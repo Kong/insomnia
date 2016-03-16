@@ -1,0 +1,29 @@
+/* Background Colors */
+$bg-primary: #7D70CC;
+$bg-light: #f1f2f7;
+$bg-super-light: #ffffff;
+$bg-dark: #2c2d28;
+
+/* Font Colors */
+$font-light-bg: #444444;
+$font-dark-bg: #ffffff;
+
+.bg-primary {
+  background: $bg-primary;
+  color: $font-dark-bg;
+}
+
+.bg-dark {
+  background: $bg-dark;
+  color: $font-dark-bg;
+}
+
+.bg-light {
+  background: $bg-light;
+  color: $font-light-bg;
+}
+
+.bg-light.bg-hover:hover {
+  background: darken($bg-light, 2%);
+}
+

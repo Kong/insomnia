@@ -1,0 +1,29 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.form-control {
+  width: 100%;
+  background: $bg-super-light;
+  outline: none;
+  border: 0;
+}
+
+.btn {
+  cursor: pointer;
+  text-align: center;
+  padding: $default-padding $default-padding * 1.5;
+}
+
+input, button {
+  padding: $default-padding;
+  background: none;
+  border: 0;
+  outline: 0;
+  font-size: inherit;
+  width: 100%;
+  height: 100%;
+}
+
+button {
+  width: auto;
+}

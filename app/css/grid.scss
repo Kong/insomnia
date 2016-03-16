@@ -1,0 +1,25 @@
+@import 'constants/dimensions';
+
+.grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  align-content: flex-start;
+  height: 100%;
+}
+
+.col-1, .col-2 {
+  flex-basis: auto;
+}
+
+.col-1 {
+  flex-grow: 1;
+}
+
+.col-1 {
+  flex-grow: 1;
+  flex-basis: auto;
+}
+

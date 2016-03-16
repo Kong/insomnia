@@ -1,0 +1,15 @@
+@import '../constants/colors';
+@import '../constants/dimensions';
+
+#request {
+  background: $bg-dark;
+
+  .header {
+    background: $bg-super-light;
+  }
+
+  .url-input {
+    background: $bg-light;
+    font-size: $font-size-lg;
+  }
+}

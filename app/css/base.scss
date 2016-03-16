@@ -1,0 +1,25 @@
+@import 'constants/colors';
+@import 'constants/dimensions';
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: $font-size;
+  background: $bg-light;
+  color: $font-light-bg;
+}
+
+h1 {
+  font-size: $font-size-xxl;
+}
+
+h2 {
+  font-size: $font-size-xl;
+}
+

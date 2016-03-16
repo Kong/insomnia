@@ -1,0 +1,16 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.header {
+  box-shadow: 1px 0 3px rgba(0, 0, 0, .15);
+  border-bottom: 1px solid transparent;
+  z-index: 1;
+  position: relative;
+
+  &.header-clickable a, &:not(.header-clickable) {
+    height: $header-height;
+    box-sizing: border-box;
+    display: block;
+    padding: $default-padding;
+  }
+}
