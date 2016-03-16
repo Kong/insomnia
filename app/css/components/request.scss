@@ -6,14 +6,10 @@
 
   .header {
     background: $bg-super-light;
+    border-right: 1px solid $bg-light;
   }
 
   .url-input {
-    background: $bg-light;
     font-size: $font-size-lg;
-
-    .method-dropdown {
-      font-size: $font-size-md;
-    }
   }
 }

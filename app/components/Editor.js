@@ -1,24 +1,48 @@
 import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
+
+// Modes
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/javascript/javascript';
+
+// CSS
+import 'codemirror/lib/codemirror.css'
+
+// Plugins
 import 'codemirror/addon/scroll/simplescrollbars';
 import 'codemirror/addon/scroll/simplescrollbars.css';
-import 'codemirror/lib/codemirror.css'
+
+import 'codemirror/addon/scroll/scrollpastend';
+
+import 'codemirror/addon/fold/foldcode';
+import 'codemirror/addon/fold/brace-fold';
+import 'codemirror/addon/fold/comment-fold';
+import 'codemirror/addon/fold/indent-fold';
+import 'codemirror/addon/fold/xml-fold';
+
+import 'codemirror/addon/fold/foldgutter';
+import 'codemirror/addon/fold/foldgutter.css';
+
+// CSS Themes
 import 'codemirror/theme/material.css'
 import 'codemirror/theme/railscasts.css'
 import 'codemirror/theme/tomorrow-night-bright.css'
+import 'codemirror/theme/tomorrow-night-eighties.css'
 import 'codemirror/theme/ambiance.css'
 import 'codemirror/theme/mbo.css'
 import 'codemirror/theme/pastel-on-dark.css'
+import 'codemirror/theme/seti.css'
+import 'codemirror/theme/monokai.css'
+
+// App styles
+import '../css/components/editor.scss';
 
 class Editor extends Component {
 
   constructor () {
     super();
-    this._currentCodemirrorValue = null;
     this.state = {
       isFocused: false
     }
@@ -27,10 +51,16 @@ class Editor extends Component {
   componentDidMount () {
     var textareaNode = this.refs.textarea;
     let options = Object.assign({
-      //theme: 'material',
-      //theme: 'mbo',
-      theme: 'pastel-on-dark',
-      fixedGutter: true,
+      theme: 'monokai',
+      scrollPastEnd: true,
+      foldGutter: true,
+      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+      cursorScrollMargin: 60,
+      extraKeys: {
+        "Ctrl-Q": function (cm) {
+          cm.foldCode(cm.getCursor());
+        }
+      },
       scrollbarStyle: 'overlay'
     }, this.props.options || {});
 

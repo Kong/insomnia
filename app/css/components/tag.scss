@@ -1,0 +1,14 @@
+@import '../constants/dimensions';
+
+.tag {
+  display: inline-block;
+  border: 1px solid;
+  padding: $slim-padding;
+  margin-right: 1em;
+  box-sizing: border-box;
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+

@@ -5,6 +5,7 @@ import { loadTodos } from './actions/index';
 import App from './containers/App'
 import configureStore from './stores/configureStore'
 import './css/index.scss'
+import './css/lib/chrome/platform_app.css'
 import './css/lib/fontawesome/css/font-awesome.css'
 
 const store = configureStore();

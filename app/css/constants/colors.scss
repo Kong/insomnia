@@ -1,12 +1,19 @@
 /* Background Colors */
 $bg-primary: #7D70CC;
-$bg-light: #f1f2f7;
+$bg-light: #eaeaea;
 $bg-super-light: #ffffff;
 $bg-dark: #2c2d28;
+
+$success: #598f07;
 
 /* Font Colors */
 $font-light-bg: #444444;
 $font-dark-bg: #ffffff;
+
+.success {
+  border-color: $success !important;
+  color: $success;
+}
 
 .bg-primary {
   background: $bg-primary;
@@ -23,15 +30,23 @@ $font-dark-bg: #ffffff;
   color: $font-light-bg;
 }
 
+.bg-light.btn:hover {
+  background: darken($bg-light, 4%);
+}
+
+.bg-light.btn:active {
+  background: darken($bg-light, 6%);
+}
+
 .bg-super-light {
-  background: $bg-light;
+  background: $bg-super-light;
   color: $font-light-bg;
 }
 
-.bg-light.bg-hover:hover {
-  background: darken($bg-light, 3%);
+.bg-super-light.btn:hover {
+  background: darken($bg-super-light, 4%);
 }
 
-.bg-light.bg-hover:active {
-  background: darken($bg-light, 6%);
+.bg-super-light.btn:active {
+  background: darken($bg-super-light, 6%);
 }

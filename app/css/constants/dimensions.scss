@@ -1,4 +1,5 @@
 $default-padding: 15px;
+$slim-padding: $default-padding / 2;
 
 /* Fonts */
 $font-size: 12px;
@@ -29,7 +30,7 @@ $header-height: 50px;
 
 /* Sidebar */
 $sidebar-width: 300px;
-$sidebar-item-height: 45px;
+$sidebar-item-padding: $default-padding $default-padding * 2;
 
 /* Elements */
 $form-height: 50px;

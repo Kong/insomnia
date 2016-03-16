@@ -23,18 +23,10 @@ h2 {
   font-size: $font-size-xl;
 }
 
-.CodeMirror {
-  height: 100% !important;
-  width: 100%;
-  font-size: 13px !important;
-  font-family: "Source Code Pro", monospace;
+.text-center {
+  text-align: center;
 }
 
-.CodeMirror, .CodeMirror-gutters, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
-  background: $bg-dark !important;
+strong {
+  font-weight: 600;
 }
-
-.CodeMirror-overlayscroll-horizontal div, .CodeMirror-overlayscroll-vertical div {
-  background: lighten($bg-dark, 10%);
-}
-

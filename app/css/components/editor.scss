@@ -1,0 +1,26 @@
+@import '../constants/colors';
+
+.CodeMirror {
+  height: 100% !important;
+  width: 100%;
+  font-size: 13px !important;
+  font-family: "Source Code Pro", monospace;
+  padding: 5px 0;
+  box-sizing: border-box;
+}
+
+.CodeMirror,
+.cm-s-seti.CodeMirror, // Hack because seti theme is dumb
+.CodeMirror-gutters,
+.CodeMirror-scrollbar-filler,
+.CodeMirror-gutter-filler {
+  background-color: $bg-dark !important;
+}
+
+.CodeMirror-overlayscroll-horizontal div, .CodeMirror-overlayscroll-vertical div {
+  background: lighten($bg-dark, 10%);
+}
+
+.CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
+  color: #555555 !important;
+}
