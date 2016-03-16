@@ -38,7 +38,7 @@ class App extends Component {
           </header>
           <div className="bg-light pane-tabs">
             {['Query Params', 'Body', 'Headers', 'Basic Auth'].map((name => {
-              return <button className={'btn ' + (name === 'Body' ? 'bg-dark' : 'bg-light')}>
+              return <button key={name} className={'btn ' + (name === 'Body' ? 'bg-dark' : 'bg-light')}>
                 {name}
               </button>
             }))}
