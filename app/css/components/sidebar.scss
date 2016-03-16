@@ -2,14 +2,12 @@
 @import '../constants/colors';
 
 #sidebar {
-  width: $sidebar-width;
   background: lighten($bg-dark, 3%);
   color: $font-dark-bg;
   align-self: stretch;
 
   .header {
     background: $bg-dark;
-    border-bottom-color: darken($bg-dark, 1%);
   }
 
   a {
@@ -18,8 +16,10 @@
     display: block;
   }
 
-  .sidebar-items li {
-    a {
+  ul.sidebar-items {
+    width: $sidebar-width;
+
+    li > a {
       color: darken($font-dark-bg, 30%);
       padding: $default-padding;
       height: $sidebar-item-height;

@@ -23,7 +23,15 @@ $font-dark-bg: #ffffff;
   color: $font-light-bg;
 }
 
-.bg-light.bg-hover:hover {
-  background: darken($bg-light, 2%);
+.bg-super-light {
+  background: $bg-light;
+  color: $font-light-bg;
 }
 
+.bg-light.bg-hover:hover {
+  background: darken($bg-light, 3%);
+}
+
+.bg-light.bg-hover:active {
+  background: darken($bg-light, 6%);
+}

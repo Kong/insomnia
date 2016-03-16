@@ -2,15 +2,18 @@
 @import '../constants/colors';
 
 .header {
-  box-shadow: 1px 0 3px rgba(0, 0, 0, .15);
-  border-bottom: 1px solid transparent;
-  z-index: 1;
-  position: relative;
-
-  &.header-clickable a, &:not(.header-clickable) {
+  &.header-clickable a, &:not(.header-clickable) > *:first-child {
+    display: block;
     height: $header-height;
     box-sizing: border-box;
-    display: block;
     padding: $default-padding;
+
+  }
+  &:not(.header_clickable).header-no-padding > *:first-child {
+    padding: 0;
+  }
+
+  &.header-clickable.header-no-padding a {
+    padding: 0;
   }
 }
