@@ -17,7 +17,7 @@
     background: $bg-dark;
     margin-right: 3px;
 
-    li > a {
+    li.sidebar-item > a {
       color: darken($font-dark-bg, 40%);
       padding: $sidebar-item-padding;
       border-left: 4px solid transparent;
@@ -32,7 +32,7 @@
     }
   }
 
-  .sidebar-items li.active > a {
+  .sidebar-items li.sidebar-item.active > a {
     border-left-color: $bg-primary;
     color: $font-dark-bg;
   }
