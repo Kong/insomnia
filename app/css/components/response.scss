@@ -1,10 +1,10 @@
 @import '../constants/colors';
 
 #response {
-  .header {
-    // HACK: Find some way to center this vertically
-    .tag {
-      margin-top: 10px;
+  .pane-header {
+
+    .tag { // HACK: Find some way to center this vertically
+      margin-top: -4px;
     }
   }
 }

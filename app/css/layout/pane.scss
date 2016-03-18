@@ -1,9 +1,30 @@
 @import '../constants/colors';
+@import '../constants/dimensions';
 
 .pane {
-  margin-right: 2px;
-}
+  .pane-header {
+    z-index: 1;
+    position: relative;
+    border-right: 2px solid rgba(0,0,0,0.05);
 
-.pane-tabs {
-  border-bottom: 2px solid $bg-darker;
+    &.pane-header-clickable a, &:not(.pane-header-clickable) > *:first-child {
+      display: block;
+      height: $header-height;
+      box-sizing: border-box;
+      padding: $default-padding;
+    }
+
+    &:not(.pane-header_clickable).pane-header-no-padding > *:first-child {
+      padding: 0;
+    }
+
+    &.pane-header-clickable.header-no-padding a {
+      padding: 0;
+    }
+  }
+
+  .pane-body {
+    height: 100%;
+    border-right: 2px solid rgba(0,0,0,0.1);
+  }
 }

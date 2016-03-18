@@ -4,7 +4,6 @@
 html, body, #root {
   height: 100%;
   width: 100%;
-  background: $bg-darker;
 }
 
 body {
@@ -12,8 +11,6 @@ body {
   padding: 0;
   font-family: 'Open Sans', sans-serif;
   font-size: $font-size;
-  background: $bg-light;
-  color: $font-light-bg;
 }
 
 h1 {

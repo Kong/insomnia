@@ -8,7 +8,7 @@ class App extends Component {
   render () {
     //const { global, todos, actions } = this.props;
     return (
-      <div className="grid">
+      <div className="grid bg-dark">
         <Sidebar />
         <RequestPane />
         <ResponsePane />
