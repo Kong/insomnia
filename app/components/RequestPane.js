@@ -16,9 +16,9 @@ const RequestPane = (props) => (
         </div>
       </div>
     </header>
-    <div className="bg-light pane-tabs">
+    <div className="bg-dark pane-tabs">
       {['Query Params', 'Body', 'Headers', 'Basic Auth'].map((name => {
-        return <button key={name} className={'btn ' + (name === 'Body' ? 'bg-dark' : 'bg-light')}>
+        return <button key={name} className="btn bg-dark">
           {name}
         </button>
       }))}

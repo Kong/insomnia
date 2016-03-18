@@ -3,12 +3,13 @@ $bg-primary: #7D70CC;
 $bg-light: #eaeaea;
 $bg-super-light: #ffffff;
 $bg-dark: #2c2d28;
+$bg-darker: darken($bg-dark, 3%);
 
 $success: #598f07;
 
 /* Font Colors */
 $font-light-bg: #444444;
-$font-dark-bg: #ffffff;
+$font-dark-bg: #eeeeee;
 
 .success {
   border-color: $success !important;
@@ -17,11 +18,21 @@ $font-dark-bg: #ffffff;
 
 .bg-primary {
   background: $bg-primary;
-  color: $font-dark-bg;
+
+  &, a {
+    color: $font-dark-bg;
+  }
 }
 
 .bg-dark {
   background: $bg-dark;
+  &, a {
+    color: $font-dark-bg;
+  }
+}
+
+.bg-darker {
+  background: $bg-darker;
   color: $font-dark-bg;
 }
 

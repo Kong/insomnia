@@ -1,11 +1,7 @@
 @import '../constants/colors';
 
 #response {
-  background: $bg-dark;
-
   .header {
-    background: $bg-super-light;
-
     // HACK: Find some way to center this vertically
     .tag {
       margin-top: 10px;

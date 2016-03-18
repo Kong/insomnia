@@ -1,8 +1,8 @@
 import React from 'react'
 
 const Sidebar = (props) => (
-  <aside id="sidebar" className="pane">
-    <header className="header header-clickable">
+  <aside id="sidebar" className="pane bg-dark">
+    <header className="header header-clickable bg-primary">
       <h2><a href="#">Insomnia</a></h2>
     </header>
     <ul className="sidebar-items">

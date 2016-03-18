@@ -1,6 +1,9 @@
 @import '../constants/colors';
 
 .pane {
-  background-color: $bg-light;
+  margin-right: 2px;
 }
 
+.pane-tabs {
+  border-bottom: 2px solid $bg-darker;
+}

@@ -1,10 +1,8 @@
 import React, { Component, PropTypes } from 'react'
-import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import Editor from '../components/Editor'
 import Sidebar from '../components/Sidebar'
 import RequestPane from '../components/RequestPane'
-import * as TodoActions from '../actions'
+import ResponsePane from '../components/ResponsePane'
 
 class App extends Component {
   render () {
@@ -13,17 +11,7 @@ class App extends Component {
       <div className="grid">
         <Sidebar />
         <RequestPane />
-        <section id="response" className="pane col grid-v">
-          <header className="header header-no-padding text-center">
-            <div>
-              <div className="tag success"><strong>200</strong> SUCCESS</div>
-              <div className="tag"><strong>GET</strong> https://google.com</div>
-            </div>
-          </header>
-          <Editor value={'{}'}
-                  options={{mode: 'application/json', lineNumbers: true}}
-          ></Editor>
-        </section>
+        <ResponsePane />
       </div>
     )
   };

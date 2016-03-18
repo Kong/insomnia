@@ -2,13 +2,6 @@
 @import '../constants/dimensions';
 
 #request {
-  background: $bg-dark;
-
-  .header {
-    background: $bg-super-light;
-    border-right: 1px solid $bg-light;
-  }
-
   .url-input {
     font-size: $font-size-lg;
   }
