@@ -1,8 +1,9 @@
 import React from 'react'
-import { render } from 'react-dom'
-import { Provider } from 'react-redux'
-import App from './containers/App'
+import {render} from 'react-dom'
+import {Provider} from 'react-redux'
 import configureStore from './stores/configureStore'
+import AppWrapper from './containers/AppWrapper'
+
 
 // Global CSS
 import './css/index.scss'
@@ -12,6 +13,6 @@ import './css/lib/fontawesome/css/font-awesome.css'
 const store = configureStore();
 
 render(
-    <Provider store={store}><App /></Provider>,
-    document.getElementById('root')
+  <Provider store={store}><AppWrapper /></Provider>,
+  document.getElementById('root')
 );

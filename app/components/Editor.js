@@ -50,30 +50,18 @@ class Editor extends Component {
 
   componentDidMount () {
     var textareaNode = this.refs.textarea;
-    let options = Object.assign({
-      theme: 'monokai',
-      scrollPastEnd: true,
-      foldGutter: true,
-      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-      cursorScrollMargin: 60,
-      extraKeys: {
-        "Ctrl-Q": function (cm) {
-          cm.foldCode(cm.getCursor());
-        }
-      },
-      scrollbarStyle: 'overlay'
-    }, this.props.options || {});
 
-    if (options.mode === 'application/json') {
-      options.mode = 'application/ld+json';
-    }
-
-    this.codeMirror = CodeMirror.fromTextArea(textareaNode, options);
+    this.codeMirror = CodeMirror.fromTextArea(textareaNode);
     this.codeMirror.on('change', this.codemirrorValueChanged.bind(this));
     this.codeMirror.on('focus', this.focusChanged.bind(this, true));
     this.codeMirror.on('blur', this.focusChanged.bind(this, false));
     this._currentCodemirrorValue = this.props.defaultValue || this.props.value || '';
+    this.codemirrorSetOptions(this.props.options);
     this.codeMirror.setValue(this._currentCodemirrorValue);
+  }
+
+  componentDidUpdate () {
+    this.codemirrorSetOptions(this.props.options);
   }
 
   componentWillUnmount () {
@@ -96,10 +84,6 @@ class Editor extends Component {
     }
   }
 
-  getCodeMirror () {
-    return this.codeMirror;
-  }
-
   focus () {
     if (this.codeMirror) {
       this.codeMirror.focus();
@@ -113,18 +97,51 @@ class Editor extends Component {
     this.props.onFocusChange && this.props.onFocusChange(focused);
   }
 
-  codemirrorValueChanged (doc, change) {
-    var newValue = doc.getValue();
-    this._currentCodemirrorValue = newValue;
-    this.props.onChange && this.props.onChange(newValue);
+  codemirrorSetOptions (options) {
+    options = Object.assign({
+      theme: 'monokai',
+      scrollPastEnd: true,
+      foldGutter: true,
+      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+      cursorScrollMargin: 60,
+      extraKeys: {
+        "Ctrl-Q": function (cm) {
+          cm.foldCode(cm.getCursor());
+        }
+      },
+      scrollbarStyle: 'overlay'
+    }, options || {});
+
+    if (options.mode === 'json') {
+      options.mode = 'application/json';
+    }
+
+    if (options.mode === 'application/json') {
+      options.mode = 'application/ld+json';
+    }
+
+    Object.keys(options).map(key => {
+      this.codeMirror.setOption(key, options[key]);
+    });
+  }
+
+  codemirrorValueChanged (doc) {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      var newValue = doc.getValue();
+      this._currentCodemirrorValue = newValue;
+      this.props.onChange && this.props.onChange(newValue);
+    }, (this.props.debounceMillis || 0));
   }
 
   render () {
     return (
-      <textarea name={this.props.path}
-                ref='textarea'
-                defaultValue={this.props.value}
-                autoComplete='off'></textarea>
+      <div className={`editor ${this.props.className || ''}`}>
+        <textarea name={this.props.path}
+                  ref='textarea'
+                  defaultValue={this.props.value}
+                  autoComplete='off'></textarea>
+      </div>
     );
   }
 }
@@ -135,7 +152,8 @@ Editor.propTypes = {
   options: PropTypes.object,
   path: PropTypes.string,
   value: PropTypes.string,
-  className: PropTypes.any
+  className: PropTypes.any,
+  debounceMillis: PropTypes.number
 };
 
 export default Editor;

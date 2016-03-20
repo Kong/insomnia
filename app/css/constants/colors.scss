@@ -28,6 +28,14 @@ $font-dark-bg: #dddddd;
   &, a, textarea, input, .btn {
     color: $font-dark-bg;
   }
+
+  .btn:hover {
+    background: lighten($bg-dark, 4%);
+  }
+
+  .btn:active {
+    background: lighten($bg-dark, 6%);
+  }
 }
 
 .bg-light {
