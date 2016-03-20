@@ -7,7 +7,7 @@ Tabs.setUseDefaultStyles(false);
 
 class RequestPane extends Component {
   shouldComponentUpdate (nextProps, nextState) {
-    return nextProps.request !== this.props.request
+    return nextProps.request !== this.props.request;
   }
 
   render () {
@@ -48,7 +48,6 @@ class RequestPane extends Component {
             <TabPanel className="col">
               <Editor value={request.body}
                       onChange={(body) => updateRequest(Object.assign({}, request, {body}) )}
-                      debounceMillis={500}
                       options={{mode: request._mode, lineNumbers: true}}/>
             </TabPanel>
             <TabPanel className="col">Basic Auth</TabPanel>

@@ -10,19 +10,24 @@ import * as RequestActions from '../actions/requests'
 import * as GlobalActions from '../actions/global'
 
 class App extends Component {
-  componentDidMount() {
+  componentDidMount () {
     const {actions} = this.props;
     actions.restoreState();
   }
-  renderEditor () {
+
+  renderRequestPane () {
     const {actions, requests} = this.props;
     return (
-      <div className="grid">
-        <RequestPane
-          updateRequest={actions.updateRequest}
-          request={requests.active}/>
-        <ResponsePane request={requests.active}/>
-      </div>
+      <RequestPane
+        updateRequest={actions.updateRequest}
+        request={requests.active}/>
+    )
+  }
+
+  renderResponsePane () {
+    const {requests} = this.props;
+    return (
+      <ResponsePane request={requests.active}/>
     )
   }
 
@@ -35,7 +40,8 @@ class App extends Component {
           addRequest={actions.addRequest}
           loading={loading}
           requests={requests}/>
-        {requests.active ? this.renderEditor() : <div></div>}
+        {requests.active ? this.renderRequestPane() : <div></div>}
+        {requests.active ? this.renderResponsePane() : <div></div>}
       </div>
     )
   }

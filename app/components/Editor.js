@@ -39,29 +39,39 @@ import 'codemirror/theme/monokai.css'
 // App styles
 import '../css/components/editor.scss';
 
+const DEFAULT_DEBOUNCE_MILLIS = 300;
+
+const BASE_CODEMIRROR_OPTIONS = {
+  theme: 'monokai',
+  lineNumbers: true,
+  scrollPastEnd: true,
+  foldGutter: true,
+  gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+  cursorScrollMargin: 60,
+  extraKeys: {
+    "Ctrl-Q": function (cm) {
+      cm.foldCode(cm.getCursor());
+    }
+  },
+  scrollbarStyle: 'overlay'
+};
+
 class Editor extends Component {
 
   constructor () {
     super();
-    this.state = {
-      isFocused: false
-    }
+    this.state = {isFocused: false}
   }
 
   componentDidMount () {
     var textareaNode = this.refs.textarea;
 
-    this.codeMirror = CodeMirror.fromTextArea(textareaNode);
+    this.codeMirror = CodeMirror.fromTextArea(textareaNode, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', this.codemirrorValueChanged.bind(this));
     this.codeMirror.on('focus', this.focusChanged.bind(this, true));
     this.codeMirror.on('blur', this.focusChanged.bind(this, false));
     this._currentCodemirrorValue = this.props.defaultValue || this.props.value || '';
-    this._ignoreNextChange = true;
-    this.codemirrorSetOptions(this.props.options);
-    this.codeMirror.setValue(this._currentCodemirrorValue);
-  }
-
-  componentDidUpdate () {
+    this.codemirrorSetValue(this._currentCodemirrorValue);
     this.codemirrorSetOptions(this.props.options);
   }
 
@@ -74,15 +84,11 @@ class Editor extends Component {
 
   componentWillReceiveProps (nextProps) {
     if (this.codeMirror && nextProps.value !== undefined && this._currentCodemirrorValue !== nextProps.value) {
-      this.codeMirror.setValue(nextProps.value);
+      this.codemirrorSetValue(nextProps.value);
     }
-    if (typeof nextProps.options === 'object') {
-      for (var optionName in nextProps.options) {
-        if (nextProps.options.hasOwnProperty(optionName)) {
-          this.codeMirror.setOption(optionName, nextProps.options[optionName]);
-        }
-      }
-    }
+
+    // Reset any options that may have changed
+    this.codemirrorSetOptions(nextProps.options);
   }
 
   focus () {
@@ -92,27 +98,15 @@ class Editor extends Component {
   }
 
   focusChanged (focused) {
-    this.setState({
-      isFocused: focused
-    });
+    this.setState({isFocused: focused});
     this.props.onFocusChange && this.props.onFocusChange(focused);
   }
 
+  /**
+   * Set options on the CodeMirror editor while also sanitizing them
+   * @param options
+   */
   codemirrorSetOptions (options) {
-    options = Object.assign({
-      theme: 'monokai',
-      scrollPastEnd: true,
-      foldGutter: true,
-      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-      cursorScrollMargin: 60,
-      extraKeys: {
-        "Ctrl-Q": function (cm) {
-          cm.foldCode(cm.getCursor());
-        }
-      },
-      scrollbarStyle: 'overlay'
-    }, options || {});
-
     if (options.mode === 'json') {
       options.mode = 'application/json';
     }
@@ -126,18 +120,36 @@ class Editor extends Component {
     });
   }
 
+  /**
+   * Wrapper function to add extra behaviour to our onChange event
+   * @param doc CodeMirror document
+   */
   codemirrorValueChanged (doc) {
-    if (this._ignoreNextChange) {
+    // Update our cached value
+    var newValue = doc.getValue();
+    this._currentCodemirrorValue = newValue;
+
+    // Don't trigger change event if we're ignoring changes
+    if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
       return;
     }
 
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
-      var newValue = doc.getValue();
-      this._currentCodemirrorValue = newValue;
-      this.props.onChange && this.props.onChange(newValue);
-    }, (this.props.debounceMillis || 0));
+    // Do the debounce in a closure so the callback doesn't change while we're waiting
+    const debounceMillis = this.props.debounceMillis || DEFAULT_DEBOUNCE_MILLIS;
+    ((v, cb, millis) => {
+      clearTimeout(this._timeout);
+      this._timeout = setTimeout(() => cb(v), millis);
+    })(newValue, this.props.onChange, debounceMillis);
+  }
+
+  /**
+   * Set the CodeMirror value without triggering the onChange event
+   * @param code the code to set in the editor
+   */
+  codemirrorSetValue (code) {
+    this._ignoreNextChange = true;
+    this.codeMirror.setValue(code);
   }
 
   render () {

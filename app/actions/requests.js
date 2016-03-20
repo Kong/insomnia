@@ -25,7 +25,7 @@ function defaultRequest () {
  */
 function buildRequest (request) {
   // Build the required fields
-  const id = request.id || `req_${Date.now()}`;
+  const id = request.id || `rq_${Date.now()}`;
   const created = request.created || Date.now();
   const modified = request.modified || Date.now();
 
@@ -39,25 +39,30 @@ export function addRequest (name = 'My Request') {
   return (dispatch) => {
     dispatch(loadStart());
     const request = buildRequest({name});
+    dispatch({type: types.REQUEST_ADD, request});
 
-    setTimeout(() => {
-      dispatch({type: types.REQUEST_ADD, request});
-      dispatch(loadStop());
-    }, 500);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        dispatch(loadStop());
+        resolve();
+      }, 500);
+    });
   };
 }
 
 export function updateRequest (requestPatch) {
   return (dispatch) => {
     dispatch(loadStart());
-    
-    const newRequest = Object.assign({}, requestPatch, {modified: Date.now()});
-    const request = buildRequest(newRequest);
 
-    setTimeout(() => {
-      dispatch({type: types.REQUEST_UPDATE, request});
-      dispatch(loadStop());
-    }, 500);
+    const request = Object.assign({}, requestPatch, {modified: Date.now()});
+    dispatch({type: types.REQUEST_UPDATE, request});
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        dispatch(loadStop());
+        resolve();
+      }, 500);
+    });
   };
 }
 

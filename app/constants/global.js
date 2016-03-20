@@ -9,3 +9,11 @@ export const METHOD_POST = 'POST';
 export const METHOD_DELETE = 'DELETE';
 export const METHOD_OPTIONS = 'OPTIONS';
 export const METHOD_HEAD = 'HEAD';
+export const METHODS = [
+  METHOD_GET,
+  METHOD_PUT,
+  METHOD_POST,
+  METHOD_DELETE,
+  METHOD_OPTIONS,
+  METHOD_HEAD
+];

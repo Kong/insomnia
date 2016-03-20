@@ -2,6 +2,7 @@
 @import 'constants/dimensions';
 
 html, body, #root {
+  display: block;
   height: 100%;
   width: 100%;
 }

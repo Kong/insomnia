@@ -10,7 +10,12 @@ function requestsReducer (state = [], action) {
     case types.REQUEST_ADD:
       return [...state, action.request];
     case types.REQUEST_UPDATE:
-      return state.map(request => request.id === action.request.id ? action.request : request);
+      return state.map(request => {
+        if (request.id === action.request.id) {
+          return Object.assign({}, request, action.request);
+        } else {
+          return request;
+      }});
     default:
       return state;
   }
@@ -25,11 +30,12 @@ export default function (state = initialState, action) {
       return Object.assign({}, state, {all, active});
     case types.REQUEST_UPDATE:
       all = requestsReducer(state.all, action);
-      active = state.active.id === action.request.id ? action.request : state.active;
+      active = state.active;
+      active = active && active.id === action.request.id ? action.request : active;
       return Object.assign({}, state, {all, active});
     case types.REQUEST_ACTIVATE:
       active = action.request;
-      return Object.assign({}, state, {active});
+      return active ? Object.assign({}, state, {active}) : state;
     default:
       return state
   }

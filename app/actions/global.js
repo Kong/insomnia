@@ -10,7 +10,7 @@ export function restoreState () {
       } catch (e) { }
 
       dispatch({type: types.GLOBAL_STATE_RESTORED, state});
-    }, 300);
+    }, 0);
   }
 }
 
