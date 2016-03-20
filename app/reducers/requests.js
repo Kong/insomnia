@@ -8,7 +8,18 @@ const initialState = {
 function requestsReducer (state = [], action) {
   switch (action.type) {
     case types.REQUEST_ADD:
-      return [...state, action.request];
+
+      // Change name if there is a duplicate
+      const request = action.request;
+      for (let i = 0; ; i++) {
+        let name = i === 0 ? request.name : request.name + ` (${i})`;
+        if (!state.find(r => r.name === name)) {
+          request.name = name;
+          break;
+        }
+      }
+
+      return [...state, request];
     case types.REQUEST_UPDATE:
       return state.map(request => {
         if (request.id === action.patch.id) {

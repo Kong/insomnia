@@ -53,6 +53,24 @@ describe('Requests Reducer', () => {
     });
   });
 
+  it('should add request of same name', () => {
+    initialState.all.push(request);
+    const newRequest = Object.assign({}, request);
+
+    expect(
+      reducer(initialState, {
+        type: types.REQUEST_ADD,
+        request: newRequest
+      })
+    ).toEqual({
+      all: [
+        request,
+        Object.assign(newRequest, {name: `${request.name} (1)`})
+      ],
+      active: request.id
+    });
+  });
+
   it('should update request', () => {
     const state = reducer(undefined, {
       type: types.REQUEST_ADD,

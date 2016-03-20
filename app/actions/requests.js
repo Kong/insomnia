@@ -37,7 +37,7 @@ function buildRequest (request) {
 }
 
 export function addRequest (name = 'My Request') {
-  return (dispatch) => {
+  return (dispatch, getState) => {
     dispatch(loadStart());
     const request = buildRequest({name});
     dispatch({type: types.REQUEST_ADD, request});
