@@ -12,13 +12,20 @@ class RequestPane extends Component {
   }
 
   render () {
-    const {request, updateRequestBody, updateRequestUrl} = this.props;
+    const {
+      request,
+      updateRequestBody,
+      updateRequestUrl,
+      updateRequestMethod
+    } = this.props;
 
     return (
       <section id="request" className="pane col grid-v">
         <header className="pane__header bg-super-light">
           <div className="form-control url-input">
             <UrlInput onUrlChange={updateRequestUrl}
+                      onMethodChange={updateRequestMethod}
+                      method={request.method}
                       urlValue={request.url}/>
           </div>
         </header>
@@ -56,6 +63,7 @@ class RequestPane extends Component {
 RequestPane.propTypes = {
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,
+  updateRequestMethod: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired
 };
 

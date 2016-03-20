@@ -11,7 +11,7 @@ describe('Requests Reducer', () => {
   beforeEach(() => {
     initialState = {
       all: [],
-      activeId: null
+      active: null
     };
 
     request = {
@@ -49,7 +49,7 @@ describe('Requests Reducer', () => {
       })
     ).toEqual({
       all: [request],
-      activeId: request.id
+      active: request.id
     });
   });
 
@@ -69,7 +69,7 @@ describe('Requests Reducer', () => {
       patch: patch
     })).toEqual({
       all: [Object.assign({}, request, patch)],
-      activeId: request.id
+      active: request.id
     });
   });
 
@@ -82,20 +82,20 @@ describe('Requests Reducer', () => {
 
   it('should activate request', () => {
     initialState.all = [request];
-    initialState.activeId = null;
+    initialState.active = null;
 
     expect(reducer(initialState, {
       type: types.REQUEST_ACTIVATE,
       id: request.id
     })).toEqual({
       all: [request],
-      activeId: request.id
+      active: request.id
     });
   });
 
   it('should not activate invalid request', () => {
     initialState.all = [request];
-    initialState.activeId = null;
+    initialState.active = null;
 
     expect(reducer(initialState, {
       type: types.REQUEST_ACTIVATE

@@ -39,7 +39,7 @@ import 'codemirror/theme/monokai.css'
 // App styles
 import '../css/components/editor.scss';
 
-const DEFAULT_DEBOUNCE_MILLIS = 300;
+const DEFAULT_DEBOUNCE_MILLIS = 500;
 
 const BASE_CODEMIRROR_OPTIONS = {
   theme: 'monokai',

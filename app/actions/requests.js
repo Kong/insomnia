@@ -80,6 +80,10 @@ export function updateRequestBody (id, body) {
   return updateRequest({id, body});
 }
 
+export function updateRequestMethod (id, method) {
+  return updateRequest({id, method});
+}
+
 export function activateRequest (id) {
   return {type: types.REQUEST_ACTIVATE, id};
 }

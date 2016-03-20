@@ -21,6 +21,7 @@ class App extends Component {
       <RequestPane
         updateRequestBody={actions.updateRequestBody.bind(null, activeRequest.id)}
         updateRequestUrl={actions.updateRequestUrl.bind(null, activeRequest.id)}
+        updateRequestMethod={actions.updateRequestMethod.bind(null, activeRequest.id)}
         request={activeRequest}
       />
     )
@@ -61,7 +62,7 @@ function mapStateToProps (state) {
   return {
     actions: state.actions,
     allRequests: state.requests.all,
-    activeRequest: state.requests.all.find(r => r.id === state.requests.activeId),
+    activeRequest: state.requests.all.find(r => r.id === state.requests.active),
     loading: state.loading
   };
 }

@@ -3,12 +3,12 @@ import Input from '../components/Input';
 
 class UrlInput extends Component {
   render () {
-    const {onUrlChange, urlValue} = this.props;
+    const {onUrlChange, urlValue, method} = this.props;
 
     return (
       <div className="grid">
         <button className="btn method-dropdown">
-          POST&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
+          {method}&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
         </button>
         <Input type="text"
                placeholder="https://google.com"
@@ -24,7 +24,9 @@ class UrlInput extends Component {
 
 UrlInput.propTypes = {
   onUrlChange: PropTypes.func.isRequired,
-  urlValue: PropTypes.string.isRequired
+  onMethodChange: PropTypes.func.isRequired,
+  urlValue: PropTypes.string.isRequired,
+  method: PropTypes.string.isRequired
 };
 
 export default UrlInput;
