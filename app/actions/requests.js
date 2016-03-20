@@ -60,3 +60,7 @@ export function updateRequest (requestPatch) {
     }, 500);
   };
 }
+
+export function activateRequest (request) {
+  return {type: types.REQUEST_ACTIVATE, request: request};
+}

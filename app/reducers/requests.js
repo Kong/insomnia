@@ -27,6 +27,9 @@ export default function (state = initialState, action) {
       all = requestsReducer(state.all, action);
       active = state.active.id === action.request.id ? action.request : state.active;
       return Object.assign({}, state, {all, active});
+    case types.REQUEST_ACTIVATE:
+      active = action.request;
+      return Object.assign({}, state, {active});
     default:
       return state
   }

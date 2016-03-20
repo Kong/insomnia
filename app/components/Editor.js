@@ -56,6 +56,7 @@ class Editor extends Component {
     this.codeMirror.on('focus', this.focusChanged.bind(this, true));
     this.codeMirror.on('blur', this.focusChanged.bind(this, false));
     this._currentCodemirrorValue = this.props.defaultValue || this.props.value || '';
+    this._ignoreNextChange = true;
     this.codemirrorSetOptions(this.props.options);
     this.codeMirror.setValue(this._currentCodemirrorValue);
   }
@@ -126,6 +127,11 @@ class Editor extends Component {
   }
 
   codemirrorValueChanged (doc) {
+    if (this._ignoreNextChange) {
+      this._ignoreNextChange = false;
+      return;
+    }
+
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
       var newValue = doc.getValue();
