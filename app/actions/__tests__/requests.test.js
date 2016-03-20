@@ -31,6 +31,7 @@ describe('Requests Actions', () => {
           modified: 1000000000000,
           name: 'Test Request',
           method: 'GET',
+          url: '',
           body: '',
           headers: [],
           params: [],
@@ -61,6 +62,7 @@ describe('Requests Actions', () => {
           _mode: 'json',
           created: 1000000000000,
           modified: 1000000000000,
+          url: '',
           name: 'Test Request',
           method: 'GET',
           body: '',
@@ -73,8 +75,9 @@ describe('Requests Actions', () => {
       {type: types.GLOBAL_LOAD_START},
       {
         type: types.REQUEST_UPDATE,
-        request: {
+        patch: {
           method: 'POST',
+          id: 'rq_1000000000000',
           modified: 1000000000000
         }
       },
@@ -84,7 +87,7 @@ describe('Requests Actions', () => {
     const store = mockStore({});
     store.dispatch(addRequest('Test Request'));
     jest.runAllTimers();
-    store.dispatch(updateRequest({method: 'POST'}));
+    store.dispatch(updateRequest({id: 'rq_1000000000000', method: 'POST'}));
     jest.runAllTimers();
 
     const actions = store.getActions();

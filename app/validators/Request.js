@@ -53,7 +53,8 @@ const requestSchema = {
     modified: {type: 'number', minimum: 1000000000000, maximum: 10000000000000},
     name: {type: 'string', minLength: 1},
     method: {enum: METHODS},
-    body: {type: 'string', minLength: 0},
+    url: {type: 'string'},
+    body: {type: 'string'},
     authentication: {
       oneOf: [
         {$ref: '/BasicAuthentication'},
@@ -66,6 +67,7 @@ const requestSchema = {
   required: [
     '_mode',
     'id',
+    'url',
     'created',
     'modified',
     'name',

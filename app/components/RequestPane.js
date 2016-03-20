@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react'
-import Editor from '../components/Editor'
+import CodeEditor from '../components/CodeEditor'
+import UrlInput from '../components/UrlInput'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
 // Don't inject component styles (use our own)
@@ -11,21 +12,14 @@ class RequestPane extends Component {
   }
 
   render () {
-    const {request, updateRequest} = this.props;
+    const {request, updateRequestBody, updateRequestUrl} = this.props;
 
     return (
       <section id="request" className="pane col grid-v">
         <header className="pane__header bg-super-light">
           <div className="form-control url-input">
-            <div className="grid">
-              <button className="btn method-dropdown">
-                POST&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
-              </button>
-              <input type="text" placeholder="https://google.com"/>
-              <button className="btn send-request-button">
-                <i className="fa fa-repeat txt-xl"></i>
-              </button>
-            </div>
+            <UrlInput onUrlChange={updateRequestUrl}
+                      urlValue={request.url}/>
           </div>
         </header>
         <div className="pane__body">
@@ -46,9 +40,9 @@ class RequestPane extends Component {
             </TabList>
             <TabPanel className="col">Params</TabPanel>
             <TabPanel className="col">
-              <Editor value={request.body}
-                      onChange={(body) => updateRequest(Object.assign({}, request, {body}) )}
-                      options={{mode: request._mode, lineNumbers: true}}/>
+              <CodeEditor value={request.body}
+                          onChange={updateRequestBody}
+                          options={{mode: request._mode, lineNumbers: true}}/>
             </TabPanel>
             <TabPanel className="col">Basic Auth</TabPanel>
             <TabPanel className="col">Headers</TabPanel>
@@ -60,7 +54,8 @@ class RequestPane extends Component {
 }
 
 RequestPane.propTypes = {
-  updateRequest: PropTypes.func.isRequired,
+  updateRequestUrl: PropTypes.func.isRequired,
+  updateRequestBody: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired
 };
 

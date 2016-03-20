@@ -9,6 +9,7 @@ function defaultRequest () {
     _mode: 'json',
     created: 0,
     modified: 0,
+    url: '',
     name: '',
     method: methods.METHOD_GET,
     body: '',
@@ -30,7 +31,7 @@ function buildRequest (request) {
   const modified = request.modified || Date.now();
 
   // Create the request
-  return Object.assign({}, defaultRequest(), request, {
+  return Object.assign(defaultRequest(), request, {
     id, created, modified
   });
 }
@@ -51,21 +52,34 @@ export function addRequest (name = 'My Request') {
 }
 
 export function updateRequest (requestPatch) {
+  if (!requestPatch.id) {
+    throw new Error('Cannot update request without id');
+  }
+
   return (dispatch) => {
     dispatch(loadStart());
 
-    const request = Object.assign({}, requestPatch, {modified: Date.now()});
-    dispatch({type: types.REQUEST_UPDATE, request});
+    const modified = Date.now();
+    const patch = Object.assign({}, requestPatch, {modified});
+    dispatch({type: types.REQUEST_UPDATE, patch});
 
     return new Promise((resolve) => {
       setTimeout(() => {
         dispatch(loadStop());
         resolve();
-      }, 500);
+      }, 800);
     });
   };
 }
 
-export function activateRequest (request) {
-  return {type: types.REQUEST_ACTIVATE, request: request};
+export function updateRequestUrl (id, url) {
+  return updateRequest({id, url});
+}
+
+export function updateRequestBody (id, body) {
+  return updateRequest({id, body});
+}
+
+export function activateRequest (id) {
+  return {type: types.REQUEST_ACTIVATE, id};
 }

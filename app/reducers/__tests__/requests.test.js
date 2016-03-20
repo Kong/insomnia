@@ -11,9 +11,9 @@ describe('Requests Reducer', () => {
   beforeEach(() => {
     initialState = {
       all: [],
-      active: null
+      activeId: null
     };
-    
+
     request = {
       _mode: 'json',
       id: 'req_1234567890',
@@ -49,7 +49,7 @@ describe('Requests Reducer', () => {
       })
     ).toEqual({
       all: [request],
-      active: request
+      activeId: request.id
     });
   });
 
@@ -59,42 +59,43 @@ describe('Requests Reducer', () => {
       request: request
     });
 
-    const newRequest = Object.assign(
-      {}, request, {name: 'New Name'}
-    );
+    const patch = {
+      id: request.id,
+      name: 'New Name'
+    };
 
     expect(reducer(state, {
       type: types.REQUEST_UPDATE,
-      request: newRequest
+      patch: patch
     })).toEqual({
-      all: [newRequest],
-      active: newRequest
+      all: [Object.assign({}, request, patch)],
+      activeId: request.id
     });
   });
-  
+
   it('should not update unknown request', () => {
     expect(reducer(initialState, {
       type: types.REQUEST_UPDATE,
-      request: request
+      patch: {id: 'req_1234567890123'}
     })).toEqual(initialState);
   });
-  
+
   it('should activate request', () => {
     initialState.all = [request];
-    initialState.active = null;
-    
+    initialState.activeId = null;
+
     expect(reducer(initialState, {
       type: types.REQUEST_ACTIVATE,
-      request: request
+      id: request.id
     })).toEqual({
       all: [request],
-      active: request
+      activeId: request.id
     });
   });
-  
+
   it('should not activate invalid request', () => {
     initialState.all = [request];
-    initialState.active = null;
+    initialState.activeId = null;
 
     expect(reducer(initialState, {
       type: types.REQUEST_ACTIVATE

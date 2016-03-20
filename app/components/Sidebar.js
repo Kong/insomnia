@@ -22,11 +22,11 @@ const Sidebar = (props) => (
         </li>
       </ul>
       <ul className="sidebar-items">
-        {props.requests.all.map((request) => {
-          const isActive = request.id === props.requests.active.id;
+        {props.requests.map((request) => {
+          const isActive = request.id === props.activeRequest.id;
           return (
             <li key={request.id} className={'sidebar-item ' + (isActive ? 'active': '')}>
-              <a href="#" onClick={() => {props.activateRequest(request)}}>{request.name}</a>
+              <a href="#" onClick={() => {props.activateRequest(request.id)}}>{request.name}</a>
             </li>
           );
         })}
@@ -37,7 +37,8 @@ const Sidebar = (props) => (
 
 Sidebar.propTypes = {
   activateRequest: PropTypes.func.isRequired,
-  requests: PropTypes.object.isRequired,
+  requests: PropTypes.array.isRequired,
+  activeRequest: PropTypes.object,
   loading: PropTypes.bool.isRequired
 };
 

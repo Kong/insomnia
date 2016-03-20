@@ -2,7 +2,7 @@ import * as types from "../constants/actionTypes";
 
 const initialState = {
   all: [],
-  active: null
+  activeId: null
 };
 
 function requestsReducer (state = [], action) {
@@ -11,8 +11,8 @@ function requestsReducer (state = [], action) {
       return [...state, action.request];
     case types.REQUEST_UPDATE:
       return state.map(request => {
-        if (request.id === action.request.id) {
-          return Object.assign({}, request, action.request);
+        if (request.id === action.patch.id) {
+          return Object.assign({}, request, action.patch);
         } else {
           return request;
       }});
@@ -22,20 +22,22 @@ function requestsReducer (state = [], action) {
 }
 
 export default function (state = initialState, action) {
-  let all, active;
+  let all, activeId;
   switch (action.type) {
     case types.REQUEST_ADD:
       all = requestsReducer(state.all, action);
-      active = state.active || action.request;
-      return Object.assign({}, state, {all, active});
+      activeId = state.activeId || action.request.id;
+      return Object.assign({}, state, {all, activeId});
     case types.REQUEST_UPDATE:
       all = requestsReducer(state.all, action);
-      active = state.active;
-      active = active && active.id === action.request.id ? action.request : active;
-      return Object.assign({}, state, {all, active});
+      return Object.assign({}, state, {all});
     case types.REQUEST_ACTIVATE:
-      active = action.request;
-      return active ? Object.assign({}, state, {active}) : state;
+      if (!state.all.find(r => r.id === action.id)) {
+        // Don't set if the request doesn't exist
+        return state;
+      } else {
+        return Object.assign({}, state, {activeId: action.id});
+      }
     default:
       return state
   }

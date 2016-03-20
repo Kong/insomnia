@@ -16,46 +16,52 @@ class App extends Component {
   }
 
   renderRequestPane () {
-    const {actions, requests} = this.props;
+    const {actions, activeRequest} = this.props;
     return (
       <RequestPane
-        updateRequest={actions.updateRequest}
-        request={requests.active}/>
+        updateRequestBody={actions.updateRequestBody.bind(null, activeRequest.id)}
+        updateRequestUrl={actions.updateRequestUrl.bind(null, activeRequest.id)}
+        request={activeRequest}
+      />
     )
   }
 
   renderResponsePane () {
-    const {requests} = this.props;
+    const {activeRequest} = this.props;
     return (
-      <ResponsePane request={requests.active}/>
+      <ResponsePane request={activeRequest}/>
     )
   }
 
   render () {
-    const {actions, loading, requests} = this.props;
+    const {actions, loading, activeRequest, allRequests} = this.props;
     return (
       <div className="grid bg-dark">
         <Sidebar
           activateRequest={actions.activateRequest}
           addRequest={actions.addRequest}
           loading={loading}
-          requests={requests}/>
-        {requests.active ? this.renderRequestPane() : <div></div>}
-        {requests.active ? this.renderResponsePane() : <div></div>}
+          activeRequest={activeRequest}
+          requests={allRequests}
+        />
+        {activeRequest ? this.renderRequestPane() : <div></div>}
+        {activeRequest ? this.renderResponsePane() : <div></div>}
       </div>
     )
   }
 }
 
 App.propTypes = {
-  requests: PropTypes.object.isRequired,
+  allRequests: PropTypes.array.isRequired,
+  activeRequest: PropTypes.object,
   loading: PropTypes.bool.isRequired
 };
 
 function mapStateToProps (state) {
   return {
     actions: state.actions,
-    requests: state.requests,
+    allRequests: state.requests.all,
+    activeRequest: state.requests.all.find(r => r.id === state.requests.activeId),
     loading: state.loading
   };
 }

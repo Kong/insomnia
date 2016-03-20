@@ -13,6 +13,7 @@ describe('RequestSchema', () => {
       id: 'rq_1234567890123',
       created: Date.now(),
       modified: Date.now(),
+      url: 'https://google.com',
       name: 'My Request',
       method: 'GET',
       body: '{"foo": "bar"}',

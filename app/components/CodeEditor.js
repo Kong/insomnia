@@ -70,6 +70,7 @@ class Editor extends Component {
     this.codeMirror.on('change', this.codemirrorValueChanged.bind(this));
     this.codeMirror.on('focus', this.focusChanged.bind(this, true));
     this.codeMirror.on('blur', this.focusChanged.bind(this, false));
+    this.codeMirror.on('paste', this.codemirrorValueChanged.bind(this));
     this._currentCodemirrorValue = this.props.defaultValue || this.props.value || '';
     this.codemirrorSetValue(this._currentCodemirrorValue);
     this.codemirrorSetOptions(this.props.options);

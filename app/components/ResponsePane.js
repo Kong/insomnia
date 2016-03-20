@@ -1,5 +1,5 @@
 import React, {PropTypes} from 'react'
-import Editor from '../components/Editor'
+import CodeEditor from '../components/CodeEditor'
 
 const ResponsePane = (props) => (
   <section id="response" className="pane col grid-v">
@@ -10,7 +10,7 @@ const ResponsePane = (props) => (
       </div>
     </header>
     <div className="pane__body">
-      <Editor value={'{}'} options={{mode: 'application/json'}}></Editor>
+      <CodeEditor value={'{}'} options={{mode: 'application/json'}}></CodeEditor>
     </div>
   </section>
 );
