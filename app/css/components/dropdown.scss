@@ -9,11 +9,17 @@
     display: block;
   }
 
+  &.dropdown--right ul {
+    right: 0;
+    left: auto;
+  }
+
   ul {
     position: absolute;
+    left: 0;
     display: none;
     z-index: 10;
-    min-width: 180px;
+    width: 180px;
     border-radius: 2px;
     padding: 2px 0;
     margin-top: 4px;

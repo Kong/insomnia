@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react'
 import CodeEditor from '../components/CodeEditor'
 import UrlInput from '../components/UrlInput'
+import {METHOD_GET} from '../constants/global'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
 // Don't inject component styles (use our own)
@@ -28,13 +29,13 @@ class RequestPane extends Component {
                     urlValue={request.url}/>
         </header>
         <div className="pane__body grid-v">
-          <Tabs selectedIndex={1} className="grid-v">
+          <Tabs selectedIndex={0} className="grid-v">
             <TabList className="pane__header grid">
               <Tab>
-                <button className="btn">Params</button>
+                <button className="btn">Body</button>
               </Tab>
               <Tab>
-                <button className="btn">Body</button>
+                <button className="btn">Params</button>
               </Tab>
               <Tab>
                 <button className="btn">Auth</button>
@@ -43,13 +44,13 @@ class RequestPane extends Component {
                 <button className="btn">Headers</button>
               </Tab>
             </TabList>
-            <TabPanel className="grid-v">Params</TabPanel>
             <TabPanel className="grid-v">
               <CodeEditor value={request.body}
                           className="grid-v"
                           onChange={updateRequestBody}
                           options={{mode: request._mode}}/>
             </TabPanel>
+            <TabPanel className="grid-v">Params</TabPanel>
             <TabPanel className="grid-v">Basic Auth</TabPanel>
             <TabPanel className="grid-v">Headers</TabPanel>
           </Tabs>

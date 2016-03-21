@@ -1,13 +1,24 @@
 import React, {PropTypes} from 'react'
+import Dropdown from '../components/Dropdown'
 
 const Sidebar = (props) => (
   <aside id="sidebar" className="pane">
     <header className="pane__header bg-primary">
       <h1>
-        <a href="#" className="pane__header__content">
-          {props.loading ? <i className="fa fa-refresh fa-spin pull-right"></i> : ''}
-          Insomnia
-        </a>
+        <Dropdown right={true}>
+          <a href="#" className="pane__header__content">
+            <i className="fa fa-angle-down pull-right"></i>
+            {props.loading ? <i className="fa fa-refresh fa-spin pull-right"></i> : ''}
+            Insomnia
+          </a>
+          <ul className="bg-super-light">
+            <li><a href="#">hello</a></li>
+            <li><a href="#">hello</a></li>
+            <li><a href="#">hello</a></li>
+            <li><a href="#">hello</a></li>
+            <li><a href="#">hello</a></li>
+          </ul>
+        </Dropdown>
       </h1>
     </header>
     <div className="pane__body grid-v hide-scrollbars">

@@ -5,15 +5,16 @@ class Dropdown extends Component {
     super();
     this.state = {open: false};
   }
-  
+
   componentDidMount () {
     // Capture clicks outside the component and close the dropdown
+    // TODO: Remove this listener when component unmounts
     document.addEventListener('click', (e) => {
       if (!this.refs.container.contains(e.target)) {
         e.preventDefault();
         this.setState({open: false});
       }
-    })
+    });
   }
 
   handleClick (e) {
@@ -25,7 +26,10 @@ class Dropdown extends Component {
     const {initialValue, value} = this.props;
     return (
       <div ref="container"
-           className={'dropdown ' + (this.state.open ? 'dropdown--open' : '')}
+           className={'dropdown ' + 
+             (this.state.open ? 'dropdown--open ' : ' ') +
+             (this.props.right ? 'dropdown--right ' : ' ')
+           }
            onClick={this.handleClick.bind(this)}>
         {this.props.children}
       </div>
@@ -33,6 +37,8 @@ class Dropdown extends Component {
   }
 }
 
-Dropdown.propTypes = {};
+Dropdown.propTypes = {
+  right: PropTypes.bool
+};
 
 export default Dropdown;
