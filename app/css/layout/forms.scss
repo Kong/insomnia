@@ -5,6 +5,16 @@
   outline: none;
   border: 0;
   height: $form-height;
+
+  &.form-control--right button:last-child,
+  &.form-control--left input {
+    padding-left: $default-padding;
+  }
+
+  &.form-control--left button:first-child,
+  &.form-control--right input {
+    padding-right: $default-padding;
+  }
 }
 
 .btn {
@@ -17,6 +27,7 @@ input, button {
   box-sizing: border-box;
   padding: $default-padding;
   font-size: inherit;
+  text-decoration: inherit;
   background: none;
   border: 0;
   outline: 0;
@@ -26,5 +37,6 @@ input, button {
 }
 
 button {
+  cursor: pointer;
   width: auto;
 }

@@ -3,14 +3,14 @@ import React, {PropTypes} from 'react'
 const Sidebar = (props) => (
   <aside id="sidebar" className="pane">
     <header className="pane__header bg-primary">
-      <h2>
+      <h1>
         <a href="#" className="pane__header__content">
           {props.loading ? <i className="fa fa-refresh fa-spin pull-right"></i> : ''}
           Insomnia
         </a>
-      </h2>
+      </h1>
     </header>
-    <div className="pane__body">
+    <div className="pane__body grid-v hide-scrollbars">
       <ul className="sidebar-items">
         <li className="grid">
           <div className="form-control col">
@@ -21,7 +21,7 @@ const Sidebar = (props) => (
           </button>
         </li>
       </ul>
-      <ul className="sidebar-items">
+      <ul className="sidebar-items row">
         {props.requests.map((request) => {
           const isActive = request.id === props.activeRequest.id;
           return (

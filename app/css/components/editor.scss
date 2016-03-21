@@ -9,7 +9,6 @@
     width: 100%;
     font-size: 12px !important;
     font-family: "Source Code Pro", monospace;
-    padding: 5px 0;
     box-sizing: border-box;
   }
 
@@ -21,12 +20,28 @@
     background-color: $bg-dark !important;
   }
 
-  .CodeMirror-overlayscroll-horizontal div, .CodeMirror-overlayscroll-vertical div {
+  .CodeMirror-overlayscroll-horizontal div,
+  .CodeMirror-overlayscroll-vertical div {
     background: lighten($bg-dark, 10%);
   }
 
   .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
     color: #555555 !important;
+  }
+
+  .CodeMirror-scroll {
+    /*
+     * Not sure why but this fixes vertical sizing of scroll
+     * area in flexbox grid
+     */
+    box-sizing: border-box;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .CodeMirror-lines {
+    // Scroll past the end
+    padding-bottom: 150px;
   }
 }
 

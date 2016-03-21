@@ -33,6 +33,7 @@ class Input extends Component {
       <input
         ref="input"
         type="text"
+        className={this.props.className}
         initialValue={initialValue || value}
         onChange={this.valueChanged.bind(this)}
         placeholder="https://google.com"

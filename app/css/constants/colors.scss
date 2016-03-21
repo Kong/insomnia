@@ -8,63 +8,71 @@ $success: #598f07;
 
 /* Font Colors */
 $font-light-bg: #444444;
-$font-dark-bg: #dddddd;
+$font-dark-bg: #eeeeee;
 
 .success {
   border-color: $success !important;
   color: $success;
 }
 
-.bg-primary {
-  background: $bg-primary;
-
-  &, a, textarea, input, .btn {
-    color: $font-dark-bg;
-  }
-}
-
 .bg-dark {
   background: $bg-dark;
-  &, a, textarea, input, .btn {
+  &, a, textarea, input, button {
     color: $font-dark-bg;
   }
 
-  .btn:hover {
+  button:hover, a:hover {
     background: lighten($bg-dark, 4%);
   }
 
-  .btn:active {
+  button:active, a:active {
     background: lighten($bg-dark, 6%);
+  }
+}
+
+.bg-primary {
+  background: $bg-primary;
+
+  &, a, textarea, input, button {
+    color: $font-dark-bg;
+  }
+
+  button:hover, a:hover {
+    background: darken($bg-primary, 4%);
+  }
+
+  button:active, a:active {
+    background: darken($bg-primary, 6%);
   }
 }
 
 .bg-light {
   background: $bg-light;
 
-  &, a, textarea, input, .btn {
+  &, a, textarea, input, button {
     color: $font-light-bg;
   }
 
-  .btn:hover {
+  button:hover, a:hover {
     background: darken($bg-light, 4%);
   }
 
-  .btn:active {
+  button:active, a:active {
     background: darken($bg-light, 6%);
   }
 }
 
 .bg-super-light {
   background: $bg-super-light;
-  &, a, textarea, input, .btn {
+  &, a, textarea, input, button {
     color: $font-light-bg;
   }
 
-  .btn:hover {
+  button:hover, a:hover {
     background: darken($bg-super-light, 4%);
   }
 
-  .btn:active {
+  button:active, a:active {
     background: darken($bg-super-light, 6%);
   }
 }

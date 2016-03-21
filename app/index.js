@@ -9,8 +9,12 @@ import AppWrapper from './containers/App'
 import './css/index.scss'
 import './css/lib/chrome/platform_app.css'
 import './css/lib/fontawesome/css/font-awesome.css'
+import * as GlobalActions from "./actions/global";
 
 const store = configureStore();
+
+// Dispatch the initial load of data
+store.dispatch(GlobalActions.restoreState());
 
 render(
   <Provider store={store}><AppWrapper /></Provider>,

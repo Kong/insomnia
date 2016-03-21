@@ -5,9 +5,22 @@ $slim-padding: $default-padding / 2;
 $font-size: 12px;
 $font-size-sm: $font-size * 0.8;
 $font-size-md: $font-size;
-$font-size-lg: $font-size * 1.3;
-$font-size-xl: $font-size * 1.5;
-$font-size-xxl: $font-size * 1.8;
+$font-size-lg: $font-size * 1.2;
+$font-size-xl: $font-size * 1.4;
+$font-size-xxl: $font-size * 1.6;
+
+/* Breakpoints */
+$breakpoint-md: 888px;
+
+/* Wrapper */
+$header-height: 50px;
+
+/* Sidebar */
+$sidebar-width: 250px;
+$sidebar-item-padding: $default-padding $default-padding * 2;
+
+/* Elements */
+$form-height: 50px;
 
 .txt-sm {
   font-size: $font-size-sm;
@@ -24,13 +37,3 @@ $font-size-xxl: $font-size * 1.8;
 .txt-xl {
   font-size: $font-size-xl;
 }
-
-/* Wrapper */
-$header-height: 50px;
-
-/* Sidebar */
-$sidebar-width: 300px;
-$sidebar-item-padding: $default-padding $default-padding * 2;
-
-/* Elements */
-$form-height: 50px;

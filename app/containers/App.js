@@ -10,11 +10,6 @@ import * as RequestActions from '../actions/requests'
 import * as GlobalActions from '../actions/global'
 
 class App extends Component {
-  componentDidMount () {
-    const {actions} = this.props;
-    actions.restoreState();
-  }
-
   renderRequestPane () {
     const {actions, activeRequest} = this.props;
     return (
@@ -43,10 +38,13 @@ class App extends Component {
           addRequest={actions.addRequest}
           loading={loading}
           activeRequest={activeRequest}
-          requests={allRequests}
-        />
-        {activeRequest ? this.renderRequestPane() : <div></div>}
-        {activeRequest ? this.renderResponsePane() : <div></div>}
+          requests={allRequests}/>
+        <div className="col">
+          <div className="grid grid-collapse">
+            {activeRequest ? this.renderRequestPane() : <div></div>}
+            {activeRequest ? this.renderResponsePane() : <div></div>}
+          </div>
+        </div>
       </div>
     )
   }

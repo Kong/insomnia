@@ -22,16 +22,14 @@ class RequestPane extends Component {
     return (
       <section id="request" className="pane col grid-v">
         <header className="pane__header bg-super-light">
-          <div className="form-control url-input">
-            <UrlInput onUrlChange={updateRequestUrl}
-                      onMethodChange={updateRequestMethod}
-                      method={request.method}
-                      urlValue={request.url}/>
-          </div>
+          <UrlInput onUrlChange={updateRequestUrl}
+                    onMethodChange={updateRequestMethod}
+                    method={request.method}
+                    urlValue={request.url}/>
         </header>
-        <div className="pane__body">
+        <div className="pane__body grid-v">
           <Tabs selectedIndex={1} className="grid-v">
-            <TabList className="grid pane__header">
+            <TabList className="pane__header grid">
               <Tab>
                 <button className="btn">Params</button>
               </Tab>
@@ -39,20 +37,21 @@ class RequestPane extends Component {
                 <button className="btn">Body</button>
               </Tab>
               <Tab>
-                <button className="btn">Basic Auth</button>
+                <button className="btn">Auth</button>
               </Tab>
               <Tab>
                 <button className="btn">Headers</button>
               </Tab>
             </TabList>
-            <TabPanel className="col">Params</TabPanel>
-            <TabPanel className="col">
+            <TabPanel className="grid-v">Params</TabPanel>
+            <TabPanel className="grid-v">
               <CodeEditor value={request.body}
+                          className="grid-v"
                           onChange={updateRequestBody}
-                          options={{mode: request._mode, lineNumbers: true}}/>
+                          options={{mode: request._mode}}/>
             </TabPanel>
-            <TabPanel className="col">Basic Auth</TabPanel>
-            <TabPanel className="col">Headers</TabPanel>
+            <TabPanel className="grid-v">Basic Auth</TabPanel>
+            <TabPanel className="grid-v">Headers</TabPanel>
           </Tabs>
         </div>
       </section>

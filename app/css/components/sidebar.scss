@@ -2,8 +2,11 @@
 @import '../constants/colors';
 
 #sidebar {
-  align-self: stretch;
   height: 100%;
+
+  .pane__body {
+    overflow-y: auto;
+  }
 
   a {
     box-sizing: border-box;

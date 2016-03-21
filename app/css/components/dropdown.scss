@@ -1,0 +1,30 @@
+@import '../constants/dimensions';
+
+.dropdown {
+  position: relative;
+  display: block;
+  height: 100%;
+
+  &.dropdown--open ul {
+    display: block;
+  }
+
+  ul {
+    position: absolute;
+    display: none;
+    z-index: 10;
+    min-width: 180px;
+    border-radius: 2px;
+    padding: 2px 0;
+    margin-top: 4px;
+    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
+
+    a, button {
+      font-size: $font-size-md;
+      text-align: left;
+      padding: 10px $default-padding;
+      width: 100%;
+      display: block;
+    }
+  }
+}

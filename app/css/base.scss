@@ -3,8 +3,8 @@
 
 html, body, #root {
   display: block;
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
 
 body {
@@ -28,6 +28,18 @@ h2 {
 
 .pull-right {
   float: right;
+}
+
+.tall {
+  height: 100%;
+  display: block;
+  box-sizing: border-box;
+}
+
+.hide-scrollbars {
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 strong {

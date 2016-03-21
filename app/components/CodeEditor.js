@@ -11,11 +11,6 @@ import 'codemirror/mode/javascript/javascript';
 import 'codemirror/lib/codemirror.css'
 
 // Plugins
-import 'codemirror/addon/scroll/simplescrollbars';
-import 'codemirror/addon/scroll/simplescrollbars.css';
-
-import 'codemirror/addon/scroll/scrollpastend';
-
 import 'codemirror/addon/fold/foldcode';
 import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/comment-fold';
@@ -44,16 +39,14 @@ const DEFAULT_DEBOUNCE_MILLIS = 500;
 const BASE_CODEMIRROR_OPTIONS = {
   theme: 'monokai',
   lineNumbers: true,
-  scrollPastEnd: true,
   foldGutter: true,
   gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-  cursorScrollMargin: 60,
+  cursorScrollMargin: 80,
   extraKeys: {
     "Ctrl-Q": function (cm) {
       cm.foldCode(cm.getCursor());
     }
-  },
-  scrollbarStyle: 'overlay'
+  }
 };
 
 class Editor extends Component {
