@@ -45,7 +45,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "jest $@",
-    "build": "webpack --config webpack/prod.config.js # --optimize-minimize"
+    "build": "npm test && webpack --config webpack/prod.config.js --optimize-minimize"
   },
   "jest": {
     "unmockedModulePathPatterns": [
