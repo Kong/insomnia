@@ -4,13 +4,16 @@ import Dropdown from './base/Dropdown';
 import {METHODS} from '../constants/global';
 
 class UrlInput extends Component {
+  shouldComponentUpdate(nextProps) {
+    return this.props.request.url !== nextProps.request.url;
+  }
   render () {
-    const {onUrlChange, onMethodChange, urlValue, method} = this.props;
+    const {onUrlChange, onMethodChange, request} = this.props;
     return (
       <div className="grid form-control form-control--left form-control--right">
         <Dropdown>
           <button className="btn txt-lg">
-            {method}&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
+            {request.method}&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
           </button>
           <ul className="bg-super-light">
             {METHODS.map((method) => (
@@ -25,7 +28,7 @@ class UrlInput extends Component {
         <Input type="text"
                className="txt-lg"
                placeholder="https://google.com"
-               initialValue={urlValue}
+               initialValue={request.url}
                onChange={onUrlChange}/>
         <button className="btn">
           <i className="fa fa-repeat txt-xl"></i>
@@ -38,8 +41,10 @@ class UrlInput extends Component {
 UrlInput.propTypes = {
   onUrlChange: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,
-  urlValue: PropTypes.string.isRequired,
-  method: PropTypes.string.isRequired
+  request: PropTypes.shape({
+    url: PropTypes.string.isRequired,
+    method: PropTypes.string.isRequired
+  }).isRequired
 };
 
 export default UrlInput;

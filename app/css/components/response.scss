@@ -7,5 +7,9 @@
       margin-top: -4px;
     }
   }
+
+  .pane__header, .pane__body {
+    border-right: 0;
+  }
 }
 

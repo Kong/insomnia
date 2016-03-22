@@ -5,7 +5,7 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
 import CodeEditor from '../components/base/Editor'
 import RequestBodyEditor from '../components/RequestBodyEditor'
-import UrlInput from '../components/UrlInput'
+import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
 
 import * as RequestActions from '../actions/requests'
@@ -29,11 +29,10 @@ class App extends Component {
       <div className="grid grid-collapse">
         <section id="request" className="pane col grid-v">
           <header className="pane__header bg-super-light">
-            <UrlInput
+            <RequestUrlBar
               onUrlChange={updateRequestUrl}
               onMethodChange={updateRequestMethod}
-              method={activeRequest.method}
-              urlValue={activeRequest.url}/>
+              request={activeRequest}/>
           </header>
           <div className="pane__body grid-v">
             <Tabs selectedIndex={0} className="grid-v">

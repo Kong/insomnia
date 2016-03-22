@@ -7,7 +7,7 @@ module.exports = {
   context: path.join(__dirname, '../app'),
   entry: [
     './index.js',
-    './index.html'
+    './electron.html'
   ],
   output: {
     path: path.join(__dirname, '../dist'),
@@ -52,6 +52,7 @@ module.exports = {
     ]
   },
   resolve: {
-    extensions: ['', '.js', '.jsx']
+    extensions: ['', '.js', '.jsx'],
+    packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   }
 };

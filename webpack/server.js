@@ -1,19 +1,26 @@
-var webpack = require('webpack');
-var WebpackDevServer = require('webpack-dev-server');
-var config = require('./dev.config.js');
+'use strict';
 
-new WebpackDevServer(webpack(config), {
+const express = require('express');
+const webpack = require('webpack');
+const config = require('../webpack/dev.config');
+
+const app = express();
+const compiler = webpack(config);
+
+const PORT = 3000;
+
+app.use(require('webpack-dev-middleware')(compiler, {
   publicPath: config.output.publicPath,
-  debug: true,
-  hot: true,
-  stats: {
-    colors: true
-  },
-  historyApiFallback: true
-}).listen(3000, 'localhost', function (err, result) {
+  stats: {colors: true}
+}));
+
+app.use(require('webpack-hot-middleware')(compiler));
+
+app.listen(PORT, 'localhost', err => {
   if (err) {
-    return console.log(err);
+    console.log(err);
+    return;
   }
 
-  console.log('Listening at http://localhost:3000/');
+  console.log(`Listening at http://localhost:${PORT}`);
 });

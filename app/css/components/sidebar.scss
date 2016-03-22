@@ -8,6 +8,10 @@
     overflow-y: auto;
   }
 
+  .pane__header, .pane__body {
+    border-left: 0;
+  }
+
   a {
     box-sizing: border-box;
     display: block;

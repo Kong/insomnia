@@ -1,28 +1,38 @@
 var path = require('path');
 var webpack = require('webpack');
-var base = require('./prod.config');
+var base = require('./base.config');
+var webpackTargetElectronRenderer = require('webpack-target-electron-renderer');
 
 base.entry = [
-    'webpack-dev-server/client?http://0.0.0.0:3000',
-    'webpack/hot/only-dev-server'
+  'webpack-hot-middleware/client?path=http://localhost:3000/__webpack_hmr',
+  'webpack/hot/only-dev-server'
 ].concat(base.entry);
-
 
 base.devtool = 'eval'; // Fastest form of source maps
 base.debug = true;
-base.devtool = 'inline-source-maps';
 base.output.path = path.join(base.output.path, '/dev');
-base.output.publicPath = '/';
+base.output.publicPath = 'http://localhost:3000/dist/';
 
 for (var i = 0; i < base.module.loaders.length; i++) {
-    var loader = base.module.loaders[i];
-    if (loader.id === 'babel') {
-        loader.loaders = ['react-hot'].concat(loader.loaders);
-        break;
-    }
+  var loader = base.module.loaders[i];
+  if (loader.id === 'babel') {
+    loader.loaders = ['react-hot'].concat(loader.loaders);
+    break;
+  }
 }
 
-base.plugins = [new webpack.HotModuleReplacementPlugin()];
+base.plugins = [
+  new webpack.HotModuleReplacementPlugin(),
+  new webpack.NoErrorsPlugin(),
+  new webpack.DefinePlugin({
+    __DEV__: true,
+    'process.env': {
+      NODE_ENV: JSON.stringify('development')
+    }
+  })
+];
+
+base.target = webpackTargetElectronRenderer(base);
 
 module.exports = base;
 
