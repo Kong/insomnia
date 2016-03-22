@@ -43,9 +43,9 @@
     "webpack-dev-server": "^1.14.1"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node ./webpack/server.js",
     "test": "jest $@",
-    "build": "npm test && webpack --config webpack/prod.config.js --optimize-minimize"
+    "package": "npm test && webpack --config webpack/prod.config.js"
   },
   "jest": {
     "unmockedModulePathPatterns": [
