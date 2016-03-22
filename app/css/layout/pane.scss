@@ -3,8 +3,8 @@
 
 .pane {
   .pane__header {
-    border-right: 1px solid transparent;
-    border-left: 1px solid transparent;
+    border-right: 2px solid transparent;
+    border-left: 2px solid transparent;
     height: $header-height;
 
     .pane__header__content {
@@ -17,7 +17,7 @@
 
   .pane__body {
     height: 100%;
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    border-left: 2px solid rgba(0, 0, 0, 0.1);
+    border-right: 2px solid rgba(0, 0, 0, 0.1);
   }
 }

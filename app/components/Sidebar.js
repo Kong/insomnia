@@ -12,16 +12,16 @@ const Sidebar = (props) => (
             Insomnia
           </a>
           <ul className="bg-super-light">
-            <li><a href="#">hello</a></li>
-            <li><a href="#">hello</a></li>
-            <li><a href="#">hello</a></li>
-            <li><a href="#">hello</a></li>
-            <li><a href="#">hello</a></li>
+            <li><button>hello</button></li>
+            <li><button>hello</button></li>
+            <li><button>hello</button></li>
+            <li><button>hello</button></li>
+            <li><button>hello</button></li>
           </ul>
         </Dropdown>
       </h1>
     </header>
-    <div className="pane__body grid-v hide-scrollbars">
+    <div className="pane__body grid-v hide-scrollbars bg-dark">
       <ul className="sidebar-items">
         <li className="grid">
           <div className="form-control col">

@@ -20,11 +20,6 @@
     background-color: $bg-dark !important;
   }
 
-  .CodeMirror-overlayscroll-horizontal div,
-  .CodeMirror-overlayscroll-vertical div {
-    background: lighten($bg-dark, 10%);
-  }
-
   .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
     color: #555555 !important;
   }

@@ -20,19 +20,10 @@
       color: darken($font-dark-bg, 40%);
       padding: $sidebar-item-padding;
       border-left: 4px solid transparent;
-
-      &:hover {
-        background: lighten($bg-dark, 2%);
-      }
-
-      &:active {
-        background: lighten($bg-dark, 4%);
-      }
     }
   }
 
   .sidebar-items li.sidebar-item.active > a {
     border-left-color: $bg-primary;
-    color: $font-dark-bg;
   }
 }

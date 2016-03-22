@@ -15,7 +15,7 @@ class UrlInput extends Component {
           <ul className="bg-super-light">
             {METHODS.map((method) => (
               <li key={method}>
-                <button className="bg-super-light" onClick={onMethodChange.bind(null, method)}>
+                <button onClick={onMethodChange.bind(null, method)}>
                   {method}
                 </button>
               </li>
