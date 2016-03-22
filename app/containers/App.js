@@ -57,7 +57,7 @@ class App extends Component {
         </section>
         <section id="response" className="pane col grid-v">
           <header className="pane__header text-center bg-light">
-            <div className="pane__header__content">
+            <div className="grid">
               <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
               <div className="tag"><strong>GET</strong>&nbsp;https://google.com</div>
             </div>

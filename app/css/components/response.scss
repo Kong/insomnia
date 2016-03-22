@@ -1,13 +1,6 @@
 @import '../constants/colors';
 
 #response {
-  .pane__header {
-
-    .tag { // HACK: Find some way to center this vertically
-      margin-top: -4px;
-    }
-  }
-
   .pane__header, .pane__body {
     border-right: 0;
   }
