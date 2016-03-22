@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react'
-import Input from '../components/Input';
-import Dropdown from '../components/Dropdown';
+import Input from './base/Input';
+import Dropdown from './base/Dropdown';
 import {METHODS} from '../constants/global';
 
 class UrlInput extends Component {

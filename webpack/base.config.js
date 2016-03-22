@@ -2,6 +2,8 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
+  target: 'web',
+  devtool: 'source-map',
   context: path.join(__dirname, '../app'),
   entry: [
     './index.js',

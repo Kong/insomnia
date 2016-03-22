@@ -37,8 +37,8 @@ export default function (state = initialState, action) {
   switch (action.type) {
     case types.REQUEST_ADD:
       all = requestsReducer(state.all, action);
-      return Object.assign({}, state, {all, active});
       active = action.request.id;
+      return Object.assign({}, state, {all, active});
     case types.REQUEST_UPDATE:
       all = requestsReducer(state.all, action);
       return Object.assign({}, state, {all});

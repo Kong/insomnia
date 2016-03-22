@@ -3,7 +3,8 @@ import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
-import CodeEditor from '../components/CodeEditor'
+import CodeEditor from '../components/base/Editor'
+import RequestBodyEditor from '../components/RequestBodyEditor'
 import UrlInput from '../components/UrlInput'
 import Sidebar from '../components/Sidebar'
 
@@ -14,8 +15,7 @@ import * as GlobalActions from '../actions/global'
 Tabs.setUseDefaultStyles(false);
 
 class App extends Component {
-  renderPageBody() {
-    const {actions, activeRequest} = this.props;
+  renderPageBody (actions, activeRequest) {
 
     if (!activeRequest) {
       return <div></div>;
@@ -24,15 +24,16 @@ class App extends Component {
     const updateRequestBody = actions.updateRequestBody.bind(null, activeRequest.id);
     const updateRequestUrl = actions.updateRequestUrl.bind(null, activeRequest.id);
     const updateRequestMethod = actions.updateRequestMethod.bind(null, activeRequest.id);
-    
+
     return (
       <div className="grid grid-collapse">
         <section id="request" className="pane col grid-v">
           <header className="pane__header bg-super-light">
-            <UrlInput onUrlChange={updateRequestUrl}
-                      onMethodChange={updateRequestMethod}
-                      method={activeRequest.method}
-                      urlValue={activeRequest.url}/>
+            <UrlInput
+              onUrlChange={updateRequestUrl}
+              onMethodChange={updateRequestMethod}
+              method={activeRequest.method}
+              urlValue={activeRequest.url}/>
           </header>
           <div className="pane__body grid-v">
             <Tabs selectedIndex={0} className="grid-v">
@@ -43,10 +44,11 @@ class App extends Component {
                 <Tab><button className="btn">Headers</button></Tab>
               </TabList>
               <TabPanel className="grid-v">
-                <CodeEditor value={activeRequest.body}
-                            className="grid-v"
-                            onChange={updateRequestBody}
-                            options={{mode: activeRequest._mode}}/>
+                <RequestBodyEditor
+                  className="grid-v"
+                  onChange={updateRequestBody}
+                  request={activeRequest}
+                  options={{mode: activeRequest._mode}}/>
               </TabPanel>
               <TabPanel className="grid-v">Params</TabPanel>
               <TabPanel className="grid-v">Basic Auth</TabPanel>
@@ -57,8 +59,8 @@ class App extends Component {
         <section id="response" className="pane col grid-v">
           <header className="pane__header text-center bg-light">
             <div className="pane__header__content">
-              <div className="tag success"><strong>200</strong> SUCCESS</div>
-              <div className="tag"><strong>GET</strong> https://google.com</div>
+              <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
+              <div className="tag"><strong>GET</strong>&nbsp;https://google.com</div>
             </div>
           </header>
           <div className="pane__body grid-v">
@@ -71,19 +73,21 @@ class App extends Component {
       </div>
     )
   }
+
   render () {
-    const {actions, loading, activeRequest, allRequests} = this.props;
+    const {actions, loading, requests} = this.props;
+    const activeRequest = requests.all.find(r => r.id === requests.active);
 
     return (
       <div className="grid bg-dark">
         <Sidebar
           activateRequest={actions.activateRequest}
           addRequest={actions.addRequest}
-          loading={loading}
           activeRequest={activeRequest}
-          requests={allRequests}/>
+          loading={loading}
+          requests={requests.all}/>
         <div className="col">
-          {this.renderPageBody()}
+          {this.renderPageBody(actions, activeRequest)}
         </div>
       </div>
     )
@@ -91,16 +95,23 @@ class App extends Component {
 }
 
 App.propTypes = {
-  allRequests: PropTypes.array.isRequired,
-  activeRequest: PropTypes.object,
+  actions: PropTypes.shape({
+    activateRequest: PropTypes.func.isRequired,
+    updateRequestBody: PropTypes.func.isRequired,
+    updateRequestUrl: PropTypes.func.isRequired,
+    updateRequestMethod: PropTypes.func.isRequired
+  }).isRequired,
+  requests: PropTypes.shape({
+    all: PropTypes.array.isRequired,
+    active: PropTypes.string // "required" but can be null
+  }).isRequired,
   loading: PropTypes.bool.isRequired
 };
 
 function mapStateToProps (state) {
   return {
     actions: state.actions,
-    allRequests: state.requests.all,
-    activeRequest: state.requests.all.find(r => r.id === state.requests.active),
+    requests: state.requests,
     loading: state.loading
   };
 }

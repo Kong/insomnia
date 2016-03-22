@@ -3,7 +3,7 @@ import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 
 // Modes
-import 'codemirror/mode/css/css';
+import '../../../node_modules/codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/javascript/javascript';
 
@@ -20,6 +20,17 @@ import 'codemirror/addon/fold/xml-fold';
 import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/fold/foldgutter.css';
 
+// TODO: Figure out how to lint (json-lint doesn't build in webpack environment)
+// import 'codemirror/addon/lint/lint';
+// import 'codemirror/addon/lint/json-lint';
+// import 'codemirror/addon/lint/html-lint';
+// import 'codemirror/addon/lint/lint.css';
+// import * as jsonlint from 'jsonlint';
+// import * as htmlhint from 'htmlhint';
+
+// window.jsonlint = jsonlint;
+// window.htmlhint = htmlhint;
+
 // CSS Themes
 import 'codemirror/theme/material.css'
 import 'codemirror/theme/railscasts.css'
@@ -32,7 +43,7 @@ import 'codemirror/theme/seti.css'
 import 'codemirror/theme/monokai.css'
 
 // App styles
-import '../css/components/editor.scss';
+import '../../css/components/editor.scss';
 
 const DEFAULT_DEBOUNCE_MILLIS = 500;
 
@@ -40,7 +51,12 @@ const BASE_CODEMIRROR_OPTIONS = {
   theme: 'monokai',
   lineNumbers: true,
   foldGutter: true,
-  gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+  // lint: true,
+  gutters: [
+    'CodeMirror-linenumbers',
+    'CodeMirror-foldgutter',
+    'CodeMirror-lint-markers'
+  ],
   cursorScrollMargin: 80,
   extraKeys: {
     "Ctrl-Q": function (cm) {
@@ -60,13 +76,11 @@ class Editor extends Component {
     var textareaNode = this.refs.textarea;
 
     this.codeMirror = CodeMirror.fromTextArea(textareaNode, BASE_CODEMIRROR_OPTIONS);
-    this.codeMirror.on('change', this.codemirrorValueChanged.bind(this));
-    this.codeMirror.on('focus', this.focusChanged.bind(this, true));
-    this.codeMirror.on('blur', this.focusChanged.bind(this, false));
-    this.codeMirror.on('paste', this.codemirrorValueChanged.bind(this));
+    this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
+    this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
     this._currentCodemirrorValue = this.props.defaultValue || this.props.value || '';
-    this.codemirrorSetValue(this._currentCodemirrorValue);
-    this.codemirrorSetOptions(this.props.options);
+    this._codemirrorSetValue(this._currentCodemirrorValue);
+    this._codemirrorSetOptions(this.props.options);
   }
 
   componentWillUnmount () {
@@ -77,35 +91,48 @@ class Editor extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (this.codeMirror && nextProps.value !== undefined && this._currentCodemirrorValue !== nextProps.value) {
-      this.codemirrorSetValue(nextProps.value);
+    // Don't update if no CodeMirror instance
+    if (!this.codeMirror) {
+      return;
     }
 
+    // Don't update if no value passed
+    if (nextProps.value === undefined) {
+      return;
+    }
+
+    // Don't update if same value passed again
+    if (this._currentCodemirrorValue === nextProps.value) {
+      return;
+    }
+
+    // Set the new value
+    this._codemirrorSetValue(nextProps.value);
+
     // Reset any options that may have changed
-    this.codemirrorSetOptions(nextProps.options);
+    this._codemirrorSetOptions(nextProps.options);
   }
 
+  /**
+   * Focus the cursor to the editor
+   */
   focus () {
     if (this.codeMirror) {
       this.codeMirror.focus();
     }
   }
 
-  focusChanged (focused) {
-    this.setState({isFocused: focused});
-    this.props.onFocusChange && this.props.onFocusChange(focused);
-  }
-
   /**
-   * Set options on the CodeMirror editor while also sanitizing them
+   * Sets options on the CodeMirror editor while also sanitizing them
    * @param options
    */
-  codemirrorSetOptions (options) {
+  _codemirrorSetOptions (options) {
     if (options.mode === 'json') {
       options.mode = 'application/json';
     }
 
     if (options.mode === 'application/json') {
+      // ld+json looks better because keys are a different color
       options.mode = 'application/ld+json';
     }
 
@@ -118,7 +145,7 @@ class Editor extends Component {
    * Wrapper function to add extra behaviour to our onChange event
    * @param doc CodeMirror document
    */
-  codemirrorValueChanged (doc) {
+  _codemirrorValueChanged (doc) {
     // Update our cached value
     var newValue = doc.getValue();
     this._currentCodemirrorValue = newValue;
@@ -138,10 +165,10 @@ class Editor extends Component {
   }
 
   /**
-   * Set the CodeMirror value without triggering the onChange event
+   * Sets the CodeMirror value without triggering the onChange event
    * @param code the code to set in the editor
    */
-  codemirrorSetValue (code) {
+  _codemirrorSetValue (code) {
     this._ignoreNextChange = true;
     this.codeMirror.setValue(code);
   }
@@ -149,10 +176,12 @@ class Editor extends Component {
   render () {
     return (
       <div className={`editor ${this.props.className || ''}`}>
-        <textarea name={this.props.path}
-                  ref='textarea'
-                  defaultValue={this.props.value}
-                  autoComplete='off'></textarea>
+        <textarea
+          name={this.props.path}
+          ref='textarea'
+          defaultValue={this.props.value}
+          autoComplete='off'>
+        </textarea>
       </div>
     );
   }

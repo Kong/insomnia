@@ -10,6 +10,8 @@
   "dependencies": {
     "classnames": "^2.2.3",
     "codemirror": "^5.12.0",
+    "htmlhint": "^0.9.12",
+    "jsonlint": "^1.6.2",
     "jsonschema": "^1.1.0",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
