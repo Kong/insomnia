@@ -37,7 +37,7 @@ class App extends Component {
           </header>
           <div className="pane__body grid-v">
             <Tabs selectedIndex={0} className="grid-v">
-              <TabList className="pane__header grid">
+              <TabList className="grid">
                 <Tab><button className="btn">Body</button></Tab>
                 <Tab><button className="btn">Params</button></Tab>
                 <Tab><button className="btn">Auth</button></Tab>

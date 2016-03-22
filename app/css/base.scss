@@ -42,6 +42,10 @@ h2 {
   }
 }
 
+.ReactTabs__TabList {
+  height: $header-height;
+}
+
 strong {
   font-weight: 600;
 }

@@ -2,9 +2,13 @@
 @import '../constants/dimensions';
 
 .pane {
+  .pane__body, .pane__header {
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 3px solid rgba(0, 0, 0, 0.2);
+  }
+
   .pane__header {
-    border-right: 2px solid transparent;
-    border-left: 2px solid transparent;
+    border-color: transparent;
     height: $header-height;
 
     .pane__header__content {
@@ -17,7 +21,5 @@
 
   .pane__body {
     height: 100%;
-    border-left: 2px solid rgba(0, 0, 0, 0.1);
-    border-right: 2px solid rgba(0, 0, 0, 0.1);
   }
 }
