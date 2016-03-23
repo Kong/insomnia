@@ -11,7 +11,8 @@ describe('Requests Reducer', () => {
   beforeEach(() => {
     initialState = {
       all: [],
-      active: null
+      active: null,
+      filter: ''
     };
 
     request = {
@@ -49,7 +50,8 @@ describe('Requests Reducer', () => {
       })
     ).toEqual({
       all: [request],
-      active: request.id
+      active: request.id,
+      filter: ''
     });
   });
 
@@ -67,7 +69,8 @@ describe('Requests Reducer', () => {
         request,
         Object.assign(newRequest, {name: `${request.name} (1)`})
       ],
-      active: request.id
+      active: request.id,
+      filter: ''
     });
   });
 
@@ -87,7 +90,8 @@ describe('Requests Reducer', () => {
       patch: patch
     })).toEqual({
       all: [Object.assign({}, request, patch)],
-      active: request.id
+      active: request.id,
+      filter: ''
     });
   });
 
@@ -107,7 +111,8 @@ describe('Requests Reducer', () => {
       id: request.id
     })).toEqual({
       all: [request],
-      active: request.id
+      active: request.id,
+      filter: ''
     });
   });
 

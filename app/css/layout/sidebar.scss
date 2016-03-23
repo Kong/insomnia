@@ -33,6 +33,10 @@
       &.sidebar__item--right-menu {
         padding-right: 0;
       }
+
+      button {
+        color: inherit;
+      }
     }
 
     & > li {

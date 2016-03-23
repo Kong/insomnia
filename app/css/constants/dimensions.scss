@@ -1,30 +1,28 @@
 /* Padding */
-$padding-md: 15px;
+$padding-md: 1.25rem;
 $padding-sm: $padding-md / 2;
 $padding-lg: $padding-md * 2;
 
 /* Fonts */
 $font-size: 12px;
-$font-size-sm: $font-size * 0.8;
-$font-size-md: $font-size;
-$font-size-lg: $font-size * 1.2;
-$font-size-xl: $font-size * 1.4;
-$font-size-xxl: $font-size * 1.6;
+$font-size-sm: 0.8rem;
+$font-size-md: 1.0rem;
+$font-size-lg: 1.2rem;
+$font-size-xl: 1.4rem;
+$font-size-xxl: 1.6rem;
 
 /* Breakpoints */
-$breakpoint-md: 888px;
-$breakpoint-sm: 555px;
+$breakpoint-lg: 1500px;
+$breakpoint-md: 930px;
+$breakpoint-sm: 580px;
 
 /* Wrapper */
-$line-height-md: 50px;
+$line-height-md: 4.17rem;
 $line-height-sm: $line-height-md * 0.75;
 
 /* Sidebar */
-$sidebar-width: 250px;
+$sidebar-width: 20rem;
 $sidebar-width-sm: $sidebar-width * 0.75;
-
-/* Elements */
-$form-height: 50px;
 
 /* Borders */
 $radius-md: 2px;

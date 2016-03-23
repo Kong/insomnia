@@ -1,8 +1,12 @@
 @import '../constants/colors';
 @import '../constants/dimensions';
 
+html {
+  font-family: 'Open Sans', sans-serif;
+  font-size: $font-size;
+}
+
 html, body, #root {
-  display: block;
   width: 100%;
   height: 100%;
 }
@@ -10,8 +14,6 @@ html, body, #root {
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Open Sans', sans-serif;
-  font-size: $font-size;
 }
 
 h1 {
@@ -52,4 +54,16 @@ h2 {
 
 strong {
   font-weight: 600;
+}
+
+@media (max-width: $breakpoint-md) {
+  body {
+    font-size: $font-size * 0.95;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  body {
+    font-size: $font-size * 0.9;
+  }
 }

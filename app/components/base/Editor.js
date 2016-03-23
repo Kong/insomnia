@@ -51,7 +51,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   theme: 'monokai',
   lineNumbers: true,
   foldGutter: true,
-  // lint: true,
+  height: 'auto',
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',

@@ -19,7 +19,7 @@ app.on('ready', function () {
   mainWindow = new BrowserWindow({
     width: IS_DEV ? 1600 : 1200,
     height: 800,
-    minHeight: 400,
+    minHeight: 500,
     minWidth: 500
   });
 

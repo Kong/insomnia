@@ -3,7 +3,7 @@ import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
-import CodeEditor from '../components/base/Editor'
+import Editor from '../components/base/Editor'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
@@ -74,9 +74,9 @@ class App extends Component {
                   <Tab><button className="btn">Cookies</button></Tab>
                 </TabList>
                 <TabPanel className="grid-v">
-                  <CodeEditor
+                  <Editor
                     className="grid-v"
-                    value="{}"
+                    value={'{\n' + '  "status": 200\n}'}
                     options={{mode: 'application/json', readOnly: true}}/>
                 </TabPanel>
                 <TabPanel className="grid-v pad">Raw</TabPanel>
