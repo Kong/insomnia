@@ -13,7 +13,10 @@ class RequestBodyEditor extends Component {
         value={request.body}
         className={className}
         onChange={onChange}
-        options={{mode: request._mode}}
+        options={{
+          mode: request._mode,
+          placeholder: 'request body here...'
+        }}
       />
     )
   }

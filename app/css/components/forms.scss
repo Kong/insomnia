@@ -55,6 +55,7 @@
 
 input, button {
   box-sizing: border-box;
+  text-align: left;
   font-size: inherit;
   text-decoration: inherit;
   background: none;
@@ -68,6 +69,6 @@ input, button {
 }
 
 button {
-  cursor: pointer;
   width: auto;
+  cursor: pointer;
 }

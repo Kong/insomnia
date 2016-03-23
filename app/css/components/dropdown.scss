@@ -40,6 +40,11 @@
       &:active {
         background: $hl-md;
       }
+
+      i {
+        display: inline-block;
+        width: 1.5em;
+      }
     }
   }
 }

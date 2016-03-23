@@ -27,7 +27,7 @@ class UrlInput extends Component {
         </Dropdown>
         <Input type="text"
                className="txt-lg"
-               placeholder="https://google.com"
+               placeholder="http://echo.insomnia.rest/status/200"
                initialValue={request.url}
                onChange={onUrlChange}/>
         <button className="btn">

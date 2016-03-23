@@ -23,17 +23,20 @@ class Sidebar extends Component {
           <header className="pane__header bg-primary">
             <h1>
               <Dropdown right={true}>
-                <a href="#" className="pane__header__content">
+                <button className="pane__header__content">
                   <i className="fa fa-angle-down pull-right"></i>
                   {loading ? <i className="fa fa-refresh fa-spin pull-right"></i> : ''}
                   Insomnia
-                </a>
+                </button>
                 <ul className="bg-super-light">
-                  <li><button>hello</button></li>
-                  <li><button>hello</button></li>
-                  <li><button>hello</button></li>
-                  <li><button>hello</button></li>
-                  <li><button>hello</button></li>
+                  <li>
+                    <button onClick={(e) => addRequest()}>
+                      <i className="fa fa-plus-circle"></i> Add Request
+                    </button>
+                  </li>
+                  <li><button><i className="fa fa-share-square-o"></i> Import/Export</button></li>
+                  <li><button><i className="fa fa-empty"></i> Toggle Sidebar</button></li>
+                  <li><button><i className="fa fa-empty"></i> Delete Workspace</button></li>
                 </ul>
               </Dropdown>
             </h1>

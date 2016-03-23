@@ -41,5 +41,9 @@
     // Scroll past the end
     padding-bottom: 150px;
   }
+
+  .CodeMirror-placeholder {
+    color: $hl-xl;
+  }
 }
 

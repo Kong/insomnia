@@ -76,8 +76,11 @@ class App extends Component {
                 <TabPanel className="grid-v">
                   <Editor
                     className="grid-v"
-                    value={'{\n' + '  "status": 200\n}'}
-                    options={{mode: 'application/json', readOnly: false}}/>
+                    options={{
+                      mode: 'application/json',
+                      readOnly: true,
+                      placeholder: 'nothing yet...'
+                    }}/>
                 </TabPanel>
                 <TabPanel className="grid-v pad">Raw</TabPanel>
                 <TabPanel className="grid-v pad">Headers</TabPanel>

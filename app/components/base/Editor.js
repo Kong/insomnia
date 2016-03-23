@@ -20,6 +20,8 @@ import 'codemirror/addon/fold/xml-fold';
 import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/fold/foldgutter.css';
 
+import 'codemirror/addon/display/placeholder';
+
 // TODO: Figure out how to lint (json-lint doesn't build in webpack environment)
 // import 'codemirror/addon/lint/lint';
 // import 'codemirror/addon/lint/json-lint';
@@ -50,6 +52,7 @@ const DEFAULT_DEBOUNCE_MILLIS = 500;
 const BASE_CODEMIRROR_OPTIONS = {
   theme: 'monokai',
   lineNumbers: true,
+  placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
   gutters: [
