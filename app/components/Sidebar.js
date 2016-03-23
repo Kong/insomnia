@@ -1,56 +1,94 @@
-import React, {PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react'
 import Dropdown from './base/Dropdown'
+import DebouncingInput from './base/DebouncingInput'
 
-const Sidebar = (props) => (
-  <aside id="sidebar" className="pane">
-    <div className="grid-v">
-      <header className="pane__header bg-primary">
-        <h1>
-          <Dropdown right={true}>
-            <a href="#" className="pane__header__content">
-              <i className="fa fa-angle-down pull-right"></i>
-              {props.loading ? <i className="fa fa-refresh fa-spin pull-right"></i> : ''}
-              Insomnia
-            </a>
-            <ul className="bg-super-light">
-              <li><button>hello</button></li>
-              <li><button>hello</button></li>
-              <li><button>hello</button></li>
-              <li><button>hello</button></li>
-              <li><button>hello</button></li>
-            </ul>
-          </Dropdown>
-        </h1>
-      </header>
-      <div className="pane__body hide-scrollbars bg-dark">
-        <ul className="sidebar-items">
-          <li className="grid">
-            <div className="form-control col">
-              <input type="text" placeholder="Filter Requests"/>
+class Sidebar extends Component {
+  onFilterChange (value) {
+    this.props.changeFilter(value);
+  }
+
+  render () {
+    const {
+      requests,
+      activeRequest,
+      activeFilter,
+      loading,
+      activateRequest,
+      addRequest
+    } = this.props;
+
+    return (
+      <aside className="sidebar pane">
+        <div className="grid-v">
+          <header className="pane__header bg-primary">
+            <h1>
+              <Dropdown right={true}>
+                <a href="#" className="pane__header__content">
+                  <i className="fa fa-angle-down pull-right"></i>
+                  {loading ? <i className="fa fa-refresh fa-spin pull-right"></i> : ''}
+                  Insomnia
+                </a>
+                <ul className="bg-super-light">
+                  <li><button>hello</button></li>
+                  <li><button>hello</button></li>
+                  <li><button>hello</button></li>
+                  <li><button>hello</button></li>
+                  <li><button>hello</button></li>
+                </ul>
+              </Dropdown>
+            </h1>
+          </header>
+          <div className="pane__body hide-scrollbars bg-dark">
+            <div className="stock-height form-control form-control--outlined col">
+              <DebouncingInput
+                type="text"
+                placeholder="Filter Requests"
+                debounceMillis={100}
+                value={activeFilter}
+                onChange={this.onFilterChange.bind(this)}/>
             </div>
-            <button className="btn" onClick={(e) => props.addRequest()}>
-              <i className="fa fa-plus-circle"></i>
-            </button>
-          </li>
-        </ul>
-        <ul className="sidebar-items">
-          {props.requests.map((request) => {
-            const isActive = request.id === props.activeRequest.id;
-            return (
-              <li key={request.id} className={'sidebar-item ' + (isActive ? 'active': '')}>
-                <a href="#" onClick={() => {props.activateRequest(request.id)}}>{request.name}</a>
+            <ul>
+              <li>
+                <div className="sidebar__item sidebar__item--right-menu grid">
+                  <div className="col">Request Group</div>
+                  <button className="btn" onClick={(e) => addRequest()}>
+                    <i className="fa fa-plus-circle"></i>
+                  </button>
+                </div>
+                <ul>
+                  {requests.filter(request => {
+                    if (!activeFilter) {
+                      return true;
+                    }
+                    return request.name.toLowerCase().indexOf(activeFilter.toLowerCase()) >= 0;
+                  }).map(request => {
+                    const isActive = request.id === activeRequest.id;
+                    return (
+                      <li key={request.id} className={isActive ? 'active': ''}>
+                        <button
+                          onClick={() => {activateRequest(request.id)}}
+                          className="btn sidebar__item"
+                        >
+                          {request.name}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               </li>
-            );
-          })}
-        </ul>
-      </div>
-    </div>
-  </aside>
-);
+            </ul>
+          </div>
+        </div>
+      </aside>
+    )
+  }
+}
 
 Sidebar.propTypes = {
   activateRequest: PropTypes.func.isRequired,
   addRequest: PropTypes.func.isRequired,
+  changeFilter: PropTypes.func.isRequired,
+  activeFilter: PropTypes.string,
   requests: PropTypes.array.isRequired,
   activeRequest: PropTypes.object,
   loading: PropTypes.bool.isRequired

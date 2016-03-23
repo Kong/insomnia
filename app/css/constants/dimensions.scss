@@ -1,5 +1,7 @@
-$default-padding: 15px;
-$slim-padding: $default-padding / 2;
+/* Padding */
+$padding-md: 15px;
+$padding-sm: $padding-md / 2;
+$padding-lg: $padding-md * 2;
 
 /* Fonts */
 $font-size: 12px;
@@ -11,16 +13,25 @@ $font-size-xxl: $font-size * 1.6;
 
 /* Breakpoints */
 $breakpoint-md: 888px;
+$breakpoint-sm: 555px;
 
 /* Wrapper */
-$header-height: 50px;
+$line-height-md: 50px;
+$line-height-sm: $line-height-md * 0.75;
 
 /* Sidebar */
 $sidebar-width: 250px;
-$sidebar-item-padding: $default-padding $default-padding * 2;
+$sidebar-width-sm: $sidebar-width * 0.75;
 
 /* Elements */
 $form-height: 50px;
+
+/* Borders */
+$radius-md: 2px;
+
+.pad {
+  padding: $padding-md;
+}
 
 .txt-sm {
   font-size: $font-size-sm;

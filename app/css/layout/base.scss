@@ -1,5 +1,5 @@
-@import 'constants/colors';
-@import 'constants/dimensions';
+@import '../constants/colors';
+@import '../constants/dimensions';
 
 html, body, #root {
   display: block;
@@ -36,14 +36,18 @@ h2 {
   box-sizing: border-box;
 }
 
+.wide {
+  width: 100%;
+}
+
 .hide-scrollbars {
   &::-webkit-scrollbar {
     display: none;
   }
 }
 
-.ReactTabs__TabList {
-  height: $header-height;
+.stock-height {
+  height: $line-height-md;
 }
 
 strong {

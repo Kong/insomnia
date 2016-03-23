@@ -4,11 +4,21 @@ $bg-light: #efefef;
 $bg-super-light: #ffffff;
 $bg-dark: #272824;
 
+$hl-xxs: rgba(130, 130, 130, 0.05);
+$hl-xs: rgba(130, 130, 130, 0.09);
+$hl-sm: rgba(130, 130, 130, 0.15);
+$hl-md: rgba(130, 130, 130, 0.25);
+$hl-lg: rgba(130, 130, 130, 0.35);
+$hl-xl: rgba(130, 130, 130, 0.5);
+$hl: rgba(130, 130, 130, 1);
+
 $success: #598f07;
 
 /* Font Colors */
 $font-light-bg: #444444;
 $font-dark-bg: #eeeeee;
+
+$faint-opacity: 0.5;
 
 .success {
   border-color: $success !important;
@@ -20,14 +30,6 @@ $font-dark-bg: #eeeeee;
   &, a, textarea, input, button {
     color: $font-dark-bg;
   }
-
-  button:hover, a:hover {
-    background: lighten($bg-dark, 4%);
-  }
-
-  button:active, a:active {
-    background: lighten($bg-dark, 6%);
-  }
 }
 
 .bg-primary {
@@ -35,14 +37,6 @@ $font-dark-bg: #eeeeee;
 
   &, a, textarea, input, button {
     color: $font-dark-bg;
-  }
-
-  button:hover, a:hover {
-    background: darken($bg-primary, 4%);
-  }
-
-  button:active, a:active {
-    background: darken($bg-primary, 6%);
   }
 }
 
@@ -52,14 +46,6 @@ $font-dark-bg: #eeeeee;
   &, a, textarea, input, button {
     color: $font-light-bg;
   }
-
-  button:hover, a:hover {
-    background: darken($bg-light, 4%);
-  }
-
-  button:active, a:active {
-    background: darken($bg-light, 6%);
-  }
 }
 
 .bg-super-light {
@@ -67,20 +53,4 @@ $font-dark-bg: #eeeeee;
   &, a, textarea, input, button {
     color: $font-light-bg;
   }
-
-  button:hover, a:hover {
-    background: darken($bg-super-light, 4%);
-  }
-
-  button:active, a:active {
-    background: darken($bg-super-light, 6%);
-  }
-}
-
-.bg-super-light.btn:hover {
-  background: darken($bg-super-light, 4%);
-}
-
-.bg-super-light.btn:active {
-  background: darken($bg-super-light, 6%);
 }

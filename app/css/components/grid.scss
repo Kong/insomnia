@@ -1,4 +1,4 @@
-@import 'constants/dimensions';
+@import '../constants/dimensions';
 
 .grid {
   display: flex;
@@ -38,12 +38,6 @@
     height: 100%;
     box-sizing: border-box;
   }
-}
-
-.un-grid {
-  display: initial;
-  height: auto;
-  width: auto;
 }
 
 @media (max-width: $breakpoint-md) {

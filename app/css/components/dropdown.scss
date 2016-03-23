@@ -1,3 +1,4 @@
+@import '../constants/colors';
 @import '../constants/dimensions';
 
 .dropdown {
@@ -20,7 +21,7 @@
     display: none;
     z-index: 10;
     width: 180px;
-    border-radius: 2px;
+    border-radius: $radius-md;
     padding: 2px 0;
     margin-top: 4px;
     box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
@@ -28,9 +29,17 @@
     a, button {
       font-size: $font-size-md;
       text-align: left;
-      padding: 10px $default-padding;
+      padding: 10px $padding-md;
       width: 100%;
       display: block;
+
+      &:hover {
+        background: $hl-xs;
+      }
+
+      &:active {
+        background: $hl-md;
+      }
     }
   }
 }

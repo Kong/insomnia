@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react'
-import Input from './base/Input';
+import Input from './base/DebouncingInput';
 import Dropdown from './base/Dropdown';
 import {METHODS} from '../constants/global';
 

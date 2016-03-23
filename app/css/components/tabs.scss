@@ -1,9 +1,17 @@
+@import '../constants/colors';
+@import '../constants/dimensions';
+
 .ReactTabs {
-  .ReactTabs__Tab {
-    opacity: 0.5;
+  .ReactTabs__TabList {
+    flex-basis: $line-height-md;
   }
 
-  .ReactTabs__Tab--selected {
-    opacity: 1;
+  .ReactTabs__Tab button {
+    height: $line-height-md;
+    color: $hl;
+  }
+
+  .ReactTabs__Tab--selected button {
+    color: inherit;
   }
 }

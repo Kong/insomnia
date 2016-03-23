@@ -87,3 +87,7 @@ export function updateRequestMethod (id, method) {
 export function activateRequest (id) {
   return {type: types.REQUEST_ACTIVATE, id};
 }
+
+export function changeFilter (filter) {
+  return {type: types.REQUEST_CHANGE_FILTER, filter};
+}

@@ -2,7 +2,8 @@ import * as types from "../constants/actionTypes";
 
 const initialState = {
   all: [],
-  active: null
+  active: null,
+  filter: ''
 };
 
 function requestsReducer (state = [], action) {
@@ -18,7 +19,6 @@ function requestsReducer (state = [], action) {
           break;
         }
       }
-
       return [...state, request];
     case types.REQUEST_UPDATE:
       return state.map(request => {
@@ -26,7 +26,8 @@ function requestsReducer (state = [], action) {
           return Object.assign({}, request, action.patch);
         } else {
           return request;
-      }});
+        }
+      });
     default:
       return state;
   }
@@ -43,12 +44,17 @@ export default function (state = initialState, action) {
       all = requestsReducer(state.all, action);
       return Object.assign({}, state, {all});
     case types.REQUEST_ACTIVATE:
-      if (!state.all.find(r => r.id === action.id)) {
+      if (state.active === action.id) {
+        // If it's the same, do nothing
+        return state;
+      } else if (!state.all.find(r => r.id === action.id)) {
         // Don't set if the request doesn't exist
         return state;
       } else {
         return Object.assign({}, state, {active: action.id});
       }
+    case types.REQUEST_CHANGE_FILTER:
+      return Object.assign({}, state, {filter: action.filter});
     default:
       return state
   }

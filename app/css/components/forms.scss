@@ -1,0 +1,73 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.form-control {
+  outline: none;
+  border: 0;
+  height: $form-height;
+
+  input {
+    width: 100%;
+    height: 100%;
+  }
+
+  &.form-control--right button:last-child,
+  &.form-control--left input {
+    padding-left: $padding-md;
+  }
+
+  &.form-control--left button:first-child,
+  &.form-control--right input {
+    padding-right: $padding-md;
+  }
+
+  &.form-control--outlined {
+    border: 1px solid $hl-lg;
+    border-radius: $radius-md;
+    height: auto;
+    margin: $padding-sm;
+
+    input {
+      padding: $padding-sm;
+    }
+  }
+}
+
+.btn {
+  cursor: pointer;
+  text-align: center;
+  padding: 0 ($padding-md * 1.5);
+  height: $line-height-md;
+
+  &.btn--compact {
+    padding: 0 ($padding-md);
+    height: $line-height-md / 2;
+  }
+}
+
+.btn:hover {
+  background: $hl-xs;
+}
+
+.btn:active {
+  background: $hl-md;
+}
+
+input, button {
+  box-sizing: border-box;
+  font-size: inherit;
+  text-decoration: inherit;
+  background: none;
+  border: 0;
+  outline: 0;
+  margin: 0;
+
+  &::-webkit-input-placeholder {
+    color: $hl-xl;
+  }
+}
+
+button {
+  cursor: pointer;
+  width: auto;
+}

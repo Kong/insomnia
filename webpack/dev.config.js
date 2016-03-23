@@ -8,8 +8,8 @@ base.entry = [
   'webpack/hot/only-dev-server'
 ].concat(base.entry);
 
-base.devtool = 'eval'; // Fastest form of source maps
 base.debug = true;
+base.devtool = 'inline-source-map';
 base.output.path = path.join(base.output.path, '/dev');
 base.output.publicPath = 'http://localhost:3000/dist/';
 

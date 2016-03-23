@@ -1,0 +1,60 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.sidebar {
+  height: 100%;
+
+  .pane__body {
+    overflow-y: auto;
+    width: $sidebar-width;
+  }
+
+  .pane__header, .pane__body {
+    border-left: 0;
+  }
+
+  ul {
+    li.active > .sidebar__item {
+      color: inherit;
+      cursor: default;
+    }
+
+    & > li > .sidebar__item {
+      display: flex;
+      align-items: center;
+      padding: 0 $padding-md;
+      color: $hl;
+      height: $line-height-sm;
+      line-height: $line-height-sm;
+      box-sizing: border-box;
+      width: 100%;
+      text-align: left;
+
+      &.sidebar__item--right-menu {
+        padding-right: 0;
+      }
+    }
+
+    & > li {
+      & > ul > li {
+        & > .sidebar__item {
+          padding-left: $padding-md * 2;
+        }
+        & > ul > li {
+          & > .sidebar__item {
+            padding-left: $padding-md * 3;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .sidebar {
+    .pane__body {
+      overflow-y: auto;
+      width: $sidebar-width-sm;
+    }
+  }
+}

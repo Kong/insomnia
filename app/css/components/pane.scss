@@ -3,23 +3,19 @@
 
 .pane {
   .pane__body, .pane__header {
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid $hl-sm;
     border-left: 2px solid rgba(0, 0, 0, 0.2);
   }
 
   .pane__header {
     border-color: transparent;
-    height: $header-height;
+    height: $line-height-md;
 
     .pane__header__content {
       display: block;
-      height: $header-height;
+      height: $line-height-md;
       box-sizing: border-box;
-      padding: $default-padding;
+      padding: $padding-md;
     }
-  }
-
-  .pane__body {
-    height: 100%;
   }
 }

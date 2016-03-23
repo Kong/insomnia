@@ -1,10 +1,12 @@
+@import '../constants/colors';
+@import '../constants/dimensions';
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar {
-  height: 8px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -12,6 +14,6 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.35);
-  border-radius: 4px;
+  background: $hl-md;
+  border-radius: $radius-md;
 }

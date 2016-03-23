@@ -14,6 +14,10 @@ class Dropdown extends Component {
     document.addEventListener('click', this._clickEvenCallback.bind(this));
   }
 
+  componentWillUnmount () {
+    document.removeEventListener('click', this._clickEvenCallback);
+  }
+
   _clickEvenCallback (e) {
     if (!this.refs.container.contains(e.target)) {
       e.preventDefault();

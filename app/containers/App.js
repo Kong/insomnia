@@ -27,46 +27,63 @@ class App extends Component {
 
     return (
       <div className="grid grid-collapse">
-        <section id="request" className="pane col grid-v">
-          <header className="pane__header bg-super-light">
-            <RequestUrlBar
-              onUrlChange={updateRequestUrl}
-              onMethodChange={updateRequestMethod}
-              request={activeRequest}/>
-          </header>
-          <div className="pane__body grid-v">
-            <Tabs selectedIndex={0} className="grid-v">
-              <TabList className="grid">
-                <Tab><button className="btn">Body</button></Tab>
-                <Tab><button className="btn">Params</button></Tab>
-                <Tab><button className="btn">Auth</button></Tab>
-                <Tab><button className="btn">Headers</button></Tab>
-              </TabList>
-              <TabPanel className="grid-v">
-                <RequestBodyEditor
-                  className="grid-v"
-                  onChange={updateRequestBody}
-                  request={activeRequest}
-                  options={{mode: activeRequest._mode}}/>
-              </TabPanel>
-              <TabPanel className="grid-v">Params</TabPanel>
-              <TabPanel className="grid-v">Basic Auth</TabPanel>
-              <TabPanel className="grid-v">Headers</TabPanel>
-            </Tabs>
+        <section id="request-pane" className="pane col">
+          <div className="grid-v">
+            <header className="pane__header bg-super-light">
+              <RequestUrlBar
+                onUrlChange={updateRequestUrl}
+                onMethodChange={updateRequestMethod}
+                request={activeRequest}/>
+            </header>
+            <div className="pane__body grid-v">
+              <Tabs selectedIndex={0} className="grid-v">
+                <TabList className="grid">
+                  <Tab><button className="btn">Body</button></Tab>
+                  <Tab><button className="btn">Params</button></Tab>
+                  <Tab><button className="btn">Auth</button></Tab>
+                  <Tab><button className="btn">Headers</button></Tab>
+                </TabList>
+                <TabPanel className="grid-v">
+                  <RequestBodyEditor
+                    className="grid-v"
+                    onChange={updateRequestBody}
+                    request={activeRequest}
+                    options={{mode: activeRequest._mode}}/>
+                </TabPanel>
+                <TabPanel className="grid-v pad">Params</TabPanel>
+                <TabPanel className="grid-v pad">Basic Auth</TabPanel>
+                <TabPanel className="grid-v pad">Headers</TabPanel>
+              </Tabs>
+            </div>
           </div>
         </section>
-        <section id="response" className="pane col grid-v">
-          <header className="pane__header text-center bg-light">
-            <div className="grid">
-              <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
-              <div className="tag"><strong>GET</strong>&nbsp;https://google.com</div>
+        <section id="response-pane" className="pane col">
+          <div className="grid-v">
+            <header className="pane__header text-center bg-light">
+              <div className="grid">
+                <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
+                <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
+              </div>
+            </header>
+            <div className="pane__body grid-v">
+              <Tabs selectedIndex={0}>
+                <TabList className="grid">
+                  <Tab><button className="btn">Preview</button></Tab>
+                  <Tab><button className="btn">Raw</button></Tab>
+                  <Tab><button className="btn">Headers</button></Tab>
+                  <Tab><button className="btn">Cookies</button></Tab>
+                </TabList>
+                <TabPanel className="grid-v">
+                  <CodeEditor
+                    className="grid-v"
+                    value="{}"
+                    options={{mode: 'application/json', readOnly: true}}/>
+                </TabPanel>
+                <TabPanel className="grid-v pad">Raw</TabPanel>
+                <TabPanel className="grid-v pad">Headers</TabPanel>
+                <TabPanel className="grid-v pad">Cookies</TabPanel>
+              </Tabs>
             </div>
-          </header>
-          <div className="pane__body grid-v">
-            <CodeEditor
-              className="grid-v"
-              value="{}"
-              options={{mode: 'application/json', readOnly: true}}/>
           </div>
         </section>
       </div>
@@ -81,8 +98,10 @@ class App extends Component {
       <div className="grid bg-dark">
         <Sidebar
           activateRequest={actions.activateRequest}
+          changeFilter={actions.changeFilter}
           addRequest={actions.addRequest}
           activeRequest={activeRequest}
+          activeFilter={requests.filter}
           loading={loading}
           requests={requests.all}/>
         <div className="col">
@@ -98,6 +117,7 @@ App.propTypes = {
     activateRequest: PropTypes.func.isRequired,
     updateRequestBody: PropTypes.func.isRequired,
     updateRequestUrl: PropTypes.func.isRequired,
+    changeFilter: PropTypes.func.isRequired,
     updateRequestMethod: PropTypes.func.isRequired
   }).isRequired,
   requests: PropTypes.shape({

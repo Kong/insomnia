@@ -4,20 +4,20 @@
 
 /* Boilerplate */
 @import 'reset';
-@import 'grid';
-@import 'base';
+@import 'components/grid';
+@import 'layout/base';
 
 /* Styles */
-@import 'links';
+@import 'components/links';
 
 /* Layout */
-@import 'layout/pane';
-@import 'layout/forms';
+@import 'components/pane';
+@import 'components/forms';
 
 /* Components */
-@import 'components/sidebar';
-@import 'components/request';
-@import 'components/response';
+@import 'layout/sidebar';
+@import 'layout/request';
+@import 'layout/response';
 @import 'components/tag';
 @import 'components/tabs';
 @import 'components/scrollbars';
