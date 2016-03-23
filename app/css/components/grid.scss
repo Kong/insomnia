@@ -19,6 +19,10 @@
     overflow: hidden;
     box-sizing: border-box;
   }
+
+  .pull-right {
+    align-self: flex-end;
+  }
 }
 
 .grid-v {

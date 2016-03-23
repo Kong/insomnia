@@ -16,16 +16,26 @@
   ul {
     li.active > .sidebar__item {
       color: inherit;
-      cursor: default;
+    }
+
+    .sidebar__item, .sidebar__item-btn {
+      height: $line-height-sm;
+      line-height: $line-height-sm;
+      padding: 0 $padding-md;
+
+      &:hover {
+        background: $hl-xs;
+      }
+
+      &:active {
+        background: $hl-md;
+      }
     }
 
     & > li > .sidebar__item {
       display: flex;
       align-items: center;
-      padding: 0 $padding-md;
       color: $hl;
-      height: $line-height-sm;
-      line-height: $line-height-sm;
       box-sizing: border-box;
       width: 100%;
       text-align: left;
@@ -33,16 +43,12 @@
       &.sidebar__item--right-menu {
         padding-right: 0;
       }
-
-      button {
-        color: inherit;
-      }
     }
 
     & > li {
       & > ul > li {
         & > .sidebar__item {
-          padding-left: $padding-md * 2;
+          padding-left: $padding-sm * 5;
         }
         & > ul > li {
           & > .sidebar__item {

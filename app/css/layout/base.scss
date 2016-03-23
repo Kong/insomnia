@@ -28,6 +28,10 @@ h2 {
   text-align: center;
 }
 
+.text-left {
+  text-align: left !important;
+}
+
 .pull-right {
   float: right;
 }
@@ -57,13 +61,13 @@ strong {
 }
 
 @media (max-width: $breakpoint-md) {
-  body {
+  html {
     font-size: $font-size * 0.95;
   }
 }
 
 @media (max-width: $breakpoint-sm) {
-  body {
+  html {
     font-size: $font-size * 0.9;
   }
 }

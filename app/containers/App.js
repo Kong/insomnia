@@ -66,7 +66,7 @@ class App extends Component {
               </div>
             </header>
             <div className="pane__body grid-v">
-              <Tabs selectedIndex={0}>
+              <Tabs selectedIndex={0} className="grid-v">
                 <TabList className="grid">
                   <Tab><button className="btn">Preview</button></Tab>
                   <Tab><button className="btn">Raw</button></Tab>
@@ -77,7 +77,7 @@ class App extends Component {
                   <Editor
                     className="grid-v"
                     value={'{\n' + '  "status": 200\n}'}
-                    options={{mode: 'application/json', readOnly: true}}/>
+                    options={{mode: 'application/json', readOnly: false}}/>
                 </TabPanel>
                 <TabPanel className="grid-v pad">Raw</TabPanel>
                 <TabPanel className="grid-v pad">Headers</TabPanel>

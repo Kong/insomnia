@@ -11,6 +11,10 @@
     border-color: transparent;
     height: $line-height-md;
 
+    // Hack. Put the header over the tab bar because there is some stupid flexbox issues
+    position: relative;
+    z-index: 1;
+
     .pane__header__content {
       display: block;
       height: $line-height-md;

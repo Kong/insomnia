@@ -11,11 +11,6 @@ $font-size-lg: 1.2rem;
 $font-size-xl: 1.4rem;
 $font-size-xxl: 1.6rem;
 
-/* Breakpoints */
-$breakpoint-lg: 1500px;
-$breakpoint-md: 930px;
-$breakpoint-sm: 580px;
-
 /* Wrapper */
 $line-height-md: 4.17rem;
 $line-height-sm: $line-height-md * 0.75;
@@ -26,6 +21,11 @@ $sidebar-width-sm: $sidebar-width * 0.75;
 
 /* Borders */
 $radius-md: 2px;
+
+/* Breakpoints */
+$breakpoint-lg: 1500px;
+$breakpoint-md: 930px;
+$breakpoint-sm: 580px;
 
 .pad {
   padding: $padding-md;

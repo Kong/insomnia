@@ -49,9 +49,11 @@ class Sidebar extends Component {
             </div>
             <ul>
               <li>
-                <div className="sidebar__item sidebar__item--right-menu grid">
-                  <div className="col">Request Group</div>
-                  <button className="btn" onClick={(e) => addRequest()}>
+                <div className="grid">
+                  <button className="sidebar__item col text-left">
+                    <i className="fa fa-folder-open-o"></i>&nbsp;&nbsp;&nbsp;Request Group
+                  </button>
+                  <button className="sidebar__item-btn" onClick={(e) => addRequest()}>
                     <i className="fa fa-plus-circle"></i>
                   </button>
                 </div>
@@ -65,10 +67,8 @@ class Sidebar extends Component {
                     const isActive = request.id === activeRequest.id;
                     return (
                       <li key={request.id} className={isActive ? 'active': ''}>
-                        <button
-                          onClick={() => {activateRequest(request.id)}}
-                          className="btn sidebar__item"
-                        >
+                        <button onClick={() => {activateRequest(request.id)}}
+                                className="sidebar__item">
                           {request.name}
                         </button>
                       </li>

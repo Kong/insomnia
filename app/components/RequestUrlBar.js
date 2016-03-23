@@ -5,7 +5,7 @@ import {METHODS} from '../constants/global';
 
 class UrlInput extends Component {
   shouldComponentUpdate(nextProps) {
-    return this.props.request.method !== nextProps.request.method;
+    return this.props.request !== nextProps.request;
   }
   render () {
     const {onUrlChange, onMethodChange, request} = this.props;

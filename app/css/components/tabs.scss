@@ -3,11 +3,11 @@
 
 .ReactTabs {
   .ReactTabs__TabList {
-    flex-basis: $line-height-md;
+    height: $line-height-md;
+    flex-shrink: 0;
   }
 
   .ReactTabs__Tab button {
-    height: $line-height-md;
     color: $hl;
   }
 
