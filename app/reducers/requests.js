@@ -19,7 +19,7 @@ function requestsReducer (state = [], action) {
           break;
         }
       }
-      return [...state, request];
+      return [request, ...state];
     case types.REQUEST_UPDATE:
       return state.map(request => {
         if (request.id === action.patch.id) {

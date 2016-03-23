@@ -66,8 +66,8 @@ describe('Requests Reducer', () => {
       })
     ).toEqual({
       all: [
-        request,
-        Object.assign(newRequest, {name: `${request.name} (1)`})
+        Object.assign(newRequest, {name: `${request.name} (1)`}),
+        request
       ],
       active: request.id,
       filter: ''
