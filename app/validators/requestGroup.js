@@ -1,14 +1,11 @@
 import {Validator} from 'jsonschema';
-import {METHODS} from "../constants/global";
 
 const validator = new Validator();
 
 const environmentsSchema = {
   id: '/RequestGroupEnvironment',
   type: 'object',
-  properties: {
-    
-  }
+  properties: {}
 };
 
 const requestGroupSchema = {

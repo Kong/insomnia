@@ -19,7 +19,7 @@ class Dropdown extends Component {
   }
 
   _clickEvenCallback (e) {
-    if (!this.refs.container.contains(e.target)) {
+    if (this.refs.container && !this.refs.container.contains(e.target)) {
       e.preventDefault();
       this.setState({open: false});
     }

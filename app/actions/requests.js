@@ -3,21 +3,19 @@ import * as methods from '../constants/global'
 import {loadStart} from "./global";
 import {loadStop} from "./global";
 
-function defaultRequest () {
-  return {
-    id: null,
-    _mode: 'json',
-    created: 0,
-    modified: 0,
-    url: '',
-    name: '',
-    method: methods.METHOD_GET,
-    body: '',
-    params: [],
-    headers: [],
-    authentication: {}
-  }
-}
+const defaultRequest = {
+  id: null,
+  _mode: 'json',
+  created: 0,
+  modified: 0,
+  url: '',
+  name: '',
+  method: methods.METHOD_GET,
+  body: '',
+  params: [],
+  headers: [],
+  authentication: {}
+};
 
 /**
  * Build a new request from a subset of fields
@@ -31,7 +29,7 @@ function buildRequest (request) {
   const modified = request.modified || Date.now();
 
   // Create the request
-  return Object.assign(defaultRequest(), request, {
+  return Object.assign(defaultRequest, request, {
     id, created, modified
   });
 }

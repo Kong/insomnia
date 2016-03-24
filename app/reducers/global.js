@@ -1,6 +1,7 @@
 import * as types from '../constants/actionTypes';
-import requestsReducer from './requests'
 import settingsReducer from './settings'
+import requestsReducer from './requests'
+import requestGroupsReducer from './requestgroups'
 
 const initialState = {
   initialized: false,
@@ -19,11 +20,14 @@ export default function (state = initialState, action) {
       return Object.assign({}, state, {loading: false});
     default:
       // Send everything else to the child reducers
-      const requests = requestsReducer(state.requests, action);
       const settings = settingsReducer(state.settings, action);
+      const requests = requestsReducer(state.requests, action);
+      const requestGroups = requestGroupsReducer(state.requestGroups, action);
+      
       return Object.assign({}, state, {
         settings,
-        requests
+        requests,
+        requestGroups
       });
   }
 };

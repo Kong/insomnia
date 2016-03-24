@@ -69,7 +69,6 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 class Editor extends Component {
-
   constructor () {
     super();
     this.state = {isFocused: false}
@@ -177,8 +176,14 @@ class Editor extends Component {
   }
 
   render () {
+    const classes = [
+      'editor',
+      this.props.className,
+      (this.props.options || {}).readOnly ? 'editor--readonly' : ''
+    ];
+    
     return (
-      <div className={`editor ${this.props.className || ''}`}>
+      <div className={classes.join(' ')}>
         <textarea
           name={this.props.path}
           ref='textarea'

@@ -68,7 +68,7 @@ class App extends Component {
             <div className="pane__body grid-v">
               <Tabs selectedIndex={0} className="grid-v">
                 <TabList className="grid">
-                  <Tab><button className="btn">Preview</button></Tab>
+                  <Tab><button className="btn">Response</button></Tab>
                   <Tab><button className="btn">Raw</button></Tab>
                   <Tab><button className="btn">Headers</button></Tab>
                   <Tab><button className="btn">Cookies</button></Tab>
@@ -82,7 +82,15 @@ class App extends Component {
                       placeholder: 'nothing yet...'
                     }}/>
                 </TabPanel>
-                <TabPanel className="grid-v pad">Raw</TabPanel>
+                <TabPanel className="grid-v">
+                  <Editor
+                    className="grid-v"
+                    options={{
+                      mode: 'application/json',
+                      readOnly: true,
+                      placeholder: 'nothing yet...'
+                    }}/>
+                </TabPanel>
                 <TabPanel className="grid-v pad">Headers</TabPanel>
                 <TabPanel className="grid-v pad">Cookies</TabPanel>
               </Tabs>

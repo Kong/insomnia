@@ -1,19 +1,20 @@
 /* Background Colors */
 $bg-primary: #7D70CC;
 $bg-light: #efefef;
-$bg-super-light: #ffffff;
+$bg-super-light: #fff;
 $bg-dark: #272824;
 
 /* Font Colors */
 $font-light-bg: #555;
-$font-dark-bg: #eeeeee;
+$font-dark-bg: #ddd;
+$font-primary-bg: #eee;
 
-$hl-xxs: rgba(130, 130, 130, 0.05);
-$hl-xs: rgba(130, 130, 130, 0.09);
-$hl-sm: rgba(130, 130, 130, 0.15);
-$hl-md: rgba(130, 130, 130, 0.25);
-$hl-lg: rgba(130, 130, 130, 0.35);
-$hl-xl: rgba(130, 130, 130, 0.5);
+$hl-xxs: rgba(140, 140, 140, 0.05);
+$hl-xs: rgba(140, 140, 140, 0.09);
+$hl-sm: rgba(140, 140, 140, 0.15);
+$hl-md: rgba(140, 140, 140, 0.25);
+$hl-lg: rgba(140, 140, 140, 0.35);
+$hl-xl: rgba(140, 140, 140, 0.5);
 $hl: rgba(130, 130, 130, 1);
 
 $success: #598f07;
@@ -36,7 +37,7 @@ $faint-opacity: 0.5;
   background: $bg-primary;
 
   &, a, textarea, input, button {
-    color: $font-dark-bg;
+    color: $font-primary-bg;
   }
 }
 
