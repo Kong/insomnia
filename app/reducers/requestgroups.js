@@ -32,19 +32,19 @@ function requestGroupsReducer (state = [], action) {
 }
 
 export default function (state = initialState, action) {
-  let all, active;
+  let all, collapsed;
   switch (action.type) {
     case types.REQUEST_GROUP_ADD:
       all = requestGroupsReducer(state.all, action);
-      active = action.requestGroup.id;
-      return Object.assign({}, state, {all, active});
+      return Object.assign({}, state, {all});
+    case types.REQUEST_GROUP_DELETE:
+      // TODO: Remove from collapsed as well
+      all = state.all.filter(rg => rg.id !== action.id);
+      return Object.assign({}, state, {all});
     case types.REQUEST_GROUP_TOGGLE:
-      let collapsed;
       if (state.collapsed.indexOf(action.id) >= 0) {
-        // Remove it
         collapsed = state.collapsed.filter(id => id !== action.id);
       } else {
-        // Add it
         collapsed = [...state.collapsed, action.id]
       }
       return Object.assign({}, state, {collapsed});
