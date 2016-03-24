@@ -7,15 +7,53 @@ class Sidebar extends Component {
     this.props.changeFilter(value);
   }
 
+  renderRequestGroupItem (requestGroup) {
+    const {activeFilter, addRequest, requests} = this.props;
+
+    const filteredRequests = requests.filter(
+      r => !requestGroup || requestGroup.requests.find(r.id)
+    ).filter(
+      r => r.name.toLowerCase().indexOf(activeFilter.toLowerCase()) >= 0
+    );
+
+    if (requestGroup) {
+      return (
+        <li>
+          <div className="grid">
+            <button className="sidebar__item col text-left">
+              <i className="fa fa-folder-open-o"></i>&nbsp;&nbsp;&nbsp;Request Group
+            </button>
+            <button className="sidebar__item-btn" onClick={(e) => addRequest()}>
+              <i className="fa fa-plus-circle"></i>
+            </button>
+          </div>
+          <ul>
+            {filteredRequests.map(request => this.renderRequestItem(request))}
+          </ul>
+        </li>
+      )
+    } else {
+      return (
+        filteredRequests.map(request => this.renderRequestItem(request))
+      )
+    }
+  }
+
+  renderRequestItem (request) {
+    const {activeRequest, activateRequest} = this.props;
+    const isActive = request.id === activeRequest.id;
+    return (
+      <li key={request.id} className={isActive ? 'active': ''}>
+        <button onClick={() => {activateRequest(request.id)}}
+                className="sidebar__item">
+          {request.name}
+        </button>
+      </li>
+    );
+  }
+
   render () {
-    const {
-      requests,
-      activeRequest,
-      activeFilter,
-      loading,
-      activateRequest,
-      addRequest
-    } = this.props;
+    const {activeFilter, loading, addRequest, requestGroups} = this.props;
 
     return (
       <aside className="sidebar pane">
@@ -51,34 +89,8 @@ class Sidebar extends Component {
                 onChange={this.onFilterChange.bind(this)}/>
             </div>
             <ul>
-              <li>
-                <div className="grid">
-                  <button className="sidebar__item col text-left">
-                    <i className="fa fa-folder-open-o"></i>&nbsp;&nbsp;&nbsp;Request Group
-                  </button>
-                  <button className="sidebar__item-btn" onClick={(e) => addRequest()}>
-                    <i className="fa fa-plus-circle"></i>
-                  </button>
-                </div>
-                <ul>
-                  {requests.filter(request => {
-                    if (!activeFilter) {
-                      return true;
-                    }
-                    return request.name.toLowerCase().indexOf(activeFilter.toLowerCase()) >= 0;
-                  }).map(request => {
-                    const isActive = request.id === activeRequest.id;
-                    return (
-                      <li key={request.id} className={isActive ? 'active': ''}>
-                        <button onClick={() => {activateRequest(request.id)}}
-                                className="sidebar__item">
-                          {request.name}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </li>
+              {this.renderRequestGroupItem(null)}
+              {requestGroups.map(requestGroup => this.renderRequestGroupItem(requestGroup))}
             </ul>
           </div>
         </div>
@@ -93,6 +105,7 @@ Sidebar.propTypes = {
   changeFilter: PropTypes.func.isRequired,
   activeFilter: PropTypes.string,
   requests: PropTypes.array.isRequired,
+  requestGroups: PropTypes.array.isRequired,
   activeRequest: PropTypes.object,
   loading: PropTypes.bool.isRequired
 };

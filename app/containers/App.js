@@ -102,7 +102,7 @@ class App extends Component {
   }
 
   render () {
-    const {actions, loading, requests} = this.props;
+    const {actions, loading, requests, requestGroups} = this.props;
     const activeRequest = requests.all.find(r => r.id === requests.active);
 
     return (
@@ -114,6 +114,7 @@ class App extends Component {
           activeRequest={activeRequest}
           activeFilter={requests.filter}
           loading={loading}
+          requestGroups={requestGroups.all}
           requests={requests.all}/>
         <div className="col">
           {this.renderPageBody(actions, activeRequest)}
@@ -135,6 +136,10 @@ App.propTypes = {
     all: PropTypes.array.isRequired,
     active: PropTypes.string // "required" but can be null
   }).isRequired,
+  requestGroups: PropTypes.shape({
+    all: PropTypes.array.isRequired,
+    collapsed: PropTypes.array.isRequired
+  }).isRequired,
   loading: PropTypes.bool.isRequired
 };
 
@@ -142,6 +147,7 @@ function mapStateToProps (state) {
   return {
     actions: state.actions,
     requests: state.requests,
+    requestGroups: state.requestGroups,
     loading: state.loading
   };
 }
