@@ -8,8 +8,8 @@ const initialState = {
 
 function requestsReducer (state = [], action) {
   switch (action.type) {
+    
     case types.REQUEST_ADD:
-
       // Change name if there is a duplicate
       const request = action.request;
       for (let i = 0; ; i++) {
@@ -20,6 +20,10 @@ function requestsReducer (state = [], action) {
         }
       }
       return [request, ...state];
+
+    case types.REQUEST_DELETE:
+      return state.filter(r => r.id !== action.id);
+
     case types.REQUEST_UPDATE:
       return state.map(request => {
         if (request.id === action.patch.id) {
@@ -28,6 +32,7 @@ function requestsReducer (state = [], action) {
           return request;
         }
       });
+
     default:
       return state;
   }
@@ -35,14 +40,23 @@ function requestsReducer (state = [], action) {
 
 export default function (state = initialState, action) {
   let all, active;
+  
   switch (action.type) {
+    
     case types.REQUEST_ADD:
       all = requestsReducer(state.all, action);
       active = action.request.id;
       return Object.assign({}, state, {all, active});
+
+    case types.REQUEST_DELETE:
+      all = requestsReducer(state.all, action);
+      active = state.active === action.id ? null : state.active;
+      return Object.assign({}, state, {all, active});
+    
     case types.REQUEST_UPDATE:
       all = requestsReducer(state.all, action);
       return Object.assign({}, state, {all});
+    
     case types.REQUEST_ACTIVATE:
       if (state.active === action.id) {
         // If it's the same, do nothing
@@ -53,8 +67,10 @@ export default function (state = initialState, action) {
       } else {
         return Object.assign({}, state, {active: action.id});
       }
+          
     case types.REQUEST_CHANGE_FILTER:
       return Object.assign({}, state, {filter: action.filter});
+    
     default:
       return state
   }

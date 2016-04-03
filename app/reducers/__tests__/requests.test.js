@@ -73,6 +73,38 @@ describe('Requests Reducer', () => {
       filter: ''
     });
   });
+  
+  it('should delete request', () => {
+    initialState.all.push(request);
+    initialState.active = request.id;
+
+    expect(
+      reducer(initialState, {
+        type: types.REQUEST_DELETE,
+        id: request.id
+      })
+    ).toEqual({
+      all: [],
+      active: null,
+      filter: ''
+    });
+  });
+  
+  it('should delete request and not remove active', () => {
+    initialState.all.push(request);
+    initialState.active = 'req_9999999999';
+
+    expect(
+      reducer(initialState, {
+        type: types.REQUEST_DELETE,
+        id: request.id
+      })
+    ).toEqual({
+      all: [],
+      active: 'req_9999999999',
+      filter: ''
+    });
+  });
 
   it('should update request', () => {
     const state = reducer(undefined, {

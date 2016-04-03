@@ -37,9 +37,7 @@ class Dropdown extends Component {
     this.props.right && classes.push('dropdown--right');
 
     return (
-      <div ref="container"
-           className={classes.join(' ')}
-           onClick={this._handleClick.bind(this)}>
+      <div ref="container" className={classes.join(' ')} onClick={this._handleClick.bind(this)}>
         {this.props.children}
       </div>
     )

@@ -1,13 +1,14 @@
 import React, {Component, PropTypes} from 'react'
 import Dropdown from './base/Dropdown'
 import DebouncingInput from './base/DebouncingInput'
+import RequestActionsDropdown from './dropdowns/RequestActionsDropdown'
 
 class Sidebar extends Component {
   onFilterChange (value) {
     this.props.changeFilter(value);
   }
 
-  renderRequestGroupItem (requestGroup) {
+  renderRequestGroupRow (requestGroup) {
     const {activeFilter, addRequest, requests} = this.props;
 
     const filteredRequests = requests.filter(
@@ -28,26 +29,28 @@ class Sidebar extends Component {
             </button>
           </div>
           <ul>
-            {filteredRequests.map(request => this.renderRequestItem(request))}
+            {filteredRequests.map(request => this.renderRequestRow(request))}
           </ul>
         </li>
       )
     } else {
       return (
-        filteredRequests.map(request => this.renderRequestItem(request))
+        filteredRequests.map(request => this.renderRequestRow(request))
       )
     }
   }
 
-  renderRequestItem (request) {
+  renderRequestRow (request) {
     const {activeRequest, activateRequest} = this.props;
-    const isActive = request.id === activeRequest.id;
+    const isActive = activeRequest && request.id === activeRequest.id;
+    const className = ['grid'].concat(isActive ? ['active'] : '');
+
     return (
-      <li key={request.id} className={isActive ? 'active': ''}>
-        <button onClick={() => {activateRequest(request.id)}}
-                className="sidebar__item">
+      <li key={request.id} className={className.join(' ')}>
+        <button className='sidebar__item col' onClick={() => {activateRequest(request.id)}}>
           {request.name}
         </button>
+        <RequestActionsDropdown right={true} request={request}/>
       </li>
     );
   }
@@ -89,8 +92,8 @@ class Sidebar extends Component {
                 onChange={this.onFilterChange.bind(this)}/>
             </div>
             <ul>
-              {this.renderRequestGroupItem(null)}
-              {requestGroups.map(requestGroup => this.renderRequestGroupItem(requestGroup))}
+              {this.renderRequestGroupRow(null)}
+              {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
             </ul>
           </div>
         </div>

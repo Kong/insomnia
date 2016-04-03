@@ -29,7 +29,7 @@ function buildRequest (request) {
   const modified = request.modified || Date.now();
 
   // Create the request
-  return Object.assign(defaultRequest, request, {
+  return Object.assign({}, defaultRequest, request, {
     id, created, modified
   });
 }
@@ -47,6 +47,20 @@ export function addRequest (name = 'My Request') {
       }, 500);
     });
   };
+}
+
+export function deleteRequest (id) {
+  return (dispatch) => {
+    dispatch(loadStart());
+    dispatch({type: types.REQUEST_DELETE, id});
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        dispatch(loadStop());
+        resolve();
+      }, 500);
+    });
+  }
 }
 
 export function updateRequest (requestPatch) {
