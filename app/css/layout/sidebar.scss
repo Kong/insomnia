@@ -14,7 +14,7 @@
   }
 
   ul {
-    li.active > .sidebar__item {
+    li.active .sidebar__item {
       color: inherit;
     }
 
@@ -32,7 +32,7 @@
       }
     }
 
-    & > li > .sidebar__item {
+    & .sidebar__item {
       display: flex;
       align-items: center;
       color: $hl;
@@ -45,17 +45,11 @@
       }
     }
 
-    & > li {
-      & > ul > li {
-        & > .sidebar__item {
-          padding-left: $padding-sm * 5;
-        }
-        & > ul > li {
-          & > .sidebar__item {
-            padding-left: $padding-md * 3;
-          }
-        }
-      }
+    & .sidebar__item .sidebar__item {
+      padding-left: $padding-sm * 5;
+    }
+    & .sidebar__item .sidebar__item .sidebar__item {
+      padding-left: $padding-md * 3;
     }
   }
 }

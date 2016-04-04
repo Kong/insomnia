@@ -47,10 +47,12 @@ class Sidebar extends Component {
 
     return (
       <li key={request.id} className={className.join(' ')}>
-        <button className='sidebar__item col' onClick={() => {activateRequest(request.id)}}>
-          {request.name}
-        </button>
-        <RequestActionsDropdown right={true} request={request}/>
+        <div className="grid">
+          <button className='sidebar__item col' onClick={() => {activateRequest(request.id)}}>
+            {request.name}
+          </button>
+          <RequestActionsDropdown className="sidebar__item-btn" right={true} request={request}/>
+        </div>
       </li>
     );
   }
