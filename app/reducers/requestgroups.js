@@ -1,12 +1,12 @@
 import * as types from "../constants/actionTypes";
 
 const initialState = {
-  all: [],
-  collapsed: []
+  all: []
 };
 
 function requestGroupsReducer (state = [], action) {
   switch (action.type) {
+
     case types.REQUEST_GROUP_ADD:
       // Change name if there is a duplicate
       const requestGroup = action.requestGroup;
@@ -18,14 +18,37 @@ function requestGroupsReducer (state = [], action) {
         }
       }
       return [requestGroup, ...state];
+
     case types.REQUEST_GROUP_UPDATE:
-      return state.map(requestGroup => {
-        if (requestGroup.id === action.patch.id) {
-          return Object.assign({}, requestGroup, action.patch);
+      return state.map(rg => {
+        if (rg.id === action.patch.id) {
+          return Object.assign({}, rg, action.patch);
         } else {
-          return requestGroup;
+          return rg;
         }
       });
+    
+    case types.REQUEST_GROUP_TOGGLE:
+      return state.map(rg => {
+        if (rg.id === action.id) {
+          const collapsed = !rg.collapsed;
+          return Object.assign({}, rg, {collapsed});
+        } else {
+          return rg;
+        }
+      });
+
+    case types.REQUEST_GROUP_ADD_CHILD_REQUEST:
+      return state.map(rg => {
+        if (rg.id === action.id) {
+          rg.children = [
+            {type: 'Request', id: action.requestId},
+            ...rg.children
+          ];
+        }
+        return rg;
+      });
+
     default:
       return state;
   }
@@ -34,23 +57,28 @@ function requestGroupsReducer (state = [], action) {
 export default function (state = initialState, action) {
   let all, collapsed;
   switch (action.type) {
+
     case types.REQUEST_GROUP_ADD:
       all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
+
     case types.REQUEST_GROUP_DELETE:
       // TODO: Remove from collapsed as well
       all = state.all.filter(rg => rg.id !== action.id);
       return Object.assign({}, state, {all});
+
+    case types.REQUEST_GROUP_ADD_CHILD_REQUEST:
+      all = requestGroupsReducer(state.all, action);
+      return Object.assign({}, state, {all});
+
     case types.REQUEST_GROUP_TOGGLE:
-      if (state.collapsed.indexOf(action.id) >= 0) {
-        collapsed = state.collapsed.filter(id => id !== action.id);
-      } else {
-        collapsed = [...state.collapsed, action.id]
-      }
-      return Object.assign({}, state, {collapsed});
+      all = requestGroupsReducer(state.all, action);
+      return Object.assign({}, state, {all});
+
     case types.REQUEST_GROUP_UPDATE:
       all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
+
     default:
       return state
   }

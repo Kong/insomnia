@@ -5,7 +5,6 @@ import {loadStop} from "./global";
 
 const defaultRequest = {
   id: null,
-  _mode: 'json',
   created: 0,
   modified: 0,
   url: '',
@@ -13,15 +12,13 @@ const defaultRequest = {
   method: methods.METHOD_GET,
   body: '',
   params: [],
-  headers: [],
+  headers: [{
+    name: 'Content-Type',
+    value: 'application/json'
+  }],
   authentication: {}
 };
 
-/**
- * Build a new request from a subset of fields
- * @param request values to override defaults with
- * @returns {*}
- */
 function buildRequest (request) {
   // Build the required fields
   const id = request.id || `rq_${Date.now()}`;
@@ -34,11 +31,17 @@ function buildRequest (request) {
   });
 }
 
-export function addRequest (name = 'My Request') {
+export function addRequest (requestGroupId = null) {
   return (dispatch) => {
     dispatch(loadStart());
-    const request = buildRequest({name});
+    const request = buildRequest({name: 'My Request'});
     dispatch({type: types.REQUEST_ADD, request});
+
+    if (requestGroupId) {
+      const id = requestGroupId;
+      const requestId = request.id;
+      dispatch({type: types.REQUEST_GROUP_ADD_CHILD_REQUEST, requestId, id});
+    }
 
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -102,4 +105,8 @@ export function activateRequest (id) {
 
 export function changeFilter (filter) {
   return {type: types.REQUEST_CHANGE_FILTER, filter};
+}
+
+export function sendRequest (id) {
+  
 }

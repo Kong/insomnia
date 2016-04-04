@@ -21,8 +21,8 @@ app.on('ready', function () {
     width: IS_DEV ? 1600 : 1200,
     height: 800,
     minHeight: 500,
-    minWidth: 500,
-    acceptFirstMouse: true,
+    minWidth: 520,
+    acceptFirstMouse: true
     // titleBarStyle: IS_MAC ? 'hidden-inset' : 'default'
   });
 

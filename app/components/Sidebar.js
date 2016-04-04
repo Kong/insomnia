@@ -1,7 +1,9 @@
 import React, {Component, PropTypes} from 'react'
-import Dropdown from './base/Dropdown'
+import WorkspaceDropdown from './dropdowns/WorkspaceDropdown'
 import DebouncingInput from './base/DebouncingInput'
 import RequestActionsDropdown from './dropdowns/RequestActionsDropdown'
+import MethodTag from './MethodTag'
+import Dropdown from './base/Dropdown'
 
 class Sidebar extends Component {
   onFilterChange (value) {
@@ -9,33 +11,63 @@ class Sidebar extends Component {
   }
 
   renderRequestGroupRow (requestGroup) {
-    const {activeFilter, addRequest, requests} = this.props;
+    const {activeFilter, activeRequest, addRequest, toggleRequestGroup, requests, requestGroups} = this.props;
 
-    const filteredRequests = requests.filter(
-      r => !requestGroup || requestGroup.requests.find(r.id)
-    ).filter(
-      r => r.name.toLowerCase().indexOf(activeFilter.toLowerCase()) >= 0
+    let filteredRequests = requests.filter(
+      r => r.name.toLowerCase().indexOf(activeFilter.toLowerCase()) != -1
     );
 
-    if (requestGroup) {
+    if (!requestGroup) {
+      // Grab all requests that are not children of request groups
+      filteredRequests = filteredRequests.filter(r => {
+        return !requestGroups.find(rg => {
+          return rg.children.find(c => c.id === r.id)
+        })
+      });
+
+      return filteredRequests.map(request => this.renderRequestRow(request));
+    } else {
+      // Grab all of the children for this request group
+      filteredRequests = filteredRequests.filter(
+        r => requestGroup.children.find(c => c.id === r.id)
+      );
+
+      const isActive = activeRequest && filteredRequests.find(r => r.id == activeRequest.id);
+
+      let folderIconClass = 'fa-folder';
+      folderIconClass += requestGroup.collapsed ? '' : '-open';
+      folderIconClass += isActive ? '' : '-o';
+
       return (
-        <li>
-          <div className="grid">
-            <button className="sidebar__item col text-left">
-              <i className="fa fa-folder-open-o"></i>&nbsp;&nbsp;&nbsp;Request Group
-            </button>
-            <button className="sidebar__item-btn" onClick={(e) => addRequest()}>
-              <i className="fa fa-plus-circle"></i>
-            </button>
+        <li key={requestGroup.id}>
+          <div
+            className={'sidebar__item sidebar__item--bordered ' + (isActive ? 'sidebar__item--active' : '')}>
+            <div className="sidebar__item__row">
+              <button onClick={e => toggleRequestGroup(requestGroup.id)}>
+                <i className={'fa ' + folderIconClass}></i>
+                &nbsp;&nbsp;&nbsp;{requestGroup.name}
+              </button>
+            </div>
+            <div className="sidebar__item__btn">
+              <button onClick={(e) => addRequest(requestGroup.id)}>
+                <i className="fa fa-plus-circle"></i>
+              </button>
+              <Dropdown right={true} className="tall">
+                <button>
+                  <i className="fa fa-caret-down"></i>
+                </button>
+                <ul>
+                  <li><button>Hello</button></li>
+                  <li><button>Hello</button></li>
+                  <li><button>Hello</button></li>
+                </ul>
+              </Dropdown>
+            </div>
           </div>
           <ul>
-            {filteredRequests.map(request => this.renderRequestRow(request))}
+            {requestGroup.collapsed ? null : filteredRequests.map(request => this.renderRequestRow(request))}
           </ul>
         </li>
-      )
-    } else {
-      return (
-        filteredRequests.map(request => this.renderRequestRow(request))
       )
     }
   }
@@ -43,46 +75,33 @@ class Sidebar extends Component {
   renderRequestRow (request) {
     const {activeRequest, activateRequest} = this.props;
     const isActive = activeRequest && request.id === activeRequest.id;
-    const className = ['grid'].concat(isActive ? ['active'] : '');
 
     return (
-      <li key={request.id} className={className.join(' ')}>
-        <div className="grid">
-          <button className='sidebar__item col' onClick={() => {activateRequest(request.id)}}>
-            {request.name}
-          </button>
-          <RequestActionsDropdown className="sidebar__item-btn" right={true} request={request}/>
+      <li key={request.id}>
+        <div className={'sidebar__item ' + (isActive ? 'sidebar__item--active' : '')}>
+          <div className="sidebar__item__row">
+            <button onClick={() => {activateRequest(request.id)}}>
+              <MethodTag method={request.method}/> {request.name}
+            </button>
+          </div>
+          <RequestActionsDropdown
+            className="sidebar__item__btn"
+            right={true}
+            request={request}
+          />
         </div>
       </li>
     );
   }
 
   render () {
-    const {activeFilter, loading, addRequest, requestGroups} = this.props;
+    const {activeFilter, requestGroups} = this.props;
 
     return (
       <aside className="sidebar pane">
         <div className="grid-v">
-          <header className="pane__header bg-primary">
-            <h1>
-              <Dropdown right={true}>
-                <button className="pane__header__content">
-                  <i className="fa fa-angle-down pull-right"></i>
-                  {loading ? <i className="fa fa-refresh fa-spin pull-right"></i> : ''}
-                  Insomnia
-                </button>
-                <ul className="bg-super-light">
-                  <li>
-                    <button onClick={(e) => addRequest()}>
-                      <i className="fa fa-plus-circle"></i> Add Request
-                    </button>
-                  </li>
-                  <li><button><i className="fa fa-share-square-o"></i> Import/Export</button></li>
-                  <li><button><i className="fa fa-empty"></i> Toggle Sidebar</button></li>
-                  <li><button><i className="fa fa-empty"></i> Delete Workspace</button></li>
-                </ul>
-              </Dropdown>
-            </h1>
+          <header className="pane__header bg-dark">
+            <h1><WorkspaceDropdown /></h1>
           </header>
           <div className="pane__body hide-scrollbars bg-dark">
             <div className="stock-height form-control form-control--outlined col">
@@ -106,13 +125,12 @@ class Sidebar extends Component {
 
 Sidebar.propTypes = {
   activateRequest: PropTypes.func.isRequired,
-  addRequest: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
+  toggleRequestGroup: PropTypes.func.isRequired,
   activeFilter: PropTypes.string,
   requests: PropTypes.array.isRequired,
   requestGroups: PropTypes.array.isRequired,
-  activeRequest: PropTypes.object,
-  loading: PropTypes.bool.isRequired
+  activeRequest: PropTypes.object
 };
 
 export default Sidebar;

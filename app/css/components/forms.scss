@@ -34,14 +34,13 @@
 }
 
 .btn {
-  cursor: pointer;
   text-align: center;
   padding: 0 ($padding-md * 1.5);
   height: $line-height-md;
 
   &.btn--compact {
-    padding: 0 ($padding-md);
-    height: $line-height-md / 2;
+    padding: 0 $padding-md;
+    height: $line-height-sm;
   }
 }
 
@@ -71,4 +70,6 @@ input, button {
 button {
   width: auto;
   cursor: pointer;
+  padding: 0;
+  margin: 0;
 }

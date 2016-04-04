@@ -12,10 +12,10 @@ class UrlInput extends Component {
     return (
       <div className="grid form-control form-control--left form-control--right">
         <Dropdown>
-          <button className="btn txt-lg">
+          <button className="btn txt-md">
             {request.method}&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
           </button>
-          <ul className="bg-super-light">
+          <ul>
             {METHODS.map((method) => (
               <li key={method}>
                 <button onClick={onMethodChange.bind(null, method)}>
@@ -26,12 +26,12 @@ class UrlInput extends Component {
           </ul>
         </Dropdown>
         <Input type="text"
-               className="txt-lg"
+               className="txt-md"
                placeholder="http://echo.insomnia.rest/status/200"
                initialValue={request.url}
                onChange={onUrlChange}/>
         <button className="btn">
-          <i className="fa fa-repeat txt-xl"></i>
+          <i className="fa fa-repeat txt-lg"></i>
         </button>
       </div>
     )

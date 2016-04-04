@@ -16,7 +16,6 @@ describe('Requests Reducer', () => {
     };
 
     request = {
-      _mode: 'json',
       id: 'req_1234567890',
       created: Date.now(),
       modified: Date.now(),

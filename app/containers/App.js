@@ -9,6 +9,7 @@ import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
 
 import * as RequestActions from '../actions/requests'
+import * as RequestGroupActions from '../actions/requestGroups'
 import * as GlobalActions from '../actions/global'
 
 // Don't inject component styles (use our own)
@@ -27,9 +28,9 @@ class App extends Component {
 
     return (
       <div className="grid grid-collapse">
-        <section id="request-pane" className="pane col">
+        <section id="request-pane" className="pane col tall">
           <div className="grid-v">
-            <header className="pane__header bg-super-light">
+            <header className="pane__header bg-super-dark">
               <RequestUrlBar
                 onUrlChange={updateRequestUrl}
                 onMethodChange={updateRequestMethod}
@@ -37,18 +38,17 @@ class App extends Component {
             </header>
             <div className="pane__body grid-v">
               <Tabs selectedIndex={0} className="grid-v">
-                <TabList className="grid">
-                  <Tab><button className="btn">Body</button></Tab>
-                  <Tab><button className="btn">Params</button></Tab>
-                  <Tab><button className="btn">Auth</button></Tab>
-                  <Tab><button className="btn">Headers</button></Tab>
+                <TabList className="grid txt-sm">
+                  <Tab><button className="btn btn--compact">Body</button></Tab>
+                  <Tab><button className="btn btn--compact">Params</button></Tab>
+                  <Tab><button className="btn btn--compact">Auth</button></Tab>
+                  <Tab><button className="btn btn--compact">Headers</button></Tab>
                 </TabList>
                 <TabPanel className="grid-v">
                   <RequestBodyEditor
                     className="grid-v"
                     onChange={updateRequestBody}
-                    request={activeRequest}
-                    options={{mode: activeRequest._mode}}/>
+                    request={activeRequest}/>
                 </TabPanel>
                 <TabPanel className="grid-v pad">Params</TabPanel>
                 <TabPanel className="grid-v pad">Basic Auth</TabPanel>
@@ -57,9 +57,9 @@ class App extends Component {
             </div>
           </div>
         </section>
-        <section id="response-pane" className="pane col">
+        <section id="response-pane" className="pane col tall">
           <div className="grid-v">
-            <header className="pane__header text-center bg-light">
+            <header className="pane__header text-center bg-super-dark">
               <div className="grid">
                 <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
                 <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
@@ -67,11 +67,11 @@ class App extends Component {
             </header>
             <div className="pane__body grid-v">
               <Tabs selectedIndex={0} className="grid-v">
-                <TabList className="grid">
-                  <Tab><button className="btn">Response</button></Tab>
-                  <Tab><button className="btn">Raw</button></Tab>
-                  <Tab><button className="btn">Headers</button></Tab>
-                  <Tab><button className="btn">Cookies</button></Tab>
+                <TabList className="grid txt-sm">
+                  <Tab><button className="btn btn--compact">Response</button></Tab>
+                  <Tab><button className="btn btn--compact">Raw</button></Tab>
+                  <Tab><button className="btn btn--compact">Headers</button></Tab>
+                  <Tab><button className="btn btn--compact">Cookies</button></Tab>
                 </TabList>
                 <TabPanel className="grid-v">
                   <Editor
@@ -111,12 +111,13 @@ class App extends Component {
           activateRequest={actions.activateRequest}
           changeFilter={actions.changeFilter}
           addRequest={actions.addRequest}
+          toggleRequestGroup={actions.toggleRequestGroup}
           activeRequest={activeRequest}
           activeFilter={requests.filter}
           loading={loading}
           requestGroups={requestGroups.all}
           requests={requests.all}/>
-        <div className="col">
+        <div className="col tall">
           {this.renderPageBody(actions, activeRequest)}
         </div>
       </div>
@@ -130,15 +131,15 @@ App.propTypes = {
     updateRequestBody: PropTypes.func.isRequired,
     updateRequestUrl: PropTypes.func.isRequired,
     changeFilter: PropTypes.func.isRequired,
-    updateRequestMethod: PropTypes.func.isRequired
+    updateRequestMethod: PropTypes.func.isRequired,
+    toggleRequestGroup: PropTypes.func.isRequired
   }).isRequired,
   requests: PropTypes.shape({
     all: PropTypes.array.isRequired,
     active: PropTypes.string // "required" but can be null
   }).isRequired,
   requestGroups: PropTypes.shape({
-    all: PropTypes.array.isRequired,
-    collapsed: PropTypes.array.isRequired
+    all: PropTypes.array.isRequired
   }).isRequired,
   loading: PropTypes.bool.isRequired
 };
@@ -157,7 +158,8 @@ function mapDispatchToProps (dispatch) {
     actions: Object.assign(
       {},
       bindActionCreators(GlobalActions, dispatch),
-      bindActionCreators(RequestActions, dispatch)
+      bindActionCreators(RequestActions, dispatch),
+      bindActionCreators(RequestGroupActions, dispatch)
     )
   }
 }

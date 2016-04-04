@@ -1,10 +1,13 @@
 /* Padding */
 $padding-md: 1.25rem;
-$padding-sm: $padding-md / 2;
+$padding-sm: $padding-md * 0.5;
+$padding-xs: $padding-md * 0.35;
+$padding-xxs: $padding-md * 0.20;
 $padding-lg: $padding-md * 2;
 
 /* Fonts */
 $font-size: 12px;
+$font-size-xs: 0.7rem;
 $font-size-sm: 0.8rem;
 $font-size-md: 1.0rem;
 $font-size-lg: 1.2rem;
@@ -17,10 +20,10 @@ $line-height-sm: $line-height-md * 0.75;
 
 /* Sidebar */
 $sidebar-width: 20rem;
-$sidebar-width-sm: $sidebar-width * 0.75;
 
 /* Borders */
-$radius-md: 2px;
+$radius-sm: 1px;
+$radius-md: 3px;
 
 /* Breakpoints */
 $breakpoint-lg: 1500px;

@@ -19,7 +19,6 @@ const requestGroupSchema = {
     environment: {type: 'object'}
   },
   required: [
-    '_mode',
     'id',
     'created',
     'modified',

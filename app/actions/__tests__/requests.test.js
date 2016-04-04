@@ -27,14 +27,16 @@ describe('Requests Actions', () => {
         type: types.REQUEST_ADD,
         request: {
           id: 'rq_1000000000000',
-          _mode: 'json',
           created: 1000000000000,
           modified: 1000000000000,
-          name: 'Test Request',
+          name: 'My Request',
           method: 'GET',
           url: '',
           body: '',
-          headers: [],
+          headers: [{
+            name: 'Content-Type',
+            value: 'application/json'
+          }],
           params: [],
           authentication: {}
         }
@@ -43,7 +45,7 @@ describe('Requests Actions', () => {
     ];
 
     const store = mockStore();
-    store.dispatch(addRequest('Test Request'));
+    store.dispatch(addRequest());
     jest.runAllTimers();
 
     const actions = store.getActions();

@@ -3,8 +3,7 @@
 
 .dropdown {
   position: relative;
-  display: block;
-  height: 100%;
+  display: inline-block;
 
   &.dropdown--open ul {
     display: block;
@@ -21,29 +20,44 @@
     display: none;
     z-index: 10;
     width: 180px;
-    border-radius: $radius-md;
-    padding: 2px 0;
-    margin-top: 4px;
     box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
+    padding-top: 4px;
 
-    a, button {
-      font-size: $font-size-md;
-      text-align: left;
-      padding: 10px $padding-md;
-      width: 100%;
-      display: block;
+    li {
+      background: $bg-super-light;
 
-      &:hover {
-        background: $hl-xs;
+      &:first-child {
+        border-top-left-radius: $radius-md;
+        border-top-right-radius: $radius-md;
+        padding-top: 2px;
       }
 
-      &:active {
-        background: $hl-md;
+      &:last-child {
+        border-bottom-left-radius: $radius-md;
+        border-bottom-right-radius: $radius-md;
+        padding-bottom: 2px;
       }
 
-      i {
-        display: inline-block;
-        width: 1.5em;
+      & > button {
+        font-size: $font-size-md;
+        text-align: left;
+        padding: 10px $padding-md;
+        width: 100%;
+        display: block;
+        color: $font-light-bg !important;
+
+        &:hover {
+          background: $hl-sm;
+        }
+
+        &:active {
+          background: $hl-md;
+        }
+
+        i.fa {
+          display: inline-block;
+          width: 1.5em;
+        }
       }
     }
   }

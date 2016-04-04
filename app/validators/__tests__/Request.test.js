@@ -9,7 +9,6 @@ describe('RequestSchema', () => {
   
   beforeEach(() => {
     request = {
-      _mode: 'json',
       id: 'rq_1234567890123',
       created: Date.now(),
       modified: Date.now(),

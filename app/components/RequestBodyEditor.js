@@ -8,13 +8,16 @@ class RequestBodyEditor extends Component {
 
   render () {
     const {request, onChange, className} = this.props;
+    const contentTypeHeader = request.headers.find(h => h.name.toLowerCase() === 'content-type');
+    const mode = contentTypeHeader ? contentTypeHeader.value : 'text/plain';
+
     return (
       <CodeEditor
         value={request.body}
         className={className}
         onChange={onChange}
         options={{
-          mode: request._mode,
+          mode: mode,
           placeholder: 'request body here...'
         }}
       />
@@ -24,8 +27,7 @@ class RequestBodyEditor extends Component {
 
 RequestBodyEditor.propTypes = {
   request: PropTypes.shape({
-    body: PropTypes.string.isRequired,
-    _mode: PropTypes.string.isRequired
+    body: PropTypes.string.isRequired
   }).isRequired,
   onChange: PropTypes.func.isRequired
 };

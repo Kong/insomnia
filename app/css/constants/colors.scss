@@ -1,13 +1,27 @@
 /* Background Colors */
-$bg-primary: #7D70CC;
+//$bg-primary: #7D70CC;
 $bg-light: #efefef;
 $bg-super-light: #fff;
 $bg-dark: #272824;
+$bg-super-dark: #222320;
+
+// For light theme
+//$bg-super-dark: #efefef;
+//$bg-dark: #fff;
+//$bg-light: #272824;
+//$bg-super-light: #22231f;
 
 /* Font Colors */
 $font-light-bg: #555;
 $font-dark-bg: #ddd;
+$font-super-dark-bg: #ccc;
 $font-primary-bg: #eee;
+
+// For light theme
+//$font-dark-bg: #444;
+//$font-light-bg: #ddd;
+//$font-super-dark-bg: #333;
+//$font-primary-bg: #eee;
 
 $hl-xxs: rgba(140, 140, 140, 0.05);
 $hl-xs: rgba(140, 140, 140, 0.09);
@@ -15,15 +29,41 @@ $hl-sm: rgba(140, 140, 140, 0.15);
 $hl-md: rgba(140, 140, 140, 0.25);
 $hl-lg: rgba(140, 140, 140, 0.35);
 $hl-xl: rgba(140, 140, 140, 0.5);
-$hl: rgba(130, 130, 130, 1);
+$hl-xxl: rgba(140, 140, 140, 0.7);
+$hl: rgba(140, 140, 140, 1);
 
-$success: #598f07;
+$success: #91c74e;
+$warning: #ffad36;
+$danger: #ff6d59;
+$info: #52adc1;
 
-$faint-opacity: 0.5;
+$faint-opacity: 0.4;
 
-.success {
+.success,
+.method-POST {
   border-color: $success !important;
   color: $success;
+}
+
+.warning,
+.method-PUT,
+.method-PATCH {
+  border-color: $warning !important;
+  color: $warning;
+}
+
+.danger,
+.method-DELETE {
+  border-color: $danger !important;
+  color: $danger;
+}
+
+.info,
+.method-GET,
+.method-OPTIONS,
+.method-HEAD {
+  border-color: $info !important;
+  color: $info;
 }
 
 .bg-dark {
@@ -33,13 +73,20 @@ $faint-opacity: 0.5;
   }
 }
 
-.bg-primary {
-  background: $bg-primary;
-
+.bg-super-dark {
+  background: $bg-super-dark;
   &, a, textarea, input, button {
-    color: $font-primary-bg;
+    color: $font-super-dark-bg;
   }
 }
+
+//.bg-primary {
+//  background: $bg-primary;
+//
+//  &, a, textarea, input, button {
+//    color: $font-primary-bg;
+//  }
+//}
 
 .bg-light {
   background: $bg-light;

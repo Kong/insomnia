@@ -7,58 +7,86 @@
   .pane__body {
     overflow-y: auto;
     width: $sidebar-width;
+    height: 100%;
   }
 
-  .pane__header, .pane__body {
+  .pane__header,
+  .pane__body {
     border-left: 0;
   }
 
-  ul {
-    li.active .sidebar__item {
-      color: inherit;
+  .sidebar__item__row {
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+    height: $line-height-sm;
+    line-height: $line-height-sm;
+    color: inherit;
+
+    &:hover {
+      background: $hl-xxs;
     }
 
-    .sidebar__item, .sidebar__item-btn {
-      height: $line-height-sm;
-      line-height: $line-height-sm;
+    & > button {
       padding: 0 $padding-md;
-
-      &:hover {
-        background: $hl-xs;
-      }
-
-      &:active {
-        background: $hl-md;
-      }
-    }
-
-    & .sidebar__item {
-      display: flex;
-      align-items: center;
-      color: $hl;
-      box-sizing: border-box;
+      color: inherit;
+      height: 100%;
       width: 100%;
-      text-align: left;
-
-      &.sidebar__item--right-menu {
-        padding-right: 0;
-      }
-    }
-
-    & .sidebar__item .sidebar__item {
-      padding-left: $padding-sm * 5;
-    }
-    & .sidebar__item .sidebar__item .sidebar__item {
-      padding-left: $padding-md * 3;
     }
   }
-}
 
-@media (max-width: $breakpoint-sm) {
-  .sidebar {
-    .pane__body {
-      overflow-y: auto;
-      width: $sidebar-width-sm;
+  .sidebar__item__btn {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    color: $hl-xl;
+
+    & > button,
+    & > .dropdown > button {
+      padding: 0 $padding-sm;
+      height: 100%;
+      color: inherit;
+
+      &:hover {
+        color: $font-dark-bg;
+      }
     }
+  }
+
+  .sidebar__item {
+    color: $hl;
+    box-sizing: border-box;
+    width: 100%;
+    position: relative;
+
+    &.sidebar__item--active {
+      color: $font-dark-bg;
+
+      .tag {
+        opacity: 1;
+      }
+    }
+
+    &.sidebar__item--right-menu {
+      padding-right: 0;
+    }
+
+    &:hover .sidebar__item__btn {
+      display: block;
+    }
+
+    &.sidebar__item--bordered {
+      border-top: 1px solid $hl-xs;
+    }
+
+    .tag {
+      opacity: $faint-opacity;
+    }
+  }
+
+  ul ul .sidebar__item__row > button {
+    padding-left: $padding-sm * 3 !important;
   }
 }

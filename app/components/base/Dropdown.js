@@ -31,7 +31,7 @@ class Dropdown extends Component {
   }
 
   render () {
-    const classes = ['dropdown'];
+    const classes = ['dropdown'].concat(this.props.className || []);
 
     this.state.open && classes.push('dropdown--open');
     this.props.right && classes.push('dropdown--right');

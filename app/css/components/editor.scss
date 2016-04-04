@@ -10,6 +10,7 @@
     width: 100%;
     font-family: "Source Code Pro", monospace;
     box-sizing: border-box;
+    font-size: 11px;
   }
 
   .CodeMirror,
@@ -43,7 +44,7 @@
   }
 
   .CodeMirror-placeholder {
-    color: $hl-xl;
+    color: $hl-xxl;
   }
 
   &.editor--readonly .CodeMirror-cursors {

@@ -4,11 +4,13 @@ import {loadStart} from "./global";
 import {loadStop} from "./global";
 
 const defaultRequestGroup = {
-    id: null,
-    created: 0,
-    modified: 0,
-    name: '',
-    environment: {}
+  id: null,
+  created: 0,
+  modified: 0,
+  collapsed: false,
+  name: '',
+  environment: {},
+  children: []
 };
 
 /**
@@ -33,6 +35,20 @@ export function addRequestGroup (name = 'My Group') {
     dispatch(loadStart());
     const requestGroup = buildRequestGroup({name});
     dispatch({type: types.REQUEST_GROUP_ADD, requestGroup});
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        dispatch(loadStop());
+        resolve();
+      }, 500);
+    });
+  };
+}
+
+export function addChildRequest (id, requestId) {
+  return (dispatch) => {
+    dispatch(loadStart());
+    dispatch({type: types.REQUEST_GROUP_ADD_CHILD_REQUEST, id, requestId});
 
     return new Promise((resolve) => {
       setTimeout(() => {

@@ -6,15 +6,18 @@ import * as RequestActions from '../../actions/requests'
 
 class RequestActionsDropdown extends Component {
   render () {
-    const {actions, request, ...other} = this.props;
+    const {actions, request, buttonClassName, ...other} = this.props;
 
     return (
-      <Dropdown right={this.props.right || false} {...other}>
-        <button className="pane__header__content">
-          <i className="fa fa-angle-down pull-right"></i>
+      <Dropdown {...other}>
+        <button className={buttonClassName}>
+          <i className="fa fa-gear"></i>
         </button>
-        <ul className="bg-super-light">
-          <li><button onClick={actions.deleteRequest.bind(null, request.id)}>Delete</button></li>
+        <ul>
+          <li><button>Duplicate</button></li>
+          <li><button>Rename</button></li>
+          <li><button>Export</button></li>
+          <li><button onClick={e => actions.deleteRequest(request.id)}>Delete</button></li>
         </ul>
       </Dropdown>
     )
@@ -25,7 +28,8 @@ RequestActionsDropdown.propTypes = {
   request: PropTypes.object.isRequired,
   actions: PropTypes.shape({
     deleteRequest: PropTypes.func.isRequired
-  })
+  }),
+  buttonClassName: PropTypes.string
 };
 
 function mapStateToProps (state) {

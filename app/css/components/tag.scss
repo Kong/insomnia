@@ -7,8 +7,16 @@
   margin-right: 1em;
   line-height: 1em;
   box-sizing: border-box;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
 
   &:last-child {
     margin-right: 0;
+  }
+
+  &.tag--small {
+    padding: $padding-xxs;
+    font-size: $font-size-xs;
+    border-radius: $radius-sm;
   }
 }
