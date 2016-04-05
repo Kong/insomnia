@@ -59,7 +59,7 @@ class Sidebar extends Component {
     const isActive = activeRequest && filteredRequests.find(r => r.id == activeRequest.id);
 
     let folderIconClass = 'fa-folder';
-    let expanded = activeFilter || !requestGroup.collapsed;
+    let expanded = !requestGroup.collapsed;
     folderIconClass += !expanded ? '' : '-open';
     folderIconClass += isActive ? '' : '-o';
     

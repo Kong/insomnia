@@ -23,8 +23,6 @@
     width: 100%;
     text-align: left;
     box-sizing: border-box;
-    height: $line-height-sm;
-    line-height: $line-height-sm;
     color: inherit;
 
     &:hover {
@@ -32,7 +30,7 @@
     }
 
     & > button {
-      padding: 0 $padding-md;
+      padding: $padding-sm;
       color: inherit;
       height: 100%;
       width: 100%;

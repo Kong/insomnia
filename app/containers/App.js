@@ -30,7 +30,7 @@ class App extends Component {
       <div className="grid grid-collapse">
         <section id="request-pane" className="pane col tall">
           <div className="grid-v">
-            <header className="pane__header bg-super-light">
+            <header className="pane__header">
               <RequestUrlBar
                 onUrlChange={updateRequestUrl}
                 onMethodChange={updateRequestMethod}
@@ -106,7 +106,7 @@ class App extends Component {
     const activeRequest = requests.all.find(r => r.id === requests.active);
 
     return (
-      <div className="grid">
+      <div className="grid bg-super-dark">
         <Sidebar
           activateRequest={actions.activateRequest}
           changeFilter={actions.changeFilter}
@@ -134,9 +134,6 @@ App.propTypes = {
     updateRequestMethod: PropTypes.func.isRequired,
     toggleRequestGroup: PropTypes.func.isRequired
   }).isRequired,
-  sidebar: PropTypes.shape({
-    
-  }).isRequired,
   requests: PropTypes.shape({
     all: PropTypes.array.isRequired,
     active: PropTypes.string // "required" but can be null
@@ -151,7 +148,6 @@ function mapStateToProps (state) {
   return {
     actions: state.actions,
     requests: state.requests,
-    sidebar: state.sidebar,
     requestGroups: state.requestGroups,
     loading: state.loading
   };
@@ -163,8 +159,7 @@ function mapDispatchToProps (dispatch) {
       {},
       bindActionCreators(GlobalActions, dispatch),
       bindActionCreators(RequestActions, dispatch),
-      bindActionCreators(RequestGroupActions, dispatch),
-      bindActionCreators(SidebarActions, dispatch)
+      bindActionCreators(RequestGroupActions, dispatch)
     )
   }
 }

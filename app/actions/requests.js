@@ -37,6 +37,8 @@ export function addRequest (requestGroupId = null) {
     const request = buildRequest({name: 'My Request'});
     dispatch({type: types.REQUEST_ADD, request});
 
+    // HACK: Add request to group right away. Not sure how to get around this
+    // TODO: Make this not need to know about RequestGroup actions
     if (requestGroupId) {
       const id = requestGroupId;
       const requestId = request.id;
@@ -90,7 +92,9 @@ export function updateRequest (requestPatch) {
 export function duplicateRequest (oldRequest, requestGroupId) {
   return (dispatch) => {
     dispatch(loadStart());
-    const request = buildRequest(Object.assign({}, oldRequest, {id: null}));
+    const request = buildRequest(
+      Object.assign({}, oldRequest, {id: null, name: `${oldRequest.name} Copy`})
+    );
     dispatch({type: types.REQUEST_ADD, request});
 
     if (requestGroupId) {
