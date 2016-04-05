@@ -3,20 +3,11 @@
 
 .sidebar {
   height: 100%;
-
-  .pane__body {
-    width: $sidebar-width;
-    height: 100%;
-  }
+  width: $sidebar-width;
+  flex-shrink: 0;
 
   .sidebar__scroll {
     overflow-y: auto;
-    height: 100%;
-  }
-
-  .pane__header,
-  .pane__body {
-    border-left: 0;
   }
 
   .sidebar__item__row {

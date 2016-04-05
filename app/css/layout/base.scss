@@ -34,7 +34,6 @@ h2 {
 
 .tall {
   height: 100%;
-  display: block;
   box-sizing: border-box;
 }
 
@@ -68,6 +67,10 @@ i.fa {
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+.scrollable {
+  overflow: scroll;
 }
 
 .hover-scrollbars {

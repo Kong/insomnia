@@ -128,12 +128,12 @@ class Sidebar extends Component {
     const {activeFilter, requestGroups} = this.props;
 
     return (
-      <aside className="sidebar pane bg-dark">
-        <div className="grid-v">
-          <header className="pane__header">
+      <aside className="sidebar bg-dark">
+        <div className="grid--v">
+          <header className="header">
             <h1><WorkspaceDropdown /></h1>
           </header>
-          <div className="pane__body grid-v">
+          <div className="grid--v">
             <div className="stock-height form-control form-control--outlined">
               <DebouncingInput
                 type="text"

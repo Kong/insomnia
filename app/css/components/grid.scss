@@ -1,54 +1,42 @@
 @import '../constants/dimensions';
 
-.grid {
+.grid,
+.grid--v {
   display: flex;
-  flex-direction: row;
   flex-wrap: nowrap;
   justify-content: center;
-  align-items: center;
-  align-content: flex-start;
-  height: 100%;
-  width: 100%;
+  align-items: stretch;
+  align-content: stretch;
+  overflow: auto;
   box-sizing: border-box;
 
-  &.grid--left {
+  &.grid--center {
+    align-items: center;
+  }
+
+  &.grid--start {
     justify-content: flex-start;
   }
 
-  &.grid--right {
+  &.grid--end {
     justify-content: flex-end;
   }
 
-  & > .col {
-    display: block;
-    flex: 1 1 auto;
-    width: 100%;
-    overflow: hidden;
+  & > .grid__cell {
+    overflow: auto;
+    flex: 1 1 100%;
     box-sizing: border-box;
-  }
-
-  .pull-right {
-    align-self: flex-end;
   }
 }
 
-.grid-v {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: stretch;
-  align-content: flex-start;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
+.grid {
+  max-width: 100%;
+  flex-direction: row;
+}
 
-  & > .row {
-    display: block;
-    flex: 1 1 auto;
-    height: 100%;
-    box-sizing: border-box;
-  }
+.grid--v {
+  max-height: 100%;
+  flex-direction: column;
 }
 
 @media (max-width: $breakpoint-md) {

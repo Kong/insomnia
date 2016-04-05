@@ -11,13 +11,11 @@
 @import 'components/links';
 
 /* Layout */
-@import 'components/pane';
 @import 'components/forms';
+@import 'components/header';
 
 /* Components */
 @import 'layout/sidebar';
-@import 'layout/request';
-@import 'layout/response';
 @import 'components/tag';
 @import 'components/tabs';
 @import 'components/scrollbars';
