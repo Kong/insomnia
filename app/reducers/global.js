@@ -23,11 +23,13 @@ export default function (state = initialState, action) {
       const settings = settingsReducer(state.settings, action);
       const requests = requestsReducer(state.requests, action);
       const requestGroups = requestGroupsReducer(state.requestGroups, action);
+      const sidebar = requestGroupsReducer(state.sidebar, action);
 
       return Object.assign({}, state, {
         settings,
         requests,
-        requestGroups
+        requestGroups,
+        sidebar
       });
   }
 };

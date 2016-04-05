@@ -11,6 +11,14 @@
   width: 100%;
   box-sizing: border-box;
 
+  &.grid--left {
+    justify-content: flex-start;
+  }
+
+  &.grid--right {
+    justify-content: flex-end;
+  }
+
   & > .col {
     display: block;
     flex: 1 1 auto;

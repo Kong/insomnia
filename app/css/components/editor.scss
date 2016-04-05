@@ -10,7 +10,8 @@
     width: 100%;
     font-family: "Source Code Pro", monospace;
     box-sizing: border-box;
-    font-size: 11px;
+    font-size: $font-size-md;
+    padding-top: $padding-sm;
   }
 
   .CodeMirror,
@@ -18,7 +19,8 @@
   .CodeMirror-gutters,
   .CodeMirror-scrollbar-filler,
   .CodeMirror-gutter-filler {
-    background-color: $bg-dark !important;
+    // Let the background behind show through
+    background-color: transparent !important;
   }
 
   .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {

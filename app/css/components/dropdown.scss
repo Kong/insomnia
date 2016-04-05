@@ -5,15 +5,6 @@
   position: relative;
   display: inline-block;
 
-  &.dropdown--open ul {
-    display: block;
-  }
-
-  &.dropdown--right ul {
-    right: 0;
-    left: auto;
-  }
-
   ul {
     position: absolute;
     left: 0;
@@ -25,17 +16,22 @@
 
     li {
       background: $bg-super-light;
+      //border: 1px solid $hl;
+      border-bottom-width: 0;
+      border-top-width: 0;
 
       &:first-child {
         border-top-left-radius: $radius-md;
         border-top-right-radius: $radius-md;
         padding-top: 2px;
+        border-top-width: 1px;
       }
 
       &:last-child {
         border-bottom-left-radius: $radius-md;
         border-bottom-right-radius: $radius-md;
         padding-bottom: 2px;
+        border-bottom-width: 1px;
       }
 
       & > button {
@@ -56,9 +52,19 @@
 
         i.fa {
           display: inline-block;
-          width: 1.5em;
+          width: 2em;
+          text-align: left;
         }
       }
     }
+  }
+
+  &.dropdown--open ul {
+    display: block;
+  }
+
+  &.dropdown--right ul {
+    right: 0;
+    left: auto;
   }
 }

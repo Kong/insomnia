@@ -8,15 +8,19 @@
   line-height: 1em;
   box-sizing: border-box;
   border-radius: $radius-md;
-  font-size: $font-size-sm;
+  text-align: center;
 
   &:last-child {
     margin-right: 0;
   }
 
   &.tag--small {
-    padding: $padding-xxs;
-    font-size: $font-size-xs;
+    padding: $padding-xs;
+    font-size: $font-size-sm;
     border-radius: $radius-sm;
+  }
+
+  &.tag--no-border {
+    border-width: 0;
   }
 }

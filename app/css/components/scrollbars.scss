@@ -3,17 +3,10 @@
 
 ::-webkit-scrollbar {
   width: 6px;
-}
-
-::-webkit-scrollbar {
   height: 6px;
 }
 
-::-webkit-scrollbar-track {
-  //background: rgba(100, 100, 100, 0.1);
-}
-
 ::-webkit-scrollbar-thumb {
-  background: $hl-md;
+  background: $hl-lg;
   border-radius: $radius-md;
 }

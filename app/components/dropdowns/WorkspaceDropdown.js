@@ -27,7 +27,7 @@ class WorkspaceDropdown extends Component {
             <i className="fa fa-plus-circle"></i> Add Request
           </button></li>
           <li><button onClick={e => actions.addRequestGroup()}>
-            <i className="fa fa-plus-circle"></i> Add Request Group
+            <i className="fa fa-folder"></i> Add Folder
           </button></li>
           <li><button><i className="fa fa-share-square-o"></i> Import/Export</button></li>
           <li><button><i className="fa fa-empty"></i> Toggle Sidebar</button></li>

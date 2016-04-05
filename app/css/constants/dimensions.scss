@@ -34,6 +34,14 @@ $breakpoint-sm: 580px;
   padding: $padding-md;
 }
 
+.pad-left-half {
+  padding-left: $padding-md / 2;
+}
+
+.pad-right-half {
+  padding-right: $padding-md / 2;
+}
+
 .txt-sm {
   font-size: $font-size-sm;
 }

@@ -30,19 +30,19 @@ class App extends Component {
       <div className="grid grid-collapse">
         <section id="request-pane" className="pane col tall">
           <div className="grid-v">
-            <header className="pane__header bg-super-dark">
+            <header className="pane__header bg-super-light">
               <RequestUrlBar
                 onUrlChange={updateRequestUrl}
                 onMethodChange={updateRequestMethod}
                 request={activeRequest}/>
             </header>
-            <div className="pane__body grid-v">
+            <div className="pane__body grid-v bg-super-dark">
               <Tabs selectedIndex={0} className="grid-v">
-                <TabList className="grid txt-sm">
-                  <Tab><button className="btn btn--compact">Body</button></Tab>
-                  <Tab><button className="btn btn--compact">Params</button></Tab>
-                  <Tab><button className="btn btn--compact">Auth</button></Tab>
-                  <Tab><button className="btn btn--compact">Headers</button></Tab>
+                <TabList className="grid grid--left">
+                  <Tab><button className="btn">Body</button></Tab>
+                  <Tab><button className="btn">Params</button></Tab>
+                  <Tab><button className="btn">Auth</button></Tab>
+                  <Tab><button className="btn">Headers</button></Tab>
                 </TabList>
                 <TabPanel className="grid-v">
                   <RequestBodyEditor
@@ -59,19 +59,19 @@ class App extends Component {
         </section>
         <section id="response-pane" className="pane col tall">
           <div className="grid-v">
-            <header className="pane__header text-center bg-super-dark">
+            <header className="pane__header text-center">
               <div className="grid">
                 <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
                 <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
               </div>
             </header>
             <div className="pane__body grid-v">
-              <Tabs selectedIndex={0} className="grid-v">
-                <TabList className="grid txt-sm">
-                  <Tab><button className="btn btn--compact">Response</button></Tab>
-                  <Tab><button className="btn btn--compact">Raw</button></Tab>
-                  <Tab><button className="btn btn--compact">Headers</button></Tab>
-                  <Tab><button className="btn btn--compact">Cookies</button></Tab>
+              <Tabs selectedIndex={0} className="grid-v bg-super-dark">
+                <TabList className="grid grid--left">
+                  <Tab><button className="btn">Response</button></Tab>
+                  <Tab><button className="btn">Raw</button></Tab>
+                  <Tab><button className="btn">Headers</button></Tab>
+                  <Tab><button className="btn">Cookies</button></Tab>
                 </TabList>
                 <TabPanel className="grid-v">
                   <Editor
@@ -106,7 +106,7 @@ class App extends Component {
     const activeRequest = requests.all.find(r => r.id === requests.active);
 
     return (
-      <div className="grid bg-dark">
+      <div className="grid">
         <Sidebar
           activateRequest={actions.activateRequest}
           changeFilter={actions.changeFilter}
@@ -134,6 +134,9 @@ App.propTypes = {
     updateRequestMethod: PropTypes.func.isRequired,
     toggleRequestGroup: PropTypes.func.isRequired
   }).isRequired,
+  sidebar: PropTypes.shape({
+    
+  }).isRequired,
   requests: PropTypes.shape({
     all: PropTypes.array.isRequired,
     active: PropTypes.string // "required" but can be null
@@ -148,6 +151,7 @@ function mapStateToProps (state) {
   return {
     actions: state.actions,
     requests: state.requests,
+    sidebar: state.sidebar,
     requestGroups: state.requestGroups,
     loading: state.loading
   };
@@ -159,7 +163,8 @@ function mapDispatchToProps (dispatch) {
       {},
       bindActionCreators(GlobalActions, dispatch),
       bindActionCreators(RequestActions, dispatch),
-      bindActionCreators(RequestGroupActions, dispatch)
+      bindActionCreators(RequestGroupActions, dispatch),
+      bindActionCreators(SidebarActions, dispatch)
     )
   }
 }

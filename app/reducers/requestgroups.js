@@ -38,45 +38,29 @@ function requestGroupsReducer (state = [], action) {
         }
       });
 
-    case types.REQUEST_GROUP_ADD_CHILD_REQUEST:
-      return state.map(rg => {
-        if (rg.id === action.id) {
-          rg.children = [
-            {type: 'Request', id: action.requestId},
-            ...rg.children
-          ];
-        }
-        return rg;
-      });
-
     default:
       return state;
   }
 }
 
 export default function (state = initialState, action) {
-  let all, collapsed;
   switch (action.type) {
 
     case types.REQUEST_GROUP_ADD:
-      all = requestGroupsReducer(state.all, action);
+      let all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
 
     case types.REQUEST_GROUP_DELETE:
       // TODO: Remove from collapsed as well
-      all = state.all.filter(rg => rg.id !== action.id);
-      return Object.assign({}, state, {all});
-
-    case types.REQUEST_GROUP_ADD_CHILD_REQUEST:
-      all = requestGroupsReducer(state.all, action);
+      let all = state.all.filter(rg => rg.id !== action.id);
       return Object.assign({}, state, {all});
 
     case types.REQUEST_GROUP_TOGGLE:
-      all = requestGroupsReducer(state.all, action);
+      let all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
 
     case types.REQUEST_GROUP_UPDATE:
-      all = requestGroupsReducer(state.all, action);
+      let all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
 
     default:

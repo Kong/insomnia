@@ -1,27 +1,15 @@
 /* Background Colors */
 //$bg-primary: #7D70CC;
-$bg-light: #efefef;
+$bg-light: #e8e8e8;
 $bg-super-light: #fff;
-$bg-dark: #272824;
-$bg-super-dark: #222320;
-
-// For light theme
-//$bg-super-dark: #efefef;
-//$bg-dark: #fff;
-//$bg-light: #272824;
-//$bg-super-light: #22231f;
+$bg-dark: #2e2f2b;
+$bg-super-dark: darken($bg-dark, 2);
 
 /* Font Colors */
 $font-light-bg: #555;
 $font-dark-bg: #ddd;
-$font-super-dark-bg: #ccc;
+$font-super-dark-bg: #c8c8c8;
 $font-primary-bg: #eee;
-
-// For light theme
-//$font-dark-bg: #444;
-//$font-light-bg: #ddd;
-//$font-super-dark-bg: #333;
-//$font-primary-bg: #eee;
 
 $hl-xxs: rgba(140, 140, 140, 0.05);
 $hl-xs: rgba(140, 140, 140, 0.09);
@@ -35,6 +23,7 @@ $hl: rgba(140, 140, 140, 1);
 $success: #91c74e;
 $warning: #ffad36;
 $danger: #ff6d59;
+$surprise: #a086ff;
 $info: #52adc1;
 
 $faint-opacity: 0.4;
@@ -59,11 +48,16 @@ $faint-opacity: 0.4;
 }
 
 .info,
-.method-GET,
 .method-OPTIONS,
 .method-HEAD {
   border-color: $info !important;
   color: $info;
+}
+
+.surprise,
+.method-GET {
+  border-color: $surprise !important;
+  color: $surprise;
 }
 
 .bg-dark {

@@ -13,7 +13,7 @@ class MethodTag extends Component {
     }
 
     return (
-      <div className={'tag tag--small method-' + method}>
+      <div className={'tag tag--no-border tag--small method-' + method}>
         {methodName}
       </div>
     );

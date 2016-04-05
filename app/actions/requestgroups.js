@@ -25,7 +25,7 @@ function buildRequestGroup (requestGroup) {
   const modified = requestGroup.modified || Date.now();
 
   // Create the request
-  return Object.assign(defaultRequestGroup, requestGroup, {
+  return Object.assign({}, defaultRequestGroup, requestGroup, {
     id, created, modified
   });
 }

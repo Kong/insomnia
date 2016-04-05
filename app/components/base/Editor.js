@@ -34,14 +34,6 @@ import 'codemirror/addon/display/placeholder';
 // window.htmlhint = htmlhint;
 
 // CSS Themes
-import 'codemirror/theme/material.css'
-import 'codemirror/theme/railscasts.css'
-import 'codemirror/theme/tomorrow-night-bright.css'
-import 'codemirror/theme/tomorrow-night-eighties.css'
-import 'codemirror/theme/ambiance.css'
-import 'codemirror/theme/mbo.css'
-import 'codemirror/theme/pastel-on-dark.css'
-import 'codemirror/theme/seti.css'
 import 'codemirror/theme/monokai.css'
 
 // App styles

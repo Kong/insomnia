@@ -5,8 +5,12 @@
   height: 100%;
 
   .pane__body {
-    overflow-y: auto;
     width: $sidebar-width;
+    height: 100%;
+  }
+
+  .sidebar__scroll {
+    overflow-y: auto;
     height: 100%;
   }
 
@@ -24,7 +28,7 @@
     color: inherit;
 
     &:hover {
-      background: $hl-xxs;
+      background-color: $hl-xxs;
     }
 
     & > button {
@@ -78,12 +82,20 @@
     }
 
     &.sidebar__item--bordered {
-      border-top: 1px solid $hl-xs;
+      border-top: 1px solid $hl-sm;
     }
 
     .tag {
       opacity: $faint-opacity;
+      width: 4em;
+      margin-right: 0;
+      text-align: left;
     }
+  }
+
+  // This removes the border on the first request group if there are no requests above it
+  .sidebar__request-list li:first-child .sidebar__item--bordered {
+    border-top: 0;
   }
 
   ul ul .sidebar__item__row > button {

@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react'
+import classnames from 'classnames'
 import WorkspaceDropdown from './dropdowns/WorkspaceDropdown'
 import DebouncingInput from './base/DebouncingInput'
 import RequestActionsDropdown from './dropdowns/RequestActionsDropdown'
@@ -14,11 +15,28 @@ class Sidebar extends Component {
     const {activeFilter, activeRequest, addRequest, toggleRequestGroup, requests, requestGroups} = this.props;
 
     let filteredRequests = requests.filter(
-      r => r.name.toLowerCase().indexOf(activeFilter.toLowerCase()) != -1
+      r => {
+        // TODO: Move this to a lib file
+
+        if (!activeFilter) {
+          return true;
+        }
+
+        const toMatch = `${r.method} ::: ${r.name}`.toLowerCase();
+        const matchTokens = activeFilter.split(' ');
+        for (let i = 0; i < matchTokens.length; i++) {
+          if (toMatch.indexOf(matchTokens[i]) === -1) {
+            return false;
+          }
+        }
+
+        return true;
+      }
     );
 
     if (!requestGroup) {
       // Grab all requests that are not children of request groups
+      // TODO: Optimize this
       filteredRequests = filteredRequests.filter(r => {
         return !requestGroups.find(rg => {
           return rg.children.find(c => c.id === r.id)
@@ -26,53 +44,64 @@ class Sidebar extends Component {
       });
 
       return filteredRequests.map(request => this.renderRequestRow(request));
-    } else {
-      // Grab all of the children for this request group
-      filteredRequests = filteredRequests.filter(
-        r => requestGroup.children.find(c => c.id === r.id)
-      );
-
-      const isActive = activeRequest && filteredRequests.find(r => r.id == activeRequest.id);
-
-      let folderIconClass = 'fa-folder';
-      folderIconClass += requestGroup.collapsed ? '' : '-open';
-      folderIconClass += isActive ? '' : '-o';
-
-      return (
-        <li key={requestGroup.id}>
-          <div
-            className={'sidebar__item sidebar__item--bordered ' + (isActive ? 'sidebar__item--active' : '')}>
-            <div className="sidebar__item__row">
-              <button onClick={e => toggleRequestGroup(requestGroup.id)}>
-                <i className={'fa ' + folderIconClass}></i>
-                &nbsp;&nbsp;&nbsp;{requestGroup.name}
-              </button>
-            </div>
-            <div className="sidebar__item__btn">
-              <button onClick={(e) => addRequest(requestGroup.id)}>
-                <i className="fa fa-plus-circle"></i>
-              </button>
-              <Dropdown right={true} className="tall">
-                <button>
-                  <i className="fa fa-caret-down"></i>
-                </button>
-                <ul>
-                  <li><button>Hello</button></li>
-                  <li><button>Hello</button></li>
-                  <li><button>Hello</button></li>
-                </ul>
-              </Dropdown>
-            </div>
-          </div>
-          <ul>
-            {requestGroup.collapsed ? null : filteredRequests.map(request => this.renderRequestRow(request))}
-          </ul>
-        </li>
-      )
     }
+
+    // Grab all of the children for this request group
+    filteredRequests = filteredRequests.filter(
+      r => requestGroup.children.find(c => c.id === r.id)
+    );
+
+    // Don't show folder if it was not in the filter
+    if (activeFilter && !filteredRequests.length) {
+      return null;
+    }
+
+    const isActive = activeRequest && filteredRequests.find(r => r.id == activeRequest.id);
+
+    let folderIconClass = 'fa-folder';
+    let expanded = activeFilter || !requestGroup.collapsed;
+    folderIconClass += !expanded ? '' : '-open';
+    folderIconClass += isActive ? '' : '-o';
+    
+    const sidebarItemClassNames = classnames(
+      'sidebar__item',
+      'sidebar__item--bordered',
+      {'sidebar__item--active': isActive}
+    );
+    
+    return (
+      <li key={requestGroup.id}>
+        <div className={sidebarItemClassNames}>
+          <div className="sidebar__item__row">
+            <button onClick={e => toggleRequestGroup(requestGroup.id)}>
+              <i className={'fa ' + folderIconClass}></i>
+              &nbsp;&nbsp;&nbsp;{requestGroup.name}
+            </button>
+          </div>
+          <div className="sidebar__item__btn">
+            <button onClick={(e) => addRequest(requestGroup.id)}>
+              <i className="fa fa-plus-circle"></i>
+            </button>
+            <Dropdown right={true} className="tall">
+              <button>
+                <i className="fa fa-caret-down"></i>
+              </button>
+              <ul>
+                <li><button>Hello</button></li>
+                <li><button>Hello</button></li>
+                <li><button>Hello</button></li>
+              </ul>
+            </Dropdown>
+          </div>
+        </div>
+        <ul>
+          {!expanded ? null : filteredRequests.map(request => this.renderRequestRow(request, requestGroup))}
+        </ul>
+      </li>
+    );
   }
 
-  renderRequestRow (request) {
+  renderRequestRow (request, requestGroup = null) {
     const {activeRequest, activateRequest} = this.props;
     const isActive = activeRequest && request.id === activeRequest.id;
 
@@ -88,6 +117,7 @@ class Sidebar extends Component {
             className="sidebar__item__btn"
             right={true}
             request={request}
+            requestGroup={requestGroup}
           />
         </div>
       </li>
@@ -98,13 +128,13 @@ class Sidebar extends Component {
     const {activeFilter, requestGroups} = this.props;
 
     return (
-      <aside className="sidebar pane">
+      <aside className="sidebar pane bg-dark">
         <div className="grid-v">
-          <header className="pane__header bg-dark">
+          <header className="pane__header">
             <h1><WorkspaceDropdown /></h1>
           </header>
-          <div className="pane__body hide-scrollbars bg-dark">
-            <div className="stock-height form-control form-control--outlined col">
+          <div className="pane__body grid-v">
+            <div className="stock-height form-control form-control--outlined">
               <DebouncingInput
                 type="text"
                 placeholder="Filter Requests"
@@ -112,7 +142,7 @@ class Sidebar extends Component {
                 value={activeFilter}
                 onChange={this.onFilterChange.bind(this)}/>
             </div>
-            <ul>
+            <ul className="sidebar__scroll hover-scrollbars sidebar__request-list">
               {this.renderRequestGroupRow(null)}
               {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
             </ul>

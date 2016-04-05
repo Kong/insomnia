@@ -87,6 +87,27 @@ export function updateRequest (requestPatch) {
   };
 }
 
+export function duplicateRequest (oldRequest, requestGroupId) {
+  return (dispatch) => {
+    dispatch(loadStart());
+    const request = buildRequest(Object.assign({}, oldRequest, {id: null}));
+    dispatch({type: types.REQUEST_ADD, request});
+
+    if (requestGroupId) {
+      const id = requestGroupId;
+      const requestId = request.id;
+      dispatch({type: types.REQUEST_GROUP_ADD_CHILD_REQUEST, requestId, id});
+    }
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        dispatch(loadStop());
+        resolve();
+      }, 500);
+    });
+  };
+}
+
 export function updateRequestUrl (id, url) {
   return updateRequest({id, url});
 }
@@ -108,5 +129,5 @@ export function changeFilter (filter) {
 }
 
 export function sendRequest (id) {
-  
+
 }

@@ -3,15 +3,25 @@
 
 .ReactTabs {
   .ReactTabs__TabList {
-    height: $line-height-sm;
+    height: $line-height-md;
     flex-shrink: 0;
+    align-items: flex-start;
+    align-content: flex-start;
   }
 
-  .ReactTabs__Tab button {
-    color: $hl;
+  .ReactTabs__Tab {
+    align-self: flex-start;
+    button {
+      color: $hl;
+    }
   }
 
-  .ReactTabs__Tab--selected button {
-    color: inherit;
+  .ReactTabs__Tab--selected {
+    button {
+      color: inherit;
+    }
+  }
+
+  .ReactTabs__TabPanel {
   }
 }
