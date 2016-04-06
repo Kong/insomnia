@@ -1,49 +1,68 @@
 @import '../constants/colors';
 @import '../constants/dimensions';
 
-.editor {
-  width: 100%;
-  min-width: 100%;
-  //height: 100%;
-  min-height: 100%;
+.editor-wrapper {
+  /**
+   * There is a huge hack here. In order to expand an element 100% inside flexbox
+   * you need to use a position: absolute hack like this...
+   */
+  position: relative;
+  display: flex;
+  flex: 1 1 100%;
 
-  .CodeMirror {
-    //height: 100%;
-    font-family: "Source Code Pro", monospace;
+  .editor {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     box-sizing: border-box;
-    font-size: $font-size-md;
-    padding-top: $padding-sm;
+
+    .CodeMirror {
+      position: absolute;
+      height: 100% !important;
+      widtH: 100%;
+      font-family: "Source Code Pro", monospace;
+      box-sizing: border-box;
+      font-size: $font-size-md;
+      padding-top: $padding-sm;
+    }
+
+    .CodeMirror,
+    .cm-s-seti.CodeMirror, // Hack because seti theme is dumb
+    .CodeMirror-gutters,
+    .CodeMirror-scrollbar-filler,
+    .CodeMirror-gutter-filler {
+      // Let the background behind show through
+      background-color: transparent !important;
+    }
+
+    .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
+      color: #555555 !important;
+    }
+
+    .CodeMirror-scroll {
+      /*
+       * Not sure why but this fixes vertical sizing of scroll
+       * area in flexbox grid
+       */
+      //box-sizing: border-box;
+      //margin-bottom: 0;
+      //padding-bottom: 0;
+
+      /* Normal Overrides */
+      cursor: text; // Show text cursor everywhere (not just in .Codemirror-lines)
+    }
+
+    .CodeMirror-lines {
+      // Scroll past the end
+      padding-bottom: 150px;
+    }
+
+    .CodeMirror-placeholder {
+      color: $hl-xxl;
+    }
   }
 
-  .CodeMirror,
-  .cm-s-seti.CodeMirror, // Hack because seti theme is dumb
-  .CodeMirror-gutters,
-  .CodeMirror-scrollbar-filler,
-  .CodeMirror-gutter-filler {
-    // Let the background behind show through
-    background-color: transparent !important;
-  }
-
-  .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
-    color: #555555 !important;
-  }
-
-  .CodeMirror-scroll {
-    /* Normal Overrides */
-    cursor: text; // Show text cursor everywhere (not just in .Codemirror-lines)
-  }
-
-  .CodeMirror-lines {
-    // Scroll past the end
-    padding-bottom: 150px;
-  }
-
-  .CodeMirror-placeholder {
-    color: $hl-xxl;
-  }
-
-  &.editor--readonly .CodeMirror-cursors {
+  &.editor-wrapper--readonly .CodeMirror-cursors {
     opacity: 0;
   }
 }
-

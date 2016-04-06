@@ -6,12 +6,12 @@
   flex-wrap: nowrap;
   justify-content: center;
   align-items: stretch;
-  align-content: stretch;
+  align-content: center;
   overflow: auto;
-  box-sizing: border-box;
 
   &.grid--center {
     align-items: center;
+    align-content: center;
   }
 
   &.grid--start {
@@ -23,9 +23,9 @@
   }
 
   & > .grid__cell {
+    display: flex;
     overflow: auto;
     flex: 1 1 100%;
-    box-sizing: border-box;
   }
 }
 

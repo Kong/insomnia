@@ -169,19 +169,21 @@ class Editor extends Component {
 
   render () {
     const classes = [
-      'editor',
+      'editor-wrapper',
       this.props.className,
-      (this.props.options || {}).readOnly ? 'editor--readonly' : ''
+      (this.props.options || {}).readOnly ? 'editor-wrapper--readonly' : ''
     ];
-    
+
     return (
       <div className={classes.join(' ')}>
-        <textarea
-          name={this.props.path}
-          ref='textarea'
-          defaultValue={this.props.value}
-          autoComplete='off'>
-        </textarea>
+        <div className="editor">
+          <textarea
+            name={this.props.path}
+            ref='textarea'
+            defaultValue={this.props.value}
+            autoComplete='off'>
+          </textarea>
+        </div>
       </div>
     );
   }

@@ -34,7 +34,14 @@ h2 {
 
 .tall {
   height: 100%;
-  box-sizing: border-box;
+}
+
+.wide {
+  width: 100%;
+}
+
+.relative {
+  position: relative;
 }
 
 /* Make all font awesome icons the same width */
