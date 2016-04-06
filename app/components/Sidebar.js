@@ -134,14 +134,14 @@ class Sidebar extends Component {
             <h1><WorkspaceDropdown /></h1>
           </header>
           <div className="grid--v">
-            <div className="stock-height form-control form-control--outlined">
+            {/*<div className="stock-height form-control form-control--outlined">
               <DebouncingInput
                 type="text"
                 placeholder="Filter Requests"
                 debounceMillis={100}
                 value={activeFilter}
                 onChange={this.onFilterChange.bind(this)}/>
-            </div>
+            </div>*/}
             <ul className="sidebar__scroll hover-scrollbars sidebar__request-list">
               {this.renderRequestGroupRow(null)}
               {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}

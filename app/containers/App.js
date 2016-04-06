@@ -29,20 +29,18 @@ class App extends Component {
     return (
       <div className="grid__cell grid grid-collapse">
         <section className="grid__cell grid--v">
-          <header className="header">
-            <div className="grid__cell">
-              <RequestUrlBar
-                onUrlChange={updateRequestUrl}
-                onMethodChange={updateRequestMethod}
-                request={activeRequest}/>
-            </div>
-          </header>
+          <div className="grid__cell grid__cell--no-flex">
+            <RequestUrlBar
+              onUrlChange={updateRequestUrl}
+              onMethodChange={updateRequestMethod}
+              request={activeRequest}/>
+          </div>
           <Tabs selectedIndex={0} className="grid__cell grid--v">
             <TabList className="grid grid--start">
-              <Tab><button className="btn">Body</button></Tab>
-              <Tab><button className="btn">Params</button></Tab>
-              <Tab><button className="btn">Auth</button></Tab>
-              <Tab><button className="btn">Headers</button></Tab>
+              <Tab><button className="btn btn--compact">Body</button></Tab>
+              <Tab><button className="btn btn--compact">Params</button></Tab>
+              <Tab><button className="btn btn--compact">Auth</button></Tab>
+              <Tab><button className="btn btn--compact">Headers</button></Tab>
             </TabList>
             <TabPanel className="grid__cell relative">
               <RequestBodyEditor
@@ -55,16 +53,15 @@ class App extends Component {
           </Tabs>
         </section>
         <section className="grid__cell grid--v">
-          <header className="grid grid--center header text-center">
+          <header className="grid grid--center header text-center bg-light txt-sm">
             <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
             <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
           </header>
           <Tabs selectedIndex={0} className="grid__cell grid--v">
             <TabList className="grid grid--start">
-              <Tab><button className="btn">Response</button></Tab>
-              <Tab><button className="btn">Raw</button></Tab>
-              <Tab><button className="btn">Headers</button></Tab>
-              <Tab><button className="btn">Cookies</button></Tab>
+              <Tab><button className="btn btn--compact">Response</button></Tab>
+              <Tab><button className="btn btn--compact">Raw</button></Tab>
+              <Tab><button className="btn btn--compact">Headers</button></Tab>
             </TabList>
             <TabPanel className="grid__cell">
               <Editor
@@ -75,7 +72,7 @@ class App extends Component {
                 }}
               />
             </TabPanel>
-            <TabPanel>
+            <TabPanel className="grid__cell">
               <Editor
                 options={{
                   mode: 'application/json',
@@ -84,8 +81,7 @@ class App extends Component {
                 }}
               />
             </TabPanel>
-            <TabPanel className="pad">Headers</TabPanel>
-            <TabPanel className="pad">Cookies</TabPanel>
+            <TabPanel className="pad grid__cell">Headers</TabPanel>
           </Tabs>
         </section>
       </div>
@@ -109,9 +105,9 @@ class App extends Component {
           requestGroups={requestGroups.all}
           requests={requests.all}/>
         <div className="grid__cell grid--v">
-          <header className="header">
+          {/*<header className="header bg-light">
             <div className="header__content"><h1>Hi World</h1></div>
-          </header>
+          </header>*/}
           {this.renderPageBody(actions, activeRequest)}
         </div>
       </div>

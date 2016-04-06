@@ -11,6 +11,10 @@
     height: 100%;
   }
 
+  &.form-control--compact {
+    height: $line-height-sm;
+  }
+
   &.form-control--right button:last-child,
   &.form-control--left input {
     padding-left: $padding-md;
@@ -69,7 +73,6 @@ input, button {
 
 button {
   width: auto;
-  cursor: pointer;
   padding: 0;
   margin: 0;
 }

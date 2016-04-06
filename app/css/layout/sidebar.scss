@@ -2,6 +2,8 @@
 @import '../constants/colors';
 
 .sidebar {
+  border-right: 1px solid $hl-sm;
+  box-shadow: 0 0 1.5rem 0 rgba(0, 0, 0, 0.1);
   height: 100%;
   width: $sidebar-width;
   flex-shrink: 0;

@@ -11,7 +11,7 @@ class WorkspaceDropdown extends Component {
 
     return (
       <Dropdown right={true} {...other} className="block">
-        <button className="header__content">
+        <button className="btn header__content">
           <div className="grid grid--center">
             <div className="grid__cell">Insomnia</div>
             <div className="no-wrap">

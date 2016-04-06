@@ -3,7 +3,6 @@
 
 .ReactTabs {
   .ReactTabs__TabList {
-    height: $line-height-md;
     flex-shrink: 0;
     align-items: flex-start;
     align-content: flex-start;
@@ -11,8 +10,10 @@
 
   .ReactTabs__Tab {
     align-self: flex-start;
+
     button {
-      color: $hl;
+      color: $hl-xxl;
+      position: relative;
     }
   }
 
@@ -20,8 +21,14 @@
     button {
       color: inherit;
     }
+
+    &,
+    button:hover {
+      background-color: transparent;
+    }
   }
 
   .ReactTabs__TabPanel {
+    //border-top: 1px solid $hl-sm;
   }
 }

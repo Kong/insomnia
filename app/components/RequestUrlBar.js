@@ -10,9 +10,9 @@ class UrlInput extends Component {
   render () {
     const {onUrlChange, onMethodChange, request} = this.props;
     return (
-      <div className="grid form-control form-control--left form-control--right">
+      <div className="grid wide form-control form-control--left form-control--right bg-super-light">
         <Dropdown>
-          <button className="btn txt-md">
+          <button className="btn txt-lg">
             {request.method}&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
           </button>
           <ul>
@@ -31,7 +31,7 @@ class UrlInput extends Component {
                initialValue={request.url}
                onChange={onUrlChange}/>
         <button className="btn">
-          <i className="fa fa-repeat txt-lg"></i>
+          <i className="fa fa-repeat txt-xl"></i>
         </button>
       </div>
     )

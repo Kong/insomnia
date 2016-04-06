@@ -24,6 +24,11 @@
   & > .grid__cell {
     display: flex;
     flex: 1 1 100%;
+
+    &.grid__cell--no-flex {
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
   }
 }
 
