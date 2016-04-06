@@ -9,8 +9,7 @@ describe('RequestGroups Reducer', () => {
 
   beforeEach(() => {
     initialState = {
-      all: [],
-      collapsed: []
+      all: []
     };
 
     requestGroup = {

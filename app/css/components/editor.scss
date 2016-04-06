@@ -40,15 +40,6 @@
     }
 
     .CodeMirror-scroll {
-      /*
-       * Not sure why but this fixes vertical sizing of scroll
-       * area in flexbox grid
-       */
-      //box-sizing: border-box;
-      //margin-bottom: 0;
-      //padding-bottom: 0;
-
-      /* Normal Overrides */
       cursor: text; // Show text cursor everywhere (not just in .Codemirror-lines)
     }
 

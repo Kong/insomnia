@@ -28,14 +28,14 @@ class App extends Component {
 
     return (
       <div className="grid__cell grid grid-collapse">
-        <section className="grid__cell grid--v">
-          <div className="grid__cell grid__cell--no-flex">
+        <section className="grid__cell grid--v section">
+          <div className="grid__cell grid__cell--no-flex section__header">
             <RequestUrlBar
               onUrlChange={updateRequestUrl}
               onMethodChange={updateRequestMethod}
               request={activeRequest}/>
           </div>
-          <Tabs selectedIndex={0} className="grid__cell grid--v">
+          <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
             <TabList className="grid grid--start">
               <Tab><button className="btn btn--compact">Body</button></Tab>
               <Tab><button className="btn btn--compact">Params</button></Tab>
@@ -52,12 +52,12 @@ class App extends Component {
             <TabPanel className="grid__cell pad">Headers</TabPanel>
           </Tabs>
         </section>
-        <section className="grid__cell grid--v">
-          <header className="grid grid--center header text-center bg-light txt-sm">
+        <section className="grid__cell grid--v section">
+          <header className="grid grid--center header text-center bg-light txt-sm section__header">
             <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
             <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
           </header>
-          <Tabs selectedIndex={0} className="grid__cell grid--v">
+          <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
             <TabList className="grid grid--start">
               <Tab><button className="btn btn--compact">Response</button></Tab>
               <Tab><button className="btn btn--compact">Raw</button></Tab>

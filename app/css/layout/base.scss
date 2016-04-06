@@ -94,6 +94,16 @@ i.fa {
   height: $line-height-md;
 }
 
+.section:not(:last-child) {
+  .section__header {
+
+  }
+
+  .section__body {
+    border-right: 1px solid $hl-sm;
+  }
+}
+
 strong {
   font-weight: 600;
 }
