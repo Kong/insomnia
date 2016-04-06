@@ -26,7 +26,7 @@ class UrlInput extends Component {
           </ul>
         </Dropdown>
         <Input type="text"
-               className="txt-lg"
+               className="grid__cell txt-lg"
                placeholder="http://echo.insomnia.rest/status/200"
                initialValue={request.url}
                onChange={onUrlChange}/>

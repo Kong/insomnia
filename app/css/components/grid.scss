@@ -7,7 +7,6 @@
   justify-content: center;
   align-items: stretch;
   align-content: center;
-  overflow: auto;
 
   &.grid--center {
     align-items: center;
@@ -24,7 +23,6 @@
 
   & > .grid__cell {
     display: flex;
-    overflow: auto;
     flex: 1 1 100%;
   }
 }
