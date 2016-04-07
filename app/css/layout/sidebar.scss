@@ -9,6 +9,7 @@
 
   .sidebar__scroll {
     overflow-y: auto;
+    height: 100%;
   }
 
   .sidebar__item__row {
@@ -30,7 +31,6 @@
   }
 
   .sidebar__item__btn {
-    display: none;
     position: absolute;
     right: 0;
     top: 0;
@@ -39,6 +39,7 @@
 
     & > button,
     & > .dropdown > button {
+      display: none;
       padding: 0 $padding-sm;
       height: 100%;
       color: inherit;
@@ -67,7 +68,8 @@
       padding-right: 0;
     }
 
-    &:hover .sidebar__item__btn {
+    &:hover .sidebar__item__btn > button,
+    &:hover .sidebar__item__btn > .dropdown > button {
       display: block;
     }
 

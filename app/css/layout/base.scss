@@ -70,6 +70,10 @@ i.fa {
   display: inline-block !important;
 }
 
+.italic {
+  font-style: italic;
+}
+
 .hide-scrollbars {
   &::-webkit-scrollbar {
     display: none;

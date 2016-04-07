@@ -6,6 +6,10 @@
   height: 6px;
 }
 
+::-webkit-scrollbar-track {
+  background: $hl-xxs;
+}
+
 ::-webkit-scrollbar-thumb {
   background: $hl-md;
   border-radius: $radius-md;

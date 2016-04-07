@@ -11,15 +11,17 @@ class Dropdown extends Component {
   componentDidMount () {
     // Capture clicks outside the component and close the dropdown
     // TODO: Remove this listener when component unmounts
-    document.addEventListener('click', this._clickEvenCallback.bind(this));
+    document.addEventListener('click', this._clickCallback.bind(this));
   }
 
   componentWillUnmount () {
-    document.removeEventListener('click', this._clickEvenCallback);
+    document.removeEventListener('click', this._clickCallback);
   }
 
-  _clickEvenCallback (e) {
-    if (this.refs.container && !this.refs.container.contains(e.target)) {
+  _clickCallback (e) {
+    const container = this.refs.container;
+
+    if (container && !container.contains(e.target)) {
       e.preventDefault();
       this.setState({open: false});
     }

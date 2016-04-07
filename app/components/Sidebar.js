@@ -1,7 +1,6 @@
 import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
 import WorkspaceDropdown from './dropdowns/WorkspaceDropdown'
-import DebouncingInput from './base/DebouncingInput'
 import RequestActionsDropdown from './dropdowns/RequestActionsDropdown'
 import MethodTag from './MethodTag'
 import Dropdown from './base/Dropdown'
@@ -62,13 +61,13 @@ class Sidebar extends Component {
     let expanded = !requestGroup.collapsed;
     folderIconClass += !expanded ? '' : '-open';
     folderIconClass += isActive ? '' : '-o';
-    
+
     const sidebarItemClassNames = classnames(
       'sidebar__item',
       'sidebar__item--bordered',
       {'sidebar__item--active': isActive}
     );
-    
+
     return (
       <li key={requestGroup.id}>
         <div className={sidebarItemClassNames}>
@@ -78,7 +77,7 @@ class Sidebar extends Component {
               &nbsp;&nbsp;&nbsp;{requestGroup.name}
             </button>
           </div>
-          <div className="sidebar__item__btn">
+          <div className="sidebar__item__btn grid">
             <button onClick={(e) => addRequest(requestGroup.id)}>
               <i className="fa fa-plus-circle"></i>
             </button>
@@ -95,58 +94,63 @@ class Sidebar extends Component {
           </div>
         </div>
         <ul>
+          {expanded && !filteredRequests.length ? this.renderRequestRow() : null}
           {!expanded ? null : filteredRequests.map(request => this.renderRequestRow(request, requestGroup))}
         </ul>
       </li>
     );
   }
 
-  renderRequestRow (request, requestGroup = null) {
+  renderRequestRow (request = null, requestGroup = null) {
     const {activeRequest, activateRequest} = this.props;
-    const isActive = activeRequest && request.id === activeRequest.id;
+    const isActive = request && activeRequest && request.id === activeRequest.id;
 
     return (
-      <li key={request.id}>
+      <li key={request ? request.id : 'none'}>
         <div className={'sidebar__item ' + (isActive ? 'sidebar__item--active' : '')}>
           <div className="sidebar__item__row">
-            <button onClick={() => {activateRequest(request.id)}}>
-              <MethodTag method={request.method}/> {request.name}
-            </button>
+            {request ? (
+              <button onClick={() => {activateRequest(request.id)}}>
+                <MethodTag method={request.method}/> {request.name}
+              </button>
+            ) : (
+              <button className="italic">No Requests</button>
+            )}
           </div>
-          <RequestActionsDropdown
-            className="sidebar__item__btn"
-            right={true}
-            request={request}
-            requestGroup={requestGroup}
-          />
+          {request ? (
+            <RequestActionsDropdown
+              className="sidebar__item__btn"
+              right={true}
+              request={request}
+              requestGroup={requestGroup}
+            />
+          ) : null}
         </div>
       </li>
     );
   }
 
   render () {
-    const {activeFilter, requestGroups} = this.props;
+    const {requestGroups} = this.props;
 
     return (
-      <aside className="sidebar bg-dark">
-        <div className="grid--v">
-          <header className="header">
-            <h1><WorkspaceDropdown /></h1>
-          </header>
-          <div className="grid--v">
-            {/*<div className="stock-height form-control form-control--outlined">
-              <DebouncingInput
-                type="text"
-                placeholder="Filter Requests"
-                debounceMillis={100}
-                value={activeFilter}
-                onChange={this.onFilterChange.bind(this)}/>
-            </div>*/}
-            <ul className="sidebar__scroll hover-scrollbars sidebar__request-list">
-              {this.renderRequestGroupRow(null)}
-              {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
-            </ul>
-          </div>
+      <aside className="sidebar bg-dark grid--v">
+        <header className="header">
+          <h1><WorkspaceDropdown /></h1>
+        </header>
+        <div className="grid--v grid--start grid__cell">
+          {/*<div className="stock-height form-control form-control--outlined">
+           <DebouncingInput
+           type="text"
+           placeholder="Filter Requests"
+           debounceMillis={100}
+           value={activeFilter}
+           onChange={this.onFilterChange.bind(this)}/>
+           </div>*/}
+          <ul className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
+            {this.renderRequestGroupRow(null)}
+            {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
+          </ul>
         </div>
       </aside>
     )

@@ -8,6 +8,8 @@ class MethodTag extends Component {
     let methodName;
     if (method === constants.METHOD_DELETE || method === constants.METHOD_OPTIONS) {
       methodName = method.slice(0, 3);
+    } else if (method === constants.METHOD_PATCH) {
+      methodName = 'PTCH';
     } else {
       methodName = method.slice(0, 4);
     }
