@@ -95,7 +95,7 @@ class App extends Component {
 
     return (
       <div className="grid bg-super-dark tall">
-        <Modal visible={true}>
+        <Modal visible={false} ref="modal">
           <ModalHeader>Header</ModalHeader>
           <ModalBody>
             <p>Hello</p>
