@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
 import WorkspaceDropdown from './dropdowns/WorkspaceDropdown'
 import RequestActionsDropdown from './dropdowns/RequestActionsDropdown'
+import DebouncingInput from './base/DebouncingInput'
 import MethodTag from './MethodTag'
 import Dropdown from './base/Dropdown'
 
@@ -139,7 +140,7 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {requestGroups} = this.props;
+    const {activeFilter, requestGroups} = this.props;
 
     return (
       <aside className="sidebar bg-dark grid--v">
@@ -147,14 +148,14 @@ class Sidebar extends Component {
           <h1><WorkspaceDropdown /></h1>
         </header>
         <div className="grid--v grid--start grid__cell">
-          {/*<div className="stock-height form-control form-control--outlined">
+          <div className="stock-height form-control form-control--outlined">
            <DebouncingInput
            type="text"
            placeholder="Filter Requests"
            debounceMillis={100}
            value={activeFilter}
            onChange={this.onFilterChange.bind(this)}/>
-           </div>*/}
+           </div>
           <ul className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
             {this.renderRequestGroupRow(null)}
             {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}

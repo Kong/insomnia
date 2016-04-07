@@ -78,7 +78,7 @@
     }
 
     .tag {
-      opacity: $faint-opacity;
+      opacity: 0.4;
       width: 4em;
       margin-right: 0;
       text-align: left;
@@ -91,6 +91,10 @@
   }
 
   ul ul .sidebar__item__row > button {
-    padding-left: $padding-sm * 3 !important;
+    padding-left: $padding-md !important;
+  }
+
+  ul ul ul .sidebar__item__row > button {
+    padding-left: $padding-md * 2 !important;
   }
 }
