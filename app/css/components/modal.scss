@@ -1,0 +1,29 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.modal {
+  position: absolute;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(20, 20, 20, 0.5);
+  padding: $padding-xl;
+
+  .modal__header {
+    border-bottom: 1px solid $hl-md;
+  }
+
+  .modal__content {
+    border-radius: $radius-md;
+    box-sizing: border-box;
+    min-width: $modal-width;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .modal__footer {
+    border-top: 1px solid $hl-md;
+  }
+}

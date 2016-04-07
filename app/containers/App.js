@@ -7,6 +7,7 @@ import Editor from '../components/base/Editor'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
+import {Modal, ModalHeader, ModalBody, ModalFooter} from '../components/base/Modal'
 
 import * as RequestActions from '../actions/requests'
 import * as RequestGroupActions from '../actions/requestGroups'
@@ -94,11 +95,19 @@ class App extends Component {
 
     return (
       <div className="grid bg-super-dark tall">
+        <Modal visible={true}>
+          <ModalHeader>Header</ModalHeader>
+          <ModalBody>
+            <p>Hello</p>
+          </ModalBody>
+          <ModalFooter>Footer</ModalFooter>
+        </Modal>
         <Sidebar
           activateRequest={actions.activateRequest}
           changeFilter={actions.changeFilter}
           addRequest={actions.addRequest}
           toggleRequestGroup={actions.toggleRequestGroup}
+          deleteRequestGroup={actions.deleteRequestGroup}
           activeRequest={activeRequest}
           activeFilter={requests.filter}
           loading={loading}
@@ -106,8 +115,8 @@ class App extends Component {
           requests={requests.all}/>
         <div className="grid__cell grid--v">
           {/*<header className="header bg-light">
-            <div className="header__content"><h1>Hi World</h1></div>
-          </header>*/}
+           <div className="header__content"><h1>Hi World</h1></div>
+           </header>*/}
           {this.renderPageBody(actions, activeRequest)}
         </div>
       </div>
@@ -118,6 +127,8 @@ class App extends Component {
 App.propTypes = {
   actions: PropTypes.shape({
     activateRequest: PropTypes.func.isRequired,
+    deleteRequestGroup: PropTypes.func.isRequired,
+    addRequest: PropTypes.func.isRequired,
     updateRequestBody: PropTypes.func.isRequired,
     updateRequestUrl: PropTypes.func.isRequired,
     changeFilter: PropTypes.func.isRequired,

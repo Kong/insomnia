@@ -4,6 +4,7 @@ $padding-sm: $padding-md * 0.5;
 $padding-xs: $padding-md * 0.35;
 $padding-xxs: $padding-md * 0.20;
 $padding-lg: $padding-md * 2;
+$padding-xl: $padding-md * 4;
 
 /* Fonts */
 $font-size: 12px;
@@ -24,6 +25,9 @@ $sidebar-width: 20rem;
 /* Borders */
 $radius-sm: 1px;
 $radius-md: 2px;
+
+/* Modals */
+$modal-width: 50rem;
 
 /* Breakpoints */
 $breakpoint-lg: 1500px;

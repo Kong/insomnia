@@ -34,7 +34,7 @@ function buildRequest (request) {
 export function addRequest (requestGroupId = null) {
   return (dispatch) => {
     dispatch(loadStart());
-    const request = buildRequest({name: 'My Request'});
+    const request = buildRequest({name: 'New Request'});
     dispatch({type: types.REQUEST_ADD, request});
 
     // HACK: Add request to group right away. Not sure how to get around this

@@ -11,7 +11,15 @@ class Sidebar extends Component {
   }
 
   renderRequestGroupRow (requestGroup) {
-    const {activeFilter, activeRequest, addRequest, toggleRequestGroup, requests, requestGroups} = this.props;
+    const {
+      activeFilter,
+      activeRequest,
+      addRequest,
+      deleteRequestGroup,
+      toggleRequestGroup,
+      requests,
+      requestGroups
+    } = this.props;
 
     let filteredRequests = requests.filter(
       r => {
@@ -86,9 +94,9 @@ class Sidebar extends Component {
                 <i className="fa fa-caret-down"></i>
               </button>
               <ul>
-                <li><button>Hello</button></li>
-                <li><button>Hello</button></li>
-                <li><button>Hello</button></li>
+                <li>
+                  <button onClick={e => deleteRequestGroup(requestGroup.id)}>Delete Request Group</button>
+                </li>
               </ul>
             </Dropdown>
           </div>
@@ -159,8 +167,10 @@ class Sidebar extends Component {
 
 Sidebar.propTypes = {
   activateRequest: PropTypes.func.isRequired,
+  addRequest: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
   toggleRequestGroup: PropTypes.func.isRequired,
+  deleteRequestGroup: PropTypes.func.isRequired,
   activeFilter: PropTypes.string,
   requests: PropTypes.array.isRequired,
   requestGroups: PropTypes.array.isRequired,

@@ -52,11 +52,11 @@ export default function (state = initialState, action) {
       all = requestsReducer(state.all, action);
       active = state.active === action.id ? null : state.active;
       return Object.assign({}, state, {all, active});
-    
+
     case types.REQUEST_UPDATE:
       all = requestsReducer(state.all, action);
       return Object.assign({}, state, {all});
-    
+
     case types.REQUEST_ACTIVATE:
       if (state.active === action.id) {
         // If it's the same, do nothing

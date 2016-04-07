@@ -1,5 +1,4 @@
 import * as types from '../constants/actionTypes'
-import * as methods from '../constants/global'
 import {loadStart} from "./global";
 import {loadStop} from "./global";
 
@@ -30,7 +29,7 @@ function buildRequestGroup (requestGroup) {
   });
 }
 
-export function addRequestGroup (name = 'My Group') {
+export function addRequestGroup (name = 'New Group') {
   return (dispatch) => {
     dispatch(loadStart());
     const requestGroup = buildRequestGroup({name});
@@ -69,7 +68,22 @@ export function updateRequestGroup (requestGroupPatch) {
 
     const modified = Date.now();
     const patch = Object.assign({}, requestGroupPatch, {modified});
-    dispatch({type: types.REQUEST_UPDATE, patch});
+    dispatch({type: types.REQUEST_GROUP_UPDATE, patch});
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        dispatch(loadStop());
+        resolve();
+      }, 800);
+    });
+  };
+}
+
+export function deleteRequestGroup (id) {
+  return (dispatch) => {
+    dispatch(loadStart());
+
+    dispatch({type: types.REQUEST_GROUP_DELETE, id});
 
     return new Promise((resolve) => {
       setTimeout(() => {

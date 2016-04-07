@@ -49,6 +49,9 @@ function requestGroupsReducer (state = [], action) {
         return rg;
       });
 
+    case types.REQUEST_GROUP_DELETE:
+      return state.filter(rg => rg.id !== action.id);
+
     default:
       return state;
   }
@@ -62,11 +65,6 @@ export default function (state = initialState, action) {
       all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
 
-    case types.REQUEST_GROUP_DELETE:
-      // TODO: Remove from collapsed as well
-      all = state.all.filter(rg => rg.id !== action.id);
-      return Object.assign({}, state, {all});
-
     case types.REQUEST_GROUP_ADD_CHILD_REQUEST:
       all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
@@ -78,7 +76,11 @@ export default function (state = initialState, action) {
     case types.REQUEST_GROUP_UPDATE:
       all = requestGroupsReducer(state.all, action);
       return Object.assign({}, state, {all});
-
+    
+    case types.REQUEST_GROUP_DELETE:
+      all = requestGroupsReducer(state.all, action);
+      return Object.assign({}, state, {all});
+    
     default:
       return state
   }
