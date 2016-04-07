@@ -71,6 +71,7 @@ class Modal extends Component {
     if (!this.state.visible) {
       return null;
     }
+    console.log('render');
 
     return (
       <div className="modal grid grid--center" onClick={this._handleClick.bind(this)} ref="modal">

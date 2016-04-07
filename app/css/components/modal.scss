@@ -12,7 +12,8 @@
   padding: $padding-xl;
 
   .modal__header {
-    border-radius: $radius-md;
+    border-top-left-radius: $radius-md;
+    border-top-right-radius: $radius-md;
     border-bottom: 1px solid $hl-md;
   }
 
@@ -25,7 +26,8 @@
   }
 
   .modal__footer {
-    border-radius: $radius-md;
+    border-bottom-left-radius: $radius-md;
+    border-bottom-right-radius: $radius-md;
     border-top: 1px solid $hl-md;
   }
 }

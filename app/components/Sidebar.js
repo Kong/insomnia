@@ -67,7 +67,7 @@ class Sidebar extends Component {
     const isActive = activeRequest && filteredRequests.find(r => r.id == activeRequest.id);
 
     let folderIconClass = 'fa-folder';
-    let expanded = !requestGroup.collapsed;
+    let expanded = !requestGroup.collapsed || activeFilter;
     folderIconClass += !expanded ? '' : '-open';
     folderIconClass += isActive ? '' : '-o';
 
@@ -152,7 +152,7 @@ class Sidebar extends Component {
            <DebouncingInput
            type="text"
            placeholder="Filter Requests"
-           debounceMillis={100}
+           debounceMillis={300}
            value={activeFilter}
            onChange={this.onFilterChange.bind(this)}/>
            </div>
