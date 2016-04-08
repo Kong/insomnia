@@ -3,6 +3,7 @@ import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 import Dropdown from '../base/Dropdown'
 import * as RequestActions from '../../actions/requests'
+import * as GlobalActions from '../../actions/global'
 
 class RequestActionsDropdown extends Component {
   render () {
@@ -20,7 +21,11 @@ class RequestActionsDropdown extends Component {
               Duplicate
             </button>
           </li>
-          <li><button>Rename</button></li>
+          <li>
+            <button onClick={e => actions.showRequestUpdateNamePrompt(request.id)}>
+              Rename
+            </button>
+          </li>
           <li><button>Export</button></li>
           <li><button onClick={e => actions.deleteRequest(request.id)}>Delete</button></li>
         </ul>
@@ -43,7 +48,13 @@ function mapStateToProps (state) {
 }
 
 function mapDispatchToProps (dispatch) {
-  return {actions: bindActionCreators(RequestActions, dispatch)}
+  return {
+    actions: Object.assign(
+      {},
+      bindActionCreators(RequestActions, dispatch),
+      bindActionCreators(GlobalActions, dispatch)
+    )
+  }
 }
 
 export default connect(

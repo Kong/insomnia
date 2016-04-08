@@ -1,7 +1,7 @@
 import * as types from '../constants/actionTypes'
 import * as methods from '../constants/global'
-import {loadStart} from "./global";
-import {loadStop} from "./global";
+import {loadStart, loadStop, showPrompt} from "./global";
+import {REQUEST_RENAME} from "../constants/prompts";
 
 const defaultRequest = {
   id: null,
@@ -124,6 +124,11 @@ export function updateRequestMethod (id, method) {
   return updateRequest({id, method});
 }
 
+export function updateRequestName (id, name) {
+  console.log('NEW NAME', id, name);
+  return updateRequest({id, name});
+}
+
 export function activateRequest (id) {
   return {type: types.REQUEST_ACTIVATE, id};
 }
@@ -134,4 +139,8 @@ export function changeFilter (filter) {
 
 export function sendRequest (id) {
 
+}
+
+export function showRequestUpdateNamePrompt (id) {
+  return showPrompt(REQUEST_RENAME, {id});
 }

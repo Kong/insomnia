@@ -4,7 +4,9 @@ const ModalHeader = (props) => (
   <div className="modal__header bg-light">
     <div className="grid">
       <div className="grid__cell pad">
-        {props.children}
+        <div className={props.className}>
+          {props.children}
+        </div>
       </div>
       <div className="grid--v">
         <button className="btn btn--compact txt-lg" data-close-modal="true">
@@ -17,33 +19,28 @@ const ModalHeader = (props) => (
 
 const ModalBody = (props) => (
   <div className="modal__body pad grid__cell scrollable">
-    <div>
+    <div className={props.className}>
       {props.children}
     </div>
   </div>
 );
 
 const ModalFooter = (props) => (
-  <div className="modal__footer pad">
-    {props.children}
+  <div className="modal__footer">
+    <div className={props.className}>
+      {props.children}
+    </div>
   </div>
 );
 
 class Modal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      visible: props.visible
-    }
-  }
-
   _handleClick (e) {
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
     let target = e.target;
     let close = false;
-    
+
     if (target === this.refs.modal) {
       close = true;
     }
@@ -56,25 +53,25 @@ class Modal extends Component {
 
       target = target.parentNode;
     }
-    
+
     if (close) {
       this.close();
     }
   }
-  
+
   close () {
-    this.setState({visible: !this.state.visible});
     this.props.onClose && this.props.onClose();
   }
 
   render () {
-    if (!this.state.visible) {
+    if (!this.props.visible) {
       return null;
     }
-    console.log('render');
 
     return (
-      <div className="modal grid grid--center" onClick={this._handleClick.bind(this)} ref="modal">
+      <div ref="modal"
+           className="modal grid grid--center"
+           onClick={this._handleClick.bind(this)}>
         <div className="modal__content grid--v bg-super-light">
           {this.props.children}
         </div>

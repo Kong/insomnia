@@ -5,10 +5,12 @@ import requestGroupsReducer from './requestGroups'
 
 const initialState = {
   initialized: false,
-  loading: false
+  loading: false,
+  prompt: null
 };
 
 export default function (state = initialState, action) {
+  let prompt;
   switch (action.type) {
     case types.GLOBAL_STATE_SAVED:
       return state;
@@ -18,6 +20,12 @@ export default function (state = initialState, action) {
       return Object.assign({}, state, {loading: true});
     case types.GLOBAL_LOAD_STOP:
       return Object.assign({}, state, {loading: false});
+    case types.GLOBAL_SHOW_PROMPT:
+      prompt = {id: action.id, data: action.data};
+      return Object.assign({}, state, {prompt});
+    case types.GLOBAL_HIDE_PROMPT:
+      prompt = null;
+      return Object.assign({}, state, {prompt});
     default:
       // Send everything else to the child reducers
       const settings = settingsReducer(state.settings, action);

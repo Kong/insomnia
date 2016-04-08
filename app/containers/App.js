@@ -4,10 +4,12 @@ import {bindActionCreators} from 'redux'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
 import Editor from '../components/base/Editor'
+import PromptModal from '../components/base/PromptModal'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
 import {Modal, ModalHeader, ModalBody, ModalFooter} from '../components/base/Modal'
+import {REQUEST_RENAME} from "../constants/prompts";
 
 import * as RequestActions from '../actions/requests'
 import * as RequestGroupActions from '../actions/requestGroups'
@@ -23,17 +25,13 @@ class App extends Component {
       return <div></div>;
     }
 
-    const updateRequestBody = actions.updateRequestBody.bind(null, activeRequest.id);
-    const updateRequestUrl = actions.updateRequestUrl.bind(null, activeRequest.id);
-    const updateRequestMethod = actions.updateRequestMethod.bind(null, activeRequest.id);
-
     return (
       <div className="grid__cell grid grid-collapse">
         <section className="grid__cell grid--v section">
           <div className="grid__cell grid__cell--no-flex section__header">
             <RequestUrlBar
-              onUrlChange={updateRequestUrl}
-              onMethodChange={updateRequestMethod}
+              onUrlChange={url => {actions.updateRequest({id: activeRequest.id, url})}}
+              onMethodChange={method => {actions.updateRequest({id: activeRequest.id, method})}}
               request={activeRequest}/>
           </div>
           <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
@@ -45,7 +43,7 @@ class App extends Component {
             </TabList>
             <TabPanel className="grid__cell relative">
               <RequestBodyEditor
-                onChange={updateRequestBody}
+                onChange={body => {actions.updateRequest({id: activeRequest.id, body})}}
                 request={activeRequest}/>
             </TabPanel>
             <TabPanel className="grid__cell pad">Params</TabPanel>
@@ -90,7 +88,7 @@ class App extends Component {
   }
 
   render () {
-    const {actions, loading, requests, requestGroups} = this.props;
+    const {actions, loading, requests, requestGroups, prompt} = this.props;
     const activeRequest = requests.all.find(r => r.id === requests.active);
 
     return (
@@ -102,6 +100,13 @@ class App extends Component {
           </ModalBody>
           <ModalFooter>Footer</ModalFooter>
         </Modal>
+        {!prompt ? null : (
+          <PromptModal
+            headerName="Rename Request"
+            visible={true}
+            onClose={() => actions.hidePrompt(prompt.id)}
+            onSubmit={name => actions.updateRequest({id: prompt.data.id, name})}/>
+        )}
         <Sidebar
           activateRequest={actions.activateRequest}
           changeFilter={actions.changeFilter}
@@ -129,8 +134,7 @@ App.propTypes = {
     activateRequest: PropTypes.func.isRequired,
     deleteRequestGroup: PropTypes.func.isRequired,
     addRequest: PropTypes.func.isRequired,
-    updateRequestBody: PropTypes.func.isRequired,
-    updateRequestUrl: PropTypes.func.isRequired,
+    updateRequest: PropTypes.func.isRequired,
     changeFilter: PropTypes.func.isRequired,
     updateRequestMethod: PropTypes.func.isRequired,
     toggleRequestGroup: PropTypes.func.isRequired
@@ -142,7 +146,8 @@ App.propTypes = {
   requestGroups: PropTypes.shape({
     all: PropTypes.array.isRequired
   }).isRequired,
-  loading: PropTypes.bool.isRequired
+  loading: PropTypes.bool.isRequired,
+  prompt: PropTypes.object
 };
 
 function mapStateToProps (state) {
@@ -150,7 +155,8 @@ function mapStateToProps (state) {
     actions: state.actions,
     requests: state.requests,
     requestGroups: state.requestGroups,
-    loading: state.loading
+    loading: state.loading,
+    prompt: state.prompt
   };
 }
 
