@@ -18,16 +18,24 @@ class RequestActionsDropdown extends Component {
         <ul>
           <li>
             <button onClick={e => actions.duplicateRequest(request, requestGroupId)}>
-              Duplicate
+              <i className="fa fa-copy"></i> Duplicate
             </button>
           </li>
           <li>
             <button onClick={e => actions.showRequestUpdateNamePrompt(request.id)}>
-              Rename
+              <i className="fa fa-edit"></i> Rename
             </button>
           </li>
-          <li><button>Export</button></li>
-          <li><button onClick={e => actions.deleteRequest(request.id)}>Delete</button></li>
+          <li>
+            <button>
+              <i className="fa fa-share-square-o"></i> Export
+            </button>
+          </li>
+          <li>
+            <button onClick={e => actions.deleteRequest(request.id)}>
+              <i className="fa fa-trash-o"></i> Delete
+            </button>
+          </li>
         </ul>
       </Dropdown>
     )
