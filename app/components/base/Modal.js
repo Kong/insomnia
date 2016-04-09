@@ -59,6 +59,13 @@ class Modal extends Component {
     }
   }
 
+  _keyDown (e) {
+    if (e.keyCode === 27) {
+      // We pressed ESC
+      this.close();
+    }
+  }
+
   close () {
     this.props.onClose && this.props.onClose();
   }
@@ -71,6 +78,7 @@ class Modal extends Component {
     return (
       <div ref="modal"
            className="modal grid grid--center"
+           onKeyDown={this._keyDown.bind(this)}
            onClick={this._handleClick.bind(this)}>
         <div className="modal__content grid--v bg-super-light">
           {this.props.children}

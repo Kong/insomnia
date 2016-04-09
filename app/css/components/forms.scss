@@ -27,13 +27,13 @@
 
   &.form-control--outlined,
   &.form-control--underlined {
-    border-radius: $radius-md;
     height: auto;
     margin: $padding-sm;
 
     input {
       border: 1px solid $hl-lg;
       padding: $padding-sm;
+      border-radius: $radius-md;
     }
 
     input:focus {

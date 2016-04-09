@@ -22,7 +22,7 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => actions.showRequestUpdateNamePrompt(request.id)}>
+            <button onClick={e => actions.showRequestUpdateNamePrompt(request)}>
               <i className="fa fa-edit"></i> Rename
             </button>
           </li>

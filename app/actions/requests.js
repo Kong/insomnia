@@ -104,6 +104,8 @@ export function changeFilter (filter) {
 export function sendRequest (request) {
 }
 
-export function showRequestUpdateNamePrompt (id) {
-  return showPrompt(REQUEST_RENAME, {id});
+export function showRequestUpdateNamePrompt (request) {
+  const id = request.id;
+  const defaultValue = request.name;
+  return showPrompt(REQUEST_RENAME, {id, defaultValue});
 }

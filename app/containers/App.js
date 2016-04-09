@@ -129,6 +129,7 @@ class App extends Component {
           <PromptModal
             headerName="Rename Request"
             submitName="Rename"
+            defaultValue={prompt.data.defaultValue}
             visible={true}
             onClose={() => actions.hidePrompt(prompt.id)}
             onSubmit={name => actions.updateRequest({id: prompt.data.id, name})}/>
