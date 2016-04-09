@@ -31,15 +31,15 @@ class DebouncingInput extends Component {
   }
 
   render () {
-    const {initialValue, value} = this.props;
+    const {initialValue, value, ...other} = this.props;
     return (
       <input
+        {...other}
         ref="input"
         type="text"
         className={this.props.className}
         initialValue={initialValue || value}
         onChange={this.valueChanged.bind(this)}
-        placeholder={this.props.placeholder}
       />
     )
   }

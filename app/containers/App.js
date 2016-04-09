@@ -5,11 +5,11 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
 import Editor from '../components/base/Editor'
 import PromptModal from '../components/base/PromptModal'
+import KeyValueEditor from '../components/base/KeyValueEditor'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
 import {Modal, ModalHeader, ModalBody, ModalFooter} from '../components/base/Modal'
-import {REQUEST_RENAME} from "../constants/prompts";
 
 import * as RequestActions from '../actions/requests'
 import * as RequestGroupActions from '../actions/requestGroups'
@@ -46,9 +46,16 @@ class App extends Component {
                 onChange={body => {actions.updateRequest({id: activeRequest.id, body})}}
                 request={activeRequest}/>
             </TabPanel>
-            <TabPanel className="grid__cell pad">Params</TabPanel>
+            <TabPanel className="grid__cell">
+              <KeyValueEditor
+                pairs={activeRequest.params}
+                onChange={params => actions.updateRequest({id: activeRequest.id, params})}
+              />
+            </TabPanel>
             <TabPanel className="grid__cell pad">Basic Auth</TabPanel>
-            <TabPanel className="grid__cell pad">Headers</TabPanel>
+            <TabPanel className="grid__cell">
+              Hello
+            </TabPanel>
           </Tabs>
         </section>
         <section className="grid__cell grid--v section">
@@ -58,7 +65,7 @@ class App extends Component {
           </header>
           <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
             <TabList className="grid grid--start">
-              <Tab><button className="btn btn--compact">Response</button></Tab>
+              <Tab><button className="btn btn--compact">Preview</button></Tab>
               <Tab><button className="btn btn--compact">Raw</button></Tab>
               <Tab><button className="btn btn--compact">Headers</button></Tab>
             </TabList>
@@ -103,6 +110,7 @@ class App extends Component {
         {!prompt ? null : (
           <PromptModal
             headerName="Rename Request"
+            submitName="Rename"
             visible={true}
             onClose={() => actions.hidePrompt(prompt.id)}
             onSubmit={name => actions.updateRequest({id: prompt.data.id, name})}/>

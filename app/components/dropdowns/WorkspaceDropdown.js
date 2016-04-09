@@ -27,6 +27,7 @@ class WorkspaceDropdown extends Component {
           <li><button onClick={e => actions.addRequestGroup()}>
             <i className="fa fa-folder"></i> Add Request Group
           </button></li>
+          <li><button><i className="fa fa-code"></i> Environments</button></li>
           <li><button><i className="fa fa-share-square-o"></i> Import/Export</button></li>
           <li><button><i className="fa fa-empty"></i> Toggle Sidebar</button></li>
           <li><button><i className="fa fa-empty"></i> Delete Workspace</button></li>

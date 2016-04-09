@@ -137,8 +137,7 @@ export function changeFilter (filter) {
   return {type: types.REQUEST_CHANGE_FILTER, filter};
 }
 
-export function sendRequest (id) {
-
+export function sendRequest (request) {
 }
 
 export function showRequestUpdateNamePrompt (id) {

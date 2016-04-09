@@ -25,14 +25,27 @@
     padding-right: $padding-md;
   }
 
-  &.form-control--outlined {
-    border: 1px solid $hl-lg;
+  &.form-control--outlined,
+  &.form-control--underlined {
     border-radius: $radius-md;
     height: auto;
     margin: $padding-sm;
 
     input {
+      border: 1px solid $hl-lg;
       padding: $padding-sm;
+    }
+
+    input:focus {
+      border-color: $hl-xxl;
+    }
+  }
+
+  &.form-control--underlined {
+    input {
+      border-top: 0;
+      border-right: 0;
+      border-left: 0;
     }
   }
 }
@@ -48,7 +61,7 @@
   }
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   background: $hl-xs;
 }
 

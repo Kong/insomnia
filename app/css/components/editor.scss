@@ -36,7 +36,7 @@
     }
 
     .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
-      color: #555555 !important;
+      color: $hl-xl !important;
     }
 
     .CodeMirror-scroll {
@@ -45,7 +45,7 @@
 
     .CodeMirror-lines {
       // Scroll past the end
-      padding-bottom: 150px;
+      padding-bottom: 100px;
     }
 
     .CodeMirror-placeholder {

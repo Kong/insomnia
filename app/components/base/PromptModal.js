@@ -15,15 +15,17 @@ class PromptModal extends Component {
     return (
       <Modal ref="modal" onClose={onClose} visible={visible}>
         <ModalHeader>{headerName}</ModalHeader>
-        <ModalBody>
-          <form onSubmit={this._onSubmit.bind(this)}>
-            <input ref="input"
-                   type="text"
-                   autoFocus={true}
-                   className="form-control form-control--outlined"/>
+        <ModalBody className="wide">
+          <form onSubmit={this._onSubmit.bind(this)} className="wide">
+            <div className="form-control form-control--outlined">
+              <input ref="input"
+                     type="text"
+                     autoFocus={true}/>
+            </div>
           </form>
         </ModalBody>
         <ModalFooter className="grid grid--end">
+          <button className="btn" onClick={() => this.refs.modal.close()}>Cancel</button>
           <button className="btn" onClick={this._onSubmit.bind(this)}>
             {submitName || 'Save'}
           </button>
