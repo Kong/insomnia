@@ -26,74 +26,87 @@ class App extends Component {
     }
 
     return (
-      <div className="grid__cell grid grid-collapse">
-        <section className="grid__cell grid--v section">
-          <div className="grid__cell grid__cell--no-flex section__header">
-            <RequestUrlBar
-              onUrlChange={url => {actions.updateRequest({id: activeRequest.id, url})}}
-              onMethodChange={method => {actions.updateRequest({id: activeRequest.id, method})}}
-              request={activeRequest}/>
-          </div>
-          <Tabs className="grid__cell grid--v section__body"
-                onSelect={i => actions.selectTab('request', i)}
-                selectedIndex={tabs.request || 0}>
-            <TabList className="grid grid--start">
-              <Tab><button className="btn btn--compact">Body</button></Tab>
-              <Tab><button className="btn btn--compact">Params</button></Tab>
-              <Tab><button className="btn btn--compact">Auth</button></Tab>
-              <Tab><button className="btn btn--compact">Headers</button></Tab>
-            </TabList>
-            <TabPanel className="grid__cell relative">
-              <RequestBodyEditor
-                onChange={body => {actions.updateRequest({id: activeRequest.id, body})}}
+      <div className="grid__cell grid grid--collapse">
+        <section className="grid__cell section">
+          <div className="grid--v wide">
+            <div className="grid__cell grid__cell--no-flex section__header">
+              <RequestUrlBar
+                onUrlChange={url => {actions.updateRequest({id: activeRequest.id, url})}}
+                onMethodChange={method => {actions.updateRequest({id: activeRequest.id, method})}}
                 request={activeRequest}/>
-            </TabPanel>
-            <TabPanel className="grid__cell">
-              <KeyValueEditor
-                pairs={activeRequest.params}
-                onChange={params => actions.updateRequest({id: activeRequest.id, params})}
-              />
-            </TabPanel>
-            <TabPanel className="grid__cell pad">Basic Auth</TabPanel>
-            <TabPanel className="grid__cell">
-              <KeyValueEditor
-                pairs={activeRequest.headers}
-                onChange={headers => actions.updateRequest({id: activeRequest.id, headers})}
-              />
-            </TabPanel>
-          </Tabs>
+            </div>
+            <Tabs className="grid__cell grid--v section__body"
+                  onSelect={i => actions.selectTab('request', i)}
+                  selectedIndex={tabs.request || 0}>
+              <TabList className="grid grid--start">
+                <Tab><button className="btn btn--compact">Body</button></Tab>
+                <Tab>
+                  <button className="btn btn--compact no-wrap">
+                    Params {activeRequest.params.length ? `(${activeRequest.params.length})` : ''}
+                  </button>
+                </Tab>
+                <Tab><button className="btn btn--compact">Auth</button></Tab>
+                <Tab>
+                  <button className="btn btn--compact no-wrap">
+                    Headers {activeRequest.headers.length ? `(${activeRequest.headers.length})` : ''}
+                  </button>
+                </Tab>
+              </TabList>
+              <TabPanel className="grid__cell relative">
+                <RequestBodyEditor
+                  onChange={body => {actions.updateRequest({id: activeRequest.id, body})}}
+                  request={activeRequest}/>
+              </TabPanel>
+              <TabPanel className="grid__cell scrollable">
+                <KeyValueEditor
+                  pairs={activeRequest.params}
+                  onChange={params => actions.updateRequest({id: activeRequest.id, params})}
+                />
+              </TabPanel>
+              <TabPanel className="grid__cell pad">Basic Auth</TabPanel>
+              <TabPanel className="grid__cell">
+                <KeyValueEditor
+                  pairs={activeRequest.headers}
+                  onChange={headers => actions.updateRequest({id: activeRequest.id, headers})}
+                />
+              </TabPanel>
+            </Tabs>
+          </div>
         </section>
-        <section className="grid__cell grid--v section">
-          <header className="grid grid--center header text-center bg-light txt-sm section__header">
-            <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
-            <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
-          </header>
-          <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
-            <TabList className="grid grid--start">
-              <Tab><button className="btn btn--compact">Preview</button></Tab>
-              <Tab><button className="btn btn--compact">Raw</button></Tab>
-              <Tab><button className="btn btn--compact">Headers</button></Tab>
-            </TabList>
-            <TabPanel className="grid__cell">
-              <Editor
-                options={{
+        <section className="grid__cell section">
+          <div className="grid--v wide">
+            <header
+              className="grid grid--center header text-center bg-light txt-sm section__header">
+              <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
+              <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
+            </header>
+            <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
+              <TabList className="grid grid--start">
+                <Tab><button className="btn btn--compact">Preview</button></Tab>
+                <Tab><button className="btn btn--compact">Raw</button></Tab>
+                <Tab><button className="btn btn--compact">Headers</button></Tab>
+              </TabList>
+              <TabPanel className="grid__cell">
+                <Editor
+                  options={{
                   mode: 'application/json',
                   readOnly: true,
                   placeholder: 'nothing yet...'
                 }}
-              />
-            </TabPanel>
-            <TabPanel className="grid__cell">
-              <Editor
-                options={{
+                />
+              </TabPanel>
+              <TabPanel className="grid__cell">
+                <Editor
+                  options={{
                   mode: 'application/json',
                   readOnly: true,
                   placeholder: 'nothing yet...'
                 }}
-              />
-            </TabPanel>
-            <TabPanel className="pad grid__cell">Headers</TabPanel>
-          </Tabs>
+                />
+              </TabPanel>
+              <TabPanel className="pad grid__cell">Headers</TabPanel>
+            </Tabs>
+          </div>
         </section>
       </div>
     )

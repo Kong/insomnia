@@ -21,7 +21,7 @@ app.on('ready', function () {
     width: IS_DEV ? 1600 : 1200,
     height: 800,
     minHeight: 500,
-    minWidth: 480,
+    minWidth: 500,
     acceptFirstMouse: true
     // titleBarStyle: IS_MAC ? 'hidden-inset' : 'default'
   });
@@ -41,5 +41,4 @@ app.on('ready', function () {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
-})
-;
+});

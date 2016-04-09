@@ -36,30 +36,29 @@
 .grid {
   max-width: 100%;
   flex-direction: row;
+
+  & > .grid__cell {
+    // So the cells are equal width
+    width: 100%;
+  }
 }
 
 .grid--v {
   max-height: 100%;
   flex-direction: column;
+
+  & > .grid__cell {
+    // So the cells are equal height
+    height: 100%;
+  }
 }
 
 @media (max-width: $breakpoint-md) {
-  .grid.grid-collapse {
-    display: flex;
+  .grid.grid--collapse {
     flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: stretch;
-    align-content: flex-start;
-    height: 100%;
-    width: 100%;
-    box-sizing: border-box;
 
-    & > .col {
-      display: block;
-      flex: 1 1 auto;
+    & > .grid__cell {
       height: 100%;
-      box-sizing: border-box;
     }
   }
 }
