@@ -16,7 +16,7 @@ export default function (request, callback) {
   if (request.body) {
     config.body = request.body;
   }
-  
+
   networkRequest(config, function (err, response) {
     callback(err, response);
   });

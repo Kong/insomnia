@@ -9,6 +9,9 @@ jest.unmock('jsonschema');
 jest.unmock('redux-thunk');
 jest.unmock('redux-mock-store');
 
+// Jest seems to barf when this isn't here
+jest.unmock('request');
+
 import * as types from '../../constants/actionTypes'
 import validate from '../../validators/request'
 import thunk from 'redux-thunk'

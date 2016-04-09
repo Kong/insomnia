@@ -1,7 +1,8 @@
 import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
+import {REQUEST_RENAME, REQUEST_GROUP_RENAME} from "../constants/prompts"
 
 import Editor from '../components/base/Editor'
 import PromptModal from '../components/base/PromptModal'
@@ -10,7 +11,6 @@ import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
-import {Modal, ModalHeader, ModalBody, ModalFooter} from '../components/base/Modal'
 
 import * as GlobalActions from '../actions/global'
 import * as RequestGroupActions from '../actions/requestGroups'
@@ -130,21 +130,23 @@ class App extends Component {
 
     return (
       <div className="grid bg-super-dark tall">
-        <Modal visible={false} ref="modal">
-          <ModalHeader>Header</ModalHeader>
-          <ModalBody>
-            <p>Hello</p>
-          </ModalBody>
-          <ModalFooter>Footer</ModalFooter>
-        </Modal>
         {!prompt ? null : (
-          <PromptModal
-            headerName="Rename Request"
-            submitName="Rename"
-            defaultValue={prompt.data.defaultValue}
-            visible={true}
-            onClose={() => actions.hidePrompt(prompt.id)}
-            onSubmit={name => actions.updateRequest({id: prompt.data.id, name})}/>
+          <div className="prompts">
+            <PromptModal
+              headerName="Rename Request"
+              submitName="Rename"
+              defaultValue={prompt.data.defaultValue}
+              visible={prompt.id === REQUEST_RENAME}
+              onClose={() => actions.hidePrompt(prompt.id)}
+              onSubmit={name => actions.updateRequest({id: prompt.data.id, name})}/>
+            <PromptModal
+              headerName="Rename Request Group"
+              submitName="Rename"
+              defaultValue={prompt.data.defaultValue}
+              visible={prompt.id === REQUEST_GROUP_RENAME}
+              onClose={() => actions.hidePrompt(prompt.id)}
+              onSubmit={name => actions.updateRequestGroup({id: prompt.data.id, name})}/>
+          </div>
         )}
         <Sidebar
           activateRequest={actions.activateRequest}
@@ -152,6 +154,7 @@ class App extends Component {
           addRequest={actions.addRequest}
           toggleRequestGroup={actions.toggleRequestGroup}
           deleteRequestGroup={actions.deleteRequestGroup}
+          updateRequestGroup={actions.updateRequestGroup}
           activeRequest={activeRequest}
           activeFilter={requests.filter}
           requestGroups={requestGroups.all}
@@ -175,7 +178,8 @@ App.propTypes = {
     sendRequest: PropTypes.func.isRequired,
     updateRequest: PropTypes.func.isRequired,
     changeFilter: PropTypes.func.isRequired,
-    toggleRequestGroup: PropTypes.func.isRequired
+    toggleRequestGroup: PropTypes.func.isRequired,
+    updateRequestGroup: PropTypes.func.isRequired
   }).isRequired,
   requestGroups: PropTypes.shape({
     all: PropTypes.array.isRequired

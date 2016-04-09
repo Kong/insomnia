@@ -2,9 +2,9 @@ import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
 import WorkspaceDropdown from './dropdowns/WorkspaceDropdown'
 import RequestActionsDropdown from './dropdowns/RequestActionsDropdown'
+import RequestGroupActionsDropdown from './dropdowns/RequestGroupActionsDropdown'
 import DebouncingInput from './base/DebouncingInput'
 import MethodTag from './MethodTag'
-import Dropdown from './base/Dropdown'
 
 class Sidebar extends Component {
   onFilterChange (value) {
@@ -16,7 +16,6 @@ class Sidebar extends Component {
       activeFilter,
       activeRequest,
       addRequest,
-      deleteRequestGroup,
       toggleRequestGroup,
       requests,
       requestGroups
@@ -90,16 +89,9 @@ class Sidebar extends Component {
             <button onClick={(e) => addRequest(requestGroup.id)}>
               <i className="fa fa-plus-circle"></i>
             </button>
-            <Dropdown right={true} className="tall">
-              <button>
-                <i className="fa fa-caret-down"></i>
-              </button>
-              <ul>
-                <li>
-                  <button onClick={e => deleteRequestGroup(requestGroup.id)}>Delete Request Group</button>
-                </li>
-              </ul>
-            </Dropdown>
+            <RequestGroupActionsDropdown requestGroup={requestGroup}
+                                         right={true}
+                                         className="tall"/>
           </div>
         </div>
         <ul>
@@ -149,14 +141,15 @@ class Sidebar extends Component {
         </header>
         <div className="grid--v grid--start grid__cell">
           <div className="stock-height form-control form-control--outlined">
-           <DebouncingInput
-           type="text"
-           placeholder="Filter Requests"
-           debounceMillis={300}
-           value={activeFilter}
-           onChange={this.onFilterChange.bind(this)}/>
-           </div>
-          <ul className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
+            <DebouncingInput
+              type="text"
+              placeholder="Filter Requests"
+              debounceMillis={300}
+              value={activeFilter}
+              onChange={this.onFilterChange.bind(this)}/>
+          </div>
+          <ul
+            className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
             {this.renderRequestGroupRow(null)}
             {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
           </ul>
@@ -172,6 +165,7 @@ Sidebar.propTypes = {
   changeFilter: PropTypes.func.isRequired,
   toggleRequestGroup: PropTypes.func.isRequired,
   deleteRequestGroup: PropTypes.func.isRequired,
+  updateRequestGroup: PropTypes.func.isRequired,
   activeFilter: PropTypes.string,
   requests: PropTypes.array.isRequired,
   requestGroups: PropTypes.array.isRequired,

@@ -3,16 +3,15 @@ import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 import Dropdown from '../base/Dropdown'
 import * as RequestActions from '../../actions/requests'
-import * as GlobalActions from '../../actions/global'
 
 class RequestActionsDropdown extends Component {
   render () {
-    const {actions, request, requestGroup, buttonClassName, ...other} = this.props;
+    const {actions, request, requestGroup, ...other} = this.props;
     const requestGroupId = requestGroup ? requestGroup.id : null;
 
     return (
       <Dropdown {...other}>
-        <button className={buttonClassName}>
+        <button>
           <i className="fa fa-gear"></i>
         </button>
         <ul>
@@ -45,23 +44,22 @@ class RequestActionsDropdown extends Component {
 RequestActionsDropdown.propTypes = {
   request: PropTypes.object.isRequired,
   actions: PropTypes.shape({
-    deleteRequest: PropTypes.func.isRequired
+    deleteRequest: PropTypes.func.isRequired,
+    showRequestUpdateNamePrompt: PropTypes.func.isRequired,
+    duplicateRequest: PropTypes.func.isRequired
   }),
-  requestGroup: PropTypes.object,
-  buttonClassName: PropTypes.string
+  requestGroup: PropTypes.object
 };
 
 function mapStateToProps (state) {
-  return {actions: state.actions};
+  return {
+    actions: state.actions
+  };
 }
 
 function mapDispatchToProps (dispatch) {
   return {
-    actions: Object.assign(
-      {},
-      bindActionCreators(RequestActions, dispatch),
-      bindActionCreators(GlobalActions, dispatch)
-    )
+    actions: bindActionCreators(RequestActions, dispatch)
   }
 }
 

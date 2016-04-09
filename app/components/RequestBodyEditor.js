@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import CodeEditor from './base/Editor'
+import Editor from './base/Editor'
 
 class RequestBodyEditor extends Component {
   shouldComponentUpdate (nextProps) {
@@ -12,7 +12,7 @@ class RequestBodyEditor extends Component {
     const mode = contentTypeHeader ? contentTypeHeader.value : 'text/plain';
 
     return (
-      <CodeEditor
+      <Editor
         value={request.body}
         className={className}
         onChange={onChange}

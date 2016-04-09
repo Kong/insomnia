@@ -101,7 +101,7 @@ export function sendRequest (request) {
         body: response.body,
         statusCode: response.statusCode
       }));
-      
+
       dispatch(loadStop());
     });
   }

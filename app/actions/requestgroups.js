@@ -1,4 +1,6 @@
 import * as types from '../constants/actionTypes'
+import {REQUEST_GROUP_RENAME} from "../constants/prompts";
+import {showPrompt} from "./global";
 
 const defaultRequestGroup = {
   id: null,
@@ -50,14 +52,12 @@ export function deleteRequestGroup (id) {
   return {type: types.REQUEST_GROUP_DELETE, id};
 }
 
-export function updateRequestGroupName (id, name) {
-  return updateRequest({id, name});
-}
-
-export function updateRequestGroupEnvironment (id, environment) {
-  return updateRequest({id, environment});
-}
-
 export function toggleRequestGroup (id) {
   return {type: types.REQUEST_GROUP_TOGGLE, id}
+}
+
+export function showRequestGroupUpdateNamePrompt (requestGroup) {
+  const id = requestGroup.id;
+  const defaultValue = requestGroup.name;
+  return showPrompt(REQUEST_GROUP_RENAME, {id, defaultValue});
 }
