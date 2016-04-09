@@ -9,7 +9,7 @@ class UrlInput extends Component {
   }
 
   render () {
-    const {onUrlChange, onMethodChange, request} = this.props;
+    const {sendRequest, onUrlChange, onMethodChange, request} = this.props;
     return (
       <div className="grid wide form-control form-control--left form-control--right bg-super-light">
         <Dropdown>
@@ -26,14 +26,16 @@ class UrlInput extends Component {
             ))}
           </ul>
         </Dropdown>
-        <DebouncingInput
-          type="text"
-          className="grid__cell txt-lg"
-          placeholder="http://echo.insomnia.rest/status/200"
-          value={request.url}
-          debounceMillis={1000}
-          onChange={onUrlChange}/>
-        <button className="btn">
+        <form className="tall grid__cell" onSubmit={e => {e.preventDefault(); sendRequest(request)}}>
+          <DebouncingInput
+            type="text"
+            className="txt-lg"
+            placeholder="http://echo.insomnia.rest/status/200"
+            value={request.url}
+            debounceMillis={1000}
+            onChange={onUrlChange}/>
+        </form>
+        <button className="btn" onClick={sendRequest.bind(null, request)}>
           <i className="fa fa-repeat txt-xl"></i>
         </button>
       </div>
@@ -42,6 +44,7 @@ class UrlInput extends Component {
 }
 
 UrlInput.propTypes = {
+  sendRequest: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,
   request: PropTypes.shape({

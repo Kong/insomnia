@@ -14,6 +14,7 @@ import * as GlobalActions from "./actions/global";
 const store = configureStore();
 
 // Dispatch the initial load of data
+console.log('Init Insomnia');
 store.dispatch(GlobalActions.restoreState());
 
 render(

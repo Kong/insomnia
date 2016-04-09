@@ -7,20 +7,21 @@ import Editor from '../components/base/Editor'
 import PromptModal from '../components/base/PromptModal'
 import KeyValueEditor from '../components/base/KeyValueEditor'
 import RequestBodyEditor from '../components/RequestBodyEditor'
+import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
 import {Modal, ModalHeader, ModalBody, ModalFooter} from '../components/base/Modal'
 
-import * as RequestActions from '../actions/requests'
-import * as RequestGroupActions from '../actions/requestGroups'
 import * as GlobalActions from '../actions/global'
+import * as RequestGroupActions from '../actions/requestGroups'
+import * as RequestActions from '../actions/requests'
+import * as ResponseActions from '../actions/responses'
 
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
 
 class App extends Component {
-  _renderPageBody (actions, activeRequest, tabs) {
-
+  _renderPageBody (actions, activeRequest, activeResponse, tabs) {
     if (!activeRequest) {
       return <div></div>;
     }
@@ -31,6 +32,7 @@ class App extends Component {
           <div className="grid--v wide">
             <div className="grid__cell grid__cell--no-flex section__header">
               <RequestUrlBar
+                sendRequest={actions.sendRequest}
                 onUrlChange={url => {actions.updateRequest({id: activeRequest.id, url})}}
                 onMethodChange={method => {actions.updateRequest({id: activeRequest.id, method})}}
                 request={activeRequest}/>
@@ -63,8 +65,13 @@ class App extends Component {
                   onChange={params => actions.updateRequest({id: activeRequest.id, params})}
                 />
               </TabPanel>
-              <TabPanel className="grid__cell pad">Basic Auth</TabPanel>
-              <TabPanel className="grid__cell">
+              <TabPanel className="grid__cell pad">
+                <RequestAuthEditor
+                  request={activeRequest}
+                  onChange={authentication => actions.updateRequest({id: activeRequest.id, authentication})}
+                />
+              </TabPanel>
+              <TabPanel className="grid__cell scrollable">
                 <KeyValueEditor
                   pairs={activeRequest.headers}
                   onChange={headers => actions.updateRequest({id: activeRequest.id, headers})}
@@ -80,7 +87,9 @@ class App extends Component {
               <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
               <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
             </header>
-            <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
+            <Tabs className="grid__cell grid--v section__body"
+                  onSelect={i => actions.selectTab('response', i)}
+                  selectedIndex={tabs.response || 0}>
               <TabList className="grid grid--start">
                 <Tab><button className="btn btn--compact">Preview</button></Tab>
                 <Tab><button className="btn btn--compact">Raw</button></Tab>
@@ -88,20 +97,22 @@ class App extends Component {
               </TabList>
               <TabPanel className="grid__cell">
                 <Editor
+                  value={activeResponse && JSON.stringify(JSON.parse(activeResponse.body), null, 4) || ''}
                   options={{
-                  mode: 'application/json',
-                  readOnly: true,
-                  placeholder: 'nothing yet...'
-                }}
+                    mode: 'application/json',
+                    readOnly: true,
+                    placeholder: 'nothing yet...'
+                  }}
                 />
               </TabPanel>
               <TabPanel className="grid__cell">
                 <Editor
+                  value={activeResponse && activeResponse.body || ''}
                   options={{
-                  mode: 'application/json',
-                  readOnly: true,
-                  placeholder: 'nothing yet...'
-                }}
+                    mode: 'text/plain',
+                    readOnly: true,
+                    placeholder: 'nothing yet...'
+                  }}
                 />
               </TabPanel>
               <TabPanel className="pad grid__cell">Headers</TabPanel>
@@ -113,8 +124,9 @@ class App extends Component {
   }
 
   render () {
-    const {actions, requests, requestGroups, prompt, tabs} = this.props;
+    const {actions, requests, responses, requestGroups, prompt, tabs} = this.props;
     const activeRequest = requests.all.find(r => r.id === requests.active);
+    const activeResponse = responses[activeRequest && activeRequest.id];
 
     return (
       <div className="grid bg-super-dark tall">
@@ -148,7 +160,7 @@ class App extends Component {
           {/*<header className="header bg-light">
            <div className="header__content"><h1>Hi World</h1></div>
            </header>*/}
-          {this._renderPageBody(actions, activeRequest, tabs)}
+          {this._renderPageBody(actions, activeRequest, activeResponse, tabs)}
         </div>
       </div>
     )
@@ -160,18 +172,19 @@ App.propTypes = {
     activateRequest: PropTypes.func.isRequired,
     deleteRequestGroup: PropTypes.func.isRequired,
     addRequest: PropTypes.func.isRequired,
+    sendRequest: PropTypes.func.isRequired,
     updateRequest: PropTypes.func.isRequired,
     changeFilter: PropTypes.func.isRequired,
-    updateRequestMethod: PropTypes.func.isRequired,
     toggleRequestGroup: PropTypes.func.isRequired
+  }).isRequired,
+  requestGroups: PropTypes.shape({
+    all: PropTypes.array.isRequired
   }).isRequired,
   requests: PropTypes.shape({
     all: PropTypes.array.isRequired,
     active: PropTypes.string // "required" but can be null
   }).isRequired,
-  requestGroups: PropTypes.shape({
-    all: PropTypes.array.isRequired
-  }).isRequired,
+  responses: PropTypes.object.isRequired,
   tabs: PropTypes.object.isRequired,
   prompt: PropTypes.object
 };
@@ -181,6 +194,7 @@ function mapStateToProps (state) {
     actions: state.actions,
     requests: state.requests,
     requestGroups: state.requestGroups,
+    responses: state.responses,
     prompt: state.prompt,
     tabs: state.tabs
   };
@@ -191,8 +205,9 @@ function mapDispatchToProps (dispatch) {
     actions: Object.assign(
       {},
       bindActionCreators(GlobalActions, dispatch),
+      bindActionCreators(RequestGroupActions, dispatch),
       bindActionCreators(RequestActions, dispatch),
-      bindActionCreators(RequestGroupActions, dispatch)
+      bindActionCreators(ResponseActions, dispatch)
     )
   }
 }

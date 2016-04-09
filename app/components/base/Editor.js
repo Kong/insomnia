@@ -72,7 +72,7 @@ class Editor extends Component {
     this.codeMirror = CodeMirror.fromTextArea(textareaNode, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
     this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
-    this._currentCodemirrorValue = this.props.defaultValue || this.props.value || '';
+    this._currentCodemirrorValue = this.props.value || '';
     this._codemirrorSetValue(this._currentCodemirrorValue);
     this._codemirrorSetOptions(this.props.options);
   }
@@ -168,10 +168,11 @@ class Editor extends Component {
   }
 
   render () {
+    const options = this.props.options || {};
     const classes = [
       'editor-wrapper',
       this.props.className,
-      (this.props.options || {}).readOnly ? 'editor-wrapper--readonly' : ''
+      options.readOnly ? 'editor-wrapper--readonly' : ''
     ];
 
     return (
@@ -181,6 +182,7 @@ class Editor extends Component {
             name={this.props.path}
             ref='textarea'
             defaultValue={this.props.value}
+            readOnly={options.readOnly}
             autoComplete='off'>
           </textarea>
         </div>

@@ -122,7 +122,7 @@ class KeyValueEditor extends Component {
   _updateFocus () {
     const refName = `${this._focusedPair}.${this._focusedField}`;
     const ref = this.refs[refName];
-    
+
     if (ref) {
       ref.focus();
 
@@ -141,6 +141,7 @@ class KeyValueEditor extends Component {
 
   render () {
     const {pairs} = this.state;
+    const {maxPairs} = this.props;
 
     return (
       <div className="grid--v grid--start wide">
@@ -179,24 +180,25 @@ class KeyValueEditor extends Component {
             </div>
           )
         })}
-
-        <div className="grid__cell grid__cell--no-flex grid">
-          <div className="form-control form-control--underlined grid__cell">
-            <input type="text"
-                   placeholder="Name"
-                   onFocus={e => {this._focusedField = NAME; this._addPair()}}/>
+        {maxPairs === undefined || maxPairs > pairs.length ? (
+          <div className="grid__cell grid__cell--no-flex grid">
+            <div className="form-control form-control--underlined grid__cell">
+              <input type="text"
+                     placeholder="Name"
+                     onFocus={e => {this._focusedField = NAME; this._addPair()}}/>
+            </div>
+            <div className="form-control form-control--underlined grid__cell">
+              <input type="text"
+                     placeholder="Value"
+                     onFocus={e => {this._focusedField = VALUE; this._addPair()}}/>
+            </div>
+            <div className="grid--v">
+              <button className="btn btn--compact" disabled={true} tabIndex="-1">
+                <i className="fa fa-blank"></i>
+              </button>
+            </div>
           </div>
-          <div className="form-control form-control--underlined grid__cell">
-            <input type="text"
-                   placeholder="Value"
-                   onFocus={e => {this._focusedField = VALUE; this._addPair()}}/>
-          </div>
-          <div className="grid--v">
-            <button className="btn btn--compact" disabled={true} tabIndex="-1">
-              <i className="fa fa-blank"></i>
-            </button>
-          </div>
-        </div>
+        ) : null}
       </div>
     )
   }
@@ -204,7 +206,8 @@ class KeyValueEditor extends Component {
 
 KeyValueEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
-  pairs: PropTypes.array.isRequired
+  pairs: PropTypes.array.isRequired,
+  maxPairs: PropTypes.number
 };
 
 export default KeyValueEditor;

@@ -2,6 +2,7 @@ import * as types from '../constants/actionTypes';
 import settingsReducer from './settings'
 import requestsReducer from './requests'
 import requestGroupsReducer from './requestGroups'
+import responsesReducer from './responses'
 
 const initialState = {
   initialized: false,
@@ -36,11 +37,13 @@ export default function (state = initialState, action) {
       const settings = settingsReducer(state.settings, action);
       const requests = requestsReducer(state.requests, action);
       const requestGroups = requestGroupsReducer(state.requestGroups, action);
+      const responses = responsesReducer(state.responses, action);
 
       return Object.assign({}, state, {
         settings,
+        requestGroups,
         requests,
-        requestGroups
+        responses
       });
   }
 };

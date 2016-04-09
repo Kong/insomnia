@@ -1,5 +1,5 @@
 // Global
-export const LOCALSTORAGE_DEBOUNCE_MILLIS = 1000;
+export const LOCALSTORAGE_DEBOUNCE_MILLIS = 500;
 export const LOCALSTORAGE_KEY = 'insomnia';
 
 // HTTP Methods

@@ -1,7 +1,9 @@
 import * as types from '../constants/actionTypes'
 import * as methods from '../constants/global'
-import {showPrompt} from "./global";
-import {REQUEST_RENAME} from "../constants/prompts";
+import makeRequest from '../lib/request'
+import {loadStart, loadStop, showPrompt} from "./global"
+import {REQUEST_RENAME} from "../constants/prompts"
+import {setResponse} from "./responses";
 
 const defaultRequest = {
   id: null,
@@ -76,23 +78,6 @@ export function duplicateRequest (oldRequest, requestGroupId) {
   }
 }
 
-export function updateRequestUrl (id, url) {
-  return updateRequest({id, url});
-}
-
-export function updateRequestBody (id, body) {
-  return updateRequest({id, body});
-}
-
-export function updateRequestMethod (id, method) {
-  return updateRequest({id, method});
-}
-
-export function updateRequestName (id, name) {
-  console.log('NEW NAME', id, name);
-  return updateRequest({id, name});
-}
-
 export function activateRequest (id) {
   return {type: types.REQUEST_ACTIVATE, id};
 }
@@ -102,6 +87,24 @@ export function changeFilter (filter) {
 }
 
 export function sendRequest (request) {
+  return dispatch => {
+    dispatch(loadStart());
+
+    makeRequest(request, (err, response) => {
+      if (err) {
+        console.error(err);
+      } else {
+        console.log(response.statusCode, response.body);
+      }
+
+      dispatch(setResponse(request.id, {
+        body: response.body,
+        statusCode: response.statusCode
+      }));
+      
+      dispatch(loadStop());
+    });
+  }
 }
 
 export function showRequestUpdateNamePrompt (request) {

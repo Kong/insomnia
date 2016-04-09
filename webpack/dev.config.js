@@ -29,7 +29,10 @@ base.plugins = [
     'process.env': {
       NODE_ENV: JSON.stringify('development')
     }
-  })
+  }),
+  new webpack.ExternalsPlugin('commonjs', [
+    'request'
+  ])
 ];
 
 base.target = webpackTargetElectronRenderer(base);
