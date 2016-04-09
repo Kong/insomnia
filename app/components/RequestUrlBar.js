@@ -1,12 +1,13 @@
 import React, {Component, PropTypes} from 'react'
-import Input from './base/DebouncingInput';
+import DebouncingInput from './base/DebouncingInput';
 import Dropdown from './base/Dropdown';
 import {METHODS} from '../constants/global';
 
 class UrlInput extends Component {
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate (nextProps) {
     return this.props.request !== nextProps.request;
   }
+
   render () {
     const {onUrlChange, onMethodChange, request} = this.props;
     return (
@@ -25,11 +26,13 @@ class UrlInput extends Component {
             ))}
           </ul>
         </Dropdown>
-        <Input type="text"
-               className="grid__cell txt-lg"
-               placeholder="http://echo.insomnia.rest/status/200"
-               initialValue={request.url}
-               onChange={onUrlChange}/>
+        <DebouncingInput
+          type="text"
+          className="grid__cell txt-lg"
+          placeholder="http://echo.insomnia.rest/status/200"
+          value={request.url}
+          debounceMillis={1000}
+          onChange={onUrlChange}/>
         <button className="btn">
           <i className="fa fa-repeat txt-xl"></i>
         </button>

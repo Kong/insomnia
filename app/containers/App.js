@@ -19,7 +19,7 @@ import * as GlobalActions from '../actions/global'
 Tabs.setUseDefaultStyles(false);
 
 class App extends Component {
-  renderPageBody (actions, activeRequest) {
+  _renderPageBody (actions, activeRequest, tabs) {
 
     if (!activeRequest) {
       return <div></div>;
@@ -34,7 +34,9 @@ class App extends Component {
               onMethodChange={method => {actions.updateRequest({id: activeRequest.id, method})}}
               request={activeRequest}/>
           </div>
-          <Tabs selectedIndex={0} className="grid__cell grid--v section__body">
+          <Tabs className="grid__cell grid--v section__body"
+                onSelect={i => actions.selectTab('request', i)}
+                selectedIndex={tabs.request || 0}>
             <TabList className="grid grid--start">
               <Tab><button className="btn btn--compact">Body</button></Tab>
               <Tab><button className="btn btn--compact">Params</button></Tab>
@@ -54,7 +56,10 @@ class App extends Component {
             </TabPanel>
             <TabPanel className="grid__cell pad">Basic Auth</TabPanel>
             <TabPanel className="grid__cell">
-              Hello
+              <KeyValueEditor
+                pairs={activeRequest.headers}
+                onChange={headers => actions.updateRequest({id: activeRequest.id, headers})}
+              />
             </TabPanel>
           </Tabs>
         </section>
@@ -95,7 +100,7 @@ class App extends Component {
   }
 
   render () {
-    const {actions, loading, requests, requestGroups, prompt} = this.props;
+    const {actions, requests, requestGroups, prompt, tabs} = this.props;
     const activeRequest = requests.all.find(r => r.id === requests.active);
 
     return (
@@ -123,14 +128,13 @@ class App extends Component {
           deleteRequestGroup={actions.deleteRequestGroup}
           activeRequest={activeRequest}
           activeFilter={requests.filter}
-          loading={loading}
           requestGroups={requestGroups.all}
           requests={requests.all}/>
         <div className="grid__cell grid--v">
           {/*<header className="header bg-light">
            <div className="header__content"><h1>Hi World</h1></div>
            </header>*/}
-          {this.renderPageBody(actions, activeRequest)}
+          {this._renderPageBody(actions, activeRequest, tabs)}
         </div>
       </div>
     )
@@ -154,7 +158,7 @@ App.propTypes = {
   requestGroups: PropTypes.shape({
     all: PropTypes.array.isRequired
   }).isRequired,
-  loading: PropTypes.bool.isRequired,
+  tabs: PropTypes.object.isRequired,
   prompt: PropTypes.object
 };
 
@@ -163,8 +167,8 @@ function mapStateToProps (state) {
     actions: state.actions,
     requests: state.requests,
     requestGroups: state.requestGroups,
-    loading: state.loading,
-    prompt: state.prompt
+    prompt: state.prompt,
+    tabs: state.tabs
   };
 }
 

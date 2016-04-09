@@ -22,14 +22,13 @@ describe('Requests Actions', () => {
     spyOn(Date, 'now').and.returnValue(1000000000000);
 
     const expectedActions = [
-      {type: types.GLOBAL_LOAD_START},
       {
         type: types.REQUEST_ADD,
         request: {
           id: 'rq_1000000000000',
           created: 1000000000000,
           modified: 1000000000000,
-          name: 'My Request',
+          name: 'New Request',
           method: 'GET',
           url: '',
           body: '',
@@ -40,30 +39,25 @@ describe('Requests Actions', () => {
           params: [],
           authentication: {}
         }
-      },
-      {type: types.GLOBAL_LOAD_STOP}
+      }
     ];
 
     const store = mockStore();
     store.dispatch(addRequest());
-    jest.runAllTimers();
 
     const actions = store.getActions();
     expect(actions).toEqual(expectedActions);
-    expect(validate(actions[1].request).valid).toEqual(true);
+    expect(validate(actions[0].request).valid).toEqual(true);
   });
 
   it('should delete request', () => {
     const expectedActions = [
-      {type: types.GLOBAL_LOAD_START},
-      {type: types.REQUEST_DELETE, id: 'rq_1000000000000'},
-      {type: types.GLOBAL_LOAD_STOP}
+      {type: types.REQUEST_DELETE, id: 'rq_1000000000000'}
     ];
 
     const store = mockStore();
 
     store.dispatch(deleteRequest('rq_1000000000000'));
-    jest.runAllTimers();
 
     const actions = store.getActions();
     expect(actions).toEqual(expectedActions);
@@ -73,7 +67,6 @@ describe('Requests Actions', () => {
     spyOn(Date, 'now').and.returnValue(1000000000000);
 
     const expectedActions = [
-      {type: types.GLOBAL_LOAD_START},
       {
         type: types.REQUEST_UPDATE,
         patch: {
@@ -81,17 +74,15 @@ describe('Requests Actions', () => {
           id: 'rq_1000000000000',
           modified: 1000000000000
         }
-      },
-      {type: types.GLOBAL_LOAD_STOP}
+      }
     ];
 
     const store = mockStore();
 
     store.dispatch(updateRequest({id: 'rq_1000000000000', method: 'POST'}));
-    jest.runAllTimers();
 
     const actions = store.getActions();
     expect(actions).toEqual(expectedActions);
-    expect(validate(actions[1].request).valid).toEqual(true);
+    expect(validate(actions[0].request).valid).toEqual(true);
   });
 });

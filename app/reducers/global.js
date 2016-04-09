@@ -6,7 +6,8 @@ import requestGroupsReducer from './requestGroups'
 const initialState = {
   initialized: false,
   loading: false,
-  prompt: null
+  prompt: null,
+  tabs: {}
 };
 
 export default function (state = initialState, action) {
@@ -26,6 +27,10 @@ export default function (state = initialState, action) {
     case types.GLOBAL_HIDE_PROMPT:
       prompt = null;
       return Object.assign({}, state, {prompt});
+    case types.GLOBAL_SELECT_TAB:
+      let tabs = Object.assign({}, state.tabs);
+      tabs[action.id] = action.selectedIndex;
+      return Object.assign({}, state, {tabs});
     default:
       // Send everything else to the child reducers
       const settings = settingsReducer(state.settings, action);

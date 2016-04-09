@@ -29,3 +29,7 @@ export function showPrompt (id, data) {
 export function hidePrompt (id) {
   return {type: types.GLOBAL_HIDE_PROMPT, id};
 }
+
+export function selectTab (id, selectedIndex) {
+  return {type: types.GLOBAL_SELECT_TAB, id, selectedIndex}
+}

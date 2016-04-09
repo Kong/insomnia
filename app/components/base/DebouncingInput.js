@@ -6,7 +6,7 @@ const DEFAULT_DEBOUNCE_MILLIS = 300;
  * Input that only fire onChange() after the user stops typing
  */
 class DebouncingInput extends Component {
-  valueChanged (e) {
+  _valueChanged (e) {
     if (!this.props.onChange) {
       return;
     }
@@ -18,28 +18,29 @@ class DebouncingInput extends Component {
     })(e.target.value, this.props.onChange, this.props.debounceMillis);
   }
 
-  updateValueFromProps() {
+  _updateValueFromProps () {
     this.refs.input.value = this.props.initialValue || this.props.value || '';
   }
 
   componentDidMount () {
-    this.updateValueFromProps()
+    this._updateValueFromProps()
   }
-  
+
   componentDidUpdate () {
-    this.updateValueFromProps()
+    this._updateValueFromProps()
+  }
+
+  focus () {
+    this.refs.input.focus();
   }
 
   render () {
-    const {initialValue, value, ...other} = this.props;
+    const {value, ...other} = this.props;
     return (
       <input
         {...other}
         ref="input"
-        type="text"
-        className={this.props.className}
-        initialValue={initialValue || value}
-        onChange={this.valueChanged.bind(this)}
+        onChange={this._valueChanged.bind(this)}
       />
     )
   }
@@ -47,9 +48,8 @@ class DebouncingInput extends Component {
 
 DebouncingInput.propTypes = {
   onChange: PropTypes.func.isRequired,
-  initialValue: PropTypes.string,
-  debounceMillis: PropTypes.number,
-  value: PropTypes.string
+  value: PropTypes.string.isRequired,
+  debounceMillis: PropTypes.number
 };
 
 export default DebouncingInput;

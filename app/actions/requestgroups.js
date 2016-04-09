@@ -1,6 +1,4 @@
 import * as types from '../constants/actionTypes'
-import {loadStart} from "./global";
-import {loadStop} from "./global";
 
 const defaultRequestGroup = {
   id: null,
@@ -30,32 +28,12 @@ function buildRequestGroup (requestGroup) {
 }
 
 export function addRequestGroup (name = 'New Group') {
-  return (dispatch) => {
-    dispatch(loadStart());
-    const requestGroup = buildRequestGroup({name});
-    dispatch({type: types.REQUEST_GROUP_ADD, requestGroup});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 500);
-    });
-  };
+  const requestGroup = buildRequestGroup({name});
+  return {type: types.REQUEST_GROUP_ADD, requestGroup};
 }
 
 export function addChildRequest (id, requestId) {
-  return (dispatch) => {
-    dispatch(loadStart());
-    dispatch({type: types.REQUEST_GROUP_ADD_CHILD_REQUEST, id, requestId});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 500);
-    });
-  };
+  return {type: types.REQUEST_GROUP_ADD_CHILD_REQUEST, id, requestId};
 }
 
 export function updateRequestGroup (requestGroupPatch) {
@@ -63,35 +41,13 @@ export function updateRequestGroup (requestGroupPatch) {
     throw new Error('Cannot update RequestGroup without id');
   }
 
-  return (dispatch) => {
-    dispatch(loadStart());
-
-    const modified = Date.now();
-    const patch = Object.assign({}, requestGroupPatch, {modified});
-    dispatch({type: types.REQUEST_GROUP_UPDATE, patch});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 800);
-    });
-  };
+  const modified = Date.now();
+  const patch = Object.assign({}, requestGroupPatch, {modified});
+  return {type: types.REQUEST_GROUP_UPDATE, patch};
 }
 
 export function deleteRequestGroup (id) {
-  return (dispatch) => {
-    dispatch(loadStart());
-
-    dispatch({type: types.REQUEST_GROUP_DELETE, id});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 800);
-    });
-  };
+  return {type: types.REQUEST_GROUP_DELETE, id};
 }
 
 export function updateRequestGroupName (id, name) {

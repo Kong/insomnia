@@ -1,6 +1,6 @@
 import * as types from '../constants/actionTypes'
 import * as methods from '../constants/global'
-import {loadStart, loadStop, showPrompt} from "./global";
+import {showPrompt} from "./global";
 import {REQUEST_RENAME} from "../constants/prompts";
 
 const defaultRequest = {
@@ -32,8 +32,7 @@ function buildRequest (request) {
 }
 
 export function addRequest (requestGroupId = null) {
-  return (dispatch) => {
-    dispatch(loadStart());
+  return dispatch => {
     const request = buildRequest({name: 'New Request'});
     dispatch({type: types.REQUEST_ADD, request});
 
@@ -44,28 +43,11 @@ export function addRequest (requestGroupId = null) {
       const requestId = request.id;
       dispatch({type: types.REQUEST_GROUP_ADD_CHILD_REQUEST, requestId, id});
     }
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 500);
-    });
-  };
+  }
 }
 
 export function deleteRequest (id) {
-  return (dispatch) => {
-    dispatch(loadStart());
-    dispatch({type: types.REQUEST_DELETE, id});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 500);
-    });
-  }
+  return {type: types.REQUEST_DELETE, id};
 }
 
 export function updateRequest (requestPatch) {
@@ -73,25 +55,14 @@ export function updateRequest (requestPatch) {
     throw new Error('Cannot update request without id');
   }
 
-  return (dispatch) => {
-    dispatch(loadStart());
+  const modified = Date.now();
+  const patch = Object.assign({}, requestPatch, {modified});
 
-    const modified = Date.now();
-    const patch = Object.assign({}, requestPatch, {modified});
-    dispatch({type: types.REQUEST_UPDATE, patch});
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 800);
-    });
-  };
+  return {type: types.REQUEST_UPDATE, patch};
 }
 
 export function duplicateRequest (oldRequest, requestGroupId) {
-  return (dispatch) => {
-    dispatch(loadStart());
+  return dispatch => {
     const request = buildRequest(
       Object.assign({}, oldRequest, {id: null, name: `${oldRequest.name} Copy`})
     );
@@ -102,14 +73,7 @@ export function duplicateRequest (oldRequest, requestGroupId) {
       const requestId = request.id;
       dispatch({type: types.REQUEST_GROUP_ADD_CHILD_REQUEST, requestId, id});
     }
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        dispatch(loadStop());
-        resolve();
-      }, 500);
-    });
-  };
+  }
 }
 
 export function updateRequestUrl (id, url) {
