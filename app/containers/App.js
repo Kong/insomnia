@@ -117,10 +117,10 @@ class App extends Component {
                   }}
                 />
               </TabPanel>
-              <TabPanel className="pad grid__cell">
-                <div className="grid--v grid--start wide">
+              <TabPanel className="grid__cell scrollable">
+                <div className="grid--v grid--start wide pad">
                   {!activeResponse ? null : activeResponse.headers.map((h, i) => (
-                    <div className="grid__cell grid selectable tall" key={i}>
+                    <div className="grid grid__cell grid__cell--no-flex selectable" key={i}>
                       <div className="grid__cell">{h.name}</div>
                       <div className="grid__cell">{h.value}</div>
                     </div>

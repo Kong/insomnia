@@ -23,7 +23,7 @@
 
   & > .grid__cell {
     display: flex;
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     box-sizing: border-box;
 
     &.grid__cell--no-flex {

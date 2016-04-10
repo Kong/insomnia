@@ -11,13 +11,12 @@
   flex: 1 1 100%;
 
   .editor {
-    position: absolute;
-    width: 100%;
-    height: 100%;
     box-sizing: border-box;
+    position: absolute;
+    height: 100% !important;
+    width: 100%;
 
     .CodeMirror {
-      position: absolute;
       height: 100% !important;
       width: 100%;
       font-family: "Source Code Pro", monospace;
