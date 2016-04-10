@@ -56,6 +56,10 @@
     width: 100%;
     position: relative;
 
+    .tag {
+      padding-left: 0;
+    }
+
     &.sidebar__item--active {
       color: $font-dark-bg;
 
@@ -90,11 +94,15 @@
     border-top: 0;
   }
 
-  ul ul .sidebar__item__row > button {
+  ul .sidebar__item__row > button {
     padding-left: $padding-md !important;
   }
 
-  ul ul ul .sidebar__item__row > button {
+  ul ul .sidebar__item__row > button {
     padding-left: $padding-md * 2 !important;
+  }
+
+  ul ul ul .sidebar__item__row > button {
+    padding-left: $padding-md * 3 !important;
   }
 }

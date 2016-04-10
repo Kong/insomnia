@@ -71,6 +71,14 @@ class Modals extends Component {
             return isVisible ? modal : null;
           })}
         </div>
+        <div ref="toasts">
+          {/*<div className="toast grid">
+            <div className="toast__message">Request deleted</div>
+            <button className="btn toast__action">
+              Undo
+            </button>
+          </div> */}
+        </div>
       </div>
     );
   }

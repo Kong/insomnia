@@ -11,29 +11,20 @@
     left: 0;
     display: none;
     z-index: 100;
-    width: 180px;
+    min-width: $dropdown-min-width;
     box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
-    padding-top: 4px;
-    padding-bottom: 4px;
 
     li {
       background: $bg-super-light;
-      //border: 1px solid $hl;
-      border-bottom-width: 0;
-      border-top-width: 0;
 
       &:first-child {
         border-top-left-radius: $radius-md;
         border-top-right-radius: $radius-md;
-        padding-top: 2px;
-        border-top-width: 1px;
       }
 
       &:last-child {
         border-bottom-left-radius: $radius-md;
         border-bottom-right-radius: $radius-md;
-        padding-bottom: 2px;
-        border-bottom-width: 1px;
       }
 
       & > button {

@@ -1,6 +1,7 @@
 // Global
 export const LOCALSTORAGE_DEBOUNCE_MILLIS = 500;
 export const LOCALSTORAGE_KEY = 'insomnia';
+export const DEFAULT_FONT_SIZE = '12px';
 
 // HTTP Methods
 export const METHOD_GET = 'GET';

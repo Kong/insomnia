@@ -7,7 +7,8 @@ $bg-super-dark: #292a26;
 $color-brand: #7D70CC;
 
 /* Font Colors */
-$font-light-bg: #555;
+$font-light-bg: #444;
+$font-super-light-bg: #555;
 $font-dark-bg: #ddd;
 $font-super-dark-bg: #c8c8c8;
 $font-primary-bg: #eee;
@@ -84,6 +85,6 @@ $info: #52adc1;
 .bg-super-light {
   background: $bg-super-light;
   &, a, textarea, input, button {
-    color: $font-light-bg;
+    color: $font-super-light-bg;
   }
 }

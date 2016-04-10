@@ -3,7 +3,6 @@
 
 html {
   font-family: 'Open Sans', sans-serif;
-  font-size: $font-size;
 }
 
 html, body, #root {
@@ -92,10 +91,6 @@ i.fa {
   &:hover::-webkit-scrollbar {
     display: block;
   }
-}
-
-.stock-height {
-  height: $line-height-md;
 }
 
 .section:not(:last-child) {

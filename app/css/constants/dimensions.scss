@@ -20,11 +20,14 @@ $line-height-md: 4rem;
 $line-height-sm: $line-height-md * 0.75;
 
 /* Sidebar */
-$sidebar-width: 20rem;
+$sidebar-width: 19rem;
 
 /* Borders */
-$radius-sm: 1px;
-$radius-md: 2px;
+$radius-sm: 0.1rem;
+$radius-md: 0.2rem;
+
+/* Dropdowns */
+$dropdown-min-width: 15rem;
 
 /* Modals */
 $modal-width: 50rem;

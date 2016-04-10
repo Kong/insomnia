@@ -89,9 +89,10 @@ class Sidebar extends Component {
             <button onClick={(e) => addRequest(requestGroup.id)}>
               <i className="fa fa-plus-circle"></i>
             </button>
-            <RequestGroupActionsDropdown requestGroup={requestGroup}
-                                         right={true}
-                                         className="tall"/>
+            <RequestGroupActionsDropdown
+              requestGroup={requestGroup}
+              right={true}
+              className="tall"/>
           </div>
         </div>
         <ul>
@@ -140,7 +141,12 @@ class Sidebar extends Component {
           <h1><WorkspaceDropdown /></h1>
         </header>
         <div className="grid--v grid--start grid__cell">
-          <div className="stock-height form-control form-control--outlined">
+          <ul
+            className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
+            {this.renderRequestGroupRow(null)}
+            {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
+          </ul>
+          <div className="form-control form-control--underlined">
             <DebouncingInput
               type="text"
               placeholder="Filter Requests"
@@ -148,11 +154,6 @@ class Sidebar extends Component {
               value={activeFilter}
               onChange={this.onFilterChange.bind(this)}/>
           </div>
-          <ul
-            className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
-            {this.renderRequestGroupRow(null)}
-            {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
-          </ul>
         </div>
       </aside>
     )

@@ -16,11 +16,6 @@ class RequestGroupActionsDropdown extends Component {
         </button>
         <ul>
           <li>
-            <button onClick={e => actions.duplicateRequest(requestGroup, requestGroupId)}>
-              <i className="fa fa-copy"></i> Duplicate
-            </button>
-          </li>
-          <li>
             <button onClick={e => actions.showRequestGroupUpdateNamePrompt(requestGroup)}>
               <i className="fa fa-edit"></i> Rename
             </button>

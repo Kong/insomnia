@@ -1,0 +1,31 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.toast {
+  position: absolute;
+  z-index: 100;
+  bottom: $padding-md;
+  right: $padding-md;
+  background: $bg-light;
+  color: $font-light-bg;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
+
+  .toast__message,
+  .toast__action {
+    padding: $padding-sm $padding-md;
+    height: auto;
+  }
+
+  .toast__message {
+    border-right: 1px solid $hl-md;
+  }
+
+  .toast__action {
+    color: $font-light-bg;
+
+    &:hover {
+      color: $font-super-light-bg;
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+}

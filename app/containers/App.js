@@ -16,6 +16,8 @@ import * as RequestGroupActions from '../actions/requestGroups'
 import * as RequestActions from '../actions/requests'
 import * as ResponseActions from '../actions/responses'
 
+import {DEFAULT_FONT_SIZE} from '../constants/global';
+
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
 
@@ -123,13 +125,33 @@ class App extends Component {
     )
   }
 
+  componentDidMount () {
+    document.documentElement.style.fontSize = DEFAULT_FONT_SIZE;
+  }
+
+  _keyDown (e) {
+    if (e.metaKey) {
+      if (e.keyCode === 189) { // MINUS
+        let fontSize = parseFloat(document.documentElement.style.fontSize);
+        document.documentElement.style.fontSize = `${fontSize - 0.5}px`;
+      } else if (e.keyCode === 187) { // EQUALS
+        let fontSize = parseFloat(document.documentElement.style.fontSize);
+        document.documentElement.style.fontSize = `${fontSize + 0.5}px`;
+      } else if (e.keyCode === 48) { // ZERO
+        document.documentElement.style.fontSize = DEFAULT_FONT_SIZE;
+      } else {
+        // console.log('CTRL + ' + e.keyCode);
+      }
+    }
+  }
+
   render () {
     const {actions, requests, responses, requestGroups, prompt, tabs} = this.props;
     const activeRequest = requests.all.find(r => r.id === requests.active);
     const activeResponse = responses[activeRequest && activeRequest.id];
 
     return (
-      <div className="grid bg-super-dark tall">
+      <div className="grid bg-super-dark tall" onKeyDown={this._keyDown.bind(this)}>
         <Modals />
         <Sidebar
           activateRequest={actions.activateRequest}
