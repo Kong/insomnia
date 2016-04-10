@@ -1,8 +1,4 @@
 import * as types from '../constants/actionTypes'
-import * as methods from '../constants/global'
-import makeRequest from '../lib/request'
-import {loadStart, loadStop, showPrompt} from "./global"
-import {REQUEST_RENAME} from "../constants/prompts"
 
 const defaultResponse = {
   id: null,
@@ -11,6 +7,7 @@ const defaultResponse = {
   modified: 0,
   body: '',
   statusCode: -1,
+  contentType: 'text/plain',
   headers: [{
     name: 'Content-Type',
     value: 'application/json'

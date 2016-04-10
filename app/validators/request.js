@@ -54,6 +54,7 @@ const requestSchema = {
     method: {enum: METHODS},
     url: {type: 'string'},
     body: {type: 'string'},
+    contentType: {type: 'string'},
     authentication: {
       oneOf: [
         {$ref: '/BasicAuthentication'},

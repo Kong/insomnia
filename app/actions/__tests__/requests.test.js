@@ -35,10 +35,8 @@ describe('Requests Actions', () => {
           method: 'GET',
           url: '',
           body: '',
-          headers: [{
-            name: 'Content-Type',
-            value: 'application/json'
-          }],
+          contentType: 'text/plain',
+          headers: [],
           params: [],
           authentication: {}
         }

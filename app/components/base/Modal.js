@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import classnames from 'classnames';
 
 const ModalHeader = (props) => (
   <div className="modal__header bg-light">
@@ -18,10 +19,8 @@ const ModalHeader = (props) => (
 );
 
 const ModalBody = (props) => (
-  <div className="modal__body pad grid__cell scrollable">
-    <div className={props.className}>
-      {props.children}
-    </div>
+  <div className={classnames('modal__body', 'grid__cell', 'scrollable', props.className)}>
+    {props.children}
   </div>
 );
 
@@ -70,17 +69,18 @@ class Modal extends Component {
     this.props.onClose && this.props.onClose();
   }
 
-  render () {
-    if (!this.props.visible) {
-      return null;
-    }
+  componentDidMount () {
+    this.refs.modal.focus();
+  }
 
+  render () {
     return (
       <div ref="modal"
-           className="modal grid grid--center"
+           tabIndex="-1"
+           className={classnames('modal', 'grid', 'grid--center', this.props.className)}
            onKeyDown={this._keyDown.bind(this)}
            onClick={this._handleClick.bind(this)}>
-        <div className="modal__content grid--v bg-super-light">
+        <div className={classnames('modal__content', 'grid--v', 'bg-super-light', {tall: this.props.tall})}>
           {this.props.children}
         </div>
       </div>
@@ -89,8 +89,8 @@ class Modal extends Component {
 }
 
 Modal.propTypes = {
-  visible: PropTypes.bool.isRequired,
-  onClose: PropTypes.func
+  onClose: PropTypes.func,
+  tall: PropTypes.bool
 };
 
 export {Modal, ModalHeader, ModalBody, ModalFooter};

@@ -27,7 +27,9 @@ class WorkspaceDropdown extends Component {
           <li><button onClick={e => actions.addRequestGroup()}>
             <i className="fa fa-folder"></i> Add Request Group
           </button></li>
-          <li><button><i className="fa fa-code"></i> Environments</button></li>
+          <li><button onClick={e => actions.showEnvironmentEditModal()}>
+            <i className="fa fa-code"></i> Environments
+          </button></li>
           <li><button><i className="fa fa-share-square-o"></i> Import/Export</button></li>
           <li><button><i className="fa fa-empty"></i> Toggle Sidebar</button></li>
           <li><button><i className="fa fa-empty"></i> Delete Workspace</button></li>
@@ -40,6 +42,7 @@ class WorkspaceDropdown extends Component {
 WorkspaceDropdown.propTypes = {
   loading: PropTypes.bool.isRequired,
   actions: PropTypes.shape({
+    showEnvironmentEditModal: PropTypes.func.isRequired,
     addRequest: PropTypes.func.isRequired,
     addRequestGroup: PropTypes.func.isRequired
   })

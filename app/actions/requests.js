@@ -1,9 +1,10 @@
 import * as types from '../constants/actionTypes'
 import * as methods from '../constants/global'
 import makeRequest from '../lib/request'
-import {loadStart, loadStop, showPrompt} from "./global"
-import {REQUEST_RENAME} from "../constants/prompts"
-import {setResponse} from "./responses";
+import {loadStart, loadStop} from './global'
+import {showModal} from './modals'
+import {REQUEST_RENAME} from '../constants/modals'
+import {setResponse} from "./responses"
 
 const defaultRequest = {
   id: null,
@@ -14,10 +15,8 @@ const defaultRequest = {
   method: methods.METHOD_GET,
   body: '',
   params: [],
-  headers: [{
-    name: 'Content-Type',
-    value: 'application/json'
-  }],
+  contentType: 'text/plain',
+  headers: [],
   authentication: {}
 };
 
@@ -93,15 +92,9 @@ export function sendRequest (request) {
     makeRequest(request, (err, response) => {
       if (err) {
         console.error(err);
-      } else {
-        console.log(response.statusCode, response.body);
       }
 
-      dispatch(setResponse(request.id, {
-        body: response.body,
-        statusCode: response.statusCode
-      }));
-
+      dispatch(setResponse(request.id, response));
       dispatch(loadStop());
     });
   }
@@ -110,5 +103,5 @@ export function sendRequest (request) {
 export function showRequestUpdateNamePrompt (request) {
   const id = request.id;
   const defaultValue = request.name;
-  return showPrompt(REQUEST_RENAME, {id, defaultValue});
+  return showModal(REQUEST_RENAME, {id, defaultValue});
 }

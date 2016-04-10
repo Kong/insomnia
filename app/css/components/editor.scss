@@ -33,6 +33,7 @@
     .CodeMirror-gutter-filler {
       // Let the background behind show through
       background-color: transparent !important;
+      border: 0;
     }
 
     .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {

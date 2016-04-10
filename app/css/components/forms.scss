@@ -6,6 +6,7 @@
   border: 0;
   height: $line-height-md;
 
+  textarea,
   input {
     width: 100%;
     height: 100%;
@@ -30,24 +31,33 @@
     height: auto;
     margin: $padding-sm;
 
+    textarea,
     input {
       border: 1px solid $hl-lg;
       padding: $padding-sm;
       border-radius: $radius-md;
     }
 
+    textarea,
     input:focus {
       border-color: $hl-xxl;
     }
   }
 
   &.form-control--underlined {
+    textarea,
     input {
       border-top: 0;
       border-right: 0;
       border-left: 0;
     }
   }
+}
+
+// Push form all the way to the sides if inside label
+label > .form-control {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 .btn {
@@ -69,7 +79,7 @@
   background: $hl-md;
 }
 
-input, button {
+textarea, input, button {
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;

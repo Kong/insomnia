@@ -2,10 +2,9 @@ import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
-import {REQUEST_RENAME, REQUEST_GROUP_RENAME} from "../constants/prompts"
 
 import Editor from '../components/base/Editor'
-import PromptModal from '../components/base/PromptModal'
+import Modals from '../components/modals/ModalContainer'
 import KeyValueEditor from '../components/base/KeyValueEditor'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestAuthEditor from '../components/RequestAuthEditor'
@@ -65,7 +64,7 @@ class App extends Component {
                   onChange={params => actions.updateRequest({id: activeRequest.id, params})}
                 />
               </TabPanel>
-              <TabPanel className="grid__cell pad">
+              <TabPanel className="grid__cell scrollable">
                 <RequestAuthEditor
                   request={activeRequest}
                   onChange={authentication => actions.updateRequest({id: activeRequest.id, authentication})}
@@ -97,9 +96,10 @@ class App extends Component {
               </TabList>
               <TabPanel className="grid__cell">
                 <Editor
-                  value={activeResponse && JSON.stringify(JSON.parse(activeResponse.body), null, 4) || ''}
+                  value={activeResponse && activeResponse.body || ''}
+                  prettify={true}
                   options={{
-                    mode: 'application/json',
+                    mode: activeResponse && activeResponse.contentType || 'text/plain',
                     readOnly: true,
                     placeholder: 'nothing yet...'
                   }}
@@ -130,24 +130,7 @@ class App extends Component {
 
     return (
       <div className="grid bg-super-dark tall">
-        {!prompt ? null : (
-          <div className="prompts">
-            <PromptModal
-              headerName="Rename Request"
-              submitName="Rename"
-              defaultValue={prompt.data.defaultValue}
-              visible={prompt.id === REQUEST_RENAME}
-              onClose={() => actions.hidePrompt(prompt.id)}
-              onSubmit={name => actions.updateRequest({id: prompt.data.id, name})}/>
-            <PromptModal
-              headerName="Rename Request Group"
-              submitName="Rename"
-              defaultValue={prompt.data.defaultValue}
-              visible={prompt.id === REQUEST_GROUP_RENAME}
-              onClose={() => actions.hidePrompt(prompt.id)}
-              onSubmit={name => actions.updateRequestGroup({id: prompt.data.id, name})}/>
-          </div>
-        )}
+        <Modals />
         <Sidebar
           activateRequest={actions.activateRequest}
           changeFilter={actions.changeFilter}
@@ -189,8 +172,7 @@ App.propTypes = {
     active: PropTypes.string // "required" but can be null
   }).isRequired,
   responses: PropTypes.object.isRequired,
-  tabs: PropTypes.object.isRequired,
-  prompt: PropTypes.object
+  tabs: PropTypes.object.isRequired
 };
 
 function mapStateToProps (state) {
@@ -199,7 +181,6 @@ function mapStateToProps (state) {
     requests: state.requests,
     requestGroups: state.requestGroups,
     responses: state.responses,
-    prompt: state.prompt,
     tabs: state.tabs
   };
 }

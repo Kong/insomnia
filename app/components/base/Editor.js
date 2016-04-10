@@ -35,6 +35,7 @@ import 'codemirror/addon/display/placeholder';
 
 // CSS Themes
 import 'codemirror/theme/monokai.css'
+import 'codemirror/theme/neat.css'
 
 // App styles
 import '../../css/components/editor.scss';
@@ -84,27 +85,27 @@ class Editor extends Component {
     }
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentDidUpdate () {
     // Don't update if no CodeMirror instance
     if (!this.codeMirror) {
       return;
     }
 
     // Don't update if no value passed
-    if (nextProps.value === undefined) {
+    if (this.props.value === undefined) {
       return;
     }
 
     // Don't update if same value passed again
-    if (this._currentCodemirrorValue === nextProps.value) {
+    if (this._currentCodemirrorValue === this.props.value) {
       return;
     }
 
-    // Set the new value
-    this._codemirrorSetValue(nextProps.value);
-
     // Reset any options that may have changed
-    this._codemirrorSetOptions(nextProps.options);
+    this._codemirrorSetOptions(this.props.options);
+
+    // Set the new value
+    this._codemirrorSetValue(this.props.value);
   }
 
   /**
@@ -121,6 +122,9 @@ class Editor extends Component {
    * @param options
    */
   _codemirrorSetOptions (options) {
+    // Clone first so we can modify it
+    options = Object.assign({}, options);
+    
     if (options.mode === 'json') {
       options.mode = 'application/json';
     }
@@ -164,6 +168,15 @@ class Editor extends Component {
    */
   _codemirrorSetValue (code) {
     this._ignoreNextChange = true;
+    
+    if (this.props.prettify) {
+      if (this.props.options.mode === 'application/json') {
+        try {
+          code = JSON.stringify(JSON.parse(code), null, 4);
+        } catch (e) { }
+      }
+    }
+    
     this.codeMirror.setValue(code);
   }
 
@@ -197,6 +210,7 @@ Editor.propTypes = {
   options: PropTypes.object,
   path: PropTypes.string,
   value: PropTypes.string,
+  prettify: PropTypes.bool,
   className: PropTypes.any,
   debounceMillis: PropTypes.number
 };

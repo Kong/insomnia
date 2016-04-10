@@ -4,6 +4,7 @@ $bg-light: #eff0ed;
 $bg-super-light: #fff;
 $bg-dark: #2e2f2b;
 $bg-super-dark: #292a26;
+$color-brand: #7D70CC;
 
 /* Font Colors */
 $font-light-bg: #555;
@@ -71,14 +72,6 @@ $info: #52adc1;
     color: $font-super-dark-bg;
   }
 }
-
-//.bg-primary {
-//  background: $bg-primary;
-//
-//  &, a, textarea, input, button {
-//    color: $font-primary-bg;
-//  }
-//}
 
 .bg-light {
   background: $bg-light;

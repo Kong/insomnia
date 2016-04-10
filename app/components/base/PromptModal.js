@@ -10,10 +10,6 @@ class PromptModal extends Component {
   }
 
   _setDefaultValueFromProps () {
-    if (!this.props.visible) {
-      return;
-    }
-
     if (this.props.defaultValue) {
       this.refs.input.value = this.props.defaultValue;
     }
@@ -31,14 +27,9 @@ class PromptModal extends Component {
   }
 
   render () {
-    const {visible, onClose, submitName, headerName} = this.props;
-
-    if (!visible) {
-      return null;
-    }
-
+    const {onClose, submitName, headerName} = this.props;
     return (
-      <Modal ref="modal" onClose={onClose} visible={visible}>
+      <Modal ref="modal" onClose={onClose}>
         <ModalHeader>{headerName}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._onSubmit.bind(this)} className="wide">
@@ -60,7 +51,6 @@ class PromptModal extends Component {
 
 PromptModal.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  visible: PropTypes.bool.isRequired,
   headerName: PropTypes.string.isRequired,
 
   defaultValue: PropTypes.string,

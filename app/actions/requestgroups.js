@@ -1,6 +1,7 @@
 import * as types from '../constants/actionTypes'
-import {REQUEST_GROUP_RENAME} from "../constants/prompts";
-import {showPrompt} from "./global";
+import {REQUEST_GROUP_RENAME} from '../constants/modals';
+import {ENVIRONMENT_EDITOR} from '../constants/modals';
+import {showModal} from './modals';
 
 const defaultRequestGroup = {
   id: null,
@@ -59,5 +60,9 @@ export function toggleRequestGroup (id) {
 export function showRequestGroupUpdateNamePrompt (requestGroup) {
   const id = requestGroup.id;
   const defaultValue = requestGroup.name;
-  return showPrompt(REQUEST_GROUP_RENAME, {id, defaultValue});
+  return showModal(REQUEST_GROUP_RENAME, {id, defaultValue});
+}
+
+export function showEnvironmentEditModal () {
+  return showModal(ENVIRONMENT_EDITOR);
 }

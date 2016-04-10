@@ -8,8 +8,7 @@ class RequestBodyEditor extends Component {
 
   render () {
     const {request, onChange, className} = this.props;
-    const contentTypeHeader = request.headers.find(h => h.name.toLowerCase() === 'content-type');
-    const mode = contentTypeHeader ? contentTypeHeader.value : 'text/plain';
+    const mode = request.contentType || 'application/json';
 
     return (
       <Editor
