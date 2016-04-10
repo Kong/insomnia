@@ -30,7 +30,7 @@ class Sidebar extends Component {
         }
 
         const toMatch = `${r.method} ::: ${r.name}`.toLowerCase();
-        const matchTokens = activeFilter.split(' ');
+        const matchTokens = activeFilter.toLowerCase().split(' ');
         for (let i = 0; i < matchTokens.length; i++) {
           if (toMatch.indexOf(matchTokens[i]) === -1) {
             return false;

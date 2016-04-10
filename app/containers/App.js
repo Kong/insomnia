@@ -117,7 +117,16 @@ class App extends Component {
                   }}
                 />
               </TabPanel>
-              <TabPanel className="pad grid__cell">Headers</TabPanel>
+              <TabPanel className="pad grid__cell">
+                <div className="grid--v grid--start wide">
+                  {!activeResponse ? null : activeResponse.headers.map((h, i) => (
+                    <div className="grid__cell grid selectable tall" key={i}>
+                      <div className="grid__cell">{h.name}</div>
+                      <div className="grid__cell">{h.value}</div>
+                    </div>
+                  ))}
+                </div>
+              </TabPanel>
             </Tabs>
           </div>
         </section>

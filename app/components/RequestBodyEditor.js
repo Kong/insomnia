@@ -17,6 +17,7 @@ class RequestBodyEditor extends Component {
         onChange={onChange}
         options={{
           mode: mode,
+          lineWrapping: true,
           placeholder: 'request body here...'
         }}
       />

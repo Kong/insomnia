@@ -3,6 +3,7 @@
 
 html {
   font-family: 'Open Sans', sans-serif;
+  font-size: $font-size;
 }
 
 html, body, #root {
@@ -71,6 +72,11 @@ i.fa {
 
 .italic {
   font-style: italic;
+}
+
+.selectable {
+  -webkit-user-select: text;
+  cursor: text;
 }
 
 .hide-scrollbars {

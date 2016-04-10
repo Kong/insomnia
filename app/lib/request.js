@@ -33,8 +33,11 @@ export default function (request, callback) {
       return callback(null, {
         body: response.body,
         contentType: response.headers['content-type'],
-        headers: response.headers,
-        statusCode: response.statusCode
+        statusCode: response.statusCode,
+        headers: Object.keys(response.headers).map(name => {
+          const value = response.headers[name];
+          return {name, value};
+        })
       });
     }
   });

@@ -14,6 +14,10 @@
     min-width: $dropdown-min-width;
     box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
 
+    // Separate it from the button a bit
+    padding-top: 3px;
+    padding-bottom: 3px;
+
     li {
       background: $bg-super-light;
 
