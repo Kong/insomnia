@@ -151,7 +151,7 @@ class KeyValueEditor extends Component {
               <div className="form-control form-control--underlined grid__cell">
                 <input
                   type="text"
-                  placeholder="Name"
+                  placeholder={this.props.namePlaceholder || 'Name'}
                   ref={`${i}.${NAME}`}
                   value={pair.name}
                   onChange={e => this._updatePair(i, {name: e.target.value})}
@@ -162,7 +162,7 @@ class KeyValueEditor extends Component {
               <div className="form-control form-control--underlined grid__cell">
                 <input
                   type="text"
-                  placeholder="Value"
+                  placeholder={this.props.valuePlaceholder || 'Value'}
                   ref={`${i}.${VALUE}`}
                   value={pair.value}
                   onChange={e => this._updatePair(i, {value: e.target.value})}
@@ -184,12 +184,12 @@ class KeyValueEditor extends Component {
           <div className="grid__cell grid__cell--no-flex grid">
             <div className="form-control form-control--underlined grid__cell">
               <input type="text"
-                     placeholder="Name"
+                     placeholder={this.props.namePlaceholder || 'Name'}
                      onFocus={e => {this._focusedField = NAME; this._addPair()}}/>
             </div>
             <div className="form-control form-control--underlined grid__cell">
               <input type="text"
-                     placeholder="Value"
+                     placeholder={this.props.valuePlaceholder || 'Value'}
                      onFocus={e => {this._focusedField = VALUE; this._addPair()}}/>
             </div>
             <div className="grid--v">
@@ -207,7 +207,9 @@ class KeyValueEditor extends Component {
 KeyValueEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   pairs: PropTypes.array.isRequired,
-  maxPairs: PropTypes.number
+  maxPairs: PropTypes.number,
+  namePlaceholder: PropTypes.string,
+  valuePlaceholder: PropTypes.string
 };
 
 export default KeyValueEditor;

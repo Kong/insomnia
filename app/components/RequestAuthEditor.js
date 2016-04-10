@@ -15,6 +15,8 @@ class RequestAuthEditor extends Component {
       <KeyValueEditor
         pairs={pairs}
         maxPairs={1}
+        namePlaceholder="Username"
+        valuePlaceholder="Password"
         onChange={pairs => onChange({
           username: pairs[0].name,
           password: pairs[0].value
