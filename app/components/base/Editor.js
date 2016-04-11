@@ -124,6 +124,9 @@ class Editor extends Component {
   _codemirrorSetOptions (options) {
     // Clone first so we can modify it
     options = Object.assign({}, options);
+
+    // Strip of charset if there is one
+    options.mode = options.mode.split(';')[0];
     
     if (options.mode === 'json') {
       options.mode = 'application/json';
