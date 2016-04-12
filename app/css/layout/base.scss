@@ -101,7 +101,7 @@ i.fa {
 
 .section:not(:last-child) {
   .section__header {
-
+    border-right: 1px solid #eee;
   }
 
   .section__body {

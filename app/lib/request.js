@@ -18,7 +18,9 @@ export default function (request, callback) {
 
   for (let i = 0; i < request.headers.length; i++) {
     let header = request.headers[i];
-    config.headers[header.name] = header.value;
+    if (header.name) {
+      config.headers[header.name] = header.value;
+    }
   }
 
   // SNEAKY HACK: Render nested object by converting it to JSON then rendering

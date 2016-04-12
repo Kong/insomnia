@@ -82,7 +82,7 @@ class App extends Component {
         <section className="grid__cell section">
           <div className="grid--v wide">
             <header
-              className="grid grid--center header text-center bg-light txt-sm section__header">
+              className="grid grid--center header text-center bg-super-light txt-sm section__header">
               <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
               <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
             </header>
@@ -109,6 +109,7 @@ class App extends Component {
                 <Editor
                   value={activeResponse && activeResponse.body || ''}
                   options={{
+                    lineWrapping: true,
                     mode: 'text/plain',
                     readOnly: true,
                     placeholder: 'nothing yet...'
