@@ -180,7 +180,7 @@ class KeyValueEditor extends Component {
             </div>
           )
         })}
-        {maxPairs === undefined || maxPairs > pairs.length ? (
+        {maxPairs === undefined || pairs.length < maxPairs ? (
           <div className="grid__cell grid__cell--no-flex grid">
             <div className="form-control form-control--underlined grid__cell">
               <input type="text"

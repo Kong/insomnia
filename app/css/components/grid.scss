@@ -53,6 +53,27 @@
   }
 }
 
+.grid__cell--scroll--v,
+.grid__cell--scroll--h {
+  flex: 1 1 auto;
+}
+
+.grid__cell--scroll--v {
+  overflow-y: auto;
+
+  & > * {
+    height: 0;
+  }
+}
+
+.grid__cell--scroll--h {
+  overflow-x: auto;
+
+  & > * {
+    width: 0;
+  }
+}
+
 @media (max-width: $breakpoint-md) {
   .grid.grid--collapse {
     flex-direction: column;

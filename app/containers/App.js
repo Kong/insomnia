@@ -53,28 +53,34 @@ class App extends Component {
                   </button>
                 </Tab>
               </TabList>
-              <TabPanel className="grid__cell relative">
+              <TabPanel className="grid__cell">
                 <RequestBodyEditor
                   onChange={body => {actions.updateRequest({id: activeRequest.id, body})}}
                   request={activeRequest}/>
               </TabPanel>
-              <TabPanel className="grid__cell scrollable">
-                <KeyValueEditor
-                  pairs={activeRequest.params}
-                  onChange={params => actions.updateRequest({id: activeRequest.id, params})}
-                />
+              <TabPanel className="grid__cell grid__cell--scroll--v">
+                <div className="wide">
+                  <KeyValueEditor
+                    pairs={activeRequest.params}
+                    onChange={params => actions.updateRequest({id: activeRequest.id, params})}
+                  />
+                </div>
               </TabPanel>
-              <TabPanel className="grid__cell scrollable">
-                <RequestAuthEditor
-                  request={activeRequest}
-                  onChange={authentication => actions.updateRequest({id: activeRequest.id, authentication})}
-                />
+              <TabPanel className="grid__cell grid__cell--scroll--v">
+                <div className="wide">
+                  <RequestAuthEditor
+                    request={activeRequest}
+                    onChange={authentication => actions.updateRequest({id: activeRequest.id, authentication})}
+                  />
+                </div>
               </TabPanel>
-              <TabPanel className="grid__cell scrollable">
-                <KeyValueEditor
-                  pairs={activeRequest.headers}
-                  onChange={headers => actions.updateRequest({id: activeRequest.id, headers})}
-                />
+              <TabPanel className="grid__cell grid__cell--scroll--v">
+                <div className="wide">
+                  <KeyValueEditor
+                    pairs={activeRequest.headers}
+                    onChange={headers => actions.updateRequest({id: activeRequest.id, headers})}
+                  />
+                </div>
               </TabPanel>
             </Tabs>
           </div>
@@ -82,8 +88,10 @@ class App extends Component {
         <section className="grid__cell section">
           <div className="grid--v wide">
             <header
-              className="grid grid--center header text-center bg-super-light txt-sm section__header">
-              <div className="tag success"><strong>200</strong>&nbsp;SUCCESS</div>
+              className="grid grid--center header text-center bg-light txt-sm section__header">
+              <div className="tag success">
+                <strong>{activeResponse && activeResponse.statusCode}</strong>&nbsp;SUCCESS
+              </div>
               <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
             </header>
             <Tabs className="grid__cell grid--v section__body"
@@ -116,14 +124,16 @@ class App extends Component {
                   }}
                 />
               </TabPanel>
-              <TabPanel className="grid__cell scrollable">
-                <div className="grid--v grid--start wide pad">
-                  {!activeResponse ? null : activeResponse.headers.map((h, i) => (
-                    <div className="grid grid__cell grid__cell--no-flex selectabletall" key={i}>
-                      <div className="grid__cell">{h.name}</div>
-                      <div className="grid__cell">{h.value}</div>
-                    </div>
-                  ))}
+              <TabPanel className="grid__cell grid__cell--scroll--v">
+                <div className="wide">
+                  <div className="grid--v grid--start pad">
+                    {!activeResponse ? null : activeResponse.headers.map((h, i) => (
+                      <div className="grid grid__cell grid__cell--no-flex selectable" key={i}>
+                        <div className="grid__cell">{h.name}</div>
+                        <div className="grid__cell">{h.value}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </TabPanel>
             </Tabs>

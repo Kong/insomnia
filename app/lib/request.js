@@ -16,12 +16,20 @@ export default function (request, callback) {
     }
   }
 
+  // TODO: Do these need to be urlencoded or something?
   for (let i = 0; i < request.headers.length; i++) {
     let header = request.headers[i];
     if (header.name) {
       config.headers[header.name] = header.value;
     }
   }
+  
+  // TODO: this is just a POC. It breaks in a lot of cases
+  config.url += request.params.map((p, i) => {
+    const name = encodeURIComponent(p.name);
+    const value = encodeURIComponent(p.value);
+    return `${i === 0 ? '?' : '&'}${name}=${value}`;
+  }).join('');
 
   // SNEAKY HACK: Render nested object by converting it to JSON then rendering
   const context = {template_id: 'tem_WWq2w9uJNR6Pqk8APkvsS3'};
