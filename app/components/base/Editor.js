@@ -48,6 +48,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
+  lineWrapping: false,
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',

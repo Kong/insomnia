@@ -55,7 +55,8 @@
 }
 
 // Push form all the way to the sides if inside label
-label > .form-control {
+label > .form-control,
+.form-control--wide {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }

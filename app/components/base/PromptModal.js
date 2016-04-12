@@ -15,7 +15,9 @@ class PromptModal extends Component {
     }
 
     this.refs.input.focus();
-    this.refs.input.select();
+    if (this.props.selectText) {
+      this.refs.input.select();
+    }
   }
 
   componentDidMount () {
@@ -32,8 +34,8 @@ class PromptModal extends Component {
       <Modal ref="modal" onClose={onClose}>
         <ModalHeader>{headerName}</ModalHeader>
         <ModalBody className="wide">
-          <form onSubmit={this._onSubmit.bind(this)} className="wide">
-            <div className="form-control form-control--outlined">
+          <form onSubmit={this._onSubmit.bind(this)} className="wide pad">
+            <div className="form-control form-control--outlined form-control--wide">
               <input ref="input" type="text"/>
             </div>
           </form>
@@ -52,9 +54,9 @@ class PromptModal extends Component {
 PromptModal.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   headerName: PropTypes.string.isRequired,
-
   defaultValue: PropTypes.string,
   submitName: PropTypes.string,
+  selectText: PropTypes.bool,
   onClose: PropTypes.func
 };
 
