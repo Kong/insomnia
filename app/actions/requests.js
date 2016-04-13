@@ -1,6 +1,6 @@
 import * as types from '../constants/actionTypes'
 import * as methods from '../constants/global'
-import makeRequest from '../lib/request'
+import makeRequest from '../lib/request.electron'
 import {loadStart, loadStop} from './global'
 import {showModal} from './modals'
 import {REQUEST_RENAME} from '../constants/modals'

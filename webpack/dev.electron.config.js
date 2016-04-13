@@ -37,5 +37,7 @@ base.plugins = [
 
 base.target = webpackTargetElectronRenderer(base);
 
+base.resolve.extensions.push('electron.js');
+
 module.exports = base;
 

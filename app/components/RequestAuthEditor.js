@@ -18,8 +18,8 @@ class RequestAuthEditor extends Component {
         namePlaceholder="Username"
         valuePlaceholder="Password"
         onChange={pairs => onChange({
-          username: pairs[0].name,
-          password: pairs[0].value
+          username: pairs.length ? pairs[0].name : '',
+          password: pairs.length ? pairs[0].value : ''
         })}
       />
     );

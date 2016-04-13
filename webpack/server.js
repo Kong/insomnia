@@ -2,7 +2,7 @@
 
 const express = require('express');
 const webpack = require('webpack');
-const config = require('../webpack/dev.config');
+const config = require('./dev.electron.config.js');
 
 const app = express();
 const compiler = webpack(config);
