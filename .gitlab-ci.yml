@@ -2,7 +2,6 @@ image: node:4.2.2
 
 all_tests:
   script:
-  - nvm install
   - npm install > /dev/null
   - npm test
   cache:
