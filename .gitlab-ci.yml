@@ -1,10 +1,9 @@
 image: node:4.2.2
 
 cache:
-  paths:
-  - node_modules/
+  untracked: true
 
 all_tests:
   script:
-   - npm install
-   - npm test
+  - npm install &> /dev/null
+  - npm test
