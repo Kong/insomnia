@@ -6,5 +6,6 @@ cache:
 
 all_tests:
   script:
-   - npm install
-   - npm test
+  - nvm install
+  - npm install > /dev/null
+  - npm test
