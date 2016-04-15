@@ -61,9 +61,21 @@
   },
   "jest": {
     "unmockedModulePathPatterns": [
+      "<rootDir>/node_modules/redux-thunk",
+      "<rootDir>/node_modules/redux-mock-store",
+      "<rootDir>/node_modules/nunjucks",
+      "<rootDir>/node_modules/jsonschema",
       "<rootDir>/node_modules/react",
       "<rootDir>/node_modules/react-dom",
       "<rootDir>/node_modules/react-addons-test-utils"
+    ],
+    "testFileExtensions": [
+      "test.js"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "electron.js",
+      "chrome.js"
     ]
   }
 }

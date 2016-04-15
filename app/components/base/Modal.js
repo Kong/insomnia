@@ -1,36 +1,6 @@
-import React, {Component, PropTypes} from 'react';
-import classnames from 'classnames';
-
-const ModalHeader = (props) => (
-  <div className="modal__header bg-light">
-    <div className="grid">
-      <div className="grid__cell pad">
-        <div className={props.className}>
-          {props.children}
-        </div>
-      </div>
-      <div className="grid--v">
-        <button className="btn btn--compact txt-lg" data-close-modal="true">
-          <i className="fa fa-times"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-const ModalBody = (props) => (
-  <div className={classnames('modal__body', 'grid__cell', 'scrollable', props.className)}>
-    {props.children}
-  </div>
-);
-
-const ModalFooter = (props) => (
-  <div className="modal__footer">
-    <div className={props.className}>
-      {props.children}
-    </div>
-  </div>
-);
+import React, {Component, PropTypes} from 'react'
+import classnames from 'classnames'
+import * as ModalActions from '../../actions/modals'
 
 class Modal extends Component {
   _handleClick (e) {
@@ -70,7 +40,7 @@ class Modal extends Component {
   }
 
   componentDidMount () {
-    this.refs.modal.focus();
+    this.refs.modal && this.refs.modal.focus();
   }
 
   render () {
@@ -80,7 +50,8 @@ class Modal extends Component {
            className={classnames('modal', 'grid', 'grid--center', this.props.className)}
            onKeyDown={this._keyDown.bind(this)}
            onClick={this._handleClick.bind(this)}>
-        <div className={classnames('modal__content', 'grid--v', 'bg-super-light', {tall: this.props.tall})}>
+        <div
+          className={classnames('modal__content', 'grid--v', 'bg-super-light', {tall: this.props.tall})}>
           {this.props.children}
         </div>
       </div>
@@ -93,4 +64,5 @@ Modal.propTypes = {
   tall: PropTypes.bool
 };
 
-export {Modal, ModalHeader, ModalBody, ModalFooter};
+export default Modal;
+
