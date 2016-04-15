@@ -24,6 +24,22 @@ h2 {
   font-size: $font-size-xl;
 }
 
+h3 {
+  font-size: $font-size-lg;
+}
+
+h1, h2, h3 {
+  padding-top: 1.5em;
+}
+
+hr {
+  width: 100%;
+  height: 1px;
+  background-color: $hl-md;
+  border: 0;
+  margin: $padding-md 0;
+}
+
 .text-center {
   text-align: center;
 }
@@ -56,6 +72,10 @@ i.fa {
 
 .no-wrap {
   white-space: nowrap;
+}
+
+.no-pad {
+  padding: 0 !important;
 }
 
 .wide {

@@ -65,8 +65,7 @@ class Modals extends Component {
             const isVisible = modals.find(m => m.id === id);
             const modal = React.createElement(c, {
               key: id,
-              onClose: () => actions.hideModal(id),
-              tall: true
+              onClose: () => actions.hideModal(id)
             });
             return isVisible ? modal : null;
           })}

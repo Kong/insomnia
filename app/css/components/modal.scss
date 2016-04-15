@@ -20,6 +20,7 @@
   .modal__content {
     border-radius: $radius-md;
     box-sizing: border-box;
+    box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.5);
     width: $modal-width;
     max-width: 100%;
     max-height: 100%;

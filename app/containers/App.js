@@ -59,7 +59,7 @@ class App extends Component {
                   request={activeRequest}/>
               </TabPanel>
               <TabPanel className="grid__cell grid__cell--scroll--v">
-                <div className="wide">
+                <div className="wide pad">
                   <KeyValueEditor
                     pairs={activeRequest.params}
                     onChange={params => actions.updateRequest({id: activeRequest.id, params})}
@@ -67,7 +67,7 @@ class App extends Component {
                 </div>
               </TabPanel>
               <TabPanel className="grid__cell grid__cell--scroll--v">
-                <div className="wide">
+                <div className="wide pad">
                   <RequestAuthEditor
                     request={activeRequest}
                     onChange={authentication => actions.updateRequest({id: activeRequest.id, authentication})}
@@ -75,7 +75,7 @@ class App extends Component {
                 </div>
               </TabPanel>
               <TabPanel className="grid__cell grid__cell--scroll--v">
-                <div className="wide">
+                <div className="wide pad">
                   <KeyValueEditor
                     pairs={activeRequest.headers}
                     onChange={headers => actions.updateRequest({id: activeRequest.id, headers})}

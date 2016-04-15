@@ -8,7 +8,9 @@ class RequestBodyEditor extends Component {
 
   render () {
     const {request, onChange, className} = this.props;
-    const mode = request.contentType || 'application/json';
+    // console.log(request);
+    // const mode = request.contentType || 'application/json';
+    const mode = 'application/json';
 
     return (
       <Editor
