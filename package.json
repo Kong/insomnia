@@ -3,6 +3,7 @@
   "private": true,
   "version": "3.0.0",
   "description": "Insomnia App",
+  "main": "electron.js",
   "repository": {
     "type": "git",
     "url": "git@bitbucket.org:gschier/insomnia.git"
