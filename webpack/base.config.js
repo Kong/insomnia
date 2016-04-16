@@ -18,16 +18,20 @@ var config = {
     loaders: [
       {
         id: 'babel',
-        test: /\.jsx?$/,
+        test: /\.(js|jsx)$/,
         loaders: ['babel'],
         exclude: /node_modules/
+      },
+      {
+        test: /\.json$/,
+        loader: 'json'
       },
       {
         test: /\.(scss|css)$/,
         loader: 'style!css!sass'
       },
       {
-        test: /\.(html)$/,
+        test: /\.html$/,
         loader: "file?name=[name].[ext]"
       },
       {
@@ -53,7 +57,7 @@ var config = {
     ]
   },
   resolve: {
-    extensions: ['', '.js', '.jsx', '.electron.js', '.chrome.js'],
+    extensions: ['', '.js', '.json', '.jsx'],
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
   plugins: [
@@ -64,7 +68,9 @@ var config = {
       }
     }),
     new webpack.ExternalsPlugin('commonjs', [
-      'request'
+      'request',
+      'nunjucks',
+      'pouchdb'
     ])
   ]
 };

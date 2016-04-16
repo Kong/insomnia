@@ -3,11 +3,12 @@ import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 import Dropdown from '../base/Dropdown'
 import * as RequestActions from '../../actions/requests'
+import * as db from '../../database/index'; 
 
 class RequestActionsDropdown extends Component {
   render () {
     const {actions, request, requestGroup, ...other} = this.props;
-    const requestGroupId = requestGroup ? requestGroup.id : null;
+    const requestGroupId = requestGroup ? requestGroup._id : null;
 
     return (
       <Dropdown {...other}>
@@ -16,12 +17,12 @@ class RequestActionsDropdown extends Component {
         </button>
         <ul>
           <li>
-            <button onClick={e => actions.duplicateRequest(request, requestGroupId)}>
+            <button onClick={e => db.requestDuplicate(request, requestGroupId)}>
               <i className="fa fa-copy"></i> Duplicate
             </button>
           </li>
           <li>
-            <button onClick={e => actions.showRequestUpdateNamePrompt(request)}>
+            <button onClick={e => actions.showUpdateNamePrompt(request)}>
               <i className="fa fa-edit"></i> Rename
             </button>
           </li>
@@ -31,7 +32,7 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => actions.deleteRequest(request.id)}>
+            <button onClick={e => db.remove(request)}>
               <i className="fa fa-trash-o"></i> Delete
             </button>
           </li>
@@ -44,9 +45,7 @@ class RequestActionsDropdown extends Component {
 RequestActionsDropdown.propTypes = {
   request: PropTypes.object.isRequired,
   actions: PropTypes.shape({
-    deleteRequest: PropTypes.func.isRequired,
-    showRequestUpdateNamePrompt: PropTypes.func.isRequired,
-    duplicateRequest: PropTypes.func.isRequired
+    showUpdateNamePrompt: PropTypes.func.isRequired
   }),
   requestGroup: PropTypes.object
 };

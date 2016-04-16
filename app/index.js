@@ -1,23 +1,69 @@
 import React from 'react'
 import {render} from 'react-dom'
 import {Provider} from 'react-redux'
+import {bindActionCreators} from 'redux'
 import configureStore from './stores/configureStore'
-import AppWrapper from './containers/App'
+import App from './containers/App'
 
+import * as RequestGroupActions from './actions/requestGroups'
+import * as RequestActions from './actions/requests'
+import * as db from './database'
 
 // Global CSS
 import './css/index.scss'
 import './css/lib/chrome/platform_app.css'
 import './css/lib/fontawesome/css/font-awesome.css'
-import * as GlobalActions from "./actions/global";
 
 const store = configureStore();
 
 // Dispatch the initial load of data
-console.log('Init Insomnia');
-store.dispatch(GlobalActions.restoreState());
+console.log('-- Init Insomnia --');
+
+const actionFns = {
+  RequestGroup: bindActionCreators(RequestGroupActions, store.dispatch),
+  Request: bindActionCreators(RequestActions, store.dispatch)
+};
+
+function refreshDoc (doc) {
+  const fns = actionFns[doc.type];
+
+  if (fns) {
+    fns[doc._deleted ? 'remove' : 'update'](doc);
+  } else {
+    console.warn('Unknown change', doc.type, doc);
+  }
+}
+
+function watchDB () {
+  console.log('-- Watching PouchDB --');
+
+  let buffer = [];
+  let timeout = null;
+
+  // Debounce and buffer changes if they happen in quick succession
+  db.changes.on('change', (response) => {
+    const doc = response.doc;
+
+    buffer.push(doc);
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+      buffer.map(refreshDoc);
+      buffer = [];
+    }, 50);
+  });
+}
+
+function restoreDB() {
+  db.allDocs().then(response => {
+    response.rows.map(row => refreshDoc(row.doc));
+  })
+}
+
+watchDB();
+restoreDB();
 
 render(
-  <Provider store={store}><AppWrapper /></Provider>,
+  <Provider store={store}><App /></Provider>,
   document.getElementById('root')
 );

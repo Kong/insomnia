@@ -11,11 +11,11 @@ class Sidebar extends Component {
     this.props.changeFilter(value);
   }
 
-  renderRequestGroupRow (requestGroup) {
+  renderRequestGroupRow (requestGroup = null) {
     const {
       activeFilter,
       activeRequest,
-      addRequest,
+      addRequestToRequestGroup,
       toggleRequestGroup,
       requests,
       requestGroups
@@ -42,28 +42,19 @@ class Sidebar extends Component {
     );
 
     if (!requestGroup) {
-      // Grab all requests that are not children of request groups
-      // TODO: Optimize this
-      filteredRequests = filteredRequests.filter(r => {
-        return !requestGroups.find(rg => {
-          return rg.children.find(c => c.id === r.id)
-        })
-      });
-
+      filteredRequests = filteredRequests.filter(r => !r.parent);
       return filteredRequests.map(request => this.renderRequestRow(request));
     }
 
     // Grab all of the children for this request group
-    filteredRequests = filteredRequests.filter(
-      r => requestGroup.children.find(c => c.id === r.id)
-    );
+    filteredRequests = filteredRequests.filter(r => r.parent === requestGroup._id);
 
     // Don't show folder if it was not in the filter
     if (activeFilter && !filteredRequests.length) {
       return null;
     }
 
-    const isActive = activeRequest && filteredRequests.find(r => r.id == activeRequest.id);
+    const isActive = activeRequest && filteredRequests.find(r => r._id == activeRequest._id);
 
     let folderIconClass = 'fa-folder';
     let expanded = !requestGroup.collapsed || activeFilter;
@@ -77,16 +68,16 @@ class Sidebar extends Component {
     );
 
     return (
-      <li key={requestGroup.id}>
+      <li key={requestGroup._id}>
         <div className={sidebarItemClassNames}>
           <div className="sidebar__item__row">
-            <button onClick={e => toggleRequestGroup(requestGroup.id)}>
+            <button onClick={e => toggleRequestGroup(requestGroup)}>
               <i className={'fa ' + folderIconClass}></i>
               &nbsp;&nbsp;&nbsp;{requestGroup.name}
             </button>
           </div>
           <div className="sidebar__item__btn grid">
-            <button onClick={(e) => addRequest(requestGroup.id)}>
+            <button onClick={(e) => addRequestToRequestGroup(requestGroup)}>
               <i className="fa fa-plus-circle"></i>
             </button>
             <RequestGroupActionsDropdown
@@ -105,14 +96,14 @@ class Sidebar extends Component {
 
   renderRequestRow (request = null, requestGroup = null) {
     const {activeRequest, activateRequest} = this.props;
-    const isActive = request && activeRequest && request.id === activeRequest.id;
+    const isActive = request && activeRequest && request._id === activeRequest._id;
 
     return (
-      <li key={request ? request.id : 'none'}>
+      <li key={request ? request._id : 'none'}>
         <div className={'sidebar__item ' + (isActive ? 'sidebar__item--active' : '')}>
           <div className="sidebar__item__row">
             {request ? (
-              <button onClick={() => {activateRequest(request.id)}}>
+              <button onClick={() => {activateRequest(request)}}>
                 <MethodTag method={request.method}/> {request.name}
               </button>
             ) : (
@@ -162,11 +153,9 @@ class Sidebar extends Component {
 
 Sidebar.propTypes = {
   activateRequest: PropTypes.func.isRequired,
-  addRequest: PropTypes.func.isRequired,
+  addRequestToRequestGroup: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
   toggleRequestGroup: PropTypes.func.isRequired,
-  deleteRequestGroup: PropTypes.func.isRequired,
-  updateRequestGroup: PropTypes.func.isRequired,
   activeFilter: PropTypes.string,
   requests: PropTypes.array.isRequired,
   requestGroups: PropTypes.array.isRequired,

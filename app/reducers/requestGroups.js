@@ -7,30 +7,23 @@ const initialState = {
 function requestGroupsReducer (state = [], action) {
   switch (action.type) {
 
-    case types.REQUEST_GROUP_ADD:
-      // Change name if there is a duplicate
-      const requestGroup = action.requestGroup;
-      for (let i = 0; ; i++) {
-        let name = i === 0 ? requestGroup.name : requestGroup.name + ` (${i})`;
-        if (!state.find(r => r.name === name)) {
-          requestGroup.name = name;
-          break;
-        }
-      }
-      return [requestGroup, ...state];
-
     case types.REQUEST_GROUP_UPDATE:
-      return state.map(rg => {
-        if (rg.id === action.patch.id) {
-          return Object.assign({}, rg, action.patch);
-        } else {
-          return rg;
-        }
-      });
+      const requestGroup = state.find(r => r._id === action.requestGroup._id);
+      if (requestGroup) {
+        return state.map(requestGroup => {
+          if (requestGroup._id === action.requestGroup._id) {
+            return Object.assign({}, requestGroup, action.requestGroup);
+          } else {
+            return requestGroup;
+          }
+        });
+      } else {
+        return [action.requestGroup, ...state];
+      }
     
     case types.REQUEST_GROUP_TOGGLE:
       return state.map(rg => {
-        if (rg.id === action.id) {
+        if (rg._id === action._id) {
           const collapsed = !rg.collapsed;
           return Object.assign({}, rg, {collapsed});
         } else {
@@ -38,19 +31,8 @@ function requestGroupsReducer (state = [], action) {
         }
       });
 
-    case types.REQUEST_GROUP_ADD_CHILD_REQUEST:
-      return state.map(rg => {
-        if (rg.id === action.id) {
-          rg.children = [
-            {type: 'Request', id: action.requestId},
-            ...rg.children
-          ];
-        }
-        return rg;
-      });
-
     case types.REQUEST_GROUP_DELETE:
-      return state.filter(rg => rg.id !== action.id);
+      return state.filter(rg => rg._id !== action.requestGroup._id);
 
     default:
       return state;
@@ -60,10 +42,6 @@ function requestGroupsReducer (state = [], action) {
 export default function (state = initialState, action) {
   let all;
   switch (action.type) {
-
-    case types.REQUEST_GROUP_ADD:
-      all = requestGroupsReducer(state.all, action);
-      return Object.assign({}, state, {all});
 
     case types.REQUEST_GROUP_ADD_CHILD_REQUEST:
       all = requestGroupsReducer(state.all, action);

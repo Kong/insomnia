@@ -2,8 +2,8 @@ import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 import Dropdown from '../base/Dropdown'
-import * as RequestActions from '../../actions/requests'
 import * as RequestGroupActions from '../../actions/requestGroups'
+import * as db from '../../database'
 
 class WorkspaceDropdown extends Component {
   render () {
@@ -23,10 +23,10 @@ class WorkspaceDropdown extends Component {
           </div>
         </button>
         <ul>
-          <li><button onClick={e => actions.addRequest()}>
+          <li><button onClick={e => db.requestCreate()}>
             <i className="fa fa-plus-circle"></i> Add Request
           </button></li>
-          <li><button onClick={e => actions.addRequestGroup()}>
+          <li><button onClick={e => db.requestGroupCreate()}>
             <i className="fa fa-folder"></i> Add Request Group
           </button></li>
           <li><button onClick={e => actions.showEnvironmentEditModal()}>
@@ -44,9 +44,7 @@ class WorkspaceDropdown extends Component {
 WorkspaceDropdown.propTypes = {
   loading: PropTypes.bool.isRequired,
   actions: PropTypes.shape({
-    showEnvironmentEditModal: PropTypes.func.isRequired,
-    addRequest: PropTypes.func.isRequired,
-    addRequestGroup: PropTypes.func.isRequired
+    showEnvironmentEditModal: PropTypes.func.isRequired
   })
 };
 
@@ -59,11 +57,7 @@ function mapStateToProps (state) {
 
 function mapDispatchToProps (dispatch) {
   return {
-    actions: Object.assign(
-      {},
-      bindActionCreators(RequestActions, dispatch),
-      bindActionCreators(RequestGroupActions, dispatch)
-    )
+    actions: bindActionCreators(RequestGroupActions, dispatch)
   }
 }
 

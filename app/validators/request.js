@@ -47,7 +47,8 @@ const requestSchema = {
   id: '/Request',
   type: 'object',
   properties: {
-    id: {type: 'string', pattern: '^rq_[\\w]{13}$'},
+    _id: {type: 'string', pattern: '^rq_[\\w]{13}$'},
+    type: {type: 'string', pattern: '^Request$'},
     created: {type: 'number', minimum: 1000000000000, maximum: 10000000000000},
     modified: {type: 'number', minimum: 1000000000000, maximum: 10000000000000},
     name: {type: 'string', minLength: 1},
@@ -65,7 +66,8 @@ const requestSchema = {
     headers: {type: 'array', items: {$ref: '/Header'}}
   },
   required: [
-    'id',
+    '_id',
+    'type',
     'url',
     'created',
     'modified',

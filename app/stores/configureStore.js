@@ -2,7 +2,6 @@ import {createStore, applyMiddleware} from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
 import rootReducer from '../reducers/global'
-import localStorageMiddleware from '../middleware/localstorage'
 
 const loggerMiddleware = createLogger({
   collapsed: true
@@ -14,7 +13,6 @@ export default function configureStore (initialState) {
     initialState,
     applyMiddleware(
       thunkMiddleware,
-      localStorageMiddleware,
       loggerMiddleware
     )
   );

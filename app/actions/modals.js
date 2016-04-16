@@ -1,9 +1,9 @@
 import * as types from '../constants/actionTypes';
 
-export function hideModal (id) {
+export function hide (id) {
   return {type: types.MODAL_HIDE, id}
 }
 
-export function showModal (id, data = {}) {
+export function show (id, data = {}) {
   return {type: types.MODAL_SHOW, id, data};
 }

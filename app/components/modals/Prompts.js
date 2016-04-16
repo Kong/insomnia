@@ -8,6 +8,8 @@ import * as RequestActions from '../../actions/requests'
 import * as modalIds from '../../constants/modals'
 import PromptModal from '../base/PromptModal'
 
+import * as db from '../../database'
+
 class Prompts extends Component {
   constructor (props) {
     super(props);
@@ -16,7 +18,7 @@ class Prompts extends Component {
       header: 'Rename Request',
       submit: 'Rename',
       onSubmit: (modal, name) => {
-        props.actions.updateRequest({id: modal.data.id, name})
+        db.update(modal.data.request, {name})
       }
     };
 
@@ -24,7 +26,7 @@ class Prompts extends Component {
       header: 'Rename Request Group',
       submit: 'Rename',
       onSubmit: (modal, name) => {
-        props.actions.updateRequestGroup({id: modal.data.id, name})
+        db.update(modal.data.requestGroup, {name})
       }
     };
   }
@@ -49,7 +51,7 @@ class Prompts extends Component {
               headerName={promptDef.header}
               submitName={promptDef.submit}
               defaultValue={modal.data.defaultValue}
-              onClose={() => actions.hideModal(modal.id)}
+              onClose={() => actions.modals.hide(modal.id)}
               onSubmit={value => promptDef.onSubmit(modal, value)}
             />
           )
@@ -61,9 +63,15 @@ class Prompts extends Component {
 
 Prompts.propTypes = {
   actions: PropTypes.shape({
-    hideModal: PropTypes.func.isRequired,
-    updateRequestGroup: PropTypes.func.isRequired,
-    updateRequest: PropTypes.func.isRequired
+    modals: PropTypes.shape({
+      hide: PropTypes.func.isRequired
+    }),
+    requestGroups: PropTypes.shape({
+      update: PropTypes.func.isRequired
+    }),
+    requests: PropTypes.shape({
+      update: PropTypes.func.isRequired
+    })
   }),
   modals: PropTypes.array.isRequired
 };
@@ -77,12 +85,11 @@ function mapStateToProps (state) {
 
 function mapDispatchToProps (dispatch) {
   return {
-    actions: Object.assign(
-      {},
-      bindActionCreators(ModalActions, dispatch),
-      bindActionCreators(RequestGroupActions, dispatch),
-      bindActionCreators(RequestActions, dispatch)
-    )
+    actions: {
+      requests: bindActionCreators(RequestActions, dispatch),
+      modals: bindActionCreators(ModalActions, dispatch),
+      requestGroups: bindActionCreators(RequestGroupActions, dispatch)
+    }
   }
 }
 

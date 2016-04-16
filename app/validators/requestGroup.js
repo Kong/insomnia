@@ -6,13 +6,11 @@ const environmentsSchema = {
   id: '/Environment',
   type: 'object',
   properties: {
-    id: {type: 'string'},
     name: {type: 'string'},
     data: {type: 'object'}
   },
   required: [
     'data',
-    'id',
     'name'
   ],
   additionalProperties: false
@@ -22,14 +20,16 @@ const requestGroupSchema = {
   id: '/RequestGroup',
   type: 'object',
   properties: {
-    id: {type: 'string', pattern: '^rg_[\\w]{10}$'},
+    _id: {type: 'string', pattern: '^rg_[\\w]{10}$'},
+    type: {type: 'string', pattern: '^RequestGroup$'},
     created: {type: 'number', minimum: 1000000000000, maximum: 10000000000000},
     modified: {type: 'number', minimum: 1000000000000, maximum: 10000000000000},
     name: {type: 'string', minLength: 1},
     environment: {ref: '/Environment'}
   },
   required: [
-    'id',
+    '_id',
+    'type',
     'created',
     'modified',
     'name',

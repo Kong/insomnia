@@ -11,8 +11,10 @@ const initialState = {
   tabs: {}
 };
 
-export default function (state = initialState, action) {
+export default function globalReduce (state = initialState, action) {
   switch (action.type) {
+    case types.GLOBAL_BATCH_ACTIONS:
+      return state.action.actions.reduce(globalReduce, state);
     
     case types.GLOBAL_STATE_SAVED:
       return state;

@@ -9,30 +9,22 @@ const initialState = {
 function requestsReducer (state = [], action) {
   switch (action.type) {
     
-    case types.REQUEST_ADD:
-      // Change name if there is a duplicate
-      const request = action.request;
-      for (let i = 0; ; i++) {
-        let name = i === 0 ? request.name : request.name + ` (${i})`;
-        if (!state.find(r => r.name === name)) {
-          request.name = name;
-          break;
-        }
-      }
-      return [request, ...state];
-
     case types.REQUEST_DELETE:
-      return state.filter(r => r.id !== action.id);
+      return state.filter(r => r._id !== action.request._id);
 
     case types.REQUEST_UPDATE:
-      return state.map(request => {
-        if (request.id === action.patch.id) {
-          return Object.assign({}, request, action.patch);
-        } else {
-          return request;
-        }
-      });
-
+      const request = state.find(r => r._id === action.request._id);
+      if (request) {
+        return state.map(request => {
+          if (request._id === action.request._id) {
+            return Object.assign({}, request, action.request);
+          } else {
+            return request;
+          }
+        });
+      } else {
+        return [action.request, ...state];
+      }
     default:
       return state;
   }
@@ -42,15 +34,10 @@ export default function (state = initialState, action) {
   let all, active;
   
   switch (action.type) {
-    
-    case types.REQUEST_ADD:
-      all = requestsReducer(state.all, action);
-      active = action.request.id;
-      return Object.assign({}, state, {all, active});
 
     case types.REQUEST_DELETE:
       all = requestsReducer(state.all, action);
-      active = state.active === action.id ? null : state.active;
+      active = state.active === action._id ? null : state.active;
       return Object.assign({}, state, {all, active});
 
     case types.REQUEST_UPDATE:
@@ -58,14 +45,14 @@ export default function (state = initialState, action) {
       return Object.assign({}, state, {all});
 
     case types.REQUEST_ACTIVATE:
-      if (state.active === action.id) {
+      if (state.active === action.request._id) {
         // If it's the same, do nothing
         return state;
-      } else if (!state.all.find(r => r.id === action.id)) {
+      } else if (!state.all.find(r => r._id === action.request._id)) {
         // Don't set if the request doesn't exist
         return state;
       } else {
-        return Object.assign({}, state, {active: action.id});
+        return Object.assign({}, state, {active: action.request._id});
       }
           
     case types.REQUEST_CHANGE_FILTER:
