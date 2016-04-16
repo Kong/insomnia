@@ -21,6 +21,11 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
+            <button>
+              <i className="fa fa-code"></i> Environment
+            </button>
+          </li>
+          <li>
             <button onClick={e => actions.deleteRequestGroup(requestGroup.id)}>
               <i className="fa fa-trash-o"></i> Delete
             </button>

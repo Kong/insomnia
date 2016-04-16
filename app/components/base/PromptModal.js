@@ -1,5 +1,8 @@
-import React, {Component, PropTypes} from 'react';
-import {Modal, ModalHeader, ModalBody, ModalFooter} from './Modal'
+import React, {Component, PropTypes} from 'react'
+import Modal from './Modal'
+import ModalBody from './ModalBody'
+import ModalHeader from './ModalHeader'
+import ModalFooter from './ModalFooter'
 
 class PromptModal extends Component {
   _onSubmit (e) {
@@ -29,9 +32,9 @@ class PromptModal extends Component {
   }
 
   render () {
-    const {onClose, submitName, headerName} = this.props;
+    const {onClose, submitName, headerName, ...extraProps} = this.props;
     return (
-      <Modal ref="modal" onClose={onClose}>
+      <Modal ref="modal" onClose={onClose} {...extraProps}>
         <ModalHeader>{headerName}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._onSubmit.bind(this)} className="wide pad">

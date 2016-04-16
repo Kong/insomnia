@@ -9,6 +9,7 @@
   position: relative;
   display: flex;
   flex: 1 1 100%;
+  min-height: 5rem;
 
   .editor {
     box-sizing: border-box;
@@ -45,7 +46,7 @@
 
     .CodeMirror-lines {
       // Scroll past the end
-      padding-bottom: 100px;
+      //padding-bottom: 50px;
     }
 
     .CodeMirror-placeholder {

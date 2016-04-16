@@ -34,7 +34,7 @@
       & > button {
         font-size: $font-size-md;
         text-align: left;
-        padding: 10px $padding-md;
+        padding: 10px $padding-md 10px $padding-sm;
         width: 100%;
         display: block;
         color: $font-light-bg !important;
@@ -50,7 +50,7 @@
         i.fa {
           display: inline-block;
           width: 2em;
-          text-align: left;
+          text-align: center;
         }
       }
     }

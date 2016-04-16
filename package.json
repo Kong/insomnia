@@ -3,6 +3,7 @@
   "private": true,
   "version": "3.0.0",
   "description": "Insomnia App",
+  "main": "electron.js",
   "repository": {
     "type": "git",
     "url": "git@bitbucket.org:gschier/insomnia.git"
@@ -23,7 +24,6 @@
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.0.1",
     "request": "latest",
-    "swig": "^1.4.2",
     "webpack": "^1.12.14"
   },
   "devDependencies": {
@@ -63,9 +63,21 @@
   },
   "jest": {
     "unmockedModulePathPatterns": [
+      "<rootDir>/node_modules/redux-thunk",
+      "<rootDir>/node_modules/redux-mock-store",
+      "<rootDir>/node_modules/nunjucks",
+      "<rootDir>/node_modules/jsonschema",
       "<rootDir>/node_modules/react",
       "<rootDir>/node_modules/react-dom",
       "<rootDir>/node_modules/react-addons-test-utils"
+    ],
+    "testFileExtensions": [
+      "test.js"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "electron.js",
+      "chrome.js"
     ]
   }
 }

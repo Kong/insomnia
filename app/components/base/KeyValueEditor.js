@@ -148,7 +148,7 @@ class KeyValueEditor extends Component {
         {pairs.map((pair, i) => {
           return (
             <div key={i} className="grid__cell grid__cell--no-flex grid">
-              <div className="form-control form-control--underlined grid__cell">
+              <div className="form-control form-control--underlined form-control--wide grid__cell">
                 <input
                   type="text"
                   placeholder={this.props.namePlaceholder || 'Name'}
@@ -159,7 +159,8 @@ class KeyValueEditor extends Component {
                   onBlur={e => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>
               </div>
-              <div className="form-control form-control--underlined grid__cell">
+              <div>&nbsp;&nbsp;&nbsp;</div>
+              <div className="form-control form-control--underlined form-control--wide grid__cell">
                 <input
                   type="text"
                   placeholder={this.props.valuePlaceholder || 'Value'}
@@ -170,6 +171,7 @@ class KeyValueEditor extends Component {
                   onBlur={e => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>
               </div>
+              <div>&nbsp;&nbsp;&nbsp;</div>
               <div className="grid--v">
                 <button className="btn btn--compact"
                         tabIndex="-1"
@@ -182,16 +184,18 @@ class KeyValueEditor extends Component {
         })}
         {maxPairs === undefined || pairs.length < maxPairs ? (
           <div className="grid__cell grid__cell--no-flex grid">
-            <div className="form-control form-control--underlined grid__cell">
+            <div className="form-control form-control--underlined form-control--wide grid__cell">
               <input type="text"
                      placeholder={this.props.namePlaceholder || 'Name'}
                      onFocus={e => {this._focusedField = NAME; this._addPair()}}/>
             </div>
-            <div className="form-control form-control--underlined grid__cell">
+            <div>&nbsp;&nbsp;&nbsp;</div>
+            <div className="form-control form-control--underlined form-control--wide grid__cell">
               <input type="text"
                      placeholder={this.props.valuePlaceholder || 'Value'}
                      onFocus={e => {this._focusedField = VALUE; this._addPair()}}/>
             </div>
+            <div>&nbsp;&nbsp;&nbsp;</div>
             <div className="grid--v">
               <button className="btn btn--compact" disabled={true} tabIndex="-1">
                 <i className="fa fa-blank"></i>
