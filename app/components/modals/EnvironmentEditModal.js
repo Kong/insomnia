@@ -51,14 +51,12 @@ class EnvironmentEditModal extends Component {
     return (
       <Modal {...this.props}>
         <ModalHeader>Environment Variables</ModalHeader>
-        <ModalBody className="grid--v wide pad">
-          <div>
+        <ModalBody className="wide pad">
             <KeyValueEditor onChange={this._keyValueChange.bind(this)}
                             uniquenessKey={this.props.requestGroup._id}
                             pairs={this.state.pairs}
                             namePlaceholder="BASE_URL"
                             valuePlaceholder="https://api.insomnia.com/v1"/>
-          </div>
           {/*
            <h3>Hello</h3>
            <Editor value={undefined} options={editorOptions}/>
