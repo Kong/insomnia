@@ -41,7 +41,7 @@ function makeRequest (unrenderedRequest, callback, context = {}) {
     return `${i === 0 ? '?' : '&'}${name}=${value}`;
   }).join('');
 
-
+  const startTime = Date.now();
   networkRequest(config, function (err, response) {
     if (err) {
       return callback(err);
@@ -50,6 +50,9 @@ function makeRequest (unrenderedRequest, callback, context = {}) {
         body: response.body,
         contentType: response.headers['content-type'],
         statusCode: response.statusCode,
+        statusMessage: response.statusMessage,
+        time: Date.now() - startTime,
+        size: response.connection.bytesRead,
         headers: Object.keys(response.headers).map(name => {
           const value = response.headers[name];
           return {name, value};

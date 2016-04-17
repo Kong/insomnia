@@ -9,6 +9,9 @@ import KeyValueEditor from '../components/base/KeyValueEditor'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
+import StatusTag from '../components/StatusTag'
+import SizeTag from '../components/SizeTag'
+import TimeTag from '../components/TimeTag'
 import Sidebar from '../components/Sidebar'
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal'
 
@@ -94,13 +97,19 @@ class App extends Component {
           <div className="grid--v wide">
             <header
               className="grid grid--center header text-center bg-light txt-sm section__header">
-              <div className="tag success">
-                <strong>{activeResponse && activeResponse.statusCode}</strong>&nbsp;SUCCESS
-              </div>
-              <div className="tag">TIME&nbsp;<strong>143ms</strong></div>
+              {!activeResponse ? null : (
+                <div>
+                  <StatusTag
+                    statusCode={activeResponse.statusCode}
+                    statusMessage={activeResponse.statusMessage}
+                  />
+                  <TimeTag milliseconds={activeResponse.time}/>
+                  <SizeTag bytes={activeResponse.size}/>
+                </div>
+              )}
             </header>
             <Tabs className="grid__cell grid--v section__body"
-                  onSelect={i => actions.selectTab('response', i)}
+                  onSelect={i => actions.global.selectTab('response', i)}
                   selectedIndex={tabs.response || 0}>
               <TabList className="grid grid--start">
                 <Tab><button className="btn btn--compact">Preview</button></Tab>
