@@ -16,7 +16,8 @@ class EnvironmentEditModal extends Component {
   }
 
   _saveChanges () {
-    this.props.onChange(this._mapPairsToData(this.state.pairs));
+    const environment = this._mapPairsToData(this.state.pairs);
+    this.props.onChange(Object.assign({}, this.props.requestGroup, {environment}));
     this.props.onClose();
   }
 
