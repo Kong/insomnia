@@ -16,13 +16,17 @@
     text-align: left;
     box-sizing: border-box;
     color: inherit;
+    height: $line-height-xs;
+
+    &.sidebar__item__row--heading {
+      height: $line-height-sm;
+    }
 
     &:hover {
       background-color: $hl-xxs;
     }
 
     & > button {
-      padding: $padding-sm;
       color: inherit;
       height: 100%;
       width: 100%;

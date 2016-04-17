@@ -74,6 +74,19 @@ i.fa {
   white-space: nowrap;
 }
 
+.pad {
+  box-sizing: border-box;
+  padding: $padding-md;
+}
+
+.pad-left-half {
+  padding-left: $padding-md / 2;
+}
+
+.pad-right-half {
+  padding-right: $padding-md / 2;
+}
+
 .no-pad {
   padding: 0 !important;
 }
@@ -119,21 +132,19 @@ i.fa {
   }
 }
 
-.section:not(:last-child) {
+.section.section--bordered {
   .section__header {
     border-right: 1px solid #eee;
+
+    &.bg-brand {
+      border-right-color: $bg-brand;
+    }
   }
 
   .section__body {
     border-right: 1px solid $hl-sm;
   }
 }
-
-.section__header,
-.section__body {
-  width: 100%;
-}
-
 
 strong {
   font-weight: 600;

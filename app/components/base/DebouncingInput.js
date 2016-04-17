@@ -30,6 +30,14 @@ class DebouncingInput extends Component {
     this._updateValueFromProps()
   }
 
+  shouldComponentUpdate (nextProps) {
+    if (!this.props.uniquenessKey) {
+      return true;
+    } else {
+      return this.props.uniquenessKey !== nextProps.uniquenessKey;
+    }
+  }
+
   focus () {
     this.refs.input.focus();
   }
@@ -49,7 +57,8 @@ class DebouncingInput extends Component {
 DebouncingInput.propTypes = {
   onChange: PropTypes.func.isRequired,
   value: PropTypes.string.isRequired,
-  debounceMillis: PropTypes.number
+  debounceMillis: PropTypes.number,
+  uniquenessKey: PropTypes.string
 };
 
 export default DebouncingInput;

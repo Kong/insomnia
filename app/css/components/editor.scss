@@ -7,9 +7,6 @@
    * you need to use a position: absolute hack like this...
    */
   position: relative;
-  display: flex;
-  flex: 1 1 100%;
-  min-height: 5rem;
 
   .editor {
     box-sizing: border-box;
@@ -52,9 +49,9 @@
     .CodeMirror-placeholder {
       color: $hl-xxl;
     }
-  }
 
-  &.editor-wrapper--readonly .CodeMirror-cursors {
-    opacity: 0;
+    &.editor--readonly .CodeMirror-cursors {
+      opacity: 0;
+    }
   }
 }

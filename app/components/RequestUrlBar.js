@@ -4,16 +4,12 @@ import Dropdown from './base/Dropdown';
 import {METHODS} from '../constants/global';
 
 class UrlInput extends Component {
-  shouldComponentUpdate (nextProps) {
-    return this.props.request._id !== nextProps.request._id;
-  }
-
   render () {
     const {sendRequest, onUrlChange, onMethodChange, request} = this.props;
     return (
-      <div className="grid wide form-control form-control--left form-control--right bg-super-light">
-        <Dropdown>
-          <button className="btn txt-lg">
+      <div className="tall grid grid--center wide bg-super-light">
+        <Dropdown className="tall">
+          <button className="pad tall txt-sm">
             {request.method}&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
           </button>
           <ul>
@@ -26,20 +22,22 @@ class UrlInput extends Component {
             ))}
           </ul>
         </Dropdown>
-        <form className="tall grid__cell" onSubmit={e => {e.preventDefault(); sendRequest(request)}}>
+        <form className="tall grid__cell form-control form-control--wide"
+              onSubmit={e => {e.preventDefault(); sendRequest(request)}}>
           <DebouncingInput
             type="text"
             className="txt-md"
             placeholder="http://echo.insomnia.rest/status/200"
             value={request.url}
             debounceMillis={1000}
+            uniquenessKey={request._id}
             onChange={onUrlChange}/>
         </form>
-        <button className="btn txt-lg" onClick={sendRequest.bind(null, request)}>
-          Send
+        <button className="btn btn--compact txt-lg" onClick={sendRequest.bind(null, request)}>
+          <i className="fa fa-arrow-circle-o-right"></i>
         </button>
       </div>
-    )
+    );
   }
 }
 

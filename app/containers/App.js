@@ -29,7 +29,7 @@ class App extends Component {
   _renderRequestPanel (actions, activeRequest, tabs) {
     if (!activeRequest) {
       return (
-        <section className="grid__cell section grid--v grid--start">
+        <section className="grid__cell section section--bordered grid--v grid--start">
           <header className="header bg-super-light section__header"></header>
           <div className="section__body grid__cell"></div>
         </section>
@@ -37,40 +37,42 @@ class App extends Component {
     }
 
     return (
-      <section className="grid__cell section">
+      <section className="grid__cell section section--bordered">
         <div className="grid--v wide">
-          <div className="grid__cell grid__cell--no-flex section__header">
+          <div className="header section__header">
             <RequestUrlBar
               sendRequest={actions.requests.send}
               onUrlChange={url => {db.update(activeRequest, {url})}}
               onMethodChange={method => {db.update(activeRequest, {method})}}
-              request={activeRequest}/>
+              request={activeRequest}
+            />
           </div>
           <Tabs className="grid__cell grid--v section__body"
                 onSelect={i => actions.global.selectTab('request', i)}
                 selectedIndex={tabs.request || 0}>
             <TabList className="grid grid--start">
-              <Tab><button className="btn btn--compact">Body</button></Tab>
+              <Tab><button>Body</button></Tab>
               <Tab>
-                <button className="btn btn--compact no-wrap">
+                <button className="no-wrap">
                   Params {activeRequest.params.length ? `(${activeRequest.params.length})` : ''}
                 </button>
               </Tab>
-              <Tab><button className="btn btn--compact">Auth</button></Tab>
+              <Tab><button>Auth</button></Tab>
               <Tab>
-                <button className="btn btn--compact no-wrap">
+                <button className="no-wrap">
                   Headers {activeRequest.headers.length ? `(${activeRequest.headers.length})` : ''}
                 </button>
               </Tab>
             </TabList>
-            <TabPanel className="grid__cell">
+            <TabPanel className="grid__cell editor-wrapper">
               <RequestBodyEditor
                 onChange={body => {db.update(activeRequest, {body})}}
                 request={activeRequest}/>
             </TabPanel>
             <TabPanel className="grid__cell grid__cell--scroll--v">
-              <div className="wide pad">
+              <div>
                 <KeyValueEditor
+                  className="pad"
                   uniquenessKey={activeRequest._id}
                   pairs={activeRequest.params}
                   onChange={params => {db.update(activeRequest, {params})}}
@@ -78,16 +80,18 @@ class App extends Component {
               </div>
             </TabPanel>
             <TabPanel className="grid__cell grid__cell--scroll--v">
-              <div className="wide pad">
+              <div>
                 <RequestAuthEditor
+                  className="pad"
                   request={activeRequest}
                   onChange={authentication => {db.update(activeRequest, {authentication})}}
                 />
               </div>
             </TabPanel>
             <TabPanel className="grid__cell grid__cell--scroll--v">
-              <div className="wide pad">
+              <div>
                 <KeyValueEditor
+                  className="pad"
                   uniquenessKey={activeRequest._id}
                   pairs={activeRequest.headers}
                   onChange={headers => {db.update(activeRequest, {headers})}}
@@ -98,7 +102,6 @@ class App extends Component {
         </div>
       </section>
     )
-
   }
 
   _renderResponsePanel (actions, activeResponse, tabs) {
@@ -115,7 +118,7 @@ class App extends Component {
       <section className="grid__cell section">
         <div className="grid--v wide">
           <header
-            className="grid grid--center header text-center bg-light txt-sm section__header">
+            className="grid grid--center header text-center bg-super-light txt-sm section__header">
             {!activeResponse ? null : (
               <div>
                 <StatusTag
@@ -131,11 +134,11 @@ class App extends Component {
                 onSelect={i => actions.global.selectTab('response', i)}
                 selectedIndex={tabs.response || 0}>
             <TabList className="grid grid--start">
-              <Tab><button className="btn btn--compact">Preview</button></Tab>
-              <Tab><button className="btn btn--compact">Raw</button></Tab>
-              <Tab><button className="btn btn--compact">Headers</button></Tab>
+              <Tab><button>Preview</button></Tab>
+              <Tab><button>Raw</button></Tab>
+              <Tab><button>Headers</button></Tab>
             </TabList>
-            <TabPanel className="grid__cell">
+            <TabPanel className="grid__cell editor-wrapper">
               <Editor
                 value={activeResponse && activeResponse.body || ''}
                 prettify={true}
@@ -146,7 +149,7 @@ class App extends Component {
                   }}
               />
             </TabPanel>
-            <TabPanel className="grid__cell">
+            <TabPanel className="grid__cell editor-wrapper">
               <Editor
                 value={activeResponse && activeResponse.body || ''}
                 options={{
@@ -182,6 +185,19 @@ class App extends Component {
 
     return (
       <div className="grid bg-super-dark tall">
+        <Sidebar
+          activateRequest={actions.requests.activate}
+          changeFilter={actions.requests.changeFilter}
+          addRequestToRequestGroup={requestGroup => db.requestCreate({parent: requestGroup._id})}
+          toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
+          activeRequest={activeRequest}
+          activeFilter={requests.filter}
+          requestGroups={requestGroups.all}
+          requests={requests.all}/>
+        <div className="grid wide grid--collapse">
+          {this._renderRequestPanel(actions, activeRequest, tabs)}
+          {this._renderResponsePanel(actions, activeResponse, tabs)}
+        </div>
         <Prompts />
         {modals.map(m => {
           if (m.id === EnvironmentEditModal.defaultProps.id) {
@@ -197,17 +213,6 @@ class App extends Component {
             return null;
           }
         })}
-        <Sidebar
-          activateRequest={actions.requests.activate}
-          changeFilter={actions.requests.changeFilter}
-          addRequestToRequestGroup={requestGroup => db.requestCreate({parent: requestGroup._id})}
-          toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
-          activeRequest={activeRequest}
-          activeFilter={requests.filter}
-          requestGroups={requestGroups.all}
-          requests={requests.all}/>
-        {this._renderRequestPanel(actions, activeRequest, tabs)}
-        {this._renderResponsePanel(actions, activeResponse, tabs)}
       </div>
     )
   }

@@ -12,25 +12,16 @@
     display: none;
     z-index: 100;
     min-width: $dropdown-min-width;
-    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.25);
 
     // Separate it from the button a bit
-    padding-top: 3px;
-    padding-bottom: 3px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    border-radius: $radius-md;
+    background: $bg-super-light;
+    overflow: hidden;
 
     li {
-      background: $bg-super-light;
-
-      &:first-child {
-        border-top-left-radius: $radius-md;
-        border-top-right-radius: $radius-md;
-      }
-
-      &:last-child {
-        border-bottom-left-radius: $radius-md;
-        border-bottom-right-radius: $radius-md;
-      }
-
       & > button {
         font-size: $font-size-md;
         text-align: left;

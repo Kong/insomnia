@@ -18,6 +18,7 @@ $font-size-xxl: 1.6rem;
 /* Wrapper */
 $line-height-md: 4rem;
 $line-height-sm: $line-height-md * 0.75;
+$line-height-xs: $line-height-md * 0.6;
 
 /* Sidebar */
 $sidebar-width: 20rem;
@@ -35,18 +36,6 @@ $modal-width: 50rem;
 /* Breakpoints */
 $breakpoint-md: 790px;
 $breakpoint-sm: 580px;
-
-.pad {
-  padding: $padding-md;
-}
-
-.pad-left-half {
-  padding-left: $padding-md / 2;
-}
-
-.pad-right-half {
-  padding-right: $padding-md / 2;
-}
 
 .txt-sm {
   font-size: $font-size-sm;

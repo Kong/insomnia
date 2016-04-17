@@ -69,7 +69,7 @@ class Sidebar extends Component {
     return (
       <li key={requestGroup._id}>
         <div className={sidebarItemClassNames}>
-          <div className="sidebar__item__row">
+          <div className="sidebar__item__row sidebar__item__row--heading">
             <button onClick={e => toggleRequestGroup(requestGroup)}>
               <i className={'fa ' + folderIconClass}></i>
               &nbsp;&nbsp;&nbsp;{requestGroup.name}
@@ -126,7 +126,7 @@ class Sidebar extends Component {
     const {activeFilter, requestGroups} = this.props;
 
     return (
-      <section className="sidebar bg-dark grid--v section">
+      <section className="sidebar bg-dark grid--v section section--bordered">
         <header className="header bg-brand section__header">
           <WorkspaceDropdown />
         </header>

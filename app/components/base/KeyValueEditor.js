@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react'
+import classnames from 'classnames'
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -147,10 +148,10 @@ class KeyValueEditor extends Component {
 
   render () {
     const {pairs} = this.state;
-    const {maxPairs} = this.props;
+    const {maxPairs, className} = this.props;
 
     return (
-      <div className="grid--v grid--start wide">
+      <div className={classnames('grid--v', 'grid--start', 'wide', className)}>
         {pairs.map((pair, i) => {
           return (
             <div key={i} className="grid__cell grid__cell--no-flex grid">

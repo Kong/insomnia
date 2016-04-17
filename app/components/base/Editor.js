@@ -129,7 +129,7 @@ class Editor extends Component {
 
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
-    
+
     if (options.mode === 'json') {
       options.mode = 'application/json';
     }
@@ -173,7 +173,7 @@ class Editor extends Component {
    */
   _codemirrorSetValue (code) {
     this._ignoreNextChange = true;
-    
+
     if (this.props.prettify) {
       if (this.props.options.mode === 'application/json') {
         try {
@@ -181,21 +181,28 @@ class Editor extends Component {
         } catch (e) { }
       }
     }
-    
+
     this.codeMirror.setValue(code);
+  }
+  
+  shouldComponentUpdate (nextProps) {
+    if (!this.props.uniquenessKey) {
+      return true;
+    } else {
+      return this.props.uniquenessKey !== nextProps.uniquenessKey;
+    }
   }
 
   render () {
     const options = this.props.options || {};
     const classes = [
-      'editor-wrapper',
+      'editor',
       this.props.className,
-      options.readOnly ? 'editor-wrapper--readonly' : ''
+      options.readOnly ? 'editor--readonly' : ''
     ];
 
     return (
       <div className={classes.join(' ')}>
-        <div className="editor">
           <textarea
             name={this.props.path}
             ref='textarea'
@@ -203,7 +210,6 @@ class Editor extends Component {
             readOnly={options.readOnly}
             autoComplete='off'>
           </textarea>
-        </div>
       </div>
     );
   }
@@ -217,7 +223,8 @@ Editor.propTypes = {
   value: PropTypes.string,
   prettify: PropTypes.bool,
   className: PropTypes.any,
-  debounceMillis: PropTypes.number
+  debounceMillis: PropTypes.number,
+  uniquenessKey: PropTypes.string
 };
 
 export default Editor;

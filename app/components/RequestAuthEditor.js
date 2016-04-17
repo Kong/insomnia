@@ -3,7 +3,7 @@ import KeyValueEditor from './base/KeyValueEditor'
 
 class RequestAuthEditor extends Component {
   render () {
-    const {request, onChange} = this.props;
+    const {request, onChange, ...other} = this.props;
 
     const auth = request.authentication;
     const pairs = [{
@@ -22,6 +22,7 @@ class RequestAuthEditor extends Component {
           username: pairs.length ? pairs[0].name : '',
           password: pairs.length ? pairs[0].value : ''
         })}
+        {...other}
       />
     );
   }
