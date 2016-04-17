@@ -10,11 +10,12 @@ import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 import Sidebar from '../components/Sidebar'
-import RequestGroupEnvironmentEditModal from '../components/modals/RequestGroupEnvironmentEditModal'
+import EnvironmentEditModal from '../components/modals/EnvironmentEditModal'
 
 import * as GlobalActions from '../actions/global'
 import * as RequestGroupActions from '../actions/requestGroups'
 import * as RequestActions from '../actions/requests'
+import * as ModalActions from '../actions/modals'
 
 import * as db from '../database'
 
@@ -63,6 +64,7 @@ class App extends Component {
               <TabPanel className="grid__cell grid__cell--scroll--v">
                 <div className="wide pad">
                   <KeyValueEditor
+                    uniquenessKey={activeRequest._id}
                     pairs={activeRequest.params}
                     onChange={params => {db.update(activeRequest, {params})}}
                   />
@@ -79,6 +81,7 @@ class App extends Component {
               <TabPanel className="grid__cell grid__cell--scroll--v">
                 <div className="wide pad">
                   <KeyValueEditor
+                    uniquenessKey={activeRequest._id}
                     pairs={activeRequest.headers}
                     onChange={headers => {db.update(activeRequest, {headers})}}
                   />
@@ -153,17 +156,25 @@ class App extends Component {
     return (
       <div className="grid bg-super-dark tall">
         <Prompts />
-        {!modals.find(m => m.id === RequestGroupEnvironmentEditModal.defaultProps.id) ? null : (
-          <RequestGroupEnvironmentEditModal
-            onClose={() => actions.hideModal(RequestGroupEnvironmentEditModal.defaultProps.id)}
-            onChange={v => console.log(v)}
-          />
-        )}
+        {modals.map(m => {
+          if (m.id === EnvironmentEditModal.defaultProps.id) {
+            return (
+              <EnvironmentEditModal
+                key={m.id}
+                requestGroup={m.data.requestGroup}
+                onClose={() => actions.modals.hide(m.id)}
+                onChange={rg => db.update(m.data.requestGroup, {environment: rg.environment})}
+              />
+            )
+          } else {
+            return null;
+          }
+        })}
         <Sidebar
           activateRequest={actions.requests.activate}
           changeFilter={actions.requests.changeFilter}
           addRequestToRequestGroup={requestGroup => db.requestCreate({parent: requestGroup._id})}
-          toggleRequestGroup={requestGroup => db.requestGroupToggle(requestGroup)}
+          toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
           activeRequest={activeRequest}
           activeFilter={requests.filter}
           requestGroups={requestGroups.all}
@@ -192,6 +203,9 @@ App.propTypes = {
       remove: PropTypes.func.isRequired,
       update: PropTypes.func.isRequired,
       toggle: PropTypes.func.isRequired
+    }),
+    modals: PropTypes.shape({
+      hide: PropTypes.func.isRequired
     }),
     global: PropTypes.shape({
       selectTab: PropTypes.func.isRequired
@@ -224,6 +238,7 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
+      modals: bindActionCreators(ModalActions, dispatch),
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)
     }

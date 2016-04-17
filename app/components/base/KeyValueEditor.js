@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react'
-import DebouncingInput from './DebouncingInput'
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -131,6 +130,13 @@ class KeyValueEditor extends Component {
     }
   }
 
+  shouldComponentUpdate (nextProps) {
+    return (
+      nextProps.uniquenessKey !== this.props.uniquenessKey ||
+      nextProps.pairs.length !== this.state.pairs.length
+    )
+  }
+
   componentWillReceiveProps (nextProps) {
     this.setState({pairs: nextProps.pairs})
   }
@@ -153,7 +159,7 @@ class KeyValueEditor extends Component {
                   type="text"
                   placeholder={this.props.namePlaceholder || 'Name'}
                   ref={`${i}.${NAME}`}
-                  value={pair.name}
+                  defaultValue={pair.name}
                   onChange={e => this._updatePair(i, {name: e.target.value})}
                   onFocus={e => {this._focusedPair = i; this._focusedField = NAME}}
                   onBlur={e => {this._focusedPair = -1}}
@@ -165,7 +171,7 @@ class KeyValueEditor extends Component {
                   type="text"
                   placeholder={this.props.valuePlaceholder || 'Value'}
                   ref={`${i}.${VALUE}`}
-                  value={pair.value}
+                  defaultValue={pair.value}
                   onChange={e => this._updatePair(i, {value: e.target.value})}
                   onFocus={e => {this._focusedPair = i; this._focusedField = VALUE}}
                   onBlur={e => {this._focusedPair = -1}}
@@ -210,6 +216,7 @@ class KeyValueEditor extends Component {
 
 KeyValueEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
+  uniquenessKey: PropTypes.string.isRequired,
   pairs: PropTypes.array.isRequired,
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,

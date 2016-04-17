@@ -20,6 +20,6 @@ export function showUpdateNamePrompt (requestGroup) {
   return modals.show(REQUEST_GROUP_RENAME, {defaultValue, requestGroup});
 }
 
-export function showEnvironmentEditModal () {
-  return modals.show(ENVIRONMENT_EDITOR);
+export function showEnvironmentEditModal (requestGroup) {
+  return modals.show(ENVIRONMENT_EDITOR, {requestGroup});
 }

@@ -7,20 +7,37 @@ import Editor from '../base/Editor'
 import KeyValueEditor from '../base/KeyValueEditor'
 import * as modalIds from '../../constants/modals'
 
-class RequestGroupEnvironmentEditModal extends Component {
+class EnvironmentEditModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
-      pairs: []
+      pairs: this._mapDataToPairs(props.requestGroup.environment)
     }
   }
 
   _saveChanges () {
-    this.props.onChange(this.state.pairs);
+    this.props.onChange(this._mapPairsToData(this.state.pairs));
+    this.props.onClose();
   }
 
   _keyValueChange (pairs) {
     this.setState({pairs});
+  }
+
+  _mapPairsToData (pairs) {
+    return pairs.reduce((prev, curr) => {
+      return Object.assign({}, prev, {[curr.name]: curr.value});
+    }, {});
+  }
+
+  _mapDataToPairs (data) {
+    return Object.keys(data).map(key => ({name: key, value: data[key]}));
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this.setState({
+      pairs: this._mapDataToPairs(nextProps.requestGroup.environment)
+    })
   }
 
   render () {
@@ -36,6 +53,7 @@ class RequestGroupEnvironmentEditModal extends Component {
         <ModalBody className="grid--v wide pad">
           <div>
             <KeyValueEditor onChange={this._keyValueChange.bind(this)}
+                            uniquenessKey={this.props.requestGroup._id}
                             pairs={this.state.pairs}
                             namePlaceholder="BASE_URL"
                             valuePlaceholder="https://api.insomnia.com/v1"/>
@@ -53,13 +71,15 @@ class RequestGroupEnvironmentEditModal extends Component {
   }
 }
 
-RequestGroupEnvironmentEditModal.propTypes = {
-  // requestGroup: PropTypes.object.isRequired,
+EnvironmentEditModal.propTypes = {
+  requestGroup: PropTypes.shape({
+    environment: PropTypes.object.isRequired
+  }),
   onChange: PropTypes.func.isRequired
 };
 
-RequestGroupEnvironmentEditModal.defaultProps = {
+EnvironmentEditModal.defaultProps = {
   id: modalIds.ENVIRONMENT_EDITOR
 };
 
-export default RequestGroupEnvironmentEditModal;
+export default EnvironmentEditModal;

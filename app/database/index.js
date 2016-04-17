@@ -1,5 +1,6 @@
 import PouchDB from 'pouchdb';
 import * as methods from '../constants/global';
+import {generateId} from './util'
 
 let db = new PouchDB('insomnia.db');
 
@@ -20,6 +21,10 @@ export function allDocs () {
   return db.allDocs({include_docs: true});
 }
 
+export function get (id) {
+  return db.get(id);
+}
+
 export function update (doc, patch = {}) {
   const updatedDoc = Object.assign(
     {},
@@ -31,7 +36,7 @@ export function update (doc, patch = {}) {
   return db.put(updatedDoc).catch(e => {
     if (e.status === 409) {
       console.warn('Retrying document update for', updatedDoc);
-      db.get(doc._id).then(dbDoc => {
+      get(doc._id).then(dbDoc => {
         update(dbDoc, patch);
       });
     }
@@ -47,7 +52,7 @@ export function remove (doc) {
 // ~~~~~~~ //
 
 export function requestCreate (patch = {}) {
-  update(Object.assign(
+  const request = Object.assign(
     // Defaults
     {
       url: '',
@@ -66,13 +71,17 @@ export function requestCreate (patch = {}) {
 
     // Required Generated Fields
     {
-      _id: `rq_${Date.now()}`,
+      _id: generateId('req'),
       _rev: undefined,
       type: 'Request',
       created: Date.now(),
       modified: Date.now()
     }
-  ));
+  );
+  
+  update(request);
+  
+  return request;
 }
 
 export function requestDuplicate (request) {
@@ -84,7 +93,7 @@ export function requestDuplicate (request) {
 // ~~~~~~~~~~~~~ //
 
 export function requestGroupCreate (patch = {}) {
-  update(Object.assign(
+  const requestGroup = Object.assign(
     // Default Fields
     {
       collapsed: false,
@@ -98,17 +107,17 @@ export function requestGroupCreate (patch = {}) {
 
     // Required Generated Fields
     {
-      _id: `rg_${Date.now()}`,
+      _id: generateId('grp'),
       _rev: undefined,
       type: 'RequestGroup',
       created: Date.now(),
       modified: Date.now()
     }
-  ));
-}
-
-export function requestGroupToggle (requestGroup, patch = {}) {
-  return update(requestGroup, patch);
+  );
+  
+  update(requestGroup);
+  
+  return requestGroup;
 }
 
 export {changes};

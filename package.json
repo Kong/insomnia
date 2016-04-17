@@ -36,7 +36,6 @@
     "babel-preset-react": "^6.5.0",
     "concurrently": "^2.0.0",
     "css-loader": "^0.23.1",
-    "electron-prebuilt": "^0.37.2",
     "express": "latest",
     "file-loader": "^0.8.5",
     "jest": "^0.1.40",

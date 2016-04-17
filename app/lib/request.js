@@ -1,13 +1,19 @@
 import networkRequest from 'request'
 import render from './render'
+import * as db from '../database'
 
-export default function (request, callback) {
+function makeRequest (request, callback) {
   const config = {
-    url: request.url,
     method: request.method,
     body: request.body,
     headers: {}
   };
+
+  if (request.url.indexOf('://') === -1) {
+    config.url = request.url;
+  } else {
+    config.url = `https://${request.url}`;
+  }
 
   if (request.authentication.username) {
     config.auth = {
@@ -23,7 +29,7 @@ export default function (request, callback) {
       config.headers[header.name] = header.value;
     }
   }
-  
+
   // TODO: this is just a POC. It breaks in a lot of cases
   config.url += request.params.map((p, i) => {
     const name = encodeURIComponent(p.name);
@@ -31,12 +37,8 @@ export default function (request, callback) {
     return `${i === 0 ? '?' : '&'}${name}=${value}`;
   }).join('');
 
-  // SNEAKY HACK: Render nested object by converting it to JSON then rendering
-  const context = {template_id: 'tem_WWq2w9uJNR6Pqk8APkvsS3'};
-  const template = JSON.stringify(config);
-  const renderedConfig = JSON.parse(render(template, context));
 
-  networkRequest(renderedConfig, function (err, response) {
+  networkRequest(config, function (err, response) {
     if (err) {
       return callback(err);
     } else {
@@ -51,4 +53,18 @@ export default function (request, callback) {
       });
     }
   });
+}
+
+export default function (originalRequest, callback) {
+  // SNEAKY HACK: Render nested object by converting it to JSON then rendering
+  const template = JSON.stringify(originalRequest);
+  const request = JSON.parse(render(template, context));
+
+  if (request.parent) {
+    db.get(request.parent).then(
+      requestGroup => makeRequest(config, callback, requestGroup.environment)
+    );
+  } else {
+    makeRequest(request, callback)
+  }
 }

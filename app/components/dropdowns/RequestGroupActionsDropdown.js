@@ -21,7 +21,7 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button>
+            <button onClick={e => actions.showEnvironmentEditModal(requestGroup)}>
               <i className="fa fa-code"></i> Environment
             </button>
           </li>
@@ -40,7 +40,8 @@ RequestGroupActionsDropdown.propTypes = {
   actions: PropTypes.shape({
     update: PropTypes.func.isRequired,
     remove: PropTypes.func.isRequired,
-    showUpdateNamePrompt: PropTypes.func.isRequired
+    showUpdateNamePrompt: PropTypes.func.isRequired,
+    showEnvironmentEditModal: PropTypes.func.isRequired
   }),
   requestGroup: PropTypes.object
 };

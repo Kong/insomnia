@@ -13,6 +13,7 @@ class RequestAuthEditor extends Component {
 
     return (
       <KeyValueEditor
+        uniquenessKey={request._id}
         pairs={pairs}
         maxPairs={1}
         namePlaceholder="Username"
