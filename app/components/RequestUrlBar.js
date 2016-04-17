@@ -29,14 +29,14 @@ class UrlInput extends Component {
         <form className="tall grid__cell" onSubmit={e => {e.preventDefault(); sendRequest(request)}}>
           <DebouncingInput
             type="text"
-            className="txt-lg"
+            className="txt-md"
             placeholder="http://echo.insomnia.rest/status/200"
             value={request.url}
             debounceMillis={1000}
             onChange={onUrlChange}/>
         </form>
-        <button className="btn" onClick={sendRequest.bind(null, request)}>
-          <i className="fa fa-repeat txt-xl"></i>
+        <button className="btn txt-lg" onClick={sendRequest.bind(null, request)}>
+          Send
         </button>
       </div>
     )
