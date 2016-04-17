@@ -26,134 +26,152 @@ import * as db from '../database'
 Tabs.setUseDefaultStyles(false);
 
 class App extends Component {
-  _renderPageBody (actions, activeRequest, activeResponse, tabs) {
+  _renderRequestPanel (actions, activeRequest, tabs) {
     if (!activeRequest) {
-      return <div></div>;
+      return (
+        <section className="grid__cell section grid--v grid--start">
+          <header className="header bg-super-light section__header"></header>
+          <div className="section__body grid__cell"></div>
+        </section>
+      )
     }
 
     return (
-      <div className="grid__cell grid grid--collapse">
-        <section className="grid__cell section">
-          <div className="grid--v wide">
-            <div className="grid__cell grid__cell--no-flex section__header">
-              <RequestUrlBar
-                sendRequest={actions.requests.send}
-                onUrlChange={url => {db.update(activeRequest, {url})}}
-                onMethodChange={method => {db.update(activeRequest, {method})}}
-                request={activeRequest}/>
-            </div>
-            <Tabs className="grid__cell grid--v section__body"
-                  onSelect={i => actions.global.selectTab('request', i)}
-                  selectedIndex={tabs.request || 0}>
-              <TabList className="grid grid--start">
-                <Tab><button className="btn btn--compact">Body</button></Tab>
-                <Tab>
-                  <button className="btn btn--compact no-wrap">
-                    Params {activeRequest.params.length ? `(${activeRequest.params.length})` : ''}
-                  </button>
-                </Tab>
-                <Tab><button className="btn btn--compact">Auth</button></Tab>
-                <Tab>
-                  <button className="btn btn--compact no-wrap">
-                    Headers {activeRequest.headers.length ? `(${activeRequest.headers.length})` : ''}
-                  </button>
-                </Tab>
-              </TabList>
-              <TabPanel className="grid__cell">
-                <RequestBodyEditor
-                  onChange={body => {db.update(activeRequest, {body})}}
-                  request={activeRequest}/>
-              </TabPanel>
-              <TabPanel className="grid__cell grid__cell--scroll--v">
-                <div className="wide pad">
-                  <KeyValueEditor
-                    uniquenessKey={activeRequest._id}
-                    pairs={activeRequest.params}
-                    onChange={params => {db.update(activeRequest, {params})}}
-                  />
-                </div>
-              </TabPanel>
-              <TabPanel className="grid__cell grid__cell--scroll--v">
-                <div className="wide pad">
-                  <RequestAuthEditor
-                    request={activeRequest}
-                    onChange={authentication => {db.update(activeRequest, {authentication})}}
-                  />
-                </div>
-              </TabPanel>
-              <TabPanel className="grid__cell grid__cell--scroll--v">
-                <div className="wide pad">
-                  <KeyValueEditor
-                    uniquenessKey={activeRequest._id}
-                    pairs={activeRequest.headers}
-                    onChange={headers => {db.update(activeRequest, {headers})}}
-                  />
-                </div>
-              </TabPanel>
-            </Tabs>
+      <section className="grid__cell section">
+        <div className="grid--v wide">
+          <div className="grid__cell grid__cell--no-flex section__header">
+            <RequestUrlBar
+              sendRequest={actions.requests.send}
+              onUrlChange={url => {db.update(activeRequest, {url})}}
+              onMethodChange={method => {db.update(activeRequest, {method})}}
+              request={activeRequest}/>
           </div>
+          <Tabs className="grid__cell grid--v section__body"
+                onSelect={i => actions.global.selectTab('request', i)}
+                selectedIndex={tabs.request || 0}>
+            <TabList className="grid grid--start">
+              <Tab><button className="btn btn--compact">Body</button></Tab>
+              <Tab>
+                <button className="btn btn--compact no-wrap">
+                  Params {activeRequest.params.length ? `(${activeRequest.params.length})` : ''}
+                </button>
+              </Tab>
+              <Tab><button className="btn btn--compact">Auth</button></Tab>
+              <Tab>
+                <button className="btn btn--compact no-wrap">
+                  Headers {activeRequest.headers.length ? `(${activeRequest.headers.length})` : ''}
+                </button>
+              </Tab>
+            </TabList>
+            <TabPanel className="grid__cell">
+              <RequestBodyEditor
+                onChange={body => {db.update(activeRequest, {body})}}
+                request={activeRequest}/>
+            </TabPanel>
+            <TabPanel className="grid__cell grid__cell--scroll--v">
+              <div className="wide pad">
+                <KeyValueEditor
+                  uniquenessKey={activeRequest._id}
+                  pairs={activeRequest.params}
+                  onChange={params => {db.update(activeRequest, {params})}}
+                />
+              </div>
+            </TabPanel>
+            <TabPanel className="grid__cell grid__cell--scroll--v">
+              <div className="wide pad">
+                <RequestAuthEditor
+                  request={activeRequest}
+                  onChange={authentication => {db.update(activeRequest, {authentication})}}
+                />
+              </div>
+            </TabPanel>
+            <TabPanel className="grid__cell grid__cell--scroll--v">
+              <div className="wide pad">
+                <KeyValueEditor
+                  uniquenessKey={activeRequest._id}
+                  pairs={activeRequest.headers}
+                  onChange={headers => {db.update(activeRequest, {headers})}}
+                />
+              </div>
+            </TabPanel>
+          </Tabs>
+        </div>
+      </section>
+    )
+
+  }
+
+  _renderResponsePanel (actions, activeResponse, tabs) {
+    if (!activeResponse) {
+      return (
+        <section className="grid__cell section grid--v grid--start">
+          <header className="header bg-light section__header"></header>
+          <div className="section__body grid__cell"></div>
         </section>
-        <section className="grid__cell section">
-          <div className="grid--v wide">
-            <header
-              className="grid grid--center header text-center bg-light txt-sm section__header">
-              {!activeResponse ? null : (
-                <div>
-                  <StatusTag
-                    statusCode={activeResponse.statusCode}
-                    statusMessage={activeResponse.statusMessage}
-                  />
-                  <TimeTag milliseconds={activeResponse.time}/>
-                  <SizeTag bytes={activeResponse.size}/>
-                </div>
-              )}
-            </header>
-            <Tabs className="grid__cell grid--v section__body"
-                  onSelect={i => actions.global.selectTab('response', i)}
-                  selectedIndex={tabs.response || 0}>
-              <TabList className="grid grid--start">
-                <Tab><button className="btn btn--compact">Preview</button></Tab>
-                <Tab><button className="btn btn--compact">Raw</button></Tab>
-                <Tab><button className="btn btn--compact">Headers</button></Tab>
-              </TabList>
-              <TabPanel className="grid__cell">
-                <Editor
-                  value={activeResponse && activeResponse.body || ''}
-                  prettify={true}
-                  options={{
+      )
+    }
+
+    return (
+      <section className="grid__cell section">
+        <div className="grid--v wide">
+          <header
+            className="grid grid--center header text-center bg-light txt-sm section__header">
+            {!activeResponse ? null : (
+              <div>
+                <StatusTag
+                  statusCode={activeResponse.statusCode}
+                  statusMessage={activeResponse.statusMessage}
+                />
+                <TimeTag milliseconds={activeResponse.time}/>
+                <SizeTag bytes={activeResponse.size}/>
+              </div>
+            )}
+          </header>
+          <Tabs className="grid__cell grid--v section__body"
+                onSelect={i => actions.global.selectTab('response', i)}
+                selectedIndex={tabs.response || 0}>
+            <TabList className="grid grid--start">
+              <Tab><button className="btn btn--compact">Preview</button></Tab>
+              <Tab><button className="btn btn--compact">Raw</button></Tab>
+              <Tab><button className="btn btn--compact">Headers</button></Tab>
+            </TabList>
+            <TabPanel className="grid__cell">
+              <Editor
+                value={activeResponse && activeResponse.body || ''}
+                prettify={true}
+                options={{
                     mode: activeResponse && activeResponse.contentType || 'text/plain',
                     readOnly: true,
                     placeholder: 'nothing yet...'
                   }}
-                />
-              </TabPanel>
-              <TabPanel className="grid__cell">
-                <Editor
-                  value={activeResponse && activeResponse.body || ''}
-                  options={{
+              />
+            </TabPanel>
+            <TabPanel className="grid__cell">
+              <Editor
+                value={activeResponse && activeResponse.body || ''}
+                options={{
                     lineWrapping: true,
                     mode: 'text/plain',
                     readOnly: true,
                     placeholder: 'nothing yet...'
                   }}
-                />
-              </TabPanel>
-              <TabPanel className="grid__cell grid__cell--scroll--v">
-                <div className="wide">
-                  <div className="grid--v grid--start pad">
-                    {!activeResponse ? null : activeResponse.headers.map((h, i) => (
-                      <div className="grid grid__cell grid__cell--no-flex selectable" key={i}>
-                        <div className="grid__cell">{h.name}</div>
-                        <div className="grid__cell">{h.value}</div>
-                      </div>
-                    ))}
-                  </div>
+              />
+            </TabPanel>
+            <TabPanel className="grid__cell grid__cell--scroll--v">
+              <div className="wide">
+                <div className="grid--v grid--start pad">
+                  {!activeResponse ? null : activeResponse.headers.map((h, i) => (
+                    <div className="grid grid__cell grid__cell--no-flex selectable" key={i}>
+                      <div className="grid__cell">{h.name}</div>
+                      <div className="grid__cell">{h.value}</div>
+                    </div>
+                  ))}
                 </div>
-              </TabPanel>
-            </Tabs>
-          </div>
-        </section>
-      </div>
+              </div>
+            </TabPanel>
+          </Tabs>
+        </div>
+      </section>
     )
   }
 
@@ -188,12 +206,8 @@ class App extends Component {
           activeFilter={requests.filter}
           requestGroups={requestGroups.all}
           requests={requests.all}/>
-        <div className="grid__cell grid--v">
-          {/*<header className="header bg-light">
-           <div className="header__content"><h1>Hi World</h1></div>
-           </header>*/}
-          {this._renderPageBody(actions, activeRequest, activeResponse, tabs)}
-        </div>
+        {this._renderRequestPanel(actions, activeRequest, tabs)}
+        {this._renderResponsePanel(actions, activeResponse, tabs)}
       </div>
     )
   }

@@ -7,8 +7,7 @@ import * as db from '../../database/index';
 
 class RequestActionsDropdown extends Component {
   render () {
-    const {actions, request, requestGroup, ...other} = this.props;
-    const requestGroupId = requestGroup ? requestGroup._id : null;
+    const {actions, request, ...other} = this.props;
 
     return (
       <Dropdown {...other}>
@@ -17,7 +16,7 @@ class RequestActionsDropdown extends Component {
         </button>
         <ul>
           <li>
-            <button onClick={e => db.requestDuplicate(request, requestGroupId)}>
+            <button onClick={e => db.requestCopy(request)}>
               <i className="fa fa-copy"></i> Duplicate
             </button>
           </li>
@@ -46,8 +45,7 @@ RequestActionsDropdown.propTypes = {
   request: PropTypes.object.isRequired,
   actions: PropTypes.shape({
     showUpdateNamePrompt: PropTypes.func.isRequired
-  }),
-  requestGroup: PropTypes.object
+  })
 };
 
 function mapStateToProps (state) {

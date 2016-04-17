@@ -4,9 +4,10 @@ import {generateId} from './util'
 
 let db = new PouchDB('insomnia.db');
 
-global.db = db;
+// For browser console debugging
+// global.db = db;
 
-let changes = db.changes({
+export let changes = db.changes({
   since: 'now',
   live: true,
   include_docs: true,
@@ -32,7 +33,7 @@ export function update (doc, patch = {}) {
     patch,
     {modified: Date.now()}
   );
- 
+
   return db.put(updatedDoc).catch(e => {
     if (e.status === 409) {
       console.warn('Retrying document update for', updatedDoc);
@@ -47,31 +48,18 @@ export function remove (doc) {
   return update(doc, {_deleted: true});
 }
 
-// ~~~~~~~ //
-// REQUEST //
-// ~~~~~~~ //
+// ~~~~~~~~~~~~~~~~~~~ //
+// DEFAULT MODEL STUFF //
+// ~~~~~~~~~~~~~~~~~~~ //
 
-export function requestCreate (patch = {}) {
-  const request = Object.assign(
-    // Defaults
-    {
-      url: '',
-      name: 'New Request',
-      method: methods.METHOD_GET,
-      body: '',
-      params: [],
-      contentType: 'text/plain',
-      headers: [],
-      authentication: {},
-      parent: null
-    },
-
-    // Initial Fields
+function modelCreate (idPrefix, defaults, patch = {}) {
+  const model = Object.assign(
+    defaults,
     patch,
-
+    
     // Required Generated Fields
     {
-      _id: generateId('req'),
+      _id: generateId(idPrefix),
       _rev: undefined,
       type: 'Request',
       created: Date.now(),
@@ -79,45 +67,59 @@ export function requestCreate (patch = {}) {
     }
   );
   
-  update(request);
+  update(model);
   
-  return request;
+  return model;
 }
 
-export function requestDuplicate (request) {
-  return requestCreate(request);
+
+// ~~~~~~~ //
+// REQUEST //
+// ~~~~~~~ //
+
+export function requestCreate (patch = {}) {
+  return modelCreate('req', {
+    url: '',
+    name: 'New Request',
+    method: methods.METHOD_GET,
+    body: '',
+    params: [],
+    contentType: 'text/plain',
+    headers: [],
+    authentication: {},
+    parent: null
+  }, patch);
 }
+
+export function requestCopy (originalRequest) {
+  const name = `${originalRequest.name} (Copy)`;
+  return requestCreate(Object.assign({}, originalRequest, {name}));
+}
+
 
 // ~~~~~~~~~~~~~ //
 // REQUEST GROUP //
 // ~~~~~~~~~~~~~ //
 
 export function requestGroupCreate (patch = {}) {
-  const requestGroup = Object.assign(
-    // Default Fields
-    {
-      collapsed: false,
-      name: 'New Request Group',
-      environment: {},
-      parent: null
-    },
-
-    // Initial Fields
-    patch,
-
-    // Required Generated Fields
-    {
-      _id: generateId('grp'),
-      _rev: undefined,
-      type: 'RequestGroup',
-      created: Date.now(),
-      modified: Date.now()
-    }
-  );
-  
-  update(requestGroup);
-  
-  return requestGroup;
+  return modelCreate('grp', {
+    collapsed: false,
+    name: 'New Request Group',
+    environment: {},
+    parent: null
+  }, patch);
 }
 
-export {changes};
+
+// ~~~~~~~~~//
+// RESPONSE //
+// ~~~~~~~~~//
+
+export function responseCreate (patch = {}) {
+  return modelCreate('grp', {
+    collapsed: false,
+    name: 'New Request Group',
+    environment: {},
+    parent: null
+  }, patch);
+}

@@ -17,8 +17,7 @@ class Sidebar extends Component {
       activeRequest,
       addRequestToRequestGroup,
       toggleRequestGroup,
-      requests,
-      requestGroups
+      requests
     } = this.props;
 
     let filteredRequests = requests.filter(
@@ -127,11 +126,11 @@ class Sidebar extends Component {
     const {activeFilter, requestGroups} = this.props;
 
     return (
-      <aside className="sidebar bg-dark grid--v">
-        <header className="header bg-brand">
+      <section className="sidebar bg-dark grid--v section">
+        <header className="header bg-brand section__header">
           <WorkspaceDropdown />
         </header>
-        <div className="grid--v grid--start grid__cell">
+        <div className="grid--v grid--start grid__cell section__body">
           <ul
             className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
             {this.renderRequestGroupRow(null)}
@@ -146,7 +145,7 @@ class Sidebar extends Component {
               onChange={this.onFilterChange.bind(this)}/>
           </div>
         </div>
-      </aside>
+      </section>
     )
   }
 }
