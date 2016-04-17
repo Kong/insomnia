@@ -2,19 +2,25 @@ import networkRequest from 'request'
 import render from './render'
 import * as db from '../database'
 
-function makeRequest (request, callback) {
+function makeRequest (unrenderedRequest, callback, context = {}) {
+  // SNEAKY HACK: Render nested object by converting it to JSON then rendering
+  const template = JSON.stringify(unrenderedRequest);
+  const request = JSON.parse(render(template, context));
+  
   const config = {
     method: request.method,
     body: request.body,
     headers: {}
   };
 
+  // Default the proto if it doesn't exist
   if (request.url.indexOf('://') === -1) {
-    config.url = request.url;
-  } else {
     config.url = `https://${request.url}`;
+  } else {
+    config.url = request.url;
   }
 
+  // Set basic auth if we need to
   if (request.authentication.username) {
     config.auth = {
       user: request.authentication.username,
@@ -22,7 +28,6 @@ function makeRequest (request, callback) {
     }
   }
 
-  // TODO: Do these need to be urlencoded or something?
   for (let i = 0; i < request.headers.length; i++) {
     let header = request.headers[i];
     if (header.name) {
@@ -30,7 +35,6 @@ function makeRequest (request, callback) {
     }
   }
 
-  // TODO: this is just a POC. It breaks in a lot of cases
   config.url += request.params.map((p, i) => {
     const name = encodeURIComponent(p.name);
     const value = encodeURIComponent(p.value);
@@ -55,14 +59,10 @@ function makeRequest (request, callback) {
   });
 }
 
-export default function (originalRequest, callback) {
-  // SNEAKY HACK: Render nested object by converting it to JSON then rendering
-  const template = JSON.stringify(originalRequest);
-  const request = JSON.parse(render(template, context));
-
+export default function (request, callback) {
   if (request.parent) {
     db.get(request.parent).then(
-      requestGroup => makeRequest(config, callback, requestGroup.environment)
+      requestGroup => makeRequest(request, callback, requestGroup.environment)
     );
   } else {
     makeRequest(request, callback)
