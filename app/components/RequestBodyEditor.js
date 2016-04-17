@@ -3,7 +3,7 @@ import Editor from './base/Editor'
 
 class RequestBodyEditor extends Component {
   shouldComponentUpdate (nextProps) {
-    return this.props.request !== nextProps.request;
+    return this.props.request._id !== nextProps.request._id;
   }
 
   render () {
