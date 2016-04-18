@@ -31,6 +31,10 @@ $border-color: $hl-sm;
       border-left-color: transparent;
     }
 
+    &:focus {
+      outline: 0;
+    }
+
     button {
       color: $hl;
       position: relative;

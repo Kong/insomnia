@@ -81,6 +81,8 @@ class App extends Component {
               <div>
                 <KeyValueEditor
                   className="pad"
+                  namePlaceholder="name"
+                  valuePlaceholder="value"
                   uniquenessKey={activeRequest._id}
                   pairs={activeRequest.params}
                   onChange={params => {db.update(activeRequest, {params})}}
@@ -100,6 +102,8 @@ class App extends Component {
               <div>
                 <KeyValueEditor
                   className="pad"
+                  namePlaceholder="My-Header"
+                  valuePlaceholder="Value"
                   uniquenessKey={activeRequest._id}
                   pairs={activeRequest.headers}
                   onChange={headers => {db.update(activeRequest, {headers})}}

@@ -23,14 +23,14 @@
 
     textarea,
     input {
-      border: 1px solid $hl-lg;
+      border: 1px solid $hl-md;
       padding: $padding-sm;
       border-radius: $radius-md;
     }
 
     textarea,
     input:focus {
-      border-color: $hl-xxl;
+      border-color: $hl-xl;
     }
   }
 
