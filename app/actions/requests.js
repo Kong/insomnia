@@ -3,7 +3,6 @@ import makeRequest from '../lib/request'
 import {loadStart, loadStop} from './global'
 import * as modals from './modals'
 import {REQUEST_RENAME} from '../constants/modals'
-import {setResponse} from './responses'
 
 export function remove (request) {
   return {type: types.REQUEST_DELETE, request};
@@ -25,12 +24,7 @@ export function send (request) {
   return dispatch => {
     dispatch(loadStart());
 
-    makeRequest(request, (err, response) => {
-      if (err) {
-        console.error(err);
-      }
-
-      dispatch(setResponse(request._id, response));
+    makeRequest(request, () => {
       dispatch(loadStop());
     });
   }

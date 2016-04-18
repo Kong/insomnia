@@ -44,21 +44,24 @@ function makeRequest (unrenderedRequest, callback, context = {}) {
   const startTime = Date.now();
   networkRequest(config, function (err, response) {
     if (err) {
-      return callback(err);
+      console.error('Request Failed', err, response);
     } else {
-      return callback(null, {
-        body: response.body,
-        contentType: response.headers['content-type'],
+      db.responseCreate({
+        requestId: request._id,
         statusCode: response.statusCode,
         statusMessage: response.statusMessage,
-        time: Date.now() - startTime,
-        size: response.connection.bytesRead,
+        contentType: response.headers['content-type'],
+        millis: Date.now() - startTime,
+        bytes: response.connection.bytesRead,
+        body: response.body,
         headers: Object.keys(response.headers).map(name => {
           const value = response.headers[name];
           return {name, value};
         })
       });
     }
+    
+    callback(err);
   });
 }
 

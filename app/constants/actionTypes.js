@@ -17,7 +17,7 @@ export const REQUEST_ACTIVATE = 'REQUEST.ACTIVATE';
 export const REQUEST_CHANGE_FILTER = 'REQUEST.CHANGE_FILTER';
 
 // Responses
-export const RESPONSE_SET = 'RESPONSE.SET';
+export const RESPONSE_UPDATE = 'RESPONSE.UPDATE';
 
 // RequestGroups
 export const REQUEST_GROUP_UPDATE = 'REQUEST_GROUP.UPDATE';

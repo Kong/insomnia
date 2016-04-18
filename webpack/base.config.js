@@ -70,7 +70,8 @@ var config = {
     new webpack.ExternalsPlugin('commonjs', [
       'request',
       'nunjucks',
-      'pouchdb'
+      'pouchdb',
+      'pouchdb-find'
     ])
   ]
 };

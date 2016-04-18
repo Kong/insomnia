@@ -7,6 +7,7 @@ import App from './containers/App'
 
 import * as RequestGroupActions from './actions/requestGroups'
 import * as RequestActions from './actions/requests'
+import * as ResponseActions from './actions/responses'
 import * as db from './database'
 
 // Global CSS
@@ -21,7 +22,8 @@ console.log('-- Init Insomnia --');
 
 const actionFns = {
   RequestGroup: bindActionCreators(RequestGroupActions, store.dispatch),
-  Request: bindActionCreators(RequestActions, store.dispatch)
+  Request: bindActionCreators(RequestActions, store.dispatch),
+  Response: bindActionCreators(ResponseActions, store.dispatch)
 };
 
 function refreshDoc (doc) {
@@ -29,8 +31,10 @@ function refreshDoc (doc) {
 
   if (fns) {
     fns[doc._deleted ? 'remove' : 'update'](doc);
-  } else {
+  } else if (doc.hasOwnProperty('type')) {
     console.warn('Unknown change', doc.type, doc);
+  } else {
+    // Probably a design doc update or something...
   }
 }
 

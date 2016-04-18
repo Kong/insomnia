@@ -26,6 +26,14 @@ import * as db from '../database'
 Tabs.setUseDefaultStyles(false);
 
 class App extends Component {
+  constructor (props) {
+    super(props);
+    this.state = {
+      activeResponse: null,
+      activeRequest: null
+    }
+  }
+
   _renderRequestPanel (actions, activeRequest, tabs) {
     if (!activeRequest) {
       return (
@@ -125,8 +133,8 @@ class App extends Component {
                   statusCode={activeResponse.statusCode}
                   statusMessage={activeResponse.statusMessage}
                 />
-                <TimeTag milliseconds={activeResponse.time}/>
-                <SizeTag bytes={activeResponse.size}/>
+                <TimeTag milliseconds={activeResponse.millis}/>
+                <SizeTag bytes={activeResponse.bytes}/>
               </div>
             )}
           </header>
@@ -178,10 +186,33 @@ class App extends Component {
     )
   }
 
-  render () {
-    const {actions, requests, responses, requestGroups, tabs, modals} = this.props;
+  _findActiveRequestResponse () {
+    const {requests} = this.props;
     const activeRequest = requests.all.find(r => r._id === requests.active);
-    const activeResponse = responses[activeRequest && activeRequest._id];
+
+    if (this.state.activeRequest !== activeRequest) {
+      this.setState({activeRequest});
+
+      if (activeRequest) {
+        db.responseGetForRequest(activeRequest).then(response => {
+          const activeResponse = response.docs.length ? response.docs[0] : null;
+          this.setState({activeResponse})
+        });
+      }
+    }
+  }
+
+  componentDidUpdate () {
+    this._findActiveRequestResponse();
+  }
+
+  componentDidMount () {
+    this._findActiveRequestResponse();
+  }
+
+  render () {
+    const {actions, requests, requestGroups, tabs, modals} = this.props;
+    const {activeRequest, activeResponse} = this.state;
 
     return (
       <div className="grid bg-super-dark tall">

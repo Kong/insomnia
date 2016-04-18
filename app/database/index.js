@@ -1,11 +1,15 @@
 import PouchDB from 'pouchdb';
 import * as methods from '../constants/global';
 import {generateId} from './util'
+import pouchDBFind from 'pouchdb-find'
+
+// Add plugins
+PouchDB.plugin(pouchDBFind);
 
 let db = new PouchDB('insomnia.db');
 
 // For browser console debugging
-// global.db = db;
+global.db = db;
 
 export let changes = db.changes({
   since: 'now',
@@ -52,23 +56,23 @@ export function remove (doc) {
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-function modelCreate (idPrefix, defaults, patch = {}) {
+function modelCreate (type, idPrefix, defaults, patch = {}) {
   const model = Object.assign(
     defaults,
     patch,
-    
+
     // Required Generated Fields
     {
       _id: generateId(idPrefix),
       _rev: undefined,
-      type: 'Request',
+      type: type,
       created: Date.now(),
       modified: Date.now()
     }
   );
-  
+
   update(model);
-  
+
   return model;
 }
 
@@ -78,7 +82,7 @@ function modelCreate (idPrefix, defaults, patch = {}) {
 // ~~~~~~~ //
 
 export function requestCreate (patch = {}) {
-  return modelCreate('req', {
+  return modelCreate('Request', 'req', {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
@@ -102,7 +106,7 @@ export function requestCopy (originalRequest) {
 // ~~~~~~~~~~~~~ //
 
 export function requestGroupCreate (patch = {}) {
-  return modelCreate('grp', {
+  return modelCreate('RequestGroup', 'grp', {
     collapsed: false,
     name: 'New Request Group',
     environment: {},
@@ -116,10 +120,31 @@ export function requestGroupCreate (patch = {}) {
 // ~~~~~~~~~//
 
 export function responseCreate (patch = {}) {
-  return modelCreate('grp', {
-    collapsed: false,
-    name: 'New Request Group',
-    environment: {},
-    parent: null
+  return modelCreate('Response', 'rsp', {
+    requestId: null,
+    statusCode: 0,
+    statusMessage: '',
+    contentType: 'text/plain',
+    bytes: 0,
+    millis: 0,
+    headers: {},
+    body: ''
   }, patch);
+}
+
+db.createIndex({
+  index: {fields: ['requestId']}
+}).catch(err => {
+  console.error('Failed to create index', err);
+}).then(() => {
+  console.log('-- Indexes Updated --');
+});
+
+export function responseGetForRequest (request) {
+  return db.find({
+    selector: {
+      requestId: request._id
+    },
+    limit: 1
+  })
 }

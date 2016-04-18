@@ -9,8 +9,8 @@ class UrlInput extends Component {
     return (
       <div className="tall grid grid--center wide bg-super-light">
         <Dropdown className="tall">
-          <button className="pad tall txt-sm">
-            {request.method}&nbsp;&nbsp;<i className="fa fa-caret-down"></i>
+          <button className="pad tall txt-md">
+            {request.method}&nbsp;<i className="fa fa-caret-down"></i>
           </button>
           <ul>
             {METHODS.map((method) => (
@@ -34,8 +34,8 @@ class UrlInput extends Component {
             onChange={onUrlChange}/>
         </form>
         <button className="btn btn--compact txt-lg" onClick={sendRequest.bind(null, request)}>
-          <i className="fa fa-arrow-circle-o-right"></i>
-        </button>
+          Send
+        </button>&nbsp;&nbsp;
       </div>
     );
   }

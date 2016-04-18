@@ -16,16 +16,6 @@
     height: $line-height-sm;
   }
 
-  &.form-control--right button:last-child,
-  &.form-control--left input {
-    padding-left: $padding-md;
-  }
-
-  &.form-control--left button:first-child,
-  &.form-control--right input {
-    padding-right: $padding-md;
-  }
-
   &.form-control--outlined,
   &.form-control--underlined {
     height: auto;
