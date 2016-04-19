@@ -60,7 +60,7 @@
     "hot-server": "node ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "test": "jest $@",
-    "package": "npm test && webpack --config webpack/prod.config.js"
+    "package": "./scripts/package"
   },
   "jest": {
     "unmockedModulePathPatterns": [

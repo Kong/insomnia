@@ -1,4 +1,3 @@
-'use strict';
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
@@ -18,21 +17,21 @@ app.on('window-all-closed', function () {
 
 app.on('ready', function () {
   mainWindow = new BrowserWindow({
-    width: IS_DEV ? 1600 : 1200,
-    height: 800,
-    minHeight: 500,
+    width: 1200,
+    height: 600,
+    minHeight: 400,
     minWidth: 500,
     acceptFirstMouse: true
     // titleBarStyle: IS_MAC ? 'hidden-inset' : 'default'
   });
 
-// and load the electron.html of the app.
-  mainWindow.loadURL(`file://${__dirname}/app/electron.html`);
+  // and load the app.html of the app.
+  mainWindow.loadURL(`file://${__dirname}/app/app.html`);
 
-// Open the DevTools.
-  if (IS_DEV) {
-    mainWindow.webContents.openDevTools();
-  }
+//   Open the DevTools.
+//   if (IS_DEV) {
+//     mainWindow.webContents.openDevTools();
+//   }
 
 // Emitted when the window is closed.
   mainWindow.on('closed', function () {

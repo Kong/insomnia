@@ -1,6 +1,5 @@
 var path = require('path');
 var webpack = require('webpack');
-var webpackTargetElectronRenderer = require('webpack-target-electron-renderer');
 
 var config = {
   target: 'web',
@@ -8,10 +7,10 @@ var config = {
   context: path.join(__dirname, '../app'),
   entry: [
     './index.js',
-    './electron.html'
+    './app.html'
   ],
   output: {
-    path: path.join(__dirname, '../dist'),
+    path: path.join(__dirname, '../dist/app'),
     filename: 'bundle.js'
   },
   module: {
@@ -76,5 +75,5 @@ var config = {
   ]
 };
 
-config.target = webpackTargetElectronRenderer(config);
+config.target = 'electron';
 module.exports = config;

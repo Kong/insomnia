@@ -1,0 +1,5 @@
+#!/bin/bash
+#? Package the app
+
+webpack --config webpack/prod.config.js
+cp -r node_modules electron.js package.json dist/
