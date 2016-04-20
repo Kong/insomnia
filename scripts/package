@@ -1,5 +1,9 @@
 #!/bin/bash
 #? Package the app
 
-webpack --config webpack/prod.config.js
-cp -r node_modules electron.js package.json dist/
+rm -r dist/*
+webpack --config webpack/webpack.config.production.js
+# cp -r node_modules electron.js package.json dist/
+cp electron.js package.json dist/
+cd dist
+NODE_ENV=production npm install

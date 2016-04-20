@@ -5,9 +5,9 @@ const initialState = {};
 export default function (state = initialState, action) {
   switch (action.type) {
 
-    case types.RESPONSE_SET:
+    case types.RESPONSE_UPDATE:
       const newState = Object.assign({}, state);
-      newState[action.requestId] = action.response;
+      newState[action.response.requestId] = action.response;
       return newState;
     
     default:

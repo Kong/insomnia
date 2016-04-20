@@ -1,24 +1,26 @@
-'use strict';
+import express from 'express';
+import webpack from 'webpack';
+import webpackDevMiddleware from 'webpack-dev-middleware';
+import webpackHotMiddleware from 'webpack-hot-middleware';
 
-const express = require('express');
-const webpack = require('webpack');
-const config = require('./dev.config.js');
+import config from './webpack.config.development';
 
 const app = express();
 const compiler = webpack(config);
-
 const PORT = 3333;
 
-app.use(require('webpack-dev-middleware')(compiler, {
+app.use(webpackDevMiddleware(compiler, {
   publicPath: config.output.publicPath,
-  stats: {colors: true}
+  stats: {
+    colors: true
+  }
 }));
 
-app.use(require('webpack-hot-middleware')(compiler));
+app.use(webpackHotMiddleware(compiler));
 
 app.listen(PORT, 'localhost', err => {
   if (err) {
-    console.log(err);
+    console.error(err);
     return;
   }
 

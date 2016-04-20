@@ -136,7 +136,7 @@ class Sidebar extends Component {
             {this.renderRequestGroupRow(null)}
             {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
           </ul>
-          <div className="form-control form-control--outlined">
+          <div className="form-control form-control--underlined">
             <DebouncingInput
               type="text"
               placeholder="Filter Requests"

@@ -145,6 +145,7 @@ export function responseGetForRequest (request) {
     selector: {
       requestId: request._id
     },
+    sort: [{requestId: 'desc'}],
     limit: 1
   })
 }

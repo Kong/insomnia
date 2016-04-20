@@ -190,33 +190,10 @@ class App extends Component {
     )
   }
 
-  _findActiveRequestResponse () {
-    const {requests} = this.props;
-    const activeRequest = requests.all.find(r => r._id === requests.active);
-
-    if (this.state.activeRequest !== activeRequest) {
-      this.setState({activeRequest});
-
-      if (activeRequest) {
-        db.responseGetForRequest(activeRequest).then(response => {
-          const activeResponse = response.docs.length ? response.docs[0] : null;
-          this.setState({activeResponse})
-        });
-      }
-    }
-  }
-
-  componentDidUpdate () {
-    this._findActiveRequestResponse();
-  }
-
-  componentDidMount () {
-    this._findActiveRequestResponse();
-  }
-
   render () {
-    const {actions, requests, requestGroups, tabs, modals} = this.props;
-    const {activeRequest, activeResponse} = this.state;
+    const {actions, requests, responses, requestGroups, tabs, modals} = this.props;
+    const activeRequest = requests.all.find(r => r._id === requests.active);
+    const activeResponse = activeRequest ? responses[activeRequest._id] : undefined;
 
     return (
       <div className="grid bg-super-dark tall">

@@ -1,6 +1,6 @@
 
 // Don't npm install this (it breaks). Rely on the global one.
-const electron = require('electron');
+import electron from 'electron';
 
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
@@ -9,13 +9,13 @@ const IS_MAC = process.platform === 'darwin';
 var mainWindow = null;
 
 // Quit when all windows are closed.
-app.on('window-all-closed', function () {
+app.on('window-all-closed', () => {
   if (!IS_MAC) {
     app.quit();
   }
 });
 
-app.on('ready', function () {
+app.on('ready', () => {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 600,
@@ -28,13 +28,13 @@ app.on('ready', function () {
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app/app.html`);
 
-//   Open the DevTools.
-//   if (IS_DEV) {
-//     mainWindow.webContents.openDevTools();
-//   }
+  // Open the DevTools.
+  // if (IS_DEV) {
+  //   mainWindow.webContents.openDevTools();
+  // }
 
-// Emitted when the window is closed.
-  mainWindow.on('closed', function () {
+  // Emitted when the window is closed.
+  mainWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.

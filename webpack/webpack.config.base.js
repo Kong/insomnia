@@ -1,8 +1,7 @@
-var path = require('path');
-var webpack = require('webpack');
+import path from 'path';
+import webpack from 'webpack';
 
-var config = {
-  target: 'web',
+export default {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
   entry: [
@@ -10,8 +9,9 @@ var config = {
     './app.html'
   ],
   output: {
-    path: path.join(__dirname, '../dist/app'),
-    filename: 'bundle.js'
+    path: path.join(__dirname, '../dist'),
+    filename: 'bundle.js',
+    libraryTarget: 'commonjs2'
   },
   module: {
     loaders: [
@@ -34,6 +34,14 @@ var config = {
         loader: "file?name=[name].[ext]"
       },
       {
+        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
+        loader: "file"
+      },
+      {
+        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+        loader: "url?limit=10000&mimetype=image/svg+xml"
+      },
+      {
         test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
         loader: "url?limit=10000&mimetype=application/font-woff"
       },
@@ -44,14 +52,6 @@ var config = {
       {
         test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
         loader: "url?limit=10000&mimetype=application/octet-stream"
-      },
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        loader: "file"
-      },
-      {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-        loader: "url?limit=10000&mimetype=image/svg+xml"
       }
     ]
   },
@@ -60,20 +60,13 @@ var config = {
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
   plugins: [
-    new webpack.DefinePlugin({
-      __DEV__: true,
-      'process.env': {
-        NODE_ENV: JSON.stringify('development')
-      }
-    }),
     new webpack.ExternalsPlugin('commonjs', [
       'request',
       'nunjucks',
       'pouchdb',
       'pouchdb-find'
     ])
-  ]
+  ],
+  target: 'electron-renderer'
 };
 
-config.target = 'electron';
-module.exports = config;
