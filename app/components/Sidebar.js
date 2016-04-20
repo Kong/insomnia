@@ -5,6 +5,7 @@ import RequestActionsDropdown from './dropdowns/RequestActionsDropdown'
 import RequestGroupActionsDropdown from './dropdowns/RequestGroupActionsDropdown'
 import DebouncingInput from './base/DebouncingInput'
 import MethodTag from './MethodTag'
+import * as db from '../database'
 
 class Sidebar extends Component {
   onFilterChange (value) {
@@ -28,10 +29,12 @@ class Sidebar extends Component {
           return true;
         }
 
-        const toMatch = `${r.method} ::: ${r.name}`.toLowerCase();
+        const requestGroupName = requestGroup ? requestGroup.name : '';
+        const toMatch = `${requestGroupName}✌${r.method}✌${r.name}`.toLowerCase();
         const matchTokens = activeFilter.toLowerCase().split(' ');
         for (let i = 0; i < matchTokens.length; i++) {
-          if (toMatch.indexOf(matchTokens[i]) === -1) {
+          let token = `${matchTokens[i]}`;
+          if (toMatch.indexOf(token) === -1) {
             return false;
           }
         }
@@ -56,7 +59,7 @@ class Sidebar extends Component {
     const isActive = activeRequest && filteredRequests.find(r => r._id == activeRequest._id);
 
     let folderIconClass = 'fa-folder';
-    let expanded = !requestGroup.collapsed || activeFilter;
+    let expanded = !requestGroup.collapsed;
     folderIconClass += !expanded ? '' : '-open';
     folderIconClass += isActive ? '' : '-o';
 
@@ -136,13 +139,15 @@ class Sidebar extends Component {
             {this.renderRequestGroupRow(null)}
             {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
           </ul>
-          <div className="form-control form-control--underlined">
-            <DebouncingInput
-              type="text"
-              placeholder="Filter Requests"
-              debounceMillis={300}
-              value={activeFilter}
-              onChange={this.onFilterChange.bind(this)}/>
+          <div className="grid grid--center">
+            <div className="grid__cell form-control form-control--underlined">
+              <DebouncingInput
+                type="text"
+                placeholder="Filter Items"
+                debounceMillis={300}
+                value={activeFilter}
+                onChange={this.onFilterChange.bind(this)}/>
+            </div>
           </div>
         </div>
       </section>
