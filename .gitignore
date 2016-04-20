@@ -1,5 +1,6 @@
 node_modules
 .idea
-dist
+dist/*
+builds/*
 npm-debug.log
 *.db*

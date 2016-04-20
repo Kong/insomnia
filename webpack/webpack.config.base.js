@@ -59,14 +59,10 @@ export default {
     extensions: ['', '.js', '.json', '.jsx'],
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
-  plugins: [
-    new webpack.ExternalsPlugin('commonjs', [
-      'request',
-      'nunjucks',
-      'pouchdb',
-      'pouchdb-find'
-    ])
+  externals: [
+    'request'
   ],
+  plugins: [],
   target: 'electron-renderer'
 };
 

@@ -1,6 +1,7 @@
+'use strict';
 
 // Don't npm install this (it breaks). Rely on the global one.
-import electron from 'electron';
+const electron = require('electron');
 
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
@@ -26,7 +27,7 @@ app.on('ready', () => {
   });
 
   // and load the app.html of the app.
-  mainWindow.loadURL(`file://${__dirname}/app/app.html`);
+  mainWindow.loadURL(`file://${__dirname}/app.html`);
 
   // Open the DevTools.
   // if (IS_DEV) {

@@ -2,8 +2,17 @@
 #? Package the app
 
 rm -r dist/*
-webpack --config webpack/webpack.config.production.js
-# cp -r node_modules electron.js package.json dist/
-cp electron.js package.json dist/
-cd dist
-NODE_ENV=production npm install
+NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config ./webpack/webpack.config.production.js
+
+cp app/package.json app/app.js dist/
+cp -r app/node_modules dist/
+# cd dist/; NODE_ENV=production npm install; cd ..
+
+node -r babel-register node_modules/electron-packager/cli.js \
+    dist \
+    Insomnia \
+    --platform=darwin \
+    --arch=x64 \
+    --out=builds \
+    --overwrite
+
