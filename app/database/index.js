@@ -1,14 +1,10 @@
 // import PouchDB from 'pouchdb';
 import * as methods from '../constants/global';
 import {generateId} from './util'
-import pouchDBFind from 'pouchdb-find'
 
-// Add plugins
 // We have to include the web version of PouchDB in app.html because
 // the NodeJS version defaults to LevelDB which is hard (impossible?)
 // to get working in Electron apps
-PouchDB.plugin(pouchDBFind);
-
 let db = new PouchDB('insomnia.db', {adapter: 'websql'});
 
 // For browser console debugging

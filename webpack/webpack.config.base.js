@@ -1,5 +1,5 @@
-import path from 'path';
-import webpack from 'webpack';
+import path from 'path'
+import pkg from '../app/package.json'
 
 export default {
   devtool: 'source-map',
@@ -60,7 +60,10 @@ export default {
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
   externals: [
-    'request'
+    ...Object.keys(pkg.dependencies),
+    {
+      
+    }
   ],
   plugins: [],
   target: 'electron-renderer'
