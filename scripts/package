@@ -23,6 +23,7 @@ node -r babel-register node_modules/electron-packager/cli.js \
     Insomnia \
     --platform=darwin \
     --arch=x64 \
+    --icon=assets/icon.icns \
     --out=builds \
     --overwrite
 
