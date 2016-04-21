@@ -21,6 +21,9 @@ echo "-- PACKAGING APP --"
 node -r babel-register node_modules/electron-packager/cli.js \
     dist \
     Insomnia \
+    --version-string.CompanyName="schier.co" \
+    --version-string.ProductName="Insomnia REST Client" \
+    --download.strictSSL=true \
     --platform=darwin \
     --arch=x64 \
     --icon=assets/icon.icns \
