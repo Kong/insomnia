@@ -15,6 +15,8 @@ function importRequestGroup (iRequestGroup, exportFormat) {
 
     // Sometimes (maybe all the time, I can't remember) requests will be nested
     if (iRequestGroup.hasOwnProperty('requests')) {
+      // Let's process them oldest to newest
+      iRequestGroup.requests.reverse();
       iRequestGroup.requests.map(
         r => importRequest(r, requestGroup._id, exportFormat)
       );
