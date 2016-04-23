@@ -1,7 +1,7 @@
 Insomnia REST API Client
 ========================
 
-The best REST client ever.
+An elegant and simple REST API client.
 
 ![Insomnia REST Client](http://i.imgur.com/kG0Tn6K.png)
 
@@ -13,12 +13,11 @@ Setup
 nvm install
 npm install
 
-cd app
-npm install
+cd app && npm install
 ```
 
-Run Electron Development
-------------------------
+Run Development
+---------------
 
 ```bash
 npm run dev
