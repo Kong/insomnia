@@ -21,7 +21,7 @@ app.on('ready', () => {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 600,
-    minHeight: 400,
+    minHeight: 500,
     minWidth: 500,
     acceptFirstMouse: true
     // titleBarStyle: IS_MAC ? 'hidden-inset' : 'default'

@@ -1,15 +1,18 @@
 import fs from 'fs'
+import electron from 'electron'
+
 import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
+
 import Dropdown from '../components/base/Dropdown'
+import DropdownDivider from '../components/base/DropdownDivider'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
 import * as db from '../database'
 import importData from '../lib/import'
 
 class WorkspaceDropdown extends Component {
   _importDialog () {
-    const dialog = require('electron').remote.dialog;
     const options = {
       properties: ['openFile'],
       filters: [{
@@ -17,7 +20,7 @@ class WorkspaceDropdown extends Component {
       }]
     };
 
-    dialog.showOpenDialog(options, paths => {
+    electron.remote.dialog.showOpenDialog(options, paths => {
       paths.map(path => {
         fs.readFile(path, 'utf8', (err, data) => {
           err || importData(data);
@@ -43,19 +46,22 @@ class WorkspaceDropdown extends Component {
           </div>
         </button>
         <ul>
+          
+          <DropdownDivider name="Current Workspace" />
+          
           <li>
             <button onClick={e => db.requestCreate()}>
-              <i className="fa fa-plus-circle"></i> Add Request
+              <i className="fa fa-plus-circle"></i> New Request
             </button>
           </li>
           <li>
             <button onClick={e => db.requestGroupCreate()}>
-              <i className="fa fa-folder"></i> Add Request Group
+              <i className="fa fa-folder"></i> New Request Group
             </button>
           </li>
           <li>
             <button onClick={e => actions.showEnvironmentEditModal()}>
-              <i className="fa fa-code"></i> Environments
+              <i className="fa fa-code"></i> Manage Environments
             </button>
           </li>
           <li>
@@ -63,8 +69,34 @@ class WorkspaceDropdown extends Component {
               <i className="fa fa-share-square-o"></i> Import/Export
             </button>
           </li>
-          <li><button><i className="fa fa-empty"></i> Toggle Sidebar</button></li>
-          <li><button><i className="fa fa-empty"></i> Delete Workspace</button></li>
+          <li>
+            <button>
+              <i className="fa fa-empty"></i> Delete <strong>Sendwithus</strong>
+            </button>
+          </li>
+          
+          <DropdownDivider name="Workspaces" />
+
+          <li>
+            <button>
+              <i className="fa fa-random"></i> Switch to <strong>Sendwithus Track</strong>
+            </button>
+          </li>
+          <li>
+            <button>
+              <i className="fa fa-random"></i> Switch to <strong>Default</strong>
+            </button>
+          </li>
+          <li>
+            <button>
+              <i className="fa fa-blank"></i> Create Workspace
+            </button>
+          </li>
+
+          <DropdownDivider name="Insomnia" />
+
+          <li><button><i className="fa fa-cog"></i> Settings</button></li>
+          <li><button><i className="fa fa-blank"></i> Open New Window</button></li>
         </ul>
       </Dropdown>
     )

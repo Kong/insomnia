@@ -6,6 +6,10 @@
   width: $sidebar-width;
   flex-shrink: 0;
 
+  .header .dropdown ul {
+    right: -40%;
+  }
+
   .sidebar__scroll {
     overflow-y: auto;
     height: 100%;

@@ -19,6 +19,7 @@
     margin-bottom: 3px;
     border-radius: $radius-md;
     background: $bg-super-light;
+    padding: $padding-xs;
     overflow: hidden;
 
     li {
@@ -28,7 +29,7 @@
         padding: $padding-sm $padding-md $padding-sm $padding-sm;
         width: 100%;
         display: block;
-        color: $font-light-bg !important;
+        color: $font-super-light-bg;
 
         &:hover {
           background: $hl-sm;
@@ -44,6 +45,26 @@
           text-align: center;
         }
       }
+    }
+  }
+
+  li.dropdown__divider {
+    border-bottom: 1px solid $hl-lg;
+    overflow: visible !important;
+    margin: $padding-md $padding-md $padding-md $padding-sm;
+    height: 0;
+    padding: 0;
+
+    .dropdown__divider__label {
+      position: relative;
+      top: -0.85rem;  // HACK: Fine adjustment
+      color: $hl-xxl;
+      padding-right: 1em;
+      background: #fff;
+      font-size: $font-size-xs;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+      text-transform: uppercase;
     }
   }
 
