@@ -2,12 +2,13 @@ import React from 'react'
 import {render} from 'react-dom'
 import {Provider} from 'react-redux'
 import {bindActionCreators} from 'redux'
-import configureStore from './stores/configureStore'
+
+import createStore from './redux/create'
 import App from './containers/App'
 
-import * as RequestGroupActions from './modules/requestGroups'
-import * as RequestActions from './modules/requests'
-import * as ResponseActions from './modules/responses'
+import * as RequestGroupActions from './redux/modules/requestGroups'
+import * as RequestActions from './redux/modules/requests'
+import * as ResponseActions from './redux/modules/responses'
 import * as db from './database'
 
 // Global CSS
@@ -15,7 +16,7 @@ import './css/index.scss'
 import './css/lib/chrome/platform_app.css'
 import './css/lib/fontawesome/css/font-awesome.css'
 
-const store = configureStore();
+const store = createStore();
 
 // Dispatch the initial load of data
 console.log('-- Init Insomnia --');

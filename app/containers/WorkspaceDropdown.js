@@ -2,10 +2,10 @@ import fs from 'fs'
 import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
-import Dropdown from '../base/Dropdown'
-import * as RequestGroupActions from '../../modules/requestGroups'
-import * as db from '../../database'
-import importData from '../../lib/import'
+import Dropdown from '../components/base/Dropdown'
+import * as RequestGroupActions from '../redux/modules/requestGroups'
+import * as db from '../database'
+import importData from '../lib/import'
 
 class WorkspaceDropdown extends Component {
   _importDialog () {

@@ -1,11 +1,11 @@
 import React, {Component, PropTypes} from 'react'
 
-import Modal from '../base/Modal'
-import ModalBody from '../base/ModalBody'
-import ModalHeader from '../base/ModalHeader'
-import ModalFooter from '../base/ModalFooter'
-import KeyValueEditor from '../base/KeyValueEditor'
-import {MODAL_ENVIRONMENT_EDITOR} from '../../lib/constants'
+import Modal from './base/Modal'
+import ModalBody from './base/ModalBody'
+import ModalHeader from './base/ModalHeader'
+import ModalFooter from './base/ModalFooter'
+import KeyValueEditor from './base/KeyValueEditor'
+import {MODAL_ENVIRONMENT_EDITOR} from '../lib/constants'
 
 class EnvironmentEditModal extends Component {
   constructor (props) {

@@ -1,9 +1,9 @@
 import {combineReducers} from 'redux'
 
-import makeRequest from '../lib/request'
-import {loadStart, loadStop} from '../modules/global'
-import {show} from '../modules/modals'
-import {MODAL_REQUEST_RENAME} from '../lib/constants'
+import makeRequest from '../../lib/request'
+import {loadStart, loadStop} from './global'
+import {show} from './modals'
+import {MODAL_REQUEST_RENAME} from '../../lib/constants'
 
 export const REQUEST_UPDATE = 'requests/update';
 export const REQUEST_DELETE = 'requests/delete';

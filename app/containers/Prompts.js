@@ -2,13 +2,13 @@ import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 
-import * as ModalActions from '../../modules/modals'
-import * as RequestGroupActions from '../../modules/requestGroups'
-import * as RequestActions from '../../modules/requests'
-import PromptModal from '../base/PromptModal'
+import * as ModalActions from '../redux/modules/modals'
+import * as RequestGroupActions from '../redux/modules/requestGroups'
+import * as RequestActions from '../redux/modules/requests'
+import PromptModal from '../components/base/PromptModal'
 
-import * as db from '../../database'
-import {MODAL_REQUEST_RENAME, MODAL_REQUEST_GROUP_RENAME} from '../../lib/constants';
+import * as db from '../database'
+import {MODAL_REQUEST_RENAME, MODAL_REQUEST_GROUP_RENAME} from '../lib/constants';
 
 class Prompts extends Component {
   constructor (props) {
