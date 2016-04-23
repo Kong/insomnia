@@ -32,7 +32,7 @@ node -r babel-register node_modules/electron-packager/cli.js \
     --version-string.InternalName="insomnia" \
     --download.strictSSL=true \
     --icon=assets/icon \
-    --out=builds \
+    --out=build \
     --overwrite
 
 echo "-- PACKAGING COMPLETE --"

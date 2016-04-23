@@ -3,7 +3,7 @@
   "productName": "Insomnia REST Client",
   "description": "The best REST API Client",
   "homepage": "http://insomnia.rest",
-  "licence": "MIT",
+  "licence": "GPL-3.0",
   "version": "3.0.0",
   "main": "app.js",
   "dependencies": {

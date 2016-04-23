@@ -1,6 +1,23 @@
 node_modules
 .idea
 dist/*
-builds/*
-npm-debug.log
+build/*
+
+# PouchDB stuff
 *.db*
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
