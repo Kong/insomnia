@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 import Dropdown from '../base/Dropdown'
-import * as RequestActions from '../../actions/requests'
+import * as RequestActions from '../../modules/requests'
 import * as db from '../../database/index'; 
 
 class RequestActionsDropdown extends Component {

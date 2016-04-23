@@ -1,5 +1,5 @@
 import {Validator} from 'jsonschema';
-import {METHODS} from "../constants/global";
+import {METHODS} from "../lib/constants";
 
 const validator = new Validator();
 const paramSchema = {

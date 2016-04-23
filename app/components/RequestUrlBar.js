@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react'
 import DebouncingInput from './base/DebouncingInput';
 import Dropdown from './base/Dropdown';
-import {METHODS} from '../constants/global';
+import {METHODS} from '../lib/constants';
 
 class UrlInput extends Component {
   render () {

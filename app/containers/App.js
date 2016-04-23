@@ -15,10 +15,11 @@ import TimeTag from '../components/TimeTag'
 import Sidebar from '../components/Sidebar'
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal'
 
-import * as GlobalActions from '../actions/global'
-import * as RequestGroupActions from '../actions/requestGroups'
-import * as RequestActions from '../actions/requests'
-import * as ModalActions from '../actions/modals'
+import * as GlobalActions from '../modules/global'
+import * as RequestGroupActions from '../modules/requestGroups'
+import * as RequestActions from '../modules/requests'
+import * as ModalActions from '../modules/modals'
+import * as TabActions from '../modules/tabs'
 
 import * as db from '../database'
 
@@ -56,7 +57,7 @@ class App extends Component {
             />
           </div>
           <Tabs className="grid__cell grid--v section__body"
-                onSelect={i => actions.global.selectTab('request', i)}
+                onSelect={i => actions.tabs.select('request', i)}
                 selectedIndex={tabs.request || 0}>
             <TabList className="grid grid--start">
               <Tab><button>Body</button></Tab>
@@ -143,7 +144,7 @@ class App extends Component {
             )}
           </header>
           <Tabs className="grid__cell grid--v section__body"
-                onSelect={i => actions.global.selectTab('response', i)}
+                onSelect={i => actions.tabs.select('response', i)}
                 selectedIndex={tabs.response || 0}>
             <TabList className="grid grid--start">
               <Tab><button>Preview</button></Tab>
@@ -247,8 +248,8 @@ App.propTypes = {
     modals: PropTypes.shape({
       hide: PropTypes.func.isRequired
     }),
-    global: PropTypes.shape({
-      selectTab: PropTypes.func.isRequired
+    tabs: PropTypes.shape({
+      select: PropTypes.func.isRequired
     })
   }).isRequired,
   requestGroups: PropTypes.shape({
@@ -278,6 +279,7 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
+      tabs: bindActionCreators(TabActions, dispatch),
       modals: bindActionCreators(ModalActions, dispatch),
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)

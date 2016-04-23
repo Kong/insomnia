@@ -2,19 +2,19 @@ import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 
-import * as ModalActions from '../../actions/modals'
-import * as RequestGroupActions from '../../actions/requestGroups'
-import * as RequestActions from '../../actions/requests'
-import * as modalIds from '../../constants/modals'
+import * as ModalActions from '../../modules/modals'
+import * as RequestGroupActions from '../../modules/requestGroups'
+import * as RequestActions from '../../modules/requests'
 import PromptModal from '../base/PromptModal'
 
 import * as db from '../../database'
+import {MODAL_REQUEST_RENAME, MODAL_REQUEST_GROUP_RENAME} from '../../lib/constants';
 
 class Prompts extends Component {
   constructor (props) {
     super(props);
     this._prompts = {};
-    this._prompts[modalIds.REQUEST_RENAME] = {
+    this._prompts[MODAL_REQUEST_RENAME] = {
       header: 'Rename Request',
       submit: 'Rename',
       onSubmit: (modal, name) => {
@@ -22,7 +22,7 @@ class Prompts extends Component {
       }
     };
 
-    this._prompts[modalIds.REQUEST_GROUP_RENAME] = {
+    this._prompts[MODAL_REQUEST_GROUP_RENAME] = {
       header: 'Rename Request Group',
       submit: 'Rename',
       onSubmit: (modal, name) => {

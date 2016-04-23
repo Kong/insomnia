@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react'
-import * as constants from '../constants/global';
+import * as constants from '../lib/constants';
 
 class MethodTag extends Component {
   render () {

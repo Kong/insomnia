@@ -1,6 +1,5 @@
 import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
-import * as ModalActions from '../../actions/modals'
 
 class Modal extends Component {
   _handleClick (e) {

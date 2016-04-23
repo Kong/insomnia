@@ -1,5 +1,5 @@
 // import PouchDB from 'pouchdb';
-import * as methods from '../constants/global';
+import * as methods from '../lib/constants';
 import {generateId} from './util'
 
 // We have to include the web version of PouchDB in app.html because
@@ -114,9 +114,9 @@ export function requestGroupCreate (patch = {}) {
 }
 
 
-// ~~~~~~~~~//
+// ~~~~~~~~ //
 // RESPONSE //
-// ~~~~~~~~~//
+// ~~~~~~~~ //
 
 export function responseCreate (patch = {}) {
   return modelCreate('Response', 'rsp', {
@@ -147,4 +147,16 @@ export function responseGetForRequest (request) {
     sort: [{requestId: 'desc'}],
     limit: 1
   })
+}
+
+
+// ~~~~~~~~~ //
+// WORKSPACE //
+// ~~~~~~~~~ //
+
+export function workspaceCreate (patch = {}) {
+  return modelCreate('Workspace', 'wsp', {
+    name: 'New Request Group',
+    environments: []
+  }, patch);
 }

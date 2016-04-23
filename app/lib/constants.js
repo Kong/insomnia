@@ -1,7 +1,3 @@
-// Global
-export const LOCALSTORAGE_DEBOUNCE_MILLIS = 500;
-export const LOCALSTORAGE_KEY = 'insomnia';
-
 // HTTP Methods
 export const METHOD_GET = 'GET';
 export const METHOD_PUT = 'PUT';
@@ -21,3 +17,6 @@ export const METHODS = [
   METHOD_HEAD
 ];
 
+export const MODAL_REQUEST_RENAME = 'request.update.name';
+export const MODAL_REQUEST_GROUP_RENAME = 'requestgroup.update.name';
+export const MODAL_ENVIRONMENT_EDITOR = 'environment.edit';

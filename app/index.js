@@ -5,9 +5,9 @@ import {bindActionCreators} from 'redux'
 import configureStore from './stores/configureStore'
 import App from './containers/App'
 
-import * as RequestGroupActions from './actions/requestGroups'
-import * as RequestActions from './actions/requests'
-import * as ResponseActions from './actions/responses'
+import * as RequestGroupActions from './modules/requestGroups'
+import * as RequestActions from './modules/requests'
+import * as ResponseActions from './modules/responses'
 import * as db from './database'
 
 // Global CSS
