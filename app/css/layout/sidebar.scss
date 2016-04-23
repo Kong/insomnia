@@ -17,6 +17,7 @@
     box-sizing: border-box;
     color: inherit;
     height: $line-height-xs;
+    display: flex;
 
     &.sidebar__item__row--heading {
       height: $line-height-sm;

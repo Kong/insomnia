@@ -1,7 +1,7 @@
 @import '../constants/colors';
 @import '../constants/dimensions';
 
-$border-color: $hl-sm;
+$border-color: $hl-md;
 
 .ReactTabs {
   .ReactTabs__TabList {
@@ -36,7 +36,7 @@ $border-color: $hl-sm;
     }
 
     button {
-      color: $hl;
+      color: $hl-xxl;
       position: relative;
       height: 100%;
       width: 100%;
