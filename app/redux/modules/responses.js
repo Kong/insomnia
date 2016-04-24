@@ -11,7 +11,7 @@ export default function (state = initialState, action) {
 
     case RESPONSE_UPDATE:
       return Object.assign({}, state, {
-        [action.response.requestId]: action.response
+        [action.response.parentId]: action.response
       });
 
     default:

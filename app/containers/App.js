@@ -192,16 +192,17 @@ class App extends Component {
   }
 
   render () {
-    const {actions, requests, responses, requestGroups, tabs, modals} = this.props;
-    const activeRequest = requests.all.find(r => r._id === requests.active);
+    const {actions, requests, responses, requestGroups, tabs, modals, workspaces} = this.props;
+    const activeRequest = requests.active;
     const activeResponse = activeRequest ? responses[activeRequest._id] : undefined;
 
     return (
       <div className="grid bg-super-dark tall">
         <Sidebar
-          activateRequest={actions.requests.activate}
+          workspace={workspaces.active}
+          activateRequest={db.requestActivate}
           changeFilter={actions.requests.changeFilter}
-          addRequestToRequestGroup={requestGroup => db.requestCreate({parent: requestGroup._id})}
+          addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
           toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
           activeRequest={activeRequest}
           activeFilter={requests.filter}
@@ -234,7 +235,6 @@ class App extends Component {
 App.propTypes = {
   actions: PropTypes.shape({
     requests: PropTypes.shape({
-      activate: PropTypes.func.isRequired,
       update: PropTypes.func.isRequired,
       remove: PropTypes.func.isRequired,
       send: PropTypes.func.isRequired,
@@ -257,7 +257,10 @@ App.propTypes = {
   }).isRequired,
   requests: PropTypes.shape({
     all: PropTypes.array.isRequired,
-    active: PropTypes.string // "required" but can be null
+    active: PropTypes.object
+  }).isRequired,
+  workspaces: PropTypes.shape({
+    active: PropTypes.object
   }).isRequired,
   responses: PropTypes.object.isRequired,
   tabs: PropTypes.object.isRequired,
@@ -267,6 +270,7 @@ App.propTypes = {
 function mapStateToProps (state) {
   return {
     actions: state.actions,
+    workspaces: state.workspaces,
     requests: state.requests,
     requestGroups: state.requestGroups,
     responses: state.responses,

@@ -6,9 +6,11 @@ const FORMAT_MAP = {
   'json': 'application/json'
 };
 
-function importRequestGroup (iRequestGroup, exportFormat) {
+function importRequestGroup (iRequestGroup, parentId, exportFormat) {
   if (exportFormat === 1) {
     const requestGroup = db.requestGroupCreate({
+      parentId,
+      collapsed: true,
       name: iRequestGroup.name,
       environment: (iRequestGroup.environments || {}).base || {}
     });
@@ -24,7 +26,7 @@ function importRequestGroup (iRequestGroup, exportFormat) {
   }
 }
 
-function importRequest (iRequest, parent, exportFormat) {
+function importRequest (iRequest, parentId, exportFormat) {
   if (exportFormat === 1) {
     let auth = {};
     if (iRequest.authentication.username) {
@@ -35,6 +37,8 @@ function importRequest (iRequest, parent, exportFormat) {
     }
     
     db.requestCreate({
+      parentId,
+      activated: 0, // Don't activate imported requests
       name: iRequest.name,
       url: iRequest.url,
       method: iRequest.method,
@@ -42,13 +46,12 @@ function importRequest (iRequest, parent, exportFormat) {
       headers: iRequest.headers || [],
       params: iRequest.params || [],
       contentType: FORMAT_MAP[iRequest.__insomnia.format] || 'text/plain',
-      authentication: auth,
-      parent: parent
+      authentication: auth
     });
   }
 }
 
-export default function (txt, callback) {
+export default function (workspace, txt, callback) {
   let data;
   
   try {
@@ -62,11 +65,11 @@ export default function (txt, callback) {
     return callback(new Error('Invalid Insomnia export'));
   }
   
-  data.items.filter(i => i._type === TYPE_REQUEST_GROUP).map(
-    rg => importRequestGroup(rg, data.__export_format)
+  data.items.reverse().filter(i => i._type === TYPE_REQUEST_GROUP).map(
+    rg => importRequestGroup(rg, workspace._id, data.__export_format)
   );
 
-  data.items.filter(i => i._type === TYPE_REQUEST).map(
-    r => importRequest(r, data.__export_format)
+  data.items.reverse().filter(i => i._type === TYPE_REQUEST).map(
+    r => importRequest(r, workspace._id, data.__export_format)
   );
 }

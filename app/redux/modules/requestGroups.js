@@ -1,11 +1,12 @@
 import {combineReducers} from 'redux'
 
 import {show} from './modals'
-import {MODAL_ENVIRONMENT_EDITOR, MODAL_REQUEST_GROUP_RENAME} from '../../lib/constants';
+import {MODAL_ENVIRONMENT_EDITOR, MODAL_REQUEST_GROUP_RENAME} from '../../lib/constants'
+import {removeByParent} from './requests'
 
-export const REQUEST_GROUP_UPDATE = 'requestgroups/update';
-export const REQUEST_GROUP_DELETE = 'requestgroups/delete';
-export const REQUEST_GROUP_TOGGLE = 'requestgroups/toggle';
+const REQUEST_GROUP_UPDATE = 'request-groups/update';
+const REQUEST_GROUP_DELETE = 'request-groups/delete';
+const REQUEST_GROUP_TOGGLE = 'request-groups/toggle';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -15,7 +16,7 @@ function allReducer (state = [], action) {
   switch (action.type) {
 
     case REQUEST_GROUP_UPDATE:
-      const i = state.findIndex(r => r._id === action.requestGroup._id);
+      const i = state.findIndex(rg => rg._id === action.requestGroup._id);
 
       if (i === -1) {
         return [action.requestGroup, ...state];

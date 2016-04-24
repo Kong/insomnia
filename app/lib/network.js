@@ -2,11 +2,11 @@ import networkRequest from 'request'
 import render from './render'
 import * as db from '../database'
 
-function makeRequest (unrenderedRequest, callback, context = {}) {
+function actuallySend (unrenderedRequest, callback, context = {}) {
   // SNEAKY HACK: Render nested object by converting it to JSON then rendering
   const template = JSON.stringify(unrenderedRequest);
   const request = JSON.parse(render(template, context));
-  
+
   const config = {
     method: request.method,
     body: request.body,
@@ -35,6 +35,7 @@ function makeRequest (unrenderedRequest, callback, context = {}) {
     }
   }
 
+  // TODO: this needs to account for existing URL params
   config.url += request.params.map((p, i) => {
     const name = encodeURIComponent(p.name);
     const value = encodeURIComponent(p.value);
@@ -47,7 +48,7 @@ function makeRequest (unrenderedRequest, callback, context = {}) {
       console.error('Request Failed', err, response);
     } else {
       db.responseCreate({
-        requestId: request._id,
+        parentId: request._id,
         statusCode: response.statusCode,
         statusMessage: response.statusMessage,
         contentType: response.headers['content-type'],
@@ -65,12 +66,12 @@ function makeRequest (unrenderedRequest, callback, context = {}) {
   });
 }
 
-export default function (request, callback) {
-  if (request.parent) {
-    db.get(request.parent).then(
-      requestGroup => makeRequest(request, callback, requestGroup.environment)
+export function send (request, callback) {
+  if (request.parentId) {
+    db.get(request.parentId).then(
+      requestGroup => actuallySend(request, callback, requestGroup.environment)
     );
   } else {
-    makeRequest(request, callback)
+    actuallySend(request, callback)
   }
 }

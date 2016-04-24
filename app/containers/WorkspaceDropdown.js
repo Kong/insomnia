@@ -8,6 +8,7 @@ import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown'
 import DropdownDivider from '../components/base/DropdownDivider'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
+import * as WorkspaceActions from '../redux/modules/workspaces'
 import * as db from '../database'
 import importData from '../lib/import'
 
@@ -23,14 +24,16 @@ class WorkspaceDropdown extends Component {
     electron.remote.dialog.showOpenDialog(options, paths => {
       paths.map(path => {
         fs.readFile(path, 'utf8', (err, data) => {
-          err || importData(data);
+          err || importData(this.props.workspaces.active, data);
         })
       })
     });
   }
 
   render () {
-    const {actions, loading, ...other} = this.props;
+    const {actions, loading, workspaces, ...other} = this.props;
+
+    const workspace = workspaces.active;
 
     return (
       <Dropdown right={true} {...other} className="block">
@@ -46,21 +49,21 @@ class WorkspaceDropdown extends Component {
           </div>
         </button>
         <ul>
-          
-          <DropdownDivider name="Current Workspace" />
-          
+
+          <DropdownDivider name="Current Workspace"/>
+
           <li>
-            <button onClick={e => db.requestCreate()}>
+            <button onClick={e => db.requestCreate({parentId: workspace._id})}>
               <i className="fa fa-plus-circle"></i> New Request
             </button>
           </li>
           <li>
-            <button onClick={e => db.requestGroupCreate()}>
+            <button onClick={e => db.requestGroupCreate({parentId: workspace._id})}>
               <i className="fa fa-folder"></i> New Request Group
             </button>
           </li>
           <li>
-            <button onClick={e => actions.showEnvironmentEditModal()}>
+            <button onClick={e => actions.requestGroups.showEnvironmentEditModal()}>
               <i className="fa fa-code"></i> Manage Environments
             </button>
           </li>
@@ -70,30 +73,29 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button>
-              <i className="fa fa-empty"></i> Delete <strong>Sendwithus</strong>
+            <button onClick={e => db.remove(workspace)}>
+              <i className="fa fa-empty"></i> Delete <strong>{workspace.name}</strong>
             </button>
           </li>
-          
-          <DropdownDivider name="Workspaces" />
 
+          <DropdownDivider name="Workspaces"/>
+
+          {workspaces.all.map(w => {
+            return w._id === workspaces.active._id ? null : (
+              <li key={w._id}>
+                <button onClick={() => actions.workspaces.activate(w)}>
+                  <i className="fa fa-random"></i> Switch to <strong>{w.name}</strong>
+                </button>
+              </li>
+            )
+          })}
           <li>
-            <button>
-              <i className="fa fa-random"></i> Switch to <strong>Sendwithus Track</strong>
-            </button>
-          </li>
-          <li>
-            <button>
-              <i className="fa fa-random"></i> Switch to <strong>Default</strong>
-            </button>
-          </li>
-          <li>
-            <button>
+            <button onClick={e => db.workspaceCreate()}>
               <i className="fa fa-blank"></i> Create Workspace
             </button>
           </li>
 
-          <DropdownDivider name="Insomnia" />
+          <DropdownDivider name="Insomnia"/>
 
           <li><button><i className="fa fa-cog"></i> Settings</button></li>
           <li><button><i className="fa fa-blank"></i> Open New Window</button></li>
@@ -105,13 +107,23 @@ class WorkspaceDropdown extends Component {
 
 WorkspaceDropdown.propTypes = {
   loading: PropTypes.bool.isRequired,
+  workspaces: PropTypes.shape({
+    all: PropTypes.array.isRequired,
+    active: PropTypes.object.isRequired
+  }),
   actions: PropTypes.shape({
-    showEnvironmentEditModal: PropTypes.func.isRequired
+    requestGroups: PropTypes.shape({
+      showEnvironmentEditModal: PropTypes.func.isRequired
+    }),
+    workspaces: PropTypes.shape({
+      activate: PropTypes.func.isRequired
+    })
   })
 };
 
 function mapStateToProps (state) {
   return {
+    workspaces: state.workspaces,
     actions: state.actions,
     loading: state.global.loading
   };
@@ -119,7 +131,10 @@ function mapStateToProps (state) {
 
 function mapDispatchToProps (dispatch) {
   return {
-    actions: bindActionCreators(RequestGroupActions, dispatch)
+    actions: {
+      requestGroups: bindActionCreators(RequestGroupActions, dispatch),
+      workspaces: bindActionCreators(WorkspaceActions, dispatch)
+    }
   }
 }
 

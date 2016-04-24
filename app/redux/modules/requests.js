@@ -1,14 +1,14 @@
 import {combineReducers} from 'redux'
 
-import makeRequest from '../../lib/request'
+import * as network from '../../lib/network'
 import {loadStart, loadStop} from './global'
 import {show} from './modals'
 import {MODAL_REQUEST_RENAME} from '../../lib/constants'
 
-export const REQUEST_UPDATE = 'requests/update';
-export const REQUEST_DELETE = 'requests/delete';
-export const REQUEST_ACTIVATE = 'requests/activate';
-export const REQUEST_CHANGE_FILTER = 'requests/filter';
+const REQUEST_UPDATE = 'requests/update';
+const REQUEST_DELETE = 'requests/delete';
+const REQUEST_DELETE_BY_PARENT = 'requests/delete-by-parent';
+const REQUEST_CHANGE_FILTER = 'requests/filter';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -19,6 +19,9 @@ function allReducer (state = [], action) {
 
     case REQUEST_DELETE:
       return state.filter(r => r._id !== action.request._id);
+
+    case REQUEST_DELETE_BY_PARENT:
+      return state.filter(r => r.parentId !== action.parentId);
 
     case REQUEST_UPDATE:
       const i = state.findIndex(r => r._id === action.request._id);
@@ -34,25 +37,32 @@ function allReducer (state = [], action) {
   }
 }
 
-function activeReducer (state = null, action) {
-  switch (action.type) {
-
-    case REQUEST_ACTIVATE:
-      return action.request._id;
-
-    case REQUEST_DELETE:
-      return state === action._id ? null : state;
-
-    default:
-      return state;
-
-  }
-}
-
 function filterReducer (state = '', action) {
   switch (action.type) {
     case REQUEST_CHANGE_FILTER:
       return action.filter;
+    default:
+      return state;
+  }
+}
+
+function activeReducer (state = null, action) {
+  switch (action.type) {
+    case REQUEST_UPDATE:
+      if (state && state._id === action.request._id) {
+        // Update the currently active request
+        return action.request;
+      } else if (state) {
+        // Activate a new request
+        return action.request.activated > state.activated ? action.request : state;
+      } else if (action.request.activated > 0) {
+        // Activate request if there isn't one
+        return action.request;
+      } else {
+        return state;
+      }
+    case REQUEST_DELETE:
+      return state && state._id === action.request._id ? null : state;
     default:
       return state;
   }
@@ -73,12 +83,12 @@ export function remove (request) {
   return {type: REQUEST_DELETE, request};
 }
 
-export function update (request) {
-  return {type: REQUEST_UPDATE, request};
+export function removeByParent (parentId) {
+  return {type: REQUEST_DELETE_BY_PARENT, parentId};
 }
 
-export function activate (request) {
-  return {type: REQUEST_ACTIVATE, request};
+export function update (request) {
+  return {type: REQUEST_UPDATE, request};
 }
 
 export function changeFilter (filter) {
@@ -89,7 +99,7 @@ export function send (request) {
   return dispatch => {
     dispatch(loadStart());
 
-    makeRequest(request, () => {
+    network.send(request, () => {
       dispatch(loadStop());
     });
   }

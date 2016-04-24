@@ -10,6 +10,7 @@ class RequestBodyEditor extends Component {
       <Editor
         value={request.body}
         className={className}
+        debounceMillis={400}
         onChange={onChange}
         uniquenessKey={request._id}
         options={{

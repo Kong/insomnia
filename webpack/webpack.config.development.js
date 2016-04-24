@@ -1,4 +1,3 @@
-import path from 'path'
 import webpack from 'webpack'
 import baseConfig from './webpack.config.base'
 

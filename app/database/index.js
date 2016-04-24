@@ -21,8 +21,19 @@ export let changes = db.changes({
   console.log('error', err);
 });
 
-export function allDocs () {
-  return db.allDocs({include_docs: true});
+/**
+ * Initialize the database. This should be called once on app start.
+ * @returns {Promise}
+ */
+export function initDB () {
+  console.log('-- Initializing Database --');
+  return Promise.all([
+    db.createIndex({index: {fields: ['parentId']}}),
+    db.createIndex({index: {fields: ['type']}}),
+    db.createIndex({index: {fields: ['activated', 'type']}})
+  ]).catch(err => {
+    console.error('Failed to PouchDB Indexes', err);
+  });
 }
 
 export function get (id) {
@@ -40,6 +51,7 @@ export function update (doc, patch = {}) {
   return db.put(updatedDoc).catch(e => {
     if (e.status === 409) {
       console.warn('Retrying document update for', updatedDoc);
+
       get(doc._id).then(dbDoc => {
         update(dbDoc, patch);
       });
@@ -47,8 +59,20 @@ export function update (doc, patch = {}) {
   });
 }
 
+export function getChildren (doc) {
+  const parentId = doc._id;
+  return db.find({selector: {parentId}});
+}
+
+export function removeChildren (doc) {
+  return getChildren(doc).then(res => res.docs.map(remove));
+}
+
 export function remove (doc) {
-  return update(doc, {_deleted: true});
+  return Promise.all([
+    update(doc, {_deleted: true}),
+    removeChildren(doc)
+  ]);
 }
 
 // ~~~~~~~~~~~~~~~~~~~ //
@@ -56,7 +80,12 @@ export function remove (doc) {
 // ~~~~~~~~~~~~~~~~~~~ //
 
 function modelCreate (type, idPrefix, defaults, patch = {}) {
+  const baseDefaults = {
+    parentId: null
+  };
+
   const model = Object.assign(
+    baseDefaults,
     defaults,
     patch,
 
@@ -71,10 +100,8 @@ function modelCreate (type, idPrefix, defaults, patch = {}) {
   );
 
   update(model);
-
   return model;
 }
-
 
 // ~~~~~~~ //
 // REQUEST //
@@ -85,18 +112,22 @@ export function requestCreate (patch = {}) {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
+    activated: Date.now(),
     body: '',
     params: [],
     contentType: 'text/plain',
     headers: [],
-    authentication: {},
-    parent: null
+    authentication: {}
   }, patch);
 }
 
-export function requestCopy (originalRequest) {
-  const name = `${originalRequest.name} (Copy)`;
-  return requestCreate(Object.assign({}, originalRequest, {name}));
+export function requestCopy (request) {
+  const name = `${request.name} (Copy)`;
+  return requestCreate(Object.assign({}, request, {name}));
+}
+
+export function requestActivate (request) {
+  return update(request, {activated: Date.now()});
 }
 
 
@@ -108,11 +139,9 @@ export function requestGroupCreate (patch = {}) {
   return modelCreate('RequestGroup', 'grp', {
     collapsed: false,
     name: 'New Request Group',
-    environment: {},
-    parent: null
+    environment: {}
   }, patch);
 }
-
 
 // ~~~~~~~~ //
 // RESPONSE //
@@ -120,7 +149,6 @@ export function requestGroupCreate (patch = {}) {
 
 export function responseCreate (patch = {}) {
   return modelCreate('Response', 'rsp', {
-    requestId: null,
     statusCode: 0,
     statusMessage: '',
     contentType: 'text/plain',
@@ -131,20 +159,12 @@ export function responseCreate (patch = {}) {
   }, patch);
 }
 
-db.createIndex({
-  index: {fields: ['requestId']}
-}).catch(err => {
-  console.error('Failed to create index', err);
-}).then(() => {
-  console.log('-- Indexes Updated --');
-});
-
 export function responseGetForRequest (request) {
   return db.find({
     selector: {
-      requestId: request._id
+      parentId: request._id
     },
-    sort: [{requestId: 'desc'}],
+    sort: [{parentId: 'desc'}],
     limit: 1
   })
 }
@@ -156,7 +176,41 @@ export function responseGetForRequest (request) {
 
 export function workspaceCreate (patch = {}) {
   return modelCreate('Workspace', 'wsp', {
-    name: 'New Request Group',
+    name: 'New Workspace',
+    activated: Date.now(),
     environments: []
+  }, patch);
+}
+
+export function workspaceActivate (workspace) {
+  return update(workspace, {activated: Date.now()});
+}
+
+export function workspaceAll () {
+  return db.find({
+    selector: {type: 'Workspace'}
+  })
+}
+
+export function workspaceGetActive () {
+  return db.find({
+    selector: {
+      activated: {$gte: 0}, // HACK: because can't use $exists here?
+      type: {$eq: 'Workspace'}
+    },
+    sort: [{activated: 'desc'}],
+    limit: 1
+  })
+}
+
+
+// ~~~~~~~~ //
+// SETTINGS //
+// ~~~~~~~~ //
+
+export function settingsCreate (patch = {}) {
+  return modelCreate('Settings', 'set', {
+    editorLineWrapping: false,
+    editorLineNumbers: true
   }, patch);
 }

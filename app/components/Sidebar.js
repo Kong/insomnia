@@ -5,7 +5,6 @@ import RequestActionsDropdown from './../containers/RequestActionsDropdown'
 import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown'
 import DebouncingInput from './base/DebouncingInput'
 import MethodTag from './MethodTag'
-import * as db from '../database'
 
 class Sidebar extends Component {
   onFilterChange (value) {
@@ -18,7 +17,8 @@ class Sidebar extends Component {
       activeRequest,
       addRequestToRequestGroup,
       toggleRequestGroup,
-      requests
+      requests,
+      workspace
     } = this.props;
 
     let filteredRequests = requests.filter(
@@ -44,12 +44,12 @@ class Sidebar extends Component {
     );
 
     if (!requestGroup) {
-      filteredRequests = filteredRequests.filter(r => !r.parent);
+      filteredRequests = filteredRequests.filter(r => r.parentId === workspace._id);
       return filteredRequests.map(request => this.renderRequestRow(request));
     }
 
     // Grab all of the children for this request group
-    filteredRequests = filteredRequests.filter(r => r.parent === requestGroup._id);
+    filteredRequests = filteredRequests.filter(r => r.parentId === requestGroup._id);
 
     // Don't show folder if it was not in the filter
     if (activeFilter && !filteredRequests.length) {
@@ -126,7 +126,7 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {activeFilter, requestGroups} = this.props;
+    const {activeFilter, requestGroups, workspace} = this.props;
 
     return (
       <section className="sidebar bg-dark grid--v section section--bordered">
@@ -163,6 +163,7 @@ Sidebar.propTypes = {
   activeFilter: PropTypes.string,
   requests: PropTypes.array.isRequired,
   requestGroups: PropTypes.array.isRequired,
+  workspace: PropTypes.object.isRequired,
   activeRequest: PropTypes.object
 };
 
