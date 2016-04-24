@@ -126,8 +126,8 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {activeFilter, requestGroups, workspace} = this.props;
-
+    const {activeFilter, requestGroups} = this.props;
+    
     return (
       <section className="sidebar bg-dark grid--v section section--bordered">
         <header className="header bg-brand section__header">

@@ -6,6 +6,7 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 import Editor from '../components/base/Editor'
 import Prompts from './Prompts'
 import KeyValueEditor from '../components/base/KeyValueEditor'
+import Dropdown from '../components/base/Dropdown'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
@@ -60,13 +61,23 @@ class App extends Component {
                 onSelect={i => actions.tabs.select('request', i)}
                 selectedIndex={tabs.request || 0}>
             <TabList className="grid grid--start">
-              <Tab><button>Body</button></Tab>
+              <Tab className="no-wrap grid grid--center">
+                <button>JSON</button>
+                <Dropdown>
+                  <button>&nbsp;&nbsp;<i className="fa fa-caret-down"></i></button>
+                  <ul>
+                    <li><button><i className="fa fa-file-text"></i> Plain Text</button></li>
+                    <li><button><i className="fa fa-picture-o"></i> File Upload</button></li>
+                    <li><button><i className="fa fa-bars"></i> Form Data</button></li>
+                    <li><button><i className="fa fa-code"></i> HTML/XML</button></li>
+                  </ul>
+                </Dropdown>
+              </Tab>
               <Tab>
                 <button className="no-wrap">
                   Params {activeRequest.params.length ? `(${activeRequest.params.length})` : ''}
                 </button>
               </Tab>
-              <Tab><button>Auth</button></Tab>
               <Tab>
                 <button className="no-wrap">
                   Headers {activeRequest.headers.length ? `(${activeRequest.headers.length})` : ''}
@@ -92,23 +103,22 @@ class App extends Component {
             </TabPanel>
             <TabPanel className="grid__cell grid__cell--scroll--v">
               <div>
-                <RequestAuthEditor
-                  className="pad"
-                  request={activeRequest}
-                  onChange={authentication => {db.update(activeRequest, {authentication})}}
-                />
-              </div>
-            </TabPanel>
-            <TabPanel className="grid__cell grid__cell--scroll--v">
-              <div>
-                <KeyValueEditor
-                  className="pad"
-                  namePlaceholder="My-Header"
-                  valuePlaceholder="Value"
-                  uniquenessKey={activeRequest._id}
-                  pairs={activeRequest.headers}
-                  onChange={headers => {db.update(activeRequest, {headers})}}
-                />
+                <div className="pad">
+                  <label>Basic Authentication</label>
+                  <RequestAuthEditor
+                    request={activeRequest}
+                    onChange={authentication => {db.update(activeRequest, {authentication})}}
+                  />
+                  <br/>
+                  <label>Other Headers</label>
+                  <KeyValueEditor
+                    namePlaceholder="My-Header"
+                    valuePlaceholder="Value"
+                    uniquenessKey={activeRequest._id}
+                    pairs={activeRequest.headers}
+                    onChange={headers => {db.update(activeRequest, {headers})}}
+                  />
+                </div>
               </div>
             </TabPanel>
           </Tabs>
@@ -207,8 +217,8 @@ class App extends Component {
           toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
           activeRequest={activeRequest}
           activeFilter={requests.filter}
-          requestGroups={requestGroups.all}
-          requests={requests.all}/>
+          requestGroups={requestGroups.all.sort((a, b) => a._id > b._id ? -1 : 1)}
+          requests={requests.all.sort((a, b) => a._id > b._id ? -1 : 1)}/>
         <div className="grid wide grid--collapse">
           {this._renderRequestPanel(actions, activeRequest, tabs)}
           {this._renderResponsePanel(actions, activeResponse, tabs)}

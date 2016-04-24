@@ -10,11 +10,25 @@ let db = new PouchDB('insomnia.db', {adapter: 'websql'});
 // For browser console debugging
 global.db = db;
 
-export let changes = db.changes({
+let changeListeners = {};
+
+export function onChange (id, callback) {
+  console.log(`-- Added DB Listener ${id} -- `);
+  changeListeners[id] = callback;
+}
+
+export function offChange (id) {
+  console.log(`-- Removed DB Listener ${id} -- `);
+  delete changeListeners[id];
+}
+
+db.changes({
   since: 'now',
   live: true,
   include_docs: true,
   return_docs: false
+}).on('change', function (res) {
+  Object.keys(changeListeners).map(id => changeListeners[id](res))
 }).on('complete', function (info) {
   console.log('complete', info);
 }).on('error', function (err) {

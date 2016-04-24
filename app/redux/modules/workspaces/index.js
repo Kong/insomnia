@@ -8,9 +8,7 @@ import requestGroupsReducer from './requestGroups'
 
 const WORKSPACE_UPDATE = 'workspaces/update';
 const WORKSPACE_DELETE = 'workspaces/delete';
-
-// HACK: This one is used in the root reducer to reload everything
-export const WORKSPACE_ACTIVATE = 'workspaces/activate';
+const WORKSPACE_REPLACE = 'workspaces/replace';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -18,6 +16,9 @@ export const WORKSPACE_ACTIVATE = 'workspaces/activate';
 
 function allReducer (state = [], action) {
   switch (action.type) {
+    
+    case WORKSPACE_REPLACE:
+      return [...action.workspaces];
 
     case WORKSPACE_UPDATE:
       const i = state.findIndex(w => w._id === action.workspace._id);
@@ -25,12 +26,16 @@ function allReducer (state = [], action) {
       if (i === -1) {
         return [action.workspace, ...state];
       } else {
-        return [...state.slice(0, i), action.workspace, ...state.slice(i + 1)]
+        return [
+          ...state.slice(0, i),
+          action.workspace,
+          ...state.slice(i + 1)
+        ]
       }
 
     case WORKSPACE_DELETE:
       return state.filter(w => w._id !== action.workspace._id);
-   
+
     default:
       return state;
   }
@@ -38,6 +43,15 @@ function allReducer (state = [], action) {
 
 function activeReducer (state = null, action) {
   switch (action.type) {
+    
+    case WORKSPACE_REPLACE:
+      let newActive = action.workspaces.length ? action.workspaces[0] : null;
+      action.workspaces.map(w => {
+        if (w.activated > newActive.activated) {
+          newActive = w;
+        }
+      });
+      return newActive ? Object.assign({}, newActive) : null;
 
     case WORKSPACE_UPDATE:
       if (state && state._id === action.workspace._id) {
@@ -67,7 +81,7 @@ const workspaceReducer = combineReducers({
   all: allReducer,
   filter: filterReducer,
   active: activeReducer,
-  
+
   // Nested resources
   responses: responsesReducer,
   requests: requestsReducer,
@@ -105,6 +119,10 @@ export function remove (workspace) {
 
 export function update (workspace) {
   return {type: WORKSPACE_UPDATE, workspace};
+}
+
+export function replace (workspaces) {
+  return {type: WORKSPACE_REPLACE, workspaces};
 }
 
 export function activate (workspace) {

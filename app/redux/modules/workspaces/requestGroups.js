@@ -2,9 +2,9 @@ import {combineReducers} from 'redux'
 
 import {show} from './../modals'
 import {MODAL_ENVIRONMENT_EDITOR, MODAL_REQUEST_GROUP_RENAME} from '../../../lib/constants'
-import {removeByParent} from './requests'
 
 const REQUEST_GROUP_UPDATE = 'request-groups/update';
+const REQUEST_GROUP_REPLACE = 'request-groups/replace';
 const REQUEST_GROUP_DELETE = 'request-groups/delete';
 const REQUEST_GROUP_TOGGLE = 'request-groups/toggle';
 
@@ -23,6 +23,8 @@ function allReducer (state = [], action) {
       } else {
         return [...state.slice(0, i), action.requestGroup, ...state.slice(i + 1)]
       }
+    case REQUEST_GROUP_REPLACE:
+      return [...action.requestGroups];
 
     case REQUEST_GROUP_TOGGLE:
       return state.map(
@@ -48,6 +50,10 @@ export default combineReducers({
 
 export function update (requestGroup) {
   return {type: REQUEST_GROUP_UPDATE, requestGroup};
+}
+
+export function replace (requestGroups) {
+  return {type: REQUEST_GROUP_REPLACE, requestGroups};
 }
 
 export function remove (requestGroup) {

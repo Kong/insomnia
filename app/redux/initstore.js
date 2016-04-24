@@ -5,38 +5,46 @@ import * as ResponseActions from './modules/workspaces/responses'
 import * as WorkspaceActions from './modules/workspaces'
 import * as db from '../database'
 
-// HACK: Because PouchDB doesn't let us unsub a single listener
-let haveSubbedToPouch = false;
+const CHANGE_ID = 'store.listener';
 
 export function initStore (dispatch) {
-  const actionFunctions = {
-    RequestGroup: bindActionCreators(RequestGroupActions, dispatch),
-    Request: bindActionCreators(RequestActions, dispatch),
-    Response: bindActionCreators(ResponseActions, dispatch),
-    Workspace: bindActionCreators(WorkspaceActions, dispatch)
-  };
+  db.offChange(CHANGE_ID);
+
+  const actionFunctions = [
+    // NOTE: Order matters here. Should be top -> bottom tree 
+    ['Workspace', bindActionCreators(WorkspaceActions, dispatch)],
+    ['RequestGroup', bindActionCreators(RequestGroupActions, dispatch)],
+    ['Request', bindActionCreators(RequestActions, dispatch)],
+    ['Response', bindActionCreators(ResponseActions, dispatch)]
+  ];
 
   const docChanged = doc => {
     if (!doc.hasOwnProperty('type')) {
       return;
     }
 
-    const fns = actionFunctions[doc.type];
+    const [_, fns] = actionFunctions.find(fn => fn[0] === doc.type);
     fns && fns[doc._deleted ? 'remove' : 'update'](doc);
   };
 
   console.log('-- Restoring Store --');
 
-  let docsThatChanged = [];
+  // Start building a list of docs by type. Keyed by _id so it doesn't
+  // matter if we try adding the same one twice 
+  let docsThatChanged = {};
+
+  const start = Date.now();
   return db.workspaceAll().then(res => {
-    res.docs.map(doc => docsThatChanged.push(doc));
+    res.docs.map(doc => {
+      docsThatChanged[doc._id] = doc;
+    });
   }).then(() => {
     return db.workspaceGetActive()
   }).then(res => {
     const workspace = res.docs.length ? res.docs[0] : db.workspaceCreate();
 
     const restoreChildren = (doc, maxDepth, depth = 0) => {
-      docsThatChanged.push(doc);
+      docsThatChanged[doc._id] = doc;
 
       return db.getChildren(doc).then(res => {
         return Promise.all(
@@ -47,13 +55,19 @@ export function initStore (dispatch) {
 
     return restoreChildren(workspace, 5);
   }).then(() => {
-    // We saved all the updates for the end so the UI doesn't jitter
-    docsThatChanged.map(docChanged);
+    actionFunctions.map(tuple => {
+      const [t, fns] = tuple;
+      const docs = Object.keys(docsThatChanged).map(
+        t => docsThatChanged[t]
+      ).filter(
+        doc => doc.type === t
+      );
+      
+      fns.replace(docs)
+    });
+    console.log(`Restore took ${(Date.now() - start) / 1000} s`);
   }).then(() => {
-    if (!haveSubbedToPouch) {
-      db.changes.on('change', res => docChanged(res.doc));
-      haveSubbedToPouch = true;
-    }
+    db.onChange(CHANGE_ID, res => docChanged(res.doc));
   });
 }
 

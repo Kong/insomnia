@@ -35,7 +35,7 @@ $border-color: $hl-md;
       outline: 0;
     }
 
-    button {
+    & > button {
       color: $hl-xxl;
       position: relative;
       height: 100%;
@@ -49,12 +49,12 @@ $border-color: $hl-md;
     border: 1px solid $border-color;
     border-bottom-color: transparent;
 
-    button {
+    & > button {
       color: inherit;
       border: 0 !important;
     }
 
-    button:hover {
+    & > button:hover {
       background: transparent;
     }
   }

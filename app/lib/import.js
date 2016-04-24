@@ -4,6 +4,7 @@ const TYPE_REQUEST = 'request';
 const TYPE_REQUEST_GROUP = 'request_group';
 const FORMAT_MAP = {
   'json': 'application/json'
+  // TODO: Fill these out
 };
 
 function importRequestGroup (iRequestGroup, parentId, exportFormat) {
@@ -35,7 +36,7 @@ function importRequest (iRequest, parentId, exportFormat) {
         password: iRequest.authentication.password
       }
     }
-    
+
     db.requestCreate({
       parentId,
       activated: 0, // Don't activate imported requests
@@ -51,20 +52,22 @@ function importRequest (iRequest, parentId, exportFormat) {
   }
 }
 
-export default function (workspace, txt, callback) {
+export default function (workspace, txt) {
   let data;
-  
+
   try {
     data = JSON.parse(txt);
   } catch (e) {
-    return callback(new Error('Invalid Insomnia export'));
+    // TODO: Handle these errors
+    return;
   }
-  
+
 
   if (!data.hasOwnProperty('_type') || !data.hasOwnProperty('items')) {
-    return callback(new Error('Invalid Insomnia export'));
+    // TODO: Handle these errors
+    return;
   }
-  
+
   data.items.reverse().filter(i => i._type === TYPE_REQUEST_GROUP).map(
     rg => importRequestGroup(rg, workspace._id, data.__export_format)
   );
