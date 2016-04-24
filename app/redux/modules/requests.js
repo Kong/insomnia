@@ -1,9 +1,9 @@
 import {combineReducers} from 'redux'
 
-import * as network from '../../../lib/network'
-import {loadStart, loadStop} from './../global'
-import {show} from './../modals'
-import {MODAL_REQUEST_RENAME} from '../../../lib/constants'
+import * as network from '../../lib/network'
+import {loadStart, loadStop} from './global'
+import {show} from './modals'
+import {MODAL_REQUEST_RENAME} from '../../lib/constants'
 
 const REQUEST_UPDATE = 'requests/update';
 const REQUEST_REPLACE = 'requests/replace';

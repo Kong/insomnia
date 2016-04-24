@@ -17,8 +17,8 @@ import Sidebar from '../components/Sidebar'
 import EnvironmentEditModal from '../components/EnvironmentEditModal'
 
 import * as GlobalActions from '../redux/modules/global'
-import * as RequestGroupActions from '../redux/modules/workspaces/requestGroups'
-import * as RequestActions from '../redux/modules/workspaces/requests'
+import * as RequestGroupActions from '../redux/modules/requestGroups'
+import * as RequestActions from '../redux/modules/requests'
 import * as ModalActions from '../redux/modules/modals'
 import * as TabActions from '../redux/modules/tabs'
 

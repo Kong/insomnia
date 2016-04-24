@@ -1,6 +1,6 @@
 import {combineReducers} from 'redux'
-import * as db from '../../../database'
-import {initStore} from '../../initstore'
+import * as db from '../../database'
+import {initStore} from '../initstore'
 
 import responsesReducer from './responses'
 import requestsReducer from './requests'
@@ -70,16 +70,8 @@ function activeReducer (state = null, action) {
   }
 }
 
-function filterReducer (state = '', action) {
-  switch (action.type) {
-    default:
-      return state;
-  }
-}
-
 const workspaceReducer = combineReducers({
   all: allReducer,
-  filter: filterReducer,
   active: activeReducer,
 
   // Nested resources

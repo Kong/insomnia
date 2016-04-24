@@ -1,7 +1,7 @@
 import {bindActionCreators} from 'redux'
-import * as RequestGroupActions from './modules/workspaces/requestGroups'
-import * as RequestActions from './modules/workspaces/requests'
-import * as ResponseActions from './modules/workspaces/responses'
+import * as RequestGroupActions from './modules/requestGroups'
+import * as RequestActions from './modules/requests'
+import * as ResponseActions from './modules/responses'
 import * as WorkspaceActions from './modules/workspaces'
 import * as db from '../database'
 

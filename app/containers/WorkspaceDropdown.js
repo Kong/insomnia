@@ -7,7 +7,7 @@ import {connect} from 'react-redux'
 
 import Dropdown from '../components/base/Dropdown'
 import DropdownDivider from '../components/base/DropdownDivider'
-import * as RequestGroupActions from '../redux/modules/workspaces/requestGroups'
+import * as RequestGroupActions from '../redux/modules/requestGroups'
 import * as WorkspaceActions from '../redux/modules/workspaces'
 import * as db from '../database'
 import importData from '../lib/import'
