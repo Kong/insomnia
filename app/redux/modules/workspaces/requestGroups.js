@@ -1,7 +1,7 @@
 import {combineReducers} from 'redux'
 
-import {show} from './modals'
-import {MODAL_ENVIRONMENT_EDITOR, MODAL_REQUEST_GROUP_RENAME} from '../../lib/constants'
+import {show} from './../modals'
+import {MODAL_ENVIRONMENT_EDITOR, MODAL_REQUEST_GROUP_RENAME} from '../../../lib/constants'
 import {removeByParent} from './requests'
 
 const REQUEST_GROUP_UPDATE = 'request-groups/update';

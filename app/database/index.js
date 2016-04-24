@@ -159,16 +159,6 @@ export function responseCreate (patch = {}) {
   }, patch);
 }
 
-export function responseGetForRequest (request) {
-  return db.find({
-    selector: {
-      parentId: request._id
-    },
-    sort: [{parentId: 'desc'}],
-    limit: 1
-  })
-}
-
 
 // ~~~~~~~~~ //
 // WORKSPACE //
@@ -208,9 +198,10 @@ export function workspaceGetActive () {
 // SETTINGS //
 // ~~~~~~~~ //
 
-export function settingsCreate (patch = {}) {
-  return modelCreate('Settings', 'set', {
-    editorLineWrapping: false,
-    editorLineNumbers: true
-  }, patch);
-}
+// TODO: This
+// export function settingsCreate (patch = {}) {
+//   return modelCreate('Settings', 'set', {
+//     editorLineWrapping: false,
+//     editorLineNumbers: true
+//   }, patch);
+// }

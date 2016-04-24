@@ -16,8 +16,8 @@ import Sidebar from '../components/Sidebar'
 import EnvironmentEditModal from '../components/EnvironmentEditModal'
 
 import * as GlobalActions from '../redux/modules/global'
-import * as RequestGroupActions from '../redux/modules/requestGroups'
-import * as RequestActions from '../redux/modules/requests'
+import * as RequestGroupActions from '../redux/modules/workspaces/requestGroups'
+import * as RequestActions from '../redux/modules/workspaces/requests'
 import * as ModalActions from '../redux/modules/modals'
 import * as TabActions from '../redux/modules/tabs'
 
@@ -192,7 +192,8 @@ class App extends Component {
   }
 
   render () {
-    const {actions, requests, responses, requestGroups, tabs, modals, workspaces} = this.props;
+    const {actions, tabs, modals, workspaces} = this.props;
+    const {requests, requestGroups, responses} = workspaces;
     const activeRequest = requests.active;
     const activeResponse = activeRequest ? responses[activeRequest._id] : undefined;
 
@@ -252,17 +253,17 @@ App.propTypes = {
       select: PropTypes.func.isRequired
     })
   }).isRequired,
-  requestGroups: PropTypes.shape({
-    all: PropTypes.array.isRequired
-  }).isRequired,
-  requests: PropTypes.shape({
-    all: PropTypes.array.isRequired,
-    active: PropTypes.object
-  }).isRequired,
   workspaces: PropTypes.shape({
-    active: PropTypes.object
+    active: PropTypes.object,
+    responses: PropTypes.object.isRequired,
+    requestGroups: PropTypes.shape({
+      all: PropTypes.array.isRequired
+    }).isRequired,
+    requests: PropTypes.shape({
+      all: PropTypes.array.isRequired,
+      active: PropTypes.object
+    }).isRequired
   }).isRequired,
-  responses: PropTypes.object.isRequired,
   tabs: PropTypes.object.isRequired,
   modals: PropTypes.array.isRequired
 };
@@ -271,9 +272,6 @@ function mapStateToProps (state) {
   return {
     actions: state.actions,
     workspaces: state.workspaces,
-    requests: state.requests,
-    requestGroups: state.requestGroups,
-    responses: state.responses,
     tabs: state.tabs,
     modals: state.modals
   };

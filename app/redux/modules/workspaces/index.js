@@ -1,6 +1,10 @@
 import {combineReducers} from 'redux'
-import * as db from '../../database'
-import {initStore} from '../initstore'
+import * as db from '../../../database'
+import {initStore} from '../../initstore'
+
+import responsesReducer from './responses'
+import requestsReducer from './requests'
+import requestGroupsReducer from './requestGroups'
 
 const WORKSPACE_UPDATE = 'workspaces/update';
 const WORKSPACE_DELETE = 'workspaces/delete';
@@ -59,11 +63,36 @@ function filterReducer (state = '', action) {
   }
 }
 
-export default combineReducers({
+const workspaceReducer = combineReducers({
   all: allReducer,
   filter: filterReducer,
-  active: activeReducer
+  active: activeReducer,
+  
+  // Nested resources
+  responses: responsesReducer,
+  requests: requestsReducer,
+  requestGroups: requestGroupsReducer
 });
+
+export default function (state = {}, action) {
+  // Call the reducer manually, so we can check if the active workspace has changed
+  let newState = workspaceReducer(state, action);
+
+  const oldActiveId = state.active && state.active._id;
+  const newActiveId = newState.active && newState.active._id;
+  const activeWorkspaceChanged = oldActiveId !== newActiveId;
+
+  // Clear all of these things if the workspace has changed
+  if (activeWorkspaceChanged) {
+    newState = Object.assign({}, newState, {
+      responses: responsesReducer(undefined, action),
+      requests: requestsReducer(undefined, action),
+      requestGroups: requestGroupsReducer(undefined, action)
+    })
+  }
+
+  return newState;
+}
 
 
 // ~~~~~~~ //
@@ -82,7 +111,6 @@ export function activate (workspace) {
   return dispatch => {
     db.workspaceActivate(workspace);
     initStore(dispatch);
-    dispatch({type: WORKSPACE_ACTIVATE, workspace});
   }
 }
 

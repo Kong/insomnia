@@ -3,8 +3,8 @@ import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 
 import * as ModalActions from '../redux/modules/modals'
-import * as RequestGroupActions from '../redux/modules/requestGroups'
-import * as RequestActions from '../redux/modules/requests'
+import * as RequestGroupActions from '../redux/modules/workspaces/requestGroups'
+import * as RequestActions from '../redux/modules/workspaces/requests'
 import PromptModal from '../components/base/PromptModal'
 
 import * as db from '../database'
