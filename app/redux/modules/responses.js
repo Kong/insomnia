@@ -1,5 +1,5 @@
-const RESPONSE_UPDATE = 'responses/update';
-const RESPONSE_REPLACE = 'responses/replace';
+export const RESPONSE_UPDATE = 'responses/update';
+export const RESPONSE_DELETE = 'responses/delete';
 
 const initialState = {};
 
@@ -9,13 +9,6 @@ const initialState = {};
 
 export default function (state = initialState, action) {
   switch (action.type) {
-
-    case RESPONSE_REPLACE:
-      let newState = {};
-      action.responses.map(r => {
-        newState[r.parentId] = r
-      });
-      return newState;
 
     case RESPONSE_UPDATE:
       return Object.assign({}, state, {
@@ -34,8 +27,4 @@ export default function (state = initialState, action) {
 
 export function update (response) {
   return {type: RESPONSE_UPDATE, response};
-}
-
-export function replace (responses) {
-  return {type: RESPONSE_REPLACE, responses};
 }

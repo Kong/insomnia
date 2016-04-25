@@ -1,13 +1,15 @@
 import {combineReducers} from 'redux'
 
-import workspacesReducer from './modules/workspaces'
-import tabsReducer from './modules/tabs'
-import globalReducer from './modules/global'
-import modalsReducer from './modules/modals'
+import workspaces from './modules/workspaces'
+import tabs from './modules/tabs'
+import global from './modules/global'
+import modals from './modules/modals'
+import entities from './modules/entities'
 
 export default combineReducers({
-  workspaces: workspacesReducer,
-  modals: modalsReducer,
-  global: globalReducer,
-  tabs: tabsReducer
+  workspaces,
+  modals,
+  global,
+  tabs,
+  entities
 });

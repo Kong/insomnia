@@ -83,7 +83,7 @@ class WorkspaceDropdown extends Component {
           {workspaces.all.map(w => {
             return w._id === workspaces.active._id ? null : (
               <li key={w._id}>
-                <button onClick={() => actions.workspaces.activate(w)}>
+                <button onClick={() => db.workspaceActivate(w)}>
                   <i className="fa fa-random"></i> Switch to <strong>{w.name}</strong>
                 </button>
               </li>
@@ -114,9 +114,6 @@ WorkspaceDropdown.propTypes = {
   actions: PropTypes.shape({
     requestGroups: PropTypes.shape({
       showEnvironmentEditModal: PropTypes.func.isRequired
-    }),
-    workspaces: PropTypes.shape({
-      activate: PropTypes.func.isRequired
     })
   })
 };
@@ -132,8 +129,7 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     actions: {
-      requestGroups: bindActionCreators(RequestGroupActions, dispatch),
-      workspaces: bindActionCreators(WorkspaceActions, dispatch)
+      requestGroups: bindActionCreators(RequestGroupActions, dispatch)
     }
   }
 }

@@ -2,6 +2,11 @@
 import * as methods from '../lib/constants';
 import {generateId} from './util'
 
+export const TYPE_WORKSPACE = 'Workspace';
+export const TYPE_REQUEST_GROUP = 'RequestGroup';
+export const TYPE_REQUEST = 'Request';
+export const TYPE_RESPONSE = 'Response';
+
 // We have to include the web version of PouchDB in app.html because
 // the NodeJS version defaults to LevelDB which is hard (impossible?)
 // to get working in Electron apps
@@ -122,7 +127,7 @@ function modelCreate (type, idPrefix, defaults, patch = {}) {
 // ~~~~~~~ //
 
 export function requestCreate (patch = {}) {
-  return modelCreate('Request', 'req', {
+  return modelCreate(TYPE_REQUEST, 'req', {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
@@ -150,7 +155,7 @@ export function requestActivate (request) {
 // ~~~~~~~~~~~~~ //
 
 export function requestGroupCreate (patch = {}) {
-  return modelCreate('RequestGroup', 'grp', {
+  return modelCreate(TYPE_REQUEST_GROUP, 'grp', {
     collapsed: false,
     name: 'New Request Group',
     environment: {}
@@ -162,7 +167,7 @@ export function requestGroupCreate (patch = {}) {
 // ~~~~~~~~ //
 
 export function responseCreate (patch = {}) {
-  return modelCreate('Response', 'rsp', {
+  return modelCreate(TYPE_RESPONSE, 'res', {
     statusCode: 0,
     statusMessage: '',
     contentType: 'text/plain',
@@ -179,9 +184,10 @@ export function responseCreate (patch = {}) {
 // ~~~~~~~~~ //
 
 export function workspaceCreate (patch = {}) {
-  return modelCreate('Workspace', 'wsp', {
+  return modelCreate(TYPE_WORKSPACE, 'wrk', {
     name: 'New Workspace',
-    activated: Date.now(),
+    activeRequestId: null,
+    activated: Date.now(), // TODO: Delete this property (replace with something better)
     environments: []
   }, patch);
 }

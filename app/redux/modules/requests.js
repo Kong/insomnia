@@ -5,10 +5,9 @@ import {loadStart, loadStop} from './global'
 import {show} from './modals'
 import {MODAL_REQUEST_RENAME} from '../../lib/constants'
 
-const REQUEST_UPDATE = 'requests/update';
-const REQUEST_REPLACE = 'requests/replace';
-const REQUEST_DELETE = 'requests/delete';
-const REQUEST_CHANGE_FILTER = 'requests/filter';
+export const REQUEST_UPDATE = 'requests/update';
+export const REQUEST_DELETE = 'requests/delete';
+export const REQUEST_CHANGE_FILTER = 'requests/filter';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -19,9 +18,6 @@ function allReducer (state = [], action) {
 
     case REQUEST_DELETE:
       return state.filter(r => r._id !== action.request._id);
-
-    case REQUEST_REPLACE:
-      return [...action.requests];
 
     case REQUEST_UPDATE:
       const i = state.findIndex(r => r._id === action.request._id);
@@ -40,9 +36,6 @@ function allReducer (state = [], action) {
 function filterReducer (state = '', action) {
   switch (action.type) {
     
-    case REQUEST_REPLACE:
-      return '';
-    
     case REQUEST_CHANGE_FILTER:
       return action.filter;
     
@@ -53,15 +46,6 @@ function filterReducer (state = '', action) {
 
 function activeReducer (state = null, action) {
   switch (action.type) {
-
-    case REQUEST_REPLACE:
-      let newActive = action.requests.length ? action.requests[0] : null;
-      action.requests.map(w => {
-        if (w.activated > newActive.activated) {
-          newActive = w;
-        }
-      });
-      return newActive ? Object.assign({}, newActive) : null;
 
     case REQUEST_UPDATE:
       if (state && state._id === action.request._id) {
@@ -102,10 +86,6 @@ export function remove (request) {
 
 export function update (request) {
   return {type: REQUEST_UPDATE, request};
-}
-
-export function replace (requests) {
-  return {type: REQUEST_REPLACE, requests};
 }
 
 export function changeFilter (filter) {

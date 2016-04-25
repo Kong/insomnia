@@ -1,14 +1,11 @@
 import {combineReducers} from 'redux'
-import * as db from '../../database'
-import {initStore} from '../initstore'
 
 import responsesReducer from './responses'
 import requestsReducer from './requests'
 import requestGroupsReducer from './requestGroups'
 
-const WORKSPACE_UPDATE = 'workspaces/update';
-const WORKSPACE_DELETE = 'workspaces/delete';
-const WORKSPACE_REPLACE = 'workspaces/replace';
+export const WORKSPACE_UPDATE = 'workspaces/update';
+export const WORKSPACE_DELETE = 'workspaces/delete';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -17,9 +14,6 @@ const WORKSPACE_REPLACE = 'workspaces/replace';
 function allReducer (state = [], action) {
   switch (action.type) {
     
-    case WORKSPACE_REPLACE:
-      return [...action.workspaces];
-
     case WORKSPACE_UPDATE:
       const i = state.findIndex(w => w._id === action.workspace._id);
 
@@ -44,15 +38,6 @@ function allReducer (state = [], action) {
 function activeReducer (state = null, action) {
   switch (action.type) {
     
-    case WORKSPACE_REPLACE:
-      let newActive = action.workspaces.length ? action.workspaces[0] : null;
-      action.workspaces.map(w => {
-        if (w.activated > newActive.activated) {
-          newActive = w;
-        }
-      });
-      return newActive ? Object.assign({}, newActive) : null;
-
     case WORKSPACE_UPDATE:
       if (state && state._id === action.workspace._id) {
         return action.workspace;
@@ -112,15 +97,3 @@ export function remove (workspace) {
 export function update (workspace) {
   return {type: WORKSPACE_UPDATE, workspace};
 }
-
-export function replace (workspaces) {
-  return {type: WORKSPACE_REPLACE, workspaces};
-}
-
-export function activate (workspace) {
-  return dispatch => {
-    db.workspaceActivate(workspace);
-    initStore(dispatch);
-  }
-}
-
