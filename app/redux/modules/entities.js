@@ -3,9 +3,9 @@ import {combineReducers} from 'redux'
 import {TYPE_WORKSPACE, TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_RESPONSE} from '../../database/index'
 import * as workspaceFns from './workspaces'
 import * as requestGroupFns from './requestGroups'
-import * as requestFns from './requests'
-import * as responseFns from './responses'
 
+const ENTITY_UPDATE = 'entities/update';
+const ENTITY_REMOVE = 'entities/remove';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -30,6 +30,30 @@ function generateEntityReducer (referenceName, updateAction, deleteAction) {
   }
 }
 
+function genericEntityReducer (referenceName) {
+  return function (state = {}, action) {
+    const doc = action[referenceName];
+    
+    if (!doc) {
+      return state;
+    }
+    
+    switch (action.type) {
+
+      case ENTITY_UPDATE:
+        return {...state, [doc._id]: doc};
+
+      case ENTITY_REMOVE:
+        const newState = Object.assign({}, state);
+        delete newState[action[referenceName]._id];
+        return newState;
+
+      default:
+        return state;
+    }
+  }
+}
+
 const workspaces = generateEntityReducer(
   'workspace',
   workspaceFns.WORKSPACE_UPDATE,
@@ -37,28 +61,16 @@ const workspaces = generateEntityReducer(
 );
 
 const requestGroups = generateEntityReducer(
-  'requestGroup', 
+  'requestGroup',
   requestGroupFns.REQUEST_GROUP_UPDATE,
   requestGroupFns.REQUEST_GROUP_DELETE
-);
-
-const requests = generateEntityReducer(
-  'request',
-  requestFns.REQUEST_UPDATE,
-  requestFns.REQUEST_DELETE
-);
-
-const responses = generateEntityReducer(
-  'response',
-  responseFns.RESPONSE_UPDATE,
-  responseFns.RESPONSE_DELETE
 );
 
 export default combineReducers({
   workspaces,
   requestGroups,
-  requests,
-  responses
+  requests: genericEntityReducer('request'),
+  responses: genericEntityReducer('response')
 })
 
 
@@ -69,33 +81,21 @@ export default combineReducers({
 const updateFns = {
   [TYPE_WORKSPACE]: workspaceFns.update,
   [TYPE_REQUEST_GROUP]: requestGroupFns.update,
-  [TYPE_REQUEST]: requestFns.update,
-  [TYPE_RESPONSE]: responseFns.update
+  [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
+  [TYPE_REQUEST]: request => ({type: ENTITY_UPDATE, request})
 };
 
 const removeFns = {
   [TYPE_WORKSPACE]: workspaceFns.remove,
   [TYPE_REQUEST_GROUP]: requestGroupFns.remove,
-  [TYPE_REQUEST]: requestFns.remove
-  // Response doesn't have a remove function (yet...)
+  [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
+  [TYPE_REQUEST]: request => ({type: ENTITY_REMOVE, request})
 };
 
 export function update (doc) {
-  // Using dispatch here because Redux gets mad if we don't return anything
-  // in a normal action creator
-  return dispatch => {
-    if (updateFns.hasOwnProperty(doc.type)) {
-      dispatch(updateFns[doc.type](doc));
-    }
-  }
+  return updateFns[doc.type](doc);
 }
 
 export function remove (doc) {
-  // Using dispatch here because Redux gets mad if we don't return anything
-  // in a normal action creator
-  return dispatch => {
-    if (removeFns.hasOwnProperty(doc.type)) {
-      dispatch(removeFns[doc.type](doc));
-    }
-  }
+  return removeFns[doc.type](doc);
 }

@@ -10,52 +10,26 @@ class Sidebar extends Component {
     this.props.changeFilter(value);
   }
 
-  renderRequestGroupRow (requestGroup = null) {
+  renderRequestGroupRow (child, parent) {
     const {
       filter,
       activeRequestId,
       addRequestToRequestGroup,
-      toggleRequestGroup,
-      requests,
-      workspaceId
+      toggleRequestGroup
     } = this.props;
-
-    let filteredRequests = requests.filter(
-      r => {
-        // TODO: Move this to a lib file
-
-        if (!filter) {
-          return true;
-        }
-
-        const requestGroupName = requestGroup ? requestGroup.name : '';
-        const toMatch = `${requestGroupName}✌${r.method}✌${r.name}`.toLowerCase();
-        const matchTokens = filter.toLowerCase().split(' ');
-        for (let i = 0; i < matchTokens.length; i++) {
-          let token = `${matchTokens[i]}`;
-          if (toMatch.indexOf(token) === -1) {
-            return false;
-          }
-        }
-
-        return true;
-      }
-    );
+    
+    const requestGroup = child.doc.type === 'RequestGroup' ? child.doc : null;
 
     if (!requestGroup) {
-      filteredRequests = filteredRequests.filter(r => r.parentId === workspaceId);
-      return filteredRequests.map(request => this.renderRequestRow(request));
+      return child.children.map(c => this._renderChild(c, child));
     }
 
-    // Grab all of the children for this request group
-    filteredRequests = filteredRequests.filter(r => r.parentId === requestGroup._id);
-
     // Don't show folder if it was not in the filter
-    if (filter && !filteredRequests.length) {
+    if (filter && !child.children.length) {
       return null;
     }
 
-    const isActive = activeRequestId && filteredRequests.find(r => r._id == activeRequestId);
+    const isActive = activeRequestId && child.children.find(c => c.doc._id == activeRequestId);
 
     let folderIconClass = 'fa-folder';
     let expanded = !requestGroup.collapsed;
@@ -67,6 +41,8 @@ class Sidebar extends Component {
       'sidebar__item--bordered',
       {'sidebar__item--active': isActive}
     );
+
+    child.children.sort((a, b) => a.doc._id > b.doc._id ? -1 : 1);
 
     return (
       <li key={requestGroup._id}>
@@ -88,20 +64,22 @@ class Sidebar extends Component {
           </div>
         </div>
         <ul>
-          {expanded && !filteredRequests.length ? this.renderRequestRow() : null}
-          {!expanded ? null : filteredRequests.map(request => this.renderRequestRow(request, requestGroup))}
+          {expanded && !child.children.length ? this.renderRequestRow() : null}
+          {!expanded ? null : child.children.map(c => this._renderChild(c, child))}
         </ul>
       </li>
     );
   }
 
-  renderRequestRow (request = null, requestGroup = null) {
+  renderRequestRow (child = null, parent = null) {
+    const request = child ? child.doc : null;
+    const requestGroup = parent ? parent.doc : null;
     const {activeRequestId, activateRequest} = this.props;
-    const isActive = request && activeRequestId && request._id === activeRequestId;
-    
+    const isActive = request && activeRequestId && request._id === activeRequestId || false;
+
     return (
       <SidebarRequestRow
-        key={request._id}
+        key={request ? request._id : null}
         activateRequest={activateRequest}
         isActive={isActive}
         request={request}
@@ -110,9 +88,32 @@ class Sidebar extends Component {
     )
   }
 
+  _renderChild (child, parent = null) {
+    const {filter} = this.props;
+
+    if (child.doc.type === 'Request') {
+      const r = child.doc;
+      const toMatch = `${r.method}❅${r.name}`.toLowerCase();
+      const matchTokens = filter.toLowerCase().split(' ');
+      for (let i = 0; i < matchTokens.length; i++) {
+        let token = `${matchTokens[i]}`;
+        if (toMatch.indexOf(token) === -1) {
+          // Filter failed. Don't render children
+          return null;
+        }
+      }
+
+      return this.renderRequestRow(child, parent)
+    } else if (child.doc.type === 'RequestGroup') {
+      return this.renderRequestGroupRow(child, parent);
+    } else {
+      console.error('Unknown child type', child.doc.type);
+    }
+  }
+
   render () {
-    const {filter, requestGroups} = this.props;
-    
+    const {filter, children} = this.props;
+
     return (
       <section className="sidebar bg-dark grid--v section section--bordered">
         <header className="header bg-brand section__header">
@@ -121,8 +122,7 @@ class Sidebar extends Component {
         <div className="grid--v grid--start grid__cell section__body">
           <ul
             className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
-            {this.renderRequestGroupRow(null)}
-            {requestGroups.map(requestGroup => this.renderRequestGroupRow(requestGroup))}
+            {children.map(c => this._renderChild(c))}
           </ul>
           <div className="grid grid--center">
             <div className="grid__cell form-control form-control--underlined">
@@ -146,12 +146,11 @@ Sidebar.propTypes = {
   toggleRequestGroup: PropTypes.func.isRequired,
   addRequestToRequestGroup: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
-  
+
   // Other
-  requests: PropTypes.array.isRequired,
-  requestGroups: PropTypes.array.isRequired,
+  children: PropTypes.array.isRequired,
   workspaceId: PropTypes.string.isRequired,
-  
+
   // Optional
   filter: PropTypes.string,
   activeRequestId: PropTypes.string

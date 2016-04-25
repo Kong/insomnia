@@ -1,30 +1,12 @@
-export const RESPONSE_UPDATE = 'responses/update';
-export const RESPONSE_DELETE = 'responses/delete';
-
-const initialState = {};
-
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
 
-export default function (state = initialState, action) {
-  switch (action.type) {
-
-    case RESPONSE_UPDATE:
-      return Object.assign({}, state, {
-        [action.response.parentId]: action.response
-      });
-
-    default:
-      return state;
-  }
-}
+// None yet
 
 
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
 
-export function update (response) {
-  return {type: RESPONSE_UPDATE, response};
-}
+// None yet...

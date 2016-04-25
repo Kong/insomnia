@@ -24,24 +24,47 @@ class App extends Component {
     }
   }
 
-  render () {
-    const {actions, modals, workspaces, requestGroups, requests, responses} = this.props;
+  _generateSidebarTree (parentId, entities) {
+    const children = entities.filter(e => e.parentId === parentId);
+    
+    if (children.length > 0) {
+      return children.map(c => ({
+        doc: c,
+        children: this._generateSidebarTree(c._id, entities)
+      }));
+    } else {
+      return children;
+    }
+  }
 
-    const activeRequest = requests.active;
-    const activeResponse = activeRequest ? responses[activeRequest._id] : undefined;
+  render () {
+    const {actions, modals, workspaces, requests, entities} = this.props;
+
+    const activeRequestId = workspaces.active.activeRequestId;
+    const activeRequest = activeRequestId ? entities.requests[activeRequestId] : null;
+
+    const responses = Object.keys(entities.responses).map(id => entities.responses[id]);
+    const allRequests = Object.keys(entities.requests).map(id => entities.requests[id]);
+    const allRequestGroups = Object.keys(entities.requestGroups).map(id => entities.requestGroups[id]);
+
+    const activeResponse = responses.find(r => r.parentId === activeRequestId);
+
+    const children = this._generateSidebarTree(
+      workspaces.active._id,
+      allRequests.concat(allRequestGroups)
+    );
 
     return (
       <div className="grid bg-super-dark tall">
         <Sidebar
           workspaceId={workspaces.active._id}
-          activateRequest={db.requestActivate}
+          activateRequest={r => db.update(workspaces.active, {activeRequestId: r._id})}
           changeFilter={actions.requests.changeFilter}
           addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
           toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
-          activeRequestId={activeRequest._id}
+          activeRequestId={activeRequest ? activeRequest._id : null}
           filter={requests.filter}
-          requestGroups={requestGroups.all.sort((a, b) => a._id > b._id ? -1 : 1)}
-          requests={requests.all.sort((a, b) => a._id > b._id ? -1 : 1)}
+          children={children}
         />
         <div className="grid wide grid--collapse">
           <RequestPane
@@ -96,13 +119,8 @@ App.propTypes = {
   workspaces: PropTypes.shape({
     active: PropTypes.object
   }).isRequired,
-  responses: PropTypes.object.isRequired,
-  requestGroups: PropTypes.shape({
-    all: PropTypes.array.isRequired
-  }).isRequired,
   requests: PropTypes.shape({
-    all: PropTypes.array.isRequired,
-    active: PropTypes.object
+    filter: PropTypes.string.isRequired
   }).isRequired,
   modals: PropTypes.array.isRequired
 };
@@ -111,9 +129,8 @@ function mapStateToProps (state) {
   return {
     actions: state.actions,
     workspaces: state.workspaces,
-    requestGroups: state.requestGroups,
     requests: state.requests,
-    responses: state.responses,
+    entities: state.entities,
     modals: state.modals
   };
 }

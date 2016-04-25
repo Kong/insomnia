@@ -37,11 +37,11 @@ SidebarRequestRow.propTypes = {
   activateRequest: PropTypes.func.isRequired,
   
   // Other
-  request: PropTypes.object.isRequired,
   isActive: PropTypes.bool.isRequired,
   
   // Optional
-  requestGroup: PropTypes.object
+  requestGroup: PropTypes.object,
+  request: PropTypes.object
 };
 
 export default SidebarRequestRow;

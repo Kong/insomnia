@@ -13,7 +13,7 @@ export const TYPE_RESPONSE = 'Response';
 let db = new PouchDB('insomnia.db', {adapter: 'websql'});
 
 // For browser console debugging
-// global.db = db;
+global.db = db;
 
 let changeListeners = {};
 
@@ -143,10 +143,6 @@ export function requestCreate (patch = {}) {
 export function requestCopy (request) {
   const name = `${request.name} (Copy)`;
   return requestCreate(Object.assign({}, request, {name}));
-}
-
-export function requestActivate (request) {
-  return update(request, {activated: Date.now()});
 }
 
 
