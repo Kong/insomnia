@@ -1,9 +1,5 @@
 import {combineReducers} from 'redux'
 
-import responsesReducer from './responses'
-import requestsReducer from './requests'
-import requestGroupsReducer from './requestGroups'
-
 export const WORKSPACE_UPDATE = 'workspaces/update';
 export const WORKSPACE_DELETE = 'workspaces/delete';
 
@@ -55,35 +51,10 @@ function activeReducer (state = null, action) {
   }
 }
 
-const workspaceReducer = combineReducers({
+export default combineReducers({
   all: allReducer,
-  active: activeReducer,
-
-  // Nested resources
-  responses: responsesReducer,
-  requests: requestsReducer,
-  requestGroups: requestGroupsReducer
+  active: activeReducer
 });
-
-export default function (state = {}, action) {
-  // Call the reducer manually, so we can check if the active workspace has changed
-  let newState = workspaceReducer(state, action);
-
-  const oldActiveId = state.active && state.active._id;
-  const newActiveId = newState.active && newState.active._id;
-  const activeWorkspaceChanged = oldActiveId !== newActiveId;
-
-  // Clear all of these things if the workspace has changed
-  if (activeWorkspaceChanged) {
-    newState = Object.assign({}, newState, {
-      responses: responsesReducer(undefined, action),
-      requests: requestsReducer(undefined, action),
-      requestGroups: requestGroupsReducer(undefined, action)
-    })
-  }
-
-  return newState;
-}
 
 
 // ~~~~~~~ //

@@ -25,8 +25,7 @@ class App extends Component {
   }
 
   render () {
-    const {actions, modals, workspaces} = this.props;
-    const {requests, requestGroups, responses} = workspaces;
+    const {actions, modals, workspaces, requestGroups, requests, responses} = this.props;
 
     const activeRequest = requests.active;
     const activeResponse = activeRequest ? responses[activeRequest._id] : undefined;
@@ -95,15 +94,15 @@ App.propTypes = {
     })
   }).isRequired,
   workspaces: PropTypes.shape({
-    active: PropTypes.object,
-    responses: PropTypes.object.isRequired,
-    requestGroups: PropTypes.shape({
-      all: PropTypes.array.isRequired
-    }).isRequired,
-    requests: PropTypes.shape({
-      all: PropTypes.array.isRequired,
-      active: PropTypes.object
-    }).isRequired
+    active: PropTypes.object
+  }).isRequired,
+  responses: PropTypes.object.isRequired,
+  requestGroups: PropTypes.shape({
+    all: PropTypes.array.isRequired
+  }).isRequired,
+  requests: PropTypes.shape({
+    all: PropTypes.array.isRequired,
+    active: PropTypes.object
   }).isRequired,
   modals: PropTypes.array.isRequired
 };
@@ -112,6 +111,9 @@ function mapStateToProps (state) {
   return {
     actions: state.actions,
     workspaces: state.workspaces,
+    requestGroups: state.requestGroups,
+    requests: state.requests,
+    responses: state.responses,
     modals: state.modals
   };
 }
