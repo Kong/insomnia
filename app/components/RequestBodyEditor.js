@@ -3,18 +3,17 @@ import Editor from './base/Editor'
 
 class RequestBodyEditor extends Component {
   render () {
-    const {request, onChange, className} = this.props;
-    const mode = request.contentType || 'text/plain';
+    const {body, contentType, requestId, onChange, className} = this.props;
 
     return (
       <Editor
-        value={request.body}
+        value={body}
         className={className}
         debounceMillis={400}
         onChange={onChange}
-        uniquenessKey={request._id}
+        uniquenessKey={requestId}
         options={{
-          mode: mode,
+          mode: contentType,
           placeholder: 'request body here...'
         }}
       />
@@ -23,10 +22,13 @@ class RequestBodyEditor extends Component {
 }
 
 RequestBodyEditor.propTypes = {
-  request: PropTypes.shape({
-    body: PropTypes.string.isRequired
-  }).isRequired,
-  onChange: PropTypes.func.isRequired
+  // Functions
+  onChange: PropTypes.func.isRequired,
+  
+  // Other
+  requestId: PropTypes.string.isRequired,
+  body: PropTypes.string.isRequired,
+  contentType: PropTypes.string.isRequired
 };
 
 export default RequestBodyEditor;

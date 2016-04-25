@@ -1,10 +1,9 @@
 import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
 import WorkspaceDropdown from './../containers/WorkspaceDropdown'
-import RequestActionsDropdown from './../containers/RequestActionsDropdown'
 import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown'
 import DebouncingInput from './base/DebouncingInput'
-import MethodTag from './MethodTag'
+import SidebarRequestRow from './SidebarRequestRow'
 
 class Sidebar extends Component {
   onFilterChange (value) {
@@ -13,25 +12,25 @@ class Sidebar extends Component {
 
   renderRequestGroupRow (requestGroup = null) {
     const {
-      activeFilter,
-      activeRequest,
+      filter,
+      activeRequestId,
       addRequestToRequestGroup,
       toggleRequestGroup,
       requests,
-      workspace
+      workspaceId
     } = this.props;
 
     let filteredRequests = requests.filter(
       r => {
         // TODO: Move this to a lib file
 
-        if (!activeFilter) {
+        if (!filter) {
           return true;
         }
 
         const requestGroupName = requestGroup ? requestGroup.name : '';
         const toMatch = `${requestGroupName}✌${r.method}✌${r.name}`.toLowerCase();
-        const matchTokens = activeFilter.toLowerCase().split(' ');
+        const matchTokens = filter.toLowerCase().split(' ');
         for (let i = 0; i < matchTokens.length; i++) {
           let token = `${matchTokens[i]}`;
           if (toMatch.indexOf(token) === -1) {
@@ -44,7 +43,7 @@ class Sidebar extends Component {
     );
 
     if (!requestGroup) {
-      filteredRequests = filteredRequests.filter(r => r.parentId === workspace._id);
+      filteredRequests = filteredRequests.filter(r => r.parentId === workspaceId);
       return filteredRequests.map(request => this.renderRequestRow(request));
     }
 
@@ -52,11 +51,11 @@ class Sidebar extends Component {
     filteredRequests = filteredRequests.filter(r => r.parentId === requestGroup._id);
 
     // Don't show folder if it was not in the filter
-    if (activeFilter && !filteredRequests.length) {
+    if (filter && !filteredRequests.length) {
       return null;
     }
 
-    const isActive = activeRequest && filteredRequests.find(r => r._id == activeRequest._id);
+    const isActive = activeRequestId && filteredRequests.find(r => r._id == activeRequestId);
 
     let folderIconClass = 'fa-folder';
     let expanded = !requestGroup.collapsed;
@@ -97,36 +96,22 @@ class Sidebar extends Component {
   }
 
   renderRequestRow (request = null, requestGroup = null) {
-    const {activeRequest, activateRequest} = this.props;
-    const isActive = request && activeRequest && request._id === activeRequest._id;
-
+    const {activeRequestId, activateRequest} = this.props;
+    const isActive = request && activeRequestId && request._id === activeRequestId;
+    
     return (
-      <li key={request ? request._id : 'none'}>
-        <div className={'sidebar__item ' + (isActive ? 'sidebar__item--active' : '')}>
-          <div className="sidebar__item__row">
-            {request ? (
-              <button onClick={() => {activateRequest(request)}}>
-                <MethodTag method={request.method}/> {request.name}
-              </button>
-            ) : (
-              <button className="italic">No Requests</button>
-            )}
-          </div>
-          {request ? (
-            <RequestActionsDropdown
-              className="sidebar__item__btn"
-              right={true}
-              request={request}
-              requestGroup={requestGroup}
-            />
-          ) : null}
-        </div>
-      </li>
-    );
+      <SidebarRequestRow
+        key={request._id}
+        activateRequest={activateRequest}
+        isActive={isActive}
+        request={request}
+        requestGroup={requestGroup}
+      />
+    )
   }
 
   render () {
-    const {activeFilter, requestGroups} = this.props;
+    const {filter, requestGroups} = this.props;
     
     return (
       <section className="sidebar bg-dark grid--v section section--bordered">
@@ -145,7 +130,7 @@ class Sidebar extends Component {
                 type="text"
                 placeholder="Filter Items"
                 debounceMillis={300}
-                value={activeFilter}
+                value={filter}
                 onChange={this.onFilterChange.bind(this)}/>
             </div>
           </div>
@@ -156,15 +141,20 @@ class Sidebar extends Component {
 }
 
 Sidebar.propTypes = {
+  // Functions
   activateRequest: PropTypes.func.isRequired,
+  toggleRequestGroup: PropTypes.func.isRequired,
   addRequestToRequestGroup: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
-  toggleRequestGroup: PropTypes.func.isRequired,
-  activeFilter: PropTypes.string,
+  
+  // Other
   requests: PropTypes.array.isRequired,
   requestGroups: PropTypes.array.isRequired,
-  workspace: PropTypes.object.isRequired,
-  activeRequest: PropTypes.object
+  workspaceId: PropTypes.string.isRequired,
+  
+  // Optional
+  filter: PropTypes.string,
+  activeRequestId: PropTypes.string
 };
 
 export default Sidebar;

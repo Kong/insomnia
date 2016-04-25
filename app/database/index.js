@@ -13,7 +13,7 @@ export const TYPE_RESPONSE = 'Response';
 let db = new PouchDB('insomnia.db', {adapter: 'websql'});
 
 // For browser console debugging
-global.db = db;
+// global.db = db;
 
 let changeListeners = {};
 

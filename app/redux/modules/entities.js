@@ -37,7 +37,7 @@ const workspaces = generateEntityReducer(
 );
 
 const requestGroups = generateEntityReducer(
-  'requestGroup',
+  'requestGroup', 
   requestGroupFns.REQUEST_GROUP_UPDATE,
   requestGroupFns.REQUEST_GROUP_DELETE
 );
