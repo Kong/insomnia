@@ -39,8 +39,14 @@ class App extends Component {
 
   render () {
     const {actions, modals, workspaces, requests, entities} = this.props;
+    
+    // TODO: Factor this out into a selector
+    let workspace = entities.workspaces[workspaces.activeId];
+    if (!workspace) {
+      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
+    }
 
-    const activeRequestId = workspaces.active.activeRequestId;
+    const activeRequestId = workspace.activeRequestId;
     const activeRequest = activeRequestId ? entities.requests[activeRequestId] : null;
 
     const responses = Object.keys(entities.responses).map(id => entities.responses[id]);
@@ -50,15 +56,15 @@ class App extends Component {
     const activeResponse = responses.find(r => r.parentId === activeRequestId);
 
     const children = this._generateSidebarTree(
-      workspaces.active._id,
+      workspace._id,
       allRequests.concat(allRequestGroups)
     );
 
     return (
       <div className="grid bg-super-dark tall">
         <Sidebar
-          workspaceId={workspaces.active._id}
-          activateRequest={r => db.update(workspaces.active, {activeRequestId: r._id})}
+          workspaceId={workspace._id}
+          activateRequest={r => db.update(workspace, {activeRequestId: r._id})}
           changeFilter={actions.requests.changeFilter}
           addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
           toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
@@ -122,7 +128,7 @@ App.propTypes = {
     responses: PropTypes.object.isRequired
   }).isRequired,
   workspaces: PropTypes.shape({
-    active: PropTypes.object
+    activeId: PropTypes.string
   }).isRequired,
   requests: PropTypes.shape({
     filter: PropTypes.string.isRequired

@@ -185,13 +185,8 @@ export function workspaceCreate (patch = {}) {
   return modelCreate(TYPE_WORKSPACE, 'wrk', {
     name: 'New Workspace',
     activeRequestId: null,
-    activated: Date.now(), // TODO: Delete this property (replace with something better)
     environments: []
   }, patch);
-}
-
-export function workspaceActivate (workspace) {
-  return update(workspace, {activated: Date.now()});
 }
 
 export function workspaceAll () {
@@ -210,18 +205,6 @@ export function workspaceAll () {
     }
   })
 }
-
-export function workspaceGetActive () {
-  return db.find({
-    selector: {
-      activated: {$gte: 0}, // HACK: because can't use $exists here?
-      type: {$eq: 'Workspace'}
-    },
-    sort: [{activated: 'desc'}],
-    limit: 1
-  })
-}
-
 
 // ~~~~~~~~ //
 // SETTINGS //

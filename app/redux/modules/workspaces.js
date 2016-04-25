@@ -1,6 +1,6 @@
 import {combineReducers} from 'redux'
 
-export const WORKSPACE_UPDATE = 'workspaces/update';
+export const WORKSPACE_ACTIVATE = 'workspaces/activate';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -8,15 +8,9 @@ export const WORKSPACE_UPDATE = 'workspaces/update';
 
 function activeReducer (state = null, action) {
   switch (action.type) {
-    
-    case WORKSPACE_UPDATE:
-      if (state && state._id === action.workspace._id) {
-        return action.workspace;
-      } else if (state) {
-        return action.workspace.activated > state.activated ? action.workspace : state;
-      } else {
-        return action.workspace;
-      }
+
+    case WORKSPACE_ACTIVATE:
+      return action.workspace._id;
 
     default:
       return state;
@@ -24,7 +18,7 @@ function activeReducer (state = null, action) {
 }
 
 export default combineReducers({
-  active: activeReducer
+  activeId: activeReducer
 });
 
 
@@ -32,6 +26,6 @@ export default combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-export function update (workspace) {
-  return {type: WORKSPACE_UPDATE, workspace};
+export function activate (workspace) {
+  return {type: WORKSPACE_ACTIVATE, workspace};
 }

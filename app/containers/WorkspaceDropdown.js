@@ -8,6 +8,7 @@ import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown'
 import DropdownDivider from '../components/base/DropdownDivider'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
+import * as WorkspaceActions from '../redux/modules/workspaces'
 import * as db from '../database'
 import importData from '../lib/import'
 
@@ -19,13 +20,26 @@ class WorkspaceDropdown extends Component {
         name: 'Insomnia Imports', extensions: ['json']
       }]
     };
-
+    
+    // TODO: Factor this out into a selector
+    const {entities, workspaces} = this.props;
+    let workspace = entities.workspaces[workspaces.activeId];
+    if (!workspace) {
+      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
+    }
+    
     electron.remote.dialog.showOpenDialog(options, paths => {
       paths.map(path => {
         fs.readFile(path, 'utf8', (err, data) => {
-          err || importData(this.props.workspaces.active, data);
+          err || importData(workspace, data);
         })
       })
+    });
+  }
+  
+  _workspaceCreate () {
+    db.workspaceCreate({name: 'New Workspace'}).then(workspace => {
+      this.props.actions.workspaces.activate(workspace);
     });
   }
 
@@ -33,13 +47,19 @@ class WorkspaceDropdown extends Component {
     const {actions, loading, workspaces, entities, ...other} = this.props;
 
     const allWorkspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
+    
+    // TODO: Factor this out into a selector
+    let workspace = entities.workspaces[workspaces.activeId];
+    if (!workspace) {
+      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
+    }
 
     return (
       <Dropdown right={true} {...other} className="block">
         <button className="btn header__content">
           <div className="grid grid--center">
             <div className="grid__cell">
-              <h1 className="no-pad">{workspaces.active.name}</h1>
+              <h1 className="no-pad">{workspace.name}</h1>
             </div>
             <div className="no-wrap">
               {loading ? <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
@@ -52,12 +72,12 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name="Current Workspace"/>
 
           <li>
-            <button onClick={e => db.requestCreate({parentId: workspaces.active._id})}>
+            <button onClick={e => db.requestCreate({parentId: workspace._id})}>
               <i className="fa fa-plus-circle"></i> New Request
             </button>
           </li>
           <li>
-            <button onClick={e => db.requestGroupCreate({parentId: workspaces.active._id})}>
+            <button onClick={e => db.requestGroupCreate({parentId: workspaces._id})}>
               <i className="fa fa-folder"></i> New Request Group
             </button>
           </li>
@@ -72,24 +92,24 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => db.remove(workspaces.active)}>
-              <i className="fa fa-empty"></i> Delete <strong>{workspaces.active.name}</strong>
+            <button onClick={e => db.remove(workspace)}>
+              <i className="fa fa-empty"></i> Delete <strong>{workspace.name}</strong>
             </button>
           </li>
 
           <DropdownDivider name="Workspaces"/>
 
           {allWorkspaces.map(w => {
-            return w._id === workspaces.active._id ? null : (
+            return w._id === workspace._id ? null : (
               <li key={w._id}>
-                <button onClick={() => db.workspaceActivate(w)}>
+                <button onClick={() => actions.workspaces.activate(w)}>
                   <i className="fa fa-random"></i> Switch to <strong>{w.name}</strong>
                 </button>
               </li>
             )
           })}
           <li>
-            <button onClick={e => db.workspaceCreate()}>
+            <button onClick={e => this._workspaceCreate()}>
               <i className="fa fa-blank"></i> Create Workspace
             </button>
           </li>
@@ -107,7 +127,7 @@ class WorkspaceDropdown extends Component {
 WorkspaceDropdown.propTypes = {
   loading: PropTypes.bool.isRequired,
   workspaces: PropTypes.shape({
-    active: PropTypes.object.isRequired
+    activeId: PropTypes.object
   }),
   entities: PropTypes.shape({
     workspaces: PropTypes.object.isRequired
@@ -115,6 +135,9 @@ WorkspaceDropdown.propTypes = {
   actions: PropTypes.shape({
     requestGroups: PropTypes.shape({
       showEnvironmentEditModal: PropTypes.func.isRequired
+    }),
+    workspaces: PropTypes.shape({
+      activate: PropTypes.func.isRequired
     })
   })
 };
@@ -131,7 +154,8 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     actions: {
-      requestGroups: bindActionCreators(RequestGroupActions, dispatch)
+      requestGroups: bindActionCreators(RequestGroupActions, dispatch),
+      workspaces: bindActionCreators(WorkspaceActions, dispatch)
     }
   }
 }
