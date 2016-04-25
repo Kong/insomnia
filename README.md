@@ -5,7 +5,7 @@ An elegant and simple REST API client.
 
 ![Insomnia REST Client](http://i.imgur.com/kG0Tn6K.png)
 
-[![Build Status](https://travis-ci.com/gschier/insomnia.svg?branch=master)](https://travis-ci.com/gschier/insomnia)
+[![Build Status](https://travis-ci.com/gschier/insomnia.svg?token=qztnkRav22GdUcB3yE2m&branch=master)](https://travis-ci.com/gschier/insomnia)
 
 Setup
 -----
