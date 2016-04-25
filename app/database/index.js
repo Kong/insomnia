@@ -204,7 +204,7 @@ export function workspaceAll () {
       // No workspaces? Create first one and try again
       // TODO: Replace this with UI flow maybe?
       console.log('-- Creating First Workspace --');
-      return workspaceCreate({name: 'First Workspace'}).then(() => {
+      return workspaceCreate({name: 'Insomnia'}).then(() => {
         return workspaceAll();
       })
     }

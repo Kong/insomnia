@@ -116,6 +116,11 @@ App.propTypes = {
       hide: PropTypes.func.isRequired
     })
   }).isRequired,
+  entities: PropTypes.shape({
+    requests: PropTypes.object.isRequired,
+    requestGroups: PropTypes.object.isRequired,
+    responses: PropTypes.object.isRequired
+  }).isRequired,
   workspaces: PropTypes.shape({
     active: PropTypes.object
   }).isRequired,

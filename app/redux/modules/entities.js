@@ -56,7 +56,7 @@ function genericEntityReducer (referenceName) {
 const workspaces = generateEntityReducer(
   'workspace',
   workspaceFns.WORKSPACE_UPDATE,
-  workspaceFns.WORKSPACE_DELETE
+  'dne'
 );
 
 export default combineReducers({
@@ -79,7 +79,7 @@ const updateFns = {
 };
 
 const removeFns = {
-  [TYPE_WORKSPACE]: workspaceFns.remove,
+  [TYPE_WORKSPACE]: workspace => ({type: ENTITY_UPDATE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
   [TYPE_REQUEST]: request => ({type: ENTITY_REMOVE, request})
