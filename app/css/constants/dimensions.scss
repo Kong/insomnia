@@ -37,6 +37,10 @@ $modal-width: 50rem;
 $breakpoint-md: 790px;
 $breakpoint-sm: 580px;
 
+.txt-xs {
+  font-size: $font-size-xs;
+}
+
 .txt-sm {
   font-size: $font-size-sm;
 }

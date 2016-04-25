@@ -21,7 +21,9 @@ class UrlInput extends Component {
           <ul>
             {METHODS.map(m => (
               <li key={m}>
-                <button onClick={onMethodChange.bind(null, m)}>{m}</button>
+                <button onClick={onMethodChange.bind(null, m)}>
+                  {m}
+                </button>
               </li>
             ))}
           </ul>

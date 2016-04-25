@@ -48,7 +48,7 @@ class RequestPane extends Component {
               <Tab className="no-wrap grid grid--center">
                 <button>JSON</button>
                 <Dropdown>
-                  <button>&nbsp;&nbsp;<i className="fa fa-caret-down"></i></button>
+                  <button><i className="fa fa-caret-down"></i></button>
                   <ul>
                     <li><button><i className="fa fa-file-text"></i> Plain Text</button></li>
                     <li><button><i className="fa fa-picture-o"></i> File Upload</button></li>

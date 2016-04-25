@@ -28,7 +28,7 @@
         padding: $padding-sm $padding-md $padding-sm $padding-sm;
         width: 100%;
         display: block;
-        color: $font-super-light-bg;
+        color: $font-super-light-bg !important;
 
         &:hover {
           background: $hl-sm;

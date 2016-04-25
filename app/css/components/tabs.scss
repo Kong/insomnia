@@ -9,6 +9,7 @@ $border-color: $hl-md;
     align-items: flex-start;
     align-content: flex-start;
     height: $line-height-sm;
+    line-height: $line-height-sm;
 
     &::after {
       width: 100%;
@@ -21,11 +22,15 @@ $border-color: $hl-md;
 
   .ReactTabs__Tab {
     align-self: flex-start;
-    padding: $padding-sm / 4 $padding-md;
     height: $line-height-sm;
     box-sizing: border-box;
+    border: 1px solid transparent;
     border-bottom: 1px solid $border-color;
     border-top: 0 !important;
+
+    * {
+      color: $hl-xxl;
+    }
 
     &:first-child {
       border-left-color: transparent;
@@ -35,23 +40,29 @@ $border-color: $hl-md;
       outline: 0;
     }
 
-    & > button {
-      color: $hl-xxl;
-      position: relative;
+    & > * {
       height: 100%;
       width: 100%;
-      border-left: 1px solid transparent;
-      border-right: 1px solid transparent;
+      padding-left: $padding-md / 3;
+      padding-right: $padding-md / 3;
+
+      &:first-child {
+        padding-left: $padding-md;
+      }
+
+      &:last-child {
+        padding-right: $padding-md;
+      }
     }
+
   }
 
   .ReactTabs__Tab--selected {
     border: 1px solid $border-color;
     border-bottom-color: transparent;
 
-    & > button {
+    * {
       color: inherit;
-      border: 0 !important;
     }
 
     & > button:hover {

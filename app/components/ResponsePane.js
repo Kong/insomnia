@@ -1,8 +1,9 @@
 import React, {Component, PropTypes} from 'react'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
-import StatusTag from '../components/StatusTag'
+import Dropdown from '../components/base/Dropdown'
 import Editor from '../components/base/Editor'
+import StatusTag from '../components/StatusTag'
 import SizeTag from '../components/SizeTag'
 import TimeTag from '../components/TimeTag'
 
@@ -39,8 +40,17 @@ class ResponsePane extends Component {
           </header>
           <Tabs className="grid__cell grid--v section__body">
             <TabList className="grid grid--start">
-              <Tab><button>Preview</button></Tab>
-              <Tab><button>Raw</button></Tab>
+              <Tab className="no-wrap grid grid--center">
+                <button>Preview</button>
+                <Dropdown>
+                  <button><i className="fa fa-caret-down"></i></button>
+                  <ul>
+                    <li><button><i className="fa fa-eye"></i> Preview</button></li>
+                    <li><button><i className="fa fa-code"></i> Formatted</button></li>
+                    <li><button><i className="fa fa-file"></i> Raw</button></li>
+                  </ul>
+                </Dropdown>
+              </Tab>
               <Tab><button>Headers</button></Tab>
             </TabList>
             <TabPanel className="grid__cell editor-wrapper">
@@ -49,17 +59,6 @@ class ResponsePane extends Component {
                 prettify={true}
                 options={{
                     mode: response && response.contentType || 'text/plain',
-                    readOnly: true,
-                    placeholder: 'nothing yet...'
-                  }}
-              />
-            </TabPanel>
-            <TabPanel className="grid__cell editor-wrapper">
-              <Editor
-                value={response && response.body || ''}
-                options={{
-                    lineWrapping: true,
-                    mode: 'text/plain',
                     readOnly: true,
                     placeholder: 'nothing yet...'
                   }}
