@@ -9,21 +9,21 @@ const FORMAT_MAP = {
 
 function importRequestGroup (iRequestGroup, parentId, exportFormat) {
   if (exportFormat === 1) {
-    const requestGroup = db.requestGroupCreate({
+    db.requestGroupCreate({
       parentId,
       collapsed: true,
       name: iRequestGroup.name,
       environment: (iRequestGroup.environments || {}).base || {}
+    }).then(requestGroup => {
+      // Sometimes (maybe all the time, I can't remember) requests will be nested
+      if (iRequestGroup.hasOwnProperty('requests')) {
+        // Let's process them oldest to newest
+        iRequestGroup.requests.reverse();
+        iRequestGroup.requests.map(
+          r => importRequest(r, requestGroup._id, exportFormat)
+        );
+      }
     });
-
-    // Sometimes (maybe all the time, I can't remember) requests will be nested
-    if (iRequestGroup.hasOwnProperty('requests')) {
-      // Let's process them oldest to newest
-      iRequestGroup.requests.reverse();
-      iRequestGroup.requests.map(
-        r => importRequest(r, requestGroup._id, exportFormat)
-      );
-    }
   }
 }
 

@@ -2,7 +2,6 @@ import {combineReducers} from 'redux'
 
 import {TYPE_WORKSPACE, TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_RESPONSE} from '../../database/index'
 import * as workspaceFns from './workspaces'
-import * as requestGroupFns from './requestGroups'
 
 const ENTITY_UPDATE = 'entities/update';
 const ENTITY_REMOVE = 'entities/remove';
@@ -60,15 +59,9 @@ const workspaces = generateEntityReducer(
   workspaceFns.WORKSPACE_DELETE
 );
 
-const requestGroups = generateEntityReducer(
-  'requestGroup',
-  requestGroupFns.REQUEST_GROUP_UPDATE,
-  requestGroupFns.REQUEST_GROUP_DELETE
-);
-
 export default combineReducers({
   workspaces,
-  requestGroups,
+  requestGroups: genericEntityReducer('requestGroup'),
   requests: genericEntityReducer('request'),
   responses: genericEntityReducer('response')
 })
@@ -80,14 +73,14 @@ export default combineReducers({
 
 const updateFns = {
   [TYPE_WORKSPACE]: workspaceFns.update,
-  [TYPE_REQUEST_GROUP]: requestGroupFns.update,
+  [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
   [TYPE_REQUEST]: request => ({type: ENTITY_UPDATE, request})
 };
 
 const removeFns = {
   [TYPE_WORKSPACE]: workspaceFns.remove,
-  [TYPE_REQUEST_GROUP]: requestGroupFns.remove,
+  [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
   [TYPE_REQUEST]: request => ({type: ENTITY_REMOVE, request})
 };

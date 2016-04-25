@@ -6,7 +6,7 @@ const CHANGE_ID = 'store.listener';
 
 export function initStore (dispatch) {
   db.offChange(CHANGE_ID);
-  
+
   // New stuff...
   const entities = bindActionCreators(entitiesActions, dispatch);
 
@@ -14,7 +14,7 @@ export function initStore (dispatch) {
     if (!doc.hasOwnProperty('type')) {
       return;
     }
-    
+
     // New stuff...
     entities[doc._deleted ? 'remove' : 'update'](doc);
   };
@@ -22,28 +22,27 @@ export function initStore (dispatch) {
   console.log('-- Restoring Store --');
 
   const start = Date.now();
-  return db.workspaceAll().then(res => {
-    res.docs.map(docChanged);
-  }).then(() => {
-    return db.workspaceGetActive()
-  }).then(res => {
-    const workspace = res.docs.length ? res.docs[0] : db.workspaceCreate();
 
-    const restoreChildren = (doc, maxDepth, depth = 0) => {
+  return db.workspaceAll().then(res => {
+    const restoreChildren = (doc) => {
       docChanged(doc);
 
       return db.getChildren(doc).then(res => {
+        // Done condition
+        if (!res.docs.length) {
+          return;
+        }
+        
         return Promise.all(
-          res.docs.map(doc => restoreChildren(doc, maxDepth, depth++))
+          res.docs.map(doc => restoreChildren(doc))
         );
       })
     };
 
-    return restoreChildren(workspace, 5);
+    return res.docs.map(restoreChildren)
   }).then(() => {
     console.log(`Restore took ${(Date.now() - start) / 1000} s`);
   }).then(() => {
     db.onChange(CHANGE_ID, res => docChanged(res.doc));
   });
 }
-

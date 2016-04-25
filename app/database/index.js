@@ -27,6 +27,10 @@ export function offChange (id) {
   delete changeListeners[id];
 }
 
+export function allDocs () {
+  return db.allDocs({include_docs: true});
+}
+
 db.changes({
   since: 'now',
   live: true,
@@ -48,8 +52,7 @@ export function initDB () {
   console.log('-- Initializing Database --');
   return Promise.all([
     db.createIndex({index: {fields: ['parentId']}}),
-    db.createIndex({index: {fields: ['type']}}),
-    db.createIndex({index: {fields: ['activated', 'type']}})
+    db.createIndex({index: {fields: ['type']}})
   ]).catch(err => {
     console.error('Failed to PouchDB Indexes', err);
   });
@@ -103,7 +106,7 @@ function modelCreate (type, idPrefix, defaults, patch = {}) {
     parentId: null
   };
 
-  const model = Object.assign(
+  const doc = Object.assign(
     baseDefaults,
     defaults,
     patch,
@@ -118,8 +121,7 @@ function modelCreate (type, idPrefix, defaults, patch = {}) {
     }
   );
 
-  update(model);
-  return model;
+  return update(doc).then(() => doc);
 }
 
 // ~~~~~~~ //
@@ -195,6 +197,17 @@ export function workspaceActivate (workspace) {
 export function workspaceAll () {
   return db.find({
     selector: {type: 'Workspace'}
+  }).then(res => {
+    if (res.docs.length) {
+      return res;
+    } else {
+      // No workspaces? Create first one and try again
+      // TODO: Replace this with UI flow maybe?
+      console.log('-- Creating First Workspace --');
+      return workspaceCreate({name: 'First Workspace'}).then(() => {
+        return workspaceAll();
+      })
+    }
   })
 }
 
