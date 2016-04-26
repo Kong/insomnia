@@ -97,7 +97,7 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => db.remove(workspace)}>
+            <button onClick={e => db.workspaceRemove(workspace)}>
               <i className="fa fa-empty"></i> Delete <strong>{workspace.name}</strong>
             </button>
           </li>

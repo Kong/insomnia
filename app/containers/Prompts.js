@@ -20,7 +20,7 @@ class Prompts extends Component {
       header: 'Rename Request',
       submit: 'Rename',
       onSubmit: (modal, name) => {
-        db.update(modal.data.request, {name})
+        db.requestUpdate(modal.data.request, {name})
       }
     };
 
@@ -28,7 +28,7 @@ class Prompts extends Component {
       header: 'Rename Request Group',
       submit: 'Rename',
       onSubmit: (modal, name) => {
-        db.update(modal.data.requestGroup, {name})
+        db.requestUpdate(modal.data.requestGroup, {name})
       }
     };
 
@@ -36,7 +36,7 @@ class Prompts extends Component {
       header: 'Rename Workspace',
       submit: 'Rename',
       onSubmit: (modal, name) => {
-        db.update(modal.data.workspace, {name})
+        db.requestUpdate(modal.data.workspace, {name})
       }
     };
   }

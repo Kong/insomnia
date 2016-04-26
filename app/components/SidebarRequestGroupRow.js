@@ -72,7 +72,7 @@ SidebarRequestGroupRow.propTypes = {
   
   // Other
   isActive: PropTypes.bool.isRequired,
-  hideIfNoChildren: PropTypes.number.isRequired,
+  hideIfNoChildren: PropTypes.bool.isRequired,
   requestGroup: PropTypes.object.isRequired
 };
 

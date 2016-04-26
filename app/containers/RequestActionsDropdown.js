@@ -31,7 +31,7 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => db.remove(request)}>
+            <button onClick={e => db.requestRemove(request)}>
               <i className="fa fa-trash-o"></i> Delete
             </button>
           </li>

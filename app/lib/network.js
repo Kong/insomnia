@@ -68,7 +68,7 @@ function actuallySend (unrenderedRequest, callback, context = {}) {
 
 export function send (request, callback) {
   if (request.parentId) {
-    db.get(request.parentId).then(
+    db.requestGroupById(request.parentId).then(
       requestGroup => actuallySend(request, callback, requestGroup.environment)
     );
   } else {

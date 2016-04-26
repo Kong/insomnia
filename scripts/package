@@ -9,7 +9,7 @@ NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config 
 
 echo "-- COPYING REMAINING FILES --"
 
-cp -r app/package.json app/app.js app/external dist/
+cp -r app/package.json app/app.js dist/
 
 echo "-- INSTALLING PACKAGES --"
 
