@@ -27,6 +27,7 @@ export function initStore (dispatch) {
 
   const start = Date.now();
 
+  // Restore docs in parent->child->grandchild order
   return db.workspaceAll().then(docs => {
     docs.map(doc => docChanged('update', doc));
     return db.requestGroupAll();
@@ -39,27 +40,8 @@ export function initStore (dispatch) {
   }).then(docs => {
     docs.map(doc => docChanged('update', doc));
   }).then(() => {
+    console.log(`-- Restored DB in ${(Date.now() - start) / 1000} s --`);
+  }).then(() => {
     db.onChange(CHANGE_ID, docChanged);
   });
-  //   const restoreChildren = (doc) => {
-  //     docChanged(doc);
-  //  
-  //     return db.getChildren(doc).then(res => {
-  //       // Done condition
-  //       if (!res.docs.length) {
-  //         return;
-  //       }
-  //  
-  //       return Promise.all(
-  //         res.docs.map(doc => restoreChildren(doc))
-  //       );
-  //     })
-  //   };
-  //  
-  //   return res.docs.map(restoreChildren)
-  // }).then(() => {
-  //   console.log(`Restore took ${(Date.now() - start) / 1000} s`);
-  // }).then(() => {
-  //   db.onChange(CHANGE_ID, res => docChanged(res.doc));
-  // });
 }

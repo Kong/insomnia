@@ -20,11 +20,20 @@ let db = null;
  * Initialize the database. This should be called once on app start.
  * @returns {Promise}
  */
+let initialized = false;
 export function initDB () {
+  // Only init once
+  if (initialized) {
+    return new Promise(resolve => resolve());
+  }
+
   return new Promise(resolve => {
     db = new Loki('insomnia.db.json', {
       autoload: true,
-      autoloadCallback: () => {
+      autosave: true,
+      autosaveInterval: 500, // TODO: Make this a bit smarter maybe
+      persistenceMethod: 'fs',
+      autoloadCallback () {
         TYPES.map(type => {
           let collection = db.getCollection(type);
           if (!collection) {
@@ -54,10 +63,8 @@ export function initDB () {
         });
 
         resolve();
-      },
-      autosave: true,
-      autosaveInterval: 1000,
-      persistenceMethod: 'fs'
+        initialized = true;
+      }
     });
   })
 }
