@@ -38,8 +38,6 @@ class RequestGroupActionsDropdown extends Component {
 
 RequestGroupActionsDropdown.propTypes = {
   actions: PropTypes.shape({
-    update: PropTypes.func.isRequired,
-    remove: PropTypes.func.isRequired,
     showUpdateNamePrompt: PropTypes.func.isRequired,
     showEnvironmentEditModal: PropTypes.func.isRequired
   }),

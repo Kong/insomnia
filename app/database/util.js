@@ -5,7 +5,7 @@ const CHARS = '23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ'.split('')
 export function generateId (prefix) {
   let id = `${prefix}/${Date.now()}/`;
   
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 13; i++) {
     id += CHARS[Math.floor(Math.random() * CHARS.length)];
   }
 

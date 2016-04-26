@@ -1,19 +1,19 @@
 import {combineReducers} from 'redux'
 
-import workspacesReducer from './modules/workspaces'
-import requestsReducer from './modules/requests'
-import tabsReducer from './modules/tabs'
-import globalReducer from './modules/global'
-import modalsReducer from './modules/modals'
-import requestGroupsReducer from './modules/requestGroups'
-import responsesReducer from './modules/responses'
+import workspaces from './modules/workspaces'
+import requestGroups from './modules/requestGroups'
+import requests from './modules/requests'
+import responses from './modules/responses'
+import global from './modules/global'
+import modals from './modules/modals'
+import entities from './modules/entities'
 
 export default combineReducers({
-  workspaces: workspacesReducer,
-  requestGroups: requestGroupsReducer,
-  requests: requestsReducer,
-  responses: responsesReducer,
-  modals: modalsReducer,
-  global: globalReducer,
-  tabs: tabsReducer
+  workspaces,
+  responses,
+  requests,
+  requestGroups,
+  modals,
+  global,
+  entities
 });

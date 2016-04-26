@@ -1,39 +1,26 @@
 import {combineReducers} from 'redux'
+import {MODAL_WORKSPACE_RENAME} from '../../lib/constants'
+import {show} from './modals'
 
-export const WORKSPACE_UPDATE = 'workspaces/update';
-export const WORKSPACE_DELETE = 'workspaces/delete';
 export const WORKSPACE_ACTIVATE = 'workspaces/activate';
 
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
 
-function allReducer (state = [], action) {
-  switch (action.type) {
-    default:
-      return state;
-  }
-}
-
 function activeReducer (state = null, action) {
   switch (action.type) {
-    default:
-      return state;
 
-  }
-}
+    case WORKSPACE_ACTIVATE:
+      return action.workspace._id;
 
-function filterReducer (state = '', action) {
-  switch (action.type) {
     default:
       return state;
   }
 }
 
 export default combineReducers({
-  all: allReducer,
-  filter: filterReducer,
-  active: activeReducer
+  activeId: activeReducer
 });
 
 
@@ -41,15 +28,11 @@ export default combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-export function remove (request) {
-  return {type: WORKSPACE_DELETE, request};
+export function activate (workspace) {
+  return {type: WORKSPACE_ACTIVATE, workspace};
 }
 
-export function update (request) {
-  return {type: WORKSPACE_UPDATE, request};
+export function showUpdateNamePrompt (workspace) {
+  const defaultValue = workspace.name;
+  return show(MODAL_WORKSPACE_RENAME, {defaultValue, workspace});
 }
-
-export function activate (request) {
-  return {type: WORKSPACE_ACTIVATE, request};
-}
-
