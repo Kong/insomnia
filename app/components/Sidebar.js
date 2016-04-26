@@ -60,6 +60,7 @@ class Sidebar extends Component {
           <SidebarRequestGroupRow
             key={requestGroup._id}
             isActive={isActive}
+            hideIfNoChildren={filter}
             toggleRequestGroup={this.props.toggleRequestGroup}
             addRequestToRequestGroup={this.props.addRequestToRequestGroup}
             numChildren={child.children.length}

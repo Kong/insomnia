@@ -1,4 +1,6 @@
 import {combineReducers} from 'redux'
+import {MODAL_WORKSPACE_RENAME} from '../../lib/constants'
+import {show} from './modals'
 
 export const WORKSPACE_ACTIVATE = 'workspaces/activate';
 
@@ -28,4 +30,9 @@ export default combineReducers({
 
 export function activate (workspace) {
   return {type: WORKSPACE_ACTIVATE, workspace};
+}
+
+export function showUpdateNamePrompt (workspace) {
+  const defaultValue = workspace.name;
+  return show(MODAL_WORKSPACE_RENAME, {defaultValue, workspace});
 }

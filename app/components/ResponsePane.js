@@ -46,7 +46,7 @@ class ResponsePane extends Component {
                   <button><i className="fa fa-caret-down"></i></button>
                   <ul>
                     <li><button><i className="fa fa-eye"></i> Preview</button></li>
-                    <li><button><i className="fa fa-code"></i> Formatted</button></li>
+                    <li><button><i className="fa fa-code"></i> Source</button></li>
                     <li><button><i className="fa fa-file"></i> Raw</button></li>
                   </ul>
                 </Dropdown>

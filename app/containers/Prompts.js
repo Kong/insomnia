@@ -6,7 +6,11 @@ import * as ModalActions from '../redux/modules/modals'
 import PromptModal from '../components/base/PromptModal'
 
 import * as db from '../database'
-import {MODAL_REQUEST_RENAME, MODAL_REQUEST_GROUP_RENAME} from '../lib/constants';
+import {
+  MODAL_REQUEST_RENAME,
+  MODAL_REQUEST_GROUP_RENAME,
+  MODAL_WORKSPACE_RENAME
+} from '../lib/constants';
 
 class Prompts extends Component {
   constructor (props) {
@@ -25,6 +29,14 @@ class Prompts extends Component {
       submit: 'Rename',
       onSubmit: (modal, name) => {
         db.update(modal.data.requestGroup, {name})
+      }
+    };
+
+    this._prompts[MODAL_WORKSPACE_RENAME] = {
+      header: 'Rename Workspace',
+      submit: 'Rename',
+      onSubmit: (modal, name) => {
+        db.update(modal.data.workspace, {name})
       }
     };
   }

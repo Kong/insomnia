@@ -53,7 +53,9 @@ class App extends Component {
     const allRequests = Object.keys(entities.requests).map(id => entities.requests[id]);
     const allRequestGroups = Object.keys(entities.requestGroups).map(id => entities.requestGroups[id]);
 
-    const activeResponse = responses.find(r => r.parentId === activeRequestId);
+    const activeResponse = responses.sort(
+      (a, b) => a._id > b._id ? -1 : 1
+    ).find(r => r.parentId === activeRequestId);
 
     const children = this._generateSidebarTree(
       workspace._id,

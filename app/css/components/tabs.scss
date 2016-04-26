@@ -43,8 +43,8 @@ $border-color: $hl-md;
     & > * {
       height: 100%;
       width: 100%;
-      padding-left: $padding-md / 3;
-      padding-right: $padding-md / 3;
+      padding-left: $padding-md / 4;
+      padding-right: $padding-md / 4;
 
       &:first-child {
         padding-left: $padding-md;

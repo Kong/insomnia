@@ -1,12 +1,13 @@
 import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
 import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown'
+import SidebarRequestRow from './SidebarRequestRow'
 
 class SidebarRequestGroupRow extends Component {
   render () {
     const {
       children,
-      numChildren,
+      hideIfNoChildren,
       requestGroup,
       isActive,
       toggleRequestGroup,
@@ -15,7 +16,7 @@ class SidebarRequestGroupRow extends Component {
     
     // If we are supposed to have children, but aren't passed any, we are probably
     // filtering so don't render anything
-    if (numChildren >= 0 && children.length === 0) {
+    if (hideIfNoChildren && children.length === 0) {
       return null;
     }
 
@@ -50,6 +51,13 @@ class SidebarRequestGroupRow extends Component {
           </div>
         </div>
         <ul>
+          {!expanded || children.length > 0 ? null : (
+            <SidebarRequestRow
+              activateRequest={() => {}}
+              isActive={false}
+              request={null}
+            />
+          )}
           {expanded ? children : null}
         </ul>
       </li>
@@ -64,7 +72,7 @@ SidebarRequestGroupRow.propTypes = {
   
   // Other
   isActive: PropTypes.bool.isRequired,
-  numChildren: PropTypes.number.isRequired,
+  hideIfNoChildren: PropTypes.number.isRequired,
   requestGroup: PropTypes.object.isRequired
 };
 

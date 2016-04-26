@@ -50,10 +50,10 @@ class RequestPane extends Component {
                 <Dropdown>
                   <button><i className="fa fa-caret-down"></i></button>
                   <ul>
-                    <li><button><i className="fa fa-file-text"></i> Plain Text</button></li>
-                    <li><button><i className="fa fa-picture-o"></i> File Upload</button></li>
+                    {/*<li><button><i className="fa fa-picture-o"></i> File Upload</button></li>*/}
                     <li><button><i className="fa fa-bars"></i> Form Data</button></li>
-                    <li><button><i className="fa fa-code"></i> HTML/XML</button></li>
+                    <li><button><i className="fa fa-code"></i> XML</button></li>
+                    <li><button><i className="fa fa-file-text"></i> Plain Text</button></li>
                   </ul>
                 </Dropdown>
               </Tab>

@@ -77,18 +77,23 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => db.requestGroupCreate({parentId: workspaces._id})}>
+            <button onClick={e => db.requestGroupCreate({parentId: workspace._id})}>
               <i className="fa fa-folder"></i> New Request Group
             </button>
           </li>
-          <li>
+          {/*<li>
             <button onClick={e => actions.requestGroups.showEnvironmentEditModal()}>
               <i className="fa fa-code"></i> Manage Environments
             </button>
-          </li>
+          </li>*/}
           <li>
             <button onClick={e => this._importDialog()}>
               <i className="fa fa-share-square-o"></i> Import/Export
+            </button>
+          </li>
+          <li>
+            <button onClick={e => actions.workspaces.showUpdateNamePrompt(workspace)}>
+              <i className="fa fa-empty"></i> Rename <strong>{workspace.name}</strong>
             </button>
           </li>
           <li>
@@ -127,7 +132,7 @@ class WorkspaceDropdown extends Component {
 WorkspaceDropdown.propTypes = {
   loading: PropTypes.bool.isRequired,
   workspaces: PropTypes.shape({
-    activeId: PropTypes.object
+    activeId: PropTypes.string
   }),
   entities: PropTypes.shape({
     workspaces: PropTypes.object.isRequired
@@ -137,7 +142,8 @@ WorkspaceDropdown.propTypes = {
       showEnvironmentEditModal: PropTypes.func.isRequired
     }),
     workspaces: PropTypes.shape({
-      activate: PropTypes.func.isRequired
+      activate: PropTypes.func.isRequired,
+      showUpdateNamePrompt: PropTypes.func.isRequired
     })
   })
 };
