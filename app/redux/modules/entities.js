@@ -3,6 +3,7 @@ import {combineReducers} from 'redux'
 import {TYPE_WORKSPACE, TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_RESPONSE} from '../../database/index'
 import * as workspaceFns from './workspaces'
 
+const ENTITY_INSERT = 'entities/insert';
 const ENTITY_UPDATE = 'entities/update';
 const ENTITY_REMOVE = 'entities/remove';
 
@@ -21,6 +22,7 @@ function genericEntityReducer (referenceName) {
     switch (action.type) {
 
       case ENTITY_UPDATE:
+      case ENTITY_INSERT:
         return {...state, [doc._id]: doc};
 
       case ENTITY_REMOVE:
@@ -46,6 +48,13 @@ export default combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
+const insertFns = {
+  [TYPE_WORKSPACE]: workspace => ({type: ENTITY_INSERT, workspace}),
+  [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_INSERT, requestGroup}),
+  [TYPE_RESPONSE]: response => ({type: ENTITY_INSERT, response}),
+  [TYPE_REQUEST]: request => ({type: ENTITY_INSERT, request})
+};
+
 const updateFns = {
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_UPDATE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
@@ -59,6 +68,10 @@ const removeFns = {
   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
   [TYPE_REQUEST]: request => ({type: ENTITY_REMOVE, request})
 };
+
+export function insert (doc) {
+  return insertFns[doc.type](doc);
+}
 
 export function update (doc) {
   return updateFns[doc.type](doc);

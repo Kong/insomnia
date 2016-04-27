@@ -60,10 +60,9 @@ export default {
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
   externals: [
-    ...Object.keys(pkg.dependencies),
-    {
-      
-    }
+    
+    // Omit all the app package dependencies (we want them loaded at runtime via NodeJS)
+    ...Object.keys(pkg.dependencies)
   ],
   plugins: [],
   target: 'electron-renderer'

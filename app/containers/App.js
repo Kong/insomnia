@@ -66,10 +66,10 @@ class App extends Component {
       <div className="grid bg-super-dark tall">
         <Sidebar
           workspaceId={workspace._id}
-          activateRequest={r => db.update(workspace, {activeRequestId: r._id})}
+          activateRequest={r => db.workspaceUpdate(workspace, {activeRequestId: r._id})}
           changeFilter={actions.requests.changeFilter}
           addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
-          toggleRequestGroup={requestGroup => db.update(requestGroup, {collapsed: !requestGroup.collapsed})}
+          toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {collapsed: !requestGroup.collapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
           filter={requests.filter}
           children={children}
@@ -78,12 +78,12 @@ class App extends Component {
           <RequestPane
             request={activeRequest}
             sendRequest={actions.requests.send}
-            updateRequestBody={body => db.update(activeRequest, {body})}
-            updateRequestUrl={url => db.update(activeRequest, {url})}
-            updateRequestMethod={method => db.update(activeRequest, {method})}
-            updateRequestParams={params => db.update(activeRequest, {params})}
-            updateRequestAuthentication={authentication => db.update(activeRequest, {authentication})}
-            updateRequestHeaders={headers => db.update(activeRequest, {headers})}
+            updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
+            updateRequestUrl={url => db.requestUpdate(activeRequest, {url})}
+            updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
+            updateRequestParams={params => db.requestUpdate(activeRequest, {params})}
+            updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
+            updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
           />
           <ResponsePane
             response={activeResponse}
@@ -99,7 +99,7 @@ class App extends Component {
                 key={m.id}
                 requestGroup={m.data.requestGroup}
                 onClose={() => actions.modals.hide(m.id)}
-                onChange={rg => db.update(m.data.requestGroup, {environment: rg.environment})}
+                onChange={rg => db.requestGroupUpdate(m.data.requestGroup, {environment: rg.environment})}
               />
             )
           } else {

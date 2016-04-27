@@ -1,19 +1,73 @@
 // import PouchDB from 'pouchdb';
 import * as methods from '../lib/constants';
 import {generateId} from './util'
+import Loki from 'lokijs'
 
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
 export const TYPE_REQUEST = 'Request';
 export const TYPE_RESPONSE = 'Response';
+const TYPES = [
+  TYPE_WORKSPACE,
+  TYPE_REQUEST_GROUP,
+  TYPE_REQUEST,
+  TYPE_RESPONSE
+];
 
-// We have to include the web version of PouchDB in app.html because
-// the NodeJS version defaults to LevelDB which is hard (impossible?)
-// to get working in Electron apps
-let db = new PouchDB('insomnia.db', {adapter: 'websql'});
+let db = null;
 
-// For browser console debugging
-global.db = db;
+/**
+ * Initialize the database. This should be called once on app start.
+ * @returns {Promise}
+ */
+let initialized = false;
+export function initDB () {
+  // Only init once
+  if (initialized) {
+    return new Promise(resolve => resolve());
+  }
+
+  return new Promise(resolve => {
+    db = new Loki('insomnia.db.json', {
+      autoload: true,
+      autosave: true,
+      autosaveInterval: 500, // TODO: Make this a bit smarter maybe
+      persistenceMethod: 'fs',
+      autoloadCallback () {
+        TYPES.map(type => {
+          let collection = db.getCollection(type);
+          if (!collection) {
+            collection = db.addCollection(type, {
+              asyncListeners: false,
+              clone: false,
+              disableChangesApi: false,
+              transactional: false
+            });
+
+            collection.ensureUniqueIndex('_id');
+
+            console.log(`-- Initialize DB Collection ${type} --`)
+          }
+
+          collection.on('update', doc => {
+            Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+          });
+
+          collection.on('insert', doc => {
+            Object.keys(changeListeners).map(k => changeListeners[k]('insert', doc));
+          });
+
+          collection.on('delete', doc => {
+            Object.keys(changeListeners).map(k => changeListeners[k]('delete', doc));
+          });
+        });
+
+        resolve();
+        initialized = true;
+      }
+    });
+  })
+}
 
 let changeListeners = {};
 
@@ -27,81 +81,65 @@ export function offChange (id) {
   delete changeListeners[id];
 }
 
-export function allDocs () {
-  return db.allDocs({include_docs: true});
+export function get (type, id) {
+  const doc = db.getCollection(type).by('_id', id);
+  return new Promise(resolve => resolve(doc));
 }
 
-db.changes({
-  since: 'now',
-  live: true,
-  include_docs: true,
-  return_docs: false
-}).on('change', function (res) {
-  Object.keys(changeListeners).map(id => changeListeners[id](res))
-}).on('complete', function (info) {
-  console.log('complete', info);
-}).on('error', function (err) {
-  console.log('error', err);
-});
-
-/**
- * Initialize the database. This should be called once on app start.
- * @returns {Promise}
- */
-export function initDB () {
-  console.log('-- Initializing Database --');
-  return Promise.all([
-    db.createIndex({index: {fields: ['parentId']}}),
-    db.createIndex({index: {fields: ['type']}})
-  ]).catch(err => {
-    console.error('Failed to PouchDB Indexes', err);
-  });
+function find (type, query) {
+  const docs = db.getCollection(type).find(query);
+  return new Promise(resolve => resolve(docs));
 }
 
-export function get (id) {
-  return db.get(id);
+function insert (doc) {
+  const newDoc = db.getCollection(doc.type).insert(doc);
+  return new Promise(resolve => resolve(newDoc));
 }
 
-export function update (doc, patch = {}) {
-  const updatedDoc = Object.assign(
-    {},
-    doc,
-    patch,
-    {modified: Date.now()}
-  );
-
-  return db.put(updatedDoc).catch(e => {
-    if (e.status === 409) {
-      console.warn('Retrying document update for', updatedDoc);
-
-      get(doc._id).then(dbDoc => {
-        update(dbDoc, patch);
-      });
-    }
-  });
+function update (doc) {
+  const newDoc = db.getCollection(doc.type).update(doc);
+  return new Promise(resolve => resolve(newDoc));
 }
+
+function remove (doc) {
+  const newDoc = db.getCollection(doc.type).remove(doc);
+  return new Promise(resolve => resolve(newDoc));
+}
+
+// setInterval(() => {
+//   db.save();
+//   console.log('SAVED');
+// }, 2000);
 
 export function getChildren (doc) {
-  const parentId = doc._id;
-  return db.find({selector: {parentId}});
+  return [];
+  // const parentId = doc._id;
+  // return db.find({selector: {parentId}});
 }
 
 export function removeChildren (doc) {
-  return getChildren(doc).then(res => res.docs.map(remove));
-}
-
-export function remove (doc) {
-  return Promise.all([
-    update(doc, {_deleted: true}),
-    removeChildren(doc)
-  ]);
+  return [];
+  // return getChildren(doc).then(res => res.docs.map(remove));
 }
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-function modelCreate (type, idPrefix, defaults, patch = {}) {
+function docUpdate (originalDoc, patch = {}) {
+  const doc = Object.assign(
+    {},
+    originalDoc,
+    patch,
+    {modified: Date.now()}
+  );
+
+  // Fake a promise
+  const finalDoc = update(doc);
+  return new Promise(resolve => resolve(finalDoc));
+}
+
+function docCreate (type, idPrefix, defaults, patch = {}) {
   const baseDefaults = {
     parentId: null
   };
@@ -114,14 +152,16 @@ function modelCreate (type, idPrefix, defaults, patch = {}) {
     // Required Generated Fields
     {
       _id: generateId(idPrefix),
-      _rev: undefined,
+      $loki: undefined,
+      meta: undefined,
       type: type,
       created: Date.now(),
       modified: Date.now()
     }
   );
 
-  return update(doc).then(() => doc);
+  // Fake a promise
+  return insert(doc);
 }
 
 // ~~~~~~~ //
@@ -129,7 +169,7 @@ function modelCreate (type, idPrefix, defaults, patch = {}) {
 // ~~~~~~~ //
 
 export function requestCreate (patch = {}) {
-  return modelCreate(TYPE_REQUEST, 'req', {
+  return docCreate(TYPE_REQUEST, 'req', {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
@@ -142,9 +182,21 @@ export function requestCreate (patch = {}) {
   }, patch);
 }
 
+export function requestUpdate (request, patch) {
+  return docUpdate(request, patch);
+}
+
 export function requestCopy (request) {
   const name = `${request.name} (Copy)`;
   return requestCreate(Object.assign({}, request, {name}));
+}
+
+export function requestRemove (request) {
+  return remove(request);
+}
+
+export function requestAll () {
+  return find(TYPE_REQUEST, {});
 }
 
 
@@ -153,11 +205,27 @@ export function requestCopy (request) {
 // ~~~~~~~~~~~~~ //
 
 export function requestGroupCreate (patch = {}) {
-  return modelCreate(TYPE_REQUEST_GROUP, 'grp', {
+  return docCreate(TYPE_REQUEST_GROUP, 'grp', {
     collapsed: false,
     name: 'New Request Group',
     environment: {}
   }, patch);
+}
+
+export function requestGroupUpdate (requestGroup, patch) {
+  return docUpdate(requestGroup, patch);
+}
+
+export function requestGroupById (id) {
+  return get(TYPE_REQUEST_GROUP, id);
+}
+
+export function requestGroupRemove (requestGroup) {
+  return remove(requestGroup);
+}
+
+export function requestGroupAll () {
+  return find(TYPE_REQUEST_GROUP, {});
 }
 
 // ~~~~~~~~ //
@@ -165,15 +233,19 @@ export function requestGroupCreate (patch = {}) {
 // ~~~~~~~~ //
 
 export function responseCreate (patch = {}) {
-  return modelCreate(TYPE_RESPONSE, 'res', {
+  return docCreate(TYPE_RESPONSE, 'res', {
     statusCode: 0,
     statusMessage: '',
     contentType: 'text/plain',
     bytes: 0,
     millis: 0,
-    headers: {},
+    headers: [],
     body: ''
   }, patch);
+}
+
+export function responseAll () {
+  return find(TYPE_RESPONSE, {});
 }
 
 
@@ -182,7 +254,7 @@ export function responseCreate (patch = {}) {
 // ~~~~~~~~~ //
 
 export function workspaceCreate (patch = {}) {
-  return modelCreate(TYPE_WORKSPACE, 'wrk', {
+  return docCreate(TYPE_WORKSPACE, 'wrk', {
     name: 'New Workspace',
     activeRequestId: null,
     environments: []
@@ -190,20 +262,22 @@ export function workspaceCreate (patch = {}) {
 }
 
 export function workspaceAll () {
-  return db.find({
-    selector: {type: 'Workspace'}
-  }).then(res => {
-    if (res.docs.length) {
-      return res;
+  return find(TYPE_WORKSPACE, {}).then(workspaces => {
+    if (workspaces.length === 0) {
+      workspaceCreate({name: 'Insomnia'});
+      return workspaceAll();
     } else {
-      // No workspaces? Create first one and try again
-      // TODO: Replace this with UI flow maybe?
-      console.log('-- Creating First Workspace --');
-      return workspaceCreate({name: 'Insomnia'}).then(() => {
-        return workspaceAll();
-      })
+      return new Promise(resolve => resolve(workspaces))
     }
-  })
+  });
+}
+
+export function workspaceUpdate (workspace, patch) {
+  return docUpdate(workspace, patch);
+}
+
+export function workspaceRemove (workspace) {
+  return remove(workspace);
 }
 
 // ~~~~~~~~ //
@@ -211,9 +285,3 @@ export function workspaceAll () {
 // ~~~~~~~~ //
 
 // TODO: This
-// export function settingsCreate (patch = {}) {
-//   return modelCreate('Settings', 'set', {
-//     editorLineWrapping: false,
-//     editorLineNumbers: true
-//   }, patch);
-// }

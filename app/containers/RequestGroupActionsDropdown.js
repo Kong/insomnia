@@ -26,7 +26,7 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => db.remove(requestGroup)}>
+            <button onClick={e => db.requestGroupRemove(requestGroup)}>
               <i className="fa fa-trash-o"></i> Delete
             </button>
           </li>
