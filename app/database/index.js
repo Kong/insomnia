@@ -106,11 +106,6 @@ function remove (doc) {
   return new Promise(resolve => resolve(newDoc));
 }
 
-// setInterval(() => {
-//   db.save();
-//   console.log('SAVED');
-// }, 2000);
-
 export function getChildren (doc) {
   return [];
   // const parentId = doc._id;
@@ -279,9 +274,3 @@ export function workspaceUpdate (workspace, patch) {
 export function workspaceRemove (workspace) {
   return remove(workspace);
 }
-
-// ~~~~~~~~ //
-// SETTINGS //
-// ~~~~~~~~ //
-
-// TODO: This
