@@ -3,9 +3,6 @@ node_modules
 dist/*
 build/*
 
-# PouchDB stuff
-*db.json
-
 # Logs
 logs
 *.log

@@ -1,3 +1,6 @@
+import * as fsPath from 'path'
+import electron from 'electron'
+
 // import PouchDB from 'pouchdb';
 import * as methods from '../lib/constants';
 import {generateId} from './util'
@@ -28,7 +31,8 @@ export function initDB () {
   }
 
   return new Promise(resolve => {
-    db = new Loki('insomnia.db.json', {
+    const rootPath = electron.remote.app.getPath('appData');
+    db = new Loki(fsPath.join(rootPath, 'insomnia.db.json'), {
       autoload: true,
       autosave: true,
       autosaveInterval: 500, // TODO: Make this a bit smarter maybe
