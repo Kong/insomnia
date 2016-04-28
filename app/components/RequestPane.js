@@ -2,11 +2,13 @@ import React, {Component, PropTypes} from 'react'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
 import KeyValueEditor from '../components/base/KeyValueEditor'
-import Dropdown from '../components/base/Dropdown'
 
+import ContentTypeDropdown from '../components/ContentTypeDropdown'
 import RequestBodyEditor from '../components/RequestBodyEditor'
 import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
+
+import {getContentTypeName} from '../lib/contentTypes'
 
 class RequestPane extends Component {
   render () {
@@ -18,7 +20,8 @@ class RequestPane extends Component {
       updateRequestBody,
       updateRequestParams,
       updateRequestAuthentication,
-      updateRequestHeaders
+      updateRequestHeaders,
+      updateRequestContentType
     } = this.props;
 
     if (!request) {
@@ -46,16 +49,10 @@ class RequestPane extends Component {
           <Tabs className="grid__cell grid--v section__body">
             <TabList className="grid grid--start">
               <Tab className="no-wrap grid grid--center">
-                <button>JSON</button>
-                <Dropdown>
-                  <button><i className="fa fa-caret-down"></i></button>
-                  <ul>
-                    {/*<li><button><i className="fa fa-picture-o"></i> File Upload</button></li>*/}
-                    <li><button><i className="fa fa-bars"></i> Form Data</button></li>
-                    <li><button><i className="fa fa-code"></i> XML</button></li>
-                    <li><button><i className="fa fa-file-text"></i> Plain Text</button></li>
-                  </ul>
-                </Dropdown>
+                <button>{getContentTypeName(request.contentType)}</button>
+                <ContentTypeDropdown
+                  updateRequestContentType={updateRequestContentType}
+                />
               </Tab>
               <Tab>
                 <button className="no-wrap">
@@ -124,6 +121,7 @@ RequestPane.propTypes = {
   updateRequestParams: PropTypes.func.isRequired,
   updateRequestAuthentication: PropTypes.func.isRequired,
   updateRequestHeaders: PropTypes.func.isRequired,
+  updateRequestContentType: PropTypes.func.isRequired,
 
   // Other
   request: PropTypes.object

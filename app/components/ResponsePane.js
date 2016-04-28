@@ -17,7 +17,13 @@ class ResponsePane extends Component {
       return (
         <section className="grid__cell section grid--v grid--start">
           <header className="header bg-light section__header"></header>
-          <div className="section__body grid__cell"></div>
+          <div className="section__body grid__cell grid grid--center">
+            <div className="faint text-center">
+              <h1>Nothing Yet...</h1>
+              <p>Click the <em>Send</em> button to trigger a request</p>
+              <br/>
+            </div>
+          </div>
         </section>
       )
     }
