@@ -13,8 +13,8 @@ cp -r app/package.json app/app.js dist/
 
 echo "-- INSTALLING PACKAGES --"
 
-cp -r app/node_modules dist/
-# cd dist/; NODE_ENV=production npm install; cd ..
+# cp -r app/node_modules dist/
+cd dist/; NODE_ENV=production npm install; cd ..
 
 echo "-- PACKAGING APP --"
 
