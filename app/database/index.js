@@ -19,6 +19,13 @@ const TYPES = [
 
 let db = null;
 
+function getDBFilePath () {
+  return fsPath.join(
+    electron.remote.app.getPath('userData'),
+    process.env.NODE_ENV === 'development' ? 'insomnia.dev.db.json' : 'insomnia.db.json'
+  );
+}
+
 /**
  * Initialize the database. This should be called once on app start.
  * @returns {Promise}
@@ -31,8 +38,9 @@ export function initDB () {
   }
 
   return new Promise(resolve => {
-    const rootPath = electron.remote.app.getPath('appData');
-    db = new Loki(fsPath.join(rootPath, 'insomnia.db.json'), {
+
+    const dbPath = getDBFilePath();
+    db = new Loki(dbPath, {
       autoload: true,
       autosave: true,
       autosaveInterval: 500, // TODO: Make this a bit smarter maybe
@@ -68,6 +76,7 @@ export function initDB () {
 
         resolve();
         initialized = true;
+        console.log(`-- Initialize DB at ${dbPath} --`)
       }
     });
   })
@@ -106,20 +115,11 @@ function update (doc) {
 }
 
 function remove (doc) {
+  // TODO: Make sure we remove children as well (by parentId)
   const newDoc = db.getCollection(doc.type).remove(doc);
   return new Promise(resolve => resolve(newDoc));
 }
 
-export function getChildren (doc) {
-  return [];
-  // const parentId = doc._id;
-  // return db.find({selector: {parentId}});
-}
-
-export function removeChildren (doc) {
-  return [];
-  // return getChildren(doc).then(res => res.docs.map(remove));
-}
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
