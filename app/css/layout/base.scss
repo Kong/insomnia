@@ -40,6 +40,10 @@ hr {
   margin: $padding-md 0;
 }
 
+em {
+  font-style: italic;
+}
+
 label {
   color: $hl;
   text-transform: uppercase;
@@ -64,6 +68,10 @@ label {
 
 .tall {
   height: 100%;
+}
+
+.faint {
+  color: $hl;
 }
 
 .wide {
