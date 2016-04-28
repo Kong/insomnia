@@ -20,10 +20,8 @@ const TYPES = [
 let db = null;
 
 function getDBFilePath () {
-  return fsPath.join(
-    electron.remote.app.getPath('userData'),
-    process.env.NODE_ENV === 'development' ? 'insomnia.dev.db.json' : 'insomnia.db.json'
-  );
+  const basePath = electron.remote.app.getPath('userData');
+  return fsPath.join(basePath, 'insomnia.db.json');
 }
 
 /**

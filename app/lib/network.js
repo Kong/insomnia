@@ -2,15 +2,18 @@ import networkRequest from 'request'
 import render from './render'
 import * as db from '../database'
 
-function actuallySend (unrenderedRequest, callback, context = {}) {
-  // SNEAKY HACK: Render nested object by converting it to JSON then rendering
-  const template = JSON.stringify(unrenderedRequest);
-  const request = JSON.parse(render(template, context));
-
+function buildRequestConfig (request, patch = {}) {
   const config = {
     method: request.method,
     body: request.body,
-    headers: {}
+    headers: {},
+
+    // Setup redirect rules
+    followRedirect: true,
+    maxRedirects: 10,
+
+    // Unzip gzipped responses
+    gzip: true
   };
 
   // Default the proto if it doesn't exist
@@ -35,12 +38,19 @@ function actuallySend (unrenderedRequest, callback, context = {}) {
     }
   }
 
-  // TODO: this needs to account for existing URL params
+  // TODO: this needs to account for existing URL params (hint: use request)
   config.url += request.params.map((p, i) => {
     const name = encodeURIComponent(p.name);
     const value = encodeURIComponent(p.value);
     return `${i === 0 ? '?' : '&'}${name}=${value}`;
   }).join('');
+  
+  return Object.assign(config, patch);
+}
+
+function actuallySend (request, callback) {
+  // TODO: Handle cookies
+  let config = buildRequestConfig(request, {jar: networkRequest.jar()});
 
   const startTime = Date.now();
   networkRequest(config, function (err, response) {
@@ -61,17 +71,21 @@ function actuallySend (unrenderedRequest, callback, context = {}) {
         })
       });
     }
-    
+
     callback(err);
   });
 }
 
 export function send (request, callback) {
-  if (request.parentId) {
-    db.requestGroupById(request.parentId).then(
-      requestGroup => actuallySend(request, callback, requestGroup.environment)
-    );
-  } else {
-    actuallySend(request, callback)
-  }
+  db.requestGroupById(request.parentId).then(requestGroup => {
+    const environment = requestGroup ? requestGroup.environment : {};
+    
+    if (environment) {
+      // SNEAKY HACK: Render nested object by converting it to JSON then rendering
+      const template = JSON.stringify(request);
+      request = JSON.parse(render(template, environment));
+    }
+    
+    actuallySend(request, callback);
+  });
 }
