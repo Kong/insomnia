@@ -1,8 +1,7 @@
 import * as fsPath from 'path'
 import electron from 'electron'
 
-// import PouchDB from 'pouchdb';
-import * as methods from '../lib/constants';
+import * as methods from '../lib/constants'
 import {generateId} from './util'
 import Loki from 'lokijs'
 

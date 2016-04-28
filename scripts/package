@@ -21,7 +21,8 @@ echo "-- PACKAGING APP --"
 node -r babel-register node_modules/electron-packager/cli.js \
     dist \
     Insomnia \
-    --all \
+    --platform=darwin \
+    --arch=x64 \
     --asar \
     --build-version=1 \
     --app-version=3.0.0 \
