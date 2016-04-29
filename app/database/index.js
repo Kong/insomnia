@@ -43,7 +43,7 @@ export function initDB () {
       autoload: true,
       autosave: true,
       clone: true, // Clone objects on save
-      autosaveInterval: 500, // TODO: Make this a bit smarter maybe
+      autosaveInterval: 10000, // TODO: do a final save on close
       persistenceMethod: 'fs',
       autoloadCallback () {
         TYPES.map(type => {

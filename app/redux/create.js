@@ -6,16 +6,22 @@ import localStorageMiddleware, {getState} from './middleware/localstorage'
 import rootReducer from './reducer'
 import {LOCALSTORAGE_KEY} from '../lib/constants'
 
+
 export default function configureStore () {
+  const middleware = [
+    thunkMiddleware,
+    localStorageMiddleware(LOCALSTORAGE_KEY)
+  ];
+
+  if (__DEV__) {
+    middleware.push(createLogger({collapsed: true}));
+  }
+
   // Create the store and apply middleware
   const store = createStore(
     rootReducer,
     getState(LOCALSTORAGE_KEY),
-    applyMiddleware(
-      thunkMiddleware,
-      localStorageMiddleware(LOCALSTORAGE_KEY),
-      createLogger({collapsed: true})
-    )
+    applyMiddleware(...middleware)
   );
 
   if (module.hot) {

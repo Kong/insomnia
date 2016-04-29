@@ -71,7 +71,7 @@ class Editor extends Component {
 
   componentDidMount () {
     const {value} = this.props;
-    
+
     var textareaNode = this.refs.textarea;
 
     this.codeMirror = CodeMirror.fromTextArea(textareaNode, BASE_CODEMIRROR_OPTIONS);
@@ -94,7 +94,7 @@ class Editor extends Component {
     if (!this.codeMirror) {
       return;
     }
-    
+
     const {value} = this.props;
 
     // Reset any options that may have changed
@@ -185,11 +185,33 @@ class Editor extends Component {
       if (this.props.mode === 'application/json') {
         try {
           code = JSON.stringify(JSON.parse(code), null, 4);
-        } catch (e) { }
+        } catch (e) {
+        }
       }
     }
 
     this.codeMirror.setValue(code);
+  }
+
+  shouldComponentUpdate (nextProps) {
+    // NOTE: This is pretty fragile but we really want to limit editor renders as much as
+    // possible
+    
+    for (let key in nextProps) {
+      if (nextProps.hasOwnProperty(key)) {
+        if (typeof nextProps[key] === 'function') {
+          // TODO: compare functions. We don't now because we're passing in anonymous ones
+          continue;
+        }
+        
+        if (nextProps[key] !== this.props[key]) {
+          // Props difference found. Re-render
+          return true;
+        }
+      }
+    }
+    
+    return false;
   }
 
   render () {
@@ -199,13 +221,15 @@ class Editor extends Component {
       this.props.readOnly ? 'editor--readonly' : ''
     ];
 
+    const {path, value, readOnly} = this.props;
+
     return (
       <div className={classes.join(' ')}>
           <textarea
-            name={this.props.path}
+            name={path}
             ref='textarea'
-            defaultValue={this.props.value}
-            readOnly={this.props.readOnly}
+            defaultValue={value}
+            readOnly={readOnly}
             autoComplete='off'>
           </textarea>
       </div>

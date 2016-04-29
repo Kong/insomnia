@@ -12,6 +12,10 @@ class ResponseBodyWebview extends Component {
   componentDidUpdate () {
     this._setBody();
   }
+  
+  shouldComponentUpdate (nextProps) {
+    return nextProps.response !== this.props.response;
+  }
 
   componentDidMount () {
     const {webview} = this.refs;
