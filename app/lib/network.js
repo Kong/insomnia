@@ -44,7 +44,7 @@ function buildRequestConfig (request, patch = {}) {
     const value = encodeURIComponent(p.value);
     return `${i === 0 ? '?' : '&'}${name}=${value}`;
   }).join('');
-  
+
   return Object.assign(config, patch);
 }
 
@@ -76,16 +76,18 @@ function actuallySend (request, callback) {
   });
 }
 
-export function send (request, callback) {
-  db.requestGroupById(request.parentId).then(requestGroup => {
-    const environment = requestGroup ? requestGroup.environment : {};
-    
-    if (environment) {
-      // SNEAKY HACK: Render nested object by converting it to JSON then rendering
-      const template = JSON.stringify(request);
-      request = JSON.parse(render(template, environment));
-    }
-    
-    actuallySend(request, callback);
-  });
+export function send (requestId, callback) {
+  db.requestById(requestId).then(request => {
+    db.requestGroupById(request.parentId).then(requestGroup => {
+      const environment = requestGroup ? requestGroup.environment : {};
+
+      if (environment) {
+        // SNEAKY HACK: Render nested object by converting it to JSON then rendering
+        const template = JSON.stringify(request);
+        request = JSON.parse(render(template, environment));
+      }
+
+      actuallySend(request, callback);
+    });
+  })
 }

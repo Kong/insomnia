@@ -1,21 +1,12 @@
 import React, {Component, PropTypes} from 'react';
 
-const DEFAULT_DEBOUNCE_MILLIS = 300;
-
-/**
- * Input that only fire onChange() after the user stops typing
- */
-class DebouncingInput extends Component {
+class Input extends Component {
   _valueChanged (e) {
     if (!this.props.onChange) {
       return;
     }
 
-    // Surround in closure because callback may change before debounce
-    clearTimeout(this._timeout);
-    ((value, cb, debounceMillis = DEFAULT_DEBOUNCE_MILLIS) => {
-      this._timeout = setTimeout(() => cb(value), debounceMillis);
-    })(e.target.value, this.props.onChange, this.props.debounceMillis);
+    this.props.onChange(e.target.value);
   }
 
   _updateValueFromProps () {
@@ -31,11 +22,8 @@ class DebouncingInput extends Component {
   }
 
   shouldComponentUpdate (nextProps) {
-    if (!this.props.uniquenessKey) {
-      return true;
-    } else {
-      return this.props.uniquenessKey !== nextProps.uniquenessKey;
-    }
+    // Only force update if the uniqueness key has changed
+    return !this.props.uniquenessKey || this.props.uniquenessKey !== nextProps.uniquenessKey;
   }
 
   focus () {
@@ -54,11 +42,10 @@ class DebouncingInput extends Component {
   }
 }
 
-DebouncingInput.propTypes = {
+Input.propTypes = {
   onChange: PropTypes.func.isRequired,
   value: PropTypes.string.isRequired,
-  debounceMillis: PropTypes.number,
   uniquenessKey: PropTypes.string
 };
 
-export default DebouncingInput;
+export default Input;

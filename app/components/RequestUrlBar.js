@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react'
-import DebouncingInput from './base/DebouncingInput';
+import Input from './base/Input';
 import Dropdown from './base/Dropdown';
 import {METHODS} from '../lib/constants';
 
@@ -30,12 +30,11 @@ class UrlInput extends Component {
         </Dropdown>
         <form className="tall grid__cell form-control form-control--wide"
               onSubmit={this._handleFormSubmit.bind(this)}>
-          <DebouncingInput
+          <Input
             type="text"
             className="txt-md"
             placeholder="http://echo.insomnia.rest/status/200"
             value={url}
-            debounceMillis={1000}
             uniquenessKey={uniquenessKey}
             onChange={onUrlChange}/>
         </form>

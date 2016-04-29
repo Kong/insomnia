@@ -40,8 +40,6 @@ import 'codemirror/theme/neat.css'
 // App styles
 import '../../css/components/editor.scss';
 
-const DEFAULT_DEBOUNCE_MILLIS = 500;
-
 const BASE_CODEMIRROR_OPTIONS = {
   theme: 'monokai',
   lineNumbers: true,
@@ -165,13 +163,8 @@ class Editor extends Component {
       this._ignoreNextChange = false;
       return;
     }
-
-    // Do the debounce in a closure so the callback doesn't change while we're waiting
-    const debounceMillis = this.props.debounceMillis || DEFAULT_DEBOUNCE_MILLIS;
-    ((v, cb, millis) => {
-      clearTimeout(this._timeout);
-      this._timeout = setTimeout(() => cb(v), millis);
-    })(newValue, this.props.onChange, debounceMillis);
+    
+    this.props.onChange(newValue);
   }
 
   /**
@@ -245,8 +238,7 @@ Editor.propTypes = {
   path: PropTypes.string,
   value: PropTypes.string,
   prettify: PropTypes.bool,
-  className: PropTypes.any,
-  debounceMillis: PropTypes.number
+  className: PropTypes.any
 };
 
 export default Editor;

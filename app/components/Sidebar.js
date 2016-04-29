@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react'
 import WorkspaceDropdown from './../containers/WorkspaceDropdown'
-import DebouncingInput from './base/DebouncingInput'
+import DebouncingInput from './base/Input'
 import SidebarRequestGroupRow from './SidebarRequestGroupRow'
 import SidebarRequestRow from './SidebarRequestRow'
 

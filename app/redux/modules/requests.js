@@ -38,7 +38,7 @@ export function send (request) {
   return dispatch => {
     dispatch(loadStart());
 
-    network.send(request, () => {
+    network.send(request._id, () => {
       dispatch(loadStop());
     });
   }

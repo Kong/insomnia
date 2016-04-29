@@ -5,7 +5,6 @@ const RequestBodyEditor = ({body, contentType, onChange, className}) => (
   <Editor
     value={body}
     className={className}
-    debounceMillis={400}
     onChange={onChange}
     mode={contentType}
     placeholder="request body here..."

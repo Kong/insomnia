@@ -1,9 +1,9 @@
 import * as fsPath from 'path'
 import electron from 'electron'
+import Loki from 'lokijs'
 
 import * as methods from '../lib/constants'
 import {generateId} from './util'
-import Loki from 'lokijs'
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes'
 import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes'
 
@@ -42,18 +42,18 @@ export function initDB () {
     db = new Loki(dbPath, {
       autoload: true,
       autosave: true,
-      clone: true, // Clone objects on save
-      autosaveInterval: 10000, // TODO: do a final save on close
+      autosaveInterval: 300, // TODO: do a final save on close
       persistenceMethod: 'fs',
       autoloadCallback () {
         TYPES.map(type => {
           let collection = db.getCollection(type);
           if (!collection) {
             collection = db.addCollection(type, {
+              indices: ['_id'],
               asyncListeners: false,
-              clone: false,
-              disableChangesApi: false,
-              transactional: false
+              disableChangesApi: true, // Don't need this yet
+              clone: true, // Clone objects on save
+              transactional: true
             });
 
             collection.ensureUniqueIndex('_id');
@@ -76,9 +76,10 @@ export function initDB () {
 
         resolve();
         initialized = true;
-        console.log(`-- Initialize DB at ${dbPath} --`)
+        console.log(`-- Initialize DB at ${dbPath} --`);
       }
     });
+    global.db = db;
   })
 }
 
@@ -110,8 +111,13 @@ function insert (doc) {
 }
 
 function update (doc) {
-  const newDoc = db.getCollection(doc.type).update(doc);
-  return new Promise(resolve => resolve(newDoc));
+  // NOTE: LokiJS only holds references to objects in its DB. This means we need to fetch the
+  // old reference and update it because that's the only way.
+  return get(doc.type, doc._id).then(oldDoc => {
+    Object.assign(oldDoc, doc);
+    db.getCollection(doc.type).update(oldDoc);
+    return new Promise(resolve => resolve(oldDoc));
+  });
 }
 
 function remove (doc) {
@@ -183,6 +189,10 @@ export function requestCreate (patch = {}) {
     headers: [],
     authentication: {}
   }, patch);
+}
+
+export function requestById (id) {
+  return get(TYPE_REQUEST, id);
 }
 
 export function requestUpdate (request, patch) {
