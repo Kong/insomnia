@@ -1,9 +1,9 @@
 import React from 'react';
 
-const ModalFooter = (props) => (
+const ModalFooter = ({className, children }) => (
   <div className="modal__footer">
-    <div className={props.className}>
-      {props.children}
+    <div className={className}>
+      {children}
     </div>
   </div>
 );

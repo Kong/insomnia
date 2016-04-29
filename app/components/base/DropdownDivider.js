@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {PropTypes} from 'react'
 
 const DropdownDivider = props => (
   <li className="dropdown__divider">
@@ -6,6 +6,8 @@ const DropdownDivider = props => (
   </li>
 );
 
-DropdownDivider.propTypes = {};
+DropdownDivider.propTypes = {
+  name: PropTypes.string.isRequired
+};
 
 export default DropdownDivider;

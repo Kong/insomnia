@@ -3,13 +3,13 @@ import classnames from 'classnames'
 import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown'
 import SidebarRequestRow from './SidebarRequestRow'
 
-const SidebarRequestGroupRow = ({children, hideIfNoChildren, requestGroup, isActive, toggleRequestGroup, addRequestToRequestGroup}) => {
-  // If we are supposed to have children, but aren't passed any, we are probably
-  // filtering so don't render anything
-  if (hideIfNoChildren && children.length === 0) {
-    return null;
-  }
-
+const SidebarRequestGroupRow = ({
+  children,
+  requestGroup,
+  isActive,
+  toggleRequestGroup,
+  addRequestToRequestGroup
+}) => {
   let folderIconClass = 'fa-folder';
   let expanded = !requestGroup.collapsed;
   folderIconClass += !expanded ? '' : '-open';
@@ -61,7 +61,6 @@ SidebarRequestGroupRow.propTypes = {
 
   // Other
   isActive: PropTypes.bool.isRequired,
-  hideIfNoChildren: PropTypes.bool.isRequired,
   requestGroup: PropTypes.object.isRequired
 };
 

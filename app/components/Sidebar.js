@@ -34,7 +34,11 @@ class Sidebar extends Component {
   }
 
   _renderChildren (children, requestGroup) {
-    const {filter} = this.props;
+    const {
+      filter,
+      toggleRequestGroup,
+      addRequestToRequestGroup
+    } = this.props;
 
     const filteredChildren = this._filterChildren(
       filter,
@@ -52,27 +56,32 @@ class Sidebar extends Component {
             request={child.doc}
           />
         )
-      } else if (child.doc.type === 'RequestGroup') {
-        const requestGroup = child.doc;
-        const isActive = !!child.children.find(c => c.doc._id === this.props.activeRequestId);
+      }
+      
+      // We have a RequestGroup!
 
-        return (
-          <SidebarRequestGroupRow
-            key={requestGroup._id}
-            isActive={isActive}
-            hideIfNoChildren={!!filter}
-            toggleRequestGroup={this.props.toggleRequestGroup}
-            addRequestToRequestGroup={this.props.addRequestToRequestGroup}
-            numChildren={child.children.length}
-            requestGroup={requestGroup}
-          >
-            {this._renderChildren(child.children, requestGroup)}
-          </SidebarRequestGroupRow>
-        )
-      } else {
-        console.error('Unknown child type', child.doc.type);
+      const requestGroup = child.doc;
+      const isActive = !!child.children.find(c => c.doc._id === this.props.activeRequestId);
+
+      const children = this._renderChildren(child.children, requestGroup);
+
+      // Don't render the row if there are no children while filtering
+      if (filter && !children.length) {
         return null;
       }
+
+      return (
+        <SidebarRequestGroupRow
+          key={requestGroup._id}
+          isActive={isActive}
+          toggleRequestGroup={toggleRequestGroup}
+          addRequestToRequestGroup={addRequestToRequestGroup}
+          numChildren={child.children.length}
+          requestGroup={requestGroup}
+        >
+          {children}
+        </SidebarRequestGroupRow>
+      )
     })
   }
 
