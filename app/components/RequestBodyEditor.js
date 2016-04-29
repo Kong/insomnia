@@ -11,10 +11,8 @@ class RequestBodyEditor extends Component {
         className={className}
         debounceMillis={400}
         onChange={onChange}
-        options={{
-          mode: contentType,
-          placeholder: 'request body here...'
-        }}
+        mode={contentType}
+        placeholder="request body here..."
       />
     )
   }
@@ -23,7 +21,7 @@ class RequestBodyEditor extends Component {
 RequestBodyEditor.propTypes = {
   // Functions
   onChange: PropTypes.func.isRequired,
-  
+
   // Other
   body: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired

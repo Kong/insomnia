@@ -6,6 +6,7 @@ import Editor from '../components/base/Editor'
 import StatusTag from '../components/StatusTag'
 import SizeTag from '../components/SizeTag'
 import TimeTag from '../components/TimeTag'
+import ResponseBodyWebview from '../components/ResponseBodyWebview'
 
 class ResponsePane extends Component {
   render () {
@@ -59,17 +60,23 @@ class ResponsePane extends Component {
               </Tab>
               <Tab><button>Headers</button></Tab>
             </TabList>
-            <TabPanel className="grid__cell editor-wrapper">
-              <Editor
-                value={response && response.body || ''}
-                prettify={true}
-                options={{
-                    mode: response && response.contentType || 'text/plain',
-                    readOnly: true,
-                    placeholder: 'nothing yet...'
-                  }}
-              />
-            </TabPanel>
+            {response.contentType.indexOf('text/html') !== -1 ? (
+              <TabPanel className="grid__cell grid--v">
+                <ResponseBodyWebview
+                  className="grid__cell wide"
+                  response={response} />
+              </TabPanel>
+            ) : (
+              <TabPanel className="grid__cell editor-wrapper">
+                <Editor
+                  value={response && response.body || ''}
+                  prettify={true}
+                  mode={response && response.contentType || 'text/plain'}
+                  readOnly={true}
+                  placeholder="nothing yet..."
+                />
+              </TabPanel>
+            )}
             <TabPanel className="grid__cell grid__cell--scroll--v">
               <div className="wide">
                 <div className="grid--v grid--start pad">

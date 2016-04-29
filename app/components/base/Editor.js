@@ -70,7 +70,7 @@ class Editor extends Component {
   }
 
   componentDidMount () {
-    const {options, value} = this.props;
+    const {value} = this.props;
     
     var textareaNode = this.refs.textarea;
 
@@ -79,7 +79,7 @@ class Editor extends Component {
     this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
     this._currentCodemirrorValue = value || '';
     this._codemirrorSetValue(this._currentCodemirrorValue);
-    this._codemirrorSetOptions(options);
+    this._codemirrorSetOptions();
   }
 
   componentWillUnmount () {
@@ -95,10 +95,10 @@ class Editor extends Component {
       return;
     }
     
-    const {options, value} = this.props;
+    const {value} = this.props;
 
     // Reset any options that may have changed
-    this._codemirrorSetOptions(options);
+    this._codemirrorSetOptions();
 
     // Don't update if no value passed
     if (value === undefined) {
@@ -125,11 +125,14 @@ class Editor extends Component {
 
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
-   * @param options
    */
-  _codemirrorSetOptions (options) {
+  _codemirrorSetOptions () {
     // Clone first so we can modify it
-    options = Object.assign({}, options);
+    let options = {
+      placeholder: this.props.placeholder || '',
+      mode: this.props.mode || 'text/plain',
+      readOnly: this.props.readOnly || false
+    };
 
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
@@ -179,7 +182,7 @@ class Editor extends Component {
     this._ignoreNextChange = true;
 
     if (this.props.prettify) {
-      if (this.props.options.mode === 'application/json') {
+      if (this.props.mode === 'application/json') {
         try {
           code = JSON.stringify(JSON.parse(code), null, 4);
         } catch (e) { }
@@ -190,11 +193,10 @@ class Editor extends Component {
   }
 
   render () {
-    const options = this.props.options || {};
     const classes = [
       'editor',
       this.props.className,
-      options.readOnly ? 'editor--readonly' : ''
+      this.props.readOnly ? 'editor--readonly' : ''
     ];
 
     return (
@@ -203,7 +205,7 @@ class Editor extends Component {
             name={this.props.path}
             ref='textarea'
             defaultValue={this.props.value}
-            readOnly={options.readOnly}
+            readOnly={this.props.readOnly}
             autoComplete='off'>
           </textarea>
       </div>
@@ -214,7 +216,8 @@ class Editor extends Component {
 Editor.propTypes = {
   onChange: PropTypes.func,
   onFocusChange: PropTypes.func,
-  options: PropTypes.object,
+  mode: PropTypes.string,
+  placeholder: PropTypes.string,
   path: PropTypes.string,
   value: PropTypes.string,
   prettify: PropTypes.bool,
