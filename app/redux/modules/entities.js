@@ -1,7 +1,6 @@
 import {combineReducers} from 'redux'
 
 import {TYPE_WORKSPACE, TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_RESPONSE} from '../../database/index'
-import * as workspaceFns from './workspaces'
 
 const ENTITY_INSERT = 'entities/insert';
 const ENTITY_UPDATE = 'entities/update';
@@ -40,7 +39,8 @@ export default combineReducers({
   workspaces: genericEntityReducer('workspace'),
   requestGroups: genericEntityReducer('requestGroup'),
   requests: genericEntityReducer('request'),
-  responses: genericEntityReducer('response')
+  responses: genericEntityReducer('response'),
+  dontPersist() { return true; }
 })
 
 

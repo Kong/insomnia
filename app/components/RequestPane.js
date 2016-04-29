@@ -94,6 +94,7 @@ class RequestPane extends Component {
                     onChange={updateRequestAuthentication}
                   />
                   <br/>
+                  <br/>
                   <label>Other Headers</label>
                   <KeyValueEditor
                     namePlaceholder="My-Header"

@@ -1,3 +1,6 @@
+// Global Stuff
+export const LOCALSTORAGE_KEY = 'insomnia.state';
+
 // HTTP Methods
 export const METHOD_GET = 'GET';
 export const METHOD_PUT = 'PUT';

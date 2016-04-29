@@ -1,14 +1,19 @@
 import {createStore, applyMiddleware} from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
-import rootReducer from './reducer'
+import localStorageMiddleware, {getState} from './middleware/localstorage'
 
-export default function configureStore (initialState) {
+import rootReducer from './reducer'
+import {LOCALSTORAGE_KEY} from '../lib/constants'
+
+export default function configureStore () {
+  // Create the store and apply middleware
   const store = createStore(
     rootReducer,
-    initialState,
+    getState(LOCALSTORAGE_KEY),
     applyMiddleware(
       thunkMiddleware,
+      localStorageMiddleware(LOCALSTORAGE_KEY),
       createLogger({collapsed: true})
     )
   );

@@ -34,9 +34,9 @@ h1, h2, h3 {
 
 hr {
   width: 100%;
-  height: 1px;
-  background-color: $hl-md;
+  height: 0;
   border: 0;
+  border-bottom: 1px solid $hl-md;
   margin: $padding-md 0;
 }
 

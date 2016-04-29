@@ -40,6 +40,7 @@ export function initDB () {
     db = new Loki(dbPath, {
       autoload: true,
       autosave: true,
+      clone: true, // Clone objects on save
       autosaveInterval: 500, // TODO: Make this a bit smarter maybe
       persistenceMethod: 'fs',
       autoloadCallback () {
@@ -112,9 +113,12 @@ function update (doc) {
 }
 
 function remove (doc) {
-  // TODO: Make sure we remove children as well (by parentId)
-  const newDoc = db.getCollection(doc.type).remove(doc);
-  return new Promise(resolve => resolve(newDoc));
+  db.getCollection(doc.type).remove(doc);
+
+  // Also remove children
+  TYPES.map(type => db.getCollection(type).removeWhere({parentId: doc._id}));
+
+  new Promise(resolve => resolve());
 }
 
 
