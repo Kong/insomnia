@@ -1,0 +1,166 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.sidebar {
+  display: grid;
+  grid-template-rows: $line-height-md 1fr $line-height-md;
+  grid-template-columns: 1fr;
+
+  background-color: $bg-dark;
+  color: $font-dark-bg;
+
+  width: 100%;
+  height: 100%;
+
+  // ~~~~~~~~~~~~~~ //
+  // Sidebar Header //
+  // ~~~~~~~~~~~~~~ //
+
+  .sidebar__header {
+    background-color: $bg-brand;
+    color: $font-brand-bg;
+
+    // HACK: Bump up the arrow a bit
+    h1 i {
+      position: relative;
+      top: -2px;
+    }
+
+    // Make the dropdown offset to the right
+    .dropdown ul {
+      right: -40%;
+    }
+
+    .btn {
+      padding: 0 $padding-md;
+    }
+  }
+
+  // ~~~~~~~~~~~~ //
+  // Sidebar List //
+  // ~~~~~~~~~~~~ //
+
+  .sidebar__list {
+    // Nothing yet...
+  }
+
+  // Root list scrolling
+
+  & > .sidebar__list {
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:hover::-webkit-scrollbar {
+      display: block;
+    }
+  }
+
+  // ~~~~~~~~~~~ //
+  // Sidebar Row //
+  // ~~~~~~~~~~~ //
+
+  .sidebar__row {
+    // Nothing yet...
+  }
+
+  // ~~~~~~~~~~~~ //
+  // Sidebar Item //
+  // ~~~~~~~~~~~~ //
+
+  .sidebar__item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: $line-height-xs;
+    color: $hl;
+
+    & > * {
+      height: 100%;
+    }
+
+    &.sidebar__item--big {
+      grid-template-rows: $line-height-sm;
+    }
+
+    &.active {
+      color: $font-dark-bg;
+
+      .tag {
+        opacity: 1;
+      }
+    }
+
+    &:hover {
+      background-color: $hl-xxs;
+    }
+
+    .tag {
+      opacity: 0.5;
+      padding-left: 0;
+      width: 2.5em;
+      text-align: left;
+    }
+  }
+
+  // put border on folders
+
+  .sidebar__row:not(:first-child) .sidebar__item--big {
+    border-top: 1px solid $hl-sm;
+  }
+
+  // ~~~~~~~~~~~~~~~~~ //
+  // Sidebar Clickable //
+  // ~~~~~~~~~~~~~~~~~ //
+
+  .sidebar__clickable {
+    // Nothing yet...
+  }
+
+  // Padding
+
+  .sidebar__list .sidebar__clickable {
+    padding-left: $padding-md;
+  }
+
+  .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: $padding-md * 2;
+  }
+
+  // ~~~~~~~~~~~~~~~ //
+  // Sidebar Actions //
+  // ~~~~~~~~~~~~~~~ //
+
+  .sidebar__actions {
+    & > * {
+      height: 100%;
+    }
+
+    & > button,
+    & > .dropdown > button {
+      display: none;
+      color: $hl;
+      height: 100%;
+      padding: 0 $padding-sm;
+    }
+
+    & > button:hover,
+    & > .dropdown:hover > button {
+      color: $font-dark-bg;
+    }
+  }
+
+  .sidebar__item:hover .sidebar__actions > button,
+  .sidebar__item:hover .sidebar__actions > .dropdown > button {
+    display: initial;
+  }
+
+  // ~~~~~~~~~~~~~~ //
+  // Sidebar Footer //
+  // ~~~~~~~~~~~~~~ //
+
+  footer.sidebar__footer {
+    // Nothing yet...
+  }
+}

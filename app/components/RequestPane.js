@@ -25,89 +25,81 @@ const RequestPane = props => {
 
   if (!request) {
     return (
-      <section className="grid__cell section section--bordered grid--v grid--start">
-        <header className="header bg-super-light section__header"></header>
-        <div className="section__body grid__cell"></div>
+      <section className="request-pane pane">
+        <header className="pane__header"></header>
+        <div className="pane__body"></div>
       </section>
     )
   }
 
   return (
-    <section className="grid__cell section section--bordered">
-      <div className="grid--v wide">
-        <div className="header section__header">
-          <RequestUrlBar
-            uniquenessKey={request._id}
-            sendRequest={() => sendRequest(request)}
-            onUrlChange={updateRequestUrl}
-            onMethodChange={updateRequestMethod}
-            url={request.url}
-            method={request.method}
-          />
-        </div>
-        <Tabs className="grid__cell grid--v section__body">
-          <TabList className="grid grid--start">
-            <Tab className="no-wrap grid grid--center">
-              <button>{getContentTypeName(request.contentType)}</button>
-              <ContentTypeDropdown
-                activeContentType={request.contentType}
-                updateRequestContentType={updateRequestContentType}
-              />
-            </Tab>
-            <Tab>
-              <button className="no-wrap">
-                Params {request.params.length ? `(${request.params.length})` : ''}
-              </button>
-            </Tab>
-            <Tab>
-              <button className="no-wrap">
-                Headers {request.headers.length ? `(${request.headers.length})` : ''}
-              </button>
-            </Tab>
-          </TabList>
-          <TabPanel className="grid__cell editor-wrapper">
-            <RequestBodyEditor
-              onChange={updateRequestBody}
-              requestId={request._id}
-              contentType={request.contentType}
-              body={request.body}
+    <section className="request-pane pane">
+      <header className="pane__header">
+        <RequestUrlBar
+          uniquenessKey={request._id}
+          sendRequest={() => sendRequest(request)}
+          onUrlChange={updateRequestUrl}
+          onMethodChange={updateRequestMethod}
+          url={request.url}
+          method={request.method}
+        />
+      </header>
+      <Tabs className="pane__body">
+        <TabList>
+          <Tab>
+            <button>{getContentTypeName(request.contentType)}</button>
+            <ContentTypeDropdown
+              activeContentType={request.contentType}
+              updateRequestContentType={updateRequestContentType}
             />
-          </TabPanel>
-          <TabPanel className="grid__cell grid__cell--scroll--v">
-            <div>
-              <KeyValueEditor
-                className="pad"
-                namePlaceholder="name"
-                valuePlaceholder="value"
-                uniquenessKey={request._id}
-                pairs={request.params}
-                onChange={updateRequestParams}
-              />
-            </div>
-          </TabPanel>
-          <TabPanel className="grid__cell grid__cell--scroll--v">
-            <div>
-              <div className="pad">
-                <label>Basic Authentication</label>
-                <RequestAuthEditor
-                  request={request}
-                  onChange={updateRequestAuthentication}
-                />
-                <br/>
-                <br/>
-                <label>Other Headers</label>
-                <KeyValueEditor
-                  namePlaceholder="My-Header"
-                  valuePlaceholder="Value"
-                  uniquenessKey={request._id}
-                  pairs={request.headers}
-                  onChange={updateRequestHeaders}
-                />
-              </div>
-            </div>
-          </TabPanel>
-        </Tabs>
-      </div>
+          </Tab>
+          <Tab>
+            <button>
+              Params {request.params.length ? `(${request.params.length})` : ''}
+            </button>
+          </Tab>
+          <Tab>
+            <button>
+              Headers {request.headers.length ? `(${request.headers.length})` : ''}
+            </button>
+          </Tab>
+        </TabList>
+        <TabPanel className="editor-wrapper">
+          <RequestBodyEditor
+            onChange={updateRequestBody}
+            requestId={request._id}
+            contentType={request.contentType}
+            body={request.body}
+          />
+        </TabPanel>
+        <TabPanel className="scrollable">
+          <KeyValueEditor
+            className="pad"
+            namePlaceholder="name"
+            valuePlaceholder="value"
+            uniquenessKey={request._id}
+            pairs={request.params}
+            onChange={updateRequestParams}
+          />
+        </TabPanel>
+        <TabPanel className="scrollable pad">
+          <label>Basic Authentication</label>
+          <RequestAuthEditor
+            request={request}
+            onChange={updateRequestAuthentication}
+          />
+          <br/>
+          <br/>
+          <label>Other Headers</label>
+          <KeyValueEditor
+            namePlaceholder="My-Header"
+            valuePlaceholder="Value"
+            uniquenessKey={request._id}
+            pairs={request.headers}
+            onChange={updateRequestHeaders}
+          />
+        </TabPanel>
+      </Tabs>
     </section>
   )
 };

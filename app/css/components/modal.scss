@@ -15,15 +15,37 @@
     border-top-left-radius: $radius-md;
     border-top-right-radius: $radius-md;
     border-bottom: 1px solid $hl-md;
+    height: $line-height-md;
+    font-size: $font-size-lg;
+    line-height: $line-height-md;
+    padding: 0 $padding-md;
+    position: relative;
+    background-color: $bg-light;
+
+    .modal__close-btn {
+      position: absolute;
+      height: 100%;
+      right: 0;
+    }
   }
 
   .modal__content {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    margin: auto;
+    background: $bg-super-light;
+    color: $font-super-light-bg;
     border-radius: $radius-md;
     box-sizing: border-box;
     box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.5);
     width: $modal-width;
     max-width: 100%;
     max-height: 100%;
+  }
+
+  .modal__body {
+    overflow: auto;
   }
 
   .modal__footer {

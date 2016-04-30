@@ -1,0 +1,41 @@
+@import '../constants/colors';
+@import '../constants/dimensions';
+
+.pane {
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-rows: $line-height-md 1fr;
+  grid-template-columns: 1fr;
+
+  .pane__header {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background: $bg-super-light;
+    color: $font-super-light-bg;
+    border-left: 1px solid $hl-md;
+    box-sizing: border-box;
+  }
+
+  .pane__body {
+    border-left: 1px solid $hl-md;
+    box-sizing: border-box;
+  }
+
+  .pane__body--placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    h1 {
+      color: $hl;
+    }
+
+    p {
+      color: $hl-xxl;
+    }
+  }
+}

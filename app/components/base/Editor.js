@@ -236,7 +236,7 @@ Editor.propTypes = {
   onFocusChange: PropTypes.func,
   mode: PropTypes.string,
   placeholder: PropTypes.string,
-  lineWrapping: PropTypes.bool,
+  line: PropTypes.string,
   path: PropTypes.string,
   value: PropTypes.string,
   prettify: PropTypes.bool,

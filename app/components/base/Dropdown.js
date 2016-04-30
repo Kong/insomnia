@@ -1,4 +1,5 @@
-import React, {Component, PropTypes} from 'react';
+import React, {Component, PropTypes} from 'react'
+import classnames from 'classnames'
 
 class Dropdown extends Component {
   constructor () {
@@ -33,13 +34,15 @@ class Dropdown extends Component {
   }
 
   render () {
-    const classes = ['dropdown'].concat(this.props.className || []);
-
-    this.state.open && classes.push('dropdown--open');
-    this.props.right && classes.push('dropdown--right');
+    const className = classnames(
+      'dropdown',
+      this.props.className,
+      {'dropdown--open': this.state.open},
+      {'dropdown--right': this.props.right}
+    );
 
     return (
-      <div ref="container" className={classes.join(' ')} onClick={this._handleClick.bind(this)}>
+      <div ref="container" className={className} onClick={this._handleClick.bind(this)}>
         {this.props.children}
       </div>
     )

@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react'
 import WorkspaceDropdown from './../containers/WorkspaceDropdown'
-import DebouncingInput from './base/Input'
+import Input from './base/Input'
 import SidebarRequestGroupRow from './SidebarRequestGroupRow'
 import SidebarRequestRow from './SidebarRequestRow'
 
@@ -57,7 +57,7 @@ class Sidebar extends Component {
           />
         )
       }
-      
+
       // We have a RequestGroup!
 
       const requestGroup = child.doc;
@@ -89,27 +89,23 @@ class Sidebar extends Component {
     const {filter, children} = this.props;
 
     return (
-      <section className="sidebar bg-dark grid--v section section--bordered">
-        <header className="header bg-brand section__header">
+      <aside className="sidebar">
+        <header className="sidebar__header">
           <WorkspaceDropdown />
         </header>
-        <div className="grid--v grid--start grid__cell section__body">
-          <ul
-            className="grid--v grid--start grid__cell sidebar__scroll hover-scrollbars sidebar__request-list">
-            {this._renderChildren(children)}
-          </ul>
-          <div className="grid grid--center">
-            <div className="grid__cell form-control form-control--underlined">
-              <DebouncingInput
-                type="text"
-                placeholder="Filter Items"
-                debounceMillis={300}
-                value={filter}
-                onChange={this.onFilterChange.bind(this)}/>
-            </div>
-          </div>
-        </div>
-      </section>
+        
+        <ul className="sidebar__list">
+          {this._renderChildren(children)}
+        </ul>
+        
+        <footer className="sidebar__footer form-control form-control--underlined">
+          <Input
+            type="text"
+            placeholder="Filter Items"
+            value={filter}
+            onChange={this.onFilterChange.bind(this)}/>
+        </footer>
+      </aside>
     )
   }
 }

@@ -10,6 +10,9 @@ const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
 var mainWindow = null;
 
+// Enable this for CSS grid layout :)
+electron.app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
   if (!IS_MAC) {

@@ -15,32 +15,30 @@ const SidebarRequestGroupRow = ({
   folderIconClass += !expanded ? '' : '-open';
   folderIconClass += isActive ? '' : '-o';
 
-  const sidebarItemClassNames = classnames(
-    'sidebar__item',
-    'sidebar__item--bordered',
-    {'sidebar__item--active': isActive}
-  );
-
   return (
-    <li key={requestGroup._id}>
-      <div className={sidebarItemClassNames}>
-        <div className="sidebar__item__row sidebar__item__row--heading">
-          <button onClick={e => toggleRequestGroup(requestGroup)}>
-            <i className={'fa ' + folderIconClass}></i>
-            &nbsp;&nbsp;&nbsp;{requestGroup.name}
-          </button>
-        </div>
-        <div className="sidebar__item__btn grid">
+    <li key={requestGroup._id}
+        className={classnames('sidebar__row', {active: isActive})}>
+
+      <div className={classnames('sidebar__item sidebar__item--big', {active: isActive})}>
+
+        <button className="sidebar__clickable" onClick={e => toggleRequestGroup(requestGroup)}>
+          <i className={'fa ' + folderIconClass}></i>
+          &nbsp;&nbsp;&nbsp;{requestGroup.name}
+        </button>
+
+        <div className="sidebar__actions">
           <button onClick={(e) => addRequestToRequestGroup(requestGroup)}>
             <i className="fa fa-plus-circle"></i>
           </button>
           <RequestGroupActionsDropdown
             requestGroup={requestGroup}
             right={true}
-            className="tall"/>
+          />
         </div>
+
       </div>
-      <ul>
+
+      <ul className="sidebar__list">
         {!expanded || children.length > 0 ? null : (
           <SidebarRequestRow
             activateRequest={() => {}}

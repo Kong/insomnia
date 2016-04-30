@@ -5,7 +5,7 @@ import Loki from 'lokijs'
 import * as methods from '../lib/constants'
 import {generateId} from './util'
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes'
-import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes'
+import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
 
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
@@ -182,7 +182,7 @@ export function requestCreate (patch = {}) {
     name: 'New Request',
     method: methods.METHOD_GET,
     activated: Date.now(),
-    previewMode: PREVIEW_MODE_FRIENDLY,
+    previewMode: PREVIEW_MODE_SOURCE,
     contentType: CONTENT_TYPE_TEXT,
     body: '',
     params: [],

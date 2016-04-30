@@ -4,7 +4,6 @@
 
 /* Boilerplate */
 @import 'reset';
-@import 'components/grid';
 @import 'layout/base';
 
 /* Styles */
@@ -12,13 +11,16 @@
 
 /* Layout */
 @import 'components/forms';
-@import 'components/header';
 
 /* Components */
-@import 'layout/sidebar';
+@import 'components/wrapper';
+@import 'components/sidebar';
+@import 'components/pane';
+@import 'components/urlbar';
 @import 'components/tag';
 @import 'components/tabs';
 @import 'components/scrollbars';
 @import 'components/dropdown';
 @import 'components/modal';
 @import 'components/toast';
+@import 'components/keyvalueeditor';

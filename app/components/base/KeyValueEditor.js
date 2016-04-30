@@ -7,7 +7,6 @@ const ENTER = 13;
 const BACKSPACE = 8;
 const UP = 38;
 const DOWN = 40;
-const DEBOUNCE_MILLIS = 300;
 
 class KeyValueEditor extends Component {
   constructor (props) {
@@ -19,14 +18,8 @@ class KeyValueEditor extends Component {
     }
   }
 
-  _onChange (pairs, debounce = false) {
-    // Surround in closure because callback may change before debounce
-    clearTimeout(this._timeout);
-    const millis = debounce ? DEBOUNCE_MILLIS : 0;
-    this._timeout = setTimeout(this.props.onChange.bind(null, pairs), millis);
-    if (debounce) {
-      this.setState({pairs});
-    }
+  _onChange (pairs) {
+    this.props.onChange(pairs);
   }
 
   _addPair (position) {
@@ -151,11 +144,11 @@ class KeyValueEditor extends Component {
     const {maxPairs, className} = this.props;
 
     return (
-      <div className={classnames('grid--v', 'grid--start', 'wide', className)}>
+      <ul className={classnames('key-value-editor', 'wide', className)}>
         {pairs.map((pair, i) => {
           return (
-            <div key={i} className="grid__cell grid__cell--no-flex grid">
-              <div className="form-control form-control--underlined form-control--wide grid__cell">
+            <li key={i}>
+              <div className="form-control form-control--underlined form-control--wide">
                 <input
                   type="text"
                   placeholder={this.props.namePlaceholder || 'Name'}
@@ -166,8 +159,7 @@ class KeyValueEditor extends Component {
                   onBlur={e => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>
               </div>
-              <div>&nbsp;&nbsp;&nbsp;</div>
-              <div className="form-control form-control--underlined form-control--wide grid__cell">
+              <div className="form-control form-control--underlined form-control--wide">
                 <input
                   type="text"
                   placeholder={this.props.valuePlaceholder || 'Value'}
@@ -178,39 +170,31 @@ class KeyValueEditor extends Component {
                   onBlur={e => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>
               </div>
-              <div>&nbsp;&nbsp;&nbsp;</div>
-              <div className="grid--v">
-                <button className="btn btn--compact"
-                        tabIndex="-1"
-                        onClick={e => this._deletePair(i)}>
-                  <i className="fa fa-trash-o"></i>
-                </button>
-              </div>
-            </div>
+
+              <button tabIndex="-1" onClick={e => this._deletePair(i)}>
+                <i className="fa fa-trash-o"></i>
+              </button>
+            </li>
           )
         })}
         {maxPairs === undefined || pairs.length < maxPairs ? (
-          <div className="grid__cell grid__cell--no-flex grid">
-            <div className="form-control form-control--underlined form-control--wide grid__cell">
+          <li>
+            <div className="form-control form-control--underlined form-control--wide">
               <input type="text"
                      placeholder={this.props.namePlaceholder || 'Name'}
                      onFocus={e => {this._focusedField = NAME; this._addPair()}}/>
             </div>
-            <div>&nbsp;&nbsp;&nbsp;</div>
-            <div className="form-control form-control--underlined form-control--wide grid__cell">
+            <div className="form-control form-control--underlined form-control--wide">
               <input type="text"
                      placeholder={this.props.valuePlaceholder || 'Value'}
                      onFocus={e => {this._focusedField = VALUE; this._addPair()}}/>
             </div>
-            <div>&nbsp;&nbsp;&nbsp;</div>
-            <div className="grid--v">
-              <button className="btn btn--compact" disabled={true} tabIndex="-1">
-                <i className="fa fa-blank"></i>
-              </button>
-            </div>
-          </div>
+            <button disabled={true} tabIndex="-1">
+              <i className="fa fa-blank"></i>
+            </button>
+          </li>
         ) : null}
-      </div>
+      </ul>
     )
   }
 }
