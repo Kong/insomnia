@@ -129,7 +129,8 @@ class Editor extends Component {
     let options = {
       placeholder: this.props.placeholder || '',
       mode: this.props.mode || 'text/plain',
-      readOnly: this.props.readOnly || false
+      readOnly: this.props.readOnly || false,
+      lineWrapping: !!this.props.lineWrapping
     };
 
     // Strip of charset if there is one
@@ -235,6 +236,7 @@ Editor.propTypes = {
   onFocusChange: PropTypes.func,
   mode: PropTypes.string,
   placeholder: PropTypes.string,
+  lineWrapping: PropTypes.bool,
   path: PropTypes.string,
   value: PropTypes.string,
   prettify: PropTypes.bool,

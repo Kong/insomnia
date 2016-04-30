@@ -183,9 +183,9 @@ export function requestCreate (patch = {}) {
     method: methods.METHOD_GET,
     activated: Date.now(),
     previewMode: PREVIEW_MODE_FRIENDLY,
+    contentType: CONTENT_TYPE_TEXT,
     body: '',
     params: [],
-    contentType: CONTENT_TYPE_TEXT,
     headers: [],
     authentication: {}
   }, patch);

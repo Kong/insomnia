@@ -2,11 +2,11 @@ import React, {Component, PropTypes} from 'react'
 
 class ResponseBodyWebview extends Component {
   _setBody () {
-    const {response} = this.props;
+    const {body, contentType} = this.props;
     const {webview} = this.refs;
 
-    const encoded = new Buffer(response.body).toString('base64');
-    webview.loadURL(`data:${response.contentType};base64,${encoded}`);
+    const encoded = new Buffer(body).toString('base64');
+    webview.loadURL(`data:${contentType};base64,${encoded}`);
   }
 
   componentDidUpdate () {
@@ -14,7 +14,15 @@ class ResponseBodyWebview extends Component {
   }
   
   shouldComponentUpdate (nextProps) {
-    return nextProps.response !== this.props.response;
+    for (let key in nextProps) {
+      if (nextProps.hasOwnProperty(key)) {
+        if (nextProps[key] !== this.props[key]) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   componentDidMount () {
@@ -31,7 +39,7 @@ class ResponseBodyWebview extends Component {
   render () {
     return (
       <webview
-        className="grid__cell wide bg-super-light"
+        className="grid__cell wide"
         autosize="on"
         ref="webview"
         src=""
@@ -41,7 +49,8 @@ class ResponseBodyWebview extends Component {
 }
 
 ResponseBodyWebview.propTypes = {
-  response: PropTypes.object.isRequired
+  body: PropTypes.string.isRequired,
+  contentType: PropTypes.string.isRequired
 };
 
 export default ResponseBodyWebview;

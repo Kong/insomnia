@@ -88,6 +88,8 @@ class App extends Component {
           />
           <ResponsePane
             response={activeResponse}
+            previewMode={activeRequest.previewMode}
+            updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}
           />
         </div>
 

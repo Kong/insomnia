@@ -91,3 +91,7 @@ button {
   padding: 0;
   margin: 0;
 }
+
+textarea.no-resize {
+  resize: none;
+}

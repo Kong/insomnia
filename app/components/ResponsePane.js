@@ -1,14 +1,14 @@
 import React, {PropTypes} from 'react'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
-import Dropdown from '../components/base/Dropdown'
-import Editor from '../components/base/Editor'
 import StatusTag from '../components/StatusTag'
 import SizeTag from '../components/SizeTag'
 import TimeTag from '../components/TimeTag'
-import ResponseBodyWebview from '../components/ResponseBodyWebview'
+import PreviewModeDropdown from '../components/PreviewModeDropdown'
+import ResponseViewer from '../components/ResponseViewer'
+import {getPreviewModeName} from '../lib/previewModes'
 
-const ResponsePane = ({response}) => {
+const ResponsePane = ({response, previewMode, updatePreviewMode}) => {
   if (!response) {
     return (
       <section className="grid__cell section grid--v grid--start">
@@ -43,39 +43,25 @@ const ResponsePane = ({response}) => {
         <Tabs className="grid__cell grid--v section__body">
           <TabList className="grid grid--start">
             <Tab className="no-wrap grid grid--center">
-              <button>Preview</button>
-              <Dropdown>
-                <button><i className="fa fa-caret-down"></i></button>
-                <ul>
-                  <li><button><i className="fa fa-eye"></i> Preview</button></li>
-                  <li><button><i className="fa fa-code"></i> Source</button></li>
-                  <li><button><i className="fa fa-file"></i> Raw</button></li>
-                </ul>
-              </Dropdown>
+              <button>{getPreviewModeName(previewMode)}</button>
+              <PreviewModeDropdown
+                previewMode={previewMode}
+                updatePreviewMode={updatePreviewMode}
+              />
             </Tab>
             <Tab><button>Headers</button></Tab>
           </TabList>
-          {response.contentType.indexOf('text/html') !== -1 ? (
-            <TabPanel className="grid__cell grid--v">
-              <ResponseBodyWebview
-                className="grid__cell wide"
-                response={response}/>
-            </TabPanel>
-          ) : (
-            <TabPanel className="grid__cell editor-wrapper">
-              <Editor
-                value={response && response.body || ''}
-                prettify={true}
-                mode={response && response.contentType || 'text/plain'}
-                readOnly={true}
-                placeholder="nothing yet..."
-              />
-            </TabPanel>
-          )}
+          <TabPanel className="grid__cell grid">
+            <ResponseViewer
+              contentType={response.contentType}
+              previewMode={previewMode}
+              body={response.body}
+            />
+          </TabPanel>
           <TabPanel className="grid__cell grid__cell--scroll--v">
             <div className="wide">
               <div className="grid--v grid--start pad">
-                {!response ? null : response.headers.map((h, i) => (
+                {response.headers.map((h, i) => (
                   <div className="grid grid__cell grid__cell--no-flex selectable" key={i}>
                     <div className="grid__cell">{h.name}</div>
                     <div className="grid__cell">{h.value}</div>
@@ -91,7 +77,15 @@ const ResponsePane = ({response}) => {
 };
 
 ResponsePane.propTypes = {
+  // Functions
+  updatePreviewMode: PropTypes.func.isRequired,
+
+  // Required
+  previewMode: PropTypes.string.isRequired,
+
+  // Other
   response: PropTypes.object
+
 };
 
 export default ResponsePane;

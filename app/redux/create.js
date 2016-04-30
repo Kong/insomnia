@@ -14,7 +14,7 @@ export default function configureStore () {
   ];
 
   if (__DEV__) {
-    middleware.push(createLogger({collapsed: true}));
+    // middleware.push(createLogger({collapsed: true}));
   }
 
   // Create the store and apply middleware

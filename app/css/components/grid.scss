@@ -76,6 +76,16 @@
   }
 }
 
+.grid__cell--scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+
+  & > * {
+    width: 0;
+    height: 0;
+  }
+}
+
 @media (max-width: $breakpoint-md) {
   .grid.grid--collapse {
     flex-direction: column;
