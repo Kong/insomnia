@@ -22,7 +22,7 @@ const RequestAuthEditor = ({request, onChange, ...other}) => {
       {...other}
     />
   );
-}
+};
 
 RequestAuthEditor.propTypes = {
   onChange: PropTypes.func.isRequired,

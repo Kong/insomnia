@@ -42,25 +42,15 @@ class EnvironmentEditModal extends Component {
   }
 
   render () {
-    const editorOptions = {
-      mode: 'application/json',
-      placeholder: '{ "array": [1, 2, 3, 4] }',
-      theme: 'neat'
-    };
-
     return (
       <Modal {...this.props}>
         <ModalHeader>Environment Variables</ModalHeader>
-        <ModalBody className="wide pad">
+        <ModalBody>
             <KeyValueEditor onChange={this._keyValueChange.bind(this)}
                             uniquenessKey={this.props.requestGroup._id}
                             pairs={this.state.pairs}
                             namePlaceholder="BASE_URL"
                             valuePlaceholder="https://api.insomnia.com/v1"/>
-          {/*
-           <h3>Hello</h3>
-           <Editor value={undefined} options={editorOptions}/>
-           */}
         </ModalBody>
         <ModalFooter className="text-right">
           <button className="btn" onClick={this._saveChanges.bind(this)}>Done</button>

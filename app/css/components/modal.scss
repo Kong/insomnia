@@ -2,6 +2,9 @@
 @import '../constants/colors';
 
 .modal {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   position: absolute;
   z-index: 1000;
   top: 0;

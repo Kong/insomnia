@@ -14,9 +14,8 @@ $border-color: $hl-md;
   .ReactTabs__TabList {
     display: flex;
     flex-direction: row;
-    height: $line-height-sm;
     width: 100%;
-    z-index: 1; // HACK: put border above panel's
+    height: 100%;
 
     &::after {
       width: 100%;

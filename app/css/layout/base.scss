@@ -44,6 +44,10 @@ em {
   font-style: italic;
 }
 
+label {
+  display: inline-block;
+}
+
 label,
 table th{
   color: $hl;
@@ -118,6 +122,10 @@ i.fa {
 .pad {
   box-sizing: border-box;
   padding: $padding-md;
+}
+
+.no-pad-bottom {
+  padding-bottom: 0;
 }
 
 .pad-left-half {

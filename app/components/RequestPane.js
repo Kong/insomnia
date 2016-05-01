@@ -82,15 +82,13 @@ const RequestPane = props => {
             onChange={updateRequestParams}
           />
         </TabPanel>
-        <TabPanel className="scrollable pad">
-          <label>Basic Authentication</label>
+        <TabPanel className="scrollable">
+          <label className="pad no-pad-bottom">Basic Authentication</label>
           <RequestAuthEditor
             request={request}
             onChange={updateRequestAuthentication}
           />
-          <br/>
-          <br/>
-          <label>Other Headers</label>
+          <label className="pad no-pad-bottom">Other Headers</label>
           <KeyValueEditor
             namePlaceholder="My-Header"
             valuePlaceholder="Value"
