@@ -44,10 +44,28 @@ em {
   font-style: italic;
 }
 
-label {
+label,
+table th{
   color: $hl;
   text-transform: uppercase;
   font-size: 0.8em;
+}
+
+webview {
+  height: 100% !important;
+  width: 100% !important;
+  background-color: $bg-super-light;
+}
+
+table {
+  td {
+    padding-top: 0.25em;
+  }
+
+  th {
+    text-align: left;
+    padding-bottom: 0.5em;
+  }
 }
 
 .monospace {
@@ -64,6 +82,10 @@ label {
 
 .text-left {
   text-align: left !important;
+}
+
+.pull-right {
+  float: right;
 }
 
 .tall {
@@ -88,8 +110,9 @@ i.fa {
   text-align: center;
 }
 
-.no-wrap {
-  white-space: nowrap;
+.force-wrap {
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .pad {
@@ -107,10 +130,6 @@ i.fa {
 
 .no-pad {
   padding: 0 !important;
-}
-
-.wide {
-  width: 100%;
 }
 
 .block {

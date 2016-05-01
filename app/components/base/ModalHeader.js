@@ -1,19 +1,12 @@
-import React from 'react';
+import React from 'react'
+import classnames from 'classnames'
 
 const ModalHeader = ({className, children}) => (
-  <div className="modal__header bg-light">
-    <div className="grid">
-      <div className="grid__cell pad">
-        <div className={className}>
-          {children}
-        </div>
-      </div>
-      <div className="grid--v">
-        <button className="btn btn--compact txt-lg" data-close-modal="true">
-          <i className="fa fa-times"></i>
-        </button>
-      </div>
-    </div>
+  <div className={classnames('modal__header', className)}>
+    <button className="btn btn--compact modal__close-btn" data-close-modal="true">
+      <i className="fa fa-times"></i>
+    </button>
+    {children}
   </div>
 );
 

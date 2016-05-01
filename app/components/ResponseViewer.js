@@ -11,37 +11,27 @@ class ResponseViewer extends Component {
     switch (previewMode) {
       case PREVIEW_MODE_FRIENDLY:
         return (
-          <div className="grid--v grid__cell bg-light">
-            <ResponseBodyWebview
-              body={body}
-              contentType={contentType}
-            />
-          </div>
+          <ResponseBodyWebview
+            body={body}
+            contentType={contentType}
+          />
         );
       case PREVIEW_MODE_SOURCE:
         return (
-          <div className="grid__cell editor-wrapper">
-            <Editor
-              value={body || ''}
-              prettify={true}
-              mode={contentType}
-              readOnly={true}
-              placeholder="nothing yet..."
-            />
-          </div>
+          <Editor
+            value={body || ''}
+            prettify={true}
+            mode={contentType}
+            readOnly={true}
+            lineWrapping={false}
+            placeholder="nothing yet..."
+          />
         );
       default: // Raw
         return (
-          <div className="grid__cell editor-wrapper">
-            <Editor
-              value={body || ''}
-              lineWrapping={true}
-              prettify={true}
-              mode="text/plain"
-              readOnly={true}
-              placeholder="nothing yet..."
-            />
-          </div>
+          <pre className="scrollable wide tall selectable monospace pad">
+            {body}
+          </pre>
         )
     }
   }

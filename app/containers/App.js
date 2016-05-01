@@ -26,7 +26,7 @@ class App extends Component {
 
   _generateSidebarTree (parentId, entities) {
     const children = entities.filter(e => e.parentId === parentId);
-    
+
     if (children.length > 0) {
       return children.map(c => ({
         doc: c,
@@ -39,7 +39,7 @@ class App extends Component {
 
   render () {
     const {actions, modals, workspaces, requests, entities} = this.props;
-    
+
     // TODO: Factor this out into a selector
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
@@ -63,7 +63,7 @@ class App extends Component {
     );
 
     return (
-      <div className="grid bg-super-dark tall">
+      <div className="wrapper">
         <Sidebar
           workspaceId={workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {activeRequestId: r._id})}
@@ -74,24 +74,24 @@ class App extends Component {
           filter={requests.filter}
           children={children}
         />
-        <div className="grid wide grid--collapse">
-          <RequestPane
-            request={activeRequest}
-            sendRequest={actions.requests.send}
-            updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
-            updateRequestUrl={url => db.requestUpdate(activeRequest, {url})}
-            updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
-            updateRequestParams={params => db.requestUpdate(activeRequest, {params})}
-            updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
-            updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
-            updateRequestContentType={contentType => db.requestUpdate(activeRequest, {contentType})}
-          />
-          <ResponsePane
-            response={activeResponse}
-            previewMode={activeRequest.previewMode}
-            updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}
-          />
-        </div>
+        
+        <RequestPane
+          request={activeRequest}
+          sendRequest={actions.requests.send}
+          updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
+          updateRequestUrl={url => db.requestUpdate(activeRequest, {url})}
+          updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
+          updateRequestParams={params => db.requestUpdate(activeRequest, {params})}
+          updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
+          updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
+          updateRequestContentType={contentType => db.requestUpdate(activeRequest, {contentType})}
+        />
+        
+        <ResponsePane
+          response={activeResponse}
+          previewMode={activeRequest ? activeRequest.previewMode : null}
+          updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}
+        />
 
         <Prompts />
 

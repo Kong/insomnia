@@ -12,9 +12,9 @@ class UrlInput extends Component {
   render () {
     const {onUrlChange, onMethodChange, uniquenessKey, url, method} = this.props;
     return (
-      <div className="tall grid grid--center wide bg-super-light">
-        <Dropdown className="tall">
-          <button className="pad tall txt-md">
+      <div className="urlbar">
+        <Dropdown>
+          <button>
             {method}&nbsp;
             <i className="fa fa-caret-down"></i>
           </button>
@@ -28,19 +28,18 @@ class UrlInput extends Component {
             ))}
           </ul>
         </Dropdown>
-        <form className="tall grid__cell form-control form-control--wide"
+        <form className="form-control"
               onSubmit={this._handleFormSubmit.bind(this)}>
           <Input
             type="text"
-            className="txt-md"
             placeholder="http://echo.insomnia.rest/status/200"
             value={url}
             uniquenessKey={uniquenessKey}
             onChange={onUrlChange}/>
         </form>
-        <button className="btn btn--compact txt-lg" onClick={this._handleFormSubmit.bind(this)}>
+        <button onClick={this._handleFormSubmit.bind(this)}>
           Send
-        </button>&nbsp;&nbsp;
+        </button>
       </div>
     );
   }

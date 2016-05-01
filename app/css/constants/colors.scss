@@ -12,6 +12,7 @@ $font-light-bg: #444;
 $font-super-light-bg: #666;
 $font-dark-bg: #ddd;
 $font-super-dark-bg: #ddd;
+$font-brand-bg: #eee;
 
 $hl-xxs: rgba(140, 140, 140, 0.05);
 $hl-xs: rgba(140, 140, 140, 0.09);
@@ -58,40 +59,4 @@ $info: #3ca4ba;
 .method-GET {
   border-color: $surprise !important;
   color: $surprise;
-}
-
-.bg-dark {
-  background: $bg-dark;
-  &, a, textarea, input, button {
-    color: $font-dark-bg;
-  }
-}
-
-.bg-super-dark {
-  background: $bg-super-dark;
-  &, a, textarea, input, button {
-    color: $font-super-dark-bg;
-  }
-}
-
-.bg-light {
-  background: $bg-light;
-
-  &, a, textarea, input, button {
-    color: $font-light-bg;
-  }
-}
-
-.bg-super-light {
-  background: $bg-super-light;
-  &, a, textarea, input, button {
-    color: $font-super-light-bg;
-  }
-}
-
-.bg-brand {
-  background: $bg-brand;
-  &, a, textarea, input, button {
-    color: white;
-  }
 }

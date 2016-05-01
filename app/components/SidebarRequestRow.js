@@ -1,30 +1,39 @@
 import React, {PropTypes} from 'react'
+import classnames from 'classnames'
+
 import RequestActionsDropdown from './../containers/RequestActionsDropdown'
 import MethodTag from './MethodTag'
 
-const SidebarRequestRow = ({request, requestGroup, isActive, activateRequest}) => (
-  <li key={request ? request._id : 'none'}>
-    <div className={'sidebar__item ' + (isActive ? 'sidebar__item--active' : '')}>
-      <div className="sidebar__item__row">
-        {request ? (
-          <button onClick={() => {activateRequest(request)}}>
-            <MethodTag method={request.method}/> {request.name}
-          </button>
-        ) : (
-          <button className="italic">No Requests</button>
-        )}
+const SidebarRequestRow = ({request, requestGroup, isActive, activateRequest}) => {
+  if (!request) {
+    return (
+      <li className="sidebar__item">
+        <em>No Requests</em>
+      </li>
+    )
+  }
+
+  return (
+    <li className="sidebar__row">
+
+      <div className={classnames('sidebar__item', {active: isActive})}>
+
+        <button className="sidebar__clickable" onClick={() => {activateRequest(request)}}>
+          <MethodTag method={request.method}/> {request.name}
+        </button>
+
+        <div className="sidebar__actions">
+          <RequestActionsDropdown
+            right={true}
+            request={request}
+            requestGroup={requestGroup}
+          />
+        </div>
+
       </div>
-      {request ? (
-        <RequestActionsDropdown
-          className="sidebar__item__btn"
-          right={true}
-          request={request}
-          requestGroup={requestGroup}
-        />
-      ) : null}
-    </div>
-  </li>
-);
+    </li>
+  )
+};
 
 SidebarRequestRow.propTypes = {
   // Functions

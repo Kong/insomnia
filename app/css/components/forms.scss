@@ -80,6 +80,7 @@ textarea, input, button {
   border: 0;
   outline: 0;
   margin: 0;
+  color: inherit;
 
   &::-webkit-input-placeholder {
     color: $hl-xl;

@@ -46,11 +46,11 @@ class Modal extends Component {
     return (
       <div ref="modal"
            tabIndex="-1"
-           className={classnames('modal', 'grid', 'grid--center', this.props.className)}
+           className={classnames('modal', this.props.className)}
            onKeyDown={this._keyDown.bind(this)}
            onClick={this._handleClick.bind(this)}>
         <div
-          className={classnames('modal__content', 'grid--v', 'bg-super-light', {tall: this.props.tall})}>
+          className={classnames('modal__content', {tall: this.props.tall})}>
           {this.props.children}
         </div>
       </div>

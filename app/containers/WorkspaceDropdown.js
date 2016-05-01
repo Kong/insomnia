@@ -55,17 +55,15 @@ class WorkspaceDropdown extends Component {
     }
 
     return (
-      <Dropdown right={true} {...other} className="block">
-        <button className="btn header__content">
-          <div className="grid grid--center">
-            <div className="grid__cell">
-              <h1 className="no-pad">{workspace.name}</h1>
-            </div>
-            <div className="no-wrap">
+      <Dropdown right={true} {...other} className="wide">
+        <button className="btn wide">
+          <h1 className="no-pad text-left">
+            <div className="pull-right">
               {loading ? <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
               <i className="fa fa-caret-down txt-lg"></i>
             </div>
-          </div>
+            {workspace.name}
+          </h1>
         </button>
         <ul>
 
@@ -81,11 +79,6 @@ class WorkspaceDropdown extends Component {
               <i className="fa fa-folder"></i> New Request Group
             </button>
           </li>
-          {/*<li>
-            <button onClick={e => actions.requestGroups.showEnvironmentEditModal()}>
-              <i className="fa fa-code"></i> Manage Environments
-            </button>
-          </li>*/}
           <li>
             <button onClick={e => this._importDialog()}>
               <i className="fa fa-share-square-o"></i> Import/Export

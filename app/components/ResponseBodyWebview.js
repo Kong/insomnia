@@ -12,7 +12,7 @@ class ResponseBodyWebview extends Component {
   componentDidUpdate () {
     this._setBody();
   }
-  
+
   shouldComponentUpdate (nextProps) {
     for (let key in nextProps) {
       if (nextProps.hasOwnProperty(key)) {
@@ -27,23 +27,18 @@ class ResponseBodyWebview extends Component {
 
   componentDidMount () {
     const {webview} = this.refs;
-    
+
     const cb = () => {
       webview.removeEventListener('dom-ready', cb);
       this._setBody();
     };
-    
+
     webview.addEventListener('dom-ready', cb);
   }
 
   render () {
     return (
-      <webview
-        className="grid__cell wide"
-        autosize="on"
-        ref="webview"
-        src=""
-      ></webview>
+      <webview ref="webview" src=""></webview>
     );
   }
 }

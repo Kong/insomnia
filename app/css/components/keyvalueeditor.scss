@@ -1,0 +1,26 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.key-value-editor {
+  li {
+    display: grid;
+    grid-template-columns: 0.5fr 0.5fr auto;
+    grid-template-rows: auto;
+
+    & > * {
+      padding-right: $padding-md;
+
+      &:last-child {
+        padding-right: 0;
+      }
+    }
+
+    & > button {
+      color: $hl;
+
+      &:hover {
+        color: inherit;
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+@import '../constants/colors';
+@import '../constants/dimensions';
+
+.urlbar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: 1fr;
+  align-items: stretch;
+  align-self: stretch;
+
+  & > .dropdown > button {
+    height: 100%;
+  }
+
+  & > button,
+  & > .dropdown {
+    height: 100%;
+
+    &:hover {
+      background-color: $hl-xxs;
+    }
+  }
+
+  & > *:first-child {
+    padding-left: $padding-md;
+    padding-right: $padding-md;
+  }
+
+  & > *:last-child {
+    padding-right: $padding-md;
+    padding-left: $padding-md;
+  }
+}

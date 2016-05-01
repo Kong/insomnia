@@ -4,29 +4,33 @@
 $border-color: $hl-md;
 
 .ReactTabs {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr;
+  align-content: stretch;
+
   .ReactTabs__TabList {
-    flex-shrink: 0;
-    align-items: flex-start;
-    align-content: flex-start;
+    display: flex;
+    flex-direction: row;
     height: $line-height-sm;
-    line-height: $line-height-sm;
+    width: 100%;
 
     &::after {
       width: 100%;
       height: $line-height-sm;
       content: "";
       border-bottom: 1px solid $border-color;
-      box-sizing: border-box;
     }
   }
 
   .ReactTabs__Tab {
-    align-self: flex-start;
     height: $line-height-sm;
-    box-sizing: border-box;
     border: 1px solid transparent;
     border-bottom: 1px solid $border-color;
     border-top: 0 !important;
+    white-space: nowrap;
 
     * {
       color: $hl-xxl;
@@ -42,7 +46,6 @@ $border-color: $hl-md;
 
     & > * {
       height: 100%;
-      width: 100%;
       padding-left: $padding-md / 4;
       padding-right: $padding-md / 4;
 
@@ -70,9 +73,9 @@ $border-color: $hl-md;
     }
   }
 
-  .tab-panel-wrapper {
+  .ReactTabs__TabPanel {
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
   }
-
 }
