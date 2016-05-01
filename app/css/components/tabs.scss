@@ -16,6 +16,7 @@ $border-color: $hl-md;
     flex-direction: row;
     height: $line-height-sm;
     width: 100%;
+    z-index: 1; // HACK: put border above panel's
 
     &::after {
       width: 100%;

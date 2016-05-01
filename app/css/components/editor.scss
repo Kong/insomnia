@@ -20,7 +20,7 @@
   .CodeMirror-scrollbar-filler,
   .CodeMirror-gutter-filler {
     // Let the background behind show through
-    background-color: transparent !important;
+    background-color: $bg-super-dark !important;
     border: 0;
   }
 
