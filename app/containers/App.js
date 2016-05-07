@@ -4,6 +4,7 @@ import {bindActionCreators} from 'redux'
 
 import Prompts from './Prompts'
 import EnvironmentEditModal from '../components/EnvironmentEditModal'
+import SettingsModal from '../components/SettingsModal'
 import RequestPane from '../components/RequestPane'
 import ResponsePane from '../components/ResponsePane'
 import Sidebar from '../components/Sidebar'
@@ -74,7 +75,7 @@ class App extends Component {
           filter={requests.filter}
           children={children}
         />
-        
+
         <RequestPane
           request={activeRequest}
           sendRequest={actions.requests.send}
@@ -86,7 +87,7 @@ class App extends Component {
           updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
           updateRequestContentType={contentType => db.requestUpdate(activeRequest, {contentType})}
         />
-        
+
         <ResponsePane
           response={activeResponse}
           previewMode={activeRequest ? activeRequest.previewMode : null}
@@ -96,7 +97,14 @@ class App extends Component {
         <Prompts />
 
         {modals.map(m => {
-          if (m.id === EnvironmentEditModal.defaultProps.id) {
+          if (m.id === SettingsModal.defaultProps.id) {
+            return (
+              <SettingsModal
+                key={m.id}
+                onClose={() => actions.modals.hide(m.id)}
+              />
+            )
+          } else if (m.id === EnvironmentEditModal.defaultProps.id) {
             return (
               <EnvironmentEditModal
                 key={m.id}

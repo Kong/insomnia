@@ -24,3 +24,4 @@ export const MODAL_WORKSPACE_RENAME = 'workspace.update.name';
 export const MODAL_REQUEST_GROUP_RENAME = 'requestgroup.update.name';
 export const MODAL_REQUEST_RENAME = 'request.update.name';
 export const MODAL_ENVIRONMENT_EDITOR = 'environment.edit';
+export const MODAL_SETTINGS = 'settings';

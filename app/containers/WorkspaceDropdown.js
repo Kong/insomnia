@@ -5,10 +5,12 @@ import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 
+import {MODAL_SETTINGS} from '../lib/constants'
 import Dropdown from '../components/base/Dropdown'
 import DropdownDivider from '../components/base/DropdownDivider'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
 import * as WorkspaceActions from '../redux/modules/workspaces'
+import * as ModalActions from '../redux/modules/modals'
 import * as db from '../database'
 import importData from '../lib/import'
 
@@ -20,14 +22,14 @@ class WorkspaceDropdown extends Component {
         name: 'Insomnia Imports', extensions: ['json']
       }]
     };
-    
+
     // TODO: Factor this out into a selector
     const {entities, workspaces} = this.props;
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
     }
-    
+
     electron.remote.dialog.showOpenDialog(options, paths => {
       paths.map(path => {
         fs.readFile(path, 'utf8', (err, data) => {
@@ -36,7 +38,7 @@ class WorkspaceDropdown extends Component {
       })
     });
   }
-  
+
   _workspaceCreate () {
     db.workspaceCreate({name: 'New Workspace'}).then(workspace => {
       this.props.actions.workspaces.activate(workspace);
@@ -47,7 +49,7 @@ class WorkspaceDropdown extends Component {
     const {actions, loading, workspaces, entities, ...other} = this.props;
 
     const allWorkspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
-    
+
     // TODO: Factor this out into a selector
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
@@ -114,7 +116,11 @@ class WorkspaceDropdown extends Component {
 
           <DropdownDivider name="Insomnia"/>
 
-          <li><button><i className="fa fa-cog"></i> Settings</button></li>
+          <li>
+            <button onClick={e => actions.modals.show(MODAL_SETTINGS)}>
+              <i className="fa fa-cog"></i> Settings
+            </button>
+          </li>
           <li><button><i className="fa fa-blank"></i> Open New Window</button></li>
         </ul>
       </Dropdown>
@@ -131,6 +137,9 @@ WorkspaceDropdown.propTypes = {
     workspaces: PropTypes.object.isRequired
   }).isRequired,
   actions: PropTypes.shape({
+    modals: PropTypes.shape({
+      show: PropTypes.func.isRequired
+    }),
     requestGroups: PropTypes.shape({
       showEnvironmentEditModal: PropTypes.func.isRequired
     }),
@@ -154,7 +163,8 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),
-      workspaces: bindActionCreators(WorkspaceActions, dispatch)
+      workspaces: bindActionCreators(WorkspaceActions, dispatch),
+      modals: bindActionCreators(ModalActions, dispatch)
     }
   }
 }
