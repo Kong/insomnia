@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
+import Input from '../base/Input'
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -120,15 +121,31 @@ class KeyValueEditor extends Component {
       ref.focus();
 
       // Focus at the end of the text
-      ref.selectionStart = ref.selectionEnd = ref.value.length;
+      ref.selectionStart = ref.selectionEnd = ref.getValue().length;
     }
   }
 
   shouldComponentUpdate (nextProps) {
-    return (
-      nextProps.uniquenessKey !== this.props.uniquenessKey ||
-      nextProps.pairs.length !== this.state.pairs.length
-    )
+    // Compare uniqueness key (quick)
+    if (nextProps.uniquenessKey !== this.props.uniquenessKey) {
+      return true;
+    }
+
+    // Compare array length (quick)
+    if (nextProps.pairs.length !== this.state.pairs.length) {
+      return true;
+    }
+    
+    // Compare arrays
+    for (let i = 0; i < nextProps.pairs.length; i++) {
+      let newPair = nextProps.pairs[i];
+      let oldPair = this.state.pairs[i];
+      if (newPair.name !== oldPair.name || newPair.value !== oldPair.value) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   componentWillReceiveProps (nextProps) {
@@ -149,23 +166,23 @@ class KeyValueEditor extends Component {
           return (
             <li key={i}>
               <div className="form-control form-control--underlined form-control--wide">
-                <input
+                <Input
                   type="text"
                   placeholder={this.props.namePlaceholder || 'Name'}
                   ref={`${i}.${NAME}`}
-                  defaultValue={pair.name}
-                  onChange={e => this._updatePair(i, {name: e.target.value})}
+                  value={pair.name}
+                  onChange={name => this._updatePair(i, {name})}
                   onFocus={e => {this._focusedPair = i; this._focusedField = NAME}}
                   onBlur={e => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>
               </div>
               <div className="form-control form-control--underlined form-control--wide">
-                <input
+                <Input
                   type="text"
                   placeholder={this.props.valuePlaceholder || 'Value'}
                   ref={`${i}.${VALUE}`}
-                  defaultValue={pair.value}
-                  onChange={e => this._updatePair(i, {value: e.target.value})}
+                  value={pair.value}
+                  onChange={value => this._updatePair(i, {value})}
                   onFocus={e => {this._focusedPair = i; this._focusedField = VALUE}}
                   onBlur={e => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>

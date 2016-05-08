@@ -22,12 +22,15 @@ class Input extends Component {
   }
 
   shouldComponentUpdate (nextProps) {
-    // Only force update if the uniqueness key has changed
-    return !this.props.uniquenessKey || this.props.uniquenessKey !== nextProps.uniquenessKey;
+    return this.refs.input.value !== nextProps.value;
   }
 
   focus () {
     this.refs.input.focus();
+  }
+  
+  getValue () {
+    return this.refs.input.value;
   }
 
   render () {
@@ -44,8 +47,7 @@ class Input extends Component {
 
 Input.propTypes = {
   onChange: PropTypes.func.isRequired,
-  value: PropTypes.string.isRequired,
-  uniquenessKey: PropTypes.string
+  value: PropTypes.string.isRequired
 };
 
 export default Input;
