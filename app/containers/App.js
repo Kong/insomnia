@@ -8,6 +8,7 @@ import SettingsModal from '../components/SettingsModal'
 import RequestPane from '../components/RequestPane'
 import ResponsePane from '../components/ResponsePane'
 import Sidebar from '../components/Sidebar'
+import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes'
 
 import * as GlobalActions from '../redux/modules/global'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
@@ -90,7 +91,7 @@ class App extends Component {
 
         <ResponsePane
           response={activeResponse}
-          previewMode={activeRequest ? activeRequest.previewMode : null}
+          previewMode={activeRequest ? activeRequest.previewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}
         />
 
