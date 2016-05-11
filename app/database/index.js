@@ -1,11 +1,12 @@
-import * as fsPath from 'path'
 import electron from 'electron'
-import Loki from 'lokijs'
+import * as fsPath from 'path'
+import * as fs from 'fs'
 
 import * as methods from '../lib/constants'
 import {generateId} from './util'
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes'
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
+import {DB_PERSIST_INTERVAL} from '../lib/constants'
 
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
@@ -19,6 +20,7 @@ const TYPES = [
 ];
 
 let db = null;
+global.db = db;
 
 function getDBFilePath () {
   const basePath = electron.remote.app.getPath('userData');
@@ -37,49 +39,41 @@ export function initDB () {
   }
 
   return new Promise(resolve => {
-
     const dbPath = getDBFilePath();
-    db = new Loki(dbPath, {
-      autoload: true,
-      autosave: true,
-      autosaveInterval: 300, // TODO: do a final save on close
-      persistenceMethod: 'fs',
-      autoloadCallback () {
-        TYPES.map(type => {
-          let collection = db.getCollection(type);
-          if (!collection) {
-            collection = db.addCollection(type, {
-              indices: ['_id'],
-              asyncListeners: false,
-              disableChangesApi: true, // Don't need this yet
-              clone: true, // Clone objects on save
-              transactional: true
-            });
-
-            collection.ensureUniqueIndex('_id');
-
-            console.log(`-- Initialize DB Collection ${type} --`)
-          }
-
-          collection.on('update', doc => {
-            Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
-          });
-
-          collection.on('insert', doc => {
-            Object.keys(changeListeners).map(k => changeListeners[k]('insert', doc));
-          });
-
-          collection.on('delete', doc => {
-            Object.keys(changeListeners).map(k => changeListeners[k]('delete', doc));
-          });
-        });
-
-        resolve();
-        initialized = true;
-        console.log(`-- Initialize DB at ${dbPath} --`);
+    db = {};
+    for (let i = 0; i < TYPES.length; i++) {
+      db[TYPES[i]] = {};
+    }
+    
+    fs.readFile(getDBFilePath(), 'utf8', (err, text) => {
+      if (!err) {
+        // TODO: Better error handling
+        console.log('-- Restored DB from file --');
+        Object.assign(db, JSON.parse(text));
       }
+
+      // Add listeners to do persistence
+      
+      let timeout = null;
+      onChange('DB_WRITER', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          fs.writeFile(getDBFilePath(), JSON.stringify(db, null, 2), err => {
+            if (err) {
+              console.error('Failed to write DB to file', err);
+            } else {
+              console.log('-- Persisted DB --');
+            }
+          })
+        }, DB_PERSIST_INTERVAL)
+      });
+      
+      // Done
+
+      initialized = true;
+      console.log(`-- Initialize DB at ${dbPath} --`);
+      resolve();
     });
-    global.db = db;
   })
 }
 
@@ -96,36 +90,55 @@ export function offChange (id) {
 }
 
 export function get (type, id) {
-  const doc = db.getCollection(type).by('_id', id);
+  const doc = db[type][id];
   return new Promise(resolve => resolve(doc));
 }
 
-function find (type, query) {
-  const docs = db.getCollection(type).find(query);
+function all (type) {
+  let docs = [];
+  const ids = Object.keys(db[type]);
+  for (let i = 0; i < ids.length; i++) {
+    docs.push(db[type][ids[i]]);
+  }
+
+  return new Promise(resolve => resolve(docs));
+}
+
+function removeWhere (type, key, value) {
+  const ids = Object.keys(db[type]);
+  let docs = [];
+
+  for (let i = 0; i < ids.length; i++) {
+    const doc = db[type][ids[i]];
+    if (doc[key] === value) {
+      remove(doc);
+    }
+  }
+
   return new Promise(resolve => resolve(docs));
 }
 
 function insert (doc) {
-  const newDoc = db.getCollection(doc.type).insert(doc);
-  return new Promise(resolve => resolve(newDoc));
+  db[doc.type][doc._id] = doc;
+  
+  Object.keys(changeListeners).map(k => changeListeners[k]('insert', doc));
+  return new Promise(resolve => resolve(doc));
 }
 
 function update (doc) {
-  // NOTE: LokiJS only holds references to objects in its DB. This means we need to fetch the
-  // old reference and update it because that's the only way.
-  return get(doc.type, doc._id).then(oldDoc => {
-    Object.assign(oldDoc, doc);
-    db.getCollection(doc.type).update(oldDoc);
-    return new Promise(resolve => resolve(oldDoc));
-  });
+  db[doc.type][doc._id] = doc;
+  
+  Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+  return new Promise(resolve => resolve(doc));
 }
 
 function remove (doc) {
-  db.getCollection(doc.type).remove(doc);
+  delete db[doc.type][doc._id];
 
   // Also remove children
-  TYPES.map(type => db.getCollection(type).removeWhere({parentId: doc._id}));
-
+  TYPES.map(type => removeWhere(type, 'parentId', doc._id));
+  
+  Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
   new Promise(resolve => resolve());
 }
 
@@ -209,7 +222,7 @@ export function requestRemove (request) {
 }
 
 export function requestAll () {
-  return find(TYPE_REQUEST, {});
+  return all(TYPE_REQUEST);
 }
 
 
@@ -238,7 +251,7 @@ export function requestGroupRemove (requestGroup) {
 }
 
 export function requestGroupAll () {
-  return find(TYPE_REQUEST_GROUP, {});
+  return all(TYPE_REQUEST_GROUP);
 }
 
 // ~~~~~~~~ //
@@ -258,7 +271,7 @@ export function responseCreate (patch = {}) {
 }
 
 export function responseAll () {
-  return find(TYPE_RESPONSE, {});
+  return all(TYPE_RESPONSE);
 }
 
 
@@ -275,7 +288,7 @@ export function workspaceCreate (patch = {}) {
 }
 
 export function workspaceAll () {
-  return find(TYPE_WORKSPACE, {}).then(workspaces => {
+  return all(TYPE_WORKSPACE).then(workspaces => {
     if (workspaces.length === 0) {
       workspaceCreate({name: 'Insomnia'});
       return workspaceAll();

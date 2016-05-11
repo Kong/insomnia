@@ -18,7 +18,7 @@ export function initStore (dispatch) {
       entities.insert(doc);
     } else if (event === 'update') {
       entities.update(doc);
-    } else if (event === 'delete') {
+    } else if (event === 'remove') {
       entities.remove(doc);
     }
   };
