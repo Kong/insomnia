@@ -1,2 +1,2 @@
-Hello Foo
-=========
+Installation
+============
