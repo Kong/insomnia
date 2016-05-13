@@ -20,8 +20,6 @@ cd app && npm install
 Run Development
 ---------------
 
-Start the live dev environment
-
 ```bash
 npm run dev
 ```
