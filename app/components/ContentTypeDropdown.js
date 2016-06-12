@@ -8,7 +8,9 @@ const ContentTypeDropdown = ({updateRequestContentType, activeContentType}) => {
 
   return (
     <Dropdown>
-      <button><i className="fa fa-caret-down"></i></button>
+      <button className="tall">
+        <i className="fa fa-caret-down"></i>
+      </button>
       <ul>
         {contentTypes.map(contentType => (
           <li key={contentType}>

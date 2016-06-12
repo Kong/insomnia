@@ -6,7 +6,9 @@ import {PREVIEW_MODES, getPreviewModeName} from '../lib/previewModes'
 const PreviewModeDropdown = ({updatePreviewMode}) => {
   return (
     <Dropdown>
-      <button><i className="fa fa-caret-down"></i></button>
+      <button className="tall">
+        <i className="fa fa-caret-down"></i>
+      </button>
       <ul>
         {PREVIEW_MODES.map(previewMode => (
           <li key={previewMode}>

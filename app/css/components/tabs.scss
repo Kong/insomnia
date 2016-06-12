@@ -31,10 +31,7 @@ $border-color: $hl-md;
     border-bottom: 1px solid $border-color;
     border-top: 0 !important;
     white-space: nowrap;
-
-    * {
-      color: $hl-xxl;
-    }
+    display: flex;
 
     &:first-child {
       border-left-color: transparent;
@@ -45,6 +42,7 @@ $border-color: $hl-md;
     }
 
     & > * {
+      color: $hl-xxl;
       height: 100%;
       padding-left: $padding-md / 4;
       padding-right: $padding-md / 4;
