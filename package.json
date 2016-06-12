@@ -58,7 +58,7 @@
     "hot-server": "node -r babel-register ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "test": "jest $@",
-    "package": "./scripts/package"
+    "package": "bash scripts/package.sh"
   },
   "jest": {
     "unmockedModulePathPatterns": [

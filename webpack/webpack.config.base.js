@@ -61,7 +61,7 @@ export default {
   },
   externals: [
     
-    // Omit all the app package dependencies (we want them loaded at runtime via NodeJS)
+    // Omit all the app package.sh dependencies (we want them loaded at runtime via NodeJS)
     ...Object.keys(pkg.dependencies)
   ],
   plugins: [],
