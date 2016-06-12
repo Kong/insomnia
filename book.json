@@ -1,8 +1,9 @@
 {
-  "gitbook": "2.x.x",
+  "gitbook": "3.x.x",
   "title": "Insomnia Rest Client",
+  "root": "docs",
   "structure": {
-    "summary": "docs/README.md"
+    "summary": "README.md"
   },
   "plugins": ["prism", "-highlight", "github", "anker-enable"],
   "pluginsConfig": {

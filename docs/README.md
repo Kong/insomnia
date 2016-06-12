@@ -1,4 +1,4 @@
 Summary
 =======
 
-- [Installation](docs/installation.md)
+- [Installation](/installation.md)
