@@ -8,22 +8,22 @@ const StatusTag = ({statusMessage, statusCode}) => {
   let backupStatusMessage;
 
   if (statusCode.startsWith('1')) {
-    colorClass = 'info';
+    colorClass = 'bg-info';
     backupStatusMessage = 'INFO';
   } else if (statusCode.startsWith('2')) {
-    colorClass = 'success';
+    colorClass = 'bg-success';
     backupStatusMessage = 'SUCCESS';
   } else if (statusCode.startsWith('3')) {
-    colorClass = 'surprise';
+    colorClass = 'bg-surprise';
     backupStatusMessage = 'REDIRECT';
   } else if (statusCode.startsWith('4')) {
-    colorClass = 'warning';
+    colorClass = 'bg-warning';
     backupStatusMessage = 'INVALID';
   } else if (statusCode.startsWith('5')) {
-    colorClass = 'danger';
+    colorClass = 'bg-danger';
     backupStatusMessage = 'ERROR';
   } else {
-    colorClass = 'info';
+    colorClass = 'bg-info';
     backupStatusMessage = 'UNKNOWN';
   }
 

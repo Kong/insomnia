@@ -1,14 +1,15 @@
 @import '../constants/dimensions';
+@import '../constants/colors';
 
 .tag {
   display: inline-block;
-  border: 1px solid;
   padding: $padding-sm;
   margin-right: 1em;
   line-height: 1em;
   box-sizing: border-box;
   border-radius: $radius-md;
   text-align: center;
+  background: $hl-md;
 
   &:last-child {
     margin-right: 0;
@@ -20,7 +21,7 @@
     border-radius: $radius-sm;
   }
 
-  &.tag--no-border {
-    border-width: 0;
+  &.tag--no-bg {
+    background: transparent;
   }
 }

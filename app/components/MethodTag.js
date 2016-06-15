@@ -13,7 +13,7 @@ const MethodTag = ({method}) => {
   }
 
   return (
-    <div className={'tag tag--no-border tag--small method-' + method}>
+    <div className={'tag tag--no-bg tag--small method-' + method}>
       {methodName}
     </div>
   )

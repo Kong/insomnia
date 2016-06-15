@@ -23,40 +23,67 @@ $hl-xl: rgba(140, 140, 140, 0.5);
 $hl-xxl: rgba(140, 140, 140, 0.7);
 $hl: rgba(140, 140, 140, 1);
 
-$success: #6bad2b;
-$warning: #ffad36;
+$success: #84ba47;
+$warning: #f3a031;
 $danger: #ff6d59;
 $surprise: #a086ff;
 $info: #3ca4ba;
 
 .success,
 .method-POST {
-  border-color: $success !important;
   color: $success;
 }
 
 .warning,
 .method-PUT,
 .method-PATCH {
-  border-color: $warning !important;
   color: $warning;
 }
 
 .danger,
 .method-DELETE {
-  border-color: $danger !important;
   color: $danger;
 }
 
 .info,
 .method-OPTIONS,
 .method-HEAD {
-  border-color: $info !important;
   color: $info;
 }
 
 .surprise,
 .method-GET {
-  border-color: $surprise !important;
   color: $surprise;
+}
+
+.bg-success,
+.bg-method-POST {
+  background: $success !important;
+  color: #fff;
+}
+
+.bg-warning,
+.bg-method-PUT,
+.bg-method-PATCH {
+  background: $warning !important;
+  color: #fff;
+}
+
+.bg-danger,
+.bg-method-DELETE {
+  background: $danger !important;
+  color: #fff;
+}
+
+.bg-info,
+.bg-method-OPTIONS,
+.bg-method-HEAD {
+  background: $info !important;
+  color: #fff;
+}
+
+.bg-surprise,
+.bg-method-GET {
+  background: $surprise !important;
+  color: #fff;
 }
