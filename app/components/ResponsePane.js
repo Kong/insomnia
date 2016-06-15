@@ -1,9 +1,9 @@
 import React, {PropTypes} from 'react'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
-import StatusTag from '../components/StatusTag'
-import SizeTag from '../components/SizeTag'
-import TimeTag from '../components/TimeTag'
+import StatusTag from './StatusTag'
+import SizeTag from './SizeTag'
+import TimeTag from './TimeTag'
 import PreviewModeDropdown from '../components/PreviewModeDropdown'
 import ResponseViewer from '../components/ResponseViewer'
 import {getPreviewModeName} from '../lib/previewModes'

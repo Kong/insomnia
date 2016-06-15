@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PropTypes} from 'react';
 import Editor from './base/Editor'
 
 const RequestBodyEditor = ({body, contentType, onChange, className}) => (
