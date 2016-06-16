@@ -1,4 +1,6 @@
 import React, {Component, PropTypes} from 'react'
+import classnames from 'classnames'
+
 import Input from './base/Input';
 import Dropdown from './base/Dropdown';
 import {METHODS} from '../lib/constants';
@@ -11,8 +13,12 @@ class UrlInput extends Component {
 
   render () {
     const {onUrlChange, onMethodChange, uniquenessKey, url, method} = this.props;
+
+    // TODO: Implement proper error checking here
+    const hasError = !url;
+
     return (
-      <div className="urlbar">
+      <div className={classnames({'urlbar': true, 'urlbar--error': hasError})}>
         <Dropdown>
           <button>
             {method}&nbsp;
@@ -28,8 +34,7 @@ class UrlInput extends Component {
             ))}
           </ul>
         </Dropdown>
-        <form className="form-control"
-              onSubmit={this._handleFormSubmit.bind(this)}>
+        <form className="form-control" onSubmit={this._handleFormSubmit.bind(this)}>
           <Input
             type="text"
             placeholder="http://echo.insomnia.rest/status/200"

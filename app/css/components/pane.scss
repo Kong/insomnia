@@ -17,6 +17,11 @@
     color: $font-super-light-bg;
     border-left: 1px solid $hl-md;
     box-sizing: border-box;
+
+    &.pane__header--grey {
+      background: $bg-light;
+      border-left: 1px solid $hl-xs;
+    }
   }
 
   .pane__body {

@@ -23,7 +23,7 @@ const ResponsePane = ({response, previewMode, updatePreviewMode}) => {
 
   return (
     <section className="response-pane pane">
-      <header className="pane__header">
+      <header className="pane__header pane__header--grey">
         {!response ? null : (
           <div>
             <StatusTag

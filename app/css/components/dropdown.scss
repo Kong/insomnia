@@ -25,7 +25,7 @@
       & > button {
         font-size: $font-size-md;
         text-align: left;
-        padding: $padding-sm $padding-md $padding-sm $padding-sm;
+        padding: $padding-xs $padding-md $padding-xs $padding-sm;
         width: 100%;
         display: block;
         color: $font-super-light-bg !important;
@@ -48,6 +48,7 @@
   }
 
   li.dropdown__divider {
+    min-width: 16rem;
     border-bottom: 1px solid $hl-lg;
     overflow: visible !important;
     margin: $padding-md $padding-md $padding-md $padding-sm;

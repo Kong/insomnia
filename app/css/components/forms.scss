@@ -12,6 +12,12 @@
     height: 100%;
   }
 
+  &.form-control--error {
+    input {
+      text-decoration: underline;
+    }
+  }
+
   &.form-control--compact {
     height: $line-height-sm;
   }
