@@ -172,8 +172,8 @@ class KeyValueEditor extends Component {
                   ref={`${i}.${NAME}`}
                   value={pair.name}
                   onChange={name => this._updatePair(i, {name})}
-                  onFocus={e => {this._focusedPair = i; this._focusedField = NAME}}
-                  onBlur={e => {this._focusedPair = -1}}
+                  onFocus={() => {this._focusedPair = i; this._focusedField = NAME}}
+                  onBlur={() => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>
               </div>
               <div className="form-control form-control--underlined form-control--wide">
@@ -183,8 +183,8 @@ class KeyValueEditor extends Component {
                   ref={`${i}.${VALUE}`}
                   value={pair.value}
                   onChange={value => this._updatePair(i, {value})}
-                  onFocus={e => {this._focusedPair = i; this._focusedField = VALUE}}
-                  onBlur={e => {this._focusedPair = -1}}
+                  onFocus={() => {this._focusedPair = i; this._focusedField = VALUE}}
+                  onBlur={() => {this._focusedPair = -1}}
                   onKeyDown={this._keyDown.bind(this)}/>
               </div>
 
@@ -199,12 +199,12 @@ class KeyValueEditor extends Component {
             <div className="form-control form-control--underlined form-control--wide">
               <input type="text"
                      placeholder={this.props.namePlaceholder || 'Name'}
-                     onFocus={e => {this._focusedField = NAME; this._addPair()}}/>
+                     onFocus={() => {this._focusedField = NAME; this._addPair()}}/>
             </div>
             <div className="form-control form-control--underlined form-control--wide">
               <input type="text"
                      placeholder={this.props.valuePlaceholder || 'Value'}
-                     onFocus={e => {this._focusedField = VALUE; this._addPair()}}/>
+                     onFocus={() => {this._focusedField = VALUE; this._addPair()}}/>
             </div>
             <button disabled={true} tabIndex="-1">
               <i className="fa fa-blank"></i>

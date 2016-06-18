@@ -60,6 +60,11 @@ const RequestPane = props => {
           </Tab>
           <Tab>
             <button>
+              Auth {request.authentication.username ? <i className="fa fa-lock"></i> : ''}
+            </button>
+          </Tab>
+          <Tab>
+            <button>
               Headers {request.headers.length ? `(${request.headers.length})` : ''}
             </button>
           </Tab>
@@ -83,12 +88,12 @@ const RequestPane = props => {
           />
         </TabPanel>
         <TabPanel className="scrollable">
-          <label className="pad no-pad-bottom">Basic Authentication</label>
           <RequestAuthEditor
             request={request}
             onChange={updateRequestAuthentication}
           />
-          <label className="pad no-pad-bottom">Other Headers</label>
+        </TabPanel>
+        <TabPanel className="scrollable">
           <KeyValueEditor
             namePlaceholder="My-Header"
             valuePlaceholder="Value"

@@ -44,6 +44,7 @@ const SidebarRequestGroupRow = ({
             activateRequest={() => {}}
             isActive={false}
             request={null}
+            requestGroup={requestGroup}
           />
         )}
         {expanded ? children : null}
