@@ -7,7 +7,7 @@ const RequestBodyEditor = ({body, contentType, onChange, className}) => (
     className={className}
     onChange={onChange}
     mode={contentType}
-    lineWrapping={false}
+    lineWrapping={true}
     placeholder="request body here..."
   />
 );

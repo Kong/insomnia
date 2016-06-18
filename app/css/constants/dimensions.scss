@@ -21,7 +21,7 @@ $line-height-sm: $line-height-md * 0.75;
 $line-height-xs: $line-height-md * 0.6;
 
 /* Sidebar */
-$sidebar-width: 20rem;
+$sidebar-width: 19rem;
 
 /* Borders */
 $radius-sm: 0.1rem;
@@ -34,7 +34,8 @@ $dropdown-min-width: 12rem;
 $modal-width: 50rem;
 
 /* Breakpoints */
-$breakpoint-md: 790px;
+$breakpoint-lg: 1100px;
+$breakpoint-md: 800px;
 $breakpoint-sm: 580px;
 
 .txt-xs {

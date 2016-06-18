@@ -195,14 +195,20 @@ strong {
   font-weight: 600;
 }
 
-@media (max-width: $breakpoint-md) {
+@media (max-width: $breakpoint-lg) {
   html {
     font-size: $font-size * 0.95;
   }
 }
 
+@media (max-width: $breakpoint-md) {
+  html {
+    font-size: $font-size * 0.90;
+  }
+}
+
 @media (max-width: $breakpoint-sm) {
   html {
-    font-size: $font-size * 0.9;
+    font-size: $font-size * 0.85;
   }
 }

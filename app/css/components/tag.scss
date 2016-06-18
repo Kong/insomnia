@@ -2,7 +2,6 @@
 @import '../constants/colors';
 
 .tag {
-  font-size: $font-size-sm;
   display: inline-block;
   padding: $padding-sm;
   margin-right: 1em;
@@ -10,7 +9,8 @@
   box-sizing: border-box;
   border-radius: $radius-md;
   text-align: center;
-  background: $hl-lg;
+  background: $hl-sm;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 
   &:last-child {
     margin-right: 0;
@@ -24,5 +24,6 @@
 
   &.tag--no-bg {
     background: transparent;
+    border: 0;
   }
 }

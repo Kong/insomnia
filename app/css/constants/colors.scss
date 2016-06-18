@@ -23,11 +23,11 @@ $hl-xl: rgba(140, 140, 140, 0.5);
 $hl-xxl: rgba(140, 140, 140, 0.7);
 $hl: rgba(140, 140, 140, 1);
 
-$success: #8cbd55;
-$warning: #f3a031;
+$success: #8fc62b;
+$warning: #ffb241;
 $danger: #ff6d59;
 $surprise: #a086ff;
-$info: #3ca4ba;
+$info: #3eaec5;
 
 .success,
 .method-POST {
@@ -59,6 +59,7 @@ $info: #3ca4ba;
 .bg-success,
 .bg-method-POST {
   background: $success !important;
+  text-shadow: 0 0 0.05em darken($success, 20);
   color: #fff;
 }
 
@@ -67,12 +68,14 @@ $info: #3ca4ba;
 .bg-method-PATCH {
   background: $warning !important;
   color: #fff;
+  text-shadow: 0 0 0.05em darken($warning, 20);
 }
 
 .bg-danger,
 .bg-method-DELETE {
   background: $danger !important;
   color: #fff;
+  text-shadow: 0 0 0.05em darken($danger, 20);
 }
 
 .bg-info,
@@ -80,10 +83,12 @@ $info: #3ca4ba;
 .bg-method-HEAD {
   background: $info !important;
   color: #fff;
+  text-shadow: 0 0 0.05em darken($info, 20);
 }
 
 .bg-surprise,
 .bg-method-GET {
   background: $surprise !important;
   color: #fff;
+  text-shadow: 0 0 0.05em darken($surprise, 20);
 }

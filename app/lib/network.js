@@ -55,7 +55,12 @@ function actuallySend (request, callback) {
   const startTime = Date.now();
   networkRequest(config, function (err, response) {
     if (err) {
-      console.error('Request Failed', err, response);
+      db.responseCreate({
+        parentId: request._id,
+        millis: Date.now() - startTime,
+        error: err.toString()
+      });
+      console.warn(`Request to ${config.url} failed`, err);
     } else {
       db.responseCreate({
         parentId: request._id,

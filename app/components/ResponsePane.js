@@ -7,6 +7,7 @@ import TimeTag from './TimeTag'
 import PreviewModeDropdown from '../components/PreviewModeDropdown'
 import ResponseViewer from '../components/ResponseViewer'
 import {getPreviewModeName} from '../lib/previewModes'
+import {PREVIEW_MODE_SOURCE} from "../lib/previewModes";
 
 const ResponsePane = ({response, previewMode, updatePreviewMode}) => {
   if (!response) {
@@ -23,7 +24,7 @@ const ResponsePane = ({response, previewMode, updatePreviewMode}) => {
 
   return (
     <section className="response-pane pane">
-      <header className="pane__header pane__header--grey">
+      <header className="pane__header">
         {!response ? null : (
           <div>
             <StatusTag
@@ -47,11 +48,21 @@ const ResponsePane = ({response, previewMode, updatePreviewMode}) => {
           <Tab><button>Headers</button></Tab>
         </TabList>
         <TabPanel>
-          <ResponseViewer
-            contentType={response.contentType}
-            previewMode={previewMode}
-            body={response.body}
-          />
+          {response.error ? (
+            <ResponseViewer
+              contentType={response.contentType}
+              previewMode={PREVIEW_MODE_SOURCE}
+              body={response.error}
+              wrap={true}
+            />
+          ) : (
+            <ResponseViewer
+              contentType={response.contentType}
+              previewMode={previewMode}
+              body={response.body}
+              wrap={true} // TODO: Make this a user preference
+            />
+          )}
         </TabPanel>
         <TabPanel className="scrollable pad">
           <table className="wide">

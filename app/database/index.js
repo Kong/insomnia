@@ -40,11 +40,16 @@ export function initDB () {
 
   return new Promise(resolve => {
     const dbPath = getDBFilePath();
-    db = {};
-    for (let i = 0; i < TYPES.length; i++) {
-      db[TYPES[i]] = {};
-    }
     
+    db = {
+      created: Date.now(),
+      entities: {}
+    };
+    
+    for (let i = 0; i < TYPES.length; i++) {
+      db.entities[TYPES[i]] = {};
+    }
+
     fs.readFile(getDBFilePath(), 'utf8', (err, text) => {
       if (!err) {
         // TODO: Better error handling
@@ -53,7 +58,7 @@ export function initDB () {
       }
 
       // Add listeners to do persistence
-      
+
       let timeout = null;
       onChange('DB_WRITER', () => {
         clearTimeout(timeout);
@@ -67,7 +72,7 @@ export function initDB () {
           })
         }, DB_PERSIST_INTERVAL)
       });
-      
+
       // Done
 
       initialized = true;
@@ -90,26 +95,26 @@ export function offChange (id) {
 }
 
 export function get (type, id) {
-  const doc = db[type][id];
+  const doc = db.entities[type][id];
   return new Promise(resolve => resolve(doc));
 }
 
 function all (type) {
   let docs = [];
-  const ids = Object.keys(db[type]);
+  const ids = Object.keys(db.entities[type]);
   for (let i = 0; i < ids.length; i++) {
-    docs.push(db[type][ids[i]]);
+    docs.push(db.entities[type][ids[i]]);
   }
 
   return new Promise(resolve => resolve(docs));
 }
 
 function removeWhere (type, key, value) {
-  const ids = Object.keys(db[type]);
+  const ids = Object.keys(db.entities[type]);
   let docs = [];
 
   for (let i = 0; i < ids.length; i++) {
-    const doc = db[type][ids[i]];
+    const doc = db.entities[type][ids[i]];
     if (doc[key] === value) {
       remove(doc);
     }
@@ -119,25 +124,25 @@ function removeWhere (type, key, value) {
 }
 
 function insert (doc) {
-  db[doc.type][doc._id] = doc;
-  
+  db.entities[doc.type][doc._id] = doc;
+
   Object.keys(changeListeners).map(k => changeListeners[k]('insert', doc));
   return new Promise(resolve => resolve(doc));
 }
 
 function update (doc) {
-  db[doc.type][doc._id] = doc;
-  
+  db.entities[doc.type][doc._id] = doc;
+
   Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
   return new Promise(resolve => resolve(doc));
 }
 
 function remove (doc) {
-  delete db[doc.type][doc._id];
+  delete db.entities[doc.type][doc._id];
 
   // Also remove children
   TYPES.map(type => removeWhere(type, 'parentId', doc._id));
-  
+
   Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
   new Promise(resolve => resolve());
 }
@@ -266,7 +271,8 @@ export function responseCreate (patch = {}) {
     bytes: 0,
     millis: 0,
     headers: [],
-    body: ''
+    body: '',
+    error: ''
   }, patch);
 }
 

@@ -22,14 +22,18 @@ const StatusTag = ({statusMessage, statusCode}) => {
   } else if (statusCode.startsWith('5')) {
     colorClass = 'bg-danger';
     backupStatusMessage = 'ERROR';
+  } else if (statusCode.startsWith('0')) {
+    colorClass = 'bg-danger';
+    backupStatusMessage = 'UNKNOWN';
+    statusCode = '';  // Don't print a 0 status code
   } else {
-    colorClass = 'bg-info';
+    colorClass = 'bg-danger';
     backupStatusMessage = 'UNKNOWN';
   }
 
   return (
     <div className={classnames('tag', colorClass)}>
-      <strong>{statusCode}</strong>&nbsp;{statusMessage || backupStatusMessage}
+      <strong>{statusCode}</strong> {statusMessage || backupStatusMessage}
     </div>
   );
 };
