@@ -49,13 +49,11 @@
     text-align: center;
 
     &::after {
-      background: darken($danger, 10);
-      display: block;
-      border-radius: 50%;
-      width: 0.8rem;
-      height: 0.8rem;
-      margin: auto;
-      content: ' ';
+      color: darken($danger, 10);
+      text-align: center;
+      width: 100%;
+      content: '⬤';
+      font-size: 0.7em;
     }
   }
 
