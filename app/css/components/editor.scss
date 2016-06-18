@@ -41,7 +41,42 @@
     color: $hl-xxl;
   }
 
+  .CodeMirror-lint-marker-error {
+    width: 100%;
+    height: 1em;
+    display: flex;
+    background: none;
+    text-align: center;
+
+    &::after {
+      background: darken($danger, 10);
+      display: block;
+      border-radius: 50%;
+      width: 0.8rem;
+      height: 0.8rem;
+      margin: auto;
+      content: ' ';
+    }
+  }
+
   &.editor--readonly .CodeMirror-cursors {
     opacity: 0;
+  }
+}
+
+// This has to be outside because it's moved to the body element
+.CodeMirror-lint-tooltip {
+  background-color: $bg-light;
+  color: $font-light-bg;
+  border-radius: 0;
+  font-size: $font-size-md;
+  padding: $padding-xs $padding-sm;
+
+  .CodeMirror-lint-message-error {
+    background-image: none;
+    padding-left: 0;
+  }
+  &::after {
+    display: none;
   }
 }

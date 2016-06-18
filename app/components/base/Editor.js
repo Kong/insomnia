@@ -23,14 +23,13 @@ import 'codemirror/addon/fold/foldgutter.css';
 import 'codemirror/addon/display/placeholder';
 
 // TODO: Figure out how to lint (json-lint doesn't build in webpack environment)
-// import 'codemirror/addon/lint/lint';
-// import 'codemirror/addon/lint/json-lint';
+import 'codemirror/addon/lint/lint';
+import 'codemirror/addon/lint/json-lint';
 // import 'codemirror/addon/lint/html-lint';
-// import 'codemirror/addon/lint/lint.css';
-// import * as jsonlint from 'jsonlint';
+import 'codemirror/addon/lint/lint.css';
 // import * as htmlhint from 'htmlhint';
 
-// window.jsonlint = jsonlint;
+// global.jsonlint = jsonlint;
 // window.htmlhint = htmlhint;
 
 // CSS Themes
@@ -47,7 +46,10 @@ const BASE_CODEMIRROR_OPTIONS = {
   foldGutter: true,
   height: 'auto',
   lineWrapping: false,
+  lint: true,
   tabSize: 4,
+  indentUnit: 4,
+  indentWithTabs: false,
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',
@@ -135,10 +137,6 @@ class Editor extends Component {
 
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
-
-    if (options.mode === 'json') {
-      options.mode = 'application/json';
-    }
 
     if (options.mode === 'application/json') {
       // ld+json looks better because keys are a different color
