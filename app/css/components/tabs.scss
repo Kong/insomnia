@@ -32,6 +32,7 @@ $border-color: $hl-md;
     border-top: 0 !important;
     white-space: nowrap;
     display: flex;
+    position: static;
 
     &:first-child {
       border-left-color: transparent;

@@ -6,7 +6,7 @@ import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../lib/previewModes'
 
 class ResponseViewer extends Component {
   render () {
-    const {previewMode, contentType, body, wrap} = this.props;
+    const {previewMode, contentType, body, url, wrap} = this.props;
 
     switch (previewMode) {
       case PREVIEW_MODE_FRIENDLY:
@@ -14,6 +14,7 @@ class ResponseViewer extends Component {
           <ResponseBodyWebview
             body={body}
             contentType={contentType}
+            url={url}
           />
         );
       case PREVIEW_MODE_SOURCE:
@@ -41,6 +42,7 @@ ResponseViewer.propTypes = {
   body: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
+  url: PropTypes.string.isRequired,
 
   // Optional
   wrap: PropTypes.bool

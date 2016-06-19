@@ -67,6 +67,7 @@ function actuallySend (request, callback) {
         statusCode: response.statusCode,
         statusMessage: response.statusMessage,
         contentType: response.headers['content-type'],
+        url: request.url,
         millis: Date.now() - startTime,
         bytes: response.connection.bytesRead,
         body: response.body,

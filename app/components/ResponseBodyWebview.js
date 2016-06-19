@@ -2,11 +2,11 @@ import React, {Component, PropTypes} from 'react'
 
 class ResponseBodyWebview extends Component {
   _setBody () {
-    const {body, contentType} = this.props;
+    const {body, contentType, url} = this.props;
     const {webview} = this.refs;
 
-    const encoded = new Buffer(body).toString('base64');
-    webview.loadURL(`data:${contentType};base64,${encoded}`);
+    const newBody = body.replace('<head>', `<head><base href="${url}">`);
+    webview.loadURL(`data:${contentType};charset=utf-8,${encodeURIComponent(newBody)}`);
   }
 
   componentDidUpdate () {
@@ -38,14 +38,15 @@ class ResponseBodyWebview extends Component {
 
   render () {
     return (
-      <webview ref="webview" src=""></webview>
+      <webview ref="webview" src="about:blank"></webview>
     );
   }
 }
 
 ResponseBodyWebview.propTypes = {
   body: PropTypes.string.isRequired,
-  contentType: PropTypes.string.isRequired
+  contentType: PropTypes.string.isRequired,
+  url: PropTypes.string.isRequired
 };
 
 export default ResponseBodyWebview;

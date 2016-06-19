@@ -102,8 +102,13 @@ class App extends Component {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
     }
 
-    const activeRequestId = workspace.activeRequestId;
+    let activeRequestId = workspace.activeRequestId;
     const activeRequest = activeRequestId ? entities.requests[activeRequestId] : null;
+
+    // Request doesn't actually exist anymore :(
+    if (!activeRequest) {
+      activeRequestId = null;
+    }
 
     const responses = Object.keys(entities.responses).map(id => entities.responses[id]);
     const allRequests = Object.keys(entities.requests).map(id => entities.requests[id]);

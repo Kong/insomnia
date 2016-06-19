@@ -21,6 +21,10 @@
     background-color: $bg-brand;
     color: $font-brand-bg;
 
+    &:hover {
+      background-color: lighten($bg-brand, 1);
+    }
+
     h1 {
       white-space: nowrap;
       overflow: hidden;

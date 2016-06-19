@@ -60,6 +60,7 @@ class ResponsePane extends Component {
                 contentType={response.contentType}
                 previewMode={PREVIEW_MODE_SOURCE}
                 body={response.error}
+                url={response.url}
                 wrap={true}
               />
             ) : (
@@ -67,6 +68,7 @@ class ResponsePane extends Component {
                 contentType={response.contentType}
                 previewMode={previewMode}
                 body={response.body}
+                url={response.url}
                 wrap={true} // TODO: Make this a user preference
               />
             )}
@@ -104,7 +106,6 @@ ResponsePane.propTypes = {
 
   // Other
   response: PropTypes.object
-
 };
 
 export default ResponsePane;

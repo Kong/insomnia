@@ -4,9 +4,9 @@ import * as fs from 'fs'
 
 import * as methods from '../lib/constants'
 import {generateId} from './util'
-import {CONTENT_TYPE_TEXT} from '../lib/contentTypes'
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
 import {DB_PERSIST_INTERVAL} from '../lib/constants'
+import {CONTENT_TYPE_JSON} from '../lib/contentTypes'
 
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
@@ -201,7 +201,7 @@ export function requestCreate (patch = {}) {
     method: methods.METHOD_GET,
     activated: Date.now(),
     previewMode: PREVIEW_MODE_SOURCE,
-    contentType: CONTENT_TYPE_TEXT,
+    contentType: CONTENT_TYPE_JSON,
     body: '',
     params: [],
     headers: [],
@@ -268,6 +268,7 @@ export function responseCreate (patch = {}) {
     statusCode: 0,
     statusMessage: '',
     contentType: 'text/plain',
+    url: '',
     bytes: 0,
     millis: 0,
     headers: [],
