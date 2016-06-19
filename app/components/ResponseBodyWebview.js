@@ -6,7 +6,7 @@ class ResponseBodyWebview extends Component {
     const {webview} = this.refs;
 
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
-    webview.loadURL(`data:${contentType};charset=utf-8,${encodeURIComponent(newBody)}`);
+    webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
   }
 
   componentDidUpdate () {
