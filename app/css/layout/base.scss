@@ -119,6 +119,10 @@ i.fa {
   white-space: pre-wrap;
 }
 
+.no-wrap {
+  white-space: nowrap;
+}
+
 .pad {
   box-sizing: border-box;
   padding: $padding-md;

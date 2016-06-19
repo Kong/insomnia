@@ -47,7 +47,12 @@ class ResponsePane extends Component {
                 updatePreviewMode={updatePreviewMode}
               />
             </Tab>
-            <Tab><button>Headers</button></Tab>
+            <Tab>
+              <button>
+                Headers {response.headers.length ? (
+                <span className="txt-sm">({response.headers.length})</span> ) : null}
+              </button>
+            </Tab>
           </TabList>
           <TabPanel>
             {response.error ? (

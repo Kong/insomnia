@@ -56,17 +56,19 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button>
-                Params {request.params.length ? `(${request.params.length})` : ''}
+                Params {request.params.length ? (
+                <span className="txt-sm">({request.params.length})</span> ) : null}
               </button>
             </Tab>
             <Tab>
               <button>
-                Auth {request.authentication.username ? <i className="fa fa-lock"></i> : ''}
+                Auth {request.authentication.username ? <i className="fa fa-lock txt-sm"></i> : ''}
               </button>
             </Tab>
             <Tab>
               <button>
-                Headers {request.headers.length ? `(${request.headers.length})` : ''}
+                Headers {request.headers.length ? (
+                <span className="txt-sm">({request.headers.length})</span> ) : null}
               </button>
             </Tab>
           </TabList>
