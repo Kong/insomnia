@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes, Component} from 'react'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
 import StatusTag from './StatusTag'
@@ -9,83 +9,86 @@ import ResponseViewer from '../components/ResponseViewer'
 import {getPreviewModeName} from '../lib/previewModes'
 import {PREVIEW_MODE_SOURCE} from "../lib/previewModes";
 
-const ResponsePane = ({response, previewMode, updatePreviewMode}) => {
-  if (!response) {
+class ResponsePane extends Component {
+  render () {
+    const {response, previewMode, updatePreviewMode} = this.props;
+    if (!response) {
+      return (
+        <section className="response-pane pane">
+          <header className="pane__header"></header>
+          <div className="pane__body pane__body--placeholder">
+            <h1>Nothing Yet...</h1>
+            <p>Click the <em>Send</em> button to trigger a request</p>
+          </div>
+        </section>
+      )
+    }
+
     return (
       <section className="response-pane pane">
-        <header className="pane__header"></header>
-        <div className="pane__body pane__body--placeholder">
-          <h1>Nothing Yet...</h1>
-          <p>Click the <em>Send</em> button to trigger a request</p>
-        </div>
+        <header className="pane__header">
+          {!response ? null : (
+            <div>
+              <StatusTag
+                statusCode={response.statusCode}
+                statusMessage={response.statusMessage}
+              />
+              <TimeTag milliseconds={response.millis}/>
+              <SizeTag bytes={response.bytes}/>
+            </div>
+          )}
+        </header>
+        <Tabs className="pane__body">
+          <TabList>
+            <Tab>
+              <button>{getPreviewModeName(previewMode)}</button>
+              <PreviewModeDropdown
+                previewMode={previewMode}
+                updatePreviewMode={updatePreviewMode}
+              />
+            </Tab>
+            <Tab><button>Headers</button></Tab>
+          </TabList>
+          <TabPanel>
+            {response.error ? (
+              <ResponseViewer
+                contentType={response.contentType}
+                previewMode={PREVIEW_MODE_SOURCE}
+                body={response.error}
+                wrap={true}
+              />
+            ) : (
+              <ResponseViewer
+                contentType={response.contentType}
+                previewMode={previewMode}
+                body={response.body}
+                wrap={true} // TODO: Make this a user preference
+              />
+            )}
+          </TabPanel>
+          <TabPanel className="scrollable pad">
+            <table className="wide">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Value</th>
+              </tr>
+              </thead>
+              <tbody>
+              {response.headers.map((h, i) => (
+                <tr className="selectable" key={i}>
+                  <td>{h.name}</td>
+                  <td>{h.value}</td>
+                </tr>
+              ))}
+              </tbody>
+            </table>
+          </TabPanel>
+        </Tabs>
       </section>
     )
   }
-
-  return (
-    <section className="response-pane pane">
-      <header className="pane__header">
-        {!response ? null : (
-          <div>
-            <StatusTag
-              statusCode={response.statusCode}
-              statusMessage={response.statusMessage}
-            />
-            <TimeTag milliseconds={response.millis}/>
-            <SizeTag bytes={response.bytes}/>
-          </div>
-        )}
-      </header>
-      <Tabs className="pane__body">
-        <TabList>
-          <Tab>
-            <button>{getPreviewModeName(previewMode)}</button>
-            <PreviewModeDropdown
-              previewMode={previewMode}
-              updatePreviewMode={updatePreviewMode}
-            />
-          </Tab>
-          <Tab><button>Headers</button></Tab>
-        </TabList>
-        <TabPanel>
-          {response.error ? (
-            <ResponseViewer
-              contentType={response.contentType}
-              previewMode={PREVIEW_MODE_SOURCE}
-              body={response.error}
-              wrap={true}
-            />
-          ) : (
-            <ResponseViewer
-              contentType={response.contentType}
-              previewMode={previewMode}
-              body={response.body}
-              wrap={true} // TODO: Make this a user preference
-            />
-          )}
-        </TabPanel>
-        <TabPanel className="scrollable pad">
-          <table className="wide">
-            <thead>
-            <tr>
-              <th>Name</th>
-              <th>Value</th>
-            </tr>
-            </thead>
-            <tbody>
-            {response.headers.map((h, i) => (
-              <tr className="selectable" key={i}>
-                <td>{h.name}</td>
-                <td>{h.value}</td>
-              </tr>
-            ))}
-            </tbody>
-          </table>
-        </TabPanel>
-      </Tabs>
-    </section>
-  )
-};
+}
 
 ResponsePane.propTypes = {
   // Functions

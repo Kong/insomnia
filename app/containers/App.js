@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react'
+import ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 
@@ -22,7 +23,10 @@ class App extends Component {
     super(props);
     this.state = {
       activeResponse: null,
-      activeRequest: null
+      activeRequest: null,
+      draggingSidebar: false,
+      draggingPane: false,
+      paneWidth: 0.5
     }
   }
 
@@ -37,6 +41,48 @@ class App extends Component {
     } else {
       return children;
     }
+  }
+
+  _startDragSidebar () {
+    this.setState({
+      draggingSidebar: true
+    })
+  }
+
+  _startDragPane () {
+    this.setState({
+      draggingPane: true
+    })
+  }
+
+  componentDidMount () {
+    document.addEventListener('mouseup', e => {
+      this.setState({
+        draggingSidebar: false,
+        draggingPane: false
+      })
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (this.state.draggingPane) {
+        const requestPane = ReactDOM.findDOMNode(this.refs.requestPane);
+        const responsePane = ReactDOM.findDOMNode(this.refs.responsePane);
+
+        const requestPaneWidth = requestPane.offsetWidth;
+        const responsePaneWidth = responsePane.offsetWidth;
+        const pixelOffset = e.clientX - requestPane.offsetLeft;
+        const ratio = pixelOffset / (requestPaneWidth + responsePaneWidth);
+        const paneWidth = Math.max(Math.min(ratio, 0.6), 0.4);
+        
+        this.setState({paneWidth});
+      } else if (this.state.draggingSidebar) {
+        this.refs.sidebar.resize(e.clientX);
+      }
+    })
+  }
+
+  componentWillUnmount () {
+    console.log('hello');
   }
 
   render () {
@@ -65,8 +111,10 @@ class App extends Component {
     );
 
     return (
-      <div className="wrapper">
+      <div className="wrapper"
+           style={{gridTemplateColumns: `auto 0 ${this.state.paneWidth}fr 0 ${1 - this.state.paneWidth}fr`}}>
         <Sidebar
+          ref="sidebar"
           workspaceId={workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {activeRequestId: r._id})}
           changeFilter={actions.requests.changeFilter}
@@ -77,7 +125,12 @@ class App extends Component {
           children={children}
         />
 
+        <div className="drag drag--sidebar">
+          <div onMouseDown={e => this._startDragSidebar(e)}></div>
+        </div>
+
         <RequestPane
+          ref="requestPane"
           request={activeRequest}
           sendRequest={actions.requests.send}
           updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
@@ -89,7 +142,12 @@ class App extends Component {
           updateRequestContentType={contentType => db.requestUpdate(activeRequest, {contentType})}
         />
 
+        <div className="drag drag--pane">
+          <div onMouseDown={e => this._startDragPane(e)}></div>
+        </div>
+
         <ResponsePane
+          ref="responsePane"
           response={activeResponse}
           previewMode={activeRequest ? activeRequest.previewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}

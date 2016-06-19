@@ -52,8 +52,8 @@
       color: darken($danger, 10);
       text-align: center;
       width: 100%;
+      font-size: 0.7em; // because the circle is so large
       content: '⬤';
-      font-size: 0.7em;
     }
   }
 
