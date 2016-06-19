@@ -3,11 +3,6 @@ body {
     -webkit-user-select: none;
     cursor: default;
 }
-webview, adview {
-    display: inline-block;
-    width: 300px;
-    height: 300px;
-}
 html, body {
     overflow: hidden;
 }
