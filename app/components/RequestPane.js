@@ -56,13 +56,13 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button>
-                Params {request.params.length ? (
-                <span className="txt-sm">({request.params.length})</span> ) : null}
+                Auth {request.authentication.username ? <i className="fa fa-lock txt-sm"></i> : ''}
               </button>
             </Tab>
             <Tab>
               <button>
-                Auth {request.authentication.username ? <i className="fa fa-lock txt-sm"></i> : ''}
+                Params {request.params.length ? (
+                <span className="txt-sm">({request.params.length})</span> ) : null}
               </button>
             </Tab>
             <Tab>
@@ -80,6 +80,12 @@ class RequestPane extends Component {
               body={request.body}
             />
           </TabPanel>
+          <TabPanel>
+            <RequestAuthEditor
+              request={request}
+              onChange={updateRequestAuthentication}
+            />
+          </TabPanel>
           <TabPanel className="scrollable">
             <KeyValueEditor
               className="pad"
@@ -88,12 +94,6 @@ class RequestPane extends Component {
               uniquenessKey={request._id}
               pairs={request.params}
               onChange={updateRequestParams}
-            />
-          </TabPanel>
-          <TabPanel className="scrollable">
-            <RequestAuthEditor
-              request={request}
-              onChange={updateRequestAuthentication}
             />
           </TabPanel>
           <TabPanel className="scrollable">

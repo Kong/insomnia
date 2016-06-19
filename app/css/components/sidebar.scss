@@ -26,7 +26,7 @@
       text-overflow: ellipsis;
 
       // HACK: Bump up the arrow a bit
-      & > i {
+      i.fa-caret-down {
         position: relative;
         top: -2px;
       }
