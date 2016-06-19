@@ -26,7 +26,7 @@ class ResponsePane extends Component {
 
     return (
       <section className="response-pane pane">
-        <header className="pane__header">
+        <header className="pane__header pad no-wrap">
           {!response ? null : (
             <div>
               <StatusTag

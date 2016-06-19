@@ -73,11 +73,7 @@ class App extends Component {
         const pixelOffset = e.clientX - requestPane.offsetLeft;
         let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
 
-        if (paneWidth < 0.1) {
-          paneWidth = 0.01;
-        } else if (paneWidth > 0.9) {
-          paneWidth = 0.99;
-        }
+        paneWidth = Math.min(Math.max(paneWidth, 0.01), 0.99);
 
         this.setState({paneWidth});
       } else if (this.state.draggingSidebar) {

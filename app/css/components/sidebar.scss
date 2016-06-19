@@ -19,10 +19,16 @@
     background-color: $bg-brand;
     color: $font-brand-bg;
 
-    // HACK: Bump up the arrow a bit
-    h1 i {
-      position: relative;
-      top: -2px;
+    h1 {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      // HACK: Bump up the arrow a bit
+      & > i {
+        position: relative;
+        top: -2px;
+      }
     }
 
     // Make the dropdown offset to the right
