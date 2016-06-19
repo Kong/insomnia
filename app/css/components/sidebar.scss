@@ -20,6 +20,7 @@
   .sidebar__header {
     background-color: $bg-brand;
     color: $font-brand-bg;
+    width: 100%;
 
     &:hover {
       background-color: lighten($bg-brand, 1);
