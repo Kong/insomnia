@@ -6,15 +6,6 @@ import SidebarRequestGroupRow from './SidebarRequestGroupRow'
 import SidebarRequestRow from './SidebarRequestRow'
 
 class Sidebar extends Component {
-  
-  constructor (props) {
-    super(props);
-    
-    this.state = {
-      width: 19
-    }
-  }
-  
   _onFilterChange (value) {
     this.props.changeFilter(value);
   }
@@ -95,23 +86,11 @@ class Sidebar extends Component {
     })
   }
 
-  /**
-   * Resize the sidebar
-   * 
-   * @param pixelWidth how wide to make the sidebar
-   */
-  resize (pixelWidth) {
-    const currentPixelWidth = ReactDOM.findDOMNode(this).offsetWidth;
-    const ratio = pixelWidth / currentPixelWidth;
-    const width = Math.max(Math.min(this.state.width * ratio, 25), 13);
-    this.setState({width});
-  }
-
   render () {
     const {filter, children} = this.props;
 
     return (
-      <aside className="sidebar" style={{width: `${this.state.width}rem`}}>
+      <aside className="sidebar">
         <header className="sidebar__header">
           <WorkspaceDropdown />
         </header>

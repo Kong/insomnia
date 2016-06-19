@@ -26,7 +26,8 @@ class App extends Component {
       activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
-      paneWidth: 0.5
+      paneWidth: 0.5, // % (fr)
+      sidebarWidth: 19 // rem
     }
   }
 
@@ -44,12 +45,15 @@ class App extends Component {
   }
 
   _startDragSidebar () {
+    console.log('-- Start Sidebar Drag --');
     this.setState({
       draggingSidebar: true
     })
   }
 
   _startDragPane () {
+    console.log('-- Start Pane Drag --');
+
     this.setState({
       draggingPane: true
     })
@@ -77,7 +81,10 @@ class App extends Component {
 
         this.setState({paneWidth});
       } else if (this.state.draggingSidebar) {
-        this.refs.sidebar.resize(e.clientX);
+        const currentPixelWidth = ReactDOM.findDOMNode(this.refs.sidebar).offsetWidth;
+        const ratio = e.clientX / currentPixelWidth;
+        const sidebarWidth = Math.max(Math.min(this.state.sidebarWidth * ratio, 25), 13);
+        this.setState({sidebarWidth})
       }
     })
   }
@@ -111,9 +118,12 @@ class App extends Component {
       allRequests.concat(allRequestGroups)
     );
 
+    const {sidebarWidth, paneWidth} = this.state;
+    const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
+
     return (
       <div className="wrapper"
-           style={{gridTemplateColumns: `auto 0 ${this.state.paneWidth}fr 0 ${1 - this.state.paneWidth}fr`}}>
+           style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
           workspaceId={workspace._id}

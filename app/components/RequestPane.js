@@ -28,7 +28,7 @@ class RequestPane extends Component {
       return (
         <section className="request-pane pane">
           <header className="pane__header"></header>
-          <div className="pane__body"></div>
+          <div className="pane__body text-center pad"></div>
         </section>
       )
     }

@@ -16,7 +16,7 @@ class ResponsePane extends Component {
       return (
         <section className="response-pane pane">
           <header className="pane__header"></header>
-          <div className="pane__body pane__body--placeholder">
+          <div className="pane__body pane__body--placeholder text-center pad">
             <h1>Nothing Yet...</h1>
             <p>Click the <em>Send</em> button to trigger a request</p>
           </div>

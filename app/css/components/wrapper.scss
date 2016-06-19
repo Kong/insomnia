@@ -52,8 +52,6 @@
 
 @media (max-width: $breakpoint-md) {
   .wrapper {
-    grid-template-columns: auto 0 1fr 0 1fr !important;
-
     .request-pane {
       grid-column-start: 3;
       grid-column-end: span 3;
