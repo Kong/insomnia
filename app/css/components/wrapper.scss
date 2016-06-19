@@ -25,12 +25,13 @@
     & > * {
       cursor: ew-resize;
       position: absolute;
-      //background: red;
+      //background: rgba(255, 0, 0, 0.3);
       height: 100%;
-      z-index: 100;
+      z-index: 10;
       width: $drag-width;
-      left: -$drag-width / 2;
       top: 0;
+      // More to the right so it doesn't cover scrollbars
+      left: -$drag-width / 8;
     }
   }
 
@@ -66,7 +67,7 @@
       grid-row-end: span 1;
     }
 
-    .drag--panels {
+    .drag--pane {
       display: none;
     }
   }
