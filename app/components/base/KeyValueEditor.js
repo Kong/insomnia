@@ -163,6 +163,10 @@ class KeyValueEditor extends Component {
     return (
       <ul className={classnames('key-value-editor', 'wide', className)}>
         {pairs.map((pair, i) => {
+          if (typeof pair.value !== 'string') {
+            return null;
+          }
+
           return (
             <li key={i}>
               <div className="form-control form-control--underlined form-control--wide">

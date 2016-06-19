@@ -6,7 +6,7 @@ import * as methods from '../lib/constants'
 import {generateId} from './util'
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
 import {DB_PERSIST_INTERVAL} from '../lib/constants'
-import {CONTENT_TYPE_JSON} from '../lib/contentTypes'
+import {CONTENT_TYPE_TEXT} from '../lib/contentTypes'
 
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
@@ -201,7 +201,7 @@ export function requestCreate (patch = {}) {
     method: methods.METHOD_GET,
     activated: Date.now(),
     previewMode: PREVIEW_MODE_SOURCE,
-    contentType: CONTENT_TYPE_JSON,
+    contentType: CONTENT_TYPE_TEXT,
     body: '',
     params: [],
     headers: [],
