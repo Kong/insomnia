@@ -10,6 +10,7 @@ import RequestPane from '../components/RequestPane'
 import ResponsePane from '../components/ResponsePane'
 import Sidebar from '../components/Sidebar'
 import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes'
+import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS} from '../lib/constants'
 
 import * as GlobalActions from '../redux/modules/global'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
@@ -82,13 +83,14 @@ class App extends Component {
         const pixelOffset = e.clientX - requestPane.offsetLeft;
         let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
 
-        paneWidth = Math.min(Math.max(paneWidth, 0.01), 0.99);
+        paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
 
         this.setState({paneWidth});
       } else if (this.state.draggingSidebar) {
         const currentPixelWidth = ReactDOM.findDOMNode(this.refs.sidebar).offsetWidth;
         const ratio = e.clientX / currentPixelWidth;
-        const sidebarWidth = Math.max(Math.min(this.state.sidebarWidth * ratio, 25), 13);
+        const width = this.state.sidebarWidth * ratio;
+        const sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
         this.setState({sidebarWidth})
       }
     })
