@@ -37,15 +37,10 @@ import 'codemirror/addon/lint/lint'
 import 'codemirror/addon/lint/json-lint'
 import 'codemirror/addon/lint/lint.css'
 
-// CSS Themes
-import 'codemirror/theme/monokai.css'
-import 'codemirror/theme/neat.css'
-
 // App styles
 import '../../css/components/editor.scss';
 
 const BASE_CODEMIRROR_OPTIONS = {
-  theme: 'monokai',
   lineNumbers: true,
   placeholder: 'Start Typing...',
   foldGutter: true,

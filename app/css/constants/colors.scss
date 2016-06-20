@@ -24,9 +24,10 @@ $hl-xxl: rgba(140, 140, 140, 0.7);
 $hl: rgba(140, 140, 140, 1);
 
 $success: #8fc62b;
-$warning: #ffb241;
+$notice: #e5df54;
+$warning: #ffb635;
 $danger: #ff6d59;
-$surprise: #a086ff;
+$surprise: #8f78ff;
 $info: #3eaec5;
 
 .success,
@@ -34,9 +35,13 @@ $info: #3eaec5;
   color: $success;
 }
 
-.warning,
-.method-PUT,
+.notice,
 .method-PATCH {
+  color: $notice;
+}
+
+.warning,
+.method-PUT {
   color: $warning;
 }
 
@@ -63,9 +68,15 @@ $info: #3eaec5;
   color: #fff;
 }
 
-.bg-warning,
-.bg-method-PUT,
+.bg-notice,
 .bg-method-PATCH {
+  background: $notice !important;
+  color: #fff;
+  text-shadow: 0 0 0.05em darken($notice, 20);
+}
+
+.bg-warning,
+.bg-method-PUT {
   background: $warning !important;
   color: #fff;
   text-shadow: 0 0 0.05em darken($warning, 20);
