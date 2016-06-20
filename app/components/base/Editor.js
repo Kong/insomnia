@@ -20,6 +20,8 @@ import 'codemirror/addon/fold/xml-fold'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
 
+import 'codemirror/addon/selection/active-line'
+
 import 'codemirror/addon/search/matchesonscrollbar'
 import 'codemirror/addon/search/matchesonscrollbar.css'
 
@@ -48,11 +50,12 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  lineWrapping: false,
+  lineWrapping: true,
   lint: true,
   tabSize: 4,
   indentUnit: 4,
   indentWithTabs: false,
+  styleActiveLine: true,
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',
