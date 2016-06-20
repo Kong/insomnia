@@ -2,10 +2,12 @@ import React, {Component, PropTypes} from 'react'
 import ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
+import {HotKeys} from 'react-hotkeys'
 
 import Prompts from './Prompts'
 import EnvironmentEditModal from '../components/EnvironmentEditModal'
 import SettingsModal from '../components/SettingsModal'
+import RequestSwitcherModal from '../components/RequestSwitcherModal'
 import RequestPane from '../components/RequestPane'
 import ResponsePane from '../components/ResponsePane'
 import Sidebar from '../components/Sidebar'
@@ -15,9 +17,14 @@ import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS} from
 import * as GlobalActions from '../redux/modules/global'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
 import * as RequestActions from '../redux/modules/requests'
-import * as ModalActions from '../redux/modules/modals'
 
 import * as db from '../database'
+
+const keyMap = {
+  showRequestSwitcher: 'mod+k',
+  showSettingsModal: 'mod+,',
+  escape: 'esc'
+};
 
 class App extends Component {
   constructor (props) {
@@ -29,7 +36,7 @@ class App extends Component {
       draggingPane: false,
       paneWidth: 0.5, // % (fr)
       sidebarWidth: 19 // rem
-    }
+    };
   }
 
   _generateSidebarTree (parentId, entities) {
@@ -47,7 +54,7 @@ class App extends Component {
 
   _startDragSidebar () {
     console.log('-- Start Sidebar Drag --');
-    
+
     this.setState({
       draggingSidebar: true
     })
@@ -101,7 +108,7 @@ class App extends Component {
   }
 
   render () {
-    const {actions, modals, workspaces, requests, entities} = this.props;
+    const {actions, workspaces, requests, entities} = this.props;
 
     // TODO: Factor this out into a selector
     let workspace = entities.workspaces[workspaces.activeId];
@@ -133,9 +140,27 @@ class App extends Component {
     const {sidebarWidth, paneWidth} = this.state;
     const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
+    const handlers = {
+      showRequestSwitcher: () => {
+        this.refs.requestSwitcherModal.show();
+        console.log('-- Show Request Switcher --');
+      },
+      showSettingsModal: () => {
+        this.refs.settingsModal.show();
+        console.log('-- Show Settings Modal --');
+      }
+    };
+
     return (
-      <div className="wrapper"
-           style={{gridTemplateColumns: gridTemplateColumns}}>
+      <HotKeys
+        style={{gridTemplateColumns: gridTemplateColumns}}
+        keyMap={keyMap}
+        handlers={handlers}
+        focus={true}
+        focused={true}
+        className="wrapper"
+        id="wrapper">
+
         <Sidebar
           ref="sidebar"
           workspaceId={workspace._id}
@@ -178,28 +203,9 @@ class App extends Component {
 
         <Prompts />
 
-        {modals.map(m => {
-          if (m.id === SettingsModal.defaultProps.id) {
-            return (
-              <SettingsModal
-                key={m.id}
-                onClose={() => actions.modals.hide(m.id)}
-              />
-            )
-          } else if (m.id === EnvironmentEditModal.defaultProps.id) {
-            return (
-              <EnvironmentEditModal
-                key={m.id}
-                requestGroup={m.data.requestGroup}
-                onClose={() => actions.modals.hide(m.id)}
-                onChange={rg => db.requestGroupUpdate(m.data.requestGroup, {environment: rg.environment})}
-              />
-            )
-          } else {
-            return null;
-          }
-        })}
-      </div>
+        <SettingsModal ref="settingsModal"/>
+        <RequestSwitcherModal ref="requestSwitcherModal" />
+      </HotKeys>
     )
   }
 }
@@ -245,7 +251,6 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
-      modals: bindActionCreators(ModalActions, dispatch),
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)
     }

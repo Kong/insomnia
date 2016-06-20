@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react'
-import ReactDOM from 'react-dom'
+
 import WorkspaceDropdown from './../containers/WorkspaceDropdown'
 import Input from './base/Input'
 import SidebarRequestGroupRow from './SidebarRequestGroupRow'
@@ -78,8 +78,7 @@ class Sidebar extends Component {
           toggleRequestGroup={toggleRequestGroup}
           addRequestToRequestGroup={addRequestToRequestGroup}
           numChildren={child.children.length}
-          requestGroup={requestGroup}
-        >
+          requestGroup={requestGroup}>
           {children}
         </SidebarRequestGroupRow>
       )
@@ -94,11 +93,11 @@ class Sidebar extends Component {
         <header className="sidebar__header">
           <WorkspaceDropdown />
         </header>
-        
+
         <ul className="sidebar__list">
           {this._renderChildren(children)}
         </ul>
-        
+
         <footer className="sidebar__footer form-control form-control--underlined">
           <Input
             type="text"
