@@ -3,34 +3,37 @@ import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 
 // Modes
-import '../../../node_modules/codemirror/mode/css/css';
-import 'codemirror/mode/htmlmixed/htmlmixed';
-import 'codemirror/mode/javascript/javascript';
+import '../../../node_modules/codemirror/mode/css/css'
+import 'codemirror/mode/htmlmixed/htmlmixed'
+import 'codemirror/mode/javascript/javascript'
 
 // CSS
 import 'codemirror/lib/codemirror.css'
 
 // Plugins
-import 'codemirror/addon/fold/foldcode';
-import 'codemirror/addon/fold/brace-fold';
-import 'codemirror/addon/fold/comment-fold';
-import 'codemirror/addon/fold/indent-fold';
-import 'codemirror/addon/fold/xml-fold';
+import 'codemirror/addon/fold/foldcode'
+import 'codemirror/addon/fold/brace-fold'
+import 'codemirror/addon/fold/comment-fold'
+import 'codemirror/addon/fold/indent-fold'
+import 'codemirror/addon/fold/xml-fold'
 
-import 'codemirror/addon/fold/foldgutter';
-import 'codemirror/addon/fold/foldgutter.css';
+import 'codemirror/addon/search/search'
+import 'codemirror/addon/search/searchcursor'
 
-import 'codemirror/addon/display/placeholder';
+import 'codemirror/addon/search/matchesonscrollbar'
+import 'codemirror/addon/search/matchesonscrollbar.css'
 
-// TODO: Figure out how to lint (json-lint doesn't build in webpack environment)
-import 'codemirror/addon/lint/lint';
-import 'codemirror/addon/lint/json-lint';
-// import 'codemirror/addon/lint/html-lint';
-import 'codemirror/addon/lint/lint.css';
-// import * as htmlhint from 'htmlhint';
+import 'codemirror/addon/dialog/dialog'
+import 'codemirror/addon/dialog/dialog.css'
 
-// global.jsonlint = jsonlint;
-// window.htmlhint = htmlhint;
+import 'codemirror/addon/fold/foldgutter'
+import 'codemirror/addon/fold/foldgutter.css'
+
+import 'codemirror/addon/display/placeholder'
+
+import 'codemirror/addon/lint/lint'
+import 'codemirror/addon/lint/json-lint'
+import 'codemirror/addon/lint/lint.css'
 
 // CSS Themes
 import 'codemirror/theme/monokai.css'

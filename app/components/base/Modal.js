@@ -49,8 +49,8 @@ class Modal extends Component {
            className={classnames('modal', this.props.className)}
            onKeyDown={this._keyDown.bind(this)}
            onClick={this._handleClick.bind(this)}>
-        <div
-          className={classnames('modal__content', {tall: this.props.tall})}>
+        <div className={classnames('modal__content', {tall: this.props.tall})}>
+          <div className="modal__backdrop" onClick={() => this.close()}></div>
           {this.props.children}
         </div>
       </div>

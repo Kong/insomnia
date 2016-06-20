@@ -5,15 +5,25 @@
   position: relative;
   display: inline-block;
 
+  .dropdown__backdrop {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    content: ' ';
+  }
+
   ul {
+    display: none;
     position: absolute;
     top: 100%;
     left: 0;
-    display: none;
     z-index: 1000;
     min-width: $dropdown-min-width;
     box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.25);
-
     // Separate it from the button a bit
     margin-top: 3px;
     margin-bottom: 3px;
@@ -48,7 +58,6 @@
   }
 
   li.dropdown__divider {
-    min-width: 16rem;
     border-bottom: 1px solid $hl-lg;
     overflow: visible !important;
     margin: $padding-md $padding-md $padding-md $padding-sm;
@@ -57,7 +66,8 @@
 
     .dropdown__divider__label {
       position: relative;
-      top: -0.85rem;  // HACK: Fine adjustment
+      top: -0.85rem;
+      // HACK: Fine adjustment
       color: $hl-xxl;
       padding-right: 1em;
       background: #fff;
@@ -73,8 +83,14 @@
     top: auto;
   }
 
-  &.dropdown--open ul {
-    display: block;
+  &.dropdown--open {
+    ul {
+      display: block;
+    }
+
+    .dropdown__backdrop {
+      display: block;
+    }
   }
 
   &.dropdown--right ul {

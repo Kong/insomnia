@@ -2,17 +2,40 @@
 @import '../constants/colors';
 
 .modal {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
   position: absolute;
   z-index: 1000;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(20, 20, 20, 0.5);
   padding: $padding-xl;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+
+  .modal__backdrop {
+    background: rgba(20, 20, 20, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+  }
+
+  .modal__content {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    margin: auto;
+    color: $font-super-light-bg;
+    border-radius: $radius-md;
+    box-sizing: border-box;
+    box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.5);
+    width: $modal-width;
+    max-width: 100%;
+    max-height: 100%;
+  }
 
   .modal__header {
     border-top-left-radius: $radius-md;
@@ -32,29 +55,15 @@
     }
   }
 
-  .modal__content {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    margin: auto;
-    background: $bg-super-light;
-    color: $font-super-light-bg;
-    border-radius: $radius-md;
-    box-sizing: border-box;
-    box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.5);
-    width: $modal-width;
-    max-width: 100%;
-    max-height: 100%;
-  }
-
   .modal__body {
     overflow: auto;
+    background-color: $bg-super-light;
   }
 
   .modal__footer {
     border-bottom-left-radius: $radius-md;
     border-bottom-right-radius: $radius-md;
     border-top: 1px solid $hl-md;
-    text-align: right;
+    background-color: $bg-super-light;
   }
 }

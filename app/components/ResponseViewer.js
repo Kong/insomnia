@@ -42,10 +42,10 @@ ResponseViewer.propTypes = {
   body: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired,
 
   // Optional
-  wrap: PropTypes.bool
+  wrap: PropTypes.bool,
+  url: PropTypes.string
 };
 
 export default ResponseViewer;

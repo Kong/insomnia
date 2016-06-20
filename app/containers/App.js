@@ -46,6 +46,7 @@ class App extends Component {
 
   _startDragSidebar () {
     console.log('-- Start Sidebar Drag --');
+    
     this.setState({
       draggingSidebar: true
     })
@@ -60,11 +61,15 @@ class App extends Component {
   }
 
   componentDidMount () {
-    document.addEventListener('mouseup', e => {
-      this.setState({
-        draggingSidebar: false,
-        draggingPane: false
-      })
+    document.addEventListener('mouseup', () => {
+      if (this.state.draggingSidebar || this.state.draggingPane) {
+        console.log('-- End Pane or Sidebar Drag --');
+
+        this.setState({
+          draggingSidebar: false,
+          draggingPane: false
+        })
+      }
     });
 
     document.addEventListener('mousemove', e => {

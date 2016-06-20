@@ -12,8 +12,10 @@ const DOWN = 40;
 class KeyValueEditor extends Component {
   constructor (props) {
     super(props);
+
     this._focusedPair = -1;
     this._focusedField = NAME;
+
     this.state = {
       pairs: props.pairs
     }
