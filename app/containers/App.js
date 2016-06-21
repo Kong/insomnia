@@ -5,14 +5,20 @@ import {bindActionCreators} from 'redux'
 import {HotKeys} from 'react-hotkeys'
 
 import Prompts from './Prompts'
-import EnvironmentEditModal from '../components/EnvironmentEditModal'
 import SettingsModal from '../components/SettingsModal'
 import RequestSwitcherModal from '../components/RequestSwitcherModal'
 import RequestPane from '../components/RequestPane'
 import ResponsePane from '../components/ResponsePane'
 import Sidebar from '../components/Sidebar'
 import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes'
-import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS} from '../lib/constants'
+import {
+  MAX_PANE_WIDTH,
+  MIN_PANE_WIDTH,
+  DEFAULT_PANE_WIDTH,
+  MAX_SIDEBAR_REMS,
+  MIN_SIDEBAR_REMS,
+  DEFAULT_SIDEBAR_WIDTH
+} from '../lib/constants'
 
 import * as GlobalActions from '../redux/modules/global'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
@@ -23,6 +29,7 @@ import * as db from '../database'
 const keyMap = {
   showRequestSwitcher: 'mod+k',
   showSettingsModal: 'mod+,',
+  sendRequest: 'mod+enter',
   escape: 'esc'
 };
 
@@ -60,11 +67,27 @@ class App extends Component {
     })
   }
 
+  _resetSidebar () {
+    console.log('-- Reset Sidebar Drag --');
+
+    this.setState({
+      sidebarWidth: DEFAULT_SIDEBAR_WIDTH
+    })
+  }
+
   _startDragPane () {
     console.log('-- Start Pane Drag --');
 
     this.setState({
       draggingPane: true
+    })
+  }
+
+  _resetDragPane () {
+    console.log('-- Reset Pane Drag --');
+
+    this.setState({
+      paneWidth: DEFAULT_PANE_WIDTH
     })
   }
 
@@ -148,7 +171,8 @@ class App extends Component {
       showSettingsModal: () => {
         this.refs.settingsModal.show();
         console.log('-- Show Settings Modal --');
-      }
+      },
+      sendRequest: () => actions.requests.send(activeRequest)
     };
 
     return (
@@ -174,7 +198,8 @@ class App extends Component {
         />
 
         <div className="drag drag--sidebar">
-          <div onMouseDown={e => this._startDragSidebar(e)}></div>
+          <div onMouseDown={() => this._startDragSidebar()}
+               onDoubleClick={() => this._resetSidebar()}></div>
         </div>
 
         <RequestPane
@@ -191,7 +216,8 @@ class App extends Component {
         />
 
         <div className="drag drag--pane">
-          <div onMouseDown={e => this._startDragPane(e)}></div>
+          <div onMouseDown={() => this._startDragPane()}
+               onDoubleClick={() => this._resetDragPane()}></div>
         </div>
 
         <ResponsePane
@@ -204,7 +230,7 @@ class App extends Component {
         <Prompts />
 
         <SettingsModal ref="settingsModal"/>
-        <RequestSwitcherModal ref="requestSwitcherModal" />
+        <RequestSwitcherModal ref="requestSwitcherModal"/>
       </HotKeys>
     )
   }

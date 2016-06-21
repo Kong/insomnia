@@ -7,6 +7,8 @@ export const MAX_SIDEBAR_REMS = 35;
 export const MIN_SIDEBAR_REMS = 13;
 export const MAX_PANE_WIDTH = 0.99;
 export const MIN_PANE_WIDTH = 0.01;
+export const DEFAULT_PANE_WIDTH = 0.5;
+export const DEFAULT_SIDEBAR_WIDTH = 19;
 
 // HTTP Methods
 export const METHOD_GET = 'GET';
