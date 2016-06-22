@@ -1,5 +1,6 @@
-const GLOBAL_LOAD_START = 'global/load-start';
-const GLOBAL_LOAD_STOP = 'global/load-stop';
+const LOAD_START = 'global/load-start';
+const LOAD_STOP = 'global/load-stop';
+const SIDEBAR_RESIZE = 'global/sidebar-resize';
 
 const initialState = {
   loading: false
@@ -13,10 +14,10 @@ const initialState = {
 export default function (state = initialState, action) {
   switch (action.type) {
 
-    case GLOBAL_LOAD_START:
+    case LOAD_START:
       return Object.assign({}, state, {loading: true});
 
-    case GLOBAL_LOAD_STOP:
+    case LOAD_STOP:
       return Object.assign({}, state, {loading: false});
 
     default:
@@ -30,9 +31,9 @@ export default function (state = initialState, action) {
 // ~~~~~~~ //
 
 export function loadStart () {
-  return {type: GLOBAL_LOAD_START};
+  return {type: LOAD_START};
 }
 
 export function loadStop () {
-  return {type: GLOBAL_LOAD_STOP};
+  return {type: LOAD_STOP};
 }

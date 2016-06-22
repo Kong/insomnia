@@ -20,7 +20,6 @@ import {
   DEFAULT_SIDEBAR_WIDTH
 } from '../lib/constants'
 
-import * as GlobalActions from '../redux/modules/global'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
 import * as RequestActions from '../redux/modules/requests'
 
@@ -36,13 +35,15 @@ const keyMap = {
 class App extends Component {
   constructor (props) {
     super(props);
+
+    const workspace = this._getActiveWorkspace(props);
     this.state = {
       activeResponse: null,
       activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
-      paneWidth: 0.5, // % (fr)
-      sidebarWidth: 19 // rem
+      sidebarWidth: workspace.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
+      paneWidth: 0.5 // % (fr)
     };
   }
 
@@ -91,13 +92,37 @@ class App extends Component {
     })
   }
 
+  _getActiveWorkspace(props) {
+    // TODO: Factor this out into a selector
+
+    const {entities, workspaces} = props || this.props;
+    let workspace = entities.workspaces[workspaces.activeId];
+    if (!workspace) {
+      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
+    }
+
+    return workspace;
+  }
+
+  componentWillReceiveProps (nextProps) {
+    const sidebarWidth = this._getActiveWorkspace(nextProps).sidebarWidth;
+    this.setState({sidebarWidth});
+  }
+
   componentDidMount () {
     document.addEventListener('mouseup', () => {
-      if (this.state.draggingSidebar || this.state.draggingPane) {
-        console.log('-- End Pane or Sidebar Drag --');
-
+      if (this.state.draggingSidebar) {
+        console.log('-- End Sidebar Drag --');
+        const sidebarWidth = this.state.sidebarWidth;
+        db.workspaceUpdate(this._getActiveWorkspace(), {sidebarWidth});
         this.setState({
-          draggingSidebar: false,
+          draggingSidebar: false
+        })
+      }
+
+      if (this.state.draggingPane) {
+        console.log('-- End Pane Drag --');
+        this.setState({
           draggingPane: false
         })
       }
@@ -131,13 +156,9 @@ class App extends Component {
   }
 
   render () {
-    const {actions, workspaces, requests, entities} = this.props;
+    const {actions, requests, entities} = this.props;
 
-    // TODO: Factor this out into a selector
-    let workspace = entities.workspaces[workspaces.activeId];
-    if (!workspace) {
-      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
-    }
+    const workspace = this._getActiveWorkspace();
 
     let activeRequestId = workspace.activeRequestId;
     const activeRequest = activeRequestId ? entities.requests[activeRequestId] : null;
@@ -276,7 +297,6 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     actions: {
-      global: bindActionCreators(GlobalActions, dispatch),
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)
     }
