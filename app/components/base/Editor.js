@@ -50,7 +50,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   tabSize: 4,
   indentUnit: 4,
   indentWithTabs: false,
-  styleActiveLine: true,
+  // styleActiveLine: true,
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',

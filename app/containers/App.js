@@ -35,7 +35,7 @@ const keyMap = {
 class App extends Component {
   constructor (props) {
     super(props);
-
+    
     const workspace = this._getActiveWorkspace(props);
     this.state = {
       activeResponse: null,
@@ -113,7 +113,7 @@ class App extends Component {
     document.addEventListener('mouseup', () => {
       if (this.state.draggingSidebar) {
         console.log('-- End Sidebar Drag --');
-        const sidebarWidth = this.state.sidebarWidth;
+        const {sidebarWidth} = this.state;
         db.workspaceUpdate(this._getActiveWorkspace(), {sidebarWidth});
         this.setState({
           draggingSidebar: false
@@ -152,7 +152,8 @@ class App extends Component {
   }
 
   componentWillUnmount () {
-    console.log('hello');
+    console.log('TODO: remove listenerse');
+    // TODO: Remove event listeners
   }
 
   render () {
@@ -210,11 +211,11 @@ class App extends Component {
           ref="sidebar"
           workspaceId={workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {activeRequestId: r._id})}
-          changeFilter={actions.requests.changeFilter}
+          changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {collapsed: !requestGroup.collapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
-          filter={requests.filter}
+          filter={workspace.filter || ''}
           children={children}
         />
 

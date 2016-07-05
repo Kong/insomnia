@@ -291,7 +291,8 @@ export function workspaceCreate (patch = {}) {
     name: 'New Workspace',
     activeRequestId: null,
     environments: [],
-    sidebarWidth: DEFAULT_SIDEBAR_WIDTH
+    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    filter: ''
   }, patch);
 }
 
