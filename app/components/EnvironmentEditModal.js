@@ -8,49 +8,54 @@ import KeyValueEditor from './base/KeyValueEditor'
 import {MODAL_ENVIRONMENT_EDITOR} from '../lib/constants'
 
 class EnvironmentEditModal extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
+    this.requestGroup = null;
     this.state = {
-      pairs: this._mapDataToPairs(props.requestGroup.environment)
+      pairs: []
     }
   }
 
-  _saveChanges () {
+  _saveChanges() {
     const environment = this._mapPairsToData(this.state.pairs);
-    this.props.onChange(Object.assign({}, this.props.requestGroup, {environment}));
-    this.props.onClose();
+    this.props.onChange(Object.assign({}, this.requestGroup, {environment}));
+    this.hide();
   }
 
-  _keyValueChange (pairs) {
+  _keyValueChange(pairs) {
     this.setState({pairs});
   }
 
-  _mapPairsToData (pairs) {
+  _mapPairsToData(pairs) {
     return pairs.reduce((prev, curr) => {
       return Object.assign({}, prev, {[curr.name]: curr.value});
     }, {});
   }
 
-  _mapDataToPairs (data) {
+  _mapDataToPairs(data) {
     return Object.keys(data).map(key => ({name: key, value: data[key]}));
   }
 
-  componentWillReceiveProps (nextProps) {
-    this.setState({
-      pairs: this._mapDataToPairs(nextProps.requestGroup.environment)
-    })
+  toggle(requestGroup) {
+    this.requestGroup = requestGroup;
+    this.setState({pairs: this._mapDataToPairs(requestGroup.environment)})
+    this.refs.modal.toggle();
   }
 
-  render () {
+  hide() {
+    this.refs.modal.hide();
+  }
+
+  render() {
     return (
-      <Modal {...this.props}>
+      <Modal ref="modal" {...this.props}>
         <ModalHeader>Environment Variables</ModalHeader>
         <ModalBody>
-            <KeyValueEditor onChange={this._keyValueChange.bind(this)}
-                            uniquenessKey={this.props.requestGroup._id}
-                            pairs={this.state.pairs}
-                            namePlaceholder="BASE_URL"
-                            valuePlaceholder="https://api.insomnia.com/v1"/>
+          <KeyValueEditor onChange={this._keyValueChange.bind(this)}
+                          uniquenessKey={this.props.uniquenessKey}
+                          pairs={this.state.pairs}
+                          namePlaceholder="BASE_URL"
+                          valuePlaceholder="https://api.insomnia.com/v1"/>
         </ModalBody>
         <ModalFooter className="text-right">
           <button className="btn" onClick={this._saveChanges.bind(this)}>Done</button>
@@ -61,9 +66,7 @@ class EnvironmentEditModal extends Component {
 }
 
 EnvironmentEditModal.propTypes = {
-  requestGroup: PropTypes.shape({
-    environment: PropTypes.object.isRequired
-  }),
+  uniquenessKey: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired
 };
 

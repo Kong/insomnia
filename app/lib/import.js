@@ -39,7 +39,6 @@ function importRequest (iRequest, parentId, exportFormat) {
 
     db.requestCreate({
       parentId,
-      activated: 0, // Don't activate imported requests
       name: iRequest.name,
       url: iRequest.url,
       method: iRequest.method,

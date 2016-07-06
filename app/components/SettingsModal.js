@@ -7,10 +7,15 @@ import ModalFooter from './base/ModalFooter'
 import {MODAL_SETTINGS} from '../lib/constants'
 
 class SettingsModal extends Component {
-  show () {
+  show() {
     this.refs.modal.show();
   }
-  render () {
+
+  toggle() {
+    this.refs.modal.toggle();
+  }
+
+  render() {
     return (
       <Modal ref="modal" {...this.props}>
         <ModalHeader>Settings</ModalHeader>
@@ -24,8 +29,7 @@ class SettingsModal extends Component {
   }
 }
 
-SettingsModal.propTypes = {
-};
+SettingsModal.propTypes = {};
 
 SettingsModal.defaultProps = {
   id: MODAL_SETTINGS

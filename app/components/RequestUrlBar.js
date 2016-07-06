@@ -1,18 +1,40 @@
 import React, {Component, PropTypes} from 'react'
 import classnames from 'classnames'
 
-import Input from './base/Input';
-import Dropdown from './base/Dropdown';
-import {METHODS} from '../lib/constants';
+import Input from './base/Input'
+import Dropdown from './base/Dropdown'
+import {METHODS, DEBOUNCE_MILLIS} from '../lib/constants'
+import Mousetrap from '../lib/mousetrap'
 
 class UrlInput extends Component {
-  _handleFormSubmit (e) {
+  _handleFormSubmit(e) {
     e.preventDefault();
     this.props.sendRequest();
   }
 
-  render () {
-    const {onUrlChange, onMethodChange, uniquenessKey, url, method} = this.props;
+  _handleUrlChange(url) {
+    // Debounce URL changes so we don't update the app so much
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(() => {
+      this.props.onUrlChange(url);
+    }, DEBOUNCE_MILLIS);
+  }
+
+  focus() {
+    this.refs.input.focus();
+    console.log('-- Focus URL Bar --');
+  }
+
+  componentDidMount() {
+    Mousetrap.bindGlobal('mod+l', this.focus.bind(this));
+  }
+
+  componentWillUnmount() {
+    Mousetrap.unbind('mod+l');
+  }
+
+  render() {
+    const {onMethodChange, uniquenessKey, url, method} = this.props;
 
     // TODO: Implement proper error checking here
     const hasError = !url;
@@ -36,11 +58,12 @@ class UrlInput extends Component {
         </Dropdown>
         <form className="form-control" onSubmit={this._handleFormSubmit.bind(this)}>
           <Input
+            ref="input"
             type="text"
             placeholder="http://echo.insomnia.rest/status/200"
             value={url}
             uniquenessKey={uniquenessKey}
-            onChange={onUrlChange}/>
+            onChange={url => this._handleUrlChange(url)}/>
         </form>
         <button onClick={this._handleFormSubmit.bind(this)}>
           Send

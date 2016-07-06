@@ -7,9 +7,13 @@ import ModalFooter from './base/ModalFooter'
 import {MODAL_REQUEST_SWITCHER} from '../lib/constants'
 
 class RequestSwitcherModal extends Component {
-  render () {
+  toggle() {
+    this.refs.modal.toggle();
+  }
+
+  render() {
     return (
-      <Modal {...this.props}>
+      <Modal ref="modal" {...this.props}>
         <ModalHeader>Switch Request</ModalHeader>
         <ModalBody className="pad">
           <p>DO IT</p>

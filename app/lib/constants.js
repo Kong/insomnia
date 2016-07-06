@@ -1,6 +1,7 @@
 // Global Stuff
 export const LOCALSTORAGE_KEY = 'insomnia.state';
 export const DB_PERSIST_INTERVAL = 1000;
+export const DEBOUNCE_MILLIS = 100;
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 35;

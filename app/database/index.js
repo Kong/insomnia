@@ -194,12 +194,23 @@ function docCreate (type, idPrefix, defaults, patch = {}) {
 // REQUEST //
 // ~~~~~~~ //
 
+export function requestCreateAndActivate (workspace, patch = {}) {
+  return requestCreate(patch).then(r => {
+    workspaceUpdate(workspace, {activeRequestId: r._id});
+  })
+}
+
+export function requestCopyAndActivate (workspace, request) {
+  return requestCopy(request).then(r => {
+    workspaceUpdate(workspace, {activeRequestId: r._id});
+  })
+}
+
 export function requestCreate (patch = {}) {
   return docCreate(TYPE_REQUEST, 'req', {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
-    activated: Date.now(),
     previewMode: PREVIEW_MODE_SOURCE,
     contentType: CONTENT_TYPE_TEXT,
     body: '',

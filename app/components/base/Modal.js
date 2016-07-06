@@ -43,6 +43,18 @@ class Modal extends Component {
 
   hide () {
     this.setState({open: false});
+  }
+  
+  toggle () {
+    if (this.state.open) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+
+  hide () {
+    this.setState({open: false});
 
     // Focus the app when the modal closes
     // TODO: Is this the best thing to do here? Maybe we should focus the last thing
