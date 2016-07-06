@@ -2,6 +2,7 @@ node_modules
 .idea
 dist/*
 build/*
+.DS_Store
 
 # Logs
 logs
