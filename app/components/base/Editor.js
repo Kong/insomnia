@@ -2,6 +2,8 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 
+import {DEBOUNCE_MILLIS} from '../../lib/constants'
+
 // Modes
 import '../../../node_modules/codemirror/mode/css/css'
 import 'codemirror/mode/htmlmixed/htmlmixed'
@@ -50,7 +52,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   tabSize: 4,
   indentUnit: 4,
   indentWithTabs: false,
-  styleActiveLine: true,
+  // styleActiveLine: true,
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',
@@ -65,12 +67,12 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 class Editor extends Component {
-  constructor () {
+  constructor() {
     super();
     this.state = {isFocused: false}
   }
 
-  componentDidMount () {
+  componentDidMount() {
     const {value} = this.props;
 
     var textareaNode = this.refs.textarea;
@@ -83,14 +85,14 @@ class Editor extends Component {
     this._codemirrorSetOptions();
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     // todo: is there a lighter-weight way to remove the cm instance?
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
     }
   }
 
-  componentDidUpdate () {
+  componentDidUpdate() {
     // Don't update if no CodeMirror instance
     if (!this.codeMirror) {
       return;
@@ -118,7 +120,7 @@ class Editor extends Component {
   /**
    * Focus the cursor to the editor
    */
-  focus () {
+  focus() {
     if (this.codeMirror) {
       this.codeMirror.focus();
     }
@@ -127,7 +129,7 @@ class Editor extends Component {
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
-  _codemirrorSetOptions () {
+  _codemirrorSetOptions() {
     // Clone first so we can modify it
     let options = {
       placeholder: this.props.placeholder || '',
@@ -153,25 +155,29 @@ class Editor extends Component {
    * Wrapper function to add extra behaviour to our onChange event
    * @param doc CodeMirror document
    */
-  _codemirrorValueChanged (doc) {
-    // Update our cached value
-    var newValue = doc.getValue();
-    this._currentCodemirrorValue = newValue;
+  _codemirrorValueChanged(doc) {
+    // Debounce URL changes so we don't update the app so much
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(() => {
+      // Update our cached value
+      var newValue = doc.getValue();
+      this._currentCodemirrorValue = newValue;
 
-    // Don't trigger change event if we're ignoring changes
-    if (this._ignoreNextChange || !this.props.onChange) {
-      this._ignoreNextChange = false;
-      return;
-    }
-    
-    this.props.onChange(newValue);
+      // Don't trigger change event if we're ignoring changes
+      if (this._ignoreNextChange || !this.props.onChange) {
+        this._ignoreNextChange = false;
+        return;
+      }
+
+      this.props.onChange(newValue);
+    }, DEBOUNCE_MILLIS)
   }
 
   /**
    * Sets the CodeMirror value without triggering the onChange event
    * @param code the code to set in the editor
    */
-  _codemirrorSetValue (code) {
+  _codemirrorSetValue(code) {
     this._ignoreNextChange = true;
 
     if (this.props.prettify) {
@@ -186,28 +192,28 @@ class Editor extends Component {
     this.codeMirror.setValue(code);
   }
 
-  shouldComponentUpdate (nextProps) {
+  shouldComponentUpdate(nextProps) {
     // NOTE: This is pretty fragile but we really want to limit editor renders as much as
     // possible
-    
+
     for (let key in nextProps) {
       if (nextProps.hasOwnProperty(key)) {
         if (typeof nextProps[key] === 'function') {
           // TODO: compare functions. We don't now because we're passing in anonymous ones
           continue;
         }
-        
+
         if (nextProps[key] !== this.props[key]) {
           // Props difference found. Re-render
           return true;
         }
       }
     }
-    
+
     return false;
   }
 
-  render () {
+  render() {
     const classes = [
       'editor',
       this.props.className,

@@ -4,13 +4,9 @@ import Modal from './base/Modal'
 import ModalBody from './base/ModalBody'
 import ModalHeader from './base/ModalHeader'
 import ModalFooter from './base/ModalFooter'
-import {MODAL_SETTINGS} from '../lib/constants'
+import {MODAL_REQUEST_SWITCHER} from '../lib/constants'
 
-class SettingsModal extends Component {
-  show() {
-    this.refs.modal.show();
-  }
-
+class RequestSwitcherModal extends Component {
   toggle() {
     this.refs.modal.toggle();
   }
@@ -18,9 +14,9 @@ class SettingsModal extends Component {
   render() {
     return (
       <Modal ref="modal" {...this.props}>
-        <ModalHeader>Settings</ModalHeader>
+        <ModalHeader>Switch Request</ModalHeader>
         <ModalBody className="pad">
-          <p>Settings</p>
+          <p>DO IT</p>
         </ModalBody>
         <ModalFooter className="text-right">
         </ModalFooter>
@@ -29,10 +25,10 @@ class SettingsModal extends Component {
   }
 }
 
-SettingsModal.propTypes = {};
+RequestSwitcherModal.propTypes = {};
 
-SettingsModal.defaultProps = {
-  id: MODAL_SETTINGS
+RequestSwitcherModal.defaultProps = {
+  id: MODAL_REQUEST_SWITCHER
 };
 
-export default SettingsModal;
+export default RequestSwitcherModal;

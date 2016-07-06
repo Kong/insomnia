@@ -1,8 +1,10 @@
 import networkRequest from 'request'
+
 import render from './render'
 import * as db from '../database'
+import {DEBOUNCE_MILLIS} from './constants'
 
-function buildRequestConfig (request, patch = {}) {
+function buildRequestConfig(request, patch = {}) {
   const config = {
     method: request.method,
     body: request.body,
@@ -48,7 +50,7 @@ function buildRequestConfig (request, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (request, callback) {
+function actuallySend(request, callback) {
   // TODO: Handle cookies
   let config = buildRequestConfig(request, {jar: networkRequest.jar()});
 
@@ -82,18 +84,21 @@ function actuallySend (request, callback) {
   });
 }
 
-export function send (requestId, callback) {
-  db.requestById(requestId).then(request => {
-    db.requestGroupById(request.parentId).then(requestGroup => {
-      const environment = requestGroup ? requestGroup.environment : {};
+export function send(requestId, callback) {
+  // First, lets wait for all debounces to finish
+  setTimeout(() => {
+    db.requestById(requestId).then(request => {
+      db.requestGroupById(request.parentId).then(requestGroup => {
+        const environment = requestGroup ? requestGroup.environment : {};
 
-      if (environment) {
-        // SNEAKY HACK: Render nested object by converting it to JSON then rendering
-        const template = JSON.stringify(request);
-        request = JSON.parse(render(template, environment));
-      }
+        if (environment) {
+          // SNEAKY HACK: Render nested object by converting it to JSON then rendering
+          const template = JSON.stringify(request);
+          request = JSON.parse(render(template, environment));
+        }
 
-      actuallySend(request, callback);
-    });
-  })
+        actuallySend(request, callback);
+      });
+    })
+  }, DEBOUNCE_MILLIS);
 }

@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react'
+import {HotKeys} from 'react-hotkeys'
 import classnames from 'classnames'
 
 class Dropdown extends Component {
@@ -11,7 +12,17 @@ class Dropdown extends Component {
 
   _handleClick (e) {
     e.preventDefault();
+
+    if (this.state.open) {
+      // TODO: Is this the best thing to do here? Maybe we should focus the last thing
+      document.getElementById('wrapper').focus();
+    }
+
     this.setState({open: !this.state.open});
+  }
+
+  hide () {
+    this.setState({open: false});
   }
 
   render () {
@@ -23,10 +34,14 @@ class Dropdown extends Component {
     );
 
     return (
-      <div className={className} onClick={this._handleClick.bind(this)}>
+      <HotKeys
+        handlers={{escape: () => this.hide()}}
+        className={className}
+        onClick={this._handleClick.bind(this)}>
+
         {this.props.children}
         <div className="dropdown__backdrop"></div>
-      </div>
+      </HotKeys>
     )
   }
 }

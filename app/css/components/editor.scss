@@ -57,7 +57,8 @@
     }
   }
 
-  &.editor--readonly .CodeMirror-cursors {
+  &.editor--readonly .CodeMirror-cursors,
+  &.editor--readonly .CodeMirror-activeline-background {
     opacity: 0;
   }
 }
@@ -81,36 +82,112 @@
 
 /* Based on Sublime Text's Monokai theme */
 
-.cm-s-default.CodeMirror { color: #f8f8f2; }
-.cm-s-default div.CodeMirror-selected { background: #49483E; }
-.cm-s-default .CodeMirror-line::selection, .cm-s-default .CodeMirror-line > span::selection, .cm-s-default .CodeMirror-line > span > span::selection { background: rgba(73, 72, 62, .99); }
-.cm-s-default .CodeMirror-line::-moz-selection, .cm-s-default .CodeMirror-line > span::-moz-selection, .cm-s-default .CodeMirror-line > span > span::-moz-selection { background: rgba(73, 72, 62, .99); }
-.cm-s-default .CodeMirror-gutters { background: #272822; border-right: 0px; }
-.cm-s-default .CodeMirror-guttermarker { color: white; }
-.cm-s-default .CodeMirror-guttermarker-subtle { color: #d0d0d0; }
-.cm-s-default .CodeMirror-linenumber { color: #d0d0d0; }
-.cm-s-default .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }
+.cm-s-default.CodeMirror {
+  color: #f8f8f2;
+}
 
-.cm-s-default span.cm-comment { color: #75715e; }
-.cm-s-default span.cm-atom { color: lighten($surprise, 5); }
-.cm-s-default span.cm-number { color: lighten($surprise, 5); }
+.cm-s-default div.CodeMirror-selected {
+  background: #49483E;
+}
 
-.cm-s-default span.cm-property, .cm-s-default span.cm-attribute { color: lighten($success, 5); }
-.cm-s-default span.cm-keyword { color: #f92672; }
-.cm-s-default span.cm-builtin { color: #66d9ef; }
-.cm-s-default span.cm-string { color: lighten($notice, 5); }
+.cm-s-default .CodeMirror-line::selection, .cm-s-default .CodeMirror-line > span::selection, .cm-s-default .CodeMirror-line > span > span::selection {
+  background: rgba(73, 72, 62, .99);
+}
 
-.cm-s-default span.cm-variable { color: #f8f8f2; }
-.cm-s-default span.cm-variable-2 { color: #9effff; }
-.cm-s-default span.cm-variable-3 { color: #66d9ef; }
-.cm-s-default span.cm-def { color: #fd971f; }
-.cm-s-default span.cm-bracket { color: #f8f8f2; }
-.cm-s-default span.cm-tag { color: #f92672; }
-.cm-s-default span.cm-header { color: lighten($surprise, 5); }
-.cm-s-default span.cm-link { color: lighten($surprise, 5); }
-.cm-s-default span.cm-error { background: #f92672; color: #f8f8f0; }
+.cm-s-default .CodeMirror-line::-moz-selection, .cm-s-default .CodeMirror-line > span::-moz-selection, .cm-s-default .CodeMirror-line > span > span::-moz-selection {
+  background: rgba(73, 72, 62, .99);
+}
 
-.cm-s-default .CodeMirror-activeline-background { background: #373831; }
+.cm-s-default .CodeMirror-gutters {
+  background: #272822;
+  border-right: 0px;
+}
+
+.cm-s-default .CodeMirror-guttermarker {
+  color: white;
+}
+
+.cm-s-default .CodeMirror-guttermarker-subtle {
+  color: #d0d0d0;
+}
+
+.cm-s-default .CodeMirror-linenumber {
+  color: #d0d0d0;
+}
+
+.cm-s-default .CodeMirror-cursor {
+  border-left: 1px solid #f8f8f0;
+}
+
+.cm-s-default span.cm-comment {
+  color: #75715e;
+}
+
+.cm-s-default span.cm-atom {
+  color: lighten($surprise, 5);
+}
+
+.cm-s-default span.cm-number {
+  color: lighten($surprise, 5);
+}
+
+.cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
+  color: lighten($success, 5);
+}
+
+.cm-s-default span.cm-keyword {
+  color: #f92672;
+}
+
+.cm-s-default span.cm-builtin {
+  color: #66d9ef;
+}
+
+.cm-s-default span.cm-string {
+  color: lighten($notice, 5);
+}
+
+.cm-s-default span.cm-variable {
+  color: #f8f8f2;
+}
+
+.cm-s-default span.cm-variable-2 {
+  color: #9effff;
+}
+
+.cm-s-default span.cm-variable-3 {
+  color: #66d9ef;
+}
+
+.cm-s-default span.cm-def {
+  color: #fd971f;
+}
+
+.cm-s-default span.cm-bracket {
+  color: #f8f8f2;
+}
+
+.cm-s-default span.cm-tag {
+  color: #f92672;
+}
+
+.cm-s-default span.cm-header {
+  color: lighten($surprise, 5);
+}
+
+.cm-s-default span.cm-link {
+  color: lighten($surprise, 5);
+}
+
+.cm-s-default span.cm-error {
+  background: #f92672;
+  color: #f8f8f0;
+}
+
+.cm-s-default .CodeMirror-activeline-background {
+  background: #373831;
+}
+
 .cm-s-default .CodeMirror-matchingbracket {
   text-decoration: underline;
   color: white !important;

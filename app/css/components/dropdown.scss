@@ -5,6 +5,10 @@
   position: relative;
   display: inline-block;
 
+  &:focus {
+    outline: none;
+  }
+
   .dropdown__backdrop {
     display: none;
     position: fixed;

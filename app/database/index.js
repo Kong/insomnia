@@ -5,8 +5,8 @@ import * as fs from 'fs'
 import * as methods from '../lib/constants'
 import {generateId} from './util'
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
-import {DB_PERSIST_INTERVAL} from '../lib/constants'
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes'
+import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants'
 
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
@@ -194,12 +194,23 @@ function docCreate (type, idPrefix, defaults, patch = {}) {
 // REQUEST //
 // ~~~~~~~ //
 
+export function requestCreateAndActivate (workspace, patch = {}) {
+  return requestCreate(patch).then(r => {
+    workspaceUpdate(workspace, {activeRequestId: r._id});
+  })
+}
+
+export function requestCopyAndActivate (workspace, request) {
+  return requestCopy(request).then(r => {
+    workspaceUpdate(workspace, {activeRequestId: r._id});
+  })
+}
+
 export function requestCreate (patch = {}) {
   return docCreate(TYPE_REQUEST, 'req', {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
-    activated: Date.now(),
     previewMode: PREVIEW_MODE_SOURCE,
     contentType: CONTENT_TYPE_TEXT,
     body: '',
@@ -290,7 +301,9 @@ export function workspaceCreate (patch = {}) {
   return docCreate(TYPE_WORKSPACE, 'wrk', {
     name: 'New Workspace',
     activeRequestId: null,
-    environments: []
+    environments: [],
+    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    filter: ''
   }, patch);
 }
 
