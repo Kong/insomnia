@@ -2,7 +2,6 @@ import React, {Component, PropTypes} from 'react'
 import ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
-import {HotKeys} from 'react-hotkeys'
 import Mousetrap from '../lib/mousetrap'
 
 import Prompts from './Prompts'
@@ -37,12 +36,7 @@ class App extends Component {
       draggingSidebar: false,
       draggingPane: false,
       sidebarWidth: workspace.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
-      paneWidth: 0.5 // % (fr)
-    };
-
-    this.keyMap = {
-      // Common Component Keys
-      escape: 'esc'
+      paneWidth: workspace.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
     };
 
     this.globalKeyMap = {
@@ -50,7 +44,6 @@ class App extends Component {
       // Show Settings
       'mod+,': () => {
         this.refs.settingsModal.toggle();
-        console.log('-- Show Settings --');
       },
 
       // Show Environment Editor
@@ -63,7 +56,6 @@ class App extends Component {
       // Show Request Switcher
       'mod+k|mod+p': () => {
         this.refs.requestSwitcherModal.toggle();
-        console.log('-- Show Request Switcher --');
       },
 
       // Request Send
@@ -125,35 +117,47 @@ class App extends Component {
   }
 
   _startDragSidebar() {
-    console.log('-- Start Sidebar Drag --');
-
     this.setState({
       draggingSidebar: true
     })
   }
 
-  _resetSidebar() {
-    console.log('-- Reset Sidebar Drag --');
+  _resetDragSidebar() {
+    // TODO: Remove setTimeout need be not triggering drag on double click
+    setTimeout(() => {
+      this.setState({
+        sidebarWidth: DEFAULT_SIDEBAR_WIDTH
+      })
 
-    this.setState({
-      sidebarWidth: DEFAULT_SIDEBAR_WIDTH
-    })
+      this._saveSidebarWidth();
+    }, 50);
   }
 
   _startDragPane() {
-    console.log('-- Start Pane Drag --');
-
     this.setState({
       draggingPane: true
     })
   }
 
   _resetDragPane() {
-    console.log('-- Reset Pane Drag --');
+    // TODO: Remove setTimeout need be not triggering drag on double click
+    setTimeout(() => {
+      this.setState({
+        paneWidth: DEFAULT_PANE_WIDTH
+      })
 
-    this.setState({
-      paneWidth: DEFAULT_PANE_WIDTH
-    })
+      this._savePaneWidth();
+    }, 50);
+  }
+
+  _savePaneWidth() {
+    const {paneWidth} = this.state;
+    db.workspaceUpdate(this._getActiveWorkspace(), {paneWidth});
+  }
+
+  _saveSidebarWidth() {
+    const {sidebarWidth} = this.state;
+    db.workspaceUpdate(this._getActiveWorkspace(), {sidebarWidth});
   }
 
   _getActiveWorkspace(props) {
@@ -203,10 +207,9 @@ class App extends Component {
       const responsePaneWidth = responsePane.offsetWidth;
       const pixelOffset = e.clientX - requestPane.offsetLeft;
       let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
-
       paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
-
       this.setState({paneWidth});
+
     } else if (this.state.draggingSidebar) {
       const currentPixelWidth = ReactDOM.findDOMNode(this.refs.sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
@@ -216,21 +219,21 @@ class App extends Component {
     }
   }
 
-  _handleMouseUp(e) {
+  _handleMouseUp() {
     if (this.state.draggingSidebar) {
-      console.log('-- End Sidebar Drag --');
-      const {sidebarWidth} = this.state;
-      db.workspaceUpdate(this._getActiveWorkspace(), {sidebarWidth});
       this.setState({
         draggingSidebar: false
       })
+
+      this._saveSidebarWidth();
     }
 
     if (this.state.draggingPane) {
-      console.log('-- End Pane Drag --');
       this.setState({
         draggingPane: false
       })
+
+      this._savePaneWidth();
     }
   }
 
@@ -264,7 +267,7 @@ class App extends Component {
   }
 
   render() {
-    const {actions, entities} = this.props;
+    const {actions, entities, requests} = this.props;
 
     const workspace = this._getActiveWorkspace();
 
@@ -288,13 +291,7 @@ class App extends Component {
     const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
     return (
-      <HotKeys
-        style={{gridTemplateColumns: gridTemplateColumns}}
-        keyMap={this.keyMap}
-        handlers={{}}
-        className="wrapper"
-        id="wrapper">
-
+      <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
           workspaceId={workspace._id}
@@ -308,8 +305,10 @@ class App extends Component {
         />
 
         <div className="drag drag--sidebar">
-          <div onMouseDown={() => this._startDragSidebar()}
-               onDoubleClick={() => this._resetSidebar()}></div>
+          <div
+            onMouseDown={() => this._startDragSidebar()}
+            onDoubleClick={() => this._resetDragSidebar()}
+          />
         </div>
 
         <RequestPane
@@ -335,6 +334,7 @@ class App extends Component {
           response={activeResponse}
           previewMode={activeRequest ? activeRequest.previewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}
+          loadingRequests={requests.loadingRequests}
         />
 
         <Prompts />
@@ -345,7 +345,7 @@ class App extends Component {
           ref="environmentEditModal"
           uniquenessKey={activeRequestId || "__NONE__"}
           onChange={rg => db.requestGroupUpdate(rg)}/>
-      </HotKeys>
+      </div>
     )
   }
 }
@@ -372,7 +372,8 @@ App.propTypes = {
     activeId: PropTypes.string
   }).isRequired,
   requests: PropTypes.shape({
-    filter: PropTypes.string.isRequired
+    filter: PropTypes.string.isRequired,
+    loadingRequests: PropTypes.object.isRequired
   }).isRequired,
   modals: PropTypes.array.isRequired
 };

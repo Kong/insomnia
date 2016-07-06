@@ -1,17 +1,18 @@
 import React, {Component, PropTypes} from 'react'
 import ReactDOM from 'react-dom'
-import {HotKeys} from 'react-hotkeys'
 import classnames from 'classnames'
 
+import Mousetrap from '../../lib/mousetrap'
+
 class Modal extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       open: false
     }
   }
 
-  _handleClick (e) {
+  _handleClick(e) {
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
@@ -36,16 +37,16 @@ class Modal extends Component {
     }
   }
 
-  show () {
+  show() {
     this.setState({open: true});
     this.focus();
+    
+    Mousetrap.bind('esc', () => {
+      this.hide();
+    });
   }
 
-  hide () {
-    this.setState({open: false});
-  }
-  
-  toggle () {
+  toggle() {
     if (this.state.open) {
       this.hide();
     } else {
@@ -53,31 +54,34 @@ class Modal extends Component {
     }
   }
 
-  hide () {
+  hide() {
     this.setState({open: false});
 
     // Focus the app when the modal closes
     // TODO: Is this the best thing to do here? Maybe we should focus the last thing
     document.getElementById('wrapper').focus();
+    
+    // Unbind keys
+    Mousetrap.unbind('esc');
   }
 
-  focus () {
+  focus() {
     const node = ReactDOM.findDOMNode(this);
     node && node.focus();
   }
 
-  render () {
+  render() {
     return (
-      <HotKeys
-        handlers={{escape: () => this.hide()}}
+      <div
+        tabIndex="-1"
         className={classnames('modal', this.props.className, {'modal--open': this.state.open})}
         onClick={this._handleClick.bind(this)}>
-        
+
         <div className={classnames('modal__content', {tall: this.props.tall})}>
           <div className="modal__backdrop" onClick={() => this.hide()}></div>
           {this.props.children}
         </div>
-      </HotKeys>
+      </div>
     )
   }
 }

@@ -47,18 +47,23 @@ class EnvironmentEditModal extends Component {
   }
 
   render() {
+    const {uniquenessKey} = this.props;
+    const {pairs} = this.state;
+
     return (
       <Modal ref="modal" {...this.props}>
         <ModalHeader>Environment Variables</ModalHeader>
         <ModalBody>
           <KeyValueEditor onChange={this._keyValueChange.bind(this)}
-                          uniquenessKey={this.props.uniquenessKey}
-                          pairs={this.state.pairs}
+                          uniquenessKey={uniquenessKey}
+                          pairs={pairs}
                           namePlaceholder="BASE_URL"
                           valuePlaceholder="https://api.insomnia.com/v1"/>
         </ModalBody>
         <ModalFooter className="text-right">
-          <button className="btn" onClick={this._saveChanges.bind(this)}>Done</button>
+          <button className="btn" onClick={this._saveChanges.bind(this)}>
+            Done
+          </button>
         </ModalFooter>
       </Modal>
     );

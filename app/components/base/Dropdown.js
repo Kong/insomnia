@@ -1,31 +1,44 @@
 import React, {Component, PropTypes} from 'react'
-import {HotKeys} from 'react-hotkeys'
 import classnames from 'classnames'
 
+import Mousetrap from '../../lib/mousetrap'
+
 class Dropdown extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       open: false
     };
   }
 
-  _handleClick (e) {
+  _handleClick(e) {
     e.preventDefault();
 
-    if (this.state.open) {
-      // TODO: Is this the best thing to do here? Maybe we should focus the last thing
-      document.getElementById('wrapper').focus();
-    }
-
-    this.setState({open: !this.state.open});
+    this.toggle();
   }
 
-  hide () {
+  hide() {
+    Mousetrap.unbind('esc');
     this.setState({open: false});
   }
+  
+  show() {
+    Mousetrap.bind('esc', () => {
+      this.hide();
+    });
+    
+    this.setState({open: true});
+  }
+  
+  toggle() {
+    if (this.state.open) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
 
-  render () {
+  render() {
     const className = classnames(
       'dropdown',
       this.props.className,
@@ -34,14 +47,13 @@ class Dropdown extends Component {
     );
 
     return (
-      <HotKeys
-        handlers={{escape: () => this.hide()}}
+      <div
         className={className}
         onClick={this._handleClick.bind(this)}>
 
         {this.props.children}
         <div className="dropdown__backdrop"></div>
-      </HotKeys>
+      </div>
     )
   }
 }

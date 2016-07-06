@@ -11,7 +11,8 @@ import {PREVIEW_MODE_SOURCE} from "../lib/previewModes";
 
 class ResponsePane extends Component {
   render () {
-    const {response, previewMode, updatePreviewMode} = this.props;
+    const {response, previewMode, updatePreviewMode, loadingRequests} = this.props;
+
     if (!response) {
       return (
         <section className="response-pane pane">
@@ -23,9 +24,17 @@ class ResponsePane extends Component {
         </section>
       )
     }
+    
+    const showLoading = loadingRequests.hasOwnProperty(response.parentId);
 
     return (
       <section className="response-pane pane">
+        {showLoading ? (
+          <div className="response-pane__overlay">
+            <i className="fa fa-refresh fa-spin"></i>
+          </div>
+        ) : null}
+
         <header className="pane__header pad no-wrap">
           {!response ? null : (
             <div>
@@ -103,6 +112,7 @@ ResponsePane.propTypes = {
 
   // Required
   previewMode: PropTypes.string.isRequired,
+  loadingRequests: PropTypes.object.isRequired,
 
   // Other
   response: PropTypes.object

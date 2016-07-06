@@ -62,7 +62,6 @@ class UrlInput extends Component {
             type="text"
             placeholder="http://echo.insomnia.rest/status/200"
             value={url}
-            uniquenessKey={uniquenessKey}
             onChange={url => this._handleUrlChange(url)}/>
         </form>
         <button onClick={this._handleFormSubmit.bind(this)}>

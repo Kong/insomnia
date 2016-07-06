@@ -22,8 +22,7 @@ class SettingsModal extends Component {
         <ModalBody className="pad">
           <p>Settings</p>
         </ModalBody>
-        <ModalFooter className="text-right">
-        </ModalFooter>
+        <ModalFooter className="text-right"></ModalFooter>
       </Modal>
     );
   }
