@@ -14,5 +14,24 @@
     document.write(script.outerHTML);
   }());
 </script>
+<script>
+  const remote = require('electron').remote;
+  const Menu = remote.Menu;
+  const MenuItem = remote.MenuItem;
+
+  var menu = new Menu();
+  menu.append(new MenuItem({label: "Undo", selector: "undo:"}));
+  menu.append(new MenuItem({label: "Redo", selector: "redo:"}));
+  menu.append(new MenuItem({type: "separator"}));
+  menu.append(new MenuItem({label: "Cut", selector: "cut:"}));
+  menu.append(new MenuItem({label: "Copy", selector: "copy:"}));
+  menu.append(new MenuItem({label: "Paste", selector: "paste:"}));
+  menu.append(new MenuItem({label: "Select All", selector: "selectAll:"}));
+
+  window.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    menu.popup(remote.getCurrentWindow());
+  }, false);
+</script>
 </body>
 </html>

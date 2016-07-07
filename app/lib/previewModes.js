@@ -4,7 +4,7 @@ export const PREVIEW_MODE_SOURCE = 'source';
 export const PREVIEW_MODE_RAW = 'raw';
 
 const previewModeMap = {
-  [PREVIEW_MODE_FRIENDLY]: 'Friendly',
+  [PREVIEW_MODE_FRIENDLY]: 'Visual',
   [PREVIEW_MODE_SOURCE]: 'Source',
   [PREVIEW_MODE_RAW]: 'Raw'
 };

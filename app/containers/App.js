@@ -26,7 +26,7 @@ import * as RequestActions from '../redux/modules/requests'
 import * as db from '../database'
 
 class App extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
 
     const workspace = this._getActiveWorkspace(props);
@@ -99,11 +99,21 @@ class App extends Component {
       // Sidebar Toggle
       'mod+\\': () => {
         // TODO: This
-      }
+      },
+      //
+      // // Zoom In Screen
+      // 'mod++': () => {
+      //
+      // },
+      //
+      // // Zoom Out Screen
+      // 'mod+-': () => {
+      //
+      // }
     }
   }
 
-  _generateSidebarTree(parentId, entities) {
+  _generateSidebarTree (parentId, entities) {
     const children = entities.filter(e => e.parentId === parentId);
 
     if (children.length > 0) {
@@ -116,13 +126,13 @@ class App extends Component {
     }
   }
 
-  _startDragSidebar() {
+  _startDragSidebar () {
     this.setState({
       draggingSidebar: true
     })
   }
 
-  _resetDragSidebar() {
+  _resetDragSidebar () {
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
       this.setState({
@@ -133,13 +143,13 @@ class App extends Component {
     }, 50);
   }
 
-  _startDragPane() {
+  _startDragPane () {
     this.setState({
       draggingPane: true
     })
   }
 
-  _resetDragPane() {
+  _resetDragPane () {
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
       this.setState({
@@ -150,17 +160,17 @@ class App extends Component {
     }, 50);
   }
 
-  _savePaneWidth() {
+  _savePaneWidth () {
     const {paneWidth} = this.state;
     db.workspaceUpdate(this._getActiveWorkspace(), {paneWidth});
   }
 
-  _saveSidebarWidth() {
+  _saveSidebarWidth () {
     const {sidebarWidth} = this.state;
     db.workspaceUpdate(this._getActiveWorkspace(), {sidebarWidth});
   }
 
-  _getActiveWorkspace(props) {
+  _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
 
     const {entities, workspaces} = props || this.props;
@@ -172,14 +182,14 @@ class App extends Component {
     return workspace;
   }
 
-  _getActiveRequest(props) {
+  _getActiveRequest (props) {
     props = props || this.props;
     const {entities} = props;
     let activeRequestId = this._getActiveWorkspace(props).activeRequestId;
     return activeRequestId ? entities.requests[activeRequestId] : null;
   }
 
-  _fetchActiveRequestGroup(props) {
+  _fetchActiveRequestGroup (props) {
     return new Promise((resolve, reject) => {
       props = props || this.props;
       const request = this._getActiveRequest(props);
@@ -198,7 +208,7 @@ class App extends Component {
     });
   }
 
-  _handleMouseMove(e) {
+  _handleMouseMove (e) {
     if (this.state.draggingPane) {
       const requestPane = ReactDOM.findDOMNode(this.refs.requestPane);
       const responsePane = ReactDOM.findDOMNode(this.refs.responsePane);
@@ -219,7 +229,7 @@ class App extends Component {
     }
   }
 
-  _handleMouseUp() {
+  _handleMouseUp () {
     if (this.state.draggingSidebar) {
       this.setState({
         draggingSidebar: false
@@ -237,12 +247,12 @@ class App extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps (nextProps) {
     const sidebarWidth = this._getActiveWorkspace(nextProps).sidebarWidth;
     this.setState({sidebarWidth});
   }
 
-  componentDidMount() {
+  componentDidMount () {
     // Bind handlers before we use them
     this._handleMouseUp = this._handleMouseUp.bind(this);
     this._handleMouseMove = this._handleMouseMove.bind(this);
@@ -257,7 +267,7 @@ class App extends Component {
     });
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     // Remove mouse handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
@@ -266,7 +276,7 @@ class App extends Component {
     Mousetrap.unbind();
   }
 
-  render() {
+  render () {
     const {actions, entities, requests} = this.props;
 
     const workspace = this._getActiveWorkspace();
@@ -332,6 +342,7 @@ class App extends Component {
         <ResponsePane
           ref="responsePane"
           response={activeResponse}
+          request={activeRequest}
           previewMode={activeRequest ? activeRequest.previewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}
           loadingRequests={requests.loadingRequests}
@@ -378,7 +389,7 @@ App.propTypes = {
   modals: PropTypes.array.isRequired
 };
 
-function mapStateToProps(state) {
+function mapStateToProps (state) {
   return {
     actions: state.actions,
     workspaces: state.workspaces,
@@ -388,7 +399,7 @@ function mapStateToProps(state) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps (dispatch) {
   return {
     actions: {
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),

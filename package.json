@@ -1,7 +1,7 @@
 {
   "name": "insomnia",
   "private": true,
-  "version": "3.0.0",
+  "version": "1.0.0",
   "description": "Insomnia App",
   "main": "electron.js",
   "repository": {
@@ -18,7 +18,7 @@
     "react": "^15.2.0",
     "react-dom": "^15.1.0",
     "react-redux": "^4.4.1",
-    "react-tabs": "^0.5.4",
+    "react-tabs": "^0.5.5",
     "redux": "^3.3.1",
     "redux-logger": "^2.6.1",
     "redux-shortcuts": "0.0.1",
@@ -37,7 +37,7 @@
     "concurrently": "^2.0.0",
     "css-loader": "^0.23.1",
     "electron-packager": "^7.0.0",
-    "electron-prebuilt": "^0.37.6",
+    "electron-prebuilt": "^1.2.6",
     "express": "latest",
     "file-loader": "^0.8.5",
     "jest": "^0.1.40",
@@ -60,7 +60,8 @@
     "hot-server": "node -r babel-register ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "test": "jest $@",
-    "package": "bash scripts/package.sh"
+    "build": "bash scripts/build.sh",
+    "package": "npm run build && bash scripts/package.sh"
   },
   "jest": {
     "unmockedModulePathPatterns": [

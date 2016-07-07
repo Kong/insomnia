@@ -61,8 +61,7 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button>
-                Params {request.params.length ? (
-                <span className="txt-sm">({request.params.length})</span> ) : null}
+                Params {request.params.length ? <span className="txt-sm">({request.params.length})</span> : null}
               </button>
             </Tab>
             <Tab>

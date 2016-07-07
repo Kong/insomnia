@@ -13,6 +13,10 @@
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
 
+  &.modal--fixed-height .modal__content {
+    height: 100%;
+  }
+
   &.modal--open {
     display: grid;
   }
@@ -42,8 +46,6 @@
   }
 
   .modal__header {
-    border-top-left-radius: $radius-md;
-    border-top-right-radius: $radius-md;
     border-bottom: 1px solid $hl-md;
     height: $line-height-md;
     font-size: $font-size-lg;
@@ -65,9 +67,18 @@
   }
 
   .modal__footer {
-    border-bottom-left-radius: $radius-md;
-    border-bottom-right-radius: $radius-md;
     border-top: 1px solid $hl-md;
     background-color: $bg-super-light;
+  }
+
+  .modal__content > *:not(.modal__backdrop):last-child {
+    border-bottom-left-radius: $radius-md;
+    border-bottom-right-radius: $radius-md;
+  }
+
+  // 2nd child because the backdrop is the first
+  .modal__content > *:nth-child(2) {
+    border-top-left-radius: $radius-md;
+    border-top-right-radius: $radius-md;
   }
 }

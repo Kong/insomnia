@@ -1,6 +1,3 @@
-import fs from 'fs'
-import electron from 'electron'
-
 import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
@@ -11,32 +8,19 @@ import DropdownDivider from '../components/base/DropdownDivider'
 import * as RequestGroupActions from '../redux/modules/requestGroups'
 import * as WorkspaceActions from '../redux/modules/workspaces'
 import * as ModalActions from '../redux/modules/modals'
+import * as GlobalActions from '../redux/modules/global'
 import * as db from '../database'
-import importData from '../lib/import'
 
 class WorkspaceDropdown extends Component {
   _importDialog () {
-    const options = {
-      properties: ['openFile'],
-      filters: [{
-        name: 'Insomnia Imports', extensions: ['json']
-      }]
-    };
-
     // TODO: Factor this out into a selector
     const {entities, workspaces} = this.props;
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
     }
-
-    electron.remote.dialog.showOpenDialog(options, paths => {
-      paths.map(path => {
-        fs.readFile(path, 'utf8', (err, data) => {
-          err || importData(workspace, data);
-        })
-      })
-    });
+    
+    this.props.actions.global.importFile(workspace);
   }
 
   _workspaceCreate () {
@@ -146,6 +130,9 @@ WorkspaceDropdown.propTypes = {
     workspaces: PropTypes.shape({
       activate: PropTypes.func.isRequired,
       showUpdateNamePrompt: PropTypes.func.isRequired
+    }),
+    global: PropTypes.shape({
+      importFile: PropTypes.func.isRequired
     })
   })
 };
@@ -164,7 +151,8 @@ function mapDispatchToProps (dispatch) {
     actions: {
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       workspaces: bindActionCreators(WorkspaceActions, dispatch),
-      modals: bindActionCreators(ModalActions, dispatch)
+      modals: bindActionCreators(ModalActions, dispatch),
+      global: bindActionCreators(GlobalActions, dispatch)
     }
   }
 }

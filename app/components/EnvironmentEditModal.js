@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react'
 
+import Link from './base/Link'
 import Modal from './base/Modal'
 import ModalBody from './base/ModalBody'
 import ModalHeader from './base/ModalHeader'
@@ -8,7 +9,7 @@ import KeyValueEditor from './base/KeyValueEditor'
 import {MODAL_ENVIRONMENT_EDITOR} from '../lib/constants'
 
 class EnvironmentEditModal extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.requestGroup = null;
     this.state = {
@@ -16,42 +17,42 @@ class EnvironmentEditModal extends Component {
     }
   }
 
-  _saveChanges() {
+  _saveChanges () {
     const environment = this._mapPairsToData(this.state.pairs);
     this.props.onChange(Object.assign({}, this.requestGroup, {environment}));
     this.hide();
   }
 
-  _keyValueChange(pairs) {
+  _keyValueChange (pairs) {
     this.setState({pairs});
   }
 
-  _mapPairsToData(pairs) {
+  _mapPairsToData (pairs) {
     return pairs.reduce((prev, curr) => {
       return Object.assign({}, prev, {[curr.name]: curr.value});
     }, {});
   }
 
-  _mapDataToPairs(data) {
+  _mapDataToPairs (data) {
     return Object.keys(data).map(key => ({name: key, value: data[key]}));
   }
 
-  toggle(requestGroup) {
+  toggle (requestGroup) {
     this.requestGroup = requestGroup;
     this.setState({pairs: this._mapDataToPairs(requestGroup.environment)})
     this.refs.modal.toggle();
   }
 
-  hide() {
+  hide () {
     this.refs.modal.hide();
   }
 
-  render() {
+  render () {
     const {uniquenessKey} = this.props;
     const {pairs} = this.state;
 
     return (
-      <Modal ref="modal" {...this.props}>
+      <Modal ref="modal" tall={true} {...this.props}>
         <ModalHeader>Environment Variables</ModalHeader>
         <ModalBody>
           <KeyValueEditor onChange={this._keyValueChange.bind(this)}
@@ -60,10 +61,15 @@ class EnvironmentEditModal extends Component {
                           namePlaceholder="BASE_URL"
                           valuePlaceholder="https://api.insomnia.com/v1"/>
         </ModalBody>
-        <ModalFooter className="text-right">
-          <button className="btn" onClick={this._saveChanges.bind(this)}>
+        <ModalFooter>
+          <button className="btn pull-right" onClick={this._saveChanges.bind(this)}>
             Done
           </button>
+          <div className="pad">
+            This data can be used for&nbsp;
+            <Link href="https://mozilla.github.io/nunjucks/templating.html">Nunjucks Templating</Link>&nbsp;
+            in your requests.
+          </div>
         </ModalFooter>
       </Modal>
     );

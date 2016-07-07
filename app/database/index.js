@@ -54,7 +54,11 @@ export function initDB () {
       if (!err) {
         // TODO: Better error handling
         console.log('-- Restored DB from file --');
-        Object.assign(db, JSON.parse(text));
+        try {
+          Object.assign(db, JSON.parse(text));
+        } catch (e) {
+          console.error('Failed to parse DB file', e);
+        }
       }
 
       // Add listeners to do persistence
@@ -63,10 +67,19 @@ export function initDB () {
       onChange('DB_WRITER', () => {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-          fs.writeFile(getDBFilePath(), JSON.stringify(db, null, 2), err => {
+          
+          // First, write to a tmp file, then overwrite the old one. This
+          // prevents getting a corrupt file if we crash part-way through
+          // a write.
+
+          const filePath = getDBFilePath();
+          const tmpFilePath = `${filePath}.tmp`;
+          
+          fs.writeFile(tmp, JSON.stringify(db, null, 2), err => {
             if (err) {
               console.error('Failed to write DB to file', err);
             } else {
+              fs.renameSync(tmpFilePath, filePath);
               console.log('-- Persisted DB --');
             }
           })

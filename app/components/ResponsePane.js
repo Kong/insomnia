@@ -7,15 +7,53 @@ import TimeTag from './TimeTag'
 import PreviewModeDropdown from '../components/PreviewModeDropdown'
 import ResponseViewer from '../components/ResponseViewer'
 import {getPreviewModeName} from '../lib/previewModes'
-import {PREVIEW_MODE_SOURCE} from "../lib/previewModes";
+import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
+import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants'
 
 class ResponsePane extends Component {
   render () {
-    const {response, previewMode, updatePreviewMode, loadingRequests} = this.props;
+    const {
+      response,
+      request,
+      previewMode,
+      updatePreviewMode,
+      loadingRequests
+    } = this.props;
+
+    const loadStartTime = loadingRequests[request._id];
+    let timer = null;
+
+    if (loadStartTime) {
+      // Set a timer to update the UI again soon
+      setTimeout(() => {
+        this.forceUpdate();
+      }, 30);
+
+      const elapsedTime = Math.round((Date.now() - loadStartTime - 200) / 100) / 10;
+
+      timer = (
+        <div className="response-pane__overlay">
+          {elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER ? (
+            <h2>{elapsedTime} seconds...</h2>
+          ) : (
+            <h2>Loading...</h2>
+          )}
+
+          <i className="fa fa-refresh fa-spin"></i>
+
+          {false && elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER ? (
+            // TODO: implement cancel requests
+            <button className="btn btn--compact bg-danger">Cancel Request</button>
+          ) : null}
+        </div>
+      )
+    }
 
     if (!response) {
       return (
         <section className="response-pane pane">
+          {timer}
+
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder text-center pad">
             <h1>Nothing Yet...</h1>
@@ -24,16 +62,10 @@ class ResponsePane extends Component {
         </section>
       )
     }
-    
-    const showLoading = loadingRequests.hasOwnProperty(response.parentId);
 
     return (
       <section className="response-pane pane">
-        {showLoading ? (
-          <div className="response-pane__overlay">
-            <i className="fa fa-refresh fa-spin"></i>
-          </div>
-        ) : null}
+        {timer}
 
         <header className="pane__header pad no-wrap">
           {!response ? null : (
@@ -113,9 +145,10 @@ ResponsePane.propTypes = {
   // Required
   previewMode: PropTypes.string.isRequired,
   loadingRequests: PropTypes.object.isRequired,
+  request: PropTypes.object.isRequired,
 
   // Other
-  response: PropTypes.object
+  response: PropTypes.object,
 };
 
 export default ResponsePane;

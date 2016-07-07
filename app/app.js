@@ -2,13 +2,14 @@
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
-const Menu = require('menu');
+const Menu = electron.Menu;
 
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
-var mainWindow = null;
+let mainWindow = null;
+let zoomFactor = 1;
 
 // Enable this for CSS grid layout :)
 electron.app.commandLine.appendSwitch('enable-experimental-web-platform-features');
@@ -26,8 +27,10 @@ app.on('ready', () => {
     height: 600,
     minHeight: 500,
     minWidth: 500,
-    acceptFirstMouse: true
-    // titleBarStyle: IS_MAC ? 'hidden-inset' : 'default'
+    acceptFirstMouse: true,
+    webPreferences: {
+      zoomFactor: zoomFactor
+    }
   });
 
   // and load the app.html of the app.
@@ -69,6 +72,37 @@ app.on('ready', () => {
       {label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:"},
       {label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:"},
       {label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
+    ]
+  }, {
+    label: "View",
+    submenu: [
+      {
+        label: "Actual Size",
+        accelerator: "CmdOrCtrl+0",
+        click: () => {
+          const window = electron.BrowserWindow.getFocusedWindow();
+          zoomFactor = 1;
+          window.webContents.setZoomFactor(zoomFactor);
+        }
+      },
+      {
+        label: "Zoom In",
+        accelerator: "CmdOrCtrl+Plus",
+        click: () => {
+          const window = electron.BrowserWindow.getFocusedWindow();
+          zoomFactor = Math.min(1.8, zoomFactor + 0.1);
+          window.webContents.setZoomFactor(zoomFactor);
+        }
+      },
+      {
+        label: "Zoom Out",
+        accelerator: "CmdOrCtrl+-",
+        click: () => {
+          const window = electron.BrowserWindow.getFocusedWindow();
+          zoomFactor = Math.max(0.5, zoomFactor - 0.1);
+          window.webContents.setZoomFactor(zoomFactor);
+        }
+      }
     ]
   }];
 

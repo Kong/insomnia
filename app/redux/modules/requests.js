@@ -25,18 +25,18 @@ function filterReducer(state = '', action) {
 }
 
 function loadingRequestsReducer(state = {}, action) {
-  let loadingRequests;
+  let newState;
   switch (action.type) {
 
     case REQUEST_SEND_START:
-      loadingRequests = Object.assign({}, state.loadingRequests);
-      loadingRequests[action.requestId] = true;
-      return Object.assign({}, state, {loadingRequests})
+      newState = Object.assign({}, state);
+      newState[action.requestId] = Date.now();
+      return newState
 
     case REQUEST_SEND_STOP:
-      loadingRequests = Object.assign({}, state.loadingRequests);
-      delete loadingRequests[action.requestId];
-      return Object.assign({}, state, {loadingRequests})
+      newState = Object.assign({}, state);
+      delete newState[action.requestId];
+      return newState;
 
     default:
       return state;

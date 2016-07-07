@@ -1,5 +1,11 @@
 @import '../constants/colors';
 
 a {
+  font-weight: bold;
   text-decoration: none;
+  color: $font-light-bg-link;
+  
+  &:hover {
+    text-decoration: underline;
+  }
 }

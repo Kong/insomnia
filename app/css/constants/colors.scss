@@ -1,13 +1,13 @@
+$color-brand: #7D70CC;
+
 /* Background Colors */
-//$bg-primary: #7D70CC;
+
 $bg-light: #eff0ed;
 $bg-super-light: #fff;
 $bg-dark: #2e2f2b;
 $bg-super-dark: #292a26;
-$bg-brand: #7D70CC;
+$bg-brand: $color-brand;
 $bg-backdrop: rgba(20, 20, 20, 0.5);
-
-$color-brand: #7D70CC;
 
 /* Font Colors */
 $font-light-bg: #444;
@@ -15,6 +15,7 @@ $font-super-light-bg: #666;
 $font-dark-bg: #ddd;
 $font-super-dark-bg: #ddd;
 $font-brand-bg: #eee;
+$font-light-bg-link: darken($bg-brand, 3);
 
 $hl-xxs: rgba(140, 140, 140, 0.05);
 $hl-xs: rgba(140, 140, 140, 0.09);
@@ -27,7 +28,7 @@ $hl: rgba(140, 140, 140, 1);
 
 $success: #8fc62b;
 $notice: #e5df54;
-$warning: #ffb635;
+$warning: #ffb932;
 $danger: #ff6d59;
 $surprise: #8f78ff;
 $info: #3eaec5;

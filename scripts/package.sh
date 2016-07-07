@@ -4,23 +4,6 @@
 APP_NAME="Insomnia REST Client"
 APP_ID="insomnia"
 
-echo "-- REMOVING DIST FOLDER --"
-rm -r dist/*
-
-echo "-- BUILDING PRODUCTION APP --"
-NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config ./webpack/webpack.config.production.js
-
-echo "-- COPYING REMAINING FILES --"
-
-# Copy some things
-cp app/app.json dist/package.json
-cp app/app.js dist/
-
-echo "-- INSTALLING PACKAGES --"
-
-#cp -r app/node_modules dist/
-cd dist/; NODE_ENV=production npm install; cd ..
-
 echo "-- PACKAGING APP --"
 
 node -r babel-register node_modules/electron-packager/cli.js \

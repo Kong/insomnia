@@ -48,7 +48,11 @@ label {
   display: inline-block;
 }
 
-label,
+p {
+  margin-bottom: 1em;
+}
+
+label.label--small,
 table th{
   color: $hl;
   text-transform: uppercase;
@@ -100,6 +104,14 @@ table {
   color: $hl;
 }
 
+.valign-bottom {
+  vertical-align: bottom;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
 .wide {
   width: 100%;
 }
@@ -128,6 +140,11 @@ i.fa {
   padding: $padding-md;
 }
 
+.pad-top {
+  box-sizing: border-box;
+  padding-top: $padding-md;
+}
+
 .no-pad-bottom {
   padding-bottom: 0;
 }
@@ -142,6 +159,10 @@ i.fa {
 
 .no-pad {
   padding: 0 !important;
+}
+
+.no-marg {
+  margin: 0 !important;
 }
 
 .block {
@@ -199,20 +220,34 @@ strong {
   font-weight: 600;
 }
 
+.hide-above-lg {
+  display: none;
+}
+
+.hide-above-md {
+  display: none;
+}
+
 @media (max-width: $breakpoint-lg) {
-  html {
-    font-size: $font-size * 0.95;
+  .hide-below-lg {
+    display: none;
+  }
+
+  .hide-above-lg {
+    display: initial;
   }
 }
 
 @media (max-width: $breakpoint-md) {
   html {
-    font-size: $font-size * 0.90;
+    font-size: $font-size * 0.95;
+  }
+
+  .hide-below-md {
+    display: none;
+  }
+
+  .hide-above-md {
+    display: initial;
   }
 }
-
-//@media (max-width: $breakpoint-sm) {
-//  html {
-//    font-size: $font-size * 0.85;
-//  }
-//}

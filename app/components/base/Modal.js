@@ -5,14 +5,14 @@ import classnames from 'classnames'
 import Mousetrap from '../../lib/mousetrap'
 
 class Modal extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
       open: false
     }
   }
 
-  _handleClick(e) {
+  _handleClick (e) {
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
@@ -37,16 +37,15 @@ class Modal extends Component {
     }
   }
 
-  show() {
+  show () {
     this.setState({open: true});
-    this.focus();
-    
-    Mousetrap.bind('esc', () => {
+
+    Mousetrap.bindGlobal('esc', () => {
       this.hide();
     });
   }
 
-  toggle() {
+  toggle () {
     if (this.state.open) {
       this.hide();
     } else {
@@ -54,31 +53,30 @@ class Modal extends Component {
     }
   }
 
-  hide() {
+  hide () {
     this.setState({open: false});
 
-    // Focus the app when the modal closes
-    // TODO: Is this the best thing to do here? Maybe we should focus the last thing
-    document.getElementById('wrapper').focus();
-    
     // Unbind keys
     Mousetrap.unbind('esc');
   }
 
-  focus() {
-    const node = ReactDOM.findDOMNode(this);
-    node && node.focus();
-  }
+  render () {
+    const {tall, className} = this.props;
+    const {open} = this.state;
 
-  render() {
+    const classes = classnames(
+      'modal',
+      className,
+      {'modal--open': open},
+      {'modal--fixed-height': tall}
+    )
     return (
       <div
-        tabIndex="-1"
-        className={classnames('modal', this.props.className, {'modal--open': this.state.open})}
+        className={classes}
         onClick={this._handleClick.bind(this)}>
 
-        <div className={classnames('modal__content', {tall: this.props.tall})}>
-          <div className="modal__backdrop" onClick={() => this.hide()}></div>
+        <div className="modal__content">
+          <div className="modal__backdrop" onClick={() => this.hide()}/>
           {this.props.children}
         </div>
       </div>
