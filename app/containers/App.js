@@ -99,17 +99,7 @@ class App extends Component {
       // Sidebar Toggle
       'mod+\\': () => {
         // TODO: This
-      },
-      //
-      // // Zoom In Screen
-      // 'mod++': () => {
-      //
-      // },
-      //
-      // // Zoom Out Screen
-      // 'mod+-': () => {
-      //
-      // }
+      }
     }
   }
 

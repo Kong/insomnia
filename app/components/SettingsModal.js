@@ -56,6 +56,12 @@ class SettingsModal extends Component {
                   Use bulk header editor by default
                 </label>
               </div>
+              <div className="pad-top">
+                <input id="setting-follow-redirects" type="checkbox"/>&nbsp;&nbsp;
+                <label htmlFor="setting-follow-redirects">
+                  Follow Redirects
+                </label>
+              </div>
               <div>
                 <label htmlFor="setting-request-timeout" className="pad-top">
                   Request Timeout (milliseconds)

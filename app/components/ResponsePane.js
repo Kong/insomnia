@@ -20,7 +20,7 @@ class ResponsePane extends Component {
       loadingRequests
     } = this.props;
 
-    const loadStartTime = loadingRequests[request._id];
+    const loadStartTime = loadingRequests[request ? request._id : '__NONE__'];
     let timer = null;
 
     if (loadStartTime) {
@@ -146,10 +146,10 @@ ResponsePane.propTypes = {
   // Required
   previewMode: PropTypes.string.isRequired,
   loadingRequests: PropTypes.object.isRequired,
-  request: PropTypes.object.isRequired,
 
   // Other
   response: PropTypes.object,
+  request: PropTypes.object,
 };
 
 export default ResponsePane;
