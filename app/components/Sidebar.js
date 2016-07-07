@@ -101,7 +101,7 @@ class Sidebar extends Component {
         <footer className="sidebar__footer form-control form-control--underlined">
           <Input
             type="text"
-            placeholder="Filter Items"
+            placeholder="Filter Requests"
             value={filter}
             onChange={this._onFilterChange.bind(this)}/>
         </footer>

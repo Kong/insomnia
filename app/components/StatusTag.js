@@ -1,5 +1,6 @@
 import classnames from 'classnames';
 import React, {PropTypes} from 'react'
+import {RESPONSE_CODE_DESCRIPTIONS} from '../lib/constants'
 
 const StatusTag = ({statusMessage, statusCode}) => {
   statusCode = String(statusCode);
@@ -31,8 +32,10 @@ const StatusTag = ({statusMessage, statusCode}) => {
     backupStatusMessage = 'UNKNOWN';
   }
 
+  const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code'
+
   return (
-    <div className={classnames('tag', colorClass)}>
+    <div className={classnames('tag', colorClass)} title={description}>
       <strong>{statusCode}</strong> {statusMessage || backupStatusMessage}
     </div>
   );

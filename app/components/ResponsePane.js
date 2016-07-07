@@ -29,6 +29,7 @@ class ResponsePane extends Component {
         this.forceUpdate();
       }, 30);
 
+      // NOTE: We subtract 200ms because the request has some time padding on either end
       const elapsedTime = Math.round((Date.now() - loadStartTime - 200) / 100) / 10;
 
       timer = (
