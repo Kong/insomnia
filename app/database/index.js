@@ -69,13 +69,11 @@ export function initDB () {
         timeout = setTimeout(() => {
           
           // First, write to a tmp file, then overwrite the old one. This
-          // prevents getting a corrupt file if we crash part-way through
-          // a write.
-
+          // prevents getting a corru
           const filePath = getDBFilePath();
           const tmpFilePath = `${filePath}.tmp`;
           
-          fs.writeFile(tmpFilePath, JSON.stringify(db, null, 2), err => {
+          fs.writeFile(tmp, JSON.stringify(db, null, 2), err => {
             if (err) {
               console.error('Failed to write DB to file', err);
             } else {
@@ -157,7 +155,7 @@ function remove (doc) {
   TYPES.map(type => removeWhere(type, 'parentId', doc._id));
 
   Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
-  new Promise(resolve => resolve());
+  new Promise(resolve => resolve(doc));
 }
 
 
