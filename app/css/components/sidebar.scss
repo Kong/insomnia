@@ -115,9 +115,13 @@
     .tag {
       opacity: 0.5;
       padding-left: 0;
-      width: 3.25em;
       text-align: left;
+      width: 2.8em;
     }
+  }
+
+  .sidebar__item__icon {
+    padding-right: $padding-sm;
   }
 
   // put border on folders
@@ -131,7 +135,9 @@
   // ~~~~~~~~~~~~~~~~~ //
 
   .sidebar__clickable {
-    // Nothing yet...
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
   }
 
   // Padding

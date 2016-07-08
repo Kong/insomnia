@@ -1,14 +1,16 @@
 import React, {PropTypes} from 'react'
 import classnames from 'classnames'
+
 import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown'
 import SidebarRequestRow from './SidebarRequestRow'
+import * as db from '../database'
 
 const SidebarRequestGroupRow = ({
   children,
   requestGroup,
   isActive,
   toggleRequestGroup,
-  addRequestToRequestGroup
+  addRequestToRequestGroup,
 }) => {
   let folderIconClass = 'fa-folder';
   let expanded = !requestGroup.collapsed;
@@ -20,10 +22,11 @@ const SidebarRequestGroupRow = ({
         className={classnames('sidebar__row', {active: isActive})}>
 
       <div className={classnames('sidebar__item sidebar__item--big', {active: isActive})}>
-
-        <button className="sidebar__clickable" onClick={e => toggleRequestGroup(requestGroup)}>
-          <i className={'fa ' + folderIconClass}></i>
-          &nbsp;&nbsp;&nbsp;{requestGroup.name}
+        <button onClick={e => toggleRequestGroup(requestGroup)}>
+          <div className="sidebar__clickable">
+            <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
+            <span>{requestGroup.name}</span>
+          </div>
         </button>
 
         <div className="sidebar__actions">
@@ -35,7 +38,6 @@ const SidebarRequestGroupRow = ({
             right={true}
           />
         </div>
-
       </div>
 
       <ul className="sidebar__list">

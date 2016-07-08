@@ -1,16 +1,17 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes, Component} from 'react'
 import classnames from 'classnames'
 
-import RequestActionsDropdown from './../containers/RequestActionsDropdown'
+import RequestActionsDropdown from '../containers/RequestActionsDropdown'
+import Editable from './base/Editable'
 import MethodTag from './MethodTag'
 import * as db from '../database'
+
 
 const SidebarRequestRow = ({request, requestGroup, isActive, activateRequest}) => {
   if (!request) {
     return (
       <li className="sidebar__item">
-        <button className="sidebar__clickable"
-                onClick={() => db.requestCreate({parentId: requestGroup._id})}>
+        <button className="sidebar__clickable" onClick={() => db.requestCreate({parentId: requestGroup._id})}>
           <em>click to add first request...</em>
         </button>
       </li>
@@ -19,10 +20,15 @@ const SidebarRequestRow = ({request, requestGroup, isActive, activateRequest}) =
 
   return (
     <li className="sidebar__row">
-
       <div className={classnames('sidebar__item', {active: isActive})}>
-        <button className="sidebar__clickable" onClick={() => {activateRequest(request)}}>
-          <MethodTag method={request.method}/> {request.name}
+        <button onClick={() => {activateRequest(request)}}>
+          <div className="sidebar__clickable">
+            <MethodTag method={request.method}/>
+            <Editable
+              value={request.name}
+              onSubmit={name => db.requestUpdate(request, {name})}
+            />
+          </div>
         </button>
 
         <div className="sidebar__actions">
