@@ -62,10 +62,10 @@ class EnvironmentEditModal extends Component {
                           valuePlaceholder="https://api.insomnia.com/v1"/>
         </ModalBody>
         <ModalFooter>
-          <button className="btn pull-right" onClick={this._saveChanges.bind(this)}>
-            Done
-          </button>
-          <div className="pad">
+          <div className="pull-right">
+            <button className="btn" onClick={this._saveChanges.bind(this)}>Save</button>
+          </div>
+          <div className="pad txt-sm">
             This data can be used for&nbsp;
             <Link href="https://mozilla.github.io/nunjucks/templating.html">Nunjucks Templating</Link>&nbsp;
             in your requests.

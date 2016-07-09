@@ -73,7 +73,7 @@ export function initDB () {
           const filePath = getDBFilePath();
           const tmpFilePath = `${filePath}.tmp`;
           
-          fs.writeFile(tmp, JSON.stringify(db, null, 2), err => {
+          fs.writeFile(tmpFilePath, JSON.stringify(db, null, 2), err => {
             if (err) {
               console.error('Failed to write DB to file', err);
             } else {

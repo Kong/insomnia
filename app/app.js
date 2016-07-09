@@ -14,7 +14,7 @@ let zoomFactor = 1;
 // Enable this for CSS grid layout :)
 electron.app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
-// Quit when all windows are closed.
+// Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!IS_MAC) {
     app.quit();
@@ -35,11 +35,6 @@ app.on('ready', () => {
 
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
-
-  // Open the DevTools.
-  // if (IS_DEV) {
-  //   mainWindow.webContents.openDevTools();
-  // }
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {

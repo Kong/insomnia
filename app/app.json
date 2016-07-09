@@ -1,9 +1,11 @@
 {
+  "private": true,
   "name": "insomnia",
   "version": "3.0.0",
   "productName": "Insomnia REST Client",
   "description": "The best REST API Client",
   "homepage": "http://insomnia.rest",
+  "author": "Gregory Schier",
   "licence": "GPL-3.0",
   "main": "app.js",
   "dependencies": {
