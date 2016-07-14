@@ -36,7 +36,7 @@
     "babel-preset-react-hmre": "^1.1.1",
     "concurrently": "^2.0.0",
     "css-loader": "^0.23.1",
-    "electron-packager": "^7.0.0",
+    "electron-packager": "^7.3.0",
     "electron-prebuilt": "^1.2.6",
     "express": "latest",
     "file-loader": "^0.8.5",

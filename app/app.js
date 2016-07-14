@@ -2,17 +2,43 @@
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
+const appVersion = require('./package.json').version;
+const autoUpdater = electron.autoUpdater;
 const Menu = electron.Menu;
 
 const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
+
 let mainWindow = null;
 let zoomFactor = 1;
 
 // Enable this for CSS grid layout :)
 electron.app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+
+if (!IS_DEV) {
+  autoUpdater.setFeedURL(
+    IS_MAC ?
+      `http://builds.insomnia.rest/builds/check/mac?v=${appVersion}` :
+      `http://builds.insomnia.rest/builds/check/windows?v=${appVersion}`
+  );
+
+  autoUpdater.checkForUpdates();
+}
+
+autoUpdater.on('update-not-available', () => {
+  console.log('-- Update Not Available --')
+});
+
+autoUpdater.on('update-available', () => {
+  console.log('-- Update Available --');
+});
+
+autoUpdater.on('update-downloaded', (e) => {
+  console.log('-- Update Downloaded --');
+  autoUpdater.quitAndInstall();
+});
 
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {

@@ -54,7 +54,7 @@ function actuallySend (request, callback) {
   // TODO: Handle cookies
   let config = buildRequestConfig(request, {
     jar: networkRequest.jar(),
-    followRedirect: false
+    followRedirect: true
   }, true);
 
   const startTime = Date.now();

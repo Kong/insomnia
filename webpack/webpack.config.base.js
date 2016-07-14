@@ -1,5 +1,5 @@
 import path from 'path'
-import pkg from '../app/app.json'
+import pkg from '../app/package.json'
 
 export default {
   devtool: 'source-map',
