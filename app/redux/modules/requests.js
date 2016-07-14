@@ -1,7 +1,7 @@
 import {combineReducers} from 'redux'
 import * as network from '../../lib/network'
 import {show} from './modals'
-import {MODAL_REQUEST_RENAME} from '../../lib/constants'
+import {MODAL_REQUEST_RENAME, MODAL_CURL_EXPORT} from '../../lib/constants'
 
 export const REQUEST_CHANGE_FILTER = 'requests/filter';
 export const REQUEST_SEND_START = 'requests/start';
@@ -71,3 +71,8 @@ export function showUpdateNamePrompt(request) {
   const defaultValue = request.name;
   return show(MODAL_REQUEST_RENAME, {defaultValue, request});
 }
+
+export function showCurlExportModal (request) {
+  return show(MODAL_CURL_EXPORT, {request});
+}
+

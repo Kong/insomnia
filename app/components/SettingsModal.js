@@ -1,4 +1,4 @@
-import React, {Component} from 'react'
+import React from 'react'
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 import {shell} from 'electron'
 
@@ -7,19 +7,11 @@ import Modal from './base/Modal'
 import ModalBody from './base/ModalBody'
 import ModalHeader from './base/ModalHeader'
 import ModalFooter from './base/ModalFooter'
-import {MODAL_SETTINGS} from '../lib/constants'
+import ModalComponent from './lib/ModalComponent'
 import {MASHAPE_URL} from '../lib/constants'
 import {getVersion} from '../lib/appInfo'
 
-class SettingsModal extends Component {
-  show () {
-    this.refs.modal.show();
-  }
-
-  toggle () {
-    this.refs.modal.toggle();
-  }
-
+class SettingsModal extends ModalComponent {
   render () {
     return (
       <Modal ref="modal" tall={true} {...this.props}>
@@ -111,9 +103,5 @@ class SettingsModal extends Component {
 }
 
 SettingsModal.propTypes = {};
-
-SettingsModal.defaultProps = {
-  id: MODAL_SETTINGS
-};
 
 export default SettingsModal;

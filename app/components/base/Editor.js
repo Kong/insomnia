@@ -51,7 +51,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   lint: true,
   tabSize: 4,
   indentUnit: 4,
-  indentWithTabs: false,
+  indentWithTabs: true,
   // styleActiveLine: true,
   gutters: [
     'CodeMirror-linenumbers',
@@ -67,12 +67,12 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 class Editor extends Component {
-  constructor() {
+  constructor () {
     super();
     this.state = {isFocused: false}
   }
 
-  componentDidMount() {
+  componentDidMount () {
     const {value} = this.props;
 
     var textareaNode = this.refs.textarea;
@@ -80,19 +80,27 @@ class Editor extends Component {
     this.codeMirror = CodeMirror.fromTextArea(textareaNode, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
     this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
+    if (!this.codeMirror.getOption('indentWithTabs')) {
+      this.codeMirror.setOption('extraKeys', {
+        Tab: cm => {
+          var spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          cm.replaceSelection(spaces);
+        }
+      });
+    }
     this._currentCodemirrorValue = value || '';
     this._codemirrorSetValue(this._currentCodemirrorValue);
     this._codemirrorSetOptions();
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     // todo: is there a lighter-weight way to remove the cm instance?
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
     }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate () {
     // Don't update if no CodeMirror instance
     if (!this.codeMirror) {
       return;
@@ -120,7 +128,7 @@ class Editor extends Component {
   /**
    * Focus the cursor to the editor
    */
-  focus() {
+  focus () {
     if (this.codeMirror) {
       this.codeMirror.focus();
     }
@@ -129,7 +137,7 @@ class Editor extends Component {
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
-  _codemirrorSetOptions() {
+  _codemirrorSetOptions () {
     // Clone first so we can modify it
     let options = {
       placeholder: this.props.placeholder || '',
@@ -155,7 +163,7 @@ class Editor extends Component {
    * Wrapper function to add extra behaviour to our onChange event
    * @param doc CodeMirror document
    */
-  _codemirrorValueChanged(doc) {
+  _codemirrorValueChanged (doc) {
     // Debounce URL changes so we don't update the app so much
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
@@ -177,7 +185,7 @@ class Editor extends Component {
    * Sets the CodeMirror value without triggering the onChange event
    * @param code the code to set in the editor
    */
-  _codemirrorSetValue(code) {
+  _codemirrorSetValue (code) {
     this._ignoreNextChange = true;
 
     if (this.props.prettify) {
@@ -192,7 +200,7 @@ class Editor extends Component {
     this.codeMirror.setValue(code);
   }
 
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate (nextProps) {
     // NOTE: This is pretty fragile but we really want to limit editor renders as much as
     // possible
 
@@ -213,7 +221,7 @@ class Editor extends Component {
     return false;
   }
 
-  render() {
+  render () {
     const classes = [
       'editor',
       this.props.className,

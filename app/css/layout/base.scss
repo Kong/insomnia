@@ -97,7 +97,7 @@ table {
 }
 
 .tall {
-  height: 100%;
+  height: 100% !important;
 }
 
 .faint {
@@ -167,6 +167,10 @@ i.fa {
 
 .block {
   display: block !important;
+}
+
+.grid {
+  display: grid !important;
 }
 
 .inline-block {

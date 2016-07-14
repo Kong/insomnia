@@ -2,6 +2,7 @@ import networkRequest from 'request'
 
 import render from './render'
 import * as db from '../database'
+import * as querystring from './querystring'
 import {DEBOUNCE_MILLIS} from './constants'
 
 function buildRequestConfig (request, patch = {}) {
@@ -40,12 +41,8 @@ function buildRequestConfig (request, patch = {}) {
     }
   }
 
-  // TODO: this needs to account for existing URL params (hint: use request)
-  config.url += request.params.map((p, i) => {
-    const name = encodeURIComponent(p.name);
-    const value = encodeURIComponent(p.value);
-    return `${i === 0 ? '?' : '&'}${name}=${value}`;
-  }).join('');
+  const qs = querystring.buildFromParams(request.params);
+  config.url = querystring.joinURL(request.url, qs);
 
   return Object.assign(config, patch);
 }

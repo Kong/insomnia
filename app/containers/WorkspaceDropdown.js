@@ -2,24 +2,27 @@ import React, {Component, PropTypes} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 
-import {MODAL_SETTINGS} from '../lib/constants'
 import Dropdown from '../components/base/Dropdown'
 import DropdownDivider from '../components/base/DropdownDivider'
-import * as RequestGroupActions from '../redux/modules/requestGroups'
+import PromptModal from '../components/PromptModal'
 import * as WorkspaceActions from '../redux/modules/workspaces'
-import * as ModalActions from '../redux/modules/modals'
 import * as GlobalActions from '../redux/modules/global'
 import * as db from '../database'
 
 class WorkspaceDropdown extends Component {
+  _promptUpdateName () {
+    const workspace = this._getActiveWorkspace(this.props);
+
+    PromptModal.show({
+      headerName: 'Rename Workspace',
+      defaultValue: workspace.name
+    }).then(name => {
+      db.workspaceUpdate(workspace, {name});
+    })
+  }
+
   _importDialog () {
-    // TODO: Factor this out into a selector
-    const {entities, workspaces} = this.props;
-    let workspace = entities.workspaces[workspaces.activeId];
-    if (!workspace) {
-      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
-    }
-    
+    const workspace = this._getActiveWorkspace(this.props);
     this.props.actions.global.importFile(workspace);
   }
 
@@ -29,16 +32,23 @@ class WorkspaceDropdown extends Component {
     });
   }
 
-  render () {
-    const {actions, loading, workspaces, entities, ...other} = this.props;
-
-    const allWorkspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
-
+  _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
+
+    const {entities, workspaces} = props || this.props;
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
     }
+
+    return workspace;
+  }
+
+  render () {
+    const {actions, loading, entities, ...other} = this.props;
+
+    const allWorkspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
+    const workspace = this._getActiveWorkspace(this.props);
 
     return (
       <Dropdown right={true} {...other} className="wide">
@@ -71,7 +81,7 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => actions.workspaces.showUpdateNamePrompt(workspace)}>
+            <button onClick={e => this._promptUpdateName()}>
               <i className="fa fa-empty"></i> Rename <strong>{workspace.name}</strong>
             </button>
           </li>
@@ -105,7 +115,9 @@ class WorkspaceDropdown extends Component {
               <i className="fa fa-cog"></i> Settings
             </button>
           </li>
-          <li><button><i className="fa fa-blank"></i> Open New Window</button></li>
+          <li>
+            <button><i className="fa fa-blank"></i> Open New Window</button>
+          </li>
         </ul>
       </Dropdown>
     )
@@ -121,15 +133,8 @@ WorkspaceDropdown.propTypes = {
     workspaces: PropTypes.object.isRequired
   }).isRequired,
   actions: PropTypes.shape({
-    modals: PropTypes.shape({
-      show: PropTypes.func.isRequired
-    }),
-    requestGroups: PropTypes.shape({
-      showEnvironmentEditModal: PropTypes.func.isRequired
-    }),
     workspaces: PropTypes.shape({
       activate: PropTypes.func.isRequired,
-      showUpdateNamePrompt: PropTypes.func.isRequired
     }),
     global: PropTypes.shape({
       importFile: PropTypes.func.isRequired
@@ -149,9 +154,7 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     actions: {
-      requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       workspaces: bindActionCreators(WorkspaceActions, dispatch),
-      modals: bindActionCreators(ModalActions, dispatch),
       global: bindActionCreators(GlobalActions, dispatch)
     }
   }

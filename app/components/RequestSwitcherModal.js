@@ -1,16 +1,12 @@
-import React, {Component, PropTypes} from 'react'
+import React from 'react'
 
 import Modal from './base/Modal'
 import ModalBody from './base/ModalBody'
 import ModalHeader from './base/ModalHeader'
 import ModalFooter from './base/ModalFooter'
-import {MODAL_REQUEST_SWITCHER} from '../lib/constants'
+import ModalComponent from './lib/ModalComponent'
 
-class RequestSwitcherModal extends Component {
-  toggle() {
-    this.refs.modal.toggle();
-  }
-
+class RequestSwitcherModal extends ModalComponent {
   render() {
     return (
       <Modal ref="modal" {...this.props}>
@@ -26,9 +22,5 @@ class RequestSwitcherModal extends Component {
 }
 
 RequestSwitcherModal.propTypes = {};
-
-RequestSwitcherModal.defaultProps = {
-  id: MODAL_REQUEST_SWITCHER
-};
 
 export default RequestSwitcherModal;

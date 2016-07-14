@@ -1,13 +1,25 @@
 import React, {Component, PropTypes} from 'react'
-import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown'
-import * as RequestActions from '../redux/modules/requests'
-import * as db from '../database';
+import CurlExportModal from '../components/CurlExportModal'
+import PromptModal from '../components/PromptModal'
+import * as db from '../database'
+
 
 class RequestActionsDropdown extends Component {
+  _promptUpdateName () {
+    const {request} = this.props;
+
+    PromptModal.show({
+      headerName: 'Rename Request',
+      defaultValue: request.name
+    }).then(name => {
+      db.requestUpdate(request, {name});
+    })
+  }
+
   render () {
-    const {actions, request, ...other} = this.props;
+    const {request, ...other} = this.props;
 
     return (
       <Dropdown {...other}>
@@ -21,13 +33,13 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => actions.showUpdateNamePrompt(request)}>
+            <button onClick={e => this._promptUpdateName()}>
               <i className="fa fa-edit"></i> Rename
             </button>
           </li>
           <li>
-            <button>
-              <i className="fa fa-share-square-o"></i> Export
+            <button onClick={e => CurlExportModal.show(request)}>
+              <i className="fa fa-share-square-o"></i> Export as cURL
             </button>
           </li>
           <li>
@@ -42,22 +54,15 @@ class RequestActionsDropdown extends Component {
 }
 
 RequestActionsDropdown.propTypes = {
-  request: PropTypes.object.isRequired,
-  actions: PropTypes.shape({
-    showUpdateNamePrompt: PropTypes.func.isRequired
-  })
+  request: PropTypes.object.isRequired
 };
 
 function mapStateToProps (state) {
-  return {
-    actions: state.actions
-  };
+  return {};
 }
 
 function mapDispatchToProps (dispatch) {
-  return {
-    actions: bindActionCreators(RequestActions, dispatch)
-  }
+  return {}
 }
 
 export default connect(

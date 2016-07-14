@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react'
+import React, {PropTypes} from 'react'
 
 import Link from './base/Link'
 import Modal from './base/Modal'
@@ -6,14 +6,15 @@ import ModalBody from './base/ModalBody'
 import ModalHeader from './base/ModalHeader'
 import ModalFooter from './base/ModalFooter'
 import KeyValueEditor from './base/KeyValueEditor'
-import {MODAL_ENVIRONMENT_EDITOR} from '../lib/constants'
+import ModalComponent from './lib/ModalComponent'
 
-class EnvironmentEditModal extends Component {
+class EnvironmentEditModal extends ModalComponent {
   constructor (props) {
     super(props);
     this.requestGroup = null;
     this.state = {
-      pairs: []
+      pairs: [],
+      uniquenessKey: ''
     }
   }
 
@@ -38,18 +39,17 @@ class EnvironmentEditModal extends Component {
   }
 
   toggle (requestGroup) {
-    this.requestGroup = requestGroup;
-    this.setState({pairs: this._mapDataToPairs(requestGroup.environment)})
-    this.refs.modal.toggle();
-  }
+    super.toggle();
 
-  hide () {
-    this.refs.modal.hide();
+    this.requestGroup = requestGroup;
+    this.setState({
+      pairs: this._mapDataToPairs(requestGroup.environment),
+      uniquenessKey: requestGroup._id
+    })
   }
 
   render () {
-    const {uniquenessKey} = this.props;
-    const {pairs} = this.state;
+    const {uniquenessKey, pairs} = this.state;
 
     return (
       <Modal ref="modal" tall={true} {...this.props}>
@@ -77,12 +77,7 @@ class EnvironmentEditModal extends Component {
 }
 
 EnvironmentEditModal.propTypes = {
-  uniquenessKey: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired
-};
-
-EnvironmentEditModal.defaultProps = {
-  id: MODAL_ENVIRONMENT_EDITOR
 };
 
 export default EnvironmentEditModal;

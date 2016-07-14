@@ -32,12 +32,13 @@ export const METHODS = [
   METHOD_HEAD
 ];
 
-export const MODAL_WORKSPACE_RENAME = 'workspace.update.name';
-export const MODAL_REQUEST_GROUP_RENAME = 'requestgroup.update.name';
-export const MODAL_REQUEST_RENAME = 'request.update.name';
-export const MODAL_REQUEST_SWITCHER = 'request.action.switch';
-export const MODAL_ENVIRONMENT_EDITOR = 'environment.edit';
-export const MODAL_SETTINGS = 'settings';
+// export const MODAL_WORKSPACE_RENAME = 'workspace.update.name';
+// export const MODAL_REQUEST_GROUP_RENAME = 'requestGroup.update.name';
+// export const MODAL_REQUEST_RENAME = 'request.update.name';
+// export const MODAL_REQUEST_SWITCHER = 'request.action.switch';
+// export const MODAL_CURL_EXPORT = 'request.curlExport';
+// export const MODAL_ENVIRONMENT_EDITOR = 'environment.edit';
+// export const MODAL_SETTINGS = 'settings';
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS = {

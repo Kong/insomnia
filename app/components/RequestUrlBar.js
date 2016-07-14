@@ -6,13 +6,14 @@ import Dropdown from './base/Dropdown'
 import {METHODS, DEBOUNCE_MILLIS} from '../lib/constants'
 import Mousetrap from '../lib/mousetrap'
 
-class UrlInput extends Component {
-  _handleFormSubmit(e) {
+
+class RequestUrlBar extends Component {
+  _handleFormSubmit (e) {
     e.preventDefault();
     this.props.sendRequest();
   }
 
-  _handleUrlChange(url) {
+  _handleUrlChange (url) {
     // Debounce URL changes so we don't update the app so much
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
@@ -20,21 +21,21 @@ class UrlInput extends Component {
     }, DEBOUNCE_MILLIS);
   }
 
-  focus() {
+  focus () {
     this.refs.input.focus();
     console.log('-- Focus URL Bar --');
   }
 
-  componentDidMount() {
+  componentDidMount () {
     Mousetrap.bindGlobal('mod+l', this.focus.bind(this));
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     Mousetrap.unbind('mod+l');
   }
 
-  render() {
-    const {onMethodChange, uniquenessKey, url, method} = this.props;
+  render () {
+    const {onMethodChange, url, method} = this.props;
 
     // TODO: Implement proper error checking here
     const hasError = !url;
@@ -44,7 +45,7 @@ class UrlInput extends Component {
         <Dropdown>
           <button>
             {method}&nbsp;
-            <i className="fa fa-caret-down"></i>
+            <i className="fa fa-caret-down"/>
           </button>
           <ul>
             {METHODS.map(m => (
@@ -72,13 +73,12 @@ class UrlInput extends Component {
   }
 }
 
-UrlInput.propTypes = {
+RequestUrlBar.propTypes = {
   sendRequest: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,
-  uniquenessKey: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
   method: PropTypes.string.isRequired
 };
 
-export default UrlInput;
+export default RequestUrlBar;

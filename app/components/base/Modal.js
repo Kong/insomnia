@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react'
-import ReactDOM from 'react-dom'
 import classnames from 'classnames'
 
 import Mousetrap from '../../lib/mousetrap'
@@ -9,7 +8,7 @@ class Modal extends Component {
     super(props);
     this.state = {
       open: false
-    }
+    };
   }
 
   _handleClick (e) {
@@ -69,14 +68,15 @@ class Modal extends Component {
       className,
       {'modal--open': open},
       {'modal--fixed-height': tall}
-    )
+    );
+
     return (
       <div
         className={classes}
         onClick={this._handleClick.bind(this)}>
 
         <div className="modal__content">
-          <div className="modal__backdrop" onClick={() => this.hide()}/>
+          <div className="modal__backdrop" onClick={() => this.hide()}></div>
           {this.props.children}
         </div>
       </div>

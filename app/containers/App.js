@@ -4,9 +4,10 @@ import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux'
 import Mousetrap from '../lib/mousetrap'
 
-import Prompts from './Prompts'
 import EnvironmentEditModal from '../components/EnvironmentEditModal'
 import RequestSwitcherModal from '../components/RequestSwitcherModal'
+import CurlExportModal from '../components/CurlExportModal'
+import PromptModal from '../components/PromptModal'
 import SettingsModal from '../components/SettingsModal'
 import RequestPane from '../components/RequestPane'
 import ResponsePane from '../components/ResponsePane'
@@ -24,6 +25,7 @@ import * as RequestGroupActions from '../redux/modules/requestGroups'
 import * as RequestActions from '../redux/modules/requests'
 
 import * as db from '../database'
+import {importCurl} from "../lib/curl";
 
 class App extends Component {
   constructor (props) {
@@ -43,19 +45,19 @@ class App extends Component {
 
       // Show Settings
       'mod+,': () => {
-        this.refs.settingsModal.toggle();
+        SettingsModal.toggle();
       },
 
       // Show Environment Editor
       'mod+e': () => {
         this._fetchActiveRequestGroup().then(requestGroup => {
-          this.refs.environmentEditModal.toggle(requestGroup);
+          EnvironmentEditModal.toggle(requestGroup);
         })
       },
 
       // Show Request Switcher
       'mod+k|mod+p': () => {
-        this.refs.requestSwitcherModal.toggle();
+        RequestSwitcherModal.toggle();
       },
 
       // Request Send
@@ -113,6 +115,18 @@ class App extends Component {
       }));
     } else {
       return children;
+    }
+  }
+
+  _handleUrlChanged (url) {
+    // TODO: Should this be moved elsewhere?
+    const requestPatch = importCurl(url);
+
+    if (requestPatch) {
+      // If the user typed in a curl cmd, dissect it and update the whole request
+      db.requestUpdate(this._getActiveRequest(), requestPatch);
+    } else {
+      db.requestUpdate(this._getActiveRequest(), {url});
     }
   }
 
@@ -223,7 +237,7 @@ class App extends Component {
     if (this.state.draggingSidebar) {
       this.setState({
         draggingSidebar: false
-      })
+      });
 
       this._saveSidebarWidth();
     }
@@ -231,7 +245,7 @@ class App extends Component {
     if (this.state.draggingPane) {
       this.setState({
         draggingPane: false
-      })
+      });
 
       this._savePaneWidth();
     }
@@ -305,10 +319,9 @@ class App extends Component {
         />
 
         <div className="drag drag--sidebar">
-          <div
-            onMouseDown={() => this._startDragSidebar()}
-            onDoubleClick={() => this._resetDragSidebar()}
-          />
+          <div onMouseDown={() => this._startDragSidebar()}
+               onDoubleClick={() => this._resetDragSidebar()}>
+          </div>
         </div>
 
         <RequestPane
@@ -316,7 +329,7 @@ class App extends Component {
           request={activeRequest}
           sendRequest={actions.requests.send}
           updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
-          updateRequestUrl={url => db.requestUpdate(activeRequest, {url})}
+          updateRequestUrl={url => this._handleUrlChanged(url)}
           updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
           updateRequestParams={params => db.requestUpdate(activeRequest, {params})}
           updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
@@ -338,14 +351,11 @@ class App extends Component {
           loadingRequests={requests.loadingRequests}
         />
 
-        <Prompts />
-
-        <SettingsModal ref="settingsModal"/>
-        <RequestSwitcherModal ref="requestSwitcherModal"/>
-        <EnvironmentEditModal
-          ref="environmentEditModal"
-          uniquenessKey={activeRequestId || "__NONE__"}
-          onChange={rg => db.requestGroupUpdate(rg)}/>
+        <PromptModal />
+        <SettingsModal />
+        <RequestSwitcherModal />
+        <CurlExportModal />
+        <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
       </div>
     )
   }

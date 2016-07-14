@@ -9,6 +9,7 @@ import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 
 import {getContentTypeName} from '../lib/contentTypes'
+import {exportCurl} from "../lib/curl";
 
 class RequestPane extends Component {
   render () {
@@ -37,10 +38,10 @@ class RequestPane extends Component {
       <section className="request-pane pane">
         <header className="pane__header">
           <RequestUrlBar
-            uniquenessKey={request._id}
             sendRequest={() => sendRequest(request)}
             onUrlChange={updateRequestUrl}
             onMethodChange={updateRequestMethod}
+            requestId={request._id}
             url={request.url}
             method={request.method}
           />
