@@ -19,11 +19,13 @@ function buildRequestConfig (request, patch = {}) {
     gzip: true
   };
 
+  // Set the URL, including the query params
+  const qs = querystring.buildFromParams(request.params);
+  config.url = querystring.joinURL(request.url, qs);
+
   // Default the proto if it doesn't exist
-  if (request.url.indexOf('://') === -1) {
-    config.url = `https://${request.url}`;
-  } else {
-    config.url = request.url;
+  if (config.url.indexOf('://') === -1) {
+    config.url = `https://${config.url}`;
   }
 
   // Set basic auth if we need to
@@ -40,9 +42,6 @@ function buildRequestConfig (request, patch = {}) {
       config.headers[header.name] = header.value;
     }
   }
-
-  const qs = querystring.buildFromParams(request.params);
-  config.url = querystring.joinURL(request.url, qs);
 
   return Object.assign(config, patch);
 }
