@@ -101,6 +101,7 @@ function splitHeaders (flags) {
     var header = headers[i].split(':');
     var name = header[0].trim();
     var value = header[1].trim();
+
     parsed.push({name: name, value: value});
   }
 
@@ -196,6 +197,12 @@ export function exportCurl (requestId) {
 
           for (let i = 0; i < request.headers.length; i++) {
             const {name, value} = request.headers[i];
+
+            if (!name) {
+              // Don't add headers with no name
+              continue;
+            }
+
             cmd += ` \\\n -H '${name}: ${value}'`;
           }
 
@@ -230,7 +237,8 @@ export function importCurl (blob) {
   if (contentType.toLowerCase() === 'application/json') {
     try {
       body = JSON.stringify(JSON.parse(body), null, '\t');
-    } catch (e) {}
+    } catch (e) {
+    }
   }
 
   const httpMethod = getHttpMethod(flags, !!body);
