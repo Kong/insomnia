@@ -54,9 +54,6 @@ class Modal extends Component {
 
   hide () {
     this.setState({open: false});
-
-    // Unbind keys
-    Mousetrap.unbind('esc');
   }
 
   render () {

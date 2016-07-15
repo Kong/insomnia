@@ -5,6 +5,7 @@ import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown'
 import DropdownDivider from '../components/base/DropdownDivider'
 import PromptModal from '../components/PromptModal'
+import SettingsModal from '../components/SettingsModal'
 import * as WorkspaceActions from '../redux/modules/workspaces'
 import * as GlobalActions from '../redux/modules/global'
 import * as db from '../database'
@@ -111,7 +112,7 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name="Insomnia"/>
 
           <li>
-            <button onClick={e => actions.modals.show(MODAL_SETTINGS)}>
+            <button onClick={e => SettingsModal.show()}>
               <i className="fa fa-cog"></i> Settings
             </button>
           </li>

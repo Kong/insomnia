@@ -1,16 +1,14 @@
 import React, {Component} from 'react'
-import ReactDOM from 'react-dom'
 
 
-let modals = {
+const modals = {
   // Modals will be registered here as singletons
 };
 
 class ModalComponent extends Component {
   componentDidMount () {
     const name = this.constructor.name;
-    modals[this.constructor.name] = this;
-    console.log(`-- Registered ${name} --`)
+    modals[name] = this;
   }
 
   static _callInstanceMethod (method, ...args) {

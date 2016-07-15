@@ -18,7 +18,6 @@ class Dropdown extends Component {
   }
 
   hide() {
-    Mousetrap.unbind('esc');
     this.setState({open: false});
   }
   

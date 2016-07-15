@@ -52,6 +52,8 @@ class App extends Component {
       'mod+e': () => {
         this._fetchActiveRequestGroup().then(requestGroup => {
           EnvironmentEditModal.toggle(requestGroup);
+        }, () => {
+          // No RequestGroup is active
         })
       },
 

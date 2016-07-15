@@ -9,7 +9,6 @@ import RequestAuthEditor from '../components/RequestAuthEditor'
 import RequestUrlBar from '../components/RequestUrlBar'
 
 import {getContentTypeName} from '../lib/contentTypes'
-import {exportCurl} from "../lib/curl";
 
 class RequestPane extends Component {
   render () {

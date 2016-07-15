@@ -8,6 +8,7 @@ import ModalFooter from './base/ModalFooter'
 import KeyValueEditor from './base/KeyValueEditor'
 import ModalComponent from './lib/ModalComponent'
 
+
 class EnvironmentEditModal extends ModalComponent {
   constructor (props) {
     super(props);
@@ -38,14 +39,22 @@ class EnvironmentEditModal extends ModalComponent {
     return Object.keys(data).map(key => ({name: key, value: data[key]}));
   }
 
-  toggle (requestGroup) {
-    super.toggle();
-
+  _update (requestGroup) {
     this.requestGroup = requestGroup;
     this.setState({
       pairs: this._mapDataToPairs(requestGroup.environment),
       uniquenessKey: requestGroup._id
     })
+  }
+
+  show (requestGroup) {
+    super.show();
+    this._update(requestGroup);
+  }
+
+  toggle (requestGroup) {
+    super.toggle();
+    this._update(requestGroup);
   }
 
   render () {
