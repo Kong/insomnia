@@ -1,6 +1,6 @@
-import {combineReducers} from 'redux'
+import {combineReducers} from 'redux';
 
-import {TYPE_WORKSPACE, TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_RESPONSE} from '../../database/index'
+import {TYPE_WORKSPACE, TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_RESPONSE} from '../../database/index';
 
 const ENTITY_INSERT = 'entities/insert';
 const ENTITY_UPDATE = 'entities/update';

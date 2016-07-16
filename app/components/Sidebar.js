@@ -1,9 +1,9 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 
-import WorkspaceDropdown from './../containers/WorkspaceDropdown'
-import Input from './base/Input'
-import SidebarRequestGroupRow from './SidebarRequestGroupRow'
-import SidebarRequestRow from './SidebarRequestRow'
+import WorkspaceDropdown from './../containers/WorkspaceDropdown';
+import Input from './base/Input';
+import SidebarRequestGroupRow from './SidebarRequestGroupRow';
+import SidebarRequestRow from './SidebarRequestRow';
 
 class Sidebar extends Component {
   _onFilterChange (value) {

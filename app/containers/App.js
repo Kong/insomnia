@@ -1,18 +1,18 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 import ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
-import {bindActionCreators} from 'redux'
-import Mousetrap from '../lib/mousetrap'
+import {bindActionCreators} from 'redux';
+import Mousetrap from '../lib/mousetrap';
 
-import EnvironmentEditModal from '../components/EnvironmentEditModal'
-import RequestSwitcherModal from '../components/RequestSwitcherModal'
-import CurlExportModal from '../components/CurlExportModal'
-import PromptModal from '../components/PromptModal'
-import SettingsModal from '../components/SettingsModal'
-import RequestPane from '../components/RequestPane'
-import ResponsePane from '../components/ResponsePane'
-import Sidebar from '../components/Sidebar'
-import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes'
+import EnvironmentEditModal from '../components/EnvironmentEditModal';
+import RequestSwitcherModal from '../components/RequestSwitcherModal';
+import CurlExportModal from '../components/CurlExportModal';
+import PromptModal from '../components/PromptModal';
+import SettingsModal from '../components/SettingsModal';
+import RequestPane from '../components/RequestPane';
+import ResponsePane from '../components/ResponsePane';
+import Sidebar from '../components/Sidebar';
+import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes';
 import {
   MAX_PANE_WIDTH, MIN_PANE_WIDTH,
   DEFAULT_PANE_WIDTH,
@@ -21,10 +21,10 @@ import {
   DEFAULT_SIDEBAR_WIDTH
 } from '../lib/constants'
 
-import * as RequestGroupActions from '../redux/modules/requestGroups'
-import * as RequestActions from '../redux/modules/requests'
+import * as RequestGroupActions from '../redux/modules/requestGroups';
+import * as RequestActions from '../redux/modules/requests';
 
-import * as db from '../database'
+import * as db from '../database';
 import {importCurl} from "../lib/curl";
 
 class App extends Component {

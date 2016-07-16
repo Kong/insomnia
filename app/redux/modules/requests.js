@@ -1,7 +1,7 @@
-import {combineReducers} from 'redux'
-import * as network from '../../lib/network'
-import {show} from './modals'
-import {MODAL_REQUEST_RENAME, MODAL_CURL_EXPORT} from '../../lib/constants'
+import {combineReducers} from 'redux';
+import * as network from '../../lib/network';
+import {show} from './modals';
+import {MODAL_REQUEST_RENAME, MODAL_CURL_EXPORT} from '../../lib/constants';
 
 export const REQUEST_CHANGE_FILTER = 'requests/filter';
 export const REQUEST_SEND_START = 'requests/start';

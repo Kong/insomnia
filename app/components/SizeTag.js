@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes} from 'react';
 
 const SizeTag = props => {
   const bytes = Math.round(props.bytes * 10) / 10;

@@ -1,9 +1,9 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux'
-import Dropdown from '../components/base/Dropdown'
-import CurlExportModal from '../components/CurlExportModal'
-import PromptModal from '../components/PromptModal'
-import * as db from '../database'
+import Dropdown from '../components/base/Dropdown';
+import CurlExportModal from '../components/CurlExportModal';
+import PromptModal from '../components/PromptModal';
+import * as db from '../database';
 
 
 class RequestActionsDropdown extends Component {

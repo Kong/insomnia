@@ -1,8 +1,8 @@
 'use strict';
 
-import render from './render'
-import * as querystring from './querystring'
-import * as db from '../database'
+import render from './render';
+import * as querystring from './querystring';
+import * as db from '../database';
 import {DEBOUNCE_MILLIS} from "./constants";
 import {METHOD_GET} from "./constants";
 

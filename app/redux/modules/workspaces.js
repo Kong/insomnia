@@ -1,6 +1,6 @@
-import {combineReducers} from 'redux'
-import {MODAL_WORKSPACE_RENAME} from '../../lib/constants'
-import {show} from './modals'
+import {combineReducers} from 'redux';
+import {MODAL_WORKSPACE_RENAME} from '../../lib/constants';
+import {show} from './modals';
 
 export const WORKSPACE_ACTIVATE = 'workspaces/activate';
 

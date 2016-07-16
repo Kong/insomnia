@@ -1,7 +1,7 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes} from 'react';
 
-import Dropdown from '../components/base/Dropdown'
-import {PREVIEW_MODES, getPreviewModeName} from '../lib/previewModes'
+import Dropdown from '../components/base/Dropdown';
+import {PREVIEW_MODES, getPreviewModeName} from '../lib/previewModes';
 
 const PreviewModeDropdown = ({updatePreviewMode}) => {
   return (

@@ -1,9 +1,9 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux'
-import Dropdown from '../components/base/Dropdown'
-import EnvironmentEditModal from '../components/EnvironmentEditModal'
-import PromptModal from '../components/PromptModal'
-import * as db from '../database'
+import Dropdown from '../components/base/Dropdown';
+import EnvironmentEditModal from '../components/EnvironmentEditModal';
+import PromptModal from '../components/PromptModal';
+import * as db from '../database';
 
 class RequestGroupActionsDropdown extends Component {
   _promptUpdateName () {

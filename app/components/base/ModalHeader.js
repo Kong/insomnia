@@ -1,5 +1,5 @@
-import React from 'react'
-import classnames from 'classnames'
+import React from 'react';
+import classnames from 'classnames';
 
 const ModalHeader = ({className, children}) => (
   <div className={classnames('modal__header', className)}>

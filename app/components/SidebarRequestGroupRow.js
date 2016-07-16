@@ -1,9 +1,9 @@
-import React, {PropTypes} from 'react'
-import classnames from 'classnames'
+import React, {PropTypes} from 'react';
+import classnames from 'classnames';
 
-import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown'
-import SidebarRequestRow from './SidebarRequestRow'
-import * as db from '../database'
+import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown';
+import SidebarRequestRow from './SidebarRequestRow';
+import * as db from '../database';
 
 const SidebarRequestGroupRow = ({
   children,

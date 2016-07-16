@@ -1,7 +1,7 @@
-import fs from 'fs'
-import electron from 'electron'
+import fs from 'fs';
+import electron from 'electron';
 
-import importData from '../../lib/import'
+import importData from '../../lib/import';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';

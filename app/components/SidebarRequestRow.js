@@ -1,10 +1,10 @@
-import React, {PropTypes, Component} from 'react'
-import classnames from 'classnames'
+import React, {PropTypes, Component} from 'react';
+import classnames from 'classnames';
 
-import RequestActionsDropdown from '../containers/RequestActionsDropdown'
-import Editable from './base/Editable'
-import MethodTag from './MethodTag'
-import * as db from '../database'
+import RequestActionsDropdown from '../containers/RequestActionsDropdown';
+import Editable from './base/Editable';
+import MethodTag from './MethodTag';
+import * as db from '../database';
 
 
 const SidebarRequestRow = ({request, requestGroup, isActive, activateRequest}) => {

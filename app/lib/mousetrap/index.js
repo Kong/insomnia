@@ -1,4 +1,4 @@
-import Mousetrap from 'mousetrap'
+import Mousetrap from 'mousetrap';
 
 // Apply plugins
 import bindGlobal from './mousetrap-global'

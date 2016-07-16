@@ -1,14 +1,14 @@
-import React, {PropTypes, Component} from 'react'
+import React, {PropTypes, Component} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
-import StatusTag from './StatusTag'
-import SizeTag from './SizeTag'
-import TimeTag from './TimeTag'
-import PreviewModeDropdown from '../components/PreviewModeDropdown'
-import ResponseViewer from '../components/ResponseViewer'
-import {getPreviewModeName} from '../lib/previewModes'
-import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
-import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants'
+import StatusTag from './StatusTag';
+import SizeTag from './SizeTag';
+import TimeTag from './TimeTag';
+import PreviewModeDropdown from '../components/PreviewModeDropdown';
+import ResponseViewer from '../components/ResponseViewer';
+import {getPreviewModeName} from '../lib/previewModes';
+import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
+import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
 
 class ResponsePane extends Component {
   render () {

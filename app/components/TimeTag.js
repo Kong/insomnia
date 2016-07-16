@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes} from 'react';
 
 const TimeTag = ({milliseconds}) => {
   let unit = 'ms';

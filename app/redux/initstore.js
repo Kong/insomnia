@@ -1,6 +1,6 @@
-import {bindActionCreators} from 'redux'
-import * as entitiesActions from './modules/entities'
-import * as db from '../database'
+import {bindActionCreators} from 'redux';
+import * as entitiesActions from './modules/entities';
+import * as db from '../database';
 
 const CHANGE_ID = 'store.listener';
 

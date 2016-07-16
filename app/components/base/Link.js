@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import {shell} from 'electron'
+import {shell} from 'electron';
 
 class Link extends Component {
   _handleClick (e) {

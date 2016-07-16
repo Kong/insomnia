@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes} from 'react';
 
 const DropdownDivider = props => (
   <li className="dropdown__divider">

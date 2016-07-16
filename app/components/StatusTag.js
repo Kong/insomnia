@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import React, {PropTypes} from 'react'
-import {RESPONSE_CODE_DESCRIPTIONS} from '../lib/constants'
+import React, {PropTypes} from 'react';
+import {RESPONSE_CODE_DESCRIPTIONS} from '../lib/constants';
 
 const StatusTag = ({statusMessage, statusCode}) => {
   statusCode = String(statusCode);

@@ -1,9 +1,9 @@
-import networkRequest from 'request'
+import networkRequest from 'request';
 
-import render from './render'
-import * as db from '../database'
-import * as querystring from './querystring'
-import {DEBOUNCE_MILLIS} from './constants'
+import render from './render';
+import * as db from '../database';
+import * as querystring from './querystring';
+import {DEBOUNCE_MILLIS} from './constants';
 
 function buildRequestConfig (request, patch = {}) {
   const config = {

@@ -1,10 +1,10 @@
-import React, {Component, PropTypes} from 'react'
-import classnames from 'classnames'
+import React, {Component, PropTypes} from 'react';
+import classnames from 'classnames';
 
-import Input from './base/Input'
-import Dropdown from './base/Dropdown'
-import {METHODS, DEBOUNCE_MILLIS} from '../lib/constants'
-import Mousetrap from '../lib/mousetrap'
+import Input from './base/Input';
+import Dropdown from './base/Dropdown';
+import {METHODS, DEBOUNCE_MILLIS} from '../lib/constants';
+import Mousetrap from '../lib/mousetrap';
 
 
 class RequestUrlBar extends Component {

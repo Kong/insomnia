@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 
-import {DEBOUNCE_MILLIS} from '../../lib/constants'
+import {DEBOUNCE_MILLIS} from '../../lib/constants';
 
 // Modes
 import '../../../node_modules/codemirror/mode/css/css'
