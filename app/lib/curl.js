@@ -1,8 +1,8 @@
 'use strict';
 
-import render from './render'
-import * as querystring from './querystring'
-import * as db from '../database'
+import render from './render';
+import * as querystring from './querystring';
+import * as db from '../database';
 import {DEBOUNCE_MILLIS} from "./constants";
 import {METHOD_GET} from "./constants";
 
@@ -151,7 +151,7 @@ export function exportCurl (requestId) {
 
     // First, lets wait for all debounces to finish
     setTimeout(() => {
-      db.requestById(requestId).then(request => {
+      db.requestGetById(requestId).then(request => {
         db.requestGroupById(request.parentId).then(requestGroup => {
           const renderCtx = requestGroup ? requestGroup.environment : {};
 

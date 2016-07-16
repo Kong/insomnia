@@ -1,6 +1,6 @@
-import React, {Component, PropTypes} from 'react'
-import classnames from 'classnames'
-import Input from '../base/Input'
+import React, {Component, PropTypes} from 'react';
+import classnames from 'classnames';
+import Input from '../base/Input';
 
 const NAME = 'name';
 const VALUE = 'value';

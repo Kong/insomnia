@@ -1,7 +1,7 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes} from 'react';
 
-import Dropdown from '../components/base/Dropdown'
-import {CONTENT_TYPES, getContentTypeName} from '../lib/contentTypes'
+import Dropdown from '../components/base/Dropdown';
+import {CONTENT_TYPES, getContentTypeName} from '../lib/contentTypes';
 
 const ContentTypeDropdown = ({updateRequestContentType, activeContentType}) => {
   const contentTypes = CONTENT_TYPES.filter(ct => ct !== activeContentType);

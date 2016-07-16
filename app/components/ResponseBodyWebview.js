@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 
 class ResponseBodyWebview extends Component {
   _setBody () {

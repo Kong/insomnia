@@ -1,5 +1,5 @@
-import React, {PropTypes} from 'react'
-import KeyValueEditor from './base/KeyValueEditor'
+import React, {PropTypes} from 'react';
+import KeyValueEditor from './base/KeyValueEditor';
 
 const RequestAuthEditor = ({request, onChange, ...other}) => {
   const auth = request.authentication;

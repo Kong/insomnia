@@ -1,10 +1,10 @@
-import React from 'react'
+import React from 'react';
 
-import Modal from './base/Modal'
-import ModalBody from './base/ModalBody'
-import ModalHeader from './base/ModalHeader'
-import ModalFooter from './base/ModalFooter'
-import ModalComponent from './lib/ModalComponent'
+import Modal from './base/Modal';
+import ModalBody from './base/ModalBody';
+import ModalHeader from './base/ModalHeader';
+import ModalFooter from './base/ModalFooter';
+import ModalComponent from './lib/ModalComponent';
 
 class RequestSwitcherModal extends ModalComponent {
   render() {

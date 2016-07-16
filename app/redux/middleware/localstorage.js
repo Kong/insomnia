@@ -14,9 +14,13 @@ export default function (key) {
       timeout = setTimeout(() => {
         const state = getState();
         const stateToSave = {};
-        Object.keys(state).filter(k => !state[k].dontPersist).map(k => {
-          stateToSave[k] = state[k]
-        });
+
+        // Check for a `doNotPersist` property on the state
+        Object.keys(state)
+          .filter(k => !state[k].doNotPersist)
+          .map(k => {
+            stateToSave[k] = state[k]
+          });
 
         localStorage[key] = JSON.stringify(stateToSave);
       }, 1000);

@@ -1,8 +1,8 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 
-import Editor from '../components/base/Editor'
-import ResponseBodyWebview from '../components/ResponseBodyWebview'
-import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../lib/previewModes'
+import Editor from '../components/base/Editor';
+import ResponseBodyWebview from '../components/ResponseBodyWebview';
+import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 
 class ResponseViewer extends Component {
   render () {

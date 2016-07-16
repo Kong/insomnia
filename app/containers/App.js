@@ -1,18 +1,21 @@
-import React, {Component, PropTypes} from 'react'
-import ReactDOM from 'react-dom'
-import {connect} from 'react-redux'
-import {bindActionCreators} from 'redux'
-import Mousetrap from '../lib/mousetrap'
+import React, {Component, PropTypes} from 'react';
+import ReactDOM from 'react-dom';
+import {connect} from 'react-redux';
+import {bindActionCreators} from 'redux';
+import HTML5Backend from 'react-dnd-html5-backend';
+import {DragDropContext} from 'react-dnd';
 
-import EnvironmentEditModal from '../components/EnvironmentEditModal'
-import RequestSwitcherModal from '../components/RequestSwitcherModal'
-import CurlExportModal from '../components/CurlExportModal'
-import PromptModal from '../components/PromptModal'
-import SettingsModal from '../components/SettingsModal'
-import RequestPane from '../components/RequestPane'
-import ResponsePane from '../components/ResponsePane'
-import Sidebar from '../components/Sidebar'
-import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes'
+import Mousetrap from '../lib/mousetrap';
+
+import EnvironmentEditModal from '../components/EnvironmentEditModal';
+import RequestSwitcherModal from '../components/RequestSwitcherModal';
+import CurlExportModal from '../components/CurlExportModal';
+import PromptModal from '../components/PromptModal';
+import SettingsModal from '../components/SettingsModal';
+import RequestPane from '../components/RequestPane';
+import ResponsePane from '../components/ResponsePane';
+import Sidebar from '../components/Sidebar';
+import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes';
 import {
   MAX_PANE_WIDTH, MIN_PANE_WIDTH,
   DEFAULT_PANE_WIDTH,
@@ -21,11 +24,11 @@ import {
   DEFAULT_SIDEBAR_WIDTH
 } from '../lib/constants'
 
-import * as RequestGroupActions from '../redux/modules/requestGroups'
-import * as RequestActions from '../redux/modules/requests'
+import * as RequestGroupActions from '../redux/modules/requestGroups';
+import * as RequestActions from '../redux/modules/requests';
 
-import * as db from '../database'
-import {importCurl} from "../lib/curl";
+import * as db from '../database';
+import {importCurl} from '../lib/curl';
 
 class App extends Component {
   constructor (props) {
@@ -107,8 +110,66 @@ class App extends Component {
     }
   }
 
+  _moveRequest (requestToMove, requestToTarget, targetOffset) {
+    // Oh God, this function is awful...
+
+    if (requestToMove._id === requestToTarget._id) {
+      // Nothing to do
+      return;
+    }
+
+    db.requestFindByParentId(requestToMove.parentId).then(requests => {
+      requests = requests.sort((a, b) => a.sortKey < b.sortKey ? -1 : 1);
+
+      // Find the index of request B so we can re-order and save everything
+      for (let i = 0; i < requests.length; i++) {
+        const request = requests[i];
+
+        if (request._id === requestToTarget._id) {
+          let before, after;
+          if (targetOffset < 0) {
+            // We're moving to below
+            before = requests[i];
+            after = requests[i + 1];
+          } else {
+            // We're moving to above
+            before = requests[i - 1];
+            after = requests[i];
+          }
+
+          const beforeKey = before ? before.sortKey : requests[0].sortKey - 100;
+          const afterKey = after ? after.sortKey : requests[requests.length - 1].sortKey + 100;
+
+          if (Math.abs(afterKey - beforeKey) < 0.000001) {
+            // If sort keys get too close together, we need to redistribute the list. This is
+            // not performant at all (need to update all siblings in DB), but it is extremely rare
+            // anyway
+            console.warn('-- Recreating Sort Keys --');
+
+            requests.map((r, i) => {
+              db.requestUpdate(r, {sortKey: i * 100});
+            });
+          } else {
+            const sortKey = afterKey - (afterKey - beforeKey) / 2;
+            db.requestUpdate(requestToMove, {sortKey});
+          }
+
+          break;
+        }
+      }
+    })
+  }
+
   _generateSidebarTree (parentId, entities) {
-    const children = entities.filter(e => e.parentId === parentId);
+    const children = entities.filter(
+      e => e.parentId === parentId
+    ).sort((a, b) => {
+      if (!a.sortKey || !b.sortKey || a.sortKey === b.sortKey) {
+        return a._id > b._id ? -1 : 1;
+      } else {
+         return a.sortKey < b.sortKey ? -1 : 1;
+      }
+    });
 
     if (children.length > 0) {
       return children.map(c => ({
@@ -143,7 +204,7 @@ class App extends Component {
     setTimeout(() => {
       this.setState({
         sidebarWidth: DEFAULT_SIDEBAR_WIDTH
-      })
+      });
 
       this._saveSidebarWidth();
     }, 50);
@@ -313,6 +374,7 @@ class App extends Component {
           workspaceId={workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {activeRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
+          moveRequest={this._moveRequest.bind(this)}
           addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {collapsed: !requestGroup.collapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
@@ -410,8 +472,10 @@ function mapDispatchToProps (dispatch) {
   }
 }
 
-export default connect(
+const reduxApp = connect(
   mapStateToProps,
   mapDispatchToProps
 )(App);
+
+export default DragDropContext(HTML5Backend)(reduxApp);
 

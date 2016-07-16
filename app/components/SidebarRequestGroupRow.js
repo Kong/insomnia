@@ -1,9 +1,8 @@
-import React, {PropTypes} from 'react'
-import classnames from 'classnames'
+import React, {PropTypes} from 'react';
+import classnames from 'classnames';
 
-import RequestGroupActionsDropdown from './../containers/RequestGroupActionsDropdown'
-import SidebarRequestRow from './SidebarRequestRow'
-import * as db from '../database'
+import RequestGroupActionsDropdown from '../containers/RequestGroupActionsDropdown';
+import SidebarRequestRow from './SidebarRequestRow';
 
 const SidebarRequestGroupRow = ({
   children,
@@ -44,6 +43,7 @@ const SidebarRequestGroupRow = ({
         {!expanded || children.length > 0 ? null : (
           <SidebarRequestRow
             activateRequest={() => {}}
+            moveRequest={() => {}}
             isActive={false}
             request={null}
             requestGroup={requestGroup}
@@ -62,7 +62,8 @@ SidebarRequestGroupRow.propTypes = {
 
   // Other
   isActive: PropTypes.bool.isRequired,
-  requestGroup: PropTypes.object.isRequired
+  requestGroup: PropTypes.object.isRequired,
+  position: PropTypes.number.isRequired
 };
 
 export default SidebarRequestGroupRow;

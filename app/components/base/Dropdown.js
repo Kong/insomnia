@@ -1,7 +1,7 @@
-import React, {Component, PropTypes} from 'react'
-import classnames from 'classnames'
+import React, {Component, PropTypes} from 'react';
+import classnames from 'classnames';
 
-import Mousetrap from '../../lib/mousetrap'
+import Mousetrap from '../../lib/mousetrap';
 
 class Dropdown extends Component {
   constructor(props) {

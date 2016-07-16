@@ -1,13 +1,17 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 
-import WorkspaceDropdown from './../containers/WorkspaceDropdown'
-import Input from './base/Input'
-import SidebarRequestGroupRow from './SidebarRequestGroupRow'
-import SidebarRequestRow from './SidebarRequestRow'
+import Input from './base/Input';
+import SidebarRequestRow from './SidebarRequestRow';
+import SidebarRequestGroupRow from './SidebarRequestGroupRow';
+import WorkspaceDropdown from '../containers/WorkspaceDropdown';
 
 class Sidebar extends Component {
   _onFilterChange (value) {
     this.props.changeFilter(value);
+  }
+
+  _handleGhostRequest () {
+
   }
 
   _filterChildren (filter, children, extra = null) {
@@ -38,22 +42,27 @@ class Sidebar extends Component {
     const {
       filter,
       toggleRequestGroup,
-      addRequestToRequestGroup
+      addRequestToRequestGroup,
+      moveRequest,
+      activateRequest,
+      activeRequestId
     } = this.props;
 
     const filteredChildren = this._filterChildren(
       filter,
       children,
       requestGroup && requestGroup.name
-    ).sort((a, b) => a.doc._id > b.doc._id ? -1 : 1);
+    );
 
-    return filteredChildren.map(child => {
+    return filteredChildren.map((child, index) => {
       if (child.doc.type === 'Request') {
         return (
           <SidebarRequestRow
             key={child.doc._id}
-            activateRequest={this.props.activateRequest}
-            isActive={child.doc._id === this.props.activeRequestId}
+            moveRequest={moveRequest}
+            ghostRequest={this._handleGhostRequest.bind(this)}
+            activateRequest={activateRequest}
+            isActive={child.doc._id === activeRequestId}
             request={child.doc}
           />
         )
@@ -62,7 +71,7 @@ class Sidebar extends Component {
       // We have a RequestGroup!
 
       const requestGroup = child.doc;
-      const isActive = !!child.children.find(c => c.doc._id === this.props.activeRequestId);
+      const isActive = !!child.children.find(c => c.doc._id === activeRequestId);
 
       const children = this._renderChildren(child.children, requestGroup);
 
@@ -74,6 +83,7 @@ class Sidebar extends Component {
       return (
         <SidebarRequestGroupRow
           key={requestGroup._id}
+          position={index}
           isActive={isActive}
           toggleRequestGroup={toggleRequestGroup}
           addRequestToRequestGroup={addRequestToRequestGroup}

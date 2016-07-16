@@ -1,12 +1,12 @@
-import electron from 'electron'
-import * as fsPath from 'path'
-import * as fs from 'fs'
+import electron from 'electron';
+import * as fsPath from 'path';
+import * as fs from 'fs';
 
-import * as methods from '../lib/constants'
-import {generateId} from './util'
-import {PREVIEW_MODE_SOURCE} from '../lib/previewModes'
-import {CONTENT_TYPE_TEXT} from '../lib/contentTypes'
-import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants'
+import * as methods from '../lib/constants';
+import {generateId} from './util';
+import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
+import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
+import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
 
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
@@ -20,7 +20,6 @@ const TYPES = [
 ];
 
 let db = null;
-global.db = db;
 
 function getDBFilePath () {
   const basePath = electron.remote.app.getPath('userData');
@@ -40,12 +39,12 @@ export function initDB () {
 
   return new Promise(resolve => {
     const dbPath = getDBFilePath();
-    
-    db = {
+
+    global.db = db = {
       created: Date.now(),
       entities: {}
     };
-    
+
     for (let i = 0; i < TYPES.length; i++) {
       db.entities[TYPES[i]] = {};
     }
@@ -67,12 +66,12 @@ export function initDB () {
       onChange('DB_WRITER', () => {
         clearTimeout(timeout);
         timeout = setTimeout(() => {
-          
+
           // First, write to a tmp file, then overwrite the old one. This
           // prevents getting a corru
           const filePath = getDBFilePath();
           const tmpFilePath = `${filePath}.tmp`;
-          
+
           fs.writeFile(tmpFilePath, JSON.stringify(db, null, 2), err => {
             if (err) {
               console.error('Failed to write DB to file', err);
@@ -105,9 +104,31 @@ export function offChange (id) {
   delete changeListeners[id];
 }
 
+export function find (type, key, value) {
+  const docs = [];
+  Object.keys(db.entities[type]).map(id => {
+    const doc = db.entities[type][id];
+    if (doc[key] === value) {
+      docs.push(doc);
+    }
+  });
+  return new Promise(resolve => resolve(docs));
+}
+
 export function get (type, id) {
   const doc = db.entities[type][id];
   return new Promise(resolve => resolve(doc));
+}
+
+export function getFromMany (types, id) {
+  const docs = [];
+
+  types.map(t => {
+    const doc = db.entities[t][id];
+    doc && docs.push(doc);
+  });
+
+  return new Promise(resolve => resolve(docs));
 }
 
 function all (type) {
@@ -142,10 +163,16 @@ function insert (doc) {
 }
 
 function update (doc) {
-  db.entities[doc.type][doc._id] = doc;
-
-  Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
-  return new Promise(resolve => resolve(doc));
+  return new Promise((resolve, reject) => {
+    // Only update if it exists in the DB
+    if (db.entities[doc.type][doc._id]) {
+      db.entities[doc.type][doc._id] = doc;
+      Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+      resolve(doc);
+    } else {
+      reject(new Error(`Doc did not exist for update: ${doc._id}`));
+    }
+  });
 }
 
 function remove (doc) {
@@ -171,9 +198,7 @@ function docUpdate (originalDoc, patch = {}) {
     {modified: Date.now()}
   );
 
-  // Fake a promise
-  const finalDoc = update(doc);
-  return new Promise(resolve => resolve(finalDoc));
+  return update(doc);
 }
 
 function docCreate (type, idPrefix, defaults, patch = {}) {
@@ -189,7 +214,6 @@ function docCreate (type, idPrefix, defaults, patch = {}) {
     // Required Generated Fields
     {
       _id: generateId(idPrefix),
-      $loki: undefined,
       meta: undefined,
       type: type,
       created: Date.now(),
@@ -227,12 +251,26 @@ export function requestCreate (patch = {}) {
     body: '',
     params: [],
     headers: [],
-    authentication: {}
+    authentication: {},
+
+    // Always put new request at the top
+    sortKey: -1 * Date.now()
   }, patch);
 }
 
-export function requestById (id) {
+export function requestGetById (id) {
   return get(TYPE_REQUEST, id);
+}
+
+export function requestFindByParentId (parentId) {
+  return find(TYPE_REQUEST, 'parentId', parentId);
+}
+
+export function requestGetParent (request) {
+  return getFromMany(
+    [TYPE_REQUEST_GROUP, TYPE_WORKSPACE],
+    request.parentId
+  ).then(docs => docs.length ? docs[0] : null);
 }
 
 export function requestUpdate (request, patch) {

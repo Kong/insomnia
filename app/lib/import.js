@@ -1,4 +1,4 @@
-import * as db from '../database'
+import * as db from '../database';
 
 const TYPE_REQUEST = 'request';
 const TYPE_REQUEST_GROUP = 'request_group';

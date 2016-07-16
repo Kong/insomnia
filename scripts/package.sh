@@ -3,7 +3,7 @@
 
 APP_NAME="Insomnia"
 APP_ID="com.insomnia.app"
-APP_VERSION=$(node -e "console.log(require('./dist/package.json').version)")
+APP_VERSION=$(node -e "console.log(require('./dist/app.json').version)")
 COMPANY_NAME="Gregory Schier"
 OUT_DIR="build/darwin/v$APP_VERSION"
 

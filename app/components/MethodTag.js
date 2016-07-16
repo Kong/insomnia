@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react'
+import React, {PropTypes} from 'react';
 import * as constants from '../lib/constants';
 
 const MethodTag = ({method}) => {

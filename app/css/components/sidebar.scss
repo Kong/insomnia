@@ -79,7 +79,34 @@
   // ~~~~~~~~~~~ //
 
   .sidebar__row {
-    // Nothing yet...
+    &.sidebar__row--dragging {
+      // Set opacity on children so we can still see the separator
+      & > * {
+        opacity: 0.2;
+      }
+    }
+
+    &.sidebar__row--dragging-below {
+      &::after {
+        position: absolute;
+        height: 2px;
+        content: " ";
+        width: 100%;
+        display: block;
+        background: lighten($bg-brand, 2);
+      }
+    }
+
+    &.sidebar__row--dragging-above {
+      &::before {
+        position: absolute;
+        height: 2px;
+        content: " ";
+        width: 100%;
+        display: block;
+        background: $bg-brand;
+      }
+    }
   }
 
   // ~~~~~~~~~~~~ //

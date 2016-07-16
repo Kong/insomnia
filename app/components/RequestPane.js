@@ -1,14 +1,14 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
-import KeyValueEditor from '../components/base/KeyValueEditor'
+import KeyValueEditor from '../components/base/KeyValueEditor';
 
-import ContentTypeDropdown from '../components/ContentTypeDropdown'
-import RequestBodyEditor from '../components/RequestBodyEditor'
-import RequestAuthEditor from '../components/RequestAuthEditor'
-import RequestUrlBar from '../components/RequestUrlBar'
+import ContentTypeDropdown from '../components/ContentTypeDropdown';
+import RequestBodyEditor from '../components/RequestBodyEditor';
+import RequestAuthEditor from '../components/RequestAuthEditor';
+import RequestUrlBar from '../components/RequestUrlBar';
 
-import {getContentTypeName} from '../lib/contentTypes'
+import {getContentTypeName} from '../lib/contentTypes';
 
 class RequestPane extends Component {
   render () {

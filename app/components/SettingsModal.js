@@ -1,15 +1,15 @@
-import React from 'react'
+import React from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
-import {shell} from 'electron'
+import {shell} from 'electron';
 
-import Link from './base/Link'
-import Modal from './base/Modal'
-import ModalBody from './base/ModalBody'
-import ModalHeader from './base/ModalHeader'
-import ModalFooter from './base/ModalFooter'
-import ModalComponent from './lib/ModalComponent'
-import {MASHAPE_URL} from '../lib/constants'
-import {getVersion} from '../lib/appInfo'
+import Link from './base/Link';
+import Modal from './base/Modal';
+import ModalBody from './base/ModalBody';
+import ModalHeader from './base/ModalHeader';
+import ModalFooter from './base/ModalFooter';
+import ModalComponent from './lib/ModalComponent';
+import {MASHAPE_URL} from '../lib/constants';
+import {getVersion} from '../lib/appInfo';
 
 class SettingsModal extends ModalComponent {
   render () {
