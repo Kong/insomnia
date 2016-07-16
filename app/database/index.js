@@ -62,26 +62,10 @@ export function initDB () {
       }
 
       // Add listeners to do persistence
-
       let timeout = null;
       onChange('DB_WRITER', () => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          
-          // First, write to a tmp file, then overwrite the old one. This
-          // prevents getting a corru
-          const filePath = getDBFilePath();
-          const tmpFilePath = `${filePath}.tmp`;
-          
-          fs.writeFile(tmpFilePath, JSON.stringify(db, null, 2), err => {
-            if (err) {
-              console.error('Failed to write DB to file', err);
-            } else {
-              fs.renameSync(tmpFilePath, filePath);
-              console.log('-- Persisted DB --');
-            }
-          })
-        }, DB_PERSIST_INTERVAL)
+        timeout = setTimeout(persistDB, DB_PERSIST_INTERVAL);
       });
 
       // Done
@@ -90,6 +74,28 @@ export function initDB () {
       console.log(`-- Initialize DB at ${dbPath} --`);
       resolve();
     });
+  })
+}
+
+function persistDB () {
+  // First, write to a tmp file, then overwrite the old one. This
+  // prevents getting a corrupted
+  const filePath = getDBFilePath();
+  const tmpFilePath = `${filePath}.tmp`;
+
+  const start = Date.now();
+  const blob = JSON.stringify(db, null, '\t');
+  const bytes = Buffer.byteLength(blob, 'utf8');
+  const megabytes = Math.round(bytes / 1024 / 1024 * 10) / 10;
+
+  fs.writeFile(tmpFilePath, blob, err => {
+    if (err) {
+      console.error('Failed to write DB to file', err);
+    } else {
+      fs.renameSync(tmpFilePath, filePath);
+
+      console.log(`-- Persisted DB in ${Date.now() - start}ms (${megabytes}MB) --`);
+    }
   })
 }
 

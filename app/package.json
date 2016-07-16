@@ -10,5 +10,7 @@
   "main": "app.js",
   "dependencies": {
     "request": "^2.71.0"
+  },
+  "devDependencies": {
   }
 }

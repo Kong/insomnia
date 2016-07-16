@@ -15,7 +15,7 @@ let mainWindow = null;
 let zoomFactor = 1;
 
 // Enable this for CSS grid layout :)
-electron.app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 if (!IS_DEV) {
   autoUpdater.setFeedURL(
@@ -134,6 +134,7 @@ app.on('ready', () => {
     {
       label: "Help",
       role: "help",
+      id: "help",
       submenu: [
         {
           label: "Report an Issue...",
@@ -155,6 +156,7 @@ app.on('ready', () => {
   if (IS_DEV) {
     template.push({
       label: 'Developer',
+      position: 'before=help',
       submenu: [{
         label: 'Reload',
         accelerator: 'Command+R',

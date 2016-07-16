@@ -9,7 +9,8 @@
   .CodeMirror {
     height: 100% !important;
     width: 100%;
-    font-family: monospace;
+    font-family: 'Source Code Pro', Menlo, 'Ubuntu Mono', 'Courier New', monospace;
+    font-size: 0.96rem;
     box-sizing: border-box;
     padding-top: $padding-sm;
   }
