@@ -10,10 +10,6 @@ class Sidebar extends Component {
     this.props.changeFilter(value);
   }
 
-  _handleGhostRequest () {
-
-  }
-
   _filterChildren (filter, children, extra = null) {
     return children.filter(child => {
       if (child.doc.type !== 'Request') {
@@ -54,13 +50,12 @@ class Sidebar extends Component {
       requestGroup && requestGroup.name
     );
 
-    return filteredChildren.map((child, index) => {
+    return filteredChildren.map(child => {
       if (child.doc.type === 'Request') {
         return (
           <SidebarRequestRow
             key={child.doc._id}
             moveRequest={moveRequest}
-            ghostRequest={this._handleGhostRequest.bind(this)}
             activateRequest={activateRequest}
             isActive={child.doc._id === activeRequestId}
             request={child.doc}
@@ -83,7 +78,6 @@ class Sidebar extends Component {
       return (
         <SidebarRequestGroupRow
           key={requestGroup._id}
-          position={index}
           isActive={isActive}
           toggleRequestGroup={toggleRequestGroup}
           addRequestToRequestGroup={addRequestToRequestGroup}
