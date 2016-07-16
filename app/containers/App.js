@@ -118,7 +118,8 @@ class App extends Component {
       return;
     }
 
-    db.requestFindByParentId(requestToMove.parentId).then(requests => {
+    // NOTE: using requestToTarget's parentId so we can switch parents!
+    db.requestFindByParentId(requestToTarget.parentId).then(requests => {
       requests = requests.sort((a, b) => a.sortKey < b.sortKey ? -1 : 1);
 
       // Find the index of request B so we can re-order and save everything
@@ -147,11 +148,11 @@ class App extends Component {
             console.warn('-- Recreating Sort Keys --');
 
             requests.map((r, i) => {
-              db.requestUpdate(r, {sortKey: i * 100});
+              db.requestUpdate(r, {sortKey: i * 100, parentId: requestToTarget.parentId});
             });
           } else {
             const sortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.requestUpdate(requestToMove, {sortKey});
+            db.requestUpdate(requestToMove, {sortKey, parentId: requestToTarget.parentId});
           }
 
           break;
