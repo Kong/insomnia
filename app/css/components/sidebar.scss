@@ -124,12 +124,6 @@
     padding-right: $padding-sm;
   }
 
-  // put border on folders
-
-  .sidebar__row:not(:first-child) .sidebar__item--big {
-    border-top: 1px solid $hl-sm;
-  }
-
   // ~~~~~~~~~~~~~~~~~ //
   // Sidebar Clickable //
   // ~~~~~~~~~~~~~~~~~ //

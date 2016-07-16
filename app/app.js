@@ -70,66 +70,91 @@ app.on('ready', () => {
     mainWindow = null;
   });
 
-  var template = [{
-    label: "Application",
-    submenu: [
-      {label: "About Application", selector: "orderFrontStandardAboutPanel:"},
-      {type: "separator"},
-      {
-        label: "Quit",
-        accelerator: "Command+Q",
-        click: function () {
-          app.quit();
+  var template = [
+    {
+      label: "Application",
+      role: "window",
+      submenu: [
+        {label: "About Application", selector: "orderFrontStandardAboutPanel:"},
+        {type: "separator"},
+        {
+          label: "Quit",
+          accelerator: "Command+Q",
+          click: function () {
+            app.quit();
+          }
         }
-      }
-    ]
-  }, {
-    label: "Edit",
-    submenu: [
-      {label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:"},
-      {label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:"},
-      {type: "separator"},
-      {label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:"},
-      {label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:"},
-      {label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:"},
-      {label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
-    ]
-  }, {
-    label: "View",
-    submenu: [
-      {
-        label: "Actual Size",
-        accelerator: "CmdOrCtrl+0",
-        click: () => {
-          const window = electron.BrowserWindow.getFocusedWindow();
-          zoomFactor = 1;
-          window.webContents.setZoomFactor(zoomFactor);
+      ]
+    },
+    {
+      label: "Edit",
+      submenu: [
+        {label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:"},
+        {label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:"},
+        {type: "separator"},
+        {label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:"},
+        {label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:"},
+        {label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:"},
+        {label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
+      ]
+    },
+    {
+      label: "View",
+      role: "window",
+      submenu: [
+        {
+          label: "Actual Size",
+          accelerator: "CmdOrCtrl+0",
+          click: () => {
+            const window = electron.BrowserWindow.getFocusedWindow();
+            zoomFactor = 1;
+            window.webContents.setZoomFactor(zoomFactor);
+          }
+        },
+        {
+          label: "Zoom In",
+          accelerator: "CmdOrCtrl+Plus",
+          click: () => {
+            const window = electron.BrowserWindow.getFocusedWindow();
+            zoomFactor = Math.min(1.8, zoomFactor + 0.1);
+            window.webContents.setZoomFactor(zoomFactor);
+          }
+        },
+        {
+          label: "Zoom Out",
+          accelerator: "CmdOrCtrl+-",
+          click: () => {
+            const window = electron.BrowserWindow.getFocusedWindow();
+            zoomFactor = Math.max(0.5, zoomFactor - 0.1);
+            window.webContents.setZoomFactor(zoomFactor);
+          }
         }
-      },
-      {
-        label: "Zoom In",
-        accelerator: "CmdOrCtrl+Plus",
-        click: () => {
-          const window = electron.BrowserWindow.getFocusedWindow();
-          zoomFactor = Math.min(1.8, zoomFactor + 0.1);
-          window.webContents.setZoomFactor(zoomFactor);
+      ]
+    },
+    {
+      label: "Help",
+      role: "help",
+      submenu: [
+        {
+          label: "Report an Issue...",
+          click: () => {
+            electron.shell.openExternal('mailto:support@insomnia.rest');
+          }
+        },
+        {
+          label: "Insomnia Help",
+          accelerator: "CmdOrCtrl+?",
+          click: () => {
+            electron.shell.openExternal('http://insomnia.rest');
+          }
         }
-      },
-      {
-        label: "Zoom Out",
-        accelerator: "CmdOrCtrl+-",
-        click: () => {
-          const window = electron.BrowserWindow.getFocusedWindow();
-          zoomFactor = Math.max(0.5, zoomFactor - 0.1);
-          window.webContents.setZoomFactor(zoomFactor);
-        }
-      }
-    ]
-  }];
+      ]
+    }
+  ];
 
   if (IS_DEV) {
     template.push({
-      label: 'View',
+      label: 'Developer',
       submenu: [{
         label: 'Reload',
         accelerator: 'Command+R',
