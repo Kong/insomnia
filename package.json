@@ -15,13 +15,12 @@
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "test": "jest $@",
     "build": "bash scripts/build.sh",
-    "package": "npm run build && bash scripts/package.sh",
-    "release": "npm run build && bash scripts/release.sh"
+    "package": "npm run build && bash scripts/package.sh"
   },
   "build": {
     "appId": "com.insomnia.app",
     "app-category-type": "public.app-category.developer-tools",
-    "compression": "maximum",
+    "compression": "normal",
     "win": {
       "iconUrl": "https://trello-logos.s3.amazonaws.com/06507f4661a7bb6375a8cf5beeaa48be/170.png",
       "icon": "build/icon.ico",
@@ -30,8 +29,8 @@
     }
   },
   "directories": {
-    "app": "dist",
-    "output": "build"
+    "app": "build",
+    "output": "dist"
   },
   "dependencies": {
     "classnames": "^2.2.3",

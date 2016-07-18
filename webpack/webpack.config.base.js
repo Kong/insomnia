@@ -9,7 +9,7 @@ export default {
     './app.html'
   ],
   output: {
-    path: path.join(__dirname, '../dist'),
+    path: path.join(__dirname, '../build'),
     filename: 'bundle.js',
     libraryTarget: 'commonjs2'
   },
