@@ -1,5 +1,9 @@
 'use strict';
 
+if (require('electron-squirrel-startup')) {
+  process.exit(0);
+}
+
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
 const appVersion = require('./app.json').version;
@@ -10,20 +14,23 @@ const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
+const IS_WIN = process.platform === 'win32';
+const IS_LIN = process.platform === 'linux';
+
+const UPDATE_URLS = {
+  darwin: `http://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
+  win32: 'https://s3.amazonaws.com/builds-insomnia-rest/win',
+  linux: null
+};
 
 let mainWindow = null;
 let zoomFactor = 1;
 
 // Enable this for CSS grid layout :)
-electron.app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 if (!IS_DEV) {
-  autoUpdater.setFeedURL(
-    IS_MAC ?
-      `http://builds.insomnia.rest/builds/check/mac?v=${appVersion}` :
-      `http://builds.insomnia.rest/builds/check/windows?v=${appVersion}`
-  );
-
+  autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
   autoUpdater.checkForUpdates();
 }
 
@@ -70,66 +77,93 @@ app.on('ready', () => {
     mainWindow = null;
   });
 
-  var template = [{
-    label: "Application",
-    submenu: [
-      {label: "About Application", selector: "orderFrontStandardAboutPanel:"},
-      {type: "separator"},
-      {
-        label: "Quit",
-        accelerator: "Command+Q",
-        click: function () {
-          app.quit();
+  var template = [
+    {
+      label: "Application",
+      role: "window",
+      submenu: [
+        {label: "About Application", selector: "orderFrontStandardAboutPanel:"},
+        {type: "separator"},
+        {
+          label: "Quit",
+          accelerator: "Command+Q",
+          click: function () {
+            app.quit();
+          }
         }
-      }
-    ]
-  }, {
-    label: "Edit",
-    submenu: [
-      {label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:"},
-      {label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:"},
-      {type: "separator"},
-      {label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:"},
-      {label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:"},
-      {label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:"},
-      {label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
-    ]
-  }, {
-    label: "View",
-    submenu: [
-      {
-        label: "Actual Size",
-        accelerator: "CmdOrCtrl+0",
-        click: () => {
-          const window = electron.BrowserWindow.getFocusedWindow();
-          zoomFactor = 1;
-          window.webContents.setZoomFactor(zoomFactor);
+      ]
+    },
+    {
+      label: "Edit",
+      submenu: [
+        {label: "Undo", accelerator: "CmdOrCtrl+Z", selector: "undo:"},
+        {label: "Redo", accelerator: "Shift+CmdOrCtrl+Z", selector: "redo:"},
+        {type: "separator"},
+        {label: "Cut", accelerator: "CmdOrCtrl+X", selector: "cut:"},
+        {label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:"},
+        {label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:"},
+        {label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:"}
+      ]
+    },
+    {
+      label: "View",
+      role: "window",
+      submenu: [
+        {
+          label: "Actual Size",
+          accelerator: "CmdOrCtrl+0",
+          click: () => {
+            const window = electron.BrowserWindow.getFocusedWindow();
+            zoomFactor = 1;
+            window.webContents.setZoomFactor(zoomFactor);
+          }
+        },
+        {
+          label: "Zoom In",
+          accelerator: "CmdOrCtrl+Plus",
+          click: () => {
+            const window = electron.BrowserWindow.getFocusedWindow();
+            zoomFactor = Math.min(1.8, zoomFactor + 0.1);
+            window.webContents.setZoomFactor(zoomFactor);
+          }
+        },
+        {
+          label: "Zoom Out",
+          accelerator: "CmdOrCtrl+-",
+          click: () => {
+            const window = electron.BrowserWindow.getFocusedWindow();
+            zoomFactor = Math.max(0.5, zoomFactor - 0.1);
+            window.webContents.setZoomFactor(zoomFactor);
+          }
         }
-      },
-      {
-        label: "Zoom In",
-        accelerator: "CmdOrCtrl+Plus",
-        click: () => {
-          const window = electron.BrowserWindow.getFocusedWindow();
-          zoomFactor = Math.min(1.8, zoomFactor + 0.1);
-          window.webContents.setZoomFactor(zoomFactor);
+      ]
+    },
+    {
+      label: "Help",
+      role: "help",
+      id: "help",
+      submenu: [
+        {
+          label: "Report an Issue...",
+          click: () => {
+            electron.shell.openExternal('mailto:support@insomnia.rest');
+          }
+        },
+        {
+          label: "Insomnia Help",
+          accelerator: "CmdOrCtrl+?",
+          click: () => {
+            electron.shell.openExternal('http://insomnia.rest');
+          }
         }
-      },
-      {
-        label: "Zoom Out",
-        accelerator: "CmdOrCtrl+-",
-        click: () => {
-          const window = electron.BrowserWindow.getFocusedWindow();
-          zoomFactor = Math.max(0.5, zoomFactor - 0.1);
-          window.webContents.setZoomFactor(zoomFactor);
-        }
-      }
-    ]
-  }];
+      ]
+    }
+  ];
 
   if (IS_DEV) {
     template.push({
-      label: 'View',
+      label: 'Developer',
+      position: 'before=help',
       submenu: [{
         label: 'Reload',
         accelerator: 'Command+R',
@@ -146,5 +180,7 @@ app.on('ready', () => {
     });
   }
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  if (!IS_WIN) {
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  }
 });

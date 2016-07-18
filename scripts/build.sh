@@ -1,25 +1,29 @@
 #!/bin/bash
 #? Package the app
 
+BUILD_DIR='./build'
+
 echo "-- REMOVING DIST FOLDER --"
-rm -r dist/*
+rm -r "$BUILD_DIR/*"
 
 echo "-- BUILDING PRODUCTION APP --"
 NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config ./webpack/webpack.config.production.js
 
 echo "-- COPYING REMAINING FILES --"
 
-# Make package.json and app.json
-# TODO: Remove the need have both of these
-cp app/app.json dist/package.json
-cp app/app.json dist/app.json
+# Copy package JSON
+# TODO: Remove the need for both of these
+cp app/app.json "$BUILD_DIR/package.json"
+cp app/app.json "$BUILD_DIR/app.json"
 
-# Copy some other things
-cp app/app.js dist/
-cp -r app/images dist/
-cp -r app/external dist/
+# Copy some things
+cp app/app.js "$BUILD_DIR/"
+cp -r app/images "$BUILD_DIR/"
+cp -r app/external "$BUILD_DIR/"
 
 echo "-- INSTALLING PACKAGES --"
 
-cd dist/; NODE_ENV=production npm install; cd ..
+cd "$BUILD_DIR"/
+NODE_ENV=production npm install
 
+echo "-- BUILD COMPLETE --"

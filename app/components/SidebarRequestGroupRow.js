@@ -62,8 +62,7 @@ SidebarRequestGroupRow.propTypes = {
 
   // Other
   isActive: PropTypes.bool.isRequired,
-  requestGroup: PropTypes.object.isRequired,
-  position: PropTypes.number.isRequired
+  requestGroup: PropTypes.object.isRequired
 };
 
 export default SidebarRequestGroupRow;

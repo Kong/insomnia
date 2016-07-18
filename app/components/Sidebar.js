@@ -102,13 +102,13 @@ class Sidebar extends Component {
           {this._renderChildren(children)}
         </ul>
 
-        <footer className="sidebar__footer form-control form-control--underlined">
-          <Input
-            type="text"
-            placeholder="Filter Requests"
-            value={filter}
-            onChange={this._onFilterChange.bind(this)}/>
-        </footer>
+        {/*<footer className="sidebar__footer form-control form-control--underlined">*/}
+          {/*<Input*/}
+            {/*type="text"*/}
+            {/*placeholder="Filter Requests"*/}
+            {/*value={filter}*/}
+            {/*onChange={this._onFilterChange.bind(this)}/>*/}
+        {/*</footer>*/}
       </aside>
     )
   }
