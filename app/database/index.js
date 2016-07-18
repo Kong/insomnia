@@ -40,12 +40,12 @@ export function initDB () {
 
   return new Promise(resolve => {
     const dbPath = getDBFilePath();
-    
+
     db = {
       created: Date.now(),
       entities: {}
     };
-    
+
     for (let i = 0; i < TYPES.length; i++) {
       db.entities[TYPES[i]] = {};
     }
@@ -112,15 +112,21 @@ export function offChange (id) {
 }
 
 export function get (type, id) {
-  const doc = db.entities[type][id];
+  const rawDoc = db.entities[type][id];
+  const modelDefaults = MODEL_DEFAULTS[type];
+  const doc = Object.assign({}, modelDefaults, rawDoc);
   return new Promise(resolve => resolve(doc));
 }
 
 function all (type) {
   let docs = [];
   const ids = Object.keys(db.entities[type]);
+  const modelDefaults = MODEL_DEFAULTS[type];
+
   for (let i = 0; i < ids.length; i++) {
-    docs.push(db.entities[type][ids[i]]);
+    const rawDoc = db.entities[type][ids[i]];
+    const doc = Object.assign({}, modelDefaults, rawDoc);
+    docs.push(doc);
   }
 
   return new Promise(resolve => resolve(docs));
@@ -165,6 +171,47 @@ function remove (doc) {
 }
 
 
+// MODEL DEFINITIONS //
+
+const MODEL_DEFAULTS = {
+  [TYPE_REQUEST]: {
+    url: '',
+    name: 'New Request',
+    method: methods.METHOD_GET,
+    previewMode: PREVIEW_MODE_SOURCE,
+    contentType: CONTENT_TYPE_TEXT,
+    body: '',
+    params: [],
+    headers: [],
+    authentication: {}
+  },
+  [TYPE_REQUEST_GROUP]: {
+    collapsed: false,
+    name: 'New Request Group',
+    environment: {}
+  },
+  [TYPE_WORKSPACE]: {
+    name: 'New Workspace',
+    activeRequestId: null,
+    environments: [],
+    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    filter: ''
+
+  },
+  [TYPE_RESPONSE]: {
+    statusCode: 0,
+    statusMessage: '',
+    contentType: 'text/plain',
+    url: '',
+    bytes: 0,
+    millis: 0,
+    headers: [],
+    body: '',
+    error: ''
+  }
+};
+
+
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
@@ -182,14 +229,16 @@ function docUpdate (originalDoc, patch = {}) {
   return new Promise(resolve => resolve(finalDoc));
 }
 
-function docCreate (type, idPrefix, defaults, patch = {}) {
+function docCreate (type, idPrefix, patch = {}) {
   const baseDefaults = {
     parentId: null
   };
 
+  const modelDefaults = MODEL_DEFAULTS[type];
+
   const doc = Object.assign(
     baseDefaults,
-    defaults,
+    modelDefaults,
     patch,
 
     // Required Generated Fields
@@ -224,17 +273,7 @@ export function requestCopyAndActivate (workspace, request) {
 }
 
 export function requestCreate (patch = {}) {
-  return docCreate(TYPE_REQUEST, 'req', {
-    url: '',
-    name: 'New Request',
-    method: methods.METHOD_GET,
-    previewMode: PREVIEW_MODE_SOURCE,
-    contentType: CONTENT_TYPE_TEXT,
-    body: '',
-    params: [],
-    headers: [],
-    authentication: {}
-  }, patch);
+  return docCreate(TYPE_REQUEST, 'req', patch);
 }
 
 export function requestById (id) {
@@ -264,11 +303,7 @@ export function requestAll () {
 // ~~~~~~~~~~~~~ //
 
 export function requestGroupCreate (patch = {}) {
-  return docCreate(TYPE_REQUEST_GROUP, 'grp', {
-    collapsed: false,
-    name: 'New Request Group',
-    environment: {}
-  }, patch);
+  return docCreate(TYPE_REQUEST_GROUP, 'grp', patch);
 }
 
 export function requestGroupUpdate (requestGroup, patch) {
@@ -292,17 +327,7 @@ export function requestGroupAll () {
 // ~~~~~~~~ //
 
 export function responseCreate (patch = {}) {
-  return docCreate(TYPE_RESPONSE, 'res', {
-    statusCode: 0,
-    statusMessage: '',
-    contentType: 'text/plain',
-    url: '',
-    bytes: 0,
-    millis: 0,
-    headers: [],
-    body: '',
-    error: ''
-  }, patch);
+  return docCreate(TYPE_RESPONSE, 'res', patch);
 }
 
 export function responseAll () {
@@ -315,13 +340,7 @@ export function responseAll () {
 // ~~~~~~~~~ //
 
 export function workspaceCreate (patch = {}) {
-  return docCreate(TYPE_WORKSPACE, 'wrk', {
-    name: 'New Workspace',
-    activeRequestId: null,
-    environments: [],
-    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    filter: ''
-  }, patch);
+  return docCreate(TYPE_WORKSPACE, 'wrk', patch);
 }
 
 export function workspaceAll () {
