@@ -79,6 +79,8 @@
   // ~~~~~~~~~~~ //
 
   .sidebar__row {
+    position: relative;
+
     &.sidebar__row--dragging {
       // Set opacity on children so we can still see the separator
       & > * {
@@ -169,6 +171,26 @@
 
   .sidebar__list .sidebar__list .sidebar__clickable {
     padding-left: $padding-md * 2;
+  }
+
+  .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: $padding-md * 3;
+  }
+
+  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: $padding-md * 4;
+  }
+
+  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: $padding-md * 5;
+  }
+
+  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: $padding-md * 6;
+  }
+
+  .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+    padding-left: $padding-md * 7;
   }
 
   // ~~~~~~~~~~~~~~~ //

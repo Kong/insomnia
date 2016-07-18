@@ -147,6 +147,11 @@ function all (type) {
   return new Promise(resolve => resolve(docs));
 }
 
+function count (type) {
+  const count = Object.keys(db.entities[type]).length;
+  return new Promise(resolve => resolve(count));
+}
+
 function removeWhere (type, key, value) {
   const ids = Object.keys(db.entities[type]);
   let docs = [];
@@ -187,8 +192,10 @@ function remove (doc) {
   // Also remove children
   TYPES.map(type => removeWhere(type, 'parentId', doc._id));
 
+  const wasLastDoc = db.entities[doc.type].length === 0;
+
   Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
-  new Promise(resolve => resolve(doc));
+  return new Promise(resolve => resolve({wasLastDoc}));
 }
 
 
@@ -270,13 +277,6 @@ export function requestGetById (id) {
 
 export function requestFindByParentId (parentId) {
   return find(TYPE_REQUEST, 'parentId', parentId);
-}
-
-export function requestGetParent (request) {
-  return getFromMany(
-    [TYPE_REQUEST_GROUP, TYPE_WORKSPACE],
-    request.parentId
-  ).then(docs => docs.length ? docs[0] : null);
 }
 
 export function requestUpdate (request, patch) {
@@ -371,6 +371,10 @@ export function workspaceAll () {
       return new Promise(resolve => resolve(workspaces))
     }
   });
+}
+
+export function workspaceCount () {
+  return count(TYPE_WORKSPACE)
 }
 
 export function workspaceUpdate (workspace, patch) {

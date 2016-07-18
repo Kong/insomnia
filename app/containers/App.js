@@ -11,7 +11,8 @@ import EnvironmentEditModal from '../components/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/RequestSwitcherModal';
 import CurlExportModal from '../components/CurlExportModal';
 import PromptModal from '../components/PromptModal';
-import SettingsModal from '../components/SettingsModal';
+import AlertModal from '../components/SettingsModal';
+import SettingsModal from '../components/AlertModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/Sidebar';
@@ -159,6 +160,11 @@ class App extends Component {
         }
       }
     })
+  }
+
+  _requestCreate (parentId) {
+    const workspace = this._getActiveWorkspace();
+    db.requestCreateAndActivate(workspace, {parentId})
   }
 
   _generateSidebarTree (parentId, entities) {
@@ -376,7 +382,7 @@ class App extends Component {
           activateRequest={r => db.workspaceUpdate(workspace, {activeRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           moveRequest={this._moveRequest.bind(this)}
-          addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
+          addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {collapsed: !requestGroup.collapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
           filter={workspace.filter || ''}
@@ -417,6 +423,7 @@ class App extends Component {
         />
 
         <PromptModal />
+        <AlertModal />
         <SettingsModal />
         <RequestSwitcherModal />
         <CurlExportModal />

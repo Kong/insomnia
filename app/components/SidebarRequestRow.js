@@ -40,21 +40,24 @@ class SidebarRequestRow extends Component {
 
     let node;
 
+    const classes = classnames('sidebar__row', {
+      'sidebar__row--dragging': isDragging,
+      'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
+      'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0
+    });
+
     if (!request) {
       node = (
-        <li className="sidebar__item">
-          <button className="sidebar__clickable" onClick={() => db.requestCreate({parentId: requestGroup._id})}>
-            <em>click to add first request...</em>
-          </button>
+        <li className={classes}>
+          <div className="sidebar__item">
+            <button className="sidebar__clickable"
+                    onClick={() => db.requestCreate({parentId: requestGroup._id})}>
+              <em>click to add first request...</em>
+            </button>
+          </div>
         </li>
       )
     } else {
-      const classes = classnames('sidebar__row', {
-        'sidebar__row--dragging': isDragging,
-        'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
-        'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0
-      });
-
       node = (
         <li className={classes}>
           <div className={classnames('sidebar__item', {active: isActive})}>
@@ -116,24 +119,26 @@ const dragSource = {
   }
 };
 
+
+function isAbove (monitor, component) {
+  const hoveredNode = ReactDOM.findDOMNode(component);
+
+  const hoveredTop = hoveredNode.getBoundingClientRect().top;
+  const draggedTop = monitor.getSourceClientOffset().y;
+
+  return hoveredTop > draggedTop;
+}
+
 const dragTarget = {
   drop (props, monitor, component) {
-    const hoveredNode = ReactDOM.findDOMNode(component);
-    const hoveredTop = hoveredNode.offsetTop;
-    const draggedTop = monitor.getSourceClientOffset().y;
-
-    if (hoveredTop > draggedTop) {
+    if (isAbove(monitor, component)) {
       props.moveRequest(monitor.getItem().request, props.request, 1);
     } else {
       props.moveRequest(monitor.getItem().request, props.request, -1);
     }
   },
   hover (props, monitor, component) {
-    const hoveredNode = ReactDOM.findDOMNode(component);
-    const hoveredTop = hoveredNode.offsetTop;
-    const draggedTop = monitor.getSourceClientOffset().y;
-
-    if (hoveredTop > draggedTop) {
+    if (isAbove(monitor, component)) {
       component.decoratedComponentInstance.setDragDirection(1);
     } else {
       component.decoratedComponentInstance.setDragDirection(-1);
