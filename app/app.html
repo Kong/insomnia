@@ -36,6 +36,10 @@
 </script>
 
 <script>
+  document.body.setAttribute('data-platform', process.platform);
+</script>
+
+<script>
   if (process.env.NODE_ENV !== 'development') {
     (function (i, s, o, g, r, a, m) {
       i['GoogleAnalyticsObject'] = r;

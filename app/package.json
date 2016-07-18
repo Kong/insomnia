@@ -1,16 +1,15 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "3.0.6",
-  "productName": "Insomnia REST Client",
+  "version": "3.0.1",
+  "productName": "Insomnia",
   "description": "The best REST API Client",
   "homepage": "http://insomnia.rest",
-  "author": "Gregory Schier",
+  "author": "Gregory Schier <support@insomnia.rest>",
   "licence": "GPL-3.0",
   "main": "app.js",
   "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
     "request": "^2.71.0"
-  },
-  "devDependencies": {
   }
 }

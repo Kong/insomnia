@@ -17,5 +17,7 @@ cp -r app/external dist/
 
 echo "-- INSTALLING PACKAGES --"
 
-cd dist/; NODE_ENV=production npm install; cd ..
+cd dist/
+NODE_ENV=production npm install
 
+echo "-- BUILD COMPLETE --"

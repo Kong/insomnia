@@ -1,5 +1,9 @@
 'use strict';
 
+if (require('electron-squirrel-startup')) {
+  process.exit(0);
+}
+
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
 const appVersion = require('./package.json').version;
@@ -10,6 +14,14 @@ const app = electron.app;  // Module to control application life.
 const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
+const IS_WIN = process.platform === 'win32';
+const IS_LIN = process.platform === 'linux';
+
+const UPDATE_URLS = {
+  darwin: `http://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
+  win32: 'https://s3.amazonaws.com/builds-insomnia-rest/win',
+  linux: null
+};
 
 let mainWindow = null;
 let zoomFactor = 1;
@@ -18,12 +30,7 @@ let zoomFactor = 1;
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 if (!IS_DEV) {
-  autoUpdater.setFeedURL(
-    IS_MAC ?
-      `http://builds.insomnia.rest/builds/check/mac?v=${appVersion}` :
-      `http://builds.insomnia.rest/builds/check/windows?v=${appVersion}`
-  );
-
+  autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
   autoUpdater.checkForUpdates();
 }
 
@@ -173,5 +180,7 @@ app.on('ready', () => {
     });
   }
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  if (!IS_WIN) {
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  }
 });
