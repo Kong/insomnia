@@ -8,16 +8,56 @@ import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
 
+export const TYPE_SETTINGS = 'Settings';
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
 export const TYPE_REQUEST = 'Request';
 export const TYPE_RESPONSE = 'Response';
-const TYPES = [
-  TYPE_WORKSPACE,
-  TYPE_REQUEST_GROUP,
-  TYPE_REQUEST,
-  TYPE_RESPONSE
-];
+
+const MODEL_DEFAULTS = {
+  [TYPE_SETTINGS]: () => ({
+    showPasswords: true,
+    useBulkHeaderEditor: false,
+    followRedirects: true,
+    timeout: -1
+  }),
+  [TYPE_WORKSPACE]: () => ({
+    name: 'New Workspace',
+    environments: [],
+    filter: '',
+    metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    metaActiveRequestId: null
+  }),
+  [TYPE_REQUEST_GROUP]: () => ({
+    name: 'New Request Group',
+    environment: {},
+    metaCollapsed: false,
+    metaSortKey: -1 * Date.now()
+  }),
+  [TYPE_REQUEST]: () => ({
+    url: '',
+    name: 'New Request',
+    method: methods.METHOD_GET,
+    contentType: CONTENT_TYPE_TEXT,
+    body: '',
+    parameters: [],
+    headers: [],
+    authentication: {},
+    metaPreviewMode: PREVIEW_MODE_SOURCE,
+    metaSortKey: -1 * Date.now()
+  }),
+  [TYPE_RESPONSE]: () => ({
+    statusCode: 0,
+    statusMessage: '',
+    contentType: 'text/plain',
+    url: '',
+    bytes: 0,
+    millis: 0,
+    headers: [],
+    body: '',
+    error: ''
+  }),
+};
 
 let db = null;
 
@@ -45,10 +85,6 @@ export function initDB () {
       entities: {}
     };
 
-    for (let i = 0; i < TYPES.length; i++) {
-      db.entities[TYPES[i]] = {};
-    }
-
     fs.readFile(getDBFilePath(), 'utf8', (err, text) => {
       if (!err) {
         // TODO: Better error handling
@@ -59,6 +95,13 @@ export function initDB () {
           console.error('Failed to parse DB file', e);
         }
       }
+
+      // Fill in the defaults
+
+      const modelTypes = Object.keys(MODEL_DEFAULTS);
+      modelTypes.map(t => {
+        db.entities[t] = db.entities[t] || {};
+      });
 
       // Add listeners to do persistence
       let timeout = null;
@@ -194,55 +237,13 @@ function remove (doc) {
   delete db.entities[doc.type][doc._id];
 
   // Also remove children
-  TYPES.map(type => removeWhere(type, 'parentId', doc._id));
+  Object.key(MODEL_DEFAULTS).map(type => removeWhere(type, 'parentId', doc._id));
 
   const wasLastDoc = db.entities[doc.type].length === 0;
 
   Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
   return new Promise(resolve => resolve({wasLastDoc}));
 }
-
-
-// MODEL DEFINITIONS //
-
-const MODEL_DEFAULTS = {
-  [TYPE_REQUEST]: () => ({
-    url: '',
-    name: 'New Request',
-    method: methods.METHOD_GET,
-    contentType: CONTENT_TYPE_TEXT,
-    body: '',
-    parameters: [],
-    headers: [],
-    authentication: {},
-    metaPreviewMode: PREVIEW_MODE_SOURCE,
-    metaSortKey: -1 * Date.now()
-  }),
-  [TYPE_REQUEST_GROUP]: () => ({
-    name: 'New Request Group',
-    environment: {},
-    metaCollapsed: false,
-    metaSortKey: -1 * Date.now()
-  }),
-  [TYPE_WORKSPACE]: () => ({
-    name: 'New Workspace',
-    environments: [],
-    filter: '',
-    metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    metaActiveRequestId: null
-  }),
-  [TYPE_RESPONSE]: () => ({
-    statusCode: 0,
-    statusMessage: '',
-    contentType: 'text/plain',
-    url: '',
-    bytes: 0,
-    millis: 0,
-    headers: [],
-    body: '',
-    error: ''
-  }),
-};
 
 
 // ~~~~~~~~~~~~~~~~~~~ //
@@ -383,8 +384,7 @@ export function workspaceCreate (patch = {}) {
 export function workspaceAll () {
   return all(TYPE_WORKSPACE).then(workspaces => {
     if (workspaces.length === 0) {
-      workspaceCreate({name: 'Insomnia'});
-      return workspaceAll();
+      return workspaceCreate({name: 'Insomnia'}).then(workspaceAll);
     } else {
       return new Promise(resolve => resolve(workspaces))
     }
@@ -401,4 +401,27 @@ export function workspaceUpdate (workspace, patch) {
 
 export function workspaceRemove (workspace) {
   return remove(workspace);
+}
+
+
+// ~~~~~~~~~ //
+// WORKSPACE //
+// ~~~~~~~~~ //
+
+export function settingsCreate (patch = {}) {
+  return docCreate(TYPE_SETTINGS, 'sts', patch);
+}
+
+export function settingsUpdate (settings, patch) {
+  return docUpdate(settings, patch);
+}
+
+export function settingsGet () {
+  return all(TYPE_SETTINGS).then(results => {
+    if (results.length === 0) {
+      return settingsCreate().then(settingsGet);
+    } else {
+      return new Promise(resolve => resolve(results[0]));
+    }
+  });
 }

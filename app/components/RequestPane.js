@@ -14,6 +14,7 @@ class RequestPane extends Component {
   render () {
     const {
       request,
+      showPasswords,
       sendRequest,
       updateRequestUrl,
       updateRequestMethod,
@@ -21,7 +22,8 @@ class RequestPane extends Component {
       updateRequestParameters,
       updateRequestAuthentication,
       updateRequestHeaders,
-      updateRequestContentType
+      updateRequestContentType,
+      updateSettingsShowPasswords
     } = this.props;
 
     if (!request) {
@@ -61,7 +63,8 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button>
-                Params {request.parameters.length ? <span className="txt-sm">({request.parameters.length})</span> : null}
+                Params {request.parameters.length ?
+                <span className="txt-sm">({request.parameters.length})</span> : null}
               </button>
             </Tab>
             <Tab>
@@ -81,9 +84,16 @@ class RequestPane extends Component {
           </TabPanel>
           <TabPanel>
             <RequestAuthEditor
+              showPasswords={showPasswords}
               request={request}
               onChange={updateRequestAuthentication}
             />
+            <div className="pad pull-right txt-sm">
+              <button className="btn btn--super-compact btn--outlined faint"
+                      onClick={e => updateSettingsShowPasswords(!showPasswords)}>
+                {showPasswords ? 'Hide Password' : 'Show Password'}
+              </button>
+            </div>
           </TabPanel>
           <TabPanel className="scrollable">
             <KeyValueEditor
@@ -120,9 +130,13 @@ RequestPane.propTypes = {
   updateRequestAuthentication: PropTypes.func.isRequired,
   updateRequestHeaders: PropTypes.func.isRequired,
   updateRequestContentType: PropTypes.func.isRequired,
+  updateSettingsShowPasswords: PropTypes.func.isRequired,
 
   // Other
-  request: PropTypes.object
+  showPasswords: PropTypes.bool.isRequired,
+
+  // Optional
+  request: PropTypes.object,
 };
 
 export default RequestPane;

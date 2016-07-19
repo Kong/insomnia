@@ -127,28 +127,35 @@ class KeyValueEditor extends Component {
     }
   }
 
-  shouldComponentUpdate (nextProps) {
-    // Compare uniqueness key (quick)
-    if (nextProps.uniquenessKey !== this.props.uniquenessKey) {
-      return true;
-    }
-
-    // Compare array length (quick)
-    if (nextProps.pairs.length !== this.state.pairs.length) {
-      return true;
-    }
-    
-    // Compare arrays
-    for (let i = 0; i < nextProps.pairs.length; i++) {
-      let newPair = nextProps.pairs[i];
-      let oldPair = this.state.pairs[i];
-      if (newPair.name !== oldPair.name || newPair.value !== oldPair.value) {
-        return true;
-      }
-    }
-    
-    return false;
-  }
+  // This works, but is commented out because it's caused some bugs
+  // TODO: Re-implement this (if needed) after some perf analysis
+  // shouldComponentUpdate (nextProps) {
+  //   // Compare the config (quick)
+  //   if (nextProps.valueInputType !== this.props.valueInputType) {
+  //     return true;
+  //   }
+  //
+  //   // Compare uniqueness key (quick)
+  //   if (nextProps.uniquenessKey !== this.props.uniquenessKey) {
+  //     return true;
+  //   }
+  //
+  //   // Compare array length (quick)
+  //   if (nextProps.pairs.length !== this.state.pairs.length) {
+  //     return true;
+  //   }
+  //
+  //   // Compare arrays
+  //   for (let i = 0; i < nextProps.pairs.length; i++) {
+  //     let newPair = nextProps.pairs[i];
+  //     let oldPair = this.state.pairs[i];
+  //     if (newPair.name !== oldPair.name || newPair.value !== oldPair.value) {
+  //       return true;
+  //     }
+  //   }
+  //
+  //   return false;
+  // }
 
   componentWillReceiveProps (nextProps) {
     this.setState({pairs: nextProps.pairs})
@@ -160,7 +167,7 @@ class KeyValueEditor extends Component {
 
   render () {
     const {pairs} = this.state;
-    const {maxPairs, className} = this.props;
+    const {maxPairs, className, valueInputType} = this.props;
 
     return (
       <ul className={classnames('key-value-editor', 'wide', className)}>
@@ -184,7 +191,7 @@ class KeyValueEditor extends Component {
               </div>
               <div className="form-control form-control--underlined form-control--wide">
                 <Input
-                  type="text"
+                  type={valueInputType || 'text'}
                   placeholder={this.props.valuePlaceholder || 'Value'}
                   ref={`${i}.${VALUE}`}
                   value={pair.value}
@@ -208,7 +215,7 @@ class KeyValueEditor extends Component {
                      onFocus={() => {this._focusedField = NAME; this._addPair()}}/>
             </div>
             <div className="form-control form-control--underlined form-control--wide">
-              <input type="text"
+              <input type={valueInputType || 'text'}
                      placeholder={this.props.valuePlaceholder || 'Value'}
                      onFocus={() => {this._focusedField = VALUE; this._addPair()}}/>
             </div>
@@ -228,7 +235,8 @@ KeyValueEditor.propTypes = {
   pairs: PropTypes.array.isRequired,
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,
-  valuePlaceholder: PropTypes.string
+  valuePlaceholder: PropTypes.string,
+  valueInputType: PropTypes.string
 };
 
 export default KeyValueEditor;

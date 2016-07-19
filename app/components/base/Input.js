@@ -6,11 +6,27 @@ class Input extends Component {
       return;
     }
 
-    this.props.onChange(e.target.value);
+    if (this.props.type === 'number') {
+      if (e.target.value === '') {
+        // This is what it returns when not a valid number
+        return;
+      }
+      this.props.onChange(parseFloat(e.target.value));
+    } else if (this.props.type === 'checkbox') {
+      this.props.onChange(e.target.checked);
+    } else {
+      this.props.onChange(e.target.value);
+    }
   }
 
   _updateValueFromProps () {
-    this.refs.input.value = this.props.initialValue || this.props.value || '';
+    if (this.props.type === 'number') {
+      this.refs.input.value = this.props.value || 0;
+    } else if (this.props.type === 'checkbox') {
+      this.refs.input.checked = this.props.value || false;
+    } else {
+      this.refs.input.value = this.props.value || '';
+    }
   }
 
   componentDidMount () {
@@ -21,14 +37,10 @@ class Input extends Component {
     this._updateValueFromProps()
   }
 
-  shouldComponentUpdate (nextProps) {
-    return this.refs.input.value !== nextProps.value;
-  }
-
   focus () {
     this.refs.input.focus();
   }
-  
+
   getValue () {
     return this.refs.input.value;
   }
@@ -47,7 +59,11 @@ class Input extends Component {
 
 Input.propTypes = {
   onChange: PropTypes.func.isRequired,
-  value: PropTypes.string.isRequired
+  value: PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string,
+    PropTypes.bool
+  ])
 };
 
 export default Input;

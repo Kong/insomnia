@@ -11,8 +11,8 @@ import EnvironmentEditModal from '../components/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/RequestSwitcherModal';
 import CurlExportModal from '../components/CurlExportModal';
 import PromptModal from '../components/PromptModal';
-import AlertModal from '../components/SettingsModal';
-import SettingsModal from '../components/AlertModal';
+import AlertModal from '../components/AlertModal';
+import SettingsModal from '../components/SettingsModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/Sidebar';
@@ -403,6 +403,7 @@ class App extends Component {
 
   render () {
     const {actions, entities, requests} = this.props;
+    const settings = entities.settings[Object.keys(entities.settings)[0]];
 
     const workspace = this._getActiveWorkspace();
 
@@ -450,6 +451,7 @@ class App extends Component {
           ref="requestPane"
           request={activeRequest}
           sendRequest={actions.requests.send}
+          showPasswords={settings.showPasswords}
           updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(url)}
           updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
@@ -457,6 +459,7 @@ class App extends Component {
           updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
           updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
           updateRequestContentType={contentType => db.requestUpdate(activeRequest, {contentType})}
+          updateSettingsShowPasswords={showPasswords => db.settingsUpdate(settings, {showPasswords})}
         />
 
         <div className="drag drag--pane">
