@@ -113,8 +113,7 @@ SidebarRequestRow.propTypes = {
 const dragSource = {
   beginDrag(props) {
     return {
-      request: props.request,
-      sortKey: props.request.sortKey
+      request: props.request
     };
   }
 };

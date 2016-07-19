@@ -123,7 +123,7 @@ export function find (type, key, value) {
 
 export function get (type, id) {
   const rawDoc = db.entities[type][id];
-  const modelDefaults = MODEL_DEFAULTS[type];
+  const modelDefaults = MODEL_DEFAULTS[type]();
   const doc = Object.assign({}, modelDefaults, rawDoc);
   return new Promise(resolve => resolve(doc));
 }
@@ -134,7 +134,7 @@ function getWhere (type, key, value = '__ANY__') {
 
   for (let i = 0; i < ids.length; i++) {
     const doc = db.entities[type][ids[i]];
-    const modelDefaults = MODEL_DEFAULTS[type];
+    const modelDefaults = MODEL_DEFAULTS[type]();
 
     if (value === '__ANY__' || doc[key] === value) {
       const rawDoc = db.entities[type][ids[i]];
@@ -206,7 +206,7 @@ function remove (doc) {
 // MODEL DEFINITIONS //
 
 const MODEL_DEFAULTS = {
-  [TYPE_REQUEST]: {
+  [TYPE_REQUEST]: () => ({
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
@@ -215,27 +215,22 @@ const MODEL_DEFAULTS = {
     parameters: [],
     headers: [],
     authentication: {},
-    meta: {
-      previewMode: PREVIEW_MODE_SOURCE
-    }
-  },
-  [TYPE_REQUEST_GROUP]: {
+    metaPreviewMode: PREVIEW_MODE_SOURCE,
+    metaSortKey: -1 * Date.now()
+  }),
+  [TYPE_REQUEST_GROUP]: () => ({
     name: 'New Request Group',
     environment: {},
-    meta: {
-      collapsed: false
-    }
-  },
-  [TYPE_WORKSPACE]: {
+    metaCollapsed: false
+  }),
+  [TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
     environments: [],
     filter: '',
-    meta: {
-      sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-      activeRequestId: null
-    }
-  },
-  [TYPE_RESPONSE]: {
+    metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    metaActiveRequestId: null
+  }),
+  [TYPE_RESPONSE]: () => ({
     statusCode: 0,
     statusMessage: '',
     contentType: 'text/plain',
@@ -244,11 +239,8 @@ const MODEL_DEFAULTS = {
     millis: 0,
     headers: [],
     body: '',
-    error: '',
-    meta: {
-      // Nothing yet
-    }
-  }
+    error: ''
+  }),
 };
 
 
@@ -267,19 +259,12 @@ function docUpdate (originalDoc, patch = {}) {
   return update(doc);
 }
 
-function docUpdateMeta (originalDoc, metaPatch = {}) {
-  const meta = Object.assign({}, originalDoc.meta, metaPatch);
-  const finalDoc = docUpdate(originalDoc, {meta});
-  return new Promise(resolve => resolve(finalDoc));
-}
-
 function docCreate (type, idPrefix, patch = {}) {
   const baseDefaults = {
-    parentId: null,
-    meta: {}
+    parentId: null
   };
 
-  const modelDefaults = MODEL_DEFAULTS[type];
+  const modelDefaults = MODEL_DEFAULTS[type]();
 
   const doc = Object.assign(
     baseDefaults,
@@ -331,10 +316,6 @@ export function requestUpdate (request, patch) {
   return docUpdate(request, patch);
 }
 
-export function requestUpdateMeta (request, patch) {
-  return docUpdateMeta(request, patch);
-}
-
 export function requestCopy (request) {
   const name = `${request.name} (Copy)`;
   return requestCreate(Object.assign({}, request, {name}));
@@ -359,10 +340,6 @@ export function requestGroupCreate (patch = {}) {
 
 export function requestGroupUpdate (requestGroup, patch) {
   return docUpdate(requestGroup, patch);
-}
-
-export function requestGroupUpdateMeta (requestGroup, patch) {
-  return docUpdateMeta(requestGroup, patch);
 }
 
 export function requestGroupById (id) {
@@ -415,10 +392,6 @@ export function workspaceCount () {
 
 export function workspaceUpdate (workspace, patch) {
   return docUpdate(workspace, patch);
-}
-
-export function workspaceUpdateMeta (workspace, patch) {
-  return docUpdateMeta(workspace, patch);
 }
 
 export function workspaceRemove (workspace) {

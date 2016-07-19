@@ -41,8 +41,8 @@ class App extends Component {
       activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
-      sidebarWidth: workspace.meta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
-      paneWidth: workspace.meta.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
+      sidebarWidth: workspace.metaSidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
+      paneWidth: workspace.metaPaneWidth || DEFAULT_PANE_WIDTH // % (fr)
     };
 
     this.globalKeyMap = {
@@ -121,7 +121,7 @@ class App extends Component {
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
     db.requestFindByParentId(requestToTarget.parentId).then(requests => {
-      requests = requests.sort((a, b) => a.sortKey < b.sortKey ? -1 : 1);
+      requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
       // Find the index of request B so we can re-order and save everything
       for (let i = 0; i < requests.length; i++) {
@@ -139,8 +139,8 @@ class App extends Component {
             after = requests[i];
           }
 
-          const beforeKey = before ? before.sortKey : requests[0].sortKey - 100;
-          const afterKey = after ? after.sortKey : requests[requests.length - 1].sortKey + 100;
+          const beforeKey = before ? before.metaSortKey : requests[0].metaSortKey - 100;
+          const afterKey = after ? after.metaSortKey : requests[requests.length - 1].metaSortKey + 100;
 
           if (Math.abs(afterKey - beforeKey) < 0.000001) {
             // If sort keys get too close together, we need to redistribute the list. This is
@@ -149,11 +149,11 @@ class App extends Component {
             console.warn('-- Recreating Sort Keys --');
 
             requests.map((r, i) => {
-              db.requestUpdate(r, {sortKey: i * 100, parentId: requestToTarget.parentId});
+              db.requestUpdate(r, {metaSortKey: i * 100, parentId: requestToTarget.parentId});
             });
           } else {
-            const sortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.requestUpdate(requestToMove, {sortKey, parentId: requestToTarget.parentId});
+            const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+            db.requestUpdate(requestToMove, {metaSortKey, parentId: requestToTarget.parentId});
           }
 
           break;
@@ -171,10 +171,10 @@ class App extends Component {
     const children = entities.filter(
       e => e.parentId === parentId
     ).sort((a, b) => {
-      if (!a.sortKey || !b.sortKey || a.sortKey === b.sortKey) {
+      if (!a.metaSortKey || !b.metaSortKey || a.metaSortKey === b.metaSortKey) {
         return a._id > b._id ? -1 : 1;
       } else {
-         return a.sortKey < b.sortKey ? -1 : 1;
+         return a.metaSortKey < b.metaSortKey ? -1 : 1;
       }
     });
 
@@ -235,13 +235,13 @@ class App extends Component {
   }
 
   _savePaneWidth () {
-    const {paneWidth} = this.state;
-    db.workspaceUpdateMeta(this._getActiveWorkspace(), {paneWidth});
+    const metaPaneWidth = this.state.paneWidth;
+    db.workspaceUpdate(this._getActiveWorkspace(), {metaPaneWidth});
   }
 
   _saveSidebarWidth () {
-    const {sidebarWidth} = this.state;
-    db.workspaceUpdateMeta(this._getActiveWorkspace(), {sidebarWidth});
+    const metaSidebarWidth = this.state.sidebarWidth;
+    db.workspaceUpdate(this._getActiveWorkspace(), {metaSidebarWidth});
   }
 
   _getActiveWorkspace (props) {
@@ -259,7 +259,7 @@ class App extends Component {
   _getActiveRequest (props) {
     props = props || this.props;
     const {entities} = props;
-    let activeRequestId = this._getActiveWorkspace(props).meta.activeRequestId;
+    let activeRequestId = this._getActiveWorkspace(props).metaActiveRequestId;
     return activeRequestId ? entities.requests[activeRequestId] : null;
   }
 
@@ -322,7 +322,7 @@ class App extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    const sidebarWidth = this._getActiveWorkspace(nextProps).meta.sidebarWidth;
+    const sidebarWidth = this._getActiveWorkspace(nextProps).metaSidebarWidth;
     this.setState({sidebarWidth});
   }
 
@@ -378,11 +378,11 @@ class App extends Component {
       <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
-          activateRequest={r => db.workspaceUpdateMeta(workspace, {activeRequestId: r._id})}
+          activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           moveRequest={this._moveRequest.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
-          toggleRequestGroup={requestGroup => db.requestGroupUpdateMeta(requestGroup, {collapsed: !requestGroup.meta.collapsed})}
+          toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
           filter={workspace.filter || ''}
           children={children}
@@ -416,8 +416,8 @@ class App extends Component {
           ref="responsePane"
           response={activeResponse}
           request={activeRequest}
-          previewMode={activeRequest ? activeRequest.meta.previewMode : PREVIEW_MODE_FRIENDLY}
-          updatePreviewMode={previewMode => db.requestUpdateMeta(activeRequest, {previewMode})}
+          previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
+          updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
           loadingRequests={requests.loadingRequests}
         />
 

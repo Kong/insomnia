@@ -12,7 +12,7 @@ const SidebarRequestGroupRow = ({
   addRequestToRequestGroup,
 }) => {
   let folderIconClass = 'fa-folder';
-  let expanded = !requestGroup.meta.collapsed;
+  let expanded = !requestGroup.metaCollapsed;
   folderIconClass += !expanded ? '' : '-open';
   folderIconClass += isActive ? '' : '-o';
 

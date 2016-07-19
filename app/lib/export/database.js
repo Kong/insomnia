@@ -29,9 +29,11 @@ function importRequestGroup (iRequestGroup, parentId, exportFormat) {
   if (exportFormat === VERSION_CHROME_APP) {
     return db.requestGroupCreate({
       parentId,
-      collapsed: true,
       name: iRequestGroup.name,
-      environment: (iRequestGroup.environments || {}).base || {}
+      environment: (iRequestGroup.environments || {}).base || {},
+      meta: {
+        collapsed: true
+      }
     }).then(requestGroup => {
       // Sometimes (maybe all the time, I can't remember) requests will be nested
       if (iRequestGroup.hasOwnProperty('requests')) {
@@ -45,9 +47,11 @@ function importRequestGroup (iRequestGroup, parentId, exportFormat) {
   } else if (exportFormat === VERSION_DESKTOP_APP) {
     return db.requestGroupCreate({
       parentId,
-      collapsed: true,
       name: iRequestGroup.name,
-      environment: iRequestGroup.environment
+      environment: iRequestGroup.environment,
+      meta: {
+        collapsed: true
+      }
     });
   } else {
     console.error(`Unknown export format ${exportFormat}`)
