@@ -4,6 +4,7 @@ import {bindActionCreators} from 'redux';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 import {shell} from 'electron';
 
+import Input from './base/Input';
 import Link from './base/Link';
 import Modal from './base/Modal';
 import ModalBody from './base/ModalBody';
@@ -11,6 +12,7 @@ import ModalHeader from './base/ModalHeader';
 import ModalFooter from './base/ModalFooter';
 import ModalComponent from './lib/ModalComponent';
 import * as GlobalActions from '../redux/modules/global';
+import * as db from '../database';
 import {MASHAPE_URL} from '../lib/constants';
 import {getVersion} from '../lib/appInfo';
 
@@ -38,6 +40,10 @@ class SettingsTabs extends Component {
   }
 
   render () {
+    const {entities} = this.props;
+
+    const settings = entities.settings[Object.keys(entities.settings)[0]];
+
     return (
       <Tabs>
         <TabList>
@@ -59,29 +65,63 @@ class SettingsTabs extends Component {
         </TabList>
         <TabPanel className="pad">
           <div>
-            <input id="setting-show-passwords" type="checkbox"/>&nbsp;&nbsp;
+            <Input
+              id="setting-show-passwords"
+              type="checkbox"
+              value={settings.showPasswords}
+              onChange={showPasswords => db.settingsUpdate(settings, {showPasswords})}
+            />
+            &nbsp;&nbsp;
             <label htmlFor="setting-show-passwords">
-              Show HTTP authentication passwords in plain-text
+              Show passwords in plain-text
             </label>
           </div>
+
           <div className="pad-top">
-            <input id="setting-bulk-header-edit" type="checkbox"/>&nbsp;&nbsp;
-            <label htmlFor="setting-bulk-header-edit">
-              Use bulk header editor by default
-            </label>
-          </div>
-          <div className="pad-top">
-            <input id="setting-follow-redirects" type="checkbox"/>&nbsp;&nbsp;
+            <Input
+              id="setting-follow-redirects"
+              type="checkbox"
+              value={settings.followRedirects}
+              onChange={followRedirects => db.settingsUpdate(settings, {followRedirects})}
+            />
+            &nbsp;&nbsp;
             <label htmlFor="setting-follow-redirects">
-              Follow Redirects
+              Follow redirects automatically
             </label>
           </div>
+
+          {/*<div className="pad-top">*/}
+          {/*<Input*/}
+          {/*id="setting-bulk-header-edit"*/}
+          {/*type="checkbox"*/}
+          {/*value={settings.useBulkHeaderEditor}*/}
+          {/*onChange={useBulkHeaderEditor => db.settingsUpdate(settings, {useBulkHeaderEditor})}*/}
+          {/*/>*/}
+          {/*&nbsp;&nbsp;*/}
+          {/*<label htmlFor="setting-bulk-header-edit">*/}
+          {/*Use bulk header editor by default*/}
+          {/*</label>*/}
+          {/*</div>*/}
+
+          {/*<div className="pad-top">*/}
+          {/*<input id="setting-follow-redirects" type="checkbox"/>&nbsp;&nbsp;*/}
+          {/*<label htmlFor="setting-follow-redirects">*/}
+          {/*Follow Redirects*/}
+          {/*</label>*/}
+          {/*</div>*/}
+
           <div>
             <label htmlFor="setting-request-timeout" className="pad-top">
-              Request Timeout (milliseconds)
+              Request Timeout (ms) (-1 for no timeout)
             </label>
-            <div className="form-control form-control--outlined no-marg">
-              <input id="setting-request-timeout" type="text" defaultValue={30000}/>
+            <div className="form-control form-control--outlined no-margin">
+              <Input
+                id="setting-request-timeout"
+                type="number"
+                min={-1}
+                value={settings.timeout}
+                onChange={timeout => db.settingsUpdate(settings, {timeout})}
+              />
             </div>
           </div>
           <br/>
@@ -91,11 +131,13 @@ class SettingsTabs extends Component {
             Import or export your data, so you can share it or back it up.
           </p>
           <p>
-            <button className="btn btn--compact bg-surprise" onClick={e => this._importFile()}>
+            <button className="btn btn--super-compact btn--outlined"
+                    onClick={e => this._importFile()}>
               Import
             </button>
             {" "}
-            <button className="btn btn--compact bg-surprise" onClick={e => this._exportFile()}>
+            <button className="btn btn--super-compact btn--outlined"
+                    onClick={e => this._exportFile()}>
               Export
             </button>
           </p>
@@ -130,7 +172,8 @@ SettingsTabs.propTypes = {
     activeId: PropTypes.string
   }),
   entities: PropTypes.shape({
-    workspaces: PropTypes.object.isRequired
+    workspaces: PropTypes.object.isRequired,
+    settings: PropTypes.object.isRequired
   }).isRequired,
   actions: PropTypes.shape({
     global: PropTypes.shape({

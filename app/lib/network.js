@@ -14,6 +14,7 @@ function buildRequestConfig (request, patch = {}) {
     // Setup redirect rules
     followRedirect: true,
     maxRedirects: 10,
+    timeout: -1,
 
     // Unzip gzipped responses
     gzip: true
@@ -46,11 +47,11 @@ function buildRequestConfig (request, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (request, callback) {
-  // TODO: Handle cookies
+function actuallySend (request, settings, callback) {
   let config = buildRequestConfig(request, {
     jar: networkRequest.jar(),
-    followRedirect: true
+    followRedirect: settings.followRedirects,
+    timeout: settings.timeout > 0 ? settings.timeout : null
   }, true);
 
   const startTime = Date.now();
@@ -86,7 +87,13 @@ function actuallySend (request, callback) {
 export function send (requestId, callback) {
   // First, lets wait for all debounces to finish
   setTimeout(() => {
-    db.requestGetById(requestId).then(request => {
+    Promise.all([
+      db.requestGetById(requestId),
+      db.settingsGet()
+    ]).then(([
+      request,
+      settings
+    ]) => {
       db.requestGroupGetById(request.parentId).then(requestGroup => {
         const environment = requestGroup ? requestGroup.environment : {};
 
@@ -96,7 +103,7 @@ export function send (requestId, callback) {
           request = JSON.parse(render(template, environment));
         }
 
-        actuallySend(request, callback);
+        actuallySend(request, settings, callback);
       });
     })
   }, DEBOUNCE_MILLIS);

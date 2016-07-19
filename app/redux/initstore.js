@@ -28,7 +28,10 @@ export function initStore (dispatch) {
   const start = Date.now();
 
   // Restore docs in parent->child->grandchild order
-  return db.workspaceAll().then(docs => {
+  return db.settingsGet().then(doc => {
+    docChanged('update', doc);
+    return db.workspaceAll();
+  }).then(docs => {
     docs.map(doc => docChanged('update', doc));
     return db.requestGroupAll();
   }).then(docs => {

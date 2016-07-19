@@ -34,7 +34,7 @@ class CurlExportModal extends ModalComponent {
       <Modal ref="modal" tall={true} {...this.props}>
         <ModalHeader>Export Request as Curl</ModalHeader>
         <ModalBody className="grid pad">
-          <div className="form-control form-control--outlined no-marg tall">
+          <div className="form-control form-control--outlined no-margin tall">
             <textarea
               ref="textarea"
               className="no-resize monospace tall"

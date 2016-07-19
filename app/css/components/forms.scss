@@ -22,6 +22,10 @@
     height: $line-height-sm;
   }
 
+  &.form-control--super-compact {
+    height: $line-height-xs;
+  }
+
   &.form-control--outlined,
   &.form-control--underlined {
     height: auto;
@@ -66,6 +70,16 @@ label > .form-control,
   &.btn--compact {
     padding: 0 $padding-md;
     height: $line-height-sm;
+  }
+
+  &.btn--super-compact {
+    padding: 0 $padding-md;
+    height: $line-height-xs;
+  }
+
+  &.btn--outlined {
+    border: 1px solid $hl-lg;
+    border-radius: $radius-md;
   }
 }
 

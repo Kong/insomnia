@@ -1,6 +1,12 @@
 import {combineReducers} from 'redux';
 
-import {TYPE_WORKSPACE, TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_RESPONSE} from '../../database/index';
+import {
+  TYPE_SETTINGS,
+  TYPE_WORKSPACE,
+  TYPE_REQUEST_GROUP,
+  TYPE_REQUEST,
+  TYPE_RESPONSE
+} from '../../database/index';
 
 const ENTITY_INSERT = 'entities/insert';
 const ENTITY_UPDATE = 'entities/update';
@@ -36,6 +42,7 @@ function genericEntityReducer (referenceName) {
 }
 
 export default combineReducers({
+  settings: genericEntityReducer('settings'),
   workspaces: genericEntityReducer('workspace'),
   requestGroups: genericEntityReducer('requestGroup'),
   requests: genericEntityReducer('request'),
@@ -49,6 +56,7 @@ export default combineReducers({
 // ~~~~~~~ //
 
 const insertFns = {
+  [TYPE_SETTINGS]: settings => ({type: ENTITY_INSERT, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_INSERT, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_INSERT, requestGroup}),
   [TYPE_RESPONSE]: response => ({type: ENTITY_INSERT, response}),
@@ -56,6 +64,7 @@ const insertFns = {
 };
 
 const updateFns = {
+  [TYPE_SETTINGS]: settings => ({type: ENTITY_UPDATE, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_UPDATE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
@@ -63,6 +72,7 @@ const updateFns = {
 };
 
 const removeFns = {
+  [TYPE_SETTINGS]: settings => ({type: ENTITY_REMOVE, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_REMOVE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_REMOVE, requestGroup}),
   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
