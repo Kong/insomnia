@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: $line-height-md 1fr;
+  grid-template-rows: $line-height-md 1fr auto;
   grid-template-columns: 1fr;
 
   background-color: $bg-dark;
@@ -88,26 +88,14 @@
       }
     }
 
-    &.sidebar__row--dragging-below {
-      &::after {
-        position: absolute;
-        height: 2px;
-        content: " ";
-        width: 100%;
-        display: block;
-        background: lighten($bg-brand, 2);
-      }
-    }
-
-    &.sidebar__row--dragging-above {
-      &::before {
-        position: absolute;
-        height: 2px;
-        content: " ";
-        width: 100%;
-        display: block;
-        background: $bg-brand;
-      }
+    &.sidebar__row--dragging-below::after,
+    &.sidebar__row--dragging-above::before {
+      position: absolute;
+      height: 2px;
+      content: " ";
+      width: 100%;
+      display: block;
+      background: lighten($success, 2);
     }
   }
 
@@ -129,7 +117,7 @@
       grid-template-rows: $line-height-sm;
     }
 
-    &.active {
+    &.sidebar__item--active {
       color: $font-dark-bg;
 
       .tag {
@@ -226,12 +214,6 @@
   // ~~~~~~~~~~~~~~ //
 
   .sidebar__footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0;
-    background-color: transparentize($bg-dark, 0.1);
-    padding: $padding-sm;
+    // Nothing yet
   }
 }

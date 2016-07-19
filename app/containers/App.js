@@ -111,6 +111,57 @@ class App extends Component {
     }
   }
 
+  _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
+    // Oh God, this function is awful...
+
+    if (requestGroupToMove._id === requestGroupToTarget._id) {
+      // Nothing to do
+      return;
+    }
+
+    // NOTE: using requestToTarget's parentId so we can switch parents!
+    db.requestGroupFindByParentId(requestGroupToTarget.parentId).then(requestGroups => {
+      requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+
+      // Find the index of request B so we can re-order and save everything
+      for (let i = 0; i < requestGroups.length; i++) {
+        const request = requestGroups[i];
+
+        if (request._id === requestGroupToTarget._id) {
+          let before, after;
+          if (targetOffset < 0) {
+            // We're moving to below
+            before = requestGroups[i];
+            after = requestGroups[i + 1];
+          } else {
+            // We're moving to above
+            before = requestGroups[i - 1];
+            after = requestGroups[i];
+          }
+
+          const beforeKey = before ? before.metaSortKey : requestGroups[0].metaSortKey - 100;
+          const afterKey = after ? after.metaSortKey : requestGroups[requestGroups.length - 1].metaSortKey + 100;
+
+          if (Math.abs(afterKey - beforeKey) < 0.000001) {
+            // If sort keys get too close together, we need to redistribute the list. This is
+            // not performant at all (need to update all siblings in DB), but it is extremely rare
+            // anyway
+            console.warn('-- Recreating Sort Keys --');
+
+            requestGroups.map((r, i) => {
+              db.requestGroupUpdate(r, {metaSortKey: i * 100, parentId: requestGroupToTarget.parentId});
+            });
+          } else {
+            const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+            db.requestGroupUpdate(requestGroupToMove, {metaSortKey, parentId: requestGroupToTarget.parentId});
+          }
+
+          break;
+        }
+      }
+    })
+  }
+
   _moveRequest (requestToMove, requestToTarget, targetOffset) {
     // Oh God, this function is awful...
 
@@ -171,7 +222,7 @@ class App extends Component {
     const children = entities.filter(
       e => e.parentId === parentId
     ).sort((a, b) => {
-      if (!a.metaSortKey || !b.metaSortKey || a.metaSortKey === b.metaSortKey) {
+      if (a.metaSortKey === b.metaSortKey) {
         return a._id > b._id ? -1 : 1;
       } else {
          return a.metaSortKey < b.metaSortKey ? -1 : 1;
@@ -272,7 +323,7 @@ class App extends Component {
         reject();
       }
 
-      db.requestGroupById(request.parentId).then(requestGroup => {
+      db.requestGroupGetById(request.parentId).then(requestGroup => {
         if (requestGroup) {
           resolve(requestGroup);
         } else {
@@ -381,6 +432,7 @@ class App extends Component {
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           moveRequest={this._moveRequest.bind(this)}
+          moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}

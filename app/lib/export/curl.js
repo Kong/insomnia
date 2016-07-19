@@ -151,7 +151,7 @@ export function exportCurl (requestId) {
     // First, lets wait for all debounces to finish
     setTimeout(() => {
       db.requestGetById(requestId).then(request => {
-        db.requestGroupById(request.parentId).then(requestGroup => {
+        db.requestGroupGetById(request.parentId).then(requestGroup => {
           const renderCtx = requestGroup ? requestGroup.environment : {};
 
           // Build the querystring

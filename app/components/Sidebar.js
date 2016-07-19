@@ -40,6 +40,7 @@ class Sidebar extends Component {
       toggleRequestGroup,
       addRequestToRequestGroup,
       moveRequest,
+      moveRequestGroup,
       activateRequest,
       activeRequestId
     } = this.props;
@@ -79,6 +80,7 @@ class Sidebar extends Component {
         <SidebarRequestGroupRow
           key={requestGroup._id}
           isActive={isActive}
+          moveRequestGroup={moveRequestGroup}
           toggleRequestGroup={toggleRequestGroup}
           addRequestToRequestGroup={addRequestToRequestGroup}
           numChildren={child.children.length}
@@ -120,6 +122,8 @@ Sidebar.propTypes = {
   toggleRequestGroup: PropTypes.func.isRequired,
   addRequestToRequestGroup: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
+  moveRequest: PropTypes.func.isRequired,
+  moveRequestGroup: PropTypes.func.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,

@@ -221,7 +221,8 @@ const MODEL_DEFAULTS = {
   [TYPE_REQUEST_GROUP]: () => ({
     name: 'New Request Group',
     environment: {},
-    metaCollapsed: false
+    metaCollapsed: false,
+    metaSortKey: -1 * Date.now()
   }),
   [TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
@@ -342,8 +343,12 @@ export function requestGroupUpdate (requestGroup, patch) {
   return docUpdate(requestGroup, patch);
 }
 
-export function requestGroupById (id) {
+export function requestGroupGetById (id) {
   return get(TYPE_REQUEST_GROUP, id);
+}
+
+export function requestGroupFindByParentId (parentId) {
+  return getWhere(TYPE_REQUEST_GROUP, 'parentId', parentId);
 }
 
 export function requestGroupRemove (requestGroup) {
