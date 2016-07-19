@@ -21,10 +21,10 @@ export function build (param) {
   }
 };
 
-export function buildFromParams (params) {
+export function buildFromParams (parameters) {
   var items = [];
-  for (var i = 0; i < params.length; i++) {
-    let param = params[i];
+  for (var i = 0; i < parameters.length; i++) {
+    let param = parameters[i];
     items.push(build(param));
   }
 
