@@ -13,7 +13,8 @@ class PromptModal extends ModalComponent {
       headerName: 'Not Set',
       defaultValue: '',
       submitName: 'Not Set',
-      selectText: false
+      selectText: false,
+      hint: null
     };
   }
 
@@ -35,7 +36,7 @@ class PromptModal extends ModalComponent {
     }
   }
 
-  show ({headerName, defaultValue, submitName, selectText}) {
+  show ({headerName, defaultValue, submitName, selectText, hint}) {
     super.show();
 
     return new Promise(resolve => {
@@ -45,7 +46,8 @@ class PromptModal extends ModalComponent {
         headerName,
         defaultValue,
         submitName,
-        selectText
+        selectText,
+        hint
       })
     });
   }
@@ -56,7 +58,7 @@ class PromptModal extends ModalComponent {
 
   render () {
     const {extraProps} = this.props;
-    const {submitName, headerName} = this.state;
+    const {submitName, headerName, hint} = this.state;
 
     return (
       <Modal ref="modal" {...extraProps}>
@@ -70,11 +72,14 @@ class PromptModal extends ModalComponent {
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={() => this.hide()}>Cancel</button>
+            <button className="btn" onClick={() => this.hide()}>
+              Cancel
+            </button>
             <button className="btn" onClick={this._onSubmit.bind(this)}>
               {submitName || 'Save'}
             </button>
           </div>
+          <div className="pad faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
         </ModalFooter>
       </Modal>
     )

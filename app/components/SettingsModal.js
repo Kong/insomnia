@@ -54,9 +54,6 @@ class SettingsTabs extends Component {
             <button>Import/Export</button>
           </Tab>
           <Tab>
-            <button>Editor</button>
-          </Tab>
-          <Tab>
             <button>Hotkeys</button>
           </Tab>
           <Tab>
@@ -141,9 +138,6 @@ class SettingsTabs extends Component {
               Export
             </button>
           </p>
-        </TabPanel>
-        <TabPanel className="pad">
-          Editor
         </TabPanel>
         <TabPanel className="pad">
           Keyboard

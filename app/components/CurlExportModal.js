@@ -44,7 +44,12 @@ class CurlExportModal extends ModalComponent {
           </div>
         </ModalBody>
         <ModalFooter>
-          <button className="btn pull-right" onClick={e => this.hide()}>Done</button>
+          <div className="pull-right">
+            <button className="btn" onClick={e => this.hide()}>Done</button>
+          </div>
+          <div className="pad faint italic txt-sm tall">
+            * copy/paste this command into a Unix terminal
+          </div>
         </ModalFooter>
       </Modal>
     );

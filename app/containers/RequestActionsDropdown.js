@@ -12,7 +12,8 @@ class RequestActionsDropdown extends Component {
 
     PromptModal.show({
       headerName: 'Rename Request',
-      defaultValue: request.name
+      defaultValue: request.name,
+      hint: 'rename requests more quickly by double clicking in the sidebar'
     }).then(name => {
       db.requestUpdate(request, {name});
     })
@@ -29,7 +30,7 @@ class RequestActionsDropdown extends Component {
         <ul>
           <li>
             <button onClick={e => db.requestCopy(request)}>
-              <i className="fa fa-copy"></i> Clone
+              <i className="fa fa-copy"></i> Duplicate
             </button>
           </li>
           <li>
@@ -39,7 +40,7 @@ class RequestActionsDropdown extends Component {
           </li>
           <li>
             <button onClick={e => CurlExportModal.show(request)}>
-              <i className="fa fa-share-square-o"></i> Export as cURL
+              <i className="fa fa-share-square-o"></i> Export as Curl
             </button>
           </li>
           <li>
