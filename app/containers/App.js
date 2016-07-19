@@ -307,9 +307,8 @@ class App extends Component {
     const {sidebarWidth, paneWidth} = this.state;
     const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
-    const classes = classnames('wrapper', {'wrapper--sidebar-hidden': !workspace.meta.sidebarVisible});
     return (
-      <div id="wrapper" className={classes} style={{gridTemplateColumns: gridTemplateColumns}}>
+      <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
           activateRequest={r => db.workspaceUpdateMeta(workspace, {activeRequestId: r._id})}
