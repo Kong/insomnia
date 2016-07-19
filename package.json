@@ -13,7 +13,6 @@
     "start-hot": "HOT=1 NODE_ENV=development electron -r babel-register ./app/app.js",
     "hot-server": "node -r babel-register ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
-    "test": "jest $@",
     "build": "bash scripts/build.sh",
     "package": "npm run build && bash scripts/package.sh"
   },
@@ -50,7 +49,6 @@
   },
   "devDependencies": {
     "babel-core": "^6.7.2",
-    "babel-jest": "^9.0.3",
     "babel-loader": "^6.2.4",
     "babel-plugin-add-module-exports": "^0.1.2",
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
@@ -65,8 +63,6 @@
     "electron-prebuilt": "^1.2.6",
     "express": "latest",
     "file-loader": "^0.8.5",
-    "jest": "^0.1.40",
-    "jest-cli": "^0.9.2",
     "json-loader": "^0.5.4",
     "node-sass": "^3.4.2",
     "react-addons-test-utils": "^15.1.0",

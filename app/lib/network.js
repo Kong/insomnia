@@ -19,8 +19,8 @@ function buildRequestConfig (request, patch = {}) {
     gzip: true
   };
 
-  // Set the URL, including the query params
-  const qs = querystring.buildFromParams(request.params);
+  // Set the URL, including the query parameters
+  const qs = querystring.buildFromParams(request.parameters);
   config.url = querystring.joinURL(request.url, qs);
 
   // Default the proto if it doesn't exist

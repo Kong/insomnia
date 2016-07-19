@@ -18,7 +18,7 @@ class RequestPane extends Component {
       updateRequestUrl,
       updateRequestMethod,
       updateRequestBody,
-      updateRequestParams,
+      updateRequestParameters,
       updateRequestAuthentication,
       updateRequestHeaders,
       updateRequestContentType
@@ -61,7 +61,7 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button>
-                Params {request.params.length ? <span className="txt-sm">({request.params.length})</span> : null}
+                Params {request.parameters.length ? <span className="txt-sm">({request.parameters.length})</span> : null}
               </button>
             </Tab>
             <Tab>
@@ -91,8 +91,8 @@ class RequestPane extends Component {
               namePlaceholder="name"
               valuePlaceholder="value"
               uniquenessKey={request._id}
-              pairs={request.params}
-              onChange={updateRequestParams}
+              pairs={request.parameters}
+              onChange={updateRequestParameters}
             />
           </TabPanel>
           <TabPanel className="scrollable">
@@ -116,7 +116,7 @@ RequestPane.propTypes = {
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,
-  updateRequestParams: PropTypes.func.isRequired,
+  updateRequestParameters: PropTypes.func.isRequired,
   updateRequestAuthentication: PropTypes.func.isRequired,
   updateRequestHeaders: PropTypes.func.isRequired,
   updateRequestContentType: PropTypes.func.isRequired,

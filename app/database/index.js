@@ -118,32 +118,41 @@ export function get (type, id) {
   return new Promise(resolve => resolve(doc));
 }
 
-function all (type) {
-  let docs = [];
-  const ids = Object.keys(db.entities[type]);
-  const modelDefaults = MODEL_DEFAULTS[type];
-
-  for (let i = 0; i < ids.length; i++) {
-    const rawDoc = db.entities[type][ids[i]];
-    const doc = Object.assign({}, modelDefaults, rawDoc);
-    docs.push(doc);
-  }
-
-  return new Promise(resolve => resolve(docs));
-}
-
-function removeWhere (type, key, value) {
+function getWhere (type, key, value = '__ANY__') {
   const ids = Object.keys(db.entities[type]);
   let docs = [];
 
   for (let i = 0; i < ids.length; i++) {
     const doc = db.entities[type][ids[i]];
-    if (doc[key] === value) {
-      remove(doc);
+    const modelDefaults = MODEL_DEFAULTS[type];
+
+    if (value === '__ANY__' || doc[key] === value) {
+      const rawDoc = db.entities[type][ids[i]];
+      const doc = Object.assign({}, modelDefaults, rawDoc);
+      docs.push(doc);
     }
   }
 
   return new Promise(resolve => resolve(docs));
+}
+
+function all (type) {
+  return getWhere(type);
+}
+
+function removeWhere (type, key, value) {
+  const ids = Object.keys(db.entities[type]);
+  let numRemoved = 0;
+
+  for (let i = 0; i < ids.length; i++) {
+    const doc = db.entities[type][ids[i]];
+    if (doc[key] === value) {
+      numRemoved++;
+      remove(doc);
+    }
+  }
+
+  return new Promise(resolve => resolve(numRemoved));
 }
 
 function insert (doc) {
@@ -181,7 +190,7 @@ const MODEL_DEFAULTS = {
     previewMode: PREVIEW_MODE_SOURCE,
     contentType: CONTENT_TYPE_TEXT,
     body: '',
-    params: [],
+    parameters: [],
     headers: [],
     authentication: {}
   },
@@ -196,7 +205,6 @@ const MODEL_DEFAULTS = {
     environments: [],
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     filter: ''
-
   },
   [TYPE_RESPONSE]: {
     statusCode: 0,

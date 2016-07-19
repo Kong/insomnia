@@ -25,7 +25,7 @@ import * as RequestGroupActions from '../redux/modules/requestGroups';
 import * as RequestActions from '../redux/modules/requests';
 
 import * as db from '../database';
-import {importCurl} from "../lib/curl";
+import {importCurl} from "../lib/export/curl";
 
 class App extends Component {
   constructor (props) {
@@ -333,7 +333,7 @@ class App extends Component {
           updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(url)}
           updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
-          updateRequestParams={params => db.requestUpdate(activeRequest, {params})}
+          updateRequestParameters={parameters => db.requestUpdate(activeRequest, {parameters})}
           updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
           updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
           updateRequestContentType={contentType => db.requestUpdate(activeRequest, {contentType})}
