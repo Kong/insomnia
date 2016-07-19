@@ -20,7 +20,6 @@ const TYPES = [
 ];
 
 let db = null;
-global.db = db;
 
 function getDBFilePath () {
   const basePath = electron.remote.app.getPath('userData');
@@ -41,7 +40,7 @@ export function initDB () {
   return new Promise(resolve => {
     const dbPath = getDBFilePath();
 
-    db = {
+    global.db = db = {
       created: Date.now(),
       entities: {}
     };
@@ -187,24 +186,30 @@ const MODEL_DEFAULTS = {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
-    previewMode: PREVIEW_MODE_SOURCE,
     contentType: CONTENT_TYPE_TEXT,
     body: '',
     parameters: [],
     headers: [],
-    authentication: {}
+    authentication: {},
+    meta: {
+      previewMode: PREVIEW_MODE_SOURCE
+    }
   },
   [TYPE_REQUEST_GROUP]: {
-    collapsed: false,
     name: 'New Request Group',
-    environment: {}
+    environment: {},
+    meta: {
+      collapsed: false
+    }
   },
   [TYPE_WORKSPACE]: {
     name: 'New Workspace',
-    activeRequestId: null,
     environments: [],
-    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    filter: ''
+    filter: '',
+    meta: {
+      sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+      activeRequestId: null
+    }
   },
   [TYPE_RESPONSE]: {
     statusCode: 0,
@@ -215,7 +220,10 @@ const MODEL_DEFAULTS = {
     millis: 0,
     headers: [],
     body: '',
-    error: ''
+    error: '',
+    meta: {
+      // Nothing yet
+    }
   }
 };
 
@@ -237,9 +245,16 @@ function docUpdate (originalDoc, patch = {}) {
   return new Promise(resolve => resolve(finalDoc));
 }
 
+function docUpdateMeta (originalDoc, metaPatch = {}) {
+  const meta = Object.assign({}, originalDoc.meta, metaPatch);
+  const finalDoc = docUpdate(originalDoc, {meta});
+  return new Promise(resolve => resolve(finalDoc));
+}
+
 function docCreate (type, idPrefix, patch = {}) {
   const baseDefaults = {
-    parentId: null
+    parentId: null,
+    meta: {}
   };
 
   const modelDefaults = MODEL_DEFAULTS[type];
@@ -252,8 +267,6 @@ function docCreate (type, idPrefix, patch = {}) {
     // Required Generated Fields
     {
       _id: generateId(idPrefix),
-      $loki: undefined,
-      meta: undefined,
       type: type,
       created: Date.now(),
       modified: Date.now()
@@ -292,6 +305,10 @@ export function requestUpdate (request, patch) {
   return docUpdate(request, patch);
 }
 
+export function requestUpdateMeta (request, patch) {
+  return docUpdateMeta(request, patch);
+}
+
 export function requestCopy (request) {
   const name = `${request.name} (Copy)`;
   return requestCreate(Object.assign({}, request, {name}));
@@ -316,6 +333,10 @@ export function requestGroupCreate (patch = {}) {
 
 export function requestGroupUpdate (requestGroup, patch) {
   return docUpdate(requestGroup, patch);
+}
+
+export function requestGroupUpdateMeta (requestGroup, patch) {
+  return docUpdateMeta(requestGroup, patch);
 }
 
 export function requestGroupById (id) {
@@ -364,6 +385,10 @@ export function workspaceAll () {
 
 export function workspaceUpdate (workspace, patch) {
   return docUpdate(workspace, patch);
+}
+
+export function workspaceUpdateMeta (workspace, patch) {
+  return docUpdateMeta(workspace, patch);
 }
 
 export function workspaceRemove (workspace) {

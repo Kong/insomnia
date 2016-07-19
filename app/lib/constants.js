@@ -7,7 +7,7 @@ export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 35;
-export const MIN_SIDEBAR_REMS = 10;
+export const MIN_SIDEBAR_REMS = 0.75;
 export const MAX_PANE_WIDTH = 0.99;
 export const MIN_PANE_WIDTH = 0.01;
 export const DEFAULT_PANE_WIDTH = 0.5;

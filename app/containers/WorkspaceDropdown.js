@@ -103,6 +103,11 @@ class WorkspaceDropdown extends Component {
 
           <li>
             <button onClick={e => SettingsModal.show()}>
+              <i className="fa fa-share"></i> Import/Export
+            </button>
+          </li>
+          <li>
+            <button onClick={e => SettingsModal.show()}>
               <i className="fa fa-cog"></i> Settings
             </button>
           </li>

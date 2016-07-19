@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react';
-import ReactDOM from 'react-dom'
+import ReactDOM from 'react-dom';
+import classnames from 'classnames';
 import {connect} from 'react-redux'
 import {bindActionCreators} from 'redux';
 import Mousetrap from '../lib/mousetrap';
@@ -37,8 +38,8 @@ class App extends Component {
       activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
-      sidebarWidth: workspace.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
-      paneWidth: workspace.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
+      sidebarWidth: workspace.meta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
+      paneWidth: workspace.meta.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
     };
 
     this.globalKeyMap = {
@@ -168,12 +169,12 @@ class App extends Component {
 
   _savePaneWidth () {
     const {paneWidth} = this.state;
-    db.workspaceUpdate(this._getActiveWorkspace(), {paneWidth});
+    db.workspaceUpdateMeta(this._getActiveWorkspace(), {paneWidth});
   }
 
   _saveSidebarWidth () {
     const {sidebarWidth} = this.state;
-    db.workspaceUpdate(this._getActiveWorkspace(), {sidebarWidth});
+    db.workspaceUpdateMeta(this._getActiveWorkspace(), {sidebarWidth});
   }
 
   _getActiveWorkspace (props) {
@@ -191,7 +192,7 @@ class App extends Component {
   _getActiveRequest (props) {
     props = props || this.props;
     const {entities} = props;
-    let activeRequestId = this._getActiveWorkspace(props).activeRequestId;
+    let activeRequestId = this._getActiveWorkspace(props).meta.activeRequestId;
     return activeRequestId ? entities.requests[activeRequestId] : null;
   }
 
@@ -254,7 +255,7 @@ class App extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    const sidebarWidth = this._getActiveWorkspace(nextProps).sidebarWidth;
+    const sidebarWidth = this._getActiveWorkspace(nextProps).meta.sidebarWidth;
     this.setState({sidebarWidth});
   }
 
@@ -287,7 +288,7 @@ class App extends Component {
 
     const workspace = this._getActiveWorkspace();
 
-    const activeRequest = this._getActiveRequest()
+    const activeRequest = this._getActiveRequest();
     const activeRequestId = activeRequest ? activeRequest._id : null;
 
     const responses = Object.keys(entities.responses).map(id => entities.responses[id]);
@@ -306,15 +307,15 @@ class App extends Component {
     const {sidebarWidth, paneWidth} = this.state;
     const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
+    const classes = classnames('wrapper', {'wrapper--sidebar-hidden': !workspace.meta.sidebarVisible});
     return (
-      <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
+      <div id="wrapper" className={classes} style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
-          workspaceId={workspace._id}
-          activateRequest={r => db.workspaceUpdate(workspace, {activeRequestId: r._id})}
+          activateRequest={r => db.workspaceUpdateMeta(workspace, {activeRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
-          toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {collapsed: !requestGroup.collapsed})}
+          toggleRequestGroup={requestGroup => db.requestGroupUpdateMeta(requestGroup, {collapsed: !requestGroup.meta.collapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
           filter={workspace.filter || ''}
           children={children}
@@ -348,8 +349,8 @@ class App extends Component {
           ref="responsePane"
           response={activeResponse}
           request={activeRequest}
-          previewMode={activeRequest ? activeRequest.previewMode : PREVIEW_MODE_FRIENDLY}
-          updatePreviewMode={previewMode => db.requestUpdate(activeRequest, {previewMode})}
+          previewMode={activeRequest ? activeRequest.meta.previewMode : PREVIEW_MODE_FRIENDLY}
+          updatePreviewMode={previewMode => db.requestUpdateMeta(activeRequest, {previewMode})}
           loadingRequests={requests.loadingRequests}
         />
 

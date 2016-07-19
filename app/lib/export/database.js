@@ -175,7 +175,6 @@ export function exportJSON () {
         url: r.url,
         name: r.name,
         method: r.method,
-        previewMode: r.previewMode,
         contentType: r.contentType,
         body: r.body,
         parameters: r.parameters,
