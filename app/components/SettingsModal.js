@@ -77,6 +77,19 @@ class SettingsTabs extends Component {
             </label>
           </div>
 
+          <div className="pad-top">
+            <Input
+              id="setting-follow-redirects"
+              type="checkbox"
+              value={settings.followRedirects}
+              onChange={followRedirects => db.settingsUpdate(settings, {followRedirects})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-follow-redirects">
+              Follow redirects automatically
+            </label>
+          </div>
+
           {/*<div className="pad-top">*/}
           {/*<Input*/}
           {/*id="setting-bulk-header-edit"*/}
