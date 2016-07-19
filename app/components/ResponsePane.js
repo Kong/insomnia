@@ -17,7 +17,9 @@ class ResponsePane extends Component {
       request,
       previewMode,
       updatePreviewMode,
-      loadingRequests
+      loadingRequests,
+      editorLineWrapping,
+      editorFontSize
     } = this.props;
 
     const loadStartTime = loadingRequests[request ? request._id : '__NONE__'];
@@ -101,14 +103,17 @@ class ResponsePane extends Component {
               <ResponseViewer
                 contentType={response.contentType}
                 previewMode={PREVIEW_MODE_SOURCE}
+                editorLineWrapping={editorLineWrapping}
+                editorFontSize={editorFontSize}
                 body={response.error}
                 url={response.url}
-                wrap={true}
               />
             ) : (
               <ResponseViewer
                 contentType={response.contentType}
                 previewMode={previewMode}
+                editorLineWrapping={editorLineWrapping}
+                editorFontSize={editorFontSize}
                 body={response.body}
                 url={response.url}
                 wrap={true} // TODO: Make this a user preference
@@ -146,10 +151,12 @@ ResponsePane.propTypes = {
   // Required
   previewMode: PropTypes.string.isRequired,
   loadingRequests: PropTypes.object.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
 
   // Other
   response: PropTypes.object,
-  request: PropTypes.object,
+  request: PropTypes.object
 };
 
 export default ResponsePane;

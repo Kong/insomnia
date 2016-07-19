@@ -1,13 +1,14 @@
 import React, {PropTypes} from 'react';
 import Editor from './base/Editor';
 
-const RequestBodyEditor = ({body, contentType, onChange, className}) => (
+const RequestBodyEditor = ({fontSize, lineWrapping, body, contentType, onChange, className}) => (
   <Editor
+    fontSize={fontSize}
     value={body}
     className={className}
     onChange={onChange}
     mode={contentType}
-    lineWrapping={true}
+    lineWrapping={lineWrapping}
     placeholder="request body here..."
   />
 );
@@ -18,7 +19,11 @@ RequestBodyEditor.propTypes = {
 
   // Other
   body: PropTypes.string.isRequired,
-  contentType: PropTypes.string.isRequired
+  contentType: PropTypes.string.isRequired,
+
+  // Optional
+  fontSize: PropTypes.number,
+  lineWrapping: PropTypes.bool
 };
 
 export default RequestBodyEditor;

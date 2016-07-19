@@ -6,7 +6,14 @@ import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 
 class ResponseViewer extends Component {
   render () {
-    const {previewMode, contentType, body, url, wrap} = this.props;
+    const {
+      previewMode,
+      contentType,
+      editorLineWrapping,
+      editorFontSize,
+      body,
+      url
+    } = this.props;
 
     switch (previewMode) {
       case PREVIEW_MODE_FRIENDLY:
@@ -24,7 +31,8 @@ class ResponseViewer extends Component {
             prettify={true}
             mode={contentType}
             readOnly={true}
-            lineWrapping={wrap}
+            lineWrapping={editorLineWrapping}
+            fontSize={editorFontSize}
             placeholder="nothing yet..."
           />
         );
@@ -42,9 +50,10 @@ ResponseViewer.propTypes = {
   body: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
 
   // Optional
-  wrap: PropTypes.bool,
   url: PropTypes.string
 };
 

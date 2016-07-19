@@ -452,6 +452,8 @@ class App extends Component {
           request={activeRequest}
           sendRequest={actions.requests.send}
           showPasswords={settings.showPasswords}
+          editorFontSize={settings.editorFontSize}
+          editorLineWrapping={settings.editorLineWrapping}
           updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(url)}
           updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
@@ -471,6 +473,8 @@ class App extends Component {
           ref="responsePane"
           response={activeResponse}
           request={activeRequest}
+          editorFontSize={settings.editorFontSize}
+          editorLineWrapping={settings.editorLineWrapping}
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
           loadingRequests={requests.loadingRequests}

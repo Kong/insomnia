@@ -19,6 +19,8 @@ const MODEL_DEFAULTS = {
     showPasswords: true,
     useBulkHeaderEditor: false,
     followRedirects: true,
+    editorFontSize: 12,
+    editorLineWrapping: true,
     timeout: -1
   }),
   [TYPE_WORKSPACE]: () => ({

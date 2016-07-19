@@ -15,6 +15,8 @@ class RequestPane extends Component {
     const {
       request,
       showPasswords,
+      editorFontSize,
+      editorLineWrapping,
       sendRequest,
       updateRequestUrl,
       updateRequestMethod,
@@ -79,6 +81,8 @@ class RequestPane extends Component {
               onChange={updateRequestBody}
               requestId={request._id}
               contentType={request.contentType}
+              fontSize={editorFontSize}
+              lineWrapping={editorLineWrapping}
               body={request.body}
             />
           </TabPanel>
@@ -134,6 +138,8 @@ RequestPane.propTypes = {
 
   // Other
   showPasswords: PropTypes.bool.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
 
   // Optional
   request: PropTypes.object,

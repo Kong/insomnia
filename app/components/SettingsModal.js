@@ -57,71 +57,108 @@ class SettingsTabs extends Component {
             <button>Hotkeys</button>
           </Tab>
           <Tab>
-            <button>About v{getVersion()}</button>
+            <button>About</button>
           </Tab>
         </TabList>
         <TabPanel className="pad">
           <div>
-            <Input
-              id="setting-show-passwords"
-              type="checkbox"
-              value={settings.showPasswords}
-              onChange={showPasswords => db.settingsUpdate(settings, {showPasswords})}
-            />
-            &nbsp;&nbsp;
-            <label htmlFor="setting-show-passwords">
-              Show passwords in plain-text
-            </label>
+            <h2 className="txt-md">
+              <label className="label--small">General Settings</label>
+            </h2>
+            <div>
+              <Input
+                id="setting-show-passwords"
+                type="checkbox"
+                value={settings.showPasswords}
+                onChange={showPasswords => db.settingsUpdate(settings, {showPasswords})}
+              />
+              &nbsp;&nbsp;
+              <label htmlFor="setting-show-passwords">
+                Show passwords in plain-text
+              </label>
+            </div>
+
+            <div className="pad-top">
+              <Input
+                id="setting-follow-redirects"
+                type="checkbox"
+                value={settings.followRedirects}
+                onChange={followRedirects => db.settingsUpdate(settings, {followRedirects})}
+              />
+              &nbsp;&nbsp;
+              <label htmlFor="setting-follow-redirects">
+                Follow redirects automatically
+              </label>
+            </div>
+
+            {/*<div className="pad-top">*/}
+            {/*<Input*/}
+            {/*id="setting-bulk-header-edit"*/}
+            {/*type="checkbox"*/}
+            {/*value={settings.useBulkHeaderEditor}*/}
+            {/*onChange={useBulkHeaderEditor => db.settingsUpdate(settings, {useBulkHeaderEditor})}*/}
+            {/*/>*/}
+            {/*&nbsp;&nbsp;*/}
+            {/*<label htmlFor="setting-bulk-header-edit">*/}
+            {/*Use bulk header editor by default*/}
+            {/*</label>*/}
+            {/*</div>*/}
+
+            {/*<div className="pad-top">*/}
+            {/*<input id="setting-follow-redirects" type="checkbox"/>&nbsp;&nbsp;*/}
+            {/*<label htmlFor="setting-follow-redirects">*/}
+            {/*Follow Redirects*/}
+            {/*</label>*/}
+            {/*</div>*/}
+
+            <div>
+              <label htmlFor="setting-request-timeout" className="pad-top">
+                Request Timeout (ms) (-1 for no timeout)
+              </label>
+              <div className="form-control form-control--outlined no-margin">
+                <Input
+                  id="setting-request-timeout"
+                  type="number"
+                  min={-1}
+                  value={settings.timeout}
+                  onChange={timeout => db.settingsUpdate(settings, {timeout})}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="pad-top">
-            <Input
-              id="setting-follow-redirects"
-              type="checkbox"
-              value={settings.followRedirects}
-              onChange={followRedirects => db.settingsUpdate(settings, {followRedirects})}
-            />
-            &nbsp;&nbsp;
-            <label htmlFor="setting-follow-redirects">
-              Follow redirects automatically
-            </label>
-          </div>
+            <br/>
+            <label className="label--small">Code Editor Settings</label>
 
-          {/*<div className="pad-top">*/}
-          {/*<Input*/}
-          {/*id="setting-bulk-header-edit"*/}
-          {/*type="checkbox"*/}
-          {/*value={settings.useBulkHeaderEditor}*/}
-          {/*onChange={useBulkHeaderEditor => db.settingsUpdate(settings, {useBulkHeaderEditor})}*/}
-          {/*/>*/}
-          {/*&nbsp;&nbsp;*/}
-          {/*<label htmlFor="setting-bulk-header-edit">*/}
-          {/*Use bulk header editor by default*/}
-          {/*</label>*/}
-          {/*</div>*/}
-
-          {/*<div className="pad-top">*/}
-          {/*<input id="setting-follow-redirects" type="checkbox"/>&nbsp;&nbsp;*/}
-          {/*<label htmlFor="setting-follow-redirects">*/}
-          {/*Follow Redirects*/}
-          {/*</label>*/}
-          {/*</div>*/}
-
-          <div>
-            <label htmlFor="setting-request-timeout" className="pad-top">
-              Request Timeout (ms) (-1 for no timeout)
-            </label>
-            <div className="form-control form-control--outlined no-margin">
+            <div className="pad-top">
               <Input
-                id="setting-request-timeout"
-                type="number"
-                min={-1}
-                value={settings.timeout}
-                onChange={timeout => db.settingsUpdate(settings, {timeout})}
+                id="setting-editor-line-wrapping"
+                type="checkbox"
+                value={settings.editorLineWrapping}
+                onChange={editorLineWrapping => db.settingsUpdate(settings, {editorLineWrapping})}
               />
+              &nbsp;&nbsp;
+              <label htmlFor="setting-editor-line-wrapping">
+                Wrap Long Lines
+              </label>
+            </div>
+            <div>
+              <label htmlFor="setting-editor-font-size" className="pad-top">
+                Font Size (px)
+              </label>
+              <div className="form-control form-control--outlined no-margin">
+                <Input
+                  id="setting-editor-font-size"
+                  type="number"
+                  min={8}
+                  max={20}
+                  value={settings.editorFontSize}
+                  onChange={editorFontSize => db.settingsUpdate(settings, {editorFontSize})}
+                />
+              </div>
             </div>
           </div>
-          <br/>
         </TabPanel>
         <TabPanel className="pad">
           <p>
@@ -207,7 +244,11 @@ class SettingsModal extends ModalComponent {
 
     return (
       <Modal ref="modal" tall={true} {...this.props}>
-        <ModalHeader>Insomnia Settings</ModalHeader>
+        <ModalHeader>
+          Insomnia
+          {" "}
+          <span className="faint txt-sm">v{getVersion()}</span>
+        </ModalHeader>
         <ModalBody>
           <ConnectedSettingsTabs />
         </ModalBody>

@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
+import classnames from 'classnames';
 
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 
@@ -222,18 +223,17 @@ class Editor extends Component {
   }
 
   render () {
-    const classes = [
+    const {value, readOnly, fontSize} = this.props;
+
+    const classes = classnames(
       'editor',
       this.props.className,
-      this.props.readOnly ? 'editor--readonly' : ''
-    ];
-
-    const {path, value, readOnly} = this.props;
+      {'editor--readonly': readOnly}
+    );
 
     return (
-      <div className={classes.join(' ')}>
+      <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
-            name={path}
             ref='textarea'
             defaultValue={value}
             readOnly={readOnly}
@@ -249,8 +249,8 @@ Editor.propTypes = {
   onFocusChange: PropTypes.func,
   mode: PropTypes.string,
   placeholder: PropTypes.string,
-  line: PropTypes.string,
-  path: PropTypes.string,
+  lineWrapping: PropTypes.bool,
+  fontSize: PropTypes.number,
   value: PropTypes.string,
   prettify: PropTypes.bool,
   className: PropTypes.any
