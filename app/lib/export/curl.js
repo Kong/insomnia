@@ -1,10 +1,9 @@
 'use strict';
 
-import render from './render';
-import * as querystring from './querystring';
-import * as db from '../database';
-import {DEBOUNCE_MILLIS} from "./constants";
-import {METHOD_GET} from "./constants";
+import render from '../render';
+import * as querystring from '../querystring';
+import * as db from '../../database';
+import {DEBOUNCE_MILLIS, METHOD_GET} from '../constants';
 
 const FLAGS = [
   'cacert', 'capath', 'E', 'cert', 'cert-type', 'ciphers', 'K', 'config',
@@ -156,9 +155,9 @@ export function exportCurl (requestId) {
           const renderCtx = requestGroup ? requestGroup.environment : {};
 
           // Build the querystring
-          const paramsString = JSON.stringify(request.params);
-          const params = JSON.parse(render(paramsString, renderCtx));
-          const qs = querystring.buildFromParams(params);
+          const paramsString = JSON.stringify(request.parameters);
+          const parameters = JSON.parse(render(paramsString, renderCtx));
+          const qs = querystring.buildFromParams(parameters);
 
           // Build the Url
           const url = querystring.joinURL(request.url, qs);

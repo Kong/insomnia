@@ -22,11 +22,6 @@ class WorkspaceDropdown extends Component {
     })
   }
 
-  _importDialog () {
-    const workspace = this._getActiveWorkspace(this.props);
-    this.props.actions.global.importFile(workspace);
-  }
-
   _workspaceCreate () {
     db.workspaceCreate({name: 'New Workspace'}).then(workspace => {
       this.props.actions.workspaces.activate(workspace);
@@ -66,19 +61,14 @@ class WorkspaceDropdown extends Component {
 
           <DropdownDivider name="Current Workspace"/>
 
-          <li>
-            <button onClick={e => db.requestCreate({parentId: workspace._id})}>
-              <i className="fa fa-plus-circle"></i> New Request
-            </button>
-          </li>
+          {/*<li>*/}
+            {/*<button onClick={e => db.requestCreate({parentId: workspace._id})}>*/}
+              {/*<i className="fa fa-plus-circle"></i> New Request*/}
+            {/*</button>*/}
+          {/*</li>*/}
           <li>
             <button onClick={e => db.requestGroupCreate({parentId: workspace._id})}>
               <i className="fa fa-folder"></i> New Request Group
-            </button>
-          </li>
-          <li>
-            <button onClick={e => this._importDialog()}>
-              <i className="fa fa-share-square-o"></i> Import/Export
             </button>
           </li>
           <li>
@@ -138,7 +128,8 @@ WorkspaceDropdown.propTypes = {
       activate: PropTypes.func.isRequired,
     }),
     global: PropTypes.shape({
-      importFile: PropTypes.func.isRequired
+      importFile: PropTypes.func.isRequired,
+      exportFile: PropTypes.func.isRequired,
     })
   })
 };
