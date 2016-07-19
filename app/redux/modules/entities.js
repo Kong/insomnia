@@ -40,7 +40,7 @@ export default combineReducers({
   requestGroups: genericEntityReducer('requestGroup'),
   requests: genericEntityReducer('request'),
   responses: genericEntityReducer('response'),
-  dontPersist() { return true; }
+  doNotPersist: () => true
 })
 
 

@@ -5,6 +5,7 @@ import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
 import PromptModal from '../components/PromptModal';
+import AlertModal from '../components/AlertModal';
 import SettingsModal from '../components/SettingsModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
@@ -23,9 +24,48 @@ class WorkspaceDropdown extends Component {
   }
 
   _workspaceCreate () {
-    db.workspaceCreate({name: 'New Workspace'}).then(workspace => {
-      this.props.actions.workspaces.activate(workspace);
+    PromptModal.show({
+      headerName: 'Create New Workspace',
+      defaultValue: 'New Workspace',
+      submitName: 'Create',
+      selectText: true
+    }).then(name => {
+      db.workspaceCreate({name}).then(workspace => {
+        this.props.actions.workspaces.activate(workspace);
+      });
     });
+  }
+
+  _workspaceRemove () {
+    db.workspaceCount().then(count => {
+      if (count <= 1) {
+        AlertModal.show({
+          message: 'You cannot delete your last workspace'
+        });
+      } else {
+        const workspace = this._getActiveWorkspace(this.props);
+        db.workspaceRemove(workspace);
+      }
+    })
+  }
+
+  _requestGroupCreate () {
+    PromptModal.show({
+      headerName: 'Create New Request Group',
+      defaultValue: 'New Group',
+      submitName: 'Create',
+      selectText: true
+    }).then(name => {
+      const workspace = this._getActiveWorkspace(this.props);
+      db.requestGroupCreate({name, parentId: workspace._id}).then(requestGroup => {
+        // Nothing yet
+      });
+    });
+  }
+
+  _requestCreate () {
+    const workspace = this._getActiveWorkspace(this.props);
+    db.requestCreateAndActivate(workspace, {parentId: workspace._id});
   }
 
   _getActiveWorkspace (props) {
@@ -66,8 +106,9 @@ class WorkspaceDropdown extends Component {
               {/*<i className="fa fa-plus-circle"></i> New Request*/}
             {/*</button>*/}
           {/*</li>*/}
+
           <li>
-            <button onClick={e => db.requestGroupCreate({parentId: workspace._id})}>
+            <button onClick={e => this._requestGroupCreate() }>
               <i className="fa fa-folder"></i> New Request Group
             </button>
           </li>
@@ -77,7 +118,7 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => db.workspaceRemove(workspace)}>
+            <button onClick={e => this._workspaceRemove()}>
               <i className="fa fa-empty"></i> Delete <strong>{workspace.name}</strong>
             </button>
           </li>
@@ -95,7 +136,7 @@ class WorkspaceDropdown extends Component {
           })}
           <li>
             <button onClick={e => this._workspaceCreate()}>
-              <i className="fa fa-blank"></i> Create Workspace
+              <i className="fa fa-blank"></i> New Workspace
             </button>
           </li>
 

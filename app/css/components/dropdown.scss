@@ -43,6 +43,7 @@
         width: 100%;
         display: block;
         color: $font-super-light-bg !important;
+        white-space: nowrap;
 
         &:hover {
           background: $hl-sm;

@@ -16,6 +16,25 @@ class RequestGroupActionsDropdown extends Component {
       db.requestGroupUpdate(requestGroup, {name});
     })
   }
+
+  _requestCreate () {
+    const workspace = this._getActiveWorkspace(this.props);
+    const {requestGroup} = this.props;
+    db.requestCreateAndActivate(workspace, {parentId: requestGroup._id});
+  }
+
+  _getActiveWorkspace (props) {
+    // TODO: Factor this out into a selector
+
+    const {entities, workspaces} = props || this.props;
+    let workspace = entities.workspaces[workspaces.activeId];
+    if (!workspace) {
+      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
+    }
+
+    return workspace;
+  }
+
   render () {
     const {requestGroup, ...other} = this.props;
 
@@ -36,8 +55,18 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
+            <button onClick={e => this._requestCreate()}>
+              <i className="fa fa-plus-circle"></i> New Request
+            </button>
+          </li>
+          {/*<li>*/}
+          {/*<button onClick={e => db.requestGroupCreate({parentId: requestGroup._id})}>*/}
+          {/*<i className="fa fa-folder"></i> New Request Group*/}
+          {/*</button>*/}
+          {/*</li>*/}
+          <li>
             <button onClick={e => db.requestGroupRemove(requestGroup)}>
-              <i className="fa fa-trash-o"></i> Delete
+              <i className="fa fa-trash-o"></i> Delete Group
             </button>
           </li>
         </ul>
@@ -47,11 +76,23 @@ class RequestGroupActionsDropdown extends Component {
 }
 
 RequestGroupActionsDropdown.propTypes = {
+  // Required
+  entities: PropTypes.shape({
+    workspaces: PropTypes.object.isRequired
+  }).isRequired,
+  workspaces: PropTypes.shape({
+    activeId: PropTypes.string
+  }),
+
+  // Optional
   requestGroup: PropTypes.object
 };
 
 function mapStateToProps (state) {
-  return {};
+  return {
+    workspaces: state.workspaces,
+    entities: state.entities
+  };
 }
 
 function mapDispatchToProps (dispatch) {

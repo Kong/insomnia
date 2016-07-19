@@ -1,8 +1,8 @@
 import React, {PropTypes} from 'react';
 
-const DropdownDivider = props => (
+const DropdownDivider = ({name}) => (
   <li className="dropdown__divider">
-    <span className="dropdown__divider__label">{props.name}</span>
+    <span className="dropdown__divider__label">{name}</span>
   </li>
 );
 

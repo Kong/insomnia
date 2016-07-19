@@ -6,7 +6,7 @@ if (require('electron-squirrel-startup')) {
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
-const appVersion = require('./package.json').version;
+const appVersion = require('./app.json').version;
 const autoUpdater = electron.autoUpdater;
 const Menu = electron.Menu;
 

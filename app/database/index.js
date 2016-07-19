@@ -110,9 +110,20 @@ export function offChange (id) {
   delete changeListeners[id];
 }
 
+export function find (type, key, value) {
+  const docs = [];
+  Object.keys(db.entities[type]).map(id => {
+    const doc = db.entities[type][id];
+    if (doc[key] === value) {
+      docs.push(doc);
+    }
+  });
+  return new Promise(resolve => resolve(docs));
+}
+
 export function get (type, id) {
   const rawDoc = db.entities[type][id];
-  const modelDefaults = MODEL_DEFAULTS[type];
+  const modelDefaults = MODEL_DEFAULTS[type]();
   const doc = Object.assign({}, modelDefaults, rawDoc);
   return new Promise(resolve => resolve(doc));
 }
@@ -123,7 +134,7 @@ function getWhere (type, key, value = '__ANY__') {
 
   for (let i = 0; i < ids.length; i++) {
     const doc = db.entities[type][ids[i]];
-    const modelDefaults = MODEL_DEFAULTS[type];
+    const modelDefaults = MODEL_DEFAULTS[type]();
 
     if (value === '__ANY__' || doc[key] === value) {
       const rawDoc = db.entities[type][ids[i]];
@@ -133,6 +144,11 @@ function getWhere (type, key, value = '__ANY__') {
   }
 
   return new Promise(resolve => resolve(docs));
+}
+
+function count (type) {
+  const count = Object.keys(db.entities[type]).length;
+  return new Promise(resolve => resolve(count));
 }
 
 function all (type) {
@@ -162,10 +178,16 @@ function insert (doc) {
 }
 
 function update (doc) {
-  db.entities[doc.type][doc._id] = doc;
-
-  Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
-  return new Promise(resolve => resolve(doc));
+  return new Promise((resolve, reject) => {
+    // Only update if it exists in the DB
+    if (db.entities[doc.type][doc._id]) {
+      db.entities[doc.type][doc._id] = doc;
+      Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+      resolve(doc);
+    } else {
+      reject(new Error(`Doc did not exist for update: ${doc._id}`));
+    }
+  });
 }
 
 function remove (doc) {
@@ -174,15 +196,17 @@ function remove (doc) {
   // Also remove children
   TYPES.map(type => removeWhere(type, 'parentId', doc._id));
 
+  const wasLastDoc = db.entities[doc.type].length === 0;
+
   Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
-  new Promise(resolve => resolve(doc));
+  return new Promise(resolve => resolve({wasLastDoc}));
 }
 
 
 // MODEL DEFINITIONS //
 
 const MODEL_DEFAULTS = {
-  [TYPE_REQUEST]: {
+  [TYPE_REQUEST]: () => ({
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
@@ -191,27 +215,23 @@ const MODEL_DEFAULTS = {
     parameters: [],
     headers: [],
     authentication: {},
-    meta: {
-      previewMode: PREVIEW_MODE_SOURCE
-    }
-  },
-  [TYPE_REQUEST_GROUP]: {
+    metaPreviewMode: PREVIEW_MODE_SOURCE,
+    metaSortKey: -1 * Date.now()
+  }),
+  [TYPE_REQUEST_GROUP]: () => ({
     name: 'New Request Group',
     environment: {},
-    meta: {
-      collapsed: false
-    }
-  },
-  [TYPE_WORKSPACE]: {
+    metaCollapsed: false,
+    metaSortKey: -1 * Date.now()
+  }),
+  [TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
     environments: [],
     filter: '',
-    meta: {
-      sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-      activeRequestId: null
-    }
-  },
-  [TYPE_RESPONSE]: {
+    metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    metaActiveRequestId: null
+  }),
+  [TYPE_RESPONSE]: () => ({
     statusCode: 0,
     statusMessage: '',
     contentType: 'text/plain',
@@ -220,11 +240,8 @@ const MODEL_DEFAULTS = {
     millis: 0,
     headers: [],
     body: '',
-    error: '',
-    meta: {
-      // Nothing yet
-    }
-  }
+    error: ''
+  }),
 };
 
 
@@ -240,24 +257,15 @@ function docUpdate (originalDoc, patch = {}) {
     {modified: Date.now()}
   );
 
-  // Fake a promise
-  const finalDoc = update(doc);
-  return new Promise(resolve => resolve(finalDoc));
-}
-
-function docUpdateMeta (originalDoc, metaPatch = {}) {
-  const meta = Object.assign({}, originalDoc.meta, metaPatch);
-  const finalDoc = docUpdate(originalDoc, {meta});
-  return new Promise(resolve => resolve(finalDoc));
+  return update(doc);
 }
 
 function docCreate (type, idPrefix, patch = {}) {
   const baseDefaults = {
-    parentId: null,
-    meta: {}
+    parentId: null
   };
 
-  const modelDefaults = MODEL_DEFAULTS[type];
+  const modelDefaults = MODEL_DEFAULTS[type]();
 
   const doc = Object.assign(
     baseDefaults,
@@ -297,16 +305,16 @@ export function requestCreate (patch = {}) {
   return docCreate(TYPE_REQUEST, 'req', patch);
 }
 
-export function requestById (id) {
+export function requestGetById (id) {
   return get(TYPE_REQUEST, id);
+}
+
+export function requestFindByParentId (parentId) {
+  return find(TYPE_REQUEST, 'parentId', parentId);
 }
 
 export function requestUpdate (request, patch) {
   return docUpdate(request, patch);
-}
-
-export function requestUpdateMeta (request, patch) {
-  return docUpdateMeta(request, patch);
 }
 
 export function requestCopy (request) {
@@ -335,12 +343,12 @@ export function requestGroupUpdate (requestGroup, patch) {
   return docUpdate(requestGroup, patch);
 }
 
-export function requestGroupUpdateMeta (requestGroup, patch) {
-  return docUpdateMeta(requestGroup, patch);
+export function requestGroupGetById (id) {
+  return get(TYPE_REQUEST_GROUP, id);
 }
 
-export function requestGroupById (id) {
-  return get(TYPE_REQUEST_GROUP, id);
+export function requestGroupFindByParentId (parentId) {
+  return getWhere(TYPE_REQUEST_GROUP, 'parentId', parentId);
 }
 
 export function requestGroupRemove (requestGroup) {
@@ -383,12 +391,12 @@ export function workspaceAll () {
   });
 }
 
-export function workspaceUpdate (workspace, patch) {
-  return docUpdate(workspace, patch);
+export function workspaceCount () {
+  return count(TYPE_WORKSPACE)
 }
 
-export function workspaceUpdateMeta (workspace, patch) {
-  return docUpdateMeta(workspace, patch);
+export function workspaceUpdate (workspace, patch) {
+  return docUpdate(workspace, patch);
 }
 
 export function workspaceRemove (workspace) {

@@ -1,15 +1,18 @@
 import React, {Component, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
-import classnames from 'classnames';
-import {connect} from 'react-redux'
+import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
+import HTML5Backend from 'react-dnd-html5-backend';
+import {DragDropContext} from 'react-dnd';
+
 import Mousetrap from '../lib/mousetrap';
 
 import EnvironmentEditModal from '../components/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/RequestSwitcherModal';
 import CurlExportModal from '../components/CurlExportModal';
 import PromptModal from '../components/PromptModal';
-import SettingsModal from '../components/SettingsModal';
+import AlertModal from '../components/SettingsModal';
+import SettingsModal from '../components/AlertModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/Sidebar';
@@ -26,7 +29,7 @@ import * as RequestGroupActions from '../redux/modules/requestGroups';
 import * as RequestActions from '../redux/modules/requests';
 
 import * as db from '../database';
-import {importCurl} from "../lib/export/curl";
+import {importCurl} from '../lib/export/curl';
 
 class App extends Component {
   constructor (props) {
@@ -38,8 +41,8 @@ class App extends Component {
       activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
-      sidebarWidth: workspace.meta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
-      paneWidth: workspace.meta.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
+      sidebarWidth: workspace.metaSidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
+      paneWidth: workspace.metaPaneWidth || DEFAULT_PANE_WIDTH // % (fr)
     };
 
     this.globalKeyMap = {
@@ -108,8 +111,123 @@ class App extends Component {
     }
   }
 
+  _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
+    // Oh God, this function is awful...
+
+    if (requestGroupToMove._id === requestGroupToTarget._id) {
+      // Nothing to do
+      return;
+    }
+
+    // NOTE: using requestToTarget's parentId so we can switch parents!
+    db.requestGroupFindByParentId(requestGroupToTarget.parentId).then(requestGroups => {
+      requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+
+      // Find the index of request B so we can re-order and save everything
+      for (let i = 0; i < requestGroups.length; i++) {
+        const request = requestGroups[i];
+
+        if (request._id === requestGroupToTarget._id) {
+          let before, after;
+          if (targetOffset < 0) {
+            // We're moving to below
+            before = requestGroups[i];
+            after = requestGroups[i + 1];
+          } else {
+            // We're moving to above
+            before = requestGroups[i - 1];
+            after = requestGroups[i];
+          }
+
+          const beforeKey = before ? before.metaSortKey : requestGroups[0].metaSortKey - 100;
+          const afterKey = after ? after.metaSortKey : requestGroups[requestGroups.length - 1].metaSortKey + 100;
+
+          if (Math.abs(afterKey - beforeKey) < 0.000001) {
+            // If sort keys get too close together, we need to redistribute the list. This is
+            // not performant at all (need to update all siblings in DB), but it is extremely rare
+            // anyway
+            console.warn('-- Recreating Sort Keys --');
+
+            requestGroups.map((r, i) => {
+              db.requestGroupUpdate(r, {metaSortKey: i * 100, parentId: requestGroupToTarget.parentId});
+            });
+          } else {
+            const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+            db.requestGroupUpdate(requestGroupToMove, {metaSortKey, parentId: requestGroupToTarget.parentId});
+          }
+
+          break;
+        }
+      }
+    })
+  }
+
+  _moveRequest (requestToMove, requestToTarget, targetOffset) {
+    // Oh God, this function is awful...
+
+    if (requestToMove._id === requestToTarget._id) {
+      // Nothing to do
+      return;
+    }
+
+    // NOTE: using requestToTarget's parentId so we can switch parents!
+    db.requestFindByParentId(requestToTarget.parentId).then(requests => {
+      requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+
+      // Find the index of request B so we can re-order and save everything
+      for (let i = 0; i < requests.length; i++) {
+        const request = requests[i];
+
+        if (request._id === requestToTarget._id) {
+          let before, after;
+          if (targetOffset < 0) {
+            // We're moving to below
+            before = requests[i];
+            after = requests[i + 1];
+          } else {
+            // We're moving to above
+            before = requests[i - 1];
+            after = requests[i];
+          }
+
+          const beforeKey = before ? before.metaSortKey : requests[0].metaSortKey - 100;
+          const afterKey = after ? after.metaSortKey : requests[requests.length - 1].metaSortKey + 100;
+
+          if (Math.abs(afterKey - beforeKey) < 0.000001) {
+            // If sort keys get too close together, we need to redistribute the list. This is
+            // not performant at all (need to update all siblings in DB), but it is extremely rare
+            // anyway
+            console.warn('-- Recreating Sort Keys --');
+
+            requests.map((r, i) => {
+              db.requestUpdate(r, {metaSortKey: i * 100, parentId: requestToTarget.parentId});
+            });
+          } else {
+            const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+            db.requestUpdate(requestToMove, {metaSortKey, parentId: requestToTarget.parentId});
+          }
+
+          break;
+        }
+      }
+    })
+  }
+
+  _requestCreate (parentId) {
+    const workspace = this._getActiveWorkspace();
+    db.requestCreateAndActivate(workspace, {parentId})
+  }
+
   _generateSidebarTree (parentId, entities) {
-    const children = entities.filter(e => e.parentId === parentId);
+    const children = entities.filter(
+      e => e.parentId === parentId
+    ).sort((a, b) => {
+      if (a.metaSortKey === b.metaSortKey) {
+        return a._id > b._id ? -1 : 1;
+      } else {
+         return a.metaSortKey < b.metaSortKey ? -1 : 1;
+      }
+    });
 
     if (children.length > 0) {
       return children.map(c => ({
@@ -144,7 +262,7 @@ class App extends Component {
     setTimeout(() => {
       this.setState({
         sidebarWidth: DEFAULT_SIDEBAR_WIDTH
-      })
+      });
 
       this._saveSidebarWidth();
     }, 50);
@@ -168,13 +286,13 @@ class App extends Component {
   }
 
   _savePaneWidth () {
-    const {paneWidth} = this.state;
-    db.workspaceUpdateMeta(this._getActiveWorkspace(), {paneWidth});
+    const metaPaneWidth = this.state.paneWidth;
+    db.workspaceUpdate(this._getActiveWorkspace(), {metaPaneWidth});
   }
 
   _saveSidebarWidth () {
-    const {sidebarWidth} = this.state;
-    db.workspaceUpdateMeta(this._getActiveWorkspace(), {sidebarWidth});
+    const metaSidebarWidth = this.state.sidebarWidth;
+    db.workspaceUpdate(this._getActiveWorkspace(), {metaSidebarWidth});
   }
 
   _getActiveWorkspace (props) {
@@ -192,7 +310,7 @@ class App extends Component {
   _getActiveRequest (props) {
     props = props || this.props;
     const {entities} = props;
-    let activeRequestId = this._getActiveWorkspace(props).meta.activeRequestId;
+    let activeRequestId = this._getActiveWorkspace(props).metaActiveRequestId;
     return activeRequestId ? entities.requests[activeRequestId] : null;
   }
 
@@ -205,7 +323,7 @@ class App extends Component {
         reject();
       }
 
-      db.requestGroupById(request.parentId).then(requestGroup => {
+      db.requestGroupGetById(request.parentId).then(requestGroup => {
         if (requestGroup) {
           resolve(requestGroup);
         } else {
@@ -255,7 +373,7 @@ class App extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    const sidebarWidth = this._getActiveWorkspace(nextProps).meta.sidebarWidth;
+    const sidebarWidth = this._getActiveWorkspace(nextProps).metaSidebarWidth;
     this.setState({sidebarWidth});
   }
 
@@ -311,10 +429,12 @@ class App extends Component {
       <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
-          activateRequest={r => db.workspaceUpdateMeta(workspace, {activeRequestId: r._id})}
+          activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
-          addRequestToRequestGroup={requestGroup => db.requestCreate({parentId: requestGroup._id})}
-          toggleRequestGroup={requestGroup => db.requestGroupUpdateMeta(requestGroup, {collapsed: !requestGroup.meta.collapsed})}
+          moveRequest={this._moveRequest.bind(this)}
+          moveRequestGroup={this._moveRequestGroup.bind(this)}
+          addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
+          toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
           filter={workspace.filter || ''}
           children={children}
@@ -348,12 +468,13 @@ class App extends Component {
           ref="responsePane"
           response={activeResponse}
           request={activeRequest}
-          previewMode={activeRequest ? activeRequest.meta.previewMode : PREVIEW_MODE_FRIENDLY}
-          updatePreviewMode={previewMode => db.requestUpdateMeta(activeRequest, {previewMode})}
+          previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
+          updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
           loadingRequests={requests.loadingRequests}
         />
 
         <PromptModal />
+        <AlertModal />
         <SettingsModal />
         <RequestSwitcherModal />
         <CurlExportModal />
@@ -410,8 +531,10 @@ function mapDispatchToProps (dispatch) {
   }
 }
 
-export default connect(
+const reduxApp = connect(
   mapStateToProps,
   mapDispatchToProps
 )(App);
+
+export default DragDropContext(HTML5Backend)(reduxApp);
 

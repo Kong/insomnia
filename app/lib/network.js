@@ -86,8 +86,8 @@ function actuallySend (request, callback) {
 export function send (requestId, callback) {
   // First, lets wait for all debounces to finish
   setTimeout(() => {
-    db.requestById(requestId).then(request => {
-      db.requestGroupById(request.parentId).then(requestGroup => {
+    db.requestGetById(requestId).then(request => {
+      db.requestGroupGetById(request.parentId).then(requestGroup => {
         const environment = requestGroup ? requestGroup.environment : {};
 
         if (environment) {

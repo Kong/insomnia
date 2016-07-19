@@ -1,9 +1,9 @@
 import React, {Component, PropTypes} from 'react';
 
-import WorkspaceDropdown from './../containers/WorkspaceDropdown';
 import Input from './base/Input';
-import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarRequestRow from './SidebarRequestRow';
+import SidebarRequestGroupRow from './SidebarRequestGroupRow';
+import WorkspaceDropdown from '../containers/WorkspaceDropdown';
 
 class Sidebar extends Component {
   _onFilterChange (value) {
@@ -38,22 +38,27 @@ class Sidebar extends Component {
     const {
       filter,
       toggleRequestGroup,
-      addRequestToRequestGroup
+      addRequestToRequestGroup,
+      moveRequest,
+      moveRequestGroup,
+      activateRequest,
+      activeRequestId
     } = this.props;
 
     const filteredChildren = this._filterChildren(
       filter,
       children,
       requestGroup && requestGroup.name
-    ).sort((a, b) => a.doc._id > b.doc._id ? -1 : 1);
+    );
 
     return filteredChildren.map(child => {
       if (child.doc.type === 'Request') {
         return (
           <SidebarRequestRow
             key={child.doc._id}
-            activateRequest={this.props.activateRequest}
-            isActive={child.doc._id === this.props.activeRequestId}
+            moveRequest={moveRequest}
+            activateRequest={activateRequest}
+            isActive={child.doc._id === activeRequestId}
             request={child.doc}
           />
         )
@@ -62,7 +67,7 @@ class Sidebar extends Component {
       // We have a RequestGroup!
 
       const requestGroup = child.doc;
-      const isActive = !!child.children.find(c => c.doc._id === this.props.activeRequestId);
+      const isActive = !!child.children.find(c => c.doc._id === activeRequestId);
 
       const children = this._renderChildren(child.children, requestGroup);
 
@@ -75,6 +80,7 @@ class Sidebar extends Component {
         <SidebarRequestGroupRow
           key={requestGroup._id}
           isActive={isActive}
+          moveRequestGroup={moveRequestGroup}
           toggleRequestGroup={toggleRequestGroup}
           addRequestToRequestGroup={addRequestToRequestGroup}
           numChildren={child.children.length}
@@ -116,6 +122,8 @@ Sidebar.propTypes = {
   toggleRequestGroup: PropTypes.func.isRequired,
   addRequestToRequestGroup: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
+  moveRequest: PropTypes.func.isRequired,
+  moveRequestGroup: PropTypes.func.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,
