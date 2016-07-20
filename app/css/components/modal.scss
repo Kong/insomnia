@@ -45,6 +45,10 @@
     max-height: 100%;
   }
 
+  &.modal--fixed-top .modal__content {
+    margin: 0 auto auto auto;
+  }
+
   .modal__header {
     border-bottom: 1px solid $hl-md;
     height: $line-height-md;

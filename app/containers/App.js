@@ -150,11 +150,17 @@ class App extends Component {
             console.warn('-- Recreating Sort Keys --');
 
             requestGroups.map((r, i) => {
-              db.requestGroupUpdate(r, {metaSortKey: i * 100, parentId: requestGroupToTarget.parentId});
+              db.requestGroupUpdate(r, {
+                metaSortKey: i * 100,
+                parentId: requestGroupToTarget.parentId
+              });
             });
           } else {
             const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.requestGroupUpdate(requestGroupToMove, {metaSortKey, parentId: requestGroupToTarget.parentId});
+            db.requestGroupUpdate(requestGroupToMove, {
+              metaSortKey,
+              parentId: requestGroupToTarget.parentId
+            });
           }
 
           break;
@@ -226,7 +232,7 @@ class App extends Component {
       if (a.metaSortKey === b.metaSortKey) {
         return a._id > b._id ? -1 : 1;
       } else {
-         return a.metaSortKey < b.metaSortKey ? -1 : 1;
+        return a.metaSortKey < b.metaSortKey ? -1 : 1;
       }
     });
 
@@ -485,8 +491,12 @@ class App extends Component {
         <AlertModal />
         <ChangelogModal />
         <SettingsModal />
-        <RequestSwitcherModal />
         <CurlExportModal />
+        <RequestSwitcherModal
+          workspaceId={workspace._id}
+          activeRequest={activeRequest}
+          activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
+        />
         <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
       </div>
     )

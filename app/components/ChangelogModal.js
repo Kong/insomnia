@@ -45,7 +45,7 @@ class ChangelogModal extends ModalComponent {
 
     if (!changelog) {
       html = [
-        <div className="txt-lg">
+        <div key="spinner" className="txt-lg">
           <i className="fa fa-refresh fa-spin"></i>
         </div>
       ];
@@ -55,19 +55,19 @@ class ChangelogModal extends ModalComponent {
       changelog.map(change => {
         html = [
           ...html,
-          <h1>v{change.version} Changes</h1>
+          <h1 key="changes">v{change.version} Changes</h1>
         ];
         if (change.summary) {
           if (!Array.isArray(change.summary)) {
             html = [
               ...html,
-              <p>{change.summary}</p>
+              <p key="summary">{change.summary}</p>
             ]
           } else {
             html = [
               ...html,
-              <p><strong>{change.summary[0]}</strong></p>,
-              ...change.summary.slice(1).map(text => <p>{text}</p>)
+              <p key="summary"><strong>{change.summary[0]}</strong></p>,
+              ...change.summary.slice(1).map((text, i) => <p key={`summary[${i}]`}>{text}</p>)
             ]
           }
         }
@@ -75,30 +75,36 @@ class ChangelogModal extends ModalComponent {
         if (change.major && change.major.length) {
           html = [
             ...html,
-            <h3>Noteworthy</h3>,
-            <ul>{change.major.map(text => <li>{text}</li>)}</ul>
+            <h3 key="major">Noteworthy</h3>,
+            <ul key="major.list">
+              {change.major.map((text, i) => <li key={i}>{text}</li>)}
+            </ul>
           ];
         }
 
         if (change.fixes && change.fixes.length) {
           html = [
             ...html,
-            <h3>Fixes</h3>,
-            <ul>{change.fixes.map(text => <li>{text}</li>)}</ul>
+            <h3 key="fixes">Fixes</h3>,
+            <ul key="fixes.list">
+              {change.fixes.map(text => <li>{text}</li>)}
+              </ul>
           ];
         }
 
         if (change.minor && change.minor.length) {
           html = [
             ...html,
-            <h3>Minor Changes</h3>,
-            <ul>{change.minor.map(text => <li>{text}</li>)}</ul>
+            <h3 key="minor">Minor Changes</h3>,
+            <ul key="minor.list">
+              {change.minor.map((text, i) => <li key={i}>{text}</li>)}
+              </ul>
           ];
         }
 
         html = [
           ...html,
-          <hr/>
+          <hr key="hr"/>
         ]
       });
     }

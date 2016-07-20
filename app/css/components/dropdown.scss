@@ -72,14 +72,12 @@
 
     .dropdown__divider__label {
       position: relative;
-      top: -0.85rem;
+      top: -0.80rem;
       // HACK: Fine adjustment
-      color: $hl-xxl;
+      color: $hl;
       padding-right: 1em;
       background: #fff;
       font-size: $font-size-xs;
-      margin-top: 0.5em;
-      margin-bottom: 0.5em;
       text-transform: uppercase;
     }
   }

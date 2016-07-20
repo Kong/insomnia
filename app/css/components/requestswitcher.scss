@@ -1,0 +1,22 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.request-switcher {
+  ul {
+
+  }
+
+  .btn:hover {
+    background: $hl-xs;
+  }
+
+  .btn.focus {
+    background: $hl-sm;
+  }
+
+  .tag {
+    width: 3em;
+    text-align: left;
+    padding-left: 0 !important;
+  }
+}

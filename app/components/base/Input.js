@@ -27,6 +27,10 @@ class Input extends Component {
     } else {
       this.refs.input.value = this.props.value || '';
     }
+
+    if (this.props.autofocus) {
+      this.focus();
+    }
   }
 
   componentDidMount () {
@@ -34,7 +38,7 @@ class Input extends Component {
   }
 
   componentDidUpdate () {
-    this._updateValueFromProps()
+    this._updateValueFromProps();
   }
 
   focus () {
@@ -46,7 +50,8 @@ class Input extends Component {
   }
 
   render () {
-    const {value, ...other} = this.props;
+    // NOTE: We're taking props base <input> doesn't need
+    const {value, autofocus, ...other} = this.props;
     return (
       <input
         {...other}
@@ -63,7 +68,8 @@ Input.propTypes = {
     PropTypes.number,
     PropTypes.string,
     PropTypes.bool
-  ])
+  ]),
+  autofocus: PropTypes.bool
 };
 
 export default Input;

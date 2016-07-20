@@ -75,6 +75,8 @@ label > .form-control,
   }
 }
 
+.btn:focus:not(:disabled),
+.btn.focus:not(:disabled),
 .btn:hover:not(:disabled) {
   background: $hl-sm;
 }
