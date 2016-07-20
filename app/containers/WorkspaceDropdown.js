@@ -7,6 +7,7 @@ import DropdownDivider from '../components/base/DropdownDivider';
 import PromptModal from '../components/PromptModal';
 import AlertModal from '../components/AlertModal';
 import SettingsModal from '../components/SettingsModal';
+import ChangelogModal from '../components/ChangelogModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
@@ -153,8 +154,13 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button><i className="fa fa-blank"></i> Open New Window</button>
+            <button onClick={e => ChangelogModal.show()}>
+              <i className="fa fa-blank"></i> Changelog
+            </button>
           </li>
+          {/*<li>*/}
+            {/*<button><i className="fa fa-blank"></i> Open New Window</button>*/}
+          {/*</li>*/}
         </ul>
       </Dropdown>
     )

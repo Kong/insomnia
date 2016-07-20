@@ -66,6 +66,7 @@
     border-bottom: 1px solid $hl-lg;
     overflow: visible !important;
     margin: $padding-md $padding-md $padding-md $padding-sm;
+    min-width: $dropdown-min-width;
     height: 0;
     padding: 0;
 

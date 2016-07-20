@@ -1,0 +1,19 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.changelog {
+
+  h2 {
+    font-size: $font-size-xl;
+  }
+
+  h3 {
+    font-size: $font-size-xl;
+  }
+
+  ul {
+    list-style: disc;
+    padding-left: $padding-lg;
+    margin-bottom: 1.5em;
+  }
+}

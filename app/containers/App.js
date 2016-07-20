@@ -12,6 +12,7 @@ import RequestSwitcherModal from '../components/RequestSwitcherModal';
 import CurlExportModal from '../components/CurlExportModal';
 import PromptModal from '../components/PromptModal';
 import AlertModal from '../components/AlertModal';
+import ChangelogModal from '../components/ChangelogModal';
 import SettingsModal from '../components/SettingsModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
@@ -482,6 +483,7 @@ class App extends Component {
 
         <PromptModal />
         <AlertModal />
+        <ChangelogModal />
         <SettingsModal />
         <RequestSwitcherModal />
         <CurlExportModal />
