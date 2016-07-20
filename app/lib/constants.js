@@ -9,6 +9,7 @@ export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const CHANGELOG_URL = isDevelopment() ?
   'http://localhost:5000/changelog.json' :
   'http://changelog.insomnia.rest/changelog.json';
+export const STATUS_CODE_PEBKAC = -333;
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 35;
@@ -20,8 +21,8 @@ export const DEFAULT_SIDEBAR_WIDTH = 19;
 
 // HTTP Methods
 export const METHOD_GET = 'GET';
-export const METHOD_PUT = 'PUT';
 export const METHOD_POST = 'POST';
+export const METHOD_PUT = 'PUT';
 export const METHOD_PATCH = 'PATCH';
 export const METHOD_DELETE = 'DELETE';
 export const METHOD_OPTIONS = 'OPTIONS';
@@ -29,10 +30,10 @@ export const METHOD_HEAD = 'HEAD';
 
 export const METHODS = [
   METHOD_GET,
-  METHOD_PUT,
-  METHOD_PATCH,
   METHOD_POST,
+  METHOD_PUT,
   METHOD_DELETE,
+  METHOD_PATCH,
   METHOD_OPTIONS,
   METHOD_HEAD
 ];

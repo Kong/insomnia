@@ -3,6 +3,7 @@ import classnames from 'classnames';
 
 import Input from './base/Input';
 import Dropdown from './base/Dropdown';
+import MethodTag from './MethodTag';
 import {METHODS, DEBOUNCE_MILLIS} from '../lib/constants';
 import Mousetrap from '../lib/mousetrap';
 
@@ -44,14 +45,16 @@ class RequestUrlBar extends Component {
       <div className={classnames({'urlbar': true, 'urlbar--error': hasError})}>
         <Dropdown>
           <button>
-            {method}&nbsp;
-            <i className="fa fa-caret-down"/>
+            <div className="tall">
+              <span>{method}</span>
+              <i className="fa fa-caret-down"/>
+            </div>
           </button>
           <ul>
             {METHODS.map(m => (
               <li key={m}>
                 <button onClick={onMethodChange.bind(null, m)}>
-                  {m}
+                  <MethodTag method={m} fullNames={true}/>
                 </button>
               </li>
             ))}

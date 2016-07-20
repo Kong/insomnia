@@ -1,6 +1,5 @@
 import electron from 'electron';
 import fs from 'fs';
-import path from 'path';
 
 import {importJSON, exportJSON} from '../../lib/export/database';
 

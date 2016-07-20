@@ -4,6 +4,7 @@ import render from './render';
 import * as db from '../database';
 import * as querystring from './querystring';
 import {DEBOUNCE_MILLIS} from './constants';
+import {STATUS_CODE_PEBKAC} from './constants';
 
 function buildRequestConfig (request, patch = {}) {
   const config = {
@@ -47,24 +48,27 @@ function buildRequestConfig (request, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (request, settings, callback) {
-  let config = buildRequestConfig(request, {
-    jar: networkRequest.jar(),
-    followRedirect: settings.followRedirects,
-    timeout: settings.timeout > 0 ? settings.timeout : null
-  }, true);
+function actuallySend (request, settings) {
+  return new Promise((resolve, reject) => {
 
-  const startTime = Date.now();
-  networkRequest(config, function (err, response) {
-    if (err) {
-      db.responseCreate({
-        parentId: request._id,
-        millis: Date.now() - startTime,
-        error: err.toString()
-      });
-      console.warn(`Request to ${config.url} failed`, err);
-    } else {
-      db.responseCreate({
+    let config = buildRequestConfig(request, {
+      jar: networkRequest.jar(),
+      followRedirect: settings.followRedirects,
+      timeout: settings.timeout > 0 ? settings.timeout : null
+    }, true);
+
+    const startTime = Date.now();
+    networkRequest(config, function (err, response) {
+      if (err) {
+        db.responseCreate({
+          parentId: request._id,
+          millis: Date.now() - startTime,
+          error: err.toString()
+        });
+        console.warn(`Request to ${config.url} failed`, err);
+        return reject(err);
+      }
+      const responsePatch = {
         parentId: request._id,
         statusCode: response.statusCode,
         statusMessage: response.statusMessage,
@@ -77,34 +81,77 @@ function actuallySend (request, settings, callback) {
           const value = response.headers[name];
           return {name, value};
         })
-      });
-    }
+      };
 
-    callback(err);
-  });
+      db.responseCreate(responsePatch).then(resolve, reject);
+    })
+  })
 }
 
-export function send (requestId, callback) {
-  // First, lets wait for all debounces to finish
-  setTimeout(() => {
-    Promise.all([
-      db.requestGetById(requestId),
-      db.settingsGet()
-    ]).then(([
-      request,
-      settings
-    ]) => {
-      db.requestGroupGetById(request.parentId).then(requestGroup => {
-        const environment = requestGroup ? requestGroup.environment : {};
+export function send (requestId) {
+  return new Promise((resolve, reject) => {
 
-        if (environment) {
-          // SNEAKY HACK: Render nested object by converting it to JSON then rendering
-          const template = JSON.stringify(request);
-          request = JSON.parse(render(template, environment));
-        }
+    // First, lets wait for all debounces to finish
+    setTimeout(() => {
+      Promise.all([
+        db.requestGetById(requestId),
+        db.settingsGet()
+      ]).then(([
+        request,
+        settings
+      ]) => {
+        db.requestGroupGetById(request.parentId).then(requestGroup => {
+          // TODO: Clean this shit up
 
-        actuallySend(request, settings, callback);
-      });
-    })
-  }, DEBOUNCE_MILLIS);
+          const environment = requestGroup ? requestGroup.environment : {};
+          let renderedRequest = null;
+
+          if (environment) {
+            let template;
+
+            try {
+              template = JSON.stringify(request);
+            } catch (e) {
+              // Failed to parse Request as JSON
+              db.responseCreate({
+                parentId: request._id,
+                statusCode: STATUS_CODE_PEBKAC,
+                error: `Bad Request: "${e.message}"`
+              }).then(resolve, reject);
+              return;
+            }
+
+            let renderedJSON;
+            try {
+              renderedJSON = render(template, environment);
+            } catch (e) {
+              // Failed to render Request
+              db.responseCreate({
+                parentId: request._id,
+                statusCode: STATUS_CODE_PEBKAC,
+                error: `Render Failed: "${e.message}"`
+              }).then(resolve, reject);
+              return;
+            }
+
+            try {
+              renderedRequest = JSON.parse(renderedJSON);
+            } catch (e) {
+              // Failed to parse rendered request
+              db.responseCreate({
+                parentId: request._id,
+                statusCode: STATUS_CODE_PEBKAC,
+                error: `Parse Failed: "${e.message}"`
+              }).then(resolve, reject);
+              return;
+            }
+          }
+
+          if (renderedRequest) {
+            actuallySend(renderedRequest, settings).then(resolve, reject);
+          }
+        });
+      })
+    }, DEBOUNCE_MILLIS);
+  });
 }

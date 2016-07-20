@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, {PropTypes} from 'react';
-import {RESPONSE_CODE_DESCRIPTIONS} from '../lib/constants';
+
+import {RESPONSE_CODE_DESCRIPTIONS, STATUS_CODE_PEBKAC} from '../lib/constants';
 
 const StatusTag = ({statusMessage, statusCode}) => {
   statusCode = String(statusCode);
@@ -27,12 +28,16 @@ const StatusTag = ({statusMessage, statusCode}) => {
     colorClass = 'bg-danger';
     backupStatusMessage = 'UNKNOWN';
     statusCode = '';  // Don't print a 0 status code
+  } else if (statusCode === STATUS_CODE_PEBKAC.toString()) {
+    colorClass = 'bg-danger';
+    backupStatusMessage = 'PEBKAC\xa0\xa0٩◔̯◔۶';
+    statusCode = '';  // Don't print status code
   } else {
     colorClass = 'bg-danger';
     backupStatusMessage = 'UNKNOWN';
   }
 
-  const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code'
+  const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
 
   return (
     <div className={classnames('tag', colorClass)} title={description}>

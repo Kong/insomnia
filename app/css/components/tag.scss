@@ -26,4 +26,8 @@
     background: transparent;
     border: 0;
   }
+
+  &.tag--outlined {
+    border: 1px solid;
+  }
 }

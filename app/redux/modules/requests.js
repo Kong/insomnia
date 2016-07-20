@@ -61,7 +61,10 @@ export function send(request) {
   return dispatch => {
     dispatch({type: REQUEST_SEND_START, requestId: request._id});
 
-    network.send(request._id, () => {
+    network.send(request._id).then(() => {
+      dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
+    }, err => {
+      console.error('Error sending request', err);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     });
   }
