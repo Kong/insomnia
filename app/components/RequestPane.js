@@ -4,11 +4,13 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 import KeyValueEditor from '../components/base/KeyValueEditor';
 
 import ContentTypeDropdown from '../components/ContentTypeDropdown';
+import RenderedQueryString from '../components/RenderedQueryString';
 import RequestBodyEditor from '../components/RequestBodyEditor';
 import RequestAuthEditor from '../components/RequestAuthEditor';
 import RequestUrlBar from '../components/RequestUrlBar';
 
 import {getContentTypeName} from '../lib/contentTypes';
+import {renderRequest} from '../lib/render';
 
 class RequestPane extends Component {
   render () {
@@ -100,8 +102,13 @@ class RequestPane extends Component {
             </div>
           </TabPanel>
           <TabPanel className="scrollable">
+            <div className="pad no-pad-bottom">
+              <label className="label--small">Querystring Preview</label>
+              <code className="txt-sm block">
+                <RenderedQueryString request={request}/>
+              </code>
+            </div>
             <KeyValueEditor
-              className="pad"
               namePlaceholder="name"
               valuePlaceholder="value"
               uniquenessKey={request._id}

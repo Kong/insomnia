@@ -61,7 +61,7 @@ class EnvironmentEditModal extends ModalComponent {
     const {uniquenessKey, pairs} = this.state;
 
     return (
-      <Modal ref="modal" tall={true} {...this.props}>
+      <Modal ref="modal" top={true} {...this.props}>
         <ModalHeader>Environment Variables</ModalHeader>
         <ModalBody>
           <KeyValueEditor onChange={this._keyValueChange.bind(this)}

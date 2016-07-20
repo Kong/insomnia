@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import Input from './base/Input';
 import Dropdown from './base/Dropdown';
 import MethodTag from './MethodTag';
-import {METHODS, DEBOUNCE_MILLIS} from '../lib/constants';
+import {METHODS} from '../lib/constants';
 import Mousetrap from '../lib/mousetrap';
 
 
@@ -15,11 +15,7 @@ class RequestUrlBar extends Component {
   }
 
   _handleUrlChange (url) {
-    // Debounce URL changes so we don't update the app so much
-    clearTimeout(this.timeout);
-    this.timeout = setTimeout(() => {
-      this.props.onUrlChange(url);
-    }, DEBOUNCE_MILLIS);
+    this.props.onUrlChange(url);
   }
 
   focus () {

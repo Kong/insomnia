@@ -48,8 +48,8 @@ class SidebarRequestRow extends Component {
 
     if (!request) {
       node = (
-        <li className={classes}>
-          <div className="sidebar__item">
+        <li className={classes} onKeyDown={this._onKeyDown.bind(this)}>
+          <div className="sidebar__item" tabIndex={0}>
             <button className="sidebar__clickable"
                     onClick={() => db.requestCreate({parentId: requestGroup._id})}>
               <em>click to add first request...</em>

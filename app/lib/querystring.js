@@ -2,13 +2,13 @@
 export function getJoiner (url) {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';
-};
+}
 
 export function joinURL (url, qs) {
   if (!qs) { return url; }
   url = url || '';
   return url + getJoiner(url) + qs;
-};
+}
 
 export function build (param) {
   // Skip non-name ones
@@ -19,14 +19,19 @@ export function build (param) {
   } else {
     return encodeURIComponent(param.name);
   }
-};
+}
 
 export function buildFromParams (parameters) {
-  var items = [];
+  let items = [];
   for (var i = 0; i < parameters.length; i++) {
-    let param = parameters[i];
-    items.push(build(param));
+    let built = build(parameters[i]);
+
+    if (!built) {
+      continue;
+    }
+
+    items.push(built);
   }
 
   return items.join('&');
-};
+}

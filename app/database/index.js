@@ -19,7 +19,7 @@ const MODEL_DEFAULTS = {
     showPasswords: true,
     useBulkHeaderEditor: false,
     followRedirects: true,
-    editorFontSize: 12,
+    editorFontSize: 11,
     editorLineWrapping: true,
     timeout: -1
   }),
@@ -305,6 +305,10 @@ export function requestCopyAndActivate (workspace, request) {
 }
 
 export function requestCreate (patch = {}) {
+  if (!patch.parentId) {
+    throw new Error('New Requests missing `parentId`', patch);
+  }
+
   return docCreate(TYPE_REQUEST, 'req', patch);
 }
 
@@ -339,6 +343,10 @@ export function requestAll () {
 // ~~~~~~~~~~~~~ //
 
 export function requestGroupCreate (patch = {}) {
+  if (!patch.parentId) {
+    throw new Error('New Requests missing `parentId`', patch);
+  }
+
   return docCreate(TYPE_REQUEST_GROUP, 'grp', patch);
 }
 
@@ -367,6 +375,10 @@ export function requestGroupAll () {
 // ~~~~~~~~ //
 
 export function responseCreate (patch = {}) {
+  if (!patch.parentId) {
+    throw new Error('New Requests missing `parentId`', patch);
+  }
+
   return docCreate(TYPE_RESPONSE, 'res', patch);
 }
 

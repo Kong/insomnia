@@ -1,5 +1,6 @@
 @import '../constants/colors';
 @import '../constants/dimensions';
+@import '../constants/fonts';
 
 .editor {
   box-sizing: border-box;
@@ -9,7 +10,7 @@
   .CodeMirror {
     height: 100% !important;
     width: 100%;
-    font-family: 'Source Code Pro', Menlo, 'Ubuntu Mono', 'Courier New', monospace;
+    font-family: $font-monospace;
     box-sizing: border-box;
     padding-top: $padding-sm;
   }

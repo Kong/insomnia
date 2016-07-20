@@ -1,31 +1,46 @@
-import React, {PropTypes} from 'react';
-import * as constants from '../lib/constants';
+import React, {PropTypes, Component} from 'react';
+import {getRenderedRequest} from '../lib/render';
+import * as querystring from '../lib/querystring';
 
-const MethodTag = ({method, fullNames}) => {
-  let methodName = method;
 
-  if (!fullNames) {
-    if (method === constants.METHOD_DELETE || method === constants.METHOD_OPTIONS) {
-      methodName = method.slice(0, 3);
-    } else if (method === constants.METHOD_PATCH) {
-      methodName = 'PTCH';
-    } else {
-      methodName = method.slice(0, 4);
+class RenderedQueryString extends Component {
+  constructor (props) {
+    super(props);
+    this.state = {
+      string: ''
     }
   }
 
-  return (
-    <div className={'tag tag--no-bg tag--small method-' + method}>
-      <span className='tag__inner'>{methodName}</span>
-    </div>
-  )
+  _update (props) {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      getRenderedRequest(props.request).then(({parameters}) => {
+        const qs = querystring.buildFromParams(parameters);
+        this.setState({string: qs});
+      });
+    }, 500);
+  }
+
+  componentDidMount () {
+    this._update(this.props);
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this._update(nextProps);
+  }
+
+  render () {
+    if (this.state.string) {
+      return <span>{this.state.string}</span>
+    } else {
+      return <span className="super-faint">add some parameters below</span>
+    }
+  }
+}
+
+
+RenderedQueryString.propTypes = {
+  request: PropTypes.object.isRequired
 };
 
-MethodTag.propTypes = {
-  method: PropTypes.string.isRequired,
-
-  // Optional
-  fullNames: PropTypes.bool
-};
-
-export default MethodTag;
+export default RenderedQueryString;

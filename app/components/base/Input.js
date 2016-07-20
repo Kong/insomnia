@@ -1,22 +1,28 @@
 import React, {Component, PropTypes} from 'react';
 
 class Input extends Component {
-  _valueChanged (e) {
+  _valueChanged () {
     if (!this.props.onChange) {
       return;
     }
 
-    if (this.props.type === 'number') {
-      if (e.target.value === '') {
-        // This is what it returns when not a valid number
-        return;
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      const value = this.refs.input.value;
+      const checked = this.refs.input.checked;
+
+      if (this.props.type === 'number') {
+        if (value === '') {
+          // This is what it returns when not a valid number
+          return;
+        }
+        this.props.onChange(parseFloat(value));
+      } else if (this.props.type === 'checkbox') {
+        this.props.onChange(checked);
+      } else {
+        this.props.onChange(value);
       }
-      this.props.onChange(parseFloat(e.target.value));
-    } else if (this.props.type === 'checkbox') {
-      this.props.onChange(e.target.checked);
-    } else {
-      this.props.onChange(e.target.value);
-    }
+    }, 100);
   }
 
   _updateValueFromProps () {

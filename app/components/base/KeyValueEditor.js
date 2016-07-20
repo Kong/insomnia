@@ -8,6 +8,8 @@ const ENTER = 13;
 const BACKSPACE = 8;
 const UP = 38;
 const DOWN = 40;
+const LEFT = 37;
+const RIGHT = 39;
 
 class KeyValueEditor extends Component {
   constructor (props) {
@@ -112,6 +114,10 @@ class KeyValueEditor extends Component {
     } else if (e.keyCode === UP) {
       e.preventDefault();
       this._focusPreviousPair();
+    } else if (e.keyCode === LEFT) {
+      // TODO: Implement this
+    } else if (e.keyCode === RIGHT) {
+      // TODO: Implement this
     }
   }
 
@@ -178,50 +184,70 @@ class KeyValueEditor extends Component {
 
           return (
             <li key={i}>
-              <div className="form-control form-control--underlined form-control--wide">
-                <Input
-                  type="text"
-                  placeholder={this.props.namePlaceholder || 'Name'}
-                  ref={`${i}.${NAME}`}
-                  value={pair.name}
-                  onChange={name => this._updatePair(i, {name})}
-                  onFocus={() => {this._focusedPair = i; this._focusedField = NAME}}
-                  onBlur={() => {this._focusedPair = -1}}
-                  onKeyDown={this._keyDown.bind(this)}/>
-              </div>
-              <div className="form-control form-control--underlined form-control--wide">
-                <Input
-                  type={valueInputType || 'text'}
-                  placeholder={this.props.valuePlaceholder || 'Value'}
-                  ref={`${i}.${VALUE}`}
-                  value={pair.value}
-                  onChange={value => this._updatePair(i, {value})}
-                  onFocus={() => {this._focusedPair = i; this._focusedField = VALUE}}
-                  onBlur={() => {this._focusedPair = -1}}
-                  onKeyDown={this._keyDown.bind(this)}/>
-              </div>
+              <div className="key-value-editor__row">
+                <div className="form-control form-control--underlined form-control--wide">
+                  <Input
+                    type="text"
+                    placeholder={this.props.namePlaceholder || 'Name'}
+                    ref={`${i}.${NAME}`}
+                    value={pair.name}
+                    onChange={name => this._updatePair(i, {name})}
+                    onFocus={() => {
+                      this._focusedPair = i;
+                      this._focusedField = NAME
+                    }}
+                    onBlur={() => {
+                      this._focusedPair = -1
+                    }}
+                    onKeyDown={this._keyDown.bind(this)}/>
+                </div>
+                <div className="form-control form-control--underlined form-control--wide">
+                  <Input
+                    type={valueInputType || 'text'}
+                    placeholder={this.props.valuePlaceholder || 'Value'}
+                    ref={`${i}.${VALUE}`}
+                    value={pair.value}
+                    onChange={value => this._updatePair(i, {value})}
+                    onFocus={() => {
+                      this._focusedPair = i;
+                      this._focusedField = VALUE
+                    }}
+                    onBlur={() => {
+                      this._focusedPair = -1
+                    }}
+                    onKeyDown={this._keyDown.bind(this)}/>
+                </div>
 
-              <button tabIndex="-1" onClick={e => this._deletePair(i)}>
-                <i className="fa fa-trash-o"></i>
-              </button>
+                <button tabIndex="-1" onClick={e => this._deletePair(i)}>
+                  <i className="fa fa-trash-o"></i>
+                </button>
+              </div>
             </li>
           )
         })}
         {maxPairs === undefined || pairs.length < maxPairs ? (
           <li>
-            <div className="form-control form-control--underlined form-control--wide">
-              <input type="text"
-                     placeholder={this.props.namePlaceholder || 'Name'}
-                     onFocus={() => {this._focusedField = NAME; this._addPair()}}/>
+            <div className="key-value-editor__row">
+              <div className="form-control form-control--underlined form-control--wide">
+                <input type="text"
+                       placeholder={this.props.namePlaceholder || 'Name'}
+                       onFocus={() => {
+                         this._focusedField = NAME;
+                         this._addPair()
+                       }}/>
+              </div>
+              <div className="form-control form-control--underlined form-control--wide">
+                <input type={valueInputType || 'text'}
+                       placeholder={this.props.valuePlaceholder || 'Value'}
+                       onFocus={() => {
+                         this._focusedField = VALUE;
+                         this._addPair()
+                       }}/>
+              </div>
+              <button disabled={true} tabIndex="-1">
+                <i className="fa fa-blank"></i>
+              </button>
             </div>
-            <div className="form-control form-control--underlined form-control--wide">
-              <input type={valueInputType || 'text'}
-                     placeholder={this.props.valuePlaceholder || 'Value'}
-                     onFocus={() => {this._focusedField = VALUE; this._addPair()}}/>
-            </div>
-            <button disabled={true} tabIndex="-1">
-              <i className="fa fa-blank"></i>
-            </button>
           </li>
         ) : null}
       </ul>

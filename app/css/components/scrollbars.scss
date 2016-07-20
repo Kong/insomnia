@@ -2,14 +2,15 @@
 @import '../constants/dimensions';
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: $padding-sm;
+  height: $padding-sm;
 }
 
 ::-webkit-scrollbar-track {
+  background: $hl-xxxs;
 }
 
 ::-webkit-scrollbar-thumb {
   background: $hl-md;
-  border-radius: $radius-md;
+  border-radius: $padding-sm;
 }

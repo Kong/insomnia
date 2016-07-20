@@ -1,5 +1,6 @@
 @import '../constants/colors';
 @import '../constants/dimensions';
+@import '../constants/fonts';
 
 html {
   font-family: 'Open Sans', sans-serif;
@@ -53,10 +54,11 @@ p {
 }
 
 label.label--small,
-table th{
+table th {
   color: $hl;
   text-transform: uppercase;
   font-size: 0.8em;
+  padding-bottom: $padding-xxs;
 }
 
 webview {
@@ -76,8 +78,13 @@ table {
   }
 }
 
-.monospace {
-  font-family: monospace;
+code {
+  background: $bg-dark;
+  border: 1px solid $hl-xs;
+  padding: $padding-xs;
+  font-family: $font-monospace;
+  color: $font-super-dark-bg;
+  border-radius: $radius-md;
 }
 
 .text-center {
@@ -102,6 +109,10 @@ table {
 
 .faint {
   color: $hl;
+}
+
+.super-faint {
+  color: $hl-lg;
 }
 
 .valign-bottom {

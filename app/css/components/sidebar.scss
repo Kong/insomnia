@@ -90,11 +90,11 @@
     &.sidebar__row--dragging-below::after,
     &.sidebar__row--dragging-above::before {
       position: absolute;
-      height: 2px;
+      height: 0;
+      border-bottom: 2px dotted lighten($surprise, 5);
       content: " ";
       width: 100%;
-      display: block;
-      background: lighten($success, 2);
+      display: block
     }
   }
 
@@ -116,7 +116,7 @@
       grid-template-rows: $line-height-sm;
     }
 
-    &.sidebar__item--active {
+    &.sidebar__item--active > button {
       color: $font-dark-bg;
 
       .tag {
@@ -124,8 +124,14 @@
       }
     }
 
-    &:hover {
+    &.sidebar__item--active > .sidebar__actions,
+    & > button:focus {
       background-color: $hl-xxs;
+    }
+
+    &:hover > .sidebar__actions,
+    &:hover > button {
+      background-color: $hl-xxxs;
     }
 
     .tag {

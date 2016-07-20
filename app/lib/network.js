@@ -1,10 +1,11 @@
 import networkRequest from 'request';
 
-import render from './render';
 import * as db from '../database';
 import * as querystring from './querystring';
+import {render} from './render';
 import {DEBOUNCE_MILLIS} from './constants';
 import {STATUS_CODE_PEBKAC} from './constants';
+import {getRenderedRequest} from './render';
 
 function buildRequestConfig (request, patch = {}) {
   const config = {
@@ -100,56 +101,14 @@ export function send (requestId) {
         request,
         settings
       ]) => {
-        db.requestGroupGetById(request.parentId).then(requestGroup => {
-          // TODO: Clean this shit up
-
-          const environment = requestGroup ? requestGroup.environment : {};
-          let renderedRequest = null;
-
-          if (environment) {
-            let template;
-
-            try {
-              template = JSON.stringify(request);
-            } catch (e) {
-              // Failed to parse Request as JSON
-              db.responseCreate({
-                parentId: request._id,
-                statusCode: STATUS_CODE_PEBKAC,
-                error: `Bad Request: "${e.message}"`
-              }).then(resolve, reject);
-              return;
-            }
-
-            let renderedJSON;
-            try {
-              renderedJSON = render(template, environment);
-            } catch (e) {
-              // Failed to render Request
-              db.responseCreate({
-                parentId: request._id,
-                statusCode: STATUS_CODE_PEBKAC,
-                error: `Render Failed: "${e.message}"`
-              }).then(resolve, reject);
-              return;
-            }
-
-            try {
-              renderedRequest = JSON.parse(renderedJSON);
-            } catch (e) {
-              // Failed to parse rendered request
-              db.responseCreate({
-                parentId: request._id,
-                statusCode: STATUS_CODE_PEBKAC,
-                error: `Parse Failed: "${e.message}"`
-              }).then(resolve, reject);
-              return;
-            }
-          }
-
-          if (renderedRequest) {
-            actuallySend(renderedRequest, settings).then(resolve, reject);
-          }
+        getRenderedRequest(request).then(renderedRequest => {
+          actuallySend(renderedRequest, settings).then(resolve, reject);
+        }, err => {
+          db.responseCreate({
+            parentId: request._id,
+            statusCode: STATUS_CODE_PEBKAC,
+            error: err.message
+          }).then(resolve, reject);
         });
       })
     }, DEBOUNCE_MILLIS);

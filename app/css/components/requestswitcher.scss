@@ -2,10 +2,6 @@
 @import '../constants/colors';
 
 .request-switcher {
-  ul {
-
-  }
-
   .btn:hover {
     background: $hl-xs;
   }
@@ -17,5 +13,6 @@
   .tag {
     width: 4.5em;
     border: 1px solid !important;
+    padding: $padding-xxs !important;
   }
 }

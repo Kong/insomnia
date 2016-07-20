@@ -5,27 +5,36 @@
   padding: $padding-md 0;
 
   li {
-    display: grid;
-    grid-template-columns: 0.5fr 0.5fr auto;
-    grid-template-rows: auto;
 
-    & > * {
-      padding: 0 $padding-sm;
-
-      &:first-child {
-        padding-left: $padding-md;
-      }
-
-      &:last-child {
-        padding-right: $padding-md;
-      }
+    .key-value-editor__label {
+      padding: 0 $padding-md;
+      opacity: 0.5;
+      font-size: $font-size-sm;
     }
 
-    & > button {
-      color: $hl;
+    .key-value-editor__row {
+      display: grid;
+      grid-template-columns: 0.5fr 0.5fr auto;
+      grid-template-rows: auto;
 
-      &:hover {
-        color: inherit;
+      & > * {
+        padding: 0 $padding-sm;
+
+        &:first-child {
+          padding-left: $padding-md;
+        }
+
+        &:last-child {
+          padding-right: $padding-md;
+        }
+      }
+
+      & > button {
+        color: $hl;
+
+        &:hover {
+          color: inherit;
+        }
       }
     }
   }

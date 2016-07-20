@@ -17,6 +17,7 @@ $font-super-dark-bg: #ddd;
 $font-brand-bg: #eee;
 $font-light-bg-link: darken($bg-brand, 3);
 
+$hl-xxxs: rgba(140, 140, 140, 0.03);
 $hl-xxs: rgba(140, 140, 140, 0.05);
 $hl-xs: rgba(140, 140, 140, 0.09);
 $hl-sm: rgba(140, 140, 140, 0.15);
@@ -27,7 +28,7 @@ $hl-xxl: rgba(140, 140, 140, 0.7);
 $hl: rgba(140, 140, 140, 1);
 
 $success: #88bd29;
-$notice: #e5df54;
+$notice: #e5d550;
 $warning: #f59d00;
 $danger: #ff6d59;
 $surprise: #8f78ff;
