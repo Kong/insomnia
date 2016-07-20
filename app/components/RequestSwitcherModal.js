@@ -38,7 +38,7 @@ class RequestSwitcherModal extends ModalComponent {
     } else {
       // Create the request if nothing matched
       const name = this.state.searchString;
-      const parentId = this.props.activeRequest.parentId;
+      const parentId = this.props.newRequestParentId;
 
       db.requestCreate({name, parentId}).then(request => {
         this._activateRequest(request);
@@ -63,8 +63,8 @@ class RequestSwitcherModal extends ModalComponent {
       requests,
       requestGroups
     ]) => {
-      const {activeRequest} = this.props;
-      const activeRequestGroup = requestGroups.find(rg => rg._id === activeRequest.parentId);
+      const {parentId} = this.props;
+      const activeRequestGroup = requestGroups.find(rg => rg._id === parentId);
 
       const matchedRequests = requests.sort(
         (a, b) => {
@@ -207,8 +207,8 @@ class RequestSwitcherModal extends ModalComponent {
 
 RequestSwitcherModal.propTypes = {
   activateRequest: PropTypes.func.isRequired,
-  activeRequest: PropTypes.object.isRequired,
-  workspaceId: PropTypes.string.isRequired
+  workspaceId: PropTypes.string.isRequired,
+  newRequestParentId: PropTypes.string.isRequired
 };
 
 export default RequestSwitcherModal;

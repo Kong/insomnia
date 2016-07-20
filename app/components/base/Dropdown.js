@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 
 import Mousetrap from '../../lib/mousetrap';
@@ -7,12 +8,13 @@ class Dropdown extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: false
+      open: false,
+      dropUp: false
     };
   }
 
   _handleClick(e) {
-    e.preventDefault();
+    // e.preventDefault();
 
     this.toggle();
   }
@@ -25,8 +27,12 @@ class Dropdown extends Component {
     Mousetrap.bind('esc', () => {
       this.hide();
     });
-    
-    this.setState({open: true});
+
+    const bodyHeight = document.body.getBoundingClientRect().height;
+    const dropdownTop = ReactDOM.findDOMNode(this).getBoundingClientRect().top;
+    const dropUp = dropdownTop > bodyHeight * 0.75;
+
+    this.setState({open: true, dropUp});
   }
   
   toggle() {
@@ -38,16 +44,20 @@ class Dropdown extends Component {
   }
 
   render() {
-    const className = classnames(
+    const {right, className} = this.props;
+    const {dropUp, open} = this.state;
+
+    const classes = classnames(
       'dropdown',
-      this.props.className,
-      {'dropdown--open': this.state.open},
-      {'dropdown--right': this.props.right}
+      className,
+      {'dropdown--open': open},
+      {'dropdown--up': dropUp},
+      {'dropdown--right': right}
     );
 
     return (
       <div
-        className={className}
+        className={classes}
         onClick={this._handleClick.bind(this)}>
 
         {this.props.children}

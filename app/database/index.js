@@ -239,7 +239,7 @@ function remove (doc) {
   delete db.entities[doc.type][doc._id];
 
   // Also remove children
-  Object.key(MODEL_DEFAULTS).map(type => removeWhere(type, 'parentId', doc._id));
+  Object.keys(MODEL_DEFAULTS).map(type => removeWhere(type, 'parentId', doc._id));
 
   const wasLastDoc = db.entities[doc.type].length === 0;
 
