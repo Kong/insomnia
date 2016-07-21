@@ -56,13 +56,14 @@ class App extends Component {
       },
 
       // Show Environment Editor
-      'mod+e': () => {
-        this._fetchActiveRequestGroup().then(requestGroup => {
-          EnvironmentEditModal.toggle(requestGroup);
-        }, () => {
-          // No RequestGroup is active
-        })
-      },
+      // DON'T WANT THIS YET
+      // 'mod+e': () => {
+      //   this._fetchActiveRequestGroup().then(requestGroup => {
+      //     EnvironmentEditModal.toggle(requestGroup);
+      //   }, () => {
+      //     // No RequestGroup is active
+      //   })
+      // },
 
       // Show Request Switcher
       'mod+k|mod+p': () => {
@@ -112,16 +113,6 @@ class App extends Component {
 
         db.requestCopyAndActivate(workspace, request);
       },
-
-      // Change Http Method
-      'mod+m': () => {
-        // TODO: This
-      },
-
-      // Sidebar Toggle
-      'mod+\\': () => {
-        // TODO: This
-      }
     }
   }
 

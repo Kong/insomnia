@@ -79,11 +79,11 @@ table {
 }
 
 code {
+  display: inline-block;
   background: $hl-xs;
   border: 1px solid $hl-sm;
   padding: $padding-xs;
   font-family: $font-monospace;
-  color: $font-super-dark-bg;
   border-radius: $radius-md;
 }
 

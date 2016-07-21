@@ -15,6 +15,7 @@ import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
 import {MASHAPE_URL} from '../lib/constants';
 import {getVersion} from '../lib/appInfo';
+import {MOD_SYM} from '../lib/constants';
 
 
 class SettingsTabs extends Component {
@@ -53,7 +54,7 @@ class SettingsTabs extends Component {
             <button>Import/Export</button>
           </Tab>
           <Tab>
-            <button>Hotkeys</button>
+            <button>Shortcuts</button>
           </Tab>
           <Tab>
             <button>About</button>
@@ -176,7 +177,42 @@ class SettingsTabs extends Component {
           </p>
         </TabPanel>
         <TabPanel className="pad">
-          Keyboard
+          <p>Use these shortcuts to improve your productivity.</p>
+          <br/>
+          <table className="wide">
+            <thead>
+            <tr>
+              <th>Keyboard Shortcut</th>
+              <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td><code>{MOD_SYM}P</code> <code>{MOD_SYM}K</code></td>
+              <td>Quick Switch Requests</td>
+            </tr>
+            <tr>
+              <td><code>{MOD_SYM}Enter</code></td>
+              <td>Send Request</td>
+            </tr>
+            <tr>
+              <td><code>{MOD_SYM}N</code></td>
+              <td>New Request</td>
+            </tr>
+            <tr>
+              <td><code>{MOD_SYM}D</code></td>
+              <td>Duplicate Request</td>
+            </tr>
+            <tr>
+              <td><code>{MOD_SYM}L</code></td>
+              <td>Focus URL Bar</td>
+            </tr>
+            <tr>
+              <td><code>{MOD_SYM},</code></td>
+              <td>Show Settings</td>
+            </tr>
+            </tbody>
+          </table>
         </TabPanel>
         <TabPanel className="pad">
           <h1>Why hello there!</h1>
@@ -271,7 +307,7 @@ class SettingsModal extends ModalComponent {
           <span className="faint txt-sm">v{getVersion()}</span>
         </ModalHeader>
         <ModalBody>
-          <ConnectedSettingsTabs selectedIndex={selectedIndex} />
+          <ConnectedSettingsTabs selectedIndex={selectedIndex}/>
         </ModalBody>
         <ModalFooter className="pad text-right">
           <div className="relative">

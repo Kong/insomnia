@@ -52,14 +52,13 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => EnvironmentEditModal.show()}>
-              <i className="fa fa-code"></i> Environment
-              <DropdownHint char="E"></DropdownHint>
+            <button onClick={e => this._promptUpdateName()}>
+              <i className="fa fa-edit"></i> Rename
             </button>
           </li>
           <li>
-            <button onClick={e => this._promptUpdateName()}>
-              <i className="fa fa-edit"></i> Rename
+            <button onClick={e => EnvironmentEditModal.show()}>
+              <i className="fa fa-code"></i> Environment
             </button>
           </li>
           {/*<li>*/}
