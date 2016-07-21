@@ -48,8 +48,16 @@ class Input extends Component {
   }
 
   shouldComponentUpdate (nextProps) {
+    if (nextProps.type !== this.props.type) {
+      return true;
+    }
+
     // Only update when we have to, or else the cursor will jump to the end.
-    return this.refs.input.value !== nextProps.value;
+    if (this.refs.input.value !== nextProps.value) {
+      return true;
+    }
+
+    return false;
   }
 
   focus () {

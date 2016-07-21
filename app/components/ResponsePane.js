@@ -67,7 +67,7 @@ class ResponsePane extends Component {
 
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder text-center pad">
-            <h1>Nothing Yet...</h1>
+            <h1>No responses yet...</h1>
             <p>Click the <em>Send</em> button to trigger a request</p>
           </div>
         </section>
