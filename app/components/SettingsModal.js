@@ -40,12 +40,11 @@ class SettingsTabs extends Component {
   }
 
   render () {
-    const {entities} = this.props;
-
+    const {entities, selectedIndex} = this.props;
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
     return (
-      <Tabs>
+      <Tabs selectedIndex={selectedIndex >= 0 ? selectedIndex : 0}>
         <TabList>
           <Tab>
             <button>General</button>
@@ -211,7 +210,10 @@ SettingsTabs.propTypes = {
       importFile: PropTypes.func.isRequired,
       exportFile: PropTypes.func.isRequired,
     })
-  })
+  }),
+
+  // Optional
+  selectedIndex: PropTypes.number
 };
 
 function mapStateToProps (state) {
@@ -240,7 +242,25 @@ const ConnectedSettingsTabs = connect(
 
 
 class SettingsModal extends ModalComponent {
+  constructor (props) {
+    super(props);
+    this.state = {
+      selectedIndex: 0
+    }
+  }
+
+  show (selectedIndex = 0) {
+    super.show();
+
+    if (selectedIndex >= 0) {
+      this.setState({selectedIndex});
+    } else {
+      this.setState({selectedIndex: 0});
+    }
+  }
+
   render () {
+    const {selectedIndex} = this.state;
 
     return (
       <Modal ref="modal" tall={true} {...this.props}>
@@ -250,7 +270,7 @@ class SettingsModal extends ModalComponent {
           <span className="faint txt-sm">v{getVersion()}</span>
         </ModalHeader>
         <ModalBody>
-          <ConnectedSettingsTabs />
+          <ConnectedSettingsTabs selectedIndex={selectedIndex} />
         </ModalBody>
         <ModalFooter className="pad text-right">
           <div className="relative">

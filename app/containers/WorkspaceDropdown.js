@@ -145,7 +145,7 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name="Insomnia"/>
 
           <li>
-            <button onClick={e => SettingsModal.show()}>
+            <button onClick={e => SettingsModal.show(1)}>
               <i className="fa fa-share"></i> Import/Export
             </button>
           </li>

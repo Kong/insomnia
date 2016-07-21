@@ -91,9 +91,10 @@
     &.sidebar__row--dragging-above::before {
       position: absolute;
       height: 0;
+      right: 0;
+      left: 0;
       border-bottom: 2px dotted lighten($surprise, 5);
       content: " ";
-      width: 100%;
       display: block
     }
   }

@@ -7,18 +7,27 @@ import ModalHeader from './base/ModalHeader';
 import ModalFooter from './base/ModalFooter';
 import ModalComponent from './lib/ModalComponent';
 import {CHANGELOG_URL} from '../lib/constants';
+import {getVersion} from '../lib/appInfo';
 
 class ChangelogModal extends ModalComponent {
   constructor (props) {
     super(props);
     this.state = {
-      startVersion: null,
+      startVersion: getVersion(),
       changelog: null
     };
   }
 
-  show (startVersion) {
+  show (startVersion = null) {
     super.show();
+
+    if (startVersion) {
+      this.setState({startVersion});
+    }
+  }
+
+  componentDidMount () {
+    super.componentDidMount();
 
     request.get(CHANGELOG_URL, (err, response) => {
       if (err) {
@@ -34,7 +43,7 @@ class ChangelogModal extends ModalComponent {
         return;
       }
 
-      this.setState({changelog, startVersion});
+      this.setState({changelog});
     });
   }
 
@@ -52,21 +61,27 @@ class ChangelogModal extends ModalComponent {
     } else {
       html = [];
 
-      changelog.map(change => {
+      let startIndex = changelog.findIndex(c => c.version === startVersion);
+      if (startIndex < 0) {
+        startIndex = 0;
+        console.error(`Failed to find changelog version for ${startVersion}`)
+      }
+
+      changelog.slice(startIndex).map((change, i) => {
         html = [
           ...html,
-          <h1 key="changes">v{change.version} Changes</h1>
+          <h1 key={`changes.${i}`}>v{change.version} Changes</h1>
         ];
         if (change.summary) {
           if (!Array.isArray(change.summary)) {
             html = [
               ...html,
-              <p key="summary">{change.summary}</p>
+              <p key={`summary.${i}`}>{change.summary}</p>
             ]
           } else {
             html = [
               ...html,
-              <p key="summary"><strong>{change.summary[0]}</strong></p>,
+              <p key={`summary.${i}`}><strong>{change.summary[0]}</strong></p>,
               ...change.summary.slice(1).map((text, i) => <p key={`summary[${i}]`}>{text}</p>)
             ]
           }
@@ -75,8 +90,8 @@ class ChangelogModal extends ModalComponent {
         if (change.major && change.major.length) {
           html = [
             ...html,
-            <h3 key="major">Noteworthy</h3>,
-            <ul key="major.list">
+            <h3 key={`major.${i}`}>Noteworthy</h3>,
+            <ul key={`major.${i}.list`}>
               {change.major.map((text, i) => <li key={i}>{text}</li>)}
             </ul>
           ];
@@ -85,26 +100,26 @@ class ChangelogModal extends ModalComponent {
         if (change.fixes && change.fixes.length) {
           html = [
             ...html,
-            <h3 key="fixes">Fixes</h3>,
-            <ul key="fixes.list">
+            <h3 key={`fixes.${i}`}>Fixes</h3>,
+            <ul key={`fixes.${i}.list`}>
               {change.fixes.map(text => <li>{text}</li>)}
-              </ul>
+            </ul>
           ];
         }
 
         if (change.minor && change.minor.length) {
           html = [
             ...html,
-            <h3 key="minor">Minor Changes</h3>,
-            <ul key="minor.list">
+            <h3 key={`minor.${i}`}>Minor Changes</h3>,
+            <ul key={`minor.${i}.list`}>
               {change.minor.map((text, i) => <li key={i}>{text}</li>)}
-              </ul>
+            </ul>
           ];
         }
 
         html = [
           ...html,
-          <hr key="hr"/>
+          <hr key={`hr.${i}`}/>
         ]
       });
     }
