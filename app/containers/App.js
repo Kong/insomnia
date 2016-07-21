@@ -521,8 +521,9 @@ class App extends Component {
         />
         <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
         {/*<div className="toast toast--show">*/}
-        {/*<div className="toast__message">Hello, there is an update</div>*/}
-        {/*<button className="toast__action">Update</button>*/}
+          {/*<div className="toast__message">How's it going?</div>*/}
+          {/*<button className="toast__action">Great!</button>*/}
+          {/*<button className="toast__action">Horrible :(</button>*/}
         {/*</div>*/}
       </div>
     )

@@ -179,6 +179,7 @@ class SettingsTabs extends Component {
           Keyboard
         </TabPanel>
         <TabPanel className="pad">
+          <h1>Why hello there!</h1>
           <p>
             <Link href="http://insomnia.rest">Insomnia</Link> is made with love by me,&nbsp;
             <Link href="http://schier.co">Gregory Schier</Link>.

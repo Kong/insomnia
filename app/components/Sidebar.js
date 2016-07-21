@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 
 import Input from './base/Input';
 import Dropdown from './base/Dropdown';
+import DropdownHint from './base/DropdownHint';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import WorkspaceDropdown from '../containers/WorkspaceDropdown';
@@ -115,6 +116,7 @@ class Sidebar extends Component {
               <li>
                 <button onClick={e => requestCreate()}>
                   <i className="fa fa-plus-circle"></i> New Request
+                  <DropdownHint char="N"></DropdownHint>
                 </button>
               </li>
               <li>

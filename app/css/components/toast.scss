@@ -27,17 +27,13 @@
     height: auto;
   }
 
-  .toast__message {
-    border-right: 1px solid $hl-md;
-  }
-
   .toast__action {
-    color: $surprise;
+    color: $font-light-bg;
     font-weight: bold;
     font-size: $font-size-sm;
+    border-left: 1px solid $hl-md;
 
     &:hover {
-      color: darken($surprise, 10);
       background: $hl-xs;
     }
   }
