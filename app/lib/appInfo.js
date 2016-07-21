@@ -1,7 +1,15 @@
 import * as appJson from '../app.json';
 
-export function getVersion () {
+export function getAppVersion () {
   return appJson.version;
+}
+
+export function getAppLongName () {
+  return appJson.longName;
+}
+
+export function getAppName () {
+  return appJson.productName;
 }
 
 export function isMac () {

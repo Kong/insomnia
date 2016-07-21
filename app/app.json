@@ -3,6 +3,7 @@
   "name": "insomnia",
   "version": "3.0.3",
   "productName": "Insomnia",
+  "longName": "Insomnia HTTP Client",
   "description": "The best REST API Client",
   "homepage": "http://insomnia.rest",
   "author": "Gregory Schier <support@insomnia.rest>",

@@ -1,5 +1,5 @@
 import * as db from '../../database';
-import {getVersion} from '../appInfo';
+import {getAppVersion} from '../appInfo';
 
 const VERSION_CHROME_APP = 1;
 const VERSION_DESKTOP_APP = 2;
@@ -153,7 +153,7 @@ export function exportJSON () {
     _type: 'export',
     __export_format: 2,
     __export_date: new Date(),
-    __export_source: `insomnia.desktop.app:v${getVersion()}`,
+    __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
     resources: {}
   };
 

@@ -7,13 +7,13 @@ import ModalHeader from './base/ModalHeader';
 import ModalFooter from './base/ModalFooter';
 import ModalComponent from './lib/ModalComponent';
 import {CHANGELOG_URL} from '../lib/constants';
-import {getVersion} from '../lib/appInfo';
+import {getAppVersion} from '../lib/appInfo';
 
 class ChangelogModal extends ModalComponent {
   constructor (props) {
     super(props);
     this.state = {
-      startVersion: getVersion(),
+      startVersion: getAppVersion(),
       changelog: null
     };
   }

@@ -13,7 +13,7 @@ import ChangelogModal from '../components/ChangelogModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
-import {getVersion} from '../lib/appInfo';
+import {getAppVersion} from '../lib/appInfo';
 
 class WorkspaceDropdown extends Component {
   _promptUpdateName () {
@@ -150,7 +150,7 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
 
-          <DropdownDivider name={`Insomnia Version ${getVersion()}`}/>
+          <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
           <li>
             <button onClick={e => SettingsModal.show(1)}>

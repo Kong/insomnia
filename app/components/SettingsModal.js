@@ -14,8 +14,9 @@ import ModalComponent from './lib/ModalComponent';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
 import {MASHAPE_URL} from '../lib/constants';
-import {getVersion} from '../lib/appInfo';
+import {getAppVersion} from '../lib/appInfo';
 import {MOD_SYM} from '../lib/constants';
+import {getAppName, getAppLongName} from '../lib/appInfo';
 
 
 class SettingsTabs extends Component {
@@ -217,7 +218,7 @@ class SettingsTabs extends Component {
         <TabPanel className="pad">
           <h1>Why hello there!</h1>
           <p>
-            <Link href="http://insomnia.rest">Insomnia</Link> is made with love by me,&nbsp;
+            <Link href="http://insomnia.rest">{getAppName()}</Link> is made with love by me,&nbsp;
             <Link href="http://schier.co">Gregory Schier</Link>.
           </p>
           <p>
@@ -302,9 +303,9 @@ class SettingsModal extends ModalComponent {
     return (
       <Modal ref="modal" tall={true} {...this.props}>
         <ModalHeader>
-          Insomnia
-          {" "}
-          <span className="faint txt-sm">v{getVersion()}</span>
+          {getAppLongName()}
+          &nbsp;&nbsp;
+          <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>
         <ModalBody>
           <ConnectedSettingsTabs selectedIndex={selectedIndex}/>
