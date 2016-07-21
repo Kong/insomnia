@@ -52,7 +52,7 @@ class WorkspaceDropdown extends Component {
 
   _requestGroupCreate () {
     PromptModal.show({
-      headerName: 'Create New Request Group',
+      headerName: 'Create New Folder',
       defaultValue: 'New Group',
       submitName: 'Create',
       selectText: true
@@ -111,7 +111,7 @@ class WorkspaceDropdown extends Component {
 
           <li>
             <button onClick={e => this._requestGroupCreate() }>
-              <i className="fa fa-folder"></i> New Request Group
+              <i className="fa fa-folder"></i> New Folder
             </button>
           </li>
           <li>

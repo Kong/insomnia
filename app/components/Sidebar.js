@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 
 import Input from './base/Input';
+import Dropdown from './base/Dropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import WorkspaceDropdown from '../containers/WorkspaceDropdown';
@@ -93,7 +94,7 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {filter, children} = this.props;
+    const {filter, children, requestCreate, requestGroupCreate} = this.props;
 
     return (
       <aside className="sidebar">
@@ -105,12 +106,32 @@ class Sidebar extends Component {
           {this._renderChildren(children)}
         </ul>
 
-        <footer className="sidebar__footer form-control form-control--underlined">
-          <Input
-            type="text"
-            placeholder="Filter Requests"
-            value={filter}
-            onChange={this._onFilterChange.bind(this)}/>
+        <footer className="sidebar__footer">
+          <Dropdown>
+            <button className="btn btn--compact">
+              <i className="fa fa-plus-circle"></i>
+            </button>
+            <ul>
+              <li>
+                <button onClick={e => requestCreate()}>
+                  <i className="fa fa-plus-circle"></i> New Request
+                </button>
+              </li>
+              <li>
+                <button onClick={e => requestGroupCreate()}>
+                  <i className="fa fa-folder"></i> New Folder
+                </button>
+              </li>
+            </ul>
+          </Dropdown>
+          <div className="form-control form-control--underlined">
+            <Input
+              type="text"
+              placeholder="Filter Requests"
+              value={filter}
+              onChange={this._onFilterChange.bind(this)}
+            />
+          </div>
         </footer>
       </aside>
     )
@@ -125,6 +146,8 @@ Sidebar.propTypes = {
   changeFilter: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
+  requestCreate: PropTypes.func.isRequired,
+  requestGroupCreate: PropTypes.func.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,

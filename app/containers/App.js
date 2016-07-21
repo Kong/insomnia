@@ -450,6 +450,8 @@ class App extends Component {
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
+          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}
+          requestGroupCreate={() => db.requestGroupCreate({parentId: workspace._id})}
           filter={workspace.filter || ''}
           children={children}
         />
@@ -504,6 +506,10 @@ class App extends Component {
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
         />
         <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
+        {/*<div className="toast toast--show">*/}
+          {/*<div className="toast__message">Hello, there is an update</div>*/}
+          {/*<button className="toast__action">Update</button>*/}
+        {/*</div>*/}
       </div>
     )
   }

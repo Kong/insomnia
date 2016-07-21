@@ -11,14 +11,15 @@ class RenderedQueryString extends Component {
     }
   }
 
-  _update (props) {
+  _update (props, delay = false) {
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
-      getRenderedRequest(props.request).then(({parameters}) => {
+      getRenderedRequest(props.request).then(({url, parameters}) => {
         const qs = querystring.buildFromParams(parameters);
-        this.setState({string: qs});
+        const fullUrl = querystring.joinURL(url, qs);
+        this.setState({string: fullUrl});
       });
-    }, 500);
+    }, delay ? 300 : 0);
   }
 
   componentDidMount () {
@@ -26,7 +27,14 @@ class RenderedQueryString extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    this._update(nextProps);
+    let delay = true;
+
+    // Update right away if we're switching requests
+    if (nextProps.request._id !== this.props.request._id) {
+      delay = false;
+    }
+
+    this._update(nextProps, delay);
   }
 
   render () {

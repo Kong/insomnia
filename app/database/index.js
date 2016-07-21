@@ -31,7 +31,7 @@ const MODEL_DEFAULTS = {
     metaActiveRequestId: null
   }),
   [TYPE_REQUEST_GROUP]: () => ({
-    name: 'New Request Group',
+    name: 'New Folder',
     environment: {},
     metaCollapsed: false,
     metaSortKey: -1 * Date.now()

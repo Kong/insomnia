@@ -10,7 +10,7 @@ class RequestGroupActionsDropdown extends Component {
     const {requestGroup} = this.props;
 
     PromptModal.show({
-      headerName: 'Rename Request Group',
+      headerName: 'Rename Folder',
       defaultValue: requestGroup.name
     }).then(name => {
       db.requestGroupUpdate(requestGroup, {name});
@@ -61,7 +61,7 @@ class RequestGroupActionsDropdown extends Component {
           </li>
           {/*<li>*/}
           {/*<button onClick={e => db.requestGroupCreate({parentId: requestGroup._id})}>*/}
-          {/*<i className="fa fa-folder"></i> New Request Group*/}
+          {/*<i className="fa fa-folder"></i> New Folder*/}
           {/*</button>*/}
           {/*</li>*/}
           <li>

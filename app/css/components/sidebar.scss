@@ -221,5 +221,20 @@
 
   .sidebar__footer {
     // Nothing yet
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .btn {
+      color: $hl;
+    }
+
+    .form-control {
+      padding: 0;
+      width: 100%;
+      input {
+        padding: $padding-xs;
+      }
+    }
   }
 }

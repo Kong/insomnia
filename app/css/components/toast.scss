@@ -1,7 +1,10 @@
 @import '../constants/dimensions';
 @import '../constants/colors';
+@import '../constants/animations';
+
 
 .toast {
+  opacity: 0;
   position: absolute;
   z-index: 100;
   bottom: $padding-md;
@@ -9,6 +12,14 @@
   background: $bg-light;
   color: $font-light-bg;
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: row;
+  border-radius: $radius-md;
+
+  &.toast--show {
+    opacity: 1;
+    transition: opacity 2s 5s ease-in;
+  }
 
   .toast__message,
   .toast__action {
@@ -21,11 +32,13 @@
   }
 
   .toast__action {
-    color: $font-light-bg;
+    color: $surprise;
+    font-weight: bold;
+    font-size: $font-size-sm;
 
     &:hover {
-      color: $font-super-light-bg;
-      background: rgba(0, 0, 0, 0.05);
+      color: darken($surprise, 10);
+      background: $hl-xs;
     }
   }
 }
