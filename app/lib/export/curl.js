@@ -4,6 +4,7 @@ import render from '../render';
 import * as querystring from '../querystring';
 import * as db from '../../database';
 import {DEBOUNCE_MILLIS, METHOD_GET} from '../constants';
+import {getRenderedRequest} from '../render';
 
 const FLAGS = [
   'cacert', 'capath', 'E', 'cert', 'cert-type', 'ciphers', 'K', 'config',
@@ -150,52 +151,50 @@ export function exportCurl (requestId) {
 
     // First, lets wait for all debounces to finish
     setTimeout(() => {
-      db.requestGetById(requestId).then(request => {
-        db.requestGroupGetById(request.parentId).then(requestGroup => {
-          const renderCtx = requestGroup ? requestGroup.environment : {};
+      db.requestGetById(requestId).then(r => {
+        getRenderedRequest(r).then(renderedRequest => {
 
           // Build the querystring
-          const paramsString = JSON.stringify(request.parameters);
-          const parameters = JSON.parse(render(paramsString, renderCtx));
+          const {parameters} = renderedRequest;
           const qs = querystring.buildFromParams(parameters);
 
           // Build the Url
-          const url = querystring.joinURL(request.url, qs);
-          const IS_GET_REQUEST = request.method.toUpperCase() === METHOD_GET.toUpperCase();
+          const url = querystring.joinURL(renderedRequest.url, qs);
+          const IS_GET_REQUEST = renderedRequest.method.toUpperCase() === METHOD_GET.toUpperCase();
 
           let cmd = 'curl';
 
           // HTTP method
           if (!IS_GET_REQUEST) {
-            cmd += ` -X ${request.method.toUpperCase()}`;
+            cmd += ` -X ${renderedRequest.method.toUpperCase()}`;
           }
 
           // Url
           cmd += ` '${url.replace(`'`, `'"'"'`)}'`;
 
           // Payload
-          if (request.body) {
-            cmd += ` \\\n -d '${request.body.replace(`'`, `'"'"'`)}'`;
+          if (renderedRequest.body) {
+            cmd += ` \\\n -d '${renderedRequest.body.replace(`'`, `'"'"'`)}'`;
           }
 
           // Basic auth
-          const {username, password} = request.authentication;
+          const {username, password} = renderedRequest.authentication;
           if (username || password) {
             cmd += ` \\\n -u ${username}:${password}`;
           }
 
           // Headers
-          const hasContentTypeHeader = !!request.headers.find(h => h.name.toUpperCase() === 'CONTENT-TYPE');
+          const hasContentTypeHeader = !!renderedRequest.headers.find(h => h.name.toUpperCase() === 'CONTENT-TYPE');
 
           if (!hasContentTypeHeader && !IS_GET_REQUEST) {
-            const value = request.contentType;
+            const value = renderedRequest.contentType;
             const name = 'Content-Type';
 
-            request.headers.push({name, value})
+            renderedRequest.headers.push({name, value})
           }
 
-          for (let i = 0; i < request.headers.length; i++) {
-            const {name, value} = request.headers[i];
+          for (let i = 0; i < renderedRequest.headers.length; i++) {
+            const {name, value} = renderedRequest.headers[i];
 
             if (!name) {
               // Don't add headers with no name
@@ -205,7 +204,7 @@ export function exportCurl (requestId) {
             cmd += ` \\\n -H '${name}: ${value}'`;
           }
 
-          resolve(render(cmd, renderCtx));
+          resolve(cmd);
         });
       });
     }, DEBOUNCE_MILLIS);

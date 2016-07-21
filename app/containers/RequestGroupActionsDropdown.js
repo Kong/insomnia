@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown';
+import DropdownHint from '../components/base/DropdownHint';
 import EnvironmentEditModal from '../components/EnvironmentEditModal';
 import PromptModal from '../components/PromptModal';
 import * as db from '../database';
@@ -45,18 +46,20 @@ class RequestGroupActionsDropdown extends Component {
         </button>
         <ul>
           <li>
+            <button onClick={e => this._requestCreate()}>
+              <i className="fa fa-plus-circle"></i> New Request
+              <DropdownHint char="N"></DropdownHint>
+            </button>
+          </li>
+          <li>
             <button onClick={e => EnvironmentEditModal.show()}>
               <i className="fa fa-code"></i> Environment
+              <DropdownHint char="E"></DropdownHint>
             </button>
           </li>
           <li>
             <button onClick={e => this._promptUpdateName()}>
               <i className="fa fa-edit"></i> Rename
-            </button>
-          </li>
-          <li>
-            <button onClick={e => this._requestCreate()}>
-              <i className="fa fa-plus-circle"></i> New Request
             </button>
           </li>
           {/*<li>*/}
@@ -66,7 +69,7 @@ class RequestGroupActionsDropdown extends Component {
           {/*</li>*/}
           <li>
             <button onClick={e => db.requestGroupRemove(requestGroup)}>
-              <i className="fa fa-trash-o"></i> Delete Group
+              <i className="fa fa-trash-o"></i> Delete
             </button>
           </li>
         </ul>

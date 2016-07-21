@@ -5,6 +5,7 @@ import {connect} from 'react-redux'
 
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
+import DropdownHint from '../components/base/DropdownHint';
 import PromptModal from '../components/PromptModal';
 import AlertModal from '../components/AlertModal';
 import SettingsModal from '../components/SettingsModal';
@@ -112,6 +113,7 @@ class WorkspaceDropdown extends Component {
             <button
               onClick={e => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}>
               <i className="fa fa-plus-circle"></i> New Request
+              <DropdownHint char="N"></DropdownHint>
             </button>
           </li>
 
@@ -158,6 +160,7 @@ class WorkspaceDropdown extends Component {
           <li>
             <button onClick={e => SettingsModal.show()}>
               <i className="fa fa-cog"></i> Settings
+              <DropdownHint char=","></DropdownHint>
             </button>
           </li>
           <li>

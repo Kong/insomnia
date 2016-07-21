@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown';
+import DropdownHint from '../components/base/DropdownHint';
 import CurlExportModal from '../components/CurlExportModal';
 import PromptModal from '../components/PromptModal';
 import * as db from '../database';
@@ -31,6 +32,7 @@ class RequestActionsDropdown extends Component {
           <li>
             <button onClick={e => db.requestCopy(request)}>
               <i className="fa fa-copy"></i> Duplicate
+              <DropdownHint char="D"></DropdownHint>
             </button>
           </li>
           <li>

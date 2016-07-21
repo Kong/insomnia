@@ -6,7 +6,6 @@ import Modal from './base/Modal';
 import ModalBody from './base/ModalBody';
 import ModalHeader from './base/ModalHeader';
 import ModalFooter from './base/ModalFooter';
-import {MODAL_CURL_EXPORT} from '../lib/constants';
 import {exportCurl} from '../lib/export/curl';
 
 class CurlExportModal extends ModalComponent {

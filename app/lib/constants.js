@@ -1,4 +1,5 @@
 import {isDevelopment} from './appInfo';
+import {isMac} from './appInfo';
 
 // Global Stuff
 export const LOCALSTORAGE_KEY = 'insomnia.state';
@@ -10,6 +11,7 @@ export const CHANGELOG_URL = isDevelopment() ?
   'http://localhost:5000/changelog.json' :
   'http://changelog.insomnia.rest/changelog.json';
 export const STATUS_CODE_PEBKAC = -333;
+export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 35;

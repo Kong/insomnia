@@ -1,5 +1,6 @@
 @import '../constants/colors';
 @import '../constants/dimensions';
+@import '../constants/fonts';
 
 .dropdown {
   position: relative;
@@ -57,6 +58,12 @@
           display: inline-block;
           width: 2em;
           text-align: center;
+        }
+
+        .dropdown__hint {
+          font-family: $font-monospace;
+          color: $hl;
+          float: right;
         }
       }
     }
