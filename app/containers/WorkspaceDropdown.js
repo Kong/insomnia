@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import {ipcRenderer} from 'electron';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux'
 
@@ -11,6 +12,7 @@ import ChangelogModal from '../components/ChangelogModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
+import {getVersion} from '../lib/appInfo';
 
 class WorkspaceDropdown extends Component {
   _promptUpdateName () {
@@ -22,6 +24,10 @@ class WorkspaceDropdown extends Component {
     }).then(name => {
       db.workspaceUpdate(workspace, {name});
     })
+  }
+
+  _handleCheckForUpdates () {
+    ipcRenderer.send('check-for-updates');
   }
 
   _workspaceCreate () {
@@ -142,7 +148,7 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
 
-          <DropdownDivider name="Insomnia"/>
+          <DropdownDivider name={`Insomnia Version ${getVersion()}`}/>
 
           <li>
             <button onClick={e => SettingsModal.show(1)}>
@@ -152,6 +158,11 @@ class WorkspaceDropdown extends Component {
           <li>
             <button onClick={e => SettingsModal.show()}>
               <i className="fa fa-cog"></i> Settings
+            </button>
+          </li>
+          <li>
+            <button onClick={e => this._handleCheckForUpdates()}>
+              <i className="fa fa-blank"></i> Check for Updates
             </button>
           </li>
           <li>

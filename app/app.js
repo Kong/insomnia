@@ -7,11 +7,8 @@ if (require('electron-squirrel-startup')) {
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
 const appVersion = require('./app.json').version;
-const autoUpdater = electron.autoUpdater;
-const Menu = electron.Menu;
+const {app, ipcMain, ipcRenderer, autoUpdater, Menu, BrowserWindow, webContents} = electron;
 
-const app = electron.app;  // Module to control application life.
-const BrowserWindow = electron.BrowserWindow;  // Module to create native browser window.
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
 const IS_WIN = process.platform === 'win32';
@@ -42,10 +39,31 @@ autoUpdater.on('update-available', () => {
   console.log('-- Update Available --');
 });
 
-autoUpdater.on('update-downloaded', (e) => {
-  console.log('-- Update Downloaded --');
-  autoUpdater.quitAndInstall();
+autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
+  console.log(`-- Update Downloaded ${releaseName} --`);
+  ipcRenderer.send('update-available', releaseName);
 });
+
+ipcMain.on('install-update', (event, arg) => {
+  console.log('-- Installing Update --');
+  if (!IS_DEV) {
+    autoUpdater.quitAndInstall();
+  }
+});
+
+ipcMain.on('check-for-updates', () => {
+  console.log('-- Checking for Updates --');
+  if (!IS_DEV) {
+    autoUpdater.checkForUpdates();
+  }
+});
+
+// Debug faking that there is an update (for dev testing)
+if (IS_DEV) {
+  ipcMain.on('debug-pop-updates-modal', e => {
+    mainWindow.webContents.send('update-available');
+  });
+}
 
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
