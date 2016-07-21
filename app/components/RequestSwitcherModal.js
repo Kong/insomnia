@@ -56,13 +56,28 @@ class RequestSwitcherModal extends ModalComponent {
   }
 
   _handleChange (searchString) {
+    const {workspaceId} = this.props;
+
     Promise.all([
       db.requestAll(),
       db.requestGroupAll()
     ]).then(([
-      requests,
-      requestGroups
+      allRequests,
+      allRequestGroups
     ]) => {
+      // TODO: Support nested RequestGroups
+      // Filter out RequestGroups that don't belong to this Workspace
+      const requestGroups = allRequestGroups.filter(rg => rg.parentId === workspaceId);
+
+      // Filter out Requests that don't belong to this Workspace
+      const requests = allRequests.filter(r => {
+        if (r.parentId === workspaceId) {
+          return true;
+        } else {
+          return !!requestGroups.find(rg => rg._id === r.parentId);
+        }
+      });
+
       const {parentId} = this.props;
       const activeRequestGroup = requestGroups.find(rg => rg._id === parentId);
 
