@@ -11,8 +11,9 @@
   }
 
   .tag {
-    width: 4.5em;
-    border: 1px solid !important;
-    padding: $padding-xxs !important;
+    width: 4em;
+    padding-left: 0;
+    margin-right: 0;
+    text-align: left;
   }
 }

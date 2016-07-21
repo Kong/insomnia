@@ -22,10 +22,10 @@ class SidebarRequestGroupRow extends Component {
   }
 
   render () {
-
     const {
       connectDragSource,
       connectDropTarget,
+      moveRequest,
       children,
       requestGroup,
       isActive,
@@ -73,10 +73,8 @@ class SidebarRequestGroupRow extends Component {
         <ul className="sidebar__list">
           {!expanded || children.length > 0 ? null : (
             <SidebarRequestRow
-              activateRequest={() => {
-              }}
-              moveRequest={() => {
-              }}
+              activateRequest={() => null}
+              moveRequest={moveRequest}
               isActive={false}
               request={null}
               requestGroup={requestGroup}
@@ -94,6 +92,7 @@ SidebarRequestGroupRow.propTypes = {
   toggleRequestGroup: PropTypes.func.isRequired,
   addRequestToRequestGroup: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
+  moveRequest: PropTypes.func.isRequired,
 
   // Other
   isActive: PropTypes.bool.isRequired,

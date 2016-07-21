@@ -51,6 +51,14 @@ class ResponsePane extends Component {
         </div>
       )
     }
+    if (!request) {
+      return (
+        <section className="response-pane pane">
+          <header className="pane__header"></header>
+          <div className="pane__body pane__body--placeholder text-center pad"></div>
+        </section>
+      )
+    }
 
     if (!response) {
       return (

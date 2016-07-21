@@ -38,7 +38,7 @@ class RequestSwitcherModal extends ModalComponent {
     } else {
       // Create the request if nothing matched
       const name = this.state.searchString;
-      const parentId = this.props.newRequestParentID;
+      const parentId = this.props.newRequestParentId;
 
       db.requestCreate({name, parentId}).then(request => {
         this._activateRequest(request);

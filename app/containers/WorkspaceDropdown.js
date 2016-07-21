@@ -102,11 +102,12 @@ class WorkspaceDropdown extends Component {
 
           <DropdownDivider name="Current Workspace"/>
 
-          {/*<li>*/}
-            {/*<button onClick={e => db.requestCreate({parentId: workspace._id})}>*/}
-              {/*<i className="fa fa-plus-circle"></i> New Request*/}
-            {/*</button>*/}
-          {/*</li>*/}
+          <li>
+            <button
+              onClick={e => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}>
+              <i className="fa fa-plus-circle"></i> New Request
+            </button>
+          </li>
 
           <li>
             <button onClick={e => this._requestGroupCreate() }>
@@ -159,7 +160,7 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           {/*<li>*/}
-            {/*<button><i className="fa fa-blank"></i> Open New Window</button>*/}
+          {/*<button><i className="fa fa-blank"></i> Open New Window</button>*/}
           {/*</li>*/}
         </ul>
       </Dropdown>

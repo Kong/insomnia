@@ -294,13 +294,13 @@ function docCreate (type, idPrefix, patch = {}) {
 
 export function requestCreateAndActivate (workspace, patch = {}) {
   return requestCreate(patch).then(r => {
-    workspaceUpdate(workspace, {activeRequestId: r._id});
+    workspaceUpdate(workspace, {metaActiveRequestId: r._id});
   })
 }
 
 export function requestCopyAndActivate (workspace, request) {
   return requestCopy(request).then(r => {
-    workspaceUpdate(workspace, {activeRequestId: r._id});
+    workspaceUpdate(workspace, {metaActiveRequestId: r._id});
   })
 }
 

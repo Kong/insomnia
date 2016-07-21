@@ -81,6 +81,7 @@ class Sidebar extends Component {
           key={requestGroup._id}
           isActive={isActive}
           moveRequestGroup={moveRequestGroup}
+          moveRequest={moveRequest}
           toggleRequestGroup={toggleRequestGroup}
           addRequestToRequestGroup={addRequestToRequestGroup}
           numChildren={child.children.length}

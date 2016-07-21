@@ -169,23 +169,29 @@ class App extends Component {
     })
   }
 
-  _moveRequest (requestToMove, requestToTarget, targetOffset) {
+  _moveRequest (requestToMove, parentId, targetId, targetOffset) {
     // Oh God, this function is awful...
 
-    if (requestToMove._id === requestToTarget._id) {
-      // Nothing to do
+    if (requestToMove._id === targetId) {
+      // Nothing to do. We are in the same spot as we started
+      return;
+    }
+
+    if (targetId === null) {
+      // We are moving to an empty area. No sorting required
+      db.requestUpdate(requestToMove, {parentId});
       return;
     }
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
-    db.requestFindByParentId(requestToTarget.parentId).then(requests => {
+    db.requestFindByParentId(parentId).then(requests => {
       requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
       // Find the index of request B so we can re-order and save everything
       for (let i = 0; i < requests.length; i++) {
         const request = requests[i];
 
-        if (request._id === requestToTarget._id) {
+        if (request._id === targetId) {
           let before, after;
           if (targetOffset < 0) {
             // We're moving to below
@@ -207,11 +213,11 @@ class App extends Component {
             console.warn('-- Recreating Sort Keys --');
 
             requests.map((r, i) => {
-              db.requestUpdate(r, {metaSortKey: i * 100, parentId: requestToTarget.parentId});
+              db.requestUpdate(r, {metaSortKey: i * 100, parentId});
             });
           } else {
             const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.requestUpdate(requestToMove, {metaSortKey, parentId: requestToTarget.parentId});
+            db.requestUpdate(requestToMove, {metaSortKey, parentId});
           }
 
           break;

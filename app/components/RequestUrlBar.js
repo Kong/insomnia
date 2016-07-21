@@ -60,7 +60,7 @@ class RequestUrlBar extends Component {
           <Input
             ref="input"
             type="text"
-            placeholder="http://echo.insomnia.rest/status/200"
+            placeholder="https://api.myproduct.com/v1/users"
             value={url}
             onChange={url => this._handleUrlChange(url)}/>
         </form>

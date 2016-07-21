@@ -48,7 +48,7 @@ class SidebarRequestRow extends Component {
 
     if (!request) {
       node = (
-        <li className={classes} onKeyDown={this._onKeyDown.bind(this)}>
+        <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
             <button className="sidebar__clickable"
                     onClick={() => db.requestCreate({parentId: requestGroup._id})}>
@@ -130,10 +130,18 @@ function isAbove (monitor, component) {
 
 const dragTarget = {
   drop (props, monitor, component) {
+    const {request} = monitor.getItem();
+    const targetRequest = props.request;
+
+    const {requestGroup} = props;
+    const requestGroupId = requestGroup ? requestGroup._id : null;
+    const parentId = targetRequest ? targetRequest.parentId : requestGroupId;
+    const targetId = targetRequest ? targetRequest._id : null;
+
     if (isAbove(monitor, component)) {
-      props.moveRequest(monitor.getItem().request, props.request, 1);
+      props.moveRequest(request, parentId, targetId, 1);
     } else {
-      props.moveRequest(monitor.getItem().request, props.request, -1);
+      props.moveRequest(request, parentId, targetId, -1);
     }
   },
   hover (props, monitor, component) {
