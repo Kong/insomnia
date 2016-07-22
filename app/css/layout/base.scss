@@ -82,7 +82,7 @@ code {
   display: inline-block;
   background: $hl-xs;
   border: 1px solid $hl-sm;
-  padding: $padding-xs;
+  padding: $padding-xs $padding-sm;
   font-family: $font-monospace;
   border-radius: $radius-md;
 }
