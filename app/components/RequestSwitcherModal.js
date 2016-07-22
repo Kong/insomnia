@@ -80,25 +80,20 @@ class RequestSwitcherModal extends ModalComponent {
 
       const parentId = this.props.activeRequestParentId;
 
-      const matchedRequests = requests.sort(
+      // OPTIMIZATION: This only filters if we have a filter
+      let matchedRequests = !searchString ? requests : requests.filter(
+        r => r.name.toLowerCase().indexOf(searchString.toLowerCase()) !== -1
+      );
+
+      // OPTIMIZATION: Apply sort after the filter so we have to sort less
+      matchedRequests = matchedRequests.sort(
         (a, b) => {
-          // const rgA = requestGroups.find(rg => rg._id === a.parentId);
-          // const rgB = requestGroups.find(rg => rg._id === b.parentId);
-          // const rgAId = rgA ? rgA._id : null;
-          // const rgBId = rgB ? rgB._id : null;
-
-          // if (rgAId === parentId && rgBId !== parentId) {
-          //   return -1;
-          // } else if (rgBId === parentId && rgAId !== parentId) {
-          //   return 1;
-
           if (a.parentId === b.parentId) {
             // Sort Requests by name inside of the same parent
             // TODO: Sort by quality of match (eg. start of string vs mid string, etc)
             return a.name > b.name ? 1 : -1;
           } else {
             // Sort RequestGroups by relevance if Request isn't in the same parent
-            console.log(a.parentId, b.parentId, parentId);
             if (a.parentId === parentId) {
               return -1;
             } else if (b.parentId === parentId) {
@@ -108,13 +103,7 @@ class RequestSwitcherModal extends ModalComponent {
             }
           }
         }
-      ).filter(r => {
-        if (!searchString) {
-          return true;
-        } else {
-          return r.name.toLowerCase().indexOf(searchString.toLowerCase()) !== -1;
-        }
-      });
+      );
 
       const activeIndex = searchString ? 0 : -1;
 
