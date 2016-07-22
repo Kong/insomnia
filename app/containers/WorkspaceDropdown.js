@@ -6,10 +6,10 @@ import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
 import DropdownHint from '../components/base/DropdownHint';
-import PromptModal from '../components/PromptModal';
-import AlertModal from '../components/AlertModal';
-import SettingsModal from '../components/SettingsModal';
-import ChangelogModal from '../components/ChangelogModal';
+import PromptModal from '../components/modals/PromptModal';
+import AlertModal from '../components/modals/AlertModal';
+import SettingsModal from '../components/modals/SettingsModal';
+import ChangelogModal from '../components/modals/ChangelogModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';

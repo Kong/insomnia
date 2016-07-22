@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd'
 import classnames from 'classnames';
 
-import RequestGroupActionsDropdown from '../containers/RequestGroupActionsDropdown';
+import RequestGroupActionsDropdown from '../../containers/RequestGroupActionsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 
 class SidebarRequestGroupRow extends Component {

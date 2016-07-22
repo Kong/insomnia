@@ -2,8 +2,8 @@ import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
-import CurlExportModal from '../components/CurlExportModal';
-import PromptModal from '../components/PromptModal';
+import CurlExportModal from '../components/modals/CurlExportModal';
+import PromptModal from '../components/modals/PromptModal';
 import * as db from '../database';
 
 

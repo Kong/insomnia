@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom'
 
-import ModalComponent from './lib/ModalComponent';
-import Modal from './base/Modal';
-import ModalBody from './base/ModalBody';
-import ModalHeader from './base/ModalHeader';
-import ModalFooter from './base/ModalFooter';
-import {exportCurl} from '../lib/export/curl';
+import ModalComponent from '../lib/ModalComponent';
+import Modal from '../base/Modal';
+import ModalBody from '../base/ModalBody';
+import ModalHeader from '../base/ModalHeader';
+import ModalFooter from '../base/ModalFooter';
+import {exportCurl} from '../../lib/export/curl';
 
 class CurlExportModal extends ModalComponent {
   constructor (props) {

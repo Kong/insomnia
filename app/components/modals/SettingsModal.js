@@ -4,19 +4,19 @@ import {bindActionCreators} from 'redux';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 import {shell} from 'electron';
 
-import Input from './base/Input';
-import Link from './base/Link';
-import Modal from './base/Modal';
-import ModalBody from './base/ModalBody';
-import ModalHeader from './base/ModalHeader';
-import ModalFooter from './base/ModalFooter';
-import ModalComponent from './lib/ModalComponent';
-import * as GlobalActions from '../redux/modules/global';
-import * as db from '../database';
-import {MASHAPE_URL} from '../lib/constants';
-import {getAppVersion} from '../lib/appInfo';
-import {MOD_SYM} from '../lib/constants';
-import {getAppName, getAppLongName} from '../lib/appInfo';
+import Input from '../base/Input';
+import Link from '../base/Link';
+import Modal from '../base/Modal';
+import ModalBody from '../base/ModalBody';
+import ModalHeader from '../base/ModalHeader';
+import ModalFooter from '../base/ModalFooter';
+import ModalComponent from '../lib/ModalComponent';
+import * as GlobalActions from '../../redux/modules/global';
+import * as db from '../../database';
+import {MASHAPE_URL} from '../../lib/constants';
+import {getAppVersion} from '../../lib/appInfo';
+import {MOD_SYM} from '../../lib/constants';
+import {getAppName, getAppLongName} from '../../lib/appInfo';
 
 
 class SettingsTabs extends Component {

@@ -7,7 +7,7 @@ if (require('electron-squirrel-startup')) {
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
 const appVersion = require('./app.json').version;
-const {app, ipcMain, ipcRenderer, autoUpdater, Menu, BrowserWindow, webContents} = electron;
+const {app, dialog, ipcMain, ipcRenderer, autoUpdater, Menu, BrowserWindow, webContents} = electron;
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
@@ -41,15 +41,29 @@ autoUpdater.on('update-available', () => {
 
 autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
   console.log(`-- Update Downloaded ${releaseName} --`);
-  ipcRenderer.send('update-available', releaseName);
+  showUpdateModal();
 });
 
-ipcMain.on('install-update', (event, arg) => {
-  console.log('-- Installing Update --');
-  if (!IS_DEV) {
-    autoUpdater.quitAndInstall();
-  }
-});
+function showUpdateModal () {
+  dialog.showMessageBox({
+    type: 'info',
+    buttons: [
+      'Install and Restart',
+      'Later',
+    ],
+    defaultId: 0,
+    cancelId: 1,
+    title: 'New Update Available!',
+    message: 'Exciting news!\n\nA fresh new update has been downloaded and is ready to install\n\n\n~Gregory'
+  }, id => {
+    if (id === 0) {
+      console.log('-- Installing Update --');
+      autoUpdater.quitAndInstall();
+    } else {
+      console.log('-- Cancel Update --');
+    }
+  });
+}
 
 ipcMain.on('check-for-updates', () => {
   console.log('-- Checking for Updates --');
@@ -57,13 +71,6 @@ ipcMain.on('check-for-updates', () => {
     autoUpdater.checkForUpdates();
   }
 });
-
-// Debug faking that there is an update (for dev testing)
-if (IS_DEV) {
-  ipcMain.on('debug-pop-updates-modal', e => {
-    mainWindow.webContents.send('update-available');
-  });
-}
 
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {

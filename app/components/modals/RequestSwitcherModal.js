@@ -2,12 +2,12 @@ import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 
-import Modal from './base/Modal';
-import ModalHeader from './base/ModalHeader';
-import ModalBody from './base/ModalBody';
-import MethodTag from './MethodTag';
-import ModalComponent from './lib/ModalComponent';
-import * as db from '../database';
+import Modal from '../base/Modal';
+import ModalHeader from '../base/ModalHeader';
+import ModalBody from '../base/ModalBody';
+import MethodTag from '../MethodTag';
+import ModalComponent from '../lib/ModalComponent';
+import * as db from '../../database';
 
 
 class RequestSwitcherModal extends ModalComponent {

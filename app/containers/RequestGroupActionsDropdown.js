@@ -2,8 +2,8 @@ import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
-import EnvironmentEditModal from '../components/EnvironmentEditModal';
-import PromptModal from '../components/PromptModal';
+import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
+import PromptModal from '../components/modals/PromptModal';
 import * as db from '../database';
 
 class RequestGroupActionsDropdown extends Component {

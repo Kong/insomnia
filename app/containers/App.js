@@ -7,17 +7,16 @@ import {DragDropContext} from 'react-dnd';
 
 import Mousetrap from '../lib/mousetrap';
 
-import EnvironmentEditModal from '../components/EnvironmentEditModal';
-import RequestSwitcherModal from '../components/RequestSwitcherModal';
-import CurlExportModal from '../components/CurlExportModal';
-import PromptModal from '../components/PromptModal';
-import AlertModal from '../components/AlertModal';
-import UpdateModal from '../components/UpdateModal';
-import ChangelogModal from '../components/ChangelogModal';
-import SettingsModal from '../components/SettingsModal';
+import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
+import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
+import CurlExportModal from '../components/modals/CurlExportModal';
+import PromptModal from '../components/modals/PromptModal';
+import AlertModal from '../components/modals/AlertModal';
+import ChangelogModal from '../components/modals/ChangelogModal';
+import SettingsModal from '../components/modals/SettingsModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/sidebar/Sidebar';
 import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes';
 import {
   MAX_PANE_WIDTH, MIN_PANE_WIDTH,
@@ -502,7 +501,6 @@ class App extends Component {
         <PromptModal />
         <AlertModal />
         <ChangelogModal />
-        <UpdateModal />
         <SettingsModal />
         <CurlExportModal />
         <RequestSwitcherModal

@@ -1,12 +1,12 @@
 import React, {PropTypes} from 'react';
 
-import Link from './base/Link';
-import Editor from './base/Editor';
-import Modal from './base/Modal';
-import ModalBody from './base/ModalBody';
-import ModalHeader from './base/ModalHeader';
-import ModalFooter from './base/ModalFooter';
-import ModalComponent from './lib/ModalComponent';
+import Link from '../base/Link';
+import Editor from '../base/Editor';
+import Modal from '../base/Modal';
+import ModalBody from '../base/ModalBody';
+import ModalHeader from '../base/ModalHeader';
+import ModalFooter from '../base/ModalFooter';
+import ModalComponent from '../lib/ModalComponent';
 
 
 class EnvironmentEditModal extends ModalComponent {
