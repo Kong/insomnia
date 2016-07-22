@@ -186,13 +186,6 @@ export function exportCurl (requestId) {
           // Headers
           const hasContentTypeHeader = !!renderedRequest.headers.find(h => h.name.toUpperCase() === 'CONTENT-TYPE');
 
-          if (!hasContentTypeHeader && !IS_GET_REQUEST) {
-            const value = renderedRequest.contentType;
-            const name = 'Content-Type';
-
-            renderedRequest.headers.push({name, value})
-          }
-
           for (let i = 0; i < renderedRequest.headers.length; i++) {
             const {name, value} = renderedRequest.headers[i];
 

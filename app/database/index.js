@@ -5,8 +5,8 @@ import * as fs from 'fs';
 import * as methods from '../lib/constants';
 import {generateId} from './util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
-import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
+import {CONTENT_TYPE_JSON} from '../lib/contentTypes';
 
 export const TYPE_SETTINGS = 'Settings';
 export const TYPE_WORKSPACE = 'Workspace';
@@ -40,10 +40,12 @@ const MODEL_DEFAULTS = {
     url: '',
     name: 'New Request',
     method: methods.METHOD_GET,
-    contentType: CONTENT_TYPE_TEXT,
     body: '',
     parameters: [],
-    headers: [],
+    headers: [{
+      name: 'Content-Type',
+      value: CONTENT_TYPE_JSON
+    }],
     authentication: {},
     metaPreviewMode: PREVIEW_MODE_SOURCE,
     metaSortKey: -1 * Date.now()
@@ -322,6 +324,24 @@ export function requestFindByParentId (parentId) {
 
 export function requestUpdate (request, patch) {
   return docUpdate(request, patch);
+}
+
+export function requestUpdateContentType (request, contentType) {
+  let headers = [...request.headers];
+  const contentTypeHeader = headers.find(
+    h => h.name.toLowerCase() === 'content-type'
+  );
+
+  if (!contentType) {
+    // Remove the contentType header if we are unsetting it
+    headers = headers.filter(h => h !== contentTypeHeader);
+  } else if (contentTypeHeader) {
+    contentTypeHeader.value = contentType;
+  } else {
+    headers.push({name: 'Content-Type', value: contentType})
+  }
+
+  return docUpdate(request, {headers});
 }
 
 export function requestCopy (request) {

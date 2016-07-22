@@ -1,5 +1,6 @@
 import * as db from '../../database';
 import {getAppVersion} from '../appInfo';
+import {getContentTypeFromHeaders} from '../contentTypes';
 
 const VERSION_CHROME_APP = 1;
 const VERSION_DESKTOP_APP = 2;
@@ -64,29 +65,43 @@ function importRequest (importedRequest, parentId, exportFormat) {
       }
     }
 
+    // Add the content type header
+    const headers = importedRequest.headers || [];
+    const contentType = getContentTypeFromHeaders(headers);
+    if (!contentType) {
+      const derivedContentType = FORMAT_MAP[importedRequest.__insomnia.format];
+
+      if (derivedContentType) {
+        headers.push({
+          name: 'Content-Type',
+          value: FORMAT_MAP[importedRequest.__insomnia.format]
+        });
+      }
+    }
+
     db.requestCreate({
       parentId,
       name: importedRequest.name,
       url: importedRequest.url,
       method: importedRequest.method,
       body: importedRequest.body,
-      headers: importedRequest.headers || [],
+      headers: headers,
       parameters: importedRequest.params || [],
       contentType: FORMAT_MAP[importedRequest.__insomnia.format] || 'text/plain',
       authentication: auth
     });
   } else if (exportFormat === VERSION_DESKTOP_APP) {
-    db.requestCreate({
-      parentId,
-      name: importedRequest.name,
-      url: importedRequest.url,
-      method: importedRequest.method,
-      body: importedRequest.body,
-      headers: importedRequest.headers,
-      parameters: importedRequest.parameters,
-      contentType: importedRequest.contentType,
-      authentication: importedRequest.authentication
-    });
+    const headers =
+      db.requestCreate({
+        parentId,
+        name: importedRequest.name,
+        url: importedRequest.url,
+        method: importedRequest.method,
+        body: importedRequest.body,
+        headers: importedRequest.headers,
+        parameters: importedRequest.parameters,
+        authentication: importedRequest.authentication
+      });
   } else {
     console.error(`Unknown export format ${exportFormat}`)
   }
@@ -175,7 +190,6 @@ export function exportJSON () {
         url: r.url,
         name: r.name,
         method: r.method,
-        contentType: r.contentType,
         body: r.body,
         parameters: r.parameters,
         headers: r.headers,

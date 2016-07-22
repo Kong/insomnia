@@ -479,7 +479,7 @@ class App extends Component {
           updateRequestParameters={parameters => db.requestUpdate(activeRequest, {parameters})}
           updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
           updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
-          updateRequestContentType={contentType => db.requestUpdate(activeRequest, {contentType})}
+          updateRequestContentType={contentType => db.requestUpdateContentType(activeRequest, contentType)}
           updateSettingsShowPasswords={showPasswords => db.settingsUpdate(settings, {showPasswords})}
         />
 

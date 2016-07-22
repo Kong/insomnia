@@ -11,6 +11,7 @@ import RequestUrlBar from '../components/RequestUrlBar';
 
 import {getContentTypeName} from '../lib/contentTypes';
 import {renderRequest} from '../lib/render';
+import {getContentTypeFromHeaders} from '../lib/contentTypes';
 
 class RequestPane extends Component {
   render () {
@@ -54,11 +55,8 @@ class RequestPane extends Component {
         <Tabs className="pane__body">
           <TabList>
             <Tab>
-              <button>{getContentTypeName(request.contentType)}</button>
-              <ContentTypeDropdown
-                activeContentType={request.contentType}
-                updateRequestContentType={updateRequestContentType}
-              />
+              <button>{getContentTypeName(getContentTypeFromHeaders(request.headers))}</button>
+              <ContentTypeDropdown updateRequestContentType={updateRequestContentType}/>
             </Tab>
             <Tab>
               <button>
@@ -80,12 +78,10 @@ class RequestPane extends Component {
           </TabList>
           <TabPanel className="editor-wrapper">
             <RequestBodyEditor
+              request={request}
               onChange={updateRequestBody}
-              requestId={request._id}
-              contentType={request.contentType}
               fontSize={editorFontSize}
               lineWrapping={editorLineWrapping}
-              body={request.body}
             />
           </TabPanel>
           <TabPanel>

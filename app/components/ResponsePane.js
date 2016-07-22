@@ -4,8 +4,9 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 import StatusTag from './StatusTag';
 import SizeTag from './SizeTag';
 import TimeTag from './TimeTag';
-import PreviewModeDropdown from '../components/PreviewModeDropdown';
-import ResponseViewer from '../components/ResponseViewer';
+import PreviewModeDropdown from './PreviewModeDropdown';
+import ResponseBodyViewer from './ResponseBodyViewer';
+import ResponseHeadersViewer from './ResponseHeadersViewer';
 import {getPreviewModeName} from '../lib/previewModes';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
@@ -108,7 +109,7 @@ class ResponsePane extends Component {
           </TabList>
           <TabPanel>
             {response.error ? (
-              <ResponseViewer
+              <ResponseBodyViewer
                 contentType={response.contentType}
                 previewMode={PREVIEW_MODE_SOURCE}
                 editorLineWrapping={editorLineWrapping}
@@ -117,7 +118,7 @@ class ResponsePane extends Component {
                 url={response.url}
               />
             ) : (
-              <ResponseViewer
+              <ResponseBodyViewer
                 contentType={response.contentType}
                 previewMode={previewMode}
                 editorLineWrapping={editorLineWrapping}
@@ -129,22 +130,7 @@ class ResponsePane extends Component {
             )}
           </TabPanel>
           <TabPanel className="scrollable pad">
-            <table className="wide">
-              <thead>
-              <tr>
-                <th>Name</th>
-                <th>Value</th>
-              </tr>
-              </thead>
-              <tbody>
-              {response.headers.map((h, i) => (
-                <tr className="selectable" key={i}>
-                  <td>{h.name}</td>
-                  <td>{h.value}</td>
-                </tr>
-              ))}
-              </tbody>
-            </table>
+            <ResponseHeadersViewer headers={response.headers}/>
           </TabPanel>
         </Tabs>
       </section>
