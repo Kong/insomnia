@@ -223,12 +223,16 @@ class Editor extends Component {
   }
 
   render () {
-    const {value, readOnly, fontSize} = this.props;
+    const {value, readOnly, fontSize, lightTheme} = this.props;
 
     const classes = classnames(
       'editor',
       this.props.className,
-      {'editor--readonly': readOnly}
+      {
+        'editor--readonly': readOnly,
+        'editor--light-theme': !!lightTheme,
+        'editor--dark-theme': !lightTheme
+      }
     );
 
     return (
@@ -253,7 +257,8 @@ Editor.propTypes = {
   fontSize: PropTypes.number,
   value: PropTypes.string,
   prettify: PropTypes.bool,
-  className: PropTypes.any
+  className: PropTypes.any,
+  lightTheme: PropTypes.bool
 };
 
 export default Editor;

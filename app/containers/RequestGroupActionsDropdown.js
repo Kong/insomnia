@@ -57,7 +57,7 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => EnvironmentEditModal.show()}>
+            <button onClick={e => EnvironmentEditModal.show(requestGroup)}>
               <i className="fa fa-code"></i> Environment
             </button>
           </li>

@@ -69,7 +69,11 @@ webview {
 
 table {
   td {
-    padding-top: 0.25em;
+    padding-top: $padding-sm;
+
+    &:not(:last-child) {
+      padding-right: $padding-lg;
+    }
   }
 
   th {
@@ -154,6 +158,11 @@ i.fa {
 .pad-top {
   box-sizing: border-box;
   padding-top: $padding-md;
+}
+
+.pad-bottom {
+  box-sizing: border-box;
+  padding-bottom: $padding-md;
 }
 
 .no-pad-bottom {

@@ -18,7 +18,10 @@ function buildRequestConfig (request, patch = {}) {
     timeout: -1,
 
     // Unzip gzipped responses
-    gzip: true
+    gzip: true,
+
+    // Time the request
+    time: true
   };
 
   // Set the URL, including the query parameters
@@ -71,7 +74,7 @@ function actuallySend (request, settings) {
         contentType: networkResponse.headers['content-type'],
         url: config.url, // TODO: Handle redirects somehow
         elapsedTime: networkResponse.elapsedTime,
-        bytes: networkResponse.connection.bytesRead,
+        bytesRead: networkResponse.connection.bytesRead,
         body: networkResponse.body,
         headers: Object.keys(networkResponse.headers).map(name => {
           const value = networkResponse.headers[name];

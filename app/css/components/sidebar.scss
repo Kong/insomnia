@@ -230,7 +230,7 @@
     }
 
     .form-control {
-      padding: 0;
+      padding: 0 $padding-xs 0 0;
       width: 100%;
       input {
         padding: $padding-xs;
