@@ -22,7 +22,8 @@
     "win": {
       "iconUrl": "https://trello-logos.s3.amazonaws.com/06507f4661a7bb6375a8cf5beeaa48be/170.png",
       "icon": "build/icon.ico",
-      "loadingGif": "build/install-spinner.gif"
+      "loadingGif": "build/install-spinner.gif",
+      "remoteReleases": "https://s3.amazonaws.com/builds-insomnia-rest/win"
     }
   },
   "directories": {
