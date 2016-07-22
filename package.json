@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "description": "Insomnia App",
   "main": "electron.js",
-  "homepage": null,
   "repository": {
     "type": "git",
     "url": "https://github.com/gschier/insomnia"
@@ -23,8 +22,7 @@
     "win": {
       "iconUrl": "https://trello-logos.s3.amazonaws.com/06507f4661a7bb6375a8cf5beeaa48be/170.png",
       "icon": "build/icon.ico",
-      "loadingGif": "build/install-spinner.gif",
-      "remoteReleases": "https://s3.amazonaws.com/builds-insomnia-rest/win"
+      "loadingGif": "build/install-spinner.gif"
     }
   },
   "directories": {
