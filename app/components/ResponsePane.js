@@ -86,8 +86,8 @@ class ResponsePane extends Component {
                 statusCode={response.statusCode}
                 statusMessage={response.statusMessage}
               />
-              <TimeTag milliseconds={response.millis}/>
-              <SizeTag bytes={response.bytes}/>
+              <TimeTag milliseconds={response.elapsedTime}/>
+              <SizeTag bytes={response.bytesRead}/>
             </div>
           )}
         </header>

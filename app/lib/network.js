@@ -2,7 +2,6 @@ import networkRequest from 'request';
 
 import * as db from '../database';
 import * as querystring from './querystring';
-import {render} from './render';
 import {DEBOUNCE_MILLIS} from './constants';
 import {STATUS_CODE_PEBKAC} from './constants';
 import {getRenderedRequest} from './render';
@@ -25,11 +24,6 @@ function buildRequestConfig (request, patch = {}) {
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(request.parameters);
   config.url = querystring.joinURL(request.url, qs);
-
-  // Default the proto if it doesn't exist
-  if (config.url.indexOf('://') === -1) {
-    config.url = `https://${config.url}`;
-  }
 
   // Set basic auth if we need to
   if (request.authentication.username) {
@@ -59,27 +53,28 @@ function actuallySend (request, settings) {
     }, true);
 
     const startTime = Date.now();
-    networkRequest(config, function (err, response) {
+    networkRequest(config, function (err, networkResponse) {
       if (err) {
         db.responseCreate({
           parentId: request._id,
-          millis: Date.now() - startTime,
+          elapsedTime: Date.now() - startTime,
           error: err.toString()
         });
         console.warn(`Request to ${config.url} failed`, err);
         return reject(err);
       }
+
       const responsePatch = {
         parentId: request._id,
-        statusCode: response.statusCode,
-        statusMessage: response.statusMessage,
-        contentType: response.headers['content-type'],
-        url: request.url,
-        millis: Date.now() - startTime,
-        bytes: response.connection.bytesRead,
-        body: response.body,
-        headers: Object.keys(response.headers).map(name => {
-          const value = response.headers[name];
+        statusCode: networkResponse.statusCode,
+        statusMessage: networkResponse.statusMessage,
+        contentType: networkResponse.headers['content-type'],
+        url: config.url, // TODO: Handle redirects somehow
+        elapsedTime: networkResponse.elapsedTime,
+        bytes: networkResponse.connection.bytesRead,
+        body: networkResponse.body,
+        headers: Object.keys(networkResponse.headers).map(name => {
+          const value = networkResponse.headers[name];
           return {name, value};
         })
       };

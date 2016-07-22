@@ -52,9 +52,7 @@ ResponseViewer.propTypes = {
   previewMode: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
-
-  // Optional
-  url: PropTypes.string
+  url: PropTypes.string.isRequired
 };
 
 export default ResponseViewer;

@@ -55,8 +55,8 @@ const MODEL_DEFAULTS = {
     statusMessage: '',
     contentType: 'text/plain',
     url: '',
-    bytes: 0,
-    millis: 0,
+    bytesRead: 0,
+    elapsedTime: 0,
     headers: [],
     body: '',
     error: ''
