@@ -16,7 +16,11 @@ class RequestBodyEditor extends Component {
   }
 
   static _getPairsFromBody (body) {
-    return querystring.deconstructToParams(body, false);
+    if (body === '') {
+      return [];
+    } else {
+      return querystring.deconstructToParams(body, false);
+    }
   }
 
   render () {

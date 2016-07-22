@@ -101,7 +101,10 @@ class RequestPane extends Component {
             <div className="pad no-pad-bottom">
               <label className="label--small">Url Preview</label>
               <code className="txt-sm block selectable">
-                <RenderedQueryString request={request}/>
+                <RenderedQueryString
+                  request={request}
+                  placeholder="http://myproduct.com?name=Gregory"
+                />
               </code>
             </div>
             <KeyValueEditor

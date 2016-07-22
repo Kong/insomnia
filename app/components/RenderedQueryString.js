@@ -41,14 +41,17 @@ class RenderedQueryString extends Component {
     if (this.state.string) {
       return <span>{this.state.string}</span>
     } else {
-      return <span className="super-faint">add some parameters below</span>
+      return <span className="super-faint">{this.props.placeholder || ''}</span>
     }
   }
 }
 
 
 RenderedQueryString.propTypes = {
-  request: PropTypes.object.isRequired
+  request: PropTypes.object.isRequired,
+
+  // Optional
+  placeholder: PropTypes.string
 };
 
 export default RenderedQueryString;
