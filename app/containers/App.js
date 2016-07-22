@@ -507,7 +507,7 @@ class App extends Component {
         <CurlExportModal />
         <RequestSwitcherModal
           workspaceId={workspace._id}
-          newRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
+          activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
         />
         <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>

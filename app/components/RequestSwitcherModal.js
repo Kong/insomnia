@@ -38,7 +38,7 @@ class RequestSwitcherModal extends ModalComponent {
     } else {
       // Create the request if nothing matched
       const name = this.state.searchString;
-      const parentId = this.props.newRequestParentId;
+      const parentId = this.props.activeRequestParentId;
 
       db.requestCreate({name, parentId}).then(request => {
         this._activateRequest(request);
@@ -78,21 +78,34 @@ class RequestSwitcherModal extends ModalComponent {
         }
       });
 
-      const {parentId} = this.props;
-      const activeRequestGroup = requestGroups.find(rg => rg._id === parentId);
+      const parentId = this.props.activeRequestParentId;
 
       const matchedRequests = requests.sort(
         (a, b) => {
-          const rgA = requestGroups.find(rg => rg._id === a.parentId);
-          const rgB = requestGroups.find(rg => rg._id === b.parentId);
+          // const rgA = requestGroups.find(rg => rg._id === a.parentId);
+          // const rgB = requestGroups.find(rg => rg._id === b.parentId);
+          // const rgAId = rgA ? rgA._id : null;
+          // const rgBId = rgB ? rgB._id : null;
 
-          if (rgA === activeRequestGroup && rgB !== activeRequestGroup) {
-            return -1;
-          } else if (rgB === activeRequestGroup && rgA !== activeRequestGroup) {
-            return 1;
-          } else {
+          // if (rgAId === parentId && rgBId !== parentId) {
+          //   return -1;
+          // } else if (rgBId === parentId && rgAId !== parentId) {
+          //   return 1;
+
+          if (a.parentId === b.parentId) {
+            // Sort Requests by name inside of the same parent
             // TODO: Sort by quality of match (eg. start of string vs mid string, etc)
-            return (rgA || {}).name > (rgB || {}).name ? 1 : -1;
+            return a.name > b.name ? 1 : -1;
+          } else {
+            // Sort RequestGroups by relevance if Request isn't in the same parent
+            console.log(a.parentId, b.parentId, parentId);
+            if (a.parentId === parentId) {
+              return -1;
+            } else if (b.parentId === parentId) {
+              return 1;
+            } else {
+              return a.parentId > b.parentId ? -1 : 1;
+            }
           }
         }
       ).filter(r => {
@@ -223,7 +236,7 @@ class RequestSwitcherModal extends ModalComponent {
 RequestSwitcherModal.propTypes = {
   activateRequest: PropTypes.func.isRequired,
   workspaceId: PropTypes.string.isRequired,
-  newRequestParentId: PropTypes.string.isRequired
+  activeRequestParentId: PropTypes.string.isRequired
 };
 
 export default RequestSwitcherModal;

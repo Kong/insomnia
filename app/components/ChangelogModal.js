@@ -47,6 +47,10 @@ class ChangelogModal extends ModalComponent {
     });
   }
 
+  shouldComponentUpdate (nextProps, nextState) {
+    return nextState !== this.state;
+  }
+
   render () {
     const {changelog, startVersion} = this.state;
 

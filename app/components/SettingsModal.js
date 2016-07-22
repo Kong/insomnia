@@ -23,10 +23,12 @@ class SettingsTabs extends Component {
   _importFile () {
     const workspace = this._getActiveWorkspace(this.props);
     this.props.actions.global.importFile(workspace);
+    this.props.hide();
   }
 
   _exportFile () {
     this.props.actions.global.exportFile();
+    this.props.hide();
   }
 
   _getActiveWorkspace (props) {
@@ -236,6 +238,7 @@ class SettingsTabs extends Component {
 }
 
 SettingsTabs.propTypes = {
+  hide: PropTypes.func.isRequired,
   workspaces: PropTypes.shape({
     activeId: PropTypes.string
   }),
@@ -308,7 +311,7 @@ class SettingsModal extends ModalComponent {
           <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>
         <ModalBody>
-          <ConnectedSettingsTabs selectedIndex={selectedIndex}/>
+          <ConnectedSettingsTabs hide={() => this.hide()} selectedIndex={selectedIndex}/>
         </ModalBody>
         <ModalFooter className="pad text-right">
           <div className="relative">
