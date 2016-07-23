@@ -213,7 +213,7 @@ class App extends Component {
             // If sort keys get too close together, we need to redistribute the list. This is
             // not performant at all (need to update all siblings in DB), but it is extremely rare
             // anyway
-            console.warn('-- Recreating Sort Keys --');
+            console.warn(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
 
             requests.map((r, i) => {
               db.requestUpdate(r, {metaSortKey: i * 100, parentId});

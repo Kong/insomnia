@@ -7,9 +7,9 @@ export const CONTENT_TYPE_OTHER = '';
 const contentTypeMap = {
   [CONTENT_TYPE_JSON]: 'JSON',
   [CONTENT_TYPE_XML]: 'XML',
-  [CONTENT_TYPE_TEXT]: 'Text',
-  [CONTENT_TYPE_OTHER]: 'Other',
-  [CONTENT_TYPE_FORM_URLENCODED]: 'Form URL Encoded'
+  [CONTENT_TYPE_FORM_URLENCODED]: 'Form Encoded',
+  [CONTENT_TYPE_TEXT]: 'Plain Text',
+  [CONTENT_TYPE_OTHER]: 'Other'
 };
 
 export const CONTENT_TYPES = Object.keys(contentTypeMap);

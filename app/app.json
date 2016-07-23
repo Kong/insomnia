@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "productName": "Insomnia",
   "longName": "Insomnia HTTP Client",
   "description": "The best REST API Client",
@@ -10,6 +10,7 @@
   "main": "app.js",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
+    "nedb": "^1.8.0",
     "request": "^2.71.0"
   }
 }

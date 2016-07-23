@@ -26,20 +26,20 @@ const FORMAT_MAP = {
 //   }
 // }
 
-function importRequestGroup (iRequestGroup, parentId, exportFormat) {
+function importRequestGroup (iRequestGroup, parentId, exportFormat, index = 1) {
   if (exportFormat === VERSION_CHROME_APP) {
     return db.requestGroupCreate({
       parentId,
       name: iRequestGroup.name,
       environment: (iRequestGroup.environments || {}).base || {},
-      metaCollapsed: true
+      metaCollapsed: true,
+      metaSortKey: index * 1000
     }).then(requestGroup => {
       // Sometimes (maybe all the time, I can't remember) requests will be nested
       if (iRequestGroup.hasOwnProperty('requests')) {
         // Let's process them oldest to newest
-        iRequestGroup.requests.reverse();
         iRequestGroup.requests.map(
-          r => importRequest(r, requestGroup._id, exportFormat)
+          (r, i) => importRequest(r, requestGroup._id, exportFormat, index * 1000 + i)
         );
       }
     });
@@ -48,6 +48,7 @@ function importRequestGroup (iRequestGroup, parentId, exportFormat) {
       parentId,
       name: iRequestGroup.name,
       environment: iRequestGroup.environment,
+      metaSortKey: index * 1000,
       metaCollapsed: true
     });
   } else {
@@ -55,7 +56,7 @@ function importRequestGroup (iRequestGroup, parentId, exportFormat) {
   }
 }
 
-function importRequest (importedRequest, parentId, exportFormat) {
+function importRequest (importedRequest, parentId, exportFormat, index) {
   if (exportFormat === VERSION_CHROME_APP) {
     let auth = {};
     if (importedRequest.authentication.username) {
@@ -87,21 +88,22 @@ function importRequest (importedRequest, parentId, exportFormat) {
       body: importedRequest.body,
       headers: headers,
       parameters: importedRequest.params || [],
+      metaSortKey: index * 1000,
       contentType: FORMAT_MAP[importedRequest.__insomnia.format] || 'text/plain',
       authentication: auth
     });
   } else if (exportFormat === VERSION_DESKTOP_APP) {
-    const headers =
-      db.requestCreate({
-        parentId,
-        name: importedRequest.name,
-        url: importedRequest.url,
-        method: importedRequest.method,
-        body: importedRequest.body,
-        headers: importedRequest.headers,
-        parameters: importedRequest.parameters,
-        authentication: importedRequest.authentication
-      });
+    db.requestCreate({
+      parentId,
+      name: importedRequest.name,
+      url: importedRequest.url,
+      method: importedRequest.method,
+      body: importedRequest.body,
+      headers: importedRequest.headers,
+      metaSortKey: index * 1000,
+      parameters: importedRequest.parameters,
+      authentication: importedRequest.authentication
+    });
   } else {
     console.error(`Unknown export format ${exportFormat}`)
   }
@@ -125,12 +127,12 @@ export function importJSON (workspace, json) {
   const exportFormat = data.__export_format;
 
   if (exportFormat === VERSION_CHROME_APP) {
-    data.items.reverse().filter(i => i._type === TYPE_REQUEST_GROUP).map(
-      rg => importRequestGroup(rg, workspace._id, data.__export_format)
+    data.items.filter(item => item._type === TYPE_REQUEST_GROUP).map(
+      (rg, i) => importRequestGroup(rg, workspace._id, data.__export_format, i)
     );
 
-    data.items.reverse().filter(i => i._type === TYPE_REQUEST).map(
-      r => importRequest(r, workspace._id, data.__export_format)
+    data.items.filter(item => item._type === TYPE_REQUEST).map(
+      (r, i) => importRequest(r, workspace._id, data.__export_format, i)
     );
   } else if (exportFormat === VERSION_DESKTOP_APP) {
     const requestGroupIdMap = {
@@ -138,8 +140,8 @@ export function importJSON (workspace, json) {
     };
 
     const requestGroupPromises = [];
-    data.resources.filter(i => i._type === TYPE_REQUEST_GROUP).map(iRg => {
-      const p = importRequestGroup(iRg, workspace._id, data.__export_format).then(rg => {
+    data.resources.filter(item => item._type === TYPE_REQUEST_GROUP).map((iRg, i) => {
+      const p = importRequestGroup(iRg, workspace._id, data.__export_format, i).then(rg => {
         requestGroupIdMap[iRg._id] = rg._id;
         return rg;
       });
@@ -150,12 +152,12 @@ export function importJSON (workspace, json) {
 
       // RequestGroups are imported, and we have the new IDs. Now we can import the requests...
 
-      data.resources.filter(i => i._type === TYPE_REQUEST).map(iR => {
+      data.resources.filter(item => item._type === TYPE_REQUEST).map((iR, i) => {
 
         // If we couldn't find the parentID in our RequestGroups, fall back to the Workspace id
         const parentId = requestGroupIdMap[iR.parentId] || workspace._id;
 
-        importRequest(iR, parentId, exportFormat);
+        importRequest(iR, parentId, exportFormat, i);
       });
     });
   } else {
