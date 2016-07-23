@@ -6,7 +6,7 @@ import * as methods from '../lib/constants';
 import {generateId} from './util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
-import {CONTENT_TYPE_JSON} from '../lib/contentTypes';
+import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
 
 export const TYPE_SETTINGS = 'Settings';
 export const TYPE_WORKSPACE = 'Workspace';
@@ -45,7 +45,7 @@ const MODEL_DEFAULTS = {
     parameters: [],
     headers: [{
       name: 'Content-Type',
-      value: CONTENT_TYPE_JSON
+      value: CONTENT_TYPE_TEXT
     }],
     authentication: {},
     metaPreviewMode: PREVIEW_MODE_SOURCE,
@@ -198,6 +198,7 @@ function update (doc) {
 
 function remove (doc) {
   return new Promise((resolve, reject) => {
+    // TODO: Remove all children as well
     db[doc.type].remove({_id: doc._id}, {multi: true}, err => {
       if (err) {
         return reject(err);
