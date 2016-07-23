@@ -12,9 +12,8 @@ NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config 
 echo "-- COPYING REMAINING FILES --"
 
 # Copy package JSON
-# TODO: Remove the need for both of these
-cp app/app.json "$BUILD_DIR/package.json"
 cp app/app.json "$BUILD_DIR/app.json"
+cp app/app.json "$BUILD_DIR/package.json"
 
 # Copy some things
 cp app/app.js "$BUILD_DIR/"
