@@ -9,6 +9,7 @@
   "author": "Gregory Schier <support@insomnia.rest>",
   "main": "app.js",
   "dependencies": {
+    "analytics-node": "^2.1.0",
     "electron-squirrel-startup": "^1.0.0",
     "nedb": "^1.8.0",
     "request": "^2.71.0"

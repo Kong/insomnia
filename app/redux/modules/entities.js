@@ -1,12 +1,14 @@
 import {combineReducers} from 'redux';
 
 import {
+  TYPE_STATS,
   TYPE_SETTINGS,
   TYPE_WORKSPACE,
   TYPE_REQUEST_GROUP,
   TYPE_REQUEST,
   TYPE_RESPONSE
 } from '../../database/index';
+import {trackEvent} from '../../lib/analytics';
 
 const ENTITY_INSERT = 'entities/insert';
 const ENTITY_UPDATE = 'entities/update';
@@ -42,6 +44,7 @@ function genericEntityReducer (referenceName) {
 }
 
 export default combineReducers({
+  stats: genericEntityReducer('stats'),
   settings: genericEntityReducer('settings'),
   workspaces: genericEntityReducer('workspace'),
   requestGroups: genericEntityReducer('requestGroup'),
@@ -56,6 +59,7 @@ export default combineReducers({
 // ~~~~~~~ //
 
 const insertFns = {
+  [TYPE_STATS]: stats => ({type: ENTITY_INSERT, stats}),
   [TYPE_SETTINGS]: settings => ({type: ENTITY_INSERT, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_INSERT, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_INSERT, requestGroup}),
@@ -64,6 +68,7 @@ const insertFns = {
 };
 
 const updateFns = {
+  [TYPE_STATS]: stats => ({type: ENTITY_UPDATE, stats}),
   [TYPE_SETTINGS]: settings => ({type: ENTITY_UPDATE, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_UPDATE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
@@ -72,6 +77,7 @@ const updateFns = {
 };
 
 const removeFns = {
+  [TYPE_STATS]: stats => ({type: ENTITY_REMOVE, stats}),
   [TYPE_SETTINGS]: settings => ({type: ENTITY_REMOVE, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_REMOVE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_REMOVE, requestGroup}),
@@ -80,13 +86,16 @@ const removeFns = {
 };
 
 export function insert (doc) {
+  trackEvent(`Insert ${doc.type}`, {name: doc.name});
   return insertFns[doc.type](doc);
 }
 
 export function update (doc) {
+  trackEvent(`Update ${doc.type}`, {name: doc.name});
   return updateFns[doc.type](doc);
 }
 
 export function remove (doc) {
+  trackEvent(`Delete ${doc.type}`, {name: doc.name});
   return removeFns[doc.type](doc);
 }

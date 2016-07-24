@@ -31,7 +31,8 @@ import * as RequestActions from '../redux/modules/requests';
 
 import * as db from '../database';
 import {importCurl} from '../lib/export/curl';
-import {isDevelopment} from '../lib/appInfo';
+import {trackEvent} from '../lib/analytics';
+import {getAppVersion} from '../lib/appInfo';
 
 class App extends Component {
   constructor (props) {
@@ -54,18 +55,8 @@ class App extends Component {
         SettingsModal.toggle();
       },
 
-      // Show Environment Editor
-      // DON'T WANT THIS YET
-      // 'mod+e': () => {
-      //   this._fetchActiveRequestGroup().then(requestGroup => {
-      //     EnvironmentEditModal.toggle(requestGroup);
-      //   }, () => {
-      //     // No RequestGroup is active
-      //   })
-      // },
-
       // Show Request Switcher
-      'mod+k|mod+p': () => {
+      'mod+p': () => {
         RequestSwitcherModal.toggle();
       },
 
@@ -74,17 +65,6 @@ class App extends Component {
         const request = this._getActiveRequest();
         if (request) {
           this.props.actions.requests.send(request);
-        }
-      },
-
-      // Request Send 2
-      'mod+r': () => {
-        // In dev, mod+r is mapped to refresh the app
-        if (!isDevelopment()) {
-          const request = this._getActiveRequest();
-          if (request) {
-            this.props.actions.requests.send(request);
-          }
         }
       },
 
@@ -105,13 +85,14 @@ class App extends Component {
       // Request Duplicate
       'mod+d': () => {
         const request = this._getActiveRequest();
+        const workspace = this._getActiveWorkspace();
 
         if (!request) {
           return;
         }
 
         db.requestCopyAndActivate(workspace, request);
-      },
+      }
     }
   }
 
@@ -405,6 +386,22 @@ class App extends Component {
     // Map global keyboard shortcuts
     Object.keys(this.globalKeyMap).map(key => {
       Mousetrap.bindGlobal(key.split('|'), this.globalKeyMap[key]);
+    });
+
+    // Do The Analytics
+    trackEvent('App Launched');
+
+    // Update Stats Object
+    db.statsGet().then(({lastVersion}) => {
+      if (lastVersion !== getAppVersion()) {
+        ChangelogModal.show();
+      }
+
+      db.statsIncrement('launches');
+      db.statsUpdate({
+        lastLaunch: Date.now(),
+        lastVersion: getAppVersion()
+      });
     });
   }
 

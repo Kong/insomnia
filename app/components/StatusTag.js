@@ -26,7 +26,7 @@ const StatusTag = ({statusMessage, statusCode}) => {
     backupStatusMessage = 'ERROR';
   } else if (statusCode.startsWith('0')) {
     colorClass = 'bg-danger';
-    backupStatusMessage = 'UNKNOWN';
+    backupStatusMessage = 'ERROR';
     statusCode = '';  // Don't print a 0 status code
   } else if (statusCode === STATUS_CODE_PEBKAC.toString()) {
     colorClass = 'bg-danger';

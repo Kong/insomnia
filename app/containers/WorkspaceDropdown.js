@@ -60,7 +60,7 @@ class WorkspaceDropdown extends Component {
   _requestGroupCreate () {
     PromptModal.show({
       headerName: 'Create New Folder',
-      defaultValue: 'New Group',
+      defaultValue: 'New Folder',
       submitName: 'Create',
       selectText: true
     }).then(name => {
@@ -163,11 +163,11 @@ class WorkspaceDropdown extends Component {
               <DropdownHint char=","></DropdownHint>
             </button>
           </li>
-          <li>
-            <button onClick={e => this._handleCheckForUpdates()}>
-              <i className="fa fa-blank"></i> Check for Updates
-            </button>
-          </li>
+          {/*<li>*/}
+            {/*<button onClick={e => this._handleCheckForUpdates()}>*/}
+              {/*<i className="fa fa-blank"></i> Check for Updates*/}
+            {/*</button>*/}
+          {/*</li>*/}
           <li>
             <button onClick={e => ChangelogModal.show()}>
               <i className="fa fa-blank"></i> Changelog

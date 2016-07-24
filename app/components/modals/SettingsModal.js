@@ -11,11 +11,11 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import ModalComponent from '../lib/ModalComponent';
+import KeyboardShortcutsTable from '../KeyboardShortcutsTable';
 import * as GlobalActions from '../../redux/modules/global';
 import * as db from '../../database';
 import {MASHAPE_URL} from '../../lib/constants';
 import {getAppVersion} from '../../lib/appInfo';
-import {MOD_SYM} from '../../lib/constants';
 import {getAppName, getAppLongName} from '../../lib/appInfo';
 
 
@@ -182,40 +182,7 @@ class SettingsTabs extends Component {
         <TabPanel className="pad">
           <p>Use these shortcuts to improve your productivity.</p>
           <br/>
-          <table className="wide">
-            <thead>
-            <tr>
-              <th>Keyboard Shortcut</th>
-              <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td><code>{MOD_SYM}P</code> <code>{MOD_SYM}K</code></td>
-              <td>Quick Switch Requests</td>
-            </tr>
-            <tr>
-              <td><code>{MOD_SYM}Enter</code></td>
-              <td>Send Request</td>
-            </tr>
-            <tr>
-              <td><code>{MOD_SYM}N</code></td>
-              <td>New Request</td>
-            </tr>
-            <tr>
-              <td><code>{MOD_SYM}D</code></td>
-              <td>Duplicate Request</td>
-            </tr>
-            <tr>
-              <td><code>{MOD_SYM}L</code></td>
-              <td>Focus URL Bar</td>
-            </tr>
-            <tr>
-              <td><code>{MOD_SYM},</code></td>
-              <td>Show Settings</td>
-            </tr>
-            </tbody>
-          </table>
+          <KeyboardShortcutsTable />
         </TabPanel>
         <TabPanel className="pad">
           <h1>Why hello there!</h1>

@@ -1,17 +1,17 @@
 import React, {Component, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
-import KeyValueEditor from '../components/base/KeyValueEditor';
+import KeyValueEditor from './base/KeyValueEditor';
 
-import ContentTypeDropdown from '../components/ContentTypeDropdown';
-import RenderedQueryString from '../components/RenderedQueryString';
-import RequestBodyEditor from '../components/RequestBodyEditor';
-import RequestAuthEditor from '../components/RequestAuthEditor';
+import ContentTypeDropdown from './ContentTypeDropdown';
+import RenderedQueryString from './RenderedQueryString';
+import RequestBodyEditor from './RequestBodyEditor';
+import RequestAuthEditor from './RequestAuthEditor';
 import RequestUrlBar from '../components/RequestUrlBar';
 
 import {getContentTypeName} from '../lib/contentTypes';
-import {renderRequest} from '../lib/render';
 import {getContentTypeFromHeaders} from '../lib/contentTypes';
+import {MOD_SYM} from '../lib/constants';
 
 class RequestPane extends Component {
   render () {
@@ -35,7 +35,24 @@ class RequestPane extends Component {
       return (
         <section className="request-pane pane">
           <header className="pane__header"></header>
-          <div className="pane__body text-center pad"></div>
+          <div className="pane__body pane__body--placeholder">
+            <table>
+              <tbody>
+              <tr>
+                <td>New Request</td>
+                <td><code>{MOD_SYM}N</code></td>
+              </tr>
+              <tr>
+                <td>Open Settings</td>
+                <td><code>{MOD_SYM},</code></td>
+              </tr>
+              <tr>
+                <td>Switch Requests</td>
+                <td><code>{MOD_SYM}P</code></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
       )
     }

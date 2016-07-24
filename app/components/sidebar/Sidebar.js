@@ -7,6 +7,7 @@ import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
 
+
 class Sidebar extends Component {
   _onFilterChange (value) {
     this.props.changeFilter(value);

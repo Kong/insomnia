@@ -68,6 +68,7 @@
   .modal__body {
     overflow: auto;
     background-color: $bg-super-light;
+    min-height: 2rem;
   }
 
   .modal__footer {
