@@ -10,6 +10,7 @@ import ResponseHeadersViewer from './ResponseHeadersViewer';
 import {getPreviewModeName} from '../lib/previewModes';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
+import {MOD_SYM} from '../lib/constants';
 
 class ResponsePane extends Component {
   render () {
@@ -67,9 +68,23 @@ class ResponsePane extends Component {
           {timer}
 
           <header className="pane__header"></header>
-          <div className="pane__body pane__body--placeholder text-center pad">
-            <h1>No responses yet...</h1>
-            <p>Click the <em>Send</em> button to trigger a request</p>
+          <div className="pane__body pane__body--placeholder">
+            <table>
+              <tbody>
+              <tr>
+                <td>Send Request</td>
+                <td><code>{MOD_SYM}Enter</code></td>
+              </tr>
+              <tr>
+                <td>Switch Requests</td>
+                <td><code>{MOD_SYM}P</code></td>
+              </tr>
+              <tr>
+                <td>Focus Url Bar</td>
+                <td><code>{MOD_SYM}L</code></td>
+              </tr>
+              </tbody>
+            </table>
           </div>
         </section>
       )

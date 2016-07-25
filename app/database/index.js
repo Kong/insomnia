@@ -8,6 +8,7 @@ import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
 
+export const TYPE_STATS = 'Stats';
 export const TYPE_SETTINGS = 'Settings';
 export const TYPE_WORKSPACE = 'Workspace';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
@@ -16,6 +17,11 @@ export const TYPE_RESPONSE = 'Response';
 
 
 const MODEL_DEFAULTS = {
+  [TYPE_STATS]: () => ({
+    lastLaunch: Date.now(),
+    lastVersion: null,
+    launches: 0
+  }),
   [TYPE_SETTINGS]: () => ({
     showPasswords: true,
     useBulkHeaderEditor: false,
@@ -145,7 +151,8 @@ function getWhere (type, query) {
       }
 
       if (rawDocs.length === 0) {
-        return reject(new Error(`Could not get doc by ${JSON.stringify(query)}`));
+        // Not found. Too bad!
+        return resolve(null);
       }
 
       const modelDefaults = MODEL_DEFAULTS[type]();
@@ -403,7 +410,7 @@ export function workspaceRemove (workspace) {
 // ~~~~~~~~~ //
 
 export function settingsCreate (patch = {}) {
-  return docCreate(TYPE_SETTINGS, 'sts', patch);
+  return docCreate(TYPE_SETTINGS, 'set', patch);
 }
 
 export function settingsUpdate (settings, patch) {
@@ -417,5 +424,43 @@ export function settingsGet () {
     } else {
       return new Promise(resolve => resolve(results[0]));
     }
+  });
+}
+
+// ~~~~ //
+// USER //
+// ~~~~ //
+
+export function statsCreate (patch = {}) {
+  return docCreate(TYPE_STATS, 'sta', patch);
+}
+
+export function statsUpdate (patch) {
+  return statsGet().then(stats => {
+    return docUpdate(stats, patch);
+  });
+}
+
+export function statsGet () {
+  return all(TYPE_STATS).then(results => {
+    if (results.length === 0) {
+      return statsCreate().then(statsGet);
+    } else {
+      return new Promise(resolve => resolve(results[0]));
+    }
+  });
+}
+
+export function statsIncrement (key) {
+  return statsGet().then(stats => {
+    if (stats[key] === undefined) {
+      throw new Error(`Stats[${key}] doesn't exist for increment`);
+    }
+
+    const patch = {
+      [key]: stats[key] + 1
+    };
+
+    return docUpdate(stats, patch);
   });
 }

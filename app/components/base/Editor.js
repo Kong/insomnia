@@ -14,11 +14,16 @@ import 'codemirror/mode/javascript/javascript'
 import 'codemirror/lib/codemirror.css'
 
 // Plugins
+import 'codemirror/addon/dialog/dialog'
+import 'codemirror/addon/dialog/dialog.css'
+
 import 'codemirror/addon/fold/foldcode'
 import 'codemirror/addon/fold/brace-fold'
 import 'codemirror/addon/fold/comment-fold'
 import 'codemirror/addon/fold/indent-fold'
 import 'codemirror/addon/fold/xml-fold'
+
+import 'codemirror/addon/display/autorefresh'
 
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
@@ -27,9 +32,6 @@ import 'codemirror/addon/selection/active-line'
 
 import 'codemirror/addon/search/matchesonscrollbar'
 import 'codemirror/addon/search/matchesonscrollbar.css'
-
-import 'codemirror/addon/dialog/dialog'
-import 'codemirror/addon/dialog/dialog.css'
 
 import 'codemirror/addon/fold/foldgutter'
 import 'codemirror/addon/fold/foldgutter.css'
@@ -48,6 +50,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
+  autoRefresh: {delay: 5000}, // Necessary to show up in the env modal first launch
   lineWrapping: true,
   lint: true,
   tabSize: 4,

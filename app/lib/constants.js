@@ -12,6 +12,9 @@ export const CHANGELOG_URL = isDevelopment() ?
   'http://changelog.insomnia.rest/changelog.json';
 export const STATUS_CODE_PEBKAC = -333;
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
+export const SEGMENT_WRITE_KEY = isDevelopment() ?
+  'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy' :
+  'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 35;

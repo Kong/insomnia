@@ -3,15 +3,41 @@
 <head>
   <meta charset="utf-8">
   <title>Insomnia</title>
-  <script src="./external/jsonlint.js"></script>
 </head>
 <body>
 <div id="root"></div>
+<script src="./external/jsonlint.js"></script>
+<script src="./external/raven.min.js"></script>
+
+<script>
+  // Sentry
+
+  Raven.config('https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a4189a68efb63c38fc50b@app.getsentry.com/88289', {
+    allowSecretKey: true,
+    logger: 'sentry',
+    release: require('./app.json').version,
+    environment: process.env.NODE_ENV,
+    ignoreErrors: [
+      'fb_xd_fragment',
+      /ReferenceError:.*/
+    ],
+    excludePaths: [
+      /\/external\/.*/
+    ],
+    includePaths: [
+      /.*/
+    ]
+  }).install();
+
+  console.log('-- Initialized Sentry --');
+</script>
 <script>
   const {longName} = require('./app.json');
   document.title = `${longName}`;
 </script>
 <script>
+  // HOT RELOADING IN DEV
+
   (function () {
     const script = document.createElement('script');
     script.src = (process.env.HOT) ? 'http://localhost:3333/build/bundle.js' : './bundle.js';
@@ -20,6 +46,8 @@
 </script>
 
 <script>
+  // CREATE MENUS
+
   const remote = require('electron').remote;
   const Menu = remote.Menu;
   const MenuItem = remote.MenuItem;
@@ -40,26 +68,9 @@
 </script>
 
 <script>
+  // SOME HELPERS
+
   document.body.setAttribute('data-platform', process.platform);
-</script>
-
-<script>
-  if (process.env.NODE_ENV !== 'development') {
-    (function (i, s, o, g, r, a, m) {
-      i['GoogleAnalyticsObject'] = r;
-      i[r] = i[r] || function () {
-          (i[r].q = i[r].q || []).push(arguments)
-        }, i[r].l = 1 * new Date();
-      a = s.createElement(o),
-        m = s.getElementsByTagName(o)[0];
-      a.async = 1;
-      a.src = g;
-      m.parentNode.insertBefore(a, m)
-    })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
-
-    ga('create', 'UA-9837747-17', 'auto');
-    ga('send', 'pageview');
-  }
 </script>
 </body>
 </html>

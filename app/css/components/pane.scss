@@ -30,19 +30,16 @@
   }
 
   .pane__body--placeholder {
+    overflow: hidden;
+    padding: $padding-md;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    color: $hl-xxl;
 
-    h1 {
-      color: $hl;
-      font-size: $font-size-xxl;
-    }
-
-    p {
-      color: $hl-xxl;
-      font-size: $font-size-md;
+    & > * {
+      min-width: 20em;
     }
   }
 }

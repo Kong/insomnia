@@ -1,6 +1,7 @@
 import {combineReducers} from 'redux';
 
 import {
+  TYPE_STATS,
   TYPE_SETTINGS,
   TYPE_WORKSPACE,
   TYPE_REQUEST_GROUP,
@@ -42,6 +43,7 @@ function genericEntityReducer (referenceName) {
 }
 
 export default combineReducers({
+  stats: genericEntityReducer('stats'),
   settings: genericEntityReducer('settings'),
   workspaces: genericEntityReducer('workspace'),
   requestGroups: genericEntityReducer('requestGroup'),
@@ -56,6 +58,7 @@ export default combineReducers({
 // ~~~~~~~ //
 
 const insertFns = {
+  [TYPE_STATS]: stats => ({type: ENTITY_INSERT, stats}),
   [TYPE_SETTINGS]: settings => ({type: ENTITY_INSERT, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_INSERT, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_INSERT, requestGroup}),
@@ -64,6 +67,7 @@ const insertFns = {
 };
 
 const updateFns = {
+  [TYPE_STATS]: stats => ({type: ENTITY_UPDATE, stats}),
   [TYPE_SETTINGS]: settings => ({type: ENTITY_UPDATE, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_UPDATE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
@@ -72,6 +76,7 @@ const updateFns = {
 };
 
 const removeFns = {
+  [TYPE_STATS]: stats => ({type: ENTITY_REMOVE, stats}),
   [TYPE_SETTINGS]: settings => ({type: ENTITY_REMOVE, settings}),
   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_REMOVE, workspace}),
   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_REMOVE, requestGroup}),

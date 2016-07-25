@@ -14,7 +14,7 @@ class RequestActionsDropdown extends Component {
     PromptModal.show({
       headerName: 'Rename Request',
       defaultValue: request.name,
-      hint: 'rename requests more quickly by double clicking in the sidebar'
+      hint: 'also rename requests by double clicking in the sidebar'
     }).then(name => {
       db.requestUpdate(request, {name});
     })
