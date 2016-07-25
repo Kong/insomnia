@@ -69,7 +69,7 @@ class ResponsePane extends Component {
 
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
-            <table className="request-pane__shortcuts-table">
+            <table>
               <tbody>
               <tr>
                 <td>Send Request</td>

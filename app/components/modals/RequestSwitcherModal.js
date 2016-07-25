@@ -124,7 +124,9 @@ class RequestSwitcherModal extends ModalComponent {
   }
 
   show () {
-    throw new Error('show() not supposed to be called on RequestSwitcherModal');
+    super.show();
+    this._focusInput();
+    this._handleChange('');
   }
 
   toggle () {

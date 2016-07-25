@@ -7,7 +7,6 @@ let analytics = null;
 let userId = null;
 
 export function initAnalytics () {
-  console.log('-- Initializing Analytics --');
   return new Promise((resolve, reject) => {
     analytics = new Analytics(SEGMENT_WRITE_KEY);
 

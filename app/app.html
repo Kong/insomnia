@@ -3,10 +3,34 @@
 <head>
   <meta charset="utf-8">
   <title>Insomnia</title>
-  <script src="./external/jsonlint.js"></script>
 </head>
 <body>
 <div id="root"></div>
+<script src="./external/jsonlint.js"></script>
+<script src="./external/raven.min.js"></script>
+
+<script>
+  // Sentry
+
+  Raven.config('https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a4189a68efb63c38fc50b@app.getsentry.com/88289', {
+    allowSecretKey: true,
+    logger: 'sentry',
+    release: require('./app.json').version,
+    environment: process.env.NODE_ENV,
+    ignoreErrors: [
+      'fb_xd_fragment',
+      /ReferenceError:.*/
+    ],
+    excludePaths: [
+      /\/external\/.*/
+    ],
+    includePaths: [
+      /.*/
+    ]
+  }).install();
+
+  console.log('-- Initialized Sentry --');
+</script>
 <script>
   const {longName} = require('./app.json');
   document.title = `${longName}`;

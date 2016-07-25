@@ -13,7 +13,7 @@ export const CHANGELOG_URL = isDevelopment() ?
 export const STATUS_CODE_PEBKAC = -333;
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
 export const SEGMENT_WRITE_KEY = isDevelopment() ?
-  'fv5VtIiwEH2EoAMPUDVROi1aCOhwJvcl' :
+  'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy' :
   'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
 
 // UI Stuff

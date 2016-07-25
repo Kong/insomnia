@@ -7,7 +7,7 @@ if (require('electron-squirrel-startup')) {
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
 const appVersion = require('./app.json').version;
-const {app, dialog, ipcMain, ipcRenderer, autoUpdater, Menu, BrowserWindow, webContents} = electron;
+const {app, dialog, ipcMain, autoUpdater, Menu, BrowserWindow, webContents} = electron;
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
@@ -93,6 +93,9 @@ app.on('ready', () => {
 
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
+
+  // Uncomment this to test things
+  // mainWindow.toggleDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {

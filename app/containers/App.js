@@ -392,13 +392,16 @@ class App extends Component {
     trackEvent('App Launched');
 
     // Update Stats Object
-    db.statsGet().then(({lastVersion}) => {
-      if (lastVersion !== getAppVersion()) {
+    db.statsGet().then(({lastVersion, launches}) => {
+      const firstLaunch = !lastVersion;
+      if (firstLaunch) {
+        // TODO: Show a welcome message
+      } else if (lastVersion !== getAppVersion()) {
         ChangelogModal.show();
       }
 
-      db.statsIncrement('launches');
       db.statsUpdate({
+        launches: launches + 1,
         lastLaunch: Date.now(),
         lastVersion: getAppVersion()
       });
@@ -415,6 +418,7 @@ class App extends Component {
   }
 
   render () {
+    // throw new Error('Test Exception');
     const {actions, entities, requests} = this.props;
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
@@ -507,9 +511,9 @@ class App extends Component {
         />
         <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
         {/*<div className="toast toast--show">*/}
-          {/*<div className="toast__message">How's it going?</div>*/}
-          {/*<button className="toast__action">Great!</button>*/}
-          {/*<button className="toast__action">Horrible :(</button>*/}
+        {/*<div className="toast__message">How's it going?</div>*/}
+        {/*<button className="toast__action">Great!</button>*/}
+        {/*<button className="toast__action">Horrible :(</button>*/}
         {/*</div>*/}
       </div>
     )

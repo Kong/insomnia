@@ -8,7 +8,6 @@ import {
   TYPE_REQUEST,
   TYPE_RESPONSE
 } from '../../database/index';
-import {trackEvent} from '../../lib/analytics';
 
 const ENTITY_INSERT = 'entities/insert';
 const ENTITY_UPDATE = 'entities/update';
@@ -86,16 +85,13 @@ const removeFns = {
 };
 
 export function insert (doc) {
-  trackEvent(`Insert ${doc.type}`, {name: doc.name});
   return insertFns[doc.type](doc);
 }
 
 export function update (doc) {
-  trackEvent(`Update ${doc.type}`, {name: doc.name});
   return updateFns[doc.type](doc);
 }
 
 export function remove (doc) {
-  trackEvent(`Delete ${doc.type}`, {name: doc.name});
   return removeFns[doc.type](doc);
 }
