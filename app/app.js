@@ -27,8 +27,12 @@ let zoomFactor = 1;
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 if (!IS_DEV) {
-  autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
-  autoUpdater.checkForUpdates();
+  try {
+    autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
+    autoUpdater.checkForUpdates();
+  } catch (e) {
+    // Probably don't have internet
+  }
 }
 
 autoUpdater.on('update-not-available', () => {
