@@ -185,14 +185,14 @@ class SettingsTabs extends Component {
           <KeyboardShortcutsTable />
         </TabPanel>
         <TabPanel className="pad">
-          <h1>Why hello there!</h1>
+          <h1>Hi there!</h1>
           <p>
             <Link href="http://insomnia.rest">{getAppName()}</Link> is made with love by me,&nbsp;
             <Link href="http://schier.co">Gregory Schier</Link>.
           </p>
           <p>
             You can help me out by sending your feedback to&nbsp;
-            <Link href="mailto:greg@schier.co">greg@schier.co</Link> or tweet&nbsp;
+            <Link href="mailto:supporot@insomnia.rest">support@insomnia.rest</Link> or tweet&nbsp;
             <Link href="https://twitter.com/GetInsomnia">@GetInsomnia</Link>.
           </p>
           <p>Thanks!</p>
