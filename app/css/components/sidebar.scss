@@ -107,7 +107,7 @@
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-rows: $line-height-xs;
-    color: $hl;
+    color: $hl-xxl;
 
     & > * {
       height: 100%;
@@ -136,10 +136,11 @@
     }
 
     .tag {
-      opacity: 0.5;
+      opacity: 0.6;
       padding-left: 0;
       text-align: left;
       width: 2.8em;
+      text-shadow: 0 0 0.1em rgba(0, 0, 0, 0.9);
     }
   }
 
