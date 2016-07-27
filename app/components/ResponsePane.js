@@ -11,7 +11,6 @@ import {getPreviewModeName} from '../lib/previewModes';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
 import {MOD_SYM} from '../lib/constants';
-import RequestSwitcherModal from './modals/RequestSwitcherModal';
 
 class ResponsePane extends Component {
   render () {
@@ -147,7 +146,7 @@ class ResponsePane extends Component {
               />
             )}
           </TabPanel>
-          <TabPanel>
+          <TabPanel className="scrollable pad">
             <ResponseHeadersViewer headers={response.headers}/>
           </TabPanel>
         </Tabs>

@@ -7,9 +7,30 @@ const ResponseHeadersViewer = ({headers}) => {
   ).join('\n');
 
   return (
-    <pre className="scrollable wide tall selectable monospace pad">
-      {headersString}
-    </pre>
+    <div>
+      <table className="wide">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {headers.map((h, i) => (
+          <tr className="selectable" key={i}>
+            <td>{h.name}</td>
+            <td>{h.value}</td>
+          </tr>
+        ))}
+        </tbody>
+      </table>
+      <p className="pad-top">
+        <CopyButton
+          className="pull-right btn btn--super-compact btn--outlined"
+          content={headersString}
+        />
+      </p>
+    </div>
   )
 };
 

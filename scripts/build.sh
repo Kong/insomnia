@@ -3,6 +3,7 @@
 
 BUILD_DIR='./build'
 
+say "Starting build"
 echo "-- REMOVING DIST FOLDER --"
 rm -r "$BUILD_DIR"
 
@@ -26,3 +27,4 @@ cd "$BUILD_DIR"/
 NODE_ENV=production npm install
 
 echo "-- BUILD COMPLETE --"
+say "Build complete"
