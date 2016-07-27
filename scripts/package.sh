@@ -10,8 +10,7 @@ node node_modules/electron-builder/out/build-cli.js --publish='never' --x64 --wi
 echo "-- PACKAGING MAC --"
 node node_modules/electron-builder/out/build-cli.js --publish='never' --x64 --mac
 
-# TODO: This
-#echo "-- PACKAGING LINUX --"
-#node node_modules/electron-builder/out/build-cli.js --publish='never' --x64 --linux
+echo "-- PACKAGING LINUX --"
+node node_modules/electron-builder/out/build-cli.js --publish='never' --x64 --linux
 
 echo "-- PACKAGING COMPLETE --"

@@ -144,7 +144,7 @@ class ResponsePane extends Component {
               />
             )}
           </TabPanel>
-          <TabPanel className="scrollable pad">
+          <TabPanel>
             <ResponseHeadersViewer headers={response.headers}/>
           </TabPanel>
         </Tabs>

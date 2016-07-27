@@ -212,7 +212,5 @@ app.on('ready', () => {
     });
   }
 
-  if (!IS_WIN) {
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-  }
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 });
