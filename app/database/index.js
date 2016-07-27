@@ -346,7 +346,7 @@ export function requestGroupGetById (id) {
 }
 
 export function requestGroupFindByParentId (parentId) {
-  return getWhere(TYPE_REQUEST_GROUP, {parentId});
+  return find(TYPE_REQUEST_GROUP, {parentId});
 }
 
 export function requestGroupRemove (requestGroup) {

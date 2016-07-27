@@ -193,11 +193,11 @@ class Editor extends Component {
     this._ignoreNextChange = true;
 
     if (this.props.prettify) {
-      if (this.props.mode === 'application/json') {
-        try {
-          code = JSON.stringify(JSON.parse(code), null, 4);
-        } catch (e) {
-        }
+      try {
+        code = JSON.stringify(JSON.parse(code), null, '\t');
+      } catch (e) {
+        // That's Ok, just leave it
+        // TODO: support more than just JSON prettifying
       }
     }
 
