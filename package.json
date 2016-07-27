@@ -76,7 +76,6 @@
     "css-loader": "^0.23.1",
     "electron-builder": "^5.16.0",
     "electron-packager": "^7.3.0",
-    "electron-prebuilt": "^1.2.6",
     "express": "latest",
     "file-loader": "^0.8.5",
     "json-loader": "^0.5.4",
