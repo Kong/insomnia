@@ -86,7 +86,7 @@ class ChangelogModal extends ModalComponent {
             html = [
               ...html,
               <p key={`summary.${i}`}><strong>{change.summary[0]}</strong></p>,
-              ...change.summary.slice(1).map((text, i) => <p key={`summary[${i}]`}>{text}</p>)
+              ...change.summary.slice(1).map((text, j) => <p key={`summary.${i}[${j}]`}>{text}</p>)
             ]
           }
         }
@@ -106,7 +106,7 @@ class ChangelogModal extends ModalComponent {
             ...html,
             <h3 key={`fixes.${i}`}>Fixes</h3>,
             <ul key={`fixes.${i}.list`}>
-              {change.fixes.map(text => <li>{text}</li>)}
+              {change.fixes.map(text => <li key={i}>{text}</li>)}
             </ul>
           ];
         }

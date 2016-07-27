@@ -17,6 +17,7 @@ class RequestPane extends Component {
   render () {
     const {
       request,
+      importFile,
       showPasswords,
       editorFontSize,
       editorLineWrapping,
@@ -36,22 +37,29 @@ class RequestPane extends Component {
         <section className="request-pane pane">
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
-            <table>
-              <tbody>
-              <tr>
-                <td>New Request</td>
-                <td><code>{MOD_SYM}N</code></td>
-              </tr>
-              <tr>
-                <td>Open Settings</td>
-                <td><code>{MOD_SYM},</code></td>
-              </tr>
-              <tr>
-                <td>Switch Requests</td>
-                <td><code>{MOD_SYM}P</code></td>
-              </tr>
-              </tbody>
-            </table>
+            <div>
+              <table>
+                <tbody>
+                <tr>
+                  <td>New Request</td>
+                  <td><code>{MOD_SYM}N</code></td>
+                </tr>
+                <tr>
+                  <td>Open Settings</td>
+                  <td><code>{MOD_SYM},</code></td>
+                </tr>
+                <tr>
+                  <td>Switch Requests</td>
+                  <td><code>{MOD_SYM}P</code></td>
+                </tr>
+                </tbody>
+              </table>
+
+              <button className="btn btn--super-compact btn--outlined pane__body--placeholder__cta"
+                      onClick={e => importFile()}>
+                Import from File
+              </button>
+            </div>
           </div>
         </section>
       )
@@ -158,6 +166,7 @@ RequestPane.propTypes = {
   updateRequestHeaders: PropTypes.func.isRequired,
   updateRequestContentType: PropTypes.func.isRequired,
   updateSettingsShowPasswords: PropTypes.func.isRequired,
+  importFile: PropTypes.func.isRequired,
 
   // Other
   showPasswords: PropTypes.bool.isRequired,

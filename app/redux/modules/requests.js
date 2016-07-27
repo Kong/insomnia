@@ -2,6 +2,7 @@ import {combineReducers} from 'redux';
 import * as network from '../../lib/network';
 import {show} from './modals';
 import {MODAL_REQUEST_RENAME, MODAL_CURL_EXPORT} from '../../lib/constants';
+import {trackEvent} from '../../lib/analytics';
 
 export const REQUEST_CHANGE_FILTER = 'requests/filter';
 export const REQUEST_SEND_START = 'requests/start';
@@ -60,6 +61,7 @@ export function changeFilter(filter) {
 export function send(request) {
   return dispatch => {
     dispatch({type: REQUEST_SEND_START, requestId: request._id});
+    trackEvent('Request Send');
 
     network.send(request._id).then(() => {
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
@@ -69,13 +71,3 @@ export function send(request) {
     });
   }
 }
-
-export function showUpdateNamePrompt(request) {
-  const defaultValue = request.name;
-  return show(MODAL_REQUEST_RENAME, {defaultValue, request});
-}
-
-export function showCurlExportModal (request) {
-  return show(MODAL_CURL_EXPORT, {request});
-}
-

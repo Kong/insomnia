@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
@@ -26,6 +27,7 @@ import {
   DEFAULT_SIDEBAR_WIDTH
 } from '../lib/constants'
 
+import * as GlobalActions from '../redux/modules/global';
 import * as RequestGroupActions from '../redux/modules/requestGroups';
 import * as RequestActions from '../redux/modules/requests';
 
@@ -33,6 +35,7 @@ import * as db from '../database';
 import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
+import {CHECK_FOR_UPDATES_INTERVAL} from '../lib/constants';
 
 class App extends Component {
   constructor (props) {
@@ -94,6 +97,11 @@ class App extends Component {
         db.requestCopyAndActivate(workspace, request);
       }
     }
+  }
+
+  _importFile () {
+    const workspace = this._getActiveWorkspace();
+    this.props.actions.global.importFile(workspace);
   }
 
   _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
@@ -406,6 +414,10 @@ class App extends Component {
         lastVersion: getAppVersion()
       });
     });
+
+    setInterval(() => {
+      ipcRenderer.send('check-for-updates');
+    }, CHECK_FOR_UPDATES_INTERVAL);
   }
 
   componentWillUnmount () {
@@ -468,6 +480,7 @@ class App extends Component {
 
         <RequestPane
           ref="requestPane"
+          importFile={this._importFile.bind(this)}
           request={activeRequest}
           sendRequest={actions.requests.send}
           showPasswords={settings.showPasswords}
@@ -561,6 +574,7 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     actions: {
+      global: bindActionCreators(GlobalActions, dispatch),
       requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)
     }

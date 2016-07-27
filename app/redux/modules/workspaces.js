@@ -31,8 +31,3 @@ export default combineReducers({
 export function activate (workspace) {
   return {type: WORKSPACE_ACTIVATE, workspace};
 }
-
-export function showUpdateNamePrompt (workspace) {
-  const defaultValue = workspace.name;
-  return show(MODAL_WORKSPACE_RENAME, {defaultValue, workspace});
-}
