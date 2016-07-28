@@ -106,7 +106,7 @@ class ChangelogModal extends ModalComponent {
             ...html,
             <h3 key={`fixes.${i}`}>Fixes</h3>,
             <ul key={`fixes.${i}.list`}>
-              {change.fixes.map(text => <li key={i}>{text}</li>)}
+              {change.fixes.map((text, j) => <li key={j}>{text}</li>)}
             </ul>
           ];
         }

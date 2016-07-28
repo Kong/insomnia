@@ -103,8 +103,8 @@ app.on('ready', () => {
     mainWindow = new BrowserWindow({
       x: x,
       y: y,
-      width: width || 800,
-      height: height || 500,
+      width: width || 1200,
+      height: height || 600,
       minHeight: 500,
       minWidth: 500,
       acceptFirstMouse: true,

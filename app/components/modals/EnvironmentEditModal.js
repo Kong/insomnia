@@ -59,7 +59,7 @@ class EnvironmentEditModal extends ModalComponent {
 
     return (
       <Modal ref="modal" top={true} {...this.props}>
-        <ModalHeader>Environment Variables</ModalHeader>
+        <ModalHeader>Environment Variables (JSON Format)</ModalHeader>
         <ModalBody>
           <div className="pad-bottom">
             <Editor

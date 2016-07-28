@@ -2,6 +2,7 @@ import React, {PropTypes} from 'react';
 
 import Dropdown from '../components/base/Dropdown';
 import {CONTENT_TYPES, getContentTypeName} from '../lib/contentTypes';
+import {trackEvent} from '../lib/analytics';
 
 const ContentTypeDropdown = ({updateRequestContentType}) => {
   return (
@@ -12,9 +13,10 @@ const ContentTypeDropdown = ({updateRequestContentType}) => {
       <ul>
         {CONTENT_TYPES.map(contentType => (
           <li key={contentType}>
-            <button onClick={e => updateRequestContentType(contentType)}>
-              {getContentTypeName(contentType)}
-            </button>
+            <button onClick={e => {
+              trackEvent('Changed Content-Type', {contentType});
+              updateRequestContentType(contentType)
+            }}>{getContentTypeName(contentType)}</button>
           </li>
         ))}
       </ul>

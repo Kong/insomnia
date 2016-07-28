@@ -11,6 +11,7 @@ import {getPreviewModeName} from '../lib/previewModes';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
 import {MOD_SYM} from '../lib/constants';
+import {trackEvent} from '../lib/analytics';
 
 class ResponsePane extends Component {
   render () {
@@ -111,14 +112,16 @@ class ResponsePane extends Component {
         <Tabs className="pane__body">
           <TabList>
             <Tab>
-              <button>{getPreviewModeName(previewMode)}</button>
+              <button onClick={e => trackEvent('Response Tab Clicked', {name: 'Body'})}>
+                {getPreviewModeName(previewMode)}
+              </button>
               <PreviewModeDropdown
                 previewMode={previewMode}
                 updatePreviewMode={updatePreviewMode}
               />
             </Tab>
             <Tab>
-              <button>
+              <button onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
                 Headers {response.headers.length ? (
                 <span className="txt-sm">({response.headers.length})</span> ) : null}
               </button>
@@ -127,6 +130,7 @@ class ResponsePane extends Component {
           <TabPanel>
             {response.error ? (
               <ResponseBodyViewer
+                key={response._id}
                 contentType={response.contentType}
                 previewMode={PREVIEW_MODE_SOURCE}
                 editorLineWrapping={editorLineWrapping}
@@ -136,6 +140,7 @@ class ResponsePane extends Component {
               />
             ) : (
               <ResponseBodyViewer
+                key={response._id}
                 contentType={response.contentType}
                 previewMode={previewMode}
                 editorLineWrapping={editorLineWrapping}
@@ -147,7 +152,10 @@ class ResponsePane extends Component {
             )}
           </TabPanel>
           <TabPanel className="scrollable pad">
-            <ResponseHeadersViewer headers={response.headers}/>
+            <ResponseHeadersViewer
+              key={response._id}
+              headers={response.headers}
+            />
           </TabPanel>
         </Tabs>
       </section>

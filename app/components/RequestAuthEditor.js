@@ -10,7 +10,6 @@ const RequestAuthEditor = ({request, showPasswords, onChange, ...other}) => {
 
   return (
     <KeyValueEditor
-      uniquenessKey={request._id}
       pairs={pairs}
       maxPairs={1}
       namePlaceholder="Username"

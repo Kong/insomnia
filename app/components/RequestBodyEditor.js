@@ -36,11 +36,12 @@ class RequestBodyEditor extends Component {
 
     if (contentType === CONTENT_TYPE_FORM_URLENCODED) {
       return (
-        <KeyValueEditor
-          onChange={pairs => onChange(RequestBodyEditor._getBodyFromPairs(pairs))}
-          pairs={RequestBodyEditor._getPairsFromBody(request.body)}
-          uniquenessKey={request._id}
-        />
+        <div className="scrollable tall wide">
+          <KeyValueEditor
+            onChange={pairs => onChange(RequestBodyEditor._getBodyFromPairs(pairs))}
+            pairs={RequestBodyEditor._getPairsFromBody(request.body)}
+          />
+        </div>
       )
     } else {
       return (

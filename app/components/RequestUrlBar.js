@@ -1,11 +1,12 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 
-import Input from './base/Input';
 import Dropdown from './base/Dropdown';
 import MethodTag from './MethodTag';
 import {METHODS} from '../lib/constants';
 import Mousetrap from '../lib/mousetrap';
+import {trackEvent} from '../lib/analytics';
+import {DEBOUNCE_MILLIS} from '../lib/constants';
 
 
 class RequestUrlBar extends Component {
@@ -15,7 +16,10 @@ class RequestUrlBar extends Component {
   }
 
   _handleUrlChange (url) {
-    this.props.onUrlChange(url);
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      this.props.onUrlChange(url);
+    }, DEBOUNCE_MILLIS);
   }
 
   focus () {
@@ -25,10 +29,6 @@ class RequestUrlBar extends Component {
 
   componentDidMount () {
     Mousetrap.bindGlobal('mod+l', this.focus.bind(this));
-  }
-
-  componentWillUnmount () {
-    Mousetrap.unbind('mod+l');
   }
 
   render () {
@@ -47,22 +47,25 @@ class RequestUrlBar extends Component {
             </div>
           </button>
           <ul>
-            {METHODS.map(m => (
-              <li key={m}>
-                <button onClick={onMethodChange.bind(null, m)}>
-                  <MethodTag method={m} fullNames={true}/>
+            {METHODS.map(method => (
+              <li key={method}>
+                <button onClick={e => {
+                  onMethodChange(method);
+                  trackEvent('Changed Method', {method});
+                }}>
+                  <MethodTag method={method} fullNames={true}/>
                 </button>
               </li>
             ))}
           </ul>
         </Dropdown>
         <form className="form-control" onSubmit={this._handleFormSubmit.bind(this)}>
-          <Input
+          <input
             ref="input"
             type="text"
             placeholder="https://api.myproduct.com/v1/users"
-            value={url}
-            onChange={url => this._handleUrlChange(url)}/>
+            defaultValue={url}
+            onChange={e => this._handleUrlChange(e.target.value)}/>
         </form>
         <button onClick={this._handleFormSubmit.bind(this)}>
           Send

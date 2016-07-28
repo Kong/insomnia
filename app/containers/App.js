@@ -28,7 +28,6 @@ import {
 } from '../lib/constants'
 
 import * as GlobalActions from '../redux/modules/global';
-import * as RequestGroupActions from '../redux/modules/requestGroups';
 import * as RequestActions from '../redux/modules/requests';
 
 import * as db from '../database';
@@ -539,9 +538,6 @@ App.propTypes = {
       send: PropTypes.func.isRequired,
       changeFilter: PropTypes.func.isRequired
     }),
-    requestGroups: PropTypes.shape({
-      toggle: PropTypes.func.isRequired
-    }),
     modals: PropTypes.shape({
       hide: PropTypes.func.isRequired
     })
@@ -575,7 +571,6 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
-      requestGroups: bindActionCreators(RequestGroupActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)
     }
   }

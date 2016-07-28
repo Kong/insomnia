@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-import Input from '../base/Input';
+import {DEBOUNCE_MILLIS} from '../../lib/constants';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -23,8 +23,11 @@ class KeyValueEditor extends Component {
     }
   }
 
-  _onChange (pairs) {
-    this.props.onChange(pairs);
+  _onChange (pairs, debounce = false) {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      this.props.onChange(pairs);
+    }, debounce ? DEBOUNCE_MILLIS : 0);
   }
 
   _addPair (position) {
@@ -129,39 +132,9 @@ class KeyValueEditor extends Component {
       ref.focus();
 
       // Focus at the end of the text
-      ref.selectionStart = ref.selectionEnd = ref.getValue().length;
+      ref.selectionStart = ref.selectionEnd = ref.value.length;
     }
   }
-
-  // This works, but is commented out because it's caused some bugs
-  // TODO: Re-implement this (if needed) after some perf analysis
-  // shouldComponentUpdate (nextProps) {
-  //   // Compare the config (quick)
-  //   if (nextProps.valueInputType !== this.props.valueInputType) {
-  //     return true;
-  //   }
-  //
-  //   // Compare uniqueness key (quick)
-  //   if (nextProps.uniquenessKey !== this.props.uniquenessKey) {
-  //     return true;
-  //   }
-  //
-  //   // Compare array length (quick)
-  //   if (nextProps.pairs.length !== this.state.pairs.length) {
-  //     return true;
-  //   }
-  //
-  //   // Compare arrays
-  //   for (let i = 0; i < nextProps.pairs.length; i++) {
-  //     let newPair = nextProps.pairs[i];
-  //     let oldPair = this.state.pairs[i];
-  //     if (newPair.name !== oldPair.name || newPair.value !== oldPair.value) {
-  //       return true;
-  //     }
-  //   }
-  //
-  //   return false;
-  // }
 
   componentWillReceiveProps (nextProps) {
     this.setState({pairs: nextProps.pairs})
@@ -186,12 +159,12 @@ class KeyValueEditor extends Component {
             <li key={i}>
               <div className="key-value-editor__row">
                 <div className="form-control form-control--underlined form-control--wide">
-                  <Input
+                  <input
                     type="text"
-                    placeholder={this.props.namePlaceholder || 'Name'}
                     ref={`${i}.${NAME}`}
-                    value={pair.name}
-                    onChange={name => this._updatePair(i, {name})}
+                    placeholder={this.props.namePlaceholder || 'Name'}
+                    defaultValue={pair.name}
+                    onChange={e => this._updatePair(i, {name: e.target.value})}
                     onFocus={() => {
                       this._focusedPair = i;
                       this._focusedField = NAME
@@ -202,12 +175,12 @@ class KeyValueEditor extends Component {
                     onKeyDown={this._keyDown.bind(this)}/>
                 </div>
                 <div className="form-control form-control--underlined form-control--wide">
-                  <Input
+                  <input
                     type={valueInputType || 'text'}
                     placeholder={this.props.valuePlaceholder || 'Value'}
                     ref={`${i}.${VALUE}`}
-                    value={pair.value}
-                    onChange={value => this._updatePair(i, {value})}
+                    defaultValue={pair.value}
+                    onChange={e => this._updatePair(i, {value: e.target.value})}
                     onFocus={() => {
                       this._focusedPair = i;
                       this._focusedField = VALUE
@@ -257,7 +230,6 @@ class KeyValueEditor extends Component {
 
 KeyValueEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
-  uniquenessKey: PropTypes.string.isRequired,
   pairs: PropTypes.array.isRequired,
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,

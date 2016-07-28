@@ -180,7 +180,7 @@ class RequestSwitcherModal extends ModalComponent {
             <input
               type="text"
               ref="input"
-              value={searchString}
+              defaultValue={searchString}
               onChange={e => this._handleChange(e.target.value)}
             />
           </div>

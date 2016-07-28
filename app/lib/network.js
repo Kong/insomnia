@@ -6,6 +6,8 @@ import {DEBOUNCE_MILLIS} from './constants';
 import {STATUS_CODE_PEBKAC} from './constants';
 import {getRenderedRequest} from './render';
 
+const cookieJar = networkRequest.jar();
+
 function buildRequestConfig (request, patch = {}) {
   const config = {
     method: request.method,
@@ -13,15 +15,18 @@ function buildRequestConfig (request, patch = {}) {
     headers: {},
 
     // Setup redirect rules
-    followRedirect: true,
-    maxRedirects: 10,
+    followAllRedirects: true,
+    maxRedirects: 20,
     timeout: -1,
 
     // Unzip gzipped responses
     gzip: true,
 
     // Time the request
-    time: true
+    time: true,
+
+    // SSL Checking
+    rejectUnauthorized: true
   };
 
   // Set the URL, including the query parameters
@@ -50,9 +55,10 @@ function actuallySend (request, settings) {
   return new Promise((resolve, reject) => {
 
     let config = buildRequestConfig(request, {
-      jar: networkRequest.jar(),
-      followRedirect: settings.followRedirects,
-      timeout: settings.timeout > 0 ? settings.timeout : null
+      jar: cookieJar,
+      followAllRedirects: settings.followRedirects,
+      timeout: settings.timeout > 0 ? settings.timeout : null,
+      rejectUnauthorized: settings.validateSSL
     }, true);
 
     const startTime = Date.now();

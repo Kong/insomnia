@@ -1,6 +1,5 @@
 import React, {Component, PropTypes} from 'react';
 
-import Input from '../base/Input';
 import Dropdown from '../base/Dropdown';
 import DropdownHint from '../base/DropdownHint';
 import SidebarRequestRow from './SidebarRequestRow';
@@ -128,11 +127,11 @@ class Sidebar extends Component {
             </ul>
           </Dropdown>
           <div className="form-control form-control--underlined">
-            <Input
+            <input
               type="text"
               placeholder="Filter Requests"
               value={filter}
-              onChange={this._onFilterChange.bind(this)}
+              onChange={e => this._onFilterChange(e.target.value)}
             />
           </div>
         </footer>

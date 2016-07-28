@@ -12,6 +12,7 @@ import RequestUrlBar from '../components/RequestUrlBar';
 import {getContentTypeName} from '../lib/contentTypes';
 import {getContentTypeFromHeaders} from '../lib/contentTypes';
 import {MOD_SYM} from '../lib/constants';
+import {trackEvent} from '../lib/analytics';
 
 class RequestPane extends Component {
   render () {
@@ -69,10 +70,10 @@ class RequestPane extends Component {
       <section className="request-pane pane">
         <header className="pane__header">
           <RequestUrlBar
+            key={request._id}
             sendRequest={() => sendRequest(request)}
             onUrlChange={updateRequestUrl}
             onMethodChange={updateRequestMethod}
-            requestId={request._id}
             url={request.url}
             method={request.method}
           />
@@ -80,22 +81,24 @@ class RequestPane extends Component {
         <Tabs className="pane__body">
           <TabList>
             <Tab>
-              <button>{getContentTypeName(getContentTypeFromHeaders(request.headers))}</button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Body'})}>
+                {getContentTypeName(getContentTypeFromHeaders(request.headers))}
+              </button>
               <ContentTypeDropdown updateRequestContentType={updateRequestContentType}/>
             </Tab>
             <Tab>
-              <button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Auth'})}>
                 Auth {request.authentication.username ? <i className="fa fa-lock txt-sm"></i> : ''}
               </button>
             </Tab>
             <Tab>
-              <button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Params'})}>
                 Params {request.parameters.length ?
                 <span className="txt-sm">({request.parameters.length})</span> : null}
               </button>
             </Tab>
             <Tab>
-              <button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Headers'})}>
                 Headers {request.headers.length ? (
                 <span className="txt-sm">({request.headers.length})</span> ) : null}
               </button>
@@ -103,6 +106,7 @@ class RequestPane extends Component {
           </TabList>
           <TabPanel className="editor-wrapper">
             <RequestBodyEditor
+              key={request._id}
               request={request}
               onChange={updateRequestBody}
               fontSize={editorFontSize}
@@ -111,6 +115,7 @@ class RequestPane extends Component {
           </TabPanel>
           <TabPanel>
             <RequestAuthEditor
+              key={request._id}
               showPasswords={showPasswords}
               request={request}
               onChange={updateRequestAuthentication}
@@ -127,24 +132,25 @@ class RequestPane extends Component {
               <label className="label--small">Url Preview</label>
               <code className="txt-sm block selectable">
                 <RenderedQueryString
+                  key={request._id}
                   request={request}
                   placeholder="http://myproduct.com?name=Gregory"
                 />
               </code>
             </div>
             <KeyValueEditor
+              key={request._id}
               namePlaceholder="name"
               valuePlaceholder="value"
-              uniquenessKey={request._id}
               pairs={request.parameters}
               onChange={updateRequestParameters}
             />
           </TabPanel>
           <TabPanel className="scrollable">
             <KeyValueEditor
+              key={request._id}
               namePlaceholder="My-Header"
               valuePlaceholder="Value"
-              uniquenessKey={request._id}
               pairs={request.headers}
               onChange={updateRequestHeaders}
             />

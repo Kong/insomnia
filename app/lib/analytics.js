@@ -36,12 +36,6 @@ export function initAnalytics () {
 }
 
 export function trackEvent (event, properties = {}) {
-  // add some extra properties
-  properties = Object.assign({
-    appPlatform: process.platform,
-    appVersion: getAppVersion()
-  }, properties);
-
   // Don't track events if we haven't set them up yet
   if (analytics) {
     analytics.track({userId, event, properties});
