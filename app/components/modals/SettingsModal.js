@@ -71,8 +71,8 @@ class SettingsTabs extends Component {
               <input
                 id="setting-show-passwords"
                 type="checkbox"
-                defaultValue={settings.showPasswords}
-                onChange={e => db.settingsUpdate(settings, {showPasswords: e.target.value})}
+                checked={settings.showPasswords}
+                onChange={e => db.settingsUpdate(settings, {showPasswords: e.target.checked})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-show-passwords">
@@ -85,7 +85,7 @@ class SettingsTabs extends Component {
                 id="setting-follow-redirects"
                 type="checkbox"
                 value={settings.followRedirects}
-                onChange={e => db.settingsUpdate(settings, {followRedirects: e.target.value})}
+                onChange={e => db.settingsUpdate(settings, {followRedirects: e.target.checked})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-follow-redirects">
@@ -97,8 +97,8 @@ class SettingsTabs extends Component {
               <input
                 id="setting-validate-ssl"
                 type="checkbox"
-                defaultValue={settings.validateSSL}
-                onChange={e => db.settingsUpdate(settings, {validateSSL: e.target.value})}
+                checked={settings.validateSSL}
+                onChange={e => db.settingsUpdate(settings, {validateSSL: e.target.checked})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-validate-ssl">
@@ -108,15 +108,15 @@ class SettingsTabs extends Component {
 
             <div>
               <label htmlFor="setting-request-timeout" className="pad-top">
-                Request Timeout (ms) (-1 for no timeout)
+                Request Timeout (ms) (0 for no timeout)
               </label>
               <div className="form-control form-control--outlined no-margin">
                 <input
                   id="setting-request-timeout"
                   type="number"
-                  min={-1}
+                  min={0}
                   value={settings.timeout}
-                  onChange={e => db.settingsUpdate(settings, {timeout: e.target.value})}
+                  onChange={e => db.settingsUpdate(settings, {timeout: parseInt(e.target.value, 10)})}
                 />
               </div>
             </div>
@@ -130,8 +130,8 @@ class SettingsTabs extends Component {
               <input
                 id="setting-editor-line-wrapping"
                 type="checkbox"
-                value={settings.editorLineWrapping}
-                onChange={e => db.settingsUpdate(settings, {editorLineWrapping: e.target.value})}
+                checked={settings.editorLineWrapping}
+                onChange={e => db.settingsUpdate(settings, {editorLineWrapping: e.target.checked})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-editor-line-wrapping">
@@ -149,7 +149,7 @@ class SettingsTabs extends Component {
                   min={8}
                   max={20}
                   value={settings.editorFontSize}
-                  onChange={e => db.settingsUpdate(settings, {editorFontSize: e.target.value})}
+                  onChange={e => db.settingsUpdate(settings, {editorFontSize: parseInt(e.target.value, 10)})}
                 />
               </div>
             </div>

@@ -28,7 +28,7 @@ const MODEL_DEFAULTS = {
     followRedirects: false,
     editorFontSize: 11,
     editorLineWrapping: true,
-    timeout: -1,
+    timeout: 0,
     validateSSL: true
   }),
   [TYPE_WORKSPACE]: () => ({
