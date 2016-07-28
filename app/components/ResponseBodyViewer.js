@@ -4,7 +4,7 @@ import Editor from '../components/base/Editor';
 import ResponseBodyWebview from '../components/ResponseBodyWebview';
 import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 
-class ResponseViewer extends Component {
+class ResponseBodyViewer extends Component {
   render () {
     const {
       previewMode,
@@ -46,13 +46,15 @@ class ResponseViewer extends Component {
   }
 }
 
-ResponseViewer.propTypes = {
+ResponseBodyViewer.propTypes = {
   body: PropTypes.string.isRequired,
-  contentType: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
-  url: PropTypes.string.isRequired
+  url: PropTypes.string.isRequired,
+
+  // Optional
+  contentType: PropTypes.string
 };
 
-export default ResponseViewer;
+export default ResponseBodyViewer;

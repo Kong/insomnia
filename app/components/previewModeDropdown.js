@@ -2,6 +2,7 @@ import React, {PropTypes} from 'react';
 
 import Dropdown from '../components/base/Dropdown';
 import {PREVIEW_MODES, getPreviewModeName} from '../lib/previewModes';
+import {trackEvent} from '../lib/analytics';
 
 const PreviewModeDropdown = ({updatePreviewMode}) => {
   return (
@@ -12,9 +13,10 @@ const PreviewModeDropdown = ({updatePreviewMode}) => {
       <ul>
         {PREVIEW_MODES.map(previewMode => (
           <li key={previewMode}>
-            <button onClick={e => updatePreviewMode(previewMode)}>
-              {getPreviewModeName(previewMode)}
-            </button>
+            <button onClick={e => {
+              trackEvent('Changed Preview Mode', {previewMode});
+              updatePreviewMode(previewMode);
+            }}>{getPreviewModeName(previewMode)}</button>
           </li>
         ))}
       </ul>
@@ -25,7 +27,7 @@ const PreviewModeDropdown = ({updatePreviewMode}) => {
 PreviewModeDropdown.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
-  
+
   // Required
   previewMode: PropTypes.string.isRequired
 };

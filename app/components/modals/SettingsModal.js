@@ -94,25 +94,18 @@ class SettingsTabs extends Component {
               </label>
             </div>
 
-            {/*<div className="pad-top">*/}
-            {/*<Input*/}
-            {/*id="setting-bulk-header-edit"*/}
-            {/*type="checkbox"*/}
-            {/*value={settings.useBulkHeaderEditor}*/}
-            {/*onChange={useBulkHeaderEditor => db.settingsUpdate(settings, {useBulkHeaderEditor})}*/}
-            {/*/>*/}
-            {/*&nbsp;&nbsp;*/}
-            {/*<label htmlFor="setting-bulk-header-edit">*/}
-            {/*Use bulk header editor by default*/}
-            {/*</label>*/}
-            {/*</div>*/}
-
-            {/*<div className="pad-top">*/}
-            {/*<input id="setting-follow-redirects" type="checkbox"/>&nbsp;&nbsp;*/}
-            {/*<label htmlFor="setting-follow-redirects">*/}
-            {/*Follow Redirects*/}
-            {/*</label>*/}
-            {/*</div>*/}
+            <div className="pad-top">
+              <Input
+                id="setting-validate-ssl"
+                type="checkbox"
+                value={settings.validateSSL}
+                onChange={validateSSL => db.settingsUpdate(settings, {validateSSL})}
+              />
+              &nbsp;&nbsp;
+              <label htmlFor="setting-validate-ssl">
+                Validate SSL Certificates
+              </label>
+            </div>
 
             <div>
               <label htmlFor="setting-request-timeout" className="pad-top">

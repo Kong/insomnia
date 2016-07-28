@@ -12,6 +12,7 @@ import RequestUrlBar from '../components/RequestUrlBar';
 import {getContentTypeName} from '../lib/contentTypes';
 import {getContentTypeFromHeaders} from '../lib/contentTypes';
 import {MOD_SYM} from '../lib/constants';
+import {trackEvent} from '../lib/analytics';
 
 class RequestPane extends Component {
   render () {
@@ -80,22 +81,24 @@ class RequestPane extends Component {
         <Tabs className="pane__body">
           <TabList>
             <Tab>
-              <button>{getContentTypeName(getContentTypeFromHeaders(request.headers))}</button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Body'})}>
+                {getContentTypeName(getContentTypeFromHeaders(request.headers))}
+              </button>
               <ContentTypeDropdown updateRequestContentType={updateRequestContentType}/>
             </Tab>
             <Tab>
-              <button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Auth'})}>
                 Auth {request.authentication.username ? <i className="fa fa-lock txt-sm"></i> : ''}
               </button>
             </Tab>
             <Tab>
-              <button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Params'})}>
                 Params {request.parameters.length ?
                 <span className="txt-sm">({request.parameters.length})</span> : null}
               </button>
             </Tab>
             <Tab>
-              <button>
+              <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Headers'})}>
                 Headers {request.headers.length ? (
                 <span className="txt-sm">({request.headers.length})</span> ) : null}
               </button>

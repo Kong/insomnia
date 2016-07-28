@@ -6,6 +6,7 @@ import Dropdown from './base/Dropdown';
 import MethodTag from './MethodTag';
 import {METHODS} from '../lib/constants';
 import Mousetrap from '../lib/mousetrap';
+import {trackEvent} from '../lib/analytics';
 
 
 class RequestUrlBar extends Component {
@@ -47,10 +48,13 @@ class RequestUrlBar extends Component {
             </div>
           </button>
           <ul>
-            {METHODS.map(m => (
-              <li key={m}>
-                <button onClick={onMethodChange.bind(null, m)}>
-                  <MethodTag method={m} fullNames={true}/>
+            {METHODS.map(method => (
+              <li key={method}>
+                <button onClick={e => {
+                  onMethodChange(method);
+                  trackEvent('Changed Method', {method});
+                }}>
+                  <MethodTag method={method} fullNames={true}/>
                 </button>
               </li>
             ))}

@@ -21,7 +21,10 @@ function buildRequestConfig (request, patch = {}) {
     gzip: true,
 
     // Time the request
-    time: true
+    time: true,
+
+    // SSL Checking
+    rejectUnauthorized: true
   };
 
   // Set the URL, including the query parameters
@@ -52,7 +55,8 @@ function actuallySend (request, settings) {
     let config = buildRequestConfig(request, {
       jar: networkRequest.jar(),
       followRedirect: settings.followRedirects,
-      timeout: settings.timeout > 0 ? settings.timeout : null
+      timeout: settings.timeout > 0 ? settings.timeout : null,
+      rejectUnauthorized: settings.validateSSL
     }, true);
 
     const startTime = Date.now();
