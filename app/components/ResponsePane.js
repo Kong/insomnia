@@ -130,6 +130,7 @@ class ResponsePane extends Component {
           <TabPanel>
             {response.error ? (
               <ResponseBodyViewer
+                key={response._id}
                 contentType={response.contentType}
                 previewMode={PREVIEW_MODE_SOURCE}
                 editorLineWrapping={editorLineWrapping}
@@ -139,6 +140,7 @@ class ResponsePane extends Component {
               />
             ) : (
               <ResponseBodyViewer
+                key={response._id}
                 contentType={response.contentType}
                 previewMode={previewMode}
                 editorLineWrapping={editorLineWrapping}
@@ -150,7 +152,10 @@ class ResponsePane extends Component {
             )}
           </TabPanel>
           <TabPanel className="scrollable pad">
-            <ResponseHeadersViewer headers={response.headers}/>
+            <ResponseHeadersViewer
+              key={response._id}
+              headers={response.headers}
+            />
           </TabPanel>
         </Tabs>
       </section>

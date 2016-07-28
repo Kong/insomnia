@@ -4,7 +4,6 @@ import {bindActionCreators} from 'redux';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 import {shell} from 'electron';
 
-import Input from '../base/Input';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -69,11 +68,11 @@ class SettingsTabs extends Component {
               <label className="label--small">General Settings</label>
             </h2>
             <div>
-              <Input
+              <input
                 id="setting-show-passwords"
                 type="checkbox"
-                value={settings.showPasswords}
-                onChange={showPasswords => db.settingsUpdate(settings, {showPasswords})}
+                defaultValue={settings.showPasswords}
+                onChange={e => db.settingsUpdate(settings, {showPasswords: e.target.value})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-show-passwords">
@@ -82,11 +81,11 @@ class SettingsTabs extends Component {
             </div>
 
             <div className="pad-top">
-              <Input
+              <input
                 id="setting-follow-redirects"
                 type="checkbox"
                 value={settings.followRedirects}
-                onChange={followRedirects => db.settingsUpdate(settings, {followRedirects})}
+                onChange={e => db.settingsUpdate(settings, {followRedirects: e.target.value})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-follow-redirects">
@@ -95,11 +94,11 @@ class SettingsTabs extends Component {
             </div>
 
             <div className="pad-top">
-              <Input
+              <input
                 id="setting-validate-ssl"
                 type="checkbox"
-                value={settings.validateSSL}
-                onChange={validateSSL => db.settingsUpdate(settings, {validateSSL})}
+                defaultValue={settings.validateSSL}
+                onChange={e => db.settingsUpdate(settings, {validateSSL: e.target.value})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-validate-ssl">
@@ -112,12 +111,12 @@ class SettingsTabs extends Component {
                 Request Timeout (ms) (-1 for no timeout)
               </label>
               <div className="form-control form-control--outlined no-margin">
-                <Input
+                <input
                   id="setting-request-timeout"
                   type="number"
                   min={-1}
                   value={settings.timeout}
-                  onChange={timeout => db.settingsUpdate(settings, {timeout})}
+                  onChange={e => db.settingsUpdate(settings, {timeout: e.target.value})}
                 />
               </div>
             </div>
@@ -128,11 +127,11 @@ class SettingsTabs extends Component {
             <label className="label--small">Code Editor Settings</label>
 
             <div className="pad-top">
-              <Input
+              <input
                 id="setting-editor-line-wrapping"
                 type="checkbox"
                 value={settings.editorLineWrapping}
-                onChange={editorLineWrapping => db.settingsUpdate(settings, {editorLineWrapping})}
+                onChange={e => db.settingsUpdate(settings, {editorLineWrapping: e.target.value})}
               />
               &nbsp;&nbsp;
               <label htmlFor="setting-editor-line-wrapping">
@@ -144,13 +143,13 @@ class SettingsTabs extends Component {
                 Font Size (px)
               </label>
               <div className="form-control form-control--outlined no-margin">
-                <Input
+                <input
                   id="setting-editor-font-size"
                   type="number"
                   min={8}
                   max={20}
                   value={settings.editorFontSize}
-                  onChange={editorFontSize => db.settingsUpdate(settings, {editorFontSize})}
+                  onChange={e => db.settingsUpdate(settings, {editorFontSize: e.target.value})}
                 />
               </div>
             </div>

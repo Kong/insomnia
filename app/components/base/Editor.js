@@ -104,31 +104,6 @@ class Editor extends Component {
     }
   }
 
-  componentDidUpdate () {
-    // Don't update if no CodeMirror instance
-    if (!this.codeMirror) {
-      return;
-    }
-
-    const {value} = this.props;
-
-    // Reset any options that may have changed
-    this._codemirrorSetOptions();
-
-    // Don't update if no value passed
-    if (value === undefined) {
-      return;
-    }
-
-    // Don't update if same value passed again
-    if (this._currentCodemirrorValue === value) {
-      return;
-    }
-
-    // Set the new value
-    this._codemirrorSetValue(value);
-  }
-
   /**
    * Focus the cursor to the editor
    */
@@ -169,8 +144,8 @@ class Editor extends Component {
    */
   _codemirrorValueChanged (doc) {
     // Debounce URL changes so we don't update the app so much
-    clearTimeout(this.timeout);
-    this.timeout = setTimeout(() => {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
       // Update our cached value
       var newValue = doc.getValue();
       this._currentCodemirrorValue = newValue;
@@ -202,27 +177,6 @@ class Editor extends Component {
     }
 
     this.codeMirror.setValue(code);
-  }
-
-  shouldComponentUpdate (nextProps) {
-    // NOTE: This is pretty fragile but we really want to limit editor renders as much as
-    // possible
-
-    for (let key in nextProps) {
-      if (nextProps.hasOwnProperty(key)) {
-        if (typeof nextProps[key] === 'function') {
-          // TODO: compare functions. We don't now because we're passing in anonymous ones
-          continue;
-        }
-
-        if (nextProps[key] !== this.props[key]) {
-          // Props difference found. Re-render
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
 
   render () {
