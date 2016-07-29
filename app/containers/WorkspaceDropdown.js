@@ -54,22 +54,9 @@ class WorkspaceDropdown extends Component {
   }
 
   _requestGroupCreate () {
-    PromptModal.show({
-      headerName: 'Create New Folder',
-      defaultValue: 'New Folder',
-      submitName: 'Create',
-      selectText: true
-    }).then(name => {
-      const workspace = this._getActiveWorkspace(this.props);
-      db.requestGroupCreate({name, parentId: workspace._id}).then(requestGroup => {
-        // Nothing yet
-      });
-    });
-  }
-
-  _requestCreate () {
     const workspace = this._getActiveWorkspace(this.props);
-    db.requestCreateAndActivate(workspace, {parentId: workspace._id});
+    const parentId = workspace._id;
+    db.requestGroupCreate({parentId});
   }
 
   _getActiveWorkspace (props) {
