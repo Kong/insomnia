@@ -143,18 +143,19 @@ class Editor extends Component {
    * @param doc CodeMirror document
    */
   _codemirrorValueChanged (doc) {
+
+    // Don't trigger change event if we're ignoring changes
+    if (this._ignoreNextChange || !this.props.onChange) {
+      this._ignoreNextChange = false;
+      return;
+    }
+
     // Debounce URL changes so we don't update the app so much
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
       // Update our cached value
       var newValue = doc.getValue();
       this._currentCodemirrorValue = newValue;
-
-      // Don't trigger change event if we're ignoring changes
-      if (this._ignoreNextChange || !this.props.onChange) {
-        this._ignoreNextChange = false;
-        return;
-      }
 
       this.props.onChange(newValue);
     }, DEBOUNCE_MILLIS)

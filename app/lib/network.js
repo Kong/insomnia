@@ -17,7 +17,7 @@ function buildRequestConfig (request, patch = {}) {
     // Setup redirect rules
     followAllRedirects: true,
     maxRedirects: 20,
-    timeout: -1,
+    timeout: 0,
 
     // Unzip gzipped responses
     gzip: true,
