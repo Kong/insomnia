@@ -192,7 +192,7 @@
 
   .cm-s-default .CodeMirror-matchingbracket {
     text-decoration: underline;
-    color: white !important;
+    color: inherit !important;
   }
 }
 
@@ -220,5 +220,6 @@
 
   .cm-s-default .CodeMirror-matchingbracket {
     text-decoration: underline;
+    color: inherit !important;
   }
 }

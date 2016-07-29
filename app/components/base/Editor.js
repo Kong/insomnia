@@ -6,7 +6,7 @@ import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 
 // Modes
-import '../../../node_modules/codemirror/mode/css/css'
+import 'codemirror/mode/css/css'
 import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/javascript/javascript'
 
@@ -27,6 +27,8 @@ import 'codemirror/addon/display/autorefresh'
 
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
+
+import 'codemirror/addon/edit/matchbrackets'
 
 import 'codemirror/addon/search/matchesonscrollbar'
 import 'codemirror/addon/search/matchesonscrollbar.css'
@@ -52,6 +54,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   lineWrapping: true,
   lint: true,
   tabSize: 4,
+  matchBrackets: true,
   indentUnit: 4,
   indentWithTabs: true,
   gutters: [
@@ -125,7 +128,7 @@ class Editor extends Component {
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
 
-    if (options.mode === 'application/json') {
+    if (options.mode.indexOf('application/json') !== -1) {
       // ld+json looks better because keys are a different color
       options.mode = 'application/ld+json';
     }
@@ -175,6 +178,10 @@ class Editor extends Component {
     }
 
     this.codeMirror.setValue(code);
+  }
+
+  componentDidUpdate () {
+    this._codemirrorSetOptions();
   }
 
   render () {
