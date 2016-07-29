@@ -55,7 +55,7 @@ class EnvironmentEditModal extends ModalComponent {
   }
 
   render () {
-    const {environmentJSON} = this.state;
+    const {environmentJSON, requestGroup} = this.state;
 
     return (
       <Modal ref="modal" top={true} {...this.props}>
@@ -63,6 +63,7 @@ class EnvironmentEditModal extends ModalComponent {
         <ModalBody>
           <div className="pad-bottom">
             <Editor
+              key={requestGroup ? requestGroup._id : 'n/a'}
               onChange={this._handleChange.bind(this)}
               value={environmentJSON}
               lightTheme={true}

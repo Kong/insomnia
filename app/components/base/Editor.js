@@ -28,8 +28,6 @@ import 'codemirror/addon/display/autorefresh'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/searchcursor'
 
-import 'codemirror/addon/selection/active-line'
-
 import 'codemirror/addon/search/matchesonscrollbar'
 import 'codemirror/addon/search/matchesonscrollbar.css'
 
@@ -56,13 +54,12 @@ const BASE_CODEMIRROR_OPTIONS = {
   tabSize: 4,
   indentUnit: 4,
   indentWithTabs: true,
-  // styleActiveLine: true,
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',
     'CodeMirror-lint-markers'
   ],
-  cursorScrollMargin: 80,
+  cursorScrollMargin: 12, // NOTE: This is px
   extraKeys: {
     "Ctrl-Q": function (cm) {
       cm.foldCode(cm.getCursor());
