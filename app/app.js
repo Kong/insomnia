@@ -11,8 +11,6 @@ const appVersion = require('./app.json').version;
 const {app, dialog, ipcMain, autoUpdater, Menu, BrowserWindow, webContents} = electron;
 const {LocalStorage} = require('node-localstorage');
 
-const localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
-
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
 const IS_WIN = process.platform === 'win32';
@@ -25,6 +23,7 @@ const UPDATE_URLS = {
 };
 
 let mainWindow = null;
+let localStorage = null;
 
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
@@ -119,6 +118,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('ready', () => {
+  localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
+
   const zoomFactor = getZoomFactor();
   const bounds = getBounds();
   const {x, y, width, height} = bounds;
