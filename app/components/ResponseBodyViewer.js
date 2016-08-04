@@ -5,6 +5,16 @@ import ResponseBodyWebview from '../components/ResponseBodyWebview';
 import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 
 class ResponseBodyViewer extends Component {
+  shouldComponentUpdate (nextProps) {
+    for (let k of Object.keys(nextProps)) {
+      if (this.props[k] !== nextProps[k]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   render () {
     const {
       previewMode,

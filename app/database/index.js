@@ -74,6 +74,7 @@ const MODEL_DEFAULTS = {
 let db = null;
 
 function getDBFilePath (modelType) {
+  // NOTE: Do not EVER change this. EVER!
   const basePath = electron.remote.app.getPath('userData');
   return fsPath.join(basePath, `insomnia.${modelType}.db`);
 }
@@ -325,6 +326,33 @@ export function requestAll () {
   return all(TYPE_REQUEST);
 }
 
+export function requestGetAncestors (request) {
+  return new Promise(resolve => {
+    const ancestors = [];
+
+    const next = (doc) => {
+      Promise.all([
+        requestGroupGetById(doc.parentId),
+        workspaceGetById(doc.parentId)
+      ]).then(([requestGroup, workspace]) => {
+        if (requestGroup) {
+          ancestors.push(requestGroup);
+          next(requestGroup);
+        } else if (workspace) {
+          ancestors.push(workspace);
+          next(workspace);
+          // We could be done here, but let's have there only be one finish case
+        } else {
+          // We're finished
+          resolve(ancestors);
+        }
+      });
+    };
+
+    next(request);
+  });
+}
+
 
 // ~~~~~~~~~~~~~ //
 // REQUEST GROUP //
@@ -378,6 +406,10 @@ export function responseAll () {
 // ~~~~~~~~~ //
 // WORKSPACE //
 // ~~~~~~~~~ //
+
+export function workspaceGetById (id) {
+  return get(TYPE_WORKSPACE, id);
+}
 
 export function workspaceCreate (patch = {}) {
   return docCreate(TYPE_WORKSPACE, 'wrk', patch);

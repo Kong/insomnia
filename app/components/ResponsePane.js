@@ -30,9 +30,10 @@ class ResponsePane extends Component {
 
     if (loadStartTime) {
       // Set a timer to update the UI again soon
+      // TODO: Move this into a child component so we don't rerender too much
       setTimeout(() => {
         this.forceUpdate();
-      }, 30);
+      }, 100);
 
       // NOTE: We subtract 200ms because the request has some time padding on either end
       const elapsedTime = Math.round((Date.now() - loadStartTime - 200) / 100) / 10;
