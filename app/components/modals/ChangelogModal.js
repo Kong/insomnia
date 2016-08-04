@@ -31,7 +31,7 @@ class ChangelogModal extends ModalComponent {
 
     request.get(CHANGELOG_URL, (err, response) => {
       if (err) {
-        console.error('Failed to load changelog', err);
+        console.warn('Failed to load changelog', err);
         return;
       }
 

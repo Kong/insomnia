@@ -3,13 +3,17 @@
 @import '../constants/fonts';
 
 html {
-  font-family: 'Open Sans', sans-serif;
   font-size: $font-size;
 }
 
 html, body, #root {
   width: 100%;
   height: 100%;
+}
+
+p, div, span, strong, h1, h2, h3, h4, h5, h6 {
+  font-weight: 400;
+  font-family: 'Open Sans', sans-serif;
 }
 
 body {

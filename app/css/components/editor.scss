@@ -10,9 +10,12 @@
   .CodeMirror {
     height: 100% !important;
     width: 100%;
-    font-family: $font-monospace;
     box-sizing: border-box;
     padding-top: $padding-sm;
+  }
+
+  .CodeMirror * {
+    font-family: $font-monospace;
   }
 
   .CodeMirror,

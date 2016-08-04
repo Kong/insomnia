@@ -1,9 +1,7 @@
 import React, {PropTypes, Component} from 'react';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
+import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
-import StatusTag from './StatusTag';
-import SizeTag from './SizeTag';
-import TimeTag from './TimeTag';
+import ResponsePaneHeader from './ResponsePaneHeader'
 import PreviewModeDropdown from './PreviewModeDropdown';
 import ResponseBodyViewer from './ResponseBodyViewer';
 import ResponseHeadersViewer from './ResponseHeadersViewer';
@@ -100,14 +98,12 @@ class ResponsePane extends Component {
 
         <header className="pane__header pad no-wrap">
           {!response ? null : (
-            <div>
-              <StatusTag
-                statusCode={response.statusCode}
-                statusMessage={response.statusMessage}
-              />
-              <TimeTag milliseconds={response.elapsedTime}/>
-              <SizeTag bytes={response.bytesRead}/>
-            </div>
+            <ResponsePaneHeader
+              statusCode={response.statusCode}
+              statusMessage={response.statusMessage}
+              elapsedTime={response.elapsedTime}
+              bytesRead={response.bytesRead}
+            />
           )}
         </header>
         <Tabs className="pane__body">
