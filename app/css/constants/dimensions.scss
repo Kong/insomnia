@@ -13,13 +13,15 @@ $font-size-sm: 0.9rem;
 $font-size-md: 1.0rem;
 $font-size-lg: 1.1rem;
 $font-size-xl: 1.3rem;
-$font-size-xxl: 1.6rem;
-$font-size-xxxl: 1.8rem;
+$font-size-xxl: 1.5rem;
+$font-size-xxxl: 1.7rem;
 
 /* Wrapper */
+$line-height-lg: 5rem;
 $line-height-md: 4rem;
-$line-height-sm: $line-height-md * 0.75;
-$line-height-xs: $line-height-md * 0.6;
+$line-height-sm: 3rem;
+$line-height-xs: 2.4rem;
+$height-nav: $line-height-lg;
 
 /* Sidebar */
 $sidebar-width: 19rem;
@@ -43,25 +45,25 @@ $breakpoint-md: 880px;
 $breakpoint-sm: 660px;
 
 .txt-xs {
-  font-size: $font-size-xs;
+  font-size: $font-size-xs !important;
 }
 
 .txt-sm {
-  font-size: $font-size-sm;
+  font-size: $font-size-sm !important;
 }
 
 .txt-md {
-  font-size: $font-size-md;
+  font-size: $font-size-md !important;
 }
 
 .txt-lg {
-  font-size: $font-size-lg;
+  font-size: $font-size-lg !important;
 }
 
 .txt-xl {
-  font-size: $font-size-xl;
+  font-size: $font-size-xl !important;
 }
 
 .txt-xxl {
-  font-size: $font-size-xxl;
+  font-size: $font-size-xxl !important;
 }

@@ -72,20 +72,22 @@ class WorkspaceDropdown extends Component {
   }
 
   render () {
-    const {actions, loading, entities, ...other} = this.props;
+    const {className, actions, loading, entities, ...other} = this.props;
 
     const allWorkspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
     const workspace = this._getActiveWorkspace(this.props);
 
     return (
-      <Dropdown right={true} {...other} className="wide">
+      <Dropdown right={true} {...other} className={className + ' wide workspace-dropdown'}>
         <button className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
               {loading ? <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
-              <i className="fa fa-caret-down txt-lg"></i>
+              <i className="fa fa-caret-down"></i>
             </div>
             {workspace.name}
+            <br/>
+            <span className="txt-md"><i className="fa fa-home txt-md"></i> Hello</span>
           </h1>
         </button>
         <ul>

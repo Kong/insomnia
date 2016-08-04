@@ -99,9 +99,7 @@ class Sidebar extends Component {
 
     return (
       <aside className="sidebar">
-        <header className="sidebar__header">
-          <WorkspaceDropdown />
-        </header>
+          <WorkspaceDropdown className="sidebar__header" />
 
         <ul className="sidebar__list">
           {this._renderChildren(children)}

@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: $line-height-md 1fr auto;
+  grid-template-rows: $height-nav 1fr auto;
   grid-template-columns: 1fr;
 
   background-color: $bg-dark;
@@ -25,30 +25,10 @@
     background-color: $bg-brand;
     color: $font-brand-bg;
     width: 100%;
+    height: 100%;
 
     &:hover {
       background-color: lighten($bg-brand, 1);
-    }
-
-    h1 {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      // HACK: Bump up the arrow a bit
-      i.fa-caret-down {
-        position: relative;
-        top: -2px;
-      }
-    }
-
-    // Make the dropdown offset to the right
-    .dropdown ul {
-      right: -40%;
-    }
-
-    .btn {
-      padding: 0 $padding-md;
     }
   }
 
