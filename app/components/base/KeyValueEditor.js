@@ -23,11 +23,10 @@ class KeyValueEditor extends Component {
     }
   }
 
-  _onChange (pairs, debounce = false) {
+  _onChange (pairs) {
     clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
-      this.props.onChange(pairs);
-    }, debounce ? DEBOUNCE_MILLIS : 0);
+    this._timeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
+    this.setState({pairs});
   }
 
   _addPair (position) {
@@ -53,7 +52,7 @@ class KeyValueEditor extends Component {
     const pairs = this.state.pairs.map(
       (p, i) => i == position ? Object.assign({}, p, pairPatch) : p
     );
-    this._onChange(pairs, true);
+    this._onChange(pairs);
   }
 
   _focusNext (addIfValue = false) {
@@ -149,7 +148,7 @@ class KeyValueEditor extends Component {
     const {maxPairs, className, valueInputType} = this.props;
 
     return (
-      <ul className={classnames('key-value-editor', 'wide', className)}>
+      <ul key={pairs.length} className={classnames('key-value-editor', 'wide', className)}>
         {pairs.map((pair, i) => {
           if (typeof pair.value !== 'string') {
             return null;
