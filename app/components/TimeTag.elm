@@ -27,7 +27,7 @@ view milliseconds =
     in
         div [ class "tag" ]
             [ strong [ ] [ text "TIME " ]
-            , text (toString number)
+            , text (toString (toFloat (round (number * 10)) / 10))
             , text " "
             , text unit
             ]

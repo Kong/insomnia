@@ -1,10 +1,10 @@
 /* Padding */
 $padding-md: 1.25rem;
-$padding-sm: $padding-md * 0.5;
-$padding-xs: $padding-md * 0.35;
-$padding-xxs: $padding-md * 0.20;
-$padding-lg: $padding-md * 2;
-$padding-xl: $padding-md * 4;
+$padding-sm: 0.63rem;
+$padding-xs: 0.44rem;
+$padding-xxs: 0.25rem;
+$padding-lg: 2.5rem;
+$padding-xl: 5rem;
 
 /* Fonts */
 $font-size: 12px;
@@ -21,14 +21,15 @@ $line-height-lg: 4.5rem;
 $line-height-md: 4rem;
 $line-height-sm: 3rem;
 $line-height-xs: 2.4rem;
-$height-nav: $line-height-lg;
+$line-height-xxs: 2rem;
+$height-nav: $line-height-md;
 
 /* Sidebar */
 $sidebar-width: 19rem;
 
 /* Borders */
-$radius-sm: 0.1rem;
-$radius-md: 0.2rem;
+$radius-sm: 0.15rem;
+$radius-md: 0.3rem;
 
 /* Dropdowns */
 $dropdown-min-width: 15rem;

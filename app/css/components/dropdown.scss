@@ -6,11 +6,16 @@
   position: relative;
   display: inline-block;
 
+  &.dropdown--outlined ul {
+    border: 1px solid $hl-md;
+  }
+
   &:focus {
     outline: none;
   }
 
   .dropdown__backdrop {
+    //background: rgba(255, 0, 0, 0.1);
     display: none;
     position: fixed;
     z-index: 999;
@@ -28,10 +33,10 @@
     left: 0;
     z-index: 1000;
     min-width: $dropdown-min-width;
-    box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0 1rem 0 $hl-sm;
     // Separate it from the button a bit
-    margin-top: 3px;
-    margin-bottom: 3px;
+    margin-top: $padding-xxs;
+    margin-bottom: $padding-xxs;
     border-radius: $radius-md;
     background: $bg-super-light;
     overflow: hidden;
@@ -46,7 +51,8 @@
         color: $font-super-light-bg !important;
         white-space: nowrap;
 
-        &:hover {
+        &:hover,
+        &:focus {
           background: $hl-sm;
         }
 

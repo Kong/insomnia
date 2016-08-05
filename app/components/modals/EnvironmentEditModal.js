@@ -1,7 +1,7 @@
 import React, {PropTypes} from 'react';
 
 import Link from '../base/Link';
-import Editor from '../base/Editor';
+import EnvironmentEditor from '../EnvironmentEditor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -14,66 +14,64 @@ class EnvironmentEditModal extends ModalComponent {
     super(props);
 
     this.state = {
-      environmentJSON: '{}',
-      requestGroup: null
+      requestGroup: null,
+      isValid: true
     }
   }
 
   _saveChanges () {
-    const {requestGroup, environmentJSON} = this.state;
-
-    let environment;
-    try {
-      environment = JSON.parse(environmentJSON);
-    } catch (e) {
-      // That's OK. The user will (hopefully) fix the problem
-      console.warn('Failed to parse environment JSON', e);
+    if (!this._envEditor.isValid()) {
+      console.warn('Tried to save invalid environment');
       return;
     }
 
+    const environment = this._envEditor.getValue();
+    const {requestGroup} = this.state;
+
     this.props.onChange(Object.assign({}, requestGroup, {environment}));
+
     this.hide();
   }
 
-  _handleChange (environmentJSON) {
-    this.setState({environmentJSON});
-  }
-
-  _update (requestGroup) {
-    const environmentJSON = JSON.stringify(requestGroup.environment, null, '\t');
-    this.setState({environmentJSON, requestGroup});
+  _didChange () {
+    const isValid = this._envEditor.isValid();
+    if (this.state.isValid !== isValid) {
+      this.setState({isValid});
+    }
   }
 
   show (requestGroup) {
     super.show();
-    this._update(requestGroup);
+    this.setState({requestGroup});
   }
 
   toggle (requestGroup) {
     super.toggle();
-    this._update(requestGroup);
+    this.setState({requestGroup});
   }
 
   render () {
-    const {environmentJSON, requestGroup} = this.state;
+    const {requestGroup, isValid} = this.state;
 
     return (
       <Modal ref="modal" top={true} {...this.props}>
         <ModalHeader>Environment Variables (JSON Format)</ModalHeader>
         <ModalBody>
           <div className="pad-bottom">
-            <Editor
+            <EnvironmentEditor
+              ref={node => this._envEditor = node}
               key={requestGroup ? requestGroup._id : 'n/a'}
-              onChange={this._handleChange.bind(this)}
-              value={environmentJSON}
+              environment={requestGroup ? requestGroup.environment : {}}
+              didChange={this._didChange.bind(this)}
               lightTheme={true}
-              mode="application/json"
             />
           </div>
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={this._saveChanges.bind(this)}>Save</button>
+            <button className="btn" onClick={this._saveChanges.bind(this)} disabled={!isValid}>
+              Save
+            </button>
           </div>
           <div className="pad faint italic txt-sm tall">
             * this data can be used for&nbsp;

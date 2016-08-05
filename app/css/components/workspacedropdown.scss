@@ -2,12 +2,12 @@
 @import '../constants/colors';
 
 .workspace-dropdown {
+
   h1 {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: $font-size-xxl;
-    line-height: 1.2em;
 
     // HACK: Bump up the arrow a bit
     i.fa {
@@ -16,13 +16,9 @@
     }
   }
 
-  .dropdown {
-    height: 100%;
-  }
-
   // Make the dropdown offset to the right
-  .dropdown ul {
-    right: -40%;
+  ul {
+    left: 60% !important;
   }
 
   .btn {

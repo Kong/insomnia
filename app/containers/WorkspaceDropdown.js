@@ -10,6 +10,7 @@ import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
+import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
@@ -78,7 +79,7 @@ class WorkspaceDropdown extends Component {
     const workspace = this._getActiveWorkspace(this.props);
 
     return (
-      <Dropdown right={true} {...other} className={className + ' wide workspace-dropdown'}>
+      <Dropdown {...other} className={className + ' wide workspace-dropdown'}>
         <button className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
@@ -86,8 +87,6 @@ class WorkspaceDropdown extends Component {
               <i className="fa fa-caret-down"></i>
             </div>
             {workspace.name}
-            <br/>
-            <span className="txt-md"><i className="fa fa-home txt-md"></i> Hello</span>
           </h1>
         </button>
         <ul>
@@ -96,15 +95,9 @@ class WorkspaceDropdown extends Component {
 
           <li>
             <button
-              onClick={e => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}>
-              <i className="fa fa-plus-circle"></i> New Request
-              <DropdownHint char="N"></DropdownHint>
-            </button>
-          </li>
-
-          <li>
-            <button onClick={e => this._requestGroupCreate() }>
-              <i className="fa fa-folder"></i> New Folder
+              onClick={e => WorkspaceEnvironmentsEditModal.show()}>
+              <i className="fa fa-pencil-square-o"></i> Edit Environments
+              <DropdownHint char="E"></DropdownHint>
             </button>
           </li>
           <li>

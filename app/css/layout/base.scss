@@ -11,7 +11,7 @@ html, body, #root {
   height: 100%;
 }
 
-p, div, span, strong, h1, h2, h3, h4, h5, h6 {
+html, h1, h2, h3, h4, h5, h6 {
   font-weight: 400;
   font-family: 'Open Sans', sans-serif;
 }
@@ -143,7 +143,7 @@ code {
 
 /* Make all font awesome icons the same width */
 i.fa {
-  width: 1.1em;
+  min-width: 1.1rem;
   text-align: center;
 }
 
@@ -154,6 +154,10 @@ i.fa {
 
 .no-wrap {
   white-space: nowrap;
+}
+
+.wrap {
+  white-space: normal;
 }
 
 .pad {

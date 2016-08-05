@@ -8,6 +8,7 @@ import {DragDropContext} from 'react-dnd';
 
 import Mousetrap from '../lib/mousetrap';
 
+import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import CurlExportModal from '../components/modals/CurlExportModal';
@@ -35,6 +36,7 @@ import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
 import {CHECK_FOR_UPDATES_INTERVAL} from '../lib/constants';
+import {COLLAPSE_SIDEBAR_REMS} from '../lib/constants';
 
 class App extends Component {
   constructor (props) {
@@ -68,6 +70,11 @@ class App extends Component {
         if (request) {
           this.props.actions.requests.send(request);
         }
+      },
+
+      // Edit Workspace Environments
+      'mod+e': () => {
+        WorkspaceEnvironmentsEditModal.toggle(this._getActiveWorkspace());
       },
 
       // Request Create
@@ -353,7 +360,7 @@ class App extends Component {
       const currentPixelWidth = ReactDOM.findDOMNode(this.refs.sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
-      const sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
+      let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
       this.setState({sidebarWidth})
     }
   }
@@ -469,6 +476,7 @@ class App extends Component {
           requestGroupCreate={() => db.requestGroupCreate({parentId: workspace._id})}
           filter={workspace.filter || ''}
           children={children}
+          width={sidebarWidth}
         />
 
         <div className="drag drag--sidebar">
@@ -522,6 +530,7 @@ class App extends Component {
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
         />
         <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
+        <WorkspaceEnvironmentsEditModal onChange={w => db.workspaceUpdate(w)}/>
         {/*<div className="toast toast--show">*/}
         {/*<div className="toast__message">How's it going?</div>*/}
         {/*<button className="toast__action">Great!</button>*/}

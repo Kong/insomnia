@@ -1,10 +1,13 @@
 import React, {Component, PropTypes} from 'react';
+import classnames from 'classnames';
 
 import Dropdown from '../base/Dropdown';
 import DropdownHint from '../base/DropdownHint';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
+import {SIDEBAR_SKINNY_REMS} from '../../lib/constants';
+import {COLLAPSE_SIDEBAR_REMS} from '../../lib/constants';
 
 
 class Sidebar extends Component {
@@ -95,18 +98,25 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {filter, children, requestCreate, requestGroupCreate} = this.props;
+    const {filter, children, requestCreate, requestGroupCreate, width} = this.props;
 
     return (
-      <aside className="sidebar">
-          <WorkspaceDropdown className="sidebar__header" />
+      <aside className={classnames('sidebar', {
+        'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
+        'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
+      })}>
+        <WorkspaceDropdown className="sidebar__header"/>
 
-        <ul className="sidebar__list">
-          {this._renderChildren(children)}
-        </ul>
-
-        <footer className="sidebar__footer">
-          <Dropdown>
+        <div className="sidebar__filter">
+          <div className="form-control form-control--outlined">
+            <input
+              type="text"
+              placeholder="Filter"
+              value={filter}
+              onChange={e => this._onFilterChange(e.target.value)}
+            />
+          </div>
+          <Dropdown right={true}>
             <button className="btn btn--compact">
               <i className="fa fa-plus-circle"></i>
             </button>
@@ -124,15 +134,39 @@ class Sidebar extends Component {
               </li>
             </ul>
           </Dropdown>
-          <div className="form-control form-control--underlined">
-            <input
-              type="text"
-              placeholder="Filter Requests"
-              value={filter}
-              onChange={e => this._onFilterChange(e.target.value)}
-            />
-          </div>
-        </footer>
+        </div>
+        <div className="sidebar__menu">
+          <Dropdown>
+            <button className="btn btn--super-compact no-wrap">
+              <div className="sidebar__menu__thing">
+                <span>{'Production'}</span>
+                &nbsp;
+                <i className="fa fa-caret-down"></i>
+              </div>
+            </button>
+            <ul>
+              <li>
+                <button>Production</button>
+              </li>
+              <li>
+                <button>Staging</button>
+              </li>
+              <li>
+                <button>Development</button>
+              </li>
+            </ul>
+          </Dropdown>
+          <button className="btn btn--super-compact">
+            <div className="sidebar__menu__thing">
+              <span>Cookies</span>
+            </div>
+          </button>
+        </div>
+
+        <ul className="sidebar__list sidebar__list-root">
+          {this._renderChildren(children)}
+        </ul>
+
       </aside>
     )
   }
@@ -148,6 +182,7 @@ Sidebar.propTypes = {
   moveRequestGroup: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   requestGroupCreate: PropTypes.func.isRequired,
+  width: PropTypes.number.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,
