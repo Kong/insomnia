@@ -37,6 +37,7 @@ class Modal extends Component {
 
   show () {
     this.setState({open: true});
+    ReactDOM.findDOMNode(this).focus();
   }
 
   toggle () {

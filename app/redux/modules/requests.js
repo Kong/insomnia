@@ -1,8 +1,7 @@
 import {combineReducers} from 'redux';
-import * as network from '../../lib/network';
-import {show} from './modals';
-import {MODAL_REQUEST_RENAME, MODAL_CURL_EXPORT} from '../../lib/constants';
+
 import {trackEvent} from '../../lib/analytics';
+import * as network from '../../lib/network';
 
 export const REQUEST_CHANGE_FILTER = 'requests/filter';
 export const REQUEST_SEND_START = 'requests/start';
@@ -32,7 +31,7 @@ function loadingRequestsReducer(state = {}, action) {
     case REQUEST_SEND_START:
       newState = Object.assign({}, state);
       newState[action.requestId] = Date.now();
-      return newState
+      return newState;
 
     case REQUEST_SEND_STOP:
       newState = Object.assign({}, state);
@@ -66,6 +65,7 @@ export function send(request) {
     network.send(request._id).then(() => {
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     }, err => {
+      throw err;
       console.error('Error sending request', err);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     });

@@ -11,6 +11,7 @@ import AlertModal from '../components/modals/AlertModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
+import CookieEditModal from '../components/modals/CookieEditModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
@@ -96,8 +97,15 @@ class WorkspaceDropdown extends Component {
           <li>
             <button
               onClick={e => WorkspaceEnvironmentsEditModal.show()}>
-              <i className="fa fa-pencil-square-o"></i> Edit Environments
+              <i className="fa fa-home"></i> Manage Environments
               <DropdownHint char="E"></DropdownHint>
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={e => CookieEditModal.show()}>
+              <i className="fa fa-th"></i> Manage Cookies
+              <DropdownHint char="K"></DropdownHint>
             </button>
           </li>
           <li>

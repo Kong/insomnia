@@ -9,6 +9,7 @@ import {DragDropContext} from 'react-dnd';
 import Mousetrap from '../lib/mousetrap';
 
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
+import CookieEditModal from '../components/modals/CookieEditModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import CurlExportModal from '../components/modals/CurlExportModal';
@@ -36,7 +37,7 @@ import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
 import {CHECK_FOR_UPDATES_INTERVAL} from '../lib/constants';
-import {COLLAPSE_SIDEBAR_REMS} from '../lib/constants';
+
 
 class App extends Component {
   constructor (props) {
@@ -75,6 +76,11 @@ class App extends Component {
       // Edit Workspace Environments
       'mod+e': () => {
         WorkspaceEnvironmentsEditModal.toggle(this._getActiveWorkspace());
+      },
+
+      // Edit Cookies
+      'mod+k': () => {
+        CookieEditModal.toggle(this._getActiveWorkspace());
       },
 
       // Request Create
@@ -460,6 +466,7 @@ class App extends Component {
 
     const {sidebarWidth, paneWidth} = this.state;
     const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
+    const activeParentId = activeRequest ? activeRequest.parentId : workspace._id;
 
     return (
       <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
@@ -472,7 +479,7 @@ class App extends Component {
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
-          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}
+          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: activeParentId})}
           requestGroupCreate={() => db.requestGroupCreate({parentId: workspace._id})}
           filter={workspace.filter || ''}
           children={children}
@@ -531,6 +538,7 @@ class App extends Component {
         />
         <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
         <WorkspaceEnvironmentsEditModal onChange={w => db.workspaceUpdate(w)}/>
+        <CookieEditModal onChange={() => console.log('TODO: COOKIES!!!')}/>
         {/*<div className="toast toast--show">*/}
         {/*<div className="toast__message">How's it going?</div>*/}
         {/*<button className="toast__action">Great!</button>*/}

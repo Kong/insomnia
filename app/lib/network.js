@@ -6,7 +6,6 @@ import {DEBOUNCE_MILLIS} from './constants';
 import {STATUS_CODE_PEBKAC} from './constants';
 import {getRenderedRequest} from './render';
 
-const cookieJar = networkRequest.jar();
 
 function buildRequestConfig (request, patch = {}) {
   const config = {
@@ -51,11 +50,14 @@ function buildRequestConfig (request, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (request, settings) {
+function actuallySend (request, settings, cookieJar) {
   return new Promise((resolve, reject) => {
+    const jar = networkRequest.jar();
+
+    console.log(jar._jar.toJSON());
 
     let config = buildRequestConfig(request, {
-      jar: cookieJar,
+      jar: jar,
       followAllRedirects: settings.followRedirects,
       timeout: settings.timeout > 0 ? settings.timeout : null,
       rejectUnauthorized: settings.validateSSL
@@ -93,28 +95,27 @@ function actuallySend (request, settings) {
   })
 }
 
-export function send (requestId) {
+export function send (requestId, cookieJarId) {
   return new Promise((resolve, reject) => {
 
-    // First, lets wait for all debounces to finish
-    setTimeout(() => {
-      Promise.all([
-        db.requestGetById(requestId),
-        db.settingsGet()
-      ]).then(([
-        request,
-        settings
-      ]) => {
-        getRenderedRequest(request).then(renderedRequest => {
-          actuallySend(renderedRequest, settings).then(resolve, reject);
-        }, err => {
-          db.responseCreate({
-            parentId: request._id,
-            statusCode: STATUS_CODE_PEBKAC,
-            error: err.message
-          }).then(resolve, reject);
-        });
-      })
-    }, DEBOUNCE_MILLIS);
-  });
+      // First, lets wait for all debounces to finish
+      setTimeout(() => {
+        Promise.all([
+          db.requestGetById(requestId),
+          db.settingsGet(),
+          db.cookieJarGetById(cookieJarId)
+        ]).then(([request, settings, cookieJar]) => {
+          return getRenderedRequest(request).then(renderedRequest => {
+            actuallySend(renderedRequest, settings, cookieJar).then(resolve, reject);
+          }, err => {
+            db.responseCreate({
+              parentId: request._id,
+              statusCode: STATUS_CODE_PEBKAC,
+              error: err.message
+            }).then(resolve, reject);
+          });
+        })
+      }, DEBOUNCE_MILLIS);
+    }
+  )
 }

@@ -75,7 +75,7 @@
 
   .sidebar__menu {
     display: grid;
-    grid-template-columns: 50% 50%;
+    grid-template-columns: 55% 45%;
     justify-items: center;
     font-size: $font-size-sm;
     color: $hl;
@@ -83,7 +83,7 @@
 
     & > * {
       width: 100%;
-      margin-bottom: $padding-xs;
+      margin-top: $padding-sm;
     }
 
     & > *:first-child {
@@ -253,7 +253,7 @@
     align-items: center;
   }
 
-  // Padding
+  // Padding for nested folders
 
   .sidebar__list .sidebar__clickable {
     padding-left: $padding-md;

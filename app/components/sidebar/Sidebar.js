@@ -2,9 +2,12 @@ import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 
 import Dropdown from '../base/Dropdown';
-import DropdownHint from '../base/DropdownHint';
+import DropdownDivider from '../base/DropdownDivider';
+import CookieEditModal from '../modals/CookieEditModal';
+import WorkspaceEnvironmentsEditModal from '../modals/WorkspaceEnvironmentsEditModal';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
+import SidebarFilter from './SidebarFilter';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
 import {SIDEBAR_SKINNY_REMS} from '../../lib/constants';
 import {COLLAPSE_SIDEBAR_REMS} from '../../lib/constants';
@@ -98,7 +101,7 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {filter, children, requestCreate, requestGroupCreate, width} = this.props;
+    const {changeFilter, filter, children, requestCreate, requestGroupCreate, width} = this.props;
 
     return (
       <aside className={classnames('sidebar', {
@@ -106,62 +109,55 @@ class Sidebar extends Component {
         'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
       })}>
         <WorkspaceDropdown className="sidebar__header"/>
-
-        <div className="sidebar__filter">
-          <div className="form-control form-control--outlined">
-            <input
-              type="text"
-              placeholder="Filter"
-              value={filter}
-              onChange={e => this._onFilterChange(e.target.value)}
-            />
-          </div>
-          <Dropdown right={true}>
-            <button className="btn btn--compact">
-              <i className="fa fa-plus-circle"></i>
-            </button>
-            <ul>
-              <li>
-                <button onClick={e => requestCreate()}>
-                  <i className="fa fa-plus-circle"></i> New Request
-                  <DropdownHint char="N"></DropdownHint>
-                </button>
-              </li>
-              <li>
-                <button onClick={e => requestGroupCreate()}>
-                  <i className="fa fa-folder"></i> New Folder
-                </button>
-              </li>
-            </ul>
-          </Dropdown>
-        </div>
         <div className="sidebar__menu">
           <Dropdown>
             <button className="btn btn--super-compact no-wrap">
               <div className="sidebar__menu__thing">
-                <span>{'Production'}</span>
+                <span>{'No Environment'}</span>
                 &nbsp;
                 <i className="fa fa-caret-down"></i>
               </div>
             </button>
             <ul>
+              <DropdownDivider name="Environments"/>
+              {['Production', 'Staging', 'Development'].map(n => (
+                <li key={n}>
+                  <button>
+                    <i className="fa fa-hand-o-right"></i> Use <strong>{n}</strong>
+                  </button>
+                </li>
+              ))}
               <li>
-                <button>Production</button>
+                <button>
+                  <i className="fa fa-empty"></i> No Environment
+                </button>
+              </li>
+              <DropdownDivider name="General"/>
+              <li>
+                <button>
+                  <i className="fa fa-pencil-square-o"></i> Edit Global Environment
+                </button>
               </li>
               <li>
-                <button>Staging</button>
-              </li>
-              <li>
-                <button>Development</button>
+                <button onClick={e => WorkspaceEnvironmentsEditModal.show()}>
+                  <i className="fa fa-empty"></i> Manage Environments
+                </button>
               </li>
             </ul>
           </Dropdown>
-          <button className="btn btn--super-compact">
+          <button className="btn btn--super-compact" onClick={e => CookieEditModal.show()}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
           </button>
         </div>
+
+        <SidebarFilter
+          onChange={filter => changeFilter(filter)}
+          requestCreate={requestCreate}
+          requestGroupCreate={requestGroupCreate}
+          filter={filter}
+        />
 
         <ul className="sidebar__list sidebar__list-root">
           {this._renderChildren(children)}

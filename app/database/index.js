@@ -11,6 +11,7 @@ import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
 export const TYPE_STATS = 'Stats';
 export const TYPE_SETTINGS = 'Settings';
 export const TYPE_WORKSPACE = 'Workspace';
+export const TYPE_COOKIE_JAR = 'CookieJar';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
 export const TYPE_REQUEST = 'Request';
 export const TYPE_RESPONSE = 'Response';
@@ -37,6 +38,10 @@ const MODEL_DEFAULTS = {
     filter: '',
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     metaActiveRequestId: null
+  }),
+  [TYPE_COOKIE_JAR]: () => ({
+    name: 'Default Jar',
+    data: {}
   }),
   [TYPE_REQUEST_GROUP]: () => ({
     name: 'New Folder',
@@ -70,6 +75,8 @@ const MODEL_DEFAULTS = {
     error: ''
   }),
 };
+
+export const ALL_TYPES = Object.keys(MODEL_DEFAULTS);
 
 let db = null;
 
@@ -403,6 +410,37 @@ export function responseAll () {
 }
 
 
+// ~~~~~~~ //
+// COOKIES //
+// ~~~~~~~ //
+
+export function cookieJarGetById (id) {
+  return get(TYPE_COOKIE_JAR);
+}
+
+export function cookieJarCreate (patch = {}) {
+  return docCreate(TYPE_COOKIE_JAR, 'jar', patch);
+}
+
+export function cookieJarAll () {
+  return all(TYPE_COOKIE_JAR).then(cookieJars => {
+    if (cookieJars.length === 0) {
+      return cookieJarCreate().then(cookieJarAll);
+    } else {
+      return new Promise(resolve => resolve(cookieJars))
+    }
+  });
+}
+
+export function cookieJarUpdate (cookieJar, patch) {
+  return docUpdate(cookieJar, patch);
+}
+
+export function cookieJarRemove (cookieJar) {
+  return remove(cookieJar);
+}
+
+
 // ~~~~~~~~~ //
 // WORKSPACE //
 // ~~~~~~~~~ //
@@ -438,9 +476,9 @@ export function workspaceRemove (workspace) {
 }
 
 
-// ~~~~~~~~~ //
-// WORKSPACE //
-// ~~~~~~~~~ //
+// ~~~~~~~~ //
+// SETTINGS //
+// ~~~~~~~~ //
 
 export function settingsCreate (patch = {}) {
   return docCreate(TYPE_SETTINGS, 'set', patch);

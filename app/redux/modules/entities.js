@@ -1,6 +1,7 @@
 import {combineReducers} from 'redux';
 
 import {
+  ALL_TYPES,
   TYPE_STATS,
   TYPE_SETTINGS,
   TYPE_WORKSPACE,
@@ -43,12 +44,12 @@ function genericEntityReducer (referenceName) {
 }
 
 export default combineReducers({
-  stats: genericEntityReducer('stats'),
-  settings: genericEntityReducer('settings'),
-  workspaces: genericEntityReducer('workspace'),
-  requestGroups: genericEntityReducer('requestGroup'),
-  requests: genericEntityReducer('request'),
-  responses: genericEntityReducer('response'),
+  stats: genericEntityReducer(TYPE_STATS),
+  settings: genericEntityReducer(TYPE_SETTINGS),
+  workspaces: genericEntityReducer(TYPE_WORKSPACE),
+  requestGroups: genericEntityReducer(TYPE_REQUEST_GROUP),
+  requests: genericEntityReducer(TYPE_REQUEST),
+  responses: genericEntityReducer(TYPE_RESPONSE),
   doNotPersist: () => true
 })
 
@@ -57,32 +58,45 @@ export default combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-const insertFns = {
-  [TYPE_STATS]: stats => ({type: ENTITY_INSERT, stats}),
-  [TYPE_SETTINGS]: settings => ({type: ENTITY_INSERT, settings}),
-  [TYPE_WORKSPACE]: workspace => ({type: ENTITY_INSERT, workspace}),
-  [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_INSERT, requestGroup}),
-  [TYPE_RESPONSE]: response => ({type: ENTITY_INSERT, response}),
-  [TYPE_REQUEST]: request => ({type: ENTITY_INSERT, request})
-};
+// const insertFns = {
+//   [TYPE_STATS]: stats => ({type: ENTITY_INSERT, stats}),
+//   [TYPE_SETTINGS]: settings => ({type: ENTITY_INSERT, settings}),
+//   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_INSERT, workspace}),
+//   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_INSERT, requestGroup}),
+//   [TYPE_RESPONSE]: response => ({type: ENTITY_INSERT, response}),
+//   [TYPE_REQUEST]: request => ({type: ENTITY_INSERT, request})
+// };
+const insertFns = {};
+for (let type of ALL_TYPES) {
+  insertFns[type] = doc => ({type: ENTITY_INSERT, [type]: doc})
+}
 
-const updateFns = {
-  [TYPE_STATS]: stats => ({type: ENTITY_UPDATE, stats}),
-  [TYPE_SETTINGS]: settings => ({type: ENTITY_UPDATE, settings}),
-  [TYPE_WORKSPACE]: workspace => ({type: ENTITY_UPDATE, workspace}),
-  [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
-  [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
-  [TYPE_REQUEST]: request => ({type: ENTITY_UPDATE, request})
-};
+// const updateFns = {
+//   [TYPE_STATS]: stats => ({type: ENTITY_UPDATE, stats}),
+//   [TYPE_SETTINGS]: settings => ({type: ENTITY_UPDATE, settings}),
+//   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_UPDATE, workspace}),
+//   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_UPDATE, requestGroup}),
+//   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
+//   [TYPE_REQUEST]: request => ({type: ENTITY_UPDATE, request})
+// };
+const updateFns = {};
+for (let type of ALL_TYPES) {
+  updateFns[type] = doc => ({type: ENTITY_UPDATE, [type]: doc})
+}
 
-const removeFns = {
-  [TYPE_STATS]: stats => ({type: ENTITY_REMOVE, stats}),
-  [TYPE_SETTINGS]: settings => ({type: ENTITY_REMOVE, settings}),
-  [TYPE_WORKSPACE]: workspace => ({type: ENTITY_REMOVE, workspace}),
-  [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_REMOVE, requestGroup}),
-  [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
-  [TYPE_REQUEST]: request => ({type: ENTITY_REMOVE, request})
-};
+// const removeFns = {
+//   [TYPE_STATS]: stats => ({type: ENTITY_REMOVE, stats}),
+//   [TYPE_SETTINGS]: settings => ({type: ENTITY_REMOVE, settings}),
+//   [TYPE_WORKSPACE]: workspace => ({type: ENTITY_REMOVE, workspace}),
+//   [TYPE_REQUEST_GROUP]: requestGroup => ({type: ENTITY_REMOVE, requestGroup}),
+//   [TYPE_RESPONSE]: response => ({type: ENTITY_UPDATE, response}),
+//   [TYPE_REQUEST]: request => ({type: ENTITY_REMOVE, request})
+// };
+
+const removeFns = {};
+for (let type of ALL_TYPES) {
+  removeFns[type] = doc => ({type: ENTITY_REMOVE, [type]: doc})
+}
 
 export function insert (doc) {
   return insertFns[doc.type](doc);
