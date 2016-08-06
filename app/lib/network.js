@@ -70,6 +70,7 @@ function actuallySend (request, settings, cookieJar) {
     }, true);
 
     const startTime = Date.now();
+    // TODO: Handle redirects ourselves
     networkRequest(config, function (err, networkResponse) {
       if (err) {
         db.responseCreate({
@@ -81,7 +82,7 @@ function actuallySend (request, settings, cookieJar) {
         return reject(err);
       }
 
-      console.log("HI", networkResponse);
+      console.log("NETWORK RESPONSE", networkResponse);
       global.cookieJar = jar;
       extractCookiesFromJar(jar);
       // db.cookieJarUpdate(cookieJar, {data: jar._jar.toJSON()}).then(j => console.log(j));

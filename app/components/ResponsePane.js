@@ -5,6 +5,7 @@ import ResponsePaneHeader from './ResponsePaneHeader'
 import PreviewModeDropdown from './PreviewModeDropdown';
 import ResponseBodyViewer from './ResponseBodyViewer';
 import ResponseHeadersViewer from './ResponseHeadersViewer';
+import ResponseCookiesViewer from './ResponseCookiesViewer';
 import {getPreviewModeName} from '../lib/previewModes';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
@@ -92,7 +93,7 @@ class ResponsePane extends Component {
       )
     }
 
-    // const cookieHeaders =
+    const cookieHeaders = response.headers.filter(h => h.name.toLowerCase() === 'set-cookie');
 
     return (
       <section className="response-pane pane">
@@ -119,12 +120,12 @@ class ResponsePane extends Component {
                 updatePreviewMode={updatePreviewMode}
               />
             </Tab>
-            {/*<Tab>*/}
-              {/*<button onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>*/}
-                {/*Cookies {response.cookies.length ? (*/}
-                {/*<span className="txt-sm">({response.headers.length})</span> ) : null}*/}
-              {/*</button>*/}
-            {/*</Tab>*/}
+            <Tab>
+              <button onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
+                Cookies {cookieHeaders.length ? (
+                <span className="txt-sm">({cookieHeaders.length})</span> ) : null}
+              </button>
+            </Tab>
             <Tab>
               <button onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
                 Headers {response.headers.length ? (
@@ -155,6 +156,12 @@ class ResponsePane extends Component {
                 wrap={true} // TODO: Make this a user preference
               />
             )}
+          </TabPanel>
+          <TabPanel className="scrollable pad">
+            <ResponseCookiesViewer
+              key={response._id}
+              headers={cookieHeaders}
+            />
           </TabPanel>
           <TabPanel className="scrollable pad">
             <ResponseHeadersViewer
