@@ -120,12 +120,6 @@ class RequestPane extends Component {
               request={request}
               onChange={updateRequestAuthentication}
             />
-            <div className="pad pull-right txt-sm">
-              <button className="btn btn--super-compact btn--outlined faint"
-                      onClick={e => updateSettingsShowPasswords(!showPasswords)}>
-                {showPasswords ? 'Hide Password' : 'Show Password'}
-              </button>
-            </div>
           </TabPanel>
           <TabPanel className="scrollable">
             <div className="pad no-pad-bottom">

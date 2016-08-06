@@ -47,11 +47,11 @@
     // Nothing yet
     width: 100%;
     display: grid;
+    font-size: $font-size-sm;
     grid-template-columns: 1fr auto;
     align-items: center;
 
     .btn {
-      font-size: $font-size-sm;
       padding: 0 ($padding-md - $padding-xxs);
       margin-right: $padding-xxs;
       border-radius: $radius-md;

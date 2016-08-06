@@ -18,8 +18,8 @@ const ResponseHeadersViewer = ({headers}) => {
         <tbody>
         {headers.map((h, i) => (
           <tr className="selectable" key={i}>
-            <td>{h.name}</td>
-            <td>{h.value}</td>
+            <td style={{width: '50%'}} className="force-wrap">{h.name}</td>
+            <td style={{width: '50%'}} className="force-wrap">{h.value}</td>
           </tr>
         ))}
         </tbody>

@@ -92,6 +92,8 @@ class ResponsePane extends Component {
       )
     }
 
+    // const cookieHeaders =
+
     return (
       <section className="response-pane pane">
         {timer}
@@ -117,6 +119,12 @@ class ResponsePane extends Component {
                 updatePreviewMode={updatePreviewMode}
               />
             </Tab>
+            {/*<Tab>*/}
+              {/*<button onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>*/}
+                {/*Cookies {response.cookies.length ? (*/}
+                {/*<span className="txt-sm">({response.headers.length})</span> ) : null}*/}
+              {/*</button>*/}
+            {/*</Tab>*/}
             <Tab>
               <button onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
                 Headers {response.headers.length ? (

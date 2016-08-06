@@ -1,10 +1,12 @@
 import networkRequest from 'request';
+import {CookieJar} from 'tough-cookie';
 
 import * as db from '../database';
 import * as querystring from './querystring';
 import {DEBOUNCE_MILLIS} from './constants';
 import {STATUS_CODE_PEBKAC} from './constants';
 import {getRenderedRequest} from './render';
+import {extractCookiesFromJar} from './cookies';
 
 
 function buildRequestConfig (request, patch = {}) {
@@ -54,7 +56,11 @@ function actuallySend (request, settings, cookieJar) {
   return new Promise((resolve, reject) => {
     const jar = networkRequest.jar();
 
-    console.log(jar._jar.toJSON());
+    try {
+      jar._jar = CookieJar.fromJSON(cookieJar.data);
+    } catch (e) {
+      console.log('Failed to initialize cookie jar', e);
+    }
 
     let config = buildRequestConfig(request, {
       jar: jar,
@@ -75,6 +81,22 @@ function actuallySend (request, settings, cookieJar) {
         return reject(err);
       }
 
+      console.log("HI", networkResponse);
+      global.cookieJar = jar;
+      extractCookiesFromJar(jar);
+      // db.cookieJarUpdate(cookieJar, {data: jar._jar.toJSON()}).then(j => console.log(j));
+
+      // Format the headers into Insomnia format
+      // TODO: Move this to a better place
+      const headers = [];
+      for (const name of Object.keys(networkResponse.headers)) {
+        const tmp = networkResponse.headers[name];
+        const values = Array.isArray(tmp) ? tmp : [tmp];
+        for (const value of values) {
+          headers.push({name, value});
+        }
+      }
+
       const responsePatch = {
         parentId: request._id,
         statusCode: networkResponse.statusCode,
@@ -84,10 +106,7 @@ function actuallySend (request, settings, cookieJar) {
         elapsedTime: networkResponse.elapsedTime,
         bytesRead: networkResponse.connection.bytesRead,
         body: networkResponse.body,
-        headers: Object.keys(networkResponse.headers).map(name => {
-          const value = networkResponse.headers[name];
-          return {name, value};
-        })
+        headers: headers
       };
 
       db.responseCreate(responsePatch).then(resolve, reject);
@@ -95,7 +114,7 @@ function actuallySend (request, settings, cookieJar) {
   })
 }
 
-export function send (requestId, cookieJarId) {
+export function send (requestId) {
   return new Promise((resolve, reject) => {
 
       // First, lets wait for all debounces to finish
@@ -103,10 +122,10 @@ export function send (requestId, cookieJarId) {
         Promise.all([
           db.requestGetById(requestId),
           db.settingsGet(),
-          db.cookieJarGetById(cookieJarId)
-        ]).then(([request, settings, cookieJar]) => {
+          db.cookieJarAll()
+        ]).then(([request, settings, cookieJars]) => {
           return getRenderedRequest(request).then(renderedRequest => {
-            actuallySend(renderedRequest, settings, cookieJar).then(resolve, reject);
+            actuallySend(renderedRequest, settings, cookieJars[0]).then(resolve, reject);
           }, err => {
             db.responseCreate({
               parentId: request._id,

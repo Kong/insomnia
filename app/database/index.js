@@ -71,6 +71,7 @@ const MODEL_DEFAULTS = {
     bytesRead: 0,
     elapsedTime: 0,
     headers: [],
+    cookies: [],
     body: '',
     error: ''
   }),
@@ -206,7 +207,7 @@ function update (doc) {
         return reject(err);
       }
 
-      resolve();
+      resolve(doc);
       Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
     });
   });

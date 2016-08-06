@@ -13,7 +13,7 @@ const RequestAuthEditor = ({request, showPasswords, onChange, ...other}) => {
       pairs={pairs}
       maxPairs={1}
       namePlaceholder="Username"
-      valuePlaceholder="Password"
+      valuePlaceholder="********"
       valueInputType={showPasswords ? 'text' : 'password'}
       onChange={pairs => onChange({
           username: pairs.length ? pairs[0].name : '',

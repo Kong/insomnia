@@ -60,12 +60,12 @@ export function changeFilter(filter) {
 export function send(request) {
   return dispatch => {
     dispatch({type: REQUEST_SEND_START, requestId: request._id});
+
     trackEvent('Request Send');
 
     network.send(request._id).then(() => {
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     }, err => {
-      throw err;
       console.error('Error sending request', err);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     });

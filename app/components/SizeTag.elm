@@ -6,29 +6,35 @@ import Html.Attributes exposing (..)
 
 -- MODEL
 
-type alias Model = Int
+
+type alias Model =
+    Int
+
 
 model : number
-model = 0
+model =
+    0
+
 
 
 -- VIEW
 
+
 view : Model -> Html a
 view bytes =
     let
-        (size, unit) =
+        ( size, unit ) =
             if bytes < 1024 then
-                (bytes, "B")
+                ( bytes, "B" )
             else if bytes < 1024 * 2024 then
-                (bytes / 1024, "B")
+                ( bytes / 1024, "B" )
             else if bytes < 1024 * 1024 * 1024 then
-                (bytes / 1024 / 1024, "B")
+                ( bytes / 1024 / 1024, "B" )
             else
-                (bytes / 1024 / 1024 / 1024, "GB")
+                ( bytes / 1024 / 1024 / 1024, "GB" )
     in
         div [ class "tag" ]
-            [ strong [ ] [ text "SIZE " ]
+            [ strong [] [ text "SIZE " ]
             , text (toString (toFloat (round (size * 10)) / 10))
             , text " "
             , text unit

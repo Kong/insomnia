@@ -61,7 +61,8 @@
     "redux": "^3.3.1",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.0.1",
-    "request": "^2.74.0"
+    "request": "^2.74.0",
+    "tough-cookie": "^2.3.1"
   },
   "devDependencies": {
     "babel-core": "^6.7.2",
