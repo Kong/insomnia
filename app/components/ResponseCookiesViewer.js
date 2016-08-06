@@ -2,6 +2,11 @@ import React, {PropTypes} from 'react';
 import {Cookie} from 'tough-cookie';
 
 const ResponseCookiesViewer = ({headers}) => {
+  if (!headers.length) {
+    // Don't do anything if no cookies
+    return <span className="faint">No cookies returned</span>;
+  }
+
   return (
     <table className="wide">
       <thead>

@@ -39,6 +39,7 @@ class Editable extends Component {
     if (editing) {
       return (
         <input
+          className="editable"
           type="text"
           ref="input"
           defaultValue={value}
@@ -58,6 +59,6 @@ class Editable extends Component {
 Editable.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   value: PropTypes.string.isRequired
-}
+};
 
 export default Editable;
