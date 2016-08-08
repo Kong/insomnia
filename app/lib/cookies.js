@@ -1,25 +1,39 @@
-const cookies = {
-  "version": "tough-cookie@2.3.1",
-  "storeType": "MemoryCookieStore",
-  "rejectPublicSuffixes": true,
-  "cookies": [{
-    "key": "XSRF-TOKEN",
-    "value": "0WzNSnkq-uiiCv7qIoKs8Ilhn1vBkCYuBYTA",
-    "domain": "insomnia.rest",
-    "path": "/",
-    "hostOnly": true,
-    "pathIsDefault": true,
-    "creation": "2016-08-05T20:19:47.377Z",
-    "lastAccessed": "2016-08-06T00:41:29.124Z"
-  }]
-};
+import {CookieJar} from 'tough-cookie';
+import request from 'request';
 
-export function extractCookiesFromJar (cookieJar) {
+export function cookiesFromJar (jar) {
   return new Promise(resolve => {
-    cookieJar._jar.store.getAllCookies((err, cookies) => {
-      resolve(cookies);
+    jar._jar.store.getAllCookies((err, cookies) => {
+      if (err) {
+        console.warn('Failed to get cookies form jar', err);
+        resolve([]);
+      } else {
+        resolve(cookies);
+      }
     });
   });
 }
 
+export function jarFromCookies (cookies) {
+  const jar = request.jar();
 
+  try {
+    jar._jar = CookieJar.fromJSON({cookies});
+  } catch (e) {
+    console.log('Failed to initialize cookie jar', e);
+  }
+
+  return jar;
+}
+
+export function cookieToString (cookie) {
+  var str = cookie.toString();
+
+  // tough-cookie toString() doesn't put domain on all the time.
+  // This hack adds when tough-cookie won't
+  if (cookie.domain && cookie.hostOnly) {
+    str += '; Domain=' + cookie.domain;
+  }
+
+  return str;
+}

@@ -2,18 +2,6 @@
 @import '../constants/colors';
 
 .cookie-edit-table {
-  td {
-    text-align: center;
-  }
-
-  input {
-    border-color: transparent !important;
-
-    &:focus {
-      border-color: $hl-lg !important;
-    }
-  }
-
   input:not([type="checkbox"]) {
     padding: $padding-xs $padding-xxs;
     width: 100%;
@@ -21,7 +9,7 @@
 
   .btn {
     padding: 0;
-    height: 100%;
     width: $line-height-xs;
+    height: $line-height-xs;
   }
 }

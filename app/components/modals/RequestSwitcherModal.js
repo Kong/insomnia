@@ -115,22 +115,13 @@ class RequestSwitcherModal extends Component {
     });
   }
 
-  _focusInput () {
-    // Need to focus after the Modal has shown, or else it won't exist yet
-    setTimeout(() => {
-      this.refs.input.focus();
-    });
-  }
-
   show () {
     this.modal.show();
-    this._focusInput();
     this._handleChange('');
   }
 
   toggle () {
     this.modal.toggle();
-    this._focusInput();
     this._handleChange('');
   }
 
@@ -176,7 +167,7 @@ class RequestSwitcherModal extends Component {
           <div className="form-control form-control--outlined no-margin">
             <input
               type="text"
-              ref="input"
+              ref={n => n && n.focus()}
               value={searchString}
               onChange={e => this._handleChange(e.target.value)}
             />

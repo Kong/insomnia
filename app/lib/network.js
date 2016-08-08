@@ -1,12 +1,11 @@
 import networkRequest from 'request';
-import {CookieJar} from 'tough-cookie';
 
 import * as db from '../database';
 import * as querystring from './querystring';
 import {DEBOUNCE_MILLIS} from './constants';
 import {STATUS_CODE_PEBKAC} from './constants';
 import {getRenderedRequest} from './render';
-import {extractCookiesFromJar} from './cookies';
+import {jarFromCookies, cookiesFromJar} from './cookies';
 
 
 function buildRequestConfig (request, patch = {}) {
@@ -54,13 +53,7 @@ function buildRequestConfig (request, patch = {}) {
 
 function actuallySend (request, settings, cookieJar) {
   return new Promise((resolve, reject) => {
-    const jar = networkRequest.jar();
-
-    try {
-      jar._jar = CookieJar.fromJSON(cookieJar.data);
-    } catch (e) {
-      console.log('Failed to initialize cookie jar', e);
-    }
+    const jar = jarFromCookies(cookieJar.cookies);
 
     let config = buildRequestConfig(request, {
       jar: jar,
@@ -82,10 +75,10 @@ function actuallySend (request, settings, cookieJar) {
         return reject(err);
       }
 
-      console.log("NETWORK RESPONSE", networkResponse);
-      global.cookieJar = jar;
-      extractCookiesFromJar(jar);
-      db.cookieJarUpdate(cookieJar, {data: jar._jar.toJSON()}).then(j => console.log(j));
+      // Update the cookie jar
+      cookiesFromJar(jar).then(cookies => {
+        db.cookieJarUpdate(cookieJar, {cookies});
+      });
 
       // Format the headers into Insomnia format
       // TODO: Move this to a better place

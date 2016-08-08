@@ -42,7 +42,7 @@ const MODEL_DEFAULTS = {
   }),
   [TYPE_COOKIE_JAR]: () => ({
     name: 'Default Jar',
-    data: {}
+    cookies: []
   }),
   [TYPE_REQUEST_GROUP]: () => ({
     name: 'New Folder',

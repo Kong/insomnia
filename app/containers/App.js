@@ -82,7 +82,7 @@ class App extends Component {
 
       // Edit Cookies
       'mod+k': () => {
-        getModal(CookiesModal).toggle(this._getActiveWorkspace());
+        getModal(CookiesModal).toggle();
       },
 
       // Request Create
