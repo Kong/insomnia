@@ -66,7 +66,7 @@ class Modal extends Component {
   }
 
   render () {
-    const {tall, top, className} = this.props;
+    const {tall, top, wide, className} = this.props;
     const {open} = this.state;
 
     const classes = classnames(
@@ -74,7 +74,8 @@ class Modal extends Component {
       className,
       {'modal--open': open},
       {'modal--fixed-height': tall},
-      {'modal--fixed-top': top}
+      {'modal--fixed-top': top},
+      {'modal--wide': wide}
     );
 
     return (
@@ -90,7 +91,8 @@ class Modal extends Component {
 
 Modal.propTypes = {
   tall: PropTypes.bool,
-  top: PropTypes.bool
+  top: PropTypes.bool,
+  wide: PropTypes.bool
 };
 
 export default Modal;

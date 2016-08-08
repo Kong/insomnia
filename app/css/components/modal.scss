@@ -49,6 +49,10 @@
     max-height: 100%;
   }
 
+  &.modal--wide .modal__content {
+    width: $modal-width-wide;
+  }
+
   &.modal--fixed-top .modal__content {
     margin: 0 auto auto auto;
   }

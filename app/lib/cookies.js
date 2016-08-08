@@ -15,10 +15,10 @@ const cookies = {
 };
 
 export function extractCookiesFromJar (cookieJar) {
-  cookieJar._jar.store.getAllCookies((err, cookies) => {
-    for (const cookie of cookies) {
-      // console.log('COOKIE', cookie);
-    }
+  return new Promise(resolve => {
+    cookieJar._jar.store.getAllCookies((err, cookies) => {
+      resolve(cookies);
+    });
   });
 }
 

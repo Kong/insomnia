@@ -74,17 +74,17 @@ webview {
 table {
   width: 100%;
 
-  td {
-    padding-top: $padding-sm;
-
-    &:not(:last-child) {
-      padding-right: $padding-md;
-    }
+  td, th {
+    padding: $padding-xs;
   }
 
   th {
     text-align: left;
-    padding-bottom: 0.5em;
+    padding-bottom: $padding-sm;
+  }
+
+  &.table--striped tbody tr:nth-child(odd) {
+    background: $hl-xs;
   }
 }
 

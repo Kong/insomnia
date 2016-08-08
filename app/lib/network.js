@@ -85,7 +85,7 @@ function actuallySend (request, settings, cookieJar) {
       console.log("NETWORK RESPONSE", networkResponse);
       global.cookieJar = jar;
       extractCookiesFromJar(jar);
-      // db.cookieJarUpdate(cookieJar, {data: jar._jar.toJSON()}).then(j => console.log(j));
+      db.cookieJarUpdate(cookieJar, {data: jar._jar.toJSON()}).then(j => console.log(j));
 
       // Format the headers into Insomnia format
       // TODO: Move this to a better place
