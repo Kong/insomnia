@@ -1,8 +1,8 @@
 import React, {PropTypes} from 'react';
 
-import Dropdown from '../components/base/Dropdown';
-import {PREVIEW_MODES, getPreviewModeName} from '../lib/previewModes';
-import {trackEvent} from '../lib/analytics';
+import Dropdown from '../base/Dropdown';
+import {PREVIEW_MODES, getPreviewModeName} from '../../lib/previewModes';
+import {trackEvent} from '../../lib/analytics';
 
 const PreviewModeDropdown = ({updatePreviewMode}) => {
   return (

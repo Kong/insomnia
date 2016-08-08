@@ -1,16 +1,15 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, Component} from 'react';
 
 import Link from '../base/Link';
-import EnvironmentEditor from '../EnvironmentEditor';
+import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Dropdown from '../base/Dropdown';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import ModalComponent from '../lib/ModalComponent';
 
 
-class WorkspaceEnvironmentsEditModal extends ModalComponent {
+class WorkspaceEnvironmentsEditModal extends Component {
   constructor (props) {
     super(props);
 
@@ -20,12 +19,12 @@ class WorkspaceEnvironmentsEditModal extends ModalComponent {
   }
 
   show (workspace) {
-    super.show();
+    this.modal.show();
     this.setState({workspace});
   }
 
   toggle (workspace) {
-    super.toggle();
+    this.modal.toggle();
     this.setState({workspace});
   }
 
@@ -42,7 +41,7 @@ class WorkspaceEnvironmentsEditModal extends ModalComponent {
     const environment = workspace ? workspace.environments[0] || {} : {};
 
     return (
-      <Modal ref="modal" top={true} tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} top={true} tall={true} {...this.props}>
         <ModalHeader>
           Environments <span className="faint txt-sm">– share variables across requests</span>
         </ModalHeader>
@@ -95,3 +94,5 @@ WorkspaceEnvironmentsEditModal.propTypes = {
 };
 
 export default WorkspaceEnvironmentsEditModal;
+
+export let show = null;

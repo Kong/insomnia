@@ -13,6 +13,10 @@
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
 
+  &:focus {
+    outline: 0;
+  }
+
   &.modal--fixed-height .modal__content {
     height: 100%;
   }

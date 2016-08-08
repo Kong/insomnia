@@ -8,8 +8,9 @@ import {DragDropContext} from 'react-dnd';
 
 import Mousetrap from '../lib/mousetrap';
 
+import {addModal} from '../components/modals';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
-import CookieEditModal from '../components/modals/CookieEditModal';
+import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import CurlExportModal from '../components/modals/CurlExportModal';
@@ -37,6 +38,7 @@ import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
 import {CHECK_FOR_UPDATES_INTERVAL} from '../lib/constants';
+import {getModal} from '../components/modals/index';
 
 
 class App extends Component {
@@ -57,12 +59,12 @@ class App extends Component {
 
       // Show Settings
       'mod+,': () => {
-        SettingsModal.toggle();
+        getModal(SettingsModal).toggle();
       },
 
       // Show Request Switcher
       'mod+p': () => {
-        RequestSwitcherModal.toggle();
+        getModal(RequestSwitcherModal).toggle();
       },
 
       // Request Send
@@ -75,12 +77,12 @@ class App extends Component {
 
       // Edit Workspace Environments
       'mod+e': () => {
-        WorkspaceEnvironmentsEditModal.toggle(this._getActiveWorkspace());
+        getModal(WorkspaceEnvironmentsEditModal).toggle(this._getActiveWorkspace());
       },
 
       // Edit Cookies
       'mod+k': () => {
-        CookieEditModal.toggle(this._getActiveWorkspace());
+        getModal(CookiesModal).toggle(this._getActiveWorkspace());
       },
 
       // Request Create
@@ -417,7 +419,7 @@ class App extends Component {
       if (firstLaunch) {
         // TODO: Show a welcome message
       } else if (lastVersion !== getAppVersion()) {
-        ChangelogModal.show();
+        getModal(ChangelogModal).show();
       }
 
       db.statsUpdate({
@@ -526,19 +528,27 @@ class App extends Component {
           loadingRequests={requests.loadingRequests}
         />
 
-        <PromptModal />
-        <AlertModal />
-        <ChangelogModal />
-        <SettingsModal />
-        <CurlExportModal />
+        <PromptModal ref={m => addModal(m)}/>
+        <AlertModal ref={m => addModal(m)}/>
+        <ChangelogModal ref={m => addModal(m)}/>
+        <SettingsModal ref={m => addModal(m)}/>
+        <CurlExportModal ref={m => addModal(m)}/>
         <RequestSwitcherModal
+          ref={m => addModal(m)}
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
         />
-        <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
-        <WorkspaceEnvironmentsEditModal onChange={w => db.workspaceUpdate(w)}/>
-        <CookieEditModal onChange={() => console.log('TODO: COOKIES!!!')}/>
+        <EnvironmentEditModal
+          ref={m => addModal(m)}
+          onChange={rg => db.requestGroupUpdate(rg)}/>
+        <WorkspaceEnvironmentsEditModal
+          ref={m => addModal(m)}
+          onChange={w => db.workspaceUpdate(w)}/>
+        <CookiesModal
+          ref={m => addModal(m)}
+          onChange={() => console.log('TODO: COOKIES!!!')}/>
+
         {/*<div className="toast toast--show">*/}
         {/*<div className="toast__message">How's it going?</div>*/}
         {/*<button className="toast__action">Great!</button>*/}

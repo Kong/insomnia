@@ -10,18 +10,17 @@ import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
-import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
-import CookieEditModal from '../components/modals/CookieEditModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
 import {getAppVersion} from '../lib/appInfo';
+import {getModal} from '../components/modals/index';
 
 class WorkspaceDropdown extends Component {
   _promptUpdateName () {
     const workspace = this._getActiveWorkspace(this.props);
 
-    PromptModal.show({
+    getModal(PromptModal).show({
       headerName: 'Rename Workspace',
       defaultValue: workspace.name
     }).then(name => {
@@ -30,7 +29,7 @@ class WorkspaceDropdown extends Component {
   }
 
   _workspaceCreate () {
-    PromptModal.show({
+    getModal(PromptModal).show({
       headerName: 'Create New Workspace',
       defaultValue: 'New Workspace',
       submitName: 'Create',
@@ -45,7 +44,7 @@ class WorkspaceDropdown extends Component {
   _workspaceRemove () {
     db.workspaceCount().then(count => {
       if (count <= 1) {
-        AlertModal.show({
+        getModal(AlertModal).show({
           message: 'You cannot delete your last workspace'
         });
       } else {
@@ -53,12 +52,6 @@ class WorkspaceDropdown extends Component {
         db.workspaceRemove(workspace);
       }
     })
-  }
-
-  _requestGroupCreate () {
-    const workspace = this._getActiveWorkspace(this.props);
-    const parentId = workspace._id;
-    db.requestGroupCreate({parentId});
   }
 
   _getActiveWorkspace (props) {
@@ -95,27 +88,13 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name="Current Workspace"/>
 
           <li>
-            <button
-              onClick={e => WorkspaceEnvironmentsEditModal.show()}>
-              <i className="fa fa-home"></i> Manage Environments
-              <DropdownHint char="E"></DropdownHint>
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={e => CookieEditModal.show()}>
-              <i className="fa fa-th"></i> Manage Cookies
-              <DropdownHint char="K"></DropdownHint>
-            </button>
-          </li>
-          <li>
             <button onClick={e => this._promptUpdateName()}>
-              <i className="fa fa-empty"></i> Rename <strong>{workspace.name}</strong>
+              <i className="fa fa-pencil-square-o"></i> Rename <strong>{workspace.name}</strong>
             </button>
           </li>
           <li>
             <button onClick={e => this._workspaceRemove()}>
-              <i className="fa fa-empty"></i> Delete <strong>{workspace.name}</strong>
+              <i className="fa fa-trash-o"></i> Delete <strong>{workspace.name}</strong>
             </button>
           </li>
 
@@ -139,18 +118,18 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
           <li>
-            <button onClick={e => SettingsModal.show(1)}>
+            <button onClick={e => getModal(SettingsModal).show(1)}>
               <i className="fa fa-share"></i> Import/Export
             </button>
           </li>
           <li>
-            <button onClick={e => SettingsModal.show()}>
+            <button onClick={e => getModal(SettingsModal).show()}>
               <i className="fa fa-cog"></i> Settings
               <DropdownHint char=","></DropdownHint>
             </button>
           </li>
           <li>
-            <button onClick={e => ChangelogModal.show()}>
+            <button onClick={e => getModal(ChangelogModal).show()}>
               <i className="fa fa-blank"></i> Changelog
             </button>
           </li>

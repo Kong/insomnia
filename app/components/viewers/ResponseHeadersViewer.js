@@ -1,5 +1,5 @@
 import React, {PropTypes} from 'react';
-import CopyButton from './base/CopyButton';
+import CopyButton from '../base/CopyButton';
 
 const ResponseHeadersViewer = ({headers}) => {
   const headersString = headers.map(

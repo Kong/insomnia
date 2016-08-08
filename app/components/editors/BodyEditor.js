@@ -1,11 +1,11 @@
 import React, {PropTypes, Component} from 'react';
-import Editor from './base/Editor';
-import KeyValueEditor from './base/KeyValueEditor';
-import {CONTENT_TYPE_FORM_URLENCODED} from '../lib/contentTypes';
-import {getContentTypeFromHeaders} from '../lib/contentTypes';
-import * as querystring from '../lib/querystring';
+import Editor from '../base/Editor';
+import KeyValueEditor from '../base/KeyValueEditor';
+import {CONTENT_TYPE_FORM_URLENCODED} from '../../lib/contentTypes';
+import {getContentTypeFromHeaders} from '../../lib/contentTypes';
+import * as querystring from '../../lib/querystring';
 
-class RequestBodyEditor extends Component {
+class BodyEditor extends Component {
   static _getBodyFromPairs (pairs) {
     const params = [];
     for (let {name, value} of pairs) {
@@ -38,8 +38,8 @@ class RequestBodyEditor extends Component {
       return (
         <div className="scrollable tall wide">
           <KeyValueEditor
-            onChange={pairs => onChange(RequestBodyEditor._getBodyFromPairs(pairs))}
-            pairs={RequestBodyEditor._getPairsFromBody(request.body)}
+            onChange={pairs => onChange(BodyEditor._getBodyFromPairs(pairs))}
+            pairs={BodyEditor._getPairsFromBody(request.body)}
           />
         </div>
       )
@@ -59,7 +59,7 @@ class RequestBodyEditor extends Component {
   }
 }
 
-RequestBodyEditor.propTypes = {
+BodyEditor.propTypes = {
   // Functions
   onChange: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
@@ -69,4 +69,4 @@ RequestBodyEditor.propTypes = {
   lineWrapping: PropTypes.bool
 };
 
-export default RequestBodyEditor;
+export default BodyEditor;

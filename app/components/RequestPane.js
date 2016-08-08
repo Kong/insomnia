@@ -3,11 +3,11 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
 import KeyValueEditor from './base/KeyValueEditor';
 
-import ContentTypeDropdown from './ContentTypeDropdown';
+import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
-import RequestBodyEditor from './RequestBodyEditor';
-import RequestAuthEditor from './RequestAuthEditor';
-import RequestUrlBar from '../components/RequestUrlBar';
+import BodyEditor from './editors/BodyEditor';
+import AuthEditor from './editors/AuthEditor';
+import RequestUrlBar from './RequestUrlBar';
 
 import {getContentTypeName} from '../lib/contentTypes';
 import {getContentTypeFromHeaders} from '../lib/contentTypes';
@@ -105,7 +105,7 @@ class RequestPane extends Component {
             </Tab>
           </TabList>
           <TabPanel className="editor-wrapper">
-            <RequestBodyEditor
+            <BodyEditor
               key={request._id}
               request={request}
               onChange={updateRequestBody}
@@ -114,7 +114,7 @@ class RequestPane extends Component {
             />
           </TabPanel>
           <TabPanel>
-            <RequestAuthEditor
+            <AuthEditor
               key={request._id}
               showPasswords={showPasswords}
               request={request}

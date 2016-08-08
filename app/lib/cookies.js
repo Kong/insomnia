@@ -16,9 +16,8 @@ const cookies = {
 
 export function extractCookiesFromJar (cookieJar) {
   cookieJar._jar.store.getAllCookies((err, cookies) => {
-    console.log(err, cookies);
     for (const cookie of cookies) {
-      console.log('COOKIE', cookie.toString());
+      // console.log('COOKIE', cookie);
     }
   });
 }

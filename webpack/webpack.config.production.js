@@ -3,6 +3,7 @@ import baseConfig from './webpack.config.base';
 
 export default {
   ...baseConfig,
+  devtool: 'source-map',
   plugins: [
     ...baseConfig.plugins,
     new webpack.DefinePlugin({

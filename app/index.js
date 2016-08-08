@@ -44,7 +44,4 @@ initDB()
       <Provider store={store}><App /></Provider>,
       document.getElementById('root')
     );
-  })
-  .catch(err => {
-    console.error('Failed to initialize app', err);
   });

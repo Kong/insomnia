@@ -33,7 +33,7 @@
     left: 0;
     z-index: 1000;
     min-width: $dropdown-min-width;
-    box-shadow: 0 0 1rem 0 $hl-sm;
+    box-shadow: 0 0 1rem 0 $hl-md;
 
     // Separate it from the button a bit
     margin-top: $padding-xxs;
@@ -68,7 +68,7 @@
 
         i.fa {
           display: inline-block;
-          width: 2em;
+          width: 2.2em;
           text-align: center;
         }
 

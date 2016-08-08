@@ -7,6 +7,7 @@ import {generateId} from './util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
+import {isDevelopment} from '../lib/appInfo';
 
 export const TYPE_STATS = 'Stats';
 export const TYPE_SETTINGS = 'Settings';
@@ -99,7 +100,11 @@ export function initDB () {
   }
 
   return new Promise(resolve => {
-    global.db = db = {};
+    db = {};
+
+    if (isDevelopment()) {
+      global.db = db;
+    }
 
     // Fill in the defaults
 

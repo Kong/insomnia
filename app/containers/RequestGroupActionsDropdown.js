@@ -5,12 +5,13 @@ import DropdownHint from '../components/base/DropdownHint';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as db from '../database';
+import {getModal} from '../components/modals/index';
 
 class RequestGroupActionsDropdown extends Component {
   _promptUpdateName () {
     const {requestGroup} = this.props;
 
-    PromptModal.show({
+    getModal(PromptModal).show({
       headerName: 'Rename Folder',
       defaultValue: requestGroup.name
     }).then(name => {
@@ -57,7 +58,7 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => EnvironmentEditModal.show(requestGroup)}>
+            <button onClick={e => getModal(EnvironmentEditModal).show(requestGroup)}>
               <i className="fa fa-code"></i> Environment
             </button>
           </li>

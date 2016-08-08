@@ -1,12 +1,11 @@
 import React, {Component, PropTypes} from 'react';
 
-class ResponseBodyWebview extends Component {
+class ResponseWebview extends Component {
   _setBody () {
     const {body, contentType, url} = this.props;
-    const {webView} = this.refs;
 
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
-    webView.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
+    this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
   }
 
   componentDidUpdate () {
@@ -26,27 +25,25 @@ class ResponseBodyWebview extends Component {
   }
 
   componentDidMount () {
-    const {webView} = this.refs;
-
     const cb = () => {
-      webView.removeEventListener('dom-ready', cb);
+      this._webview.removeEventListener('dom-ready', cb);
       this._setBody();
     };
 
-    webView.addEventListener('dom-ready', cb);
+    this._webview.addEventListener('dom-ready', cb);
   }
 
   render () {
     return (
-      <webview ref="webView" src="about:blank"></webview>
+      <webview ref={node => this._webview = node} src="about:blank"></webview>
     );
   }
 }
 
-ResponseBodyWebview.propTypes = {
+ResponseWebview.propTypes = {
   body: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired
 };
 
-export default ResponseBodyWebview;
+export default ResponseWebview;

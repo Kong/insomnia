@@ -9,7 +9,6 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import ModalComponent from '../lib/ModalComponent';
 import KeyboardShortcutsTable from '../KeyboardShortcutsTable';
 import * as GlobalActions from '../../redux/modules/global';
 import * as db from '../../database';
@@ -241,7 +240,7 @@ const ConnectedSettingsTabs = connect(
 )(SettingsTabs);
 
 
-class SettingsModal extends ModalComponent {
+class SettingsModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
@@ -249,28 +248,36 @@ class SettingsModal extends ModalComponent {
     }
   }
 
-  show (selectedIndex = 0) {
-    super.show();
-
-    if (selectedIndex >= 0) {
-      this.setState({selectedIndex});
+  _setIndex (index) {
+    if (index >= 0) {
+      this.setState({index});
     } else {
       this.setState({selectedIndex: 0});
     }
+  }
+
+  show (selectedIndex = 0) {
+    this.modal.show();
+    this._setIndex(selectedIndex);
+  }
+
+  toggle (selectedIndex = 0) {
+    this.modal.toggle();
+    this._setIndex(selectedIndex);
   }
 
   render () {
     const {selectedIndex} = this.state;
 
     return (
-      <Modal ref="modal" tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} tall={true} {...this.props}>
         <ModalHeader>
           {getAppLongName()}
           &nbsp;&nbsp;
           <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>
         <ModalBody>
-          <ConnectedSettingsTabs hide={() => this.hide()} selectedIndex={selectedIndex}/>
+          <ConnectedSettingsTabs hide={() => this.modal.hide()} selectedIndex={selectedIndex}/>
         </ModalBody>
         <ModalFooter className="pad text-right">
           <div className="relative">

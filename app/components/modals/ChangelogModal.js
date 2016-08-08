@@ -1,15 +1,14 @@
-import React from 'react';
+import React, {Component} from 'react';
 import request from 'request';
 
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import ModalComponent from '../lib/ModalComponent';
 import {CHANGELOG_URL} from '../../lib/constants';
 import {getAppVersion} from '../../lib/appInfo';
 
-class ChangelogModal extends ModalComponent {
+class ChangelogModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
@@ -19,7 +18,7 @@ class ChangelogModal extends ModalComponent {
   }
 
   show (startVersion = null) {
-    super.show();
+    this.modal.show();
 
     if (startVersion) {
       this.setState({startVersion});
@@ -27,8 +26,6 @@ class ChangelogModal extends ModalComponent {
   }
 
   componentDidMount () {
-    super.componentDidMount();
-
     request.get(CHANGELOG_URL, (err, response) => {
       if (err) {
         console.warn('Failed to load changelog', err);
@@ -129,14 +126,14 @@ class ChangelogModal extends ModalComponent {
     }
 
     return (
-      <Modal ref="modal" {...this.props}>
+      <Modal ref={m => this.modal = m} {...this.props}>
         <ModalHeader>Insomnia Changelog</ModalHeader>
         <ModalBody className="pad changelog">
           {html}
         </ModalBody>
         <ModalFooter className="text-right">
           <div className="pull-right">
-            <button className="btn" onClick={e => this.hide()}>
+            <button className="btn" onClick={e => this.modal.hide()}>
               Close
             </button>
           </div>

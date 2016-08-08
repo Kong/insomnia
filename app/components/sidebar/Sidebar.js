@@ -3,7 +3,7 @@ import classnames from 'classnames';
 
 import Dropdown from '../base/Dropdown';
 import DropdownDivider from '../base/DropdownDivider';
-import CookieEditModal from '../modals/CookieEditModal';
+import CookiesModal from '../modals/CookiesModal';
 import WorkspaceEnvironmentsEditModal from '../modals/WorkspaceEnvironmentsEditModal';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
@@ -11,13 +11,10 @@ import SidebarFilter from './SidebarFilter';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
 import {SIDEBAR_SKINNY_REMS} from '../../lib/constants';
 import {COLLAPSE_SIDEBAR_REMS} from '../../lib/constants';
+import {getModal} from '../modals/index';
 
 
 class Sidebar extends Component {
-  _onFilterChange (value) {
-    this.props.changeFilter(value);
-  }
-
   _filterChildren (filter, children, extra = null) {
     return children.filter(child => {
       if (child.doc.type !== 'Request') {
@@ -139,13 +136,13 @@ class Sidebar extends Component {
                 </button>
               </li>
               <li>
-                <button onClick={e => WorkspaceEnvironmentsEditModal.show()}>
+                <button onClick={e => getModal(WorkspaceEnvironmentsEditModal).show()}>
                   <i className="fa fa-empty"></i> Manage Environments
                 </button>
               </li>
             </ul>
           </Dropdown>
-          <button className="btn btn--super-compact" onClick={e => CookieEditModal.show()}>
+          <button className="btn btn--super-compact" onClick={e => getModal(CookiesModal).show()}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>

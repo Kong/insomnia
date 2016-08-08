@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 
 import Dropdown from './base/Dropdown';
-import MethodTag from './MethodTag';
+import MethodTag from './tags/MethodTag';
 import {METHODS} from '../lib/constants';
 import Mousetrap from '../lib/mousetrap';
 import {trackEvent} from '../lib/analytics';

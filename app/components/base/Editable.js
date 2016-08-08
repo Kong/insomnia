@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import ReactDOM from 'react-dom'
 
 class Editable extends Component {
   constructor (props) {
@@ -50,7 +49,9 @@ class Editable extends Component {
       )
     } else {
       return (
-        <span onDoubleClick={e => this._handleEditStart()} {...extra}>{value}</span>
+        <span onDoubleClick={e => this._handleEditStart()} {...extra}>
+          {value}
+        </span>
       )
     }
   }

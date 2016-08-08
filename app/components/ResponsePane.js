@@ -2,10 +2,10 @@ import React, {PropTypes, Component} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
 import ResponsePaneHeader from './ResponsePaneHeader'
-import PreviewModeDropdown from './PreviewModeDropdown';
-import ResponseBodyViewer from './ResponseBodyViewer';
-import ResponseHeadersViewer from './ResponseHeadersViewer';
-import ResponseCookiesViewer from './ResponseCookiesViewer';
+import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
+import ResponseViewer from './viewers/ResponseViewer';
+import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
+import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import {getPreviewModeName} from '../lib/previewModes';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
@@ -135,7 +135,7 @@ class ResponsePane extends Component {
           </TabList>
           <TabPanel>
             {response.error ? (
-              <ResponseBodyViewer
+              <ResponseViewer
                 key={response._id}
                 contentType={response.contentType}
                 previewMode={PREVIEW_MODE_SOURCE}
@@ -145,7 +145,7 @@ class ResponsePane extends Component {
                 url={response.url}
               />
             ) : (
-              <ResponseBodyViewer
+              <ResponseViewer
                 key={response._id}
                 contentType={response.contentType}
                 previewMode={previewMode}

@@ -1,10 +1,10 @@
 import React, {Component, PropTypes} from 'react';
 
-import Editor from '../components/base/Editor';
-import ResponseBodyWebview from '../components/ResponseBodyWebview';
-import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
+import Editor from '../base/Editor';
+import ResponseWebview from './ResponseWebview';
+import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../../lib/previewModes';
 
-class ResponseBodyViewer extends Component {
+class ResponseViewer extends Component {
   shouldComponentUpdate (nextProps) {
     for (let k of Object.keys(nextProps)) {
       if (this.props[k] !== nextProps[k]) {
@@ -28,7 +28,7 @@ class ResponseBodyViewer extends Component {
     switch (previewMode) {
       case PREVIEW_MODE_FRIENDLY:
         return (
-          <ResponseBodyWebview
+          <ResponseWebview
             body={body}
             contentType={contentType}
             url={url}
@@ -56,7 +56,7 @@ class ResponseBodyViewer extends Component {
   }
 }
 
-ResponseBodyViewer.propTypes = {
+ResponseViewer.propTypes = {
   body: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
@@ -67,4 +67,4 @@ ResponseBodyViewer.propTypes = {
   contentType: PropTypes.string
 };
 
-export default ResponseBodyViewer;
+export default ResponseViewer;

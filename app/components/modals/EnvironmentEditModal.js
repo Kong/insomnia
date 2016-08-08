@@ -1,15 +1,14 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, Component} from 'react';
 
 import Link from '../base/Link';
-import EnvironmentEditor from '../EnvironmentEditor';
+import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import ModalComponent from '../lib/ModalComponent';
 
 
-class EnvironmentEditModal extends ModalComponent {
+class EnvironmentEditModal extends Component {
   constructor (props) {
     super(props);
 
@@ -30,7 +29,7 @@ class EnvironmentEditModal extends ModalComponent {
 
     this.props.onChange(Object.assign({}, requestGroup, {environment}));
 
-    this.hide();
+    this.modal.hide();
   }
 
   _didChange () {
@@ -41,12 +40,12 @@ class EnvironmentEditModal extends ModalComponent {
   }
 
   show (requestGroup) {
-    super.show();
+    this.modal.show();
     this.setState({requestGroup});
   }
 
   toggle (requestGroup) {
-    super.toggle();
+    this.modal.toggle();
     this.setState({requestGroup});
   }
 
@@ -54,7 +53,7 @@ class EnvironmentEditModal extends ModalComponent {
     const {requestGroup, isValid} = this.state;
 
     return (
-      <Modal ref="modal" top={true} {...this.props}>
+      <Modal ref={m => this.modal = m} top={true} {...this.props}>
         <ModalHeader>Environment Variables (JSON Format)</ModalHeader>
         <ModalBody>
           <div className="pad-bottom">

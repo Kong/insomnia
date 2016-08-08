@@ -4,7 +4,7 @@ import baseConfig from './webpack.config.base';
 export default {
   ...baseConfig,
   debug: true,
-  devtool: 'inline-source-map',
+  devtool: 'eval-source-map',
   entry: [
     ...baseConfig.entry,
     'webpack-hot-middleware/client?path=http://localhost:3333/__webpack_hmr',

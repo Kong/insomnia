@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 
+
 class Modal extends Component {
   constructor (props) {
     super(props);
@@ -17,7 +18,7 @@ class Modal extends Component {
     let target = e.target;
     let shouldHide = false;
 
-    if (target === this.refs.modal) {
+    if (target === ReactDOM.findDOMNode(this)) {
       shouldHide = true;
     }
 

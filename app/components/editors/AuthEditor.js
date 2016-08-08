@@ -1,7 +1,7 @@
 import React, {PropTypes} from 'react';
-import KeyValueEditor from './base/KeyValueEditor';
+import KeyValueEditor from '../base/KeyValueEditor';
 
-const RequestAuthEditor = ({request, showPasswords, onChange, ...other}) => {
+const AuthEditor = ({request, showPasswords, onChange, ...other}) => {
   const auth = request.authentication;
   const pairs = [{
     name: auth.username || '',
@@ -24,7 +24,7 @@ const RequestAuthEditor = ({request, showPasswords, onChange, ...other}) => {
   );
 };
 
-RequestAuthEditor.propTypes = {
+AuthEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   request: PropTypes.shape({
     authentication: PropTypes.object.isRequired
@@ -32,4 +32,4 @@ RequestAuthEditor.propTypes = {
   showPasswords: PropTypes.bool.isRequired
 };
 
-export default RequestAuthEditor;
+export default AuthEditor;
