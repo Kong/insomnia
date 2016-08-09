@@ -1,25 +1,53 @@
 import React, {PropTypes, Component} from 'react';
-import {Cookie} from 'tough-cookie';
 
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
+import CookiesEditor from '../editors/CookiesEditor';
 import * as db from '../../database';
-import {cookieToString} from '../../lib/cookies';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 
 class CookiesModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
-      cookies: [],
+      cookieJar: null,
       filter: ''
     }
   }
 
   _saveChanges () {
+    const {cookieJar} = this.state;
+    db.cookieJarUpdate(cookieJar).then(j => this.modal.hide());
+  }
 
+  _handleCookieUpdate (oldCookie, cookie) {
+    const {cookieJar} = this.state;
+    const {cookies} = cookieJar;
+    const index = cookies.findIndex(c => c.domain === oldCookie.domain && c.key === oldCookie.key);
+
+    cookieJar.cookies = [
+      ...cookies.slice(0, index),
+      cookie,
+      ...cookies.slice(index + 1)
+    ];
+
+    this.setState({cookieJar});
+  }
+
+  _handleCookieAdd (cookie) {
+    const {cookieJar} = this.state;
+    const {cookies} = cookieJar;
+    cookieJar.cookies = [...cookies, cookie];
+    this.setState({cookieJar});
+  }
+
+  _handleCookieDelete (cookie) {
+    const {cookieJar} = this.state;
+    const {cookies} = cookieJar;
+    cookieJar.cookies = cookies.filter(c => c.domain !== cookie.domain || c.key !== cookie.key);
+    this.setState({cookieJar});
   }
 
   _onFilterChange (filter) {
@@ -29,34 +57,49 @@ class CookiesModal extends Component {
     }, DEBOUNCE_MILLIS);
   }
 
-  _getFilteredCookies () {
-    const {cookies, filter} = this.state;
+  _getFilteredSortedCookies () {
+    const {cookieJar, filter} = this.state;
+
+    if (!cookieJar) {
+      // Nothing to do yet.
+      return [];
+    }
+
+    const {cookies} = cookieJar;
 
     return cookies.filter(c => {
       const toSearch = JSON.stringify(c).toLowerCase();
       return toSearch.indexOf(filter.toLowerCase()) !== -1;
+    }).sort((a, b) => {
+      if (a.domain === b.domain) {
+        return a.key.toLowerCase() > b.key.toLowerCase() ? 1 : -1;
+      } else {
+        return a.domain.toLowerCase() > b.domain.toLowerCase() ? 1 : -1;
+      }
     });
   }
 
   _load (filter = '') {
     db.cookieJarAll().then(jars => {
-      const cookies = jars[0].cookies;
-      this.setState({cookies, filter});
+      const cookieJar = jars[0];
+      this.setState({cookieJar, filter});
     });
   }
 
   show (filter = '') {
     this.modal.show();
     this._load(filter);
+    this.filterInput.focus();
   }
 
   toggle (filter = '') {
     this.modal.toggle();
     this._load(filter);
+    this.filterInput.focus();
   }
 
   render () {
-    const filteredCookies = this._getFilteredCookies();
+    const filteredCookies = this._getFilteredSortedCookies();
 
     return (
       <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
@@ -69,7 +112,7 @@ class CookiesModal extends Component {
               Search Cookies
             </label>
             <input
-              ref={n => n && n.focus()}
+              ref={n => this.filterInput = n}
               onChange={e => this._onFilterChange(e.target.value)}
               type="text"
               placeholder="twitter.com"
@@ -77,44 +120,19 @@ class CookiesModal extends Component {
             />
           </div>
           <hr/>
-          <table className="cookie-edit-table table--striped">
-            <thead>
-            <tr>
-              <th style={{minWidth: '10rem'}}>Domain</th>
-              <th style={{width: '90%'}}>Cookie</th>
-              <th style={{width: '2rem'}}></th>
-            </tr>
-            </thead>
-            <tbody>
-            {filteredCookies.map((cookie, i) => {
-              const cookieString = cookieToString(Cookie.fromJSON(JSON.stringify(cookie)));
-
-              return (
-                <tr className="selectable" key={i}>
-                  <td>
-                    <div className="form-control form-control--underlined no-margin">
-                      <input type="text" value={cookie.domain}/>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="form-control form-control--underlined no-margin">
-                      <input type="text" value={cookieString}/>
-                    </div>
-                  </td>
-                  <td>
-                    <button className="btn">
-                      <i className="fa fa-trash-o"></i>
-                    </button>
-                  </td>
-                </tr>
-              )
-            })}
-            </tbody>
-          </table>
+          <CookiesEditor
+            cookies={filteredCookies}
+            onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
+            onCookieAdd={cookie => this._handleCookieAdd(cookie)}
+            onCookieDelete={cookie => this._handleCookieDelete(cookie)}
+          />
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={this._saveChanges.bind(this)}>
+            <button className="btn" onClick={e => this.modal.hide()}>
+              Cancel
+            </button>
+            <button className="btn" onClick={e => this._saveChanges()}>
               Save
             </button>
           </div>
