@@ -13,7 +13,6 @@ const ResponseCookiesViewer = ({headers}) => {
       <tr>
         <th>Name</th>
         <th>Value</th>
-        <th>Domain</th>
       </tr>
       </thead>
       <tbody>
@@ -23,7 +22,6 @@ const ResponseCookiesViewer = ({headers}) => {
           <tr className="selectable" key={i}>
             <td>{cookie.key}</td>
             <td className="force-wrap">{cookie.value}</td>
-            <td>{cookie.domain || 'n/a'}</td>
           </tr>
         );
       })}

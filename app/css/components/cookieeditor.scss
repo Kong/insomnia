@@ -1,0 +1,18 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.cookie-editor {
+  table {
+    input:not([type="checkbox"]) {
+      padding: $padding-xs $padding-xxs;
+      width: 100%;
+    }
+
+    .btn {
+      margin: 0;
+      padding: 0 $padding-sm;
+      //width: $line-height-sm;
+      height: $line-height-xs;
+    }
+  }
+}

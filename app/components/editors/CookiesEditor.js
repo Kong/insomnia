@@ -9,6 +9,11 @@ class CookiesEditor extends Component {
     this.props.onCookieUpdate(cookie, newCookie);
   }
 
+  _handleCookieAdd () {
+    const newCookie = new Cookie({key: 'foo', value: 'bar', domain: 'domain.com', path: '/'});
+    this.props.onCookieAdd(newCookie);
+  }
+
   _handleDeleteCookie (cookie) {
     this.props.onCookieDelete(cookie);
   }
@@ -21,7 +26,13 @@ class CookiesEditor extends Component {
         <tr>
           <th style={{minWidth: '10rem'}}>Domain</th>
           <th style={{width: '90%'}}>Cookie</th>
-          <th style={{width: '2rem'}}></th>
+          <th style={{width: '2rem'}} className="text-right">
+            <button className="btn btn--super-compact"
+                    onClick={e => this._handleCookieAdd()}
+                    title="Add cookie">
+              <i className="fa fa-plus-circle"></i>
+            </button>
+          </th>
         </tr>
         </thead>
         <tbody key={cookies.length}>
@@ -42,8 +53,10 @@ class CookiesEditor extends Component {
                   />
                 </div>
               </td>
-              <td>
-                <button className="btn" onClick={e => this._handleDeleteCookie(cookie)}>
+              <td className="text-right">
+                <button className="btn btn--super-compact"
+                        onClick={e => this._handleDeleteCookie(cookie)}
+                        title="Delete cookie">
                   <i className="fa fa-trash-o"></i>
                 </button>
               </td>

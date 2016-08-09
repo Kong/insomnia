@@ -90,11 +90,10 @@ table {
 
 code {
   display: inline-block;
-  background: $hl-xs;
-  border: 1px solid $hl-sm;
+  background: $hl-xxs;
   padding: $padding-xs $padding-sm;
+  color: $hl;
   font-family: $font-monospace;
-  border-radius: $radius-md;
 }
 
 .text-center {

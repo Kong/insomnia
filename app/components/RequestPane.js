@@ -124,7 +124,7 @@ class RequestPane extends Component {
           <TabPanel className="scrollable">
             <div className="pad no-pad-bottom">
               <label className="label--small">Url Preview</label>
-              <code className="txt-sm block selectable">
+              <code className="txt-sm block">
                 <RenderedQueryString
                   key={request._id}
                   request={request}

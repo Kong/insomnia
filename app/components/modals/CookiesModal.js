@@ -46,7 +46,10 @@ class CookiesModal extends Component {
   _handleCookieDelete (cookie) {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
-    cookieJar.cookies = cookies.filter(c => c.domain !== cookie.domain || c.key !== cookie.key);
+
+    // NOTE: This is sketchy because it relies on the same reference
+    cookieJar.cookies = cookies.filter(c => c !== cookie);
+
     this.setState({cookieJar});
   }
 
@@ -66,16 +69,11 @@ class CookiesModal extends Component {
     }
 
     const {cookies} = cookieJar;
-
     return cookies.filter(c => {
       const toSearch = JSON.stringify(c).toLowerCase();
       return toSearch.indexOf(filter.toLowerCase()) !== -1;
     }).sort((a, b) => {
-      if (a.domain === b.domain) {
-        return a.key.toLowerCase() > b.key.toLowerCase() ? 1 : -1;
-      } else {
-        return a.domain.toLowerCase() > b.domain.toLowerCase() ? 1 : -1;
-      }
+      return a.creation > b.creation ? -1 : 1;
     });
   }
 
@@ -106,11 +104,9 @@ class CookiesModal extends Component {
         <ModalHeader>
           Cookies <span className="faint txt-sm">– manage cookies for domains</span>
         </ModalHeader>
-        <ModalBody className="pad">
-          <div className="form-control form-control--outlined">
-            <label className="label--small">
-              Search Cookies
-            </label>
+        <ModalBody className="cookie-editor">
+          <div className="pad no-pad-bottom no-margin form-control form-control--outlined">
+            <label className="label--small">Filter Cookies</label>
             <input
               ref={n => this.filterInput = n}
               onChange={e => this._onFilterChange(e.target.value)}
@@ -119,13 +115,15 @@ class CookiesModal extends Component {
               defaultValue=""
             />
           </div>
-          <hr/>
-          <CookiesEditor
-            cookies={filteredCookies}
-            onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
-            onCookieAdd={cookie => this._handleCookieAdd(cookie)}
-            onCookieDelete={cookie => this._handleCookieDelete(cookie)}
-          />
+          <div className="pad">
+            <hr/>
+            <CookiesEditor
+              cookies={filteredCookies}
+              onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
+              onCookieAdd={cookie => this._handleCookieAdd(cookie)}
+              onCookieDelete={cookie => this._handleCookieDelete(cookie)}
+            />
+          </div>
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
