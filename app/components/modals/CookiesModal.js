@@ -77,27 +77,28 @@ class CookiesModal extends Component {
     });
   }
 
-  _load (filter = '') {
+  _load () {
     db.cookieJarAll().then(jars => {
       const cookieJar = jars[0];
-      this.setState({cookieJar, filter});
+      this.setState({cookieJar});
     });
   }
 
-  show (filter = '') {
+  show () {
     this.modal.show();
-    this._load(filter);
+    this._load();
     this.filterInput.focus();
   }
 
-  toggle (filter = '') {
+  toggle () {
     this.modal.toggle();
-    this._load(filter);
+    this._load();
     this.filterInput.focus();
   }
 
   render () {
     const filteredCookies = this._getFilteredSortedCookies();
+    const {filter} = this.state;
 
     return (
       <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
@@ -122,6 +123,8 @@ class CookiesModal extends Component {
               onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
               onCookieAdd={cookie => this._handleCookieAdd(cookie)}
               onCookieDelete={cookie => this._handleCookieDelete(cookie)}
+              // Set the domain to the filter so that it shows up if we're filtering
+              newCookieDomainName={filter || 'domain.com'}
             />
           </div>
         </ModalBody>

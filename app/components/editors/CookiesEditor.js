@@ -10,7 +10,12 @@ class CookiesEditor extends Component {
   }
 
   _handleCookieAdd () {
-    const newCookie = new Cookie({key: 'foo', value: 'bar', domain: 'domain.com', path: '/'});
+    const newCookie = new Cookie({
+      key: 'foo',
+      value: 'bar',
+      domain: this.props.newCookieDomainName,
+      path: '/'
+    });
     this.props.onCookieAdd(newCookie);
   }
 
@@ -73,7 +78,8 @@ CookiesEditor.propTypes = {
   onCookieUpdate: PropTypes.func.isRequired,
   onCookieAdd: PropTypes.func.isRequired,
   onCookieDelete: PropTypes.func.isRequired,
-  cookies: PropTypes.array.isRequired
+  cookies: PropTypes.array.isRequired,
+  newCookieDomainName: PropTypes.string.isRequired
 };
 
 export default CookiesEditor;
