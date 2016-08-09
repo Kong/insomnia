@@ -158,6 +158,10 @@ app.on('ready', () => {
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
+  if (process.env.NODE_ENV === 'development') {
+    BrowserWindow.addDevToolsExtension('/Users/gschier/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.15.0_0');
+  }
+
   // Uncomment this to test things
   // mainWindow.toggleDevTools();
 
@@ -220,7 +224,7 @@ app.on('ready', () => {
       label: "Actual Size",
       accelerator: "CmdOrCtrl+0",
       click: () => {
-        const window = electron.BrowserWindow.getFocusedWindow();
+        const window = BrowserWindow.getFocusedWindow();
         const zoomFactor = 1;
         window.webContents.setZoomFactor(zoomFactor);
         saveZoomFactor(zoomFactor);
@@ -232,7 +236,7 @@ app.on('ready', () => {
         let zoomFactor = getZoomFactor();
         zoomFactor = Math.min(1.8, zoomFactor + 0.1);
 
-        const window = electron.BrowserWindow.getFocusedWindow();
+        const window = BrowserWindow.getFocusedWindow();
         window.webContents.setZoomFactor(zoomFactor);
 
         saveZoomFactor(zoomFactor);
@@ -244,7 +248,7 @@ app.on('ready', () => {
         let zoomFactor = getZoomFactor();
         zoomFactor = Math.max(0.5, zoomFactor - 0.1);
 
-        const window = electron.BrowserWindow.getFocusedWindow();
+        const window = BrowserWindow.getFocusedWindow();
         window.webContents.setZoomFactor(zoomFactor);
 
         saveZoomFactor(zoomFactor);

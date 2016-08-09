@@ -83,7 +83,7 @@ class SettingsTabs extends Component {
               <input
                 id="setting-follow-redirects"
                 type="checkbox"
-                value={settings.followRedirects}
+                checked={settings.followRedirects}
                 onChange={e => db.settingsUpdate(settings, {followRedirects: e.target.checked})}
               />
               &nbsp;&nbsp;

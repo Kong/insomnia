@@ -126,7 +126,7 @@ class Sidebar extends Component {
               ))}
               <li>
                 <button>
-                  <i className="fa fa-empty"></i> No Environment
+                  <i className="fa fa-minus-square-o"></i> No Environment
                 </button>
               </li>
               <DropdownDivider name="General"/>

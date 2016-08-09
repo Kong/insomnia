@@ -101,12 +101,12 @@ class CookiesModal extends Component {
     const {filter} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} wide={false} top={true} tall={true} {...this.props}>
         <ModalHeader>
-          Cookies <span className="faint txt-sm">– manage cookies for domains</span>
+          Manage Cookies
         </ModalHeader>
         <ModalBody className="cookie-editor">
-          <div className="pad no-pad-bottom no-margin form-control form-control--outlined">
+          <div className="cookie-editor__filter form-control form-control--outlined">
             <label className="label--small">Filter Cookies</label>
             <input
               ref={n => this.filterInput = n}
@@ -116,8 +116,7 @@ class CookiesModal extends Component {
               defaultValue=""
             />
           </div>
-          <div className="pad">
-            <hr/>
+          <div className="cookie-editor__editor">
             <CookiesEditor
               cookies={filteredCookies}
               onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
@@ -136,6 +135,9 @@ class CookiesModal extends Component {
             <button className="btn" onClick={e => this._saveChanges()}>
               Save
             </button>
+          </div>
+          <div className="pad faint italic txt-sm tall">
+            * cookies are automatically sent with relevant requests
           </div>
         </ModalFooter>
       </Modal>

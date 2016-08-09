@@ -59,17 +59,17 @@ class RequestUrlBar extends Component {
             ))}
           </ul>
         </Dropdown>
-        <form className="form-control" onSubmit={this._handleFormSubmit.bind(this)}>
-          <input
-            ref="input"
-            type="text"
-            placeholder="https://api.myproduct.com/v1/users"
-            defaultValue={url}
-            onChange={e => this._handleUrlChange(e.target.value)}/>
+        <form onSubmit={this._handleFormSubmit.bind(this)}>
+          <div className="form-control">
+            <input
+              ref="input"
+              type="text"
+              placeholder="https://api.myproduct.com/v1/users"
+              defaultValue={url}
+              onChange={e => this._handleUrlChange(e.target.value)}/>
+          </div>
+          <button>Send</button>
         </form>
-        <button onClick={this._handleFormSubmit.bind(this)}>
-          Send
-        </button>
       </div>
     );
   }

@@ -3,7 +3,7 @@ const modals = {};
 export function addModal (instance) {
   if (instance === null) {
     // Modal was unmounted
-    return;
+    return
   }
   modals[instance.constructor.name] = instance;
 }
