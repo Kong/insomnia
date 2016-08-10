@@ -218,6 +218,10 @@
       .tag {
         opacity: 1;
       }
+
+      .editable {
+        line-height: $line-height-xs;
+      }
     }
 
     &.sidebar__item--active > .sidebar__actions,

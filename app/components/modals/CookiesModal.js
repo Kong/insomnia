@@ -101,7 +101,7 @@ class CookiesModal extends Component {
     const {filter} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} wide={false} top={true} tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>
           Manage Cookies
         </ModalHeader>

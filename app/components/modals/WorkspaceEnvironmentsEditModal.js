@@ -2,8 +2,7 @@ import React, {PropTypes, Component} from 'react';
 
 import Link from '../base/Link';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
-import Dropdown from '../base/Dropdown';
-import DropdownDivider from '../base/DropdownDivider';
+import Editable from '../base/Editable';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -50,37 +49,36 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const environment = workspace ? workspace.environment : {};
 
     return (
-      <Modal ref={m => this.modal = m} top={true} tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>
-          Environments
+          Manage Environments
         </ModalHeader>
-        <ModalBody className="environments-editor">
-          <div className="pad no-pad-bottom">
-            <label className="label--small">Select Environment</label>
-            <br/>
-            <Dropdown outline={true}>
-              <button className="btn btn--super-compact btn--outlined">
-                Base Environment <i className="fa fa-caret-down"></i>
+        <ModalBody className="env-modal">
+          <div className="env-modal__sidebar">
+            <li className="env-modal__sidebar-root-item">
+              <button>Global Environment</button>
+            </li>
+            <h4 className="pad">
+              <button className="pull-right">
+                <i className="fa fa-plus-circle"></i>
               </button>
-              <ul>
-                <DropdownDivider name="Global"></DropdownDivider>
-                <li>
+              Sub Environments
+            </h4>
+            <ul>
+              {['Production', 'Staging', 'Development'].map(n => (
+                <li key={n} className="env-modal__sidebar-item">
                   <button>
-                    <i className="fa fa-home"></i> Base Environment
+                    <Editable onSubmit={() => null} value={n}/>
+                  </button>
+                  <button className="env-modal__sidebar-actions">
+                    <i className="fa fa-trash-o"></i>
                   </button>
                 </li>
-                <DropdownDivider name="Sub Environments"></DropdownDivider>
-                <li>
-                  <button><i className="fa fa-empty"></i> Coming soon...</button>
-                </li>
-              </ul>
-            </Dropdown>
-            <button className="pull-right btn btn--super-compact btn--outlined">
-              <i className="fa fa-trash-o"></i>
-            </button>
-            <hr/>
+              ))}
+            </ul>
           </div>
           <EnvironmentEditor
+            className="env-modal__editor"
             ref={n => this._envEditor = n}
             key={workspace ? workspace._id : 'n/a'}
             environment={environment || {}}

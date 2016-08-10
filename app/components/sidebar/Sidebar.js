@@ -129,7 +129,7 @@ class Sidebar extends Component {
               {['Production', 'Staging', 'Development'].map(n => (
                 <li key={n}>
                   <button>
-                    <i className="fa fa-hand-o-right"></i> Use <strong>{n}</strong>
+                    <i className="fa fa-random"></i> Use <strong>{n}</strong>
                   </button>
                 </li>
               ))}

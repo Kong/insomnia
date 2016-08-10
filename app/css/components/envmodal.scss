@@ -1,0 +1,61 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.env-modal.modal__body {
+  overflow: visible;
+  display: grid;
+  grid-template-columns: 17rem 1fr;
+  grid-template-rows: 1fr;
+
+  .env-modal__sidebar {
+    border-right: 1px solid $hl-md;
+    padding: $padding-md 0;
+    box-sizing: border-box;
+    overflow: auto;
+    height: 100%;
+
+    .env-modal__sidebar-root-item,
+    .env-modal__sidebar-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: $line-height-xs;
+      color: $hl-xxl;
+
+      & > button {
+        padding: 0 $padding-md 0 $padding-lg;
+
+        .editable {
+          display: block;
+          width: 100%;
+          line-height: $line-height-xs;
+        }
+      }
+
+      &.env-modal__sidebar-item--active,
+      &.env-modal__sidebar-item--active > .env-modal__actions,
+      & > button:focus {
+        color: $font-light-bg;
+        background-color: $hl-xs;
+      }
+
+      &:hover > .env-modal__sidebar-actions,
+      &:hover > button {
+        background-color: $hl-xxs;
+      }
+    }
+
+    .env-modal__sidebar-root-item {
+      & > button {
+        padding-left: $padding-md;
+      }
+    }
+
+    .env-modal__sidebar-actions {
+      display: none;
+    }
+
+    .env-modal__sidebar-item:hover > .env-modal__sidebar-actions {
+      display: block;
+    }
+  }
+}

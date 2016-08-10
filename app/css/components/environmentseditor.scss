@@ -1,8 +1,0 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
-.environments-editor.modal__body {
-  overflow: visible;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}

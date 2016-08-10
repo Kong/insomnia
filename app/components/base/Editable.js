@@ -49,9 +49,9 @@ class Editable extends Component {
       )
     } else {
       return (
-        <span onDoubleClick={e => this._handleEditStart()} {...extra}>
+        <div className="editable" onDoubleClick={e => this._handleEditStart()} {...extra}>
           {value}
-        </span>
+        </div>
       )
     }
   }
