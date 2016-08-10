@@ -506,7 +506,7 @@ class App extends Component {
         />
 
         <div className="drag drag--sidebar">
-          <div onMouseDown={() => this._startDragSidebar()}
+          <div onMouseDown={e => {e.preventDefault(); this._startDragSidebar()}}
                onDoubleClick={() => this._resetDragSidebar()}>
           </div>
         </div>
