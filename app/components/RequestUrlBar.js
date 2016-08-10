@@ -22,13 +22,8 @@ class RequestUrlBar extends Component {
     }, DEBOUNCE_MILLIS);
   }
 
-  focus () {
-    this.refs.input.focus();
-    console.log('-- Focus URL Bar --');
-  }
-
   componentDidMount () {
-    Mousetrap.bindGlobal('mod+l', this.focus.bind(this));
+    Mousetrap.bindGlobal('mod+l', () => {this.input.focus(); this.input.select()});
   }
 
   render () {
@@ -62,7 +57,7 @@ class RequestUrlBar extends Component {
         <form onSubmit={this._handleFormSubmit.bind(this)}>
           <div className="form-control">
             <input
-              ref="input"
+              ref={n => this.input = n}
               type="text"
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}

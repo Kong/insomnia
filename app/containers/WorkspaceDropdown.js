@@ -31,7 +31,7 @@ class WorkspaceDropdown extends Component {
   _workspaceCreate () {
     getModal(PromptModal).show({
       headerName: 'Create New Workspace',
-      defaultValue: 'New Workspace',
+      defaultValue: 'My Workspace',
       submitName: 'Create',
       selectText: true
     }).then(name => {

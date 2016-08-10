@@ -19,6 +19,7 @@ export function getRenderedRequest (request) {
   return db.requestGetAncestors(request).then(ancestors => {
     const renderContext = {};
 
+    // Start at the root and merge environments
     for (let doc of ancestors) {
       // TODO: Add support for Workspace environments
       const environment = doc.environment || {};

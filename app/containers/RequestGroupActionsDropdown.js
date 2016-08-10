@@ -20,9 +20,16 @@ class RequestGroupActionsDropdown extends Component {
   }
 
   _requestCreate () {
-    const workspace = this._getActiveWorkspace(this.props);
-    const {requestGroup} = this.props;
-    db.requestCreateAndActivate(workspace, {parentId: requestGroup._id});
+    getModal(PromptModal).show({
+      headerName: 'Create New Request',
+      defaultValue: 'My Request',
+      selectText: true
+    }).then(name => {
+      const workspace = this._getActiveWorkspace();
+      const {requestGroup} = this.props;
+      const parentId = requestGroup._id;
+      db.requestCreateAndActivate(workspace, {parentId, name})
+    });
   }
 
   _getActiveWorkspace (props) {

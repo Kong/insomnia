@@ -31,6 +31,7 @@ export function initStore (dispatch) {
   return Promise.all([
     db.settingsGet(),
     db.workspaceAll(),
+    db.environmentAll(),
     db.cookieJarAll(),
     db.requestGroupAll(),
     db.requestAll(),

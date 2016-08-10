@@ -68,6 +68,7 @@ class EnvironmentEditModal extends Component {
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
+            <button className="btn" onClick={e => this.modal.hide()}>Cancel</button>
             <button className="btn" onClick={this._saveChanges.bind(this)} disabled={!isValid}>
               Save
             </button>

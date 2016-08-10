@@ -12,6 +12,7 @@ import {isDevelopment} from '../lib/appInfo';
 export const TYPE_STATS = 'Stats';
 export const TYPE_SETTINGS = 'Settings';
 export const TYPE_WORKSPACE = 'Workspace';
+export const TYPE_ENVIRONMENT = 'Environment';
 export const TYPE_COOKIE_JAR = 'CookieJar';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
 export const TYPE_REQUEST = 'Request';
@@ -35,10 +36,15 @@ const MODEL_DEFAULTS = {
   }),
   [TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
-    environments: [],
+    environment: {},
     filter: '',
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    activeEnvironmentId: null,
     metaActiveRequestId: null
+  }),
+  [TYPE_ENVIRONMENT]: () => ({
+    name: 'My Environment',
+    data: {}
   }),
   [TYPE_COOKIE_JAR]: () => ({
     name: 'Default Jar',
@@ -339,9 +345,15 @@ export function requestAll () {
   return all(TYPE_REQUEST);
 }
 
+/**
+ * Return all ancestors for request from closest to furthest away
+ *
+ * @param request
+ * @returns {Promise}
+ */
 export function requestGetAncestors (request) {
   return new Promise(resolve => {
-    const ancestors = [];
+    let ancestors = [];
 
     const next = (doc) => {
       Promise.all([
@@ -349,10 +361,10 @@ export function requestGetAncestors (request) {
         workspaceGetById(doc.parentId)
       ]).then(([requestGroup, workspace]) => {
         if (requestGroup) {
-          ancestors.push(requestGroup);
+          ancestors = [requestGroup, ...ancestors];
           next(requestGroup);
         } else if (workspace) {
-          ancestors.push(workspace);
+          ancestors = [workspace, ...ancestors];
           next(workspace);
           // We could be done here, but let's have there only be one finish case
         } else {
@@ -398,6 +410,7 @@ export function requestGroupRemove (requestGroup) {
 export function requestGroupAll () {
   return all(TYPE_REQUEST_GROUP);
 }
+
 
 // ~~~~~~~~ //
 // RESPONSE //
@@ -479,6 +492,39 @@ export function workspaceUpdate (workspace, patch) {
 
 export function workspaceRemove (workspace) {
   return remove(workspace);
+}
+
+
+// ~~~~~~~~~~~ //
+// ENVIRONMENT //
+// ~~~~~~~~~~~ //
+
+export function environmentCreate (patch = {}) {
+  if (!patch.parentId) {
+    throw new Error('New Environment missing `parentId`', patch);
+  }
+
+  return docCreate(TYPE_ENVIRONMENT, 'env', patch);
+}
+
+export function environmentUpdate (environment, patch) {
+  return docUpdate(environment, patch);
+}
+
+export function environmentGetById (id) {
+  return get(TYPE_ENVIRONMENT, id);
+}
+
+export function environimentFindByParentId (parentId) {
+  return find(TYPE_ENVIRONMENT, {parentId});
+}
+
+export function environmentRemove (environment) {
+  return remove(environment);
+}
+
+export function environmentAll () {
+  return all(TYPE_ENVIRONMENT);
 }
 
 

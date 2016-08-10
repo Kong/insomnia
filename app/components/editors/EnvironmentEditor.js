@@ -29,11 +29,6 @@ class EnvironmentEditor extends Component {
     this.props.didChange();
   }
 
-  componentWillReceiveProps (nextProps) {
-    const environmentJSON = JSON.stringify(nextProps.environment);
-    this.setState({environmentJSON});
-  }
-
   render () {
     const {environment, ...props} = this.props;
     const {environmentJSON} = this.state;

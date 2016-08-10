@@ -98,7 +98,16 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {changeFilter, filter, children, requestCreate, requestGroupCreate, width} = this.props;
+    const {
+      showEnvironmentsEditModal,
+      showCookiesEditModal,
+      changeFilter,
+      filter,
+      children,
+      requestCreate,
+      requestGroupCreate,
+      width
+    } = this.props;
 
     return (
       <aside className={classnames('sidebar', {
@@ -116,7 +125,7 @@ class Sidebar extends Component {
               </div>
             </button>
             <ul>
-              <DropdownDivider name="Environments"/>
+              <DropdownDivider name="Active Environment"/>
               {['Production', 'Staging', 'Development'].map(n => (
                 <li key={n}>
                   <button>
@@ -126,23 +135,18 @@ class Sidebar extends Component {
               ))}
               <li>
                 <button>
-                  <i className="fa fa-minus-square-o"></i> No Environment
+                  <i className="fa fa-empty"></i> No Environment
                 </button>
               </li>
               <DropdownDivider name="General"/>
               <li>
-                <button>
-                  <i className="fa fa-pencil-square-o"></i> Edit Global Environment
-                </button>
-              </li>
-              <li>
-                <button onClick={e => getModal(WorkspaceEnvironmentsEditModal).show()}>
-                  <i className="fa fa-empty"></i> Manage Environments
+                <button onClick={e => showEnvironmentsEditModal()}>
+                  <i className="fa fa-wrench"></i> Manage Environments
                 </button>
               </li>
             </ul>
           </Dropdown>
-          <button className="btn btn--super-compact" onClick={e => getModal(CookiesModal).show()}>
+          <button className="btn btn--super-compact" onClick={e => showCookiesEditModal()}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -175,6 +179,8 @@ Sidebar.propTypes = {
   moveRequestGroup: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   requestGroupCreate: PropTypes.func.isRequired,
+  showEnvironmentsEditModal: PropTypes.func.isRequired,
+  showCookiesEditModal: PropTypes.func.isRequired,
   width: PropTypes.number.isRequired,
 
   // Other

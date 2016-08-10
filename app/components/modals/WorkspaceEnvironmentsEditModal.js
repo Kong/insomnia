@@ -3,10 +3,12 @@ import React, {PropTypes, Component} from 'react';
 import Link from '../base/Link';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Dropdown from '../base/Dropdown';
+import DropdownDivider from '../base/DropdownDivider';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
+import * as db from '../../database'
 
 
 class WorkspaceEnvironmentsEditModal extends Component {
@@ -14,7 +16,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
     super(props);
 
     this.state = {
-      workspace: null
+      workspace: null,
+      isValid: true
     }
   }
 
@@ -29,44 +32,56 @@ class WorkspaceEnvironmentsEditModal extends Component {
   }
 
   _didChange () {
-
+    const isValid = this._envEditor.isValid();
+    if (this.state.isValid !== isValid) {
+      this.setState({isValid});
+    }
   }
 
   _saveChanges () {
-
+    const {workspace} = this.state;
+    const environment = this._envEditor.getValue();
+    db.workspaceUpdate(workspace, {environment});
+    this.modal.hide();
   }
 
   render () {
-    const {workspace} = this.state;
-    const environment = workspace ? workspace.environments[0] || {} : {};
+    const {workspace, isValid} = this.state;
+    const environment = workspace ? workspace.environment : {};
 
     return (
       <Modal ref={m => this.modal = m} top={true} tall={true} {...this.props}>
         <ModalHeader>
-          Environments <span className="faint txt-sm">– share variables across requests</span>
+          Environments
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="environments-editor">
           <div className="pad no-pad-bottom">
+            <label className="label--small">Select Environment</label>
+            <br/>
             <Dropdown outline={true}>
               <button className="btn btn--super-compact btn--outlined">
-                Production <i className="fa fa-caret-down"></i>
+                Base Environment <i className="fa fa-caret-down"></i>
               </button>
               <ul>
+                <DropdownDivider name="Global"></DropdownDivider>
                 <li>
-                  <button>Production</button>
+                  <button>
+                    <i className="fa fa-home"></i> Base Environment
+                  </button>
                 </li>
+                <DropdownDivider name="Sub Environments"></DropdownDivider>
                 <li>
-                  <button>Staging</button>
-                </li>
-                <li>
-                  <button>Development</button>
+                  <button><i className="fa fa-empty"></i> Coming soon...</button>
                 </li>
               </ul>
             </Dropdown>
+            <button className="pull-right btn btn--super-compact btn--outlined">
+              <i className="fa fa-trash-o"></i>
+            </button>
             <hr/>
           </div>
           <EnvironmentEditor
-            ref={node => this._envEditor = node}
+            ref={n => this._envEditor = n}
             key={workspace ? workspace._id : 'n/a'}
             environment={environment || {}}
             didChange={this._didChange.bind(this)}
@@ -75,7 +90,10 @@ class WorkspaceEnvironmentsEditModal extends Component {
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={this._saveChanges.bind(this)}>Save</button>
+            <button className="btn" onClick={e => this.modal.hide()}>Cancel</button>
+            <button className="btn" onClick={e => this._saveChanges()} disabled={!isValid}>
+              Save
+            </button>
           </div>
           <div className="pad faint italic txt-sm tall">
             * this data can be used for&nbsp;

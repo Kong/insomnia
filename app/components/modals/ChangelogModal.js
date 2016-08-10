@@ -65,7 +65,7 @@ class ChangelogModal extends Component {
       let startIndex = changelog.findIndex(c => c.version === startVersion);
       if (startIndex < 0) {
         startIndex = 0;
-        console.error(`Failed to find changelog version for ${startVersion}`)
+        console.warn(`Failed to find changelog version for ${startVersion}`)
       }
 
       changelog.slice(startIndex).map((change, i) => {
@@ -77,13 +77,15 @@ class ChangelogModal extends Component {
           if (!Array.isArray(change.summary)) {
             html = [
               ...html,
-              <p key={`summary.${i}`}>{change.summary}</p>
+              <p key={`summary.${i}`} dangerouslySetInnerHTML={{__html: change.summary}}/>
             ]
           } else {
             html = [
               ...html,
-              <p key={`summary.${i}`}><strong>{change.summary[0]}</strong></p>,
-              ...change.summary.slice(1).map((text, j) => <p key={`summary.${i}[${j}]`}>{text}</p>)
+              <p key={`summary.${i}`}><strong dangerouslySetInnerHTML={{__html: change.summary[0]}}/></p>,
+              ...change.summary.slice(1).map(
+                (text, j) => <p key={`summary.${i}[${j}]`} dangerouslySetInnerHTML={{__html: text}}/>
+              )
             ]
           }
         }

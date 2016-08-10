@@ -96,7 +96,7 @@ class App extends Component {
         }
 
         const parentId = request ? request.parentId : workspace._id;
-        db.requestCreateAndActivate(workspace, {parentId});
+        this._requestCreate(parentId);
       },
 
       // Request Duplicate
@@ -232,9 +232,25 @@ class App extends Component {
     })
   }
 
+  _requestGroupCreate (parentId) {
+    getModal(PromptModal).show({
+      headerName: 'Create New Folder',
+      defaultValue: 'My Folder',
+      selectText: true
+    }).then(name => {
+      db.requestGroupCreate({parentId, name})
+    });
+  }
+
   _requestCreate (parentId) {
-    const workspace = this._getActiveWorkspace();
-    db.requestCreateAndActivate(workspace, {parentId})
+    getModal(PromptModal).show({
+      headerName: 'Create New Request',
+      defaultValue: 'My Request',
+      selectText: true
+    }).then(name => {
+      const workspace = this._getActiveWorkspace();
+      db.requestCreateAndActivate(workspace, {parentId, name})
+    });
   }
 
   _generateSidebarTree (parentId, entities) {
@@ -468,12 +484,13 @@ class App extends Component {
 
     const {sidebarWidth, paneWidth} = this.state;
     const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
-    const activeParentId = activeRequest ? activeRequest.parentId : workspace._id;
 
     return (
       <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
+          showEnvironmentsEditModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
+          showCookiesEditModal={() => getModal(CookiesModal).show()}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           moveRequest={this._moveRequest.bind(this)}
@@ -481,8 +498,8 @@ class App extends Component {
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
-          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: activeParentId})}
-          requestGroupCreate={() => db.requestGroupCreate({parentId: workspace._id})}
+          requestCreate={() => this._requestCreate(workspace._id)}
+          requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
           filter={workspace.filter || ''}
           children={children}
           width={sidebarWidth}
