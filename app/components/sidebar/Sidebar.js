@@ -99,8 +99,8 @@ class Sidebar extends Component {
 
   render () {
     const {
-      showEnvironmentsEditModal,
-      showCookiesEditModal,
+      showEnvironmentsModal,
+      showCookiesModal,
       changeFilter,
       filter,
       children,
@@ -140,13 +140,13 @@ class Sidebar extends Component {
               </li>
               <DropdownDivider name="General"/>
               <li>
-                <button onClick={e => showEnvironmentsEditModal()}>
+                <button onClick={e => showEnvironmentsModal()}>
                   <i className="fa fa-wrench"></i> Manage Environments
                 </button>
               </li>
             </ul>
           </Dropdown>
-          <button className="btn btn--super-compact" onClick={e => showCookiesEditModal()}>
+          <button className="btn btn--super-compact" onClick={e => showCookiesModal()}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -179,8 +179,8 @@ Sidebar.propTypes = {
   moveRequestGroup: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   requestGroupCreate: PropTypes.func.isRequired,
-  showEnvironmentsEditModal: PropTypes.func.isRequired,
-  showCookiesEditModal: PropTypes.func.isRequired,
+  showEnvironmentsModal: PropTypes.func.isRequired,
+  showCookiesModal: PropTypes.func.isRequired,
   width: PropTypes.number.isRequired,
 
   // Other

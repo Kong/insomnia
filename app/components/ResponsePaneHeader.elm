@@ -34,7 +34,7 @@ type alias Model =
 
 init : Model -> (Model, Cmd Msg)
 init flags =
-  flags ! [ready True]
+    flags ! [ready True]
 
 
 -- UPDATE

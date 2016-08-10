@@ -38,7 +38,9 @@ class Modal extends Component {
 
   show () {
     this.setState({open: true});
-    ReactDOM.findDOMNode(this).focus();
+    setTimeout(() => {
+      this._node.focus();
+    });
   }
 
   toggle () {
@@ -79,7 +81,7 @@ class Modal extends Component {
     );
 
     return (
-      <div tabIndex="-1" className={classes} onClick={this._handleClick.bind(this)}>
+      <div ref={n => this._node = n} tabIndex="-1" className={classes} onClick={this._handleClick.bind(this)}>
         <div className="modal__content">
           <div className="modal__backdrop" onClick={() => this.hide()}></div>
           {this.props.children}

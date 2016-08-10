@@ -21,7 +21,8 @@ class ResponsePane extends Component {
       updatePreviewMode,
       loadingRequests,
       editorLineWrapping,
-      editorFontSize
+      editorFontSize,
+      showCookiesModal
     } = this.props;
 
     const loadStartTime = loadingRequests[request ? request._id : '__NONE__'];
@@ -159,6 +160,7 @@ class ResponsePane extends Component {
           </TabPanel>
           <TabPanel className="scrollable pad">
             <ResponseCookiesViewer
+              showCookiesModal={showCookiesModal}
               key={response._id}
               headers={cookieHeaders}
             />
@@ -178,6 +180,7 @@ class ResponsePane extends Component {
 ResponsePane.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
+  showCookiesModal: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,

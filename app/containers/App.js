@@ -489,8 +489,8 @@ class App extends Component {
       <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
-          showEnvironmentsEditModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
-          showCookiesEditModal={() => getModal(CookiesModal).show()}
+          showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
+          showCookiesModal={() => getModal(CookiesModal).show()}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           moveRequest={this._moveRequest.bind(this)}
@@ -543,6 +543,7 @@ class App extends Component {
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
           loadingRequests={requests.loadingRequests}
+          showCookiesModal={() => getModal(CookiesModal).show()}
         />
 
         <PromptModal ref={m => addModal(m)}/>
