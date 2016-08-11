@@ -1,4 +1,5 @@
 import networkRequest from 'request';
+import {parse as urlParse} from 'url';
 
 import * as db from '../database';
 import * as querystring from './querystring';
@@ -26,7 +27,10 @@ function buildRequestConfig (request, patch = {}) {
     time: true,
 
     // SSL Checking
-    rejectUnauthorized: true
+    rejectUnauthorized: true,
+
+    // Proxy
+    proxy: null
   };
 
   // Set the URL, including the query parameters
@@ -51,12 +55,19 @@ function buildRequestConfig (request, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (request, settings, cookieJar) {
+function actuallySend (renderedRequest, settings, cookieJar) {
   return new Promise((resolve, reject) => {
     const jar = jarFromCookies(cookieJar.cookies);
 
-    let config = buildRequestConfig(request, {
+    // Detect and set the proxy based on the request protocol
+    // NOTE: request does not have a separate settings for http/https proxies
+    const {protocol} = urlParse(renderedRequest.url);
+    const proxyHost = protocol === 'https:' ? settings.httpsProxy : settings.httpProxy;
+    const proxy = proxyHost ? `${protocol}//${proxyHost}` : null;
+
+    let config = buildRequestConfig(renderedRequest, {
       jar: jar,
+      proxy: proxy,
       followAllRedirects: settings.followRedirects,
       timeout: settings.timeout > 0 ? settings.timeout : null,
       rejectUnauthorized: settings.validateSSL
@@ -67,7 +78,7 @@ function actuallySend (request, settings, cookieJar) {
     networkRequest(config, function (err, networkResponse) {
       if (err) {
         db.responseCreate({
-          parentId: request._id,
+          parentId: renderedRequest._id,
           elapsedTime: Date.now() - startTime,
           error: err.toString()
         });
@@ -80,7 +91,7 @@ function actuallySend (request, settings, cookieJar) {
         const err = new Error(`Content-Type ${contentType} not supported`);
 
         db.responseCreate({
-          parentId: request._id,
+          parentId: renderedRequest._id,
           elapsedTime: Date.now() - startTime,
           error: err.toString(),
           statusMessage: 'UNSUPPORTED'
@@ -106,7 +117,7 @@ function actuallySend (request, settings, cookieJar) {
       }
 
       const responsePatch = {
-        parentId: request._id,
+        parentId: renderedRequest._id,
         statusCode: networkResponse.statusCode,
         statusMessage: networkResponse.statusMessage,
         contentType: networkResponse.headers['content-type'],

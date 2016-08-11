@@ -169,6 +169,11 @@ i.fa {
   padding-top: $padding-md;
 }
 
+.pad-top-sm {
+  box-sizing: border-box;
+  padding-top: $padding-sm;
+}
+
 .pad-bottom {
   box-sizing: border-box;
   padding-bottom: $padding-md;

@@ -31,6 +31,8 @@ const MODEL_DEFAULTS = {
     followRedirects: false,
     editorFontSize: 11,
     editorLineWrapping: true,
+    httpProxy: '',
+    httpsProxy: '',
     timeout: 0,
     validateSSL: true
   }),

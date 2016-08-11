@@ -1,11 +1,10 @@
 import React, {PropTypes} from 'react';
 
 import Dropdown from '../base/Dropdown';
-import DropdownDivider from '../base/DropdownDivider';
 import {PREVIEW_MODES, getPreviewModeName} from '../../lib/previewModes';
 import {trackEvent} from '../../lib/analytics';
 
-const PreviewModeDropdown = ({updatePreviewMode, downloadResponse}) => {
+const PreviewModeDropdown = ({updatePreviewMode}) => {
   return (
     <Dropdown>
       <button className="tall">
@@ -20,12 +19,6 @@ const PreviewModeDropdown = ({updatePreviewMode, downloadResponse}) => {
             }}>{getPreviewModeName(previewMode)}</button>
           </li>
         ))}
-        <DropdownDivider/>
-        <li>
-          <button onClick={() => downloadResponse()}>
-            Download
-          </button>
-        </li>
       </ul>
     </Dropdown>
   )
@@ -34,7 +27,6 @@ const PreviewModeDropdown = ({updatePreviewMode, downloadResponse}) => {
 PreviewModeDropdown.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
-  downloadResponse: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired

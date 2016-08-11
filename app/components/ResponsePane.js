@@ -1,7 +1,5 @@
 import React, {PropTypes, Component} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import electron from 'electron';
-import fs from 'fs';
 
 import ResponsePaneHeader from './ResponsePaneHeader'
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
@@ -15,22 +13,6 @@ import {MOD_SYM} from '../lib/constants';
 import {trackEvent} from '../lib/analytics';
 
 class ResponsePane extends Component {
-  _handleDownloadResponse () {
-    const options = {
-      title: 'Download Response',
-      buttonLabel: 'Download'
-    };
-
-    electron.remote.dialog.showSaveDialog(options, filename => {
-      if (!filename) {
-        // It was cancelled, so let's bail out
-        return;
-      }
-
-      const {response} = this.props;
-      fs.writeFile(filename, response.body, {}, err => null);
-    });
-  }
 
   render () {
     const {
@@ -142,7 +124,6 @@ class ResponsePane extends Component {
                 {getPreviewModeName(previewMode)}
               </button>
               <PreviewModeDropdown
-                downloadResponse={() => this._handleDownloadResponse()}
                 previewMode={previewMode}
                 updatePreviewMode={updatePreviewMode}
               />
