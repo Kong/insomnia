@@ -42,6 +42,7 @@ class Sidebar extends Component {
       filter,
       toggleRequestGroup,
       addRequestToRequestGroup,
+      addRequestToWorkspace,
       moveRequest,
       moveRequestGroup,
       activateRequest,
@@ -61,6 +62,7 @@ class Sidebar extends Component {
             key={child.doc._id}
             moveRequest={moveRequest}
             activateRequest={activateRequest}
+            requestCreate={addRequestToWorkspace}
             isActive={child.doc._id === activeRequestId}
             request={child.doc}
           />
@@ -86,7 +88,7 @@ class Sidebar extends Component {
           moveRequestGroup={moveRequestGroup}
           moveRequest={moveRequest}
           toggleRequestGroup={toggleRequestGroup}
-          addRequestToRequestGroup={addRequestToRequestGroup}
+          addRequestToRequestGroup={() => addRequestToRequestGroup(requestGroup)}
           numChildren={child.children.length}
           requestGroup={requestGroup}>
           {children}
@@ -97,7 +99,6 @@ class Sidebar extends Component {
 
   render () {
     const {
-      showEnvironmentsModal,
       showCookiesModal,
       changeFilter,
       filter,
@@ -146,6 +147,7 @@ Sidebar.propTypes = {
   activateRequest: PropTypes.func.isRequired,
   toggleRequestGroup: PropTypes.func.isRequired,
   addRequestToRequestGroup: PropTypes.func.isRequired,
+  addRequestToWorkspace: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,

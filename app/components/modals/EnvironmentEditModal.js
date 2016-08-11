@@ -20,7 +20,6 @@ class EnvironmentEditModal extends Component {
 
   _saveChanges () {
     if (!this._envEditor.isValid()) {
-      console.warn('Tried to save invalid environment');
       return;
     }
 
@@ -28,12 +27,13 @@ class EnvironmentEditModal extends Component {
     const {requestGroup} = this.state;
 
     this.props.onChange(Object.assign({}, requestGroup, {environment}));
-
-    this.modal.hide();
   }
 
   _didChange () {
+    this._saveChanges();
+
     const isValid = this._envEditor.isValid();
+
     if (this.state.isValid !== isValid) {
       this.setState({isValid});
     }
@@ -55,23 +55,18 @@ class EnvironmentEditModal extends Component {
     return (
       <Modal ref={m => this.modal = m} top={true} {...this.props}>
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
-        <ModalBody>
-          <div className="pad-bottom">
-            <EnvironmentEditor
-              ref={node => this._envEditor = node}
-              key={requestGroup ? requestGroup._id : 'n/a'}
-              environment={requestGroup ? requestGroup.environment : {}}
-              didChange={this._didChange.bind(this)}
-              lightTheme={true}
-            />
-          </div>
+        <ModalBody noScroll={true}>
+          <EnvironmentEditor
+            ref={node => this._envEditor = node}
+            key={requestGroup ? requestGroup._id : 'n/a'}
+            environment={requestGroup ? requestGroup.environment : {}}
+            didChange={this._didChange.bind(this)}
+            lightTheme={true}
+          />
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={e => this.modal.hide()}>Cancel</button>
-            <button className="btn" onClick={this._saveChanges.bind(this)} disabled={!isValid}>
-              Save
-            </button>
+            <button className="btn" onClick={e => this.modal.hide()}>Done</button>
           </div>
           <div className="pad faint italic txt-sm tall">
             * this can be used to override data in the global environment

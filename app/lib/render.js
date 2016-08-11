@@ -36,6 +36,8 @@ export function getRenderedRequest (request) {
         Object.assign(renderContext, environment);
       }
 
+      console.log('CONTENT', renderContext);
+
       let template;
 
       try {

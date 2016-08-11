@@ -77,6 +77,12 @@
     overflow: auto;
     background-color: $bg-super-light;
     min-height: 2rem;
+    box-sizing: border-box;
+
+    &.modal__body--no-scroll {
+      overflow: visible;
+      height: 100%;
+    }
   }
 
   .modal__footer {

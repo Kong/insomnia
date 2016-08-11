@@ -2,17 +2,8 @@ import React, {PropTypes, Component} from 'react';
 import Editor from '../base/Editor';
 
 class EnvironmentEditor extends Component {
-
-  constructor (props) {
-    super(props);
-
-    this.state = {
-      environmentJSON: JSON.stringify(props.environment)
-    }
-  }
-
   getValue () {
-    return JSON.parse(this.state.environmentJSON);
+    return JSON.parse(this._editor.getValue());
   }
 
   isValid () {
@@ -24,19 +15,18 @@ class EnvironmentEditor extends Component {
     }
   }
 
-  _handleChange (environmentJSON) {
-    this.setState({environmentJSON});
+  _handleChange () {
     this.props.didChange();
   }
 
   render () {
     const {environment, ...props} = this.props;
-    const {environmentJSON} = this.state;
 
     return (
       <Editor
+        ref={n => this._editor = n}
         onChange={this._handleChange.bind(this)}
-        value={environmentJSON}
+        value={JSON.stringify(environment)}
         prettify={true}
         mode="application/json"
         {...props}

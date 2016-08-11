@@ -50,7 +50,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  autoRefresh: {delay: 5000}, // Necessary to show up in the env modal first launch
+  autoRefresh: {delay: 250}, // Necessary to show up in the env modal first launch
   lineWrapping: true,
   lint: true,
   tabSize: 4,
@@ -79,9 +79,7 @@ class Editor extends Component {
   componentDidMount () {
     const {value} = this.props;
 
-    var textareaNode = this.refs.textarea;
-
-    this.codeMirror = CodeMirror.fromTextArea(textareaNode, BASE_CODEMIRROR_OPTIONS);
+    this.codeMirror = CodeMirror.fromTextArea(this._textarea, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
     this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
     if (!this.codeMirror.getOption('indentWithTabs')) {
@@ -111,6 +109,10 @@ class Editor extends Component {
     if (this.codeMirror) {
       this.codeMirror.focus();
     }
+  }
+
+  getValue () {
+    return this.codeMirror.getValue();
   }
 
   /**
@@ -200,7 +202,8 @@ class Editor extends Component {
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
-            ref='textarea'
+            style={{position: 'absolute', top: 0, zIndex: 1000}}
+            ref={n => this._textarea = n}
             defaultValue={value}
             readOnly={readOnly}
             autoComplete='off'>

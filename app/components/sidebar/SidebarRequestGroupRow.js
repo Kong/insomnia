@@ -79,7 +79,7 @@ class SidebarRequestGroupRow extends Component {
               isActive={false}
               request={null}
               requestGroup={requestGroup}
-            />
+              requestCreate={addRequestToRequestGroup}/>
           )}
           {expanded ? children : null}
         </ul>

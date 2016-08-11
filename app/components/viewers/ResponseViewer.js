@@ -43,7 +43,7 @@ class ResponseViewer extends Component {
             readOnly={true}
             lineWrapping={editorLineWrapping}
             fontSize={editorFontSize}
-            placeholder="nothing yet..."
+            placeholder="no response body..."
           />
         );
       default: // Raw

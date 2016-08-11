@@ -88,10 +88,10 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
   _didChange () {
     const isValid = this._envEditor.isValid();
-    this.setState({isValid});
+    this._saveChanges();
 
-    if (this.state.isValid === isValid) {
-      this._saveChanges();
+    if (this.state.isValid !== isValid) {
+      this.setState({isValid});
     }
   }
 
@@ -124,7 +124,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     return (
       <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>Manage Environments (JSON Format)</ModalHeader>
-        <ModalBody className="env-modal">
+        <ModalBody className="env-modal" noScroll={true}>
           <div className="env-modal__sidebar">
             <li onClick={() => this._handleActivateEnvironment(rootEnvironment)}
                 className={classnames(
@@ -175,14 +175,15 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 </button>
               ) : null}
             </div>
-            <EnvironmentEditor
-              className="env-modal__editor"
-              ref={n => this._envEditor = n}
-              key={activeEnvironment ? activeEnvironment._id : 'n/a'}
-              environment={activeEnvironment ? activeEnvironment.data : {}}
-              didChange={this._didChange.bind(this)}
-              lightTheme={true}
-            />
+            <div className="env-modal__editor">
+              <EnvironmentEditor
+                ref={n => this._envEditor = n}
+                key={activeEnvironment ? activeEnvironment._id : 'n/a'}
+                environment={activeEnvironment ? activeEnvironment.data : {}}
+                didChange={this._didChange.bind(this)}
+                lightTheme={true}
+              />
+            </div>
           </div>
         </ModalBody>
         <ModalFooter>
