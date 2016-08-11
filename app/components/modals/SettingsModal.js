@@ -123,7 +123,7 @@ class SettingsTabs extends Component {
           </div>
           <br/>
           <h2 className="txt-md pad-top-sm">
-            <label className="label--small">Network Proxy</label>
+            <label className="label--small">Network Proxy (Experimental)</label>
           </h2>
           <div>
             <label htmlFor="setting-http-proxy">
@@ -201,8 +201,6 @@ class SettingsTabs extends Component {
           </p>
         </TabPanel>
         <TabPanel className="pad">
-          <p>Use these shortcuts to improve your productivity.</p>
-          <br/>
           <KeyboardShortcutsTable />
         </TabPanel>
         <TabPanel className="pad">

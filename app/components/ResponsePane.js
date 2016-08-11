@@ -88,9 +88,15 @@ class ResponsePane extends Component {
                   </td>
                 </tr>
                 <tr>
-                  <td>Switch Requests</td>
+                  <td>Manage Cookies</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}P</code>
+                    <code>{MOD_SYM}K</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Edit Environments</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}E</code>
                   </td>
                 </tr>
                 </tbody>

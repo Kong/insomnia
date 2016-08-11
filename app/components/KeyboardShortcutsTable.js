@@ -3,36 +3,38 @@ import {MOD_SYM} from '../lib/constants';
 
 const KeyboardShortcutsTable = () => (
   <table className="wide">
-    <thead>
-    <tr>
-      <th>Keyboard Shortcut</th>
-      <th>Action</th>
-    </tr>
-    </thead>
     <tbody>
     <tr>
-      <td><code>{MOD_SYM}P</code></td>
-      <td>Switch Requests</td>
-    </tr>
-    <tr>
-      <td><code>{MOD_SYM}Enter</code></td>
       <td>Send Request</td>
+      <td><code>{MOD_SYM}Enter</code></td>
     </tr>
     <tr>
-      <td><code>{MOD_SYM}L</code></td>
+      <td>Switch Requests</td>
+      <td><code>{MOD_SYM}P</code></td>
+    </tr>
+    <tr>
       <td>Focus URL Bar</td>
+      <td><code>{MOD_SYM}L</code></td>
     </tr>
     <tr>
-      <td><code>{MOD_SYM}N</code></td>
       <td>New Request</td>
+      <td><code>{MOD_SYM}N</code></td>
     </tr>
     <tr>
-      <td><code>{MOD_SYM}D</code></td>
       <td>Duplicate Request</td>
+      <td><code>{MOD_SYM}D</code></td>
     </tr>
     <tr>
-      <td><code>{MOD_SYM},</code></td>
+      <td>Show Cookie Manager</td>
+      <td><code>{MOD_SYM}K</code></td>
+    </tr>
+    <tr>
+      <td>Show Environment Editor</td>
+      <td><code>{MOD_SYM}E</code></td>
+    </tr>
+    <tr>
       <td>Show Settings</td>
+      <td><code>{MOD_SYM},</code></td>
     </tr>
     </tbody>
   </table>
