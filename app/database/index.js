@@ -36,7 +36,6 @@ const MODEL_DEFAULTS = {
   }),
   [TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
-    environment: {},
     filter: '',
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     activeEnvironmentId: null,
@@ -44,7 +43,7 @@ const MODEL_DEFAULTS = {
   }),
   [TYPE_ENVIRONMENT]: () => ({
     name: 'My Environment',
-    data: {}
+    data: {},
   }),
   [TYPE_COOKIE_JAR]: () => ({
     name: 'Default Jar',
@@ -345,12 +344,6 @@ export function requestAll () {
   return all(TYPE_REQUEST);
 }
 
-/**
- * Return all ancestors for request from closest to furthest away
- *
- * @param request
- * @returns {Promise}
- */
 export function requestGetAncestors (request) {
   return new Promise(resolve => {
     let ancestors = [];
@@ -455,10 +448,6 @@ export function cookieJarUpdate (cookieJar, patch) {
   return docUpdate(cookieJar, patch);
 }
 
-export function cookieJarRemove (cookieJar) {
-  return remove(cookieJar);
-}
-
 
 // ~~~~~~~~~ //
 // WORKSPACE //
@@ -511,12 +500,23 @@ export function environmentUpdate (environment, patch) {
   return docUpdate(environment, patch);
 }
 
-export function environmentGetById (id) {
-  return get(TYPE_ENVIRONMENT, id);
+export function environmentFindByParentId (parentId) {
+  return find(TYPE_ENVIRONMENT, {parentId});
 }
 
-export function environimentFindByParentId (parentId) {
-  return find(TYPE_ENVIRONMENT, {parentId});
+export function environmentGetOrCreateForWorkspace (workspace) {
+  const parentId = workspace._id;
+  return find(TYPE_ENVIRONMENT, {parentId}).then(environments => {
+    if (environments.length === 0) {
+      return environmentCreate({parentId, name: 'Base Environment'})
+    } else {
+      return new Promise(resolve => resolve(environments[0]));
+    }
+  });
+}
+
+export function environmentGetById (id) {
+  return get(TYPE_ENVIRONMENT, id);
 }
 
 export function environmentRemove (environment) {

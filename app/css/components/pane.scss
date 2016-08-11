@@ -46,6 +46,10 @@
       width: auto;
       margin: $padding-lg auto;
       display: block;
+
+      & > * {
+        margin: $padding-xs;
+      }
     }
   }
 }

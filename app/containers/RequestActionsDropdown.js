@@ -27,7 +27,7 @@ class RequestActionsDropdown extends Component {
     return (
       <Dropdown {...other}>
         <button>
-          <i className="fa fa-gear"></i>
+          <i className="fa fa-caret-down"></i>
         </button>
         <ul>
           <li>

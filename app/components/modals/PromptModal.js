@@ -20,19 +20,22 @@ class PromptModal extends Component {
   _onSubmit (e) {
     e.preventDefault();
 
-    this._onSubmitCallback && this._onSubmitCallback(this.refs.input.value);
+    this._onSubmitCallback && this._onSubmitCallback(this._input.value);
     this.modal.hide();
   }
 
   _setDefaultValueFromState () {
     if (this.state.defaultValue) {
-      this.refs.input.value = this.state.defaultValue;
+      this._input.value = this.state.defaultValue;
     }
 
-    this.refs.input.focus();
-    if (this.state.selectText) {
-      this.refs.input.select();
-    }
+    // Need to do this after render because modal focuses itself too
+    setTimeout(() => {
+      this._input.focus();
+      if (this.state.selectText) {
+        this._input.select();
+      }
+    }, 100);
   }
 
   show ({headerName, defaultValue, submitName, selectText, hint}) {
@@ -65,7 +68,7 @@ class PromptModal extends Component {
         <ModalBody className="wide">
           <form onSubmit={e => this._onSubmit(e)} className="wide pad">
             <div className="form-control form-control--outlined form-control--wide">
-              <input ref="input" type="text"/>
+              <input ref={n => this._input = n} type="text"/>
             </div>
           </form>
         </ModalBody>

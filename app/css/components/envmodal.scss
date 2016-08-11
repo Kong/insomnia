@@ -11,8 +11,35 @@
     border-right: 1px solid $hl-md;
     padding: $padding-md 0;
     box-sizing: border-box;
-    overflow: auto;
+    overflow-y: auto;
     height: 100%;
+
+    .env-modal__sidebar-heading {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: $padding-sm $padding-sm 0;
+
+      & > * {
+        height: 100%;
+        padding: 0;
+      }
+
+      & > *:first-child {
+        width: 100%;
+        padding: $padding-sm 0 $padding-sm $padding-sm;
+      }
+
+      button {
+        color: $hl-xxl;
+        height: 100%;
+        padding: $padding-sm;
+
+        &:hover {
+          color: $font-light-bg;
+        }
+      }
+    }
 
     .env-modal__sidebar-root-item,
     .env-modal__sidebar-item {
@@ -22,40 +49,59 @@
       color: $hl-xxl;
 
       & > button {
-        padding: 0 $padding-md 0 $padding-lg;
+        padding: 0 $padding-md 0 $padding-md;
+        width: 100%;
+
+        &:first-child {
+          padding-right: 0;
+        }
 
         .editable {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
           display: block;
+          padding-right: $padding-xs;
+          box-sizing: border-box;
           width: 100%;
           line-height: $line-height-xs;
         }
       }
 
       &.env-modal__sidebar-item--active,
-      &.env-modal__sidebar-item--active > .env-modal__actions,
       & > button:focus {
         color: $font-light-bg;
         background-color: $hl-xs;
       }
 
-      &:hover > .env-modal__sidebar-actions,
       &:hover > button {
         background-color: $hl-xxs;
       }
     }
 
-    .env-modal__sidebar-root-item {
+    .env-modal__sidebar-item {
       & > button {
-        padding-left: $padding-md;
+        padding-left: $padding-lg;
       }
     }
+  }
 
-    .env-modal__sidebar-actions {
-      display: none;
+  .env-modal__main {
+    display: grid;
+    grid-template-rows: auto 1fr;
+
+    .env-modal__main__header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: $padding-sm $padding-md $padding-sm;
+      height: $line-height-sm;
     }
 
-    .env-modal__sidebar-item:hover > .env-modal__sidebar-actions {
-      display: block;
+    h1, h1 > * {
+      padding: 0;
+      font-size: $font-size-xl;
+      width: 100%;
     }
   }
 }

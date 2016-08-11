@@ -19,7 +19,9 @@ class CookiesModal extends Component {
 
   _saveChanges () {
     const {cookieJar} = this.state;
-    db.cookieJarUpdate(cookieJar).then(j => this.modal.hide());
+    db.cookieJarUpdate(cookieJar).then(() => {
+      this._load();
+    });
   }
 
   _handleCookieUpdate (oldCookie, cookie) {
@@ -33,14 +35,14 @@ class CookiesModal extends Component {
       ...cookies.slice(index + 1)
     ];
 
-    this.setState({cookieJar});
+    this._saveChanges(cookieJar);
   }
 
   _handleCookieAdd (cookie) {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
-    cookieJar.cookies = [...cookies, cookie];
-    this.setState({cookieJar});
+    cookieJar.cookies = [cookie, ...cookies];
+    this._saveChanges(cookieJar);
   }
 
   _handleCookieDelete (cookie) {
@@ -50,7 +52,7 @@ class CookiesModal extends Component {
     // NOTE: This is sketchy because it relies on the same reference
     cookieJar.cookies = cookies.filter(c => c !== cookie);
 
-    this.setState({cookieJar});
+    this._saveChanges(cookieJar);
   }
 
   _onFilterChange (filter) {
@@ -72,8 +74,6 @@ class CookiesModal extends Component {
     return cookies.filter(c => {
       const toSearch = JSON.stringify(c).toLowerCase();
       return toSearch.indexOf(filter.toLowerCase()) !== -1;
-    }).sort((a, b) => {
-      return a.creation > b.creation ? -1 : 1;
     });
   }
 
@@ -130,10 +130,7 @@ class CookiesModal extends Component {
         <ModalFooter>
           <div className="pull-right">
             <button className="btn" onClick={e => this.modal.hide()}>
-              Cancel
-            </button>
-            <button className="btn" onClick={e => this._saveChanges()}>
-              Save
+              Done
             </button>
           </div>
           <div className="pad faint italic txt-sm tall">

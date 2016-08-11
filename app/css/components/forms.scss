@@ -107,6 +107,10 @@ textarea, input, button {
   }
 }
 
+input.input--error {
+  border-color: $danger !important;
+}
+
 button {
   width: auto;
   padding: 0;

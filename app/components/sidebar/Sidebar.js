@@ -1,17 +1,15 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 
+import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
 import Dropdown from '../base/Dropdown';
 import DropdownDivider from '../base/DropdownDivider';
-import CookiesModal from '../modals/CookiesModal';
-import WorkspaceEnvironmentsEditModal from '../modals/WorkspaceEnvironmentsEditModal';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
 import {SIDEBAR_SKINNY_REMS} from '../../lib/constants';
 import {COLLAPSE_SIDEBAR_REMS} from '../../lib/constants';
-import {getModal} from '../modals/index';
 
 
 class Sidebar extends Component {
@@ -114,38 +112,12 @@ class Sidebar extends Component {
         'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
         'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
       })}>
-        <WorkspaceDropdown className="sidebar__header"/>
+        <WorkspaceDropdown
+          className="sidebar__header"
+        />
+
         <div className="sidebar__menu">
-          <Dropdown>
-            <button className="btn btn--super-compact no-wrap">
-              <div className="sidebar__menu__thing">
-                <span>{'No Environment'}</span>
-                &nbsp;
-                <i className="fa fa-caret-down"></i>
-              </div>
-            </button>
-            <ul>
-              <DropdownDivider name="Active Environment"/>
-              {['Production', 'Staging', 'Development'].map(n => (
-                <li key={n}>
-                  <button>
-                    <i className="fa fa-random"></i> Use <strong>{n}</strong>
-                  </button>
-                </li>
-              ))}
-              <li>
-                <button>
-                  <i className="fa fa-empty"></i> No Environment
-                </button>
-              </li>
-              <DropdownDivider name="General"/>
-              <li>
-                <button onClick={e => showEnvironmentsModal()}>
-                  <i className="fa fa-wrench"></i> Manage Environments
-                </button>
-              </li>
-            </ul>
-          </Dropdown>
+          <EnvironmentsDropdown />
           <button className="btn btn--super-compact" onClick={e => showCookiesModal()}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>

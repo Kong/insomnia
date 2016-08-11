@@ -22,6 +22,7 @@ class RequestPane extends Component {
       showPasswords,
       editorFontSize,
       editorLineWrapping,
+      requestCreate,
       sendRequest,
       updateRequestUrl,
       updateRequestMethod,
@@ -29,8 +30,7 @@ class RequestPane extends Component {
       updateRequestParameters,
       updateRequestAuthentication,
       updateRequestHeaders,
-      updateRequestContentType,
-      updateSettingsShowPasswords
+      updateRequestContentType
     } = this.props;
 
     if (!request) {
@@ -43,23 +43,35 @@ class RequestPane extends Component {
                 <tbody>
                 <tr>
                   <td>New Request</td>
-                  <td><code>{MOD_SYM}N</code></td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}N</code>
+                  </td>
                 </tr>
                 <tr>
                   <td>Open Settings</td>
-                  <td><code>{MOD_SYM},</code></td>
+                  <td className="text-right">
+                    <code>{MOD_SYM},</code>
+                  </td>
                 </tr>
                 <tr>
                   <td>Switch Requests</td>
-                  <td><code>{MOD_SYM}P</code></td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}P</code>
+                  </td>
                 </tr>
                 </tbody>
               </table>
 
-              <button className="btn btn--super-compact btn--outlined pane__body--placeholder__cta"
-                      onClick={e => importFile()}>
-                Import from File
-              </button>
+              <div className="text-center pane__body--placeholder__cta">
+                <button onClick={e => importFile()}
+                        className="btn inline-block btn--super-compact btn--outlined">
+                  Import from File
+                </button>
+                <button onClick={e => requestCreate()}
+                        className="btn inline-block btn--super-compact btn--outlined">
+                  Create Request
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -158,6 +170,7 @@ class RequestPane extends Component {
 RequestPane.propTypes = {
   // Functions
   sendRequest: PropTypes.func.isRequired,
+  requestCreate: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,

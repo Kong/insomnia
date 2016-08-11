@@ -103,6 +103,14 @@
       font-size: $font-size-xs;
       text-transform: uppercase;
     }
+
+    &.dropdown__divider--no-name {
+      margin: $padding-xs 0;
+
+      .dropdown__divider__label {
+        display: none;
+      }
+    }
   }
 
   &.dropdown--flip ul {

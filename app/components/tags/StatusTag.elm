@@ -15,7 +15,7 @@ type alias Model =
 model : Model
 model =
     { code = 0
-    , message = "UNKNOWN"
+    , message = ""
     , description = ""
     }
 
@@ -37,11 +37,11 @@ view model =
             else if (model.code // 100 == 5) then
                 ("bg-danger", toString model.code, model.message)
             else if (model.code // 100 == 0) then
-                ("bg-danger", "", model.message)
+                ("bg-danger", "", "ERROR")
             else if (model.code == -333) then
                 ("bg-danger", "", "PEBKAC\xa0\xa0٩◔̯◔۶")
             else
-                ("bg-danger", "", "UKNOWN")
+                ("bg-danger", "", "UNKNOWN")
     in
         div [ class <| "tag " ++ colorClass, title model.description ]
             [ strong [ ]

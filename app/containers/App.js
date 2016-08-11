@@ -519,6 +519,7 @@ class App extends Component {
           showPasswords={settings.showPasswords}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
+          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}
           updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(url)}
           updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}

@@ -54,7 +54,7 @@ class EnvironmentEditModal extends Component {
 
     return (
       <Modal ref={m => this.modal = m} top={true} {...this.props}>
-        <ModalHeader>Environment Variables (JSON Format)</ModalHeader>
+        <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody>
           <div className="pad-bottom">
             <EnvironmentEditor
@@ -74,10 +74,7 @@ class EnvironmentEditModal extends Component {
             </button>
           </div>
           <div className="pad faint italic txt-sm tall">
-            * this data can be used for&nbsp;
-            <Link href="https://mozilla.github.io/nunjucks/templating.html">
-              Nunjucks Templating
-            </Link> in your requests
+            * this can be used to override data in the global environment
           </div>
         </ModalFooter>
       </Modal>

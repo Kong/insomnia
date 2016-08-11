@@ -71,7 +71,21 @@ function actuallySend (request, settings, cookieJar) {
           elapsedTime: Date.now() - startTime,
           error: err.toString()
         });
-        console.warn(`Request to ${config.url} failed`, err);
+        return reject(err);
+      }
+
+      // TODO: Add image support to Insomnia
+      const contentType = networkResponse.headers['content-type'];
+      if (contentType && contentType.toLowerCase().indexOf('image/') === 0) {
+        const err = new Error(`Content-Type ${contentType} not supported`);
+
+        db.responseCreate({
+          parentId: request._id,
+          elapsedTime: Date.now() - startTime,
+          error: err.toString(),
+          statusMessage: 'UNSUPPORTED'
+        });
+
         return reject(err);
       }
 
