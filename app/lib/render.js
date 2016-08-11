@@ -31,12 +31,13 @@ export function getRenderedRequest (request) {
       );
 
       for (let doc of ancestors) {
-        // TODO: Add support for Workspace environments
+        if (doc.type === TYPE_WORKSPACE) {
+          continue;
+        }
+
         const environment = doc.environment || {};
         Object.assign(renderContext, environment);
       }
-
-      console.log('CONTENT', renderContext);
 
       let template;
 
