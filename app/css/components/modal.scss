@@ -10,8 +10,6 @@
   right: 0;
   bottom: 0;
   padding: $padding-lg;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
 
   &:focus {
     outline: 0;
@@ -22,7 +20,7 @@
   }
 
   &.modal--open {
-    display: grid;
+    display: block;
   }
 
   .modal__backdrop {

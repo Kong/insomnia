@@ -202,7 +202,6 @@ class Editor extends Component {
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
-            style={{position: 'absolute', top: 0, zIndex: 1000}}
             ref={n => this._textarea = n}
             defaultValue={value}
             readOnly={readOnly}

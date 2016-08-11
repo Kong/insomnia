@@ -1,6 +1,5 @@
 import React, {PropTypes, Component} from 'react';
 
-import Link from '../base/Link';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -53,7 +52,7 @@ class EnvironmentEditModal extends Component {
     const {requestGroup, isValid} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} top={true} {...this.props}>
+      <Modal ref={m => this.modal = m} tall={true} top={true} {...this.props}>
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll={true}>
           <EnvironmentEditor
@@ -66,7 +65,9 @@ class EnvironmentEditModal extends Component {
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={e => this.modal.hide()}>Done</button>
+            <button className="btn" disabled={!isValid} onClick={e => this.modal.hide()}>
+              Done
+            </button>
           </div>
           <div className="pad faint italic txt-sm tall">
             * this can be used to override data in the global environment

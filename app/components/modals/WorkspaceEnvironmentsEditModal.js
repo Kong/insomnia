@@ -88,11 +88,12 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
   _didChange () {
     const isValid = this._envEditor.isValid();
-    this._saveChanges();
 
-    if (this.state.isValid !== isValid) {
+    if (this.state.isValid === isValid) {
       this.setState({isValid});
     }
+
+    this._saveChanges();
   }
 
   _getActiveEnvironment () {
@@ -124,7 +125,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     return (
       <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>Manage Environments (JSON Format)</ModalHeader>
-        <ModalBody className="env-modal" noScroll={true}>
+        <ModalBody noScroll={true} className="env-modal">
           <div className="env-modal__sidebar">
             <li onClick={() => this._handleActivateEnvironment(rootEnvironment)}
                 className={classnames(

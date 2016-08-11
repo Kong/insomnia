@@ -496,7 +496,7 @@ class App extends Component {
           moveRequest={this._moveRequest.bind(this)}
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
-          addRequestToWorkspace={() => this._requestCreate(workspace._id)}
+          addRequestToWorkspace={() => this._requestCreate(requestGroup._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
           requestCreate={() => this._requestCreate(workspace._id)}
