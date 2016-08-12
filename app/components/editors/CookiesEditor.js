@@ -72,7 +72,7 @@ class CookiesEditor extends Component {
           </tbody>
         </table>
         {cookies.length === 0 ? (
-          <div className="pad super-faint italic text-center">
+          <div className="pad faint italic text-center">
             <p>
               I couldn't find any cookies for you.
             </p>

@@ -159,6 +159,10 @@ i.fa {
   white-space: normal;
 }
 
+.border-top {
+  border-top: 1px solid $hl-md;
+}
+
 .pad {
   box-sizing: border-box;
   padding: $padding-md;

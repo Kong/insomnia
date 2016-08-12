@@ -116,15 +116,17 @@ class CookiesModal extends Component {
               defaultValue=""
             />
           </div>
-          <div className="cookie-editor__editor">
-            <CookiesEditor
-              cookies={filteredCookies}
-              onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
-              onCookieAdd={cookie => this._handleCookieAdd(cookie)}
-              onCookieDelete={cookie => this._handleCookieDelete(cookie)}
-              // Set the domain to the filter so that it shows up if we're filtering
-              newCookieDomainName={filter || 'domain.com'}
-            />
+          <div className="cookie-editor__editor border-top">
+            <div className="pad-top">
+              <CookiesEditor
+                cookies={filteredCookies}
+                onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
+                onCookieAdd={cookie => this._handleCookieAdd(cookie)}
+                onCookieDelete={cookie => this._handleCookieDelete(cookie)}
+                // Set the domain to the filter so that it shows up if we're filtering
+                newCookieDomainName={filter || 'domain.com'}
+              />
+            </div>
           </div>
         </ModalBody>
         <ModalFooter>

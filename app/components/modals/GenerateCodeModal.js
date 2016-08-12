@@ -68,7 +68,7 @@ class GenerateCodeModal extends Component {
     const targets = availableTargets();
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} tall={true} {...this.props}>
         <ModalHeader>Generate Client Code</ModalHeader>
         <ModalBody noScroll={true} style={{
           display: 'grid',
@@ -76,7 +76,7 @@ class GenerateCodeModal extends Component {
           gridTemplateRows: 'auto 1fr'
         }}>
           <div className="pad">
-            <Dropdown>
+            <Dropdown outline={true}>
               <button className="btn btn--super-compact btn--outlined">
                 {target.title}
                 <i className="fa fa-caret-down"></i>
@@ -85,14 +85,14 @@ class GenerateCodeModal extends Component {
                 {targets.map(target => (
                   <li key={target.key}>
                     <button onClick={() => this._handleTargetChange(target)}>
-                      <i className="fa fa-code"></i> {target.title}
+                      {target.title}
                     </button>
                   </li>
                 ))}
               </ul>
             </Dropdown>
             &nbsp;&nbsp;
-            <Dropdown>
+            <Dropdown outline={true}>
               <button className="btn btn--super-compact btn--outlined">
                 {client.title}
                 <i className="fa fa-caret-down"></i>
@@ -101,7 +101,7 @@ class GenerateCodeModal extends Component {
                 {target.clients.map(client => (
                   <li key={client.key}>
                     <button onClick={() => this._handleClientChange(client)}>
-                      <i className="fa fa-random"></i> {client.title}
+                      {client.title}
                     </button>
                   </li>
                 ))}
@@ -111,10 +111,12 @@ class GenerateCodeModal extends Component {
             <CopyButton content={cmd} className="pull-right btn btn--super-compact btn--outlined"/>
           </div>
           <Editor
+            className="border-top"
             key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}
             ref={n => this._editor = n}
             lightTheme={true}
+            lineWrapping={true}
             value={cmd}
           />
         </ModalBody>
