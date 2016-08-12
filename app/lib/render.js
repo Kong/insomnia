@@ -22,8 +22,9 @@ export function getRenderedRequest (request) {
 
     return Promise.all([
       db.environmentGetOrCreateForWorkspace(workspace),
-      db.environmentGetById(workspace.activeEnvironmentId)
-    ]).then(([rootEnvironment, subEnvironment]) => {
+      db.environmentGetById(workspace.activeEnvironmentId),
+      db.cookieJarGetOrCreateForWorkspace(workspace)
+    ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
       const renderContext = Object.assign(
         {},
         rootEnvironment.data,
@@ -68,6 +69,9 @@ export function getRenderedRequest (request) {
       if (renderedRequest.url.indexOf('://') === -1) {
         renderedRequest.url = `http://${renderedRequest.url}`;
       }
+
+      // Add the yummy cookies
+      renderedRequest.cookieJar = cookieJar;
 
       return new Promise(resolve => resolve(renderedRequest));
     });

@@ -76,6 +76,7 @@
     background-color: $bg-super-light;
     min-height: 2rem;
     box-sizing: border-box;
+    max-width: 100%;
 
     &.modal__body--no-scroll {
       overflow: visible;

@@ -55,8 +55,9 @@ function buildRequestConfig (request, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (renderedRequest, settings, cookieJar) {
+function actuallySend (renderedRequest, settings) {
   return new Promise((resolve, reject) => {
+    const cookieJar = renderedRequest.cookieJar;
     const jar = jarFromCookies(cookieJar.cookies);
 
     // Detect and set the proxy based on the request protocol
@@ -140,11 +141,10 @@ export function send (requestId) {
       setTimeout(() => {
         Promise.all([
           db.requestGetById(requestId),
-          db.settingsGet(),
-          db.cookieJarAll()
-        ]).then(([request, settings, cookieJars]) => {
-          return getRenderedRequest(request).then(renderedRequest => {
-            actuallySend(renderedRequest, settings, cookieJars[0]).then(resolve, reject);
+          db.settingsGet()
+        ]).then(([request, settings]) => {
+          getRenderedRequest(request).then(renderedRequest => {
+            actuallySend(renderedRequest, settings).then(resolve, reject);
           }, err => {
             db.responseCreate({
               parentId: request._id,

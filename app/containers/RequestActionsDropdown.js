@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux'
 import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
-import CurlExportModal from '../components/modals/CurlExportModal';
+import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as db from '../database';
 import {getModal} from '../components/modals/index';
@@ -42,8 +42,8 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => getModal(CurlExportModal).show(request)}>
-              <i className="fa fa-share-square-o"></i> Export as Curl
+            <button onClick={e => getModal(GenerateCodeModal).show(request)}>
+              <i className="fa fa-code"></i> Generate Code
             </button>
           </li>
           <li>

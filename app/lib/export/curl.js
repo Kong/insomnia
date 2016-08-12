@@ -146,63 +146,6 @@ function getBasicAuth (flags) {
   return auth;
 }
 
-export function exportCurl (requestId) {
-  return new Promise((resolve, reject) => {
-
-    // First, lets wait for all debounces to finish
-    setTimeout(() => {
-      db.requestGetById(requestId).then(r => {
-        getRenderedRequest(r).then(renderedRequest => {
-
-          // Build the querystring
-          const {parameters} = renderedRequest;
-          const qs = querystring.buildFromParams(parameters);
-
-          // Build the Url
-          const url = querystring.joinURL(renderedRequest.url, qs);
-          const IS_GET_REQUEST = renderedRequest.method.toUpperCase() === METHOD_GET.toUpperCase();
-
-          let cmd = 'curl';
-
-          // HTTP method
-          if (!IS_GET_REQUEST) {
-            cmd += ` -X ${renderedRequest.method.toUpperCase()}`;
-          }
-
-          // Url
-          cmd += ` '${url.replace(`'`, `'"'"'`)}'`;
-
-          // Payload
-          if (renderedRequest.body) {
-            cmd += ` \\\n -d '${renderedRequest.body.replace(`'`, `'"'"'`)}'`;
-          }
-
-          // Basic auth
-          const {username, password} = renderedRequest.authentication;
-          if (username || password) {
-            cmd += ` \\\n -u ${username}:${password}`;
-          }
-
-          // Headers
-          const hasContentTypeHeader = !!renderedRequest.headers.find(h => h.name.toUpperCase() === 'CONTENT-TYPE');
-
-          for (let i = 0; i < renderedRequest.headers.length; i++) {
-            const {name, value} = renderedRequest.headers[i];
-
-            if (!name) {
-              // Don't add headers with no name
-              continue;
-            }
-
-            cmd += ` \\\n -H '${name}: ${value}'`;
-          }
-
-          resolve(cmd);
-        });
-      });
-    }, DEBOUNCE_MILLIS);
-  });
-}
 
 export function importCurl (blob) {
   if (!blob || blob.toLowerCase().indexOf('curl ') !== 0) {

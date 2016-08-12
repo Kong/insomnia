@@ -9,6 +9,14 @@ import {DEBOUNCE_MILLIS} from '../../lib/constants';
 import 'codemirror/mode/css/css'
 import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/javascript/javascript'
+import 'codemirror/mode/go/go'
+import 'codemirror/mode/shell/shell'
+import 'codemirror/mode/clike/clike'
+import 'codemirror/mode/mllike/mllike'
+import 'codemirror/mode/php/php'
+import 'codemirror/mode/python/python'
+import 'codemirror/mode/ruby/ruby'
+import 'codemirror/mode/swift/swift'
 
 // CSS
 import 'codemirror/lib/codemirror.css'
@@ -111,6 +119,15 @@ class Editor extends Component {
     }
   }
 
+  selectAll () {
+    if (this.codeMirror) {
+      this.codeMirror.setSelection(
+        {line: 0, ch: 0},
+        {line: this.codeMirror.lineCount(), ch: 0}
+      );
+    }
+  }
+
   getValue () {
     return this.codeMirror.getValue();
   }
@@ -131,8 +148,8 @@ class Editor extends Component {
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
 
     if (options.mode.indexOf('application/json') !== -1) {
-      // ld+json looks better because keys are a different color
-      options.mode = 'application/ld+json';
+      // set LD JSON because it highlights the keys a different color
+      options.mode = {name: 'javascript', jsonld: true}
     }
 
     Object.keys(options).map(key => {

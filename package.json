@@ -45,6 +45,7 @@
     "codemirror": "~5.16.0",
     "electron-prebuilt": "~1.2.8",
     "electron-squirrel-startup": "^1.0.0",
+    "httpsnippet": "^1.16.5",
     "json-lint": "^0.1.0",
     "jsonschema": "^1.1.0",
     "mousetrap": "^1.6.0",

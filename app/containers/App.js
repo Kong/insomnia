@@ -13,7 +13,7 @@ import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnviro
 import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
-import CurlExportModal from '../components/modals/CurlExportModal';
+import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
@@ -552,7 +552,7 @@ class App extends Component {
         <AlertModal ref={m => addModal(m)}/>
         <ChangelogModal ref={m => addModal(m)}/>
         <SettingsModal ref={m => addModal(m)}/>
-        <CurlExportModal ref={m => addModal(m)}/>
+        <GenerateCodeModal ref={m => addModal(m)}/>
         <RequestSwitcherModal
           ref={m => addModal(m)}
           workspaceId={workspace._id}

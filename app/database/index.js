@@ -44,7 +44,7 @@ const MODEL_DEFAULTS = {
     metaActiveRequestId: null
   }),
   [TYPE_ENVIRONMENT]: () => ({
-    name: 'My Environment',
+    name: 'Base Environment',
     data: {},
   }),
   [TYPE_COOKIE_JAR]: () => ({
@@ -428,22 +428,23 @@ export function responseAll () {
 // COOKIES //
 // ~~~~~~~ //
 
-export function cookieJarGetById (id) {
-  return get(TYPE_COOKIE_JAR);
-}
-
 export function cookieJarCreate (patch = {}) {
   return docCreate(TYPE_COOKIE_JAR, 'jar', patch);
 }
 
-export function cookieJarAll () {
-  return all(TYPE_COOKIE_JAR).then(cookieJars => {
+export function cookieJarGetOrCreateForWorkspace (workspace) {
+  const parentId = workspace._id;
+  return find(TYPE_COOKIE_JAR, {parentId}).then(cookieJars => {
     if (cookieJars.length === 0) {
-      return cookieJarCreate().then(cookieJarAll);
+      return cookieJarCreate({parentId})
     } else {
-      return new Promise(resolve => resolve(cookieJars))
+      return new Promise(resolve => resolve(cookieJars[0]));
     }
   });
+}
+
+export function cookieJarAll () {
+  return all(TYPE_COOKIE_JAR);
 }
 
 export function cookieJarUpdate (cookieJar, patch) {
@@ -510,7 +511,7 @@ export function environmentGetOrCreateForWorkspace (workspace) {
   const parentId = workspace._id;
   return find(TYPE_ENVIRONMENT, {parentId}).then(environments => {
     if (environments.length === 0) {
-      return environmentCreate({parentId, name: 'Base Environment'})
+      return environmentCreate({parentId})
     } else {
       return new Promise(resolve => resolve(environments[0]));
     }
