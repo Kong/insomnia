@@ -13,7 +13,7 @@ export function exportHar (requestId) {
             httpVersion: 'HTTP/1.1',
             cookies: renderedRequest.cookieJar.cookies.map(c => Object.assign(c, {
               name: c.key,
-              expires: c.expires.toISOString ? c.expires.toISOString() : undefined
+              expires: c.expires && c.expires.toISOString ? c.expires.toISOString() : undefined
             })),
             headers: renderedRequest.headers,
             postData: {
