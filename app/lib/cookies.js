@@ -1,6 +1,11 @@
 import {CookieJar} from 'tough-cookie';
 import request from 'request';
 
+/**
+ * Get a list of cookie objects from a request.jar()
+ *
+ * @param cookies
+ */
 export function cookiesFromJar (jar) {
   return new Promise(resolve => {
     jar._jar.store.getAllCookies((err, cookies) => {
@@ -14,6 +19,11 @@ export function cookiesFromJar (jar) {
   });
 }
 
+/**
+ * Get a request.jar() from a list of cookie objects
+ *
+ * @param cookies
+ */
 export function jarFromCookies (cookies) {
   const jar = request.jar();
 
