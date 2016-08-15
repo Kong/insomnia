@@ -32,7 +32,6 @@ import {
 
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
-import * as WorkspaceActions from '../redux/modules/workspaces';
 
 import * as db from '../database';
 import {importCurl} from '../lib/export/curl';
@@ -338,7 +337,6 @@ class App extends Component {
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
-      actions.workspaces.activate(workspace);
     }
 
     return workspace;
@@ -571,9 +569,6 @@ App.propTypes = {
     }),
     modals: PropTypes.shape({
       hide: PropTypes.func.isRequired
-    }),
-    workspaces: PropTypes.shape({
-      activate: PropTypes.func.isRequired,
     })
   }).isRequired,
   entities: PropTypes.shape({
@@ -604,7 +599,6 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
-      workspaces: bindActionCreators(WorkspaceActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)
     }
   }
