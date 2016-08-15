@@ -9,6 +9,14 @@ import {DEBOUNCE_MILLIS} from '../../lib/constants';
 import 'codemirror/mode/css/css'
 import 'codemirror/mode/htmlmixed/htmlmixed'
 import 'codemirror/mode/javascript/javascript'
+import 'codemirror/mode/go/go'
+import 'codemirror/mode/shell/shell'
+import 'codemirror/mode/clike/clike'
+import 'codemirror/mode/mllike/mllike'
+import 'codemirror/mode/php/php'
+import 'codemirror/mode/python/python'
+import 'codemirror/mode/ruby/ruby'
+import 'codemirror/mode/swift/swift'
 
 // CSS
 import 'codemirror/lib/codemirror.css'
@@ -50,7 +58,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  autoRefresh: {delay: 5000}, // Necessary to show up in the env modal first launch
+  autoRefresh: {delay: 250}, // Necessary to show up in the env modal first launch
   lineWrapping: true,
   lint: true,
   tabSize: 4,
@@ -79,9 +87,7 @@ class Editor extends Component {
   componentDidMount () {
     const {value} = this.props;
 
-    var textareaNode = this.refs.textarea;
-
-    this.codeMirror = CodeMirror.fromTextArea(textareaNode, BASE_CODEMIRROR_OPTIONS);
+    this.codeMirror = CodeMirror.fromTextArea(this._textarea, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
     this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
     if (!this.codeMirror.getOption('indentWithTabs')) {
@@ -113,6 +119,19 @@ class Editor extends Component {
     }
   }
 
+  selectAll () {
+    if (this.codeMirror) {
+      this.codeMirror.setSelection(
+        {line: 0, ch: 0},
+        {line: this.codeMirror.lineCount(), ch: 0}
+      );
+    }
+  }
+
+  getValue () {
+    return this.codeMirror.getValue();
+  }
+
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
@@ -129,8 +148,8 @@ class Editor extends Component {
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
 
     if (options.mode.indexOf('application/json') !== -1) {
-      // ld+json looks better because keys are a different color
-      options.mode = 'application/ld+json';
+      // set LD JSON because it highlights the keys a different color
+      options.mode = {name: 'javascript', jsonld: true}
     }
 
     Object.keys(options).map(key => {
@@ -200,7 +219,7 @@ class Editor extends Component {
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
-            ref='textarea'
+            ref={n => this._textarea = n}
             defaultValue={value}
             readOnly={readOnly}
             autoComplete='off'>

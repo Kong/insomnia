@@ -3,11 +3,11 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
 import KeyValueEditor from './base/KeyValueEditor';
 
-import ContentTypeDropdown from './ContentTypeDropdown';
+import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
-import RequestBodyEditor from './RequestBodyEditor';
-import RequestAuthEditor from './RequestAuthEditor';
-import RequestUrlBar from '../components/RequestUrlBar';
+import BodyEditor from './editors/BodyEditor';
+import AuthEditor from './editors/AuthEditor';
+import RequestUrlBar from './RequestUrlBar';
 
 import {getContentTypeName} from '../lib/contentTypes';
 import {getContentTypeFromHeaders} from '../lib/contentTypes';
@@ -22,6 +22,7 @@ class RequestPane extends Component {
       showPasswords,
       editorFontSize,
       editorLineWrapping,
+      requestCreate,
       sendRequest,
       updateRequestUrl,
       updateRequestMethod,
@@ -29,8 +30,7 @@ class RequestPane extends Component {
       updateRequestParameters,
       updateRequestAuthentication,
       updateRequestHeaders,
-      updateRequestContentType,
-      updateSettingsShowPasswords
+      updateRequestContentType
     } = this.props;
 
     if (!request) {
@@ -43,23 +43,41 @@ class RequestPane extends Component {
                 <tbody>
                 <tr>
                   <td>New Request</td>
-                  <td><code>{MOD_SYM}N</code></td>
-                </tr>
-                <tr>
-                  <td>Open Settings</td>
-                  <td><code>{MOD_SYM},</code></td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}N</code>
+                  </td>
                 </tr>
                 <tr>
                   <td>Switch Requests</td>
-                  <td><code>{MOD_SYM}P</code></td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}P</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Manage Cookies</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}K</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Edit Environments</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}E</code>
+                  </td>
                 </tr>
                 </tbody>
               </table>
 
-              <button className="btn btn--super-compact btn--outlined pane__body--placeholder__cta"
-                      onClick={e => importFile()}>
-                Import from File
-              </button>
+              <div className="text-center pane__body--placeholder__cta">
+                <button onClick={e => importFile()}
+                        className="btn inline-block btn--super-compact btn--outlined">
+                  Import from File
+                </button>
+                <button onClick={e => requestCreate()}
+                        className="btn inline-block btn--super-compact btn--outlined">
+                  Create Request
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -105,7 +123,7 @@ class RequestPane extends Component {
             </Tab>
           </TabList>
           <TabPanel className="editor-wrapper">
-            <RequestBodyEditor
+            <BodyEditor
               key={request._id}
               request={request}
               onChange={updateRequestBody}
@@ -114,23 +132,17 @@ class RequestPane extends Component {
             />
           </TabPanel>
           <TabPanel>
-            <RequestAuthEditor
+            <AuthEditor
               key={request._id}
               showPasswords={showPasswords}
               request={request}
               onChange={updateRequestAuthentication}
             />
-            <div className="pad pull-right txt-sm">
-              <button className="btn btn--super-compact btn--outlined faint"
-                      onClick={e => updateSettingsShowPasswords(!showPasswords)}>
-                {showPasswords ? 'Hide Password' : 'Show Password'}
-              </button>
-            </div>
           </TabPanel>
           <TabPanel className="scrollable">
             <div className="pad no-pad-bottom">
               <label className="label--small">Url Preview</label>
-              <code className="txt-sm block selectable">
+              <code className="txt-sm block">
                 <RenderedQueryString
                   key={request._id}
                   request={request}
@@ -164,6 +176,7 @@ class RequestPane extends Component {
 RequestPane.propTypes = {
   // Functions
   sendRequest: PropTypes.func.isRequired,
+  requestCreate: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,

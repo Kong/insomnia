@@ -14,3 +14,7 @@
   background: $hl-md;
   border-radius: $padding-sm;
 }
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

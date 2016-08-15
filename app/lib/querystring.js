@@ -1,3 +1,4 @@
+
 export function getJoiner (url) {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';

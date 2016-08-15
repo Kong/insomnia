@@ -7,10 +7,13 @@ import {generateId} from './util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
 import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
+import {isDevelopment} from '../lib/appInfo';
 
 export const TYPE_STATS = 'Stats';
 export const TYPE_SETTINGS = 'Settings';
 export const TYPE_WORKSPACE = 'Workspace';
+export const TYPE_ENVIRONMENT = 'Environment';
+export const TYPE_COOKIE_JAR = 'CookieJar';
 export const TYPE_REQUEST_GROUP = 'RequestGroup';
 export const TYPE_REQUEST = 'Request';
 export const TYPE_RESPONSE = 'Response';
@@ -28,15 +31,25 @@ const MODEL_DEFAULTS = {
     followRedirects: false,
     editorFontSize: 11,
     editorLineWrapping: true,
+    httpProxy: '',
+    httpsProxy: '',
     timeout: 0,
     validateSSL: true
   }),
   [TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
-    environments: [],
     filter: '',
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    activeEnvironmentId: null,
     metaActiveRequestId: null
+  }),
+  [TYPE_ENVIRONMENT]: () => ({
+    name: 'Base Environment',
+    data: {},
+  }),
+  [TYPE_COOKIE_JAR]: () => ({
+    name: 'Default Jar',
+    cookies: []
   }),
   [TYPE_REQUEST_GROUP]: () => ({
     name: 'New Folder',
@@ -66,10 +79,13 @@ const MODEL_DEFAULTS = {
     bytesRead: 0,
     elapsedTime: 0,
     headers: [],
+    cookies: [],
     body: '',
     error: ''
   }),
 };
+
+export const ALL_TYPES = Object.keys(MODEL_DEFAULTS);
 
 let db = null;
 
@@ -91,7 +107,11 @@ export function initDB () {
   }
 
   return new Promise(resolve => {
-    global.db = db = {};
+    db = {};
+
+    if (isDevelopment()) {
+      global.db = db;
+    }
 
     // Fill in the defaults
 
@@ -199,7 +219,7 @@ function update (doc) {
         return reject(err);
       }
 
-      resolve();
+      resolve(doc);
       Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
     });
   });
@@ -328,7 +348,7 @@ export function requestAll () {
 
 export function requestGetAncestors (request) {
   return new Promise(resolve => {
-    const ancestors = [];
+    let ancestors = [];
 
     const next = (doc) => {
       Promise.all([
@@ -336,10 +356,10 @@ export function requestGetAncestors (request) {
         workspaceGetById(doc.parentId)
       ]).then(([requestGroup, workspace]) => {
         if (requestGroup) {
-          ancestors.push(requestGroup);
+          ancestors = [requestGroup, ...ancestors];
           next(requestGroup);
         } else if (workspace) {
-          ancestors.push(workspace);
+          ancestors = [workspace, ...ancestors];
           next(workspace);
           // We could be done here, but let's have there only be one finish case
         } else {
@@ -386,6 +406,7 @@ export function requestGroupAll () {
   return all(TYPE_REQUEST_GROUP);
 }
 
+
 // ~~~~~~~~ //
 // RESPONSE //
 // ~~~~~~~~ //
@@ -400,6 +421,34 @@ export function responseCreate (patch = {}) {
 
 export function responseAll () {
   return all(TYPE_RESPONSE);
+}
+
+
+// ~~~~~~~ //
+// COOKIES //
+// ~~~~~~~ //
+
+export function cookieJarCreate (patch = {}) {
+  return docCreate(TYPE_COOKIE_JAR, 'jar', patch);
+}
+
+export function cookieJarGetOrCreateForWorkspace (workspace) {
+  const parentId = workspace._id;
+  return find(TYPE_COOKIE_JAR, {parentId}).then(cookieJars => {
+    if (cookieJars.length === 0) {
+      return cookieJarCreate({parentId})
+    } else {
+      return new Promise(resolve => resolve(cookieJars[0]));
+    }
+  });
+}
+
+export function cookieJarAll () {
+  return all(TYPE_COOKIE_JAR);
+}
+
+export function cookieJarUpdate (cookieJar, patch) {
+  return docUpdate(cookieJar, patch);
 }
 
 
@@ -438,9 +487,53 @@ export function workspaceRemove (workspace) {
 }
 
 
-// ~~~~~~~~~ //
-// WORKSPACE //
-// ~~~~~~~~~ //
+// ~~~~~~~~~~~ //
+// ENVIRONMENT //
+// ~~~~~~~~~~~ //
+
+export function environmentCreate (patch = {}) {
+  if (!patch.parentId) {
+    throw new Error('New Environment missing `parentId`', patch);
+  }
+
+  return docCreate(TYPE_ENVIRONMENT, 'env', patch);
+}
+
+export function environmentUpdate (environment, patch) {
+  return docUpdate(environment, patch);
+}
+
+export function environmentFindByParentId (parentId) {
+  return find(TYPE_ENVIRONMENT, {parentId});
+}
+
+export function environmentGetOrCreateForWorkspace (workspace) {
+  const parentId = workspace._id;
+  return find(TYPE_ENVIRONMENT, {parentId}).then(environments => {
+    if (environments.length === 0) {
+      return environmentCreate({parentId})
+    } else {
+      return new Promise(resolve => resolve(environments[0]));
+    }
+  });
+}
+
+export function environmentGetById (id) {
+  return get(TYPE_ENVIRONMENT, id);
+}
+
+export function environmentRemove (environment) {
+  return remove(environment);
+}
+
+export function environmentAll () {
+  return all(TYPE_ENVIRONMENT);
+}
+
+
+// ~~~~~~~~ //
+// SETTINGS //
+// ~~~~~~~~ //
 
 export function settingsCreate (patch = {}) {
   return docCreate(TYPE_SETTINGS, 'set', patch);

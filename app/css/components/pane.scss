@@ -5,7 +5,7 @@
   height: 100%;
   width: 100%;
   display: grid;
-  grid-template-rows: $line-height-md 1fr;
+  grid-template-rows: $height-nav 1fr;
   grid-template-columns: 1fr;
 
   .pane__header {
@@ -46,6 +46,10 @@
       width: auto;
       margin: $padding-lg auto;
       display: block;
+
+      & > * {
+        margin: $padding-xs;
+      }
     }
   }
 }

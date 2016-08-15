@@ -1,0 +1,32 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.cookie-editor.modal__body {
+  overflow: visible;
+  display: grid;
+  grid-template-rows: auto 1fr;
+
+  table {
+    input:not([type="checkbox"]) {
+      padding: $padding-xs $padding-xxs;
+      width: 100%;
+    }
+
+    .btn {
+      margin: 0;
+      padding: 0 $padding-sm;
+      height: $line-height-xs;
+    }
+  }
+
+  .cookie-editor__filter {
+    margin: $padding-md $padding-md $padding-sm;
+    padding-bottom: $padding-md;
+  }
+
+  .cookie-editor__editor {
+    padding: 0 $padding-md $padding-md $padding-md;
+    overflow-y: auto;
+    position: relative;
+  }
+}

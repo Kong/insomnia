@@ -1,15 +1,14 @@
-import React from 'react';
+import React, {Component} from 'react';
 import request from 'request';
 
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import ModalComponent from '../lib/ModalComponent';
 import {CHANGELOG_URL} from '../../lib/constants';
 import {getAppVersion} from '../../lib/appInfo';
 
-class ChangelogModal extends ModalComponent {
+class ChangelogModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
@@ -19,7 +18,7 @@ class ChangelogModal extends ModalComponent {
   }
 
   show (startVersion = null) {
-    super.show();
+    this.modal.show();
 
     if (startVersion) {
       this.setState({startVersion});
@@ -27,11 +26,9 @@ class ChangelogModal extends ModalComponent {
   }
 
   componentDidMount () {
-    super.componentDidMount();
-
     request.get(CHANGELOG_URL, (err, response) => {
       if (err) {
-        console.error('Failed to load changelog', err);
+        console.warn('Failed to load changelog', err);
         return;
       }
 
@@ -68,7 +65,7 @@ class ChangelogModal extends ModalComponent {
       let startIndex = changelog.findIndex(c => c.version === startVersion);
       if (startIndex < 0) {
         startIndex = 0;
-        console.error(`Failed to find changelog version for ${startVersion}`)
+        console.warn(`Failed to find changelog version for ${startVersion}`)
       }
 
       changelog.slice(startIndex).map((change, i) => {
@@ -80,13 +77,15 @@ class ChangelogModal extends ModalComponent {
           if (!Array.isArray(change.summary)) {
             html = [
               ...html,
-              <p key={`summary.${i}`}>{change.summary}</p>
+              <p key={`summary.${i}`} dangerouslySetInnerHTML={{__html: change.summary}}/>
             ]
           } else {
             html = [
               ...html,
-              <p key={`summary.${i}`}><strong>{change.summary[0]}</strong></p>,
-              ...change.summary.slice(1).map((text, j) => <p key={`summary.${i}[${j}]`}>{text}</p>)
+              <p key={`summary.${i}`}><strong dangerouslySetInnerHTML={{__html: change.summary[0]}}/></p>,
+              ...change.summary.slice(1).map(
+                (text, j) => <p key={`summary.${i}[${j}]`} dangerouslySetInnerHTML={{__html: text}}/>
+              )
             ]
           }
         }
@@ -129,14 +128,14 @@ class ChangelogModal extends ModalComponent {
     }
 
     return (
-      <Modal ref="modal" {...this.props}>
+      <Modal ref={m => this.modal = m} {...this.props}>
         <ModalHeader>Insomnia Changelog</ModalHeader>
         <ModalBody className="pad changelog">
           {html}
         </ModalBody>
         <ModalFooter className="text-right">
           <div className="pull-right">
-            <button className="btn" onClick={e => this.hide()}>
+            <button className="btn" onClick={e => this.modal.hide()}>
               Close
             </button>
           </div>

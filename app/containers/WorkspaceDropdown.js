@@ -14,12 +14,13 @@ import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../database';
 import {getAppVersion} from '../lib/appInfo';
+import {getModal} from '../components/modals/index';
 
 class WorkspaceDropdown extends Component {
   _promptUpdateName () {
     const workspace = this._getActiveWorkspace(this.props);
 
-    PromptModal.show({
+    getModal(PromptModal).show({
       headerName: 'Rename Workspace',
       defaultValue: workspace.name
     }).then(name => {
@@ -28,9 +29,9 @@ class WorkspaceDropdown extends Component {
   }
 
   _workspaceCreate () {
-    PromptModal.show({
+    getModal(PromptModal).show({
       headerName: 'Create New Workspace',
-      defaultValue: 'New Workspace',
+      defaultValue: 'My Workspace',
       submitName: 'Create',
       selectText: true
     }).then(name => {
@@ -43,7 +44,7 @@ class WorkspaceDropdown extends Component {
   _workspaceRemove () {
     db.workspaceCount().then(count => {
       if (count <= 1) {
-        AlertModal.show({
+        getModal(AlertModal).show({
           message: 'You cannot delete your last workspace'
         });
       } else {
@@ -51,12 +52,6 @@ class WorkspaceDropdown extends Component {
         db.workspaceRemove(workspace);
       }
     })
-  }
-
-  _requestGroupCreate () {
-    const workspace = this._getActiveWorkspace(this.props);
-    const parentId = workspace._id;
-    db.requestGroupCreate({parentId});
   }
 
   _getActiveWorkspace (props) {
@@ -72,18 +67,18 @@ class WorkspaceDropdown extends Component {
   }
 
   render () {
-    const {actions, loading, entities, ...other} = this.props;
+    const {className, actions, loading, entities, ...other} = this.props;
 
     const allWorkspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
     const workspace = this._getActiveWorkspace(this.props);
 
     return (
-      <Dropdown right={true} {...other} className="wide">
+      <Dropdown {...other} className={className + ' wide workspace-dropdown'}>
         <button className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
               {loading ? <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
-              <i className="fa fa-caret-down txt-lg"></i>
+              <i className="fa fa-caret-down"></i>
             </div>
             {workspace.name}
           </h1>
@@ -93,26 +88,13 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name="Current Workspace"/>
 
           <li>
-            <button
-              onClick={e => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}>
-              <i className="fa fa-plus-circle"></i> New Request
-              <DropdownHint char="N"></DropdownHint>
-            </button>
-          </li>
-
-          <li>
-            <button onClick={e => this._requestGroupCreate() }>
-              <i className="fa fa-folder"></i> New Folder
-            </button>
-          </li>
-          <li>
             <button onClick={e => this._promptUpdateName()}>
-              <i className="fa fa-empty"></i> Rename <strong>{workspace.name}</strong>
+              <i className="fa fa-pencil-square-o"></i> Rename <strong>{workspace.name}</strong>
             </button>
           </li>
           <li>
             <button onClick={e => this._workspaceRemove()}>
-              <i className="fa fa-empty"></i> Delete <strong>{workspace.name}</strong>
+              <i className="fa fa-trash-o"></i> Delete <strong>{workspace.name}</strong>
             </button>
           </li>
 
@@ -136,18 +118,18 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
           <li>
-            <button onClick={e => SettingsModal.show(1)}>
+            <button onClick={e => getModal(SettingsModal).show(1)}>
               <i className="fa fa-share"></i> Import/Export
             </button>
           </li>
           <li>
-            <button onClick={e => SettingsModal.show()}>
+            <button onClick={e => getModal(SettingsModal).show()}>
               <i className="fa fa-cog"></i> Settings
               <DropdownHint char=","></DropdownHint>
             </button>
           </li>
           <li>
-            <button onClick={e => ChangelogModal.show()}>
+            <button onClick={e => getModal(ChangelogModal).show()}>
               <i className="fa fa-blank"></i> Changelog
             </button>
           </li>

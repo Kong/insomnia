@@ -6,11 +6,16 @@
   position: relative;
   display: inline-block;
 
+  &.dropdown--outlined ul {
+    border: 1px solid $hl-md;
+  }
+
   &:focus {
     outline: none;
   }
 
   .dropdown__backdrop {
+    //background: rgba(255, 0, 0, 0.1);
     display: none;
     position: fixed;
     z-index: 999;
@@ -28,15 +33,21 @@
     left: 0;
     z-index: 1000;
     min-width: $dropdown-min-width;
-    box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0 1rem 0 $hl-md;
+
     // Separate it from the button a bit
-    margin-top: 3px;
-    margin-bottom: 3px;
+    margin-top: $padding-xxs;
+    margin-bottom: $padding-xxs;
+
+    padding-top: $radius-md;
+    padding-bottom: $radius-md;
+
     border-radius: $radius-md;
     background: $bg-super-light;
     overflow: hidden;
 
     li {
+
       & > button {
         font-size: $font-size-md;
         text-align: left;
@@ -46,7 +57,8 @@
         color: $font-super-light-bg !important;
         white-space: nowrap;
 
-        &:hover {
+        &:hover,
+        &:focus {
           background: $hl-sm;
         }
 
@@ -56,7 +68,7 @@
 
         i.fa {
           display: inline-block;
-          width: 2em;
+          width: 2.2em;
           text-align: center;
         }
 
@@ -76,20 +88,28 @@
   li.dropdown__divider {
     border-bottom: 1px solid $hl-lg;
     overflow: visible !important;
-    margin: $padding-md $padding-md $padding-md $padding-sm;
-    min-width: $dropdown-min-width;
     height: 0;
-    padding: 0;
+    margin: $padding-md $padding-md $padding-md $padding-md;
+    min-width: $dropdown-min-width;
 
     .dropdown__divider__label {
       position: relative;
-      top: -0.80rem;
+      left: -$padding-sm / 2;
+      top: -0.7rem;
       // HACK: Fine adjustment
       color: $hl;
       padding-right: 1em;
       background: #fff;
       font-size: $font-size-xs;
       text-transform: uppercase;
+    }
+
+    &.dropdown__divider--no-name {
+      margin: $padding-xs 0;
+
+      .dropdown__divider__label {
+        display: none;
+      }
     }
   }
 

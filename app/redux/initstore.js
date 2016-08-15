@@ -28,26 +28,24 @@ export function initStore (dispatch) {
   const start = Date.now();
 
   // Restore docs in parent->child->grandchild order
-  return db.statsGet().then(doc => {
-    docChanged('update', doc);
-    return db.settingsGet();
-  }).then(doc => {
-    docChanged('update', doc);
-    return db.workspaceAll();
-  }).then(docs => {
-    docs.map(doc => docChanged('update', doc));
-    return db.requestGroupAll();
-  }).then(docs => {
-    docs.map(doc => docChanged('update', doc));
-    return db.requestAll();
-  }).then(docs => {
-    docs.map(doc => docChanged('update', doc));
-    return db.responseAll();
-  }).then(docs => {
-    docs.map(doc => docChanged('update', doc));
-  }).then(() => {
+  return Promise.all([
+    db.settingsGet(),
+    db.workspaceAll(),
+    db.environmentAll(),
+    db.cookieJarAll(),
+    db.requestGroupAll(),
+    db.requestAll(),
+    db.responseAll()
+  ]).then(results => {
+    for (let docs of results) {
+      docs = Array.isArray(docs) ? docs : [docs];
+
+      for (let doc of docs) {
+        docChanged('update', doc);
+      }
+    }
+
     console.log(`-- Restored DB in ${(Date.now() - start) / 1000} s --`);
-  }).then(() => {
     db.onChange(CHANGE_ID, docChanged);
   });
 }

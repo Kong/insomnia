@@ -4,7 +4,7 @@ import baseConfig from './webpack.config.base';
 export default {
   ...baseConfig,
   debug: true,
-  devtool: 'inline-source-map',
+  devtool: 'eval-source-map',
   entry: [
     ...baseConfig.entry,
     'webpack-hot-middleware/client?path=http://localhost:3333/__webpack_hmr',
@@ -20,9 +20,7 @@ export default {
     new webpack.NoErrorsPlugin(),
     new webpack.DefinePlugin({
       __DEV__: true,
-      'process.env': {
-        NODE_ENV: JSON.stringify('development')
-      }
+      'process.env.NODE_ENV': JSON.stringify('development')
     })
   ]
 }

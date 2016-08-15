@@ -5,12 +5,13 @@ import DropdownHint from '../components/base/DropdownHint';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as db from '../database';
+import {getModal} from '../components/modals/index';
 
 class RequestGroupActionsDropdown extends Component {
   _promptUpdateName () {
     const {requestGroup} = this.props;
 
-    PromptModal.show({
+    getModal(PromptModal).show({
       headerName: 'Rename Folder',
       defaultValue: requestGroup.name
     }).then(name => {
@@ -19,9 +20,16 @@ class RequestGroupActionsDropdown extends Component {
   }
 
   _requestCreate () {
-    const workspace = this._getActiveWorkspace(this.props);
-    const {requestGroup} = this.props;
-    db.requestCreateAndActivate(workspace, {parentId: requestGroup._id});
+    getModal(PromptModal).show({
+      headerName: 'Create New Request',
+      defaultValue: 'My Request',
+      selectText: true
+    }).then(name => {
+      const workspace = this._getActiveWorkspace();
+      const {requestGroup} = this.props;
+      const parentId = requestGroup._id;
+      db.requestCreateAndActivate(workspace, {parentId, name})
+    });
   }
 
   _getActiveWorkspace (props) {
@@ -57,7 +65,7 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => EnvironmentEditModal.show(requestGroup)}>
+            <button onClick={e => getModal(EnvironmentEditModal).show(requestGroup)}>
               <i className="fa fa-code"></i> Environment
             </button>
           </li>

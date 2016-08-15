@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 
 import Dropdown from './base/Dropdown';
-import MethodTag from './MethodTag';
+import MethodTag from './tags/MethodTag';
 import {METHODS} from '../lib/constants';
 import Mousetrap from '../lib/mousetrap';
 import {trackEvent} from '../lib/analytics';
@@ -22,13 +22,8 @@ class RequestUrlBar extends Component {
     }, DEBOUNCE_MILLIS);
   }
 
-  focus () {
-    this.refs.input.focus();
-    console.log('-- Focus URL Bar --');
-  }
-
   componentDidMount () {
-    Mousetrap.bindGlobal('mod+l', this.focus.bind(this));
+    Mousetrap.bindGlobal('mod+l', () => {this.input.focus(); this.input.select()});
   }
 
   render () {
@@ -59,17 +54,17 @@ class RequestUrlBar extends Component {
             ))}
           </ul>
         </Dropdown>
-        <form className="form-control" onSubmit={this._handleFormSubmit.bind(this)}>
-          <input
-            ref="input"
-            type="text"
-            placeholder="https://api.myproduct.com/v1/users"
-            defaultValue={url}
-            onChange={e => this._handleUrlChange(e.target.value)}/>
+        <form onSubmit={this._handleFormSubmit.bind(this)}>
+          <div className="form-control">
+            <input
+              ref={n => this.input = n}
+              type="text"
+              placeholder="https://api.myproduct.com/v1/users"
+              defaultValue={url}
+              onChange={e => this._handleUrlChange(e.target.value)}/>
+          </div>
+          <button>Send</button>
         </form>
-        <button onClick={this._handleFormSubmit.bind(this)}>
-          Send
-        </button>
       </div>
     );
   }

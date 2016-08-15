@@ -2,8 +2,6 @@ import React, {Component, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 
-import Mousetrap from '../../lib/mousetrap';
-
 class Dropdown extends Component {
   constructor (props) {
     super(props);
@@ -22,10 +20,6 @@ class Dropdown extends Component {
   }
 
   show () {
-    Mousetrap.bind('esc', () => {
-      this.hide();
-    });
-
     const bodyHeight = document.body.getBoundingClientRect().height;
     const dropdownTop = ReactDOM.findDOMNode(this).getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight * 0.65;
@@ -41,14 +35,26 @@ class Dropdown extends Component {
     }
   }
 
+  componentDidMount () {
+    ReactDOM.findDOMNode(this).addEventListener('keydown', e => {
+      if (this.state.open && e.keyCode === 27) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Pressed escape
+        this.hide();
+      }
+    });
+  }
+
   render () {
-    const {right, className} = this.props;
+    const {right, className, outline} = this.props;
     const {dropUp, open} = this.state;
 
     const classes = classnames(
       'dropdown',
       className,
       {'dropdown--open': open},
+      {'dropdown--outlined': outline},
       {'dropdown--up': dropUp},
       {'dropdown--right': right}
     );
@@ -65,7 +71,8 @@ class Dropdown extends Component {
 }
 
 Dropdown.propTypes = {
-  right: PropTypes.bool
+  right: PropTypes.bool,
+  outline: PropTypes.bool
 };
 
 export default Dropdown;

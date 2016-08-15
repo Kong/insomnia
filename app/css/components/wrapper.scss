@@ -38,14 +38,14 @@
     grid-column-start: 3;
     grid-row-start: 1;
     grid-row-end: span 2;
+    background: inherit;
   }
 
   .response-pane {
     grid-column-start: 5;
     grid-row-start: 1;
     grid-row-end: span 2;
-    position: relative;
-    background-color: $bg-super-dark;
+    background: inherit;
   }
 }
 

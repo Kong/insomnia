@@ -1,85 +1,76 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, Component} from 'react';
 
-import Link from '../base/Link';
-import Editor from '../base/Editor';
+import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import ModalComponent from '../lib/ModalComponent';
 
 
-class EnvironmentEditModal extends ModalComponent {
+class EnvironmentEditModal extends Component {
   constructor (props) {
     super(props);
 
     this.state = {
-      environmentJSON: '{}',
-      requestGroup: null
+      requestGroup: null,
+      isValid: true
     }
   }
 
   _saveChanges () {
-    const {requestGroup, environmentJSON} = this.state;
-
-    let environment;
-    try {
-      environment = JSON.parse(environmentJSON);
-    } catch (e) {
-      // That's OK. The user will (hopefully) fix the problem
-      console.warn('Failed to parse environment JSON', e);
+    if (!this._envEditor.isValid()) {
       return;
     }
 
+    const environment = this._envEditor.getValue();
+    const {requestGroup} = this.state;
+
     this.props.onChange(Object.assign({}, requestGroup, {environment}));
-    this.hide();
   }
 
-  _handleChange (environmentJSON) {
-    this.setState({environmentJSON});
-  }
+  _didChange () {
+    this._saveChanges();
 
-  _update (requestGroup) {
-    const environmentJSON = JSON.stringify(requestGroup.environment, null, '\t');
-    this.setState({environmentJSON, requestGroup});
+    const isValid = this._envEditor.isValid();
+
+    if (this.state.isValid !== isValid) {
+      this.setState({isValid});
+    }
   }
 
   show (requestGroup) {
-    super.show();
-    this._update(requestGroup);
+    this.modal.show();
+    this.setState({requestGroup});
   }
 
   toggle (requestGroup) {
-    super.toggle();
-    this._update(requestGroup);
+    this.modal.toggle();
+    this.setState({requestGroup});
   }
 
   render () {
-    const {environmentJSON, requestGroup} = this.state;
+    const {requestGroup, isValid} = this.state;
 
     return (
-      <Modal ref="modal" top={true} {...this.props}>
-        <ModalHeader>Environment Variables (JSON Format)</ModalHeader>
-        <ModalBody>
-          <div className="pad-bottom">
-            <Editor
-              key={requestGroup ? requestGroup._id : 'n/a'}
-              onChange={this._handleChange.bind(this)}
-              value={environmentJSON}
-              lightTheme={true}
-              mode="application/json"
-            />
-          </div>
+      <Modal ref={m => this.modal = m} tall={true} top={true} {...this.props}>
+        <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
+        <ModalBody noScroll={true}>
+          <EnvironmentEditor
+            ref={node => this._envEditor = node}
+            key={requestGroup ? requestGroup._id : 'n/a'}
+            environment={requestGroup ? requestGroup.environment : {}}
+            didChange={this._didChange.bind(this)}
+            lightTheme={true}
+          />
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={this._saveChanges.bind(this)}>Save</button>
+            <button className="btn" disabled={!isValid} onClick={e => this.modal.hide()}>
+              Done
+            </button>
           </div>
           <div className="pad faint italic txt-sm tall">
-            * this data can be used for&nbsp;
-            <Link href="https://mozilla.github.io/nunjucks/templating.html">
-              Nunjucks Templating
-            </Link> in your requests
+            * this can be used to override data in the global environment
           </div>
         </ModalFooter>
       </Modal>

@@ -9,7 +9,6 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import ModalComponent from '../lib/ModalComponent';
 import KeyboardShortcutsTable from '../KeyboardShortcutsTable';
 import * as GlobalActions from '../../redux/modules/global';
 import * as db from '../../database';
@@ -53,6 +52,9 @@ class SettingsTabs extends Component {
             <button>General</button>
           </Tab>
           <Tab>
+            <button>Editor</button>
+          </Tab>
+          <Tab>
             <button>Import/Export</button>
           </Tab>
           <Tab>
@@ -63,95 +65,122 @@ class SettingsTabs extends Component {
           </Tab>
         </TabList>
         <TabPanel className="pad">
+          <h2 className="txt-md">
+            <label className="label--small">General Settings</label>
+          </h2>
           <div>
-            <h2 className="txt-md">
-              <label className="label--small">General Settings</label>
-            </h2>
-            <div>
-              <input
-                id="setting-show-passwords"
-                type="checkbox"
-                checked={settings.showPasswords}
-                onChange={e => db.settingsUpdate(settings, {showPasswords: e.target.checked})}
-              />
-              &nbsp;&nbsp;
-              <label htmlFor="setting-show-passwords">
-                Show passwords in plain-text
-              </label>
-            </div>
-
-            <div className="pad-top">
-              <input
-                id="setting-follow-redirects"
-                type="checkbox"
-                value={settings.followRedirects}
-                onChange={e => db.settingsUpdate(settings, {followRedirects: e.target.checked})}
-              />
-              &nbsp;&nbsp;
-              <label htmlFor="setting-follow-redirects">
-                Follow redirects automatically
-              </label>
-            </div>
-
-            <div className="pad-top">
-              <input
-                id="setting-validate-ssl"
-                type="checkbox"
-                checked={settings.validateSSL}
-                onChange={e => db.settingsUpdate(settings, {validateSSL: e.target.checked})}
-              />
-              &nbsp;&nbsp;
-              <label htmlFor="setting-validate-ssl">
-                Validate SSL Certificates
-              </label>
-            </div>
-
-            <div>
-              <label htmlFor="setting-request-timeout" className="pad-top">
-                Request Timeout (ms) (0 for no timeout)
-              </label>
-              <div className="form-control form-control--outlined no-margin">
-                <input
-                  id="setting-request-timeout"
-                  type="number"
-                  min={0}
-                  value={settings.timeout}
-                  onChange={e => db.settingsUpdate(settings, {timeout: parseInt(e.target.value, 10)})}
-                />
-              </div>
-            </div>
+            <input
+              id="setting-show-passwords"
+              type="checkbox"
+              checked={settings.showPasswords}
+              onChange={e => db.settingsUpdate(settings, {showPasswords: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-show-passwords">
+              Show passwords in plain-text
+            </label>
           </div>
 
           <div className="pad-top">
-            <br/>
-            <label className="label--small">Code Editor Settings</label>
+            <input
+              id="setting-follow-redirects"
+              type="checkbox"
+              checked={settings.followRedirects}
+              onChange={e => db.settingsUpdate(settings, {followRedirects: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-follow-redirects">
+              Follow redirects automatically
+            </label>
+          </div>
 
-            <div className="pad-top">
+          <div className="pad-top">
+            <input
+              id="setting-validate-ssl"
+              type="checkbox"
+              checked={settings.validateSSL}
+              onChange={e => db.settingsUpdate(settings, {validateSSL: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-validate-ssl">
+              Validate SSL Certificates
+            </label>
+          </div>
+
+          <div>
+            <label htmlFor="setting-request-timeout" className="pad-top">
+              Request Timeout (ms) (0 for no timeout)
+            </label>
+            <div className="form-control form-control--outlined no-margin">
               <input
-                id="setting-editor-line-wrapping"
-                type="checkbox"
-                checked={settings.editorLineWrapping}
-                onChange={e => db.settingsUpdate(settings, {editorLineWrapping: e.target.checked})}
+                id="setting-request-timeout"
+                type="number"
+                min={0}
+                value={settings.timeout}
+                onChange={e => db.settingsUpdate(settings, {timeout: parseInt(e.target.value, 10)})}
               />
-              &nbsp;&nbsp;
-              <label htmlFor="setting-editor-line-wrapping">
-                Wrap Long Lines
-              </label>
             </div>
-            <div>
-              <label htmlFor="setting-editor-font-size" className="pad-top">
-                Font Size (px)
-              </label>
-              <div className="form-control form-control--outlined no-margin">
-                <input
-                  id="setting-editor-font-size"
-                  type="number"
-                  min={8}
-                  max={20}
-                  value={settings.editorFontSize}
-                  onChange={e => db.settingsUpdate(settings, {editorFontSize: parseInt(e.target.value, 10)})}
-                />
-              </div>
+          </div>
+          <br/>
+          <h2 className="txt-md pad-top-sm">
+            <label className="label--small">Network Proxy (Experimental)</label>
+          </h2>
+          <div>
+            <label htmlFor="setting-http-proxy">
+              HTTP Proxy
+            </label>
+            <div className="form-control form-control--outlined no-margin">
+              <input
+                id="setting-http-proxy"
+                type="string"
+                placeholder="localhost:8005"
+                defaultValue={settings.httpProxy}
+                onChange={e => db.settingsUpdate(settings, {httpProxy: e.target.value})}
+              />
+            </div>
+          </div>
+          <div className="pad-top-sm">
+            <label htmlFor="setting-https-proxy">
+              HTTPS Proxy
+            </label>
+            <div className="form-control form-control--outlined no-margin">
+              <input
+                id="setting-https-proxy"
+                placeholder="localhost:8005"
+                type="string"
+                defaultValue={settings.httpsProxy}
+                onChange={e => db.settingsUpdate(settings, {httpsProxy: e.target.value})}
+              />
+            </div>
+          </div>
+        </TabPanel>
+        <TabPanel className="pad">
+          <label className="label--small">Code Editor Settings</label>
+          <div className="pad-top">
+            <input
+              id="setting-editor-line-wrapping"
+              type="checkbox"
+              checked={settings.editorLineWrapping}
+              onChange={e => db.settingsUpdate(settings, {editorLineWrapping: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-editor-line-wrapping">
+              Wrap Long Lines
+            </label>
+          </div>
+          <div>
+            <label htmlFor="setting-editor-font-size" className="pad-top">
+              Font Size (px)
+            </label>
+            <div className="form-control form-control--outlined no-margin">
+              <input
+                id="setting-editor-font-size"
+                type="number"
+                min={8}
+                max={20}
+                value={settings.editorFontSize}
+                onChange={e => db.settingsUpdate(settings, {editorFontSize: parseInt(e.target.value, 10)})}
+              />
             </div>
           </div>
         </TabPanel>
@@ -172,8 +201,6 @@ class SettingsTabs extends Component {
           </p>
         </TabPanel>
         <TabPanel className="pad">
-          <p>Use these shortcuts to improve your productivity.</p>
-          <br/>
           <KeyboardShortcutsTable />
         </TabPanel>
         <TabPanel className="pad">
@@ -241,7 +268,7 @@ const ConnectedSettingsTabs = connect(
 )(SettingsTabs);
 
 
-class SettingsModal extends ModalComponent {
+class SettingsModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
@@ -249,31 +276,42 @@ class SettingsModal extends ModalComponent {
     }
   }
 
-  show (selectedIndex = 0) {
-    super.show();
-
-    if (selectedIndex >= 0) {
-      this.setState({selectedIndex});
+  _setIndex (index) {
+    if (index >= 0) {
+      this.setState({index});
     } else {
       this.setState({selectedIndex: 0});
     }
+  }
+
+  show (selectedIndex = 0) {
+    this.modal.show();
+    this._setIndex(selectedIndex);
+  }
+
+  toggle (selectedIndex = 0) {
+    this.modal.toggle();
+    this._setIndex(selectedIndex);
   }
 
   render () {
     const {selectedIndex} = this.state;
 
     return (
-      <Modal ref="modal" tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} tall={true} {...this.props}>
         <ModalHeader>
           {getAppLongName()}
           &nbsp;&nbsp;
           <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>
         <ModalBody>
-          <ConnectedSettingsTabs hide={() => this.hide()} selectedIndex={selectedIndex}/>
+          <ConnectedSettingsTabs hide={() => this.modal.hide()} selectedIndex={selectedIndex}/>
         </ModalBody>
-        <ModalFooter className="pad text-right">
-          <div className="relative">
+        <ModalFooter>
+          <div className="pull-right">
+            <button className="btn" onClick={() => this.modal.hide()}>Done</button>
+          </div>
+          <div className="inline-block pad relative">
             Supported By&nbsp;&nbsp;
             <Link href={MASHAPE_URL}>
               <img src="images/mashape.png" style={{height: '1.5em'}} className="valign-bottom"/>

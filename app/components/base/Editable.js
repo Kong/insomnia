@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import ReactDOM from 'react-dom'
+import {DEBOUNCE_MILLIS} from '../../lib/constants';
 
 class Editable extends Component {
   constructor (props) {
@@ -13,13 +13,26 @@ class Editable extends Component {
     this.setState({editing: true});
 
     setTimeout(() => {
-      this.refs.input && this.refs.input.focus();
+      this._input && this._input.focus();
+      this._input && this._input.select();
     });
   }
 
   _handleEditEnd () {
-    this.setState({editing: false})
-    this.props.onSubmit(this.refs.input.value);
+    const value = this._input.value.trim();
+
+    if (!value) {
+      // Don't do anything if it's empty
+      return;
+    }
+
+    // This timeout prevents the UI from showing the old value after submit.
+    // It should give the UI enough time to redraw the new value.
+    setTimeout(() => {
+      this.setState({editing: false});
+    }, DEBOUNCE_MILLIS);
+
+    this.props.onSubmit(value);
   }
 
   _handleEditKeyDown (e) {
@@ -28,19 +41,20 @@ class Editable extends Component {
       this._handleEditEnd();
     } else if (e.keyCode === 27) {
       // Pressed Escape
-      this.refs.input && this.refs.input.blur();
+      this._input && this._input.blur();
     }
   }
 
   render () {
-    const {value, ...extra} = this.props;
+    const {value, singleClick, ...extra} = this.props;
     const {editing} = this.state;
 
     if (editing) {
       return (
         <input
+          className="editable"
           type="text"
-          ref="input"
+          ref={n => this._input = n}
           defaultValue={value}
           onKeyDown={e => this._handleEditKeyDown(e)}
           onBlur={e => this._handleEditEnd()}
@@ -49,7 +63,11 @@ class Editable extends Component {
       )
     } else {
       return (
-        <span onDoubleClick={e => this._handleEditStart()} {...extra}>{value}</span>
+        <div className="editable"
+             onClick={e => singleClick && this._handleEditStart()}
+             onDoubleClick={e => this._handleEditStart()} {...extra}>
+          {value}
+        </div>
       )
     }
   }
@@ -57,7 +75,10 @@ class Editable extends Component {
 
 Editable.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  value: PropTypes.string.isRequired
-}
+  value: PropTypes.string.isRequired,
+
+  // Optional
+  singleClick: PropTypes.bool
+};
 
 export default Editable;

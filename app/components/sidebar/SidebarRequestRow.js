@@ -4,7 +4,7 @@ import classnames from 'classnames';
 
 import RequestActionsDropdown from '../../containers/RequestActionsDropdown';
 import Editable from '../base/Editable';
-import MethodTag from '../MethodTag';
+import MethodTag from '../tags/MethodTag';
 import * as db from '../../database';
 import * as ReactDOM from 'react/lib/ReactDOM';
 
@@ -33,7 +33,8 @@ class SidebarRequestRow extends Component {
       request,
       requestGroup,
       isActive,
-      activateRequest
+      activateRequest,
+      requestCreate
     } = this.props;
 
     const {dragDirection} = this.state;
@@ -51,7 +52,7 @@ class SidebarRequestRow extends Component {
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
             <button className="sidebar__clickable"
-                    onClick={() => db.requestCreate({parentId: requestGroup._id})}>
+                    onClick={() => requestCreate()}>
               <em>click to add first request...</em>
             </button>
           </div>
@@ -91,6 +92,7 @@ class SidebarRequestRow extends Component {
 SidebarRequestRow.propTypes = {
   // Functions
   activateRequest: PropTypes.func.isRequired,
+  requestCreate: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
 
   // Other

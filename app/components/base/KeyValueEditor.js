@@ -23,10 +23,10 @@ class KeyValueEditor extends Component {
     }
   }
 
-  _onChange (pairs) {
+  _onChange (pairs, updateState = true) {
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
-    this.setState({pairs});
+    updateState && this.setState({pairs});
   }
 
   _addPair (position) {
@@ -102,6 +102,10 @@ class KeyValueEditor extends Component {
   }
 
   _keyDown (e) {
+    if (e.metaKey || e.ctrlKey) {
+      return;
+    }
+
     if (e.keyCode === ENTER) {
       e.preventDefault();
       this._focusNext(true);
@@ -135,8 +139,13 @@ class KeyValueEditor extends Component {
     }
   }
 
-  componentWillReceiveProps (nextProps) {
-    this.setState({pairs: nextProps.pairs})
+  shouldComponentUpdate (nextProps, nextState) {
+    // NOTE: Only ever re-render if we're changing length. This prevents cursor jumping
+    // inside inputs.
+    return (
+      nextProps.pairs.length !== this.state.pairs.length ||
+      nextState.pairs.length !== this.state.pairs.length
+    );
   }
 
   componentDidUpdate () {

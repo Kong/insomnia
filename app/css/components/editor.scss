@@ -10,9 +10,12 @@
   .CodeMirror {
     height: 100% !important;
     width: 100%;
-    font-family: $font-monospace;
     box-sizing: border-box;
     padding-top: $padding-sm;
+  }
+
+  .CodeMirror * {
+    font-family: $font-monospace;
   }
 
   .CodeMirror,
@@ -170,7 +173,7 @@
   }
 
   .cm-s-default span.cm-tag {
-    color: #f92672;
+    color: darken($danger, 3);
   }
 
   .cm-s-default span.cm-header {
@@ -182,7 +185,7 @@
   }
 
   .cm-s-default span.cm-error {
-    background: #f92672;
+    background: $danger;
     color: #f8f8f0;
   }
 
@@ -198,7 +201,7 @@
 
 .editor--light-theme {
   .cm-s-default span {
-    color: $hl;
+    color: $font-light-bg;
   }
 
   .cm-s-default span.cm-string {

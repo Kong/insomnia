@@ -1,12 +1,11 @@
 import React, {PropTypes, Component} from 'react';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
+import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
-import StatusTag from './StatusTag';
-import SizeTag from './SizeTag';
-import TimeTag from './TimeTag';
-import PreviewModeDropdown from './PreviewModeDropdown';
-import ResponseBodyViewer from './ResponseBodyViewer';
-import ResponseHeadersViewer from './ResponseHeadersViewer';
+import ResponsePaneHeader from './ResponsePaneHeader'
+import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
+import ResponseViewer from './viewers/ResponseViewer';
+import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
+import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import {getPreviewModeName} from '../lib/previewModes';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
@@ -14,6 +13,7 @@ import {MOD_SYM} from '../lib/constants';
 import {trackEvent} from '../lib/analytics';
 
 class ResponsePane extends Component {
+
   render () {
     const {
       response,
@@ -22,7 +22,8 @@ class ResponsePane extends Component {
       updatePreviewMode,
       loadingRequests,
       editorLineWrapping,
-      editorFontSize
+      editorFontSize,
+      showCookiesModal
     } = this.props;
 
     const loadStartTime = loadingRequests[request ? request._id : '__NONE__'];
@@ -76,15 +77,27 @@ class ResponsePane extends Component {
                 <tbody>
                 <tr>
                   <td>Send Request</td>
-                  <td><code>{MOD_SYM}Enter</code></td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}Enter</code>
+                  </td>
                 </tr>
                 <tr>
                   <td>Focus Url Bar</td>
-                  <td><code>{MOD_SYM}L</code></td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}L</code>
+                  </td>
                 </tr>
                 <tr>
-                  <td>Switch Requests</td>
-                  <td><code>{MOD_SYM}P</code></td>
+                  <td>Manage Cookies</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}K</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Edit Environments</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}E</code>
+                  </td>
                 </tr>
                 </tbody>
               </table>
@@ -94,20 +107,20 @@ class ResponsePane extends Component {
       )
     }
 
+    const cookieHeaders = response.headers.filter(h => h.name.toLowerCase() === 'set-cookie');
+
     return (
       <section className="response-pane pane">
         {timer}
 
         <header className="pane__header pad no-wrap">
           {!response ? null : (
-            <div>
-              <StatusTag
-                statusCode={response.statusCode}
-                statusMessage={response.statusMessage}
-              />
-              <TimeTag milliseconds={response.elapsedTime}/>
-              <SizeTag bytes={response.bytesRead}/>
-            </div>
+            <ResponsePaneHeader
+              statusCode={response.statusCode}
+              statusMessage={response.statusMessage}
+              elapsedTime={response.elapsedTime}
+              bytesRead={response.bytesRead}
+            />
           )}
         </header>
         <Tabs className="pane__body">
@@ -122,6 +135,12 @@ class ResponsePane extends Component {
               />
             </Tab>
             <Tab>
+              <button onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
+                Cookies {cookieHeaders.length ? (
+                <span className="txt-sm">({cookieHeaders.length})</span> ) : null}
+              </button>
+            </Tab>
+            <Tab>
               <button onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
                 Headers {response.headers.length ? (
                 <span className="txt-sm">({response.headers.length})</span> ) : null}
@@ -130,7 +149,7 @@ class ResponsePane extends Component {
           </TabList>
           <TabPanel>
             {response.error ? (
-              <ResponseBodyViewer
+              <ResponseViewer
                 key={response._id}
                 contentType={response.contentType}
                 previewMode={PREVIEW_MODE_SOURCE}
@@ -140,7 +159,7 @@ class ResponsePane extends Component {
                 url={response.url}
               />
             ) : (
-              <ResponseBodyViewer
+              <ResponseViewer
                 key={response._id}
                 contentType={response.contentType}
                 previewMode={previewMode}
@@ -151,6 +170,13 @@ class ResponsePane extends Component {
                 wrap={true} // TODO: Make this a user preference
               />
             )}
+          </TabPanel>
+          <TabPanel className="scrollable pad">
+            <ResponseCookiesViewer
+              showCookiesModal={showCookiesModal}
+              key={response._id}
+              headers={cookieHeaders}
+            />
           </TabPanel>
           <TabPanel className="scrollable pad">
             <ResponseHeadersViewer
@@ -167,6 +193,7 @@ class ResponsePane extends Component {
 ResponsePane.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
+  showCookiesModal: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,

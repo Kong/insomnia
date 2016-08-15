@@ -3,13 +3,17 @@
 @import '../constants/fonts';
 
 html {
-  font-family: 'Open Sans', sans-serif;
   font-size: $font-size;
 }
 
 html, body, #root {
   width: 100%;
   height: 100%;
+}
+
+html, h1, h2, h3, h4, h5, h6 {
+  font-weight: 400;
+  font-family: 'Open Sans', sans-serif;
 }
 
 body {
@@ -70,27 +74,26 @@ webview {
 table {
   width: 100%;
 
-  td {
-    padding-top: $padding-sm;
-
-    &:not(:last-child) {
-      padding-right: $padding-lg;
-    }
+  td, th {
+    padding: $padding-sm;
   }
 
   th {
     text-align: left;
-    padding-bottom: 0.5em;
+    padding-bottom: $padding-sm;
+  }
+
+  &.table--striped tbody tr:nth-child(odd) {
+    background: $hl-xs;
   }
 }
 
 code {
   display: inline-block;
   background: $hl-xs;
-  border: 1px solid $hl-sm;
   padding: $padding-xs $padding-sm;
+  color: $hl;
   font-family: $font-monospace;
-  border-radius: $radius-md;
 }
 
 .text-center {
@@ -139,7 +142,7 @@ code {
 
 /* Make all font awesome icons the same width */
 i.fa {
-  width: 1.1em;
+  min-width: 1.1rem;
   text-align: center;
 }
 
@@ -152,6 +155,14 @@ i.fa {
   white-space: nowrap;
 }
 
+.wrap {
+  white-space: normal;
+}
+
+.border-top {
+  border-top: 1px solid $hl-md;
+}
+
 .pad {
   box-sizing: border-box;
   padding: $padding-md;
@@ -160,6 +171,11 @@ i.fa {
 .pad-top {
   box-sizing: border-box;
   padding-top: $padding-md;
+}
+
+.pad-top-sm {
+  box-sizing: border-box;
+  padding-top: $padding-sm;
 }
 
 .pad-bottom {

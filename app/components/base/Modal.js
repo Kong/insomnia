@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react';
+import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 
-import Mousetrap from '../../lib/mousetrap';
 
 class Modal extends Component {
   constructor (props) {
@@ -18,7 +18,7 @@ class Modal extends Component {
     let target = e.target;
     let shouldHide = false;
 
-    if (target === this.refs.modal) {
+    if (target === ReactDOM.findDOMNode(this)) {
       shouldHide = true;
     }
 
@@ -38,9 +38,8 @@ class Modal extends Component {
 
   show () {
     this.setState({open: true});
-
-    Mousetrap.bindGlobal('esc', () => {
-      this.hide();
+    setTimeout(() => {
+      this._node.focus();
     });
   }
 
@@ -56,8 +55,20 @@ class Modal extends Component {
     this.setState({open: false});
   }
 
+  componentDidMount () {
+    // In order for this to work, there needs to be tabIndex of -1 on the modal container
+    ReactDOM.findDOMNode(this).addEventListener('keydown', e => {
+      if (this.state.open && e.keyCode === 27) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Pressed escape
+        this.hide();
+      }
+    });
+  }
+
   render () {
-    const {tall, top, className} = this.props;
+    const {tall, top, wide, className} = this.props;
     const {open} = this.state;
 
     const classes = classnames(
@@ -65,14 +76,12 @@ class Modal extends Component {
       className,
       {'modal--open': open},
       {'modal--fixed-height': tall},
-      {'modal--fixed-top': top}
+      {'modal--fixed-top': top},
+      {'modal--wide': wide}
     );
 
     return (
-      <div
-        className={classes}
-        onClick={this._handleClick.bind(this)}>
-
+      <div ref={n => this._node = n} tabIndex="-1" className={classes} onClick={this._handleClick.bind(this)}>
         <div className="modal__content">
           <div className="modal__backdrop" onClick={() => this.hide()}></div>
           {this.props.children}
@@ -84,7 +93,8 @@ class Modal extends Component {
 
 Modal.propTypes = {
   tall: PropTypes.bool,
-  top: PropTypes.bool
+  top: PropTypes.bool,
+  wide: PropTypes.bool
 };
 
 export default Modal;

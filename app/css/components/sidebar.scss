@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: $line-height-md 1fr auto;
+  grid-template-rows: $height-nav auto auto 1fr;
   grid-template-columns: 1fr;
 
   background-color: $bg-dark;
@@ -12,6 +12,13 @@
 
   width: 100%;
   height: 100%;
+
+  // Don't collapse direct children, but their children
+  &.sidebar--collapsed > * > * {
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
 
   &:focus {
     outline: none;
@@ -25,30 +32,117 @@
     background-color: $bg-brand;
     color: $font-brand-bg;
     width: 100%;
+    height: 100%;
 
     &:hover {
       background-color: lighten($bg-brand, 1);
     }
+  }
 
-    h1 {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+  // ~~~~~~~~~~~~~~~ //
+  // Sidebar Toolbar //
+  // ~~~~~~~~~~~~~~~ //
 
-      // HACK: Bump up the arrow a bit
-      i.fa-caret-down {
-        position: relative;
-        top: -2px;
+  .sidebar__filter {
+    // Nothing yet
+    width: 100%;
+    display: grid;
+    font-size: $font-size-sm;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+
+    .btn {
+      padding: 0 ($padding-md - $padding-xxs);
+      margin-right: $padding-xxs;
+      border-radius: $radius-md;
+      color: $hl;
+
+      &:hover,
+      &:focus {
+        color: $font-dark-bg;
       }
     }
 
-    // Make the dropdown offset to the right
-    .dropdown ul {
-      right: -40%;
+    .form-control {
+      padding: 0 $padding-xxs 0 0;
+      margin: $padding-sm 0 $padding-sm $padding-sm;
+
+      input {
+        padding: $padding-xs;
+      }
+    }
+  }
+
+  .sidebar__menu {
+    display: grid;
+    grid-template-columns: 55% 45%;
+    justify-items: center;
+    font-size: $font-size-sm;
+    color: $hl;
+    padding: 0 $padding-sm;
+
+    & > * {
+      width: 100%;
+      margin-top: $padding-sm;
+    }
+
+    & > *:first-child {
+      margin-right: $padding-xxs;
+    }
+
+    & > *:last-child {
+      margin-left: $padding-xxs;
+    }
+
+    .sidebar__menu__thing {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+
+      & > *:first-child {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
 
     .btn {
-      padding: 0 $padding-md;
+      width: 100%;
+      border-radius: 900px;
+      height: $line-height-xxs;
+      padding-left: $padding-xxs;
+      padding-right: $padding-xxs;
+
+      &:hover,
+      &:focus {
+        color: $font-dark-bg;
+      }
+    }
+  }
+
+  &.sidebar--skinny .sidebar__filter {
+    grid-template-columns: 100%;
+
+    & > *:first-child {
+      margin-right: $padding-xs;
+    }
+
+    & > *:last-child {
+      display: none;
+    }
+  }
+
+  &.sidebar--skinny .sidebar__menu {
+    grid-template-columns: 100%;
+
+    & > *:last-child {
+      display: none;
+    }
+
+    .btn {
+      padding-left: $padding-xs;
+      padding-right: $padding-xs;
     }
   }
 
@@ -56,12 +150,13 @@
   // Sidebar List //
   // ~~~~~~~~~~~~ //
 
-  .sidebar__list {
-  }
+  .sidebar__list-root {
+    // Add some space above so it's not so squished
+    border-top: 1px solid $hl-sm;
+    padding-top: $padding-xs;
+    padding-bottom: $padding-md;
+    box-shadow: inset 0 2rem 3rem -2rem rgba(0, 0, 0, 0.1);
 
-  // Root list scrolling
-
-  & > .sidebar__list {
     overflow-y: auto;
 
     &::-webkit-scrollbar {
@@ -123,6 +218,10 @@
       .tag {
         opacity: 1;
       }
+
+      .editable {
+        line-height: $line-height-xs;
+      }
     }
 
     &.sidebar__item--active > .sidebar__actions,
@@ -158,7 +257,7 @@
     align-items: center;
   }
 
-  // Padding
+  // Padding for nested folders
 
   .sidebar__list .sidebar__clickable {
     padding-left: $padding-md;
@@ -214,28 +313,5 @@
   .sidebar__item:hover .sidebar__actions > button,
   .sidebar__item:hover .sidebar__actions > .dropdown > button {
     display: initial;
-  }
-
-  // ~~~~~~~~~~~~~~ //
-  // Sidebar Footer //
-  // ~~~~~~~~~~~~~~ //
-
-  .sidebar__footer {
-    // Nothing yet
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    .btn {
-      color: $hl;
-    }
-
-    .form-control {
-      padding: 0 $padding-xs 0 0;
-      width: 100%;
-      input {
-        padding: $padding-xs;
-      }
-    }
   }
 }

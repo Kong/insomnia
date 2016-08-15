@@ -11,6 +11,7 @@ const PORT = 3333;
 
 app.use(webpackDevMiddleware(compiler, {
   publicPath: config.output.publicPath,
+  noInfo: true,
   stats: {
     colors: true
   }

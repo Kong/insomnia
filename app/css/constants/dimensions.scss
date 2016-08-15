@@ -1,10 +1,10 @@
 /* Padding */
 $padding-md: 1.25rem;
-$padding-sm: $padding-md * 0.5;
-$padding-xs: $padding-md * 0.35;
-$padding-xxs: $padding-md * 0.20;
-$padding-lg: $padding-md * 2;
-$padding-xl: $padding-md * 4;
+$padding-sm: 0.63rem;
+$padding-xs: 0.44rem;
+$padding-xxs: 0.25rem;
+$padding-lg: 2.5rem;
+$padding-xl: 5rem;
 
 /* Fonts */
 $font-size: 12px;
@@ -13,26 +13,30 @@ $font-size-sm: 0.9rem;
 $font-size-md: 1.0rem;
 $font-size-lg: 1.1rem;
 $font-size-xl: 1.3rem;
-$font-size-xxl: 1.6rem;
-$font-size-xxxl: 1.8rem;
+$font-size-xxl: 1.5rem;
+$font-size-xxxl: 1.7rem;
 
 /* Wrapper */
+$line-height-lg: 4.5rem;
 $line-height-md: 4rem;
-$line-height-sm: $line-height-md * 0.75;
-$line-height-xs: $line-height-md * 0.6;
+$line-height-sm: 3rem;
+$line-height-xs: 2.4rem;
+$line-height-xxs: 2rem;
+$height-nav: $line-height-md;
 
 /* Sidebar */
 $sidebar-width: 19rem;
 
 /* Borders */
-$radius-sm: 0.1rem;
-$radius-md: 0.2rem;
+$radius-sm: 0.15rem;
+$radius-md: 0.3rem;
 
 /* Dropdowns */
 $dropdown-min-width: 15rem;
 
 /* Modals */
 $modal-width: 50rem;
+$modal-width-wide: 70rem;
 
 /* Other */
 $drag-width: 0.5em;
@@ -43,25 +47,25 @@ $breakpoint-md: 880px;
 $breakpoint-sm: 660px;
 
 .txt-xs {
-  font-size: $font-size-xs;
+  font-size: $font-size-xs !important;
 }
 
 .txt-sm {
-  font-size: $font-size-sm;
+  font-size: $font-size-sm !important;
 }
 
 .txt-md {
-  font-size: $font-size-md;
+  font-size: $font-size-md !important;
 }
 
 .txt-lg {
-  font-size: $font-size-lg;
+  font-size: $font-size-lg !important;
 }
 
 .txt-xl {
-  font-size: $font-size-xl;
+  font-size: $font-size-xl !important;
 }
 
 .txt-xxl {
-  font-size: $font-size-xxl;
+  font-size: $font-size-xxl !important;
 }

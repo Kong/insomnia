@@ -51,7 +51,8 @@ class SidebarRequestGroupRow extends Component {
 
     return connectDragSource(connectDropTarget(
       <li key={requestGroup._id} className={classes}>
-        <div className={classnames('sidebar__item sidebar__item--big', {'sidebar__item--active': isActive})}>
+        <div
+          className={classnames('sidebar__item sidebar__item--big', {'sidebar__item--active': isActive})}>
           <button onClick={e => toggleRequestGroup(requestGroup)}>
             <div className="sidebar__clickable">
               <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
@@ -60,9 +61,9 @@ class SidebarRequestGroupRow extends Component {
           </button>
 
           <div className="sidebar__actions">
-            <button onClick={(e) => addRequestToRequestGroup(requestGroup)}>
-              <i className="fa fa-plus-circle"></i>
-            </button>
+            {/*<button onClick={(e) => addRequestToRequestGroup(requestGroup)}>*/}
+            {/*<i className="fa fa-plus-circle"></i>*/}
+            {/*</button>*/}
             <RequestGroupActionsDropdown
               requestGroup={requestGroup}
               right={true}
@@ -78,7 +79,7 @@ class SidebarRequestGroupRow extends Component {
               isActive={false}
               request={null}
               requestGroup={requestGroup}
-            />
+              requestCreate={addRequestToRequestGroup}/>
           )}
           {expanded ? children : null}
         </ul>

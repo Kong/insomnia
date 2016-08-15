@@ -1,17 +1,18 @@
 import React, {Component, PropTypes} from 'react';
+import classnames from 'classnames';
 
+import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
 import Dropdown from '../base/Dropdown';
-import DropdownHint from '../base/DropdownHint';
+import DropdownDivider from '../base/DropdownDivider';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
+import SidebarFilter from './SidebarFilter';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
+import {SIDEBAR_SKINNY_REMS} from '../../lib/constants';
+import {COLLAPSE_SIDEBAR_REMS} from '../../lib/constants';
 
 
 class Sidebar extends Component {
-  _onFilterChange (value) {
-    this.props.changeFilter(value);
-  }
-
   _filterChildren (filter, children, extra = null) {
     return children.filter(child => {
       if (child.doc.type !== 'Request') {
@@ -41,6 +42,7 @@ class Sidebar extends Component {
       filter,
       toggleRequestGroup,
       addRequestToRequestGroup,
+      addRequestToWorkspace,
       moveRequest,
       moveRequestGroup,
       activateRequest,
@@ -60,6 +62,7 @@ class Sidebar extends Component {
             key={child.doc._id}
             moveRequest={moveRequest}
             activateRequest={activateRequest}
+            requestCreate={addRequestToWorkspace}
             isActive={child.doc._id === activeRequestId}
             request={child.doc}
           />
@@ -85,7 +88,7 @@ class Sidebar extends Component {
           moveRequestGroup={moveRequestGroup}
           moveRequest={moveRequest}
           toggleRequestGroup={toggleRequestGroup}
-          addRequestToRequestGroup={addRequestToRequestGroup}
+          addRequestToRequestGroup={() => addRequestToRequestGroup(requestGroup)}
           numChildren={child.children.length}
           requestGroup={requestGroup}>
           {children}
@@ -95,46 +98,45 @@ class Sidebar extends Component {
   }
 
   render () {
-    const {filter, children, requestCreate, requestGroupCreate} = this.props;
+    const {
+      showCookiesModal,
+      changeFilter,
+      filter,
+      children,
+      requestCreate,
+      requestGroupCreate,
+      width
+    } = this.props;
 
     return (
-      <aside className="sidebar">
-        <header className="sidebar__header">
-          <WorkspaceDropdown />
-        </header>
+      <aside className={classnames('sidebar', {
+        'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
+        'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
+      })}>
+        <WorkspaceDropdown
+          className="sidebar__header"
+        />
 
-        <ul className="sidebar__list">
+        <div className="sidebar__menu">
+          <EnvironmentsDropdown />
+          <button className="btn btn--super-compact" onClick={e => showCookiesModal()}>
+            <div className="sidebar__menu__thing">
+              <span>Cookies</span>
+            </div>
+          </button>
+        </div>
+
+        <SidebarFilter
+          onChange={filter => changeFilter(filter)}
+          requestCreate={requestCreate}
+          requestGroupCreate={requestGroupCreate}
+          filter={filter}
+        />
+
+        <ul className="sidebar__list sidebar__list-root">
           {this._renderChildren(children)}
         </ul>
 
-        <footer className="sidebar__footer">
-          <Dropdown>
-            <button className="btn btn--compact">
-              <i className="fa fa-plus-circle"></i>
-            </button>
-            <ul>
-              <li>
-                <button onClick={e => requestCreate()}>
-                  <i className="fa fa-plus-circle"></i> New Request
-                  <DropdownHint char="N"></DropdownHint>
-                </button>
-              </li>
-              <li>
-                <button onClick={e => requestGroupCreate()}>
-                  <i className="fa fa-folder"></i> New Folder
-                </button>
-              </li>
-            </ul>
-          </Dropdown>
-          <div className="form-control form-control--underlined">
-            <input
-              type="text"
-              placeholder="Filter Requests"
-              value={filter}
-              onChange={e => this._onFilterChange(e.target.value)}
-            />
-          </div>
-        </footer>
       </aside>
     )
   }
@@ -145,11 +147,15 @@ Sidebar.propTypes = {
   activateRequest: PropTypes.func.isRequired,
   toggleRequestGroup: PropTypes.func.isRequired,
   addRequestToRequestGroup: PropTypes.func.isRequired,
+  addRequestToWorkspace: PropTypes.func.isRequired,
   changeFilter: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   requestGroupCreate: PropTypes.func.isRequired,
+  showEnvironmentsModal: PropTypes.func.isRequired,
+  showCookiesModal: PropTypes.func.isRequired,
+  width: PropTypes.number.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,

@@ -1,16 +1,15 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, Component} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 
 import Modal from '../base/Modal';
 import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
-import MethodTag from '../MethodTag';
-import ModalComponent from '../lib/ModalComponent';
+import MethodTag from '../tags/MethodTag';
 import * as db from '../../database';
 
 
-class RequestSwitcherModal extends ModalComponent {
+class RequestSwitcherModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
@@ -52,7 +51,7 @@ class RequestSwitcherModal extends ModalComponent {
     }
 
     this.props.activateRequest(request);
-    this.hide();
+    this.modal.hide();
   }
 
   _handleChange (searchString) {
@@ -116,29 +115,18 @@ class RequestSwitcherModal extends ModalComponent {
     });
   }
 
-  _focusInput () {
-    // Need to focus after the Modal has shown, or else it won't exist yet
-    setTimeout(() => {
-      this.refs.input.focus();
-    });
-  }
-
   show () {
-    super.show();
-    this._focusInput();
+    this.modal.show();
     this._handleChange('');
   }
 
   toggle () {
-    super.toggle();
-    this._focusInput();
+    this.modal.toggle();
     this._handleChange('');
   }
 
   componentDidMount () {
-    super.componentDidMount();
-
-    ReactDOM.findDOMNode(this.refs.modal).addEventListener('keydown', e => {
+    ReactDOM.findDOMNode(this).addEventListener('keydown', e => {
       const keyCode = e.keyCode;
 
       if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
@@ -162,7 +150,7 @@ class RequestSwitcherModal extends ModalComponent {
     const {matchedRequests, requestGroups, searchString, activeIndex} = this.state;
 
     return (
-      <Modal ref="modal" top={true} {...this.props}>
+      <Modal ref={m => this.modal = m} top={true} {...this.props}>
         <ModalHeader hideCloseButton={true}>
           <p className="pull-right txt-md">
             <span className="monospace">tab</span> or
@@ -179,8 +167,8 @@ class RequestSwitcherModal extends ModalComponent {
           <div className="form-control form-control--outlined no-margin">
             <input
               type="text"
-              ref="input"
-              defaultValue={searchString}
+              ref={n => n && n.focus()}
+              value={searchString}
               onChange={e => this._handleChange(e.target.value)}
             />
           </div>

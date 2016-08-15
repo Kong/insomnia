@@ -30,7 +30,9 @@ class CopyButton extends Component {
 
     return (
       <button onClick={this._handleClick.bind(this)} {...other}>
-        {showConfirmation ? 'Copied' : 'Copy'}
+        {showConfirmation ? (
+          <span>Copied <i className="fa fa-check-circle-o"></i></span>
+        ) : 'Copy to Clipboard'}
       </button>
     )
   }

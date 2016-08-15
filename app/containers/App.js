@@ -8,9 +8,12 @@ import {DragDropContext} from 'react-dnd';
 
 import Mousetrap from '../lib/mousetrap';
 
+import {addModal} from '../components/modals';
+import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
+import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
-import CurlExportModal from '../components/modals/CurlExportModal';
+import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
@@ -35,6 +38,8 @@ import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
 import {CHECK_FOR_UPDATES_INTERVAL} from '../lib/constants';
+import {getModal} from '../components/modals/index';
+
 
 class App extends Component {
   constructor (props) {
@@ -54,12 +59,12 @@ class App extends Component {
 
       // Show Settings
       'mod+,': () => {
-        SettingsModal.toggle();
+        getModal(SettingsModal).toggle();
       },
 
       // Show Request Switcher
       'mod+p': () => {
-        RequestSwitcherModal.toggle();
+        getModal(RequestSwitcherModal).toggle();
       },
 
       // Request Send
@@ -68,6 +73,16 @@ class App extends Component {
         if (request) {
           this.props.actions.requests.send(request);
         }
+      },
+
+      // Edit Workspace Environments
+      'mod+e': () => {
+        getModal(WorkspaceEnvironmentsEditModal).toggle(this._getActiveWorkspace());
+      },
+
+      // Edit Cookies
+      'mod+k': () => {
+        getModal(CookiesModal).toggle();
       },
 
       // Request Create
@@ -81,7 +96,7 @@ class App extends Component {
         }
 
         const parentId = request ? request.parentId : workspace._id;
-        db.requestCreateAndActivate(workspace, {parentId});
+        this._requestCreate(parentId);
       },
 
       // Request Duplicate
@@ -217,9 +232,25 @@ class App extends Component {
     })
   }
 
+  _requestGroupCreate (parentId) {
+    getModal(PromptModal).show({
+      headerName: 'Create New Folder',
+      defaultValue: 'My Folder',
+      selectText: true
+    }).then(name => {
+      db.requestGroupCreate({parentId, name})
+    });
+  }
+
   _requestCreate (parentId) {
-    const workspace = this._getActiveWorkspace();
-    db.requestCreateAndActivate(workspace, {parentId})
+    getModal(PromptModal).show({
+      headerName: 'Create New Request',
+      defaultValue: 'My Request',
+      selectText: true
+    }).then(name => {
+      const workspace = this._getActiveWorkspace();
+      db.requestCreateAndActivate(workspace, {parentId, name})
+    });
   }
 
   _generateSidebarTree (parentId, entities) {
@@ -353,7 +384,7 @@ class App extends Component {
       const currentPixelWidth = ReactDOM.findDOMNode(this.refs.sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
-      const sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
+      let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
       this.setState({sidebarWidth})
     }
   }
@@ -404,7 +435,7 @@ class App extends Component {
       if (firstLaunch) {
         // TODO: Show a welcome message
       } else if (lastVersion !== getAppVersion()) {
-        ChangelogModal.show();
+        getModal(ChangelogModal).show();
       }
 
       db.statsUpdate({
@@ -458,21 +489,25 @@ class App extends Component {
       <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref="sidebar"
+          showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
+          showCookiesModal={() => getModal(CookiesModal).show()}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
           changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
           moveRequest={this._moveRequest.bind(this)}
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
+          addRequestToWorkspace={() => this._requestCreate(requestGroup._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
-          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}
-          requestGroupCreate={() => db.requestGroupCreate({parentId: workspace._id})}
+          requestCreate={() => this._requestCreate(workspace._id)}
+          requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
           filter={workspace.filter || ''}
           children={children}
+          width={sidebarWidth}
         />
 
         <div className="drag drag--sidebar">
-          <div onMouseDown={() => this._startDragSidebar()}
+          <div onMouseDown={e => {e.preventDefault(); this._startDragSidebar()}}
                onDoubleClick={() => this._resetDragSidebar()}>
           </div>
         </div>
@@ -485,6 +520,7 @@ class App extends Component {
           showPasswords={settings.showPasswords}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
+          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}
           updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(url)}
           updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
@@ -509,19 +545,30 @@ class App extends Component {
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
           loadingRequests={requests.loadingRequests}
+          showCookiesModal={() => getModal(CookiesModal).show()}
         />
 
-        <PromptModal />
-        <AlertModal />
-        <ChangelogModal />
-        <SettingsModal />
-        <CurlExportModal />
+        <PromptModal ref={m => addModal(m)}/>
+        <AlertModal ref={m => addModal(m)}/>
+        <ChangelogModal ref={m => addModal(m)}/>
+        <SettingsModal ref={m => addModal(m)}/>
+        <GenerateCodeModal ref={m => addModal(m)}/>
         <RequestSwitcherModal
+          ref={m => addModal(m)}
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
         />
-        <EnvironmentEditModal onChange={rg => db.requestGroupUpdate(rg)}/>
+        <EnvironmentEditModal
+          ref={m => addModal(m)}
+          onChange={rg => db.requestGroupUpdate(rg)}/>
+        <WorkspaceEnvironmentsEditModal
+          ref={m => addModal(m)}
+          onChange={w => db.workspaceUpdate(w)}/>
+        <CookiesModal
+          ref={m => addModal(m)}
+          onChange={() => console.log('TODO: COOKIES!!!')}/>
+
         {/*<div className="toast toast--show">*/}
         {/*<div className="toast__message">How's it going?</div>*/}
         {/*<button className="toast__action">Great!</button>*/}

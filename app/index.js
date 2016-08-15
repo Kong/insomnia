@@ -19,9 +19,10 @@ import App from './containers/App';
 // }, 1000 * 10);
 
 // Global CSS
+import './css/lib/fontawesome/css/font-awesome.css'
+import './css/lib/fonts/open-sans.css'
 import './css/index.scss'
 import './css/lib/chrome/platform_app.css'
-import './css/lib/fontawesome/css/font-awesome.css'
 import {initStore} from './redux/initstore';
 import {initDB} from './database';
 import {getAppVersion} from './lib/appInfo';
@@ -43,7 +44,4 @@ initDB()
       <Provider store={store}><App /></Provider>,
       document.getElementById('root')
     );
-  })
-  .catch(err => {
-    console.error('Failed to initialize app', err);
   });

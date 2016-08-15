@@ -58,6 +58,7 @@ label > .form-control,
   text-align: center;
   padding: 0 ($padding-md * 1.5);
   height: $line-height-md;
+  border: 1px solid transparent;
 
   &.btn--compact {
     padding: 0 $padding-md;
@@ -75,10 +76,14 @@ label > .form-control,
   }
 }
 
+.btn:disabled {
+  opacity: 0.3;
+}
+
 .btn:focus:not(:disabled),
 .btn.focus:not(:disabled),
 .btn:hover:not(:disabled) {
-  background: $hl-sm;
+  background: $hl-xs;
 }
 
 .btn:active {
@@ -100,6 +105,10 @@ textarea, input, button {
   &::-webkit-input-placeholder {
     color: $hl-xl;
   }
+}
+
+input.input--error {
+  border-color: $danger !important;
 }
 
 button {
