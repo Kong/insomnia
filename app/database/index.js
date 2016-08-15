@@ -19,6 +19,12 @@ export const TYPE_REQUEST = 'Request';
 export const TYPE_RESPONSE = 'Response';
 
 
+const BASE_MODEL_DEFAULTS = () => ({
+  modified: Date.now(),
+  created: Date.now(),
+  parentId: null
+});
+
 const MODEL_DEFAULTS = {
   [TYPE_STATS]: () => ({
     lastLaunch: Date.now(),
@@ -38,10 +44,10 @@ const MODEL_DEFAULTS = {
   }),
   [TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
-    filter: '',
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    activeEnvironmentId: null,
-    metaActiveRequestId: null
+    metaActiveEnvironmentId: null,
+    metaActiveRequestId: null,
+    metaFilter: ''
   }),
   [TYPE_ENVIRONMENT]: () => ({
     name: 'Base Environment',
@@ -226,15 +232,18 @@ function update (doc) {
 }
 
 function remove (doc) {
-  return new Promise((resolve, reject) => {
-    // TODO: Remove all children as well
-    db[doc.type].remove({_id: doc._id}, {multi: true}, err => {
-      if (err) {
-        return reject(err);
-      }
+  return new Promise(resolve => {
+    withChildren(doc).then(docs => {
+      const promises = docs.map(d => (
+        db[d.type].remove({_id: d._id}, {multi: true})
+      ));
 
-      resolve();
-      Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
+      Promise.all(promises).then(() => {
+        for (const doc of docs) {
+          Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
+        }
+        resolve()
+      });
     });
   });
 }
@@ -246,7 +255,7 @@ function remove (doc) {
 
 function docUpdate (originalDoc, patch = {}) {
   const doc = Object.assign(
-    {},
+    BASE_MODEL_DEFAULTS(),
     originalDoc,
     patch,
     {modified: Date.now()}
@@ -256,28 +265,63 @@ function docUpdate (originalDoc, patch = {}) {
 }
 
 function docCreate (type, idPrefix, patch = {}) {
-  const baseDefaults = {
-    parentId: null
-  };
-
-  const modelDefaults = MODEL_DEFAULTS[type]();
-
   const doc = Object.assign(
-    baseDefaults,
-    modelDefaults,
+    BASE_MODEL_DEFAULTS(),
+    {_id: generateId(idPrefix)},
+    MODEL_DEFAULTS[type](),
     patch,
 
-    // Required Generated Fields
+    // Fields that the user can't touch
     {
-      _id: generateId(idPrefix),
       type: type,
-      created: Date.now(),
       modified: Date.now()
     }
   );
 
   return insert(doc);
 }
+
+// ~~~~~~~ //
+// GENERAL //
+// ~~~~~~~ //
+
+export function withChildren (doc = null) {
+  let docsToReturn = doc ? [doc] : [];
+
+  const next = (docs) => {
+    const promises = [];
+    for (const doc of docs) {
+      for (const type of ALL_TYPES) {
+        // If the doc is null, we want to search for parentId === null
+        const parentId = doc ? doc._id : null;
+        promises.push(find(type, {parentId}));
+      }
+    }
+
+    return Promise.all(promises).then(results => {
+      let newDocs = [];
+
+      // Gather up the docs from each type
+      for (const docs of results) {
+        for (const doc of docs) {
+          newDocs.push(doc);
+        }
+      }
+
+      if (newDocs.length === 0) {
+        // Didn't find anything. We're done
+        return new Promise(resolve => resolve(docsToReturn));
+      }
+
+      // Continue searching for children
+      docsToReturn = [...docsToReturn, ...newDocs];
+      return next(newDocs);
+    });
+  };
+
+  return next([doc]);
+}
+
 
 // ~~~~~~~ //
 // REQUEST //
@@ -383,7 +427,7 @@ export function requestGroupCreate (patch = {}) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_REQUEST_GROUP, 'grp', patch);
+  return docCreate(TYPE_REQUEST_GROUP, 'fdr', patch);
 }
 
 export function requestGroupUpdate (requestGroup, patch) {
@@ -445,6 +489,10 @@ export function cookieJarGetOrCreateForWorkspace (workspace) {
 
 export function cookieJarAll () {
   return all(TYPE_COOKIE_JAR);
+}
+
+export function cookieJarGetById (id) {
+  return get(TYPE_COOKIE_JAR, id);
 }
 
 export function cookieJarUpdate (cookieJar, patch) {

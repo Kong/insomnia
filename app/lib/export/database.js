@@ -1,113 +1,15 @@
 import * as db from '../../database';
 import {getAppVersion} from '../appInfo';
-import {getContentTypeFromHeaders} from '../contentTypes';
+import {importRequestGroupLegacy} from './legacy';
+import {importRequestLegacy} from './legacy';
 
-const VERSION_CHROME_APP = 1;
+const VERSION_LEGACY = 1;
 const VERSION_DESKTOP_APP = 2;
 const TYPE_REQUEST = 'request';
 const TYPE_REQUEST_GROUP = 'request_group';
-// const TYPE_WORKSPACE = 'workspace';
-const FORMAT_MAP = {
-  json: 'application/json',
-  xml: 'application/xml',
-  form: 'application/x-www-form-urlencoded',
-  text: 'text/plain'
-};
-
-
-// function importWorkspace (iWorkspace, exportFormat) {
-//   if (exportFormat === VERSION_DESKTOP_APP) {
-//     db.workspaceCreate({
-//       name: iWorkspace.name,
-//       environments: iWorkspace.environments
-//     });
-//   } else {
-//     console.error(`Unknown export format ${exportFormat}`)
-//   }
-// }
-
-function importRequestGroup (iRequestGroup, parentId, exportFormat, index = 1) {
-  if (exportFormat === VERSION_CHROME_APP) {
-    return db.requestGroupCreate({
-      parentId,
-      name: iRequestGroup.name,
-      environment: (iRequestGroup.environments || {}).base || {},
-      metaCollapsed: true,
-      metaSortKey: index * 1000
-    }).then(requestGroup => {
-      // Sometimes (maybe all the time, I can't remember) requests will be nested
-      if (iRequestGroup.hasOwnProperty('requests')) {
-        // Let's process them oldest to newest
-        iRequestGroup.requests.map(
-          (r, i) => importRequest(r, requestGroup._id, exportFormat, index * 1000 + i)
-        );
-      }
-    });
-  } else if (exportFormat === VERSION_DESKTOP_APP) {
-    return db.requestGroupCreate({
-      parentId,
-      name: iRequestGroup.name,
-      environment: iRequestGroup.environment,
-      metaSortKey: index * 1000,
-      metaCollapsed: true
-    });
-  } else {
-    console.error(`Unknown export format ${exportFormat}`)
-  }
-}
-
-function importRequest (importedRequest, parentId, exportFormat, index) {
-  if (exportFormat === VERSION_CHROME_APP) {
-    let auth = {};
-    if (importedRequest.authentication.username) {
-      auth = {
-        username: importedRequest.authentication.username,
-        password: importedRequest.authentication.password
-      }
-    }
-
-    // Add the content type header
-    const headers = importedRequest.headers || [];
-    const contentType = getContentTypeFromHeaders(headers);
-    if (!contentType) {
-      const derivedContentType = FORMAT_MAP[importedRequest.__insomnia.format];
-
-      if (derivedContentType) {
-        headers.push({
-          name: 'Content-Type',
-          value: FORMAT_MAP[importedRequest.__insomnia.format]
-        });
-      }
-    }
-
-    db.requestCreate({
-      parentId,
-      name: importedRequest.name,
-      url: importedRequest.url,
-      method: importedRequest.method,
-      body: importedRequest.body,
-      headers: headers,
-      parameters: importedRequest.params || [],
-      metaSortKey: index * 1000,
-      contentType: FORMAT_MAP[importedRequest.__insomnia.format] || 'text/plain',
-      authentication: auth
-    });
-  } else if (exportFormat === VERSION_DESKTOP_APP) {
-    db.requestCreate({
-      parentId,
-      name: importedRequest.name,
-      url: importedRequest.url,
-      method: importedRequest.method,
-      body: importedRequest.body,
-      headers: importedRequest.headers,
-      metaSortKey: index * 1000,
-      parameters: importedRequest.parameters,
-      authentication: importedRequest.authentication
-    });
-  } else {
-    console.error(`Unknown export format ${exportFormat}`)
-  }
-}
+const TYPE_WORKSPACE = 'workspace';
+const TYPE_COOKIE_JAR = 'cookie_jar';
+const TYPE_ENVIRONMENT = 'environment';
 
 export function importJSON (workspace, json) {
   let data;
@@ -126,46 +28,42 @@ export function importJSON (workspace, json) {
 
   const exportFormat = data.__export_format;
 
-  if (exportFormat === VERSION_CHROME_APP) {
-    data.items.filter(item => item._type === TYPE_REQUEST_GROUP).map(
-      (rg, i) => importRequestGroup(rg, workspace._id, data.__export_format, i)
-    );
+  switch (exportFormat) {
 
-    data.items.filter(item => item._type === TYPE_REQUEST).map(
-      (r, i) => importRequest(r, workspace._id, data.__export_format, i)
-    );
-  } else if (exportFormat === VERSION_DESKTOP_APP) {
-    const requestGroupIdMap = {
-      // [oldId]: newId
-    };
+    case VERSION_LEGACY:
+      data.items.filter(item => item._type === TYPE_REQUEST_GROUP).map(
+        (rg, i) => importRequestGroupLegacy(rg, workspace._id, data.__export_format, i)
+      );
+      data.items.filter(item => item._type === TYPE_REQUEST).map(
+        (r, i) => importRequestLegacy(r, workspace._id, data.__export_format, i)
+      );
+      break;
 
-    const requestGroupPromises = [];
-    data.resources.filter(item => item._type === TYPE_REQUEST_GROUP).map((iRg, i) => {
-      const p = importRequestGroup(iRg, workspace._id, data.__export_format, i).then(rg => {
-        requestGroupIdMap[iRg._id] = rg._id;
-        return rg;
+    case VERSION_DESKTOP_APP:
+      data.resources.map(r => {
+        if (r._type === TYPE_WORKSPACE) {
+          db.workspaceGetById(r._id).then(d => d ? db.workspaceUpdate(d, r) : db.workspaceCreate(r));
+        } else if (r._type === TYPE_COOKIE_JAR) {
+          db.cookieJarGetById(r._id).then(d => d ? db.cookieJarUpdate(d, r) : db.cookieJarCreate(r));
+        } else if (r._type === TYPE_ENVIRONMENT) {
+          db.environmentGetById(r._id).then(d => d ? db.environmentUpdate(d, r) : db.environmentCreate(r));
+        } else if (r._type === TYPE_REQUEST_GROUP) {
+          db.requestGroupGetById(r._id).then(d => d ? db.requestGroupUpdate(d, r) : db.requestGroupCreate(r));
+        } else if (r._type === TYPE_REQUEST) {
+          db.requestGetById(r._id).then(d => d ? db.requestUpdate(d, r) : db.requestCreate(r));
+        } else {
+          console.error('Unknown doc type for import', r.type);
+        }
       });
-      requestGroupPromises.push(p);
-    });
+      break;
 
-    Promise.all(requestGroupPromises).then(() => {
-
-      // RequestGroups are imported, and we have the new IDs. Now we can import the requests...
-
-      data.resources.filter(item => item._type === TYPE_REQUEST).map((iR, i) => {
-
-        // If we couldn't find the parentID in our RequestGroups, fall back to the Workspace id
-        const parentId = requestGroupIdMap[iR.parentId] || workspace._id;
-
-        importRequest(iR, parentId, exportFormat, i);
-      });
-    });
-  } else {
-    console.error(`Unknown export format ${exportFormat}`)
+    default:
+      console.error('Export format not recognized', exportFormat);
+      break;
   }
 }
 
-export function exportJSON () {
+export function exportJSON (parentDoc = null) {
   const data = {
     _type: 'export',
     __export_format: 2,
@@ -175,54 +73,44 @@ export function exportJSON () {
   };
 
   return new Promise(resolve => {
-    Promise.all([
-      db.requestAll(),
-      db.requestGroupAll(),
-      // db.workspaceAll()
-    ]).then(([
-      requests,
-      requestGroups,
-      // workspaces
-    ]) => {
-      const exportingRequests = requests.map(r => ({
-        _type: TYPE_REQUEST,
-        created: r.created,
-        modified: r.modified,
-        parentId: r.parentId,
-        url: r.url,
-        name: r.name,
-        method: r.method,
-        body: r.body,
-        parameters: r.parameters,
-        headers: r.headers,
-        authentication: r.authentication
-      }));
+    db.withChildren(parentDoc).then(docs => {
+      data.resources = docs.filter(d => (
+        d.type !== db.TYPE_RESPONSE &&
+        d.type !== db.TYPE_STATS &&
+        d.type !== db.TYPE_SETTINGS
+      )).map(d => {
+        if (d.type === db.TYPE_WORKSPACE) {
+          d._type = TYPE_WORKSPACE;
+        } else if (d.type === db.TYPE_COOKIE_JAR) {
+          d._type = TYPE_COOKIE_JAR;
+        } else if (d.type === db.TYPE_ENVIRONMENT) {
+          d._type = TYPE_ENVIRONMENT;
+        } else if (d.type === db.TYPE_REQUEST_GROUP) {
+          d._type = TYPE_REQUEST_GROUP;
+        } else if (d.type === db.TYPE_REQUEST) {
+          d._type = TYPE_REQUEST;
+        }
 
-      const exportingRequestGroups = requestGroups.map(rg => ({
-        _type: TYPE_REQUEST_GROUP,
-        created: rg.created,
-        modified: rg.modified,
-        name: rg.name,
-        environment: rg.environment,
-        parentId: rg.parentId,
-      }));
+        const doc = removeMetaKeys(d);
 
-      // const exportingWorkspaces = workspaces.map(w => ({
-      //   _type: TYPE_WORKSPACE,
-      //   created: w.created,
-      //   modified: w.modified,
-      //   name: w.name,
-      //   environments: w.environments
-      // }));
+        delete doc.type;
 
-      data.resources = [
-        ...exportingRequests,
-        ...exportingRequestGroups,
-        // ...exportingWorkspaces
-      ];
+        return doc;
+      });
 
       resolve(JSON.stringify(data, null, 2));
     });
   });
 }
 
+
+function removeMetaKeys (obj) {
+  const newObj = Object.assign({}, obj);
+  for (const key of Object.keys(newObj)) {
+    if (key.indexOf('meta') === 0) {
+      delete newObj[key];
+    }
+  }
+
+  return newObj;
+}

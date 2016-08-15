@@ -77,22 +77,21 @@ class CookiesModal extends Component {
     });
   }
 
-  _load () {
-    db.cookieJarAll().then(jars => {
-      const cookieJar = jars[0];
+  _load (workspace) {
+    db.cookieJarGetOrCreateForWorkspace(workspace).then(cookieJar => {
       this.setState({cookieJar});
     });
   }
 
-  show () {
+  show (workspace) {
     this.modal.show();
-    this._load();
+    this._load(workspace);
     this.filterInput.focus();
   }
 
-  toggle () {
+  toggle (workspace) {
     this.modal.toggle();
-    this._load();
+    this._load(workspace);
     this.filterInput.focus();
   }
 

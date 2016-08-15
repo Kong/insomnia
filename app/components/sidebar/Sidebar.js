@@ -2,8 +2,6 @@ import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 
 import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
-import Dropdown from '../base/Dropdown';
-import DropdownDivider from '../base/DropdownDivider';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';

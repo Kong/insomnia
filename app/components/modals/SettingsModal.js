@@ -24,8 +24,13 @@ class SettingsTabs extends Component {
     this.props.hide();
   }
 
-  _exportFile () {
+  _exportAll () {
     this.props.actions.global.exportFile();
+    this.props.hide();
+  }
+
+  _exportWorkspace () {
+    this.props.actions.global.exportFile(this._getActiveWorkspace());
     this.props.hide();
   }
 
@@ -185,9 +190,8 @@ class SettingsTabs extends Component {
           </div>
         </TabPanel>
         <TabPanel className="pad">
-          <p>
-            Import or export your data, so you can share it or back it up.
-          </p>
+          <p>This will export all app data for all workspaces.</p>
+          <p>Be aware that you may be exporting <strong>private data</strong></p>
           <p>
             <button className="btn btn--super-compact btn--outlined"
                     onClick={e => this._importFile()}>
@@ -195,8 +199,13 @@ class SettingsTabs extends Component {
             </button>
             {" "}
             <button className="btn btn--super-compact btn--outlined"
-                    onClick={e => this._exportFile()}>
-              Export
+                    onClick={e => this._exportAll()}>
+              Export All Data
+            </button>
+            {" "}
+            <button className="btn btn--super-compact btn--outlined"
+                    onClick={e => this._exportWorkspace()}>
+              Export Current Workspace
             </button>
           </p>
         </TabPanel>
@@ -211,7 +220,7 @@ class SettingsTabs extends Component {
           </p>
           <p>
             You can help me out by sending your feedback to&nbsp;
-            <Link href="mailto:supporot@insomnia.rest">support@insomnia.rest</Link> or tweet&nbsp;
+            <Link href="mailto:support@insomnia.rest">support@insomnia.rest</Link> or tweet&nbsp;
             <Link href="https://twitter.com/GetInsomnia">@GetInsomnia</Link>.
           </p>
           <p>Thanks!</p>
@@ -224,7 +233,6 @@ class SettingsTabs extends Component {
 }
 
 SettingsTabs.propTypes = {
-  hide: PropTypes.func.isRequired,
   workspaces: PropTypes.shape({
     activeId: PropTypes.string
   }),
@@ -276,9 +284,9 @@ class SettingsModal extends Component {
     }
   }
 
-  _setIndex (index) {
-    if (index >= 0) {
-      this.setState({index});
+  _setIndex (selectedIndex) {
+    if (selectedIndex >= 0) {
+      this.setState({selectedIndex});
     } else {
       this.setState({selectedIndex: 0});
     }

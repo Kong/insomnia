@@ -37,14 +37,6 @@ function buildRequestConfig (request, patch = {}) {
   const qs = querystring.buildFromParams(request.parameters);
   config.url = querystring.joinURL(request.url, qs);
 
-  // Set basic auth if we need to
-  if (request.authentication.username) {
-    config.auth = {
-      user: request.authentication.username,
-      pass: request.authentication.password
-    }
-  }
-
   for (let i = 0; i < request.headers.length; i++) {
     let header = request.headers[i];
     if (header.name) {

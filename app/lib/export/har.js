@@ -2,11 +2,24 @@ import * as db from '../../database';
 import {getRenderedRequest} from '../render';
 import {jarFromCookies} from '../cookies';
 
-export function exportHar (requestId) {
+export function exportHar (requestId, addContentLength = false) {
   return new Promise((resolve, reject) => {
     db.requestGetById(requestId).then(request => {
       return getRenderedRequest(request);
     }).then(renderedRequest => {
+
+      if (addContentLength) {
+        const hasContentLengthHeader = !!renderedRequest.headers.find(
+          h => h.name.toLowerCase() === 'content-length'
+        );
+
+        if (!hasContentLengthHeader) {
+          const name = 'content-length';
+          const value = Buffer.byteLength(renderedRequest.body).toString();
+          renderedRequest.headers.push({name, value})
+        }
+      }
+
       resolve({
         method: renderedRequest.method,
         url: renderedRequest.url,

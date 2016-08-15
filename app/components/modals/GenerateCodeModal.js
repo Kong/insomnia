@@ -21,6 +21,10 @@ const MODE_MAP = {
   ocaml: 'mllike'
 };
 
+const TO_ADD_CONTENT_LENGTH = {
+  node: ['native']
+};
+
 
 class GenerateCodeModal extends Component {
   constructor (props) {
@@ -50,7 +54,10 @@ class GenerateCodeModal extends Component {
   }
 
   _generateCode (request, target, client) {
-    exportHar(request._id).then(har => {
+    // Some clients need a content-length for the request to succeed
+    const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
+
+    exportHar(request._id, addContentLength).then(har => {
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert(target.key, client.key);
 

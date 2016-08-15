@@ -45,7 +45,7 @@
     "codemirror": "~5.16.0",
     "electron-prebuilt": "~1.2.8",
     "electron-squirrel-startup": "^1.0.0",
-    "httpsnippet": "git@github.com:gschier/httpsnippet.git#f47d1e0e7c5084adb765442839504f9265a84669",
+    "httpsnippet": "git@github.com:gschier/httpsnippet.git#39d2fb0449f33711e5cc71a4d42b0e5b808426b4",
     "json-lint": "^0.1.0",
     "jsonschema": "^1.1.0",
     "mousetrap": "^1.6.0",

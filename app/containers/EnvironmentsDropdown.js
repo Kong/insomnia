@@ -24,7 +24,7 @@ class EnvironmentsDropdown extends Component {
 
   _handleActivateEnvironment (environment) {
     const workspace = this._getActiveWorkspace();
-    db.workspaceUpdate(workspace, {activeEnvironmentId: environment._id});
+    db.workspaceUpdate(workspace, {metaActiveEnvironmentId: environment._id});
   }
 
   render () {
@@ -34,7 +34,7 @@ class EnvironmentsDropdown extends Component {
     const allEnvironments = Object.keys(entities.environments).map(id => entities.environments[id]);
     const baseEnvironment = allEnvironments.find(e => e.parentId === workspace._id);
     const subEnvironments = allEnvironments.filter(e => e.parentId === (baseEnvironment && baseEnvironment._id));
-    const activeEnvironment = allEnvironments.find(e => e._id === workspace.activeEnvironmentId) || baseEnvironment;
+    const activeEnvironment = allEnvironments.find(e => e._id === workspace.metaActiveEnvironmentId) || baseEnvironment;
 
     return (
       <Dropdown {...other} className={className + ' wide'}>

@@ -2,6 +2,7 @@ import electron from 'electron';
 import fs from 'fs';
 
 import {importJSON, exportJSON} from '../../lib/export/database';
+import * as db from '../../database/index';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
@@ -65,19 +66,22 @@ export function importFile (workspace) {
       // Let's import all the paths!
       paths.map(path => {
         fs.readFile(path, 'utf8', (err, data) => {
-          err || importJSON(workspace, data);
-          dispatch(loadStop());
+          // Unset the current active request first because we might be updating it
+          db.workspaceUpdate(workspace, {metaActiveRequestId: null}).then(() => {
+            err || importJSON(workspace, data);
+            dispatch(loadStop());
+          });
         })
       })
     });
   }
 }
 
-export function exportFile () {
+export function exportFile (parentDoc = null) {
   return dispatch => {
     dispatch(loadStart());
 
-    exportJSON().then(json => {
+    exportJSON(parentDoc).then(json => {
       const options = {
         title: 'Export Insomnia Data',
         buttonLabel: 'Export',

@@ -6,23 +6,13 @@ nunjucks.configure({
   autoescape: false
 });
 
-export function render (template, context = {}) {
-  try {
-    return nunjucks.renderString(template, context);
-  } catch (e) {
-    throw new Error(
-      e.message.replace('(unknown path)\n  ', '')
-    );
-  }
-}
-
 export function getRenderedRequest (request) {
   return db.requestGetAncestors(request).then(ancestors => {
     const workspace = ancestors.find(doc => doc.type === TYPE_WORKSPACE);
 
     return Promise.all([
       db.environmentGetOrCreateForWorkspace(workspace),
-      db.environmentGetById(workspace.activeEnvironmentId),
+      db.environmentGetById(workspace.metaActiveEnvironmentId),
       db.cookieJarGetOrCreateForWorkspace(workspace)
     ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
       const renderContext = Object.assign(
@@ -73,7 +63,38 @@ export function getRenderedRequest (request) {
       // Add the yummy cookies
       renderedRequest.cookieJar = cookieJar;
 
+      // Do authentication
+      if (renderedRequest.authentication.username) {
+        const authHeader = renderedRequest.headers.find(
+          h => h.name.toLowerCase() === 'authorization'
+        );
+
+        if (!authHeader) {
+          const {username, password} = renderedRequest.authentication;
+          const header = getBasicAuthHeader(username, password);
+          renderedRequest.headers.push(header);
+        }
+      }
+
       return new Promise(resolve => resolve(renderedRequest));
     });
   });
+}
+
+function render (template, context = {}) {
+  try {
+    return nunjucks.renderString(template, context);
+  } catch (e) {
+    throw new Error(
+      e.message.replace('(unknown path)\n  ', '')
+    );
+  }
+}
+
+function getBasicAuthHeader (username, password) {
+  const name = 'Authorization';
+  const header = `${username || ''}:${password || ''}`;
+  const authString = new Buffer(header, 'utf8').toString('base64');
+  const value = `Basic ${authString}`;
+  return {name, value};
 }

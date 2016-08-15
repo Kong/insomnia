@@ -118,7 +118,7 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
           <li>
-            <button onClick={e => getModal(SettingsModal).show(1)}>
+            <button onClick={e => getModal(SettingsModal).show(2)}>
               <i className="fa fa-share"></i> Import/Export
             </button>
           </li>

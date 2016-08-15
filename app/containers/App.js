@@ -32,6 +32,7 @@ import {
 
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
+import * as WorkspaceActions from '../redux/modules/workspaces';
 
 import * as db from '../database';
 import {importCurl} from '../lib/export/curl';
@@ -82,7 +83,7 @@ class App extends Component {
 
       // Edit Cookies
       'mod+k': () => {
-        getModal(CookiesModal).toggle();
+        getModal(CookiesModal).toggle(this._getActiveWorkspace());
       },
 
       // Request Create
@@ -333,39 +334,23 @@ class App extends Component {
   _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
 
-    const {entities, workspaces} = props || this.props;
+    const {entities, workspaces, actions} = props || this.props;
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
+      actions.workspaces.activate(workspace);
     }
 
     return workspace;
   }
 
   _getActiveRequest (props) {
+    // TODO: Factor this out into a selector
+
     props = props || this.props;
     const {entities} = props;
     let activeRequestId = this._getActiveWorkspace(props).metaActiveRequestId;
     return activeRequestId ? entities.requests[activeRequestId] : null;
-  }
-
-  _fetchActiveRequestGroup (props) {
-    return new Promise((resolve, reject) => {
-      props = props || this.props;
-      const request = this._getActiveRequest(props);
-
-      if (!request) {
-        reject();
-      }
-
-      db.requestGroupGetById(request.parentId).then(requestGroup => {
-        if (requestGroup) {
-          resolve(requestGroup);
-        } else {
-          reject();
-        }
-      });
-    });
   }
 
   _handleMouseMove (e) {
@@ -490,18 +475,18 @@ class App extends Component {
         <Sidebar
           ref="sidebar"
           showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
-          showCookiesModal={() => getModal(CookiesModal).show()}
+          showCookiesModal={() => getModal(CookiesModal).show(workspace)}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
-          changeFilter={filter => db.workspaceUpdate(workspace, {filter})}
+          changeFilter={metaFilter => db.workspaceUpdate(workspace, {metaFilter})}
           moveRequest={this._moveRequest.bind(this)}
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
-          addRequestToWorkspace={() => this._requestCreate(requestGroup._id)}
+          addRequestToWorkspace={() => this._requestCreate(workspace._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequest ? activeRequest._id : null}
-          requestCreate={() => this._requestCreate(workspace._id)}
+          requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
-          filter={workspace.filter || ''}
+          filter={workspace.metaFilter || ''}
           children={children}
           width={sidebarWidth}
         />
@@ -582,11 +567,13 @@ class App extends Component {
 App.propTypes = {
   actions: PropTypes.shape({
     requests: PropTypes.shape({
-      send: PropTypes.func.isRequired,
-      changeFilter: PropTypes.func.isRequired
+      send: PropTypes.func.isRequired
     }),
     modals: PropTypes.shape({
       hide: PropTypes.func.isRequired
+    }),
+    workspaces: PropTypes.shape({
+      activate: PropTypes.func.isRequired,
     })
   }).isRequired,
   entities: PropTypes.shape({
@@ -598,7 +585,6 @@ App.propTypes = {
     activeId: PropTypes.string
   }).isRequired,
   requests: PropTypes.shape({
-    filter: PropTypes.string.isRequired,
     loadingRequests: PropTypes.object.isRequired
   }).isRequired,
   modals: PropTypes.array.isRequired
@@ -618,6 +604,7 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
+      workspaces: bindActionCreators(WorkspaceActions, dispatch),
       requests: bindActionCreators(RequestActions, dispatch)
     }
   }
