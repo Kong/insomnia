@@ -32,6 +32,13 @@ curl https://app.getsentry.com/api/0/projects/schierco/insomnia-electron/release
 curl https://app.getsentry.com/api/0/projects/schierco/insomnia-electron/releases/${APP_VERSION}/files/ \
   -X POST \
   -u "$SENTRY_TOKEN:" \
+  -F file=@./build/bundle.js \
+  -F name="bundle.js"
+
+# Upload a file for the given release
+curl https://app.getsentry.com/api/0/projects/schierco/insomnia-electron/releases/${APP_VERSION}/files/ \
+  -X POST \
+  -u "$SENTRY_TOKEN:" \
   -F file=@./build/bundle.js.map \
   -F name="bundle.js.map"
 

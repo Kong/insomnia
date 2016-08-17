@@ -94,7 +94,8 @@
     "webpack": "^1.12.14",
     "webpack-dev-middleware": "latest",
     "webpack-dev-server": "^1.14.1",
-    "webpack-hot-middleware": "^2.10.0"
+    "webpack-hot-middleware": "^2.10.0",
+    "webpack-target-electron-renderer": "^0.4.0"
   },
   "devEngines": {
     "node": "4.x || 5.x",

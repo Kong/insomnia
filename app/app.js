@@ -23,8 +23,8 @@ const {
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
-const IS_WIN = process.platform === 'win32';
-const IS_LIN = process.platform === 'linux';
+// const IS_WIN = process.platform === 'win32';
+// const IS_LIN = process.platform === 'linux';
 
 const UPDATE_URLS = {
   darwin: `http://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
