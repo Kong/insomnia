@@ -65,7 +65,7 @@ export default {
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
   externals: [
-    
+
     // Omit all the app package.sh dependencies (we want them loaded at runtime via NodeJS)
     ...Object.keys(pkg.dependencies)
   ],

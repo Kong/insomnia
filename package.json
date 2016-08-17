@@ -11,7 +11,7 @@
     "url": "https://github.com/gschier/insomnia"
   },
   "scripts": {
-    "start-hot": "HOT=1 NODE_ENV=development electron -r babel-register ./app/app.js",
+    "start-hot": "HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/app.js",
     "hot-server": "node -r babel-register ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "build": "bash scripts/build.sh",
@@ -52,6 +52,7 @@
     "nedb": "^1.8.0",
     "node-localstorage": "^1.3.0",
     "nunjucks": "^1.3.4",
+    "raven": "^0.12.1",
     "react": "^15.2.0",
     "react-dnd": "^2.1.4",
     "react-dnd-html5-backend": "^2.1.2",

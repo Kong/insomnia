@@ -4,6 +4,16 @@ if (require('electron-squirrel-startup')) {
   process.exit(0);
 }
 
+var raven = require('raven');
+var ravenClient = new raven.Client(
+  'https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a' +
+  '4189a68efb63c38fc50b@app.getsentry.com/88289'
+);
+
+if (!IS_DEV) {
+  ravenClient.patchGlobal();
+}
+
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
 const path = require('path');
@@ -21,7 +31,7 @@ const {
   LocalStorage
 } = require('node-localstorage');
 
-const IS_DEV = process.env.NODE_ENV === 'development';
+const IS_DEV = process.env.INSOMNIA_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
 // const IS_WIN = process.platform === 'win32';
 // const IS_LIN = process.platform === 'linux';
@@ -38,14 +48,12 @@ let localStorage = null;
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
-if (!IS_DEV) {
-  try {
-    autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
-    autoUpdater.checkForUpdates();
-  } catch (e) {
-    // Probably don't have internet
+autoUpdater.on('error', e => {
+  // Failed to launch auto updater
+  if (!IS_DEV) {
+    ravenClient.captureError(e);
   }
-}
+});
 
 autoUpdater.on('update-not-available', () => {
   console.log('-- Update Not Available --')
@@ -60,7 +68,16 @@ autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, 
   showUpdateModal();
 });
 
-function showUpdateModal() {
+function checkForUpdates () {
+  try {
+    autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
+    autoUpdater.checkForUpdates();
+  } catch (e) {
+    // This will fail in development
+  }
+}
+
+function showUpdateModal () {
   dialog.showMessageBox({
     type: 'info',
     buttons: [
@@ -83,16 +100,14 @@ function showUpdateModal() {
 
 ipcMain.on('check-for-updates', () => {
   console.log('-- Checking for Updates --');
-  if (!IS_DEV) {
-    autoUpdater.checkForUpdates();
-  }
+  checkForUpdates();
 });
 
-function saveBounds() {
+function saveBounds () {
   localStorage.setItem('bounds', JSON.stringify(mainWindow.getBounds()));
 }
 
-function getBounds() {
+function getBounds () {
   let bounds = {};
   try {
     bounds = JSON.parse(localStorage.getItem('bounds') || '{}');
@@ -104,11 +119,11 @@ function getBounds() {
   return bounds;
 }
 
-function saveZoomFactor(zoomFactor) {
+function saveZoomFactor (zoomFactor) {
   localStorage.setItem('zoomFactor', JSON.stringify(zoomFactor));
 }
 
-function getZoomFactor() {
+function getZoomFactor () {
   let zoomFactor = 1;
   try {
     zoomFactor = JSON.parse(localStorage.getItem('zoomFactor') || '1');
@@ -128,6 +143,9 @@ app.on('window-all-closed', () => {
 });
 
 app.on('ready', () => {
+  // First, check for updates
+  checkForUpdates();
+
   localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
 
   const zoomFactor = getZoomFactor();
@@ -158,7 +176,7 @@ app.on('ready', () => {
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
-  if (process.env.NODE_ENV === 'development') {
+  if (IS_DEV) {
     BrowserWindow.addDevToolsExtension(
       '/Users/gschier/Library/Application Support/Google/Chrome/Default/' +
       'Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.15.0_0'
@@ -189,7 +207,7 @@ app.on('ready', () => {
       }, {
         label: "Quit",
         accelerator: "Command+Q",
-        click: function() {
+        click: function () {
           app.quit();
         }
       }]
@@ -229,6 +247,10 @@ app.on('ready', () => {
     label: "View",
     role: "window",
     submenu: [{
+      role: 'minimize'
+    }, {
+      role: 'close'
+    }, {
       label: "Actual Size",
       accelerator: "CmdOrCtrl+0",
       click: () => {
@@ -287,13 +309,13 @@ app.on('ready', () => {
       submenu: [{
         label: 'Reload',
         accelerator: 'Command+R',
-        click: function() {
+        click: function () {
           mainWindow.reload();
         }
       }, {
         label: 'Toggle DevTools',
         accelerator: 'Alt+Command+I',
-        click: function() {
+        click: function () {
           mainWindow.toggleDevTools();
         }
       }]

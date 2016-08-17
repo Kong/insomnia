@@ -8,17 +8,15 @@
 <div id="root"></div>
 <script src="./external/jsonlint.js"></script>
 <script src="./external/raven.min.js"></script>
-
 <script>
   // Sentry
 
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.INSOMNIA_ENV !== 'development') {
     Raven.config('https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a4189a68efb63c38fc50b@app.getsentry.com/88289', {
       allowSecretKey: true,
       logger: 'sentry',
       levels: ['warn', 'error'],
       release: require('./app.json').version,
-      environment: process.env.NODE_ENV,
       ignoreUrls: [
         /.*raven\.min\.js.*/
       ],
