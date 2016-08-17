@@ -19,16 +19,29 @@
       levels: ['warn', 'error'],
       release: require('./app.json').version,
       environment: process.env.NODE_ENV,
-      ignoreErrors: [
-        'fb_xd_fragment',
-        /ReferenceError:.*/
-      ],
-      excludePaths: [
-        /\/external\/.*/
+      ignoreUrls: [
+        /.*raven\.min\.js.*/
       ],
       includePaths: [
-        /.*/
-      ]
+        /^(?!.*raven.min.js$).*$/ // Ignore raven stuff
+      ],
+      dataCallback: function (data) {
+        console.log("SENTRY DATA", data);
+        var normalize = function (filename) {
+          var match = filename.match(/\/(app.asar|build)\/(.*)/);
+          if (match) {
+            return match[2]; // return everything after ../app.asar/*
+          } else {
+            return filename;
+          }
+        };
+
+        data.exception.values[0].stacktrace.frames.forEach(function (frame) {
+          frame.filename = normalize(frame.filename);
+        });
+
+        return data
+      }
     }).install();
 
     console.log('-- Initialized Sentry --');
