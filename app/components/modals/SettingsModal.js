@@ -18,10 +18,20 @@ import {getAppName, getAppLongName} from '../../lib/appInfo';
 
 
 class SettingsTabs extends Component {
+  constructor (props) {
+    super(props);
+    this._currentTabIndex = -1;
+    this._currentVersion = null;
+  }
+
   _importFile () {
     const workspace = this._getActiveWorkspace(this.props);
     this.props.actions.global.importFile(workspace);
     this.props.hide();
+  }
+
+  _handleTabSelect (selectedIndex) {
+    this._currentTabIndex = selectedIndex;
   }
 
   _exportAll () {
@@ -46,26 +56,33 @@ class SettingsTabs extends Component {
     return workspace;
   }
 
+  componentWillReceiveProps ({selectedIndex, version}) {
+    if (this._currentVersion !== version) {
+      this._currentTabIndex = selectedIndex;
+      this._currentVersion = version;
+    }
+  }
+
   render () {
-    const {entities, selectedIndex} = this.props;
+    const {entities} = this.props;
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
     return (
-      <Tabs selectedIndex={selectedIndex >= 0 ? selectedIndex : 0}>
+      <Tabs onSelect={i => this._handleTabSelect(i)} selectedIndex={this._currentTabIndex}>
         <TabList>
-          <Tab>
+          <Tab selected={this._currentTabIndex === 0}>
             <button>General</button>
           </Tab>
-          <Tab>
+          <Tab selected={this._currentTabIndex === 1}>
             <button>Editor</button>
           </Tab>
-          <Tab>
+          <Tab selected={this._currentTabIndex === 2}>
             <button>Import/Export</button>
           </Tab>
-          <Tab>
+          <Tab selected={this._currentTabIndex === 3}>
             <button>Shortcuts</button>
           </Tab>
-          <Tab>
+          <Tab selected={this._currentTabIndex === 4}>
             <button>About</button>
           </Tab>
         </TabList>
@@ -248,7 +265,8 @@ SettingsTabs.propTypes = {
   }),
 
   // Optional
-  selectedIndex: PropTypes.number
+  selectedIndex: PropTypes.number,
+  version: PropTypes.number
 };
 
 function mapStateToProps (state) {
@@ -280,16 +298,14 @@ class SettingsModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
-      selectedIndex: 0
+      version: 0,
+      selectedIndex: -1
     }
   }
 
   _setIndex (selectedIndex) {
-    if (selectedIndex >= 0) {
-      this.setState({selectedIndex});
-    } else {
-      this.setState({selectedIndex: 0});
-    }
+    const version = this.state.version + 1;
+    this.setState({selectedIndex, version});
   }
 
   show (selectedIndex = 0) {
@@ -303,7 +319,7 @@ class SettingsModal extends Component {
   }
 
   render () {
-    const {selectedIndex} = this.state;
+    const {selectedIndex, version} = this.state;
 
     return (
       <Modal ref={m => this.modal = m} tall={true} {...this.props}>
@@ -313,7 +329,11 @@ class SettingsModal extends Component {
           <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>
         <ModalBody>
-          <ConnectedSettingsTabs hide={() => this.modal.hide()} selectedIndex={selectedIndex}/>
+          <ConnectedSettingsTabs
+            version={version}
+            hide={() => this.modal.hide()}
+            selectedIndex={selectedIndex}
+          />
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">

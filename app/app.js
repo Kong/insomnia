@@ -176,22 +176,27 @@ app.on('ready', () => {
     mainWindow = null;
   });
 
-  var template = [{
-    label: "Application",
-    role: "window",
-    submenu: [{
-      label: "About Application",
-      selector: "orderFrontStandardAboutPanel:"
-    }, {
-      type: "separator"
-    }, {
-      label: "Quit",
-      accelerator: "Command+Q",
-      click: function() {
-        app.quit();
-      }
-    }]
-  }, {
+  var template = [];
+  if (IS_MAC) {
+    template.push({
+      label: "Application",
+      role: "window",
+      submenu: [{
+        label: "About Application",
+        selector: "orderFrontStandardAboutPanel:"
+      }, {
+        type: "separator"
+      }, {
+        label: "Quit",
+        accelerator: "Command+Q",
+        click: function() {
+          app.quit();
+        }
+      }]
+    })
+  }
+
+  template = template.concat([{
     label: "Edit",
     submenu: [{
       label: "Undo",
@@ -273,7 +278,7 @@ app.on('ready', () => {
         electron.shell.openExternal('http://insomnia.rest');
       }
     }]
-  }];
+  }]);
 
   if (IS_DEV) {
     template.push({
