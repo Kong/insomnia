@@ -334,7 +334,7 @@ export function requestCreateAndActivate (workspace, patch = {}) {
 }
 
 export function requestCopyAndActivate (workspace, request) {
-  return requestCopy(request).then(r => {
+  return requestDuplicate(request).then(r => {
     workspaceUpdate(workspace, {metaActiveRequestId: r._id});
   })
 }
@@ -377,9 +377,14 @@ export function requestUpdateContentType (request, contentType) {
   return docUpdate(request, {headers});
 }
 
-export function requestCopy (request) {
+export function requestDuplicate (request) {
   const name = `${request.name} (Copy)`;
-  return requestCreate(Object.assign({}, request, {name}));
+  const newRequest = Object.assign({}, request, {name});
+
+  // Remove the old Id
+  delete newRequest._id;
+
+  return requestCreate(newRequest);
 }
 
 export function requestRemove (request) {

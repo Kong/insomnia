@@ -31,7 +31,7 @@ class RequestActionsDropdown extends Component {
         </button>
         <ul>
           <li>
-            <button onClick={e => db.requestCopy(request)}>
+            <button onClick={e => db.requestDuplicate(request)}>
               <i className="fa fa-copy"></i> Duplicate
               <DropdownHint char="D"></DropdownHint>
             </button>
