@@ -7,12 +7,12 @@ if (require('electron-squirrel-startup')) {
 var raven = require('raven');
 var ravenClient = new raven.Client(
   'https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a' +
-  '4189a68efb63c38fc50b@app.getsentry.com/88289'
-);
+  '4189a68efb63c38fc50b@app.getsentry.com/88289', {
+    environment: process.env.INSOMNIA_ENV || 'production',
+    release: require('./app.json').version,
+  });
 
-if (!IS_DEV) {
-  ravenClient.patchGlobal();
-}
+ravenClient.patchGlobal();
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
@@ -37,7 +37,7 @@ const IS_MAC = process.platform === 'darwin';
 // const IS_LIN = process.platform === 'linux';
 
 const UPDATE_URLS = {
-  darwin: `http://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
+  darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
   win32: 'https://s3.amazonaws.com/builds-insomnia-rest/win',
   linux: null
 };
@@ -50,9 +50,7 @@ app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 autoUpdater.on('error', e => {
   // Failed to launch auto updater
-  if (!IS_DEV) {
-    ravenClient.captureError(e);
-  }
+  ravenClient.captureError(e);
 });
 
 autoUpdater.on('update-not-available', () => {

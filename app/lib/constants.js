@@ -10,7 +10,7 @@ export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 30; // 30 minutes
 export const CHANGELOG_URL = isDevelopment() ?
   'http://localhost:5000/changelog.json' :
-  'http://changelog.insomnia.rest/changelog.json';
+  'https://changelog.insomnia.rest/changelog.json';
 export const STATUS_CODE_PEBKAC = -333;
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
 export const SEGMENT_WRITE_KEY = isDevelopment() ?

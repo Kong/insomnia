@@ -528,7 +528,7 @@ class App extends Component {
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
           updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
           loadingRequests={requests.loadingRequests}
-          showCookiesModal={() => getModal(CookiesModal).show()}
+          showCookiesModal={() => getModal(CookiesModal).show(workspace)}
         />
 
         <PromptModal ref={m => addModal(m)}/>

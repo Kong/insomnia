@@ -15,7 +15,7 @@
     "hot-server": "node -r babel-register ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "build": "bash scripts/build.sh",
-    "package": "npm run build && bash scripts/package.sh"
+    "package": "npm run build && bash scripts/package.sh && bash scripts/sentry-release.sh"
   },
   "build": {
     "appId": "com.insomnia.app",

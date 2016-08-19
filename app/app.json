@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "productName": "Insomnia",
   "longName": "Insomnia HTTP Client",
   "description": "The best REST API Client",

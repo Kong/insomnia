@@ -11,39 +11,37 @@
 <script>
   // Sentry
 
-  if (process.env.INSOMNIA_ENV !== 'development') {
-    Raven.config('https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a4189a68efb63c38fc50b@app.getsentry.com/88289', {
-      allowSecretKey: true,
-      logger: 'sentry',
-      levels: ['warn', 'error'],
-      release: require('./app.json').version,
-      ignoreUrls: [
-        /.*raven\.min\.js.*/
-      ],
-      includePaths: [
-        /^(?!.*raven.min.js$).*$/ // Ignore raven stuff
-      ],
-      dataCallback: function (data) {
-        console.log("SENTRY DATA", data);
-        var normalize = function (filename) {
-          var match = filename.match(/\/(app.asar|build)\/(.*)/);
-          if (match) {
-            return match[2]; // return everything after ../app.asar/*
-          } else {
-            return filename;
-          }
-        };
+  Raven.config('https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a4189a68efb63c38fc50b@app.getsentry.com/88289', {
+    allowSecretKey: true,
+    logger: 'sentry',
+    environment: process.env.INSOMNIA_ENV || 'production',
+    levels: ['warn', 'error'],
+    release: require('./app.json').version,
+    ignoreUrls: [
+      /.*raven\.min\.js.*/
+    ],
+    includePaths: [
+      /^(?!.*raven.min.js$).*$/ // Ignore raven stuff
+    ],
+    dataCallback: function (data) {
+      var normalize = function (filename) {
+        var match = filename.match(/\/(app.asar|build)\/(.*)/);
+        if (match) {
+          return match[2]; // return everything after ../app.asar/*
+        } else {
+          return filename;
+        }
+      };
 
-        data.exception.values[0].stacktrace.frames.forEach(function (frame) {
-          frame.filename = normalize(frame.filename);
-        });
+      data.exception.values[0].stacktrace.frames.forEach(function (frame) {
+        frame.filename = normalize(frame.filename);
+      });
 
-        return data
-      }
-    }).install();
+      return data
+    }
+  }).install();
 
-    console.log('-- Initialized Sentry --');
-  }
+  console.log('-- Initialized Sentry --');
 </script>
 <script>
   const {longName} = require('./app.json');
