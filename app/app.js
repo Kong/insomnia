@@ -16,31 +16,33 @@ ravenClient.patchGlobal();
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
+const request = require('request');
 const path = require('path');
 const appVersion = require('./app.json').version;
+const {LocalStorage} = require('node-localstorage');
 const {
   app,
   dialog,
+  shell,
   ipcMain,
   autoUpdater,
   Menu,
   BrowserWindow,
   webContents
 } = electron;
-const {
-  LocalStorage
-} = require('node-localstorage');
 
 const IS_DEV = process.env.INSOMNIA_ENV === 'development';
 const IS_MAC = process.platform === 'darwin';
-// const IS_WIN = process.platform === 'win32';
-// const IS_LIN = process.platform === 'linux';
+const IS_WINDOWS = process.platform === 'win32';
+const IS_LINUX = !IS_MAC && !IS_WINDOWS;
 
 const UPDATE_URLS = {
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
   win32: 'https://s3.amazonaws.com/builds-insomnia-rest/win',
-  linux: null
+  linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}`
 };
+
+const DOWNLOAD_URL = 'http://download.insomnia.rest';
 
 let mainWindow = null;
 let localStorage = null;
@@ -67,11 +69,30 @@ autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, 
 });
 
 function checkForUpdates () {
-  try {
-    autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
-    autoUpdater.checkForUpdates();
-  } catch (e) {
-    // This will fail in development
+  if (IS_LINUX) {
+    try {
+      request.get(UPDATE_URLS.linux, null, (err, response) => {
+        if (err) {
+          ravenClient.captureError(err);
+          return;
+        }
+
+        if (response.statusCode === 200) {
+          showDownloadModal(response.body);
+        } else {
+          // No update available (should be STATUS=204)
+        }
+      });
+    } catch (e) {
+      ravenClient.captureException(e);
+    }
+  } else {
+    try {
+      autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
+      autoUpdater.checkForUpdates();
+    } catch (e) {
+      // This will fail in development
+    }
   }
 }
 
@@ -90,6 +111,27 @@ function showUpdateModal () {
     if (id === 0) {
       console.log('-- Installing Update --');
       autoUpdater.quitAndInstall();
+    } else {
+      console.log('-- Cancel Update --');
+    }
+  });
+}
+
+function showDownloadModal (version) {
+  dialog.showMessageBox({
+    type: 'info',
+    buttons: [
+      'Download',
+      'Later',
+    ],
+    defaultId: 0,
+    cancelId: 1,
+    title: 'New Update Available!',
+    message: `Exciting news!\n\nVersion ${version} is available.\n\n\n~Gregory`
+  }, id => {
+    if (id === 0) {
+      console.log('-- Installing Update --');
+      shell.openExternal(DOWNLOAD_URL);
     } else {
       console.log('-- Cancel Update --');
     }
