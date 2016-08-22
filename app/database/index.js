@@ -36,7 +36,7 @@ const MODEL_DEFAULTS = {
     useBulkHeaderEditor: false,
     followRedirects: false,
     useBulkHeaderEditor: false,
-    editorFontSize: 11,
+    editorFontSize: 12,
     editorLineWrapping: true,
     httpProxy: '',
     httpsProxy: '',
