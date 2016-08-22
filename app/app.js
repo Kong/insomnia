@@ -25,7 +25,6 @@ const {
   dialog,
   shell,
   ipcMain,
-  ipcRenderer,
   autoUpdater,
   Menu,
   BrowserWindow,
@@ -106,8 +105,8 @@ function showUpdateModal () {
     ],
     defaultId: 0,
     cancelId: 1,
-    title: 'New Update Available!',
-    message: 'Exciting news!\n\nA fresh new update has been downloaded and is ready to install\n\n\n~Gregory'
+    title: 'Insomnia Update Available',
+    message: 'Exciting news!\n\nA new version of Insomnia has been downloaded and is ready to install\n\n\n~Gregory'
   }, id => {
     if (id === 0) {
       console.log('-- Installing Update --');
@@ -127,8 +126,8 @@ function showDownloadModal (version) {
     ],
     defaultId: 0,
     cancelId: 1,
-    title: 'New Update Available!',
-    message: `Exciting news!\n\nVersion ${version} is available.\n\n\n~Gregory`
+    title: 'Insomnia Update Available',
+    message: `Exciting news!\n\nVersion ${version} of Insomnia is now available.\n\n\n~Gregory`
   }, id => {
     if (id === 0) {
       console.log('-- Installing Update --');
