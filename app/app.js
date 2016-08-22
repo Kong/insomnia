@@ -235,9 +235,8 @@ app.on('ready', () => {
     mainWindow = null;
   });
 
-  var template = [];
-  if (IS_MAC) {
-    template.push({
+  var template = [
+    {
       label: "Application",
       submenu: [
         {
@@ -272,112 +271,112 @@ app.on('ready', () => {
           }
         }
       ]
-    })
-  }
+    },
+    {
+      label: "Edit",
+      submenu: [{
+        label: "Undo",
+        accelerator: "CmdOrCtrl+Z",
+        selector: "undo:"
+      }, {
+        label: "Redo",
+        accelerator: "Shift+CmdOrCtrl+Z",
+        selector: "redo:"
+      }, {
+        type: "separator"
+      }, {
+        label: "Cut",
+        accelerator: "CmdOrCtrl+X",
+        selector: "cut:"
+      }, {
+        label: "Copy",
+        accelerator: "CmdOrCtrl+C",
+        selector: "copy:"
+      }, {
+        label: "Paste",
+        accelerator: "CmdOrCtrl+V",
+        selector: "paste:"
+      }, {
+        label: "Select All",
+        accelerator: "CmdOrCtrl+A",
+        selector: "selectAll:"
+      }]
+    },
+    {
+      label: "View",
+      submenu: [
+        {
+          role: 'togglefullscreen'
+        },
+        {
+          label: "Actual Size",
+          accelerator: "CmdOrCtrl+0",
+          click: () => {
+            const window = BrowserWindow.getFocusedWindow();
+            const zoomFactor = 1;
+            window.webContents.setZoomFactor(zoomFactor);
+            saveZoomFactor(zoomFactor);
+          }
+        },
+        {
+          label: "Zoom In",
+          accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
+          click: () => {
+            let zoomFactor = getZoomFactor();
+            zoomFactor = Math.min(1.8, zoomFactor + 0.1);
 
-  template = template.concat([{
-    label: "Edit",
-    submenu: [{
-      label: "Undo",
-      accelerator: "CmdOrCtrl+Z",
-      selector: "undo:"
-    }, {
-      label: "Redo",
-      accelerator: "Shift+CmdOrCtrl+Z",
-      selector: "redo:"
-    }, {
-      type: "separator"
-    }, {
-      label: "Cut",
-      accelerator: "CmdOrCtrl+X",
-      selector: "cut:"
-    }, {
-      label: "Copy",
-      accelerator: "CmdOrCtrl+C",
-      selector: "copy:"
-    }, {
-      label: "Paste",
-      accelerator: "CmdOrCtrl+V",
-      selector: "paste:"
-    }, {
-      label: "Select All",
-      accelerator: "CmdOrCtrl+A",
-      selector: "selectAll:"
-    }]
-  }, {
-    label: "View",
-    submenu: [
-      {
-        role: 'togglefullscreen'
-      },
-      {
-        label: "Actual Size",
-        accelerator: "CmdOrCtrl+0",
-        click: () => {
-          const window = BrowserWindow.getFocusedWindow();
-          const zoomFactor = 1;
-          window.webContents.setZoomFactor(zoomFactor);
-          saveZoomFactor(zoomFactor);
-        }
-      },
-      {
-        label: "Zoom In",
-        accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
-        click: () => {
-          let zoomFactor = getZoomFactor();
-          zoomFactor = Math.min(1.8, zoomFactor + 0.1);
+            const window = BrowserWindow.getFocusedWindow();
+            window.webContents.setZoomFactor(zoomFactor);
 
-          const window = BrowserWindow.getFocusedWindow();
-          window.webContents.setZoomFactor(zoomFactor);
+            saveZoomFactor(zoomFactor);
+          }
+        },
+        {
+          label: "Zoom Out",
+          accelerator: "CmdOrCtrl+-",
+          click: () => {
+            let zoomFactor = getZoomFactor();
+            zoomFactor = Math.max(0.5, zoomFactor - 0.1);
 
-          saveZoomFactor(zoomFactor);
-        }
-      },
-      {
-        label: "Zoom Out",
-        accelerator: "CmdOrCtrl+-",
-        click: () => {
-          let zoomFactor = getZoomFactor();
-          zoomFactor = Math.max(0.5, zoomFactor - 0.1);
+            const window = BrowserWindow.getFocusedWindow();
+            window.webContents.setZoomFactor(zoomFactor);
 
-          const window = BrowserWindow.getFocusedWindow();
-          window.webContents.setZoomFactor(zoomFactor);
-
-          saveZoomFactor(zoomFactor);
+            saveZoomFactor(zoomFactor);
+          }
         }
-      }
-    ]
-  }, {
-    label: "Window",
-    role: "window",
-    submenu: [
-      {
-        role: 'minimize'
-      },
-      {
-        role: 'close'
-      }
-    ]
-  }, {
-    label: "Help",
-    role: "help",
-    id: "help",
-    submenu: [
-      {
-        label: "Report an Issue...",
-        click: () => {
-          electron.shell.openExternal('mailto:support@insomnia.rest');
+      ]
+    }, {
+      label: "Window",
+      role: "window",
+      submenu: [
+        {
+          role: 'minimize'
+        },
+        {
+          role: 'close'
         }
-      },
-      {
-        label: "Insomnia Help",
-        accelerator: "CmdOrCtrl+?",
-        click: () => {
-          electron.shell.openExternal('http://insomnia.rest');
+      ]
+    }, {
+      label: "Help",
+      role: "help",
+      id: "help",
+      submenu: [
+        {
+          label: "Report an Issue...",
+          click: () => {
+            electron.shell.openExternal('mailto:support@insomnia.rest');
+          }
+        },
+        {
+          label: "Insomnia Help",
+          accelerator: "CmdOrCtrl+?",
+          click: () => {
+            electron.shell.openExternal('http://insomnia.rest');
+          }
         }
-      }
-    ]
-  }]);
+      ]
+    }
+  ];
 
   if (IS_DEV) {
     template.push({
