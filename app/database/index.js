@@ -35,6 +35,7 @@ const MODEL_DEFAULTS = {
     showPasswords: true,
     useBulkHeaderEditor: false,
     followRedirects: false,
+    useBulkHeaderEditor: false,
     editorFontSize: 11,
     editorLineWrapping: true,
     httpProxy: '',

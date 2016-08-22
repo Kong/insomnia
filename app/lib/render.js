@@ -44,8 +44,6 @@ export function getRenderedRequest (request) {
         throw new Error(`Render Failed: "${e.message}"`);
       }
 
-      console.log('RENDERED', renderedRequest);
-
       // Default the proto if it doesn't exist
       if (renderedRequest.url.indexOf('://') === -1) {
         renderedRequest.url = `http://${renderedRequest.url}`;

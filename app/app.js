@@ -242,15 +242,18 @@ app.on('ready', () => {
       submenu: [
         {
           label: `About ${appName}`,
-          selector: "orderFrontStandardAboutPanel:"
+          role: 'about',
+          visible: IS_MAC
         },
-        {type: "separator"},
+        {
+          type: "separator",
+          visible: IS_MAC
+        },
         {
           label: "Preferences",
           accelerator: "CmdOrCtrl+,",
-          click: function () {
-            const window = BrowserWindow.getFocusedWindow();
-            window.webContents.send('show-preferences');
+          click: function (menuItem, window, e) {
+            window.webContents.send('toggle-preferences');
           }
         },
         {type: "separator"},

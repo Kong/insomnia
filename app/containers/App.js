@@ -59,7 +59,8 @@ class App extends Component {
 
       // Show Settings
       'mod+,': () => {
-        getModal(SettingsModal).toggle();
+        // NOTE: This is controlled via a global menu shortcut in app.js
+        // getModal(SettingsModal).toggle();
       },
 
       // Show Request Switcher
@@ -432,8 +433,8 @@ class App extends Component {
       ipcRenderer.send('check-for-updates');
     }, CHECK_FOR_UPDATES_INTERVAL);
 
-    ipcRenderer.on('show-preferences', () => {
-      getModal(SettingsModal).show();
+    ipcRenderer.on('toggle-preferences', () => {
+      getModal(SettingsModal).toggle();
     })
   }
 
@@ -505,6 +506,7 @@ class App extends Component {
           request={activeRequest}
           sendRequest={actions.requests.send}
           showPasswords={settings.showPasswords}
+          useBulkHeaderEditor={settings.useBulkHeaderEditor}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}
@@ -516,6 +518,7 @@ class App extends Component {
           updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
           updateRequestContentType={contentType => db.requestUpdateContentType(activeRequest, contentType)}
           updateSettingsShowPasswords={showPasswords => db.settingsUpdate(settings, {showPasswords})}
+          updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => db.settingsUpdate(settings, {useBulkHeaderEditor})}
         />
 
         <div className="drag drag--pane">

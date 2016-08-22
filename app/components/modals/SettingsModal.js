@@ -105,6 +105,19 @@ class SettingsTabs extends Component {
 
           <div className="pad-top">
             <input
+              id="setting-bulk-header-editor"
+              type="checkbox"
+              checked={settings.useBulkHeaderEditor}
+              onChange={e => db.settingsUpdate(settings, {useBulkHeaderEditor: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-follow-redirects">
+              Use bulk header editor by default
+            </label>
+          </div>
+
+          <div className="pad-top">
+            <input
               id="setting-follow-redirects"
               type="checkbox"
               checked={settings.followRedirects}

@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
 
 import KeyValueEditor from './base/KeyValueEditor';
-
+import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
 import BodyEditor from './editors/BodyEditor';
@@ -24,13 +24,15 @@ class RequestPane extends Component {
       editorLineWrapping,
       requestCreate,
       sendRequest,
+      useBulkHeaderEditor,
       updateRequestUrl,
       updateRequestMethod,
       updateRequestBody,
       updateRequestParameters,
       updateRequestAuthentication,
       updateRequestHeaders,
-      updateRequestContentType
+      updateRequestContentType,
+      updateSettingsUseBulkHeaderEditor
     } = this.props;
 
     if (!request) {
@@ -159,13 +161,18 @@ class RequestPane extends Component {
             />
           </TabPanel>
           <TabPanel className="scrollable">
-            <KeyValueEditor
+            <RequestHeadersEditor
               key={request._id}
-              namePlaceholder="My-Header"
-              valuePlaceholder="Value"
-              pairs={request.headers}
+              headers={request.headers}
               onChange={updateRequestHeaders}
+              bulk={useBulkHeaderEditor}
             />
+            <div className="pad no-pad-top text-right">
+              <button className="btn btn--outlined btn--super-compact"
+                      onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
+                {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+              </button>
+            </div>
           </TabPanel>
         </Tabs>
       </section>
@@ -185,9 +192,11 @@ RequestPane.propTypes = {
   updateRequestHeaders: PropTypes.func.isRequired,
   updateRequestContentType: PropTypes.func.isRequired,
   updateSettingsShowPasswords: PropTypes.func.isRequired,
+  updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
   importFile: PropTypes.func.isRequired,
 
   // Other
+  useBulkHeaderEditor: PropTypes.bool.isRequired,
   showPasswords: PropTypes.bool.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
