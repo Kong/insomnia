@@ -1,4 +1,5 @@
 import nunjucks from 'nunjucks';
+import traverse from 'traverse';
 import * as db from '../database'
 import {TYPE_WORKSPACE} from '../database/index';
 
@@ -30,30 +31,20 @@ export function getRenderedRequest (request) {
         Object.assign(renderContext, environment);
       }
 
-      let template;
-
+      // Make a copy so no one gets mad :)
+      const renderedRequest = Object.assign({}, request);
       try {
-        template = JSON.stringify(request);
-      } catch (e) {
-        // Failed to parse Request as JSON
-        throw new Error(`Bad Request: "${e.message}"`);
-      }
-
-      let renderedJSON;
-      try {
-        renderedJSON = render(template, renderContext);
+        traverse(renderedRequest).forEach(function (x) {
+          if (typeof x === 'string') {
+            this.update(render(x, renderContext));
+          }
+        });
       } catch (e) {
         // Failed to render Request
         throw new Error(`Render Failed: "${e.message}"`);
       }
 
-      let renderedRequest = null;
-      try {
-        renderedRequest = JSON.parse(renderedJSON);
-      } catch (e) {
-        // Failed to parse rendered request
-        throw new Error(`Parse Failed: "${e.message}"`);
-      }
+      console.log('RENDERED', renderedRequest);
 
       // Default the proto if it doesn't exist
       if (renderedRequest.url.indexOf('://') === -1) {

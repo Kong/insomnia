@@ -431,6 +431,10 @@ class App extends Component {
     setInterval(() => {
       ipcRenderer.send('check-for-updates');
     }, CHECK_FOR_UPDATES_INTERVAL);
+
+    ipcRenderer.on('show-preferences', () => {
+      getModal(SettingsModal).show();
+    })
   }
 
   componentWillUnmount () {

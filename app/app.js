@@ -18,13 +18,14 @@ ravenClient.patchGlobal();
 const electron = require('electron');
 const request = require('request');
 const path = require('path');
-const appVersion = require('./app.json').version;
+const {version: appVersion, productName: appName} = require('./app.json');
 const {LocalStorage} = require('node-localstorage');
 const {
   app,
   dialog,
   shell,
   ipcMain,
+  ipcRenderer,
   autoUpdater,
   Menu,
   BrowserWindow,
@@ -238,19 +239,36 @@ app.on('ready', () => {
   if (IS_MAC) {
     template.push({
       label: "Application",
-      role: "window",
-      submenu: [{
-        label: "About Application",
-        selector: "orderFrontStandardAboutPanel:"
-      }, {
-        type: "separator"
-      }, {
-        label: "Quit",
-        accelerator: "Command+Q",
-        click: function () {
-          app.quit();
+      submenu: [
+        {
+          label: `About ${appName}`,
+          selector: "orderFrontStandardAboutPanel:"
+        },
+        {type: "separator"},
+        {
+          label: "Preferences",
+          accelerator: "CmdOrCtrl+,",
+          click: function () {
+            const window = BrowserWindow.getFocusedWindow();
+            window.webContents.send('show-preferences');
+          }
+        },
+        {type: "separator"},
+        {
+          role: "hide"
+        },
+        {
+          role: "hideothers"
+        },
+        {type: "separator"},
+        {
+          label: "Quit",
+          accelerator: "Command+Q",
+          click: function () {
+            app.quit();
+          }
         }
-      }]
+      ]
     })
   }
 
@@ -285,61 +303,77 @@ app.on('ready', () => {
     }]
   }, {
     label: "View",
+    submenu: [
+      {
+        role: 'togglefullscreen'
+      },
+      {
+        label: "Actual Size",
+        accelerator: "CmdOrCtrl+0",
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          const zoomFactor = 1;
+          window.webContents.setZoomFactor(zoomFactor);
+          saveZoomFactor(zoomFactor);
+        }
+      },
+      {
+        label: "Zoom In",
+        accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
+        click: () => {
+          let zoomFactor = getZoomFactor();
+          zoomFactor = Math.min(1.8, zoomFactor + 0.1);
+
+          const window = BrowserWindow.getFocusedWindow();
+          window.webContents.setZoomFactor(zoomFactor);
+
+          saveZoomFactor(zoomFactor);
+        }
+      },
+      {
+        label: "Zoom Out",
+        accelerator: "CmdOrCtrl+-",
+        click: () => {
+          let zoomFactor = getZoomFactor();
+          zoomFactor = Math.max(0.5, zoomFactor - 0.1);
+
+          const window = BrowserWindow.getFocusedWindow();
+          window.webContents.setZoomFactor(zoomFactor);
+
+          saveZoomFactor(zoomFactor);
+        }
+      }
+    ]
+  }, {
+    label: "Window",
     role: "window",
-    submenu: [{
-      role: 'minimize'
-    }, {
-      role: 'close'
-    }, {
-      label: "Actual Size",
-      accelerator: "CmdOrCtrl+0",
-      click: () => {
-        const window = BrowserWindow.getFocusedWindow();
-        const zoomFactor = 1;
-        window.webContents.setZoomFactor(zoomFactor);
-        saveZoomFactor(zoomFactor);
+    submenu: [
+      {
+        role: 'minimize'
+      },
+      {
+        role: 'close'
       }
-    }, {
-      label: "Zoom In",
-      accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
-      click: () => {
-        let zoomFactor = getZoomFactor();
-        zoomFactor = Math.min(1.8, zoomFactor + 0.1);
-
-        const window = BrowserWindow.getFocusedWindow();
-        window.webContents.setZoomFactor(zoomFactor);
-
-        saveZoomFactor(zoomFactor);
-      }
-    }, {
-      label: "Zoom Out",
-      accelerator: "CmdOrCtrl+-",
-      click: () => {
-        let zoomFactor = getZoomFactor();
-        zoomFactor = Math.max(0.5, zoomFactor - 0.1);
-
-        const window = BrowserWindow.getFocusedWindow();
-        window.webContents.setZoomFactor(zoomFactor);
-
-        saveZoomFactor(zoomFactor);
-      }
-    }]
+    ]
   }, {
     label: "Help",
     role: "help",
     id: "help",
-    submenu: [{
-      label: "Report an Issue...",
-      click: () => {
-        electron.shell.openExternal('mailto:support@insomnia.rest');
+    submenu: [
+      {
+        label: "Report an Issue...",
+        click: () => {
+          electron.shell.openExternal('mailto:support@insomnia.rest');
+        }
+      },
+      {
+        label: "Insomnia Help",
+        accelerator: "CmdOrCtrl+?",
+        click: () => {
+          electron.shell.openExternal('http://insomnia.rest');
+        }
       }
-    }, {
-      label: "Insomnia Help",
-      accelerator: "CmdOrCtrl+?",
-      click: () => {
-        electron.shell.openExternal('http://insomnia.rest');
-      }
-    }]
+    ]
   }]);
 
   if (IS_DEV) {

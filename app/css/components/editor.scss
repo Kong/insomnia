@@ -74,6 +74,7 @@
   border-radius: 0;
   font-size: $font-size-md;
   padding: $padding-xs $padding-sm;
+  z-index: 99999;
 
   .CodeMirror-lint-message-error {
     background-image: none;

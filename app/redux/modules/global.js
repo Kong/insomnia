@@ -3,6 +3,7 @@ import fs from 'fs';
 
 import {importJSON, exportJSON} from '../../lib/export/database';
 import * as db from '../../database/index';
+import {trackEvent} from '../../lib/analytics';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
@@ -52,7 +53,8 @@ export function importFile (workspace) {
       buttonLabel: 'Import',
       properties: ['openFile'],
       filters: [{
-        name: 'Insomnia Import', extensions: ['json']
+        // Allow empty extension and JSON
+        name: 'Insomnia Import', extensions: ['', 'json']
       }]
     };
 
@@ -60,6 +62,7 @@ export function importFile (workspace) {
       if (!paths) {
         // It was cancelled, so let's bail out
         dispatch(loadStop());
+        trackEvent('Import Cancel');
         return;
       }
 
@@ -68,8 +71,15 @@ export function importFile (workspace) {
         fs.readFile(path, 'utf8', (err, data) => {
           // Unset the current active request first because we might be updating it
           db.workspaceUpdate(workspace, {metaActiveRequestId: null}).then(() => {
-            err || importJSON(workspace, data);
             dispatch(loadStop());
+            if (err) {
+              trackEvent('Import Fail');
+              console.warn('Import Failed', err);
+              return;
+            }
+
+            importJSON(workspace, data);
+            trackEvent('Import');
           });
         })
       })
@@ -92,12 +102,19 @@ export function exportFile (parentDoc = null) {
 
       electron.remote.dialog.showSaveDialog(options, filename => {
         if (!filename) {
+          trackEvent('Export Cancel');
           // It was cancelled, so let's bail out
           dispatch(loadStop());
           return;
         }
 
         fs.writeFile(filename, json, {}, err => {
+          if (err) {
+            console.warn('Export failed', err);
+            trackEvent('Export Fail');
+            return;
+          }
+          trackEvent('Export');
           dispatch(loadStop());
         });
       });

@@ -50,7 +50,7 @@ const MODEL_DEFAULTS = {
     metaFilter: ''
   }),
   [TYPE_ENVIRONMENT]: () => ({
-    name: 'Base Environment',
+    name: 'New Environment',
     data: {},
   }),
   [TYPE_COOKIE_JAR]: () => ({
@@ -564,7 +564,7 @@ export function environmentGetOrCreateForWorkspace (workspace) {
   const parentId = workspace._id;
   return find(TYPE_ENVIRONMENT, {parentId}).then(environments => {
     if (environments.length === 0) {
-      return environmentCreate({parentId})
+      return environmentCreate({parentId, name: 'Base Environment'})
     } else {
       return new Promise(resolve => resolve(environments[0]));
     }
