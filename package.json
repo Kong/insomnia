@@ -19,6 +19,10 @@
     "package-mac": "node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --mac",
     "package-win": "node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --win",
     "package-linux": "node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --linux",
+    "build-n-package": "npm run build && npm run package",
+    "build-n-package-win": "npm run build && npm run package-win",
+    "build-n-package-mac": "npm run build && npm run package-mac",
+    "build-n-package-linux": "npm run build && npm run package-linux",
     "release": "npm run package && bash scripts/sentry-release.sh"
   },
   "build": {
