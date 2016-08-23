@@ -46,13 +46,14 @@ const DOWNLOAD_URL = 'http://download.insomnia.rest';
 
 let mainWindow = null;
 let localStorage = null;
+let hasPromptedForUpdates = false;
 
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 autoUpdater.on('error', e => {
   // Failed to launch auto updater
-  ravenClient.captureError(e);
+  ravenClient.captureError(e, {});
 });
 
 autoUpdater.on('update-not-available', () => {
@@ -69,6 +70,11 @@ autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, 
 });
 
 function checkForUpdates () {
+  if (hasPromptedForUpdates) {
+    // We've already prompted for updates. Don't bug the user anymore
+    return;
+  }
+
   if (IS_LINUX) {
     try {
       request.get(UPDATE_URLS.linux, null, (err, response) => {
@@ -97,6 +103,8 @@ function checkForUpdates () {
 }
 
 function showUpdateModal () {
+  hasPromptedForUpdates = true;
+
   dialog.showMessageBox({
     type: 'info',
     buttons: [
@@ -118,6 +126,8 @@ function showUpdateModal () {
 }
 
 function showDownloadModal (version) {
+  hasPromptedForUpdates = true;
+
   dialog.showMessageBox({
     type: 'info',
     buttons: [
@@ -251,15 +261,23 @@ app.on('ready', () => {
           label: "Preferences",
           accelerator: "CmdOrCtrl+,",
           click: function (menuItem, window, e) {
-            window.webContents.send('toggle-preferences');
+            // NOTE: Checking for window because it might be closed
+            if (window && window.webContents) {
+              window.webContents.send('toggle-preferences');
+            }
           }
         },
-        {type: "separator"},
         {
-          role: "hide"
+          type: "separator",
+          visible: IS_MAC
         },
         {
-          role: "hideothers"
+          role: "hide",
+          visible: IS_MAC
+        },
+        {
+          role: "hideothers",
+          visible: IS_MAC
         },
         {type: "separator"},
         {
