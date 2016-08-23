@@ -11,7 +11,7 @@ if [ -d "$BUILD_DIR" ]; then
 fi
 
 echo "-- BUILDING PRODUCTION APP --"
-cross-env NODE_ENV=production --config ./webpack/webpack.config.production.babel.js
+cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.production.babel.js
 
 echo "-- COPYING REMAINING FILES --"
 
