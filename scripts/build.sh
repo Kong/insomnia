@@ -20,9 +20,7 @@ cp app/app.json "$BUILD_DIR/app.json"
 cp app/app.json "$BUILD_DIR/package.json"
 
 # Copy some things
-cp app/app.js "$BUILD_DIR/"
-cp -r app/images "$BUILD_DIR/"
-cp -r app/external "$BUILD_DIR/"
+cp -r app/images app/external assets/* app/app.js "$BUILD_DIR/"
 
 echo "-- INSTALLING PACKAGES --"
 
