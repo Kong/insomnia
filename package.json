@@ -84,6 +84,7 @@
     "electron-builder": "^5.19.1",
     "electron-packager": "^7.3.0",
     "electron-prebuilt": "~1.2.8",
+    "elm": "^0.17.1",
     "elm-hot-loader": "^0.3.3",
     "elm-webpack-loader": "^3.0.3",
     "express": "latest",
