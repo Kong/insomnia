@@ -216,7 +216,7 @@ app.on('ready', () => {
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
-  if (IS_DEV) {
+  if (IS_DEV && IS_MAC) {
     BrowserWindow.addDevToolsExtension(
       '/Users/gschier/Library/Application Support/Google/Chrome/Default/' +
       'Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.15.0_0'

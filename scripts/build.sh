@@ -8,7 +8,7 @@ echo "-- REMOVING DIST FOLDER --"
 rm -r "$BUILD_DIR"
 
 echo "-- BUILDING PRODUCTION APP --"
-NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config ./webpack/webpack.config.production.js
+cross-env NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config ./webpack/webpack.config.production.js
 
 echo "-- COPYING REMAINING FILES --"
 
@@ -24,7 +24,7 @@ cp -r app/external "$BUILD_DIR/"
 echo "-- INSTALLING PACKAGES --"
 
 cd "$BUILD_DIR"/
-NODE_ENV=production npm install
+cross-env NODE_ENV=production npm install
 
 echo "-- BUILD COMPLETE --"
 say "Build complete"
