@@ -1,6 +1,8 @@
 #!/bin/bash
 #? Package the app
 
+set -e
+
 BUILD_DIR='./build'
 
 say "Starting build"
@@ -8,7 +10,7 @@ echo "-- REMOVING DIST FOLDER --"
 rm -r "$BUILD_DIR"
 
 echo "-- BUILDING PRODUCTION APP --"
-cross-env NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config ./webpack/webpack.config.production.js
+cross-env NODE_ENV=production node -r babel-register webpack --config ./webpack/webpack.config.production.js
 
 echo "-- COPYING REMAINING FILES --"
 
