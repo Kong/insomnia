@@ -24,7 +24,7 @@ export default {
       {
         test: /\.elm$/,
         exclude: [/elm-stuff/, /node_modules/],
-        loader: 'elm-hot!elm-webpack?pathToMake=node_modules/.bin/elm-make'
+        loader: 'elm-hot!elm-webpack'
       },
       {
         test: /\.json$/,
