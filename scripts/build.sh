@@ -6,7 +6,9 @@ set -e
 BUILD_DIR='./build'
 
 echo "-- REMOVING DIST FOLDER --"
-rm -r "$BUILD_DIR"
+if [ -d "$BUILD_DIR" ]; then
+    rm -r "$BUILD_DIR"
+fi
 
 echo "-- BUILDING PRODUCTION APP --"
 cross-env NODE_ENV=production node -r babel-register ./node_modules/.bin/webpack --config ./webpack/webpack.config.production.js
