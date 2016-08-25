@@ -12,20 +12,20 @@ $bg-backdrop: rgba(30, 30, 30, 0.6);
 /* Font Colors */
 $font-light-bg: #444;
 $font-super-light-bg: #666;
-$font-dark-bg: #ddd;
+$font-dark-bg: #eee;
 $font-super-dark-bg: #ddd;
 $font-brand-bg: #eee;
 $font-light-bg-link: darken($bg-brand, 3);
 
-$hl-xxxs: rgba(130, 130, 130, 0.04);
-$hl-xxs: rgba(130, 130, 130, 0.07);
-$hl-xs: rgba(130, 130, 130, 0.09);
-$hl-sm: rgba(130, 130, 130, 0.15);
-$hl-md: rgba(130, 130, 130, 0.25);
-$hl-lg: rgba(130, 130, 130, 0.35);
-$hl-xl: rgba(130, 130, 130, 0.5);
-$hl-xxl: rgba(130, 130, 130, 0.8);
-$hl: rgba(130, 130, 130, 1);
+$hl-xxxs: rgba(140, 140, 140, 0.04);
+$hl-xxs: rgba(140, 140, 140, 0.07);
+$hl-xs: rgba(140, 140, 140, 0.1);
+$hl-sm: rgba(140, 140, 140, 0.15);
+$hl-md: rgba(140, 140, 140, 0.25);
+$hl-lg: rgba(140, 140, 140, 0.35);
+$hl-xl: rgba(140, 140, 140, 0.5);
+$hl-xxl: rgba(140, 140, 140, 0.8);
+$hl: rgba(140, 140, 140, 1);
 
 $success: #88bd29;
 $notice: #e5d550;

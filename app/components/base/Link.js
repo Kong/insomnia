@@ -2,15 +2,14 @@ import React, {Component, PropTypes} from 'react';
 import {shell} from 'electron';
 
 class Link extends Component {
-  _handleClick (e) {
-    e.preventDefault();
-    shell.openExternal(this.props.href);
-  }
-
   render () {
-    const {href, children, ...other} = this.props;
-    return (
-      <a href={href} onClick={this._handleClick.bind(this)} {...other}>
+    const {button, href, children, ...other} = this.props;
+    return button ? (
+      <button onClick={() => shell.openExternal(href)} {...other}>
+        {children}
+      </button>
+    ) :(
+      <a href={href} onClick={e => {e.preventDefault(); shell.openExternal(href)}} {...other}>
         {children}
       </a>
     )
@@ -18,7 +17,10 @@ class Link extends Component {
 }
 
 Link.propTypes = {
-  href: PropTypes.string.isRequired
+  href: PropTypes.string.isRequired,
+
+  // Optional
+  button: PropTypes.bool
 };
 
 export default Link;

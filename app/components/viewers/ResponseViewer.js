@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 
 import Editor from '../base/Editor';
 import ResponseWebview from './ResponseWebview';
+import ResponseError from './ResponseError';
 import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../../lib/previewModes';
 
 class ResponseViewer extends Component {
@@ -22,8 +23,18 @@ class ResponseViewer extends Component {
       editorLineWrapping,
       editorFontSize,
       body,
-      url
+      url,
+      error
     } = this.props;
+
+    if (error) {
+      return (
+        <ResponseError
+          url={url}
+          error={body}
+        />
+      )
+    }
 
     switch (previewMode) {
       case PREVIEW_MODE_FRIENDLY:
@@ -64,7 +75,8 @@ ResponseViewer.propTypes = {
   url: PropTypes.string.isRequired,
 
   // Optional
-  contentType: PropTypes.string
+  contentType: PropTypes.string,
+  error: PropTypes.bool
 };
 
 export default ResponseViewer;

@@ -2,7 +2,9 @@ import React, {Component, PropTypes} from 'react';
 import {ipcRenderer} from 'electron';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux'
+import {shell} from 'electron';
 
+import Link from '../components/base/Link';
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
 import DropdownHint from '../components/base/DropdownHint';
@@ -127,6 +129,16 @@ class WorkspaceDropdown extends Component {
               <i className="fa fa-cog"></i> Settings
               <DropdownHint char=","></DropdownHint>
             </button>
+          </li>
+          <li>
+            <Link button={true} href="http://docs.insomnia.rest">
+              <i className="fa fa-blank"></i> Documentation
+            </Link>
+          </li>
+          <li>
+            <Link button={true} href="mailto:support@insomnia.rest">
+              <i className="fa fa-blank"></i> Support
+            </Link>
           </li>
           <li>
             <button onClick={e => getModal(ChangelogModal).show()}>
