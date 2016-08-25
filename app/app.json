@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "3.2.5",
+  "version": "3.2.7",
   "productName": "Insomnia",
   "longName": "Insomnia HTTP Client",
   "description": "The best REST API Client",
@@ -10,6 +10,7 @@
   "main": "app.js",
   "dependencies": {
     "analytics-node": "^2.1.0",
+    "electron-context-menu": "^0.4.0",
     "electron-squirrel-startup": "^1.0.0",
     "httpsnippet": "git@github.com:gschier/httpsnippet.git#39d2fb0449f33711e5cc71a4d42b0e5b808426b4",
     "nedb": "^1.8.0",

@@ -244,6 +244,8 @@ app.on('ready', () => {
     mainWindow = null;
   });
 
+  require('electron-context-menu')({});
+
   var template = [
     {
       label: "Application",
