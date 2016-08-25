@@ -38,6 +38,11 @@ class Modal extends Component {
 
   show () {
     this.setState({open: true});
+
+    if (this.props.dontFocus) {
+      return;
+    }
+
     setTimeout(() => {
       this._node.focus();
     });
@@ -94,7 +99,8 @@ class Modal extends Component {
 Modal.propTypes = {
   tall: PropTypes.bool,
   top: PropTypes.bool,
-  wide: PropTypes.bool
+  wide: PropTypes.bool,
+  dontFocus: PropTypes.bool
 };
 
 export default Modal;

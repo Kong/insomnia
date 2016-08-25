@@ -15,7 +15,7 @@
     allowSecretKey: true,
     logger: 'sentry',
     environment: process.env.INSOMNIA_ENV || 'production',
-    levels: ['warn', 'error'],
+    level: 'warning',
     release: require('./app.json').version,
     ignoreUrls: [
       /.*raven\.min\.js.*/

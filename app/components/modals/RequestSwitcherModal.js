@@ -150,7 +150,7 @@ class RequestSwitcherModal extends Component {
     const {matchedRequests, requestGroups, searchString, activeIndex} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} top={true} {...this.props}>
+      <Modal ref={m => this.modal = m} top={true} dontFocus={true} {...this.props}>
         <ModalHeader hideCloseButton={true}>
           <p className="pull-right txt-md">
             <span className="monospace">tab</span> or
