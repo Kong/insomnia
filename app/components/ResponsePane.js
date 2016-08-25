@@ -7,10 +7,10 @@ import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import {getPreviewModeName} from '../lib/previewModes';
-import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
 import {MOD_SYM} from '../lib/constants';
 import {trackEvent} from '../lib/analytics';
+import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 
 class ResponsePane extends Component {
 
@@ -156,6 +156,7 @@ class ResponsePane extends Component {
                 editorLineWrapping={editorLineWrapping}
                 editorFontSize={editorFontSize}
                 body={response.error}
+                error={true}
                 url={response.url}
               />
             ) : (
