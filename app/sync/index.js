@@ -96,7 +96,7 @@ let lastSyncTimestamp = 0;
 function fetchChanges () {
   request({
     method: 'GET',
-    url: 'http://localhost:5001/api/v1/changes',
+    url: 'https://insomnia-api.herokuapp.com/api/v1/changes',
     qs: {
       gte: lastSyncTimestamp
     }
