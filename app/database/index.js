@@ -218,7 +218,7 @@ export function insert (doc) {
   });
 }
 
-export function update (doc) {
+export function update (doc, silent = false, newRev = false) {
   return new Promise((resolve, reject) => {
     get(doc.type, doc._id).then(existingDoc => {
 
@@ -228,11 +228,9 @@ export function update (doc) {
         return;
       }
 
-      // Doc was not updated, so resolve, but don't ping listeners
-      if (doc.modified === existingDoc.modified) {
-        console.log('nothing to do, doc was not updated');
-        resolve(doc);
-        return;
+      // TODO: Move this into the sync logic somehow
+      if (!newRev) {
+        doc._rev = existingDoc._rev;
       }
 
       // Doc has changed so update, resolve, and ping listeners
@@ -242,7 +240,11 @@ export function update (doc) {
         }
 
         resolve(doc);
-        Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+
+        // Only update if it's not silent and it's actually changed
+        if (doc.modified !== existingDoc.modified && !silent) {
+          Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+        }
       });
     });
   });

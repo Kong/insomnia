@@ -1,6 +1,7 @@
-import * as db from '../database';
 import request from 'request';
-import {buildChange} from './util';
+
+import * as db from '../database';
+
 import {
   TYPE_REQUEST,
   TYPE_REQUEST_GROUP,
@@ -27,20 +28,20 @@ export function initSync () {
     // ~~~~~~~~~~ //
 
     db.onChange('sync', (event, doc) => {
+
+      // Only sync certain models
       if (!WHITE_LIST[doc.type]) {
         return;
       }
 
-      // Add the change to the queue
-      const change = buildChange(event, doc);
-      sendChange(change);
+      addChange(event, doc);
     });
 
     // ~~~~~~~~~~ //
     // SETUP PULL //
     // ~~~~~~~~~~ //
 
-    setInterval(fetchChanges, 2000);
+    // setInterval(fetchChanges, 2000);
 
     resolve();
   });
@@ -51,64 +52,44 @@ export function initSync () {
 // HELPERS //
 // ~~~~~~~ //
 
-let seenChangeIds = {};
-let changeTimeout = null;
-let changes = [];
+function addChange (event, doc) {
+  const path = {
+    Request: 'requests',
+    Workspace: 'workspaces',
+    RequestGroup: 'requestgroups',
+    Environment: 'environments',
+    CookieJar: 'cookiejars',
+    Stats: 'stats',
+  }[doc.type];
 
-function sendChange (change) {
-  changes.push(change);
+  const config = {
+    url: `http://localhost:5001/api/v1/${path}/${doc._id}`
+  };
 
-  clearTimeout(changeTimeout);
-  changeTimeout = setTimeout(() => {
-    sendChanges(changes);
-    changes = [];
-  }, 2000);
-}
+  if (event === 'insert' || event === 'update') {
+    config.method = 'PUT';
+    config.json = true;
+    config.body = doc;
+  } else if (event === 'remove') {
+    config.method = 'DELETE';
+  }
 
-function sendChanges (changes) {
-  request({
-    method: 'POST',
-    url: 'https://insomnia-api.herokuapp.com/api/v1/changes',
-    body: JSON.stringify(changes),
-    headers: {
-      'content-type': 'application/json'
-    }
-  }, (err, response) => {
+  request(config, (err, response) => {
     if (err) {
       console.error('Failed to push changes', err);
       return;
     }
 
-    console.log(`Sent ${changes.length} changes`);
+    handleDoc(response.body.data);
+    console.log('--------');
+    console.log('ORIGINAL', doc);
+    console.log('NEXT    ', response.body.data);
+    console.log('--------');
   });
 }
 
-let lastSyncTimestamp = 0;
+function handleDoc (doc) {
+  console.log('Handle doc', doc);
 
-/**
- * Get latest changes from server
- */
-function fetchChanges () {
-  request({
-    method: 'GET',
-    url: 'https://insomnia-api.herokuapp.com/api/v1/changes',
-    qs: {
-      gte: lastSyncTimestamp
-    }
-  }, (err, response) => {
-    if (err) {
-      console.error('Failed to get changes', err);
-      return;
-    }
-
-    const {data: changes} = JSON.parse(response.body);
-    changes.map(handleChange);
-  });
-
-  lastSyncTimestamp = Date.now();
-}
-
-function handleChange (change) {
-  db.update(change.doc);
-  console.log('Got change!!!!!!!!!!', change._id);
+  db.update(doc, true, true);
 }
