@@ -68,7 +68,7 @@ function sendChange (change) {
 function sendChanges (changes) {
   request({
     method: 'POST',
-    url: 'http://localhost:5001/api/v1/changes',
+    url: 'https://insomnia-api.herokuapp.com/api/v1/changes',
     body: JSON.stringify(changes),
     headers: {
       'content-type': 'application/json'
