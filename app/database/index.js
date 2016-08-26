@@ -205,7 +205,7 @@ function count (type, query = {}) {
   });
 }
 
-function insert (doc) {
+export function insert (doc) {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {
       if (err) {
@@ -218,7 +218,7 @@ function insert (doc) {
   });
 }
 
-function update (doc) {
+export function update (doc) {
   return new Promise((resolve, reject) => {
     db[doc.type].update({_id: doc._id}, doc, err => {
       if (err) {
@@ -231,7 +231,7 @@ function update (doc) {
   });
 }
 
-function remove (doc) {
+export function remove (doc) {
   return new Promise(resolve => {
     withChildren(doc).then(docs => {
       const promises = docs.map(d => (

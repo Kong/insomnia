@@ -75,6 +75,7 @@ function actuallySend (renderedRequest, settings) {
           elapsedTime: Date.now() - startTime,
           error: err.toString()
         });
+
         return reject(err);
       }
 
