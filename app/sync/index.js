@@ -79,11 +79,6 @@ function sendChanges (changes) {
       return;
     }
 
-    const {data: changes} = JSON.parse(response.body);
-    for (const change of changes) {
-      blacklistChange(change);
-    }
-
     console.log(`Sent ${changes.length} changes`);
   });
 }
@@ -114,21 +109,6 @@ function fetchChanges () {
 }
 
 function handleChange (change) {
-  if (isChangeBlacklisted(change)) {
-    console.log('Skipping blacklisted change');
-    return;
-  }
-
   db.update(change.doc);
-  console.log('Got change!!!!!!!!!!', change);
-  blacklistChange(change);
-}
-
-const seenChanges = {};
-function blacklistChange (change) {
-  seenChanges[change._id] = 1;
-}
-
-function isChangeBlacklisted (change) {
-  return !!seenChanges[change._id];
+  console.log('Got change!!!!!!!!!!', change._id);
 }

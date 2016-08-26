@@ -220,13 +220,30 @@ export function insert (doc) {
 
 export function update (doc) {
   return new Promise((resolve, reject) => {
-    db[doc.type].update({_id: doc._id}, doc, err => {
-      if (err) {
-        return reject(err);
+    get(doc.type, doc._id).then(existingDoc => {
+
+      // Doc does not exist so barf
+      if (!existingDoc) {
+        reject(new Error('Doc does not exist for update'));
+        return;
       }
 
-      resolve(doc);
-      Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+      // Doc was not updated, so resolve, but don't ping listeners
+      if (doc.modified === existingDoc.modified) {
+        console.log('nothing to do, doc was not updated');
+        resolve(doc);
+        return;
+      }
+
+      // Doc has changed so update, resolve, and ping listeners
+      db[doc.type].update({_id: doc._id}, doc, err => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(doc);
+        Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+      });
     });
   });
 }
