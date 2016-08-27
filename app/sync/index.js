@@ -81,6 +81,11 @@ function addChange (event, doc) {
       return;
     }
 
+    if (response.statusCode !== 200) {
+      console.warn('Failed to add change', response.statusCode, response.body)
+      return;
+    }
+
     db.update(doc, true, true);
     console.log('--------');
     console.log('ORIGINAL', doc);
