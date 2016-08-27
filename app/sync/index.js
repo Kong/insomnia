@@ -81,18 +81,12 @@ function addChange (event, doc) {
       return;
     }
 
-    handleDoc(response.body.data);
+    db.update(doc, true, true);
     console.log('--------');
     console.log('ORIGINAL', doc);
-    console.log('NEXT    ', response.body.data);
+    console.log('NEXT    ', response.body);
     console.log('--------');
   });
-}
-
-function handleDoc (doc) {
-  console.log('Handle doc', doc);
-
-  db.update(doc, true, true);
 }
 
 let lastCheck = 0;
@@ -112,7 +106,7 @@ function fetchChanges () {
       if (change.doc === null) {
         db.removeById(change.doc_id)
       } else {
-        db.update(change.doc)
+        db.update(change.doc, false, true)
       }
     }
 
