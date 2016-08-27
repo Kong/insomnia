@@ -63,8 +63,8 @@ function addChange (event, doc) {
   }[doc.type];
 
   const config = {
-    url: `http://localhost:5001/api/v1/${path}/${doc._id}`
-    // url: `https://insomnia-api.herokuapp.com/api/v1/${path}/${doc._id}`
+    // url: `http://localhost:5001/api/v1/${path}/${doc._id}`
+    url: `https://insomnia-api.herokuapp.com/api/v1/${path}/${doc._id}`
   };
 
   if (event === 'insert' || event === 'update') {
@@ -99,8 +99,8 @@ let lastCheck = 0;
 function fetchChanges () {
   const config = {
     method: 'GET',
-    // url: `https://insomnia-api.herokuapp.com/api/v1/changes`,
-    url: 'http://localhost:5001/api/v1/changes',
+    url: `https://insomnia-api.herokuapp.com/api/v1/changes`,
+    // url: 'http://localhost:5001/api/v1/changes',
     qs: {gte: lastCheck},
     json: true
   };
