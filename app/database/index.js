@@ -228,6 +228,7 @@ export function update (doc, silent = false, newRev = false) {
         return;
       }
 
+      //
       // TODO: Move this into the sync logic somehow
       if (!newRev) {
         doc._rev = existingDoc._rev;
@@ -248,6 +249,14 @@ export function update (doc, silent = false, newRev = false) {
       });
     });
   });
+}
+
+export function removeById (type, id) {
+  return new Promise(resolve => {
+    get(type, id).then(doc => {
+      remove(doc).then(resolve)
+    })
+  })
 }
 
 export function remove (doc) {

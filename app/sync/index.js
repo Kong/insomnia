@@ -41,7 +41,7 @@ export function initSync () {
     // SETUP PULL //
     // ~~~~~~~~~~ //
 
-    // setInterval(fetchChanges, 2000);
+    setInterval(fetchChanges, 2000);
 
     resolve();
   });
@@ -64,6 +64,7 @@ function addChange (event, doc) {
 
   const config = {
     url: `http://localhost:5001/api/v1/${path}/${doc._id}`
+    // url: `https://insomnia-api.herokuapp.com/api/v1/${path}/${doc._id}`
   };
 
   if (event === 'insert' || event === 'update') {
@@ -92,4 +93,31 @@ function handleDoc (doc) {
   console.log('Handle doc', doc);
 
   db.update(doc, true, true);
+}
+
+let lastCheck = 0;
+function fetchChanges () {
+  const config = {
+    method: 'GET',
+    // url: `https://insomnia-api.herokuapp.com/api/v1/changes`,
+    url: 'http://localhost:5001/api/v1/changes',
+    qs: {gte: lastCheck},
+    json: true
+  };
+
+  request(config, (err, response) => {
+    const changes = response.body.data;
+
+    for (const change of changes) {
+      if (change.doc === null) {
+        db.removeById(change.doc_id)
+      } else {
+        db.update(change.doc)
+      }
+    }
+
+    console.log(response.body)
+  });
+
+  lastCheck = Date.now();
 }
