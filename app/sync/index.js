@@ -82,7 +82,7 @@ function addChange (event, doc) {
     }
 
     if (response.statusCode !== 200) {
-      console.warn('Failed to add change', response.statusCode, response.body)
+      console.warn('Failed to add change', response.statusCode, response.body);
       return;
     }
 
