@@ -21,7 +21,7 @@ import App from './containers/App';
 // Global CSS
 import './css/lib/fontawesome/css/font-awesome.css'
 import './css/lib/fonts/open-sans.css'
-import './css/index.scss'
+import './css/index.less'
 import './css/lib/chrome/platform_app.css'
 import {initStore} from './redux/initstore';
 import {initDB} from './database';

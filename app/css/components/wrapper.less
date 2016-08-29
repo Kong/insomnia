@@ -2,8 +2,8 @@
 @import '../constants/colors';
 
 .wrapper {
-  background-color: $bg-super-dark;
-  color: $font-super-dark-bg;
+  background-color: @bg-super-dark;
+  color: @font-super-dark-bg;
   display: grid;
 
   grid-template-rows: 0.5fr 0.5fr;
@@ -27,10 +27,10 @@
       position: absolute;
       height: 100%;
       z-index: 20;
-      width: $drag-width;
+      width: @drag-width;
       top: 0;
       // More to the right so it doesn't cover scroll bars
-      left: -$drag-width / 8;
+      left: -@drag-width / 8;
     }
   }
 
@@ -49,7 +49,7 @@
   }
 }
 
-@media (max-width: $breakpoint-md) {
+@media (max-width: @breakpoint-md) {
   .wrapper {
     .request-pane {
       grid-column-start: 3;

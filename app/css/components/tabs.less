@@ -1,7 +1,7 @@
 @import '../constants/colors';
 @import '../constants/dimensions';
 
-$border-color: $hl-md;
+@border-color: @hl-md;
 
 .ReactTabs {
   width: 100%;
@@ -20,16 +20,16 @@ $border-color: $hl-md;
 
     &::after {
       width: 100%;
-      height: $line-height-sm;
+      height: @line-height-sm;
       content: "";
-      border-bottom: 1px solid $border-color;
+      border-bottom: 1px solid @border-color;
     }
   }
 
   .ReactTabs__Tab {
-    height: $line-height-sm;
+    height: @line-height-sm;
     border: 1px solid transparent;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid @border-color;
     border-top: 0 !important;
     white-space: nowrap;
     display: flex;
@@ -44,24 +44,24 @@ $border-color: $hl-md;
     }
 
     & > * {
-      color: $hl;
+      color: @hl;
       height: 100%;
-      padding-left: $padding-md / 4;
-      padding-right: $padding-md / 4;
+      padding-left: @padding-md / 4;
+      padding-right: @padding-md / 4;
 
       &:first-child {
-        padding-left: $padding-md;
+        padding-left: @padding-md;
       }
 
       &:last-child {
-        padding-right: $padding-md;
+        padding-right: @padding-md;
       }
     }
 
   }
 
   .ReactTabs__Tab--selected {
-    border: 1px solid $border-color;
+    border: 1px solid @border-color;
     border-bottom-color: transparent;
 
     * {

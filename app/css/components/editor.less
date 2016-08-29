@@ -11,11 +11,11 @@
     height: 100% !important;
     width: 100%;
     box-sizing: border-box;
-    padding-top: $padding-sm;
+    padding-top: @padding-sm;
   }
 
   .CodeMirror * {
-    font-family: $font-monospace;
+    font-family: @font-monospace;
   }
 
   .CodeMirror,
@@ -29,7 +29,7 @@
   }
 
   .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
-    color: $hl-xl !important;
+    color: @hl-xl !important;
   }
 
   .CodeMirror-scroll {
@@ -42,7 +42,7 @@
   }
 
   .CodeMirror-placeholder {
-    color: $hl-xxl;
+    color: @hl-xxl;
   }
 
   .CodeMirror-lint-marker-error {
@@ -53,7 +53,7 @@
     text-align: center;
 
     &::after {
-      color: darken($danger, 10);
+      color: darken(@danger, 10);
       text-align: center;
       width: 100%;
       font-size: 0.7em; // because the circle is so large
@@ -69,11 +69,11 @@
 
 // This has to be outside because it's moved to the body element
 .CodeMirror-lint-tooltip {
-  background-color: $bg-light;
-  color: $font-light-bg;
+  background-color: @bg-light;
+  color: @font-light-bg;
   border-radius: 0;
-  font-size: $font-size-md;
-  padding: $padding-xs $padding-sm;
+  font-size: @font-size-md;
+  padding: @padding-xs @padding-sm;
   z-index: 99999;
 
   .CodeMirror-lint-message-error {
@@ -93,7 +93,7 @@
 
   .cm-s-default div.CodeMirror-selected {
     //background: #49483E;
-    background: $hl-xl;
+    background: @hl-xl;
   }
 
   .cm-s-default .CodeMirror-line::selection, .cm-s-default .CodeMirror-line > span::selection, .cm-s-default .CodeMirror-line > span > span::selection {
@@ -130,15 +130,15 @@
   }
 
   .cm-s-default span.cm-atom {
-    color: lighten($surprise, 5);
+    color: lighten(@surprise, 5);
   }
 
   .cm-s-default span.cm-number {
-    color: lighten($surprise, 5);
+    color: lighten(@surprise, 5);
   }
 
   .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: lighten($success, 5);
+    color: lighten(@success, 5);
   }
 
   .cm-s-default span.cm-keyword {
@@ -150,7 +150,7 @@
   }
 
   .cm-s-default span.cm-string {
-    color: lighten($notice, 5);
+    color: lighten(@notice, 5);
   }
 
   .cm-s-default span.cm-variable {
@@ -174,24 +174,24 @@
   }
 
   .cm-s-default span.cm-tag {
-    color: darken($danger, 3);
+    color: darken(@danger, 3);
   }
 
   .cm-s-default span.cm-header {
-    color: lighten($surprise, 5);
+    color: lighten(@surprise, 5);
   }
 
   .cm-s-default span.cm-link {
-    color: lighten($surprise, 5);
+    color: lighten(@surprise, 5);
   }
 
   .cm-s-default span.cm-error {
-    background: $danger;
+    background: @danger;
     color: #f8f8f0;
   }
 
   .cm-s-default .CodeMirror-activeline-background {
-    background: $hl-md;
+    background: @hl-md;
   }
 
   .cm-s-default .CodeMirror-matchingbracket {
@@ -202,24 +202,24 @@
 
 .editor--light-theme {
   .cm-s-default span {
-    color: $font-light-bg;
+    color: @font-light-bg;
   }
 
   .cm-s-default span.cm-string {
-    color: saturate(darken($notice, 30), 100);
+    color: saturate(darken(@notice, 30), 100);
   }
 
   .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: saturate(darken($success, 15), 100);
+    color: saturate(darken(@success, 15), 100);
   }
 
   .cm-s-default span.cm-atom,
   .cm-s-default span.cm-number {
-    color: saturate(darken($surprise, 30), 100);
+    color: saturate(darken(@surprise, 30), 100);
   }
 
   .cm-s-default .CodeMirror-activeline-background {
-    background: $hl-md;
+    background: @hl-md;
   }
 
   .cm-s-default .CodeMirror-matchingbracket {

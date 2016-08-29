@@ -2,14 +2,14 @@
 @import '../constants/colors';
 
 .key-value-editor {
-  padding: $padding-md 0;
+  padding: @padding-md 0;
 
   li {
 
     .key-value-editor__label {
-      padding: 0 $padding-md;
+      padding: 0 @padding-md;
       opacity: 0.5;
-      font-size: $font-size-sm;
+      font-size: @font-size-sm;
     }
 
     .key-value-editor__row {
@@ -18,19 +18,19 @@
       grid-template-rows: auto;
 
       & > * {
-        padding: 0 $padding-sm;
+        padding: 0 @padding-sm;
 
         &:first-child {
-          padding-left: $padding-md;
+          padding-left: @padding-md;
         }
 
         &:last-child {
-          padding-right: $padding-md;
+          padding-right: @padding-md;
         }
       }
 
       & > button {
-        color: $hl;
+        color: @hl;
 
         &:hover {
           color: inherit;

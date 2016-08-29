@@ -4,11 +4,11 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: $height-nav auto auto 1fr;
+  grid-template-rows: @height-nav auto auto 1fr;
   grid-template-columns: 1fr;
 
-  background-color: $bg-dark;
-  color: $font-dark-bg;
+  background-color: @bg-dark;
+  color: @font-dark-bg;
 
   width: 100%;
   height: 100%;
@@ -29,13 +29,13 @@
   // ~~~~~~~~~~~~~~ //
 
   .sidebar__header {
-    background-color: $bg-brand;
-    color: $font-brand-bg;
+    background-color: @bg-brand;
+    color: @font-brand-bg;
     width: 100%;
     height: 100%;
 
     &:hover {
-      background-color: lighten($bg-brand, 1);
+      background-color: lighten(@bg-brand, 1);
     }
   }
 
@@ -47,28 +47,28 @@
     // Nothing yet
     width: 100%;
     display: grid;
-    font-size: $font-size-sm;
+    font-size: @font-size-sm;
     grid-template-columns: 1fr auto;
     align-items: center;
 
     .btn {
-      padding: 0 ($padding-md - $padding-xxs);
-      margin-right: $padding-xxs;
-      border-radius: $radius-md;
-      color: $hl;
+      padding: 0 (@padding-md - @padding-xxs);
+      margin-right: @padding-xxs;
+      border-radius: @radius-md;
+      color: @hl;
 
       &:hover,
       &:focus {
-        color: $font-dark-bg;
+        color: @font-dark-bg;
       }
     }
 
     .form-control {
-      padding: 0 $padding-xxs 0 0;
-      margin: $padding-sm 0 $padding-sm $padding-sm;
+      padding: 0 @padding-xxs 0 0;
+      margin: @padding-sm 0 @padding-sm @padding-sm;
 
       input {
-        padding: $padding-xs;
+        padding: @padding-xs;
       }
     }
   }
@@ -77,21 +77,21 @@
     display: grid;
     grid-template-columns: 55% 45%;
     justify-items: center;
-    font-size: $font-size-sm;
-    color: $hl;
-    padding: 0 $padding-sm;
+    font-size: @font-size-sm;
+    color: @hl;
+    padding: 0 @padding-sm;
 
     & > * {
       width: 100%;
-      margin-top: $padding-sm;
+      margin-top: @padding-sm;
     }
 
     & > *:first-child {
-      margin-right: $padding-xxs;
+      margin-right: @padding-xxs;
     }
 
     & > *:last-child {
-      margin-left: $padding-xxs;
+      margin-left: @padding-xxs;
     }
 
     .sidebar__menu__thing {
@@ -110,13 +110,13 @@
     .btn {
       width: 100%;
       border-radius: 900px;
-      height: $line-height-xxs;
-      padding-left: $padding-xxs;
-      padding-right: $padding-xxs;
+      height: @line-height-xxs;
+      padding-left: @padding-xxs;
+      padding-right: @padding-xxs;
 
       &:hover,
       &:focus {
-        color: $font-dark-bg;
+        color: @font-dark-bg;
       }
     }
   }
@@ -125,7 +125,7 @@
     grid-template-columns: 100%;
 
     & > *:first-child {
-      margin-right: $padding-xs;
+      margin-right: @padding-xs;
     }
 
     & > *:last-child {
@@ -141,8 +141,8 @@
     }
 
     .btn {
-      padding-left: $padding-xs;
-      padding-right: $padding-xs;
+      padding-left: @padding-xs;
+      padding-right: @padding-xs;
     }
   }
 
@@ -152,9 +152,9 @@
 
   .sidebar__list-root {
     // Add some space above so it's not so squished
-    border-top: 1px solid $hl-sm;
-    padding-top: $padding-xs;
-    padding-bottom: $padding-md;
+    border-top: 1px solid @hl-sm;
+    padding-top: @padding-xs;
+    padding-bottom: @padding-md;
     box-shadow: inset 0 2rem 3rem -2rem rgba(0, 0, 0, 0.1);
 
     overflow-y: auto;
@@ -188,7 +188,7 @@
       height: 0;
       right: 0;
       left: 0;
-      border-bottom: 2px dotted lighten($surprise, 5);
+      border-bottom: 2px dotted lighten(@surprise, 5);
       content: " ";
       display: block
     }
@@ -201,37 +201,37 @@
   .sidebar__item {
     display: grid;
     grid-template-columns: 1fr auto;
-    grid-template-rows: $line-height-xs;
-    color: $hl-xxl;
+    grid-template-rows: @line-height-xs;
+    color: @hl-xxl;
 
     & > * {
       height: 100%;
     }
 
     &.sidebar__item--big {
-      grid-template-rows: $line-height-sm;
+      grid-template-rows: @line-height-sm;
     }
 
     &.sidebar__item--active > button {
-      color: $font-dark-bg;
+      color: @font-dark-bg;
 
       .tag {
         opacity: 1;
       }
 
       .editable {
-        line-height: $line-height-xs;
+        line-height: @line-height-xs;
       }
     }
 
     &.sidebar__item--active > .sidebar__actions,
     & > button:focus {
-      background-color: $hl-xxs;
+      background-color: @hl-xxs;
     }
 
     &:hover > .sidebar__actions,
     &:hover > button {
-      background-color: $hl-xxxs;
+      background-color: @hl-xxxs;
     }
 
     .tag {
@@ -244,7 +244,7 @@
   }
 
   .sidebar__item__icon {
-    padding-right: $padding-sm;
+    padding-right: @padding-sm;
   }
 
   // ~~~~~~~~~~~~~~~~~ //
@@ -260,31 +260,31 @@
   // Padding for nested folders
 
   .sidebar__list .sidebar__clickable {
-    padding-left: $padding-md;
+    padding-left: @padding-md;
   }
 
   .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: $padding-md * 2;
+    padding-left: @padding-md * 2;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: $padding-md * 3;
+    padding-left: @padding-md * 3;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: $padding-md * 4;
+    padding-left: @padding-md * 4;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: $padding-md * 5;
+    padding-left: @padding-md * 5;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: $padding-md * 6;
+    padding-left: @padding-md * 6;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: $padding-md * 7;
+    padding-left: @padding-md * 7;
   }
 
   // ~~~~~~~~~~~~~~~ //
@@ -299,14 +299,14 @@
     & > button,
     & > .dropdown > button {
       display: none;
-      color: $hl;
+      color: @hl;
       height: 100%;
-      padding: 0 $padding-sm;
+      padding: 0 @padding-sm;
     }
 
     & > button:hover,
     & > .dropdown:hover > button {
-      color: $font-dark-bg;
+      color: @font-dark-bg;
     }
   }
 

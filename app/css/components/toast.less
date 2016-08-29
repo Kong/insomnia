@@ -7,14 +7,14 @@
   opacity: 0;
   position: absolute;
   z-index: 100;
-  bottom: $padding-md;
-  right: $padding-md;
-  background: $bg-light;
-  color: $font-light-bg;
+  bottom: @padding-md;
+  right: @padding-md;
+  background: @bg-light;
+  color: @font-light-bg;
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: row;
-  border-radius: $radius-md;
+  border-radius: @radius-md;
 
   &.toast--show {
     opacity: 1;
@@ -23,18 +23,18 @@
 
   .toast__message,
   .toast__action {
-    padding: $padding-sm $padding-md;
+    padding: @padding-sm @padding-md;
     height: auto;
   }
 
   .toast__action {
-    color: $font-light-bg;
+    color: @font-light-bg;
     font-weight: bold;
-    font-size: $font-size-sm;
-    border-left: 1px solid $hl-md;
+    font-size: @font-size-sm;
+    border-left: 1px solid @hl-md;
 
     &:hover {
-      background: $hl-xs;
+      background: @hl-xs;
     }
   }
 }

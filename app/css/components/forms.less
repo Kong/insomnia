@@ -4,7 +4,7 @@
 .form-control {
   outline: none;
   border: 0;
-  height: $line-height-md;
+  height: @line-height-md;
 
   textarea,
   input {
@@ -21,18 +21,18 @@
   &.form-control--outlined,
   &.form-control--underlined {
     height: auto;
-    margin: $padding-sm;
+    margin: @padding-sm;
 
     textarea,
     input {
-      border: 1px solid $hl-md;
-      padding: $padding-sm;
-      border-radius: $radius-md;
+      border: 1px solid @hl-md;
+      padding: @padding-sm;
+      border-radius: @radius-md;
     }
 
     textarea,
     input:focus {
-      border-color: $hl-xl;
+      border-color: @hl-xl;
     }
   }
 
@@ -56,23 +56,23 @@ label > .form-control,
 
 .btn {
   text-align: center;
-  padding: 0 ($padding-md * 1.5);
-  height: $line-height-md;
+  padding: 0 (@padding-md * 1.5);
+  height: @line-height-md;
   border: 1px solid transparent;
 
   &.btn--compact {
-    padding: 0 $padding-md;
-    height: $line-height-sm;
+    padding: 0 @padding-md;
+    height: @line-height-sm;
   }
 
   &.btn--super-compact {
-    padding: 0 $padding-md;
-    height: $line-height-xs;
+    padding: 0 @padding-md;
+    height: @line-height-xs;
   }
 
   &.btn--outlined {
-    border: 1px solid $hl-lg;
-    border-radius: $radius-md;
+    border: 1px solid @hl-lg;
+    border-radius: @radius-md;
   }
 }
 
@@ -83,11 +83,11 @@ label > .form-control,
 .btn:focus:not(:disabled),
 .btn.focus:not(:disabled),
 .btn:hover:not(:disabled) {
-  background: $hl-xs;
+  background: @hl-xs;
 }
 
 .btn:active {
-  background: $hl-md;
+  background: @hl-md;
 }
 
 textarea, input, button {
@@ -103,12 +103,12 @@ textarea, input, button {
   color: inherit;
 
   &::-webkit-input-placeholder {
-    color: $hl-xl;
+    color: @hl-xl;
   }
 }
 
 input.input--error {
-  border-color: $danger !important;
+  border-color: @danger !important;
 }
 
 button {
