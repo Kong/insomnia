@@ -31,8 +31,8 @@ export default {
         loader: 'json'
       },
       {
-        test: /\.(scss|css)$/,
-        loader: 'style!css!sass'
+        test: /\.(less|css)$/,
+        loader: 'style!css!less'
       },
       {
         test: /\.html$/,

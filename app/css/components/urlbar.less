@@ -27,14 +27,14 @@
       // Make everything the same height
       &,
       & > i.fa {
-        line-height: $line-height-sm;
+        line-height: @line-height-sm;
       }
     }
   }
 
   .dropdown .tag {
     border-radius: 0;
-    font-size: $font-size-md;
+    font-size: @font-size-md;
     padding: 0;
 
     &::before {
@@ -46,8 +46,8 @@
     }
 
     .tag__inner {
-      color: $hl;
-      padding-left: $padding-sm;
+      color: @hl;
+      padding-left: @padding-sm;
     }
   }
 
@@ -57,8 +57,8 @@
   }
 
   form button {
-    padding-right: $padding-md;
-    padding-left: $padding-md;
+    padding-right: @padding-md;
+    padding-left: @padding-md;
   }
 
   form, .form-control {
@@ -70,16 +70,16 @@
     height: 100%;
 
     &:hover {
-      background-color: $hl-xs;
+      background-color: @hl-xs;
     }
   }
 
   & > *:first-child {
-    padding-left: $padding-md;
-    padding-right: $padding-md / 2;
+    padding-left: @padding-md;
+    padding-right: @padding-md / 2;
   }
 
   & > *:nth-child(2) {
-    padding-left: $padding-md / 2;
+    padding-left: @padding-md / 2;
   }
 }

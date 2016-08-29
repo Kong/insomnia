@@ -45,7 +45,7 @@ class RenderedQueryString extends Component {
     if (this.state.string) {
       return (
         <span className="selectable force-wrap">
-        {this.state.string}
+          {this.state.string}
         </span>
       );
     } else {

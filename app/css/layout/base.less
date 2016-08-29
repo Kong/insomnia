@@ -3,7 +3,7 @@
 @import '../constants/fonts';
 
 html {
-  font-size: $font-size;
+  font-size: @font-size;
 }
 
 html, body, #root {
@@ -22,15 +22,15 @@ body {
 }
 
 h1 {
-  font-size: $font-size-xxl;
+  font-size: @font-size-xxl;
 }
 
 h2 {
-  font-size: $font-size-xl;
+  font-size: @font-size-xl;
 }
 
 h3 {
-  font-size: $font-size-lg;
+  font-size: @font-size-lg;
 }
 
 h1, h2, h3 {
@@ -41,8 +41,8 @@ hr {
   width: 100%;
   height: 0;
   border: 0;
-  border-bottom: 1px solid $hl-md;
-  margin: $padding-md 0;
+  border-bottom: 1px solid @hl-md;
+  margin: @padding-md 0;
 }
 
 em {
@@ -59,41 +59,41 @@ p {
 
 label.label--small,
 table th {
-  color: $hl;
+  color: @hl;
   text-transform: uppercase;
   font-size: 0.8em;
-  padding-bottom: $padding-xxs;
+  padding-bottom: @padding-xxs;
 }
 
 webview {
   height: 100%;
   width: 100%;
-  background-color: $bg-super-light;
+  background-color: @bg-super-light;
 }
 
 table {
   width: 100%;
 
   td, th {
-    padding: $padding-sm;
+    padding: @padding-sm;
   }
 
   th {
     text-align: left;
-    padding-bottom: $padding-sm;
+    padding-bottom: @padding-sm;
   }
 
   &.table--striped tbody tr:nth-child(odd) {
-    background: $hl-xs;
+    background: @hl-xs;
   }
 }
 
 code {
   display: inline-block;
-  background: $hl-xs;
-  padding: $padding-xs $padding-sm;
-  color: $hl;
-  font-family: $font-monospace;
+  background: @hl-xs;
+  padding: @padding-xs @padding-sm;
+  color: @hl;
+  font-family: @font-monospace;
 }
 
 .text-center {
@@ -117,11 +117,11 @@ code {
 }
 
 .faint {
-  color: $hl;
+  color: @hl;
 }
 
 .super-faint {
-  color: $hl-xl;
+  color: @hl-xl;
 }
 
 .valign-bottom {
@@ -160,41 +160,41 @@ i.fa {
 }
 
 .border-top {
-  border-top: 1px solid $hl-md;
+  border-top: 1px solid @hl-md;
 }
 
 .pad {
   box-sizing: border-box;
-  padding: $padding-md;
+  padding: @padding-md;
 }
 
 .pad-left {
   box-sizing: border-box;
-  padding-left: $padding-md;
+  padding-left: @padding-md;
 }
 
 .pad-right {
   box-sizing: border-box;
-  padding-right: $padding-md;
+  padding-right: @padding-md;
 }
 
 .pad-top {
   box-sizing: border-box;
-  padding-top: $padding-md;
+  padding-top: @padding-md;
 }
 
 .pad-top-sm {
   box-sizing: border-box;
-  padding-top: $padding-sm;
+  padding-top: @padding-sm;
 }
 
 .margin-top-sm {
-  margin-top: $padding-sm;
+  margin-top: @padding-sm;
 }
 
 .pad-bottom {
   box-sizing: border-box;
-  padding-bottom: $padding-md;
+  padding-bottom: @padding-md;
 }
 
 .no-pad-bottom {
@@ -206,11 +206,11 @@ i.fa {
 }
 
 .pad-left-half {
-  padding-left: $padding-md / 2;
+  padding-left: @padding-md / 2;
 }
 
 .pad-right-half {
-  padding-right: $padding-md / 2;
+  padding-right: @padding-md / 2;
 }
 
 .no-pad {
@@ -267,12 +267,12 @@ i.fa {
     border-right: 1px solid #eee;
 
     &.bg-brand {
-      border-right-color: $bg-brand;
+      border-right-color: @bg-brand;
     }
   }
 
   .section__body {
-    border-right: 1px solid $hl-sm;
+    border-right: 1px solid @hl-sm;
   }
 }
 
@@ -288,7 +288,7 @@ strong {
   display: none;
 }
 
-@media (max-width: $breakpoint-lg) {
+@media (max-width: @breakpoint-lg) {
   .hide-below-lg {
     display: none;
   }
@@ -298,9 +298,9 @@ strong {
   }
 }
 
-@media (max-width: $breakpoint-md) {
+@media (max-width: @breakpoint-md) {
   html {
-    font-size: $font-size * 0.95;
+    font-size: @font-size * 0.95;
   }
 
   .hide-below-md {
