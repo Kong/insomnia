@@ -26,10 +26,10 @@ view bytes =
         ( size, unit ) =
             if bytes < 1024 then
                 ( bytes, "B" )
-            else if bytes < 1024 * 2024 then
-                ( bytes / 1024, "B" )
+            else if bytes < 1024 * 1024 then
+                ( bytes / 1024, "KB" )
             else if bytes < 1024 * 1024 * 1024 then
-                ( bytes / 1024 / 1024, "B" )
+                ( bytes / 1024 / 1024, "MB" )
             else
                 ( bytes / 1024 / 1024 / 1024, "GB" )
     in
