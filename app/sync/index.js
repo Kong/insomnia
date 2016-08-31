@@ -57,7 +57,23 @@ export function initSync () {
 // HELPERS //
 // ~~~~~~~ //
 
+let changes = {};
+let commitTimeout = null;
 function addChange (event, doc) {
+  changes[doc._id] = [event, doc];
+
+  clearTimeout(commitTimeout);
+  commitTimeout = setTimeout(() => {
+    for (const key of Object.keys(changes)) {
+      const change = changes[key];
+      commitChange(change[0], change[1]);
+    }
+
+    changes = {};
+  }, 4000);
+}
+
+function commitChange (event, doc) {
   const path = {
     [TYPE_REQUEST]: 'requests',
     [TYPE_WORKSPACE]: 'workspaces',
@@ -105,7 +121,6 @@ function addChange (event, doc) {
 
     if (event !== db.EVENT_REMOVE) {
       const newDoc = response.body.data;
-      console.log('UPDATING', newDoc._id);
       db.update(newDoc, true, true);
     }
   });
@@ -140,10 +155,10 @@ function fullSync () {
       // Save all the updated docs to the DB //
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-      console.log('DOCS TO UPDATE', updatedDocs);
       const promises = updatedDocs.map(d => db.update(d, true, true));
       Promise.all(promises).then(() => {
-        if (updatedDocs.length) {
+        const count = updatedDocs.length;
+        if (count) {
           console.log(`Sync Updated ${updatedDocs.length} docs`);
         }
       });
