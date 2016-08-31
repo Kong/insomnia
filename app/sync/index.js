@@ -4,22 +4,16 @@ import {
   TYPE_REQUEST,
   TYPE_REQUEST_GROUP,
   TYPE_WORKSPACE,
-  TYPE_STATS,
   TYPE_ENVIRONMENT,
   TYPE_COOKIE_JAR,
-  TYPE_RESPONSE,
-  TYPE_SETTINGS
 } from '../database/index';
 
 const WHITE_LIST = {
   [TYPE_REQUEST]: true,
   [TYPE_REQUEST_GROUP]: true,
   [TYPE_WORKSPACE]: true,
-  [TYPE_STATS]: true,
   [TYPE_ENVIRONMENT]: true,
-  [TYPE_COOKIE_JAR]: true,
-  [TYPE_RESPONSE]: true,
-  [TYPE_SETTINGS]: true,
+  [TYPE_COOKIE_JAR]: true
 };
 
 const BASE_URL = 'https://oqke109kk9.execute-api.us-east-1.amazonaws.com/dev/v1';
@@ -79,17 +73,14 @@ function commitChange (event, doc) {
     [TYPE_WORKSPACE]: 'workspaces',
     [TYPE_REQUEST_GROUP]: 'requestgroups',
     [TYPE_ENVIRONMENT]: 'environments',
-    [TYPE_COOKIE_JAR]: 'cookiejars',
-    [TYPE_STATS]: 'stats',
-    [TYPE_SETTINGS]: 'settings',
-    [TYPE_RESPONSE]: 'responses',
+    [TYPE_COOKIE_JAR]: 'cookiejars'
   }[doc.type];
 
   if (!path) {
     return;
   }
 
-  console.log('CRUDDING DOC', doc);
+  console.log('CRUDDING DOC', doc._id);
 
   const config = {
     url: `${BASE_URL}/${path}/${doc._id}`
@@ -155,11 +146,11 @@ function fullSync () {
       // Save all the updated docs to the DB //
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-      const promises = updatedDocs.map(d => db.update(d, true, true));
-      Promise.all(promises).then(() => {
+      const promises = updatedDocs.map(d => db.update(d, false, true));
+      Promise.all(promises).then(docs => {
         const count = updatedDocs.length;
         if (count) {
-          console.log(`Sync Updated ${updatedDocs.length} docs`);
+          console.log(`Sync Updated ${updatedDocs.length} docs`, updatedDocs);
         }
       });
 

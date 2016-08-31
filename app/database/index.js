@@ -229,7 +229,6 @@ export function insert (doc) {
 export function update (doc, silent = false, overrideEtag = false) {
   return new Promise((resolve, reject) => {
     get(doc.type, doc._id).then(existingDoc => {
-
       // Update etag from existing one if
       // TODO: Move this into the sync logic somehow
       if (!overrideEtag) {
@@ -237,7 +236,7 @@ export function update (doc, silent = false, overrideEtag = false) {
       }
 
       // Doc has changed so update, resolve, and ping listeners
-      db[doc.type].update({_id: doc._id}, doc, err => {
+      db[doc.type].update({_id: doc._id}, doc, {upsert: true}, err => {
         if (err) {
           return reject(err);
         }
