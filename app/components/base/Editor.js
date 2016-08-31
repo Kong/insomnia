@@ -36,13 +36,6 @@ import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
 import '../../css/components/editor.less';
 
-// Modes
-
-// CSS
-
-// Plugins
-
-// App styles
 
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
