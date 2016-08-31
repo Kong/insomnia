@@ -70,7 +70,7 @@ function addChange (event, doc) {
     }
 
     changes = {};
-  }, 4000);
+  }, 3000);
 }
 
 function commitChange (event, doc) {
