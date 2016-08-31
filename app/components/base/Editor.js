@@ -68,35 +68,6 @@ class Editor extends Component {
     this.state = {isFocused: false}
   }
 
-  _initCodeMirror (textarea) {
-    if (this.codeMirror || !textarea) {
-      // Already initialized or not mounted
-      return;
-    }
-
-    const {value} = this.props;
-
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
-    this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
-    this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
-    if (!this.codeMirror.getOption('indentWithTabs')) {
-      this.codeMirror.setOption('extraKeys', {
-        Tab: cm => {
-          var spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
-          cm.replaceSelection(spaces);
-        }
-      });
-    }
-
-    this._codemirrorSetOptions();
-
-    // Let the component render first so we don't block it
-    // TODO: Add some sort of loading spinner
-    setTimeout(() => {
-      this._codemirrorSetValue(value);
-    }, 50)
-  }
-
   componentWillUnmount () {
     // todo: is there a lighter-weight way to remove the cm instance?
     if (this.codeMirror) {
@@ -124,6 +95,38 @@ class Editor extends Component {
 
   getValue () {
     return this.codeMirror.getValue();
+  }
+
+  _initEditor (textarea) {
+    if (!textarea) {
+      // Not mounted
+      return;
+    }
+
+    if (this.codeMirror) {
+      // Already initialized
+      return;
+    }
+
+    const {value} = this.props;
+
+    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+    this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
+    this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
+    if (!this.codeMirror.getOption('indentWithTabs')) {
+      this.codeMirror.setOption('extraKeys', {
+        Tab: cm => {
+          var spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          cm.replaceSelection(spaces);
+        }
+      });
+    }
+
+    setTimeout(() => {
+      this._codemirrorSetValue(value || '');
+    }, 50);
+
+    this._codemirrorSetOptions();
   }
 
   /**
@@ -211,7 +214,7 @@ class Editor extends Component {
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
-            ref={n => this._initCodeMirror(n)}
+            ref={n => this._initEditor(n)}
             readOnly={readOnly}
             autoComplete='off'>
           </textarea>
