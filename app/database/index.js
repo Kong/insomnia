@@ -252,14 +252,6 @@ export function update (doc, silent = false, overrideEtag = false) {
   });
 }
 
-export function removeById (type, id) {
-  return new Promise(resolve => {
-    get(type, id).then(doc => {
-      remove(doc).then(resolve)
-    })
-  })
-}
-
 export function remove (doc) {
   return new Promise(resolve => {
     withChildren(doc).then(docs => {

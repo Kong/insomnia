@@ -7,10 +7,10 @@ import createStore from './redux/create';
 import App from './containers/App';
 
 // Global CSS
-import './css/lib/fontawesome/css/font-awesome.css'
-import './css/lib/fonts/open-sans.css'
-import './css/index'
-import './css/lib/chrome/platform_app.css'
+import './css/lib/fontawesome/css/font-awesome.css';
+import './css/lib/fonts/open-sans.css';
+import './css/index.less';
+import './css/lib/chrome/platform_app.css';
 import {initStore} from './redux/initstore';
 import {initSync} from './sync';
 import {initDB} from './database';
