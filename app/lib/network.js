@@ -1,5 +1,5 @@
 import networkRequest from 'request';
-import {parse as urlParse} from 'url';
+import {parse as urlParse, format as urlFormat} from 'url';
 
 import * as db from '../database';
 import * as querystring from './querystring';
@@ -9,10 +9,10 @@ import {getRenderedRequest} from './render';
 import {jarFromCookies, cookiesFromJar} from './cookies';
 
 
-function buildRequestConfig (request, patch = {}) {
+function buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
-    method: request.method,
-    body: request.body,
+    method: renderedRequest.method,
+    body: renderedRequest.body,
     headers: {},
 
     // Setup redirect rules
@@ -34,11 +34,16 @@ function buildRequestConfig (request, patch = {}) {
   };
 
   // Set the URL, including the query parameters
-  const qs = querystring.buildFromParams(request.parameters);
-  config.url = querystring.joinURL(request.url, qs);
+  const qs = querystring.buildFromParams(renderedRequest.parameters);
+  let url = querystring.joinURL(renderedRequest.url, qs);
 
-  for (let i = 0; i < request.headers.length; i++) {
-    let header = request.headers[i];
+  // Encode path portion of URL
+  const parsedUrl = urlParse(url);
+  parsedUrl.pathname = encodeURI(parsedUrl.pathname);
+  config.url = urlFormat(parsedUrl);
+
+  for (let i = 0; i < renderedRequest.headers.length; i++) {
+    let header = renderedRequest.headers[i];
     if (header.name) {
       config.headers[header.name] = header.value;
     }

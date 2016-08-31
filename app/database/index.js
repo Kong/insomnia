@@ -6,7 +6,6 @@ import * as methods from '../lib/constants';
 import {generateId} from './util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
-import {CONTENT_TYPE_TEXT} from '../lib/contentTypes';
 import {isDevelopment} from '../lib/appInfo';
 
 export const TYPE_STATS = 'Stats';
@@ -69,10 +68,7 @@ const MODEL_DEFAULTS = {
     method: methods.METHOD_GET,
     body: '',
     parameters: [],
-    headers: [{
-      name: 'Content-Type',
-      value: CONTENT_TYPE_TEXT
-    }],
+    headers: [],
     authentication: {},
     metaPreviewMode: PREVIEW_MODE_SOURCE,
     metaSortKey: -1 * Date.now()
