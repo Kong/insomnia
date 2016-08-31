@@ -2,56 +2,47 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
-
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
+import 'codemirror/mode/css/css';
+import 'codemirror/mode/htmlmixed/htmlmixed';
+import 'codemirror/mode/javascript/javascript';
+import 'codemirror/mode/go/go';
+import 'codemirror/mode/shell/shell';
+import 'codemirror/mode/clike/clike';
+import 'codemirror/mode/mllike/mllike';
+import 'codemirror/mode/php/php';
+import 'codemirror/mode/python/python';
+import 'codemirror/mode/ruby/ruby';
+import 'codemirror/mode/swift/swift';
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/addon/dialog/dialog';
+import 'codemirror/addon/dialog/dialog.css';
+import 'codemirror/addon/fold/foldcode';
+import 'codemirror/addon/fold/brace-fold';
+import 'codemirror/addon/fold/comment-fold';
+import 'codemirror/addon/fold/indent-fold';
+import 'codemirror/addon/fold/xml-fold';
+import 'codemirror/addon/display/autorefresh';
+import 'codemirror/addon/search/search';
+import 'codemirror/addon/search/searchcursor';
+import 'codemirror/addon/edit/matchbrackets';
+import 'codemirror/addon/search/matchesonscrollbar';
+import 'codemirror/addon/search/matchesonscrollbar.css';
+import 'codemirror/addon/fold/foldgutter';
+import 'codemirror/addon/fold/foldgutter.css';
+import 'codemirror/addon/display/placeholder';
+import 'codemirror/addon/lint/lint';
+import 'codemirror/addon/lint/json-lint';
+import 'codemirror/addon/lint/lint.css';
+import '../../css/components/editor.less';
 
 // Modes
-import 'codemirror/mode/css/css'
-import 'codemirror/mode/htmlmixed/htmlmixed'
-import 'codemirror/mode/javascript/javascript'
-import 'codemirror/mode/go/go'
-import 'codemirror/mode/shell/shell'
-import 'codemirror/mode/clike/clike'
-import 'codemirror/mode/mllike/mllike'
-import 'codemirror/mode/php/php'
-import 'codemirror/mode/python/python'
-import 'codemirror/mode/ruby/ruby'
-import 'codemirror/mode/swift/swift'
 
 // CSS
-import 'codemirror/lib/codemirror.css'
 
 // Plugins
-import 'codemirror/addon/dialog/dialog'
-import 'codemirror/addon/dialog/dialog.css'
-
-import 'codemirror/addon/fold/foldcode'
-import 'codemirror/addon/fold/brace-fold'
-import 'codemirror/addon/fold/comment-fold'
-import 'codemirror/addon/fold/indent-fold'
-import 'codemirror/addon/fold/xml-fold'
-
-import 'codemirror/addon/display/autorefresh'
-
-import 'codemirror/addon/search/search'
-import 'codemirror/addon/search/searchcursor'
-
-import 'codemirror/addon/edit/matchbrackets'
-
-import 'codemirror/addon/search/matchesonscrollbar'
-import 'codemirror/addon/search/matchesonscrollbar.css'
-
-import 'codemirror/addon/fold/foldgutter'
-import 'codemirror/addon/fold/foldgutter.css'
-
-import 'codemirror/addon/display/placeholder'
-
-import 'codemirror/addon/lint/lint'
-import 'codemirror/addon/lint/json-lint'
-import 'codemirror/addon/lint/lint.css'
 
 // App styles
-import '../../css/components/editor.less';
 
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
@@ -84,25 +75,6 @@ class Editor extends Component {
     this.state = {isFocused: false}
   }
 
-  componentDidMount () {
-    const {value} = this.props;
-
-    this.codeMirror = CodeMirror.fromTextArea(this._textarea, BASE_CODEMIRROR_OPTIONS);
-    this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
-    this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
-    if (!this.codeMirror.getOption('indentWithTabs')) {
-      this.codeMirror.setOption('extraKeys', {
-        Tab: cm => {
-          var spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
-          cm.replaceSelection(spaces);
-        }
-      });
-    }
-    this._currentCodemirrorValue = value || '';
-    this._codemirrorSetValue(this._currentCodemirrorValue);
-    this._codemirrorSetOptions();
-  }
-
   componentWillUnmount () {
     // todo: is there a lighter-weight way to remove the cm instance?
     if (this.codeMirror) {
@@ -130,6 +102,38 @@ class Editor extends Component {
 
   getValue () {
     return this.codeMirror.getValue();
+  }
+
+  _initEditor (textarea) {
+    if (!textarea) {
+      // Not mounted
+      return;
+    }
+
+    if (this.codeMirror) {
+      // Already initialized
+      return;
+    }
+
+    const {value} = this.props;
+
+    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+    this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
+    this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
+    if (!this.codeMirror.getOption('indentWithTabs')) {
+      this.codeMirror.setOption('extraKeys', {
+        Tab: cm => {
+          var spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          cm.replaceSelection(spaces);
+        }
+      });
+    }
+
+    setTimeout(() => {
+      this._codemirrorSetValue(value || '');
+    }, 50);
+
+    this._codemirrorSetOptions();
   }
 
   /**
@@ -174,8 +178,6 @@ class Editor extends Component {
     this._timeout = setTimeout(() => {
       // Update our cached value
       var newValue = doc.getValue();
-      this._currentCodemirrorValue = newValue;
-
       this.props.onChange(newValue);
     }, DEBOUNCE_MILLIS)
   }
@@ -204,7 +206,7 @@ class Editor extends Component {
   }
 
   render () {
-    const {value, readOnly, fontSize, lightTheme} = this.props;
+    const {readOnly, fontSize, lightTheme} = this.props;
 
     const classes = classnames(
       'editor',
@@ -219,8 +221,7 @@ class Editor extends Component {
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
-            ref={n => this._textarea = n}
-            defaultValue={value}
+            ref={n => this._initEditor(n)}
             readOnly={readOnly}
             autoComplete='off'>
           </textarea>

@@ -1,9 +1,11 @@
 import React, {Component, PropTypes} from 'react';
-
 import Editor from '../base/Editor';
 import ResponseWebview from './ResponseWebview';
 import ResponseError from './ResponseError';
-import {PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../../lib/previewModes';
+import {
+  PREVIEW_MODE_FRIENDLY,
+  PREVIEW_MODE_SOURCE
+} from '../../lib/previewModes';
 
 class ResponseViewer extends Component {
   shouldComponentUpdate (nextProps) {
@@ -54,12 +56,13 @@ class ResponseViewer extends Component {
             readOnly={true}
             lineWrapping={editorLineWrapping}
             fontSize={editorFontSize}
-            placeholder="no response body..."
+            placeholder="..."
           />
         );
       default: // Raw
         return (
-          <pre className="scrollable wide tall selectable monospace pad">
+          <pre className="scrollable wide tall selectable monospace pad"
+               style={{fontSize: editorFontSize}}>
             {body}
           </pre>
         )
