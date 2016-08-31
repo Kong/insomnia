@@ -106,7 +106,7 @@ function commitChange (event, doc) {
     }
 
     if (!response.body.success) {
-      console.warn('Failed to push change', response.body.message);
+      console.warn('Failed to push change', response.body);
       return;
     }
 
@@ -137,6 +137,21 @@ function fullSync () {
     };
 
     request(config, (err, response) => {
+      if (err) {
+        console.error('Failed to sync changes', err);
+        return;
+      }
+
+      if (response.statusCode !== 200) {
+        console.warn('Failed to sync changes', response.body);
+        return;
+      }
+
+      if (!response.body.success) {
+        console.warn('Failed to sync changes', response.body);
+        return;
+      }
+
       const changes = response.body.data;
       const idsToPush = changes['ids_to_push'];
       const idsToRemove = changes['ids_to_remove'];
@@ -146,7 +161,7 @@ function fullSync () {
       // Save all the updated docs to the DB //
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-      const promises = updatedDocs.map(d => db.update(d, false, true));
+      const promises = updatedDocs.map(d => db.update(d, true, true));
       Promise.all(promises).then(docs => {
         const count = updatedDocs.length;
         if (count) {
