@@ -35,7 +35,7 @@ function buildRequestConfig (renderedRequest, patch = {}) {
 
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(renderedRequest.parameters);
-  let url = querystring.joinURL(renderedRequest.url, qs);
+  const url = querystring.joinURL(renderedRequest.url, qs);
 
   // Encode path portion of URL
   const parsedUrl = urlParse(url);
