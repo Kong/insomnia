@@ -226,19 +226,13 @@ export function insert (doc) {
   });
 }
 
-export function update (doc, silent = false, newEtag = false) {
+export function update (doc, silent = false, overrideEtag = false) {
   return new Promise((resolve, reject) => {
     get(doc.type, doc._id).then(existingDoc => {
 
-      // Doc does not exist so barf
-      if (!existingDoc) {
-        reject(new Error('Doc does not exist for update'));
-        return;
-      }
-
-      //
+      // Update etag from existing one if
       // TODO: Move this into the sync logic somehow
-      if (!newEtag) {
+      if (!overrideEtag) {
         doc._etag = existingDoc._etag;
       }
 
@@ -251,7 +245,7 @@ export function update (doc, silent = false, newEtag = false) {
         resolve(doc);
 
         // Only update if it's not silent and it's actually changed
-        if (doc.modified !== existingDoc.modified && !silent) {
+        if (doc.modified !== (existingDoc || {}).modified && !silent) {
           Object.keys(changeListeners).map(k => changeListeners[k](EVENT_UPDATE, doc));
         }
       });

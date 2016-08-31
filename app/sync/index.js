@@ -45,8 +45,8 @@ export function initSync () {
     // SETUP PULL //
     // ~~~~~~~~~~ //
 
+    setTimeout(fullSync, 300);
     setInterval(fullSync, 10000);
-    fullSync();
 
     resolve();
   });
@@ -98,8 +98,15 @@ function addChange (event, doc) {
       return;
     }
 
+    if (!response.body.success) {
+      console.warn('Failed to push change', response.body.message);
+      return;
+    }
+
     if (event !== db.EVENT_REMOVE) {
-      db.update(doc, true, true);
+      const newDoc = response.body.data;
+      console.log('UPDATING', newDoc._id);
+      db.update(newDoc, true, true);
     }
   });
 }
@@ -123,10 +130,8 @@ function fullSync () {
       body: items
     };
 
-    console.log('SENDING DATA', items);
     request(config, (err, response) => {
       const changes = response.body.data;
-      console.log('SYNC DATA', changes);
       const idsToPush = changes['ids_to_push'];
       const idsToRemove = changes['ids_to_remove'];
       const updatedDocs = changes['updated_docs'];
@@ -135,9 +140,12 @@ function fullSync () {
       // Save all the updated docs to the DB //
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
+      console.log('DOCS TO UPDATE', updatedDocs);
       const promises = updatedDocs.map(d => db.update(d, true, true));
       Promise.all(promises).then(() => {
-        console.log('All docs updated');
+        if (updatedDocs.length) {
+          console.log(`Sync Updated ${updatedDocs.length} docs`);
+        }
       });
 
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
