@@ -1,14 +1,14 @@
 import request from 'request';
-
 import * as db from '../database';
-
 import {
   TYPE_REQUEST,
   TYPE_REQUEST_GROUP,
   TYPE_WORKSPACE,
   TYPE_STATS,
   TYPE_ENVIRONMENT,
-  TYPE_COOKIE_JAR
+  TYPE_COOKIE_JAR,
+  TYPE_RESPONSE,
+  TYPE_SETTINGS
 } from '../database/index';
 
 const WHITE_LIST = {
@@ -18,7 +18,11 @@ const WHITE_LIST = {
   [TYPE_STATS]: true,
   [TYPE_ENVIRONMENT]: true,
   [TYPE_COOKIE_JAR]: true,
+  [TYPE_RESPONSE]: true,
+  [TYPE_SETTINGS]: true,
 };
+
+const BASE_URL = 'https://oqke109kk9.execute-api.us-east-1.amazonaws.com/dev/v1';
 
 export function initSync () {
   return new Promise(resolve => {
@@ -41,7 +45,8 @@ export function initSync () {
     // SETUP PULL //
     // ~~~~~~~~~~ //
 
-    setInterval(fetchChanges, 2000);
+    setInterval(fullSync, 10000);
+    fullSync();
 
     resolve();
   });
@@ -54,24 +59,31 @@ export function initSync () {
 
 function addChange (event, doc) {
   const path = {
-    Request: 'requests',
-    Workspace: 'workspaces',
-    RequestGroup: 'requestgroups',
-    Environment: 'environments',
-    CookieJar: 'cookiejars',
-    Stats: 'stats',
+    [TYPE_REQUEST]: 'requests',
+    [TYPE_WORKSPACE]: 'workspaces',
+    [TYPE_REQUEST_GROUP]: 'requestgroups',
+    [TYPE_ENVIRONMENT]: 'environments',
+    [TYPE_COOKIE_JAR]: 'cookiejars',
+    [TYPE_STATS]: 'stats',
+    [TYPE_SETTINGS]: 'settings',
+    [TYPE_RESPONSE]: 'responses',
   }[doc.type];
 
+  if (!path) {
+    return;
+  }
+
+  console.log('CRUDDING DOC', doc);
+
   const config = {
-    // url: `http://localhost:5001/api/v1/${path}/${doc._id}`
-    url: `https://insomnia-api.herokuapp.com/api/v1/${path}/${doc._id}`
+    url: `${BASE_URL}/${path}/${doc._id}`
   };
 
-  if (event === 'insert' || event === 'update') {
+  if (event === db.EVENT_INSERT || event === db.EVENT_UPDATE) {
     config.method = 'PUT';
     config.json = true;
     config.body = doc;
-  } else if (event === 'remove') {
+  } else if (event === db.EVENT_REMOVE) {
     config.method = 'DELETE';
   }
 
@@ -86,37 +98,77 @@ function addChange (event, doc) {
       return;
     }
 
-    db.update(doc, true, true);
-    console.log('--------');
-    console.log('ORIGINAL', doc);
-    console.log('NEXT    ', response.body);
-    console.log('--------');
+    if (event !== db.EVENT_REMOVE) {
+      db.update(doc, true, true);
+    }
   });
 }
 
-let lastCheck = 0;
-function fetchChanges () {
-  const config = {
-    method: 'GET',
-    url: `https://insomnia-api.herokuapp.com/api/v1/changes`,
-    // url: 'http://localhost:5001/api/v1/changes',
-    qs: {gte: lastCheck},
-    json: true
-  };
-
-  request(config, (err, response) => {
-    const changes = response.body.data;
-
-    for (const change of changes) {
-      if (change.doc === null) {
-        db.removeById(change.doc_id)
-      } else {
-        db.update(change.doc, false, true)
+function fullSync () {
+  const promises = Object.keys(WHITE_LIST).map(type => db.all(type));
+  Promise.all(promises).then(results => {
+    const allDocs = [];
+    for (const docs of results) {
+      for (const doc of docs) {
+        allDocs.push(doc);
       }
     }
 
-    console.log(response.body)
-  });
+    const items = allDocs.map(r => [r._id, r._etag]);
 
-  lastCheck = Date.now();
+    const config = {
+      method: 'POST',
+      url: `${BASE_URL}/sync`,
+      json: true,
+      body: items
+    };
+
+    console.log('SENDING DATA', items);
+    request(config, (err, response) => {
+      const changes = response.body.data;
+      console.log('SYNC DATA', changes);
+      const idsToPush = changes['ids_to_push'];
+      const idsToRemove = changes['ids_to_remove'];
+      const updatedDocs = changes['updated_docs'];
+
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+      // Save all the updated docs to the DB //
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+      const promises = updatedDocs.map(d => db.update(d, true, true));
+      Promise.all(promises).then(() => {
+        console.log('All docs updated');
+      });
+
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+      // Remove all the docs that need removing //
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+      for (const idToRemove of idsToRemove) {
+        const doc = allDocs.find(d => d._id === idToRemove);
+
+        if (!doc) {
+          throw new Error(`Could not find ID to remove ${idToRemove}`)
+        }
+
+        console.log('REMOVING ID', idToRemove);
+        db.remove(doc);
+      }
+
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+      // Push all the docs that need pushing //
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+      for (const idToPush of idsToPush) {
+        const doc = allDocs.find(d => d._id === idToPush);
+
+        if (!doc) {
+          throw new Error(`Could not find ID to push ${idToPush}`)
+        }
+
+        console.log('PUSHING ID', idToPush);
+        addChange(db.EVENT_UPDATE, doc)
+      }
+    });
+  });
 }

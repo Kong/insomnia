@@ -14,11 +14,11 @@ export function initStore (dispatch) {
       return;
     }
 
-    if (event === 'insert') {
+    if (event === db.EVENT_INSERT) {
       entities.insert(doc);
-    } else if (event === 'update') {
+    } else if (event === db.EVENT_UPDATE) {
       entities.update(doc);
-    } else if (event === 'remove') {
+    } else if (event === db.EVENT_REMOVE) {
       entities.remove(doc);
     }
   };
@@ -41,7 +41,7 @@ export function initStore (dispatch) {
       docs = Array.isArray(docs) ? docs : [docs];
 
       for (let doc of docs) {
-        docChanged('update', doc);
+        docChanged(db.EVENT_UPDATE, doc);
       }
     }
 

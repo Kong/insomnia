@@ -18,11 +18,19 @@ export const TYPE_REQUEST_GROUP = 'RequestGroup';
 export const TYPE_REQUEST = 'Request';
 export const TYPE_RESPONSE = 'Response';
 
+export const EVENT_INSERT = 'insert';
+export const EVENT_UPDATE = 'update';
+export const EVENT_REMOVE = 'remove';
+
 
 const BASE_MODEL_DEFAULTS = () => ({
   modified: Date.now(),
   created: Date.now(),
-  parentId: null
+  parentId: null,
+
+  // Server-generated fields
+  _etag: null,
+  _synced: 0
 });
 
 const MODEL_DEFAULTS = {
@@ -167,11 +175,11 @@ function find (type, query = {}) {
   });
 }
 
-function all (type) {
+export function all (type) {
   return find(type);
 }
 
-function getWhere (type, query) {
+export function getWhere (type, query) {
   return new Promise((resolve, reject) => {
     db[type].find(query, (err, rawDocs) => {
       if (err) {
@@ -213,12 +221,12 @@ export function insert (doc) {
       }
 
       resolve(newDoc);
-      Object.keys(changeListeners).map(k => changeListeners[k]('insert', doc));
+      Object.keys(changeListeners).map(k => changeListeners[k](EVENT_INSERT, doc));
     });
   });
 }
 
-export function update (doc, silent = false, newRev = false) {
+export function update (doc, silent = false, newEtag = false) {
   return new Promise((resolve, reject) => {
     get(doc.type, doc._id).then(existingDoc => {
 
@@ -230,8 +238,8 @@ export function update (doc, silent = false, newRev = false) {
 
       //
       // TODO: Move this into the sync logic somehow
-      if (!newRev) {
-        doc._rev = existingDoc._rev;
+      if (!newEtag) {
+        doc._etag = existingDoc._etag;
       }
 
       // Doc has changed so update, resolve, and ping listeners
@@ -244,7 +252,7 @@ export function update (doc, silent = false, newRev = false) {
 
         // Only update if it's not silent and it's actually changed
         if (doc.modified !== existingDoc.modified && !silent) {
-          Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+          Object.keys(changeListeners).map(k => changeListeners[k](EVENT_UPDATE, doc));
         }
       });
     });
@@ -268,7 +276,7 @@ export function remove (doc) {
 
       Promise.all(promises).then(() => {
         for (const doc of docs) {
-          Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
+          Object.keys(changeListeners).map(k => changeListeners[k](EVENT_REMOVE, doc));
         }
         resolve()
       });
