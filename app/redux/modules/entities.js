@@ -1,6 +1,11 @@
 import {combineReducers} from 'redux';
 
-import {ALL_TYPES} from '../../database/index';
+import {ALL_TYPES, TYPE_RESPONSE, TYPE_STATS} from '../../database/index';
+
+const ENTITY_BLACKLIST = {
+  [TYPE_RESPONSE]: 1,
+  [TYPE_STATS]: 1
+};
 
 const ENTITY_INSERT = 'entities/insert';
 const ENTITY_UPDATE = 'entities/update';
@@ -15,6 +20,10 @@ function genericEntityReducer (referenceName) {
     const doc = action[referenceName];
 
     if (!doc) {
+      return state;
+    }
+
+    if (ENTITY_BLACKLIST[doc.type]) {
       return state;
     }
 

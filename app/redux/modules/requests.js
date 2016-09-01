@@ -63,7 +63,7 @@ export function send(request) {
 
     trackEvent('Request Send');
 
-    network.send(request._id).then(() => {
+    network.send(request._id).then(response => {
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     }, err => {
       console.warn('Error sending request', err);

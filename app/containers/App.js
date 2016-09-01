@@ -457,13 +457,8 @@ class App extends Component {
     const activeRequest = this._getActiveRequest();
     const activeRequestId = activeRequest ? activeRequest._id : null;
 
-    const responses = Object.keys(entities.responses).map(id => entities.responses[id]);
     const allRequests = Object.keys(entities.requests).map(id => entities.requests[id]);
     const allRequestGroups = Object.keys(entities.requestGroups).map(id => entities.requestGroups[id]);
-
-    const activeResponse = responses.sort(
-      (a, b) => a._id > b._id ? -1 : 1
-    ).find(r => r.parentId === activeRequestId);
 
     const children = this._generateSidebarTree(
       workspace._id,
@@ -528,7 +523,6 @@ class App extends Component {
 
         <ResponsePane
           ref="responsePane"
-          response={activeResponse}
           request={activeRequest}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}

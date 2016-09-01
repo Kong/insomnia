@@ -1,7 +1,6 @@
 import React, {PropTypes, Component} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
-
 import Modal from '../base/Modal';
 import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
@@ -33,7 +32,8 @@ class RequestSwitcherModal extends Component {
   _activateCurrentIndex () {
     if (this.state.matchedRequests.length) {
       // Activate the request if there is one
-      this._activateRequest(this.state.matchedRequests[this.state.activeIndex]);
+      const request = this.state.matchedRequests[this.state.activeIndex];
+      this._activateRequest(request);
     } else {
       // Create the request if nothing matched
       const name = this.state.searchString;
@@ -66,7 +66,9 @@ class RequestSwitcherModal extends Component {
     ]) => {
       // TODO: Support nested RequestGroups
       // Filter out RequestGroups that don't belong to this Workspace
-      const requestGroups = allRequestGroups.filter(rg => rg.parentId === workspaceId);
+      const requestGroups = allRequestGroups.filter(
+        rg => rg.parentId === workspaceId
+      );
 
       // Filter out Requests that don't belong to this Workspace
       const requests = allRequests.filter(r => {
@@ -89,10 +91,11 @@ class RequestSwitcherModal extends Component {
         (a, b) => {
           if (a.parentId === b.parentId) {
             // Sort Requests by name inside of the same parent
-            // TODO: Sort by quality of match (eg. start of string vs mid string, etc)
+            // TODO: Sort by quality of match (eg. start of string vs
+            // mid string, etc)
             return a.name > b.name ? 1 : -1;
           } else {
-            // Sort RequestGroups by relevance if Request isn't in the same parent
+            // Sort RequestGroups by relevance if Request isn't in same parent
             if (a.parentId === parentId) {
               return -1;
             } else if (b.parentId === parentId) {
@@ -147,10 +150,16 @@ class RequestSwitcherModal extends Component {
   }
 
   render () {
-    const {matchedRequests, requestGroups, searchString, activeIndex} = this.state;
+    const {
+      matchedRequests,
+      requestGroups,
+      searchString,
+      activeIndex
+    } = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} top={true} dontFocus={true} {...this.props}>
+      <Modal ref={m => this.modal = m} top={true}
+             dontFocus={true} {...this.props}>
         <ModalHeader hideCloseButton={true}>
           <p className="pull-right txt-md">
             <span className="monospace">tab</span> or
@@ -174,12 +183,18 @@ class RequestSwitcherModal extends Component {
           </div>
           <ul className="pad-top">
             {matchedRequests.map((r, i) => {
-              const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
+              const requestGroup = requestGroups.find(
+                rg => rg._id === r.parentId
+              );
+              const buttonClasses = classnames(
+                'btn btn--compact wide text-left',
+                {focus: activeIndex === i}
+              );
 
               return (
                 <li key={r._id}>
                   <button onClick={e => this._activateRequest(r)}
-                          className={classnames('btn btn--compact wide text-left', {focus: activeIndex === i})}>
+                          className={buttonClasses}>
                     {requestGroup ? (
                       <div className="pull-right faint italic">
                         {requestGroup.name}

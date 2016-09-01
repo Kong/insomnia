@@ -1,22 +1,44 @@
+import * as db from '../database';
 import React, {PropTypes, Component} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-
-import ResponsePaneHeader from './ResponsePaneHeader'
+import ResponsePaneHeader from './ResponsePaneHeader';
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
-import {getPreviewModeName} from '../lib/previewModes';
-import {REQUEST_TIME_TO_SHOW_COUNTER} from '../lib/constants';
-import {MOD_SYM} from '../lib/constants';
+import {getPreviewModeName, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
+import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../lib/constants';
 import {trackEvent} from '../lib/analytics';
-import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 
 class ResponsePane extends Component {
+  constructor (props) {
+    super(props);
+
+    this.state = {
+      response: null
+    }
+  }
+
+  _getResponse (request) {
+    if (!request) {
+      this.setState({response: null});
+    }
+
+    db.responseGetLatestByParentId(request._id).then(response => {
+      this.setState({response});
+    })
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this._getResponse(nextProps.request);
+  }
+
+  componentDidMount () {
+    this._getResponse(this.props.request);
+  }
 
   render () {
     const {
-      response,
       request,
       previewMode,
       updatePreviewMode,
@@ -25,6 +47,8 @@ class ResponsePane extends Component {
       editorFontSize,
       showCookiesModal
     } = this.props;
+
+    const {response} = this.state;
 
     const loadStartTime = loadingRequests[request ? request._id : '__NONE__'];
     let timer = null;
@@ -36,8 +60,9 @@ class ResponsePane extends Component {
         this.forceUpdate();
       }, 100);
 
-      // NOTE: We subtract 200ms because the request has some time padding on either end
-      const elapsedTime = Math.round((Date.now() - loadStartTime - 200) / 100) / 10;
+      // NOTE: subtract 200ms because the request has some time on either end
+      const millis = Date.now() - loadStartTime - 200;
+      const elapsedTime = Math.round(millis / 100) / 10;
 
       timer = (
         <div className="response-pane__overlay">
@@ -51,7 +76,9 @@ class ResponsePane extends Component {
 
           {false && elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER ? (
             // TODO: implement cancel requests
-            <button className="btn btn--compact bg-danger">Cancel Request</button>
+            <button className="btn btn--compact bg-danger">
+              Cancel Request
+            </button>
           ) : null}
         </div>
       )
@@ -60,7 +87,8 @@ class ResponsePane extends Component {
       return (
         <section className="response-pane pane">
           <header className="pane__header"></header>
-          <div className="pane__body pane__body--placeholder text-center pad"></div>
+          <div className="pane__body pane__body--placeholder text-center pad">
+          </div>
         </section>
       )
     }
@@ -107,7 +135,9 @@ class ResponsePane extends Component {
       )
     }
 
-    const cookieHeaders = response.headers.filter(h => h.name.toLowerCase() === 'set-cookie');
+    const cookieHeaders = response.headers.filter(
+      h => h.name.toLowerCase() === 'set-cookie'
+    );
 
     return (
       <section className="response-pane pane">
@@ -126,7 +156,8 @@ class ResponsePane extends Component {
         <Tabs className="pane__body">
           <TabList>
             <Tab>
-              <button onClick={e => trackEvent('Response Tab Clicked', {name: 'Body'})}>
+              <button
+                onClick={e => trackEvent('Response Tab Clicked', {name: 'Body'})}>
                 {getPreviewModeName(previewMode)}
               </button>
               <PreviewModeDropdown
@@ -135,15 +166,24 @@ class ResponsePane extends Component {
               />
             </Tab>
             <Tab>
-              <button onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
-                Cookies {cookieHeaders.length ? (
-                <span className="txt-sm">({cookieHeaders.length})</span> ) : null}
+              <button
+                onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
+                Cookies
+                {cookieHeaders.length ? (
+                  <span className="txt-sm">
+                    ({cookieHeaders.length})
+                  </span>
+                ) : null}
               </button>
             </Tab>
             <Tab>
-              <button onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
+              <button
+                onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
                 Headers {response.headers.length ? (
-                <span className="txt-sm">({response.headers.length})</span> ) : null}
+                <span className="txt-sm">
+                  ({response.headers.length})
+                </span>
+              ) : null}
               </button>
             </Tab>
           </TabList>
@@ -203,7 +243,6 @@ ResponsePane.propTypes = {
   editorLineWrapping: PropTypes.bool.isRequired,
 
   // Other
-  response: PropTypes.object,
   request: PropTypes.object
 };
 
