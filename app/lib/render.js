@@ -7,6 +7,52 @@ nunjucks.configure({
   autoescape: false
 });
 
+export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
+  const renderContext = Object.assign(
+    {},
+    rootEnvironment.data,
+    subEnvironment ? subEnvironment.data : {}
+  );
+
+  for (let doc of ancestors) {
+    if (doc.type === TYPE_WORKSPACE) {
+      continue;
+    }
+
+    const environment = doc.environment || {};
+    Object.assign(renderContext, environment);
+  }
+
+  return renderContext
+}
+
+export function recursiveRender (obj, context) {
+  // Make a copy so no one gets mad :)
+  const newObj = Object.assign({}, obj);
+
+  try {
+    traverse(newObj).forEach(function (x) {
+      if (typeof x === 'string') {
+        this.update(render(x, context));
+      }
+    });
+  } catch (e) {
+    // Failed to render Request
+    throw new Error(`Render Failed: "${e.message}"`);
+  }
+
+  return newObj;
+}
+
+export function setDefaultProtocol (url, defaultProto = 'http:') {
+  // Default the proto if it doesn't exist
+  if (url.indexOf('://') === -1) {
+    url = `${defaultProto}//${url}`;
+  }
+
+  return url;
+}
+
 export function getRenderedRequest (request) {
   return db.requestGetAncestors(request).then(ancestors => {
     const workspace = ancestors.find(doc => doc.type === TYPE_WORKSPACE);
@@ -16,38 +62,22 @@ export function getRenderedRequest (request) {
       db.environmentGetById(workspace.metaActiveEnvironmentId),
       db.cookieJarGetOrCreateForWorkspace(workspace)
     ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
-      const renderContext = Object.assign(
-        {},
-        rootEnvironment.data,
-        subEnvironment ? subEnvironment.data : {}
+
+      // Generate the context we need to render
+      const renderContext = buildRenderContext(
+        ancestors,
+        rootEnvironment,
+        subEnvironment
       );
 
-      for (let doc of ancestors) {
-        if (doc.type === TYPE_WORKSPACE) {
-          continue;
-        }
-
-        const environment = doc.environment || {};
-        Object.assign(renderContext, environment);
-      }
-
-      // Make a copy so no one gets mad :)
-      const renderedRequest = Object.assign({}, request);
-      try {
-        traverse(renderedRequest).forEach(function (x) {
-          if (typeof x === 'string') {
-            this.update(render(x, renderContext));
-          }
-        });
-      } catch (e) {
-        // Failed to render Request
-        throw new Error(`Render Failed: "${e.message}"`);
-      }
+      // Render all request properties
+      const renderedRequest = recursiveRender(
+        request,
+        renderContext
+      );
 
       // Default the proto if it doesn't exist
-      if (renderedRequest.url.indexOf('://') === -1) {
-        renderedRequest.url = `http://${renderedRequest.url}`;
-      }
+      renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
       // Add the yummy cookies
       renderedRequest.cookieJar = cookieJar;
