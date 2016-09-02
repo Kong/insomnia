@@ -15,10 +15,10 @@
     "hot-server": "babel-node ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "build": "bash scripts/build.sh",
-    "package": "npm run package-mac && npm run package-win && npm run package-linux",
-    "package-mac": "node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --mac",
-    "package-win": "node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --win",
-    "package-linux": "node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --linux",
+    "package": "rm -rf dist && npm run package-mac && npm run package-win && npm run package-linux",
+    "package-mac": "rm -rf dist/mac && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --mac",
+    "package-win": "rm -rf dist/win* && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --win",
+    "package-linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --linux",
     "build-n-package": "npm run build && npm run package",
     "build-n-package-win": "npm run build && npm run package-win",
     "build-n-package-mac": "npm run build && npm run package-mac",
@@ -27,17 +27,17 @@
   },
   "build": {
     "appId": "com.insomnia.app",
-    "app-category-type": "public.app-category.developer-tools",
+    "category": "public.app-category.developer-tools",
     "compression": "normal",
     "win": {
       "iconUrl": "https://trello-logos.s3.amazonaws.com/06507f4661a7bb6375a8cf5beeaa48be/170.png",
       "icon": "build/icon.ico",
       "loadingGif": "build/install-spinner.gif",
       "remoteReleases": "https://s3.amazonaws.com/builds-insomnia-rest/win",
-      "msi": true
+      "msi": false
     },
     "linux": {
-      "synopsis": "A simple and beautiful REST API client",
+      "synopsis": "",
       "target": [
         "AppImage",
         "deb"
@@ -62,7 +62,7 @@
     "node-localstorage": "^1.3.0",
     "nunjucks": "git@github.com:gschier/nunjucks.git#80485468cd577f1a1a8067bedf6c5bfa878712ea",
     "raven": "^0.12.1",
-    "react": "^15.2.0",
+    "react": "^15.3.1",
     "react-dnd": "^2.1.4",
     "react-dnd-html5-backend": "^2.1.2",
     "react-dom": "^15.1.0",
@@ -89,9 +89,7 @@
     "concurrently": "^2.0.0",
     "cross-env": "^2.0.0",
     "css-loader": "^0.23.1",
-    "devtron": "^1.3.0",
-    "electron-builder": "^5.34.1",
-    "electron-packager": "^7.7.0",
+    "electron-builder": "^6.3.5",
     "electron-prebuilt": "~1.2.8",
     "elm": "^0.17.1",
     "elm-hot-loader": "^0.3.3",

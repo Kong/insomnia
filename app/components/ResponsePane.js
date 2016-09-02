@@ -22,6 +22,7 @@ class ResponsePane extends Component {
   _getResponse (request) {
     if (!request) {
       this.setState({response: null});
+      return;
     }
 
     db.responseGetLatestByParentId(request._id).then(response => {
