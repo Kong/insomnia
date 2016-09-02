@@ -34,8 +34,7 @@ export function initStore (dispatch) {
     db.environmentAll(),
     db.cookieJarAll(),
     db.requestGroupAll(),
-    db.requestAll(),
-    db.responseAll()
+    db.requestAll()
   ]).then(results => {
     for (let docs of results) {
       docs = Array.isArray(docs) ? docs : [docs];

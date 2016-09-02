@@ -85,7 +85,7 @@ class BodyEditor extends Component {
           onChange={onChange}
           mode={contentType}
           lineWrapping={lineWrapping}
-          placeholder="request body here..."
+          placeholder="..."
         />
       )
     }

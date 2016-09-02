@@ -134,17 +134,20 @@ class Editor extends Component {
    */
   _codemirrorSetOptions () {
     // Clone first so we can modify it
+    const readOnly = this.props.readOnly || false;
+
     let options = {
+      readOnly,
       placeholder: this.props.placeholder || '',
       mode: this.props.mode || 'text/plain',
-      readOnly: this.props.readOnly || false,
-      lineWrapping: !!this.props.lineWrapping
+      lineWrapping: !!this.props.lineWrapping,
+      lint: !readOnly
     };
 
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
 
-    if (options.mode.indexOf('application/json') !== -1) {
+    if (options.mode.indexOf('json') !== -1) {
       // set LD JSON because it highlights the keys a different color
       options.mode = {name: 'javascript', jsonld: true}
     }

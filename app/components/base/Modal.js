@@ -62,14 +62,26 @@ class Modal extends Component {
 
   componentDidMount () {
     // In order for this to work, there needs to be tabIndex of -1 on the modal container
-    ReactDOM.findDOMNode(this).addEventListener('keydown', e => {
-      if (this.state.open && e.keyCode === 27) {
+    this._node.addEventListener('keydown', e => {
+      if (!this.state.open) {
+        return;
+      }
+
+      const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
+      const pressedEscape = e.keyCode === 27;
+      const pressedElse = closeOnKeyCodes.find(c => c === e.keyCode);
+
+      if (pressedEscape || pressedElse) {
         e.preventDefault();
         e.stopPropagation();
         // Pressed escape
         this.hide();
       }
     });
+  }
+
+  componentWillUnmount () {
+    this._node.removeEventListener('keydown');
   }
 
   render () {
@@ -100,7 +112,8 @@ Modal.propTypes = {
   tall: PropTypes.bool,
   top: PropTypes.bool,
   wide: PropTypes.bool,
-  dontFocus: PropTypes.bool
+  dontFocus: PropTypes.bool,
+  closeOnKeyCodes: PropTypes.array
 };
 
 export default Modal;
