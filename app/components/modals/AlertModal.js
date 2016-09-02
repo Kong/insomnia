@@ -12,10 +12,7 @@ class AlertModal extends Component {
 
   show ({headerName, message}) {
     this.modal.show();
-
     this.setState({headerName, message});
-
-    Mousetrap.bindGlobal('enter', () => this.modal.hide());
   }
 
   render () {
@@ -23,7 +20,7 @@ class AlertModal extends Component {
     const {message, headerName} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} {...extraProps}>
+      <Modal ref={m => this.modal = m} closeOnKeyCodes={[13]} {...extraProps}>
         <ModalHeader>{headerName || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
           {message}
