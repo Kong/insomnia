@@ -2,7 +2,6 @@
  * Persist all state children that don't have the property "dontPersist"
  *
  * @param key localStorage key to persist to
- * @returns {function()}
  */
 export default function (key) {
   let timeout = null;

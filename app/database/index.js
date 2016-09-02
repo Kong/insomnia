@@ -1,11 +1,10 @@
 import electron from 'electron';
 import NeDB from 'nedb';
 import * as fsPath from 'path';
-
 import * as methods from '../lib/constants';
+import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
 import {generateId} from './util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
-import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
 import {isDevelopment} from '../lib/appInfo';
 
 export const TYPE_STATS = 'Stats';
@@ -146,6 +145,14 @@ export function offChange (id) {
   delete changeListeners[id];
 }
 
+function getMostRecentlyModified (type, query = {}) {
+  return new Promise((resolve, reject) => {
+    db[type].find(query).sort({modified: -1}).limit(1).exec((err, docs) => {
+      resolve(docs.length ? docs[0] : null);
+    })
+  })
+}
+
 function find (type, query = {}) {
   return new Promise((resolve, reject) => {
     db[type].find(query, (err, rawDocs) => {
@@ -241,6 +248,19 @@ function remove (doc) {
         resolve()
       });
     });
+  });
+}
+
+/**
+ * Remove a lot of documents quickly and silently
+ *
+ * @param type
+ * @param query
+ * @returns {Promise.<T>}
+ */
+function removeBulkSilently (type, query) {
+  return new Promise(resolve => {
+    db[type].remove(query, {multi: true}, err => resolve());
   });
 }
 
@@ -461,11 +481,16 @@ export function responseCreate (patch = {}) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
+  removeBulkSilently(TYPE_RESPONSE, {parentId: patch.parentId});
   return docCreate(TYPE_RESPONSE, 'res', patch);
 }
 
 export function responseAll () {
   return all(TYPE_RESPONSE);
+}
+
+export function responseGetLatestByParentId (parentId) {
+  return getMostRecentlyModified(TYPE_RESPONSE, {parentId});
 }
 
 
