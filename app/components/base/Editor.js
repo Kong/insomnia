@@ -134,11 +134,14 @@ class Editor extends Component {
    */
   _codemirrorSetOptions () {
     // Clone first so we can modify it
+    const readOnly = this.props.readOnly || false;
+
     let options = {
+      readOnly,
       placeholder: this.props.placeholder || '',
       mode: this.props.mode || 'text/plain',
-      readOnly: this.props.readOnly || false,
-      lineWrapping: !!this.props.lineWrapping
+      lineWrapping: !!this.props.lineWrapping,
+      lint: !readOnly
     };
 
     // Strip of charset if there is one
