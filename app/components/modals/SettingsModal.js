@@ -1,9 +1,8 @@
 import React, {Component, PropTypes} from 'react';
-import {connect} from 'react-redux'
+import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
+import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import {shell} from 'electron';
-
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -12,9 +11,7 @@ import ModalFooter from '../base/ModalFooter';
 import KeyboardShortcutsTable from '../KeyboardShortcutsTable';
 import * as GlobalActions from '../../redux/modules/global';
 import * as db from '../../database';
-import {MASHAPE_URL} from '../../lib/constants';
-import {getAppVersion} from '../../lib/appInfo';
-import {getAppName, getAppLongName} from '../../lib/appInfo';
+import {getAppVersion, getAppName, getAppLongName} from '../../lib/appInfo';
 
 
 class SettingsTabs extends Component {
@@ -68,7 +65,8 @@ class SettingsTabs extends Component {
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
     return (
-      <Tabs onSelect={i => this._handleTabSelect(i)} selectedIndex={this._currentTabIndex}>
+      <Tabs onSelect={i => this._handleTabSelect(i)}
+            selectedIndex={this._currentTabIndex}>
         <TabList>
           <Tab selected={this._currentTabIndex === 0}>
             <button>General</button>
@@ -221,7 +219,8 @@ class SettingsTabs extends Component {
         </TabPanel>
         <TabPanel className="pad">
           <p>This will export all app data for all workspaces.</p>
-          <p>Be aware that you may be exporting <strong>private data</strong></p>
+          <p>Be aware that you may be exporting <strong>private data</strong>
+          </p>
           <p>
             <button className="btn btn--super-compact btn--outlined"
                     onClick={e => this._importFile()}>
@@ -245,12 +244,15 @@ class SettingsTabs extends Component {
         <TabPanel className="pad">
           <h1>Hi there!</h1>
           <p>
-            <Link href="http://insomnia.rest">{getAppName()}</Link> is made with love by me,&nbsp;
+            <Link href="http://insomnia.rest">{getAppName()}</Link> is made with
+            love by me,&nbsp;
             <Link href="http://schier.co">Gregory Schier</Link>.
           </p>
           <p>
             You can help me out by sending your feedback to&nbsp;
-            <Link href="mailto:support@insomnia.rest">support@insomnia.rest</Link> or tweet&nbsp;
+            <Link
+              href="mailto:support@insomnia.rest">support@insomnia.rest</Link>
+            or tweet&nbsp;
             <Link href="https://twitter.com/GetInsomnia">@GetInsomnia</Link>.
           </p>
           <p>Thanks!</p>
@@ -349,15 +351,9 @@ class SettingsModal extends Component {
           />
         </ModalBody>
         <ModalFooter>
-          <div className="pull-right">
-            <button className="btn" onClick={() => this.modal.hide()}>Done</button>
-          </div>
-          <div className="inline-block pad relative">
-            Supported By&nbsp;&nbsp;
-            <Link href={MASHAPE_URL}>
-              <img src="images/mashape.png" style={{height: '1.5em'}} className="valign-bottom"/>
-            </Link>
-          </div>
+          <button className="btn pull-right" onClick={() => this.modal.hide()}>
+            Done
+          </button>
         </ModalFooter>
       </Modal>
     );

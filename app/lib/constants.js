@@ -5,7 +5,6 @@ import {isMac} from './appInfo';
 export const LOCALSTORAGE_KEY = 'insomnia.state';
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 10;
 export const DEBOUNCE_MILLIS = 100;
-export const MASHAPE_URL = 'https://www.mashape.com/?utm_source=chrome&utm_medium=app&utm_campaign=insomnia-rest';
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 30; // 30 minutes
 export const CHANGELOG_URL = isDevelopment() ?

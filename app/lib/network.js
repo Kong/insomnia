@@ -138,7 +138,7 @@ export function send (requestId) {
       setTimeout(() => {
         Promise.all([
           db.requestGetById(requestId),
-          db.settingsGet()
+          db.settingsGetOrCreate()
         ]).then(([request, settings]) => {
           getRenderedRequest(request).then(renderedRequest => {
             actuallySend(renderedRequest, settings).then(resolve, reject);

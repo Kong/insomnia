@@ -6,14 +6,20 @@ export function getBasicAuthHeader (username, password) {
   return {name, value};
 }
 
-export function hasAuthHeader (headers) {
-  if (!Array.isArray(headers)) {
-    return false;
+export function filterHeaders (headers, name) {
+  if (!Array.isArray(headers) || !name) {
+    return [];
   }
 
-  const index = headers.findIndex(
-    h => h.name.toLowerCase() === 'authorization'
+  return headers.filter(
+    h => h.name.toLowerCase() === name.toLowerCase()
   );
+}
 
-  return index !== -1;
+export function hasAuthHeader (headers) {
+  return filterHeaders(headers, 'authorization').length > 0;
+}
+
+export function getSetCookieHeaders (headers) {
+  return filterHeaders(headers, 'set-cookie');
 }

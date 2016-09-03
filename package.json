@@ -11,7 +11,7 @@
     "url": "https://github.com/gschier/insomnia"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --parallel",
     "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/app.js",
     "hot-server": "babel-node ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
