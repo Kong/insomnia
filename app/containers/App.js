@@ -354,8 +354,8 @@ class App extends Component {
 
   _handleMouseMove (e) {
     if (this.state.draggingPane) {
-      const requestPane = ReactDOM.findDOMNode(this.refs.requestPane);
-      const responsePane = ReactDOM.findDOMNode(this.refs.responsePane);
+      const requestPane = ReactDOM.findDOMNode(this._requestPane);
+      const responsePane = ReactDOM.findDOMNode(this._responsePane);
 
       const requestPaneWidth = requestPane.offsetWidth;
       const responsePaneWidth = responsePane.offsetWidth;
@@ -365,7 +365,7 @@ class App extends Component {
       this.setState({paneWidth});
 
     } else if (this.state.draggingSidebar) {
-      const currentPixelWidth = ReactDOM.findDOMNode(this.refs.sidebar).offsetWidth;
+      const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
       let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
@@ -471,7 +471,7 @@ class App extends Component {
     return (
       <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
-          ref="sidebar"
+          ref={n => this._sidebar = n}
           showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
           showCookiesModal={() => getModal(CookiesModal).show(workspace)}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
@@ -496,7 +496,7 @@ class App extends Component {
         </div>
 
         <RequestPane
-          ref="requestPane"
+          ref={n => this._requestPane = n}
           importFile={this._importFile.bind(this)}
           request={activeRequest}
           sendRequest={actions.requests.send}
@@ -522,7 +522,7 @@ class App extends Component {
         </div>
 
         <ResponsePane
-          ref="responsePane"
+          ref={n => this._responsePane = n}
           request={activeRequest}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}

@@ -632,9 +632,9 @@ export function settingsGet () {
   });
 }
 
-// ~~~~ //
-// USER //
-// ~~~~ //
+// ~~~~~ //
+// STATS //
+// ~~~~~ //
 
 export function statsCreate (patch = {}) {
   return docCreate(TYPE_STATS, 'sta', patch);
