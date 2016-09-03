@@ -622,10 +622,10 @@ export function settingsUpdate (settings, patch) {
   return docUpdate(settings, patch);
 }
 
-export function settingsGet () {
+export function settingsGetOrCreate () {
   return all(TYPE_SETTINGS).then(results => {
     if (results.length === 0) {
-      return settingsCreate().then(settingsGet);
+      return settingsCreate().then(settingsGetOrCreate);
     } else {
       return new Promise(resolve => resolve(results[0]));
     }

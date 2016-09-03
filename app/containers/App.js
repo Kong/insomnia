@@ -567,10 +567,10 @@ App.propTypes = {
   actions: PropTypes.shape({
     requests: PropTypes.shape({
       send: PropTypes.func.isRequired
-    }),
-    modals: PropTypes.shape({
-      hide: PropTypes.func.isRequired
-    })
+    }).isRequired,
+    global: PropTypes.shape({
+      importFile: PropTypes.func.isRequired
+    }).isRequired
   }).isRequired,
   entities: PropTypes.shape({
     requests: PropTypes.object.isRequired,
@@ -582,8 +582,7 @@ App.propTypes = {
   }).isRequired,
   requests: PropTypes.shape({
     loadingRequests: PropTypes.object.isRequired
-  }).isRequired,
-  modals: PropTypes.array.isRequired
+  }).isRequired
 };
 
 function mapStateToProps (state) {
@@ -591,8 +590,7 @@ function mapStateToProps (state) {
     actions: state.actions,
     workspaces: state.workspaces,
     requests: state.requests,
-    entities: state.entities,
-    modals: state.modals
+    entities: state.entities
   };
 }
 
