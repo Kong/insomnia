@@ -3,6 +3,12 @@
 
 set -e
 
+NODE_VERSION="$(node --version)"
+if [ "$NODE_VERSION" != "v5.1.1" ]; then
+    echo "ERROR: Node version should be 5.1.1, got $NODE_VERSION instead"
+    exit 1
+fi
+
 BUILD_DIR='./build'
 
 echo "-- REMOVING DIST FOLDER --"

@@ -120,8 +120,13 @@ export function initDB () {
     modelTypes.map(t => {
       const filename = getDBFilePath(t);
       const autoload = true;
+      const inMemoryOnly = process.env.INSOMNIA_ENV === 'test';
 
-      db[t] = new NeDB({filename, autoload});
+      db[t] = new NeDB({
+        inMemoryOnly,
+        filename,
+        autoload
+      });
       db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
     });
 
@@ -627,9 +632,9 @@ export function settingsGet () {
   });
 }
 
-// ~~~~ //
-// USER //
-// ~~~~ //
+// ~~~~~ //
+// STATS //
+// ~~~~~ //
 
 export function statsCreate (patch = {}) {
   return docCreate(TYPE_STATS, 'sta', patch);
@@ -648,19 +653,5 @@ export function statsGet () {
     } else {
       return new Promise(resolve => resolve(results[0]));
     }
-  });
-}
-
-export function statsIncrement (key) {
-  return statsGet().then(stats => {
-    if (stats[key] === undefined) {
-      throw new Error(`Stats[${key}] doesn't exist for increment`);
-    }
-
-    const patch = {
-      [key]: stats[key] + 1
-    };
-
-    return docUpdate(stats, patch);
   });
 }

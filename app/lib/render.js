@@ -1,11 +1,74 @@
 import nunjucks from 'nunjucks';
 import traverse from 'traverse';
-import * as db from '../database'
+import * as db from '../database';
 import {TYPE_WORKSPACE} from '../database/index';
+import {getBasicAuthHeader, hasAuthHeader} from './util';
 
 nunjucks.configure({
   autoescape: false
 });
+
+export function render (template, context = {}) {
+  try {
+    return nunjucks.renderString(template, context);
+  } catch (e) {
+    throw new Error(e.message.replace(/\(unknown path\)\s*/, ''));
+  }
+}
+
+export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
+  const renderContext = {};
+
+  if (rootEnvironment) {
+    Object.assign(renderContext, rootEnvironment.data);
+  }
+
+  if (subEnvironment) {
+    Object.assign(renderContext, subEnvironment.data);
+  }
+
+  if (!Array.isArray(ancestors)) {
+    ancestors = [];
+  }
+
+  for (let doc of ancestors) {
+    if (!doc.environment) {
+      continue;
+    }
+
+    Object.assign(renderContext, doc.environment);
+  }
+
+  return renderContext
+}
+
+export function recursiveRender (obj, context) {
+  // Make a copy so no one gets mad :)
+  const newObj = Object.assign({}, obj);
+
+  try {
+    traverse(newObj).forEach(function (x) {
+      if (typeof x === 'string') {
+        const str = render(x, context);
+        this.update(str);
+      }
+    });
+  } catch (e) {
+    // Failed to render Request
+    throw new Error(`Render Failed: "${e.message}"`);
+  }
+
+  return newObj;
+}
+
+export function setDefaultProtocol (url, defaultProto = 'http:') {
+  // Default the proto if it doesn't exist
+  if (url.indexOf('://') === -1) {
+    url = `${defaultProto}//${url}`;
+  }
+
+  return url;
+}
 
 export function getRenderedRequest (request) {
   return db.requestGetAncestors(request).then(ancestors => {
@@ -16,74 +79,36 @@ export function getRenderedRequest (request) {
       db.environmentGetById(workspace.metaActiveEnvironmentId),
       db.cookieJarGetOrCreateForWorkspace(workspace)
     ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
-      const renderContext = Object.assign(
-        {},
-        rootEnvironment.data,
-        subEnvironment ? subEnvironment.data : {}
+
+      // Generate the context we need to render
+      const renderContext = buildRenderContext(
+        ancestors,
+        rootEnvironment,
+        subEnvironment
       );
 
-      for (let doc of ancestors) {
-        if (doc.type === TYPE_WORKSPACE) {
-          continue;
-        }
-
-        const environment = doc.environment || {};
-        Object.assign(renderContext, environment);
-      }
-
-      // Make a copy so no one gets mad :)
-      const renderedRequest = Object.assign({}, request);
-      try {
-        traverse(renderedRequest).forEach(function (x) {
-          if (typeof x === 'string') {
-            this.update(render(x, renderContext));
-          }
-        });
-      } catch (e) {
-        // Failed to render Request
-        throw new Error(`Render Failed: "${e.message}"`);
-      }
+      // Render all request properties
+      const renderedRequest = recursiveRender(
+        request,
+        renderContext
+      );
 
       // Default the proto if it doesn't exist
-      if (renderedRequest.url.indexOf('://') === -1) {
-        renderedRequest.url = `http://${renderedRequest.url}`;
-      }
+      renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
       // Add the yummy cookies
       renderedRequest.cookieJar = cookieJar;
 
-      // Do authentication
-      if (renderedRequest.authentication.username) {
-        const authHeader = renderedRequest.headers.find(
-          h => h.name.toLowerCase() === 'authorization'
-        );
+      // Add authentication
+      const missingAuthHeader = !hasAuthHeader(renderedRequest.headers);
+      if (missingAuthHeader && renderedRequest.authentication.username) {
+        const {username, password} = renderedRequest.authentication;
+        const header = getBasicAuthHeader(username, password);
 
-        if (!authHeader) {
-          const {username, password} = renderedRequest.authentication;
-          const header = getBasicAuthHeader(username, password);
-          renderedRequest.headers.push(header);
-        }
+        renderedRequest.headers.push(header);
       }
 
       return new Promise(resolve => resolve(renderedRequest));
     });
   });
-}
-
-function render (template, context = {}) {
-  try {
-    return nunjucks.renderString(template, context);
-  } catch (e) {
-    throw new Error(
-      e.message.replace('(unknown path)\n  ', '')
-    );
-  }
-}
-
-function getBasicAuthHeader (username, password) {
-  const name = 'Authorization';
-  const header = `${username || ''}:${password || ''}`;
-  const authString = new Buffer(header, 'utf8').toString('base64');
-  const value = `Basic ${authString}`;
-  return {name, value};
 }
