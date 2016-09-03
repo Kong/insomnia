@@ -75,13 +75,6 @@ class ResponsePane extends Component {
           )}
 
           <i className="fa fa-refresh fa-spin"></i>
-
-          {false && elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER ? (
-            // TODO: implement cancel requests
-            <button className="btn btn--compact bg-danger">
-              Cancel Request
-            </button>
-          ) : null}
         </div>
       )
     }
