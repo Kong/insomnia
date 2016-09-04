@@ -53,3 +53,15 @@ describe('hasAuthHeader()', () => {
     expect(yes).toEqual(true);
   })
 });
+
+describe('generateId()', () => {
+  it('generates a valid ID', () => {
+    const id = util.generateId('foo');
+    expect(id).toMatch(/^foo_[a-zA-Z0-9]{24}$/);
+  });
+
+  it('generates without prefix', () => {
+    const id = util.generateId();
+    expect(id).toMatch(/^[a-zA-Z0-9]{24}$/);
+  });
+});

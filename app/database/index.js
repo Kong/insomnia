@@ -3,7 +3,7 @@ import NeDB from 'nedb';
 import * as fsPath from 'path';
 import * as methods from '../lib/constants';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
-import {generateId} from './util';
+import {generateId} from '../lib/util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {isDevelopment} from '../lib/appInfo';
 
@@ -101,10 +101,10 @@ function getDBFilePath (modelType) {
  * @returns {Promise}
  */
 let initialized = false;
-export function initDB () {
+export function initDB (config = {}) {
   // Only init once
   if (initialized) {
-    return new Promise(resolve => resolve());
+    return Promise.resolve();
   }
 
   return new Promise(resolve => {
@@ -120,13 +120,9 @@ export function initDB () {
     modelTypes.map(t => {
       const filename = getDBFilePath(t);
       const autoload = true;
-      const inMemoryOnly = process.env.INSOMNIA_ENV === 'test';
+      const finalConfig = Object.assign({filename, autoload}, config);
 
-      db[t] = new NeDB({
-        inMemoryOnly,
-        filename,
-        autoload
-      });
+      db[t] = new NeDB(finalConfig);
       db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
     });
 

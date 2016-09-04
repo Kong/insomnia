@@ -11,7 +11,7 @@
     "url": "https://github.com/gschier/insomnia"
   },
   "scripts": {
-    "test": "jest --parallel",
+    "test": "jest --silent",
     "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/app.js",
     "hot-server": "babel-node ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
@@ -25,6 +25,10 @@
     "build-n-package-mac": "npm run build && npm run package-mac",
     "build-n-package-linux": "npm run build && npm run package-linux",
     "release": "npm test && npm run package && bash scripts/sentry-release.sh"
+  },
+  "jest": {
+    "rootDir": "app",
+    "verbose": false
   },
   "build": {
     "appId": "com.insomnia.app",
