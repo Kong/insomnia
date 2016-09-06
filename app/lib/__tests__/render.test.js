@@ -81,7 +81,7 @@ describe('recursiveRender()', () => {
 
   it('correctly renders complex Object', () => {
     const d = new Date();
-    const newObj = render.recursiveRender({
+    const obj = {
       foo: '{{ foo }}',
       null: null,
       bool: true,
@@ -91,7 +91,9 @@ describe('recursiveRender()', () => {
         foo: '{{ foo }}',
         arr: [1,2, '{{ foo }}']
       }
-    }, {foo: 'bar'});
+    };
+
+    const newObj = render.recursiveRender(obj, {foo: 'bar'});
 
     expect(newObj).toEqual({
       foo: 'bar',
@@ -103,7 +105,12 @@ describe('recursiveRender()', () => {
         foo: 'bar',
         arr: [1,2, 'bar']
       }
-    })
+    });
+
+    // Make sure original request isn't changed
+    expect(obj.foo).toBe('{{ foo }}');
+    expect(obj.nested.foo).toBe('{{ foo }}');
+    expect(obj.nested.arr[2]).toBe('{{ foo }}');
   });
 
   it('fails on bad template', () => {

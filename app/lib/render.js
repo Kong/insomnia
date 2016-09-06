@@ -44,7 +44,7 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
 
 export function recursiveRender (obj, context) {
   // Make a copy so no one gets mad :)
-  const newObj = Object.assign({}, obj);
+  const newObj = traverse.clone(obj);
 
   try {
     traverse(newObj).forEach(function (x) {
