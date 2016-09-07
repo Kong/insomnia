@@ -62,7 +62,7 @@ class Modal extends Component {
 
   componentDidMount () {
     // In order for this to work, there needs to be tabIndex of -1 on the modal container
-    this._node.addEventListener('keydown', e => {
+    this._keydownCallback = e => {
       if (!this.state.open) {
         return;
       }
@@ -77,11 +77,13 @@ class Modal extends Component {
         // Pressed escape
         this.hide();
       }
-    });
+    };
+
+    this._node.addEventListener('keydown', this._keydownCallback);
   }
 
   componentWillUnmount () {
-    this._node.removeEventListener('keydown');
+    this._node.removeEventListener('keydown', this._keydownCallback);
   }
 
   render () {

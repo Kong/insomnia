@@ -61,8 +61,8 @@ class Dropdown extends Component {
 
     return (
       <div className={classes}
-           onClick={this._handleClick.bind(this)}>
-
+           onClick={this._handleClick.bind(this)}
+           ref={n => this._node = n}>
         {this.props.children}
         <div className="dropdown__backdrop"></div>
       </div>

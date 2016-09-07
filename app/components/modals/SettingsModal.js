@@ -109,7 +109,7 @@ class SettingsTabs extends Component {
               onChange={e => db.settingsUpdate(settings, {useBulkHeaderEditor: e.target.checked})}
             />
             &nbsp;&nbsp;
-            <label htmlFor="setting-follow-redirects">
+            <label htmlFor="setting-bulk-header-editor">
               Use bulk header editor by default
             </label>
           </div>

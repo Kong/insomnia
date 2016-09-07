@@ -86,20 +86,6 @@ class App extends Component {
         getModal(CookiesModal).toggle(this._getActiveWorkspace());
       },
 
-      // Request Create
-      'mod+n': () => {
-        const workspace = this._getActiveWorkspace();
-        const request = this._getActiveRequest();
-
-        if (!workspace) {
-          // Nothing to do if no workspace
-          return;
-        }
-
-        const parentId = request ? request.parentId : workspace._id;
-        this._requestCreate(parentId);
-      },
-
       // Request Duplicate
       'mod+d': () => {
         const request = this._getActiveRequest();

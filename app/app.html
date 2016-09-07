@@ -53,8 +53,12 @@
   }
 </script>
 <script>
-  const {longName} = require('./app.json');
-  document.title = `${longName}`;
+  const {productName} = require('./app.json');
+  if (process.env.INSOMNIA_ENV === 'development') {
+    document.title = `${productName} (DEV)`;
+  } else {
+    document.title = `${productName}`;
+  }
 </script>
 <script>
   // HOT RELOADING IN DEV
