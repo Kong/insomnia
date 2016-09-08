@@ -62,7 +62,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "httpsnippet": "git@github.com:gschier/httpsnippet.git#39d2fb0449f33711e5cc71a4d42b0e5b808426b4",
     "json-lint": "^0.1.0",
-    "jsonpath": "^0.2.7",
+    "jsonpath-plus": "^0.15.0",
     "jsonschema": "^1.1.0",
     "mousetrap": "^1.6.0",
     "nedb": "^1.8.0",

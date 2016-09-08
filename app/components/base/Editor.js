@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
-import jsonpath from 'jsonpath';
+import JSONPath from 'jsonpath-plus';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
@@ -36,6 +36,9 @@ import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
 import '../../css/components/editor.less';
+import {getModal} from '../modals/index';
+import AlertModal from '../modals/AlertModal';
+import Link from '../base/Link';
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -204,7 +207,10 @@ class Editor extends Component {
         let obj = JSON.parse(code);
 
         if (this.state.filter) {
-          obj = jsonpath.query(obj, this.state.filter);
+          obj = JSONPath({
+            json: obj,
+            path: this.state.filter
+          });
           console.log('OBJ', obj);
         }
 
@@ -224,6 +230,41 @@ class Editor extends Component {
       this.setState({filter});
       this._codemirrorSetValue(this._originalCode);
     }, DEBOUNCE_MILLIS);
+  }
+
+  _showFilterHelp () {
+    getModal(AlertModal).show({
+      headerName: 'Response Filtering Help',
+      message: (
+        <div>
+          <p>
+            Use <Link href="http://schier.co">JSONPath</Link> to filter the
+            response body. Here are some examples that you might use on a
+            book store API.
+          </p>
+          <table className="pad-top-sm">
+            <tbody>
+            <tr>
+              <td><code className="selectable">$.store.books[*].title</code></td>
+              <td>Get titles of all books in the store</td>
+            </tr>
+            <tr>
+              <td><code className="selectable">$.store.books[?(@.price &lt; 10)].title</code></td>
+              <td>Get books costing more than $10</td>
+            </tr>
+            <tr>
+              <td><code className="selectable">$.store.books[-1:]</code></td>
+              <td>Get the last book in the store</td>
+            </tr>
+            <tr>
+              <td><code className="selectable">$.store.books.length</code></td>
+              <td>Get the number of books in the store</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      )
+    })
   }
 
   componentDidUpdate () {
@@ -254,7 +295,8 @@ class Editor extends Component {
               onChange={e => this._handleFilterChange(e.target.value)}
             />
           </div>
-          <button className="btn btn--compact">
+          <button className="btn btn--compact"
+                  onClick={() => this._showFilterHelp()}>
             <i className="fa fa-question-circle"></i>
           </button>
         </div>
