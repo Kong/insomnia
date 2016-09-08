@@ -6,6 +6,23 @@
   box-sizing: border-box;
   height: 100% !important;
   width: 100%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+
+  .editor__filter {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .form-control {
+      margin-right: 0;
+      width: 100%;
+    }
+
+    button {
+      color: @hl;
+    }
+  }
 
   .CodeMirror {
     height: 100% !important;

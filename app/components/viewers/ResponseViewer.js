@@ -51,6 +51,7 @@ class ResponseViewer extends Component {
         return (
           <Editor
             value={body || ''}
+            showFilter={true}
             prettify={true}
             mode={contentType}
             readOnly={true}

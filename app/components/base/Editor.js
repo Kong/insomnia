@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
+import jsonpath from 'jsonpath';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
@@ -65,7 +66,10 @@ const BASE_CODEMIRROR_OPTIONS = {
 class Editor extends Component {
   constructor () {
     super();
-    this.state = {isFocused: false}
+    this.state = {
+      filter: ''
+    };
+    this._originalCode = '';
   }
 
   componentWillUnmount () {
@@ -122,11 +126,20 @@ class Editor extends Component {
       });
     }
 
+    // Do this a bit later so we don't block the render process
     setTimeout(() => {
       this._codemirrorSetValue(value || '');
     }, 50);
 
     this._codemirrorSetOptions();
+  }
+
+  _isJSON (mode) {
+    if (!mode) {
+      return false;
+    }
+
+    return mode.indexOf('json') !== -1
   }
 
   /**
@@ -147,7 +160,7 @@ class Editor extends Component {
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
 
-    if (options.mode.indexOf('json') !== -1) {
+    if (this._isJSON(options.mode)) {
       // set LD JSON because it highlights the keys a different color
       options.mode = {name: 'javascript', jsonld: true}
     }
@@ -183,11 +196,19 @@ class Editor extends Component {
    * @param code the code to set in the editor
    */
   _codemirrorSetValue (code) {
+    this._originalCode = code;
     this._ignoreNextChange = true;
 
     if (this.props.prettify) {
       try {
-        code = JSON.stringify(JSON.parse(code), null, '\t');
+        let obj = JSON.parse(code);
+
+        if (this.state.filter) {
+          obj = jsonpath.query(obj, this.state.filter);
+          console.log('OBJ', obj);
+        }
+
+        code = JSON.stringify(obj, null, '\t');
       } catch (e) {
         // That's Ok, just leave it
         // TODO: support more than just JSON prettifying
@@ -197,12 +218,20 @@ class Editor extends Component {
     this.codeMirror.setValue(code);
   }
 
+  _handleFilterChange (filter) {
+    clearTimeout(this._filterTimeout);
+    this._filterTimeout = setTimeout(() => {
+      this.setState({filter});
+      this._codemirrorSetValue(this._originalCode);
+    }, DEBOUNCE_MILLIS);
+  }
+
   componentDidUpdate () {
     this._codemirrorSetOptions();
   }
 
   render () {
-    const {readOnly, fontSize, lightTheme} = this.props;
+    const {readOnly, fontSize, lightTheme, mode} = this.props;
 
     const classes = classnames(
       'editor',
@@ -214,13 +243,32 @@ class Editor extends Component {
       }
     );
 
+    let filter = null;
+    if (this._isJSON(mode)) {
+      filter = (
+        <div className="editor__filter">
+          <div className="form-control form-control--outlined">
+            <input
+              type="text"
+              placeholder="$.store.book[*].author"
+              onChange={e => this._handleFilterChange(e.target.value)}
+            />
+          </div>
+          <button className="btn btn--compact">
+            <i className="fa fa-question-circle"></i>
+          </button>
+        </div>
+      )
+    }
+
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
-          <textarea
-            ref={n => this._initEditor(n)}
-            readOnly={readOnly}
-            autoComplete='off'>
-          </textarea>
+        <textarea
+          ref={n => this._initEditor(n)}
+          readOnly={readOnly}
+          autoComplete='off'>
+        </textarea>
+        {filter}
       </div>
     );
   }
@@ -236,7 +284,8 @@ Editor.propTypes = {
   value: PropTypes.string,
   prettify: PropTypes.bool,
   className: PropTypes.any,
-  lightTheme: PropTypes.bool
+  lightTheme: PropTypes.bool,
+  showFilter: PropTypes.bool
 };
 
 export default Editor;
