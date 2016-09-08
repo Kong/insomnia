@@ -40,7 +40,7 @@ class ResponseError extends Component {
         <hr/>
         <div className="text-center pad">
           <p className="faint pad-left pad-right">
-            It looks like you encountered a strange error. Here are some suggestions.
+            That error looks strange. Maybe this will help.
           </p>
           {msg}
           &nbsp;&nbsp;

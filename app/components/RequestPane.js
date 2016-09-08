@@ -113,7 +113,7 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Params'})}>
-                Params {request.parameters.length ?
+                Query {request.parameters.length ?
                 <span className="txt-sm">({request.parameters.length})</span> : null}
               </button>
             </Tab>

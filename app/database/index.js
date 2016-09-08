@@ -538,7 +538,7 @@ export function requestGroupDuplicate (requestGroup) {
 
 export function responseCreate (patch = {}) {
   if (!patch.parentId) {
-    throw new Error('New Requests missing `parentId`', patch);
+    throw new Error('New Response missing `parentId`');
   }
 
   removeBulkSilently(TYPE_RESPONSE, {parentId: patch.parentId});
