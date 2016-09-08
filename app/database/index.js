@@ -16,6 +16,10 @@ export const TYPE_REQUEST_GROUP = 'RequestGroup';
 export const TYPE_REQUEST = 'Request';
 export const TYPE_RESPONSE = 'Response';
 
+export const CHANGE_INSERT = 'insert';
+export const CHANGE_UPDATE = 'update';
+export const CHANGE_REMOVE = 'remove';
+
 
 const BASE_MODEL_DEFAULTS = () => ({
   modified: Date.now(),
@@ -23,7 +27,18 @@ const BASE_MODEL_DEFAULTS = () => ({
   parentId: null
 });
 
-const MODEL_DEFAULTS = {
+const MODEL_ID_PREFIXES = {
+  [TYPE_STATS]: 'sta',
+  [TYPE_SETTINGS]: 'set',
+  [TYPE_WORKSPACE]: 'wrk',
+  [TYPE_ENVIRONMENT]: 'env',
+  [TYPE_COOKIE_JAR]: 'jar',
+  [TYPE_REQUEST_GROUP]: 'fld',
+  [TYPE_REQUEST]: 'req',
+  [TYPE_RESPONSE]: 'res'
+};
+
+export const MODEL_DEFAULTS = {
   [TYPE_STATS]: () => ({
     lastLaunch: Date.now(),
     lastVersion: null,
@@ -101,9 +116,9 @@ function getDBFilePath (modelType) {
  * @returns {Promise}
  */
 let initialized = false;
-export function initDB (config = {}) {
+export function initDB (config = {}, force = false) {
   // Only init once
-  if (initialized) {
+  if (initialized && !force) {
     return Promise.resolve();
   }
 
@@ -146,8 +161,12 @@ export function offChange (id) {
   delete changeListeners[id];
 }
 
+function notifyOfChange (event, doc) {
+  Object.keys(changeListeners).map(k => changeListeners[k](event, doc));
+}
+
 function getMostRecentlyModified (type, query = {}) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(1).exec((err, docs) => {
       resolve(docs.length ? docs[0] : null);
     })
@@ -209,7 +228,7 @@ function count (type, query = {}) {
   });
 }
 
-function insert (doc) {
+export function insert (doc) {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {
       if (err) {
@@ -217,7 +236,7 @@ function insert (doc) {
       }
 
       resolve(newDoc);
-      Object.keys(changeListeners).map(k => changeListeners[k]('insert', doc));
+      notifyOfChange(CHANGE_INSERT, doc);
     });
   });
 }
@@ -230,22 +249,20 @@ function update (doc) {
       }
 
       resolve(doc);
-      Object.keys(changeListeners).map(k => changeListeners[k]('update', doc));
+      notifyOfChange(CHANGE_UPDATE, doc);
     });
   });
 }
 
 function remove (doc) {
   return new Promise(resolve => {
-    withChildren(doc).then(docs => {
+    withDescendants(doc).then(docs => {
       const promises = docs.map(d => (
         db[d.type].remove({_id: d._id}, {multi: true})
       ));
 
       Promise.all(promises).then(() => {
-        for (const doc of docs) {
-          Object.keys(changeListeners).map(k => changeListeners[k]('remove', doc));
-        }
+        docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
         resolve()
       });
     });
@@ -281,7 +298,13 @@ function docUpdate (originalDoc, patch = {}) {
   return update(doc);
 }
 
-function docCreate (type, idPrefix, patch = {}) {
+function docCreate (type, patch = {}) {
+  const idPrefix = MODEL_ID_PREFIXES[type];
+
+  if (!idPrefix) {
+    throw new Error(`No ID prefix for ${type}`)
+  }
+
   const doc = Object.assign(
     BASE_MODEL_DEFAULTS(),
     {_id: generateId(idPrefix)},
@@ -302,7 +325,7 @@ function docCreate (type, idPrefix, patch = {}) {
 // GENERAL //
 // ~~~~~~~ //
 
-export function withChildren (doc = null) {
+export function withDescendants (doc = null) {
   let docsToReturn = doc ? [doc] : [];
 
   const next = (docs) => {
@@ -339,6 +362,42 @@ export function withChildren (doc = null) {
   return next([doc]);
 }
 
+export function duplicate (originalDoc, patch = {}) {
+  return new Promise((resolve, reject) => {
+
+    // 1. Copy the doc
+    const newDoc = Object.assign({}, originalDoc, patch);
+    delete newDoc._id;
+    delete newDoc.created;
+    delete newDoc.modified;
+
+    docCreate(newDoc.type, newDoc).then(createdDoc => {
+
+      // 2. Get all the children
+      const promises = [];
+      for (const type of ALL_TYPES) {
+        const parentId = originalDoc._id;
+        const promise = find(type, {parentId});
+        promises.push(promise);
+      }
+
+      Promise.all(promises).then(results => {
+        let duplicatePromises = [];
+
+        // Gather up the docs from each type
+        for (const docs of results) {
+          for (const doc of docs) {
+            duplicatePromises.push(duplicate(doc, {parentId: createdDoc._id}));
+          }
+        }
+
+        // 3. Also duplicate all children, and recurse
+        Promise.all(duplicatePromises).then(() => resolve(createdDoc), reject)
+      })
+    })
+  })
+}
+
 
 // ~~~~~~~ //
 // REQUEST //
@@ -350,7 +409,7 @@ export function requestCreateAndActivate (workspace, patch = {}) {
   })
 }
 
-export function requestCopyAndActivate (workspace, request) {
+export function requestDuplicateAndActivate (workspace, request) {
   return requestDuplicate(request).then(r => {
     workspaceUpdate(workspace, {metaActiveRequestId: r._id});
   })
@@ -361,7 +420,7 @@ export function requestCreate (patch = {}) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_REQUEST, 'req', patch);
+  return docCreate(TYPE_REQUEST, patch);
 }
 
 export function requestGetById (id) {
@@ -396,12 +455,7 @@ export function requestUpdateContentType (request, contentType) {
 
 export function requestDuplicate (request) {
   const name = `${request.name} (Copy)`;
-  const newRequest = Object.assign({}, request, {name});
-
-  // Remove the old Id
-  delete newRequest._id;
-
-  return requestCreate(newRequest);
+  return duplicate(request, {name});
 }
 
 export function requestRemove (request) {
@@ -449,7 +503,7 @@ export function requestGroupCreate (patch = {}) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_REQUEST_GROUP, 'fdr', patch);
+  return docCreate(TYPE_REQUEST_GROUP, patch);
 }
 
 export function requestGroupUpdate (requestGroup, patch) {
@@ -472,6 +526,11 @@ export function requestGroupAll () {
   return all(TYPE_REQUEST_GROUP);
 }
 
+export function requestGroupDuplicate (requestGroup) {
+  const name = `${requestGroup.name} (Copy)`;
+  return duplicate(requestGroup, {name});
+}
+
 
 // ~~~~~~~~ //
 // RESPONSE //
@@ -483,11 +542,7 @@ export function responseCreate (patch = {}) {
   }
 
   removeBulkSilently(TYPE_RESPONSE, {parentId: patch.parentId});
-  return docCreate(TYPE_RESPONSE, 'res', patch);
-}
-
-export function responseAll () {
-  return all(TYPE_RESPONSE);
+  return docCreate(TYPE_RESPONSE, patch);
 }
 
 export function responseGetLatestByParentId (parentId) {
@@ -500,7 +555,7 @@ export function responseGetLatestByParentId (parentId) {
 // ~~~~~~~ //
 
 export function cookieJarCreate (patch = {}) {
-  return docCreate(TYPE_COOKIE_JAR, 'jar', patch);
+  return docCreate(TYPE_COOKIE_JAR, patch);
 }
 
 export function cookieJarGetOrCreateForWorkspace (workspace) {
@@ -536,7 +591,7 @@ export function workspaceGetById (id) {
 }
 
 export function workspaceCreate (patch = {}) {
-  return docCreate(TYPE_WORKSPACE, 'wrk', patch);
+  return docCreate(TYPE_WORKSPACE, patch);
 }
 
 export function workspaceAll () {
@@ -571,7 +626,7 @@ export function environmentCreate (patch = {}) {
     throw new Error('New Environment missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_ENVIRONMENT, 'env', patch);
+  return docCreate(TYPE_ENVIRONMENT, patch);
 }
 
 export function environmentUpdate (environment, patch) {
@@ -611,7 +666,7 @@ export function environmentAll () {
 // ~~~~~~~~ //
 
 export function settingsCreate (patch = {}) {
-  return docCreate(TYPE_SETTINGS, 'set', patch);
+  return docCreate(TYPE_SETTINGS, patch);
 }
 
 export function settingsUpdate (settings, patch) {
@@ -633,7 +688,7 @@ export function settingsGetOrCreate () {
 // ~~~~~ //
 
 export function statsCreate (patch = {}) {
-  return docCreate(TYPE_STATS, 'sta', patch);
+  return docCreate(TYPE_STATS, patch);
 }
 
 export function statsUpdate (patch) {

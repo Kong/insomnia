@@ -1,15 +1,13 @@
 import networkRequest from 'request';
 import {parse as urlParse, format as urlFormat} from 'url';
-
 import * as db from '../database';
 import * as querystring from './querystring';
-import {DEBOUNCE_MILLIS} from './constants';
-import {STATUS_CODE_PEBKAC} from './constants';
+import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 import {getRenderedRequest} from './render';
 import {jarFromCookies, cookiesFromJar} from './cookies';
 
 
-function buildRequestConfig (renderedRequest, patch = {}) {
+export function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
     method: renderedRequest.method,
     body: renderedRequest.body,
@@ -39,7 +37,7 @@ function buildRequestConfig (renderedRequest, patch = {}) {
 
   // Encode path portion of URL
   const parsedUrl = urlParse(url);
-  parsedUrl.pathname = encodeURI(parsedUrl.pathname);
+  parsedUrl.pathname = encodeURI(parsedUrl.pathname || '');
   config.url = urlFormat(parsedUrl);
 
   for (let i = 0; i < renderedRequest.headers.length; i++) {
@@ -52,7 +50,7 @@ function buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (renderedRequest, settings) {
+export function _actuallySend (renderedRequest, settings) {
   return new Promise((resolve, reject) => {
     const cookieJar = renderedRequest.cookieJar;
     const jar = jarFromCookies(cookieJar.cookies);
@@ -63,7 +61,7 @@ function actuallySend (renderedRequest, settings) {
     const proxyHost = protocol === 'https:' ? settings.httpsProxy : settings.httpProxy;
     const proxy = proxyHost ? `${protocol}//${proxyHost}` : null;
 
-    let config = buildRequestConfig(renderedRequest, {
+    let config = _buildRequestConfig(renderedRequest, {
       jar: jar,
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
@@ -134,23 +132,22 @@ function actuallySend (renderedRequest, settings) {
 export function send (requestId) {
   return new Promise((resolve, reject) => {
 
-      // First, lets wait for all debounces to finish
-      setTimeout(() => {
-        Promise.all([
-          db.requestGetById(requestId),
-          db.settingsGetOrCreate()
-        ]).then(([request, settings]) => {
-          getRenderedRequest(request).then(renderedRequest => {
-            actuallySend(renderedRequest, settings).then(resolve, reject);
-          }, err => {
-            db.responseCreate({
-              parentId: request._id,
-              statusCode: STATUS_CODE_PEBKAC,
-              error: err.message
-            }).then(resolve, reject);
-          });
-        })
-      }, DEBOUNCE_MILLIS);
-    }
-  )
+    // First, lets wait for all debounces to finish
+    setTimeout(() => {
+      Promise.all([
+        db.requestGetById(requestId),
+        db.settingsGetOrCreate()
+      ]).then(([request, settings]) => {
+        getRenderedRequest(request).then(renderedRequest => {
+          _actuallySend(renderedRequest, settings).then(resolve, reject);
+        }, err => {
+          db.responseCreate({
+            parentId: request._id,
+            statusCode: STATUS_CODE_PEBKAC,
+            error: err.message
+          }).then(resolve, reject);
+        });
+      })
+    }, DEBOUNCE_MILLIS);
+  })
 }

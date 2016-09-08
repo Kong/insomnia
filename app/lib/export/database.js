@@ -73,7 +73,7 @@ export function exportJSON (parentDoc = null) {
   };
 
   return new Promise(resolve => {
-    db.withChildren(parentDoc).then(docs => {
+    db.withDescendants(parentDoc).then(docs => {
       data.resources = docs.filter(d => (
         d.type !== db.TYPE_RESPONSE &&
         d.type !== db.TYPE_STATS &&

@@ -1,6 +1,9 @@
 import {bindActionCreators} from 'redux';
 import * as entitiesActions from './modules/entities';
 import * as db from '../database';
+import {CHANGE_INSERT} from '../database/index';
+import {CHANGE_UPDATE} from '../database/index';
+import {CHANGE_REMOVE} from '../database/index';
 
 const CHANGE_ID = 'store.listener';
 
@@ -14,11 +17,11 @@ export function initStore (dispatch) {
       return;
     }
 
-    if (event === 'insert') {
+    if (event === CHANGE_INSERT) {
       entities.insert(doc);
-    } else if (event === 'update') {
+    } else if (event === CHANGE_UPDATE) {
       entities.update(doc);
-    } else if (event === 'remove') {
+    } else if (event === CHANGE_REMOVE) {
       entities.remove(doc);
     }
   };
@@ -40,7 +43,7 @@ export function initStore (dispatch) {
       docs = Array.isArray(docs) ? docs : [docs];
 
       for (let doc of docs) {
-        docChanged('update', doc);
+        docChanged(CHANGE_UPDATE, doc);
       }
     }
 

@@ -95,7 +95,7 @@ class App extends Component {
           return;
         }
 
-        db.requestCopyAndActivate(workspace, request);
+        db.requestDuplicateAndActivate(workspace, request);
       }
     }
   }
