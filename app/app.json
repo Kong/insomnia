@@ -13,7 +13,7 @@
     "electron-context-menu": "^0.4.0",
     "electron-squirrel-startup": "^1.0.0",
     "httpsnippet": "git@github.com:gschier/httpsnippet.git#39d2fb0449f33711e5cc71a4d42b0e5b808426b4",
-    "jsonpath": "^0.2.7",
+    "jsonpath-plus": "^0.15.0",
     "nedb": "^1.8.0",
     "node-localstorage": "^1.3.0",
     "nunjucks": "git@github.com:gschier/nunjucks.git#80485468cd577f1a1a8067bedf6c5bfa878712ea",
