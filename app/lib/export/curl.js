@@ -168,7 +168,7 @@ export function importCurl (blob) {
 
   const contentType = getContentType(headers) || null;
 
-  if (contentType.toLowerCase() === 'application/json') {
+  if (contentType && contentType.toLowerCase() === 'application/json') {
     try {
       body = JSON.stringify(JSON.parse(body), null, '\t');
     } catch (e) {
