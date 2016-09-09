@@ -59,7 +59,7 @@ export function _actuallySend (renderedRequest, settings) {
     // NOTE: request does not have a separate settings for http/https proxies
     const {protocol} = urlParse(renderedRequest.url);
     const proxyHost = protocol === 'https:' ? settings.httpsProxy : settings.httpProxy;
-    const proxy = proxyHost ? `${protocol}//${proxyHost}` : null;
+    const proxy = proxyHost ? `http://${proxyHost}` : null;
 
     let config = _buildRequestConfig(renderedRequest, {
       jar: jar,
