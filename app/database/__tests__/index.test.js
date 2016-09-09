@@ -25,7 +25,7 @@ describe('requestCreate()', () => {
     };
 
     return db.requestCreate(patch).then(r => {
-      expect(Object.keys(r).length).toBe(14);
+      expect(Object.keys(r).length).toBe(15);
 
       expect(r._id).toMatch(/^req_[a-zA-Z0-9]{24}$/);
       expect(r.created).toBeGreaterThanOrEqual(now);
