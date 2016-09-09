@@ -513,7 +513,9 @@ class App extends Component {
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
+          responseFilter={activeRequest ? activeRequest.metaResponseFilter : ''}
           updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
+          updateResponseFilter={metaResponseFilter => db.requestUpdate(activeRequest, {metaResponseFilter})}
           loadingRequests={requests.loadingRequests}
           showCookiesModal={() => getModal(CookiesModal).show(workspace)}
         />

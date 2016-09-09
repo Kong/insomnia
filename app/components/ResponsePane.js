@@ -44,9 +44,11 @@ class ResponsePane extends Component {
       request,
       previewMode,
       updatePreviewMode,
+      updateResponseFilter,
       loadingRequests,
       editorLineWrapping,
       editorFontSize,
+      responseFilter,
       showCookiesModal
     } = this.props;
 
@@ -184,6 +186,8 @@ class ResponsePane extends Component {
               key={response._id}
               contentType={response.contentType}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              filter={response.error ? '' : responseFilter}
+              updateFilter={response.error ? null : updateResponseFilter}
               body={response.error ? response.error : response.body}
               error={!!response.error}
               editorLineWrapping={editorLineWrapping}
@@ -213,10 +217,12 @@ class ResponsePane extends Component {
 ResponsePane.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
+  updateResponseFilter: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,
+  responseFilter: PropTypes.string.isRequired,
   loadingRequests: PropTypes.object.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
