@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react';
-import {connect} from 'react-redux'
+import {connect} from 'react-redux';
+import PromptButton from '../components/base/PromptButton';
 import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
@@ -47,9 +48,10 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => db.requestRemove(request)}>
+            <PromptButton onClick={e => db.requestRemove(request)}
+                          addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
-            </button>
+            </PromptButton>
           </li>
         </ul>
       </Dropdown>

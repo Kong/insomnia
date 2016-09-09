@@ -5,6 +5,7 @@ import {connect} from 'react-redux'
 import {shell} from 'electron';
 
 import Link from '../components/base/Link';
+import PromptButton from '../components/base/PromptButton';
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
 import DropdownHint from '../components/base/DropdownHint';
@@ -95,9 +96,9 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => this._workspaceRemove()}>
+            <PromptButton onClick={e => this._workspaceRemove()} addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete <strong>{workspace.name}</strong>
-            </button>
+            </PromptButton>
           </li>
 
           <DropdownDivider name="Workspaces"/>

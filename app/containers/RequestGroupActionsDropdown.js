@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react';
-import {connect} from 'react-redux'
+import {connect} from 'react-redux';
+import PromptButton from '../components/base/PromptButton';
 import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
 import DropdownDivider from '../components/base/DropdownDivider';
@@ -77,14 +78,16 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <button onClick={e => getModal(EnvironmentEditModal).show(requestGroup)}>
+            <button
+              onClick={e => getModal(EnvironmentEditModal).show(requestGroup)}>
               <i className="fa fa-code"></i> Environment
             </button>
           </li>
           <li>
-            <button onClick={e => db.requestGroupRemove(requestGroup)}>
+            <PromptButton onClick={e => db.requestGroupRemove(requestGroup)}
+                          addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
-            </button>
+            </PromptButton>
           </li>
         </ul>
       </Dropdown>
