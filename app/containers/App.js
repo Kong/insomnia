@@ -267,7 +267,11 @@ class App extends Component {
 
     if (requestPatch) {
       // If the user typed in a curl cmd, dissect it and update the whole request
-      db.requestUpdate(this._getActiveRequest(), requestPatch);
+      db.requestUpdate(this._getActiveRequest(), requestPatch).then(() => {
+        setTimeout(() => {
+
+        })
+      });
     } else {
       db.requestUpdate(this._getActiveRequest(), {url});
     }

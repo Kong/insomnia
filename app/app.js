@@ -154,19 +154,27 @@ ipcMain.on('check-for-updates', () => {
 });
 
 function saveBounds () {
-  localStorage.setItem('bounds', JSON.stringify(mainWindow.getBounds()));
+  const fullscreen = mainWindow.isFullScreen();
+  if (!fullscreen) {
+    // Only save the size if we're not in fullscreen
+    localStorage.setItem('bounds', JSON.stringify(mainWindow.getBounds()));
+  }
+
+  localStorage.setItem('fullscreen', JSON.stringify(mainWindow.isFullScreen()));
 }
 
 function getBounds () {
   let bounds = {};
+  let fullscreen = false;
   try {
     bounds = JSON.parse(localStorage.getItem('bounds') || '{}');
+    fullscreen = JSON.parse(localStorage.getItem('fullscreen') || 'false')
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse window bounds', e);
   }
 
-  return bounds;
+  return {bounds, fullscreen};
 }
 
 function saveZoomFactor (zoomFactor) {
@@ -192,14 +200,24 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('ready', () => {
-  // First, check for updates
-  checkForUpdates();
+// Mac-only, when the user clicks the doc icon
+app.on('activate', (e, hasVisibleWindows) => {
+  if (!hasVisibleWindows) {
+    createWindow()
+  }
+});
 
+// When the app is first launched
+app.on('ready', () => {
+  checkForUpdates();
+  createWindow();
+});
+
+function createWindow () {
   localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
 
   const zoomFactor = getZoomFactor();
-  const bounds = getBounds();
+  const {bounds, fullscreen} = getBounds();
   const {
     x,
     y,
@@ -210,6 +228,8 @@ app.on('ready', () => {
   mainWindow = new BrowserWindow({
     x: x,
     y: y,
+    fullscreen: fullscreen,
+    fullscreenable: true,
     width: width || 1200,
     height: height || 600,
     minHeight: 500,
@@ -225,16 +245,6 @@ app.on('ready', () => {
 
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
-
-  if (IS_DEV && IS_MAC) {
-    // BrowserWindow.addDevToolsExtension(
-    //   '/Users/gschier/Library/Application Support/Google/Chrome/Default/' +
-    //   'Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.15.0_0'
-    // );
-  }
-
-  // Uncomment this to test things
-  // mainWindow.toggleDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
@@ -418,4 +428,4 @@ app.on('ready', () => {
   }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-});
+}
