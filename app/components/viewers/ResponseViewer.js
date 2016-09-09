@@ -21,9 +21,11 @@ class ResponseViewer extends Component {
   render () {
     const {
       previewMode,
+      filter,
       contentType,
       editorLineWrapping,
       editorFontSize,
+      updateFilter,
       body,
       url,
       error
@@ -31,10 +33,7 @@ class ResponseViewer extends Component {
 
     if (error) {
       return (
-        <ResponseError
-          url={url}
-          error={body}
-        />
+        <ResponseError url={url} error={body}/>
       )
     }
 
@@ -51,7 +50,8 @@ class ResponseViewer extends Component {
         return (
           <Editor
             value={body || ''}
-            showFilter={true}
+            updateFilter={updateFilter}
+            filter={filter}
             prettify={true}
             mode={contentType}
             readOnly={true}
@@ -74,11 +74,13 @@ class ResponseViewer extends Component {
 ResponseViewer.propTypes = {
   body: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
+  filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,
 
   // Optional
+  updateFilter: PropTypes.func,
   contentType: PropTypes.string,
   error: PropTypes.bool
 };

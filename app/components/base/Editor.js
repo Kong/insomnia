@@ -67,10 +67,10 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 class Editor extends Component {
-  constructor () {
-    super();
+  constructor (props) {
+    super(props);
     this.state = {
-      filter: ''
+      filter: props.filter || ''
     };
     this._originalCode = '';
   }
@@ -206,12 +206,8 @@ class Editor extends Component {
       try {
         let obj = JSON.parse(code);
 
-        if (this.state.filter) {
-          obj = JSONPath({
-            json: obj,
-            path: this.state.filter
-          });
-          console.log('OBJ', obj);
+        if (this.props.updateFilter && this.state.filter) {
+          obj = JSONPath({json: obj, path: this.state.filter});
         }
 
         code = JSON.stringify(obj, null, '\t');
@@ -229,6 +225,9 @@ class Editor extends Component {
     this._filterTimeout = setTimeout(() => {
       this.setState({filter});
       this._codemirrorSetValue(this._originalCode);
+      if (this.props.updateFilter) {
+        this.props.updateFilter(filter);
+      }
     }, DEBOUNCE_MILLIS);
   }
 
@@ -245,11 +244,13 @@ class Editor extends Component {
           <table className="pad-top-sm">
             <tbody>
             <tr>
-              <td><code className="selectable">$.store.books[*].title</code></td>
+              <td><code className="selectable">$.store.books[*].title</code>
+              </td>
               <td>Get titles of all books in the store</td>
             </tr>
             <tr>
-              <td><code className="selectable">$.store.books[?(@.price &lt; 10)].title</code></td>
+              <td><code className="selectable">$.store.books[?(@.price &lt;
+                10)].title</code></td>
               <td>Get books costing more than $10</td>
             </tr>
             <tr>
@@ -272,7 +273,7 @@ class Editor extends Component {
   }
 
   render () {
-    const {readOnly, fontSize, lightTheme, mode} = this.props;
+    const {readOnly, fontSize, lightTheme, mode, filter} = this.props;
 
     const classes = classnames(
       'editor',
@@ -284,13 +285,14 @@ class Editor extends Component {
       }
     );
 
-    let filter = null;
-    if (this._isJSON(mode)) {
-      filter = (
+    let filterElement = null;
+    if (this.props.updateFilter && this._isJSON(mode)) {
+      filterElement = (
         <div className="editor__filter">
           <div className="form-control form-control--outlined">
             <input
               type="text"
+              defaultValue={filter || ''}
               placeholder="$.store.book[*].author"
               onChange={e => this._handleFilterChange(e.target.value)}
             />
@@ -310,7 +312,7 @@ class Editor extends Component {
           readOnly={readOnly}
           autoComplete='off'>
         </textarea>
-        {filter}
+        {filterElement}
       </div>
     );
   }
@@ -327,7 +329,8 @@ Editor.propTypes = {
   prettify: PropTypes.bool,
   className: PropTypes.any,
   lightTheme: PropTypes.bool,
-  showFilter: PropTypes.bool
+  updateFilter: PropTypes.func,
+  filter: PropTypes.string
 };
 
 export default Editor;

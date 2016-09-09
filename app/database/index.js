@@ -85,6 +85,7 @@ export const MODEL_DEFAULTS = {
     headers: [],
     authentication: {},
     metaPreviewMode: PREVIEW_MODE_SOURCE,
+    metaResponseFilter: '',
     metaSortKey: -1 * Date.now()
   }),
   [TYPE_RESPONSE]: () => ({
