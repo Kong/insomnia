@@ -14,15 +14,17 @@ class RequestSwitcherModal extends Component {
     this.state = {
       searchString: '',
       matchedRequests: [],
+      matchedWorkspaces: [],
       requestGroups: [],
       activeIndex: -1
     }
   }
 
   _setActiveIndex (activeIndex) {
+    const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
     if (activeIndex < 0) {
       activeIndex = this.state.matchedRequests.length - 1;
-    } else if (activeIndex >= this.state.matchedRequests.length) {
+    } else if (activeIndex >= maxIndex) {
       activeIndex = 0;
     }
 
@@ -30,19 +32,49 @@ class RequestSwitcherModal extends Component {
   }
 
   _activateCurrentIndex () {
-    if (this.state.matchedRequests.length) {
-      // Activate the request if there is one
-      const request = this.state.matchedRequests[this.state.activeIndex];
-      this._activateRequest(request);
-    } else {
-      // Create the request if nothing matched
-      const name = this.state.searchString;
-      const parentId = this.props.activeRequestParentId;
+    const {
+      activeIndex,
+      matchedRequests,
+      matchedWorkspaces
+    } = this.state;
 
-      db.requestCreate({name, parentId}).then(request => {
-        this._activateRequest(request);
-      });
+    if (activeIndex < matchedRequests.length) {
+      // Activate the request if there is one
+      const request = matchedRequests[activeIndex];
+      this._activateRequest(request);
+    } else if (activeIndex < (matchedRequests.length + matchedWorkspaces.length)) {
+      // Activate the workspace if there is one
+      const index = activeIndex - matchedRequests.length;
+      const workspace = matchedWorkspaces[index];
+      this._activateWorkspace(workspace);
+    } else {
+      // Create request if no match
+      this._createRequestFromSearch();
     }
+  }
+
+  _createRequestFromSearch () {
+    const {activeRequestParentId} = this.props;
+    const {searchString} = this.state;
+
+    // Create the request if nothing matched
+    const patch = {
+      name: searchString,
+      parentId: activeRequestParentId
+    };
+
+    db.requestCreate(patch).then(request => {
+      this._activateRequest(request);
+    });
+  }
+
+  _activateWorkspace (workspace) {
+    if (!workspace) {
+      return;
+    }
+
+    this.props.activateWorkspace(workspace);
+    this.modal.hide();
   }
 
   _activateRequest (request) {
@@ -59,10 +91,12 @@ class RequestSwitcherModal extends Component {
 
     Promise.all([
       db.requestAll(),
-      db.requestGroupAll()
+      db.requestGroupAll(),
+      db.workspaceAll()
     ]).then(([
       allRequests,
-      allRequestGroups
+      allRequestGroups,
+      allWorkspaces
     ]) => {
       // TODO: Support nested RequestGroups
       // Filter out RequestGroups that don't belong to this Workspace
@@ -82,9 +116,14 @@ class RequestSwitcherModal extends Component {
       const parentId = this.props.activeRequestParentId;
 
       // OPTIMIZATION: This only filters if we have a filter
-      let matchedRequests = !searchString ? requests : requests.filter(
-        r => r.name.toLowerCase().indexOf(searchString.toLowerCase()) !== -1
-      );
+      let matchedRequests = requests;
+      if (searchString) {
+        matchedRequests = matchedRequests.filter(r => {
+          const name = r.name.toLowerCase();
+          const toMatch = searchString.toLowerCase();
+          return name.indexOf(toMatch) !== -1
+        });
+      }
 
       // OPTIMIZATION: Apply sort after the filter so we have to sort less
       matchedRequests = matchedRequests.sort(
@@ -107,11 +146,24 @@ class RequestSwitcherModal extends Component {
         }
       );
 
+      let matchedWorkspaces = [];
+      if (searchString) {
+        // Only match workspaces if there is a search
+        matchedWorkspaces = allWorkspaces
+          .filter(w => w._id !== workspaceId)
+          .filter(w => {
+            const name = w.name.toLowerCase();
+            const toMatch = searchString.toLowerCase();
+            return name.indexOf(toMatch) !== -1
+          });
+      }
+
       const activeIndex = searchString ? 0 : -1;
 
       this.setState({
         activeIndex,
         matchedRequests,
+        matchedWorkspaces,
         requestGroups,
         searchString
       });
@@ -152,6 +204,7 @@ class RequestSwitcherModal extends Component {
   render () {
     const {
       matchedRequests,
+      matchedWorkspaces,
       requestGroups,
       searchString,
       activeIndex
@@ -170,7 +223,7 @@ class RequestSwitcherModal extends Component {
             &nbsp;&nbsp;&nbsp;
             <span className="monospace">esc</span> to dismiss
           </p>
-          <p>Jump To Request</p>
+          <p>Quick Switch</p>
         </ModalHeader>
         <ModalBody className="pad request-switcher">
           <div className="form-control form-control--outlined no-margin">
@@ -208,9 +261,31 @@ class RequestSwitcherModal extends Component {
                 </li>
               )
             })}
+
+            {matchedRequests.length && matchedWorkspaces.length ? (
+              <hr/>
+            ) : null}
+
+            {matchedWorkspaces.map((w, i) => {
+              const buttonClasses = classnames(
+                'btn btn--compact wide text-left',
+                {focus: (activeIndex - matchedRequests.length) === i}
+              );
+
+              return (
+                <li key={w._id}>
+                  <button onClick={e => this._activateRequest(w)}
+                          className={buttonClasses}>
+                    <i className="fa fa-random"></i> Switch to
+                    {" "}
+                    <strong>{w.name}</strong>
+                  </button>
+                </li>
+              )
+            })}
           </ul>
 
-          {matchedRequests.length === 0 ? (
+          {!matchedRequests.length && !matchedWorkspaces.length ? (
             <div className="text-center">
               <p>
                 No matches found for <strong>{searchString}</strong>
@@ -229,6 +304,7 @@ class RequestSwitcherModal extends Component {
 
 RequestSwitcherModal.propTypes = {
   activateRequest: PropTypes.func.isRequired,
+  activateWorkspace: PropTypes.func.isRequired,
   workspaceId: PropTypes.string.isRequired,
   activeRequestParentId: PropTypes.string.isRequired
 };

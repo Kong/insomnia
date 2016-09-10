@@ -5,9 +5,7 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
-
 import Mousetrap from '../lib/mousetrap';
-
 import {addModal} from '../components/modals';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import CookiesModal from '../components/modals/CookiesModal';
@@ -23,21 +21,21 @@ import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/sidebar/Sidebar';
 import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes';
 import {
-  MAX_PANE_WIDTH, MIN_PANE_WIDTH,
+  MAX_PANE_WIDTH,
+  MIN_PANE_WIDTH,
   DEFAULT_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
   MIN_SIDEBAR_REMS,
-  DEFAULT_SIDEBAR_WIDTH
-} from '../lib/constants'
-
+  DEFAULT_SIDEBAR_WIDTH,
+  CHECK_FOR_UPDATES_INTERVAL
+} from '../lib/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
-
+import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as db from '../database';
 import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
-import {CHECK_FOR_UPDATES_INTERVAL} from '../lib/constants';
 import {getModal} from '../components/modals/index';
 
 
@@ -473,7 +471,8 @@ class App extends Component {
     const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
     return (
-      <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
+      <div id="wrapper" className="wrapper"
+           style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref={n => this._sidebar = n}
           showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
@@ -494,7 +493,10 @@ class App extends Component {
         />
 
         <div className="drag drag--sidebar">
-          <div onMouseDown={e => {e.preventDefault(); this._startDragSidebar()}}
+          <div onMouseDown={e => {
+            e.preventDefault();
+            this._startDragSidebar()
+          }}
                onDoubleClick={() => this._resetDragSidebar()}>
           </div>
         </div>
@@ -548,6 +550,7 @@ class App extends Component {
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
+          activateWorkspace={w => actions.workspaces.activate(w)}
         />
         <EnvironmentEditModal
           ref={m => addModal(m)}
@@ -555,9 +558,7 @@ class App extends Component {
         <WorkspaceEnvironmentsEditModal
           ref={m => addModal(m)}
           onChange={w => db.workspaceUpdate(w)}/>
-        <CookiesModal
-          ref={m => addModal(m)}
-          onChange={() => console.log('TODO: COOKIES!!!')}/>
+        <CookiesModal ref={m => addModal(m)}/>
 
         {/*<div className="toast toast--show">*/}
         {/*<div className="toast__message">How's it going?</div>*/}
@@ -573,6 +574,9 @@ App.propTypes = {
   actions: PropTypes.shape({
     requests: PropTypes.shape({
       send: PropTypes.func.isRequired
+    }).isRequired,
+    workspaces: PropTypes.shape({
+      activate: PropTypes.func.isRequired
     }).isRequired,
     global: PropTypes.shape({
       importFile: PropTypes.func.isRequired
@@ -604,7 +608,8 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
-      requests: bindActionCreators(RequestActions, dispatch)
+      requests: bindActionCreators(RequestActions, dispatch),
+      workspaces: bindActionCreators(WorkspaceActions, dispatch)
     }
   }
 }

@@ -143,9 +143,7 @@ class CookiesModal extends Component {
   }
 }
 
-CookiesModal.propTypes = {
-  onChange: PropTypes.func.isRequired
-};
+CookiesModal.propTypes = {};
 
 // export CookiesModal;
 export default CookiesModal;

@@ -36,14 +36,20 @@ class Dropdown extends Component {
   }
 
   componentDidMount () {
-    ReactDOM.findDOMNode(this).addEventListener('keydown', e => {
+    this._bodyKeydownHandler = e => {
       if (this.state.open && e.keyCode === 27) {
         e.preventDefault();
         e.stopPropagation();
         // Pressed escape
         this.hide();
       }
-    });
+    };
+
+    document.body.addEventListener('keydown', this._bodyKeydownHandler);
+  }
+
+  componentWillUnmount () {
+    document.body.removeEventListener('keydown', this._bodyKeydownHandler);
   }
 
   render () {
@@ -62,8 +68,7 @@ class Dropdown extends Component {
     return (
       <div className={classes}
            onClick={this._handleClick.bind(this)}
-           onMouseDown={e => e.preventDefault()}
-           ref={n => this._node = n}>
+           onMouseDown={e => e.preventDefault()}>
         {this.props.children}
         <div className="dropdown__backdrop"></div>
       </div>
