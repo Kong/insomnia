@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import Editor from '../base/Editor';
 import ResponseWebview from './ResponseWebview';
+import ResponseRaw from './ResponseRaw';
 import ResponseError from './ResponseError';
 import {
   PREVIEW_MODE_FRIENDLY,
@@ -62,10 +63,10 @@ class ResponseViewer extends Component {
         );
       default: // Raw
         return (
-          <textarea className="scrollable wide tall selectable monospace pad no-resize"
-                    defaultValue={body}
-                    style={{fontSize: editorFontSize}}>
-          </textarea>
+          <ResponseRaw
+            value={body}
+            fontSize={editorFontSize}
+          />
         )
     }
   }
