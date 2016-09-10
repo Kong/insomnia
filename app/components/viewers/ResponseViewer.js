@@ -62,10 +62,10 @@ class ResponseViewer extends Component {
         );
       default: // Raw
         return (
-          <pre className="scrollable wide tall selectable monospace pad"
-               style={{fontSize: editorFontSize}}>
-            {body}
-          </pre>
+          <textarea className="scrollable wide tall selectable monospace pad no-resize"
+                    defaultValue={body}
+                    style={{fontSize: editorFontSize}}>
+          </textarea>
         )
     }
   }

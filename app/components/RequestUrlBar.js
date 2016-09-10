@@ -34,8 +34,7 @@ class RequestUrlBar extends Component {
     const hasError = !url;
 
     return (
-      <form className={classnames({'urlbar': true, 'urlbar--error': hasError})}
-            onSubmit={this._handleFormSubmit.bind(this)}>
+      <div className={classnames({'urlbar': true, 'urlbar--error': hasError})}>
         <Dropdown>
           <button type="button">
             <div className="tall">
@@ -56,16 +55,19 @@ class RequestUrlBar extends Component {
             ))}
           </ul>
         </Dropdown>
-        <div className="form-control">
-          <input
-            ref={n => this.input = n}
-            type="text"
-            placeholder="https://api.myproduct.com/v1/users"
-            defaultValue={url}
-            onChange={e => this._handleUrlChange(e.target.value)}/>
-        </div>
-        <button type="submit" className="urlbar__send-button">Send</button>
-      </form>
+        <form onSubmit={this._handleFormSubmit.bind(this)}>
+          <div className="form-control">
+            <input
+              ref={n => this.input = n}
+              type="text"
+              placeholder="https://api.myproduct.com/v1/users"
+              defaultValue={url}
+              onClick={e => e.preventDefault()}
+              onChange={e => this._handleUrlChange(e.target.value)}/>
+          </div>
+          <button type="submit">Send</button>
+        </form>
+      </div>
     );
   }
 }

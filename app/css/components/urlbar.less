@@ -54,7 +54,7 @@
     min-width: 0;
   }
 
-  .urlbar__send-button {
+  form button {
     padding-right: @padding-md;
     padding-left: @padding-md;
   }
@@ -65,7 +65,13 @@
     display: inline-block;
   }
 
-  .urlbar__send-button,
+  form {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+  }
+
+  form button,
   & > .dropdown {
     height: 100%;
 
