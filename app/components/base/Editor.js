@@ -3,6 +3,8 @@ import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import JSONPath from 'jsonpath-plus';
+import xml2js from 'xml2js';
+import xpath from 'xml2js-xpath';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
@@ -145,6 +147,55 @@ class Editor extends Component {
     return mode.indexOf('json') !== -1
   }
 
+  _isXML (mode) {
+    if (!mode) {
+      return false;
+    }
+
+    return mode.indexOf('xml') !== -1
+  }
+
+  _formatJSON (code) {
+    try {
+      let obj = JSON.parse(code);
+
+      if (this.props.updateFilter && this.state.filter) {
+        obj = JSONPath({json: obj, path: this.state.filter});
+      }
+
+      code = JSON.stringify(obj, null, '\t');
+    } catch (e) {
+      // That's Ok, just leave it
+    }
+
+    return Promise.resolve(code);
+  }
+
+  _formatXML (code) {
+    return new Promise(resolve => {
+      xml2js.parseString(code, (err, obj) => {
+        if (err) {
+          resolve(code);
+          return;
+        }
+
+        if (this.props.updateFilter && this.state.filter) {
+          obj = xpath.find(obj, this.state.filter);
+        }
+
+        const builder = new xml2js.Builder({
+          renderOpts: {
+            pretty: true,
+            indent: '\t'
+          }
+        });
+        const xml = builder.buildObject(obj);
+
+        resolve(xml);
+      });
+    })
+  }
+
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
@@ -202,22 +253,18 @@ class Editor extends Component {
     this._originalCode = code;
     this._ignoreNextChange = true;
 
+    let promise;
     if (this.props.prettify) {
-      try {
-        let obj = JSON.parse(code);
-
-        if (this.props.updateFilter && this.state.filter) {
-          obj = JSONPath({json: obj, path: this.state.filter});
-        }
-
-        code = JSON.stringify(obj, null, '\t');
-      } catch (e) {
-        // That's Ok, just leave it
-        // TODO: support more than just JSON prettifying
+      if (this._isXML(this.props.mode)) {
+        promise = this._formatXML(code);
+      } else {
+        promise = this._formatJSON(code);
       }
+    } else {
+      promise = Promise.resolve(code);
     }
 
-    this.codeMirror.setValue(code);
+    promise.then(code => this.codeMirror.setValue(code));
   }
 
   _handleFilterChange (filter) {
@@ -232,33 +279,51 @@ class Editor extends Component {
   }
 
   _showFilterHelp () {
+    const json = this._isJSON(this.props.mode);
+    const link = json ? (
+      <Link href="http://goessner.net/articles/JsonPath/">
+        JSONPath
+      </Link>
+    ) : (
+      <Link
+        href="https://www.w3.org/TR/xpath/">
+        XPath
+      </Link>
+    );
+
     getModal(AlertModal).show({
       headerName: 'Response Filtering Help',
       message: (
         <div>
           <p>
-            Use <Link href="http://schier.co">JSONPath</Link> to filter the
-            response body. Here are some examples that you might use on a
-            book store API.
+            Use {link} to filter the response body. Here are some examples that
+            you might use on a book store API.
           </p>
           <table className="pad-top-sm">
             <tbody>
             <tr>
-              <td><code className="selectable">$.store.books[*].title</code>
+              <td><code className="selectable">
+                {json ? '$.store.books[*].title' : '/store/books/title'}
+              </code>
               </td>
               <td>Get titles of all books in the store</td>
             </tr>
             <tr>
-              <td><code className="selectable">$.store.books[?(@.price &lt;
-                10)].title</code></td>
+              <td><code className="selectable">
+                {json ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
+              </code></td>
               <td>Get books costing more than $10</td>
             </tr>
             <tr>
-              <td><code className="selectable">$.store.books[-1:]</code></td>
+              <td><code className="selectable">
+                {json ? '$.store.books[-1:]' : '/store/books[last()]'}
+              </code></td>
               <td>Get the last book in the store</td>
             </tr>
             <tr>
-              <td><code className="selectable">$.store.books.length</code></td>
+              <td><code className="selectable">
+                {json ? '$.store.books.length' : 'count(/store/books)'}
+              </code></td>
               <td>Get the number of books in the store</td>
             </tr>
             </tbody>
@@ -286,14 +351,14 @@ class Editor extends Component {
     );
 
     let filterElement = null;
-    if (this.props.updateFilter && this._isJSON(mode)) {
+    if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
       filterElement = (
         <div className="editor__filter">
           <div className="form-control form-control--outlined">
             <input
               type="text"
               defaultValue={filter || ''}
-              placeholder="$.store.book[*].author"
+              placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
               onChange={e => this._handleFilterChange(e.target.value)}
             />
           </div>
