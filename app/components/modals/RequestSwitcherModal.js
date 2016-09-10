@@ -276,9 +276,9 @@ class RequestSwitcherModal extends Component {
                 <li key={w._id}>
                   <button onClick={e => this._activateRequest(w)}
                           className={buttonClasses}>
-                    <i className="fa fa-random"></i> Switch to
-                    {" "}
-                    <strong>{w.name}</strong>
+                    <i className="fa fa-random"></i>
+                    &nbsp;&nbsp;&nbsp;
+                    Switch to <strong>{w.name}</strong>
                   </button>
                 </li>
               )
