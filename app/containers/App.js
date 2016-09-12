@@ -450,6 +450,7 @@ class App extends Component {
       getModal(SettingsModal).toggle();
     });
 
+
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));
   }
 

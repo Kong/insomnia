@@ -2,8 +2,7 @@ import nunjucks from 'nunjucks';
 import traverse from 'traverse';
 import * as db from '../database';
 import {TYPE_WORKSPACE} from '../database/index';
-import {getBasicAuthHeader, hasAuthHeader} from './util';
-import {setDefaultProtocol} from './util';
+import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './util';
 
 nunjucks.configure({
   autoescape: false
@@ -40,7 +39,12 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
     Object.assign(renderContext, doc.environment);
   }
 
-  return renderContext
+  // Now we're going to render the renderContext with itself.
+  // This is to support templating inside environments
+  const stringifiedEnvironment = JSON.stringify(renderContext);
+  return JSON.parse(
+    render(stringifiedEnvironment, renderContext)
+  );
 }
 
 export function recursiveRender (obj, context) {

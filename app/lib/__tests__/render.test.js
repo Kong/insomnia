@@ -49,6 +49,41 @@ describe('buildRenderContext()', () => {
     });
   });
 
+  it('cascades properly and renders', () => {
+    const ancestors = [{
+      type: TYPE_REQUEST_GROUP,
+      environment: {bar: '{{ foo }} 2', recursive: '{{ recursive }}', ancestor: true}
+    }, {
+      type: TYPE_REQUEST_GROUP,
+      environment: {bar: '{{ foo }} 1', ancestor: true}
+    }];
+
+    const rootEnvironment = {
+      type: TYPE_ENVIRONMENT,
+      data: {foo: 'root', root: true}
+    };
+
+    const subEnvironment = {
+      type: TYPE_ENVIRONMENT,
+      data: {foo: 'sub', sub: true}
+    };
+
+    const context = render.buildRenderContext(
+      ancestors,
+      rootEnvironment,
+      subEnvironment
+    );
+
+    expect(context).toEqual({
+      foo: 'sub',
+      bar: 'sub 1',
+      recursive: '{{ recursive }}',
+      ancestor: true,
+      root: true,
+      sub: true
+    });
+  });
+
   it('works with minimal parameters', () => {
     const ancestors = null;
     const rootEnvironment = null;
