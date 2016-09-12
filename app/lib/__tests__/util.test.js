@@ -65,3 +65,25 @@ describe('generateId()', () => {
     expect(id).toMatch(/^[a-zA-Z0-9]{24}$/);
   });
 });
+
+describe('setDefaultProtocol()', () => {
+  it('correctly sets protocol for empty', () => {
+    const url = util.setDefaultProtocol('google.com');
+    expect(url).toBe('http://google.com');
+  });
+
+  it('does not set for valid url', () => {
+    const url = util.setDefaultProtocol('https://google.com');
+    expect(url).toBe('https://google.com');
+  });
+
+  it('does not set for valid url', () => {
+    const url = util.setDefaultProtocol('http://google.com');
+    expect(url).toBe('http://google.com');
+  });
+
+  it('does not set for invalid url', () => {
+    const url = util.setDefaultProtocol('httbad://google.com');
+    expect(url).toBe('httbad://google.com');
+  });
+});

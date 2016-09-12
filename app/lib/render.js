@@ -3,6 +3,7 @@ import traverse from 'traverse';
 import * as db from '../database';
 import {TYPE_WORKSPACE} from '../database/index';
 import {getBasicAuthHeader, hasAuthHeader} from './util';
+import {setDefaultProtocol} from './util';
 
 nunjucks.configure({
   autoescape: false
@@ -59,15 +60,6 @@ export function recursiveRender (obj, context) {
   }
 
   return newObj;
-}
-
-export function setDefaultProtocol (url, defaultProto = 'http:') {
-  // Default the proto if it doesn't exist
-  if (url.indexOf('://') === -1) {
-    url = `${defaultProto}//${url}`;
-  }
-
-  return url;
 }
 
 export function getRenderedRequest (request) {

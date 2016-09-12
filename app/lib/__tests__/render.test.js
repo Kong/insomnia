@@ -123,25 +123,3 @@ describe('recursiveRender()', () => {
     expect(fn).toThrowError('expected variable end');
   })
 });
-
-describe('setDefaultProtocol()', () => {
-  it('correctly sets protocol for empty', () => {
-    const url = render.setDefaultProtocol('google.com');
-    expect(url).toBe('http://google.com');
-  });
-
-  it('does not set for valid url', () => {
-    const url = render.setDefaultProtocol('https://google.com');
-    expect(url).toBe('https://google.com');
-  });
-
-  it('does not set for valid url', () => {
-    const url = render.setDefaultProtocol('http://google.com');
-    expect(url).toBe('http://google.com');
-  });
-
-  it('does not set for invalid url', () => {
-    const url = render.setDefaultProtocol('httbad://google.com');
-    expect(url).toBe('httbad://google.com');
-  });
-});

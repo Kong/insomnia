@@ -79,6 +79,11 @@ class App extends Component {
         getModal(WorkspaceEnvironmentsEditModal).toggle(this._getActiveWorkspace());
       },
 
+      // Toggle Sidebar
+      'mod+\\': () => {
+        this._handleToggleSidebar();
+      },
+
       // Edit Cookies
       'mod+k': () => {
         getModal(CookiesModal).toggle(this._getActiveWorkspace());
@@ -393,6 +398,12 @@ class App extends Component {
     }
   }
 
+  _handleToggleSidebar () {
+    const workspace = this._getActiveWorkspace();
+    const metaSidebarHidden = !workspace.metaSidebarHidden;
+    db.workspaceUpdate(workspace, {metaSidebarHidden});
+  }
+
   componentWillReceiveProps (nextProps) {
     const sidebarWidth = this._getActiveWorkspace(nextProps).metaSidebarWidth;
     this.setState({sidebarWidth});
@@ -437,7 +448,9 @@ class App extends Component {
 
     ipcRenderer.on('toggle-preferences', () => {
       getModal(SettingsModal).toggle();
-    })
+    });
+
+    ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));
   }
 
   componentWillUnmount () {
@@ -468,7 +481,8 @@ class App extends Component {
     );
 
     const {sidebarWidth, paneWidth} = this.state;
-    const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
+    const realSidebarWidth = workspace.metaSidebarHidden ? 0 : sidebarWidth;
+    const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
     return (
       <div id="wrapper" className="wrapper"
@@ -484,10 +498,11 @@ class App extends Component {
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           addRequestToWorkspace={() => this._requestCreate(workspace._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
-          activeRequestId={activeRequest ? activeRequest._id : null}
+          activeRequestId={activeRequestId}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
           filter={workspace.metaFilter || ''}
+          hidden={workspace.metaSidebarHidden}
           children={children}
           width={sidebarWidth}
         />

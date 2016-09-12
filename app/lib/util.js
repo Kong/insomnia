@@ -24,6 +24,15 @@ export function getSetCookieHeaders (headers) {
   return filterHeaders(headers, 'set-cookie');
 }
 
+export function setDefaultProtocol (url, defaultProto = 'http:') {
+  // Default the proto if it doesn't exist
+  if (url.indexOf('://') === -1) {
+    url = `${defaultProto}//${url}`;
+  }
+
+  return url;
+}
+
 /**
  * Generate an ID of the format "<MODEL_NAME>_<TIMESTAMP><RANDOM>"
  * @param prefix

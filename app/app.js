@@ -372,6 +372,14 @@ function createWindow () {
 
             saveZoomFactor(zoomFactor);
           }
+        },
+        {
+          label: "Toggle Sidebar",
+          accelerator: "CmdOrCtrl+\\",
+          click: () => {
+            const window = BrowserWindow.getFocusedWindow();
+            window && window.webContents.send('toggle-sidebar');
+          }
         }
       ]
     }, {

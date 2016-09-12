@@ -60,7 +60,8 @@ export const MODEL_DEFAULTS = {
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     metaActiveEnvironmentId: null,
     metaActiveRequestId: null,
-    metaFilter: ''
+    metaFilter: '',
+    metaSidebarHidden: false
   }),
   [TYPE_ENVIRONMENT]: () => ({
     name: 'New Environment',

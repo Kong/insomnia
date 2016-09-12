@@ -101,6 +101,7 @@ class Sidebar extends Component {
       changeFilter,
       filter,
       children,
+      hidden,
       requestCreate,
       requestGroupCreate,
       width
@@ -108,6 +109,7 @@ class Sidebar extends Component {
 
     return (
       <aside className={classnames('sidebar', {
+        'sidebar--hidden': hidden,
         'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
         'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
       })}>
@@ -154,6 +156,7 @@ Sidebar.propTypes = {
   showEnvironmentsModal: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
   width: PropTypes.number.isRequired,
+  hidden: PropTypes.bool.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,

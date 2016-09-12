@@ -3,8 +3,9 @@ import {parse as urlParse, format as urlFormat} from 'url';
 import * as db from '../database';
 import * as querystring from './querystring';
 import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
-import {getRenderedRequest} from './render';
 import {jarFromCookies, cookiesFromJar} from './cookies';
+import {setDefaultProtocol} from './util';
+import {getRenderedRequest} from './render';
 
 
 export function _buildRequestConfig (renderedRequest, patch = {}) {
@@ -59,7 +60,7 @@ export function _actuallySend (renderedRequest, settings) {
     // NOTE: request does not have a separate settings for http/https proxies
     const {protocol} = urlParse(renderedRequest.url);
     const proxyHost = protocol === 'https:' ? settings.httpsProxy : settings.httpProxy;
-    const proxy = proxyHost ? `http://${proxyHost}` : null;
+    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
     let config = _buildRequestConfig(renderedRequest, {
       jar: jar,
