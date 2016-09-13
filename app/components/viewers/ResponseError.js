@@ -27,7 +27,7 @@ class ResponseError extends Component {
       msg = (
         <Link button={true} className="btn btn--super-compact btn--outlined"
                 href="http://docs.insomnia.rest">
-          View the Docs
+          Documentation
         </Link>
       )
     }
@@ -40,7 +40,7 @@ class ResponseError extends Component {
         <hr/>
         <div className="text-center pad">
           <p className="faint pad-left pad-right">
-            That error looks strange. Maybe this will help.
+            Here are some additional things that may help.
           </p>
           {msg}
           &nbsp;&nbsp;
