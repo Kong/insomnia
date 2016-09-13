@@ -62,7 +62,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   ],
   cursorScrollMargin: 12, // NOTE: This is px
   extraKeys: {
-    "Ctrl-Q": function (cm) {
+    'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     }
   }
@@ -208,6 +208,7 @@ class Editor extends Component {
       placeholder: this.props.placeholder || '',
       mode: this.props.mode || 'text/plain',
       lineWrapping: !!this.props.lineWrapping,
+      matchBrackets: !readOnly,
       lint: !readOnly
     };
 

@@ -12,7 +12,9 @@ var ravenClient = new raven.Client(
     release: require('./app.json').version,
   });
 
-ravenClient.patchGlobal();
+if (!IS_DEV) {
+  ravenClient.patchGlobal();
+}
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
@@ -53,7 +55,11 @@ app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 autoUpdater.on('error', e => {
   // Failed to launch auto updater
-  ravenClient.captureError(e, {});
+  if (IS_DEV) {
+    console.error(e);
+  } else {
+    ravenClient.captureError(e, {});
+  }
 });
 
 autoUpdater.on('update-not-available', () => {
@@ -70,6 +76,11 @@ autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, 
 });
 
 function checkForUpdates () {
+  if (IS_DEV) {
+    console.log('Skipping update check in Development');
+    return;
+  }
+
   if (hasPromptedForUpdates) {
     // We've already prompted for updates. Don't bug the user anymore
     return;
@@ -100,6 +111,25 @@ function checkForUpdates () {
       // This will fail in development
     }
   }
+}
+
+function showUnresponsiveModal () {
+  dialog.showMessageBox({
+    type: 'info',
+    buttons: [
+      'Cancel',
+      'Reload',
+    ],
+    defaultId: 1,
+    cancelId: 0,
+    title: 'Unresponsive',
+    message: 'Insomnia has become unresponsive. Do you want to reload?'
+  }, id => {
+    if (id === 1) {
+      mainWindow.destroy();
+      createWindow();
+    }
+  });
 }
 
 function showUpdateModal () {
@@ -230,6 +260,7 @@ function createWindow () {
     y: y,
     fullscreen: fullscreen,
     fullscreenable: true,
+    title: appName,
     width: width || 1200,
     height: height || 600,
     minHeight: 500,
@@ -242,6 +273,7 @@ function createWindow () {
 
   mainWindow.on('resize', e => saveBounds());
   mainWindow.on('move', e => saveBounds());
+  mainWindow.on('unresponsive', e => showUnresponsiveModal());
 
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
@@ -342,35 +374,36 @@ function createWindow () {
           accelerator: "CmdOrCtrl+0",
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
-            const zoomFactor = 1;
-            window.webContents.setZoomFactor(zoomFactor);
-            saveZoomFactor(zoomFactor);
+            if (window && window.webContents) {
+              const zoomFactor = 1;
+              window.webContents.setZoomFactor(zoomFactor);
+              saveZoomFactor(zoomFactor);
+            }
           }
         },
         {
           label: "Zoom In",
           accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
           click: () => {
-            let zoomFactor = getZoomFactor();
-            zoomFactor = Math.min(1.8, zoomFactor + 0.1);
-
             const window = BrowserWindow.getFocusedWindow();
-            window.webContents.setZoomFactor(zoomFactor);
+            if (window && window.webContents) {
+              const zoomFactor = Math.min(1.8, getZoomFactor() + 0.1);
+              window.webContents.setZoomFactor(zoomFactor);
 
-            saveZoomFactor(zoomFactor);
+              saveZoomFactor(zoomFactor);
+            }
           }
         },
         {
           label: "Zoom Out",
           accelerator: "CmdOrCtrl+-",
           click: () => {
-            let zoomFactor = getZoomFactor();
-            zoomFactor = Math.max(0.5, zoomFactor - 0.1);
-
             const window = BrowserWindow.getFocusedWindow();
-            window.webContents.setZoomFactor(zoomFactor);
-
-            saveZoomFactor(zoomFactor);
+            if (window && window.webContents) {
+              const zoomFactor = Math.max(0.5, getZoomFactor() - 0.1);
+              window.webContents.setZoomFactor(zoomFactor);
+              saveZoomFactor(zoomFactor);
+            }
           }
         },
         {

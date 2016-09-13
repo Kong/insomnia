@@ -63,6 +63,9 @@ class Modal extends Component {
   componentDidMount () {
     // In order for this to work, there needs to be tabIndex of -1 on the modal container
     this._keydownCallback = e => {
+      // Don't let key presses go above the modal
+      e.stopPropagation();
+
       if (!this.state.open) {
         return;
       }
@@ -73,7 +76,6 @@ class Modal extends Component {
 
       if (pressedEscape || pressedElse) {
         e.preventDefault();
-        e.stopPropagation();
         // Pressed escape
         this.hide();
       }
