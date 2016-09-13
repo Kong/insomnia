@@ -446,7 +446,7 @@ function createWindow () {
           }
         },
         {
-          label: "View Documentation",
+          label: "Insomnia Help",
           accelerator: "CmdOrCtrl+?",
           click: () => {
             electron.shell.openExternal('http://docs.insomnia.rest');
