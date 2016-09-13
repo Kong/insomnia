@@ -3,8 +3,9 @@ import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import JSONPath from 'jsonpath-plus';
-import xml2js from 'xml2js';
-import xpath from 'xml2js-xpath';
+import vkbeautify from 'vkbeautify';
+import {DOMParser} from 'xmldom';
+import xpath from 'xpath';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
@@ -189,28 +190,19 @@ class Editor extends Component {
   }
 
   _formatXML (code) {
-    return new Promise(resolve => {
-      xml2js.parseString(code, (err, obj) => {
-        if (err) {
-          resolve(code);
-          return;
-        }
+    if (this.props.updateFilter && this.state.filter) {
+      try {
+        const dom = new DOMParser().parseFromString(code);
+        const nodes = xpath.select(this.state.filter, dom);
+        const inner = nodes.map(n => n.toString()).join('\n');
+        code = `<result>${inner}</result>`
+      } catch (e) {
+        // Failed to parse filter (that's ok)
+        code = `<result></result>`
+      }
+    }
 
-        if (this.props.updateFilter && this.state.filter) {
-          obj = xpath.find(obj, this.state.filter);
-        }
-
-        const builder = new xml2js.Builder({
-          renderOpts: {
-            pretty: true,
-            indent: '\t'
-          }
-        });
-        const xml = builder.buildObject(obj);
-
-        resolve(xml);
-      });
-    })
+    return Promise.resolve(vkbeautify.xml(code, '\t'));
   }
 
   /**
@@ -286,7 +278,7 @@ class Editor extends Component {
       if (this.props.updateFilter) {
         this.props.updateFilter(filter);
       }
-    }, DEBOUNCE_MILLIS);
+    }, DEBOUNCE_MILLIS * 3);
   }
 
   _canPrettify () {

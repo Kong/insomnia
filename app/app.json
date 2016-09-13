@@ -22,7 +22,8 @@
     "request": "^2.71.0",
     "tough-cookie": "^2.3.1",
     "traverse": "^0.6.6",
-    "xml2js": "^0.4.17",
-    "xml2js-xpath": "^0.7.0"
+    "vkbeautify": "^0.99.1",
+    "xpath": "^0.0.23",
+    "xmldom": "^0.1.22"
   }
 }
