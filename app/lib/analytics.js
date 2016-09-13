@@ -38,6 +38,12 @@ export function initAnalytics () {
 export function trackEvent (event, properties = {}) {
   // Don't track events if we haven't set them up yet
   if (analytics) {
+    // Add base properties
+    Object.assign(properties, {
+      appPlatform: process.platform,
+      appVersion: getAppVersion()
+    });
+
     analytics.track({userId, event, properties});
   }
 }
