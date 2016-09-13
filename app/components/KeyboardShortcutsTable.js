@@ -5,16 +5,12 @@ const KeyboardShortcutsTable = () => (
   <table className="wide">
     <tbody>
     <tr>
-      <td>Send Request</td>
-      <td><code>{MOD_SYM}Enter</code></td>
-    </tr>
-    <tr>
       <td>Switch Requests</td>
       <td><code>{MOD_SYM}P</code></td>
     </tr>
     <tr>
-      <td>Focus URL Bar</td>
-      <td><code>{MOD_SYM}L</code></td>
+      <td>Send Request</td>
+      <td><code>{MOD_SYM}Enter</code></td>
     </tr>
     <tr>
       <td>New Request</td>
@@ -31,6 +27,14 @@ const KeyboardShortcutsTable = () => (
     <tr>
       <td>Show Environment Editor</td>
       <td><code>{MOD_SYM}E</code></td>
+    </tr>
+    <tr>
+      <td>Focus URL Bar</td>
+      <td><code>{MOD_SYM}L</code></td>
+    </tr>
+    <tr>
+      <td>Toggle Sidebar</td>
+      <td><code>{MOD_SYM}\</code></td>
     </tr>
     <tr>
       <td>Show Settings</td>
