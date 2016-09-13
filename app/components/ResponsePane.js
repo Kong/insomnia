@@ -10,6 +10,7 @@ import {getPreviewModeName, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../lib/constants';
 import {trackEvent} from '../lib/analytics';
 import {getSetCookieHeaders} from '../lib/util';
+import {cancelCurrentRequest} from '../lib/network';
 
 class ResponsePane extends Component {
   constructor (props) {
@@ -76,7 +77,16 @@ class ResponsePane extends Component {
             <h2>Loading...</h2>
           )}
 
+          <br/>
           <i className="fa fa-refresh fa-spin"></i>
+
+          <br/>
+          <div className="pad">
+            <button className="btn btn--super-compact btn--outlined"
+                    onClick={() => cancelCurrentRequest()}>
+              Cancel Request
+            </button>
+          </div>
         </div>
       )
     }

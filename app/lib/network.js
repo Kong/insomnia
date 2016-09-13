@@ -7,6 +7,14 @@ import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol} from './util';
 import {getRenderedRequest} from './render';
 
+let cancelRequestFunction = null;
+
+export function cancelCurrentRequest () {
+  if (typeof cancelRequestFunction === 'function') {
+    cancelRequestFunction();
+  }
+}
+
 
 export function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
@@ -72,7 +80,7 @@ export function _actuallySend (renderedRequest, settings) {
 
     const startTime = Date.now();
     // TODO: Handle redirects ourselves
-    networkRequest(config, function (err, networkResponse) {
+    const req = networkRequest(config, function (err, networkResponse) {
       if (err) {
         db.responseCreate({
           parentId: renderedRequest._id,
@@ -126,7 +134,21 @@ export function _actuallySend (renderedRequest, settings) {
       };
 
       db.responseCreate(responsePatch).then(resolve, reject);
-    })
+    });
+
+    // Kind of hacky, but this is how we cancel a request.
+    cancelRequestFunction = () => {
+      req.abort();
+
+      db.responseCreate({
+        parentId: renderedRequest._id,
+        elapsedTime: Date.now() - startTime,
+        statusMessage: 'Cancelled',
+        error: 'The request was cancelled'
+      });
+
+      return reject('Cancelled');
+    }
   })
 }
 

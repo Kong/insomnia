@@ -37,6 +37,7 @@ import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
 import {getModal} from '../components/modals/index';
+import {cancelCurrentRequest} from '../lib/network';
 
 
 class App extends Component {
