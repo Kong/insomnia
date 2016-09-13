@@ -440,16 +440,16 @@ function createWindow () {
       id: "help",
       submenu: [
         {
-          label: "Report an Issue...",
+          label: "Contact Support",
           click: () => {
             electron.shell.openExternal('mailto:support@insomnia.rest');
           }
         },
         {
-          label: "Insomnia Help",
+          label: "View Documentation",
           accelerator: "CmdOrCtrl+?",
           click: () => {
-            electron.shell.openExternal('http://insomnia.rest');
+            electron.shell.openExternal('http://docs.insomnia.rest');
           }
         }
       ]

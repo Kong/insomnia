@@ -132,16 +132,6 @@ class WorkspaceDropdown extends Component {
             </button>
           </li>
           <li>
-            <Link button={true} href="http://docs.insomnia.rest">
-              <i className="fa fa-blank"></i> Documentation
-            </Link>
-          </li>
-          <li>
-            <Link button={true} href="mailto:support@insomnia.rest">
-              <i className="fa fa-blank"></i> Support
-            </Link>
-          </li>
-          <li>
             <button onClick={e => getModal(ChangelogModal).show()}>
               <i className="fa fa-blank"></i> Changelog
             </button>
