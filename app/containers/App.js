@@ -432,6 +432,7 @@ class App extends Component {
       const firstLaunch = !lastVersion;
       if (firstLaunch) {
         // TODO: Show a welcome message
+        trackEvent('First Launch');
       } else if (lastVersion !== getAppVersion()) {
         getModal(ChangelogModal).show();
       }
