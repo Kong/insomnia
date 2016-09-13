@@ -1,16 +1,59 @@
 import nunjucks from 'nunjucks';
 import traverse from 'traverse';
+import uuid from 'node-uuid';
 import * as db from '../database';
 import {TYPE_WORKSPACE} from '../database/index';
 import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './util';
 
-nunjucks.configure({
+const nunjucksEnvironment = nunjucks.configure({
   autoescape: false
 });
 
+class NoArgsExtension {
+  parse (parser, nodes, lexer) {
+    const args = parser.parseSignature(null, true);
+    parser.skip(lexer.TOKEN_BLOCK_END);
+    return new nodes.CallExtension(this, 'run', args);
+  }
+}
+
+class ArgsExtension {
+  parse (parser, nodes, lexer) {
+    const tok = parser.nextToken();
+    const args = parser.parseSignature(null, true);
+    parser.advanceAfterBlockEnd(tok.value);
+    return new nodes.CallExtension(this, 'run', args);
+  }
+}
+
+class TimestampExtension extends NoArgsExtension {
+  constructor () {
+    super();
+    this.tags = ['timestamp'];
+  }
+
+  run (context) {
+    return Date.now();
+  }
+}
+
+class UuidExtension extends NoArgsExtension {
+  constructor () {
+    super();
+    this.tags = ['uuid'];
+  }
+
+  run (context) {
+    return uuid.v4();
+  }
+}
+
+nunjucksEnvironment.addExtension('uuid', new UuidExtension());
+nunjucksEnvironment.addExtension('timestamp', new TimestampExtension());
+
 export function render (template, context = {}) {
   try {
-    return nunjucks.renderString(template, context);
+    return nunjucksEnvironment.renderString(template, context);
   } catch (e) {
     throw new Error(e.message.replace(/\(unknown path\)\s*/, ''));
   }

@@ -1,11 +1,5 @@
 'use strict';
 
-import render from '../render';
-import * as querystring from '../querystring';
-import * as db from '../../database';
-import {DEBOUNCE_MILLIS, METHOD_GET} from '../constants';
-import {getRenderedRequest} from '../render';
-
 const FLAGS = [
   'cacert', 'capath', 'E', 'cert', 'cert-type', 'ciphers', 'K', 'config',
   'connect-timeout', 'C', 'continue-at', 'b',

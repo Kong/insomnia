@@ -9,6 +9,16 @@ describe('render()', () => {
     expect(rendered).toBe('Hello World!');
   });
 
+  it('renders custom tag: uuid', () => {
+    const rendered = render.render('Hello {% uuid %}!');
+    expect(rendered).toBe('Hello b5c2f089-2c0c-46b6-a6f1-8d5b86cbc603!');
+  });
+
+  it('renders custom tag: timestamp', () => {
+    const rendered = render.render('Hello {% timestamp %}!');
+    expect(rendered).toMatch(/Hello \d{13}!/);
+  });
+
   it('fails on invalid template', () => {
     const fn = () => render.render('Hello {{ msg }!', {msg: 'World'});
     expect(fn).toThrowError('expected variable end');

@@ -63,7 +63,6 @@
     "httpsnippet": "git@github.com:gschier/httpsnippet.git#39d2fb0449f33711e5cc71a4d42b0e5b808426b4",
     "json-lint": "^0.1.0",
     "jsonpath-plus": "^0.15.0",
-    "jsonschema": "^1.1.0",
     "mousetrap": "^1.6.0",
     "nedb": "^1.8.0",
     "node-localstorage": "^1.3.0",
@@ -82,7 +81,8 @@
     "tough-cookie": "^2.3.1",
     "traverse": "^0.6.6",
     "xml2js": "^0.4.17",
-    "xml2js-xpath": "^0.7.0"
+    "xml2js-xpath": "^0.7.0",
+    "node-uuid": "latest"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
