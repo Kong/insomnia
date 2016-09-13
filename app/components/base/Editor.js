@@ -41,6 +41,7 @@ import '../../css/components/editor.less';
 import {getModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
+import {trackEvent} from '../../lib/analytics';
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -153,6 +154,11 @@ class Editor extends Component {
     }
 
     return mode.indexOf('xml') !== -1
+  }
+
+  _handleBeautify () {
+    this._prettify(this.codeMirror.getValue());
+    trackEvent('Beautify', {mode: this.props.mode});
   }
 
   _prettify (code) {
@@ -393,7 +399,7 @@ class Editor extends Component {
         <button key="prettify"
                 className="btn btn--compact"
                 title="Auto-format request body whitespace"
-                onClick={() => this._prettify(this.codeMirror.getValue())}>
+                onClick={() => this._handleBeautify()}>
           Beautify {contentTypeName}
         </button>
       )
