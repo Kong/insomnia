@@ -57,7 +57,7 @@
   "dependencies": {
     "analytics-node": "^2.1.0",
     "classnames": "^2.2.3",
-    "codemirror": "~5.16.0",
+    "codemirror": "^5.18.2",
     "electron-context-menu": "^0.4.0",
     "electron-squirrel-startup": "^1.0.0",
     "httpsnippet": "git@github.com:gschier/httpsnippet.git#39d2fb0449f33711e5cc71a4d42b0e5b808426b4",

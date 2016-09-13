@@ -10,18 +10,30 @@
   grid-template-rows: 1fr auto;
   grid-template-columns: 100%;
 
-  .editor__filter {
+  .editor__container {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .editor__toolbar {
     display: flex;
     flex-direction: row;
     align-items: center;
+    //justify-content: flex-end;
+    border-top: 1px solid @hl-md;
+    height: @line-height-xs;
 
-    .form-control {
+    input {
       margin-right: 0;
       width: 100%;
+      margin-left: @padding-md;
     }
 
     button {
       color: @hl;
+      padding: @padding-xs @padding-md;
+      height: 100%;
     }
   }
 
@@ -124,7 +136,7 @@
 
   .cm-s-default .CodeMirror-gutters {
     //background: #272822;
-    border-right: 0px;
+    border-right: 0;
   }
 
   .cm-s-default .CodeMirror-guttermarker {
@@ -143,8 +155,9 @@
     border-left: 1px solid #f8f8f0;
   }
 
-  .cm-s-default span.cm-comment {
-    color: #75715e;
+  .cm-s-default span.cm-comment,
+  .cm-s-default span.cm-qualifier {
+    color: @hl;
   }
 
   .cm-s-default span.cm-atom {

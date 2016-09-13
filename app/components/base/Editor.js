@@ -155,6 +155,17 @@ class Editor extends Component {
     return mode.indexOf('xml') !== -1
   }
 
+  _prettify (code) {
+    let promise;
+    if (this._isXML(this.props.mode)) {
+      promise = this._formatXML(code);
+    } else {
+      promise = this._formatJSON(code);
+    }
+
+    promise.then(code => this.codeMirror.setValue(code));
+  }
+
   _formatJSON (code) {
     try {
       let obj = JSON.parse(code);
@@ -254,18 +265,11 @@ class Editor extends Component {
     this._originalCode = code;
     this._ignoreNextChange = true;
 
-    let promise;
-    if (this.props.prettify) {
-      if (this._isXML(this.props.mode)) {
-        promise = this._formatXML(code);
-      } else {
-        promise = this._formatJSON(code);
-      }
+    if (this.props.autoPrettify && this._canPrettify()) {
+      this._prettify(code);
     } else {
-      promise = Promise.resolve(code);
+      this.codeMirror.setValue(code);
     }
-
-    promise.then(code => this.codeMirror.setValue(code));
   }
 
   _handleFilterChange (filter) {
@@ -277,6 +281,11 @@ class Editor extends Component {
         this.props.updateFilter(filter);
       }
     }, DEBOUNCE_MILLIS);
+  }
+
+  _canPrettify () {
+    const {mode} = this.props;
+    return this._isJSON(mode) || this._isXML(mode);
   }
 
   _showFilterHelp () {
@@ -351,34 +360,60 @@ class Editor extends Component {
       }
     );
 
-    let filterElement = null;
+    const toolbarChildren = [];
     if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
-      filterElement = (
-        <div className="editor__filter">
-          <div className="form-control form-control--outlined">
-            <input
-              type="text"
-              defaultValue={filter || ''}
-              placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
-              onChange={e => this._handleFilterChange(e.target.value)}
-            />
-          </div>
-          <button className="btn btn--compact"
-                  onClick={() => this._showFilterHelp()}>
-            <i className="fa fa-question-circle"></i>
-          </button>
-        </div>
+      toolbarChildren.push(
+        <input
+          key="filter"
+          type="text"
+          title="Filter response body"
+          defaultValue={filter || ''}
+          placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
+          onChange={e => this._handleFilterChange(e.target.value)}
+        />
+      );
+      toolbarChildren.push(
+        <button key="help"
+                className="btn btn--compact"
+                onClick={() => this._showFilterHelp()}>
+          <i className="fa fa-question-circle"></i>
+        </button>
       )
+    }
+
+    if (this.props.manualPrettify && this._canPrettify()) {
+      let contentTypeName = '';
+      if (this._isJSON(mode)) {
+        contentTypeName = 'JSON'
+      } else if (this._isXML(mode)) {
+        contentTypeName = 'XML'
+      }
+
+      toolbarChildren.push(
+        <button key="prettify"
+                className="btn btn--compact"
+                title="Auto-format request body whitespace"
+                onClick={() => this._prettify(this.codeMirror.getValue())}>
+          Beautify {contentTypeName}
+        </button>
+      )
+    }
+
+    let toolbar = null;
+    if (toolbarChildren.length) {
+      toolbar = <div className="editor__toolbar">{toolbarChildren}</div>;
     }
 
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
+        <div className="editor__container">
         <textarea
           ref={n => this._initEditor(n)}
           readOnly={readOnly}
           autoComplete='off'>
         </textarea>
-        {filterElement}
+        </div>
+        {toolbar}
       </div>
     );
   }
@@ -392,7 +427,8 @@ Editor.propTypes = {
   lineWrapping: PropTypes.bool,
   fontSize: PropTypes.number,
   value: PropTypes.string,
-  prettify: PropTypes.bool,
+  autoPrettify: PropTypes.bool,
+  manualPrettify: PropTypes.bool,
   className: PropTypes.any,
   lightTheme: PropTypes.bool,
   updateFilter: PropTypes.func,

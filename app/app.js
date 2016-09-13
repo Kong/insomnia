@@ -53,6 +53,14 @@ let hasPromptedForUpdates = false;
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
+process.on('uncaughtException', e => {
+  if (IS_DEV) {
+    console.error(e);
+  } else {
+    ravenClient.captureError(e, {});
+  }
+});
+
 autoUpdater.on('error', e => {
   // Failed to launch auto updater
   if (IS_DEV) {

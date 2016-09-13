@@ -37,10 +37,16 @@ class Dropdown extends Component {
 
   componentDidMount () {
     this._bodyKeydownHandler = e => {
-      if (this.state.open && e.keyCode === 27) {
+      if (!this.state.open) {
+        return;
+      }
+
+      // Catch all key presses if we're open
+      e.stopPropagation();
+
+      // Pressed escape?
+      if (e.keyCode === 27) {
         e.preventDefault();
-        e.stopPropagation();
-        // Pressed escape
         this.hide();
       }
     };

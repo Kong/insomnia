@@ -53,7 +53,7 @@ class ResponseViewer extends Component {
             value={body || ''}
             updateFilter={updateFilter}
             filter={filter}
-            prettify={true}
+            autoPrettify={true}
             mode={contentType}
             readOnly={true}
             lineWrapping={editorLineWrapping}
