@@ -1,12 +1,11 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-
 import Dropdown from './base/Dropdown';
 import MethodTag from './tags/MethodTag';
-import {METHODS} from '../lib/constants';
+import {METHODS, DEBOUNCE_MILLIS} from '../lib/constants';
 import Mousetrap from '../lib/mousetrap';
 import {trackEvent} from '../lib/analytics';
-import {DEBOUNCE_MILLIS} from '../lib/constants';
+import {isMac} from '../lib/appInfo';
 
 
 class RequestUrlBar extends Component {
@@ -23,7 +22,25 @@ class RequestUrlBar extends Component {
   }
 
   componentDidMount () {
-    Mousetrap.bindGlobal('mod+l', () => {this.input.focus(); this.input.select()});
+    this._bodyKeydownHandler = e => {
+      if (!this._input) {
+        return;
+      }
+
+      // meta+l
+      const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
+      if (metaPressed && e.keyCode === 76) {
+        e.preventDefault();
+        this._input.focus();
+        this._input.select();
+      }
+    };
+
+    document.body.addEventListener('keydown', this._bodyKeydownHandler);
+  }
+
+  componentWillUnmount () {
+    document.body.removeEventListener('keydown', this._bodyKeydownHandler);
   }
 
   render () {
@@ -35,7 +52,7 @@ class RequestUrlBar extends Component {
     return (
       <div className={classnames({'urlbar': true, 'urlbar--error': hasError})}>
         <Dropdown>
-          <button>
+          <button type="button">
             <div className="tall">
               <span>{method}</span>
               <i className="fa fa-caret-down"/>
@@ -57,13 +74,14 @@ class RequestUrlBar extends Component {
         <form onSubmit={this._handleFormSubmit.bind(this)}>
           <div className="form-control">
             <input
-              ref={n => this.input = n}
+              ref={n => this._input = n}
               type="text"
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}
+              onClick={e => e.preventDefault()}
               onChange={e => this._handleUrlChange(e.target.value)}/>
           </div>
-          <button>Send</button>
+          <button type="submit">Send</button>
         </form>
       </div>
     );

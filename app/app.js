@@ -4,15 +4,24 @@ if (require('electron-squirrel-startup')) {
   process.exit(0);
 }
 
+// Some useful helpers
+const IS_DEV = process.env.INSOMNIA_ENV === 'development';
+const IS_MAC = process.platform === 'darwin';
+const IS_WINDOWS = process.platform === 'win32';
+const IS_LINUX = !IS_MAC && !IS_WINDOWS;
+
 var raven = require('raven');
 var ravenClient = new raven.Client(
   'https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a' +
   '4189a68efb63c38fc50b@app.getsentry.com/88289', {
     environment: process.env.INSOMNIA_ENV || 'production',
     release: require('./app.json').version,
+    logger: 'main'
   });
 
-ravenClient.patchGlobal();
+if (!IS_DEV) {
+  ravenClient.patchGlobal();
+}
 
 // Don't npm install this (it breaks). Rely on the global one.
 const electron = require('electron');
@@ -31,11 +40,6 @@ const {
   webContents
 } = electron;
 
-const IS_DEV = process.env.INSOMNIA_ENV === 'development';
-const IS_MAC = process.platform === 'darwin';
-const IS_WINDOWS = process.platform === 'win32';
-const IS_LINUX = !IS_MAC && !IS_WINDOWS;
-
 const UPDATE_URLS = {
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
   win32: 'https://s3.amazonaws.com/builds-insomnia-rest/win',
@@ -51,9 +55,23 @@ let hasPromptedForUpdates = false;
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
+process.on('uncaughtException', e => {
+  if (IS_DEV) {
+    console.error(e);
+  } else {
+    ravenClient.captureError(e, {});
+  }
+});
+
 autoUpdater.on('error', e => {
   // Failed to launch auto updater
-  ravenClient.captureError(e, {});
+  if (IS_DEV) {
+    console.error(e);
+  } else {
+    ravenClient.captureError(e, {
+      level: 'warning'
+    });
+  }
 });
 
 autoUpdater.on('update-not-available', () => {
@@ -70,6 +88,11 @@ autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, 
 });
 
 function checkForUpdates () {
+  if (IS_DEV) {
+    console.log('Skipping update check in Development');
+    return;
+  }
+
   if (hasPromptedForUpdates) {
     // We've already prompted for updates. Don't bug the user anymore
     return;
@@ -100,6 +123,25 @@ function checkForUpdates () {
       // This will fail in development
     }
   }
+}
+
+function showUnresponsiveModal () {
+  dialog.showMessageBox({
+    type: 'info',
+    buttons: [
+      'Cancel',
+      'Reload',
+    ],
+    defaultId: 1,
+    cancelId: 0,
+    title: 'Unresponsive',
+    message: 'Insomnia has become unresponsive. Do you want to reload?'
+  }, id => {
+    if (id === 1) {
+      mainWindow.destroy();
+      createWindow();
+    }
+  });
 }
 
 function showUpdateModal () {
@@ -153,30 +195,66 @@ ipcMain.on('check-for-updates', () => {
   checkForUpdates();
 });
 
+function storeValue (key, obj) {
+  try {
+    localStorage.setItem(key, JSON.stringify(obj));
+  } catch (e) {
+    console.error('Failed to save to LocalStorage', obj, e);
+    ravenClient.captureError(e, {
+      level: 'warning'
+    });
+  }
+}
+
+function getValue (key, defaultObj) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultObj))
+  } catch (e) {
+    console.error('Failed to get from LocalStorage', e);
+    ravenClient.captureError(e, {
+      level: 'warning'
+    });
+  }
+}
+
 function saveBounds () {
-  localStorage.setItem('bounds', JSON.stringify(mainWindow.getBounds()));
+  if (!mainWindow) {
+    return;
+  }
+
+  const fullscreen = mainWindow.isFullScreen();
+
+  // Only save the size if we're not in fullscreen
+  if (!fullscreen) {
+    storeValue('bounds', mainWindow.getBounds());
+    storeValue('fullscreen', false);
+  } else {
+    storeValue('fullscreen', true);
+  }
 }
 
 function getBounds () {
   let bounds = {};
+  let fullscreen = false;
   try {
-    bounds = JSON.parse(localStorage.getItem('bounds') || '{}');
+    bounds = getValue('bounds', {});
+    fullscreen = getValue('fullscreen', false);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse window bounds', e);
   }
 
-  return bounds;
+  return {bounds, fullscreen};
 }
 
 function saveZoomFactor (zoomFactor) {
-  localStorage.setItem('zoomFactor', JSON.stringify(zoomFactor));
+  storeValue('zoomFactor', zoomFactor);
 }
 
 function getZoomFactor () {
   let zoomFactor = 1;
   try {
-    zoomFactor = JSON.parse(localStorage.getItem('zoomFactor') || '1');
+    zoomFactor = getValue('zoomFactor', 1);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse zoomFactor', e);
@@ -192,14 +270,31 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('ready', () => {
-  // First, check for updates
-  checkForUpdates();
+// Mac-only, when the user clicks the doc icon
+app.on('activate', (e, hasVisibleWindows) => {
+  // Create a new window when clicking the doc icon if there isn't one open
+  if (!hasVisibleWindows) {
+    createWindow()
+  }
+});
 
-  localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
+// When the app is first launched
+app.on('ready', () => {
+  checkForUpdates();
+  createWindow();
+});
+
+function initLocalStorage () {
+  if (!localStorage) {
+    localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
+  }
+}
+
+function createWindow () {
+  initLocalStorage();
 
   const zoomFactor = getZoomFactor();
-  const bounds = getBounds();
+  const {bounds, fullscreen} = getBounds();
   const {
     x,
     y,
@@ -210,6 +305,9 @@ app.on('ready', () => {
   mainWindow = new BrowserWindow({
     x: x,
     y: y,
+    fullscreen: fullscreen,
+    fullscreenable: true,
+    title: appName,
     width: width || 1200,
     height: height || 600,
     minHeight: 500,
@@ -222,19 +320,10 @@ app.on('ready', () => {
 
   mainWindow.on('resize', e => saveBounds());
   mainWindow.on('move', e => saveBounds());
+  mainWindow.on('unresponsive', e => showUnresponsiveModal());
 
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/app.html`);
-
-  if (IS_DEV && IS_MAC) {
-    // BrowserWindow.addDevToolsExtension(
-    //   '/Users/gschier/Library/Application Support/Google/Chrome/Default/' +
-    //   'Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.15.0_0'
-    // );
-  }
-
-  // Uncomment this to test things
-  // mainWindow.toggleDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
@@ -263,10 +352,11 @@ app.on('ready', () => {
           label: "Preferences",
           accelerator: "CmdOrCtrl+,",
           click: function (menuItem, window, e) {
-            // NOTE: Checking for window because it might be closed
-            if (window && window.webContents) {
-              window.webContents.send('toggle-preferences');
+            if (!window || !window.webContents) {
+              return
             }
+
+            window.webContents.send('toggle-preferences');
           }
         },
         {
@@ -332,6 +422,10 @@ app.on('ready', () => {
           accelerator: "CmdOrCtrl+0",
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
+            if (!window || !window.webContents) {
+              return;
+            }
+
             const zoomFactor = 1;
             window.webContents.setZoomFactor(zoomFactor);
             saveZoomFactor(zoomFactor);
@@ -341,10 +435,12 @@ app.on('ready', () => {
           label: "Zoom In",
           accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
           click: () => {
-            let zoomFactor = getZoomFactor();
-            zoomFactor = Math.min(1.8, zoomFactor + 0.1);
-
             const window = BrowserWindow.getFocusedWindow();
+            if (!window || !window.webContents) {
+              return;
+            }
+
+            const zoomFactor = Math.min(1.8, getZoomFactor() + 0.1);
             window.webContents.setZoomFactor(zoomFactor);
 
             saveZoomFactor(zoomFactor);
@@ -354,13 +450,26 @@ app.on('ready', () => {
           label: "Zoom Out",
           accelerator: "CmdOrCtrl+-",
           click: () => {
-            let zoomFactor = getZoomFactor();
-            zoomFactor = Math.max(0.5, zoomFactor - 0.1);
-
             const window = BrowserWindow.getFocusedWindow();
-            window.webContents.setZoomFactor(zoomFactor);
+            if (!window || !window.webContents) {
+              return;
+            }
 
+            const zoomFactor = Math.max(0.5, getZoomFactor() - 0.1);
+            window.webContents.setZoomFactor(zoomFactor);
             saveZoomFactor(zoomFactor);
+          }
+        },
+        {
+          label: "Toggle Sidebar",
+          accelerator: "CmdOrCtrl+\\",
+          click: () => {
+            const window = BrowserWindow.getFocusedWindow();
+            if (!window || !window.webContents) {
+              return;
+            }
+
+            window.webContents.send('toggle-sidebar');
           }
         }
       ]
@@ -381,7 +490,7 @@ app.on('ready', () => {
       id: "help",
       submenu: [
         {
-          label: "Report an Issue...",
+          label: "Contact Support",
           click: () => {
             electron.shell.openExternal('mailto:support@insomnia.rest');
           }
@@ -390,7 +499,7 @@ app.on('ready', () => {
           label: "Insomnia Help",
           accelerator: "CmdOrCtrl+?",
           click: () => {
-            electron.shell.openExternal('http://insomnia.rest');
+            electron.shell.openExternal('http://docs.insomnia.rest');
           }
         }
       ]
@@ -418,4 +527,4 @@ app.on('ready', () => {
   }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-});
+}

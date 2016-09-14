@@ -19,6 +19,10 @@
     transition: opacity 0.5s;
   }
 
+  &.sidebar--hidden {
+    // Can't be display: none because it screws up the grid
+    opacity: 0;
+  }
 
   &:focus {
     outline: none;

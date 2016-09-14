@@ -16,9 +16,9 @@ const AuthEditor = ({request, showPasswords, onChange, ...other}) => {
       valuePlaceholder="********"
       valueInputType={showPasswords ? 'text' : 'password'}
       onChange={pairs => onChange({
-          username: pairs.length ? pairs[0].name : '',
-          password: pairs.length ? pairs[0].value : ''
-        })}
+        username: pairs.length ? pairs[0].name : '',
+        password: pairs.length ? pairs[0].value : ''
+      })}
       {...other}
     />
   );

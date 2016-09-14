@@ -9,6 +9,8 @@ import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import {getPreviewModeName, PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../lib/constants';
 import {trackEvent} from '../lib/analytics';
+import {getSetCookieHeaders} from '../lib/util';
+import {cancelCurrentRequest} from '../lib/network';
 
 class ResponsePane extends Component {
   constructor (props) {
@@ -43,9 +45,11 @@ class ResponsePane extends Component {
       request,
       previewMode,
       updatePreviewMode,
+      updateResponseFilter,
       loadingRequests,
       editorLineWrapping,
       editorFontSize,
+      responseFilter,
       showCookiesModal
     } = this.props;
 
@@ -73,23 +77,25 @@ class ResponsePane extends Component {
             <h2>Loading...</h2>
           )}
 
+          <br/>
           <i className="fa fa-refresh fa-spin"></i>
 
-          {false && elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER ? (
-            // TODO: implement cancel requests
-            <button className="btn btn--compact bg-danger">
+          <br/>
+          <div className="pad">
+            <button className="btn btn--super-compact btn--outlined"
+                    onClick={() => cancelCurrentRequest()}>
               Cancel Request
             </button>
-          ) : null}
+          </div>
         </div>
       )
     }
+
     if (!request) {
       return (
         <section className="response-pane pane">
           <header className="pane__header"></header>
-          <div className="pane__body pane__body--placeholder text-center pad">
-          </div>
+          <div className="pane__body pane__body--placeholder"></div>
         </section>
       )
     }
@@ -136,9 +142,7 @@ class ResponsePane extends Component {
       )
     }
 
-    const cookieHeaders = response.headers.filter(
-      h => h.name.toLowerCase() === 'set-cookie'
-    );
+    const cookieHeaders = getSetCookieHeaders(response.headers);
 
     return (
       <section className="response-pane pane">
@@ -169,12 +173,11 @@ class ResponsePane extends Component {
             <Tab>
               <button
                 onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
-                Cookies
-                {cookieHeaders.length ? (
-                  <span className="txt-sm">
+                Cookies {cookieHeaders.length ? (
+                <span className="txt-sm">
                     ({cookieHeaders.length})
                   </span>
-                ) : null}
+              ) : null}
               </button>
             </Tab>
             <Tab>
@@ -189,29 +192,18 @@ class ResponsePane extends Component {
             </Tab>
           </TabList>
           <TabPanel>
-            {response.error ? (
-              <ResponseViewer
-                key={response._id}
-                contentType={response.contentType}
-                previewMode={PREVIEW_MODE_SOURCE}
-                editorLineWrapping={editorLineWrapping}
-                editorFontSize={editorFontSize}
-                body={response.error}
-                error={true}
-                url={response.url}
-              />
-            ) : (
-              <ResponseViewer
-                key={response._id}
-                contentType={response.contentType}
-                previewMode={previewMode}
-                editorLineWrapping={editorLineWrapping}
-                editorFontSize={editorFontSize}
-                body={response.body}
-                url={response.url}
-                wrap={true} // TODO: Make this a user preference
-              />
-            )}
+            <ResponseViewer
+              key={response._id}
+              contentType={response.contentType}
+              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              filter={response.error ? '' : responseFilter}
+              updateFilter={response.error ? null : updateResponseFilter}
+              body={response.error ? response.error : response.body}
+              error={!!response.error}
+              editorLineWrapping={editorLineWrapping}
+              editorFontSize={editorFontSize}
+              url={response.url}
+            />
           </TabPanel>
           <TabPanel className="scrollable pad">
             <ResponseCookiesViewer
@@ -235,10 +227,12 @@ class ResponsePane extends Component {
 ResponsePane.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
+  updateResponseFilter: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,
+  responseFilter: PropTypes.string.isRequired,
   loadingRequests: PropTypes.object.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,

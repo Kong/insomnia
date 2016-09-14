@@ -27,20 +27,20 @@ class ResponseError extends Component {
       msg = (
         <Link button={true} className="btn btn--super-compact btn--outlined"
                 href="http://docs.insomnia.rest">
-          View the Docs
+          Documentation
         </Link>
       )
     }
 
     return (
       <div>
-        <div className="monospace pad">
+        <div className="selectable monospace pad">
           {error}
         </div>
         <hr/>
         <div className="text-center pad">
           <p className="faint pad-left pad-right">
-            It looks like you encountered a strange error. Here are some suggestions.
+            Here are some additional things that may help.
           </p>
           {msg}
           &nbsp;&nbsp;

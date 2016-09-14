@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-
 import Dropdown from '../base/Dropdown';
 import DropdownHint from '../base/DropdownHint';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';

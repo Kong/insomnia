@@ -79,6 +79,7 @@ class BodyEditor extends Component {
     } else {
       return (
         <Editor
+          manualPrettify={true}
           fontSize={fontSize}
           value={request.body}
           className={className}

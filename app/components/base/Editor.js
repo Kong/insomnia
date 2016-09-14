@@ -2,6 +2,10 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
+import JSONPath from 'jsonpath-plus';
+import vkbeautify from 'vkbeautify';
+import {DOMParser} from 'xmldom';
+import xpath from 'xpath';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
@@ -35,6 +39,10 @@ import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
 import '../../css/components/editor.less';
+import {getModal} from '../modals/index';
+import AlertModal from '../modals/AlertModal';
+import Link from '../base/Link';
+import {trackEvent} from '../../lib/analytics';
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -56,16 +64,19 @@ const BASE_CODEMIRROR_OPTIONS = {
   ],
   cursorScrollMargin: 12, // NOTE: This is px
   extraKeys: {
-    "Ctrl-Q": function (cm) {
+    'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     }
   }
 };
 
 class Editor extends Component {
-  constructor () {
-    super();
-    this.state = {isFocused: false}
+  constructor (props) {
+    super(props);
+    this.state = {
+      filter: props.filter || ''
+    };
+    this._originalCode = '';
   }
 
   componentWillUnmount () {
@@ -122,11 +133,76 @@ class Editor extends Component {
       });
     }
 
+    // Do this a bit later so we don't block the render process
     setTimeout(() => {
       this._codemirrorSetValue(value || '');
     }, 50);
 
     this._codemirrorSetOptions();
+  }
+
+  _isJSON (mode) {
+    if (!mode) {
+      return false;
+    }
+
+    return mode.indexOf('json') !== -1
+  }
+
+  _isXML (mode) {
+    if (!mode) {
+      return false;
+    }
+
+    return mode.indexOf('xml') !== -1
+  }
+
+  _handleBeautify () {
+    this._prettify(this.codeMirror.getValue());
+    trackEvent('Beautify', {mode: this.props.mode});
+  }
+
+  _prettify (code) {
+    let promise;
+    if (this._isXML(this.props.mode)) {
+      promise = this._formatXML(code);
+    } else {
+      promise = this._formatJSON(code);
+    }
+
+    promise.then(code => this.codeMirror.setValue(code));
+  }
+
+  _formatJSON (code) {
+    try {
+      let obj = JSON.parse(code);
+
+      if (this.props.updateFilter && this.state.filter) {
+        obj = JSONPath({json: obj, path: this.state.filter});
+      }
+
+      code = JSON.stringify(obj, null, '\t');
+    } catch (e) {
+      // That's Ok, just leave it
+    }
+
+    return Promise.resolve(code);
+  }
+
+  _formatXML (code) {
+    if (this.props.updateFilter && this.state.filter) {
+      try {
+        const dom = new DOMParser().parseFromString(code);
+        const nodes = xpath.select(this.state.filter, dom);
+        const inner = nodes.map(n => n.toString()).join('\n');
+        code = `<result>${inner}</result>`
+      } catch (e) {
+        // Failed to parse filter (that's ok)
+        code = `<result></result>`
+      }
+    }
+
+    return Promise.resolve(vkbeautify.xml(code, '\t'));
   }
 
   /**
@@ -141,13 +217,14 @@ class Editor extends Component {
       placeholder: this.props.placeholder || '',
       mode: this.props.mode || 'text/plain',
       lineWrapping: !!this.props.lineWrapping,
+      matchBrackets: !readOnly,
       lint: !readOnly
     };
 
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
 
-    if (options.mode.indexOf('json') !== -1) {
+    if (this._isJSON(options.mode)) {
       // set LD JSON because it highlights the keys a different color
       options.mode = {name: 'javascript', jsonld: true}
     }
@@ -183,18 +260,85 @@ class Editor extends Component {
    * @param code the code to set in the editor
    */
   _codemirrorSetValue (code) {
+    this._originalCode = code;
     this._ignoreNextChange = true;
 
-    if (this.props.prettify) {
-      try {
-        code = JSON.stringify(JSON.parse(code), null, '\t');
-      } catch (e) {
-        // That's Ok, just leave it
-        // TODO: support more than just JSON prettifying
-      }
+    if (this.props.autoPrettify && this._canPrettify()) {
+      this._prettify(code);
+    } else {
+      this.codeMirror.setValue(code);
     }
+  }
 
-    this.codeMirror.setValue(code);
+  _handleFilterChange (filter) {
+    clearTimeout(this._filterTimeout);
+    this._filterTimeout = setTimeout(() => {
+      this.setState({filter});
+      this._codemirrorSetValue(this._originalCode);
+      if (this.props.updateFilter) {
+        this.props.updateFilter(filter);
+      }
+    }, DEBOUNCE_MILLIS * 3);
+  }
+
+  _canPrettify () {
+    const {mode} = this.props;
+    return this._isJSON(mode) || this._isXML(mode);
+  }
+
+  _showFilterHelp () {
+    const json = this._isJSON(this.props.mode);
+    const link = json ? (
+      <Link href="http://goessner.net/articles/JsonPath/">
+        JSONPath
+      </Link>
+    ) : (
+      <Link
+        href="https://www.w3.org/TR/xpath/">
+        XPath
+      </Link>
+    );
+
+    getModal(AlertModal).show({
+      headerName: 'Response Filtering Help',
+      message: (
+        <div>
+          <p>
+            Use {link} to filter the response body. Here are some examples that
+            you might use on a book store API.
+          </p>
+          <table className="pad-top-sm">
+            <tbody>
+            <tr>
+              <td><code className="selectable">
+                {json ? '$.store.books[*].title' : '/store/books/title'}
+              </code>
+              </td>
+              <td>Get titles of all books in the store</td>
+            </tr>
+            <tr>
+              <td><code className="selectable">
+                {json ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
+              </code></td>
+              <td>Get books costing more than $10</td>
+            </tr>
+            <tr>
+              <td><code className="selectable">
+                {json ? '$.store.books[-1:]' : '/store/books[last()]'}
+              </code></td>
+              <td>Get the last book in the store</td>
+            </tr>
+            <tr>
+              <td><code className="selectable">
+                {json ? '$.store.books.length' : 'count(/store/books)'}
+              </code></td>
+              <td>Get the number of books in the store</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      )
+    })
   }
 
   componentDidUpdate () {
@@ -202,7 +346,7 @@ class Editor extends Component {
   }
 
   render () {
-    const {readOnly, fontSize, lightTheme} = this.props;
+    const {readOnly, fontSize, lightTheme, mode, filter} = this.props;
 
     const classes = classnames(
       'editor',
@@ -214,13 +358,60 @@ class Editor extends Component {
       }
     );
 
+    const toolbarChildren = [];
+    if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
+      toolbarChildren.push(
+        <input
+          key="filter"
+          type="text"
+          title="Filter response body"
+          defaultValue={filter || ''}
+          placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
+          onChange={e => this._handleFilterChange(e.target.value)}
+        />
+      );
+      toolbarChildren.push(
+        <button key="help"
+                className="btn btn--compact"
+                onClick={() => this._showFilterHelp()}>
+          <i className="fa fa-question-circle"></i>
+        </button>
+      )
+    }
+
+    if (this.props.manualPrettify && this._canPrettify()) {
+      let contentTypeName = '';
+      if (this._isJSON(mode)) {
+        contentTypeName = 'JSON'
+      } else if (this._isXML(mode)) {
+        contentTypeName = 'XML'
+      }
+
+      toolbarChildren.push(
+        <button key="prettify"
+                className="btn btn--compact"
+                title="Auto-format request body whitespace"
+                onClick={() => this._handleBeautify()}>
+          Beautify {contentTypeName}
+        </button>
+      )
+    }
+
+    let toolbar = null;
+    if (toolbarChildren.length) {
+      toolbar = <div className="editor__toolbar">{toolbarChildren}</div>;
+    }
+
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
-          <textarea
-            ref={n => this._initEditor(n)}
-            readOnly={readOnly}
-            autoComplete='off'>
-          </textarea>
+        <div className="editor__container">
+        <textarea
+          ref={n => this._initEditor(n)}
+          readOnly={readOnly}
+          autoComplete='off'>
+        </textarea>
+        </div>
+        {toolbar}
       </div>
     );
   }
@@ -234,9 +425,12 @@ Editor.propTypes = {
   lineWrapping: PropTypes.bool,
   fontSize: PropTypes.number,
   value: PropTypes.string,
-  prettify: PropTypes.bool,
+  autoPrettify: PropTypes.bool,
+  manualPrettify: PropTypes.bool,
   className: PropTypes.any,
-  lightTheme: PropTypes.bool
+  lightTheme: PropTypes.bool,
+  updateFilter: PropTypes.func,
+  filter: PropTypes.string
 };
 
 export default Editor;

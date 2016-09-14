@@ -3,9 +3,8 @@
 
 .urlbar {
   width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: 1fr;
+  display: flex;
+  flex-direction: row;
   align-items: stretch;
   align-self: stretch;
 
@@ -51,9 +50,8 @@
     }
   }
 
-  form {
-    display: grid;
-    grid-template-columns: 1fr auto;
+  input {
+    min-width: 0;
   }
 
   form button {
@@ -61,8 +59,16 @@
     padding-left: @padding-md;
   }
 
-  form, .form-control {
+  .form-control {
+    width: 100%;
     height: 100%;
+    display: inline-block;
+  }
+
+  form {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
   }
 
   form button,

@@ -4,7 +4,7 @@ import request from 'request';
 /**
  * Get a list of cookie objects from a request.jar()
  *
- * @param cookies
+ * @param jar
  */
 export function cookiesFromJar (jar) {
   return new Promise(resolve => {

@@ -5,9 +5,7 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
-
 import Mousetrap from '../lib/mousetrap';
-
 import {addModal} from '../components/modals';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import CookiesModal from '../components/modals/CookiesModal';
@@ -23,22 +21,23 @@ import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/sidebar/Sidebar';
 import {PREVIEW_MODE_FRIENDLY} from '../lib/previewModes';
 import {
-  MAX_PANE_WIDTH, MIN_PANE_WIDTH,
+  MAX_PANE_WIDTH,
+  MIN_PANE_WIDTH,
   DEFAULT_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
   MIN_SIDEBAR_REMS,
-  DEFAULT_SIDEBAR_WIDTH
-} from '../lib/constants'
-
+  DEFAULT_SIDEBAR_WIDTH,
+  CHECK_FOR_UPDATES_INTERVAL
+} from '../lib/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
-
+import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as db from '../database';
 import {importCurl} from '../lib/export/curl';
 import {trackEvent} from '../lib/analytics';
 import {getAppVersion} from '../lib/appInfo';
-import {CHECK_FOR_UPDATES_INTERVAL} from '../lib/constants';
 import {getModal} from '../components/modals/index';
+import {cancelCurrentRequest} from '../lib/network';
 
 
 class App extends Component {
@@ -81,6 +80,11 @@ class App extends Component {
         getModal(WorkspaceEnvironmentsEditModal).toggle(this._getActiveWorkspace());
       },
 
+      // Toggle Sidebar
+      'mod+\\': () => {
+        this._handleToggleSidebar();
+      },
+
       // Edit Cookies
       'mod+k': () => {
         getModal(CookiesModal).toggle(this._getActiveWorkspace());
@@ -109,7 +113,7 @@ class App extends Component {
           return;
         }
 
-        db.requestCopyAndActivate(workspace, request);
+        db.requestDuplicateAndActivate(workspace, request);
       }
     }
   }
@@ -154,7 +158,7 @@ class App extends Component {
             // If sort keys get too close together, we need to redistribute the list. This is
             // not performant at all (need to update all siblings in DB), but it is extremely rare
             // anyway
-            console.warn('-- Recreating Sort Keys --');
+            console.log('-- Recreating Sort Keys --');
 
             requestGroups.map((r, i) => {
               db.requestGroupUpdate(r, {
@@ -281,7 +285,11 @@ class App extends Component {
 
     if (requestPatch) {
       // If the user typed in a curl cmd, dissect it and update the whole request
-      db.requestUpdate(this._getActiveRequest(), requestPatch);
+      db.requestUpdate(this._getActiveRequest(), requestPatch).then(() => {
+        setTimeout(() => {
+
+        })
+      });
     } else {
       db.requestUpdate(this._getActiveRequest(), {url});
     }
@@ -354,8 +362,8 @@ class App extends Component {
 
   _handleMouseMove (e) {
     if (this.state.draggingPane) {
-      const requestPane = ReactDOM.findDOMNode(this.refs.requestPane);
-      const responsePane = ReactDOM.findDOMNode(this.refs.responsePane);
+      const requestPane = ReactDOM.findDOMNode(this._requestPane);
+      const responsePane = ReactDOM.findDOMNode(this._responsePane);
 
       const requestPaneWidth = requestPane.offsetWidth;
       const responsePaneWidth = responsePane.offsetWidth;
@@ -365,7 +373,7 @@ class App extends Component {
       this.setState({paneWidth});
 
     } else if (this.state.draggingSidebar) {
-      const currentPixelWidth = ReactDOM.findDOMNode(this.refs.sidebar).offsetWidth;
+      const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
       let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
@@ -389,6 +397,12 @@ class App extends Component {
 
       this._savePaneWidth();
     }
+  }
+
+  _handleToggleSidebar () {
+    const workspace = this._getActiveWorkspace();
+    const metaSidebarHidden = !workspace.metaSidebarHidden;
+    db.workspaceUpdate(workspace, {metaSidebarHidden});
   }
 
   componentWillReceiveProps (nextProps) {
@@ -418,6 +432,7 @@ class App extends Component {
       const firstLaunch = !lastVersion;
       if (firstLaunch) {
         // TODO: Show a welcome message
+        trackEvent('First Launch');
       } else if (lastVersion !== getAppVersion()) {
         getModal(ChangelogModal).show();
       }
@@ -435,7 +450,10 @@ class App extends Component {
 
     ipcRenderer.on('toggle-preferences', () => {
       getModal(SettingsModal).toggle();
-    })
+    });
+
+
+    ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));
   }
 
   componentWillUnmount () {
@@ -466,12 +484,14 @@ class App extends Component {
     );
 
     const {sidebarWidth, paneWidth} = this.state;
-    const gridTemplateColumns = `${sidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
+    const realSidebarWidth = workspace.metaSidebarHidden ? 0 : sidebarWidth;
+    const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
     return (
-      <div id="wrapper" className="wrapper" style={{gridTemplateColumns: gridTemplateColumns}}>
+      <div id="wrapper" className="wrapper"
+           style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
-          ref="sidebar"
+          ref={n => this._sidebar = n}
           showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
           showCookiesModal={() => getModal(CookiesModal).show(workspace)}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
@@ -481,22 +501,26 @@ class App extends Component {
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           addRequestToWorkspace={() => this._requestCreate(workspace._id)}
           toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
-          activeRequestId={activeRequest ? activeRequest._id : null}
+          activeRequestId={activeRequestId}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
           filter={workspace.metaFilter || ''}
+          hidden={workspace.metaSidebarHidden}
           children={children}
           width={sidebarWidth}
         />
 
         <div className="drag drag--sidebar">
-          <div onMouseDown={e => {e.preventDefault(); this._startDragSidebar()}}
+          <div onMouseDown={e => {
+            e.preventDefault();
+            this._startDragSidebar()
+          }}
                onDoubleClick={() => this._resetDragSidebar()}>
           </div>
         </div>
 
         <RequestPane
-          ref="requestPane"
+          ref={n => this._requestPane = n}
           importFile={this._importFile.bind(this)}
           request={activeRequest}
           sendRequest={actions.requests.send}
@@ -522,12 +546,14 @@ class App extends Component {
         </div>
 
         <ResponsePane
-          ref="responsePane"
+          ref={n => this._responsePane = n}
           request={activeRequest}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
+          responseFilter={activeRequest ? activeRequest.metaResponseFilter : ''}
           updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
+          updateResponseFilter={metaResponseFilter => db.requestUpdate(activeRequest, {metaResponseFilter})}
           loadingRequests={requests.loadingRequests}
           showCookiesModal={() => getModal(CookiesModal).show(workspace)}
         />
@@ -542,6 +568,7 @@ class App extends Component {
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
           activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
+          activateWorkspace={w => actions.workspaces.activate(w)}
         />
         <EnvironmentEditModal
           ref={m => addModal(m)}
@@ -549,9 +576,7 @@ class App extends Component {
         <WorkspaceEnvironmentsEditModal
           ref={m => addModal(m)}
           onChange={w => db.workspaceUpdate(w)}/>
-        <CookiesModal
-          ref={m => addModal(m)}
-          onChange={() => console.log('TODO: COOKIES!!!')}/>
+        <CookiesModal ref={m => addModal(m)}/>
 
         {/*<div className="toast toast--show">*/}
         {/*<div className="toast__message">How's it going?</div>*/}
@@ -567,10 +592,13 @@ App.propTypes = {
   actions: PropTypes.shape({
     requests: PropTypes.shape({
       send: PropTypes.func.isRequired
-    }),
-    modals: PropTypes.shape({
-      hide: PropTypes.func.isRequired
-    })
+    }).isRequired,
+    workspaces: PropTypes.shape({
+      activate: PropTypes.func.isRequired
+    }).isRequired,
+    global: PropTypes.shape({
+      importFile: PropTypes.func.isRequired
+    }).isRequired
   }).isRequired,
   entities: PropTypes.shape({
     requests: PropTypes.object.isRequired,
@@ -582,8 +610,7 @@ App.propTypes = {
   }).isRequired,
   requests: PropTypes.shape({
     loadingRequests: PropTypes.object.isRequired
-  }).isRequired,
-  modals: PropTypes.array.isRequired
+  }).isRequired
 };
 
 function mapStateToProps (state) {
@@ -591,8 +618,7 @@ function mapStateToProps (state) {
     actions: state.actions,
     workspaces: state.workspaces,
     requests: state.requests,
-    entities: state.entities,
-    modals: state.modals
+    entities: state.entities
   };
 }
 
@@ -600,7 +626,8 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
-      requests: bindActionCreators(RequestActions, dispatch)
+      requests: bindActionCreators(RequestActions, dispatch),
+      workspaces: bindActionCreators(WorkspaceActions, dispatch)
     }
   }
 }

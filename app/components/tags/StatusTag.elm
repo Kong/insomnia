@@ -37,7 +37,7 @@ view model =
             else if (model.code // 100 == 5) then
                 ("bg-danger", toString model.code, model.message)
             else if (model.code // 100 == 0) then
-                ("bg-danger", "", "ERROR")
+                ("bg-danger", "", if model.message /= "" then model.message else "ERROR")
             else if (model.code == -333) then
                 ("bg-danger", "", "PEBKAC\xa0\xa0٩◔̯◔۶")
             else

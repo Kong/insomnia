@@ -29,7 +29,7 @@ export function initStore (dispatch) {
 
   // Restore docs in parent->child->grandchild order
   return Promise.all([
-    db.settingsGet(),
+    db.settingsGetOrCreate(),
     db.workspaceAll(),
     db.environmentAll(),
     db.cookieJarAll(),

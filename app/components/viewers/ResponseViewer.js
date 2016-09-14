@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import Editor from '../base/Editor';
 import ResponseWebview from './ResponseWebview';
+import ResponseRaw from './ResponseRaw';
 import ResponseError from './ResponseError';
 import {
   PREVIEW_MODE_FRIENDLY,
@@ -21,9 +22,11 @@ class ResponseViewer extends Component {
   render () {
     const {
       previewMode,
+      filter,
       contentType,
       editorLineWrapping,
       editorFontSize,
+      updateFilter,
       body,
       url,
       error
@@ -31,10 +34,7 @@ class ResponseViewer extends Component {
 
     if (error) {
       return (
-        <ResponseError
-          url={url}
-          error={body}
-        />
+        <ResponseError url={url} error={body}/>
       )
     }
 
@@ -51,7 +51,9 @@ class ResponseViewer extends Component {
         return (
           <Editor
             value={body || ''}
-            prettify={true}
+            updateFilter={updateFilter}
+            filter={filter}
+            autoPrettify={true}
             mode={contentType}
             readOnly={true}
             lineWrapping={editorLineWrapping}
@@ -61,10 +63,10 @@ class ResponseViewer extends Component {
         );
       default: // Raw
         return (
-          <pre className="scrollable wide tall selectable monospace pad"
-               style={{fontSize: editorFontSize}}>
-            {body}
-          </pre>
+          <ResponseRaw
+            value={body}
+            fontSize={editorFontSize}
+          />
         )
     }
   }
@@ -73,11 +75,13 @@ class ResponseViewer extends Component {
 ResponseViewer.propTypes = {
   body: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
+  filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,
 
   // Optional
+  updateFilter: PropTypes.func,
   contentType: PropTypes.string,
   error: PropTypes.bool
 };

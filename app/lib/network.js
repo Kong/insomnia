@@ -1,15 +1,22 @@
 import networkRequest from 'request';
 import {parse as urlParse, format as urlFormat} from 'url';
-
 import * as db from '../database';
 import * as querystring from './querystring';
-import {DEBOUNCE_MILLIS} from './constants';
-import {STATUS_CODE_PEBKAC} from './constants';
-import {getRenderedRequest} from './render';
+import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
+import {setDefaultProtocol} from './util';
+import {getRenderedRequest} from './render';
+
+let cancelRequestFunction = null;
+
+export function cancelCurrentRequest () {
+  if (typeof cancelRequestFunction === 'function') {
+    cancelRequestFunction();
+  }
+}
 
 
-function buildRequestConfig (renderedRequest, patch = {}) {
+export function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
     method: renderedRequest.method,
     body: renderedRequest.body,
@@ -39,7 +46,7 @@ function buildRequestConfig (renderedRequest, patch = {}) {
 
   // Encode path portion of URL
   const parsedUrl = urlParse(url);
-  parsedUrl.pathname = encodeURI(parsedUrl.pathname);
+  parsedUrl.pathname = encodeURI(parsedUrl.pathname || '');
   config.url = urlFormat(parsedUrl);
 
   for (let i = 0; i < renderedRequest.headers.length; i++) {
@@ -52,7 +59,7 @@ function buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
-function actuallySend (renderedRequest, settings) {
+export function _actuallySend (renderedRequest, settings) {
   return new Promise((resolve, reject) => {
     const cookieJar = renderedRequest.cookieJar;
     const jar = jarFromCookies(cookieJar.cookies);
@@ -61,9 +68,9 @@ function actuallySend (renderedRequest, settings) {
     // NOTE: request does not have a separate settings for http/https proxies
     const {protocol} = urlParse(renderedRequest.url);
     const proxyHost = protocol === 'https:' ? settings.httpsProxy : settings.httpProxy;
-    const proxy = proxyHost ? `${protocol}//${proxyHost}` : null;
+    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
-    let config = buildRequestConfig(renderedRequest, {
+    let config = _buildRequestConfig(renderedRequest, {
       jar: jar,
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
@@ -73,7 +80,7 @@ function actuallySend (renderedRequest, settings) {
 
     const startTime = Date.now();
     // TODO: Handle redirects ourselves
-    networkRequest(config, function (err, networkResponse) {
+    const req = networkRequest(config, function (err, networkResponse) {
       if (err) {
         db.responseCreate({
           parentId: renderedRequest._id,
@@ -128,30 +135,43 @@ function actuallySend (renderedRequest, settings) {
       };
 
       db.responseCreate(responsePatch).then(resolve, reject);
-    })
+    });
+
+    // Kind of hacky, but this is how we cancel a request.
+    cancelRequestFunction = () => {
+      req.abort();
+
+      db.responseCreate({
+        parentId: renderedRequest._id,
+        elapsedTime: Date.now() - startTime,
+        statusMessage: 'Cancelled',
+        error: 'The request was cancelled'
+      });
+
+      return reject('Cancelled');
+    }
   })
 }
 
 export function send (requestId) {
   return new Promise((resolve, reject) => {
 
-      // First, lets wait for all debounces to finish
-      setTimeout(() => {
-        Promise.all([
-          db.requestGetById(requestId),
-          db.settingsGet()
-        ]).then(([request, settings]) => {
-          getRenderedRequest(request).then(renderedRequest => {
-            actuallySend(renderedRequest, settings).then(resolve, reject);
-          }, err => {
-            db.responseCreate({
-              parentId: request._id,
-              statusCode: STATUS_CODE_PEBKAC,
-              error: err.message
-            }).then(resolve, reject);
-          });
-        })
-      }, DEBOUNCE_MILLIS);
-    }
-  )
+    // First, lets wait for all debounces to finish
+    setTimeout(() => {
+      Promise.all([
+        db.requestGetById(requestId),
+        db.settingsGetOrCreate()
+      ]).then(([request, settings]) => {
+        getRenderedRequest(request).then(renderedRequest => {
+          _actuallySend(renderedRequest, settings).then(resolve, reject);
+        }, err => {
+          db.responseCreate({
+            parentId: request._id,
+            statusCode: STATUS_CODE_PEBKAC,
+            error: err.message
+          }).then(resolve, reject);
+        });
+      })
+    }, DEBOUNCE_MILLIS);
+  })
 }

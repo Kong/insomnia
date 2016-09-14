@@ -3,7 +3,7 @@ import NeDB from 'nedb';
 import * as fsPath from 'path';
 import * as methods from '../lib/constants';
 import {DB_PERSIST_INTERVAL, DEFAULT_SIDEBAR_WIDTH} from '../lib/constants';
-import {generateId} from './util';
+import {generateId} from '../lib/util';
 import {PREVIEW_MODE_SOURCE} from '../lib/previewModes';
 import {isDevelopment} from '../lib/appInfo';
 
@@ -31,7 +31,18 @@ const BASE_MODEL_DEFAULTS = () => ({
   _synced: 0
 });
 
-const MODEL_DEFAULTS = {
+const MODEL_ID_PREFIXES = {
+  [TYPE_STATS]: 'sta',
+  [TYPE_SETTINGS]: 'set',
+  [TYPE_WORKSPACE]: 'wrk',
+  [TYPE_ENVIRONMENT]: 'env',
+  [TYPE_COOKIE_JAR]: 'jar',
+  [TYPE_REQUEST_GROUP]: 'fld',
+  [TYPE_REQUEST]: 'req',
+  [TYPE_RESPONSE]: 'res'
+};
+
+export const MODEL_DEFAULTS = {
   [TYPE_STATS]: () => ({
     lastLaunch: Date.now(),
     lastVersion: null,
@@ -53,7 +64,8 @@ const MODEL_DEFAULTS = {
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     metaActiveEnvironmentId: null,
     metaActiveRequestId: null,
-    metaFilter: ''
+    metaFilter: '',
+    metaSidebarHidden: false
   }),
   [TYPE_ENVIRONMENT]: () => ({
     name: 'New Environment',
@@ -78,6 +90,7 @@ const MODEL_DEFAULTS = {
     headers: [],
     authentication: {},
     metaPreviewMode: PREVIEW_MODE_SOURCE,
+    metaResponseFilter: '',
     metaSortKey: -1 * Date.now()
   }),
   [TYPE_RESPONSE]: () => ({
@@ -109,10 +122,10 @@ function getDBFilePath (modelType) {
  * @returns {Promise}
  */
 let initialized = false;
-export function initDB () {
+export function initDB (config = {}, force = false) {
   // Only init once
-  if (initialized) {
-    return new Promise(resolve => resolve());
+  if (initialized && !force) {
+    return Promise.resolve();
   }
 
   return new Promise(resolve => {
@@ -128,8 +141,9 @@ export function initDB () {
     modelTypes.map(t => {
       const filename = getDBFilePath(t);
       const autoload = true;
+      const finalConfig = Object.assign({filename, autoload}, config);
 
-      db[t] = new NeDB({filename, autoload});
+      db[t] = new NeDB(finalConfig);
       db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
     });
 
@@ -153,8 +167,12 @@ export function offChange (id) {
   delete changeListeners[id];
 }
 
+function notifyOfChange (event, doc) {
+  Object.keys(changeListeners).map(k => changeListeners[k](event, doc));
+}
+
 function getMostRecentlyModified (type, query = {}) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(1).exec((err, docs) => {
       resolve(docs.length ? docs[0] : null);
     })
@@ -224,7 +242,7 @@ export function insert (doc) {
       }
 
       resolve(newDoc);
-      Object.keys(changeListeners).map(k => changeListeners[k](EVENT_INSERT, doc));
+      notifyOfChange(EVENT_INSERT, doc);
     });
   });
 }
@@ -238,18 +256,17 @@ export function update (doc, silent = false, overrideEtag = false) {
         doc._etag = existingDoc._etag;
       }
 
-      // Doc has changed so update, resolve, and ping listeners
+      // NOTE: enable upsert for because it's useful for syncing
       db[doc.type].update({_id: doc._id}, doc, {upsert: true}, err => {
         if (err) {
           return reject(err);
         }
 
-        resolve(doc);
-
-        // Only update if it's not silent and it's actually changed
         if (doc.modified !== (existingDoc || {}).modified && !silent) {
-          Object.keys(changeListeners).map(k => changeListeners[k](EVENT_UPDATE, doc));
+          notifyOfChange(EVENT_UPDATE, doc);
         }
+
+        resolve(doc);
       });
     });
   });
@@ -257,15 +274,13 @@ export function update (doc, silent = false, overrideEtag = false) {
 
 export function remove (doc) {
   return new Promise(resolve => {
-    withChildren(doc).then(docs => {
+    withDescendants(doc).then(docs => {
       const promises = docs.map(d => (
         db[d.type].remove({_id: d._id}, {multi: true})
       ));
 
       Promise.all(promises).then(() => {
-        for (const doc of docs) {
-          Object.keys(changeListeners).map(k => changeListeners[k](EVENT_REMOVE, doc));
-        }
+        docs.map(d => notifyOfChange(EVENT_REMOVE, d));
         resolve()
       });
     });
@@ -301,7 +316,13 @@ function docUpdate (originalDoc, patch = {}) {
   return update(doc);
 }
 
-function docCreate (type, idPrefix, patch = {}) {
+function docCreate (type, patch = {}) {
+  const idPrefix = MODEL_ID_PREFIXES[type];
+
+  if (!idPrefix) {
+    throw new Error(`No ID prefix for ${type}`)
+  }
+
   const doc = Object.assign(
     BASE_MODEL_DEFAULTS(),
     {_id: generateId(idPrefix)},
@@ -322,7 +343,7 @@ function docCreate (type, idPrefix, patch = {}) {
 // GENERAL //
 // ~~~~~~~ //
 
-export function withChildren (doc = null) {
+export function withDescendants (doc = null) {
   let docsToReturn = doc ? [doc] : [];
 
   const next = (docs) => {
@@ -359,6 +380,42 @@ export function withChildren (doc = null) {
   return next([doc]);
 }
 
+export function duplicate (originalDoc, patch = {}) {
+  return new Promise((resolve, reject) => {
+
+    // 1. Copy the doc
+    const newDoc = Object.assign({}, originalDoc, patch);
+    delete newDoc._id;
+    delete newDoc.created;
+    delete newDoc.modified;
+
+    docCreate(newDoc.type, newDoc).then(createdDoc => {
+
+      // 2. Get all the children
+      const promises = [];
+      for (const type of ALL_TYPES) {
+        const parentId = originalDoc._id;
+        const promise = find(type, {parentId});
+        promises.push(promise);
+      }
+
+      Promise.all(promises).then(results => {
+        let duplicatePromises = [];
+
+        // Gather up the docs from each type
+        for (const docs of results) {
+          for (const doc of docs) {
+            duplicatePromises.push(duplicate(doc, {parentId: createdDoc._id}));
+          }
+        }
+
+        // 3. Also duplicate all children, and recurse
+        Promise.all(duplicatePromises).then(() => resolve(createdDoc), reject)
+      })
+    })
+  })
+}
+
 
 // ~~~~~~~ //
 // REQUEST //
@@ -370,7 +427,7 @@ export function requestCreateAndActivate (workspace, patch = {}) {
   })
 }
 
-export function requestCopyAndActivate (workspace, request) {
+export function requestDuplicateAndActivate (workspace, request) {
   return requestDuplicate(request).then(r => {
     workspaceUpdate(workspace, {metaActiveRequestId: r._id});
   })
@@ -381,7 +438,7 @@ export function requestCreate (patch = {}) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_REQUEST, 'req', patch);
+  return docCreate(TYPE_REQUEST, patch);
 }
 
 export function requestGetById (id) {
@@ -416,12 +473,7 @@ export function requestUpdateContentType (request, contentType) {
 
 export function requestDuplicate (request) {
   const name = `${request.name} (Copy)`;
-  const newRequest = Object.assign({}, request, {name});
-
-  // Remove the old Id
-  delete newRequest._id;
-
-  return requestCreate(newRequest);
+  return duplicate(request, {name});
 }
 
 export function requestRemove (request) {
@@ -469,7 +521,7 @@ export function requestGroupCreate (patch = {}) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_REQUEST_GROUP, 'fdr', patch);
+  return docCreate(TYPE_REQUEST_GROUP, patch);
 }
 
 export function requestGroupUpdate (requestGroup, patch) {
@@ -492,6 +544,11 @@ export function requestGroupAll () {
   return all(TYPE_REQUEST_GROUP);
 }
 
+export function requestGroupDuplicate (requestGroup) {
+  const name = `${requestGroup.name} (Copy)`;
+  return duplicate(requestGroup, {name});
+}
+
 
 // ~~~~~~~~ //
 // RESPONSE //
@@ -499,15 +556,11 @@ export function requestGroupAll () {
 
 export function responseCreate (patch = {}) {
   if (!patch.parentId) {
-    throw new Error('New Requests missing `parentId`', patch);
+    throw new Error('New Response missing `parentId`');
   }
 
   removeBulkSilently(TYPE_RESPONSE, {parentId: patch.parentId});
-  return docCreate(TYPE_RESPONSE, 'res', patch);
-}
-
-export function responseAll () {
-  return all(TYPE_RESPONSE);
+  return docCreate(TYPE_RESPONSE, patch);
 }
 
 export function responseGetLatestByParentId (parentId) {
@@ -520,7 +573,7 @@ export function responseGetLatestByParentId (parentId) {
 // ~~~~~~~ //
 
 export function cookieJarCreate (patch = {}) {
-  return docCreate(TYPE_COOKIE_JAR, 'jar', patch);
+  return docCreate(TYPE_COOKIE_JAR, patch);
 }
 
 export function cookieJarGetOrCreateForWorkspace (workspace) {
@@ -556,7 +609,7 @@ export function workspaceGetById (id) {
 }
 
 export function workspaceCreate (patch = {}) {
-  return docCreate(TYPE_WORKSPACE, 'wrk', patch);
+  return docCreate(TYPE_WORKSPACE, patch);
 }
 
 export function workspaceAll () {
@@ -591,7 +644,7 @@ export function environmentCreate (patch = {}) {
     throw new Error('New Environment missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_ENVIRONMENT, 'env', patch);
+  return docCreate(TYPE_ENVIRONMENT, patch);
 }
 
 export function environmentUpdate (environment, patch) {
@@ -631,29 +684,29 @@ export function environmentAll () {
 // ~~~~~~~~ //
 
 export function settingsCreate (patch = {}) {
-  return docCreate(TYPE_SETTINGS, 'set', patch);
+  return docCreate(TYPE_SETTINGS, patch);
 }
 
 export function settingsUpdate (settings, patch) {
   return docUpdate(settings, patch);
 }
 
-export function settingsGet () {
+export function settingsGetOrCreate () {
   return all(TYPE_SETTINGS).then(results => {
     if (results.length === 0) {
-      return settingsCreate().then(settingsGet);
+      return settingsCreate().then(settingsGetOrCreate);
     } else {
       return new Promise(resolve => resolve(results[0]));
     }
   });
 }
 
-// ~~~~ //
-// USER //
-// ~~~~ //
+// ~~~~~ //
+// STATS //
+// ~~~~~ //
 
 export function statsCreate (patch = {}) {
-  return docCreate(TYPE_STATS, 'sta', patch);
+  return docCreate(TYPE_STATS, patch);
 }
 
 export function statsUpdate (patch) {
@@ -669,19 +722,5 @@ export function statsGet () {
     } else {
       return new Promise(resolve => resolve(results[0]));
     }
-  });
-}
-
-export function statsIncrement (key) {
-  return statsGet().then(stats => {
-    if (stats[key] === undefined) {
-      throw new Error(`Stats[${key}] doesn't exist for increment`);
-    }
-
-    const patch = {
-      [key]: stats[key] + 1
-    };
-
-    return docUpdate(stats, patch);
   });
 }

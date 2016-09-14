@@ -77,7 +77,7 @@ class RequestPane extends Component {
                 </button>
                 <button onClick={e => requestCreate()}
                         className="btn inline-block btn--super-compact btn--outlined">
-                  Create Request
+                  New Request
                 </button>
               </div>
             </div>
@@ -113,7 +113,7 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button onClick={e => trackEvent('Request Tab Clicked', {name: 'Params'})}>
-                Params {request.parameters.length ?
+                Query {request.parameters.length ?
                 <span className="txt-sm">({request.parameters.length})</span> : null}
               </button>
             </Tab>

@@ -26,6 +26,7 @@ export function exportHar (requestId, addContentLength = false) {
         httpVersion: 'HTTP/1.1',
         cookies: getCookies(renderedRequest),
         headers: renderedRequest.headers,
+        queryString: renderedRequest.parameters,
         postData: {
           text: renderedRequest.body
         },

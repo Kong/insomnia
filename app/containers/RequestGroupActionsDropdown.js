@@ -1,7 +1,9 @@
 import React, {Component, PropTypes} from 'react';
-import {connect} from 'react-redux'
+import {connect} from 'react-redux';
+import PromptButton from '../components/base/PromptButton';
 import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
+import DropdownDivider from '../components/base/DropdownDivider';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as db from '../database';
@@ -32,6 +34,11 @@ class RequestGroupActionsDropdown extends Component {
     });
   }
 
+  _requestGroupDuplicate () {
+    const {requestGroup} = this.props;
+    db.requestGroupDuplicate(requestGroup)
+  }
+
   _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
 
@@ -59,25 +66,28 @@ class RequestGroupActionsDropdown extends Component {
               <DropdownHint char="N"></DropdownHint>
             </button>
           </li>
+          <DropdownDivider />
+          <li>
+            <button onClick={e => this._requestGroupDuplicate()}>
+              <i className="fa fa-copy"></i> Duplicate
+            </button>
+          </li>
           <li>
             <button onClick={e => this._promptUpdateName()}>
               <i className="fa fa-edit"></i> Rename
             </button>
           </li>
           <li>
-            <button onClick={e => getModal(EnvironmentEditModal).show(requestGroup)}>
+            <button
+              onClick={e => getModal(EnvironmentEditModal).show(requestGroup)}>
               <i className="fa fa-code"></i> Environment
             </button>
           </li>
-          {/*<li>*/}
-          {/*<button onClick={e => db.requestGroupCreate({parentId: requestGroup._id})}>*/}
-          {/*<i className="fa fa-folder"></i> New Folder*/}
-          {/*</button>*/}
-          {/*</li>*/}
           <li>
-            <button onClick={e => db.requestGroupRemove(requestGroup)}>
+            <PromptButton onClick={e => db.requestGroupRemove(requestGroup)}
+                          addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
-            </button>
+            </PromptButton>
           </li>
         </ul>
       </Dropdown>
