@@ -16,7 +16,7 @@ const WHITE_LIST = {
   [TYPE_COOKIE_JAR]: true
 };
 
-const BASE_URL = 'https://oqke109kk9.execute-api.us-east-1.amazonaws.com/dev/v1';
+const BASE_URL = 'https://o90qg2me5g.execute-api.us-east-1.amazonaws.com/dev/v1';
 
 export function initSync () {
   return new Promise(resolve => {
