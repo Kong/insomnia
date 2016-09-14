@@ -14,7 +14,7 @@
   if (process.env.INSOMNIA_ENV !== 'development') {
     Raven.config('https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a4189a68efb63c38fc50b@app.getsentry.com/88289', {
       allowSecretKey: true,
-      logger: 'sentry',
+      logger: 'renderer',
       environment: process.env.INSOMNIA_ENV || 'production',
       level: 'warning',
       release: require('./app.json').version,

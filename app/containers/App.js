@@ -158,7 +158,7 @@ class App extends Component {
             // If sort keys get too close together, we need to redistribute the list. This is
             // not performant at all (need to update all siblings in DB), but it is extremely rare
             // anyway
-            console.warn('-- Recreating Sort Keys --');
+            console.log('-- Recreating Sort Keys --');
 
             requestGroups.map((r, i) => {
               db.requestGroupUpdate(r, {

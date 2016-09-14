@@ -2,9 +2,17 @@ import React, {Component, PropTypes} from 'react';
 
 class ResponseRaw extends Component {
   _update (value) {
-    setTimeout(() => {
-      this._textarea.value = value;
-    }, 50)
+    // Use a timeout so it doesn't block the UI
+    setTimeout(() => this._setTextAreaValue(value), 50)
+  }
+
+  _setTextAreaValue (value) {
+    // Bail if we're not mounted
+    if (!this._textarea) {
+      return;
+    }
+
+    this._textarea.value = value;
   }
 
   componentDidUpdate () {

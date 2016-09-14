@@ -25,7 +25,7 @@
     "build-n-package-win": "npm run build && npm run package-win",
     "build-n-package-mac": "npm run build && npm run package-mac",
     "build-n-package-linux": "npm run build && npm run package-linux",
-    "release": "npm test && npm run package && bash scripts/sentry-release.sh"
+    "release": "npm test && npm run build-n-package && bash scripts/sentry-release.sh"
   },
   "jest": {
     "rootDir": "app",

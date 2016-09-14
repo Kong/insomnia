@@ -77,7 +77,7 @@ class RequestPane extends Component {
                 </button>
                 <button onClick={e => requestCreate()}
                         className="btn inline-block btn--super-compact btn--outlined">
-                  Create Request
+                  New Request
                 </button>
               </div>
             </div>

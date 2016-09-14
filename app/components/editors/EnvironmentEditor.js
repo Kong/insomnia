@@ -27,7 +27,7 @@ class EnvironmentEditor extends Component {
         ref={n => this._editor = n}
         onChange={this._handleChange.bind(this)}
         value={JSON.stringify(environment)}
-        prettify={true}
+        autoPrettify={true}
         mode="application/json"
         {...props}
       />

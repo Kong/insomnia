@@ -62,7 +62,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
       return;
     }
 
-    this.setState({activeEnvironmentId: environment._id});
+    const {workspace} = this.state;
+    this._load(workspace, environment);
   }
 
   _handleDeleteEnvironment (environment) {

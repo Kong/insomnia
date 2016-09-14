@@ -15,27 +15,7 @@ class Dropdown extends Component {
     this.toggle();
   }
 
-  hide () {
-    this.setState({open: false});
-  }
-
-  show () {
-    const bodyHeight = document.body.getBoundingClientRect().height;
-    const dropdownTop = ReactDOM.findDOMNode(this).getBoundingClientRect().top;
-    const dropUp = dropdownTop > bodyHeight * 0.65;
-
-    this.setState({open: true, dropUp});
-  }
-
-  toggle () {
-    if (this.state.open) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-
-  componentDidMount () {
+  _addKeyListener () {
     this._bodyKeydownHandler = e => {
       if (!this.state.open) {
         return;
@@ -54,8 +34,34 @@ class Dropdown extends Component {
     document.body.addEventListener('keydown', this._bodyKeydownHandler);
   }
 
-  componentWillUnmount () {
+  _removeKeyListener () {
     document.body.removeEventListener('keydown', this._bodyKeydownHandler);
+  }
+
+  hide () {
+    this.setState({open: false});
+    this._removeKeyListener();
+  }
+
+  show () {
+    const bodyHeight = document.body.getBoundingClientRect().height;
+    const dropdownTop = ReactDOM.findDOMNode(this).getBoundingClientRect().top;
+    const dropUp = dropdownTop > bodyHeight * 0.65;
+
+    this.setState({open: true, dropUp});
+    this._addKeyListener();
+  }
+
+  toggle () {
+    if (this.state.open) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+
+  componentWillUnmount () {
+    this._removeKeyListener();
   }
 
   render () {

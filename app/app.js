@@ -4,12 +4,19 @@ if (require('electron-squirrel-startup')) {
   process.exit(0);
 }
 
+// Some useful helpers
+const IS_DEV = process.env.INSOMNIA_ENV === 'development';
+const IS_MAC = process.platform === 'darwin';
+const IS_WINDOWS = process.platform === 'win32';
+const IS_LINUX = !IS_MAC && !IS_WINDOWS;
+
 var raven = require('raven');
 var ravenClient = new raven.Client(
   'https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a' +
   '4189a68efb63c38fc50b@app.getsentry.com/88289', {
     environment: process.env.INSOMNIA_ENV || 'production',
     release: require('./app.json').version,
+    logger: 'main'
   });
 
 if (!IS_DEV) {
@@ -32,11 +39,6 @@ const {
   BrowserWindow,
   webContents
 } = electron;
-
-const IS_DEV = process.env.INSOMNIA_ENV === 'development';
-const IS_MAC = process.platform === 'darwin';
-const IS_WINDOWS = process.platform === 'win32';
-const IS_LINUX = !IS_MAC && !IS_WINDOWS;
 
 const UPDATE_URLS = {
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
@@ -66,7 +68,9 @@ autoUpdater.on('error', e => {
   if (IS_DEV) {
     console.error(e);
   } else {
-    ravenClient.captureError(e, {});
+    ravenClient.captureError(e, {
+      level: 'warning'
+    });
   }
 });
 
@@ -191,22 +195,50 @@ ipcMain.on('check-for-updates', () => {
   checkForUpdates();
 });
 
+function storeValue (key, obj) {
+  try {
+    localStorage.setItem(key, JSON.stringify(obj));
+  } catch (e) {
+    console.error('Failed to save to LocalStorage', obj, e);
+    ravenClient.captureError(e, {
+      level: 'warning'
+    });
+  }
+}
+
+function getValue (key, defaultObj) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultObj))
+  } catch (e) {
+    console.error('Failed to get from LocalStorage', e);
+    ravenClient.captureError(e, {
+      level: 'warning'
+    });
+  }
+}
+
 function saveBounds () {
-  const fullscreen = mainWindow.isFullScreen();
-  if (!fullscreen) {
-    // Only save the size if we're not in fullscreen
-    localStorage.setItem('bounds', JSON.stringify(mainWindow.getBounds()));
+  if (!mainWindow) {
+    return;
   }
 
-  localStorage.setItem('fullscreen', JSON.stringify(mainWindow.isFullScreen()));
+  const fullscreen = mainWindow.isFullScreen();
+
+  // Only save the size if we're not in fullscreen
+  if (!fullscreen) {
+    storeValue('bounds', mainWindow.getBounds());
+    storeValue('fullscreen', false);
+  } else {
+    storeValue('fullscreen', true);
+  }
 }
 
 function getBounds () {
   let bounds = {};
   let fullscreen = false;
   try {
-    bounds = JSON.parse(localStorage.getItem('bounds') || '{}');
-    fullscreen = JSON.parse(localStorage.getItem('fullscreen') || 'false')
+    bounds = getValue('bounds', {});
+    fullscreen = getValue('fullscreen', false);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse window bounds', e);
@@ -216,13 +248,13 @@ function getBounds () {
 }
 
 function saveZoomFactor (zoomFactor) {
-  localStorage.setItem('zoomFactor', JSON.stringify(zoomFactor));
+  storeValue('zoomFactor', zoomFactor);
 }
 
 function getZoomFactor () {
   let zoomFactor = 1;
   try {
-    zoomFactor = JSON.parse(localStorage.getItem('zoomFactor') || '1');
+    zoomFactor = getValue('zoomFactor', 1);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse zoomFactor', e);
@@ -240,6 +272,7 @@ app.on('window-all-closed', () => {
 
 // Mac-only, when the user clicks the doc icon
 app.on('activate', (e, hasVisibleWindows) => {
+  // Create a new window when clicking the doc icon if there isn't one open
   if (!hasVisibleWindows) {
     createWindow()
   }
@@ -251,8 +284,14 @@ app.on('ready', () => {
   createWindow();
 });
 
+function initLocalStorage () {
+  if (!localStorage) {
+    localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
+  }
+}
+
 function createWindow () {
-  localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
+  initLocalStorage();
 
   const zoomFactor = getZoomFactor();
   const {bounds, fullscreen} = getBounds();
@@ -313,10 +352,11 @@ function createWindow () {
           label: "Preferences",
           accelerator: "CmdOrCtrl+,",
           click: function (menuItem, window, e) {
-            // NOTE: Checking for window because it might be closed
-            if (window && window.webContents) {
-              window.webContents.send('toggle-preferences');
+            if (!window || !window.webContents) {
+              return
             }
+
+            window.webContents.send('toggle-preferences');
           }
         },
         {
@@ -382,11 +422,13 @@ function createWindow () {
           accelerator: "CmdOrCtrl+0",
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
-            if (window && window.webContents) {
-              const zoomFactor = 1;
-              window.webContents.setZoomFactor(zoomFactor);
-              saveZoomFactor(zoomFactor);
+            if (!window || !window.webContents) {
+              return;
             }
+
+            const zoomFactor = 1;
+            window.webContents.setZoomFactor(zoomFactor);
+            saveZoomFactor(zoomFactor);
           }
         },
         {
@@ -394,12 +436,14 @@ function createWindow () {
           accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
-            if (window && window.webContents) {
-              const zoomFactor = Math.min(1.8, getZoomFactor() + 0.1);
-              window.webContents.setZoomFactor(zoomFactor);
-
-              saveZoomFactor(zoomFactor);
+            if (!window || !window.webContents) {
+              return;
             }
+
+            const zoomFactor = Math.min(1.8, getZoomFactor() + 0.1);
+            window.webContents.setZoomFactor(zoomFactor);
+
+            saveZoomFactor(zoomFactor);
           }
         },
         {
@@ -407,11 +451,13 @@ function createWindow () {
           accelerator: "CmdOrCtrl+-",
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
-            if (window && window.webContents) {
-              const zoomFactor = Math.max(0.5, getZoomFactor() - 0.1);
-              window.webContents.setZoomFactor(zoomFactor);
-              saveZoomFactor(zoomFactor);
+            if (!window || !window.webContents) {
+              return;
             }
+
+            const zoomFactor = Math.max(0.5, getZoomFactor() - 0.1);
+            window.webContents.setZoomFactor(zoomFactor);
+            saveZoomFactor(zoomFactor);
           }
         },
         {
@@ -419,7 +465,11 @@ function createWindow () {
           accelerator: "CmdOrCtrl+\\",
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
-            window && window.webContents.send('toggle-sidebar');
+            if (!window || !window.webContents) {
+              return;
+            }
+
+            window.webContents.send('toggle-sidebar');
           }
         }
       ]

@@ -32,6 +32,15 @@ class ChangelogModal extends Component {
         return;
       }
 
+      if (response.statusCode !== 200) {
+        console.warn(
+          'Failed to fetch changelog',
+          response.statusCode,
+          response.body
+        );
+        return;
+      }
+
       let changelog;
       try {
         changelog = JSON.parse(response.body);

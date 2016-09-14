@@ -38,8 +38,8 @@ class GenerateCodeModal extends Component {
   }
 
   _handleClientChange (client) {
-    const {target} = this.state;
-    this._generateCode(this.state.request, target, client);
+    const {target, request} = this.state;
+    this._generateCode(request, target, client);
   }
 
   _handleTargetChange (target) {

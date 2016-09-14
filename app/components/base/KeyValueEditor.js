@@ -95,7 +95,7 @@ class KeyValueEditor extends Component {
   }
 
   _focusPreviousPair () {
-    if (this._focusedPair >= 0) {
+    if (this._focusedPair > 0) {
       this._focusedPair--;
       this._updateFocus();
     }
