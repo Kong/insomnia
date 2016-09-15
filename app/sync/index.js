@@ -196,7 +196,7 @@ function fullSync () {
         }
 
         console.log('REMOVING ID', idToRemove);
-        db.remove(doc);
+        db.remove(doc, true);
       }
 
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
