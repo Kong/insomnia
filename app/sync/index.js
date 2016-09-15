@@ -112,7 +112,7 @@ function commitChange (event, doc) {
 
     if (event !== db.EVENT_REMOVE) {
       const newDoc = response.body.data;
-      db.update(newDoc, true, true);
+      db.update(newDoc, true);
     }
   });
 }
@@ -164,7 +164,7 @@ function fullSync () {
       // Insert all the created docs to the DB //
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-      const createPromises = createdDocs.map(d => db.insert(d));
+      const createPromises = createdDocs.map(d => db.insert(d, true));
       Promise.all(createPromises).then(docs => {
         const count = createdDocs.length;
         if (count) {
@@ -176,7 +176,7 @@ function fullSync () {
       // Save all the updated docs to the DB //
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-      const updatePromises = updatedDocs.map(d => db.update(d));
+      const updatePromises = updatedDocs.map(d => db.update(d, true));
       Promise.all(updatePromises).then(docs => {
         const count = updatedDocs.length;
         if (count) {
