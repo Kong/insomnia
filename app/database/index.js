@@ -234,45 +234,39 @@ function count (type, query = {}) {
   });
 }
 
-export function insert (doc) {
+export function insert (doc, silent = false) {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {
       if (err) {
         return reject(err);
       }
 
-      resolve(newDoc);
-      notifyOfChange(EVENT_INSERT, doc);
-    });
-  });
-}
-
-export function update (doc, silent = false, overrideEtag = false) {
-  return new Promise((resolve, reject) => {
-    get(doc.type, doc._id).then(existingDoc => {
-      // Update etag from existing one if
-      // TODO: Move this into the sync logic somehow
-      if (!overrideEtag) {
-        doc._etag = existingDoc._etag;
+      if (!silent) {
+        notifyOfChange(EVENT_INSERT, doc);
       }
 
-      // NOTE: enable upsert for because it's useful for syncing
-      db[doc.type].update({_id: doc._id}, doc, {upsert: true}, err => {
-        if (err) {
-          return reject(err);
-        }
-
-        if (doc.modified !== (existingDoc || {}).modified && !silent) {
-          notifyOfChange(EVENT_UPDATE, doc);
-        }
-
-        resolve(doc);
-      });
+      resolve(newDoc);
     });
   });
 }
 
-export function remove (doc) {
+export function update (doc, silent = false) {
+  return new Promise((resolve, reject) => {
+    db[doc.type].update({_id: doc._id}, doc, err => {
+      if (err) {
+        return reject(err);
+      }
+
+      if (!silent) {
+        notifyOfChange(EVENT_UPDATE, doc);
+      }
+
+      resolve(doc);
+    });
+  });
+}
+
+export function remove (doc, silent = false) {
   return new Promise(resolve => {
     withDescendants(doc).then(docs => {
       const promises = docs.map(d => (
@@ -280,7 +274,11 @@ export function remove (doc) {
       ));
 
       Promise.all(promises).then(() => {
-        docs.map(d => notifyOfChange(EVENT_REMOVE, d));
+
+        if (!silent) {
+          docs.map(d => notifyOfChange(EVENT_REMOVE, d));
+        }
+
         resolve()
       });
     });

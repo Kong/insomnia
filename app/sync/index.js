@@ -153,19 +153,34 @@ function fullSync () {
       }
 
       const changes = response.body.data;
-      const idsToPush = changes['ids_to_push'];
-      const idsToRemove = changes['ids_to_remove'];
-      const updatedDocs = changes['updated_docs'];
+      const {
+        ids_to_push: idsToPush,
+        ids_to_remove: idsToRemove,
+        updated_docs: updatedDocs,
+        created_docs: createdDocs
+      } = changes;
+
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+      // Insert all the created docs to the DB //
+      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+      const createPromises = createdDocs.map(d => db.insert(d));
+      Promise.all(createPromises).then(docs => {
+        const count = createdDocs.length;
+        if (count) {
+          console.log(`Sync created ${count} docs`, createdDocs);
+        }
+      });
 
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
       // Save all the updated docs to the DB //
       // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-      const promises = updatedDocs.map(d => db.update(d, true, true));
-      Promise.all(promises).then(docs => {
+      const updatePromises = updatedDocs.map(d => db.update(d));
+      Promise.all(updatePromises).then(docs => {
         const count = updatedDocs.length;
         if (count) {
-          console.log(`Sync Updated ${updatedDocs.length} docs`, updatedDocs);
+          console.log(`Sync updated ${count} docs`, updatedDocs);
         }
       });
 
