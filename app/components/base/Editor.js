@@ -3,7 +3,7 @@ import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import JSONPath from 'jsonpath-plus';
-import vkbeautify from 'vkbeautify';
+import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
 import xpath from 'xpath';
 import {DEBOUNCE_MILLIS} from '../../lib/constants';
@@ -181,12 +181,12 @@ class Editor extends Component {
         obj = JSONPath({json: obj, path: this.state.filter});
       }
 
-      code = JSON.stringify(obj, null, '\t');
+      code = JSON.stringify(obj);
     } catch (e) {
       // That's Ok, just leave it
     }
 
-    return Promise.resolve(code);
+    return Promise.resolve(vkBeautify.json(code, '\t'));
   }
 
   _formatXML (code) {
@@ -202,7 +202,7 @@ class Editor extends Component {
       }
     }
 
-    return Promise.resolve(vkbeautify.xml(code, '\t'));
+    return Promise.resolve(vkBeautify.xml(code, '\t'));
   }
 
   /**
