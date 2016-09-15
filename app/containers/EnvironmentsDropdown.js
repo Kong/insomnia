@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {ipcRenderer} from 'electron';
-import {connect} from 'react-redux'
+import {connect} from 'react-redux';
+import classnames from 'classnames';
 
 import EnvironmentsModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import Dropdown from '../components/base/Dropdown';
@@ -39,7 +40,7 @@ class EnvironmentsDropdown extends Component {
     const activeEnvironment = allEnvironments.find(e => e._id === workspace.metaActiveEnvironmentId) || baseEnvironment;
 
     return (
-      <Dropdown {...other} className={className + ' wide'}>
+      <Dropdown {...other} className={classnames(className, 'wide')}>
         <button className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
             <span>

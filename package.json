@@ -99,6 +99,7 @@
     "concurrently": "^2.0.0",
     "cross-env": "^2.0.0",
     "css-loader": "^0.23.1",
+    "electron": "^1.4.0",
     "electron-builder": "^6.3.5",
     "electron-prebuilt": "~1.2.8",
     "elm": "^0.17.1",

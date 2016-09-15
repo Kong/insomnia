@@ -22,8 +22,7 @@ cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.producti
 echo "-- COPYING REMAINING FILES --"
 
 # Copy package JSON
-cp app/app.json "$BUILD_DIR/app.json"
-cp app/app.json "$BUILD_DIR/package.json"
+cp app/package.json "$BUILD_DIR"
 
 # Copy some things
 cp -r app/images app/external assets/* app/app.js "$BUILD_DIR/"

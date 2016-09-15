@@ -15,7 +15,7 @@ var ravenClient = new raven.Client(
   'https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a' +
   '4189a68efb63c38fc50b@app.getsentry.com/88289', {
     environment: process.env.INSOMNIA_ENV || 'production',
-    release: require('./app.json').version,
+    release: require('./package.json').version,
     logger: 'main'
   });
 
@@ -27,7 +27,7 @@ if (!IS_DEV) {
 const electron = require('electron');
 const request = require('request');
 const path = require('path');
-const {version: appVersion, productName: appName} = require('./app.json');
+const {version: appVersion, productName: appName} = require('./package.json');
 const {LocalStorage} = require('node-localstorage');
 const {
   app,

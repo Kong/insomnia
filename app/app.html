@@ -17,7 +17,7 @@
       logger: 'renderer',
       environment: process.env.INSOMNIA_ENV || 'production',
       level: 'warning',
-      release: require('./app.json').version,
+      release: require('./package.json').version,
       ignoreUrls: [
         /.*raven\.min\.js.*/
       ],
@@ -53,7 +53,7 @@
   }
 </script>
 <script>
-  const {productName} = require('./app.json');
+  const {productName} = require('./package.json');
   if (process.env.INSOMNIA_ENV === 'development') {
     document.title = `${productName} (DEV)`;
   } else {

@@ -148,7 +148,7 @@ class ResponsePane extends Component {
       <section className="response-pane pane">
         {timer}
 
-        <header className="pane__header pad no-wrap">
+        <header className="pane__header pad-left pad-right no-wrap">
           {!response ? null : (
             <ResponsePaneHeader
               statusCode={response.statusCode}
