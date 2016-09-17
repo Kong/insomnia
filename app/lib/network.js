@@ -1,6 +1,6 @@
 import networkRequest from 'request';
 import {parse as urlParse, format as urlFormat} from 'url';
-import * as db from '../database';
+import * as db from './database';
 import * as querystring from './querystring';
 import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';

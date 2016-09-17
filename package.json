@@ -13,7 +13,7 @@
   "scripts": {
     "test": "jest --silent",
     "test-watch": "jest --watch",
-    "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/app.js",
+    "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.js",
     "hot-server": "babel-node ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "build": "npm test && bash scripts/build.sh",
@@ -66,7 +66,7 @@
     "mousetrap": "^1.6.0",
     "nedb": "^1.8.0",
     "node-localstorage": "^1.3.0",
-    "node-uuid": "latest",
+    "node-uuid": "^1.4.7",
     "nunjucks": "git@github.com:gschier/nunjucks.git#80485468cd577f1a1a8067bedf6c5bfa878712ea",
     "raven": "^0.12.1",
     "react": "^15.3.1",
@@ -105,7 +105,7 @@
     "elm": "^0.17.1",
     "elm-hot-loader": "^0.3.3",
     "elm-webpack-loader": "^3.0.3",
-    "express": "latest",
+    "express": "^4.14.0",
     "file-loader": "^0.9.0",
     "jest": "^15.1.1",
     "json-loader": "^0.5.4",
@@ -120,13 +120,13 @@
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.7",
     "webpack": "^1.12.14",
-    "webpack-dev-middleware": "latest",
+    "webpack-dev-middleware": "1.7.0",
     "webpack-dev-server": "^1.14.1",
     "webpack-hot-middleware": "^2.10.0",
     "webpack-target-electron-renderer": "^0.4.0"
   },
   "devEngines": {
-    "node": "4.x || 5.x",
+    "node": "6.x",
     "npm": "2.x || 3.x"
   }
 }

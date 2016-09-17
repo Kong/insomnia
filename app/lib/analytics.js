@@ -1,6 +1,6 @@
 import Analytics from 'analytics-node';
 import {getAppVersion} from './appInfo';
-import * as db from '../database';
+import * as db from './database';
 import {SEGMENT_WRITE_KEY} from './constants';
 
 let analytics = null;

@@ -1,0 +1,67 @@
+@import '../constants/colors';
+@import '../constants/dimensions';
+
+.pane {
+  position: relative;
+
+  .pane__container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-rows: @height-nav 1fr;
+    grid-template-columns: 100%;
+
+    .pane__header {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      background: @bg-super-light;
+      color: @font-super-light-bg;
+      border-left: 1px solid @hl-md;
+      box-sizing: border-box;
+
+      &.pane__header--grey {
+        background: @bg-light;
+        border-left: 1px solid @hl-xs;
+      }
+    }
+
+    .pane__body {
+      border-left: 1px solid @hl-md;
+      box-sizing: border-box;
+      height: 100%;
+    }
+
+    .pane__body--placeholder {
+      overflow: hidden;
+      padding: @padding-md;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: @hl-xxl;
+
+      & > * {
+        min-width: 20em;
+      }
+
+      .pane__body--placeholder__cta {
+        width: auto;
+        margin: @padding-lg auto 0;
+        display: block;
+
+        & > * {
+          margin: @padding-xs;
+        }
+      }
+    }
+  }
+}
+
+body[data-platform="win32"] .pane .pane__header {
+  border-top: 1px solid @hl-md;
+}

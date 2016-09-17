@@ -1,4 +1,4 @@
-import * as db from '../../database';
+import * as db from '../database';
 import {getRenderedRequest} from '../render';
 import {jarFromCookies} from '../cookies';
 

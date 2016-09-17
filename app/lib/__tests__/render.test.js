@@ -1,5 +1,5 @@
 import * as render from '../render';
-import {TYPE_ENVIRONMENT, TYPE_REQUEST_GROUP} from '../../database/index';
+import {TYPE_ENVIRONMENT, TYPE_REQUEST_GROUP} from '../database/index';
 
 jest.mock('electron');
 
