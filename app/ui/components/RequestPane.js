@@ -7,7 +7,6 @@ import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
 import BodyEditor from './editors/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
-import RequestUrlBar from './RequestUrlBar';
 import {UrlBar} from './UrlBar.elm';
 import ElmComponent from './ElmComponent';
 
@@ -95,16 +94,16 @@ class RequestPane extends Component {
       <div className="pane request-pane">
         <section className="pane__container">
           <ElmComponent
-            child={<header className="pane__header"></header>}
+            container={<header className="pane__header"/>}
             ports={{
               onUrlChange: debounce(updateRequestUrl),
-              onSendRequest: sendRequest,
+              onSendRequest: sendRequest.bind(null, request),
               onMethodChange: updateRequestMethod
             }}
             component={UrlBar}
             method={request.method}
             url={request.url}
-          ></ElmComponent>
+          />
           <Tabs className="pane__body">
             <TabList>
               <Tab>
@@ -141,7 +140,6 @@ class RequestPane extends Component {
             </TabList>
             <TabPanel className="editor-wrapper">
               <BodyEditor
-                key={request._id}
                 request={request}
                 onChange={updateRequestBody}
                 fontSize={editorFontSize}
@@ -150,7 +148,6 @@ class RequestPane extends Component {
             </TabPanel>
             <TabPanel>
               <AuthEditor
-                key={request._id}
                 showPasswords={showPasswords}
                 request={request}
                 onChange={updateRequestAuthentication}
@@ -161,14 +158,12 @@ class RequestPane extends Component {
                 <label className="label--small">Url Preview</label>
                 <code className="txt-sm block">
                   <RenderedQueryString
-                    key={request._id}
                     request={request}
                     placeholder="http://myproduct.com?name=Gregory"
                   />
                 </code>
               </div>
               <KeyValueEditor
-                key={request._id}
                 namePlaceholder="name"
                 valuePlaceholder="value"
                 pairs={request.parameters}
@@ -177,7 +172,6 @@ class RequestPane extends Component {
             </TabPanel>
             <TabPanel className="scrollable">
               <RequestHeadersEditor
-                key={request._id}
                 headers={request.headers}
                 onChange={updateRequestHeaders}
                 bulk={useBulkHeaderEditor}

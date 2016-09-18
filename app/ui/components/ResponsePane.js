@@ -157,7 +157,7 @@ class ResponsePane extends Component {
           {!response ? null : (
             <ElmComponent
               component={ResponsePaneHeader}
-              child={<header className="pane__header pad-left pad-right no-wrap"></header>}
+              container={<header className="pane__header pad-left pad-right no-wrap"/>}
               statusCode={response.statusCode}
               statusDescription={RESPONSE_CODE_DESCRIPTIONS[response.statusCode] || ''}
               statusMessage={response.statusMessage}

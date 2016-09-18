@@ -11,7 +11,8 @@ import {
 class ResponseViewer extends Component {
   shouldComponentUpdate (nextProps) {
     for (let k of Object.keys(nextProps)) {
-      if (this.props[k] !== nextProps[k]) {
+      const prop = nextProps[k];
+      if (typeof prop !== 'function' && this.props[k] !== prop) {
         return true;
       }
     }

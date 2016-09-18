@@ -5,7 +5,6 @@
     "license": "BSD3",
     "source-directories": [
         "app/ui/components",
-        "app/ui/components/base",
         "app/ui/components/tags"
     ],
     "exposed-modules": [],

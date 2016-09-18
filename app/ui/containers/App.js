@@ -519,6 +519,7 @@ class App extends Component {
         </div>
 
         <RequestPane
+          key={activeRequest ? activeRequest._id : 'n/a'}
           ref={n => this._requestPane = n}
           importFile={this._importFile.bind(this)}
           request={activeRequest}

@@ -36,7 +36,7 @@ type alias Model =
 
 init : Model -> ( Model, Cmd Msg )
 init flags =
-    flags ! [ ready True ]
+    flags ! []
 
 
 
@@ -45,9 +45,6 @@ init flags =
 
 type Msg
     = NewModel Model
-
-
-port ready : Bool -> Cmd msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

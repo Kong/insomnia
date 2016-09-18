@@ -35,18 +35,18 @@ class ElmComponent extends Component {
   }
 
   _extractProps (props) {
-    const {component, child, ...componentProps} = props;
+    const {component, container, ...componentProps} = props;
     return componentProps;
   }
 
   render () {
-    return this.props.child;
+    return this.props.container;
   }
 }
 
 ElmComponent.propTypes = {
   component: PropTypes.object.isRequired,
-  child: PropTypes.object.isRequired,
+  container: PropTypes.object.isRequired,
 
   // Optional
   ports: PropTypes.object

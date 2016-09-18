@@ -11,43 +11,39 @@
   & > .dropdown > button {
     height: 100%;
     min-width: 4.5em;
+    display: flex;
+    justify-content: space-between;
 
-    // Need a div inside the button because we can't display:grid buttons
-    & > div {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-content: center;
+    // Pad the method name on the right
+    & > *:first-child {
+      padding-left: 0.5em;
+    }
 
-      // Pad the method name on the right
-      & > *:first-child {
-        padding-right: 0.5em;
-      }
-
-      // Make everything the same height
-      &,
-      & > i.fa {
-        line-height: @line-height-sm;
-      }
+    // Make everything the same height
+    &,
+    & > i.fa {
+      line-height: @line-height-sm;
     }
   }
 
-  .dropdown .tag {
+  .dropdown__inner {
     border-radius: 0;
     font-size: @font-size-md;
     padding: 0;
 
     &::before {
       content: '\25cf';
+      color: inherit;
       font-weight: bold;
       position: relative;
       font-size: 1.2em;
       -webkit-text-stroke: 1px rgba(0, 0, 0, 0.1);
     }
+  }
 
-    .tag__inner {
-      color: @hl;
-      padding-left: @padding-sm;
-    }
+  .dropdown__text {
+    color: @hl;
+    padding-left: @padding-sm;
   }
 
   input {
@@ -74,13 +70,13 @@
   form button,
   & > .dropdown {
     height: 100%;
-
-    &:hover {
-      background-color: @hl-xs;
-    }
   }
 
-  & > *:first-child {
+  button:hover {
+    background-color: @hl-xs;
+  }
+
+  .dropdown > button {
     padding-left: @padding-md;
     padding-right: @padding-md / 2;
   }
