@@ -79,9 +79,10 @@ class App extends Component {
         getModal(WorkspaceEnvironmentsEditModal).toggle(this._getActiveWorkspace());
       },
 
-      // Toggle Sidebar
-      'mod+\\': () => {
-        this._handleToggleSidebar();
+      // Focus URL Bar
+      'mod+l': () => {
+        const node = document.body.querySelector('.urlbar input');
+        node && node.focus();
       },
 
       // Edit Cookies

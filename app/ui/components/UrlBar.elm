@@ -7,7 +7,6 @@ import Html.App as App
 import Base.Dropdown as Dropdown
 
 
---import Dropdown
 -- APP
 
 
@@ -97,14 +96,18 @@ update msg model =
                 ( data, cmd ) =
                     updateData msg model.data
             in
-                { model | data = data } ! []
+                { model | data = data } ! [ cmd ]
 
         NewData data ->
             let
                 dropdown =
                     Dropdown.updateButtonText model.dropdown data.method
+
+                -- Keep Url the same so we don't overwrite typing
+                dataWithOldUrl =
+                    { data | url = model.data.url }
             in
-                { model | data = data, dropdown = dropdown } ! []
+                { model | data = dataWithOldUrl, dropdown = dropdown } ! []
 
         SendRequest ->
             model ! [ onSendRequest True ]
@@ -165,7 +168,13 @@ view model =
             , Html.form [ onSubmit SendRequest ]
                 [ div [ class "form-control" ]
                     [ App.map DataMessage <|
-                        input [ type' "text", value url, onInput NewUrl ] []
+                        input
+                            [ type' "text"
+                            , value url
+                            , onInput NewUrl
+                            , placeholder "https://api.myproduct.com/v1/users"
+                            ]
+                            []
                     ]
                 , button [ type' "submit" ] [ text "Send" ]
                 ]
