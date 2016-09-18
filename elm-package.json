@@ -4,8 +4,8 @@
     "repository": "https://github.com/user/project.git",
     "license": "BSD3",
     "source-directories": [
-        "app/components",
-        "app/components/tags"
+        "app/ui/components",
+        "app/ui/components/tags"
     ],
     "exposed-modules": [],
     "dependencies": {

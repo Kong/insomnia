@@ -1,4 +1,4 @@
-import * as db from '../../database';
+import * as db from '../database';
 import {getAppVersion} from '../appInfo';
 import {importRequestGroupLegacy} from './legacy';
 import {importRequestLegacy} from './legacy';

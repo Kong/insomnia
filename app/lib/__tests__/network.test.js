@@ -1,5 +1,5 @@
 import * as networkUtils from '../network';
-import * as db from '../../database';
+import * as db from '../database';
 import nock from 'nock';
 import {getRenderedRequest} from '../render';
 
