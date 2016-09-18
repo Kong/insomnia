@@ -12,10 +12,10 @@ import './css/lib/fonts/open-sans.css';
 import './css/index.less';
 import './css/lib/chrome/platform_app.css';
 import {initStore} from './redux/initstore';
-import {initSync} from './sync';
-import {initDB} from './../lib/database';
-import {getAppVersion} from './../lib/appInfo';
-import {initAnalytics} from './../lib/analytics';
+import {initSync} from '../lib/sync';
+import {initDB} from '../lib/database';
+import {getAppVersion} from '../lib/appInfo';
+import {initAnalytics} from '../lib/analytics';
 
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
