@@ -3,7 +3,6 @@ port module ResponsePaneHeader exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.App as App
-
 import TimeTag exposing (..)
 import SizeTag exposing (..)
 import StatusTag exposing (..)
@@ -11,17 +10,20 @@ import StatusTag exposing (..)
 
 -- APP
 
+
 main : Program Model
 main =
-  App.programWithFlags
-    { init = init
-    , view = view
-    , update = update
-    , subscriptions = subscriptions
-    }
+    App.programWithFlags
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
+
 
 
 -- MODEL
+
 
 type alias Model =
     { statusCode : Int
@@ -32,38 +34,45 @@ type alias Model =
     }
 
 
-init : Model -> (Model, Cmd Msg)
+init : Model -> ( Model, Cmd Msg )
 init flags =
-    flags ! [ready True]
+    flags ! []
+
 
 
 -- UPDATE
 
-type Msg = NewModel Model
 
-port ready : Bool -> Cmd msg
+type Msg
+    = NewModel Model
 
-update : Msg -> Model -> (Model, Cmd Msg)
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewModel newModel ->
             newModel ! []
 
 
+
 -- SUBSCRIPTIONS
+
 
 port replaceModel : (Model -> msg) -> Sub msg
 
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  replaceModel NewModel
+    replaceModel NewModel
+
 
 
 -- VIEW
 
+
 view : Model -> Html Msg
 view model =
-    div [ ]
+    div []
         [ StatusTag.view
             { code = model.statusCode
             , message = model.statusMessage

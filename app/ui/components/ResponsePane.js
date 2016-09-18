@@ -1,7 +1,8 @@
 import * as db from '../../lib/database';
 import React, {PropTypes, Component} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import ResponsePaneHeader from './ResponsePaneHeader';
+import ElmComponent from './ElmComponent';
+import {ResponsePaneHeader} from './ResponsePaneHeader.elm';
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
@@ -11,6 +12,7 @@ import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../../lib/constants';
 import {trackEvent} from '../../lib/analytics';
 import {getSetCookieHeaders} from '../../lib/util';
 import {cancelCurrentRequest} from '../../lib/network';
+import {RESPONSE_CODE_DESCRIPTIONS} from '../../lib/constants';
 
 class ResponsePane extends Component {
   constructor (props) {
@@ -152,17 +154,17 @@ class ResponsePane extends Component {
       <div className="response-pane pane">
         <section className="pane__container">
           {timer}
-
-          <header className="pane__header pad-left pad-right no-wrap">
-            {!response ? null : (
-              <ResponsePaneHeader
-                statusCode={response.statusCode}
-                statusMessage={response.statusMessage}
-                elapsedTime={response.elapsedTime}
-                bytesRead={response.bytesRead}
-              />
-            )}
-          </header>
+          {!response ? null : (
+            <ElmComponent
+              component={ResponsePaneHeader}
+              container={<header className="pane__header pad-left pad-right no-wrap"/>}
+              statusCode={response.statusCode}
+              statusDescription={RESPONSE_CODE_DESCRIPTIONS[response.statusCode] || ''}
+              statusMessage={response.statusMessage}
+              elapsedTime={response.elapsedTime}
+              bytesRead={response.bytesRead}
+            />
+          )}
           <Tabs className="pane__body">
             <TabList>
               <Tab>
