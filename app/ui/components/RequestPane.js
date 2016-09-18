@@ -8,11 +8,14 @@ import RenderedQueryString from './RenderedQueryString';
 import BodyEditor from './editors/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
 import RequestUrlBar from './RequestUrlBar';
+import {UrlBar} from './UrlBar.elm';
+import ElmComponent from './ElmComponent';
 
 import {getContentTypeName} from '../../lib/contentTypes';
 import {getContentTypeFromHeaders} from '../../lib/contentTypes';
 import {MOD_SYM} from '../../lib/constants';
 import {trackEvent} from '../../lib/analytics';
+import {debounce} from '../lib/debounce';
 
 class RequestPane extends Component {
   render () {
@@ -91,16 +94,17 @@ class RequestPane extends Component {
     return (
       <div className="pane request-pane">
         <section className="pane__container">
-          <header className="pane__header">
-            <RequestUrlBar
-              key={request._id}
-              sendRequest={() => sendRequest(request)}
-              onUrlChange={updateRequestUrl}
-              onMethodChange={updateRequestMethod}
-              url={request.url}
-              method={request.method}
-            />
-          </header>
+          <ElmComponent
+            child={<header className="pane__header"></header>}
+            ports={{
+              onUrlChange: debounce(updateRequestUrl),
+              onSendRequest: sendRequest,
+              onMethodChange: updateRequestMethod
+            }}
+            component={UrlBar}
+            method={request.method}
+            url={request.url}
+          ></ElmComponent>
           <Tabs className="pane__body">
             <TabList>
               <Tab>
