@@ -69,14 +69,9 @@ init flags =
 
 type Msg
     = SendRequest
-    | NewData DataModel
-    | DataMessage DataMsg
-    | DropdownMessage Dropdown.Msg
-
-
-type DataMsg
-    = NewMethod String
     | NewUrl String
+    | NewData DataModel
+    | DropdownMessage Dropdown.Msg
 
 
 port onSendRequest : Bool -> Cmd msg
@@ -91,12 +86,15 @@ port onMethodChange : String -> Cmd msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        DataMessage msg ->
+        NewUrl url ->
             let
-                ( data, cmd ) =
-                    updateData msg model.data
+                data =
+                    model.data
+
+                newData =
+                    { data | url = url }
             in
-                { model | data = data } ! [ cmd ]
+                { model | data = data } ! [ onUrlChange url ]
 
         NewData data ->
             let
@@ -128,16 +126,6 @@ update msg model =
                 { model | dropdown = dropdownModel } ! [ cmd ]
 
 
-updateData : DataMsg -> DataModel -> ( DataModel, Cmd Msg )
-updateData msg model =
-    case msg of
-        NewUrl url ->
-            { model | url = url } ! [ onUrlChange url ]
-
-        NewMethod method ->
-            { model | method = method } ! [ onMethodChange method ]
-
-
 
 -- SUBSCRIPTIONS
 
@@ -167,14 +155,13 @@ view model =
             [ App.map DropdownMessage <| Dropdown.view model.dropdown
             , Html.form [ onSubmit SendRequest ]
                 [ div [ class "form-control" ]
-                    [ App.map DataMessage <|
-                        input
-                            [ type' "text"
-                            , value url
-                            , onInput NewUrl
-                            , placeholder "https://api.myproduct.com/v1/users"
-                            ]
-                            []
+                    [ input
+                        [ type' "text"
+                        , value url
+                        , onInput NewUrl
+                        , placeholder "https://api.myproduct.com/v1/users"
+                        ]
+                        []
                     ]
                 , button [ type' "submit" ] [ text "Send" ]
                 ]
