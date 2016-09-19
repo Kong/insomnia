@@ -94,7 +94,7 @@ update msg model =
                 newData =
                     { data | url = url }
             in
-                { model | data = data } ! [ onUrlChange url ]
+                { model | data = newData } ! [ onUrlChange url ]
 
         NewData data ->
             let
