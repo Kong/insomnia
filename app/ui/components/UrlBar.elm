@@ -1,8 +1,8 @@
-port module UrlBar exposing (..)
+port module UrlBar exposing (main)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Html, input, div, button, text, form)
+import Html.Attributes exposing (class, type', value, placeholder)
+import Html.Events exposing (onInput, onSubmit)
 import Html.App as App
 import Base.Dropdown as Dropdown
 
@@ -153,7 +153,7 @@ view model =
     in
         div [ class "urlbar" ]
             [ App.map DropdownMessage <| Dropdown.view model.dropdown
-            , Html.form [ onSubmit SendRequest ]
+            , form [ onSubmit SendRequest ]
                 [ div [ class "form-control" ]
                     [ input
                         [ type' "text"
