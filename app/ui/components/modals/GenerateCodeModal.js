@@ -79,8 +79,8 @@ class GenerateCodeModal extends Component {
         <ModalHeader>Generate Client Code</ModalHeader>
         <ModalBody noScroll={true} style={{
           display: 'grid',
-          gridTemplateColumns: '1fr',
-          gridTemplateRows: 'auto 1fr'
+          gridTemplateColumns: 'minmax(0, 1fr)',
+          gridTemplateRows: 'auto minmax(0, 1fr)'
         }}>
           <div className="pad">
             <Dropdown outline={true}>

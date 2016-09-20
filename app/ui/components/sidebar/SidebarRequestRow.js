@@ -62,7 +62,7 @@ class SidebarRequestRow extends Component {
       node = (
         <li className={classes}>
           <div className={classnames('sidebar__item', {'sidebar__item--active': isActive})}>
-            <button onClick={e => activateRequest(request)}>
+            <button className="wide" onClick={e => activateRequest(request)}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
                 <Editable

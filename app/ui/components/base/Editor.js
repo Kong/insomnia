@@ -404,13 +404,11 @@ class Editor extends Component {
 
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
-        <div className="editor__container">
         <textarea
           ref={n => this._initEditor(n)}
           readOnly={readOnly}
           autoComplete='off'>
         </textarea>
-        </div>
         {toolbar}
       </div>
     );

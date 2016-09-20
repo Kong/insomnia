@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav auto auto 1fr;
+  grid-template-rows: @height-nav auto auto minmax(0, 1fr);
   grid-template-columns: 100%;
 
   background-color: @bg-dark;
@@ -52,7 +52,7 @@
     width: 100%;
     display: grid;
     font-size: @font-size-sm;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
 
     .btn {
@@ -206,7 +206,7 @@
 
   .sidebar__item {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: @line-height-xs;
     color: @hl-xxl;
 
@@ -259,8 +259,14 @@
 
   .sidebar__clickable {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
+
+    & > *:last-child {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   // Padding for nested folders
