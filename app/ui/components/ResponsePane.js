@@ -95,139 +95,134 @@ class ResponsePane extends Component {
 
     if (!request) {
       return (
-        <div className="response-pane pane">
-          <section className="pane__container">
-            <header className="pane__header"></header>
-            <div className="pane__body pane__body--placeholder"></div>
-          </section>
-        </div>
+        <section className="response-pane pane">
+          <header className="pane__header"></header>
+          <div className="pane__body pane__body--placeholder"></div>
+        </section>
       )
     }
 
     if (!response) {
       return (
-        <div className="response-pane pane">
-          <section className="pane__container">
-            {timer}
+        <section className="response-pane pane">
+          {timer}
 
-            <header className="pane__header"></header>
-            <div className="pane__body pane__body--placeholder">
-              <div>
-                <table>
-                  <tbody>
-                  <tr>
-                    <td>Send Request</td>
-                    <td className="text-right">
-                      <code>{MOD_SYM}Enter</code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Focus Url Bar</td>
-                    <td className="text-right">
-                      <code>{MOD_SYM}L</code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Manage Cookies</td>
-                    <td className="text-right">
-                      <code>{MOD_SYM}K</code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Edit Environments</td>
-                    <td className="text-right">
-                      <code>{MOD_SYM}E</code>
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
-              </div>
+          <header className="pane__header"></header>
+          <div className="pane__body pane__body--placeholder">
+            <div>
+              <table>
+                <tbody>
+                <tr>
+                  <td>Send Request</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}Enter</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Focus Url Bar</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}L</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Manage Cookies</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}K</code>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Edit Environments</td>
+                  <td className="text-right">
+                    <code>{MOD_SYM}E</code>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
       )
     }
 
     const cookieHeaders = getSetCookieHeaders(response.headers);
 
     return (
-      <div className="response-pane pane">
-        <section className="pane__container">
-          {timer}
-          {!response ? null : (
-            <ElmComponent
-              component={ResponsePaneHeader}
-              container={<header className="pane__header pad-left pad-right no-wrap"/>}
-              statusCode={response.statusCode}
-              statusDescription={RESPONSE_CODE_DESCRIPTIONS[response.statusCode] || ''}
-              statusMessage={response.statusMessage}
-              elapsedTime={response.elapsedTime}
-              bytesRead={response.bytesRead}
-            />
-          )}
-          <Tabs className="pane__body">
-            <TabList>
-              <Tab>
-                <button
-                  onClick={e => trackEvent('Response Tab Clicked', {name: 'Body'})}>
-                  {getPreviewModeName(previewMode)}
-                </button>
-                <PreviewModeDropdown
-                  previewMode={previewMode}
-                  updatePreviewMode={updatePreviewMode}
-                />
-              </Tab>
-              <Tab>
-                <button
-                  onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
-                  Cookies {cookieHeaders.length ? (
-                  <span className="txt-sm">
+      <section className="response-pane pane">
+        {timer}
+        {!response ? null : (
+          <ElmComponent
+            component={ResponsePaneHeader}
+            container={<header
+              className="pane__header pad-left pad-right no-wrap"/>}
+            statusCode={response.statusCode}
+            statusDescription={RESPONSE_CODE_DESCRIPTIONS[response.statusCode] || ''}
+            statusMessage={response.statusMessage}
+            elapsedTime={response.elapsedTime}
+            bytesRead={response.bytesRead}
+          />
+        )}
+        <Tabs className="pane__body">
+          <TabList>
+            <Tab>
+              <button
+                onClick={e => trackEvent('Response Tab Clicked', {name: 'Body'})}>
+                {getPreviewModeName(previewMode)}
+              </button>
+              <PreviewModeDropdown
+                previewMode={previewMode}
+                updatePreviewMode={updatePreviewMode}
+              />
+            </Tab>
+            <Tab>
+              <button
+                onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
+                Cookies {cookieHeaders.length ? (
+                <span className="txt-sm">
                     ({cookieHeaders.length})
                   </span>
-                ) : null}
-                </button>
-              </Tab>
-              <Tab>
-                <button
-                  onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
-                  Headers {response.headers.length ? (
-                  <span className="txt-sm">
+              ) : null}
+              </button>
+            </Tab>
+            <Tab>
+              <button
+                onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
+                Headers {response.headers.length ? (
+                <span className="txt-sm">
                   ({response.headers.length})
                 </span>
-                ) : null}
-                </button>
-              </Tab>
-            </TabList>
-            <TabPanel>
-              <ResponseViewer
-                key={response._id}
-                contentType={response.contentType}
-                previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-                filter={response.error ? '' : responseFilter}
-                updateFilter={response.error ? null : updateResponseFilter}
-                body={response.error ? response.error : response.body}
-                error={!!response.error}
-                editorLineWrapping={editorLineWrapping}
-                editorFontSize={editorFontSize}
-                url={response.url}
-              />
-            </TabPanel>
-            <TabPanel className="scrollable pad">
-              <ResponseCookiesViewer
-                showCookiesModal={showCookiesModal}
-                key={response._id}
-                headers={cookieHeaders}
-              />
-            </TabPanel>
-            <TabPanel className="scrollable pad">
-              <ResponseHeadersViewer
-                key={response._id}
-                headers={response.headers}
-              />
-            </TabPanel>
-          </Tabs>
-        </section>
-      </div>
+              ) : null}
+              </button>
+            </Tab>
+          </TabList>
+          <TabPanel>
+            <ResponseViewer
+              key={response._id}
+              contentType={response.contentType}
+              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              filter={response.error ? '' : responseFilter}
+              updateFilter={response.error ? null : updateResponseFilter}
+              body={response.error ? response.error : response.body}
+              error={!!response.error}
+              editorLineWrapping={editorLineWrapping}
+              editorFontSize={editorFontSize}
+              url={response.url}
+            />
+          </TabPanel>
+          <TabPanel className="scrollable pad">
+            <ResponseCookiesViewer
+              showCookiesModal={showCookiesModal}
+              key={response._id}
+              headers={cookieHeaders}
+            />
+          </TabPanel>
+          <TabPanel className="scrollable pad">
+            <ResponseHeadersViewer
+              key={response._id}
+              headers={response.headers}
+            />
+          </TabPanel>
+        </Tabs>
+      </section>
     )
   }
 }

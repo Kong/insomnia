@@ -10,6 +10,20 @@
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
 
+  .editor__container {
+    height: 100%;
+    width: 100%;
+    position: relative;
+  }
+
+  .CodeMirror {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+
   .editor__toolbar {
     display: flex;
     flex-direction: row;

@@ -6,7 +6,7 @@
   color: @font-super-dark-bg;
   display: grid;
 
-  grid-template-rows: 0.5fr 0.5fr;
+  grid-template-rows: minmax(0, 0.5fr) minmax(0, 0.5fr);
 
   height: 100%;
   width: 100%;
@@ -15,6 +15,7 @@
     grid-column-start: 1;
     grid-row-start: 1;
     grid-row-end: span 2;
+    min-width: 0;
   }
 
   .drag {
@@ -36,6 +37,7 @@
   }
 
   .request-pane {
+    min-width: 0;
     grid-column-start: 3;
     grid-row-start: 1;
     grid-row-end: span 2;
@@ -43,6 +45,7 @@
   }
 
   .response-pane {
+    min-width: 0;
     grid-column-start: 5;
     grid-row-start: 1;
     grid-row-end: span 2;
