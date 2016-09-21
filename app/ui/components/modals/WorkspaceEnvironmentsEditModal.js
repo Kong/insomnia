@@ -1,6 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import classnames from 'classnames';
 
+import PromptButton from '../base/PromptButton';
 import Link from '../base/Link';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Editable from '../base/Editable';
@@ -44,7 +45,12 @@ class WorkspaceEnvironmentsEditModal extends Component {
           activeEnvironmentId = this.state.activeEnvironmentId || rootEnvironment._id;
         }
 
-        this.setState({workspace, rootEnvironment, subEnvironments, activeEnvironmentId});
+        this.setState({
+          workspace,
+          rootEnvironment,
+          subEnvironments,
+          activeEnvironmentId
+        });
       });
     });
   }
@@ -124,7 +130,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
+      <Modal ref={m => this.modal = m} wide={true} top={true}
+             tall={true} {...this.props}>
         <ModalHeader>Manage Environments (JSON Format)</ModalHeader>
         <ModalBody noScroll={true} className="env-modal">
           <div className="env-modal__sidebar">
@@ -150,7 +157,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
                 return (
                   <li key={environment._id} className={classes}>
-                    <button onClick={() => this._handleActivateEnvironment(environment)}>
+                    <button
+                      onClick={() => this._handleActivateEnvironment(environment)}>
                       <Editable
                         onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
                         value={environment.name}
@@ -171,10 +179,11 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 />
               </h1>
               {rootEnvironment !== activeEnvironment ? (
-                <button className="btn btn--super-compact btn--outlined"
-                        onClick={() => this._handleDeleteEnvironment(activeEnvironment)}>
+                <PromptButton className="btn btn--super-compact btn--outlined"
+                              confirmMessage="Confirm"
+                              onClick={() => this._handleDeleteEnvironment(activeEnvironment)}>
                   <i className="fa fa-trash-o"></i>
-                </button>
+                </PromptButton>
               ) : null}
             </div>
             <div className="env-modal__editor">
@@ -190,7 +199,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" disabled={!isValid} onClick={e => this.modal.hide()}>
+            <button className="btn" disabled={!isValid}
+                    onClick={e => this.modal.hide()}>
               Done
             </button>
           </div>
