@@ -26,29 +26,18 @@ const BASE_MODEL_DEFAULTS = () => ({
   parentId: null
 });
 
-const MODEL_ID_PREFIXES = {
-  [stats.type]: stats.prefix,
-  [settings.type]: settings.prefix,
-  [workspace.type]: workspace.prefix,
-  [environment.type]: environment.prefix,
-  [cookieJar.type]: cookieJar.prefix,
-  [requestGroup.type]: requestGroup.prefix,
-  [request.type]: request.prefix,
-  [response.type]: response.prefix
+const MODELS = {
+  [stats.type]: stats,
+  [settings.type]: settings,
+  [workspace.type]: workspace,
+  [environment.type]: environment,
+  [cookieJar.type]: cookieJar,
+  [requestGroup.type]: requestGroup,
+  [request.type]: request,
+  [response.type]: response
 };
 
-module.exports.MODEL_DEFAULTS = {
-  [stats.type]: stats.init,
-  [settings.type]: settings.init,
-  [workspace.type]: workspace.init,
-  [environment.type]: environment.init,
-  [cookieJar.type]: cookieJar.init,
-  [requestGroup.type]: requestGroup.init,
-  [request.type]: request.init,
-  [response.type]: response.init
-};
-
-module.exports.ALL_TYPES = Object.keys(module.exports.MODEL_DEFAULTS);
+module.exports.ALL_TYPES = Object.keys(MODELS).map(m => MODELS[m].type);
 
 let db = null;
 
@@ -69,8 +58,6 @@ module.exports.initDB = (config = {}, force = false) => {
     return Promise.resolve();
   }
 
-  console.log('CONFIG', config);
-
   return new Promise(resolve => {
     db = {};
 
@@ -80,8 +67,7 @@ module.exports.initDB = (config = {}, force = false) => {
 
     // Fill in the defaults
 
-    const modelTypes = Object.keys(module.exports.MODEL_DEFAULTS);
-    modelTypes.map(t => {
+    module.exports.ALL_TYPES.map(t => {
       const filename = getDBFilePath(t);
       const autoload = true;
       const finalConfig = Object.assign({filename, autoload}, config);
@@ -129,7 +115,7 @@ module.exports.find = (type, query = {}) => {
         return reject(err);
       }
 
-      const modelDefaults = module.exports.MODEL_DEFAULTS[type]();
+      const modelDefaults = MODELS[type].init();
       const docs = rawDocs.map(rawDoc => {
         return Object.assign({}, modelDefaults, rawDoc);
       });
@@ -155,7 +141,7 @@ module.exports.getWhere = (type, query) => {
         return resolve(null);
       }
 
-      const modelDefaults = module.exports.MODEL_DEFAULTS[type]();
+      const modelDefaults = MODELS[type].init();
       resolve(Object.assign({}, modelDefaults, rawDocs[0]));
     });
   });
@@ -248,7 +234,7 @@ module.exports.docUpdate = (originalDoc, patch = {}) => {
 };
 
 module.exports.docCreate = (type, patch = {}) => {
-  const idPrefix = MODEL_ID_PREFIXES[type];
+  const idPrefix = MODELS[type].prefix;
 
   if (!idPrefix) {
     throw new Error(`No ID prefix for ${type}`)
@@ -257,7 +243,7 @@ module.exports.docCreate = (type, patch = {}) => {
   const doc = Object.assign(
     BASE_MODEL_DEFAULTS(),
     {_id: generateId(idPrefix)},
-    module.exports.MODEL_DEFAULTS[type](),
+    MODELS[type].init(),
     patch,
 
     // Fields that the user can't touch
