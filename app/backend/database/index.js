@@ -15,15 +15,6 @@ const requestGroup = require('./requestGroup');
 const request = require('./request');
 const response = require('./response');
 
-module.exports.TYPE_STATS = stats.type;
-module.exports.TYPE_SETTINGS = settings.type;
-module.exports.TYPE_WORKSPACE = workspace.type;
-module.exports.TYPE_ENVIRONMENT = environment.type;
-module.exports.TYPE_COOKIE_JAR = cookieJar.type;
-module.exports.TYPE_REQUEST_GROUP = requestGroup.type;
-module.exports.TYPE_REQUEST = request.type;
-module.exports.TYPE_RESPONSE = response.type;
-
 module.exports.CHANGE_INSERT = 'insert';
 module.exports.CHANGE_UPDATE = 'update';
 module.exports.CHANGE_REMOVE = 'remove';
