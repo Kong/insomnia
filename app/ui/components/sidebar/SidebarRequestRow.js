@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import RequestActionsDropdown from '../../containers/RequestActionsDropdown';
 import Editable from '../base/Editable';
 import MethodTag from '../tags/MethodTag';
-import * as db from '../../../lib/database';
+import * as db from 'backend/database';
 import * as ReactDOM from 'react/lib/ReactDOM';
 
 
@@ -62,7 +62,7 @@ class SidebarRequestRow extends Component {
       node = (
         <li className={classes}>
           <div className={classnames('sidebar__item', {'sidebar__item--active': isActive})}>
-            <button onClick={e => activateRequest(request)}>
+            <button className="wide" onClick={e => activateRequest(request)}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
                 <Editable

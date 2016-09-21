@@ -1,12 +1,14 @@
-import Analytics from 'analytics-node';
-import {getAppVersion} from './appInfo';
-import * as db from './database';
-import {SEGMENT_WRITE_KEY} from './constants';
+'use strict';
+
+const Analytics = require('analytics-node');
+const {getAppVersion} = require('./appInfo');
+const db = require('./database');
+const {SEGMENT_WRITE_KEY} = require('./constants');
 
 let analytics = null;
 let userId = null;
 
-export function initAnalytics () {
+module.exports.initAnalytics = () => {
   return new Promise((resolve, reject) => {
     analytics = new Analytics(SEGMENT_WRITE_KEY);
 
@@ -15,7 +17,7 @@ export function initAnalytics () {
         userId = stats._id;
 
         // Recurse now that we have a userId
-        return initAnalytics();
+        return module.exports.initAnalytics();
       }).then(resolve, reject);
     }
 
@@ -33,9 +35,9 @@ export function initAnalytics () {
     console.log(`-- Analytics Initialized for ${userId} --`);
     resolve();
   });
-}
+};
 
-export function trackEvent (event, properties = {}) {
+module.exports.trackEvent = (event, properties = {}) => {
   // Don't track events if we haven't set them up yet
   if (analytics) {
     // Add base properties
@@ -46,4 +48,4 @@ export function trackEvent (event, properties = {}) {
 
     analytics.track({userId, event, properties});
   }
-}
+};

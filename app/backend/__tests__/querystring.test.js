@@ -1,4 +1,6 @@
-import * as querystringUtils from '../querystring';
+'use strict';
+
+const querystringUtils = require('../querystring');
 
 describe('getBasicAuthHeader()', () => {
   it('gets joiner for bare URL', () => {

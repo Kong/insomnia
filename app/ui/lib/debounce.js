@@ -1,4 +1,4 @@
-import {DEBOUNCE_MILLIS} from '../../lib/constants';
+import {DEBOUNCE_MILLIS} from 'backend/constants';
 
 export function debounce (callback) {
   let timeout = null;

@@ -8,7 +8,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import {exportHar} from '../../../lib/export/har';
+import {exportHar} from 'backend/export/har';
 
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
 const DEFAULT_CLIENT = DEFAULT_TARGET.clients.find(t => t.key === 'curl');
@@ -79,8 +79,8 @@ class GenerateCodeModal extends Component {
         <ModalHeader>Generate Client Code</ModalHeader>
         <ModalBody noScroll={true} style={{
           display: 'grid',
-          gridTemplateColumns: '1fr',
-          gridTemplateRows: 'auto 1fr'
+          gridTemplateColumns: 'minmax(0, 1fr)',
+          gridTemplateRows: 'auto minmax(0, 1fr)'
         }}>
           <div className="pad">
             <Dropdown outline={true}>

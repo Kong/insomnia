@@ -19,7 +19,7 @@ export default {
         id: 'babel',
         test: /\.(js|jsx)$/,
         loaders: ['babel'],
-        exclude: /node_modules/
+        exclude: [/node_modules/, /backend/, /__fixtures__/, /__tests__/]
       },
       {
         test: /\.elm$/,
@@ -61,6 +61,9 @@ export default {
     ]
   },
   resolve: {
+    alias: {
+      'backend': path.resolve(__dirname, '../app/backend')
+    },
     extensions: ['', '.js', '.json', '.jsx'],
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
@@ -71,4 +74,3 @@ export default {
   plugins: [],
   target: 'electron-renderer'
 };
-

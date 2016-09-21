@@ -1,58 +1,52 @@
-import {isDevelopment} from './appInfo';
-import {isMac} from './appInfo';
+'use strict';
+
+const {isDevelopment} = require('./appInfo');
+const {isMac} = require('./appInfo');
 
 // Global Stuff
-export const LOCALSTORAGE_KEY = 'insomnia.state';
-export const DB_PERSIST_INTERVAL = 1000 * 60 * 10;
-export const DEBOUNCE_MILLIS = 100;
-export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
-export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
-export const CHANGELOG_URL = 'https://changelog.insomnia.rest/changelog.json';
-export const STATUS_CODE_PEBKAC = -333;
-export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
-export const SEGMENT_WRITE_KEY = isDevelopment() ?
+module.exports.LOCALSTORAGE_KEY = 'insomnia.state';
+module.exports.DB_PERSIST_INTERVAL = 1000 * 60 * 10;
+module.exports.DEBOUNCE_MILLIS = 100;
+module.exports.REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
+module.exports.CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
+module.exports.CHANGELOG_URL = 'https://changelog.insomnia.rest/changelog.json';
+module.exports.STATUS_CODE_PEBKAC = -333;
+module.exports.MOD_SYM = isMac() ? '⌘' : 'ctrl+';
+module.exports.SEGMENT_WRITE_KEY = isDevelopment() ?
   'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy' :
   'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
 
 // UI Stuff
-export const MAX_SIDEBAR_REMS = 35;
-export const MIN_SIDEBAR_REMS = 0.75;
-export const COLLAPSE_SIDEBAR_REMS = 4;
-export const SIDEBAR_SKINNY_REMS = 10;
-export const MAX_PANE_WIDTH = 0.99;
-export const MIN_PANE_WIDTH = 0.01;
-export const DEFAULT_PANE_WIDTH = 0.5;
-export const DEFAULT_SIDEBAR_WIDTH = 19;
+module.exports.MAX_SIDEBAR_REMS = 35;
+module.exports.MIN_SIDEBAR_REMS = 0.75;
+module.exports.COLLAPSE_SIDEBAR_REMS = 4;
+module.exports.SIDEBAR_SKINNY_REMS = 10;
+module.exports.MAX_PANE_WIDTH = 0.99;
+module.exports.MIN_PANE_WIDTH = 0.01;
+module.exports.DEFAULT_PANE_WIDTH = 0.5;
+module.exports.DEFAULT_SIDEBAR_WIDTH = 19;
 
 // HTTP Methods
-export const METHOD_GET = 'GET';
-export const METHOD_POST = 'POST';
-export const METHOD_PUT = 'PUT';
-export const METHOD_PATCH = 'PATCH';
-export const METHOD_DELETE = 'DELETE';
-export const METHOD_OPTIONS = 'OPTIONS';
-export const METHOD_HEAD = 'HEAD';
+module.exports.METHOD_GET = 'GET';
+module.exports.METHOD_POST = 'POST';
+module.exports.METHOD_PUT = 'PUT';
+module.exports.METHOD_PATCH = 'PATCH';
+module.exports.METHOD_DELETE = 'DELETE';
+module.exports.METHOD_OPTIONS = 'OPTIONS';
+module.exports.METHOD_HEAD = 'HEAD';
 
-export const METHODS = [
-  METHOD_GET,
-  METHOD_POST,
-  METHOD_PUT,
-  METHOD_DELETE,
-  METHOD_PATCH,
-  METHOD_OPTIONS,
-  METHOD_HEAD
+module.exports.METHODS = [
+  module.exports.METHOD_GET,
+  module.exports.METHOD_POST,
+  module.exports.METHOD_PUT,
+  module.exports.METHOD_DELETE,
+  module.exports.METHOD_PATCH,
+  module.exports.METHOD_OPTIONS,
+  module.exports.METHOD_HEAD
 ];
 
-// export const MODAL_WORKSPACE_RENAME = 'workspace.update.name';
-// export const MODAL_REQUEST_GROUP_RENAME = 'requestGroup.update.name';
-// export const MODAL_REQUEST_RENAME = 'request.update.name';
-// export const MODAL_REQUEST_SWITCHER = 'request.action.switch';
-// export const MODAL_CURL_EXPORT = 'request.curlExport';
-// export const MODAL_ENVIRONMENT_EDITOR = 'environment.edit';
-// export const MODAL_SETTINGS = 'settings';
-
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-export const RESPONSE_CODE_DESCRIPTIONS = {
+module.exports.RESPONSE_CODE_DESCRIPTIONS = {
 
   // 100s
 

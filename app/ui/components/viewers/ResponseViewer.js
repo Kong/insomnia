@@ -6,7 +6,7 @@ import ResponseError from './ResponseError';
 import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_SOURCE
-} from '../../../lib/previewModes';
+} from 'backend/previewModes';
 
 class ResponseViewer extends Component {
   shouldComponentUpdate (nextProps) {
@@ -64,10 +64,7 @@ class ResponseViewer extends Component {
         );
       default: // Raw
         return (
-          <ResponseRaw
-            value={body}
-            fontSize={editorFontSize}
-          />
+          <ResponseRaw value={body} fontSize={editorFontSize}/>
         )
     }
   }

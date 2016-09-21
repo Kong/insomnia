@@ -1,9 +1,9 @@
 import electron from 'electron';
 import fs from 'fs';
 
-import {importJSON, exportJSON} from '../../../lib/export/database';
-import * as db from '../../../lib/database/index';
-import {trackEvent} from '../../../lib/analytics';
+import {importJSON, exportJSON} from 'backend/export/database';
+import * as db from 'backend/database/index';
+import {trackEvent} from 'backend/analytics';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';

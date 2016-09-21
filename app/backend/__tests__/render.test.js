@@ -1,5 +1,7 @@
-import * as render from '../render';
-import {TYPE_ENVIRONMENT, TYPE_REQUEST_GROUP} from '../database/index';
+'use strict';
+
+const render = require('../render');
+const {TYPE_ENVIRONMENT, TYPE_REQUEST_GROUP} = require('../database/index');
 
 jest.mock('electron');
 

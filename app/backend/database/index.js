@@ -1,27 +1,29 @@
-import electron from 'electron';
-import NeDB from 'nedb';
-import * as fsPath from 'path';
-import {
+'use strict';
+
+const electron = require('electron');
+const NeDB = require('nedb');
+const fsPath = require('path');
+const {
   METHOD_GET,
   DB_PERSIST_INTERVAL,
   DEFAULT_SIDEBAR_WIDTH
-} from '../constants';
-import {generateId} from '../util';
-import {PREVIEW_MODE_SOURCE} from '../previewModes';
-import {isDevelopment} from '../appInfo';
+} = require('../constants');
+const {generateId} = require('../util');
+const {PREVIEW_MODE_SOURCE} = require('../previewModes');
+const {isDevelopment} = require('../appInfo');
 
-export const TYPE_STATS = 'Stats';
-export const TYPE_SETTINGS = 'Settings';
-export const TYPE_WORKSPACE = 'Workspace';
-export const TYPE_ENVIRONMENT = 'Environment';
-export const TYPE_COOKIE_JAR = 'CookieJar';
-export const TYPE_REQUEST_GROUP = 'RequestGroup';
-export const TYPE_REQUEST = 'Request';
-export const TYPE_RESPONSE = 'Response';
+module.exports.TYPE_STATS = 'Stats';
+module.exports.TYPE_SETTINGS = 'Settings';
+module.exports.TYPE_WORKSPACE = 'Workspace';
+module.exports.TYPE_ENVIRONMENT = 'Environment';
+module.exports.TYPE_COOKIE_JAR = 'CookieJar';
+module.exports.TYPE_REQUEST_GROUP = 'RequestGroup';
+module.exports.TYPE_REQUEST = 'Request';
+module.exports.TYPE_RESPONSE = 'Response';
 
-export const EVENT_INSERT = 'insert';
-export const EVENT_UPDATE = 'update';
-export const EVENT_REMOVE = 'remove';
+module.exports.CHANGE_INSERT = 'insert';
+module.exports.CHANGE_UPDATE = 'update';
+module.exports.CHANGE_REMOVE = 'remove';
 
 
 const BASE_MODEL_DEFAULTS = () => ({
@@ -35,23 +37,23 @@ const BASE_MODEL_DEFAULTS = () => ({
 });
 
 const MODEL_ID_PREFIXES = {
-  [TYPE_STATS]: 'sta',
-  [TYPE_SETTINGS]: 'set',
-  [TYPE_WORKSPACE]: 'wrk',
-  [TYPE_ENVIRONMENT]: 'env',
-  [TYPE_COOKIE_JAR]: 'jar',
-  [TYPE_REQUEST_GROUP]: 'fld',
-  [TYPE_REQUEST]: 'req',
-  [TYPE_RESPONSE]: 'res'
+  [module.exports.TYPE_STATS]: 'sta',
+  [module.exports.TYPE_SETTINGS]: 'set',
+  [module.exports.TYPE_WORKSPACE]: 'wrk',
+  [module.exports.TYPE_ENVIRONMENT]: 'env',
+  [module.exports.TYPE_COOKIE_JAR]: 'jar',
+  [module.exports.TYPE_REQUEST_GROUP]: 'fld',
+  [module.exports.TYPE_REQUEST]: 'req',
+  [module.exports.TYPE_RESPONSE]: 'res'
 };
 
-export const MODEL_DEFAULTS = {
-  [TYPE_STATS]: () => ({
+module.exports.MODEL_DEFAULTS = {
+  [module.exports.TYPE_STATS]: () => ({
     lastLaunch: Date.now(),
     lastVersion: null,
     launches: 0
   }),
-  [TYPE_SETTINGS]: () => ({
+  [module.exports.TYPE_SETTINGS]: () => ({
     showPasswords: true,
     useBulkHeaderEditor: false,
     followRedirects: false,
@@ -62,7 +64,7 @@ export const MODEL_DEFAULTS = {
     timeout: 0,
     validateSSL: true
   }),
-  [TYPE_WORKSPACE]: () => ({
+  [module.exports.TYPE_WORKSPACE]: () => ({
     name: 'New Workspace',
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     metaActiveEnvironmentId: null,
@@ -70,21 +72,21 @@ export const MODEL_DEFAULTS = {
     metaFilter: '',
     metaSidebarHidden: false
   }),
-  [TYPE_ENVIRONMENT]: () => ({
+  [module.exports.TYPE_ENVIRONMENT]: () => ({
     name: 'New Environment',
     data: {},
   }),
-  [TYPE_COOKIE_JAR]: () => ({
+  [module.exports.TYPE_COOKIE_JAR]: () => ({
     name: 'Default Jar',
     cookies: []
   }),
-  [TYPE_REQUEST_GROUP]: () => ({
+  [module.exports.TYPE_REQUEST_GROUP]: () => ({
     name: 'New Folder',
     environment: {},
     metaCollapsed: false,
     metaSortKey: -1 * Date.now()
   }),
-  [TYPE_REQUEST]: () => ({
+  [module.exports.TYPE_REQUEST]: () => ({
     url: '',
     name: 'New Request',
     method: METHOD_GET,
@@ -96,7 +98,7 @@ export const MODEL_DEFAULTS = {
     metaResponseFilter: '',
     metaSortKey: -1 * Date.now()
   }),
-  [TYPE_RESPONSE]: () => ({
+  [module.exports.TYPE_RESPONSE]: () => ({
     statusCode: 0,
     statusMessage: '',
     contentType: 'text/plain',
@@ -110,7 +112,7 @@ export const MODEL_DEFAULTS = {
   }),
 };
 
-export const ALL_TYPES = Object.keys(MODEL_DEFAULTS);
+module.exports.ALL_TYPES = Object.keys(module.exports.MODEL_DEFAULTS);
 
 let db = null;
 
@@ -125,11 +127,13 @@ function getDBFilePath (modelType) {
  * @returns {Promise}
  */
 let initialized = false;
-export function initDB (config = {}, force = false) {
+module.exports.initDB = (config = {}, force = false) => {
   // Only init once
   if (initialized && !force) {
     return Promise.resolve();
   }
+
+  console.log('CONFIG', config);
 
   return new Promise(resolve => {
     db = {};
@@ -140,7 +144,7 @@ export function initDB (config = {}, force = false) {
 
     // Fill in the defaults
 
-    const modelTypes = Object.keys(MODEL_DEFAULTS);
+    const modelTypes = Object.keys(module.exports.MODEL_DEFAULTS);
     modelTypes.map(t => {
       const filename = getDBFilePath(t);
       const autoload = true;
@@ -156,19 +160,19 @@ export function initDB (config = {}, force = false) {
     console.log(`-- Initialize DB at ${getDBFilePath('t')} --`);
     resolve();
   });
-}
+};
 
 let changeListeners = {};
 
-export function onChange (id, callback) {
+module.exports.onChange = (id, callback) => {
   console.log(`-- Added DB Listener ${id} -- `);
   changeListeners[id] = callback;
-}
+};
 
-export function offChange (id) {
+module.exports.offChange = (id) => {
   console.log(`-- Removed DB Listener ${id} -- `);
   delete changeListeners[id];
-}
+};
 
 function notifyOfChange (event, doc) {
   Object.keys(changeListeners).map(k => changeListeners[k](event, doc));
@@ -189,7 +193,7 @@ function find (type, query = {}) {
         return reject(err);
       }
 
-      const modelDefaults = MODEL_DEFAULTS[type]();
+      const modelDefaults = module.exports.MODEL_DEFAULTS[type]();
       const docs = rawDocs.map(rawDoc => {
         return Object.assign({}, modelDefaults, rawDoc);
       });
@@ -199,11 +203,11 @@ function find (type, query = {}) {
   });
 }
 
-export function all (type) {
+module.exports.all = type => {
   return find(type);
-}
+};
 
-export function getWhere (type, query) {
+module.exports.getWhere = (type, query) => {
   return new Promise((resolve, reject) => {
     db[type].find(query, (err, rawDocs) => {
       if (err) {
@@ -215,14 +219,14 @@ export function getWhere (type, query) {
         return resolve(null);
       }
 
-      const modelDefaults = MODEL_DEFAULTS[type]();
+      const modelDefaults = module.exports.MODEL_DEFAULTS[type]();
       resolve(Object.assign({}, modelDefaults, rawDocs[0]));
     });
   });
-}
+};
 
 function get (type, id) {
-  return getWhere(type, {_id: id});
+  return module.exports.getWhere(type, {_id: id});
 }
 
 function count (type, query = {}) {
@@ -237,7 +241,7 @@ function count (type, query = {}) {
   });
 }
 
-export function insert (doc, silent = false) {
+module.exports.insert = (doc, silent = false) => {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {
       if (err) {
@@ -245,15 +249,15 @@ export function insert (doc, silent = false) {
       }
 
       if (!silent) {
-        notifyOfChange(EVENT_INSERT, doc);
+        notifyOfChange(module.exports.CHANGE_INSERT, doc);
       }
 
       resolve(newDoc);
     });
   });
-}
+};
 
-export function update (doc, silent = false) {
+module.exports.update = (doc, silent = false) => {
   return new Promise((resolve, reject) => {
     db[doc.type].update({_id: doc._id}, doc, err => {
       if (err) {
@@ -261,17 +265,17 @@ export function update (doc, silent = false) {
       }
 
       if (!silent) {
-        notifyOfChange(EVENT_UPDATE, doc);
+        notifyOfChange(module.exports.CHANGE_UPDATE, doc);
       }
 
       resolve(doc);
     });
   });
-}
+};
 
-export function remove (doc, silent = false) {
+module.exports.remove = (doc, silent = false) => {
   return new Promise(resolve => {
-    withDescendants(doc).then(docs => {
+    module.exports.withDescendants(doc).then(docs => {
       const promises = docs.map(d => (
         db[d.type].remove({_id: d._id}, {multi: true})
       ));
@@ -279,14 +283,14 @@ export function remove (doc, silent = false) {
       Promise.all(promises).then(() => {
 
         if (!silent) {
-          docs.map(d => notifyOfChange(EVENT_REMOVE, d));
+          docs.map(d => notifyOfChange(module.exports.CHANGE_REMOVE, d));
         }
-
+        docs.map(d => notifyOfChange(module.exports.CHANGE_REMOVE, d));
         resolve()
       });
     });
   });
-}
+};
 
 /**
  * Remove a lot of documents quickly and silently
@@ -314,7 +318,7 @@ function docUpdate (originalDoc, patch = {}) {
     {modified: Date.now()}
   );
 
-  return update(doc);
+  return module.exports.update(doc);
 }
 
 function docCreate (type, patch = {}) {
@@ -327,7 +331,7 @@ function docCreate (type, patch = {}) {
   const doc = Object.assign(
     BASE_MODEL_DEFAULTS(),
     {_id: generateId(idPrefix)},
-    MODEL_DEFAULTS[type](),
+    module.exports.MODEL_DEFAULTS[type](),
     patch,
 
     // Fields that the user can't touch
@@ -337,20 +341,20 @@ function docCreate (type, patch = {}) {
     }
   );
 
-  return insert(doc);
+  return module.exports.insert(doc);
 }
 
 // ~~~~~~~ //
 // GENERAL //
 // ~~~~~~~ //
 
-export function withDescendants (doc = null) {
+module.exports.withDescendants = (doc = null) => {
   let docsToReturn = doc ? [doc] : [];
 
   const next = (docs) => {
     const promises = [];
     for (const doc of docs) {
-      for (const type of ALL_TYPES) {
+      for (const type of module.exports.ALL_TYPES) {
         // If the doc is null, we want to search for parentId === null
         const parentId = doc ? doc._id : null;
         promises.push(find(type, {parentId}));
@@ -360,7 +364,7 @@ export function withDescendants (doc = null) {
     return Promise.all(promises).then(results => {
       let newDocs = [];
 
-      // Gather up the docs from each type
+      // Gather up the docs = require(each type
       for (const docs of results) {
         for (const doc of docs) {
           newDocs.push(doc);
@@ -379,9 +383,9 @@ export function withDescendants (doc = null) {
   };
 
   return next([doc]);
-}
+};
 
-export function duplicate (originalDoc, patch = {}) {
+module.exports.duplicate = (originalDoc, patch = {}) => {
   return new Promise((resolve, reject) => {
 
     // 1. Copy the doc
@@ -394,7 +398,7 @@ export function duplicate (originalDoc, patch = {}) {
 
       // 2. Get all the children
       const promises = [];
-      for (const type of ALL_TYPES) {
+      for (const type of module.exports.ALL_TYPES) {
         const parentId = originalDoc._id;
         const promise = find(type, {parentId});
         promises.push(promise);
@@ -403,10 +407,15 @@ export function duplicate (originalDoc, patch = {}) {
       Promise.all(promises).then(results => {
         let duplicatePromises = [];
 
-        // Gather up the docs from each type
+        // Gather up the docs = require(each type
         for (const docs of results) {
           for (const doc of docs) {
-            duplicatePromises.push(duplicate(doc, {parentId: createdDoc._id}));
+            const promise = module.exports.duplicate(
+              doc,
+              {parentId: createdDoc._id}
+            );
+
+            duplicatePromises.push(promise);
           }
         }
 
@@ -415,46 +424,46 @@ export function duplicate (originalDoc, patch = {}) {
       })
     })
   })
-}
+};
 
 
 // ~~~~~~~ //
 // REQUEST //
 // ~~~~~~~ //
 
-export function requestCreateAndActivate (workspace, patch = {}) {
-  return requestCreate(patch).then(r => {
-    workspaceUpdate(workspace, {metaActiveRequestId: r._id});
+module.exports.requestCreateAndActivate = (workspace, patch = {}) => {
+  return module.exports.requestCreate(patch).then(r => {
+    module.exports.workspaceUpdate(workspace, {metaActiveRequestId: r._id});
   })
-}
+};
 
-export function requestDuplicateAndActivate (workspace, request) {
-  return requestDuplicate(request).then(r => {
-    workspaceUpdate(workspace, {metaActiveRequestId: r._id});
+module.exports.requestDuplicateAndActivate = (workspace, request) => {
+  return module.exports.requestDuplicate(request).then(r => {
+    module.exports.workspaceUpdate(workspace, {metaActiveRequestId: r._id});
   })
-}
+};
 
-export function requestCreate (patch = {}) {
+module.exports.requestCreate = (patch = {}) => {
   if (!patch.parentId) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_REQUEST, patch);
-}
+  return docCreate(module.exports.TYPE_REQUEST, patch);
+};
 
-export function requestGetById (id) {
-  return get(TYPE_REQUEST, id);
-}
+module.exports.requestGetById = id => {
+  return get(module.exports.TYPE_REQUEST, id);
+};
 
-export function requestFindByParentId (parentId) {
-  return find(TYPE_REQUEST, {parentId: parentId});
-}
+module.exports.requestFindByParentId = parentId => {
+  return find(module.exports.TYPE_REQUEST, {parentId: parentId});
+};
 
-export function requestUpdate (request, patch) {
+module.exports.requestUpdate = (request, patch) => {
   return docUpdate(request, patch);
-}
+};
 
-export function requestUpdateContentType (request, contentType) {
+module.exports.requestUpdateContentType = (request, contentType) => {
   let headers = [...request.headers];
   const contentTypeHeader = headers.find(
     h => h.name.toLowerCase() === 'content-type'
@@ -470,29 +479,29 @@ export function requestUpdateContentType (request, contentType) {
   }
 
   return docUpdate(request, {headers});
-}
+};
 
-export function requestDuplicate (request) {
+module.exports.requestDuplicate = request => {
   const name = `${request.name} (Copy)`;
-  return duplicate(request, {name});
-}
+  return module.exports.duplicate(request, {name});
+};
 
-export function requestRemove (request) {
-  return remove(request);
-}
+module.exports.requestRemove = request => {
+  return module.exports.remove(request);
+};
 
-export function requestAll () {
-  return all(TYPE_REQUEST);
-}
+module.exports.requestAll = () => {
+  return module.exports.all(module.exports.TYPE_REQUEST);
+};
 
-export function requestGetAncestors (request) {
+module.exports.requestGetAncestors = request => {
   return new Promise(resolve => {
     let ancestors = [];
 
     const next = (doc) => {
       Promise.all([
-        requestGroupGetById(doc.parentId),
-        workspaceGetById(doc.parentId)
+       module.exports.requestGroupGetById(doc.parentId),
+       module.exports.workspaceGetById(doc.parentId)
       ]).then(([requestGroup, workspace]) => {
         if (requestGroup) {
           ancestors = [requestGroup, ...ancestors];
@@ -510,218 +519,221 @@ export function requestGetAncestors (request) {
 
     next(request);
   });
-}
+};
 
 
 // ~~~~~~~~~~~~~ //
 // REQUEST GROUP //
 // ~~~~~~~~~~~~~ //
 
-export function requestGroupCreate (patch = {}) {
+module.exports.requestGroupCreate = (patch = {}) => {
   if (!patch.parentId) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_REQUEST_GROUP, patch);
-}
+  return docCreate(module.exports.TYPE_REQUEST_GROUP, patch);
+};
 
-export function requestGroupUpdate (requestGroup, patch) {
+module.exports.requestGroupUpdate = (requestGroup, patch) => {
   return docUpdate(requestGroup, patch);
-}
+};
 
-export function requestGroupGetById (id) {
-  return get(TYPE_REQUEST_GROUP, id);
-}
+module.exports.requestGroupGetById = id => {
+  return get(module.exports.TYPE_REQUEST_GROUP, id);
+};
 
-export function requestGroupFindByParentId (parentId) {
-  return find(TYPE_REQUEST_GROUP, {parentId});
-}
+module.exports.requestGroupFindByParentId = parentId => {
+  return find(module.exports.TYPE_REQUEST_GROUP, {parentId});
+};
 
-export function requestGroupRemove (requestGroup) {
-  return remove(requestGroup);
-}
+module.exports.requestGroupRemove = requestGroup => {
+  return module.exports.remove(requestGroup);
+};
 
-export function requestGroupAll () {
-  return all(TYPE_REQUEST_GROUP);
-}
+module.exports.requestGroupAll = () => {
+  return module.exports.all(module.exports.TYPE_REQUEST_GROUP);
+};
 
-export function requestGroupDuplicate (requestGroup) {
+module.exports.requestGroupDuplicate = requestGroup => {
   const name = `${requestGroup.name} (Copy)`;
-  return duplicate(requestGroup, {name});
-}
+  return module.exports.duplicate(requestGroup, {name});
+};
 
 
 // ~~~~~~~~ //
 // RESPONSE //
 // ~~~~~~~~ //
 
-export function responseCreate (patch = {}) {
+module.exports.responseCreate = (patch = {}) => {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
 
-  removeBulkSilently(TYPE_RESPONSE, {parentId: patch.parentId});
-  return docCreate(TYPE_RESPONSE, patch);
-}
+  removeBulkSilently(module.exports.TYPE_RESPONSE, {parentId: patch.parentId});
+  return docCreate(module.exports.TYPE_RESPONSE, patch);
+};
 
-export function responseGetLatestByParentId (parentId) {
-  return getMostRecentlyModified(TYPE_RESPONSE, {parentId});
-}
+module.exports.responseGetLatestByParentId = parentId => {
+  return getMostRecentlyModified(module.exports.TYPE_RESPONSE, {parentId});
+};
 
 
 // ~~~~~~~ //
 // COOKIES //
 // ~~~~~~~ //
 
-export function cookieJarCreate (patch = {}) {
-  return docCreate(TYPE_COOKIE_JAR, patch);
-}
+module.exports.cookieJarCreate = (patch = {}) => {
+  return docCreate(module.exports.TYPE_COOKIE_JAR, patch);
+};
 
-export function cookieJarGetOrCreateForWorkspace (workspace) {
+module.exports.cookieJarGetOrCreateForWorkspace = workspace => {
   const parentId = workspace._id;
-  return find(TYPE_COOKIE_JAR, {parentId}).then(cookieJars => {
+  return find(module.exports.TYPE_COOKIE_JAR, {parentId}).then(cookieJars => {
     if (cookieJars.length === 0) {
-      return cookieJarCreate({parentId})
+      return module.exports.cookieJarCreate({parentId})
     } else {
       return new Promise(resolve => resolve(cookieJars[0]));
     }
   });
-}
+};
 
-export function cookieJarAll () {
-  return all(TYPE_COOKIE_JAR);
-}
+module.exports.cookieJarAll = () => {
+  return module.exports.all(module.exports.TYPE_COOKIE_JAR);
+};
 
-export function cookieJarGetById (id) {
-  return get(TYPE_COOKIE_JAR, id);
-}
+module.exports.cookieJarGetById = id => {
+  return get(module.exports.TYPE_COOKIE_JAR, id);
+};
 
-export function cookieJarUpdate (cookieJar, patch) {
+module.exports.cookieJarUpdate = (cookieJar, patch) => {
   return docUpdate(cookieJar, patch);
-}
+};
 
 
 // ~~~~~~~~~ //
 // WORKSPACE //
 // ~~~~~~~~~ //
 
-export function workspaceGetById (id) {
-  return get(TYPE_WORKSPACE, id);
-}
+module.exports.workspaceGetById = id => {
+  return get(module.exports.TYPE_WORKSPACE, id);
+};
 
-export function workspaceCreate (patch = {}) {
-  return docCreate(TYPE_WORKSPACE, patch);
-}
+module.exports.workspaceCreate = (patch = {}) => {
+  return docCreate(module.exports.TYPE_WORKSPACE, patch);
+};
 
-export function workspaceAll () {
-  return all(TYPE_WORKSPACE).then(workspaces => {
+module.exports.workspaceAll = () => {
+  return module.exports.all(module.exports.TYPE_WORKSPACE).then(workspaces => {
     if (workspaces.length === 0) {
-      return workspaceCreate({name: 'Insomnia'}).then(workspaceAll);
+      return module.exports.workspaceCreate({name: 'Insomnia'})
+        .then(module.exports.workspaceAll);
     } else {
       return new Promise(resolve => resolve(workspaces))
     }
   });
-}
+};
 
-export function workspaceCount () {
-  return count(TYPE_WORKSPACE)
-}
+module.exports.workspaceCount = () => {
+  return count(module.exports.TYPE_WORKSPACE)
+};
 
-export function workspaceUpdate (workspace, patch) {
+module.exports.workspaceUpdate = (workspace, patch) => {
   return docUpdate(workspace, patch);
-}
+};
 
-export function workspaceRemove (workspace) {
-  return remove(workspace);
-}
+module.exports.workspaceRemove = workspace => {
+  return module.exports.remove(workspace);
+};
 
 
 // ~~~~~~~~~~~ //
 // ENVIRONMENT //
 // ~~~~~~~~~~~ //
 
-export function environmentCreate (patch = {}) {
+module.exports.environmentCreate = (patch = {}) => {
   if (!patch.parentId) {
     throw new Error('New Environment missing `parentId`', patch);
   }
 
-  return docCreate(TYPE_ENVIRONMENT, patch);
-}
+  return docCreate(module.exports.TYPE_ENVIRONMENT, patch);
+};
 
-export function environmentUpdate (environment, patch) {
+module.exports.environmentUpdate = (environment, patch) => {
   return docUpdate(environment, patch);
-}
+};
 
-export function environmentFindByParentId (parentId) {
-  return find(TYPE_ENVIRONMENT, {parentId});
-}
+module.exports.environmentFindByParentId = parentId => {
+  return find(module.exports.TYPE_ENVIRONMENT, {parentId});
+};
 
-export function environmentGetOrCreateForWorkspace (workspace) {
+module.exports.environmentGetOrCreateForWorkspace = workspace => {
   const parentId = workspace._id;
-  return find(TYPE_ENVIRONMENT, {parentId}).then(environments => {
+  return find(module.exports.TYPE_ENVIRONMENT, {parentId}).then(environments => {
     if (environments.length === 0) {
-      return environmentCreate({parentId, name: 'Base Environment'})
+      return module.exports.environmentCreate({parentId, name: 'Base Environment'})
     } else {
       return new Promise(resolve => resolve(environments[0]));
     }
   });
-}
+};
 
-export function environmentGetById (id) {
-  return get(TYPE_ENVIRONMENT, id);
-}
+module.exports.environmentGetById = id => {
+  return get(module.exports.TYPE_ENVIRONMENT, id);
+};
 
-export function environmentRemove (environment) {
-  return remove(environment);
-}
+module.exports.environmentRemove = environment => {
+  return module.exports.remove(environment);
+};
 
-export function environmentAll () {
-  return all(TYPE_ENVIRONMENT);
-}
+module.exports.environmentAll = () => {
+  return module.exports.all(module.exports.TYPE_ENVIRONMENT);
+};
 
 
 // ~~~~~~~~ //
 // SETTINGS //
 // ~~~~~~~~ //
 
-export function settingsCreate (patch = {}) {
-  return docCreate(TYPE_SETTINGS, patch);
-}
+module.exports.settingsCreate = (patch = {}) => {
+  return docCreate(module.exports.TYPE_SETTINGS, patch);
+};
 
-export function settingsUpdate (settings, patch) {
+module.exports.settingsUpdate = (settings, patch) => {
   return docUpdate(settings, patch);
-}
+};
 
-export function settingsGetOrCreate () {
-  return all(TYPE_SETTINGS).then(results => {
+module.exports.settingsGetOrCreate = () => {
+  return module.exports.all(module.exports.TYPE_SETTINGS).then(results => {
     if (results.length === 0) {
-      return settingsCreate().then(settingsGetOrCreate);
+      return module.exports.settingsCreate()
+        .then(module.exports.settingsGetOrCreate);
     } else {
       return new Promise(resolve => resolve(results[0]));
     }
   });
-}
+};
 
 // ~~~~~ //
 // STATS //
 // ~~~~~ //
 
-export function statsCreate (patch = {}) {
-  return docCreate(TYPE_STATS, patch);
-}
+module.exports.statsCreate = (patch = {}) => {
+  return docCreate(module.exports.TYPE_STATS, patch);
+};
 
-export function statsUpdate (patch) {
-  return statsGet().then(stats => {
+module.exports.statsUpdate = patch => {
+  return module.exports.statsGet().then(stats => {
     return docUpdate(stats, patch);
   });
-}
+};
 
-export function statsGet () {
-  return all(TYPE_STATS).then(results => {
+module.exports.statsGet = () => {
+  return module.exports.all(module.exports.TYPE_STATS).then(results => {
     if (results.length === 0) {
-      return statsCreate().then(statsGet);
+      return module.exports.statsCreate()
+        .then(module.exports.statsGet);
     } else {
       return new Promise(resolve => resolve(results[0]));
     }
   });
-}
+};

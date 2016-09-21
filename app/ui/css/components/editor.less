@@ -7,14 +7,15 @@
   height: 100% !important;
   width: 100%;
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
 
   .editor__container {
+    height: 100%;
+    width: 100%;
     position: relative;
   }
 
-  // This is a hack because it will stretch out the Grid otherwise
   .CodeMirror {
     position: absolute;
     left: 0;

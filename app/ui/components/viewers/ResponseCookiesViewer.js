@@ -4,7 +4,11 @@ import {Cookie} from 'tough-cookie';
 const ResponseCookiesViewer = ({headers, showCookiesModal}) => {
   if (!headers.length) {
     // Don't do anything if no cookies
-    return <span className="faint">No cookies returned</span>;
+    return (
+      <span className="faint">
+        No cookies returned
+      </span>
+    );
   }
 
   return (

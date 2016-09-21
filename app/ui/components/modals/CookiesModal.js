@@ -5,14 +5,15 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import CookiesEditor from '../editors/CookiesEditor';
-import * as db from '../../../lib/database';
-import {DEBOUNCE_MILLIS} from '../../../lib/constants';
+import * as db from 'backend/database';
+import {DEBOUNCE_MILLIS} from 'backend/constants';
 
 class CookiesModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
       cookieJar: null,
+      workspace: null,
       filter: ''
     }
   }
@@ -20,7 +21,7 @@ class CookiesModal extends Component {
   _saveChanges () {
     const {cookieJar} = this.state;
     db.cookieJarUpdate(cookieJar).then(() => {
-      this._load();
+      this._load(this.state.workspace);
     });
   }
 
@@ -79,7 +80,7 @@ class CookiesModal extends Component {
 
   _load (workspace) {
     db.cookieJarGetOrCreateForWorkspace(workspace).then(cookieJar => {
-      this.setState({cookieJar});
+      this.setState({cookieJar, workspace});
     });
   }
 

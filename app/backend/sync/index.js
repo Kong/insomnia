@@ -1,12 +1,14 @@
-import request from 'request';
-import * as db from '../database';
-import {
+'use strict';
+
+const request = require('request');
+const db = require('../database');
+const {
   TYPE_REQUEST,
   TYPE_REQUEST_GROUP,
   TYPE_WORKSPACE,
   TYPE_ENVIRONMENT,
   TYPE_COOKIE_JAR,
-} from '../database/index';
+} = require('../database/index');
 
 const WHITE_LIST = {
   [TYPE_REQUEST]: true,
@@ -18,7 +20,7 @@ const WHITE_LIST = {
 
 const BASE_URL = 'https://o90qg2me5g.execute-api.us-east-1.amazonaws.com/dev/v1';
 
-export function initSync () {
+module.exports.initSync = () => {
   return new Promise(resolve => {
 
     // ~~~~~~~~~~ //
@@ -44,7 +46,7 @@ export function initSync () {
 
     resolve();
   });
-}
+};
 
 
 // ~~~~~~~ //
@@ -86,11 +88,11 @@ function commitChange (event, doc) {
     url: `${BASE_URL}/${path}/${doc._id}`
   };
 
-  if (event === db.EVENT_INSERT || event === db.EVENT_UPDATE) {
+  if (event === db.CHANGE_INSERT || event === db.CHANGE_UPDATE) {
     config.method = 'PUT';
     config.json = true;
     config.body = doc;
-  } else if (event === db.EVENT_REMOVE) {
+  } else if (event === db.CHANGE_REMOVE) {
     config.method = 'DELETE';
   }
 
@@ -110,7 +112,7 @@ function commitChange (event, doc) {
       return;
     }
 
-    if (event !== db.EVENT_REMOVE) {
+    if (event !== db.CHANGE_REMOVE) {
       const newDoc = response.body.data;
       db.update(newDoc, true);
     }
@@ -211,7 +213,7 @@ function fullSync () {
         }
 
         console.log('PUSHING ID', idToPush);
-        addChange(db.EVENT_UPDATE, doc)
+        addChange(db.CHANGE_UPDATE, doc)
       }
     });
   });

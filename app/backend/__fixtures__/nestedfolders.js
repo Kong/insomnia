@@ -1,4 +1,6 @@
-import {TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_WORKSPACE} from '../database';
+'use strict';
+
+const {TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_WORKSPACE} = require('../database');
 
 module.exports[TYPE_WORKSPACE] = [{
   _id: 'wrk_1',
