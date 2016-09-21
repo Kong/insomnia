@@ -1,14 +1,10 @@
 import {combineReducers} from 'redux';
 
-import {
-  ALL_TYPES,
-  TYPE_RESPONSE,
-  TYPE_STATS
-} from 'backend/database/index';
+import * as db from 'backend/database';
 
 const ENTITY_BLACKLIST = {
-  [TYPE_RESPONSE]: 1,
-  [TYPE_STATS]: 1
+  [db.response.type]: 1,
+  [db.stats.type]: 1
 };
 
 const ENTITY_INSERT = 'entities/insert';
@@ -49,7 +45,7 @@ function genericEntityReducer (referenceName) {
 }
 
 const reducers = {};
-for (const type of ALL_TYPES) {
+for (const type of db.ALL_TYPES) {
   // Name example: RequestGroup => requestGroups
   // Add an "s" to the end if there isn't already
   const trailer = type.match(/s$/) ? '' : 's';
@@ -68,17 +64,17 @@ export default combineReducers({
 // ~~~~~~~ //
 
 const insertFns = {};
-for (let type of ALL_TYPES) {
+for (let type of db.ALL_TYPES) {
   insertFns[type] = doc => ({type: ENTITY_INSERT, [type]: doc})
 }
 
 const updateFns = {};
-for (let type of ALL_TYPES) {
+for (let type of db.ALL_TYPES) {
   updateFns[type] = doc => ({type: ENTITY_UPDATE, [type]: doc})
 }
 
 const removeFns = {};
-for (let type of ALL_TYPES) {
+for (let type of db.ALL_TYPES) {
   removeFns[type] = doc => ({type: ENTITY_REMOVE, [type]: doc})
 }
 

@@ -10,7 +10,7 @@ describe('buildRequestConfig()', () => {
 
   it('builds a default config', () => {
     return db.workspace.create().then(workspace => {
-      const request = Object.assign(db.MODEL_DEFAULTS[db.TYPE_REQUEST](), {
+      const request = Object.assign(db.request.init(), {
         parentId: workspace._id
       });
 
@@ -35,7 +35,7 @@ describe('buildRequestConfig()', () => {
 
   it('builds a complex config', () => {
     return db.workspace.create().then(workspace => {
-      const request = Object.assign(db.MODEL_DEFAULTS[db.TYPE_REQUEST](), {
+      const request = Object.assign(db.request.init(), {
         parentId: workspace._id,
         headers: [{host: '', name: 'Content-Type', value: 'application/json'}],
         parameters: [{name: 'foo bar', value: 'hello&world'}],
@@ -92,7 +92,7 @@ describe('actuallySend()', () => {
         .reply(200, 'response body')
         .log(console.log);
 
-      const request = Object.assign(db.MODEL_DEFAULTS[db.TYPE_REQUEST](), {
+      const request = Object.assign(db.request.init(), {
         _id: 'req_123',
         parentId: workspace._id,
         headers: [{name: 'Content-Type', value: 'application/json'}],

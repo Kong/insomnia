@@ -36,25 +36,25 @@ const BASE_MODEL_DEFAULTS = () => ({
 });
 
 const MODEL_ID_PREFIXES = {
-  [module.exports.TYPE_STATS]: stats.prefix,
-  [module.exports.TYPE_SETTINGS]: settings.prefix,
-  [module.exports.TYPE_WORKSPACE]: workspace.prefix,
-  [module.exports.TYPE_ENVIRONMENT]: environment.prefix,
-  [module.exports.TYPE_COOKIE_JAR]: cookieJar.prefix,
-  [module.exports.TYPE_REQUEST_GROUP]: requestGroup.prefix,
-  [module.exports.TYPE_REQUEST]: request.prefix,
-  [module.exports.TYPE_RESPONSE]: response.prefix
+  [stats.type]: stats.prefix,
+  [settings.type]: settings.prefix,
+  [workspace.type]: workspace.prefix,
+  [environment.type]: environment.prefix,
+  [cookieJar.type]: cookieJar.prefix,
+  [requestGroup.type]: requestGroup.prefix,
+  [request.type]: request.prefix,
+  [response.type]: response.prefix
 };
 
 module.exports.MODEL_DEFAULTS = {
-  [module.exports.TYPE_STATS]: stats.init,
-  [module.exports.TYPE_SETTINGS]: settings.init,
-  [module.exports.TYPE_WORKSPACE]: workspace.init,
-  [module.exports.TYPE_ENVIRONMENT]: environment.init,
-  [module.exports.TYPE_COOKIE_JAR]: cookieJar.init,
-  [module.exports.TYPE_REQUEST_GROUP]: requestGroup.init,
-  [module.exports.TYPE_REQUEST]: request.init,
-  [module.exports.TYPE_RESPONSE]: response.init
+  [stats.type]: stats.init,
+  [settings.type]: settings.init,
+  [workspace.type]: workspace.init,
+  [environment.type]: environment.init,
+  [cookieJar.type]: cookieJar.init,
+  [requestGroup.type]: requestGroup.init,
+  [request.type]: request.init,
+  [response.type]: response.init
 };
 
 module.exports.ALL_TYPES = Object.keys(module.exports.MODEL_DEFAULTS);
