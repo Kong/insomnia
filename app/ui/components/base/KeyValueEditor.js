@@ -30,7 +30,15 @@ class KeyValueEditor extends Component {
   }
 
   _addPair (position) {
-    position = position === undefined ? this.state.pairs.length : position;
+    const numPairs = this.state.pairs.length;
+    const {maxPairs} = this.props;
+
+    // Don't add any more pairs
+    if (maxPairs !== undefined && numPairs >= maxPairs) {
+      return;
+    }
+
+    position = position === undefined ? numPairs : position;
     this._focusedPair = position;
     const pairs = [
       ...this.state.pairs.slice(0, position),
