@@ -4,7 +4,8 @@ const db = require('./');
 
 module.exports.type = 'RequestGroup';
 module.exports.prefix = 'fld';
-module.exports.init = () => ({
+module.exports.slug = 'request_group';
+module.exports.init = () => db.initModel({
   name: 'New Folder',
   environment: {},
   metaCollapsed: false,

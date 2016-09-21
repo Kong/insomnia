@@ -4,7 +4,8 @@ const db = require('./');
 
 module.exports.type = 'Stats';
 module.exports.prefix = 'sta';
-module.exports.init = () => ({
+module.exports.slug = 'stats';
+module.exports.init = () => db.initModel({
   lastLaunch: Date.now(),
   lastVersion: null,
   launches: 0

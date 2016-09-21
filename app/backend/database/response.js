@@ -4,7 +4,8 @@ const db = require('./');
 
 module.exports.type = 'Response';
 module.exports.prefix = 'res';
-module.exports.init = () => ({
+module.exports.slug = 'response';
+module.exports.init = () => db.initModel({
   statusCode: 0,
   statusMessage: '',
   contentType: 'text/plain',

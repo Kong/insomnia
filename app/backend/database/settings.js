@@ -4,7 +4,8 @@ const db = require('./');
 
 module.exports.type = 'Settings';
 module.exports.prefix = 'set';
-module.exports.init = () => ({
+module.exports.slug = 'settings';
+module.exports.init = () => db.initModel({
   showPasswords: true,
   useBulkHeaderEditor: false,
   followRedirects: false,

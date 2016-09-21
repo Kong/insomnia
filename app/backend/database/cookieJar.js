@@ -4,7 +4,8 @@ const db = require('./');
 
 module.exports.type = 'CookieJar';
 module.exports.prefix = 'jar';
-module.exports.init = () => ({
+module.exports.slug = 'cookie_jar';
+module.exports.init = () => db.initModel({
   name: 'Default Jar',
   cookies: []
 });

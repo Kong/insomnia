@@ -6,38 +6,53 @@ const fsPath = require('path');
 const {DB_PERSIST_INTERVAL} = require('../constants');
 const {generateId} = require('../util');
 const {isDevelopment} = require('../appInfo');
-const stats = require('./stats');
-const settings = require('./settings');
-const workspace = require('./workspace');
-const environment = require('./environment');
-const cookieJar = require('./cookieJar');
-const requestGroup = require('./requestGroup');
-const request = require('./request');
-const response = require('./response');
 
 module.exports.CHANGE_INSERT = 'insert';
 module.exports.CHANGE_UPDATE = 'update';
 module.exports.CHANGE_REMOVE = 'remove';
 
 
-const BASE_MODEL_DEFAULTS = () => ({
+// ~~~~~~ //
+// MODELS //
+// ~~~~~~ //
+
+module.exports.stats = require('./stats');
+module.exports.settings = require('./settings');
+module.exports.workspace = require('./workspace');
+module.exports.environment = require('./environment');
+module.exports.cookieJar = require('./cookieJar');
+module.exports.requestGroup = require('./requestGroup');
+module.exports.request = require('./request');
+module.exports.response = require('./response');
+
+const MODELS = [
+  module.exports.stats,
+  module.exports.settings,
+  module.exports.workspace,
+  module.exports.environment,
+  module.exports.cookieJar,
+  module.exports.requestGroup,
+  module.exports.request,
+  module.exports.response
+];
+const MODEL_MAP = {};
+
+module.exports.initModel = doc => Object.assign({
   modified: Date.now(),
   created: Date.now(),
   parentId: null
-});
+}, doc);
 
-const MODELS = {
-  [stats.type]: stats,
-  [settings.type]: settings,
-  [workspace.type]: workspace,
-  [environment.type]: environment,
-  [cookieJar.type]: cookieJar,
-  [requestGroup.type]: requestGroup,
-  [request.type]: request,
-  [response.type]: response
-};
+module.exports.ALL_TYPES = MODELS.map(m => m.type);
 
-module.exports.ALL_TYPES = Object.keys(MODELS).map(m => MODELS[m].type);
+for (const model of MODELS) {
+  MODEL_MAP[model.type] = model;
+}
+
+
+// ~~~~~~~ //
+// HELPERS //
+// ~~~~~~~ //
 
 let db = null;
 
@@ -115,7 +130,7 @@ module.exports.find = (type, query = {}) => {
         return reject(err);
       }
 
-      const modelDefaults = MODELS[type].init();
+      const modelDefaults = MODEL_MAP[type].init();
       const docs = rawDocs.map(rawDoc => {
         return Object.assign({}, modelDefaults, rawDoc);
       });
@@ -141,7 +156,7 @@ module.exports.getWhere = (type, query) => {
         return resolve(null);
       }
 
-      const modelDefaults = MODELS[type].init();
+      const modelDefaults = MODEL_MAP[type].init();
       resolve(Object.assign({}, modelDefaults, rawDocs[0]));
     });
   });
@@ -224,7 +239,7 @@ module.exports.removeBulkSilently = (type, query) => {
 
 module.exports.docUpdate = (originalDoc, patch = {}) => {
   const doc = Object.assign(
-    BASE_MODEL_DEFAULTS(),
+    MODEL_MAP[originalDoc.type].init(),
     originalDoc,
     patch,
     {modified: Date.now()}
@@ -234,16 +249,15 @@ module.exports.docUpdate = (originalDoc, patch = {}) => {
 };
 
 module.exports.docCreate = (type, patch = {}) => {
-  const idPrefix = MODELS[type].prefix;
+  const idPrefix = MODEL_MAP[type].prefix;
 
   if (!idPrefix) {
     throw new Error(`No ID prefix for ${type}`)
   }
 
   const doc = Object.assign(
-    BASE_MODEL_DEFAULTS(),
     {_id: generateId(idPrefix)},
-    MODELS[type].init(),
+    MODEL_MAP[type].init(),
     patch,
 
     // Fields that the user can't touch
@@ -338,16 +352,3 @@ module.exports.duplicate = (originalDoc, patch = {}) => {
     })
   })
 };
-
-// ~~~~~~ //
-// MODELS //
-// ~~~~~~ //
-
-module.exports.settings = settings;
-module.exports.stats = stats;
-module.exports.workspace = workspace;
-module.exports.cookieJar = cookieJar;
-module.exports.environment = environment;
-module.exports.request = request;
-module.exports.requestGroup = requestGroup;
-module.exports.response = response;

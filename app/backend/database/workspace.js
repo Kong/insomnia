@@ -5,7 +5,8 @@ const {DEFAULT_SIDEBAR_WIDTH} = require('../constants');
 
 module.exports.type = 'Workspace';
 module.exports.prefix = 'wrk';
-module.exports.init = () => ({
+module.exports.slug = 'workspace';
+module.exports.init = () => db.initModel({
   name: 'New Workspace',
   metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   metaActiveEnvironmentId: null,

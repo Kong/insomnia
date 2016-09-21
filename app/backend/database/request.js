@@ -6,7 +6,8 @@ const db = require('./');
 
 module.exports.type = 'Request';
 module.exports.prefix = 'req';
-module.exports.init = () => ({
+module.exports.slug = 'request';
+module.exports.init = () => db.initModel({
   url: '',
   name: 'New Request',
   method: METHOD_GET,

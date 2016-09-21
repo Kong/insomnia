@@ -4,7 +4,8 @@ const db = require('./');
 
 module.exports.type = 'Environment';
 module.exports.prefix = 'env';
-module.exports.init = () => ({
+module.exports.slug = 'environment';
+module.exports.init = () => db.initModel({
   name: 'New Environment',
   data: {},
 });
