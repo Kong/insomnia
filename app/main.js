@@ -41,9 +41,10 @@ const {
 } = electron;
 
 const UPDATE_URLS = {
-  darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
-  win32: 'https://downloads.insomnia.rest/win',
-  linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}`
+  // Add `r` param to help cache bust
+  darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}&r=${Date.now()}`,
+  linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}&r=${Date.now()}`,
+  win32: `https://downloads.insomnia.rest/win?r=${Date.now()}`
 };
 
 const DOWNLOAD_URL = 'http://download.insomnia.rest';
