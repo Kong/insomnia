@@ -64,10 +64,7 @@ class ResponseViewer extends Component {
         );
       default: // Raw
         return (
-          <ResponseRaw
-            value={body}
-            fontSize={editorFontSize}
-          />
+          <ResponseRaw value={body} fontSize={editorFontSize}/>
         )
     }
   }

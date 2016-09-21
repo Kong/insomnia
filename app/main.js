@@ -42,7 +42,7 @@ const {
 
 const UPDATE_URLS = {
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
-  win32: 'https://s3.amazonaws.com/builds-insomnia-rest/win',
+  win32: 'https://downloads.insomnia.rest/win',
   linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}`
 };
 
