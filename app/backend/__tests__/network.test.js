@@ -20,7 +20,7 @@ describe('buildRequestConfig()', () => {
           body: '',
           followAllRedirects: true,
           gzip: true,
-          headers: {},
+          headers: {host: ''},
           maxRedirects: 20,
           method: 'GET',
           proxy: null,
@@ -37,11 +37,11 @@ describe('buildRequestConfig()', () => {
     return db.workspaceCreate().then(workspace => {
       const request = Object.assign(db.MODEL_DEFAULTS[db.TYPE_REQUEST](), {
         parentId: workspace._id,
-        headers: [{name: 'Content-Type', value: 'application/json'}],
+        headers: [{host: '', name: 'Content-Type', value: 'application/json'}],
         parameters: [{name: 'foo bar', value: 'hello&world'}],
         method: 'POST',
         body: 'foo=bar',
-        url: 'http://foo.com/★/foo%20bar?bar=baz',
+        url: 'http://foo.com:3332/★/foo%20bar?bar=baz',
         authentication: {
           username: 'user',
           password: 'pass'
@@ -56,7 +56,8 @@ describe('buildRequestConfig()', () => {
           gzip: true,
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Basic dXNlcjpwYXNz'
+            'Authorization': 'Basic dXNlcjpwYXNz',
+            'host': 'foo.com:3332'
           },
           maxRedirects: 20,
           method: 'POST',
@@ -64,7 +65,7 @@ describe('buildRequestConfig()', () => {
           rejectUnauthorized: true,
           time: true,
           timeout: 0,
-          url: 'http://foo.com/%E2%98%85/foo%2520bar?bar=baz&foo%20bar=hello%26world'
+          url: 'http://foo.com:3332/%E2%98%85/foo%2520bar?bar=baz&foo%20bar=hello%26world'
         });
       });
     })

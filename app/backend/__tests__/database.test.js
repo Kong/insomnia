@@ -1,7 +1,7 @@
 'use strict';
 
 const db = require('../database');
-const {PREVIEW_MODE_SOURCE} = require('backend/previewModes');
+const {PREVIEW_MODE_SOURCE} = require('../previewModes');
 
 function loadFixture (name) {
   const fixtures = require(`../__fixtures__/${name}`);

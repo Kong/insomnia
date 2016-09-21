@@ -13,6 +13,7 @@ class CookiesModal extends Component {
     super(props);
     this.state = {
       cookieJar: null,
+      workspace: null,
       filter: ''
     }
   }
@@ -20,7 +21,7 @@ class CookiesModal extends Component {
   _saveChanges () {
     const {cookieJar} = this.state;
     db.cookieJarUpdate(cookieJar).then(() => {
-      this._load();
+      this._load(this.state.workspace);
     });
   }
 
@@ -79,7 +80,7 @@ class CookiesModal extends Component {
 
   _load (workspace) {
     db.cookieJarGetOrCreateForWorkspace(workspace).then(cookieJar => {
-      this.setState({cookieJar});
+      this.setState({cookieJar, workspace});
     });
   }
 
