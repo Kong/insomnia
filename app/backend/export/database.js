@@ -44,15 +44,15 @@ module.exports.importJSON = (workspace, json) => {
     case VERSION_DESKTOP_APP:
       data.resources.map(r => {
         if (r._type === TYPE_WORKSPACE) {
-          db.workspaceGetById(r._id).then(d => d ? db.workspaceUpdate(d, r) : db.workspaceCreate(r));
+          db.workspace.getById(r._id).then(d => d ? db.workspace.update(d, r) : db.workspace.create(r));
         } else if (r._type === TYPE_COOKIE_JAR) {
-          db.cookieJarGetById(r._id).then(d => d ? db.cookieJarUpdate(d, r) : db.cookieJarCreate(r));
+          db.cookieJar.getById(r._id).then(d => d ? db.cookieJar.update(d, r) : db.cookieJar.create(r));
         } else if (r._type === TYPE_ENVIRONMENT) {
-          db.environmentGetById(r._id).then(d => d ? db.environmentUpdate(d, r) : db.environmentCreate(r));
+          db.environment.getById(r._id).then(d => d ? db.environment.update(d, r) : db.environment.create(r));
         } else if (r._type === TYPE_REQUEST_GROUP) {
-          db.requestGroupGetById(r._id).then(d => d ? db.requestGroupUpdate(d, r) : db.requestGroupCreate(r));
+          db.requestGroup.getById(r._id).then(d => d ? db.requestGroup.update(d, r) : db.requestGroup.create(r));
         } else if (r._type === TYPE_REQUEST) {
-          db.requestGetById(r._id).then(d => d ? db.requestUpdate(d, r) : db.requestCreate(r));
+          db.request.getById(r._id).then(d => d ? db.request.update(d, r) : db.request.create(r));
         } else {
           console.error('Unknown doc type for import', r.type);
         }

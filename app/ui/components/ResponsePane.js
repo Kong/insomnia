@@ -29,7 +29,7 @@ class ResponsePane extends Component {
       return;
     }
 
-    db.responseGetLatestByParentId(request._id).then(response => {
+    db.response.getLatestByParentId(request._id).then(response => {
       this.setState({response});
     })
   }

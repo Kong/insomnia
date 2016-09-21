@@ -25,7 +25,7 @@ class EnvironmentsDropdown extends Component {
 
   _handleActivateEnvironment (environment) {
     const workspace = this._getActiveWorkspace();
-    db.workspaceUpdate(workspace, {metaActiveEnvironmentId: environment._id});
+    db.workspace.update(workspace, {metaActiveEnvironmentId: environment._id});
   }
 
   render () {

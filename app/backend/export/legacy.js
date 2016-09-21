@@ -11,7 +11,7 @@ const FORMAT_MAP = {
 };
 
 module.exports.importRequestGroupLegacy = (importedRequestGroup, parentId, index = 1) => {
-  return db.requestGroupCreate({
+  return db.requestGroup.create({
     parentId,
     name: importedRequestGroup.name,
     environment: (importedRequestGroup.environments || {}).base || {},
@@ -51,7 +51,7 @@ module.exports.importRequestLegacy = (importedRequest, parentId, index = 1) => {
     }
   }
 
-  db.requestCreate({
+  db.request.create({
     parentId,
     _id: importedRequest._id,
     name: importedRequest.name,

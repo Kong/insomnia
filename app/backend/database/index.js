@@ -362,6 +362,19 @@ module.exports.duplicate = (originalDoc, patch = {}) => {
   })
 };
 
+// ~~~~~~ //
+// MODELS //
+// ~~~~~~ //
+
+module.exports.settings = settings;
+module.exports.stats = stats;
+module.exports.workspace = workspace;
+module.exports.cookieJar = cookieJar;
+module.exports.environment = environment;
+module.exports.request = request;
+module.exports.requestGroup = requestGroup;
+module.exports.response = response;
+
 
 // ~~~~~~~~~~~~~~~ //
 // MODEL FUNCTIONS //

@@ -26,7 +26,7 @@ describe('requestCreate()', () => {
       parentId: 'wrk_123'
     };
 
-    return db.requestCreate(patch).then(r => {
+    return db.request.create(patch).then(r => {
       expect(Object.keys(r).length).toBe(15);
 
       expect(r._id).toMatch(/^req_[a-zA-Z0-9]{24}$/);
@@ -47,7 +47,7 @@ describe('requestCreate()', () => {
   });
 
   it('throws when missing parentID', () => {
-    const fn = () => db.requestCreate({name: 'My Request'});
+    const fn = () => db.request.create({name: 'My Request'});
     expect(fn).toThrowError('New Requests missing `parentId`');
   });
 });
@@ -62,20 +62,20 @@ describe('requestGroupDuplicate()', () => {
 
   it('duplicates a RequestGroup', () => {
     return new Promise((resolve, reject) => {
-      db.requestGroupGetById('fld_1').then(requestGroup => {
+      db.requestGroup.getById('fld_1').then(requestGroup => {
         expect(requestGroup.name).toBe('Fld 1');
 
-        db.requestGroupDuplicate(requestGroup).then(newRequestGroup => {
+        db.requestGroup.duplicate(requestGroup).then(newRequestGroup => {
           expect(newRequestGroup._id).not.toBe(requestGroup._id);
           expect(newRequestGroup.name).toBe('Fld 1 (Copy)');
 
           Promise.all([
-            db.requestAll(),
-            db.requestGroupAll(),
-            db.requestFindByParentId(requestGroup._id),
-            db.requestGroupFindByParentId(requestGroup._id),
-            db.requestFindByParentId(newRequestGroup._id),
-            db.requestGroupFindByParentId(newRequestGroup._id)
+            db.request.all(),
+            db.requestGroup.all(),
+            db.request.findByParentId(requestGroup._id),
+            db.requestGroup.findByParentId(requestGroup._id),
+            db.request.findByParentId(newRequestGroup._id),
+            db.requestGroup.findByParentId(newRequestGroup._id)
           ]).then(([
             allRequests,
             allRequestGroups,

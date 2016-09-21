@@ -112,13 +112,13 @@ module.exports.recursiveRender = (obj, context) => {
 };
 
 module.exports.getRenderedRequest = request => {
-  return db.requestGetAncestors(request).then(ancestors => {
+  return db.request.getAncestors(request).then(ancestors => {
     const workspace = ancestors.find(doc => doc.type === TYPE_WORKSPACE);
 
     return Promise.all([
-      db.environmentGetOrCreateForWorkspace(workspace),
-      db.environmentGetById(workspace.metaActiveEnvironmentId),
-      db.cookieJarGetOrCreateForWorkspace(workspace)
+      db.environment.getOrCreateForWorkspace(workspace),
+      db.environment.getById(workspace.metaActiveEnvironmentId),
+      db.cookieJar.getOrCreateForWorkspace(workspace)
     ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
 
       // Generate the context we need to render

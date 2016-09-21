@@ -113,7 +113,7 @@ class App extends Component {
           return;
         }
 
-        db.requestDuplicateAndActivate(workspace, request);
+        db.request.duplicateAndActivate(workspace, request);
       }
     }
   }
@@ -132,7 +132,7 @@ class App extends Component {
     }
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
-    db.requestGroupFindByParentId(requestGroupToTarget.parentId).then(requestGroups => {
+    db.requestGroup.findByParentId(requestGroupToTarget.parentId).then(requestGroups => {
       requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
       // Find the index of request B so we can re-order and save everything
@@ -161,14 +161,14 @@ class App extends Component {
             console.log('-- Recreating Sort Keys --');
 
             requestGroups.map((r, i) => {
-              db.requestGroupUpdate(r, {
+              db.requestGroup.update(r, {
                 metaSortKey: i * 100,
                 parentId: requestGroupToTarget.parentId
               });
             });
           } else {
             const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.requestGroupUpdate(requestGroupToMove, {
+            db.requestGroup.update(requestGroupToMove, {
               metaSortKey,
               parentId: requestGroupToTarget.parentId
             });
@@ -190,12 +190,12 @@ class App extends Component {
 
     if (targetId === null) {
       // We are moving to an empty area. No sorting required
-      db.requestUpdate(requestToMove, {parentId});
+      db.request.update(requestToMove, {parentId});
       return;
     }
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
-    db.requestFindByParentId(parentId).then(requests => {
+    db.request.findByParentId(parentId).then(requests => {
       requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
       // Find the index of request B so we can re-order and save everything
@@ -224,11 +224,11 @@ class App extends Component {
             console.warn(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
 
             requests.map((r, i) => {
-              db.requestUpdate(r, {metaSortKey: i * 100, parentId});
+              db.request.update(r, {metaSortKey: i * 100, parentId});
             });
           } else {
             const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.requestUpdate(requestToMove, {metaSortKey, parentId});
+            db.request.update(requestToMove, {metaSortKey, parentId});
           }
 
           break;
@@ -243,7 +243,7 @@ class App extends Component {
       defaultValue: 'My Folder',
       selectText: true
     }).then(name => {
-      db.requestGroupCreate({parentId, name})
+      db.requestGroup.create({parentId, name})
     });
   }
 
@@ -254,7 +254,7 @@ class App extends Component {
       selectText: true
     }).then(name => {
       const workspace = this._getActiveWorkspace();
-      db.requestCreateAndActivate(workspace, {parentId, name})
+      db.request.createAndActivate(workspace, {parentId, name})
     });
   }
 
@@ -285,13 +285,13 @@ class App extends Component {
 
     if (requestPatch) {
       // If the user typed in a curl cmd, dissect it and update the whole request
-      db.requestUpdate(this._getActiveRequest(), requestPatch).then(() => {
+      db.request.update(this._getActiveRequest(), requestPatch).then(() => {
         setTimeout(() => {
 
         })
       });
     } else {
-      db.requestUpdate(this._getActiveRequest(), {url});
+      db.request.update(this._getActiveRequest(), {url});
     }
   }
 
@@ -331,12 +331,12 @@ class App extends Component {
 
   _savePaneWidth () {
     const metaPaneWidth = this.state.paneWidth;
-    db.workspaceUpdate(this._getActiveWorkspace(), {metaPaneWidth});
+    db.workspace.update(this._getActiveWorkspace(), {metaPaneWidth});
   }
 
   _saveSidebarWidth () {
     const metaSidebarWidth = this.state.sidebarWidth;
-    db.workspaceUpdate(this._getActiveWorkspace(), {metaSidebarWidth});
+    db.workspace.update(this._getActiveWorkspace(), {metaSidebarWidth});
   }
 
   _getActiveWorkspace (props) {
@@ -402,7 +402,7 @@ class App extends Component {
   _handleToggleSidebar () {
     const workspace = this._getActiveWorkspace();
     const metaSidebarHidden = !workspace.metaSidebarHidden;
-    db.workspaceUpdate(workspace, {metaSidebarHidden});
+    db.workspace.update(workspace, {metaSidebarHidden});
   }
 
   componentWillReceiveProps (nextProps) {
@@ -428,7 +428,7 @@ class App extends Component {
     trackEvent('App Launched');
 
     // Update Stats Object
-    db.statsGet().then(({lastVersion, launches}) => {
+    db.stats.get().then(({lastVersion, launches}) => {
       const firstLaunch = !lastVersion;
       if (firstLaunch) {
         // TODO: Show a welcome message
@@ -437,7 +437,7 @@ class App extends Component {
         getModal(ChangelogModal).show();
       }
 
-      db.statsUpdate({
+      db.stats.update({
         launches: launches + 1,
         lastLaunch: Date.now(),
         lastVersion: getAppVersion()
@@ -494,13 +494,13 @@ class App extends Component {
           ref={n => this._sidebar = n}
           showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
           showCookiesModal={() => getModal(CookiesModal).show(workspace)}
-          activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
-          changeFilter={metaFilter => db.workspaceUpdate(workspace, {metaFilter})}
+          activateRequest={r => db.workspace.update(workspace, {metaActiveRequestId: r._id})}
+          changeFilter={metaFilter => db.workspace.update(workspace, {metaFilter})}
           moveRequest={this._moveRequest.bind(this)}
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           addRequestToWorkspace={() => this._requestCreate(workspace._id)}
-          toggleRequestGroup={requestGroup => db.requestGroupUpdate(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
+          toggleRequestGroup={requestGroup => db.requestGroup.update(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequestId}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
@@ -529,16 +529,16 @@ class App extends Component {
           useBulkHeaderEditor={settings.useBulkHeaderEditor}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
-          requestCreate={() => db.requestCreateAndActivate(workspace, {parentId: workspace._id})}
-          updateRequestBody={body => db.requestUpdate(activeRequest, {body})}
+          requestCreate={() => db.request.createAndActivate(workspace, {parentId: workspace._id})}
+          updateRequestBody={body => db.request.update(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(url)}
-          updateRequestMethod={method => db.requestUpdate(activeRequest, {method})}
-          updateRequestParameters={parameters => db.requestUpdate(activeRequest, {parameters})}
-          updateRequestAuthentication={authentication => db.requestUpdate(activeRequest, {authentication})}
-          updateRequestHeaders={headers => db.requestUpdate(activeRequest, {headers})}
-          updateRequestContentType={contentType => db.requestUpdateContentType(activeRequest, contentType)}
-          updateSettingsShowPasswords={showPasswords => db.settingsUpdate(settings, {showPasswords})}
-          updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => db.settingsUpdate(settings, {useBulkHeaderEditor})}
+          updateRequestMethod={method => db.request.update(activeRequest, {method})}
+          updateRequestParameters={parameters => db.request.update(activeRequest, {parameters})}
+          updateRequestAuthentication={authentication => db.request.update(activeRequest, {authentication})}
+          updateRequestHeaders={headers => db.request.update(activeRequest, {headers})}
+          updateRequestContentType={contentType => db.request.updateContentType(activeRequest, contentType)}
+          updateSettingsShowPasswords={showPasswords => db.settings.update(settings, {showPasswords})}
+          updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => db.settings.update(settings, {useBulkHeaderEditor})}
         />
 
         <div className="drag drag--pane">
@@ -553,8 +553,8 @@ class App extends Component {
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
           responseFilter={activeRequest ? activeRequest.metaResponseFilter : ''}
-          updatePreviewMode={metaPreviewMode => db.requestUpdate(activeRequest, {metaPreviewMode})}
-          updateResponseFilter={metaResponseFilter => db.requestUpdate(activeRequest, {metaResponseFilter})}
+          updatePreviewMode={metaPreviewMode => db.request.update(activeRequest, {metaPreviewMode})}
+          updateResponseFilter={metaResponseFilter => db.request.update(activeRequest, {metaResponseFilter})}
           loadingRequests={requests.loadingRequests}
           showCookiesModal={() => getModal(CookiesModal).show(workspace)}
         />
@@ -568,15 +568,15 @@ class App extends Component {
           ref={m => addModal(m)}
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
-          activateRequest={r => db.workspaceUpdate(workspace, {metaActiveRequestId: r._id})}
+          activateRequest={r => db.workspace.update(workspace, {metaActiveRequestId: r._id})}
           activateWorkspace={w => actions.workspaces.activate(w)}
         />
         <EnvironmentEditModal
           ref={m => addModal(m)}
-          onChange={rg => db.requestGroupUpdate(rg)}/>
+          onChange={rg => db.requestGroup.update(rg)}/>
         <WorkspaceEnvironmentsEditModal
           ref={m => addModal(m)}
-          onChange={w => db.workspaceUpdate(w)}/>
+          onChange={w => db.workspace.update(w)}/>
         <CookiesModal ref={m => addModal(m)}/>
 
         {/*<div className="toast toast--show">*/}

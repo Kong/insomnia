@@ -30,12 +30,12 @@ export function initStore (dispatch) {
 
   // Restore docs in parent->child->grandchild order
   return Promise.all([
-    db.settingsGetOrCreate(),
-    db.workspaceAll(),
-    db.environmentAll(),
-    db.cookieJarAll(),
-    db.requestGroupAll(),
-    db.requestAll()
+    db.settings.getOrCreate(),
+    db.workspace.all(),
+    db.environment.all(),
+    db.cookieJar.all(),
+    db.requestGroup.all(),
+    db.request.all()
   ]).then(results => {
     for (let docs of results) {
       docs = Array.isArray(docs) ? docs : [docs];

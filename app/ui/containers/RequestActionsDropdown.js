@@ -18,7 +18,7 @@ class RequestActionsDropdown extends Component {
       defaultValue: request.name,
       hint: 'also rename requests by double clicking in the sidebar'
     }).then(name => {
-      db.requestUpdate(request, {name});
+      db.request.update(request, {name});
     })
   }
 
@@ -32,7 +32,7 @@ class RequestActionsDropdown extends Component {
         </button>
         <ul>
           <li>
-            <button onClick={e => db.requestDuplicate(request)}>
+            <button onClick={e => db.request.duplicate(request)}>
               <i className="fa fa-copy"></i> Duplicate
               <DropdownHint char="D"></DropdownHint>
             </button>
@@ -48,7 +48,7 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <PromptButton onClick={e => db.requestRemove(request)}
+            <PromptButton onClick={e => db.request.remove(request)}
                           addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
             </PromptButton>

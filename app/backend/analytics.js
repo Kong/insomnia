@@ -13,7 +13,7 @@ module.exports.initAnalytics = () => {
     analytics = new Analytics(SEGMENT_WRITE_KEY);
 
     if (!userId) {
-      return db.statsGet().then(stats => {
+      return db.stats.get().then(stats => {
         userId = stats._id;
 
         // Recurse now that we have a userId

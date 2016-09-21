@@ -26,7 +26,7 @@ class WorkspaceDropdown extends Component {
       headerName: 'Rename Workspace',
       defaultValue: workspace.name
     }).then(name => {
-      db.workspaceUpdate(workspace, {name});
+      db.workspace.update(workspace, {name});
     })
   }
 
@@ -37,21 +37,21 @@ class WorkspaceDropdown extends Component {
       submitName: 'Create',
       selectText: true
     }).then(name => {
-      db.workspaceCreate({name}).then(workspace => {
+      db.workspace.create({name}).then(workspace => {
         this.props.actions.workspaces.activate(workspace);
       });
     });
   }
 
   _workspaceRemove () {
-    db.workspaceCount().then(count => {
+    db.workspace.count().then(count => {
       if (count <= 1) {
         getModal(AlertModal).show({
           message: 'You cannot delete your last workspace'
         });
       } else {
         const workspace = this._getActiveWorkspace(this.props);
-        db.workspaceRemove(workspace);
+        db.workspace.remove(workspace);
       }
     })
   }

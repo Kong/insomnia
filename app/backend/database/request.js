@@ -88,8 +88,8 @@ module.exports.getAncestors = request => {
 
     const next = (doc) => {
       Promise.all([
-        db.requestGroupGetById(doc.parentId),
-        db.workspaceGetById(doc.parentId)
+        db.requestGroup.getById(doc.parentId),
+        db.workspace.getById(doc.parentId)
       ]).then(([requestGroup, workspace]) => {
         if (requestGroup) {
           ancestors = [requestGroup, ...ancestors];

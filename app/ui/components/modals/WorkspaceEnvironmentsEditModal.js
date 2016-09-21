@@ -36,8 +36,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
   }
 
   _load (workspace, environmentToActivate = null) {
-    db.environmentGetOrCreateForWorkspace(workspace).then(rootEnvironment => {
-      db.environmentFindByParentId(rootEnvironment._id).then(subEnvironments => {
+    db.environment.getOrCreateForWorkspace(workspace).then(rootEnvironment => {
+      db.environment.findByParentId(rootEnvironment._id).then(subEnvironments => {
         let activeEnvironmentId;
         if (environmentToActivate) {
           activeEnvironmentId = environmentToActivate._id
@@ -57,7 +57,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
   _handleAddEnvironment () {
     const {rootEnvironment, workspace} = this.state;
-    db.environmentCreate({parentId: rootEnvironment._id}).then(environment => {
+    db.environment.create({parentId: rootEnvironment._id}).then(environment => {
       this._load(workspace, environment);
     });
   }
@@ -81,14 +81,14 @@ class WorkspaceEnvironmentsEditModal extends Component {
     }
 
     // Delete the current one, then activate the root environment
-    db.environmentRemove(environment).then(() => {
+    db.environment.remove(environment).then(() => {
       this._load(workspace, rootEnvironment);
     });
   }
 
   _handleChangeEnvironmentName (environment, name) {
     const {workspace} = this.state;
-    db.environmentUpdate(environment, {name}).then(() => {
+    db.environment.update(environment, {name}).then(() => {
       this._load(workspace);
     });
   }
@@ -122,7 +122,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const environment = this._envEditor.getValue();
     const activeEnvironment = this._getActiveEnvironment();
 
-    db.environmentUpdate(activeEnvironment, {data: environment});
+    db.environment.update(activeEnvironment, {data: environment});
   }
 
   render () {

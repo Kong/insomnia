@@ -93,7 +93,7 @@ class SettingsTabs extends Component {
               id="setting-show-passwords"
               type="checkbox"
               checked={settings.showPasswords}
-              onChange={e => db.settingsUpdate(settings, {showPasswords: e.target.checked})}
+              onChange={e => db.settings.update(settings, {showPasswords: e.target.checked})}
             />
             &nbsp;&nbsp;
             <label htmlFor="setting-show-passwords">
@@ -106,7 +106,7 @@ class SettingsTabs extends Component {
               id="setting-bulk-header-editor"
               type="checkbox"
               checked={settings.useBulkHeaderEditor}
-              onChange={e => db.settingsUpdate(settings, {useBulkHeaderEditor: e.target.checked})}
+              onChange={e => db.settings.update(settings, {useBulkHeaderEditor: e.target.checked})}
             />
             &nbsp;&nbsp;
             <label htmlFor="setting-bulk-header-editor">
@@ -119,7 +119,7 @@ class SettingsTabs extends Component {
               id="setting-follow-redirects"
               type="checkbox"
               checked={settings.followRedirects}
-              onChange={e => db.settingsUpdate(settings, {followRedirects: e.target.checked})}
+              onChange={e => db.settings.update(settings, {followRedirects: e.target.checked})}
             />
             &nbsp;&nbsp;
             <label htmlFor="setting-follow-redirects">
@@ -132,7 +132,7 @@ class SettingsTabs extends Component {
               id="setting-validate-ssl"
               type="checkbox"
               checked={settings.validateSSL}
-              onChange={e => db.settingsUpdate(settings, {validateSSL: e.target.checked})}
+              onChange={e => db.settings.update(settings, {validateSSL: e.target.checked})}
             />
             &nbsp;&nbsp;
             <label htmlFor="setting-validate-ssl">
@@ -150,7 +150,7 @@ class SettingsTabs extends Component {
                 type="number"
                 min={0}
                 value={settings.timeout}
-                onChange={e => db.settingsUpdate(settings, {timeout: parseInt(e.target.value, 10)})}
+                onChange={e => db.settings.update(settings, {timeout: parseInt(e.target.value, 10)})}
               />
             </div>
           </div>
@@ -168,7 +168,7 @@ class SettingsTabs extends Component {
                 type="string"
                 placeholder="localhost:8005"
                 defaultValue={settings.httpProxy}
-                onChange={e => db.settingsUpdate(settings, {httpProxy: e.target.value})}
+                onChange={e => db.settings.update(settings, {httpProxy: e.target.value})}
               />
             </div>
           </div>
@@ -182,7 +182,7 @@ class SettingsTabs extends Component {
                 placeholder="localhost:8005"
                 type="string"
                 defaultValue={settings.httpsProxy}
-                onChange={e => db.settingsUpdate(settings, {httpsProxy: e.target.value})}
+                onChange={e => db.settings.update(settings, {httpsProxy: e.target.value})}
               />
             </div>
           </div>
@@ -194,7 +194,7 @@ class SettingsTabs extends Component {
               id="setting-editor-line-wrapping"
               type="checkbox"
               checked={settings.editorLineWrapping}
-              onChange={e => db.settingsUpdate(settings, {editorLineWrapping: e.target.checked})}
+              onChange={e => db.settings.update(settings, {editorLineWrapping: e.target.checked})}
             />
             &nbsp;&nbsp;
             <label htmlFor="setting-editor-line-wrapping">
@@ -212,7 +212,7 @@ class SettingsTabs extends Component {
                 min={8}
                 max={20}
                 value={settings.editorFontSize}
-                onChange={e => db.settingsUpdate(settings, {editorFontSize: parseInt(e.target.value, 10)})}
+                onChange={e => db.settings.update(settings, {editorFontSize: parseInt(e.target.value, 10)})}
               />
             </div>
           </div>

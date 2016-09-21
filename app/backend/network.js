@@ -84,7 +84,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
     // TODO: Handle redirects ourselves
     const req = networkRequest(config, function (err, networkResponse) {
       if (err) {
-        db.responseCreate({
+        db.response.create({
           parentId: renderedRequest._id,
           elapsedTime: Date.now() - startTime,
           error: err.toString()
@@ -97,7 +97,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
       if (contentType && contentType.toLowerCase().indexOf('image/') === 0) {
         const err = new Error(`Content-Type ${contentType} not supported`);
 
-        db.responseCreate({
+        db.response.create({
           parentId: renderedRequest._id,
           elapsedTime: Date.now() - startTime,
           error: err.toString(),
@@ -109,7 +109,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
 
       // Update the cookie jar
       cookiesFromJar(jar).then(cookies => {
-        db.cookieJarUpdate(cookieJar, {cookies});
+        db.cookieJar.update(cookieJar, {cookies});
       });
 
       // Format the headers into Insomnia format
@@ -135,14 +135,14 @@ module.exports._actuallySend = (renderedRequest, settings) => {
         headers: headers
       };
 
-      db.responseCreate(responsePatch).then(resolve, reject);
+      db.response.create(responsePatch).then(resolve, reject);
     });
 
     // Kind of hacky, but this is how we cancel a request.
     cancelRequestFunction = () => {
       req.abort();
 
-      db.responseCreate({
+      db.response.create({
         parentId: renderedRequest._id,
         elapsedTime: Date.now() - startTime,
         statusMessage: 'Cancelled',
@@ -160,13 +160,13 @@ module.exports.send = requestId => {
     // First, lets wait for all debounces to finish
     setTimeout(() => {
       Promise.all([
-        db.requestGetById(requestId),
-        db.settingsGetOrCreate()
+        db.request.getById(requestId),
+        db.settings.getOrCreate()
       ]).then(([request, settings]) => {
         getRenderedRequest(request).then(renderedRequest => {
           module.exports._actuallySend(renderedRequest, settings).then(resolve, reject);
         }, err => {
-          db.responseCreate({
+          db.response.create({
             parentId: request._id,
             statusCode: STATUS_CODE_PEBKAC,
             error: err.message
