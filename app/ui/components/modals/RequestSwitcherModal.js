@@ -5,8 +5,8 @@ import Modal from '../base/Modal';
 import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
-import * as db from '../../../lib/database';
-import {trackEvent} from '../../../lib/analytics';
+import * as db from 'backend/database';
+import {trackEvent} from 'backend/analytics';
 
 
 class RequestSwitcherModal extends Component {

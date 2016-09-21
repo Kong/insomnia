@@ -8,7 +8,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as db from '../../../lib/database'
+import * as db from 'backend/database'
 
 
 class WorkspaceEnvironmentsEditModal extends Component {

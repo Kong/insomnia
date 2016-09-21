@@ -1,5 +1,5 @@
 import {combineReducers} from 'redux';
-import {MODAL_WORKSPACE_RENAME} from '../../../lib/constants';
+import {MODAL_WORKSPACE_RENAME} from 'backend/constants';
 
 export const WORKSPACE_ACTIVATE = 'workspaces/activate';
 

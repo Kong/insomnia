@@ -1,6 +1,6 @@
 import React, {PropTypes, Component} from 'react';
-import {getRenderedRequest} from '../../lib/render';
-import * as querystring from '../../lib/querystring';
+import {getRenderedRequest} from 'backend/render';
+import * as querystring from 'backend/querystring';
 
 
 class RenderedQueryString extends Component {

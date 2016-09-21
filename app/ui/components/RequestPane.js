@@ -10,10 +10,10 @@ import AuthEditor from './editors/AuthEditor';
 import {UrlBar} from './UrlBar.elm';
 import ElmComponent from './ElmComponent';
 
-import {getContentTypeName} from '../../lib/contentTypes';
-import {getContentTypeFromHeaders} from '../../lib/contentTypes';
-import {MOD_SYM} from '../../lib/constants';
-import {trackEvent} from '../../lib/analytics';
+import {getContentTypeName} from 'backend/contentTypes';
+import {getContentTypeFromHeaders} from 'backend/contentTypes';
+import {MOD_SYM} from 'backend/constants';
+import {trackEvent} from 'backend/analytics';
 import {debounce} from '../lib/debounce';
 
 class RequestPane extends Component {
@@ -143,41 +143,47 @@ class RequestPane extends Component {
               lineWrapping={editorLineWrapping}
             />
           </TabPanel>
-          <TabPanel>
-            <AuthEditor
-              showPasswords={showPasswords}
-              request={request}
-              onChange={updateRequestAuthentication}
-            />
-          </TabPanel>
-          <TabPanel className="scrollable">
-            <div className="pad no-pad-bottom">
-              <label className="label--small">Url Preview</label>
-              <code className="txt-sm block">
-                <RenderedQueryString
-                  request={request}
-                  placeholder="http://myproduct.com?name=Gregory"
-                />
-              </code>
+          <TabPanel className="scrollable-container">
+            <div className="scrollable">
+              <AuthEditor
+                showPasswords={showPasswords}
+                request={request}
+                onChange={updateRequestAuthentication}
+              />
             </div>
-            <KeyValueEditor
-              namePlaceholder="name"
-              valuePlaceholder="value"
-              pairs={request.parameters}
-              onChange={updateRequestParameters}
-            />
           </TabPanel>
-          <TabPanel className="scrollable">
-            <RequestHeadersEditor
-              headers={request.headers}
-              onChange={updateRequestHeaders}
-              bulk={useBulkHeaderEditor}
-            />
-            <div className="pad no-pad-top text-right">
-              <button className="btn btn--outlined btn--super-compact"
-                      onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
-                {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-              </button>
+          <TabPanel className="scrollable-container">
+            <div className="scrollable">
+              <div className="pad no-pad-bottom">
+                <label className="label--small">Url Preview</label>
+                <code className="txt-sm block">
+                  <RenderedQueryString
+                    request={request}
+                    placeholder="http://myproduct.com?name=Gregory"
+                  />
+                </code>
+              </div>
+              <KeyValueEditor
+                namePlaceholder="name"
+                valuePlaceholder="value"
+                pairs={request.parameters}
+                onChange={updateRequestParameters}
+              />
+            </div>
+          </TabPanel>
+          <TabPanel className="scrollable-container">
+            <div className="scrollable">
+              <RequestHeadersEditor
+                headers={request.headers}
+                onChange={updateRequestHeaders}
+                bulk={useBulkHeaderEditor}
+              />
+              <div className="pad no-pad-top text-right">
+                <button className="btn btn--outlined btn--super-compact"
+                        onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
+                  {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+                </button>
+              </div>
             </div>
           </TabPanel>
         </Tabs>

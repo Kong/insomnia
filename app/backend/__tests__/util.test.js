@@ -1,4 +1,6 @@
-import * as util from '../util';
+'use strict';
+
+const util = require('../util');
 
 describe('getBasicAuthHeader()', () => {
   it('succeed with username and password', () => {

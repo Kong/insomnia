@@ -1,7 +1,9 @@
-import * as db from '../database';
-import {getAppVersion} from '../appInfo';
-import {importRequestGroupLegacy} from './legacy';
-import {importRequestLegacy} from './legacy';
+'use strict';
+
+const db = require('../database');
+const {getAppVersion} = require('../appInfo');
+const {importRequestGroupLegacy} = require('./legacy');
+const {importRequestLegacy} = require('./legacy');
 
 const VERSION_LEGACY = 1;
 const VERSION_DESKTOP_APP = 2;
@@ -11,7 +13,7 @@ const TYPE_WORKSPACE = 'workspace';
 const TYPE_COOKIE_JAR = 'cookie_jar';
 const TYPE_ENVIRONMENT = 'environment';
 
-export function importJSON (workspace, json) {
+module.exports.importJSON = (workspace, json) => {
   let data;
 
   try {
@@ -61,9 +63,9 @@ export function importJSON (workspace, json) {
       console.error('Export format not recognized', exportFormat);
       break;
   }
-}
+};
 
-export function exportJSON (parentDoc = null) {
+module.exports.exportJSON = (parentDoc = null) => {
   const data = {
     _type: 'export',
     __export_format: 2,
@@ -101,7 +103,7 @@ export function exportJSON (parentDoc = null) {
       resolve(JSON.stringify(data, null, 2));
     });
   });
-}
+};
 
 
 function removeMetaKeys (obj) {

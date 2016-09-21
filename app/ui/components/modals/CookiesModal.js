@@ -5,8 +5,8 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import CookiesEditor from '../editors/CookiesEditor';
-import * as db from '../../../lib/database';
-import {DEBOUNCE_MILLIS} from '../../../lib/constants';
+import * as db from 'backend/database';
+import {DEBOUNCE_MILLIS} from 'backend/constants';
 
 class CookiesModal extends Component {
   constructor (props) {

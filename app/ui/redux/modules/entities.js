@@ -4,7 +4,7 @@ import {
   ALL_TYPES,
   TYPE_RESPONSE,
   TYPE_STATS
-} from '../../../lib/database/index';
+} from 'backend/database/index';
 
 const ENTITY_BLACKLIST = {
   [TYPE_RESPONSE]: 1,

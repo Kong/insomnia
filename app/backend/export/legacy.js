@@ -1,5 +1,7 @@
-import * as db from '../database/index';
-import {getContentTypeFromHeaders} from '../contentTypes';
+'use strict';
+
+const db = require('../database/index');
+const {getContentTypeFromHeaders} = require('../contentTypes');
 
 const FORMAT_MAP = {
   json: 'application/json',
@@ -8,7 +10,7 @@ const FORMAT_MAP = {
   text: 'text/plain'
 };
 
-export function importRequestGroupLegacy (importedRequestGroup, parentId, index = 1) {
+module.exports.importRequestGroupLegacy = (importedRequestGroup, parentId, index = 1) => {
   return db.requestGroupCreate({
     parentId,
     name: importedRequestGroup.name,
@@ -20,13 +22,13 @@ export function importRequestGroupLegacy (importedRequestGroup, parentId, index 
     if (importedRequestGroup.hasOwnProperty('requests')) {
       // Let's process them oldest to newest
       importedRequestGroup.requests.map(
-        (r, i) => importRequestLegacy(r, requestGroup._id, index * 1000 + i)
+        (r, i) => module.exports.importRequestLegacy(r, requestGroup._id, index * 1000 + i)
       );
     }
   });
-}
+};
 
-export function importRequestLegacy (importedRequest, parentId, index = 1) {
+module.exports.importRequestLegacy = (importedRequest, parentId, index = 1) => {
   let auth = {};
   if (importedRequest.authentication.username) {
     auth = {
@@ -62,5 +64,5 @@ export function importRequestLegacy (importedRequest, parentId, index = 1) {
     contentType: FORMAT_MAP[importedRequest.__insomnia.format] || 'text/plain',
     authentication: auth
   });
-}
+};
 

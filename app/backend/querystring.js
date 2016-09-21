@@ -1,18 +1,19 @@
+'use strict';
 
-export function getJoiner (url) {
+module.exports.getJoiner = url => {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';
-}
+};
 
-export function joinURL (url, qs) {
+module.exports.joinURL = (url, qs) => {
   if (!qs) {
     return url;
   }
   url = url || '';
-  return url + getJoiner(url) + qs;
-}
+  return url + module.exports.getJoiner(url) + qs;
+};
 
-export function build (param, strict = true) {
+module.exports.build = (param, strict = true) => {
   // Skip non-name ones in strict mode
   if (strict && !param.name) {
     return '';
@@ -23,7 +24,7 @@ export function build (param, strict = true) {
   } else {
     return encodeURIComponent(param.name);
   }
-}
+};
 
 /**
  *
@@ -31,10 +32,10 @@ export function build (param, strict = true) {
  * @param strict allow empty names and values
  * @returns {string}
  */
-export function buildFromParams (parameters, strict = true) {
+module.exports.buildFromParams = (parameters, strict = true) => {
   let items = [];
   for (var i = 0; i < parameters.length; i++) {
-    let built = build(parameters[i], strict);
+    let built = module.exports.build(parameters[i], strict);
 
     if (!built) {
       continue;
@@ -44,7 +45,7 @@ export function buildFromParams (parameters, strict = true) {
   }
 
   return items.join('&');
-}
+};
 
 /**
  *
@@ -52,7 +53,7 @@ export function buildFromParams (parameters, strict = true) {
  * @param strict allow empty names and values
  * @returns {Array}
  */
-export function deconstructToParams (qs, strict = true) {
+module.exports.deconstructToParams = (qs, strict = true) => {
   const stringPairs = qs.split('&');
   const pairs = [];
 
@@ -70,4 +71,4 @@ export function deconstructToParams (qs, strict = true) {
   }
 
   return pairs;
-}
+};

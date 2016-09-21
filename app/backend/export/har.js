@@ -1,8 +1,10 @@
-import * as db from '../database';
-import {getRenderedRequest} from '../render';
-import {jarFromCookies} from '../cookies';
+'use strict';
 
-export function exportHar (requestId, addContentLength = false) {
+const db = require('../database');
+const {getRenderedRequest} = require('../render');
+const {jarFromCookies} = require('../cookies');
+
+module.exports.exportHar = (requestId, addContentLength = false) => {
   return new Promise((resolve, reject) => {
     db.requestGetById(requestId).then(request => {
       return getRenderedRequest(request);
@@ -35,7 +37,7 @@ export function exportHar (requestId, addContentLength = false) {
       });
     })
   });
-}
+};
 
 function getCookies (renderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);

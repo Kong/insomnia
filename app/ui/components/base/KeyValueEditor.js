@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-import {DEBOUNCE_MILLIS} from '../../../lib/constants';
+import {DEBOUNCE_MILLIS} from 'backend/constants';
 
 const NAME = 'name';
 const VALUE = 'value';

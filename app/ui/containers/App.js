@@ -19,7 +19,7 @@ import SettingsModal from '../components/modals/SettingsModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/sidebar/Sidebar';
-import {PREVIEW_MODE_FRIENDLY} from '../../lib/previewModes';
+import {PREVIEW_MODE_FRIENDLY} from 'backend/previewModes';
 import {
   MAX_PANE_WIDTH,
   MIN_PANE_WIDTH,
@@ -28,14 +28,14 @@ import {
   MIN_SIDEBAR_REMS,
   DEFAULT_SIDEBAR_WIDTH,
   CHECK_FOR_UPDATES_INTERVAL
-} from '../../lib/constants';
+} from 'backend/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
 import * as WorkspaceActions from '../redux/modules/workspaces';
-import * as db from '../../lib/database';
-import {importCurl} from '../../lib/export/curl';
-import {trackEvent} from '../../lib/analytics';
-import {getAppVersion} from '../../lib/appInfo';
+import * as db from 'backend/database';
+import {importCurl} from 'backend/export/curl';
+import {trackEvent} from 'backend/analytics';
+import {getAppVersion} from 'backend/appInfo';
 import {getModal} from '../components/modals/index';
 
 

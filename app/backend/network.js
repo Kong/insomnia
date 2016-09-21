@@ -1,22 +1,23 @@
-import networkRequest from 'request';
-import {parse as urlParse, format as urlFormat} from 'url';
-import * as db from './database';
-import * as querystring from './querystring';
-import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
-import {jarFromCookies, cookiesFromJar} from './cookies';
-import {setDefaultProtocol} from './util';
-import {getRenderedRequest} from './render';
+'use strict';
+
+const networkRequest = require('request');
+const {parse: urlParse, format: urlFormat} = require('url');
+const db = require('./database');
+const querystring = require('./querystring');
+const {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} = require('./constants');
+const {jarFromCookies, cookiesFromJar} = require('./cookies');
+const {setDefaultProtocol} = require('./util');
+const {getRenderedRequest} = require('./render');
 
 let cancelRequestFunction = null;
 
-export function cancelCurrentRequest () {
+module.exports.cancelCurrentRequest = () => {
   if (typeof cancelRequestFunction === 'function') {
     cancelRequestFunction();
   }
-}
+};
 
-
-export function _buildRequestConfig (renderedRequest, patch = {}) {
+module.exports._buildRequestConfig = (renderedRequest, patch = {}) => {
   const config = {
     method: renderedRequest.method,
     body: renderedRequest.body,
@@ -48,6 +49,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   const parsedUrl = urlParse(url);
   parsedUrl.pathname = encodeURI(parsedUrl.pathname || '');
   config.url = urlFormat(parsedUrl);
+  config.headers.host = parsedUrl.host;
 
   for (let i = 0; i < renderedRequest.headers.length; i++) {
     let header = renderedRequest.headers[i];
@@ -57,9 +59,9 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   }
 
   return Object.assign(config, patch);
-}
+};
 
-export function _actuallySend (renderedRequest, settings) {
+module.exports._actuallySend = (renderedRequest, settings) => {
   return new Promise((resolve, reject) => {
     const cookieJar = renderedRequest.cookieJar;
     const jar = jarFromCookies(cookieJar.cookies);
@@ -70,7 +72,7 @@ export function _actuallySend (renderedRequest, settings) {
     const proxyHost = protocol === 'https:' ? settings.httpsProxy : settings.httpProxy;
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
-    let config = _buildRequestConfig(renderedRequest, {
+    let config = module.exports._buildRequestConfig(renderedRequest, {
       jar: jar,
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
@@ -150,9 +152,9 @@ export function _actuallySend (renderedRequest, settings) {
       return reject('Cancelled');
     }
   })
-}
+};
 
-export function send (requestId) {
+module.exports.send = requestId => {
   return new Promise((resolve, reject) => {
 
     // First, lets wait for all debounces to finish
@@ -162,7 +164,7 @@ export function send (requestId) {
         db.settingsGetOrCreate()
       ]).then(([request, settings]) => {
         getRenderedRequest(request).then(renderedRequest => {
-          _actuallySend(renderedRequest, settings).then(resolve, reject);
+          module.exports._actuallySend(renderedRequest, settings).then(resolve, reject);
         }, err => {
           db.responseCreate({
             parentId: request._id,
@@ -173,4 +175,4 @@ export function send (requestId) {
       })
     }, DEBOUNCE_MILLIS);
   })
-}
+};

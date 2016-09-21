@@ -6,7 +6,7 @@ import DropdownHint from '../components/base/DropdownHint';
 import DropdownDivider from '../components/base/DropdownDivider';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
-import * as db from '../../lib/database';
+import * as db from 'backend/database';
 import {getModal} from '../components/modals/index';
 
 class RequestGroupActionsDropdown extends Component {

@@ -5,8 +5,8 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import {CHANGELOG_URL} from '../../../lib/constants';
-import {getAppVersion} from '../../../lib/appInfo';
+import {CHANGELOG_URL} from 'backend/constants';
+import {getAppVersion} from 'backend/appInfo';
 
 class ChangelogModal extends Component {
   constructor (props) {

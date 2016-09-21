@@ -5,7 +5,7 @@ import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
-import * as db from '../../lib/database';
+import * as db from 'backend/database';
 import {getModal} from '../components/modals/index';
 
 

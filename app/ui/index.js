@@ -24,9 +24,9 @@ import './css/lib/fonts/open-sans.css'
 import './css/index.less'
 import './css/lib/chrome/platform_app.css'
 import {initStore} from './redux/initstore';
-import {initDB} from './../lib/database';
-import {getAppVersion} from './../lib/appInfo';
-import {initAnalytics} from './../lib/analytics';
+import {initDB} from 'backend/database';
+import {getAppVersion} from 'backend/appInfo';
+import {initAnalytics} from 'backend/analytics';
 
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);

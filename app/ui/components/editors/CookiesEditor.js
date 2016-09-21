@@ -2,7 +2,7 @@ import React, {PropTypes, Component} from 'react';
 import {Cookie} from 'tough-cookie';
 
 import CookieInput from '../CookieInput';
-import {cookieToString} from '../../../lib/cookies';
+import {cookieToString} from 'backend/cookies';
 
 
 class CookiesEditor extends Component {

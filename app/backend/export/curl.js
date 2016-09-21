@@ -141,7 +141,7 @@ function getBasicAuth (flags) {
 }
 
 
-export function importCurl (blob) {
+module.exports.importCurl = blob => {
   if (!blob || blob.toLowerCase().indexOf('curl ') !== 0) {
     return false;
   }
@@ -189,4 +189,4 @@ export function importCurl (blob) {
     method: httpMethod,
     authentication: authentication
   };
-}
+};

@@ -1,4 +1,4 @@
-import * as db from '../../lib/database';
+import * as db from 'backend/database';
 import React, {PropTypes, Component} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import ElmComponent from './ElmComponent';
@@ -7,12 +7,12 @@ import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
-import {getPreviewModeName, PREVIEW_MODE_SOURCE} from '../../lib/previewModes';
-import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../../lib/constants';
-import {trackEvent} from '../../lib/analytics';
-import {getSetCookieHeaders} from '../../lib/util';
-import {cancelCurrentRequest} from '../../lib/network';
-import {RESPONSE_CODE_DESCRIPTIONS} from '../../lib/constants';
+import {getPreviewModeName, PREVIEW_MODE_SOURCE} from 'backend/previewModes';
+import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from 'backend/constants';
+import {trackEvent} from 'backend/analytics';
+import {getSetCookieHeaders} from 'backend/util';
+import {cancelCurrentRequest} from 'backend/network';
+import {RESPONSE_CODE_DESCRIPTIONS} from 'backend/constants';
 
 class ResponsePane extends Component {
   constructor (props) {
@@ -208,18 +208,22 @@ class ResponsePane extends Component {
               url={response.url}
             />
           </TabPanel>
-          <TabPanel className="scrollable pad">
-            <ResponseCookiesViewer
-              showCookiesModal={showCookiesModal}
-              key={response._id}
-              headers={cookieHeaders}
-            />
+          <TabPanel className="scrollable-container">
+            <div className="scrollable pad">
+              <ResponseCookiesViewer
+                showCookiesModal={showCookiesModal}
+                key={response._id}
+                headers={cookieHeaders}
+              />
+            </div>
           </TabPanel>
-          <TabPanel className="scrollable pad">
-            <ResponseHeadersViewer
-              key={response._id}
-              headers={response.headers}
-            />
+          <TabPanel className="scrollable-container">
+            <div className="scrollable pad">
+              <ResponseHeadersViewer
+                key={response._id}
+                headers={response.headers}
+              />
+            </div>
           </TabPanel>
         </Tabs>
       </section>

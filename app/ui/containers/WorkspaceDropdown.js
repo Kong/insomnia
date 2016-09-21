@@ -14,8 +14,8 @@ import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
-import * as db from '../../lib/database';
-import {getAppVersion} from '../../lib/appInfo';
+import * as db from 'backend/database';
+import {getAppVersion} from 'backend/appInfo';
 import {getModal} from '../components/modals/index';
 
 class WorkspaceDropdown extends Component {

@@ -1,12 +1,14 @@
-import {CookieJar} from 'tough-cookie';
-import request from 'request';
+'use strict';
+
+const {CookieJar} = require('tough-cookie');
+const request = require('request');
 
 /**
  * Get a list of cookie objects from a request.jar()
  *
  * @param jar
  */
-export function cookiesFromJar (jar) {
+module.exports.cookiesFromJar = jar => {
   return new Promise(resolve => {
     jar._jar.store.getAllCookies((err, cookies) => {
       if (err) {
@@ -17,14 +19,14 @@ export function cookiesFromJar (jar) {
       }
     });
   });
-}
+};
 
 /**
  * Get a request.jar() from a list of cookie objects
  *
  * @param cookies
  */
-export function jarFromCookies (cookies) {
+module.exports.jarFromCookies = cookies => {
   const jar = request.jar();
 
   try {
@@ -34,9 +36,9 @@ export function jarFromCookies (cookies) {
   }
 
   return jar;
-}
+};
 
-export function cookieToString (cookie) {
+module.exports.cookieToString = cookie => {
   var str = cookie.toString();
 
   // tough-cookie toString() doesn't put domain on all the time.
@@ -46,4 +48,4 @@ export function cookieToString (cookie) {
   }
 
   return str;
-}
+};

@@ -6,7 +6,7 @@ import JSONPath from 'jsonpath-plus';
 import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
 import xpath from 'xpath';
-import {DEBOUNCE_MILLIS} from '../../../lib/constants';
+import {DEBOUNCE_MILLIS} from 'backend/constants';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/javascript/javascript';
@@ -42,7 +42,7 @@ import '../../css/components/editor.less';
 import {getModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
-import {trackEvent} from '../../../lib/analytics';
+import {trackEvent} from 'backend/analytics';
 
 
 const BASE_CODEMIRROR_OPTIONS = {

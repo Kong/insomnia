@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import RequestActionsDropdown from '../../containers/RequestActionsDropdown';
 import Editable from '../base/Editable';
 import MethodTag from '../tags/MethodTag';
-import * as db from '../../../lib/database';
+import * as db from 'backend/database';
 import * as ReactDOM from 'react/lib/ReactDOM';
 
 

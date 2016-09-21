@@ -1,9 +1,11 @@
-import nunjucks from 'nunjucks';
-import traverse from 'traverse';
-import uuid from 'node-uuid';
-import * as db from './database';
-import {TYPE_WORKSPACE} from './database/index';
-import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './util';
+'use strict';
+
+const nunjucks = require('nunjucks');
+const traverse = require('traverse');
+const uuid = require('node-uuid');
+const db = require('./database');
+const {TYPE_WORKSPACE} = require('./database/index');
+const {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} = require('./util');
 
 const nunjucksEnvironment = nunjucks.configure({
   autoescape: false
@@ -51,15 +53,15 @@ class UuidExtension extends NoArgsExtension {
 nunjucksEnvironment.addExtension('uuid', new UuidExtension());
 nunjucksEnvironment.addExtension('timestamp', new TimestampExtension());
 
-export function render (template, context = {}) {
+module.exports.render = (template, context = {}) => {
   try {
     return nunjucksEnvironment.renderString(template, context);
   } catch (e) {
     throw new Error(e.message.replace(/\(unknown path\)\s*/, ''));
   }
-}
+};
 
-export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
+module.exports.buildRenderContext = (ancestors, rootEnvironment, subEnvironment) => {
   const renderContext = {};
 
   if (rootEnvironment) {
@@ -86,18 +88,18 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
   // This is to support templating inside environments
   const stringifiedEnvironment = JSON.stringify(renderContext);
   return JSON.parse(
-    render(stringifiedEnvironment, renderContext)
+    module.exports.render(stringifiedEnvironment, renderContext)
   );
-}
+};
 
-export function recursiveRender (obj, context) {
+module.exports.recursiveRender = (obj, context) => {
   // Make a copy so no one gets mad :)
   const newObj = traverse.clone(obj);
 
   try {
     traverse(newObj).forEach(function (x) {
       if (typeof x === 'string') {
-        const str = render(x, context);
+        const str = module.exports.render(x, context);
         this.update(str);
       }
     });
@@ -107,9 +109,9 @@ export function recursiveRender (obj, context) {
   }
 
   return newObj;
-}
+};
 
-export function getRenderedRequest (request) {
+module.exports.getRenderedRequest = request => {
   return db.requestGetAncestors(request).then(ancestors => {
     const workspace = ancestors.find(doc => doc.type === TYPE_WORKSPACE);
 
@@ -120,14 +122,14 @@ export function getRenderedRequest (request) {
     ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
 
       // Generate the context we need to render
-      const renderContext = buildRenderContext(
+      const renderContext = module.exports.buildRenderContext(
         ancestors,
         rootEnvironment,
         subEnvironment
       );
 
       // Render all request properties
-      const renderedRequest = recursiveRender(
+      const renderedRequest = module.exports.recursiveRender(
         request,
         renderContext
       );
@@ -150,4 +152,4 @@ export function getRenderedRequest (request) {
       return new Promise(resolve => resolve(renderedRequest));
     });
   });
-}
+};
