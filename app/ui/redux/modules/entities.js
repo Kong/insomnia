@@ -1,5 +1,3 @@
-import {combineReducers} from 'redux';
-
 import * as db from 'backend/database';
 
 const ENTITY_BLACKLIST = {
@@ -7,85 +5,63 @@ const ENTITY_BLACKLIST = {
   [db.stats.type]: 1
 };
 
-const ENTITY_INSERT = 'entities/insert';
-const ENTITY_UPDATE = 'entities/update';
-const ENTITY_REMOVE = 'entities/remove';
+const ENTITY_CHANGES = 'entities.changes';
 
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
 
-function genericEntityReducer (referenceName) {
-  return function (state = {}, action) {
-    const doc = action[referenceName];
+function getReducerName (type) {
+  const trailer = type.match(/s$/) ? '' : 's';
+  return `${type.slice(0, 1).toLowerCase()}${type.slice(1)}${trailer}`;
+}
 
-    if (!doc) {
+const initialState = {
+  doNotPersist: true
+};
+
+for (const type of db.ALL_TYPES) {
+  initialState[getReducerName(type)] = {};
+}
+
+export default function reducer (state = initialState, action) {
+  switch (action.type) {
+    case ENTITY_CHANGES:
+      const newState = {...state};
+      const {changes} = action;
+      for (const [event, doc] of changes) {
+        const referenceName = getReducerName(doc.type);
+
+        if (ENTITY_BLACKLIST[doc.type]) {
+          continue;
+        }
+
+        switch (event) {
+          case db.CHANGE_INSERT:
+          case db.CHANGE_UPDATE:
+            newState[referenceName][doc._id] = doc;
+            break;
+
+          case db.CHANGE_REMOVE:
+            delete newState[referenceName][doc._id];
+            break;
+
+          default:
+            break;
+        }
+      }
+
+      return newState;
+    default:
       return state;
-    }
-
-    if (ENTITY_BLACKLIST[doc.type]) {
-      return state;
-    }
-
-    switch (action.type) {
-
-      case ENTITY_UPDATE:
-      case ENTITY_INSERT:
-        return {...state, [doc._id]: doc};
-
-      case ENTITY_REMOVE:
-        const newState = Object.assign({}, state);
-        delete newState[action[referenceName]._id];
-        return newState;
-
-      default:
-        return state;
-    }
   }
 }
-
-const reducers = {};
-for (const type of db.ALL_TYPES) {
-  // Name example: RequestGroup => requestGroups
-  // Add an "s" to the end if there isn't already
-  const trailer = type.match(/s$/) ? '' : 's';
-  const name = `${type.slice(0, 1).toLowerCase()}${type.slice(1)}${trailer}`;
-  reducers[name] = genericEntityReducer(type);
-}
-
-export default combineReducers({
-  ...reducers,
-  doNotPersist: () => true
-});
 
 
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
 
-const insertFns = {};
-for (let type of db.ALL_TYPES) {
-  insertFns[type] = doc => ({type: ENTITY_INSERT, [type]: doc})
-}
-
-const updateFns = {};
-for (let type of db.ALL_TYPES) {
-  updateFns[type] = doc => ({type: ENTITY_UPDATE, [type]: doc})
-}
-
-const removeFns = {};
-for (let type of db.ALL_TYPES) {
-  removeFns[type] = doc => ({type: ENTITY_REMOVE, [type]: doc})
-}
-
-export function insert (doc) {
-  return insertFns[doc.type](doc);
-}
-
-export function update (doc) {
-  return updateFns[doc.type](doc);
-}
-
-export function remove (doc) {
-  return removeFns[doc.type](doc);
+export function addChanges (changes) {
+  return {type: ENTITY_CHANGES, changes};
 }

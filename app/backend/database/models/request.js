@@ -21,14 +21,21 @@ module.exports.init = () => db.initModel({
 });
 
 module.exports.createAndActivate = (workspace, patch = {}) => {
-  return module.exports.requestCreate(patch).then(r => {
-    module.exports.workspaceUpdate(workspace, {metaActiveRequestId: r._id});
+  return module.exports.create(patch).then(r => {
+    db.workspace.update(workspace, {metaActiveRequestId: r._id});
   })
 };
 
 module.exports.duplicateAndActivate = (workspace, request) => {
-  return module.exports.requestDuplicate(request).then(r => {
-    module.exports.workspaceUpdate(workspace, {metaActiveRequestId: r._id});
+  db.bufferChanges();
+
+  return new Promise((resolve, reject) => {
+    module.exports.duplicate(request).then(r => {
+      return db.workspace.update(workspace, {metaActiveRequestId: r._id})
+    }).then(() => {
+      db.flushChanges();
+      resolve();
+    }, reject)
   })
 };
 

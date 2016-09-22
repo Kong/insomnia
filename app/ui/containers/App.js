@@ -160,6 +160,7 @@ class App extends Component {
             // anyway
             console.log('-- Recreating Sort Keys --');
 
+            db.bufferChanges(300);
             requestGroups.map((r, i) => {
               db.requestGroup.update(r, {
                 metaSortKey: i * 100,
@@ -223,6 +224,7 @@ class App extends Component {
             // anyway
             console.warn(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
 
+            db.bufferChanges(300);
             requests.map((r, i) => {
               db.request.update(r, {metaSortKey: i * 100, parentId});
             });
@@ -529,7 +531,7 @@ class App extends Component {
           useBulkHeaderEditor={settings.useBulkHeaderEditor}
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
-          requestCreate={() => db.request.createAndActivate(workspace, {parentId: workspace._id})}
+          requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           updateRequestBody={body => db.request.update(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(url)}
           updateRequestMethod={method => db.request.update(activeRequest, {method})}

@@ -28,6 +28,9 @@ module.exports.importJSON = (workspace, json) => {
     return;
   }
 
+  // TODO: Actually figure out when we're done before resuming
+  db.bufferChanges(300);
+
   const exportFormat = data.__export_format;
 
   switch (exportFormat) {

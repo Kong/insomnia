@@ -1,32 +1,15 @@
 import {bindActionCreators} from 'redux';
 import * as entitiesActions from './modules/entities';
 import * as db from 'backend/database';
-import {CHANGE_INSERT, CHANGE_UPDATE, CHANGE_REMOVE} from 'backend/database';
-
-const CHANGE_ID = 'store.listener';
 
 export function initStore (dispatch) {
-  db.offChange(CHANGE_ID);
-
   const entities = bindActionCreators(entitiesActions, dispatch);
-
-  const docChanged = (event, doc) => {
-    if (!doc.hasOwnProperty('type')) {
-      return;
-    }
-
-    if (event === CHANGE_INSERT) {
-      entities.insert(doc);
-    } else if (event === CHANGE_UPDATE) {
-      entities.update(doc);
-    } else if (event === CHANGE_REMOVE) {
-      entities.remove(doc);
-    }
-  };
+  const handleNewChanges = entities.addChanges;
 
   console.log('-- Restoring Store --');
 
   const start = Date.now();
+  db.offChange(handleNewChanges);
 
   // Restore docs in parent->child->grandchild order
   return Promise.all([
@@ -39,13 +22,10 @@ export function initStore (dispatch) {
   ]).then(results => {
     for (let docs of results) {
       docs = Array.isArray(docs) ? docs : [docs];
-
-      for (let doc of docs) {
-        docChanged(CHANGE_UPDATE, doc);
-      }
+      handleNewChanges(docs.map(doc => [db.CHANGE_UPDATE, doc]));
     }
 
     console.log(`-- Restored DB in ${(Date.now() - start) / 1000} s --`);
-    db.onChange(CHANGE_ID, docChanged);
+    db.onChange(handleNewChanges);
   });
 }

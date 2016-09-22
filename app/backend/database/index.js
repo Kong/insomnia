@@ -99,21 +99,60 @@ module.exports.initDB = (config = {}, force = false) => {
   });
 };
 
-let changeListeners = {};
 
-module.exports.onChange = (id, callback) => {
-  console.log(`-- Added DB Listener ${id} -- `);
-  changeListeners[id] = callback;
+// ~~~~~~~~~~~~~~~~ //
+// Change Listeners //
+// ~~~~~~~~~~~~~~~~ //
+
+let bufferingChanges = false;
+let changeBuffer = [];
+let changeListeners = [];
+let bufferTimeout = null;
+
+module.exports.onChange = callback => {
+  console.log(`-- Added DB Listener -- `);
+  changeListeners.push(callback);
 };
 
-module.exports.offChange = (id) => {
-  console.log(`-- Removed DB Listener ${id} -- `);
-  delete changeListeners[id];
+module.exports.offChange = callback => {
+  console.log(`-- Removed DB Listener -- `);
+  changeListeners = changeListeners.filter(l => l !== callback);
+};
+
+module.exports.bufferChanges = (millis = 1000) => {
+  bufferingChanges = true;
+  bufferTimeout = setTimeout(() => {
+    module.exports.flushChanges()
+  }, millis);
+};
+
+module.exports.flushChanges = () => {
+  clearTimeout(bufferTimeout);
+  bufferingChanges = false;
+  bufferTimeout = null;
+
+  const changes = [...changeBuffer];
+  changeBuffer = [];
+
+  // Notify async so we don't block
+  process.nextTick(() => {
+    changeListeners.map(fn => fn(changes));
+  })
 };
 
 function notifyOfChange (event, doc) {
-  Object.keys(changeListeners).map(k => changeListeners[k](event, doc));
+  changeBuffer.push([event, doc]);
+
+  // Flush right away if we're not buffering
+  if (!bufferingChanges) {
+    module.exports.flushChanges();
+  }
 }
+
+
+// ~~~~~~~ //
+// Helpers //
+// ~~~~~~~ //
 
 module.exports.getMostRecentlyModified = (type, query = {}) => {
   return new Promise(resolve => {
@@ -205,15 +244,20 @@ module.exports.update = doc => {
 };
 
 module.exports.remove = doc => {
+  module.exports.bufferChanges();
+
   return new Promise(resolve => {
     module.exports.withDescendants(doc).then(docs => {
-      const promises = docs.map(d => (
-        db[d.type].remove({_id: d._id}, {multi: true})
-      ));
+      const docIds = docs.map(d => d._id);
+      const types = [...new Set(docs.map(d => d.type))];
+      const promises = types.map(t => {
+        db[t].remove({_id: {$in: docIds}}, {multi: true})
+      });
 
       Promise.all(promises).then(() => {
         docs.map(d => notifyOfChange(module.exports.CHANGE_REMOVE, d));
-        resolve()
+        resolve();
+        module.exports.flushChanges();
       });
     });
   });
@@ -313,6 +357,8 @@ module.exports.withDescendants = (doc = null) => {
 };
 
 module.exports.duplicate = (originalDoc, patch = {}) => {
+  module.exports.bufferChanges();
+
   return new Promise((resolve, reject) => {
 
     // 1. Copy the doc
@@ -347,7 +393,12 @@ module.exports.duplicate = (originalDoc, patch = {}) => {
         }
 
         // 3. Also duplicate all children, and recurse
-        Promise.all(duplicatePromises).then(() => resolve(createdDoc), reject)
+        Promise.all(duplicatePromises).then(() => {
+          module.exports.flushChanges();
+          resolve(createdDoc)
+        }, err => {
+          reject(err);
+        })
       })
     })
   })
