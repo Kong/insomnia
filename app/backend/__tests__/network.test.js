@@ -65,7 +65,7 @@ describe('buildRequestConfig()', () => {
           rejectUnauthorized: true,
           time: true,
           timeout: 0,
-          url: 'http://foo.com:3332/%E2%98%85/foo%2520bar?bar=baz&foo%20bar=hello%26world'
+          url: 'http://foo.com:3332/%E2%98%85/foo%20bar?bar=baz&foo%20bar=hello%26world'
         });
       });
     })

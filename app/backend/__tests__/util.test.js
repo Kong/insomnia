@@ -89,3 +89,45 @@ describe('setDefaultProtocol()', () => {
     expect(url).toBe('httbad://google.com');
   });
 });
+
+describe('prepareUrlForSending()', () => {
+  it('does not touch normal url', () => {
+    const url = util.prepareUrlForSending('http://google.com');
+    expect(url).toBe('http://google.com/');
+  });
+
+  it('works with no protocol', () => {
+    const url = util.prepareUrlForSending('google.com');
+    expect(url).toBe('http://google.com/');
+  });
+
+  it('encodes pathname', () => {
+    const url = util.prepareUrlForSending('https://google.com/foo bar/100%/foo');
+    expect(url).toBe('https://google.com/foo%20bar/100%25/foo');
+  });
+
+  it('encodes pathname mixed encoding', () => {
+    const url = util.prepareUrlForSending('https://google.com/foo bar baz%20qux/100%/foo%25');
+    expect(url).toBe('https://google.com/foo%20bar%20baz%20qux/100%25/foo%2525');
+  });
+
+  it('leaves already encoded pathname', () => {
+    const url = util.prepareUrlForSending('https://google.com/foo%20bar%20baz/100%25/foo');
+    expect(url).toBe('https://google.com/foo%20bar%20baz/100%25/foo');
+  });
+
+  it('encodes querystring', () => {
+    const url = util.prepareUrlForSending('https://google.com?s=foo bar 100%');
+    expect(url).toBe('https://google.com/?s=foo%20bar%20100%25');
+  });
+
+  it('encodes querystring with mixed spaces', () => {
+    const url = util.prepareUrlForSending('https://google.com?s=foo %20100%');
+    expect(url).toBe('https://google.com/?s=foo%20%20100%25');
+  });
+
+  it('encodes querystring with repeated keys', () => {
+    const url = util.prepareUrlForSending('https://google.com?s=foo&s=foo %20100%');
+    expect(url).toBe('https://google.com/?s=foo&s=foo%20%20100%25');
+  });
+});

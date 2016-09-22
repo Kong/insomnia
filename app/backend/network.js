@@ -4,6 +4,7 @@ const networkRequest = require('request');
 const {parse: urlParse, format: urlFormat} = require('url');
 const db = require('./database');
 const querystring = require('./querystring');
+var util = require('./util.js');
 const {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} = require('./constants');
 const {jarFromCookies, cookiesFromJar} = require('./cookies');
 const {setDefaultProtocol} = require('./util');
@@ -44,12 +45,8 @@ module.exports._buildRequestConfig = (renderedRequest, patch = {}) => {
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(renderedRequest.parameters);
   const url = querystring.joinURL(renderedRequest.url, qs);
-
-  // Encode path portion of URL
-  const parsedUrl = urlParse(url);
-  parsedUrl.pathname = encodeURI(parsedUrl.pathname || '');
-  config.url = urlFormat(parsedUrl);
-  config.headers.host = parsedUrl.host;
+  config.url = util.prepareUrlForSending(url);
+  config.headers.host = urlParse(config.url).host;
 
   for (let i = 0; i < renderedRequest.headers.length; i++) {
     let header = renderedRequest.headers[i];
@@ -69,7 +66,8 @@ module.exports._actuallySend = (renderedRequest, settings) => {
     // Detect and set the proxy based on the request protocol
     // NOTE: request does not have a separate settings for http/https proxies
     const {protocol} = urlParse(renderedRequest.url);
-    const proxyHost = protocol === 'https:' ? settings.httpsProxy : settings.httpProxy;
+    const {httpProxy, httpsProxy} = settings;
+    const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
     let config = module.exports._buildRequestConfig(renderedRequest, {

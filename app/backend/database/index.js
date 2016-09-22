@@ -107,7 +107,6 @@ module.exports.initDB = (config = {}, force = false) => {
 let bufferingChanges = false;
 let changeBuffer = [];
 let changeListeners = [];
-let bufferTimeout = null;
 
 module.exports.onChange = callback => {
   console.log(`-- Added DB Listener -- `);
@@ -121,18 +120,20 @@ module.exports.offChange = callback => {
 
 module.exports.bufferChanges = (millis = 1000) => {
   bufferingChanges = true;
-  bufferTimeout = setTimeout(() => {
+  setTimeout(() => {
     module.exports.flushChanges()
   }, millis);
 };
 
 module.exports.flushChanges = () => {
-  clearTimeout(bufferTimeout);
   bufferingChanges = false;
-  bufferTimeout = null;
-
   const changes = [...changeBuffer];
   changeBuffer = [];
+
+  if (changes.length === 0) {
+    // No work to do
+    return;
+  }
 
   // Notify async so we don't block
   process.nextTick(() => {
@@ -356,8 +357,8 @@ module.exports.withDescendants = (doc = null) => {
   return next([doc]);
 };
 
-module.exports.duplicate = (originalDoc, patch = {}, buffer = true) => {
-  buffer && module.exports.bufferChanges();
+module.exports.duplicate = (originalDoc, patch = {}, root = true) => {
+  module.exports.bufferChanges();
   return new Promise((resolve, reject) => {
 
     // 1. Copy the doc
@@ -384,7 +385,8 @@ module.exports.duplicate = (originalDoc, patch = {}, buffer = true) => {
           for (const doc of docs) {
             const promise = module.exports.duplicate(
               doc,
-              {parentId: createdDoc._id}
+              {parentId: createdDoc._id},
+              false
             );
 
             duplicatePromises.push(promise);
@@ -393,7 +395,11 @@ module.exports.duplicate = (originalDoc, patch = {}, buffer = true) => {
 
         // 3. Also duplicate all children, and recurse
         Promise.all(duplicatePromises).then(() => {
-          buffer && module.exports.flushChanges();
+          // Only flush if we're not in a recursion step
+          if (root) {
+            module.exports.flushChanges();
+          }
+
           resolve(createdDoc)
         }, err => {
           reject(err);

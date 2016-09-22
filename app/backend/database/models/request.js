@@ -67,7 +67,7 @@ module.exports.updateContentType = (request, contentType) => {
 module.exports.duplicateAndActivate = (workspace, request) => {
   db.bufferChanges();
   return new Promise((resolve, reject) => {
-    module.exports.duplicate(request, false).then(r => {
+    module.exports.duplicate(request).then(r => {
       return db.workspace.update(workspace, {metaActiveRequestId: r._id})
     }).then(() => {
       db.flushChanges();
@@ -76,9 +76,9 @@ module.exports.duplicateAndActivate = (workspace, request) => {
   })
 };
 
-module.exports.duplicate = (request, buffer = true) => {
+module.exports.duplicate = request => {
   const name = `${request.name} (Copy)`;
-  return db.duplicate(request, {name}, buffer)
+  return db.duplicate(request, {name})
 };
 
 module.exports.remove = request => {
