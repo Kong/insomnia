@@ -171,19 +171,18 @@ class RequestPane extends Component {
               />
             </div>
           </TabPanel>
-          <TabPanel className="scrollable-container">
-            <div className="scrollable">
-              <RequestHeadersEditor
-                headers={request.headers}
-                onChange={updateRequestHeaders}
-                bulk={useBulkHeaderEditor}
-              />
-              <div className="pad no-pad-top text-right">
-                <button className="btn btn--outlined btn--super-compact"
-                        onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
-                  {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-                </button>
-              </div>
+          <TabPanel className="header-editor">
+            <RequestHeadersEditor
+              headers={request.headers}
+              onChange={updateRequestHeaders}
+              bulk={useBulkHeaderEditor}
+            />
+
+            <div className="pad no-pad-top text-right">
+              <button className="btn btn--outlined btn--super-compact"
+                      onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
+                {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+              </button>
             </div>
           </TabPanel>
         </Tabs>

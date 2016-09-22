@@ -55,20 +55,22 @@ class RequestHeadersEditor extends Component {
     const {bulk, headers, onChange} = this.props;
 
     return bulk ? (
-      <div className="pad-top">
+      <div>
         <Editor
           onChange={v => this._handleBulkUpdate(v)}
           value={this._getHeadersString()}
         />
       </div>
     ) : (
-      <div className="pad-bottom">
-        <KeyValueEditor
-          namePlaceholder="My-Header"
-          valuePlaceholder="Value"
-          pairs={headers}
-          onChange={onChange}
-        />
+      <div className="pad-bottom scrollable-container">
+        <div className="scrollable">
+          <KeyValueEditor
+            namePlaceholder="My-Header"
+            valuePlaceholder="Value"
+            pairs={headers}
+            onChange={onChange}
+          />
+        </div>
       </div>
     );
   }
