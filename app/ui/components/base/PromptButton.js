@@ -46,10 +46,10 @@ class PromptButton extends Component {
   }
 
   render () {
-    const {children, onClick, addIcon, ...other} = this.props;
+    const {children, onClick, addIcon, confirmMessage, ...other} = this.props;
     const {showConfirmation} = this.state;
 
-    const CONFIRM_MESSAGE = 'Click to confirm';
+    const CONFIRM_MESSAGE = confirmMessage || 'Click to confirm';
 
     let innerMsg;
     if (showConfirmation && addIcon) {
@@ -73,7 +73,8 @@ class PromptButton extends Component {
 }
 
 PromptButton.propTypes = {
-  addIcon: PropTypes.bool
+  addIcon: PropTypes.bool,
+  confirmMessage: PropTypes.string
 };
 
 export default PromptButton;

@@ -2,20 +2,13 @@
 
 const request = require('request');
 const db = require('../database');
-const {
-  TYPE_REQUEST,
-  TYPE_REQUEST_GROUP,
-  TYPE_WORKSPACE,
-  TYPE_ENVIRONMENT,
-  TYPE_COOKIE_JAR,
-} = require('../database/index');
 
 const WHITE_LIST = {
-  [TYPE_REQUEST]: true,
-  [TYPE_REQUEST_GROUP]: true,
-  [TYPE_WORKSPACE]: true,
-  [TYPE_ENVIRONMENT]: true,
-  [TYPE_COOKIE_JAR]: true
+  [db.request.type]: true,
+  [db.requestGroup.type]: true,
+  [db.workspace.type]: true,
+  [db.environment.type]: true,
+  [db.cookieJar.type]: true
 };
 
 const BASE_URL = 'https://o90qg2me5g.execute-api.us-east-1.amazonaws.com/dev/v1';
@@ -27,14 +20,15 @@ module.exports.initSync = () => {
     // SETUP PUSH //
     // ~~~~~~~~~~ //
 
-    db.onChange('sync', (event, doc) => {
+    db.onChange(changes => {
+      for (const [event, doc] of changes) {
+        // Only sync certain models
+        if (!WHITE_LIST[doc.type]) {
+          return;
+        }
 
-      // Only sync certain models
-      if (!WHITE_LIST[doc.type]) {
-        return;
+        addChange(event, doc);
       }
-
-      addChange(event, doc);
     });
 
     // ~~~~~~~~~~ //
@@ -71,11 +65,11 @@ function addChange (event, doc) {
 
 function commitChange (event, doc) {
   const path = {
-    [TYPE_REQUEST]: 'requests',
-    [TYPE_WORKSPACE]: 'workspaces',
-    [TYPE_REQUEST_GROUP]: 'requestgroups',
-    [TYPE_ENVIRONMENT]: 'environments',
-    [TYPE_COOKIE_JAR]: 'cookiejars'
+    [db.request.type]: 'requests',
+    [db.workspace.type]: 'workspaces',
+    [db.requestGroup.type]: 'requestgroups',
+    [db.environment.type]: 'environments',
+    [db.cookieJar.type]: 'cookiejars'
   }[doc.type];
 
   if (!path) {

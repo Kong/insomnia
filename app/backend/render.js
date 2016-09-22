@@ -4,7 +4,6 @@ const nunjucks = require('nunjucks');
 const traverse = require('traverse');
 const uuid = require('node-uuid');
 const db = require('./database');
-const {TYPE_WORKSPACE} = require('./database/index');
 const {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} = require('./util');
 
 const nunjucksEnvironment = nunjucks.configure({
@@ -112,13 +111,13 @@ module.exports.recursiveRender = (obj, context) => {
 };
 
 module.exports.getRenderedRequest = request => {
-  return db.requestGetAncestors(request).then(ancestors => {
-    const workspace = ancestors.find(doc => doc.type === TYPE_WORKSPACE);
+  return db.request.getAncestors(request).then(ancestors => {
+    const workspace = ancestors.find(doc => doc.type === db.workspace.type);
 
     return Promise.all([
-      db.environmentGetOrCreateForWorkspace(workspace),
-      db.environmentGetById(workspace.metaActiveEnvironmentId),
-      db.cookieJarGetOrCreateForWorkspace(workspace)
+      db.environment.getOrCreateForWorkspace(workspace),
+      db.environment.getById(workspace.metaActiveEnvironmentId),
+      db.cookieJar.getOrCreateForWorkspace(workspace)
     ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
 
       // Generate the context we need to render

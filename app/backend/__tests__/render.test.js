@@ -1,7 +1,7 @@
 'use strict';
 
 const render = require('../render');
-const {TYPE_ENVIRONMENT, TYPE_REQUEST_GROUP} = require('../database/index');
+const db = require('../database');
 
 jest.mock('electron');
 
@@ -30,20 +30,20 @@ describe('render()', () => {
 describe('buildRenderContext()', () => {
   it('cascades properly', () => {
     const ancestors = [{
-      type: TYPE_REQUEST_GROUP,
+      type: db.requestGroup.type,
       environment: {foo: 'group 2', ancestor: true}
     }, {
-      type: TYPE_REQUEST_GROUP,
+      type: db.requestGroup.type,
       environment: {foo: 'group 1', ancestor: true}
     }];
 
     const rootEnvironment = {
-      type: TYPE_ENVIRONMENT,
+      type: db.environment.type,
       data: {foo: 'root', root: true}
     };
 
     const subEnvironment = {
-      type: TYPE_ENVIRONMENT,
+      type: db.environment.type,
       data: {foo: 'sub', sub: true}
     };
 
@@ -63,20 +63,20 @@ describe('buildRenderContext()', () => {
 
   it('cascades properly and renders', () => {
     const ancestors = [{
-      type: TYPE_REQUEST_GROUP,
+      type: db.requestGroup.type,
       environment: {bar: '{{ foo }} 2', recursive: '{{ recursive }}', ancestor: true}
     }, {
-      type: TYPE_REQUEST_GROUP,
+      type: db.requestGroup.type,
       environment: {bar: '{{ foo }} 1', ancestor: true}
     }];
 
     const rootEnvironment = {
-      type: TYPE_ENVIRONMENT,
+      type: db.environment.type,
       data: {foo: 'root', root: true}
     };
 
     const subEnvironment = {
-      type: TYPE_ENVIRONMENT,
+      type: db.environment.type,
       data: {foo: 'sub', sub: true}
     };
 

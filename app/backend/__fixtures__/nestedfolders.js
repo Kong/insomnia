@@ -1,13 +1,13 @@
 'use strict';
 
-const {TYPE_REQUEST_GROUP, TYPE_REQUEST, TYPE_WORKSPACE} = require('../database');
+const db = require('../database');
 
-module.exports[TYPE_WORKSPACE] = [{
+module.exports[db.workspace.type] = [{
   _id: 'wrk_1',
   name: 'Wrk 1'
 }];
 
-module.exports[TYPE_REQUEST_GROUP] = [{
+module.exports[db.requestGroup.type] = [{
   _id: 'fld_1',
   parentId: 'wrk_1',
   name: 'Fld 1'
@@ -21,7 +21,7 @@ module.exports[TYPE_REQUEST_GROUP] = [{
   name: 'Fld 3'
 }];
 
-module.exports[TYPE_REQUEST] = [{
+module.exports[db.request.type] = [{
   _id: 'req_1',
   parentId: 'fld_1',
   name: 'Req 1'

@@ -3,30 +3,41 @@
 const electron = require('electron');
 const NeDB = require('nedb');
 const fsPath = require('path');
-const {
-  METHOD_GET,
-  DB_PERSIST_INTERVAL,
-  DEFAULT_SIDEBAR_WIDTH
-} = require('../constants');
+const {DB_PERSIST_INTERVAL} = require('../constants');
 const {generateId} = require('../util');
-const {PREVIEW_MODE_SOURCE} = require('../previewModes');
 const {isDevelopment} = require('../appInfo');
-
-module.exports.TYPE_STATS = 'Stats';
-module.exports.TYPE_SETTINGS = 'Settings';
-module.exports.TYPE_WORKSPACE = 'Workspace';
-module.exports.TYPE_ENVIRONMENT = 'Environment';
-module.exports.TYPE_COOKIE_JAR = 'CookieJar';
-module.exports.TYPE_REQUEST_GROUP = 'RequestGroup';
-module.exports.TYPE_REQUEST = 'Request';
-module.exports.TYPE_RESPONSE = 'Response';
 
 module.exports.CHANGE_INSERT = 'insert';
 module.exports.CHANGE_UPDATE = 'update';
 module.exports.CHANGE_REMOVE = 'remove';
 
 
-const BASE_MODEL_DEFAULTS = () => ({
+// ~~~~~~ //
+// MODELS //
+// ~~~~~~ //
+
+module.exports.stats = require('./models/stats');
+module.exports.settings = require('./models/settings');
+module.exports.workspace = require('./models/workspace');
+module.exports.environment = require('./models/environment');
+module.exports.cookieJar = require('./models/cookieJar');
+module.exports.requestGroup = require('./models/requestGroup');
+module.exports.request = require('./models/request');
+module.exports.response = require('./models/response');
+
+const MODELS = [
+  module.exports.stats,
+  module.exports.settings,
+  module.exports.workspace,
+  module.exports.environment,
+  module.exports.cookieJar,
+  module.exports.requestGroup,
+  module.exports.request,
+  module.exports.response
+];
+const MODEL_MAP = {};
+
+module.exports.initModel = doc => Object.assign({
   modified: Date.now(),
   created: Date.now(),
   parentId: null,
@@ -34,85 +45,18 @@ const BASE_MODEL_DEFAULTS = () => ({
   // Server-generated fields
   _etag: null,
   _synced: 0
-});
+}, doc);
 
-const MODEL_ID_PREFIXES = {
-  [module.exports.TYPE_STATS]: 'sta',
-  [module.exports.TYPE_SETTINGS]: 'set',
-  [module.exports.TYPE_WORKSPACE]: 'wrk',
-  [module.exports.TYPE_ENVIRONMENT]: 'env',
-  [module.exports.TYPE_COOKIE_JAR]: 'jar',
-  [module.exports.TYPE_REQUEST_GROUP]: 'fld',
-  [module.exports.TYPE_REQUEST]: 'req',
-  [module.exports.TYPE_RESPONSE]: 'res'
-};
+module.exports.ALL_TYPES = MODELS.map(m => m.type);
 
-module.exports.MODEL_DEFAULTS = {
-  [module.exports.TYPE_STATS]: () => ({
-    lastLaunch: Date.now(),
-    lastVersion: null,
-    launches: 0
-  }),
-  [module.exports.TYPE_SETTINGS]: () => ({
-    showPasswords: true,
-    useBulkHeaderEditor: false,
-    followRedirects: false,
-    editorFontSize: 12,
-    editorLineWrapping: true,
-    httpProxy: '',
-    httpsProxy: '',
-    timeout: 0,
-    validateSSL: true
-  }),
-  [module.exports.TYPE_WORKSPACE]: () => ({
-    name: 'New Workspace',
-    metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    metaActiveEnvironmentId: null,
-    metaActiveRequestId: null,
-    metaFilter: '',
-    metaSidebarHidden: false
-  }),
-  [module.exports.TYPE_ENVIRONMENT]: () => ({
-    name: 'New Environment',
-    data: {},
-  }),
-  [module.exports.TYPE_COOKIE_JAR]: () => ({
-    name: 'Default Jar',
-    cookies: []
-  }),
-  [module.exports.TYPE_REQUEST_GROUP]: () => ({
-    name: 'New Folder',
-    environment: {},
-    metaCollapsed: false,
-    metaSortKey: -1 * Date.now()
-  }),
-  [module.exports.TYPE_REQUEST]: () => ({
-    url: '',
-    name: 'New Request',
-    method: METHOD_GET,
-    body: '',
-    parameters: [],
-    headers: [],
-    authentication: {},
-    metaPreviewMode: PREVIEW_MODE_SOURCE,
-    metaResponseFilter: '',
-    metaSortKey: -1 * Date.now()
-  }),
-  [module.exports.TYPE_RESPONSE]: () => ({
-    statusCode: 0,
-    statusMessage: '',
-    contentType: 'text/plain',
-    url: '',
-    bytesRead: 0,
-    elapsedTime: 0,
-    headers: [],
-    cookies: [],
-    body: '',
-    error: ''
-  }),
-};
+for (const model of MODELS) {
+  MODEL_MAP[model.type] = model;
+}
 
-module.exports.ALL_TYPES = Object.keys(module.exports.MODEL_DEFAULTS);
+
+// ~~~~~~~ //
+// HELPERS //
+// ~~~~~~~ //
 
 let db = null;
 
@@ -133,8 +77,6 @@ module.exports.initDB = (config = {}, force = false) => {
     return Promise.resolve();
   }
 
-  console.log('CONFIG', config);
-
   return new Promise(resolve => {
     db = {};
 
@@ -144,8 +86,7 @@ module.exports.initDB = (config = {}, force = false) => {
 
     // Fill in the defaults
 
-    const modelTypes = Object.keys(module.exports.MODEL_DEFAULTS);
-    modelTypes.map(t => {
+    module.exports.ALL_TYPES.map(t => {
       const filename = getDBFilePath(t);
       const autoload = true;
       const finalConfig = Object.assign({filename, autoload}, config);
@@ -162,38 +103,77 @@ module.exports.initDB = (config = {}, force = false) => {
   });
 };
 
-let changeListeners = {};
 
-module.exports.onChange = (id, callback) => {
-  console.log(`-- Added DB Listener ${id} -- `);
-  changeListeners[id] = callback;
+// ~~~~~~~~~~~~~~~~ //
+// Change Listeners //
+// ~~~~~~~~~~~~~~~~ //
+
+let bufferingChanges = false;
+let changeBuffer = [];
+let changeListeners = [];
+let bufferTimeout = null;
+
+module.exports.onChange = callback => {
+  console.log(`-- Added DB Listener -- `);
+  changeListeners.push(callback);
 };
 
-module.exports.offChange = (id) => {
-  console.log(`-- Removed DB Listener ${id} -- `);
-  delete changeListeners[id];
+module.exports.offChange = callback => {
+  console.log(`-- Removed DB Listener -- `);
+  changeListeners = changeListeners.filter(l => l !== callback);
+};
+
+module.exports.bufferChanges = (millis = 1000) => {
+  bufferingChanges = true;
+  bufferTimeout = setTimeout(() => {
+    module.exports.flushChanges()
+  }, millis);
+};
+
+module.exports.flushChanges = () => {
+  clearTimeout(bufferTimeout);
+  bufferingChanges = false;
+  bufferTimeout = null;
+
+  const changes = [...changeBuffer];
+  changeBuffer = [];
+
+  // Notify async so we don't block
+  process.nextTick(() => {
+    changeListeners.map(fn => fn(changes));
+  })
 };
 
 function notifyOfChange (event, doc) {
-  Object.keys(changeListeners).map(k => changeListeners[k](event, doc));
+  changeBuffer.push([event, doc]);
+
+  // Flush right away if we're not buffering
+  if (!bufferingChanges) {
+    module.exports.flushChanges();
+  }
 }
 
-function getMostRecentlyModified (type, query = {}) {
+
+// ~~~~~~~ //
+// Helpers //
+// ~~~~~~~ //
+
+module.exports.getMostRecentlyModified = (type, query = {}) => {
   return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(1).exec((err, docs) => {
       resolve(docs.length ? docs[0] : null);
     })
   })
-}
+};
 
-function find (type, query = {}) {
+module.exports.find = (type, query = {}) => {
   return new Promise((resolve, reject) => {
     db[type].find(query, (err, rawDocs) => {
       if (err) {
         return reject(err);
       }
 
-      const modelDefaults = module.exports.MODEL_DEFAULTS[type]();
+      const modelDefaults = MODEL_MAP[type].init();
       const docs = rawDocs.map(rawDoc => {
         return Object.assign({}, modelDefaults, rawDoc);
       });
@@ -201,10 +181,10 @@ function find (type, query = {}) {
       resolve(docs);
     });
   });
-}
+};
 
 module.exports.all = type => {
-  return find(type);
+  return module.exports.find(type);
 };
 
 module.exports.getWhere = (type, query) => {
@@ -219,17 +199,17 @@ module.exports.getWhere = (type, query) => {
         return resolve(null);
       }
 
-      const modelDefaults = module.exports.MODEL_DEFAULTS[type]();
+      const modelDefaults = MODEL_MAP[type].init();
       resolve(Object.assign({}, modelDefaults, rawDocs[0]));
     });
   });
 };
 
-function get (type, id) {
+module.exports.get = (type, id) => {
   return module.exports.getWhere(type, {_id: id});
-}
+};
 
-function count (type, query = {}) {
+module.exports.count = (type, query = {}) => {
   return new Promise((resolve, reject) => {
     db[type].count(query, (err, count) => {
       if (err) {
@@ -239,7 +219,7 @@ function count (type, query = {}) {
       resolve(count);
     });
   });
-}
+};
 
 module.exports.insert = (doc, silent = false) => {
   return new Promise((resolve, reject) => {
@@ -274,11 +254,15 @@ module.exports.update = (doc, silent = false) => {
 };
 
 module.exports.remove = (doc, silent = false) => {
+  module.exports.bufferChanges();
+
   return new Promise(resolve => {
     module.exports.withDescendants(doc).then(docs => {
-      const promises = docs.map(d => (
-        db[d.type].remove({_id: d._id}, {multi: true})
-      ));
+      const docIds = docs.map(d => d._id);
+      const types = [...new Set(docs.map(d => d.type))];
+      const promises = types.map(t => {
+        db[t].remove({_id: {$in: docIds}}, {multi: true})
+      });
 
       Promise.all(promises).then(() => {
 
@@ -286,7 +270,8 @@ module.exports.remove = (doc, silent = false) => {
           docs.map(d => notifyOfChange(module.exports.CHANGE_REMOVE, d));
         }
         docs.map(d => notifyOfChange(module.exports.CHANGE_REMOVE, d));
-        resolve()
+        resolve();
+        module.exports.flushChanges();
       });
     });
   });
@@ -299,39 +284,38 @@ module.exports.remove = (doc, silent = false) => {
  * @param query
  * @returns {Promise.<T>}
  */
-function removeBulkSilently (type, query) {
+module.exports.removeBulkSilently = (type, query) => {
   return new Promise(resolve => {
     db[type].remove(query, {multi: true}, err => resolve());
   });
-}
+};
 
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-function docUpdate (originalDoc, patch = {}) {
+module.exports.docUpdate = (originalDoc, patch = {}) => {
   const doc = Object.assign(
-    BASE_MODEL_DEFAULTS(),
+    MODEL_MAP[originalDoc.type].init(),
     originalDoc,
     patch,
     {modified: Date.now()}
   );
 
   return module.exports.update(doc);
-}
+};
 
-function docCreate (type, patch = {}) {
-  const idPrefix = MODEL_ID_PREFIXES[type];
+module.exports.docCreate = (type, patch = {}) => {
+  const idPrefix = MODEL_MAP[type].prefix;
 
   if (!idPrefix) {
     throw new Error(`No ID prefix for ${type}`)
   }
 
   const doc = Object.assign(
-    BASE_MODEL_DEFAULTS(),
     {_id: generateId(idPrefix)},
-    module.exports.MODEL_DEFAULTS[type](),
+    MODEL_MAP[type].init(),
     patch,
 
     // Fields that the user can't touch
@@ -342,7 +326,7 @@ function docCreate (type, patch = {}) {
   );
 
   return module.exports.insert(doc);
-}
+};
 
 // ~~~~~~~ //
 // GENERAL //
@@ -357,7 +341,8 @@ module.exports.withDescendants = (doc = null) => {
       for (const type of module.exports.ALL_TYPES) {
         // If the doc is null, we want to search for parentId === null
         const parentId = doc ? doc._id : null;
-        promises.push(find(type, {parentId}));
+        const promise = module.exports.find(type, {parentId});
+        promises.push(promise);
       }
     }
 
@@ -386,6 +371,8 @@ module.exports.withDescendants = (doc = null) => {
 };
 
 module.exports.duplicate = (originalDoc, patch = {}) => {
+  module.exports.bufferChanges();
+
   return new Promise((resolve, reject) => {
 
     // 1. Copy the doc
@@ -394,13 +381,13 @@ module.exports.duplicate = (originalDoc, patch = {}) => {
     delete newDoc.created;
     delete newDoc.modified;
 
-    docCreate(newDoc.type, newDoc).then(createdDoc => {
+    module.exports.docCreate(newDoc.type, newDoc).then(createdDoc => {
 
       // 2. Get all the children
       const promises = [];
       for (const type of module.exports.ALL_TYPES) {
         const parentId = originalDoc._id;
-        const promise = find(type, {parentId});
+        const promise = module.exports.find(type, {parentId});
         promises.push(promise);
       }
 
@@ -420,320 +407,13 @@ module.exports.duplicate = (originalDoc, patch = {}) => {
         }
 
         // 3. Also duplicate all children, and recurse
-        Promise.all(duplicatePromises).then(() => resolve(createdDoc), reject)
+        Promise.all(duplicatePromises).then(() => {
+          module.exports.flushChanges();
+          resolve(createdDoc)
+        }, err => {
+          reject(err);
+        })
       })
     })
   })
-};
-
-
-// ~~~~~~~ //
-// REQUEST //
-// ~~~~~~~ //
-
-module.exports.requestCreateAndActivate = (workspace, patch = {}) => {
-  return module.exports.requestCreate(patch).then(r => {
-    module.exports.workspaceUpdate(workspace, {metaActiveRequestId: r._id});
-  })
-};
-
-module.exports.requestDuplicateAndActivate = (workspace, request) => {
-  return module.exports.requestDuplicate(request).then(r => {
-    module.exports.workspaceUpdate(workspace, {metaActiveRequestId: r._id});
-  })
-};
-
-module.exports.requestCreate = (patch = {}) => {
-  if (!patch.parentId) {
-    throw new Error('New Requests missing `parentId`', patch);
-  }
-
-  return docCreate(module.exports.TYPE_REQUEST, patch);
-};
-
-module.exports.requestGetById = id => {
-  return get(module.exports.TYPE_REQUEST, id);
-};
-
-module.exports.requestFindByParentId = parentId => {
-  return find(module.exports.TYPE_REQUEST, {parentId: parentId});
-};
-
-module.exports.requestUpdate = (request, patch) => {
-  return docUpdate(request, patch);
-};
-
-module.exports.requestUpdateContentType = (request, contentType) => {
-  let headers = [...request.headers];
-  const contentTypeHeader = headers.find(
-    h => h.name.toLowerCase() === 'content-type'
-  );
-
-  if (!contentType) {
-    // Remove the contentType header if we are unsetting it
-    headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (contentTypeHeader) {
-    contentTypeHeader.value = contentType;
-  } else {
-    headers.push({name: 'Content-Type', value: contentType})
-  }
-
-  return docUpdate(request, {headers});
-};
-
-module.exports.requestDuplicate = request => {
-  const name = `${request.name} (Copy)`;
-  return module.exports.duplicate(request, {name});
-};
-
-module.exports.requestRemove = request => {
-  return module.exports.remove(request);
-};
-
-module.exports.requestAll = () => {
-  return module.exports.all(module.exports.TYPE_REQUEST);
-};
-
-module.exports.requestGetAncestors = request => {
-  return new Promise(resolve => {
-    let ancestors = [];
-
-    const next = (doc) => {
-      Promise.all([
-       module.exports.requestGroupGetById(doc.parentId),
-       module.exports.workspaceGetById(doc.parentId)
-      ]).then(([requestGroup, workspace]) => {
-        if (requestGroup) {
-          ancestors = [requestGroup, ...ancestors];
-          next(requestGroup);
-        } else if (workspace) {
-          ancestors = [workspace, ...ancestors];
-          next(workspace);
-          // We could be done here, but let's have there only be one finish case
-        } else {
-          // We're finished
-          resolve(ancestors);
-        }
-      });
-    };
-
-    next(request);
-  });
-};
-
-
-// ~~~~~~~~~~~~~ //
-// REQUEST GROUP //
-// ~~~~~~~~~~~~~ //
-
-module.exports.requestGroupCreate = (patch = {}) => {
-  if (!patch.parentId) {
-    throw new Error('New Requests missing `parentId`', patch);
-  }
-
-  return docCreate(module.exports.TYPE_REQUEST_GROUP, patch);
-};
-
-module.exports.requestGroupUpdate = (requestGroup, patch) => {
-  return docUpdate(requestGroup, patch);
-};
-
-module.exports.requestGroupGetById = id => {
-  return get(module.exports.TYPE_REQUEST_GROUP, id);
-};
-
-module.exports.requestGroupFindByParentId = parentId => {
-  return find(module.exports.TYPE_REQUEST_GROUP, {parentId});
-};
-
-module.exports.requestGroupRemove = requestGroup => {
-  return module.exports.remove(requestGroup);
-};
-
-module.exports.requestGroupAll = () => {
-  return module.exports.all(module.exports.TYPE_REQUEST_GROUP);
-};
-
-module.exports.requestGroupDuplicate = requestGroup => {
-  const name = `${requestGroup.name} (Copy)`;
-  return module.exports.duplicate(requestGroup, {name});
-};
-
-
-// ~~~~~~~~ //
-// RESPONSE //
-// ~~~~~~~~ //
-
-module.exports.responseCreate = (patch = {}) => {
-  if (!patch.parentId) {
-    throw new Error('New Response missing `parentId`');
-  }
-
-  removeBulkSilently(module.exports.TYPE_RESPONSE, {parentId: patch.parentId});
-  return docCreate(module.exports.TYPE_RESPONSE, patch);
-};
-
-module.exports.responseGetLatestByParentId = parentId => {
-  return getMostRecentlyModified(module.exports.TYPE_RESPONSE, {parentId});
-};
-
-
-// ~~~~~~~ //
-// COOKIES //
-// ~~~~~~~ //
-
-module.exports.cookieJarCreate = (patch = {}) => {
-  return docCreate(module.exports.TYPE_COOKIE_JAR, patch);
-};
-
-module.exports.cookieJarGetOrCreateForWorkspace = workspace => {
-  const parentId = workspace._id;
-  return find(module.exports.TYPE_COOKIE_JAR, {parentId}).then(cookieJars => {
-    if (cookieJars.length === 0) {
-      return module.exports.cookieJarCreate({parentId})
-    } else {
-      return new Promise(resolve => resolve(cookieJars[0]));
-    }
-  });
-};
-
-module.exports.cookieJarAll = () => {
-  return module.exports.all(module.exports.TYPE_COOKIE_JAR);
-};
-
-module.exports.cookieJarGetById = id => {
-  return get(module.exports.TYPE_COOKIE_JAR, id);
-};
-
-module.exports.cookieJarUpdate = (cookieJar, patch) => {
-  return docUpdate(cookieJar, patch);
-};
-
-
-// ~~~~~~~~~ //
-// WORKSPACE //
-// ~~~~~~~~~ //
-
-module.exports.workspaceGetById = id => {
-  return get(module.exports.TYPE_WORKSPACE, id);
-};
-
-module.exports.workspaceCreate = (patch = {}) => {
-  return docCreate(module.exports.TYPE_WORKSPACE, patch);
-};
-
-module.exports.workspaceAll = () => {
-  return module.exports.all(module.exports.TYPE_WORKSPACE).then(workspaces => {
-    if (workspaces.length === 0) {
-      return module.exports.workspaceCreate({name: 'Insomnia'})
-        .then(module.exports.workspaceAll);
-    } else {
-      return new Promise(resolve => resolve(workspaces))
-    }
-  });
-};
-
-module.exports.workspaceCount = () => {
-  return count(module.exports.TYPE_WORKSPACE)
-};
-
-module.exports.workspaceUpdate = (workspace, patch) => {
-  return docUpdate(workspace, patch);
-};
-
-module.exports.workspaceRemove = workspace => {
-  return module.exports.remove(workspace);
-};
-
-
-// ~~~~~~~~~~~ //
-// ENVIRONMENT //
-// ~~~~~~~~~~~ //
-
-module.exports.environmentCreate = (patch = {}) => {
-  if (!patch.parentId) {
-    throw new Error('New Environment missing `parentId`', patch);
-  }
-
-  return docCreate(module.exports.TYPE_ENVIRONMENT, patch);
-};
-
-module.exports.environmentUpdate = (environment, patch) => {
-  return docUpdate(environment, patch);
-};
-
-module.exports.environmentFindByParentId = parentId => {
-  return find(module.exports.TYPE_ENVIRONMENT, {parentId});
-};
-
-module.exports.environmentGetOrCreateForWorkspace = workspace => {
-  const parentId = workspace._id;
-  return find(module.exports.TYPE_ENVIRONMENT, {parentId}).then(environments => {
-    if (environments.length === 0) {
-      return module.exports.environmentCreate({parentId, name: 'Base Environment'})
-    } else {
-      return new Promise(resolve => resolve(environments[0]));
-    }
-  });
-};
-
-module.exports.environmentGetById = id => {
-  return get(module.exports.TYPE_ENVIRONMENT, id);
-};
-
-module.exports.environmentRemove = environment => {
-  return module.exports.remove(environment);
-};
-
-module.exports.environmentAll = () => {
-  return module.exports.all(module.exports.TYPE_ENVIRONMENT);
-};
-
-
-// ~~~~~~~~ //
-// SETTINGS //
-// ~~~~~~~~ //
-
-module.exports.settingsCreate = (patch = {}) => {
-  return docCreate(module.exports.TYPE_SETTINGS, patch);
-};
-
-module.exports.settingsUpdate = (settings, patch) => {
-  return docUpdate(settings, patch);
-};
-
-module.exports.settingsGetOrCreate = () => {
-  return module.exports.all(module.exports.TYPE_SETTINGS).then(results => {
-    if (results.length === 0) {
-      return module.exports.settingsCreate()
-        .then(module.exports.settingsGetOrCreate);
-    } else {
-      return new Promise(resolve => resolve(results[0]));
-    }
-  });
-};
-
-// ~~~~~ //
-// STATS //
-// ~~~~~ //
-
-module.exports.statsCreate = (patch = {}) => {
-  return docCreate(module.exports.TYPE_STATS, patch);
-};
-
-module.exports.statsUpdate = patch => {
-  return module.exports.statsGet().then(stats => {
-    return docUpdate(stats, patch);
-  });
-};
-
-module.exports.statsGet = () => {
-  return module.exports.all(module.exports.TYPE_STATS).then(results => {
-    if (results.length === 0) {
-      return module.exports.statsCreate()
-        .then(module.exports.statsGet);
-    } else {
-      return new Promise(resolve => resolve(results[0]));
-    }
-  });
 };

@@ -67,7 +67,7 @@ class SidebarRequestRow extends Component {
                 <MethodTag method={request.method}/>
                 <Editable
                   value={request.name}
-                  onSubmit={name => db.requestUpdate(request, {name})}
+                  onSubmit={name => db.request.update(request, {name})}
                 />
               </div>
             </button>

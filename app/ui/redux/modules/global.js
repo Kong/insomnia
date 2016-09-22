@@ -70,7 +70,7 @@ export function importFile (workspace) {
       paths.map(path => {
         fs.readFile(path, 'utf8', (err, data) => {
           // Unset the current active request first because we might be updating it
-          db.workspaceUpdate(workspace, {metaActiveRequestId: null}).then(() => {
+          db.workspace.update(workspace, {metaActiveRequestId: null}).then(() => {
             dispatch(loadStop());
             if (err) {
               trackEvent('Import Fail');

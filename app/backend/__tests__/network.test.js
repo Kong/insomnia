@@ -9,8 +9,8 @@ describe('buildRequestConfig()', () => {
   beforeEach(() => db.initDB({inMemoryOnly: true}, true));
 
   it('builds a default config', () => {
-    return db.workspaceCreate().then(workspace => {
-      const request = Object.assign(db.MODEL_DEFAULTS[db.TYPE_REQUEST](), {
+    return db.workspace.create().then(workspace => {
+      const request = Object.assign(db.request.init(), {
         parentId: workspace._id
       });
 
@@ -34,8 +34,8 @@ describe('buildRequestConfig()', () => {
   });
 
   it('builds a complex config', () => {
-    return db.workspaceCreate().then(workspace => {
-      const request = Object.assign(db.MODEL_DEFAULTS[db.TYPE_REQUEST](), {
+    return db.workspace.create().then(workspace => {
+      const request = Object.assign(db.request.init(), {
         parentId: workspace._id,
         headers: [{host: '', name: 'Content-Type', value: 'application/json'}],
         parameters: [{name: 'foo bar', value: 'hello&world'}],
@@ -79,8 +79,8 @@ describe('actuallySend()', () => {
     let settings, mock;
 
     return Promise.all([
-      db.workspaceCreate(),
-      db.settingsCreate()
+      db.workspace.create(),
+      db.settings.create()
     ]).then(([workspace, newSettings]) => {
       settings = newSettings;
 
@@ -92,7 +92,7 @@ describe('actuallySend()', () => {
         .reply(200, 'response body')
         .log(console.log);
 
-      const request = Object.assign(db.MODEL_DEFAULTS[db.TYPE_REQUEST](), {
+      const request = Object.assign(db.request.init(), {
         _id: 'req_123',
         parentId: workspace._id,
         headers: [{name: 'Content-Type', value: 'application/json'}],

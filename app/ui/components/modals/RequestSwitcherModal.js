@@ -64,7 +64,7 @@ class RequestSwitcherModal extends Component {
       parentId: activeRequestParentId
     };
 
-    db.requestCreate(patch).then(request => {
+    db.request.create(patch).then(request => {
       this._activateRequest(request);
     });
   }
@@ -91,9 +91,9 @@ class RequestSwitcherModal extends Component {
     const {workspaceId} = this.props;
 
     Promise.all([
-      db.requestAll(),
-      db.requestGroupAll(),
-      db.workspaceAll()
+      db.request.all(),
+      db.requestGroup.all(),
+      db.workspace.all()
     ]).then(([
       allRequests,
       allRequestGroups,

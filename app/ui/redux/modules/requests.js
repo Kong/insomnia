@@ -53,10 +53,6 @@ export default combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-export function changeFilter(filter) {
-  return {type: REQUEST_CHANGE_FILTER, filter};
-}
-
 export function send(request) {
   return dispatch => {
     dispatch({type: REQUEST_SEND_START, requestId: request._id});

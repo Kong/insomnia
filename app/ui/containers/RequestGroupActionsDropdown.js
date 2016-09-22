@@ -17,7 +17,7 @@ class RequestGroupActionsDropdown extends Component {
       headerName: 'Rename Folder',
       defaultValue: requestGroup.name
     }).then(name => {
-      db.requestGroupUpdate(requestGroup, {name});
+      db.requestGroup.update(requestGroup, {name});
     })
   }
 
@@ -30,13 +30,13 @@ class RequestGroupActionsDropdown extends Component {
       const workspace = this._getActiveWorkspace();
       const {requestGroup} = this.props;
       const parentId = requestGroup._id;
-      db.requestCreateAndActivate(workspace, {parentId, name})
+      db.request.createAndActivate(workspace, {parentId, name})
     });
   }
 
   _requestGroupDuplicate () {
     const {requestGroup} = this.props;
-    db.requestGroupDuplicate(requestGroup)
+    db.requestGroup.duplicate(requestGroup)
   }
 
   _getActiveWorkspace (props) {
@@ -84,7 +84,7 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <PromptButton onClick={e => db.requestGroupRemove(requestGroup)}
+            <PromptButton onClick={e => db.requestGroup.remove(requestGroup)}
                           addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
             </PromptButton>
