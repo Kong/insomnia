@@ -369,14 +369,14 @@ module.exports.duplicate = (originalDoc, patch = {}, buffer = true) => {
     module.exports.docCreate(newDoc.type, newDoc).then(createdDoc => {
 
       // 2. Get all the children
-      const promises = [];
+      const findPromises = [];
       for (const type of module.exports.ALL_TYPES) {
         const parentId = originalDoc._id;
         const promise = module.exports.find(type, {parentId});
-        promises.push(promise);
+        findPromises.push(promise);
       }
 
-      Promise.all(promises).then(results => {
+      Promise.all(findPromises).then(results => {
         let duplicatePromises = [];
 
         // Gather up the docs = require(each type
