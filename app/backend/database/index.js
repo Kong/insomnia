@@ -370,9 +370,8 @@ module.exports.withDescendants = (doc = null) => {
   return next([doc]);
 };
 
-module.exports.duplicate = (originalDoc, patch = {}) => {
-  module.exports.bufferChanges();
-
+module.exports.duplicate = (originalDoc, patch = {}, buffer = true) => {
+  buffer && module.exports.bufferChanges();
   return new Promise((resolve, reject) => {
 
     // 1. Copy the doc
@@ -408,7 +407,7 @@ module.exports.duplicate = (originalDoc, patch = {}) => {
 
         // 3. Also duplicate all children, and recurse
         Promise.all(duplicatePromises).then(() => {
-          module.exports.flushChanges();
+          buffer && module.exports.flushChanges();
           resolve(createdDoc)
         }, err => {
           reject(err);
