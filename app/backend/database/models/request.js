@@ -26,19 +26,6 @@ module.exports.createAndActivate = (workspace, patch = {}) => {
   })
 };
 
-module.exports.duplicateAndActivate = (workspace, request) => {
-  db.bufferChanges();
-
-  return new Promise((resolve, reject) => {
-    module.exports.duplicate(request).then(r => {
-      return db.workspace.update(workspace, {metaActiveRequestId: r._id})
-    }).then(() => {
-      db.flushChanges();
-      resolve();
-    }, reject)
-  })
-};
-
 module.exports.create = (patch = {}) => {
   if (!patch.parentId) {
     throw new Error('New Requests missing `parentId`', patch);
@@ -77,9 +64,21 @@ module.exports.updateContentType = (request, contentType) => {
   return db.docUpdate(request, {headers});
 };
 
-module.exports.duplicate = request => {
+module.exports.duplicateAndActivate = (workspace, request) => {
+  db.bufferChanges();
+  return new Promise((resolve, reject) => {
+    module.exports.duplicate(request, false).then(r => {
+      return db.workspace.update(workspace, {metaActiveRequestId: r._id})
+    }).then(() => {
+      db.flushChanges();
+      resolve();
+    }, reject)
+  })
+};
+
+module.exports.duplicate = (request, buffer = true) => {
   const name = `${request.name} (Copy)`;
-  return db.duplicate(request, {name});
+  return db.duplicate(request, {name}, buffer)
 };
 
 module.exports.remove = request => {
