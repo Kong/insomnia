@@ -1,6 +1,6 @@
 'use strict';
 
-const db = require('./');
+const db = require('../index');
 
 module.exports.type = 'Stats';
 module.exports.prefix = 'sta';

@@ -1,6 +1,6 @@
 'use strict';
 
-const db = require('./');
+const db = require('../index');
 
 module.exports.type = 'RequestGroup';
 module.exports.prefix = 'fld';

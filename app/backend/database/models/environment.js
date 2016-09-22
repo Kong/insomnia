@@ -1,6 +1,6 @@
 'use strict';
 
-const db = require('./');
+const db = require('../index');
 
 module.exports.type = 'Environment';
 module.exports.prefix = 'env';

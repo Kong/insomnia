@@ -16,14 +16,14 @@ module.exports.CHANGE_REMOVE = 'remove';
 // MODELS //
 // ~~~~~~ //
 
-module.exports.stats = require('./stats');
-module.exports.settings = require('./settings');
-module.exports.workspace = require('./workspace');
-module.exports.environment = require('./environment');
-module.exports.cookieJar = require('./cookieJar');
-module.exports.requestGroup = require('./requestGroup');
-module.exports.request = require('./request');
-module.exports.response = require('./response');
+module.exports.stats = require('./models/stats');
+module.exports.settings = require('./models/settings');
+module.exports.workspace = require('./models/workspace');
+module.exports.environment = require('./models/environment');
+module.exports.cookieJar = require('./models/cookieJar');
+module.exports.requestGroup = require('./models/requestGroup');
+module.exports.request = require('./models/request');
+module.exports.response = require('./models/response');
 
 const MODELS = [
   module.exports.stats,

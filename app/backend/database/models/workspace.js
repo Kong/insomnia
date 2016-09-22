@@ -1,7 +1,7 @@
 'use strict';
 
-const db = require('./');
-const {DEFAULT_SIDEBAR_WIDTH} = require('../constants');
+const db = require('../index');
+const {DEFAULT_SIDEBAR_WIDTH} = require('../../constants');
 
 module.exports.type = 'Workspace';
 module.exports.prefix = 'wrk';

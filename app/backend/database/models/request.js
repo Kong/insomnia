@@ -1,8 +1,8 @@
 'use strict';
 
-const {PREVIEW_MODE_SOURCE} = require('../previewModes');
-const {METHOD_GET} = require('../constants');
-const db = require('./');
+const {PREVIEW_MODE_SOURCE} = require('../../previewModes');
+const {METHOD_GET} = require('../../constants');
+const db = require('../index');
 
 module.exports.type = 'Request';
 module.exports.prefix = 'req';
