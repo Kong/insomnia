@@ -1,6 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import {getRenderedRequest} from 'backend/render';
 import * as querystring from 'backend/querystring';
+import util from 'backend/util';
 
 
 class RenderedQueryString extends Component {
@@ -17,7 +18,7 @@ class RenderedQueryString extends Component {
       getRenderedRequest(props.request).then(({url, parameters}) => {
         const qs = querystring.buildFromParams(parameters);
         const fullUrl = querystring.joinURL(url, qs);
-        this.setState({string: fullUrl});
+        this.setState({string: util.prepareUrlForSending(fullUrl)});
       });
     }, delay ? 300 : 0);
   }
