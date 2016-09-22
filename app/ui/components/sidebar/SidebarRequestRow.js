@@ -2,7 +2,7 @@ import React, {PropTypes, Component} from 'react';
 import {DragSource, DropTarget} from 'react-dnd'
 import classnames from 'classnames';
 
-import RequestActionsDropdown from '../../containers/RequestActionsDropdown';
+import RequestActionsDropdown from '../dropdowns/RequestActionsDropdown';
 import Editable from '../base/Editable';
 import MethodTag from '../tags/MethodTag';
 import * as db from 'backend/database';
