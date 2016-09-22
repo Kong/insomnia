@@ -42,9 +42,9 @@ const {
 
 const UPDATE_URLS = {
   // Add `r` param to help cache bust
-  darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}&r=${Date.now()}`,
-  linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}&r=${Date.now()}`,
-  win32: `https://downloads.insomnia.rest/win?r=${Date.now()}`
+  darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
+  linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}`,
+  win32: `https://downloads.insomnia.rest/win`
 };
 
 const DOWNLOAD_URL = 'http://download.insomnia.rest';
