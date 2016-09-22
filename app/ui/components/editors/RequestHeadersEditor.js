@@ -55,7 +55,7 @@ class RequestHeadersEditor extends Component {
     const {bulk, headers, onChange} = this.props;
 
     return bulk ? (
-      <div>
+      <div className="tall">
         <Editor
           onChange={v => this._handleBulkUpdate(v)}
           value={this._getHeadersString()}

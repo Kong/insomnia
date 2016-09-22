@@ -178,8 +178,8 @@ class RequestPane extends Component {
               bulk={useBulkHeaderEditor}
             />
 
-            <div className="pad no-pad-top text-right">
-              <button className="btn btn--outlined btn--super-compact"
+            <div className="pad-right text-right">
+              <button className="margin-top-sm btn btn--outlined btn--super-compact"
                       onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
                 {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
