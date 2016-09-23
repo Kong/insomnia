@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require('./util.js');
+
 module.exports.getJoiner = url => {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';
@@ -20,9 +22,9 @@ module.exports.build = (param, strict = true) => {
   }
 
   if (!strict || param.value) {
-    return encodeURIComponent(param.name) + '=' + encodeURIComponent(param.value);
+    return util.flexibleEncode(param.name) + '=' + util.flexibleEncode(param.value);
   } else {
-    return encodeURIComponent(param.name);
+    return util.flexibleEncode(param.name);
   }
 };
 

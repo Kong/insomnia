@@ -3,10 +3,11 @@
 const db = require('../database');
 const {getRenderedRequest} = require('../render');
 const {jarFromCookies} = require('../cookies');
+const util = require('backend/util');
 
 module.exports.exportHar = (requestId, addContentLength = false) => {
   return new Promise((resolve, reject) => {
-    db.requestGetById(requestId).then(request => {
+    db.request.getById(requestId).then(request => {
       return getRenderedRequest(request);
     }).then(renderedRequest => {
 
@@ -24,7 +25,7 @@ module.exports.exportHar = (requestId, addContentLength = false) => {
 
       resolve({
         method: renderedRequest.method,
-        url: renderedRequest.url,
+        url: util.prepareUrlForSending(renderedRequest.url),
         httpVersion: 'HTTP/1.1',
         cookies: getCookies(renderedRequest),
         headers: renderedRequest.headers,
