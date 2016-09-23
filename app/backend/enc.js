@@ -32,23 +32,25 @@ function decrypt (encryptedText, key) {
   return text + decipher.final('utf8');
 }
 
-function createEncryptionKey (password, email, accountKey, accountId, salt) {
+function createKey (password, email, accountKey, accountId, salt) {
   return new Promise((resolve, reject) => {
+    const KEY_LEN = 32;
 
     // 0. Sanitize the things
     password = prepareString(password);
     accountKey = prepareString(accountKey);
     email = prepareEmail(email);
-    const KEY_LEN = 32;
 
-    // 1. Generate intermediate key
+    // 1. Generate salt using email
     new HKDF('sha512', salt, email).derive('info', 32, saltHash => {
+
+      // 2. Generate intermediate key with salt
       crypto.pbkdf2(password, saltHash, 500000, KEY_LEN, 'sha512', (err, passwordHash) => {
         if (err) {
           return reject(err);
         }
 
-        // 2. Generate a final key using the account key and password key
+        // 3. Generate another key from account key and account id
         new HKDF('sha512', accountKey, accountId).derive('info', KEY_LEN, accountHash => {
           if (err) {
             return reject(err);
@@ -58,9 +60,10 @@ function createEncryptionKey (password, email, accountKey, accountId, salt) {
           const intPasswordHash = parseInt(passwordHash.toString('hex'), 16);
           const intAccountHash = parseInt(accountHash.toString('hex'), 16);
 
-          // XOR the two keys together
+          // 4. Generate final key by XORing the two generated keys together
           const xOrKey = intPasswordHash ^ intAccountHash;
           const key = xOrKey.toString(16);
+
           resolve(key);
         });
       });
@@ -68,28 +71,19 @@ function createEncryptionKey (password, email, accountKey, accountId, salt) {
   })
 }
 
-function createLoginKey (password, accountKey, email) {
-  // TODO
-}
-
 const password = 'MyPassIsSuperLongAndPrettyGreat';
 const accountKey = '66491c59-484b-47d8-8375-e7b77d40367f';
 const email = 'greg@schier.co';
 const salt = '1o2n4pt403tn0q2';
 const accountId = 'usr_120342085023lptyusrnistor';
+
 console.time('KEY');
-createEncryptionKey(password, email, accountKey, accountId, 'salt').then(key => {
+
+createKey(password, email, accountKey, accountId, 'salt').then(key => {
   console.timeEnd('KEY');
-  const msg = `
-Hello World! This is a pretty long message, but not too bad.
-Hello World! This is a pretty long message, but not too bad.
-Hello World! This is a pretty long message, but not too bad.
-Hello World! This is a pretty long message, but not too bad.
-Hello World! This is a pretty long message, but not too bad.
-Hello World! This is a pretty long message, but not too bad.
-Hello World! This is a pretty long message, but not too bad.
-Hello World! This is a pretty long message, but not too bad.
-`;
+
+  const msg = `Hello World! This is a pretty long message, but not too bad.`;
+
   console.time('ENCRYPT');
   const e = encrypt(msg, key);
   const d = decrypt(e, key);
