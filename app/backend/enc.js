@@ -50,8 +50,6 @@ function createKey (password, email, accountKey, accountId, salt) {
           return reject(err);
         }
 
-        // 3. Generate another key from account key and account id
-        new HKDF('sha512', accountKey, accountId).derive('info', KEY_LEN, accountHash => {
           if (err) {
             return reject(err);
           }
@@ -84,10 +82,8 @@ createKey(password, email, accountKey, accountId, 'salt').then(key => {
 
   const msg = `Hello World! This is a pretty long message, but not too bad.`;
 
-  console.time('ENCRYPT');
   const e = encrypt(msg, key);
   const d = decrypt(e, key);
-  console.timeEnd('ENCRYPT');
 
   console.log('SUCCESS?', d === msg);
 });
