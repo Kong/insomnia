@@ -60,6 +60,7 @@
     "codemirror": "^5.18.2",
     "electron-context-menu": "^0.4.0",
     "electron-squirrel-startup": "^1.0.0",
+    "hkdf": "0.0.2",
     "httpsnippet": "git@github.com:gschier/httpsnippet.git#39d2fb0449f33711e5cc71a4d42b0e5b808426b4",
     "json-lint": "^0.1.0",
     "jsonpath-plus": "^0.15.0",
@@ -82,8 +83,8 @@
     "tough-cookie": "^2.3.1",
     "traverse": "^0.6.6",
     "vkbeautify": "^0.99.1",
-    "xpath": "^0.0.23",
-    "xmldom": "^0.1.22"
+    "xmldom": "^0.1.22",
+    "xpath": "^0.0.23"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
