@@ -58,6 +58,21 @@ module.exports.generateId = prefix => {
   }
 };
 
+module.exports.flexibleEncodeComponent = str => {
+  // Sometimes spaces screw things up because of url.parse
+  str = str.replace(/%20/g, ' ');
+
+  let decodedPathname;
+  try {
+    decodedPathname = decodeURIComponent(str);
+  } catch (e) {
+    // Malformed (probably not encoded) so assume it's decoded already
+    decodedPathname = str;
+  }
+
+  return encodeURIComponent(decodedPathname);
+};
+
 module.exports.flexibleEncode = str => {
   // Sometimes spaces screw things up because of url.parse
   str = str.replace(/%20/g, ' ');

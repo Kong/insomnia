@@ -22,9 +22,11 @@ module.exports.build = (param, strict = true) => {
   }
 
   if (!strict || param.value) {
-    return util.flexibleEncode(param.name) + '=' + util.flexibleEncode(param.value);
+    const name = util.flexibleEncodeComponent(param.name || '');
+    const value = util.flexibleEncodeComponent(param.value || '');
+    return `${name}=${value}`
   } else {
-    return util.flexibleEncode(param.name);
+    return util.flexibleEncodeComponent(param.name);
   }
 };
 
@@ -36,8 +38,8 @@ module.exports.build = (param, strict = true) => {
  */
 module.exports.buildFromParams = (parameters, strict = true) => {
   let items = [];
-  for (var i = 0; i < parameters.length; i++) {
-    let built = module.exports.build(parameters[i], strict);
+  for (const param of parameters) {
+    let built = module.exports.build(param, strict);
 
     if (!built) {
       continue;
