@@ -93,7 +93,7 @@ module.exports.getAncestors = request => {
   return new Promise(resolve => {
     let ancestors = [];
 
-    const next = (doc) => {
+    const next = doc => {
       Promise.all([
         db.requestGroup.getById(doc.parentId),
         db.workspace.getById(doc.parentId)
