@@ -34,9 +34,9 @@ class ResponseError extends Component {
 
     return (
       <div>
-        <div className="selectable monospace pad">
+        <pre className="selectable pad">
           {error}
-        </div>
+        </pre>
         <hr/>
         <div className="text-center pad">
           <p className="faint pad-left pad-right">

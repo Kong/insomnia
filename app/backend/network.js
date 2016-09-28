@@ -82,11 +82,19 @@ module.exports._actuallySend = (renderedRequest, settings) => {
     // TODO: Handle redirects ourselves
     const req = networkRequest(config, function (err, networkResponse) {
       if (err) {
+        const isShittyParseError = err.toString() === 'Error: Parse Error';
+
+        let message = err.toString();
+        if (isShittyParseError) {
+          message = 'Could not parse malformed response.'
+        }
+
         db.response.create({
           parentId: renderedRequest._id,
           elapsedTime: Date.now() - startTime,
-          error: err.toString()
+          error: message
         });
+
         return reject(err);
       }
 

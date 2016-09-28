@@ -181,12 +181,11 @@ class Editor extends Component {
         obj = JSONPath({json: obj, path: this.state.filter});
       }
 
-      code = JSON.stringify(obj);
+      return Promise.resolve(vkBeautify.json(obj, '\t'));
     } catch (e) {
       // That's Ok, just leave it
+      return Promise.resolve(code);
     }
-
-    return Promise.resolve(vkBeautify.json(code, '\t'));
   }
 
   _formatXML (code) {
@@ -202,7 +201,12 @@ class Editor extends Component {
       }
     }
 
-    return Promise.resolve(vkBeautify.xml(code, '\t'));
+    try {
+      return Promise.resolve(vkBeautify.xml(code, '\t'));
+    } catch (e) {
+      // Failed to parse so just return original
+      return Promise.resolve(code);
+    }
   }
 
   /**
