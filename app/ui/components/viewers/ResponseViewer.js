@@ -49,13 +49,23 @@ class ResponseViewer extends Component {
           />
         );
       case PREVIEW_MODE_SOURCE:
+        let mode = contentType;
+
+        try {
+          // FEATURE: Detect JSON even without content-type
+          contentType.indexOf('json') === -1 && JSON.parse(body);
+          mode = 'application/json';
+        } catch (e) {
+          // Nothing
+        }
+
         return (
           <Editor
             value={body || ''}
             updateFilter={updateFilter}
             filter={filter}
             autoPrettify={true}
-            mode={contentType}
+            mode={mode}
             readOnly={true}
             lineWrapping={editorLineWrapping}
             fontSize={editorFontSize}
