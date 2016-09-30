@@ -1,8 +1,8 @@
-const nunjucks = require('nunjucks');
-const traverse = require('traverse');
-const uuid = require('node-uuid');
+import nunjucks from 'nunjucks';
+import traverse from 'traverse';
+import uuid from 'node-uuid';
 import * as db from './database';
-const {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} = require('./util');
+import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './util';
 
 const nunjucksEnvironment = nunjucks.configure({
   autoescape: false
@@ -108,45 +108,41 @@ module.exports.recursiveRender = (obj, context) => {
   return newObj;
 };
 
-module.exports.getRenderedRequest = request => {
-  return db.request.getAncestors(request).then(ancestors => {
-    const workspace = ancestors.find(doc => doc.type === db.workspace.type);
+export async function getRenderedRequest (request) {
+  const ancestors = await db.request.getAncestors(request);
+  const workspace = ancestors.find(doc => doc.type === db.workspace.type);
 
-    return Promise.all([
-      db.environment.getOrCreateForWorkspace(workspace),
-      db.environment.getById(workspace.metaActiveEnvironmentId),
-      db.cookieJar.getOrCreateForWorkspace(workspace)
-    ]).then(([rootEnvironment, subEnvironment, cookieJar]) => {
+  const rootEnvironment = await db.environment.getOrCreateForWorkspace(workspace);
+  const subEnvironment = await db.environment.getById(workspace.metaActiveEnvironmentId);
+  const cookieJar = await db.cookieJar.getOrCreateForWorkspace(workspace);
 
-      // Generate the context we need to render
-      const renderContext = module.exports.buildRenderContext(
-        ancestors,
-        rootEnvironment,
-        subEnvironment
-      );
+  // Generate the context we need to render
+  const renderContext = module.exports.buildRenderContext(
+    ancestors,
+    rootEnvironment,
+    subEnvironment
+  );
 
-      // Render all request properties
-      const renderedRequest = module.exports.recursiveRender(
-        request,
-        renderContext
-      );
+  // Render all request properties
+  const renderedRequest = module.exports.recursiveRender(
+    request,
+    renderContext
+  );
 
-      // Default the proto if it doesn't exist
-      renderedRequest.url = setDefaultProtocol(renderedRequest.url);
+  // Default the proto if it doesn't exist
+  renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
-      // Add the yummy cookies
-      renderedRequest.cookieJar = cookieJar;
+  // Add the yummy cookies
+  renderedRequest.cookieJar = cookieJar;
 
-      // Add authentication
-      const missingAuthHeader = !hasAuthHeader(renderedRequest.headers);
-      if (missingAuthHeader && renderedRequest.authentication.username) {
-        const {username, password} = renderedRequest.authentication;
-        const header = getBasicAuthHeader(username, password);
+  // Add authentication
+  const missingAuthHeader = !hasAuthHeader(renderedRequest.headers);
+  if (missingAuthHeader && renderedRequest.authentication.username) {
+    const {username, password} = renderedRequest.authentication;
+    const header = getBasicAuthHeader(username, password);
 
-        renderedRequest.headers.push(header);
-      }
+    renderedRequest.headers.push(header);
+  }
 
-      return new Promise(resolve => resolve(renderedRequest));
-    });
-  });
-};
+  return renderedRequest;
+}

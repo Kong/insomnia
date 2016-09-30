@@ -1,24 +1,22 @@
-'use strict';
-
-const networkRequest = require('request');
-const {parse: urlParse} = require('url');
-const db = require('./database');
-const querystring = require('./querystring');
-var util = require('./util.js');
+import networkRequest from 'request';
+import {parse as urlParse} from 'url';
+import * as db from './database';
+import querystring from './querystring';
+import util from './util.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
-const {jarFromCookies, cookiesFromJar} = require('./cookies');
-const {setDefaultProtocol} = require('./util');
-const {getRenderedRequest} = require('./render');
+import {jarFromCookies, cookiesFromJar} from './cookies';
+import {setDefaultProtocol} from './util';
+import {getRenderedRequest} from './render';
 
 let cancelRequestFunction = null;
 
-module.exports.cancelCurrentRequest = () => {
+export function cancelCurrentRequest () {
   if (typeof cancelRequestFunction === 'function') {
     cancelRequestFunction();
   }
-};
+}
 
-module.exports._buildRequestConfig = (renderedRequest, patch = {}) => {
+export function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
     method: renderedRequest.method,
     body: renderedRequest.body,
@@ -56,9 +54,9 @@ module.exports._buildRequestConfig = (renderedRequest, patch = {}) => {
   }
 
   return Object.assign(config, patch);
-};
+}
 
-module.exports._actuallySend = (renderedRequest, settings) => {
+export function _actuallySend (renderedRequest, settings) {
   return new Promise((resolve, reject) => {
     const cookieJar = renderedRequest.cookieJar;
     const jar = jarFromCookies(cookieJar.cookies);
@@ -70,7 +68,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
-    let config = module.exports._buildRequestConfig(renderedRequest, {
+    let config = _buildRequestConfig(renderedRequest, {
       jar: jar,
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
@@ -80,7 +78,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
 
     const startTime = Date.now();
     // TODO: Handle redirects ourselves
-    const req = networkRequest(config, function (err, networkResponse) {
+    const req = networkRequest(config, async (err, networkResponse) => {
       if (err) {
         const isShittyParseError = err.toString() === 'Error: Parse Error';
 
@@ -89,7 +87,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
           message = 'Could not parse malformed response.'
         }
 
-        db.response.create({
+        await db.response.create({
           parentId: renderedRequest._id,
           elapsedTime: Date.now() - startTime,
           error: message
@@ -103,7 +101,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
       if (contentType && contentType.toLowerCase().indexOf('image/') === 0) {
         const err = new Error(`Content-Type ${contentType} not supported`);
 
-        db.response.create({
+        await db.response.create({
           parentId: renderedRequest._id,
           elapsedTime: Date.now() - startTime,
           error: err.toString(),
@@ -114,9 +112,8 @@ module.exports._actuallySend = (renderedRequest, settings) => {
       }
 
       // Update the cookie jar
-      cookiesFromJar(jar).then(cookies => {
-        db.cookieJar.update(cookieJar, {cookies});
-      });
+      const cookies = await cookiesFromJar(jar);
+      db.cookieJar.update(cookieJar, {cookies});
 
       // Format the headers into Insomnia format
       // TODO: Move this to a better place
@@ -145,10 +142,10 @@ module.exports._actuallySend = (renderedRequest, settings) => {
     });
 
     // Kind of hacky, but this is how we cancel a request.
-    cancelRequestFunction = () => {
+    cancelRequestFunction = async () => {
       req.abort();
 
-      db.response.create({
+      await db.response.create({
         parentId: renderedRequest._id,
         elapsedTime: Date.now() - startTime,
         statusMessage: 'Cancelled',
@@ -158,9 +155,9 @@ module.exports._actuallySend = (renderedRequest, settings) => {
       return reject(new Error('Cancelled'));
     }
   })
-};
+}
 
-module.exports.send = async function send (requestId) {
+export async function send (requestId) {
   // First, lets wait for all debounces to finish
   await util.delay(DEBOUNCE_MILLIS);
 
@@ -181,5 +178,5 @@ module.exports.send = async function send (requestId) {
   }
 
   // Render succeeded so we're good to go!
-  return await module.exports._actuallySend(renderedRequest, settings);
-};
+  return await _actuallySend(renderedRequest, settings);
+}

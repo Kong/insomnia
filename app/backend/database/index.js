@@ -369,5 +369,5 @@ export async function duplicate (originalDoc, patch = {}) {
 
   flushChanges();
 
-  return originalDoc;
+  return createdDoc;
 }
