@@ -1,14 +1,14 @@
 'use strict';
 
-const {PREVIEW_MODE_SOURCE} = require('../../previewModes');
-const {METHOD_GET} = require('../../constants');
-const db = require('../index');
+import {PREVIEW_MODE_SOURCE} from '../../previewModes';
+import {METHOD_GET} from '../../constants';
+import * as db from '../index';
 
-const type = 'Request';
-const prefix = 'req';
-const slug = 'request';
+export const type = 'Request';
+export const prefix = 'req';
+export const slug = 'request';
 
-function init () {
+export function init () {
   return db.initModel({
     url: '',
     name: 'New Request',
@@ -23,13 +23,13 @@ function init () {
   });
 }
 
-async function createAndActivate (workspace, patch = {}) {
+export async function createAndActivate (workspace, patch = {}) {
   const r = await create(patch);
   await db.workspace.update(workspace, {metaActiveRequestId: r._id});
   return r;
 }
 
-async function create (patch = {}) {
+export function create (patch = {}) {
   if (!patch.parentId) {
     throw new Error('New Requests missing `parentId`', patch);
   }
@@ -37,19 +37,19 @@ async function create (patch = {}) {
   return db.docCreate(type, patch);
 }
 
-async function getById (id) {
+export function getById (id) {
   return db.get(type, id);
 }
 
-async function findByParentId (parentId) {
+export function findByParentId (parentId) {
   return db.find(type, {parentId: parentId});
 }
 
-async function update (request, patch) {
+export function update (request, patch) {
   return db.docUpdate(request, patch);
 }
 
-async function updateContentType (request, contentType) {
+export function updateContentType (request, contentType) {
   let headers = [...request.headers];
   const contentTypeHeader = headers.find(
     h => h.name.toLowerCase() === 'content-type'
@@ -67,7 +67,7 @@ async function updateContentType (request, contentType) {
   return db.docUpdate(request, {headers});
 }
 
-async function duplicateAndActivate (workspace, request) {
+export async function duplicateAndActivate (workspace, request) {
   db.bufferChanges();
 
   const r = await duplicate(request);
@@ -78,20 +78,20 @@ async function duplicateAndActivate (workspace, request) {
   return r;
 }
 
-async function duplicate (request) {
+export function duplicate (request) {
   const name = `${request.name} (Copy)`;
   return db.duplicate(request, {name})
 }
 
-async function remove (request) {
+export function remove (request) {
   return db.remove(request);
 }
 
-async function all () {
+export function all () {
   return db.all(type);
 }
 
-async function getAncestors (request) {
+export async function getAncestors (request) {
   const ancestors = [];
 
   async function next (doc) {
@@ -112,21 +112,3 @@ async function getAncestors (request) {
 
   return await next(request);
 }
-
-
-module.exports = {
-  type,
-  prefix,
-  slug,
-  init,
-  createAndActivate,
-  getById,
-  findByParentId,
-  update,
-  updateContentType,
-  duplicateAndActivate,
-  duplicate,
-  remove,
-  all,
-  getAncestors
-};

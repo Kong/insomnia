@@ -1,9 +1,7 @@
-'use strict';
-
 const nunjucks = require('nunjucks');
 const traverse = require('traverse');
 const uuid = require('node-uuid');
-const db = require('./database');
+import * as db from './database';
 const {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} = require('./util');
 
 const nunjucksEnvironment = nunjucks.configure({
