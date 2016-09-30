@@ -1,7 +1,7 @@
 'use strict';
 
 const networkRequest = require('request');
-const {parse: urlParse, format: urlFormat} = require('url');
+const {parse: urlParse} = require('url');
 const db = require('./database');
 const querystring = require('./querystring');
 var util = require('./util.js');
@@ -155,30 +155,31 @@ module.exports._actuallySend = (renderedRequest, settings) => {
         error: 'The request was cancelled'
       });
 
-      return reject('Cancelled');
+      return reject(new Error('Cancelled'));
     }
   })
 };
 
-module.exports.send = requestId => {
-  return new Promise((resolve, reject) => {
+module.exports.send = async function send (requestId) {
+  // First, lets wait for all debounces to finish
+  await util.delay(DEBOUNCE_MILLIS);
 
-    // First, lets wait for all debounces to finish
-    setTimeout(() => {
-      Promise.all([
-        db.request.getById(requestId),
-        db.settings.getOrCreate()
-      ]).then(([request, settings]) => {
-        getRenderedRequest(request).then(renderedRequest => {
-          module.exports._actuallySend(renderedRequest, settings).then(resolve, reject);
-        }, err => {
-          db.response.create({
-            parentId: request._id,
-            statusCode: STATUS_CODE_PEBKAC,
-            error: err.message
-          }).then(resolve, reject);
-        });
-      })
-    }, DEBOUNCE_MILLIS);
-  })
+  const request = await db.request.getById(requestId);
+  const settings = await db.settings.getOrCreate();
+
+  let renderedRequest;
+
+  try {
+    renderedRequest = await getRenderedRequest(request);
+  } catch (e) {
+    // Failed to render. Must be the user's fault
+    return await db.response.create({
+      parentId: request._id,
+      statusCode: STATUS_CODE_PEBKAC,
+      error: e.message
+    });
+  }
+
+  // Render succeeded so we're good to go!
+  return await module.exports._actuallySend(renderedRequest, settings);
 };

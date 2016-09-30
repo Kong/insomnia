@@ -50,7 +50,6 @@ class ResponseViewer extends Component {
         );
       case PREVIEW_MODE_SOURCE:
         let mode = contentType;
-        console.log('MODE', contentType);
 
         try {
           // FEATURE: Detect JSON even without content-type

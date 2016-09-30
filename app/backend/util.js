@@ -111,3 +111,7 @@ module.exports.prepareUrlForSending = url => {
 
   return urlFormat(parsedUrl);
 };
+
+module.exports.delay = milliseconds => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+};

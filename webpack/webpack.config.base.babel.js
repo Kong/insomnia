@@ -17,9 +17,9 @@ export default {
     loaders: [
       {
         id: 'babel',
-        test: /\.(js|jsx)$/,
+        test: /\.js$/,
         loaders: ['babel'],
-        exclude: [/node_modules/, /backend/, /__fixtures__/, /__tests__/]
+        exclude: [/node_modules/, /__fixtures__/, /__tests__/]
       },
       {
         test: /\.elm$/,
@@ -68,7 +68,7 @@ export default {
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },
   externals: [
-    // Omit all the app package.sh dependencies (we want them loaded at runtime via NodeJS)
+    // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
     ...Object.keys(pkg.dependencies)
   ],
   plugins: [],
