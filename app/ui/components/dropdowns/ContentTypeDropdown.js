@@ -1,8 +1,8 @@
 import React, {PropTypes} from 'react';
 
 import Dropdown from '../base/Dropdown';
-import {CONTENT_TYPES, getContentTypeName} from 'backend/contentTypes';
-import {trackEvent} from 'backend/analytics';
+import {CONTENT_TYPES, getContentTypeName} from '../../../backend/contentTypes';
+import {trackEvent} from '../../../backend/analytics';
 
 const ContentTypeDropdown = ({updateRequestContentType}) => {
   return (

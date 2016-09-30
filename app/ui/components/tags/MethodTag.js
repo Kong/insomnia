@@ -1,5 +1,5 @@
 import React, {PropTypes} from 'react';
-import * as constants from 'backend/constants';
+import * as constants from '../../../backend/constants';
 
 const MethodTag = ({method, fullNames}) => {
   let methodName = method;

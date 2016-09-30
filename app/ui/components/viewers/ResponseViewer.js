@@ -6,7 +6,7 @@ import ResponseError from './ResponseError';
 import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_SOURCE
-} from 'backend/previewModes';
+} from '../../../backend/previewModes';
 
 class ResponseViewer extends Component {
   shouldComponentUpdate (nextProps) {

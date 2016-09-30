@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import {DEBOUNCE_MILLIS} from 'backend/constants';
+import {DEBOUNCE_MILLIS} from '../../../backend/constants';
 
 class Editable extends Component {
   constructor (props) {

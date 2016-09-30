@@ -1,4 +1,4 @@
-import * as db from 'backend/database';
+import * as db from '../../../backend/database';
 
 const ENTITY_BLACKLIST = {
   [db.response.type]: 1,

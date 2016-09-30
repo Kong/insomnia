@@ -5,8 +5,8 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import CookiesEditor from '../editors/CookiesEditor';
-import * as db from 'backend/database';
-import {DEBOUNCE_MILLIS} from 'backend/constants';
+import * as db from '../../../backend/database';
+import {DEBOUNCE_MILLIS} from '../../../backend/constants';
 
 class CookiesModal extends Component {
   constructor (props) {
@@ -18,11 +18,10 @@ class CookiesModal extends Component {
     }
   }
 
-  _saveChanges () {
+  async _saveChanges () {
     const {cookieJar} = this.state;
-    db.cookieJar.update(cookieJar).then(() => {
-      this._load(this.state.workspace);
-    });
+    await db.cookieJar.update(cookieJar);
+    this._load(this.state.workspace);
   }
 
   _handleCookieUpdate (oldCookie, cookie) {
@@ -78,22 +77,21 @@ class CookiesModal extends Component {
     });
   }
 
-  _load (workspace) {
-    db.cookieJar.getOrCreateForWorkspace(workspace).then(cookieJar => {
-      this.setState({cookieJar, workspace});
-    });
+  async _load (workspace) {
+    const cookieJar = await db.cookieJar.getOrCreateForWorkspace(workspace);
+    this.setState({cookieJar, workspace});
   }
 
   show (workspace) {
     this.modal.show();
-    this._load(workspace);
     this.filterInput.focus();
+    this._load(workspace);
   }
 
   toggle (workspace) {
     this.modal.toggle();
-    this._load(workspace);
     this.filterInput.focus();
+    this._load(workspace);
   }
 
   render () {

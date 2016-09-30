@@ -61,9 +61,6 @@ export default {
     ]
   },
   resolve: {
-    alias: {
-      'backend': path.resolve(__dirname, '../app/backend')
-    },
     extensions: ['', '.js', '.json', '.jsx'],
     packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
   },

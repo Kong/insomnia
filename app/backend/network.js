@@ -5,7 +5,7 @@ const {parse: urlParse} = require('url');
 const db = require('./database');
 const querystring = require('./querystring');
 var util = require('./util.js');
-const {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} = require('./constants');
+import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 const {jarFromCookies, cookiesFromJar} = require('./cookies');
 const {setDefaultProtocol} = require('./util');
 const {getRenderedRequest} = require('./render');

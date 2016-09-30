@@ -1,7 +1,7 @@
 import {combineReducers} from 'redux';
 
-import {trackEvent} from 'backend/analytics';
-import * as network from 'backend/network';
+import {trackEvent} from '../../../backend/analytics';
+import * as network from '../../../backend/network';
 
 export const REQUEST_CHANGE_FILTER = 'requests/filter';
 export const REQUEST_SEND_START = 'requests/start';

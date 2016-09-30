@@ -9,7 +9,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as db from 'backend/database'
+import * as db from '../../../backend/database'
 
 
 class WorkspaceEnvironmentsEditModal extends Component {
@@ -35,31 +35,30 @@ class WorkspaceEnvironmentsEditModal extends Component {
     this._load(workspace);
   }
 
-  _load (workspace, environmentToActivate = null) {
-    db.environment.getOrCreateForWorkspace(workspace).then(rootEnvironment => {
-      db.environment.findByParentId(rootEnvironment._id).then(subEnvironments => {
-        let activeEnvironmentId;
-        if (environmentToActivate) {
-          activeEnvironmentId = environmentToActivate._id
-        } else {
-          activeEnvironmentId = this.state.activeEnvironmentId || rootEnvironment._id;
-        }
+  async _load (workspace, environmentToActivate = null) {
+    const rootEnvironment = await db.environment.getOrCreateForWorkspace(workspace);
+    const subEnvironments = await db.environment.findByParentId(rootEnvironment._id);
 
-        this.setState({
-          workspace,
-          rootEnvironment,
-          subEnvironments,
-          activeEnvironmentId
-        });
-      });
+    let activeEnvironmentId;
+
+    if (environmentToActivate) {
+      activeEnvironmentId = environmentToActivate._id
+    } else {
+      activeEnvironmentId = this.state.activeEnvironmentId || rootEnvironment._id;
+    }
+
+    this.setState({
+      workspace,
+      rootEnvironment,
+      subEnvironments,
+      activeEnvironmentId
     });
   }
 
-  _handleAddEnvironment () {
+  async _handleAddEnvironment () {
     const {rootEnvironment, workspace} = this.state;
-    db.environment.create({parentId: rootEnvironment._id}).then(environment => {
-      this._load(workspace, environment);
-    });
+    const environment = await db.environment.create({parentId: rootEnvironment._id})
+    this._load(workspace, environment);
   }
 
   _handleActivateEnvironment (environment) {
@@ -72,7 +71,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     this._load(workspace, environment);
   }
 
-  _handleDeleteEnvironment (environment) {
+  async _handleDeleteEnvironment (environment) {
     const {rootEnvironment, workspace} = this.state;
 
     // Don't delete the root environment
@@ -81,16 +80,15 @@ class WorkspaceEnvironmentsEditModal extends Component {
     }
 
     // Delete the current one, then activate the root environment
-    db.environment.remove(environment).then(() => {
-      this._load(workspace, rootEnvironment);
-    });
+    await db.environment.remove(environment);
+
+    this._load(workspace, rootEnvironment);
   }
 
-  _handleChangeEnvironmentName (environment, name) {
+  async _handleChangeEnvironmentName (environment, name) {
     const {workspace} = this.state;
-    db.environment.update(environment, {name}).then(() => {
-      this._load(workspace);
-    });
+    await db.environment.update(environment, {name});
+    this._load(workspace);
   }
 
   _didChange () {
