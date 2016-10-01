@@ -345,7 +345,10 @@ class Editor extends Component {
   }
 
   componentDidUpdate () {
-    this._codemirrorSetOptions();
+    // Don't don it sync because it might block the UI
+    setTimeout(() => {
+      this._codemirrorSetOptions();
+    }, 50);
   }
 
   render () {
