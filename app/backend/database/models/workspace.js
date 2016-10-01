@@ -15,7 +15,7 @@ export function init () {
   });
 }
 
-function getById (id) {
+export function getById (id) {
   return db.get(type, id);
 }
 

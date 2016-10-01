@@ -50,15 +50,15 @@ class UuidExtension extends NoArgsExtension {
 nunjucksEnvironment.addExtension('uuid', new UuidExtension());
 nunjucksEnvironment.addExtension('timestamp', new TimestampExtension());
 
-module.exports.render = (template, context = {}) => {
+export function render (template, context = {}) {
   try {
     return nunjucksEnvironment.renderString(template, context);
   } catch (e) {
     throw new Error(e.message.replace(/\(unknown path\)\s*/, ''));
   }
-};
+}
 
-module.exports.buildRenderContext = (ancestors, rootEnvironment, subEnvironment) => {
+export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
   const renderContext = {};
 
   if (rootEnvironment) {
@@ -85,18 +85,18 @@ module.exports.buildRenderContext = (ancestors, rootEnvironment, subEnvironment)
   // This is to support templating inside environments
   const stringifiedEnvironment = JSON.stringify(renderContext);
   return JSON.parse(
-    module.exports.render(stringifiedEnvironment, renderContext)
-  );
-};
+    render(stringifiedEnvironment, renderContext)
+  )
+}
 
-module.exports.recursiveRender = (obj, context) => {
+export function recursiveRender (obj, context) {
   // Make a copy so no one gets mad :)
   const newObj = traverse.clone(obj);
 
   try {
     traverse(newObj).forEach(function (x) {
       if (typeof x === 'string') {
-        const str = module.exports.render(x, context);
+        const str = render(x, context);
         this.update(str);
       }
     });
@@ -106,7 +106,7 @@ module.exports.recursiveRender = (obj, context) => {
   }
 
   return newObj;
-};
+}
 
 export async function getRenderedRequest (request) {
   const ancestors = await db.request.getAncestors(request);
@@ -117,14 +117,14 @@ export async function getRenderedRequest (request) {
   const cookieJar = await db.cookieJar.getOrCreateForWorkspace(workspace);
 
   // Generate the context we need to render
-  const renderContext = module.exports.buildRenderContext(
+  const renderContext = buildRenderContext(
     ancestors,
     rootEnvironment,
     subEnvironment
   );
 
   // Render all request properties
-  const renderedRequest = module.exports.recursiveRender(
+  const renderedRequest = recursiveRender(
     request,
     renderContext
   );

@@ -1,8 +1,6 @@
-'use strict';
-
-const {CookieJar} = require('tough-cookie');
-const request = require('request');
-const cookieUtils = require('../cookies');
+import {CookieJar} from 'tough-cookie';
+import request from 'request';
+import * as cookieUtils from '../cookies';
 
 describe('jarFromCookies()', () => {
   it('returns valid cookies', done => {
@@ -34,7 +32,7 @@ describe('cookiesFromJar()', () => {
     }];
 
     const jar = request.jar();
-    jar._jar = CookieJar.fromJSON({initialCookies});
+    jar._jar = CookieJar.fromJSON({cookies: initialCookies});
 
     const cookies = await cookieUtils.cookiesFromJar(jar);
 

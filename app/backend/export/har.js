@@ -1,7 +1,7 @@
 import * as db from '../database';
 import {getRenderedRequest} from  '../render';
 import {jarFromCookies} from '../cookies';
-import util from '../../backend/util';
+import * as util from '../../backend/util';
 
 export function exportHarWithRequest (renderedRequest, addContentLength = false) {
   if (addContentLength) {

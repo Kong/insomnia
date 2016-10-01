@@ -12,6 +12,7 @@
   },
   "scripts": {
     "test": "jest --silent",
+    "test-noisy": "jest",
     "test-watch": "jest --watch",
     "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.js",
     "hot-server": "babel-node ./webpack/server.js",

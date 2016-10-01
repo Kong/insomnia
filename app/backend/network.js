@@ -1,8 +1,8 @@
 import networkRequest from 'request';
 import {parse as urlParse} from 'url';
 import * as db from './database';
-import querystring from './querystring';
-import util from './util.js';
+import * as querystring from './querystring';
+import * as util from './util.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol} from './util';
