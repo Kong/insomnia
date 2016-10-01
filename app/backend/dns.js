@@ -11,7 +11,15 @@ function lookup (url) {
 }
 
 export async function swapHost (url) {
-  const ip = await lookup(url);
+  let ip;
+
+  try {
+    ip = await lookup(url);
+  } catch (e) {
+    // Fail silently. It's OK
+    return url;
+  }
+
   const parsedUrl = urlParse(url);
 
   // So it won't build to the old one value still

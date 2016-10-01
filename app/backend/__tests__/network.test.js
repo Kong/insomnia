@@ -64,7 +64,7 @@ describe('buildRequestConfig()', () => {
       url: 'http://foo.com:3332/%E2%98%85/foo%20bar?bar=baz&foo%20bar=hello%26world'
     })
   })
-})
+});
 
 describe('actuallySend()', () => {
   beforeEach(() => db.initDB({inMemoryOnly: true}, true));
@@ -75,7 +75,7 @@ describe('actuallySend()', () => {
     const workspace = await db.workspace.create();
     const settings = await db.settings.create();
 
-    mock = nock('http://foo.com')
+    mock = nock('http://127.0.0.1')
       .matchHeader('Content-Type', 'application/json')
       .matchHeader('Authorization', 'Basic dXNlcjpwYXNz')
       .post('/')
@@ -90,7 +90,7 @@ describe('actuallySend()', () => {
       parameters: [{name: 'foo bar', value: 'hello&world'}],
       method: 'POST',
       body: 'foo=bar',
-      url: 'http://foo.com',
+      url: 'http://localhost',
       authentication: {
         username: 'user',
         password: 'pass'
@@ -99,8 +99,8 @@ describe('actuallySend()', () => {
 
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(renderedRequest, settings);
-    expect(mock.basePath).toBe('http://foo.com:80');
-    expect(response.url).toBe('http://foo.com/?foo%20bar=hello%26world');
+    expect(mock.basePath).toBe('http://127.0.0.1:80');
+    expect(response.url).toBe('http://127.0.0.1/?foo%20bar=hello%26world');
     expect(response.body).toBe('response body');
     expect(response.statusCode).toBe(200);
   });
