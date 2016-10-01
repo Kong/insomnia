@@ -12,7 +12,7 @@ const contentTypeMap = {
   [CONTENT_TYPE_OTHER]: 'Other'
 };
 
-CONTENT_TYPES = Object.keys(contentTypeMap);
+export const CONTENT_TYPES = Object.keys(contentTypeMap);
 
 /**
  * Get the friendly name for a given content type
