@@ -59,7 +59,7 @@ export function importJSON (workspace, json) {
           const d = await db.requestGroup.getById(r._id);
           d ? db.requestGroup.update(d, r) : db.requestGroup.create(r);
         } else if (r._type === EXPORT_TYPE_REQUEST) {
-          const d = db.request.getById(r._id);
+          const d = await db.request.getById(r._id);
           d ? db.request.update(d, r) : db.request.create(r);
         } else {
           console.error('Unknown doc type for import', r.type);

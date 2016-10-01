@@ -38,7 +38,7 @@ class WorkspaceDropdown extends Component {
       selectText: true
     });
 
-    const workspace = db.workspace.create({name});
+    const workspace = await db.workspace.create({name});
     this.props.actions.workspaces.activate(workspace);
   }
 
@@ -91,12 +91,14 @@ class WorkspaceDropdown extends Component {
           <li>
             <button onClick={e => this._promptUpdateName()}>
               <i className="fa fa-pencil-square-o"></i> Rename
+              {" "}
               <strong>{workspace.name}</strong>
             </button>
           </li>
           <li>
             <PromptButton onClick={e => this._workspaceRemove()} addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
+              {" "}
               <strong>{workspace.name}</strong>
             </PromptButton>
           </li>
@@ -108,6 +110,7 @@ class WorkspaceDropdown extends Component {
               <li key={w._id}>
                 <button onClick={() => actions.workspaces.activate(w)}>
                   <i className="fa fa-random"></i> Switch to
+                  {" "}
                   <strong>{w.name}</strong>
                 </button>
               </li>
