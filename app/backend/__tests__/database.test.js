@@ -1,7 +1,5 @@
-'use strict';
-
-const db = require('../database');
-const {PREVIEW_MODE_SOURCE} = require('../previewModes');
+import * as db from '../database';
+import {PREVIEW_MODE_SOURCE} from '../previewModes';
 
 function loadFixture (name) {
   const fixtures = require(`../__fixtures__/${name}`);

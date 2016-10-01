@@ -1,6 +1,4 @@
-'use strict';
-
-const db = require('../database');
+import * as db from '../database';
 
 export default {
   [db.workspace.type]: [{

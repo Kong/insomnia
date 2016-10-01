@@ -1,7 +1,7 @@
-const networkUtils = require('../network');
-const db = require('../database');
-const nock = require('nock');
-const {getRenderedRequest} = require('../render');
+import * as networkUtils from '../network';
+import * as db from '../database';
+import nock from 'nock';
+import {getRenderedRequest} from '../render';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.initDB({inMemoryOnly: true}, true));

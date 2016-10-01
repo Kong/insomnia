@@ -5,6 +5,15 @@ import {DB_PERSIST_INTERVAL} from  '../constants';
 import {generateId} from '../util';
 import {isDevelopment} from '../appInfo';
 
+import * as stats from './models/stats';
+import * as settings from './models/settings';
+import * as workspace from './models/workspace';
+import * as environment from './models/environment';
+import * as cookieJar from './models/cookieJar';
+import * as requestGroup from './models/requestGroup';
+import * as request from './models/request';
+import * as response from './models/response';
+
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
 export const CHANGE_REMOVE = 'remove';
@@ -13,15 +22,6 @@ export const CHANGE_REMOVE = 'remove';
 // ~~~~~~ //
 // MODELS //
 // ~~~~~~ //
-
-export const stats = require('./models/stats');
-export const settings = require('./models/settings');
-export const workspace = require('./models/workspace');
-export const environment = require('./models/environment');
-export const cookieJar = require('./models/cookieJar');
-export const requestGroup = require('./models/requestGroup');
-export const request = require('./models/request');
-export const response = require('./models/response');
 
 const MODELS = [
   stats,
@@ -33,6 +33,15 @@ const MODELS = [
   request,
   response
 ];
+
+module.exports.stats = stats;
+module.exports.settings = settings;
+module.exports.workspace = workspace;
+module.exports.environment = environment;
+module.exports.cookieJar = cookieJar;
+module.exports.requestGroup = requestGroup;
+module.exports.request = request;
+module.exports.response = response;
 
 const MODEL_MAP = {};
 

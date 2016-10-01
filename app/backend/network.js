@@ -7,6 +7,7 @@ import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol} from './util';
 import {getRenderedRequest} from './render';
+import * as dns from './dns';
 
 let cancelRequestFunction = null;
 
@@ -57,7 +58,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 }
 
 export function _actuallySend (renderedRequest, settings) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const cookieJar = renderedRequest.cookieJar;
     const jar = jarFromCookies(cookieJar.cookies);
 
@@ -68,13 +69,20 @@ export function _actuallySend (renderedRequest, settings) {
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
-    let config = _buildRequestConfig(renderedRequest, {
+    const config = _buildRequestConfig(renderedRequest, {
       jar: jar,
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
       timeout: settings.timeout > 0 ? settings.timeout : null,
       rejectUnauthorized: settings.validateSSL
     }, true);
+
+    try {
+      config.url = await dns.swapHost(config.url);
+    } catch (e) {
+      // That's OK. Let Node do it's thing and fail further down
+      console.log('DNS lookup failed', e);
+    }
 
     const startTime = Date.now();
     // TODO: Handle redirects ourselves

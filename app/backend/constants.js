@@ -1,5 +1,5 @@
-const {isDevelopment} = require('./appInfo');
-const {isMac} = require('./appInfo');
+import {isDevelopment} from './appInfo';
+import {isMac} from './appInfo';
 
 // Global Stuff
 export const LOCALSTORAGE_KEY = 'insomnia.state';

@@ -63,7 +63,7 @@ export function send(request) {
       await network.send(request._id);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     } catch (e) {
-      console.info('Error sending request', e);
+      // console.info('Error sending request', e);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     }
   }
