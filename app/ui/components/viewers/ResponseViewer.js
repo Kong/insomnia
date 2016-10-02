@@ -87,8 +87,8 @@ class ResponseViewer extends Component {
       return (
         <div className="response-pane__overlay response-pane__overlay--under">
           <p className="pad faint">
-            Warning! Previewing responses over {LARGE_RESPONSE_MB}MB may cause
-            slowdowns on some computers.
+            Previewing responses over {LARGE_RESPONSE_MB}MB may cause
+            slowdowns on some computers
           </p>
           <p>
             <button onClick={e => this._handleDismissBlocker()}
