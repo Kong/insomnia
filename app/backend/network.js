@@ -84,6 +84,7 @@ export function _actuallySend (renderedRequest, settings) {
     config.url = await swapHost(config.url);
 
     // TODO: Handle redirects ourselves
+    const requestStartTime = Date.now();
     const req = networkRequest(config, async (err, networkResponse) => {
       if (err) {
         const isShittyParseError = err.toString() === 'Error: Parse Error';

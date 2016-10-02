@@ -9,6 +9,7 @@ export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 export const CHANGELOG_URL = 'https://changelog.insomnia.rest/changelog.json';
 export const STATUS_CODE_PEBKAC = -333;
+export const LARGE_RESPONSE_MB = 10;
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
 export const SEGMENT_WRITE_KEY = isDevelopment() ?
   'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy' :

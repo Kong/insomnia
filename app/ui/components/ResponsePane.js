@@ -199,11 +199,13 @@ class ResponsePane extends Component {
             <ResponseViewer
               key={response._id}
               contentType={response.contentType}
+              bytes={response.bytesRead}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
               filter={response.error ? '' : responseFilter}
               updateFilter={response.error ? null : updateResponseFilter}
               body={response.error ? response.error : response.body}
               error={!!response.error}
+              responseId={response._id}
               editorLineWrapping={editorLineWrapping}
               editorFontSize={editorFontSize}
               url={response.url}
