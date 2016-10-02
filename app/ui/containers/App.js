@@ -19,7 +19,7 @@ import SettingsModal from '../components/modals/SettingsModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/sidebar/Sidebar';
-import {PREVIEW_MODE_FRIENDLY} from 'backend/previewModes';
+import {PREVIEW_MODE_FRIENDLY} from '../../backend/previewModes';
 import {
   MAX_PANE_WIDTH,
   MIN_PANE_WIDTH,
@@ -28,14 +28,14 @@ import {
   MIN_SIDEBAR_REMS,
   DEFAULT_SIDEBAR_WIDTH,
   CHECK_FOR_UPDATES_INTERVAL
-} from 'backend/constants';
+} from '../../backend/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
 import * as WorkspaceActions from '../redux/modules/workspaces';
-import * as db from 'backend/database';
-import {importCurl} from 'backend/export/curl';
-import {trackEvent} from 'backend/analytics';
-import {getAppVersion} from 'backend/appInfo';
+import * as db from '../../backend/database';
+import {importCurl} from '../../backend/export/curl';
+import {trackEvent} from '../../backend/analytics';
+import {getAppVersion} from '../../backend/appInfo';
 import {getModal} from '../components/modals/index';
 
 
@@ -123,7 +123,7 @@ class App extends Component {
     this.props.actions.global.importFile(workspace);
   }
 
-  _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
+  async _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
     // Oh God, this function is awful...
 
     if (requestGroupToMove._id === requestGroupToTarget._id) {
@@ -132,56 +132,55 @@ class App extends Component {
     }
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
-    db.requestGroup.findByParentId(requestGroupToTarget.parentId).then(requestGroups => {
-      requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+    let requestGroups = await db.requestGroup.findByParentId(requestGroupToTarget.parentId);
+    requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
-      // Find the index of request B so we can re-order and save everything
-      for (let i = 0; i < requestGroups.length; i++) {
-        const request = requestGroups[i];
+    // Find the index of request B so we can re-order and save everything
+    for (let i = 0; i < requestGroups.length; i++) {
+      const request = requestGroups[i];
 
-        if (request._id === requestGroupToTarget._id) {
-          let before, after;
-          if (targetOffset < 0) {
-            // We're moving to below
-            before = requestGroups[i];
-            after = requestGroups[i + 1];
-          } else {
-            // We're moving to above
-            before = requestGroups[i - 1];
-            after = requestGroups[i];
-          }
+      if (request._id === requestGroupToTarget._id) {
+        let before, after;
+        if (targetOffset < 0) {
+          // We're moving to below
+          before = requestGroups[i];
+          after = requestGroups[i + 1];
+        } else {
+          // We're moving to above
+          before = requestGroups[i - 1];
+          after = requestGroups[i];
+        }
 
-          const beforeKey = before ? before.metaSortKey : requestGroups[0].metaSortKey - 100;
-          const afterKey = after ? after.metaSortKey : requestGroups[requestGroups.length - 1].metaSortKey + 100;
+        const beforeKey = before ? before.metaSortKey : requestGroups[0].metaSortKey - 100;
+        const afterKey = after ? after.metaSortKey : requestGroups[requestGroups.length - 1].metaSortKey + 100;
 
-          if (Math.abs(afterKey - beforeKey) < 0.000001) {
-            // If sort keys get too close together, we need to redistribute the list. This is
-            // not performant at all (need to update all siblings in DB), but it is extremely rare
-            // anyway
-            console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
+        if (Math.abs(afterKey - beforeKey) < 0.000001) {
+          // If sort keys get too close together, we need to redistribute the list. This is
+          // not performant at all (need to update all siblings in DB), but it is extremely rare
+          // anyway
+          console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
 
-            db.bufferChanges(300);
-            requestGroups.map((r, i) => {
-              db.requestGroup.update(r, {
-                metaSortKey: i * 100,
-                parentId: requestGroupToTarget.parentId
-              });
-            });
-          } else {
-            const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.requestGroup.update(requestGroupToMove, {
-              metaSortKey,
+          db.bufferChanges(300);
+          requestGroups.map((r, i) => {
+            db.requestGroup.update(r, {
+              metaSortKey: i * 100,
               parentId: requestGroupToTarget.parentId
             });
-          }
-
-          break;
+          });
+        } else {
+          const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+          db.requestGroup.update(requestGroupToMove, {
+            metaSortKey,
+            parentId: requestGroupToTarget.parentId
+          });
         }
+
+        break;
       }
-    })
+    }
   }
 
-  _moveRequest (requestToMove, parentId, targetId, targetOffset) {
+  async _moveRequest (requestToMove, parentId, targetId, targetOffset) {
     // Oh God, this function is awful...
 
     if (requestToMove._id === targetId) {
@@ -196,68 +195,67 @@ class App extends Component {
     }
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
-    db.request.findByParentId(parentId).then(requests => {
-      requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+    let requests = await db.request.findByParentId(parentId);
+    requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
-      // Find the index of request B so we can re-order and save everything
-      for (let i = 0; i < requests.length; i++) {
-        const request = requests[i];
+    // Find the index of request B so we can re-order and save everything
+    for (let i = 0; i < requests.length; i++) {
+      const request = requests[i];
 
-        if (request._id === targetId) {
-          let before, after;
-          if (targetOffset < 0) {
-            // We're moving to below
-            before = requests[i];
-            after = requests[i + 1];
-          } else {
-            // We're moving to above
-            before = requests[i - 1];
-            after = requests[i];
-          }
-
-          const beforeKey = before ? before.metaSortKey : requests[0].metaSortKey - 100;
-          const afterKey = after ? after.metaSortKey : requests[requests.length - 1].metaSortKey + 100;
-
-          if (Math.abs(afterKey - beforeKey) < 0.000001) {
-            // If sort keys get too close together, we need to redistribute the list. This is
-            // not performant at all (need to update all siblings in DB), but it is extremely rare
-            // anyway
-            console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
-
-            db.bufferChanges(300);
-            requests.map((r, i) => {
-              db.request.update(r, {metaSortKey: i * 100, parentId});
-            });
-          } else {
-            const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-            db.request.update(requestToMove, {metaSortKey, parentId});
-          }
-
-          break;
+      if (request._id === targetId) {
+        let before, after;
+        if (targetOffset < 0) {
+          // We're moving to below
+          before = requests[i];
+          after = requests[i + 1];
+        } else {
+          // We're moving to above
+          before = requests[i - 1];
+          after = requests[i];
         }
+
+        const beforeKey = before ? before.metaSortKey : requests[0].metaSortKey - 100;
+        const afterKey = after ? after.metaSortKey : requests[requests.length - 1].metaSortKey + 100;
+
+        if (Math.abs(afterKey - beforeKey) < 0.000001) {
+          // If sort keys get too close together, we need to redistribute the list. This is
+          // not performant at all (need to update all siblings in DB), but it is extremely rare
+          // anyway
+          console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
+
+          db.bufferChanges(300);
+          requests.map((r, i) => {
+            db.request.update(r, {metaSortKey: i * 100, parentId});
+          });
+        } else {
+          const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+          db.request.update(requestToMove, {metaSortKey, parentId});
+        }
+
+        break;
       }
-    })
+    }
   }
 
-  _requestGroupCreate (parentId) {
-    getModal(PromptModal).show({
+  async _requestGroupCreate (parentId) {
+    const name = await getModal(PromptModal).show({
       headerName: 'Create New Folder',
       defaultValue: 'My Folder',
       selectText: true
-    }).then(name => {
-      db.requestGroup.create({parentId, name})
     });
+
+    db.requestGroup.create({parentId, name})
   }
 
-  _requestCreate (parentId) {
-    getModal(PromptModal).show({
+  async _requestCreate (parentId) {
+    const name = await getModal(PromptModal).show({
       headerName: 'Create New Request',
       defaultValue: 'My Request',
       selectText: true
-    }).then(name => {
-      const workspace = this._getActiveWorkspace();
-      db.request.createAndActivate(workspace, {parentId, name})
     });
+
+    const workspace = this._getActiveWorkspace();
+    db.request.createAndActivate(workspace, {parentId, name})
   }
 
   _generateSidebarTree (parentId, entities) {
@@ -281,35 +279,26 @@ class App extends Component {
     }
   }
 
-  _handleUrlChanged (url) {
+  async _handleUrlChanged (url) {
     // TODO: Should this be moved elsewhere?
     const requestPatch = importCurl(url);
 
     if (requestPatch) {
-      // If the user typed in a curl cmd, dissect it and update the whole request
-      db.request.update(this._getActiveRequest(), requestPatch).then(() => {
-        setTimeout(() => {
-
-        })
-      });
+      // TODO: If the user typed in a curl cmd, dissect it and update the whole request
+      db.request.update(this._getActiveRequest(), requestPatch);
     } else {
       db.request.update(this._getActiveRequest(), {url});
     }
   }
 
   _startDragSidebar () {
-    this.setState({
-      draggingSidebar: true
-    })
+    this.setState({draggingSidebar: true})
   }
 
   _resetDragSidebar () {
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
-      this.setState({
-        sidebarWidth: DEFAULT_SIDEBAR_WIDTH
-      });
-
+      this.setState({sidebarWidth: DEFAULT_SIDEBAR_WIDTH});
       this._saveSidebarWidth();
     }, 50);
   }
@@ -412,7 +401,7 @@ class App extends Component {
     this.setState({sidebarWidth});
   }
 
-  componentDidMount () {
+  async componentDidMount () {
     // Bind handlers before we use them
     this._handleMouseUp = this._handleMouseUp.bind(this);
     this._handleMouseMove = this._handleMouseMove.bind(this);
@@ -430,20 +419,19 @@ class App extends Component {
     trackEvent('App Launched');
 
     // Update Stats Object
-    db.stats.get().then(({lastVersion, launches}) => {
-      const firstLaunch = !lastVersion;
-      if (firstLaunch) {
-        // TODO: Show a welcome message
-        trackEvent('First Launch');
-      } else if (lastVersion !== getAppVersion()) {
-        getModal(ChangelogModal).show();
-      }
+    const {lastVersion, launches} = await db.stats.get();
+    const firstLaunch = !lastVersion;
+    if (firstLaunch) {
+      // TODO: Show a welcome message
+      trackEvent('First Launch');
+    } else if (lastVersion !== getAppVersion()) {
+      getModal(ChangelogModal).show();
+    }
 
-      db.stats.update({
-        launches: launches + 1,
-        lastLaunch: Date.now(),
-        lastVersion: getAppVersion()
-      });
+    db.stats.update({
+      launches: launches + 1,
+      lastLaunch: Date.now(),
+      lastVersion: getAppVersion()
     });
 
     setInterval(() => {

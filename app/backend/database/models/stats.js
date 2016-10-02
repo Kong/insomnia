@@ -2,32 +2,30 @@
 
 const db = require('../index');
 
-module.exports.type = 'Stats';
-module.exports.prefix = 'sta';
-module.exports.slug = 'stats';
-module.exports.init = () => db.initModel({
-  lastLaunch: Date.now(),
-  lastVersion: null,
-  launches: 0
-});
-
-module.exports.create = (patch = {}) => {
-  return db.docCreate(module.exports.type, patch);
-};
-
-module.exports.update = patch => {
-  return module.exports.get().then(stats => {
-    return db.docUpdate(stats, patch);
+export const type = 'Stats';
+export const prefix = 'sta';
+export function init () {
+  return db.initModel({
+    lastLaunch: Date.now(),
+    lastVersion: null,
+    launches: 0
   });
-};
+}
 
-module.exports.get = () => {
-  return db.all(module.exports.type).then(results => {
-    if (results.length === 0) {
-      return module.exports.create()
-        .then(module.exports.get);
-    } else {
-      return new Promise(resolve => resolve(results[0]));
-    }
-  });
-};
+export function create (patch = {}) {
+  return db.docCreate(type, patch);
+}
+
+export async function update (patch) {
+  const stats = await get();
+  return db.docUpdate(stats, patch);
+}
+
+export async function get () {
+  const results = await db.all(type);
+  if (results.length === 0) {
+    return await create();
+  } else {
+    return results[0];
+  }
+}

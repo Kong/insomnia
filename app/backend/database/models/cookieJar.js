@@ -1,38 +1,36 @@
-'use strict';
+import * as db from '../index';
 
-const db = require('../index');
+export const type = 'CookieJar';
+export const prefix = 'jar';
+export function init () {
+  return db.initModel({
+    name: 'Default Jar',
+    cookies: []
+  })
+}
 
-module.exports.type = 'CookieJar';
-module.exports.prefix = 'jar';
-module.exports.slug = 'cookie_jar';
-module.exports.init = () => db.initModel({
-  name: 'Default Jar',
-  cookies: []
-});
+export function create (patch = {}) {
+  return db.docCreate(type, patch);
+}
 
-module.exports.create = (patch = {}) => {
-  return db.docCreate(module.exports.type, patch);
-};
-
-module.exports.getOrCreateForWorkspace = workspace => {
+export async function getOrCreateForWorkspace (workspace) {
   const parentId = workspace._id;
-  return db.find(module.exports.type, {parentId}).then(cookieJars => {
-    if (cookieJars.length === 0) {
-      return module.exports.create({parentId})
-    } else {
-      return new Promise(resolve => resolve(cookieJars[0]));
-    }
-  });
-};
+  const cookieJars = await db.find(type, {parentId});
+  if (cookieJars.length === 0) {
+    return await create({parentId})
+  } else {
+    return cookieJars[0];
+  }
+}
 
-module.exports.all = () => {
-  return db.all(module.exports.type);
-};
+export function all () {
+  return db.all(type);
+}
 
-module.exports.getById = id => {
-  return db.get(module.exports.type, id);
-};
+export function getById (id) {
+  return db.get(type, id);
+}
 
-module.exports.update = (cookieJar, patch) => {
+export function update (cookieJar, patch) {
   return db.docUpdate(cookieJar, patch);
 };

@@ -2,52 +2,53 @@
 
 const db = require('../index');
 
-module.exports.type = 'Environment';
-module.exports.prefix = 'env';
-module.exports.slug = 'environment';
-module.exports.init = () => db.initModel({
-  name: 'New Environment',
-  data: {},
-});
+export const type = 'Environment';
+export const prefix = 'env';
+export function init () {
+  return db.initModel({
+    name: 'New Environment',
+    data: {},
+  })
+}
 
-module.exports.create = (patch = {}) => {
+export function create (patch = {}) {
   if (!patch.parentId) {
     throw new Error('New Environment missing `parentId`', patch);
   }
 
-  return db.docCreate(module.exports.type, patch);
-};
+  return db.docCreate(type, patch);
+}
 
-module.exports.update = (environment, patch) => {
+export function update (environment, patch) {
   return db.docUpdate(environment, patch);
-};
+}
 
-module.exports.findByParentId = parentId => {
-  return db.find(module.exports.type, {parentId});
-};
+export function findByParentId (parentId) {
+  return db.find(type, {parentId});
+}
 
-module.exports.getOrCreateForWorkspace = workspace => {
+export async function getOrCreateForWorkspace (workspace) {
   const parentId = workspace._id;
-  return db.find(module.exports.type, {parentId}).then(environments => {
-    if (environments.length === 0) {
-      return module.exports.create({
-        parentId,
-        name: 'Base Environment'
-      })
-    } else {
-      return new Promise(resolve => resolve(environments[0]));
-    }
-  });
-};
+  const environments = await db.find(type, {parentId});
 
-module.exports.getById = id => {
-  return db.get(module.exports.type, id);
-};
+  if (environments.length === 0) {
+    return await create({
+      parentId,
+      name: 'Base Environment'
+    })
+  } else {
+    return environments[0];
+  }
+}
 
-module.exports.remove = environment => {
+export function getById (id) {
+  return db.get(type, id);
+}
+
+export function remove (environment) {
   return db.remove(environment);
-};
+}
 
-module.exports.all = () => {
-  return db.all(module.exports.type);
-};
+export function all () {
+  return db.all(type);
+}

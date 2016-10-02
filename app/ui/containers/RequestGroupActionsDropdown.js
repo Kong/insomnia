@@ -6,32 +6,32 @@ import DropdownHint from '../components/base/DropdownHint';
 import DropdownDivider from '../components/base/DropdownDivider';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
-import * as db from 'backend/database';
+import * as db from '../../backend/database';
 import {getModal} from '../components/modals/index';
 
 class RequestGroupActionsDropdown extends Component {
-  _promptUpdateName () {
+  async _promptUpdateName () {
     const {requestGroup} = this.props;
 
-    getModal(PromptModal).show({
+    const name = await getModal(PromptModal).show({
       headerName: 'Rename Folder',
       defaultValue: requestGroup.name
-    }).then(name => {
-      db.requestGroup.update(requestGroup, {name});
-    })
+    });
+
+    db.requestGroup.update(requestGroup, {name});
   }
 
-  _requestCreate () {
-    getModal(PromptModal).show({
+  async _requestCreate () {
+    const name = await getModal(PromptModal).show({
       headerName: 'Create New Request',
       defaultValue: 'My Request',
       selectText: true
-    }).then(name => {
-      const workspace = this._getActiveWorkspace();
-      const {requestGroup} = this.props;
-      const parentId = requestGroup._id;
-      db.request.createAndActivate(workspace, {parentId, name})
     });
+
+    const workspace = this._getActiveWorkspace();
+    const {requestGroup} = this.props;
+    const parentId = requestGroup._id;
+    db.request.createAndActivate(workspace, {parentId, name})
   }
 
   _requestGroupDuplicate () {

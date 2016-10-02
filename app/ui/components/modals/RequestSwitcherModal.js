@@ -5,8 +5,8 @@ import Modal from '../base/Modal';
 import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
-import * as db from 'backend/database';
-import {trackEvent} from 'backend/analytics';
+import * as db from '../../../backend/database';
+import {trackEvent} from '../../../backend/analytics';
 
 
 class RequestSwitcherModal extends Component {
@@ -54,7 +54,7 @@ class RequestSwitcherModal extends Component {
     }
   }
 
-  _createRequestFromSearch () {
+  async _createRequestFromSearch () {
     const {activeRequestParentId} = this.props;
     const {searchString} = this.state;
 
@@ -64,9 +64,8 @@ class RequestSwitcherModal extends Component {
       parentId: activeRequestParentId
     };
 
-    db.request.create(patch).then(request => {
-      this._activateRequest(request);
-    });
+    const request = await db.request.create(patch);
+    this._activateRequest(request);
   }
 
   _activateWorkspace (workspace) {
@@ -87,87 +86,81 @@ class RequestSwitcherModal extends Component {
     this.modal.hide();
   }
 
-  _handleChange (searchString) {
+  async _handleChange (searchString) {
     const {workspaceId} = this.props;
 
-    Promise.all([
-      db.request.all(),
-      db.requestGroup.all(),
-      db.workspace.all()
-    ]).then(([
-      allRequests,
-      allRequestGroups,
-      allWorkspaces
-    ]) => {
-      // TODO: Support nested RequestGroups
-      // Filter out RequestGroups that don't belong to this Workspace
-      const requestGroups = allRequestGroups.filter(
-        rg => rg.parentId === workspaceId
-      );
+    const allRequests = await db.request.all();
+    const allRequestGroups = await db.requestGroup.all();
+    const allWorkspaces = await db.workspace.all();
 
-      // Filter out Requests that don't belong to this Workspace
-      const requests = allRequests.filter(r => {
-        if (r.parentId === workspaceId) {
-          return true;
-        } else {
-          return !!requestGroups.find(rg => rg._id === r.parentId);
-        }
+    // TODO: Support nested RequestGroups
+    // Filter out RequestGroups that don't belong to this Workspace
+    const requestGroups = allRequestGroups.filter(
+      rg => rg.parentId === workspaceId
+    );
+
+    // Filter out Requests that don't belong to this Workspace
+    const requests = allRequests.filter(r => {
+      if (r.parentId === workspaceId) {
+        return true;
+      } else {
+        return !!requestGroups.find(rg => rg._id === r.parentId);
+      }
+    });
+
+    const parentId = this.props.activeRequestParentId;
+
+    // OPTIMIZATION: This only filters if we have a filter
+    let matchedRequests = requests;
+    if (searchString) {
+      matchedRequests = matchedRequests.filter(r => {
+        const name = r.name.toLowerCase();
+        const toMatch = searchString.toLowerCase();
+        return name.indexOf(toMatch) !== -1
       });
+    }
 
-      const parentId = this.props.activeRequestParentId;
+    // OPTIMIZATION: Apply sort after the filter so we have to sort less
+    matchedRequests = matchedRequests.sort(
+      (a, b) => {
+        if (a.parentId === b.parentId) {
+          // Sort Requests by name inside of the same parent
+          // TODO: Sort by quality of match (eg. start of string vs
+          // mid string, etc)
+          return a.name > b.name ? 1 : -1;
+        } else {
+          // Sort RequestGroups by relevance if Request isn't in same parent
+          if (a.parentId === parentId) {
+            return -1;
+          } else if (b.parentId === parentId) {
+            return 1;
+          } else {
+            return a.parentId > b.parentId ? -1 : 1;
+          }
+        }
+      }
+    );
 
-      // OPTIMIZATION: This only filters if we have a filter
-      let matchedRequests = requests;
-      if (searchString) {
-        matchedRequests = matchedRequests.filter(r => {
-          const name = r.name.toLowerCase();
+    let matchedWorkspaces = [];
+    if (searchString) {
+      // Only match workspaces if there is a search
+      matchedWorkspaces = allWorkspaces
+        .filter(w => w._id !== workspaceId)
+        .filter(w => {
+          const name = w.name.toLowerCase();
           const toMatch = searchString.toLowerCase();
           return name.indexOf(toMatch) !== -1
         });
-      }
+    }
 
-      // OPTIMIZATION: Apply sort after the filter so we have to sort less
-      matchedRequests = matchedRequests.sort(
-        (a, b) => {
-          if (a.parentId === b.parentId) {
-            // Sort Requests by name inside of the same parent
-            // TODO: Sort by quality of match (eg. start of string vs
-            // mid string, etc)
-            return a.name > b.name ? 1 : -1;
-          } else {
-            // Sort RequestGroups by relevance if Request isn't in same parent
-            if (a.parentId === parentId) {
-              return -1;
-            } else if (b.parentId === parentId) {
-              return 1;
-            } else {
-              return a.parentId > b.parentId ? -1 : 1;
-            }
-          }
-        }
-      );
+    const activeIndex = searchString ? 0 : -1;
 
-      let matchedWorkspaces = [];
-      if (searchString) {
-        // Only match workspaces if there is a search
-        matchedWorkspaces = allWorkspaces
-          .filter(w => w._id !== workspaceId)
-          .filter(w => {
-            const name = w.name.toLowerCase();
-            const toMatch = searchString.toLowerCase();
-            return name.indexOf(toMatch) !== -1
-          });
-      }
-
-      const activeIndex = searchString ? 0 : -1;
-
-      this.setState({
-        activeIndex,
-        matchedRequests,
-        matchedWorkspaces,
-        requestGroups,
-        searchString
-      });
+    this.setState({
+      activeIndex,
+      matchedRequests,
+      matchedWorkspaces,
+      requestGroups,
+      searchString
     });
   }
 

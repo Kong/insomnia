@@ -1,16 +1,14 @@
-'use strict';
-
-module.exports.PREVIEW_MODE_FRIENDLY = 'friendly';
-module.exports.PREVIEW_MODE_SOURCE = 'source';
-module.exports.PREVIEW_MODE_RAW = 'raw';
+export const PREVIEW_MODE_FRIENDLY = 'friendly';
+export const PREVIEW_MODE_SOURCE = 'source';
+export const PREVIEW_MODE_RAW = 'raw';
 
 const previewModeMap = {
-  [module.exports.PREVIEW_MODE_FRIENDLY]: 'Visual',
-  [module.exports.PREVIEW_MODE_SOURCE]: 'Source',
-  [module.exports.PREVIEW_MODE_RAW]: 'Raw'
+  [PREVIEW_MODE_FRIENDLY]: 'Visual',
+  [PREVIEW_MODE_SOURCE]: 'Source',
+  [PREVIEW_MODE_RAW]: 'Raw'
 };
 
-module.exports.PREVIEW_MODES = Object.keys(previewModeMap);
+export const PREVIEW_MODES = Object.keys(previewModeMap);
 
 /**
  * Get the friendly name for a given preview mode
@@ -18,7 +16,7 @@ module.exports.PREVIEW_MODES = Object.keys(previewModeMap);
  * @param previewMode
  * @returns {*|string}
  */
-module.exports.getPreviewModeName = previewMode => {
+export function getPreviewModeName (previewMode) {
   // TODO: Make this more robust maybe...
   return previewModeMap[previewMode] || 'Unknown';
-};
+}

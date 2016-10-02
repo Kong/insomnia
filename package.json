@@ -12,6 +12,7 @@
   },
   "scripts": {
     "test": "jest --silent",
+    "test-noisy": "jest",
     "test-watch": "jest --watch",
     "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.js",
     "hot-server": "babel-node ./webpack/server.js",
@@ -43,7 +44,8 @@
       "msi": false
     },
     "linux": {
-      "synopsis": "",
+      "synopsis": "A simple, beautiful, and free REST API client",
+      "category": "Development",
       "target": [
         "AppImage",
         "deb"
@@ -92,10 +94,13 @@
     "babel-loader": "^6.2.4",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
+    "babel-plugin-transform-regenerator": "^6.16.1",
+    "babel-plugin-transform-runtime": "^6.15.0",
     "babel-polyfill": "^6.13.0",
     "babel-preset-es2015": "^6.6.0",
     "babel-preset-react": "^6.5.0",
     "babel-preset-react-hmre": "^1.1.1",
+    "babel-runtime": "^6.11.6",
     "concurrently": "^2.0.0",
     "cross-env": "^2.0.0",
     "css-loader": "^0.23.1",

@@ -1,11 +1,9 @@
-'use strict';
+import * as db from '../database';
+import {getRenderedRequest} from  '../render';
+import {jarFromCookies} from '../cookies';
+import * as util from '../../backend/util';
 
-const db = require('../database');
-const {getRenderedRequest} = require('../render');
-const {jarFromCookies} = require('../cookies');
-const util = require('backend/util');
-
-module.exports.exportHarWithRequest = (renderedRequest, addContentLength = false) => {
+export function exportHarWithRequest (renderedRequest, addContentLength = false) {
   if (addContentLength) {
     const hasContentLengthHeader = !!renderedRequest.headers.find(
       h => h.name.toLowerCase() === 'content-length'
@@ -25,22 +23,17 @@ module.exports.exportHarWithRequest = (renderedRequest, addContentLength = false
     cookies: getCookies(renderedRequest),
     headers: renderedRequest.headers,
     queryString: renderedRequest.parameters,
-    postData: {
-      text: renderedRequest.body
-    },
+    postData: {text: renderedRequest.body},
     headersSize: -1,
     bodySize: -1
   };
-};
+}
 
-module.exports.exportHar = (requestId, addContentLength = false) => {
-  return db.request.getById(requestId)
-    .then(getRenderedRequest)
-    .then(renderedRequest => module.exports.exportHarWithRequest(
-      renderedRequest,
-      addContentLength
-    ));
-};
+export async function exportHar (requestId, addContentLength = false) {
+  const request = await db.request.getById(requestId);
+  const renderedRequest = await getRenderedRequest(request);
+  return exportHarWithRequest(renderedRequest, addContentLength);
+}
 
 function getCookies (renderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);

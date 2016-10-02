@@ -10,10 +10,10 @@ import AuthEditor from './editors/AuthEditor';
 import {UrlBar} from './UrlBar.elm';
 import ElmComponent from './ElmComponent';
 
-import {getContentTypeName} from 'backend/contentTypes';
-import {getContentTypeFromHeaders} from 'backend/contentTypes';
-import {MOD_SYM} from 'backend/constants';
-import {trackEvent} from 'backend/analytics';
+import {getContentTypeName} from '../../backend/contentTypes';
+import {getContentTypeFromHeaders} from '../../backend/contentTypes';
+import {MOD_SYM} from '../../backend/constants';
+import {trackEvent} from '../../backend/analytics';
 import {debounce} from '../lib/debounce';
 
 class RequestPane extends Component {

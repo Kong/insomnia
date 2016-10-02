@@ -14,46 +14,44 @@ import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
-import * as db from 'backend/database';
-import {getAppVersion} from 'backend/appInfo';
+import * as db from '../../backend/database';
+import {getAppVersion} from '../../backend/appInfo';
 import {getModal} from '../components/modals/index';
 
 class WorkspaceDropdown extends Component {
-  _promptUpdateName () {
+  async _promptUpdateName () {
     const workspace = this._getActiveWorkspace(this.props);
 
-    getModal(PromptModal).show({
+    const name = await getModal(PromptModal).show({
       headerName: 'Rename Workspace',
       defaultValue: workspace.name
-    }).then(name => {
-      db.workspace.update(workspace, {name});
-    })
+    });
+
+    db.workspace.update(workspace, {name});
   }
 
-  _workspaceCreate () {
-    getModal(PromptModal).show({
+  async _workspaceCreate () {
+    const name = await getModal(PromptModal).show({
       headerName: 'Create New Workspace',
       defaultValue: 'My Workspace',
       submitName: 'Create',
       selectText: true
-    }).then(name => {
-      db.workspace.create({name}).then(workspace => {
-        this.props.actions.workspaces.activate(workspace);
-      });
     });
+
+    const workspace = await db.workspace.create({name});
+    this.props.actions.workspaces.activate(workspace);
   }
 
-  _workspaceRemove () {
-    db.workspace.count().then(count => {
-      if (count <= 1) {
-        getModal(AlertModal).show({
-          message: 'You cannot delete your last workspace'
-        });
-      } else {
-        const workspace = this._getActiveWorkspace(this.props);
-        db.workspace.remove(workspace);
-      }
-    })
+  async _workspaceRemove () {
+    const count = await db.workspace.count();
+    if (count <= 1) {
+      getModal(AlertModal).show({
+        message: 'You cannot delete your last workspace'
+      });
+    } else {
+      const workspace = this._getActiveWorkspace(this.props);
+      db.workspace.remove(workspace);
+    }
   }
 
   _getActiveWorkspace (props) {
@@ -79,7 +77,8 @@ class WorkspaceDropdown extends Component {
         <button className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
-              {loading ? <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
+              {loading ?
+                <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
               <i className="fa fa-caret-down"></i>
             </div>
             {workspace.name}
@@ -91,12 +90,16 @@ class WorkspaceDropdown extends Component {
 
           <li>
             <button onClick={e => this._promptUpdateName()}>
-              <i className="fa fa-pencil-square-o"></i> Rename <strong>{workspace.name}</strong>
+              <i className="fa fa-pencil-square-o"></i> Rename
+              {" "}
+              <strong>{workspace.name}</strong>
             </button>
           </li>
           <li>
             <PromptButton onClick={e => this._workspaceRemove()} addIcon={true}>
-              <i className="fa fa-trash-o"></i> Delete <strong>{workspace.name}</strong>
+              <i className="fa fa-trash-o"></i> Delete
+              {" "}
+              <strong>{workspace.name}</strong>
             </PromptButton>
           </li>
 
@@ -106,7 +109,9 @@ class WorkspaceDropdown extends Component {
             return w._id === workspace._id ? null : (
               <li key={w._id}>
                 <button onClick={() => actions.workspaces.activate(w)}>
-                  <i className="fa fa-random"></i> Switch to <strong>{w.name}</strong>
+                  <i className="fa fa-random"></i> Switch to
+                  {" "}
+                  <strong>{w.name}</strong>
                 </button>
               </li>
             )

@@ -4,21 +4,21 @@ import Dropdown from '../base/Dropdown';
 import DropdownHint from '../base/DropdownHint';
 import GenerateCodeModal from '../modals/GenerateCodeModal';
 import PromptModal from '../modals/PromptModal';
-import * as db from 'backend/database';
+import * as db from '../../../backend/database';
 import {getModal} from '../modals/index';
 
 
 class RequestActionsDropdown extends Component {
-  _promptUpdateName () {
+  async _promptUpdateName () {
     const {request} = this.props;
 
-    getModal(PromptModal).show({
+    const name = await getModal(PromptModal).show({
       headerName: 'Rename Request',
       defaultValue: request.name,
       hint: 'also rename requests by double clicking in the sidebar'
-    }).then(name => {
-      db.request.update(request, {name});
-    })
+    });
+
+    db.request.update(request, {name});
   }
 
   render () {

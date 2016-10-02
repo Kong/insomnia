@@ -1,52 +1,54 @@
 'use strict';
 
-const {PREVIEW_MODE_SOURCE} = require('../../previewModes');
-const {METHOD_GET} = require('../../constants');
-const db = require('../index');
+import {PREVIEW_MODE_SOURCE} from '../../previewModes';
+import {METHOD_GET} from '../../constants';
+import * as db from '../index';
 
-module.exports.type = 'Request';
-module.exports.prefix = 'req';
-module.exports.slug = 'request';
-module.exports.init = () => db.initModel({
-  url: '',
-  name: 'New Request',
-  method: METHOD_GET,
-  body: '',
-  parameters: [],
-  headers: [],
-  authentication: {},
-  metaPreviewMode: PREVIEW_MODE_SOURCE,
-  metaResponseFilter: '',
-  metaSortKey: -1 * Date.now()
-});
+export const type = 'Request';
+export const prefix = 'req';
 
-module.exports.createAndActivate = (workspace, patch = {}) => {
-  return module.exports.create(patch).then(r => {
-    db.workspace.update(workspace, {metaActiveRequestId: r._id});
-  })
-};
+export function init () {
+  return db.initModel({
+    url: '',
+    name: 'New Request',
+    method: METHOD_GET,
+    body: '',
+    parameters: [],
+    headers: [],
+    authentication: {},
+    metaPreviewMode: PREVIEW_MODE_SOURCE,
+    metaResponseFilter: '',
+    metaSortKey: -1 * Date.now()
+  });
+}
 
-module.exports.create = (patch = {}) => {
+export async function createAndActivate (workspace, patch = {}) {
+  const r = await create(patch);
+  await db.workspace.update(workspace, {metaActiveRequestId: r._id});
+  return r;
+}
+
+export function create (patch = {}) {
   if (!patch.parentId) {
     throw new Error('New Requests missing `parentId`', patch);
   }
 
-  return db.docCreate(module.exports.type, patch);
-};
+  return db.docCreate(type, patch);
+}
 
-module.exports.getById = id => {
-  return db.get(module.exports.type, id);
-};
+export function getById (id) {
+  return db.get(type, id);
+}
 
-module.exports.findByParentId = parentId => {
-  return db.find(module.exports.type, {parentId: parentId});
-};
+export function findByParentId (parentId) {
+  return db.find(type, {parentId: parentId});
+}
 
-module.exports.update = (request, patch) => {
+export function update (request, patch) {
   return db.docUpdate(request, patch);
-};
+}
 
-module.exports.updateContentType = (request, contentType) => {
+export function updateContentType (request, contentType) {
   let headers = [...request.headers];
   const contentTypeHeader = headers.find(
     h => h.name.toLowerCase() === 'content-type'
@@ -62,57 +64,50 @@ module.exports.updateContentType = (request, contentType) => {
   }
 
   return db.docUpdate(request, {headers});
-};
+}
 
-module.exports.duplicateAndActivate = (workspace, request) => {
+export async function duplicateAndActivate (workspace, request) {
   db.bufferChanges();
-  return new Promise((resolve, reject) => {
-    module.exports.duplicate(request).then(r => {
-      return db.workspace.update(workspace, {metaActiveRequestId: r._id})
-    }).then(() => {
-      db.flushChanges();
-      resolve();
-    }, reject)
-  })
-};
 
-module.exports.duplicate = request => {
+  const r = await duplicate(request);
+  await db.workspace.update(workspace, {metaActiveRequestId: r._id});
+
+  db.flushChanges();
+
+  return r;
+}
+
+export function duplicate (request) {
   const name = `${request.name} (Copy)`;
   return db.duplicate(request, {name})
-};
+}
 
-module.exports.remove = request => {
+export function remove (request) {
   return db.remove(request);
-};
+}
 
-module.exports.all = () => {
-  return db.all(module.exports.type);
-};
+export function all () {
+  return db.all(type);
+}
 
-module.exports.getAncestors = request => {
-  return new Promise(resolve => {
-    let ancestors = [];
+export async function getAncestors (request) {
+  const ancestors = [];
 
-    const next = doc => {
-      Promise.all([
-        db.requestGroup.getById(doc.parentId),
-        db.workspace.getById(doc.parentId)
-      ]).then(([requestGroup, workspace]) => {
-        if (requestGroup) {
-          ancestors = [requestGroup, ...ancestors];
-          next(requestGroup);
-        } else if (workspace) {
-          ancestors = [workspace, ...ancestors];
-          next(workspace);
-          // We could be done here, but let's have there only be one finish case
-        } else {
-          // We're finished
-          resolve(ancestors);
-        }
-      });
-    };
+  async function next (doc) {
+    const rg = await db.requestGroup.getById(doc.parentId);
+    const w = await db.workspace.getById(doc.parentId);
 
-    next(request);
-  });
-};
+    if (rg) {
+      ancestors.unshift(rg);
+      return await next(rg);
+    } else if (w) {
+      ancestors.unshift(w);
+      return await next(w);
+    } else {
+      // We're finished
+      return ancestors;
+    }
+  }
 
+  return await next(request);
+}

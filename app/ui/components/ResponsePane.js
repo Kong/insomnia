@@ -1,4 +1,3 @@
-import * as db from 'backend/database';
 import React, {PropTypes, Component} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import ElmComponent from './ElmComponent';
@@ -7,12 +6,16 @@ import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
-import {getPreviewModeName, PREVIEW_MODE_SOURCE} from 'backend/previewModes';
-import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from 'backend/constants';
-import {trackEvent} from 'backend/analytics';
-import {getSetCookieHeaders} from 'backend/util';
-import {cancelCurrentRequest} from 'backend/network';
-import {RESPONSE_CODE_DESCRIPTIONS} from 'backend/constants';
+import * as db from '../../backend/database';
+import {
+  getPreviewModeName,
+  PREVIEW_MODE_SOURCE
+} from '../../backend/previewModes';
+import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../../backend/constants';
+import {trackEvent} from '../../backend/analytics';
+import {getSetCookieHeaders} from '../../backend/util';
+import {cancelCurrentRequest} from '../../backend/network';
+import {RESPONSE_CODE_DESCRIPTIONS} from '../../backend/constants';
 
 class ResponsePane extends Component {
   constructor (props) {
@@ -23,15 +26,13 @@ class ResponsePane extends Component {
     }
   }
 
-  _getResponse (request) {
+  async _getResponse (request) {
     if (!request) {
       this.setState({response: null});
-      return;
-    }
-
-    db.response.getLatestByParentId(request._id).then(response => {
+    } else {
+      const response = await db.response.getLatestByParentId(request._id);
       this.setState({response});
-    })
+    }
   }
 
   componentWillReceiveProps (nextProps) {

@@ -1,37 +1,34 @@
-'use strict';
+import * as db from '../index';
 
-const db = require('../index');
-
-module.exports.type = 'Settings';
-module.exports.prefix = 'set';
-module.exports.slug = 'settings';
-module.exports.init = () => db.initModel({
-  showPasswords: true,
-  useBulkHeaderEditor: false,
-  followRedirects: false,
-  editorFontSize: 12,
-  editorLineWrapping: true,
-  httpProxy: '',
-  httpsProxy: '',
-  timeout: 0,
-  validateSSL: true
-});
-
-module.exports.create = (patch = {}) => {
-  return db.docCreate(module.exports.type, patch);
-};
-
-module.exports.update = (settings, patch) => {
-  return db.docUpdate(settings, patch);
-};
-
-module.exports.getOrCreate = () => {
-  return db.all(module.exports.type).then(results => {
-    if (results.length === 0) {
-      return module.exports.create()
-        .then(module.exports.getOrCreate);
-    } else {
-      return new Promise(resolve => resolve(results[0]));
-    }
+export const type = 'Settings';
+export const prefix = 'set';
+export function init () {
+  return db.initModel({
+    showPasswords: true,
+    useBulkHeaderEditor: false,
+    followRedirects: false,
+    editorFontSize: 12,
+    editorLineWrapping: true,
+    httpProxy: '',
+    httpsProxy: '',
+    timeout: 0,
+    validateSSL: true
   });
-};
+}
+
+export async function create (patch = {}) {
+  return db.docCreate(type, patch);
+}
+
+export async function update (settings, patch) {
+  return db.docUpdate(settings, patch);
+}
+
+export async function getOrCreate () {
+  const results = await db.all(type);
+  if (results.length === 0) {
+    return await create();
+  } else {
+    return results[0];
+  }
+}

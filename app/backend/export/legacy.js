@@ -1,7 +1,5 @@
-'use strict';
-
-const db = require('../database/index');
-const {getContentTypeFromHeaders} = require('../contentTypes');
+import * as db from '../database/index';
+import {getContentTypeFromHeaders} from '../contentTypes';
 
 const FORMAT_MAP = {
   json: 'application/json',
@@ -10,25 +8,25 @@ const FORMAT_MAP = {
   text: 'text/plain'
 };
 
-module.exports.importRequestGroupLegacy = (importedRequestGroup, parentId, index = 1) => {
-  return db.requestGroup.create({
+export async function importRequestGroupLegacy (importedRequestGroup, parentId, index = 1) {
+  const requestGroup = await db.requestGroup.create({
     parentId,
     name: importedRequestGroup.name,
     environment: (importedRequestGroup.environments || {}).base || {},
     metaCollapsed: true,
     metaSortKey: index * 1000
-  }).then(requestGroup => {
-    // Sometimes (maybe all the time, I can't remember) requests will be nested
-    if (importedRequestGroup.hasOwnProperty('requests')) {
-      // Let's process them oldest to newest
-      importedRequestGroup.requests.map(
-        (r, i) => module.exports.importRequestLegacy(r, requestGroup._id, index * 1000 + i)
-      );
-    }
   });
-};
 
-module.exports.importRequestLegacy = (importedRequest, parentId, index = 1) => {
+  // Sometimes (maybe all the time, I can't remember) requests will be nested
+  if (importedRequestGroup.hasOwnProperty('requests')) {
+    // Let's process them oldest to newest
+    importedRequestGroup.requests.map(
+      (r, i) => importRequestLegacy(r, requestGroup._id, index * 1000 + i)
+    );
+  }
+}
+
+export function importRequestLegacy (importedRequest, parentId, index = 1) {
   let auth = {};
   if (importedRequest.authentication.username) {
     auth = {
@@ -64,5 +62,5 @@ module.exports.importRequestLegacy = (importedRequest, parentId, index = 1) => {
     contentType: FORMAT_MAP[importedRequest.__insomnia.format] || 'text/plain',
     authentication: auth
   });
-};
+}
 

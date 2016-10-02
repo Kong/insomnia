@@ -1,5 +1,5 @@
 import React, {PropTypes} from 'react';
-import {MOD_SYM} from 'backend/constants';
+import {MOD_SYM} from '../../../backend/constants';
 
 const DropdownHint = ({char}) => (
   <div className="dropdown__hint">

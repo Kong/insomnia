@@ -1,49 +1,60 @@
-'use strict';
+import electron from 'electron';
+import NeDB from 'nedb';
+import fsPath from 'path';
+import {DB_PERSIST_INTERVAL} from  '../constants';
+import {generateId} from '../util';
+import {isDevelopment} from '../appInfo';
 
-const electron = require('electron');
-const NeDB = require('nedb');
-const fsPath = require('path');
-const {DB_PERSIST_INTERVAL} = require('../constants');
-const {generateId} = require('../util');
-const {isDevelopment} = require('../appInfo');
+import * as _stats from './models/stats';
+import * as _settings from './models/settings';
+import * as _workspace from './models/workspace';
+import * as _environment from './models/environment';
+import * as _cookieJar from './models/cookieJar';
+import * as _requestGroup from './models/requestGroup';
+import * as _request from './models/request';
+import * as _response from './models/response';
 
-module.exports.CHANGE_INSERT = 'insert';
-module.exports.CHANGE_UPDATE = 'update';
-module.exports.CHANGE_REMOVE = 'remove';
+export const CHANGE_INSERT = 'insert';
+export const CHANGE_UPDATE = 'update';
+export const CHANGE_REMOVE = 'remove';
 
 
 // ~~~~~~ //
 // MODELS //
 // ~~~~~~ //
 
-module.exports.stats = require('./models/stats');
-module.exports.settings = require('./models/settings');
-module.exports.workspace = require('./models/workspace');
-module.exports.environment = require('./models/environment');
-module.exports.cookieJar = require('./models/cookieJar');
-module.exports.requestGroup = require('./models/requestGroup');
-module.exports.request = require('./models/request');
-module.exports.response = require('./models/response');
-
 const MODELS = [
-  module.exports.stats,
-  module.exports.settings,
-  module.exports.workspace,
-  module.exports.environment,
-  module.exports.cookieJar,
-  module.exports.requestGroup,
-  module.exports.request,
-  module.exports.response
+  _stats,
+  _settings,
+  _workspace,
+  _environment,
+  _cookieJar,
+  _requestGroup,
+  _request,
+  _response
 ];
+
+export const stats = _stats;
+export const settings = _settings;
+export const workspace = _workspace;
+export const environment = _environment;
+export const cookieJar = _cookieJar;
+export const requestGroup = _requestGroup;
+export const request = _request;
+export const response = _response;
+
+
 const MODEL_MAP = {};
 
-module.exports.initModel = doc => Object.assign({
-  modified: Date.now(),
-  created: Date.now(),
-  parentId: null
-}, doc);
+export function initModel (doc) {
+  return Object.assign({
+    modified: Date.now(),
+    created: Date.now(),
+    parentId: null
+  }, doc);
+}
 
-module.exports.ALL_TYPES = MODELS.map(m => m.type);
+export const ALL_TYPES = MODELS.map(m => m.type);
 
 for (const model of MODELS) {
   MODEL_MAP[model.type] = model;
@@ -67,37 +78,43 @@ function getDBFilePath (modelType) {
  * @returns {Promise}
  */
 let initialized = false;
-module.exports.initDB = (config = {}, force = false) => {
+
+/**
+ * Initialize the database. Note that this isn't actually async, but might be
+ * in the future!
+ *
+ * @param config
+ * @param force
+ * @returns {null}
+ */
+export async function initDB (config = {}, force = false) {
   // Only init once
   if (initialized && !force) {
-    return Promise.resolve();
+    return null;
   }
 
-  return new Promise(resolve => {
-    db = {};
+  db = {};
 
-    if (isDevelopment()) {
-      global.db = db;
-    }
+  if (isDevelopment()) {
+    global.db = db;
+  }
 
-    // Fill in the defaults
+  // Fill in the defaults
 
-    module.exports.ALL_TYPES.map(t => {
-      const filename = getDBFilePath(t);
-      const autoload = true;
-      const finalConfig = Object.assign({filename, autoload}, config);
+  ALL_TYPES.map(t => {
+    const filename = getDBFilePath(t);
+    const autoload = true;
+    const finalConfig = Object.assign({filename, autoload}, config);
 
-      db[t] = new NeDB(finalConfig);
-      db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
-    });
-
-    // Done
-
-    initialized = true;
-    console.log(`-- Initialize DB at ${getDBFilePath('t')} --`);
-    resolve();
+    db[t] = new NeDB(finalConfig);
+    db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
   });
-};
+
+  // Done
+
+  initialized = true;
+  console.log(`-- Initialize DB at ${getDBFilePath('t')} --`);
+}
 
 
 // ~~~~~~~~~~~~~~~~ //
@@ -108,24 +125,22 @@ let bufferingChanges = false;
 let changeBuffer = [];
 let changeListeners = [];
 
-module.exports.onChange = callback => {
+export function onChange (callback) {
   console.log(`-- Added DB Listener -- `);
   changeListeners.push(callback);
-};
+}
 
-module.exports.offChange = callback => {
+export function offChange (callback) {
   console.log(`-- Removed DB Listener -- `);
   changeListeners = changeListeners.filter(l => l !== callback);
-};
+}
 
-module.exports.bufferChanges = (millis = 1000) => {
+export function bufferChanges (millis = 1000) {
   bufferingChanges = true;
-  setTimeout(() => {
-    module.exports.flushChanges()
-  }, millis);
-};
+  setTimeout(flushChanges, millis);
+}
 
-module.exports.flushChanges = () => {
+export function flushChanges () {
   bufferingChanges = false;
   const changes = [...changeBuffer];
   changeBuffer = [];
@@ -139,14 +154,14 @@ module.exports.flushChanges = () => {
   process.nextTick(() => {
     changeListeners.map(fn => fn(changes));
   })
-};
+}
 
 function notifyOfChange (event, doc) {
   changeBuffer.push([event, doc]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
-    module.exports.flushChanges();
+    flushChanges();
   }
 }
 
@@ -155,15 +170,15 @@ function notifyOfChange (event, doc) {
 // Helpers //
 // ~~~~~~~ //
 
-module.exports.getMostRecentlyModified = (type, query = {}) => {
+export function getMostRecentlyModified (type, query = {}) {
   return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(1).exec((err, docs) => {
       resolve(docs.length ? docs[0] : null);
     })
   })
-};
+}
 
-module.exports.find = (type, query = {}) => {
+export function find (type, query = {}) {
   return new Promise((resolve, reject) => {
     db[type].find(query, (err, rawDocs) => {
       if (err) {
@@ -178,13 +193,13 @@ module.exports.find = (type, query = {}) => {
       resolve(docs);
     });
   });
-};
+}
 
-module.exports.all = type => {
-  return module.exports.find(type);
-};
+export function all (type) {
+  return find(type);
+}
 
-module.exports.getWhere = (type, query) => {
+export function getWhere (type, query) {
   return new Promise((resolve, reject) => {
     db[type].find(query, (err, rawDocs) => {
       if (err) {
@@ -198,15 +213,15 @@ module.exports.getWhere = (type, query) => {
 
       const modelDefaults = MODEL_MAP[type].init();
       resolve(Object.assign({}, modelDefaults, rawDocs[0]));
-    });
-  });
-};
+    })
+  })
+}
 
-module.exports.get = (type, id) => {
-  return module.exports.getWhere(type, {_id: id});
-};
+export function get (type, id) {
+  return getWhere(type, {_id: id});
+}
 
-module.exports.count = (type, query = {}) => {
+export function count (type, query = {}) {
   return new Promise((resolve, reject) => {
     db[type].count(query, (err, count) => {
       if (err) {
@@ -216,9 +231,9 @@ module.exports.count = (type, query = {}) => {
       resolve(count);
     });
   });
-};
+}
 
-module.exports.insert = doc => {
+export function insert (doc) {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {
       if (err) {
@@ -226,12 +241,12 @@ module.exports.insert = doc => {
       }
 
       resolve(newDoc);
-      notifyOfChange(module.exports.CHANGE_INSERT, doc);
+      notifyOfChange(CHANGE_INSERT, doc);
     });
   });
-};
+}
 
-module.exports.update = doc => {
+export function update (doc) {
   return new Promise((resolve, reject) => {
     db[doc.type].update({_id: doc._id}, doc, err => {
       if (err) {
@@ -239,30 +254,25 @@ module.exports.update = doc => {
       }
 
       resolve(doc);
-      notifyOfChange(module.exports.CHANGE_UPDATE, doc);
+      notifyOfChange(CHANGE_UPDATE, doc);
     });
   });
-};
+}
 
-module.exports.remove = doc => {
-  module.exports.bufferChanges();
+export async function remove (doc) {
+  bufferChanges();
 
-  return new Promise(resolve => {
-    module.exports.withDescendants(doc).then(docs => {
-      const docIds = docs.map(d => d._id);
-      const types = [...new Set(docs.map(d => d.type))];
-      const promises = types.map(t => {
-        db[t].remove({_id: {$in: docIds}}, {multi: true})
-      });
+  const docs = await withDescendants(doc);
+  const docIds = docs.map(d => d._id);
+  const types = [...new Set(docs.map(d => d.type))];
 
-      Promise.all(promises).then(() => {
-        docs.map(d => notifyOfChange(module.exports.CHANGE_REMOVE, d));
-        resolve();
-        module.exports.flushChanges();
-      });
-    });
-  });
-};
+  // Don't really need to wait for this to be over;
+  types.map(t => db[t].remove({_id: {$in: docIds}}, {multi: true}));
+
+  docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
+
+  flushChanges();
+}
 
 /**
  * Remove a lot of documents quickly and silently
@@ -271,18 +281,18 @@ module.exports.remove = doc => {
  * @param query
  * @returns {Promise.<T>}
  */
-module.exports.removeBulkSilently = (type, query) => {
+export function removeBulkSilently (type, query) {
   return new Promise(resolve => {
     db[type].remove(query, {multi: true}, err => resolve());
   });
-};
+}
 
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-module.exports.docUpdate = (originalDoc, patch = {}) => {
+export function docUpdate (originalDoc, patch = {}) {
   const doc = Object.assign(
     MODEL_MAP[originalDoc.type].init(),
     originalDoc,
@@ -290,10 +300,10 @@ module.exports.docUpdate = (originalDoc, patch = {}) => {
     {modified: Date.now()}
   );
 
-  return module.exports.update(doc);
-};
+  return update(doc);
+}
 
-module.exports.docCreate = (type, patch = {}) => {
+export function docCreate (type, patch = {}) {
   const idPrefix = MODEL_MAP[type].prefix;
 
   if (!idPrefix) {
@@ -312,99 +322,62 @@ module.exports.docCreate = (type, patch = {}) => {
     }
   );
 
-  return module.exports.insert(doc);
-};
+  return insert(doc);
+}
 
 // ~~~~~~~ //
 // GENERAL //
 // ~~~~~~~ //
 
-module.exports.withDescendants = (doc = null) => {
+export async function withDescendants (doc = null) {
   let docsToReturn = doc ? [doc] : [];
 
-  const next = (docs) => {
-    const promises = [];
-    for (const doc of docs) {
-      for (const type of module.exports.ALL_TYPES) {
+  async function next (docs) {
+    let foundDocs = [];
+
+    for (const d of docs) {
+      for (const type of ALL_TYPES) {
         // If the doc is null, we want to search for parentId === null
-        const parentId = doc ? doc._id : null;
-        const promise = module.exports.find(type, {parentId});
-        promises.push(promise);
+        const parentId = d ? d._id : null;
+        const more = await find(type, {parentId});
+        foundDocs = [...foundDocs, ...more]
       }
     }
 
-    return Promise.all(promises).then(results => {
-      let newDocs = [];
+    if (foundDocs.length === 0) {
+      // Didn't find anything. We're done
+      return docsToReturn;
+    }
 
-      // Gather up the docs = require(each type
-      for (const docs of results) {
-        for (const doc of docs) {
-          newDocs.push(doc);
-        }
-      }
+    // Continue searching for children
+    docsToReturn = [...docsToReturn, ...foundDocs];
+    return await next(foundDocs);
+  }
 
-      if (newDocs.length === 0) {
-        // Didn't find anything. We're done
-        return new Promise(resolve => resolve(docsToReturn));
-      }
+  return await next([doc]);
+}
 
-      // Continue searching for children
-      docsToReturn = [...docsToReturn, ...newDocs];
-      return next(newDocs);
-    });
-  };
+export async function duplicate (originalDoc, patch = {}) {
+  bufferChanges();
 
-  return next([doc]);
-};
+  // 1. Copy the doc
+  const newDoc = Object.assign({}, originalDoc, patch);
+  delete newDoc._id;
+  delete newDoc.created;
+  delete newDoc.modified;
 
-module.exports.duplicate = (originalDoc, patch = {}, root = true) => {
-  module.exports.bufferChanges();
-  return new Promise((resolve, reject) => {
+  const createdDoc = await docCreate(newDoc.type, newDoc);
 
-    // 1. Copy the doc
-    const newDoc = Object.assign({}, originalDoc, patch);
-    delete newDoc._id;
-    delete newDoc.created;
-    delete newDoc.modified;
+  // 2. Get all the children
+  for (const type of ALL_TYPES) {
+    const parentId = originalDoc._id;
+    const children = await find(type, {parentId});
+    for (const doc of children) {
+      await duplicate(doc, {parentId: createdDoc._id})
+    }
+  }
 
-    module.exports.docCreate(newDoc.type, newDoc).then(createdDoc => {
+  flushChanges();
 
-      // 2. Get all the children
-      const findPromises = [];
-      for (const type of module.exports.ALL_TYPES) {
-        const parentId = originalDoc._id;
-        const promise = module.exports.find(type, {parentId});
-        findPromises.push(promise);
-      }
-
-      Promise.all(findPromises).then(results => {
-        let duplicatePromises = [];
-
-        // Gather up the docs = require(each type
-        for (const docs of results) {
-          for (const doc of docs) {
-            const promise = module.exports.duplicate(
-              doc,
-              {parentId: createdDoc._id},
-              false
-            );
-
-            duplicatePromises.push(promise);
-          }
-        }
-
-        // 3. Also duplicate all children, and recurse
-        Promise.all(duplicatePromises).then(() => {
-          // Only flush if we're not in a recursion step
-          if (root) {
-            module.exports.flushChanges();
-          }
-
-          resolve(createdDoc)
-        }, err => {
-          reject(err);
-        })
-      })
-    })
-  })
-};
+  return createdDoc;
+}

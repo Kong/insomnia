@@ -1,12 +1,12 @@
 import React, {PropTypes, Component} from 'react';
+import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd'
 import classnames from 'classnames';
 
 import RequestActionsDropdown from '../dropdowns/RequestActionsDropdown';
 import Editable from '../base/Editable';
 import MethodTag from '../tags/MethodTag';
-import * as db from 'backend/database';
-import * as ReactDOM from 'react/lib/ReactDOM';
+import * as db from '../../../backend/database';
 
 
 class SidebarRequestRow extends Component {

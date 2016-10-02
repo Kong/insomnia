@@ -1,9 +1,9 @@
 import electron from 'electron';
 import fs from 'fs';
 
-import {importJSON, exportJSON} from 'backend/export/database';
-import * as db from 'backend/database/index';
-import {trackEvent} from 'backend/analytics';
+import {importJSON, exportJSON} from '../../../backend/export/database';
+import * as db from '../../../backend/database/index';
+import {trackEvent} from '../../../backend/analytics';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
@@ -68,55 +68,55 @@ export function importFile (workspace) {
 
       // Let's import all the paths!
       paths.map(path => {
-        fs.readFile(path, 'utf8', (err, data) => {
+        fs.readFile(path, 'utf8', async (err, data) => {
           // Unset the current active request first because we might be updating it
-          db.workspace.update(workspace, {metaActiveRequestId: null}).then(() => {
-            dispatch(loadStop());
-            if (err) {
-              trackEvent('Import Fail');
-              console.warn('Import Failed', err);
-              return;
-            }
+          await db.workspace.update(workspace, {metaActiveRequestId: null});
 
-            importJSON(workspace, data);
-            trackEvent('Import');
-          });
-        })
+          dispatch(loadStop());
+
+          if (err) {
+            trackEvent('Import Fail');
+            console.warn('Import Failed', err);
+            return;
+          }
+
+          importJSON(workspace, data);
+          trackEvent('Import');
+        });
       })
     });
   }
 }
 
 export function exportFile (parentDoc = null) {
-  return dispatch => {
+  return async dispatch => {
     dispatch(loadStart());
 
-    exportJSON(parentDoc).then(json => {
-      const options = {
-        title: 'Export Insomnia Data',
-        buttonLabel: 'Export',
-        filters: [{
-          name: 'Insomnia Export', extensions: ['json']
-        }]
-      };
+    const json = await exportJSON(parentDoc);
+    const options = {
+      title: 'Export Insomnia Data',
+      buttonLabel: 'Export',
+      filters: [{
+        name: 'Insomnia Export', extensions: ['json']
+      }]
+    };
 
-      electron.remote.dialog.showSaveDialog(options, filename => {
-        if (!filename) {
-          trackEvent('Export Cancel');
-          // It was cancelled, so let's bail out
-          dispatch(loadStop());
+    electron.remote.dialog.showSaveDialog(options, filename => {
+      if (!filename) {
+        trackEvent('Export Cancel');
+        // It was cancelled, so let's bail out
+        dispatch(loadStop());
+        return;
+      }
+
+      fs.writeFile(filename, json, {}, err => {
+        if (err) {
+          console.warn('Export failed', err);
+          trackEvent('Export Fail');
           return;
         }
-
-        fs.writeFile(filename, json, {}, err => {
-          if (err) {
-            console.warn('Export failed', err);
-            trackEvent('Export Fail');
-            return;
-          }
-          trackEvent('Export');
-          dispatch(loadStop());
-        });
+        trackEvent('Export');
+        dispatch(loadStop());
       });
     });
   }

@@ -1,24 +1,23 @@
-'use strict';
-
-const networkRequest = require('request');
-const {parse: urlParse, format: urlFormat} = require('url');
-const db = require('./database');
-const querystring = require('./querystring');
-var util = require('./util.js');
-const {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} = require('./constants');
-const {jarFromCookies, cookiesFromJar} = require('./cookies');
-const {setDefaultProtocol} = require('./util');
-const {getRenderedRequest} = require('./render');
+import networkRequest from 'request';
+import {parse as urlParse} from 'url';
+import * as db from './database';
+import * as querystring from './querystring';
+import * as util from './util.js';
+import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
+import {jarFromCookies, cookiesFromJar} from './cookies';
+import {setDefaultProtocol} from './util';
+import {getRenderedRequest} from './render';
+import {swapHost} from './dns';
 
 let cancelRequestFunction = null;
 
-module.exports.cancelCurrentRequest = () => {
+export function cancelCurrentRequest () {
   if (typeof cancelRequestFunction === 'function') {
     cancelRequestFunction();
   }
-};
+}
 
-module.exports._buildRequestConfig = (renderedRequest, patch = {}) => {
+export function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
     method: renderedRequest.method,
     body: renderedRequest.body,
@@ -56,10 +55,10 @@ module.exports._buildRequestConfig = (renderedRequest, patch = {}) => {
   }
 
   return Object.assign(config, patch);
-};
+}
 
-module.exports._actuallySend = (renderedRequest, settings) => {
-  return new Promise((resolve, reject) => {
+export function _actuallySend (renderedRequest, settings) {
+  return new Promise(async (resolve, reject) => {
     const cookieJar = renderedRequest.cookieJar;
     const jar = jarFromCookies(cookieJar.cookies);
 
@@ -70,7 +69,7 @@ module.exports._actuallySend = (renderedRequest, settings) => {
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
-    let config = module.exports._buildRequestConfig(renderedRequest, {
+    const config = _buildRequestConfig(renderedRequest, {
       jar: jar,
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
@@ -78,9 +77,14 @@ module.exports._actuallySend = (renderedRequest, settings) => {
       rejectUnauthorized: settings.validateSSL
     }, true);
 
-    const startTime = Date.now();
+    // Do DNS lookup ourselves
+    // We don't want to let NodeJS do DNS, because it doesn't use
+    // getaddrinfo by default. Instead, it first tries to reach out
+    // to the network.
+    config.url = await swapHost(config.url);
+
     // TODO: Handle redirects ourselves
-    const req = networkRequest(config, function (err, networkResponse) {
+    const req = networkRequest(config, async (err, networkResponse) => {
       if (err) {
         const isShittyParseError = err.toString() === 'Error: Parse Error';
 
@@ -89,9 +93,8 @@ module.exports._actuallySend = (renderedRequest, settings) => {
           message = 'Could not parse malformed response.'
         }
 
-        db.response.create({
+        await db.response.create({
           parentId: renderedRequest._id,
-          elapsedTime: Date.now() - startTime,
           error: message
         });
 
@@ -103,9 +106,8 @@ module.exports._actuallySend = (renderedRequest, settings) => {
       if (contentType && contentType.toLowerCase().indexOf('image/') === 0) {
         const err = new Error(`Content-Type ${contentType} not supported`);
 
-        db.response.create({
+        await db.response.create({
           parentId: renderedRequest._id,
-          elapsedTime: Date.now() - startTime,
           error: err.toString(),
           statusMessage: 'UNSUPPORTED'
         });
@@ -114,9 +116,8 @@ module.exports._actuallySend = (renderedRequest, settings) => {
       }
 
       // Update the cookie jar
-      cookiesFromJar(jar).then(cookies => {
-        db.cookieJar.update(cookieJar, {cookies});
-      });
+      const cookies = await cookiesFromJar(jar);
+      db.cookieJar.update(cookieJar, {cookies});
 
       // Format the headers into Insomnia format
       // TODO: Move this to a better place
@@ -145,40 +146,41 @@ module.exports._actuallySend = (renderedRequest, settings) => {
     });
 
     // Kind of hacky, but this is how we cancel a request.
-    cancelRequestFunction = () => {
+    cancelRequestFunction = async () => {
       req.abort();
 
-      db.response.create({
+      await db.response.create({
         parentId: renderedRequest._id,
-        elapsedTime: Date.now() - startTime,
+        elapsedTime: Date.now() - requestStartTime,
         statusMessage: 'Cancelled',
         error: 'The request was cancelled'
       });
 
-      return reject('Cancelled');
+      return reject(new Error('Cancelled'));
     }
   })
-};
+}
 
-module.exports.send = requestId => {
-  return new Promise((resolve, reject) => {
+export async function send (requestId) {
+  // First, lets wait for all debounces to finish
+  await util.delay(DEBOUNCE_MILLIS);
 
-    // First, lets wait for all debounces to finish
-    setTimeout(() => {
-      Promise.all([
-        db.request.getById(requestId),
-        db.settings.getOrCreate()
-      ]).then(([request, settings]) => {
-        getRenderedRequest(request).then(renderedRequest => {
-          module.exports._actuallySend(renderedRequest, settings).then(resolve, reject);
-        }, err => {
-          db.response.create({
-            parentId: request._id,
-            statusCode: STATUS_CODE_PEBKAC,
-            error: err.message
-          }).then(resolve, reject);
-        });
-      })
-    }, DEBOUNCE_MILLIS);
-  })
-};
+  const request = await db.request.getById(requestId);
+  const settings = await db.settings.getOrCreate();
+
+  let renderedRequest;
+
+  try {
+    renderedRequest = await getRenderedRequest(request);
+  } catch (e) {
+    // Failed to render. Must be the user's fault
+    return await db.response.create({
+      parentId: request._id,
+      statusCode: STATUS_CODE_PEBKAC,
+      error: e.message
+    });
+  }
+
+  // Render succeeded so we're good to go!
+  return await _actuallySend(renderedRequest, settings);
+}

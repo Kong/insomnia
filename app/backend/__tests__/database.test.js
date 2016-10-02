@@ -1,7 +1,5 @@
-'use strict';
-
-const db = require('../database');
-const {PREVIEW_MODE_SOURCE} = require('../previewModes');
+import * as db from '../database';
+import {PREVIEW_MODE_SOURCE} from '../previewModes';
 
 function loadFixture (name) {
   const fixtures = require(`../__fixtures__/${name}`);
@@ -18,7 +16,7 @@ describe('requestCreate()', () => {
     return db.initDB({inMemoryOnly: true}, true);
   });
 
-  it('creates a valid request', () => {
+  it('creates a valid request', async () => {
     const now = Date.now();
 
     const patch = {
@@ -26,24 +24,24 @@ describe('requestCreate()', () => {
       parentId: 'wrk_123'
     };
 
-    return db.request.create(patch).then(r => {
-      expect(Object.keys(r).length).toBe(15);
+    const r = await db.request.create(patch);
 
-      expect(r._id).toMatch(/^req_[a-zA-Z0-9]{24}$/);
-      expect(r.created).toBeGreaterThanOrEqual(now);
-      expect(r.modified).toBeGreaterThanOrEqual(now);
-      expect(r.type).toBe('Request');
-      expect(r.name).toBe('My Request');
-      expect(r.url).toBe('');
-      expect(r.method).toBe('GET');
-      expect(r.body).toBe('');
-      expect(r.parameters).toEqual([]);
-      expect(r.headers).toEqual([]);
-      expect(r.authentication).toEqual({});
-      expect(r.metaSortKey).toBeLessThanOrEqual(-1 * now);
-      expect(r.metaPreviewMode).toEqual(PREVIEW_MODE_SOURCE);
-      expect(r.parentId).toBe('wrk_123');
-    });
+    expect(Object.keys(r).length).toBe(15);
+
+    expect(r._id).toMatch(/^req_[a-zA-Z0-9]{24}$/);
+    expect(r.created).toBeGreaterThanOrEqual(now);
+    expect(r.modified).toBeGreaterThanOrEqual(now);
+    expect(r.type).toBe('Request');
+    expect(r.name).toBe('My Request');
+    expect(r.url).toBe('');
+    expect(r.method).toBe('GET');
+    expect(r.body).toBe('');
+    expect(r.parameters).toEqual([]);
+    expect(r.headers).toEqual([]);
+    expect(r.authentication).toEqual({});
+    expect(r.metaSortKey).toBeLessThanOrEqual(-1 * now);
+    expect(r.metaPreviewMode).toEqual(PREVIEW_MODE_SOURCE);
+    expect(r.parentId).toBe('wrk_123');
   });
 
   it('throws when missing parentID', () => {
@@ -53,52 +51,34 @@ describe('requestCreate()', () => {
 });
 
 describe('requestGroupDuplicate()', () => {
-  beforeEach(() => {
-    return Promise.all([
-      db.initDB({inMemoryOnly: true}, true),
-      loadFixture('nestedfolders')
-    ]);
+  beforeEach(async () => {
+    await db.initDB({inMemoryOnly: true}, true);
+    await loadFixture('nestedfolders');
   });
 
-  it('duplicates a RequestGroup', () => {
-    return new Promise((resolve, reject) => {
-      db.requestGroup.getById('fld_1').then(requestGroup => {
-        expect(requestGroup.name).toBe('Fld 1');
+  it('duplicates a RequestGroup', async () => {
+    const requestGroup = await db.requestGroup.getById('fld_1');
+    expect(requestGroup.name).toBe('Fld 1');
 
-        db.requestGroup.duplicate(requestGroup).then(newRequestGroup => {
-          expect(newRequestGroup._id).not.toBe(requestGroup._id);
-          expect(newRequestGroup.name).toBe('Fld 1 (Copy)');
+    const newRequestGroup = await db.requestGroup.duplicate(requestGroup);
+    expect(newRequestGroup._id).not.toBe(requestGroup._id);
+    expect(newRequestGroup.name).toBe('Fld 1 (Copy)');
 
-          Promise.all([
-            db.request.all(),
-            db.requestGroup.all(),
-            db.request.findByParentId(requestGroup._id),
-            db.requestGroup.findByParentId(requestGroup._id),
-            db.request.findByParentId(newRequestGroup._id),
-            db.requestGroup.findByParentId(newRequestGroup._id)
-          ]).then(([
-            allRequests,
-            allRequestGroups,
-            childRequests,
-            childRequestGroups,
-            newChildRequests,
-            newChildRequestGroups
-          ]) => {
-            // This asserting is pretty garbage but it at least checks
-            // to see that the recursion worked (for the most part)
-            expect(allRequests.length).toBe(8);
-            expect(allRequestGroups.length).toBe(5);
+    const allRequests = await db.request.all();
+    const allRequestGroups = await db.requestGroup.all();
+    const childRequests = await db.request.findByParentId(requestGroup._id);
+    const childRequestGroups = await db.requestGroup.findByParentId(requestGroup._id);
+    const newChildRequests = await db.request.findByParentId(newRequestGroup._id);
+    const newChildRequestGroups = await db.requestGroup.findByParentId(newRequestGroup._id);
+    // This asserting is pretty garbage but it at least checks
+    // to see that the recursion worked (for the most part)
+    expect(allRequests.length).toBe(8);
+    expect(allRequestGroups.length).toBe(5);
 
-            expect(childRequests.length).toBe(2);
-            expect(childRequestGroups.length).toBe(1);
+    expect(childRequests.length).toBe(2);
+    expect(childRequestGroups.length).toBe(1);
 
-            expect(newChildRequests.length).toBe(2);
-            expect(newChildRequestGroups.length).toBe(1);
-
-            resolve();
-          }, reject);
-        }, reject)
-      }, reject);
-    })
+    expect(newChildRequests.length).toBe(2);
+    expect(newChildRequestGroups.length).toBe(1);
   })
 });

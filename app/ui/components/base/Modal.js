@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
+import {isMac} from '../../../backend/appInfo';
 
 
 class Modal extends Component {
@@ -67,8 +68,12 @@ class Modal extends Component {
         return;
       }
 
-      // Don't bubble the events up past the modal no matter what
-      e.stopPropagation();
+      // Don't bubble up meta events up past the modal no matter what
+      // Example: ctrl+Enter to send requests
+      const isMeta = isMac() ? e.metaKey : e.ctrlKey;
+      if (isMeta) {
+        e.stopPropagation();
+      }
 
       const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
       const pressedEscape = e.keyCode === 27;
