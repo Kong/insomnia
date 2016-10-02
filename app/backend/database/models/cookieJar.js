@@ -2,7 +2,6 @@ import * as db from '../index';
 
 export const type = 'CookieJar';
 export const prefix = 'jar';
-export const slug = 'cookie_jar';
 export function init () {
   return db.initModel({
     name: 'Default Jar',

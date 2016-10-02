@@ -2,7 +2,6 @@ import * as db from '../index';
 
 export const type = 'RequestGroup';
 export const prefix = 'fld';
-export const slug = 'request_group';
 export function init () {
   return db.initModel({
     name: 'New Folder',

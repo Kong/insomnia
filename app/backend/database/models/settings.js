@@ -2,7 +2,6 @@ import * as db from '../index';
 
 export const type = 'Settings';
 export const prefix = 'set';
-export const slug = 'settings';
 export function init () {
   return db.initModel({
     showPasswords: true,

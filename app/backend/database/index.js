@@ -5,14 +5,14 @@ import {DB_PERSIST_INTERVAL} from  '../constants';
 import {generateId} from '../util';
 import {isDevelopment} from '../appInfo';
 
-import * as stats from './models/stats';
-import * as settings from './models/settings';
-import * as workspace from './models/workspace';
-import * as environment from './models/environment';
-import * as cookieJar from './models/cookieJar';
-import * as requestGroup from './models/requestGroup';
-import * as request from './models/request';
-import * as response from './models/response';
+import * as _stats from './models/stats';
+import * as _settings from './models/settings';
+import * as _workspace from './models/workspace';
+import * as _environment from './models/environment';
+import * as _cookieJar from './models/cookieJar';
+import * as _requestGroup from './models/requestGroup';
+import * as _request from './models/request';
+import * as _response from './models/response';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -24,24 +24,25 @@ export const CHANGE_REMOVE = 'remove';
 // ~~~~~~ //
 
 const MODELS = [
-  stats,
-  settings,
-  workspace,
-  environment,
-  cookieJar,
-  requestGroup,
-  request,
-  response
+  _stats,
+  _settings,
+  _workspace,
+  _environment,
+  _cookieJar,
+  _requestGroup,
+  _request,
+  _response
 ];
 
-module.exports.stats = stats;
-module.exports.settings = settings;
-module.exports.workspace = workspace;
-module.exports.environment = environment;
-module.exports.cookieJar = cookieJar;
-module.exports.requestGroup = requestGroup;
-module.exports.request = request;
-module.exports.response = response;
+export const stats = _stats;
+export const settings = _settings;
+export const workspace = _workspace;
+export const environment = _environment;
+export const cookieJar = _cookieJar;
+export const requestGroup = _requestGroup;
+export const request = _request;
+export const response = _response;
+
 
 const MODEL_MAP = {};
 

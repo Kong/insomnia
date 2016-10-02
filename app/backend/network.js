@@ -7,7 +7,7 @@ import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol} from './util';
 import {getRenderedRequest} from './render';
-import * as dns from './dns';
+import {swapHost} from './dns';
 
 let cancelRequestFunction = null;
 
@@ -77,14 +77,12 @@ export function _actuallySend (renderedRequest, settings) {
       rejectUnauthorized: settings.validateSSL
     }, true);
 
-    try {
-      config.url = await dns.swapHost(config.url);
-    } catch (e) {
-      // That's OK. Let Node do it's thing and fail further down
-      console.log('DNS lookup failed', e);
-    }
+    // Do DNS lookup ourselves
+    // We don't want to let NodeJS do DNS, because it doesn't use
+    // getaddrinfo by default. Instead, it first tries to reach out
+    // to the network.
+    config.url = await swapHost(config.url);
 
-    const startTime = Date.now();
     // TODO: Handle redirects ourselves
     const req = networkRequest(config, async (err, networkResponse) => {
       if (err) {
@@ -97,7 +95,6 @@ export function _actuallySend (renderedRequest, settings) {
 
         await db.response.create({
           parentId: renderedRequest._id,
-          elapsedTime: Date.now() - startTime,
           error: message
         });
 
@@ -111,7 +108,6 @@ export function _actuallySend (renderedRequest, settings) {
 
         await db.response.create({
           parentId: renderedRequest._id,
-          elapsedTime: Date.now() - startTime,
           error: err.toString(),
           statusMessage: 'UNSUPPORTED'
         });
@@ -155,7 +151,7 @@ export function _actuallySend (renderedRequest, settings) {
 
       await db.response.create({
         parentId: renderedRequest._id,
-        elapsedTime: Date.now() - startTime,
+        elapsedTime: Date.now() - requestStartTime,
         statusMessage: 'Cancelled',
         error: 'The request was cancelled'
       });

@@ -6,7 +6,6 @@ import * as db from '../index';
 
 export const type = 'Request';
 export const prefix = 'req';
-export const slug = 'request';
 
 export function init () {
   return db.initModel({

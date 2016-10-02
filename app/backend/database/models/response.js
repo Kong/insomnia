@@ -2,7 +2,6 @@ import * as db from '../index';
 
 export const type = 'Response';
 export const prefix = 'res';
-export const slug = 'response';
 export function init () {
   return db.initModel({
     statusCode: 0,

@@ -15,17 +15,12 @@ export async function swapHost (url) {
 
   try {
     ip = await lookup(url);
+    const parsedUrl = urlParse(url);
+    delete parsedUrl.host; // So it doesn't build with old host
+    parsedUrl.hostname = ip;
+    return urlFormat(parsedUrl);
   } catch (e) {
     // Fail silently. It's OK
     return url;
   }
-
-  const parsedUrl = urlParse(url);
-
-  // So it won't build to the old one value still
-  delete parsedUrl.host;
-
-  parsedUrl.hostname = ip;
-
-  return urlFormat(parsedUrl);
 }

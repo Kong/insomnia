@@ -4,7 +4,6 @@ const db = require('../index');
 
 export const type = 'Stats';
 export const prefix = 'sta';
-export const slug = 'stats';
 export function init () {
   return db.initModel({
     lastLaunch: Date.now(),

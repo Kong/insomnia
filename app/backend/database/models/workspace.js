@@ -3,7 +3,6 @@ import {DEFAULT_SIDEBAR_WIDTH} from '../../constants';
 
 export const type = 'Workspace';
 export const prefix = 'wrk';
-export const slug = 'workspace';
 export function init () {
   return db.initModel({
     name: 'New Workspace',

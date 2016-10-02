@@ -4,7 +4,6 @@ const db = require('../index');
 
 export const type = 'Environment';
 export const prefix = 'env';
-export const slug = 'environment';
 export function init () {
   return db.initModel({
     name: 'New Environment',
