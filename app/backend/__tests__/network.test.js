@@ -100,7 +100,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(renderedRequest, settings);
     expect(mock.basePath).toBe('http://127.0.0.1:80');
-    expect(response.url).toBe('http://127.0.0.1/?foo%20bar=hello%26world');
+    expect(response.url).toBe('http://localhost/?foo%20bar=hello%26world');
     expect(response.body).toBe('response body');
     expect(response.statusCode).toBe(200);
   });

@@ -1,5 +1,4 @@
 import {CookieJar} from 'tough-cookie';
-import request from 'request';
 import * as cookieUtils from '../cookies';
 
 describe('jarFromCookies()', () => {
@@ -10,7 +9,7 @@ describe('jarFromCookies()', () => {
       domain: 'google.com'
     }]);
 
-    jar._jar.store.getAllCookies((err, cookies) => {
+    jar.store.getAllCookies((err, cookies) => {
       expect(cookies[0].domain).toEqual('google.com');
       expect(cookies[0].key).toEqual('foo');
       expect(cookies[0].value).toEqual('bar');
@@ -31,8 +30,7 @@ describe('cookiesFromJar()', () => {
       expires: d
     }];
 
-    const jar = request.jar();
-    jar._jar = CookieJar.fromJSON({cookies: initialCookies});
+    const jar= CookieJar.fromJSON({cookies: initialCookies});
 
     const cookies = await cookieUtils.cookiesFromJar(jar);
 
