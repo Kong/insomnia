@@ -25,7 +25,7 @@ echo "-- COPYING REMAINING FILES --"
 cp app/package.json "$BUILD_DIR"
 
 # Copy some things
-cp -r app/ui/external assets/* app/main.js "$BUILD_DIR/"
+cp -r app/external assets/* app/main.js "$BUILD_DIR/"
 
 echo "-- INSTALLING PACKAGES --"
 
