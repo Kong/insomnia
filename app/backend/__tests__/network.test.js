@@ -80,6 +80,15 @@ describe('actuallySend()', () => {
       key: 'foo',
       value: 'barrrrr',
       expires: new Date('2096-10-12T04:40:49.000Z'),
+      domain: 'notlocalhost',
+      path: '/',
+      hostOnly: true,
+      lastAccessed: new Date('2096-10-05T04:40:49.505Z')
+    }, {
+      creation: new Date('2016-10-05T04:40:49.505Z'),
+      key: 'foo',
+      value: 'barrrrr',
+      expires: new Date('2096-10-12T04:40:49.000Z'),
       domain: 'localhost',
       path: '/',
       hostOnly: true,
