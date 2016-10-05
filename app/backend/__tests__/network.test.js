@@ -2,6 +2,7 @@ import * as networkUtils from '../network';
 import * as db from '../database';
 import nock from 'nock';
 import {getRenderedRequest} from '../render';
+import * as cookies from '../cookies';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.initDB({inMemoryOnly: true}, true));
@@ -74,10 +75,26 @@ describe('actuallySend()', () => {
 
     const workspace = await db.workspace.create();
     const settings = await db.settings.create();
+    const cookies = [{
+      creation: new Date('2016-10-05T04:40:49.505Z'),
+      key: 'foo',
+      value: 'barrrrr',
+      expires: new Date('2096-10-12T04:40:49.000Z'),
+      domain: 'localhost',
+      path: '/',
+      hostOnly: true,
+      lastAccessed: new Date('2096-10-05T04:40:49.505Z')
+    }];
+
+    await db.cookieJar.create({
+      parentId: workspace._id,
+      cookies
+    });
 
     mock = nock('http://127.0.0.1')
       .matchHeader('Content-Type', 'application/json')
       .matchHeader('Authorization', 'Basic dXNlcjpwYXNz')
+      .matchHeader('Cookie', 'foo=barrrrr; Expires=Fri, 12 Oct 2096 04:40:49 GMT; Path=/')
       .post('/')
       .query({'foo bar': 'hello&world'})
       .reply(200, 'response body')

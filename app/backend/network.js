@@ -81,10 +81,11 @@ export function _actuallySend (renderedRequest, settings) {
     const jar = jarFromCookies(cookieJar.cookies);
     const existingCookieHeaderName = Object.keys(config.headers).find(k => k.toLowerCase() === 'cookie');
     const cookieString = await cookieHeaderValueForUri(jar, config.url);
+
     if (cookieString && existingCookieHeaderName) {
       config.headers[existingCookieHeaderName] += `; ${cookieString}`;
     } else if (cookieString) {
-      config.headers['cookie'] = cookieString;
+      config.headers['Cookie'] = cookieString;
     }
 
     // Do DNS lookup ourselves
