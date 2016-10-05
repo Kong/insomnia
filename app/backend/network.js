@@ -8,7 +8,6 @@ import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol} from './util';
 import {getRenderedRequest} from './render';
 import {swapHost} from './dns';
-import {cookieHeaderForUri} from './cookies';
 import {cookieHeaderValueForUri} from './cookies';
 
 let cancelRequestFunction = null;
@@ -142,7 +141,11 @@ export function _actuallySend (renderedRequest, settings) {
       // Update the cookie jar
       // NOTE: Since we're doing own DNS, we can't rely on Request to do this
       for (const h of util.getSetCookieHeaders(headers)) {
-        jar.setCookieSync(h.value, originalUrl);
+        try {
+          jar.setCookieSync(h.value, originalUrl);
+        } catch (e) {
+          console.warn('Failed to parse set-cookie', h.value);
+        }
       }
       const cookies = await cookiesFromJar(jar);
       await db.cookieJar.update(cookieJar, {cookies});

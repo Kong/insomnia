@@ -23,10 +23,11 @@ const ResponseCookiesViewer = ({headers, showCookiesModal}) => {
         <tbody>
         {headers.map((h, i) => {
           const cookie = Cookie.parse(h.value);
+
           return (
             <tr className="selectable" key={i}>
-              <td>{cookie.key}</td>
-              <td className="force-wrap">{cookie.value}</td>
+              <td>{cookie ? cookie.key : 'n/a'}</td>
+              <td className="force-wrap">{cookie ? cookie.value : 'malformed set-cookie header'}</td>
             </tr>
           );
         })}

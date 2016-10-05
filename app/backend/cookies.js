@@ -30,7 +30,7 @@ export function cookieHeaderValueForUri (jar, uri) {
       if (err) {
         reject(err)
       } else {
-        resolve(cookies.join('; '));
+        resolve(cookies.map(c => c.cookieString()).join('; '));
       }
     })
   })

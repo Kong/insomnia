@@ -2,7 +2,6 @@ import * as networkUtils from '../network';
 import * as db from '../database';
 import nock from 'nock';
 import {getRenderedRequest} from '../render';
-import * as cookies from '../cookies';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.initDB({inMemoryOnly: true}, true));
@@ -103,7 +102,7 @@ describe('actuallySend()', () => {
     mock = nock('http://127.0.0.1')
       .matchHeader('Content-Type', 'application/json')
       .matchHeader('Authorization', 'Basic dXNlcjpwYXNz')
-      .matchHeader('Cookie', 'foo=barrrrr; Expires=Fri, 12 Oct 2096 04:40:49 GMT; Path=/')
+      .matchHeader('Cookie', 'foo=barrrrr')
       .post('/')
       .query({'foo bar': 'hello&world'})
       .reply(200, 'response body')

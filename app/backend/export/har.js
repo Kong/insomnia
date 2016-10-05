@@ -38,8 +38,7 @@ export async function exportHar (requestId, addContentLength = false) {
 function getCookies (renderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = jar.getCookiesSync(renderedRequest.url);
-  return domainCookies.map(c => Object.assign(c, {
-    name: c.key,
-    expires: c.expires && c.expires.toISOString ? c.expires.toISOString() : undefined
+  return domainCookies.map(c => Object.assign(c.toJSON(), {
+    name: c.key
   }));
 }
