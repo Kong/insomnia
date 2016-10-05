@@ -1,5 +1,4 @@
 import {CookieJar} from 'tough-cookie';
-import request from 'request';
 
 /**
  * Get a list of cookie objects from a request.jar()
@@ -8,7 +7,7 @@ import request from 'request';
  */
 export function cookiesFromJar (jar) {
   return new Promise(resolve => {
-    jar._jar.store.getAllCookies((err, cookies) => {
+    jar.store.getAllCookies((err, cookies) => {
       if (err) {
         console.warn('Failed to get cookies form jar', err);
         resolve([]);
@@ -20,20 +19,35 @@ export function cookiesFromJar (jar) {
 }
 
 /**
+ * Get cookies header
+ * @param jar
+ * @param uri
+ * @returns {Promise}
+ */
+export function cookieHeaderValueForUri (jar, uri) {
+  return new Promise((resolve, reject) => {
+    jar.getCookies(uri, (err, cookies) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(cookies.join('; '));
+      }
+    })
+  })
+}
+
+/**
  * Get a request.jar() from a list of cookie objects
  *
  * @param cookies
  */
 export function jarFromCookies (cookies) {
-  const jar = request.jar();
-
   try {
-    jar._jar = CookieJar.fromJSON({cookies});
+    return CookieJar.fromJSON({cookies});
   } catch (e) {
     console.log('Failed to initialize cookie jar', e);
+    return new CookieJar();
   }
-
-  return jar;
 }
 
 export function cookieToString (cookie) {

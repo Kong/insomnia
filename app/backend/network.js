@@ -8,6 +8,8 @@ import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol} from './util';
 import {getRenderedRequest} from './render';
 import {swapHost} from './dns';
+import {cookieHeaderForUri} from './cookies';
+import {cookieHeaderValueForUri} from './cookies';
 
 let cancelRequestFunction = null;
 
@@ -59,9 +61,6 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
 export function _actuallySend (renderedRequest, settings) {
   return new Promise(async (resolve, reject) => {
-    const cookieJar = renderedRequest.cookieJar;
-    const jar = jarFromCookies(cookieJar.cookies);
-
     // Detect and set the proxy based on the request protocol
     // NOTE: request does not have a separate settings for http/https proxies
     const {protocol} = urlParse(renderedRequest.url);
@@ -70,17 +69,29 @@ export function _actuallySend (renderedRequest, settings) {
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
     const config = _buildRequestConfig(renderedRequest, {
-      jar: jar,
+      jar: null, // We're doing our own cookies
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
       timeout: settings.timeout > 0 ? settings.timeout : null,
       rejectUnauthorized: settings.validateSSL
     }, true);
 
+    // Add the cookie header to the request
+    const cookieJar = renderedRequest.cookieJar;
+    const jar = jarFromCookies(cookieJar.cookies);
+    const existingCookieHeaderName = Object.keys(config.headers).find(k => k.toLowerCase() === 'cookie');
+    const cookieString = await cookieHeaderValueForUri(jar, config.url);
+    if (cookieString && existingCookieHeaderName) {
+      config.headers[existingCookieHeaderName] += `; ${cookieString}`;
+    } else if (cookieString) {
+      config.headers['cookie'] = cookieString;
+    }
+
     // Do DNS lookup ourselves
     // We don't want to let NodeJS do DNS, because it doesn't use
     // getaddrinfo by default. Instead, it first tries to reach out
     // to the network.
+    const originalUrl = config.url;
     config.url = await swapHost(config.url);
 
     // TODO: Handle redirects ourselves
@@ -116,10 +127,6 @@ export function _actuallySend (renderedRequest, settings) {
         return reject(err);
       }
 
-      // Update the cookie jar
-      const cookies = await cookiesFromJar(jar);
-      db.cookieJar.update(cookieJar, {cookies});
-
       // Format the headers into Insomnia format
       // TODO: Move this to a better place
       const headers = [];
@@ -131,12 +138,20 @@ export function _actuallySend (renderedRequest, settings) {
         }
       }
 
+      // Update the cookie jar
+      // NOTE: Since we're doing own DNS, we can't rely on Request to do this
+      for (const h of util.getSetCookieHeaders(headers)) {
+        jar.setCookieSync(h.value, originalUrl);
+      }
+      const cookies = await cookiesFromJar(jar);
+      await db.cookieJar.update(cookieJar, {cookies});
+
       const responsePatch = {
         parentId: renderedRequest._id,
         statusCode: networkResponse.statusCode,
         statusMessage: networkResponse.statusMessage,
         contentType: networkResponse.headers['content-type'],
-        url: config.url, // TODO: Handle redirects somehow
+        url: originalUrl, // TODO: Handle redirects somehow
         elapsedTime: networkResponse.elapsedTime,
         bytesRead: networkResponse.connection.bytesRead,
         body: networkResponse.body,

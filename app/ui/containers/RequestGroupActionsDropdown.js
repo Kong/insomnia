@@ -100,6 +100,7 @@ RequestGroupActionsDropdown.propTypes = {
   entities: PropTypes.shape({
     workspaces: PropTypes.object.isRequired
   }).isRequired,
+
   workspaces: PropTypes.shape({
     activeId: PropTypes.string
   }),

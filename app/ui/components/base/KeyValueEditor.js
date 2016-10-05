@@ -257,6 +257,8 @@ class KeyValueEditor extends Component {
 KeyValueEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   pairs: PropTypes.array.isRequired,
+
+  // Optional
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
