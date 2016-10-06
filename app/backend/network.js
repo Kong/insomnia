@@ -102,7 +102,8 @@ export function _actuallySend (renderedRequest, settings) {
 
         let message = err.toString();
         if (isShittyParseError) {
-          message = 'Could not parse malformed response.'
+          message = `Error parsing response after ${err.bytesParsed} bytes.\n\n`;
+          message += `Code: ${err.code}`;
         }
 
         await db.response.create({

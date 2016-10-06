@@ -42,15 +42,22 @@ export function cookieHeaderValueForUri (jar, uri) {
  * @param cookies
  */
 export function jarFromCookies (cookies) {
+  let jar;
+
   try {
     // For some reason, fromJSON modifies `cookies`. Create a copy first
     // just to be sure
     const copy = JSON.stringify({cookies});
-    return CookieJar.fromJSON(copy);
+    jar = CookieJar.fromJSON(copy);
   } catch (e) {
     console.log('Failed to initialize cookie jar', e);
-    return new CookieJar();
+    jar = new CookieJar();
   }
+
+  jar.rejectPublicSuffixes = false;
+  jar.looseMode = true;
+
+  return jar
 }
 
 export function cookieToString (cookie) {
