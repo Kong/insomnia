@@ -1,5 +1,3 @@
-'use strict';
-
 import {PREVIEW_MODE_SOURCE} from '../../previewModes';
 import {METHOD_GET} from '../../constants';
 import * as db from '../index';
