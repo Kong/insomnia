@@ -9,13 +9,23 @@
     right: 0;
     left: 0;
     bottom: 0;
-    background: @bg-backdrop;
+    background: fade(@bg-super-dark, 80%);
     z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    text-align: center;
+
+    &.response-pane__overlay--under {
+      background: none;
+      z-index: 9;
+    }
+
+    & > * {
+      max-width: 30rem;
+    }
 
     .btn--outlined {
       background: @bg-super-dark;

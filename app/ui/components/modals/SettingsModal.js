@@ -10,8 +10,8 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import KeyboardShortcutsTable from '../KeyboardShortcutsTable';
 import * as GlobalActions from '../../redux/modules/global';
-import * as db from 'backend/database';
-import {getAppVersion, getAppName, getAppLongName} from 'backend/appInfo';
+import * as db from '../../../backend/database';
+import {getAppVersion, getAppName, getAppLongName} from '../../../backend/appInfo';
 
 
 class SettingsTabs extends Component {

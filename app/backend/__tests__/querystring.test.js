@@ -1,6 +1,4 @@
-'use strict';
-
-const querystringUtils = require('../querystring');
+import * as querystringUtils from '../querystring';
 
 describe('getBasicAuthHeader()', () => {
   it('gets joiner for bare URL', () => {
@@ -87,7 +85,7 @@ describe('buildFromParams()', () => {
       {name: '', value: ''},
     ], false);
 
-    expect(str).toBe('foo=bar%3F%3F&hello=undefined&hi%20there=bar%3F%3F&=bar%3F%3F&=');
+    expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');
   });
 });
 

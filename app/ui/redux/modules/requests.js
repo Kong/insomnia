@@ -1,7 +1,7 @@
 import {combineReducers} from 'redux';
 
-import {trackEvent} from 'backend/analytics';
-import * as network from 'backend/network';
+import {trackEvent} from '../../../backend/analytics';
+import * as network from '../../../backend/network';
 
 export const REQUEST_CHANGE_FILTER = 'requests/filter';
 export const REQUEST_SEND_START = 'requests/start';
@@ -54,16 +54,17 @@ export default combineReducers({
 // ~~~~~~~ //
 
 export function send(request) {
-  return dispatch => {
+  return async function (dispatch) {
     dispatch({type: REQUEST_SEND_START, requestId: request._id});
 
     trackEvent('Request Send');
 
-    network.send(request._id).then(response => {
+    try {
+      await network.send(request._id);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
-    }, err => {
-      console.info('Error sending request', err);
+    } catch (e) {
+      // console.info('Error sending request', e);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
-    });
+    }
   }
 }

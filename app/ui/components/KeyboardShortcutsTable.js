@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {MOD_SYM} from 'backend/constants';
+import {MOD_SYM} from '../../backend/constants';
 
 const KeyboardShortcutsTable = () => (
   <table className="wide">

@@ -2,7 +2,9 @@
   "presets": ["es2015", "react"],
   "plugins": [
     "transform-object-rest-spread",
-    "add-module-exports"
+    "add-module-exports",
+    "transform-regenerator",
+    "transform-runtime"
   ],
   "env": {
     "development": {

@@ -1,7 +1,5 @@
-'use strict';
-
-const request = require('request');
-const db = require('../database');
+import request from 'request';
+import * as db  from '../database';
 
 const WHITE_LIST = {
   [db.request.type]: true,
@@ -13,34 +11,30 @@ const WHITE_LIST = {
 
 const BASE_URL = 'https://o90qg2me5g.execute-api.us-east-1.amazonaws.com/dev/v1';
 
-module.exports.initSync = () => {
-  return new Promise(resolve => {
+export function initSync () {
 
-    // ~~~~~~~~~~ //
-    // SETUP PUSH //
-    // ~~~~~~~~~~ //
+  // ~~~~~~~~~~ //
+  // SETUP PUSH //
+  // ~~~~~~~~~~ //
 
-    db.onChange(changes => {
-      for (const [event, doc] of changes) {
-        // Only sync certain models
-        if (!WHITE_LIST[doc.type]) {
-          return;
-        }
-
-        addChange(event, doc);
+  db.onChange(changes => {
+    for (const [event, doc] of changes) {
+      // Only sync certain models
+      if (!WHITE_LIST[doc.type]) {
+        return;
       }
-    });
 
-    // ~~~~~~~~~~ //
-    // SETUP PULL //
-    // ~~~~~~~~~~ //
-
-    setTimeout(fullSync, 300);
-    setInterval(fullSync, 10000);
-
-    resolve();
+      addChange(event, doc);
+    }
   });
-};
+
+  // ~~~~~~~~~~ //
+  // SETUP PULL //
+  // ~~~~~~~~~~ //
+
+  setTimeout(fullSync, 300);
+  setInterval(fullSync, 10000);
+}
 
 
 // ~~~~~~~ //
@@ -113,102 +107,93 @@ function commitChange (event, doc) {
   });
 }
 
-function fullSync () {
-  const promises = Object.keys(WHITE_LIST).map(type => db.all(type));
-  Promise.all(promises).then(results => {
-    const allDocs = [];
-    for (const docs of results) {
-      for (const doc of docs) {
-        allDocs.push(doc);
-      }
+async function fullSync () {
+  const allDocs = [];
+  for (const type of Object.keys(WHITE_LIST)) {
+    for (const doc of await db.all(type)) {
+      allDocs.push(doc)
+    }
+  }
+
+  const items = allDocs.map(r => [r._id, r._etag]);
+
+  const config = {
+    method: 'POST',
+    url: `${BASE_URL}/sync`,
+    json: true,
+    body: items
+  };
+
+  request(config, async (err, response) => {
+    if (err) {
+      console.error('Failed to sync changes', err);
+      return;
     }
 
-    const items = allDocs.map(r => [r._id, r._etag]);
+    if (response.statusCode !== 200) {
+      console.warn('Failed to sync changes', response.body);
+      return;
+    }
 
-    const config = {
-      method: 'POST',
-      url: `${BASE_URL}/sync`,
-      json: true,
-      body: items
-    };
+    if (!response.body.success) {
+      console.warn('Failed to sync changes', response.body);
+      return;
+    }
 
-    request(config, (err, response) => {
-      if (err) {
-        console.error('Failed to sync changes', err);
-        return;
+    const changes = response.body.data;
+    const {
+      ids_to_push: idsToPush,
+      ids_to_remove: idsToRemove,
+      updated_docs: updatedDocs,
+      created_docs: createdDocs
+    } = changes;
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+    // Insert all the created docs to the DB //
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+    await createdDocs.map(d => db.insert(d, true));
+    if (createdDocs.length) {
+      console.log(`Sync created ${createdDocs.length} docs`, createdDocs);
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+    // Save all the updated docs to the DB //
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+    await updatedDocs.map(d => db.update(d, true));
+    if (updatedDocs.length) {
+      console.log(`Sync updated ${updatedDocs.length} docs`, updatedDocs);
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+    // Remove all the docs that need removing //
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+    for (const idToRemove of idsToRemove) {
+      const doc = allDocs.find(d => d._id === idToRemove);
+
+      if (!doc) {
+        throw new Error(`Could not find ID to remove ${idToRemove}`)
       }
 
-      if (response.statusCode !== 200) {
-        console.warn('Failed to sync changes', response.body);
-        return;
+      console.log('REMOVING ID', idToRemove);
+      await db.remove(doc, true);
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+    // Push all the docs that need pushing //
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+    for (const idToPush of idsToPush) {
+      const doc = allDocs.find(d => d._id === idToPush);
+
+      if (!doc) {
+        throw new Error(`Could not find ID to push ${idToPush}`)
       }
 
-      if (!response.body.success) {
-        console.warn('Failed to sync changes', response.body);
-        return;
-      }
-
-      const changes = response.body.data;
-      const {
-        ids_to_push: idsToPush,
-        ids_to_remove: idsToRemove,
-        updated_docs: updatedDocs,
-        created_docs: createdDocs
-      } = changes;
-
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-      // Insert all the created docs to the DB //
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-
-      const createPromises = createdDocs.map(d => db.insert(d, true));
-      Promise.all(createPromises).then(docs => {
-        const count = createdDocs.length;
-        if (count) {
-          console.log(`Sync created ${count} docs`, createdDocs);
-        }
-      });
-
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-      // Save all the updated docs to the DB //
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-
-      const updatePromises = updatedDocs.map(d => db.update(d, true));
-      Promise.all(updatePromises).then(docs => {
-        const count = updatedDocs.length;
-        if (count) {
-          console.log(`Sync updated ${count} docs`, updatedDocs);
-        }
-      });
-
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-      // Remove all the docs that need removing //
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-
-      for (const idToRemove of idsToRemove) {
-        const doc = allDocs.find(d => d._id === idToRemove);
-
-        if (!doc) {
-          throw new Error(`Could not find ID to remove ${idToRemove}`)
-        }
-
-        console.log('REMOVING ID', idToRemove);
-        db.remove(doc, true);
-      }
-
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-      // Push all the docs that need pushing //
-      // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-
-      for (const idToPush of idsToPush) {
-        const doc = allDocs.find(d => d._id === idToPush);
-
-        if (!doc) {
-          throw new Error(`Could not find ID to push ${idToPush}`)
-        }
-
-        console.log('PUSHING ID', idToPush);
-        addChange(db.CHANGE_UPDATE, doc)
-      }
-    });
+      console.log('PUSHING ID', idToPush);
+      addChange(db.CHANGE_UPDATE, doc)
+    }
   });
 }

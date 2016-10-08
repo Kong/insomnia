@@ -10,10 +10,10 @@ import AuthEditor from './editors/AuthEditor';
 import {UrlBar} from './UrlBar.elm';
 import ElmComponent from './ElmComponent';
 
-import {getContentTypeName} from 'backend/contentTypes';
-import {getContentTypeFromHeaders} from 'backend/contentTypes';
-import {MOD_SYM} from 'backend/constants';
-import {trackEvent} from 'backend/analytics';
+import {getContentTypeName} from '../../backend/contentTypes';
+import {getContentTypeFromHeaders} from '../../backend/contentTypes';
+import {MOD_SYM} from '../../backend/constants';
+import {trackEvent} from '../../backend/analytics';
 import {debounce} from '../lib/debounce';
 
 class RequestPane extends Component {
@@ -171,19 +171,18 @@ class RequestPane extends Component {
               />
             </div>
           </TabPanel>
-          <TabPanel className="scrollable-container">
-            <div className="scrollable">
-              <RequestHeadersEditor
-                headers={request.headers}
-                onChange={updateRequestHeaders}
-                bulk={useBulkHeaderEditor}
-              />
-              <div className="pad no-pad-top text-right">
-                <button className="btn btn--outlined btn--super-compact"
-                        onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
-                  {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-                </button>
-              </div>
+          <TabPanel className="header-editor">
+            <RequestHeadersEditor
+              headers={request.headers}
+              onChange={updateRequestHeaders}
+              bulk={useBulkHeaderEditor}
+            />
+
+            <div className="pad-right text-right">
+              <button className="margin-top-sm btn btn--outlined btn--super-compact"
+                      onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
+                {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+              </button>
             </div>
           </TabPanel>
         </Tabs>

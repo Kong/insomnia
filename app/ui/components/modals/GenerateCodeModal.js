@@ -8,7 +8,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import {exportHar} from 'backend/export/har';
+import {exportHar} from '../../../backend/export/har';
 
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
 const DEFAULT_CLIENT = DEFAULT_TARGET.clients.find(t => t.key === 'curl');
@@ -53,16 +53,15 @@ class GenerateCodeModal extends Component {
     this._generateCode(this.state.request, target, client);
   }
 
-  _generateCode (request, target, client) {
+  async _generateCode (request, target, client) {
     // Some clients need a content-length for the request to succeed
     const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
 
-    exportHar(request._id, addContentLength).then(har => {
-      const snippet = new HTTPSnippet(har);
-      const cmd = snippet.convert(target.key, client.key);
+    const har = await exportHar(request._id, addContentLength);
+    const snippet = new HTTPSnippet(har);
+    const cmd = snippet.convert(target.key, client.key);
 
-      this.setState({request, cmd, client, target});
-    });
+    this.setState({request, cmd, client, target});
   }
 
   show (request) {
@@ -115,7 +114,8 @@ class GenerateCodeModal extends Component {
               </ul>
             </Dropdown>
             &nbsp;&nbsp;
-            <CopyButton content={cmd} className="pull-right btn btn--super-compact btn--outlined"/>
+            <CopyButton content={cmd}
+                        className="pull-right btn btn--super-compact btn--outlined"/>
           </div>
           <Editor
             className="border-top"
@@ -129,7 +129,8 @@ class GenerateCodeModal extends Component {
         </ModalBody>
         <ModalFooter>
           <div className="pull-right">
-            <button className="btn" onClick={e => this.modal.hide()}>Done</button>
+            <button className="btn" onClick={e => this.modal.hide()}>Done
+            </button>
           </div>
           <div className="pad faint italic txt-sm tall">
             * copy/paste this command into a Unix terminal

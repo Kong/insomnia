@@ -1,47 +1,46 @@
-'use strict';
+import * as db from '../index';
+import {DEFAULT_SIDEBAR_WIDTH} from '../../constants';
 
-const db = require('../index');
-const {DEFAULT_SIDEBAR_WIDTH} = require('../../constants');
-
-module.exports.type = 'Workspace';
-module.exports.prefix = 'wrk';
-module.exports.slug = 'workspace';
-module.exports.init = () => db.initModel({
-  name: 'New Workspace',
-  metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-  metaActiveEnvironmentId: null,
-  metaActiveRequestId: null,
-  metaFilter: '',
-  metaSidebarHidden: false
-});
-
-module.exports.getById = id => {
-  return db.get(module.exports.type, id);
-};
-
-module.exports.create = (patch = {}) => {
-  return db.docCreate(module.exports.type, patch);
-};
-
-module.exports.all = () => {
-  return db.all(module.exports.type).then(workspaces => {
-    if (workspaces.length === 0) {
-      return module.exports.create({name: 'Insomnia'})
-        .then(module.exports.all);
-    } else {
-      return new Promise(resolve => resolve(workspaces))
-    }
+export const type = 'Workspace';
+export const prefix = 'wrk';
+export function init () {
+  return db.initModel({
+    name: 'New Workspace',
+    metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    metaActiveEnvironmentId: null,
+    metaActiveRequestId: null,
+    metaFilter: '',
+    metaSidebarHidden: false
   });
-};
+}
 
-module.exports.count = () => {
-  return db.count(module.exports.type)
-};
+export function getById (id) {
+  return db.get(type, id);
+}
 
-module.exports.update = (workspace, patch) => {
+export function create (patch = {}) {
+  return db.docCreate(type, patch);
+}
+
+export async function all () {
+  const workspaces = await db.all(type);
+
+  if (workspaces.length === 0) {
+    await create({name: 'Insomnia'});
+    return await all();
+  } else {
+    return workspaces;
+  }
+}
+
+export function count () {
+  return db.count(type)
+}
+
+export function update (workspace, patch) {
   return db.docUpdate(workspace, patch);
-};
+}
 
-module.exports.remove = workspace => {
+export function remove (workspace) {
   return db.remove(workspace);
-};
+}

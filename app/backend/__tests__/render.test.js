@@ -1,28 +1,26 @@
-'use strict';
-
-const render = require('../render');
-const db = require('../database');
+import * as renderUtils from '../render';
+import * as db from '../database';
 
 jest.mock('electron');
 
 describe('render()', () => {
   it('renders hello world', () => {
-    const rendered = render.render('Hello {{ msg }}!', {msg: 'World'});
+    const rendered = renderUtils.render('Hello {{ msg }}!', {msg: 'World'});
     expect(rendered).toBe('Hello World!');
   });
 
   it('renders custom tag: uuid', () => {
-    const rendered = render.render('Hello {% uuid %}!');
+    const rendered = renderUtils.render('Hello {% uuid %}!');
     expect(rendered).toBe('Hello b5c2f089-2c0c-46b6-a6f1-8d5b86cbc603!');
   });
 
   it('renders custom tag: timestamp', () => {
-    const rendered = render.render('Hello {% timestamp %}!');
+    const rendered = renderUtils.render('Hello {% timestamp %}!');
     expect(rendered).toMatch(/Hello \d{13}!/);
   });
 
   it('fails on invalid template', () => {
-    const fn = () => render.render('Hello {{ msg }!', {msg: 'World'});
+    const fn = () => renderUtils.render('Hello {{ msg }!', {msg: 'World'});
     expect(fn).toThrowError('expected variable end');
   });
 });
@@ -47,7 +45,7 @@ describe('buildRenderContext()', () => {
       data: {foo: 'sub', sub: true}
     };
 
-    const context = render.buildRenderContext(
+    const context = renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
       subEnvironment
@@ -80,7 +78,7 @@ describe('buildRenderContext()', () => {
       data: {foo: 'sub', sub: true}
     };
 
-    const context = render.buildRenderContext(
+    const context = renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
       subEnvironment
@@ -101,7 +99,7 @@ describe('buildRenderContext()', () => {
     const rootEnvironment = null;
     const subEnvironment = null;
 
-    const context = render.buildRenderContext(
+    const context = renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
       subEnvironment
@@ -113,7 +111,7 @@ describe('buildRenderContext()', () => {
 
 describe('recursiveRender()', () => {
   it('correctly renders simple Object', () => {
-    const newObj = render.recursiveRender({
+    const newObj = renderUtils.recursiveRender({
       foo: '{{ foo }}',
       bar: 'bar',
       baz: '{{ bad }}'
@@ -140,7 +138,7 @@ describe('recursiveRender()', () => {
       }
     };
 
-    const newObj = render.recursiveRender(obj, {foo: 'bar'});
+    const newObj = renderUtils.recursiveRender(obj, {foo: 'bar'});
 
     expect(newObj).toEqual({
       foo: 'bar',
@@ -161,7 +159,7 @@ describe('recursiveRender()', () => {
   });
 
   it('fails on bad template', () => {
-    const fn = () => render.recursiveRender({
+    const fn = () => renderUtils.recursiveRender({
       foo: '{{ foo }',
       bar: 'bar',
       baz: '{{ bad }}'

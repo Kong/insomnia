@@ -12,10 +12,10 @@ import './css/lib/fonts/open-sans.css';
 import './css/index.less';
 import './css/lib/chrome/platform_app.css';
 import {initStore} from './redux/initstore';
-import {initDB} from 'backend/database';
-import {initSync} from 'backend/sync';
-import {getAppVersion} from 'backend/appInfo';
-import {initAnalytics} from 'backend/analytics';
+import {initDB} from '../backend/database';
+import {initSync} from '../backend/sync';
+import {getAppVersion} from '../backend/appInfo';
+import {initAnalytics} from '../backend/analytics';
 
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
@@ -24,14 +24,14 @@ export const store = createStore();
 
 console.log(`-- Loading App v${getAppVersion()} --`);
 
-initDB()
-  .then(() => initStore(store.dispatch))
-  .then(() => initSync())
-  .then(() => initAnalytics()) // Must be after because we don't want to track the initial stuff
-  .then(() => {
-    console.log('-- Rendering App --');
-    render(
-      <Provider store={store}><App /></Provider>,
-      document.getElementById('root')
-    );
-  });
+(async function () {
+  await initDB();
+  await initSync();
+  await initStore(store.dispatch);
+  await initAnalytics();
+  console.log('-- Rendering App --');
+  render(
+    <Provider store={store}><App /></Provider>,
+    document.getElementById('root')
+  );
+})();

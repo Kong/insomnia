@@ -6,7 +6,6 @@ import JSONPath from 'jsonpath-plus';
 import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
 import xpath from 'xpath';
-import {DEBOUNCE_MILLIS} from 'backend/constants';
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/javascript/javascript';
@@ -42,7 +41,8 @@ import '../../css/components/editor.less';
 import {getModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
-import {trackEvent} from 'backend/analytics';
+import {DEBOUNCE_MILLIS} from '../../../backend/constants';
+import {trackEvent} from '../../../backend/analytics';
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -162,15 +162,14 @@ class Editor extends Component {
     trackEvent('Beautify', {mode: this.props.mode});
   }
 
-  _prettify (code) {
-    let promise;
+  async _prettify (code) {
     if (this._isXML(this.props.mode)) {
-      promise = this._formatXML(code);
+      code = this._formatXML(code);
     } else {
-      promise = this._formatJSON(code);
+      code = this._formatJSON(code);
     }
 
-    promise.then(code => this.codeMirror.setValue(code));
+    this.codeMirror.setValue(code);
   }
 
   _formatJSON (code) {
@@ -181,12 +180,11 @@ class Editor extends Component {
         obj = JSONPath({json: obj, path: this.state.filter});
       }
 
-      code = JSON.stringify(obj);
+      return vkBeautify.json(obj, '\t');
     } catch (e) {
       // That's Ok, just leave it
+      return code;
     }
-
-    return Promise.resolve(vkBeautify.json(code, '\t'));
   }
 
   _formatXML (code) {
@@ -202,7 +200,12 @@ class Editor extends Component {
       }
     }
 
-    return Promise.resolve(vkBeautify.xml(code, '\t'));
+    try {
+      return vkBeautify.xml(code, '\t');
+    } catch (e) {
+      // Failed to parse so just return original
+      return code;
+    }
   }
 
   /**
@@ -342,7 +345,10 @@ class Editor extends Component {
   }
 
   componentDidUpdate () {
-    this._codemirrorSetOptions();
+    // Don't don it sync because it might block the UI
+    setTimeout(() => {
+      this._codemirrorSetOptions();
+    }, 50);
   }
 
   render () {

@@ -4,8 +4,8 @@
 set -e
 
 NODE_VERSION="$(node --version)"
-if [ "$NODE_VERSION" != "v5.1.1" ]; then
-    echo "ERROR: Node version should be 5.1.1, got $NODE_VERSION instead"
+if [ "$NODE_VERSION" != "v6.4.0" ]; then
+    echo "ERROR: Node version should be 6.4.0, got $NODE_VERSION instead"
     exit 1
 fi
 
@@ -25,7 +25,7 @@ echo "-- COPYING REMAINING FILES --"
 cp app/package.json "$BUILD_DIR"
 
 # Copy some things
-cp -r app/ui/external assets/* app/main.js "$BUILD_DIR/"
+cp -r app/external assets/* app/main.js "$BUILD_DIR/"
 
 echo "-- INSTALLING PACKAGES --"
 

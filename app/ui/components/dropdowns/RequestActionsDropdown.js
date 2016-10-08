@@ -1,25 +1,24 @@
 import React, {Component, PropTypes} from 'react';
-import {connect} from 'react-redux';
-import PromptButton from '../components/base/PromptButton';
-import Dropdown from '../components/base/Dropdown';
-import DropdownHint from '../components/base/DropdownHint';
-import GenerateCodeModal from '../components/modals/GenerateCodeModal';
-import PromptModal from '../components/modals/PromptModal';
-import * as db from 'backend/database';
-import {getModal} from '../components/modals/index';
+import PromptButton from '../base/PromptButton';
+import Dropdown from '../base/Dropdown';
+import DropdownHint from '../base/DropdownHint';
+import GenerateCodeModal from '../modals/GenerateCodeModal';
+import PromptModal from '../modals/PromptModal';
+import * as db from '../../../backend/database';
+import {getModal} from '../modals/index';
 
 
 class RequestActionsDropdown extends Component {
-  _promptUpdateName () {
+  async _promptUpdateName () {
     const {request} = this.props;
 
-    getModal(PromptModal).show({
+    const name = await getModal(PromptModal).show({
       headerName: 'Rename Request',
       defaultValue: request.name,
       hint: 'also rename requests by double clicking in the sidebar'
-    }).then(name => {
-      db.request.update(request, {name});
-    })
+    });
+
+    db.request.update(request, {name});
   }
 
   render () {
@@ -63,15 +62,4 @@ RequestActionsDropdown.propTypes = {
   request: PropTypes.object.isRequired
 };
 
-function mapStateToProps (state) {
-  return {};
-}
-
-function mapDispatchToProps (dispatch) {
-  return {}
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(RequestActionsDropdown);
+export default RequestActionsDropdown;

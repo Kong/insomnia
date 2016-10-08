@@ -1,30 +1,32 @@
-'use strict';
+import * as util from './util.js';
 
-module.exports.getJoiner = url => {
+export function getJoiner (url) {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';
-};
+}
 
-module.exports.joinURL = (url, qs) => {
+export function joinURL (url, qs) {
   if (!qs) {
     return url;
   }
   url = url || '';
-  return url + module.exports.getJoiner(url) + qs;
-};
+  return url + getJoiner(url) + qs;
+}
 
-module.exports.build = (param, strict = true) => {
+export function build (param, strict = true) {
   // Skip non-name ones in strict mode
   if (strict && !param.name) {
     return '';
   }
 
   if (!strict || param.value) {
-    return encodeURIComponent(param.name) + '=' + encodeURIComponent(param.value);
+    const name = util.flexibleEncodeComponent(param.name || '');
+    const value = util.flexibleEncodeComponent(param.value || '');
+    return `${name}=${value}`
   } else {
-    return encodeURIComponent(param.name);
+    return util.flexibleEncodeComponent(param.name);
   }
-};
+}
 
 /**
  *
@@ -32,10 +34,10 @@ module.exports.build = (param, strict = true) => {
  * @param strict allow empty names and values
  * @returns {string}
  */
-module.exports.buildFromParams = (parameters, strict = true) => {
+export function buildFromParams (parameters, strict = true) {
   let items = [];
-  for (var i = 0; i < parameters.length; i++) {
-    let built = module.exports.build(parameters[i], strict);
+  for (const param of parameters) {
+    let built = build(param, strict);
 
     if (!built) {
       continue;
@@ -45,7 +47,7 @@ module.exports.buildFromParams = (parameters, strict = true) => {
   }
 
   return items.join('&');
-};
+}
 
 /**
  *
@@ -53,7 +55,7 @@ module.exports.buildFromParams = (parameters, strict = true) => {
  * @param strict allow empty names and values
  * @returns {Array}
  */
-module.exports.deconstructToParams = (qs, strict = true) => {
+export function deconstructToParams (qs, strict = true) {
   const stringPairs = qs.split('&');
   const pairs = [];
 
@@ -71,4 +73,4 @@ module.exports.deconstructToParams = (qs, strict = true) => {
   }
 
   return pairs;
-};
+}

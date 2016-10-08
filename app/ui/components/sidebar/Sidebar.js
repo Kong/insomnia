@@ -6,8 +6,8 @@ import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
-import {SIDEBAR_SKINNY_REMS} from 'backend/constants';
-import {COLLAPSE_SIDEBAR_REMS} from 'backend/constants';
+import {SIDEBAR_SKINNY_REMS} from '../../../backend/constants';
+import {COLLAPSE_SIDEBAR_REMS} from '../../../backend/constants';
 
 
 class Sidebar extends Component {

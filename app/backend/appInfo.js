@@ -1,23 +1,21 @@
-'use strict';
+import appJson from '../package.json';
 
-const appJson = require('../package.json');
-
-module.exports.getAppVersion = () => {
+export function getAppVersion () {
   return appJson.version;
-};
+}
 
-module.exports.getAppLongName = () => {
+export function getAppLongName () {
   return appJson.longName;
-};
+}
 
-module.exports.getAppName = () => {
+export function getAppName () {
   return appJson.productName;
-};
+}
 
-module.exports.isMac = () => {
+export function isMac () {
   return process.platform === 'darwin';
-};
+}
 
-module.exports.isDevelopment = () => {
+export function isDevelopment () {
   return process.env.INSOMNIA_ENV === 'development';
-};
+}
