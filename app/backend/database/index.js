@@ -50,7 +50,7 @@ export function initModel (doc) {
   return Object.assign({
     modified: Date.now(),
     created: Date.now(),
-    parentId: null
+    parentId: null,
 
     // Server-generated fields
     _etag: null,

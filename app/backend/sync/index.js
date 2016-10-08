@@ -9,7 +9,9 @@ const WHITE_LIST = {
   [db.cookieJar.type]: true
 };
 
-const BASE_URL = 'https://o90qg2me5g.execute-api.us-east-1.amazonaws.com/dev/v1';
+const BASE_URL = 'http://localhost:8000/api/v1/sync';
+const SESSION_ID = '40b83372e7663f9ed5f6949b4cbb1197bb57921da32d00d1101db8a3137aa08b';
+const RESOURCE_GROUP_ID = 'rsgr_5dfba4be2e4a4bcfa29997b8e070ecd2';
 
 export function initSync () {
 
@@ -58,33 +60,39 @@ function addChange (event, doc) {
 }
 
 function commitChange (event, doc) {
-  const path = {
-    [db.request.type]: 'requests',
-    [db.workspace.type]: 'workspaces',
-    [db.requestGroup.type]: 'requestgroups',
-    [db.environment.type]: 'environments',
-    [db.cookieJar.type]: 'cookiejars'
-  }[doc.type];
-
-  if (!path) {
-    return;
-  }
-
   console.log('CRUDDING DOC', doc._id);
 
   const config = {
-    url: `${BASE_URL}/${path}/${doc._id}`
+    url: `${BASE_URL}/push`,
+    headers: {
+      'X-Session-ID': SESSION_ID
+    }
   };
 
   if (event === db.CHANGE_INSERT || event === db.CHANGE_UPDATE) {
-    config.method = 'PUT';
+    config.method = 'POST';
     config.json = true;
-    config.body = doc;
+    config.body = [{
+      resourceId: doc._id,
+      resourceETag: doc._etag,
+      resourceGroupId: RESOURCE_GROUP_ID,
+      resourceDeleted: false,
+      resourceType: doc.type,
+      resourceContent: JSON.stringify(doc, null, 2)
+    }];
   } else if (event === db.CHANGE_REMOVE) {
-    config.method = 'DELETE';
+    config.method = 'POST';
+    config.json = true;
+    config.body = [{
+      resourceId: doc._id,
+      resourceETag: doc._etag,
+      resourceGroupId: RESOURCE_GROUP_ID,
+      resourceDeleted: true,
+      resourceType: doc.type
+    }];
   }
 
-  request(config, (err, response) => {
+  request(config, async (err, response) => {
     if (err) {
       console.error('Failed to push changes', err);
       return;
@@ -95,64 +103,99 @@ function commitChange (event, doc) {
       return;
     }
 
-    if (!response.body.success) {
-      console.warn('Failed to push change', response.body);
-      return;
-    }
-
     if (event !== db.CHANGE_REMOVE) {
-      const newDoc = response.body.data;
-      db.update(newDoc, true);
+      const allDocs = [];
+      for (const type of Object.keys(WHITE_LIST)) {
+        for (const doc of await db.all(type)) {
+          allDocs.push(doc);
+        }
+      }
+      // TODO: Replace all local ETAGs with ones returned in response
+      const {conflicts, updated, created, removed} = response.body;
+
+      for (const item of [...created, ...updated]) {
+        const existingDoc = allDocs.find(d => d._id == item.id);
+        await db.update(Object.assign(existingDoc, {
+          _etag: item.etag
+        }), true)
+      }
+
+      for (const resource of conflicts) {
+        const existingDoc = JSON.parse(resource.resourceContent);
+        console.log('RESOLVING CONFLICT FOR', resource, existingDoc);
+        await db.update(Object.assign(existingDoc, {
+          _etag: resource.resourceETag
+        }), true)
+      }
     }
   });
 }
 
 async function fullSync () {
   const allDocs = [];
+  const allResources = [];
   for (const type of Object.keys(WHITE_LIST)) {
     for (const doc of await db.all(type)) {
-      allDocs.push(doc)
+      allDocs.push(doc);
+      allResources.push({id: doc._id, etag: doc._etag});
     }
   }
 
-  const items = allDocs.map(r => [r._id, r._etag]);
-
   const config = {
     method: 'POST',
-    url: `${BASE_URL}/sync`,
+    url: `${BASE_URL}/pull`,
     json: true,
-    body: items
+    headers: {
+      'X-Session-ID': SESSION_ID
+    },
+    body: {
+      resourceGroupId: RESOURCE_GROUP_ID,
+      resources: allResources
+    }
   };
 
   request(config, async (err, response) => {
     if (err) {
-      console.error('Failed to sync changes', err);
+      console.error('Failed to sync changes', err, config);
       return;
     }
 
     if (response.statusCode !== 200) {
-      console.warn('Failed to sync changes', response.body);
+      console.warn(
+        'Failed to sync changes',
+        response.statusCode,
+        response.body,
+        config
+      );
       return;
     }
 
-    if (!response.body.success) {
-      console.warn('Failed to sync changes', response.body);
-      return;
-    }
-
-    const changes = response.body.data;
     const {
-      ids_to_push: idsToPush,
-      ids_to_remove: idsToRemove,
-      updated_docs: updatedDocs,
-      created_docs: createdDocs
-    } = changes;
+      updatedResources: updatedDocs,
+      createdResources: createdDocs,
+      resourceIdsToPush: idsToPush,
+      resourceIdsToRemove: idsToRemove
+    } = response.body;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
     // Insert all the created docs to the DB //
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-    await createdDocs.map(d => db.insert(d, true));
+    await createdDocs.map(resource => {
+      let oldDoc;
+      try {
+        oldDoc = JSON.parse(resource.resourceContent);
+      } catch (e) {
+        console.warn('Failed to decode resource', e, resource.resourceContent);
+        return;
+      }
+
+      const doc = Object.assign(oldDoc, {
+        _etag: resource.resourceETag,
+      });
+
+      return db.insert(doc, true);
+    });
     if (createdDocs.length) {
       console.log(`Sync created ${createdDocs.length} docs`, createdDocs);
     }
@@ -161,7 +204,20 @@ async function fullSync () {
     // Save all the updated docs to the DB //
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-    await updatedDocs.map(d => db.update(d, true));
+    await updatedDocs.map(resource => {
+      let oldDoc;
+      try {
+        oldDoc = JSON.parse(resource.resourceContent);
+      } catch (e) {
+        console.warn('Failed to decode resource', e, resource.resourceContent);
+        return;
+      }
+      const doc = Object.assign(oldDoc, {
+        _etag: resource.resourceETag,
+      });
+
+      return db.update(doc, true);
+    });
     if (updatedDocs.length) {
       console.log(`Sync updated ${updatedDocs.length} docs`, updatedDocs);
     }
