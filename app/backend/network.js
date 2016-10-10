@@ -39,7 +39,10 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     rejectUnauthorized: true,
 
     // Proxy
-    proxy: null
+    proxy: null,
+
+    // Use keep-alive by default
+    forever: true,
   };
 
   // Set the URL, including the query parameters
