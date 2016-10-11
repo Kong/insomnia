@@ -26,6 +26,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
     // Setup redirect rules
     followAllRedirects: true,
+    followRedirect: true,
     maxRedirects: 20,
     timeout: 0,
 
@@ -74,6 +75,7 @@ export function _actuallySend (renderedRequest, settings) {
       jar: null, // We're doing our own cookies
       proxy: proxy,
       followAllRedirects: settings.followRedirects,
+      followRedirect: settings.followRedirects,
       timeout: settings.timeout > 0 ? settings.timeout : null,
       rejectUnauthorized: settings.validateSSL
     }, true);

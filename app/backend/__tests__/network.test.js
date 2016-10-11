@@ -17,6 +17,7 @@ describe('buildRequestConfig()', () => {
     expect(config).toEqual({
       body: '',
       followAllRedirects: true,
+      followRedirect: true,
       forever: true,
       gzip: true,
       headers: {host: ''},
@@ -50,6 +51,7 @@ describe('buildRequestConfig()', () => {
     expect(config).toEqual({
       body: 'foo=bar',
       followAllRedirects: true,
+      followRedirect: true,
       forever: true,
       gzip: true,
       headers: {
