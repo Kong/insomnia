@@ -17,6 +17,8 @@ describe('buildRequestConfig()', () => {
     expect(config).toEqual({
       body: '',
       followAllRedirects: true,
+      followRedirect: true,
+      forever: true,
       gzip: true,
       headers: {host: ''},
       maxRedirects: 20,
@@ -37,7 +39,7 @@ describe('buildRequestConfig()', () => {
       parameters: [{name: 'foo bar', value: 'hello&world'}],
       method: 'POST',
       body: 'foo=bar',
-      url: 'http://foo.com:3332/★/foo%20bar?bar=baz',
+      url: 'http://foo.com:3332/★/hi@gmail.com/foo%20bar?bar=baz',
       authentication: {
         username: 'user',
         password: 'pass'
@@ -49,6 +51,8 @@ describe('buildRequestConfig()', () => {
     expect(config).toEqual({
       body: 'foo=bar',
       followAllRedirects: true,
+      followRedirect: true,
+      forever: true,
       gzip: true,
       headers: {
         'Content-Type': 'application/json',
@@ -61,7 +65,8 @@ describe('buildRequestConfig()', () => {
       rejectUnauthorized: true,
       time: true,
       timeout: 0,
-      url: 'http://foo.com:3332/%E2%98%85/foo%20bar?bar=baz&foo%20bar=hello%26world'
+      url: 'http://foo.com:3332/%E2%98%85/hi%40gmail.com/' +
+      'foo%20bar?bar=baz&foo%20bar=hello%26world'
     })
   })
 });

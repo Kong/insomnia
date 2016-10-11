@@ -60,30 +60,30 @@ export function flexibleEncodeComponent (str) {
   // Sometimes spaces screw things up because of url.parse
   str = str.replace(/%20/g, ' ');
 
-  let decodedPathname;
+  let decoded;
   try {
-    decodedPathname = decodeURIComponent(str);
+    decoded = decodeURIComponent(str);
   } catch (e) {
     // Malformed (probably not encoded) so assume it's decoded already
-    decodedPathname = str;
+    decoded = str;
   }
 
-  return encodeURIComponent(decodedPathname);
+  return encodeURIComponent(decoded);
 }
 
 export function flexibleEncode (str) {
   // Sometimes spaces screw things up because of url.parse
   str = str.replace(/%20/g, ' ');
 
-  let decodedPathname;
+  let decoded;
   try {
-    decodedPathname = decodeURI(str);
+    decoded = decodeURI(str);
   } catch (e) {
     // Malformed (probably not encoded) so assume it's decoded already
-    decodedPathname = str;
+    decoded = str;
   }
 
-  return encodeURI(decodedPathname);
+  return encodeURI(decoded);
 }
 
 export function prepareUrlForSending (url) {
@@ -96,9 +96,10 @@ export function prepareUrlForSending (url) {
   // 1. Pathname //
   // ~~~~~~~~~~~ //
 
-  parsedUrl.pathname = flexibleEncode(
-    parsedUrl.pathname || ''
-  );
+  if (parsedUrl.pathname) {
+    const segments = parsedUrl.pathname.split('/');
+    parsedUrl.pathname = segments.map(flexibleEncodeComponent).join('/');
+  }
 
   // ~~~~~~~~~~~~~~ //
   // 2. Querystring //

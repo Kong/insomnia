@@ -434,14 +434,9 @@ class App extends Component {
       lastVersion: getAppVersion()
     });
 
-    setInterval(() => {
-      ipcRenderer.send('check-for-updates');
-    }, CHECK_FOR_UPDATES_INTERVAL);
-
     ipcRenderer.on('toggle-preferences', () => {
       getModal(SettingsModal).toggle();
     });
-
 
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));
   }
