@@ -84,8 +84,8 @@
     "tough-cookie": "^2.3.1",
     "traverse": "^0.6.6",
     "vkbeautify": "^0.99.1",
-    "xpath": "^0.0.23",
-    "xmldom": "^0.1.22"
+    "xmldom": "^0.1.22",
+    "xpath": "^0.0.23"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",

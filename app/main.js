@@ -24,11 +24,11 @@ if (!IS_DEV) {
 }
 
 // Don't npm install this (it breaks). Rely on the global one.
-const electron = require('electron');
 const request = require('request');
 const path = require('path');
 const {version: appVersion, productName: appName} = require('./package.json');
 const {LocalStorage} = require('node-localstorage');
+const electron = require('electron');
 const {
   app,
   dialog,
@@ -38,7 +38,7 @@ const {
   Menu,
   BrowserWindow,
   webContents
-} = electron;
+} = require('electron');
 
 const UPDATE_URLS = {
   // Add `r` param to help cache bust
@@ -85,17 +85,17 @@ autoUpdater.on('update-available', () => {
 
 autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
   console.log(`-- Update Downloaded ${releaseName} --`);
-  showUpdateModal();
+  showUpdateNotification();
 });
 
 function checkForUpdates () {
-  if (IS_DEV) {
-    console.log('Skipping update check in Development');
+  if (hasPromptedForUpdates) {
+    // We've already prompted for updates. Don't bug the user anymore
     return;
   }
 
-  if (hasPromptedForUpdates) {
-    // We've already prompted for updates. Don't bug the user anymore
+  if (IS_DEV) {
+    console.log('Skipping update check in Development');
     return;
   }
 
@@ -129,10 +129,7 @@ function checkForUpdates () {
 function showUnresponsiveModal () {
   dialog.showMessageBox({
     type: 'info',
-    buttons: [
-      'Cancel',
-      'Reload',
-    ],
+    buttons: ['Cancel', 'Reload',],
     defaultId: 1,
     cancelId: 0,
     title: 'Unresponsive',
@@ -145,27 +142,18 @@ function showUnresponsiveModal () {
   });
 }
 
-function showUpdateModal () {
-  hasPromptedForUpdates = true;
+function showUpdateNotification () {
+  if (hasPromptedForUpdates) {
+    return;
+  }
 
-  dialog.showMessageBox({
-    type: 'info',
-    buttons: [
-      'Install and Restart',
-      'Later',
-    ],
-    defaultId: 0,
-    cancelId: 1,
-    title: 'Insomnia Update Available',
-    message: 'Exciting news!\n\nA new version of Insomnia has been downloaded and is ready to install\n\n\n~Gregory'
-  }, id => {
-    if (id === 0) {
-      console.log('-- Installing Update --');
-      autoUpdater.quitAndInstall();
-    } else {
-      console.log('-- Cancel Update --');
-    }
-  });
+  const window = BrowserWindow.getFocusedWindow();
+  if (!window || !window.webContents) {
+    return;
+  }
+
+  window.send('update-available');
+  hasPromptedForUpdates = true;
 }
 
 function showDownloadModal (version) {
@@ -173,10 +161,7 @@ function showDownloadModal (version) {
 
   dialog.showMessageBox({
     type: 'info',
-    buttons: [
-      'Download',
-      'Later',
-    ],
+    buttons: ['Download', 'Later'],
     defaultId: 0,
     cancelId: 1,
     title: 'Insomnia Update Available',
@@ -296,16 +281,23 @@ function createWindow () {
 
   const zoomFactor = getZoomFactor();
   const {bounds, fullscreen} = getBounds();
-  const {
-    x,
-    y,
-    width,
-    height
-  } = bounds;
+  const {x, y, width, height} = bounds;
+
+  // Make sure we don't place the window outside of the visible space
+  let maxX = 0;
+  let maxY = 0;
+  for (const d of electron.screen.getAllDisplays()) {
+    // Set the maximum placement location to 50 pixels short of the end
+    maxX = Math.max(maxX, d.bounds.x + d.bounds.width - 50);
+    maxY = Math.max(maxY, d.bounds.y + d.bounds.height - 50);
+  }
+  const finalX = Math.min(maxX, x);
+  const finalY = Math.min(maxX, y);
 
   mainWindow = new BrowserWindow({
-    x: x,
-    y: y,
+    // Make sure we don't initialize the window outside the bounds
+    x: finalX,
+    y: finalY,
     fullscreen: fullscreen,
     fullscreenable: true,
     title: appName,
@@ -493,14 +485,14 @@ function createWindow () {
         {
           label: "Contact Support",
           click: () => {
-            electron.shell.openExternal('mailto:support@insomnia.rest');
+            shell.openExternal('mailto:support@insomnia.rest');
           }
         },
         {
           label: "Insomnia Help",
           accelerator: "CmdOrCtrl+?",
           click: () => {
-            electron.shell.openExternal('http://docs.insomnia.rest');
+            shell.openExternal('http://docs.insomnia.rest');
           }
         }
       ]
