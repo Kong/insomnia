@@ -106,7 +106,7 @@ describe('prepareUrlForSending()', () => {
 
   it('encodes pathname mixed encoding', () => {
     const url = util.prepareUrlForSending('https://google.com/foo bar baz%20qux/100%/foo%25');
-    expect(url).toBe('https://google.com/foo%20bar%20baz%20qux/100%25/foo%2525');
+    expect(url).toBe('https://google.com/foo%20bar%20baz%20qux/100%25/foo%25');
   });
 
   it('leaves already encoded pathname', () => {
