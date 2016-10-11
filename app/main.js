@@ -129,7 +129,7 @@ function checkForUpdates () {
 function showUnresponsiveModal () {
   dialog.showMessageBox({
     type: 'info',
-    buttons: ['Cancel', 'Reload',],
+    buttons: ['Cancel', 'Reload'],
     defaultId: 1,
     cancelId: 0,
     title: 'Unresponsive',
@@ -152,7 +152,7 @@ function showUpdateNotification () {
     return;
   }
 
-  window.send('update-available');
+  window.webContents.send('update-available');
   hasPromptedForUpdates = true;
 }
 
@@ -266,8 +266,8 @@ app.on('activate', (e, hasVisibleWindows) => {
 
 // When the app is first launched
 app.on('ready', () => {
-  checkForUpdates();
   createWindow();
+  checkForUpdates();
 });
 
 function initLocalStorage () {

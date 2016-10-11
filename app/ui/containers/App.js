@@ -396,12 +396,6 @@ class App extends Component {
     db.workspace.update(workspace, {metaSidebarHidden});
   }
 
-  _showUpdateNotification () {
-    new Notification('Insomnia Update Ready', {
-      body: 'Relaunch the app for it to take effect'
-    });
-  }
-
   componentWillReceiveProps (nextProps) {
     const sidebarWidth = this._getActiveWorkspace(nextProps).metaSidebarWidth;
     this.setState({sidebarWidth});
@@ -440,17 +434,8 @@ class App extends Component {
       lastVersion: getAppVersion()
     });
 
-    setInterval(() => {
-      ipcRenderer.send('check-for-updates');
-    }, CHECK_FOR_UPDATES_INTERVAL);
-
     ipcRenderer.on('toggle-preferences', () => {
       getModal(SettingsModal).toggle();
-    });
-
-    ipcRenderer.on('update-available', () => {
-      console.log('-- Update Available --');
-      this._showUpdateNotification();
     });
 
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));

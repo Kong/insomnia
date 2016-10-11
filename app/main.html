@@ -9,6 +9,29 @@
 <script src="./external/jsonlint.js"></script>
 <script src="./external/raven.min.js"></script>
 <script>
+  // UPDATE HANDLERS
+
+  (function () {
+    const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
+
+    function showUpdateNotification () {
+      console.log('-- Update Available --');
+      new Notification('Insomnia Update Ready', {
+        body: 'Relaunch the app for it to take effect'
+      });
+    }
+
+    const {ipcRenderer} = require('electron');
+    ipcRenderer.on('update-available', () => {
+      showUpdateNotification();
+    });
+
+    setInterval(() => {
+      ipcRenderer.send('check-for-updates');
+    }, CHECK_FOR_UPDATES_INTERVAL);
+  })();
+</script>
+<script>
   // Sentry
 
   if (process.env.INSOMNIA_ENV !== 'development') {
