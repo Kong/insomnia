@@ -1,4 +1,3 @@
-
 export function fetchPost (path, obj) {
   return _fetch('POST', path, obj)
 }
@@ -15,6 +14,7 @@ async function _fetch (method, path, json) {
 
   if (json) {
     config.body = JSON.stringify(json, null, 2);
+    config.headers.set('Content-Type', 'application/json');
   }
 
   const sessionId = localStorage.getItem('sid') || 'no-session';

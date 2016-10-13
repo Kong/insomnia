@@ -44,8 +44,8 @@ export async function initSync () {
   // SETUP PULL //
   // ~~~~~~~~~~ //
 
-  setTimeout(fullSync, 300);
-  setInterval(fullSync, 10000);
+  setTimeout(fullSync, 1000);
+  setInterval(fullSync, 1000 * 30);
 }
 
 
@@ -63,7 +63,7 @@ function addChange (event, doc) {
     const changes = Object.keys(changesMap).map(id => changesMap[id]);
     commitChanges(changes);
     changesMap = {};
-  }, 3000);
+  }, 5000);
 }
 
 async function commitChanges (changes) {
@@ -128,6 +128,7 @@ async function commitChanges (changes) {
 async function fullSync () {
   const allDocs = [];
   const allResources = [];
+
   for (const type of Object.keys(WHITE_LIST)) {
     for (const doc of await db.all(type)) {
       allDocs.push(doc);
@@ -135,10 +136,7 @@ async function fullSync () {
     }
   }
 
-  const body = {
-    resourceGroupId: resourceGroupId,
-    resources: allResources
-  };
+  const body = {resourceGroupId, resources: allResources};
 
   let responseBody;
   try {
