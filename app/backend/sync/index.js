@@ -16,24 +16,20 @@ const resourceGroupCache = {};
 
 async function _createResourceGroup () {
   // Generate symmetric key for ResourceGroup
-  const symmetricJWK = await crypt.generateAES256Key();
-  const symmetricJWKStr = JSON.stringify(symmetricJWK);
+  const rgSymmetricJWK = await crypt.generateAES256Key();
+  const rgSymmetricJWKStr = JSON.stringify(rgSymmetricJWK);
 
   // Encrypt the symmetric key with Account public key
   const publicJWK = session.getPublicKey();
-  const encryptedPrivateKey = session.getEncryptedPrivateKey();
-  const encryptedKey = crypt.encryptRSAWithJWK(publicJWK, symmetricJWKStr);
-  console.log('TRYING TO DECRYPT', encryptedPrivateKey, 'USING', symmetricJWK);
-  const privateJWK = crypt.decryptAES(symmetricJWK, encryptedPrivateKey);
-  console.log('ENCRYPTED', encryptedKey);
-  const decrypted = crypt.decryptRSAWithJWK(privateJWK, encryptedKey);
-  // return util.fetchPost('/resource_groups', {
-  //   encSymmetricKey: crypt.generateAES256Key(),
-  //   name: 'My Resource Group',
-  //   description: 'No Description'
-  // });
+  const encRGSymmetricJWK = crypt.encryptRSAWithJWK(publicJWK, rgSymmetricJWKStr);
+
+  // Create the new ResourceGroup
+  return util.fetchPost('/resource_groups', {
+    encSymmetricKey: encRGSymmetricJWK,
+    name: '',
+    description: ''
+  });
 }
-_createResourceGroup();
 
 function _fetchResourceGroup (resourceGroupId) {
   return util.fetchGet(`/resource_groups/${resourceGroupId}`);
