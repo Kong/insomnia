@@ -11,81 +11,15 @@ const WHITE_LIST = {
   [db.cookieJar.type]: true
 };
 
+// TODO: Move this stuff somewhere else
 let resourceGroupId = 'nothing';
 const resourceGroupCache = {};
-
-async function _createResourceGroup () {
-  // Generate symmetric key for ResourceGroup
-  const rgSymmetricJWK = await crypt.generateAES256Key();
-  const rgSymmetricJWKStr = JSON.stringify(rgSymmetricJWK);
-
-  // Encrypt the symmetric key with Account public key
-  const publicJWK = session.getPublicKey();
-  const encRGSymmetricJWK = crypt.encryptRSAWithJWK(publicJWK, rgSymmetricJWKStr);
-
-  // Create the new ResourceGroup
-  const resourceGroup = await util.fetchPost('/resource_groups', {
-    encSymmetricKey: encRGSymmetricJWK,
-    name: 'Test Group',
-    description: ''
-  });
-
-  resourceGroupId = resourceGroup.id;
-  return resourceGroup;
-}
-
-async function _getAccountPrivateKey () {
-  const symmetricKey = session.getSymmetricKey();
-  const encPrivateKey = session.getEncryptedPrivateKey();
-  const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
-  return JSON.parse(privateKeyStr);
-}
-
-function _fetchResourceGroup (resourceGroupId) {
-  return util.fetchGet(`/resource_groups/${resourceGroupId}`);
-}
-
-async function _getResourceGroupSymmetricKey (resourceGroupId) {
-  let resourceGroup = resourceGroupCache[resourceGroupId];
-  if (!resourceGroup) {
-    resourceGroup = await _fetchResourceGroup(resourceGroupId);
-  }
-
-  const symmetricKeyStr = crypt.decryptRSAWithJWK(
-    await _getAccountPrivateKey(),
-    resourceGroup.encSymmetricKey
-  );
-
-  return JSON.parse(symmetricKeyStr);
-}
-
-async function _encryptDoc (resourceGroupId, doc) {
-  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
-  const message = crypt.encryptAES(symmetricKey, JSON.stringify(doc));
-  return JSON.stringify(message);
-}
-
-async function _decryptDoc (resourceGroupId, messageJSON) {
-  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
-  const message = JSON.parse(messageJSON);
-  const decrypted = crypt.decryptAES(symmetricKey, message);
-  return JSON.parse(decrypted);
-}
 
 export async function initSync () {
 
   // ~~~~~~~~~~ //
   // SETUP PUSH //
   // ~~~~~~~~~~ //
-
-  // // SMOKE TEST
-  // const resourceGroup = await _createResourceGroup();
-  // const response = await _fetchResourceGroup(resourceGroup.id);
-  // const doc = {hello: 'world', _id: 'test:123'};
-  // const encrypted = await _encryptDoc(resourceGroup.id, doc);
-  // const decrypted = await _decryptDoc(resourceGroup.id, encrypted);
-  // console.log(decrypted, '==?', doc)
-  _createResourceGroup();
 
   db.onChange(changes => {
     for (const [event, doc] of changes) {
@@ -102,8 +36,8 @@ export async function initSync () {
   // SETUP PULL //
   // ~~~~~~~~~~ //
 
-  setTimeout(fullSync, 1000);
-  setInterval(fullSync, 1000 * 30);
+  setTimeout(_syncPullChanges, 1000);
+  setInterval(_syncPullChanges, 1000 * 30);
 }
 
 
@@ -119,12 +53,16 @@ function addChange (event, doc) {
   clearTimeout(commitTimeout);
   commitTimeout = setTimeout(() => {
     const changes = Object.keys(changesMap).map(id => changesMap[id]);
-    commitChanges(changes);
+    _syncPushChanges(changes);
     changesMap = {};
   }, 2000);
 }
 
-async function commitChanges (changes) {
+async function _syncPushChanges (changes) {
+  if (!session.isLoggedIn()) {
+    console.warn('-- Trying to sync but not logged in --');
+    return;
+  }
 
   let body = [];
   for (const change of changes) {
@@ -183,7 +121,12 @@ async function commitChanges (changes) {
   }
 }
 
-async function fullSync () {
+async function _syncPullChanges () {
+  if (!session.isLoggedIn()) {
+    console.warn('-- Trying to sync but not logged in --');
+    return;
+  }
+
   const allDocs = [];
   const allResources = [];
 
@@ -285,4 +228,81 @@ async function fullSync () {
     console.log('NEED TO PUSH', idToPush);
     addChange(db.CHANGE_UPDATE, doc)
   }
+}
+
+async function _createResourceGroup () {
+  // Generate symmetric key for ResourceGroup
+  const rgSymmetricJWK = await crypt.generateAES256Key();
+  const rgSymmetricJWKStr = JSON.stringify(rgSymmetricJWK);
+
+  // Encrypt the symmetric key with Account public key
+  const publicJWK = session.getPublicKey();
+  const encRGSymmetricJWK = crypt.encryptRSAWithJWK(publicJWK, rgSymmetricJWKStr);
+
+  // Create the new ResourceGroup
+  const resourceGroup = await util.fetchPost('/resource_groups', {
+    encSymmetricKey: encRGSymmetricJWK,
+    name: 'Test Group',
+    description: ''
+  });
+
+  resourceGroupId = resourceGroup.id;
+  return resourceGroup;
+}
+
+/**
+ * Fetch a ResourceGroup. If it has been fetched before, lookup from memory
+ *
+ * @param resourceGroupId
+ * @returns {*}
+ * @private
+ */
+async function _fetchResourceGroup (resourceGroupId) {
+  if (!resourceGroupCache.hasOwnProperty(resourceGroupId)) {
+    resourceGroupCache[resourceGroupId] = await util.fetchGet(
+      `/resource_groups/${resourceGroupId}`
+    );
+  }
+  return resourceGroupCache[resourceGroupId];
+}
+
+/**
+ * Get a ResourceGroup's symmetric encryption key
+ *
+ * @param resourceGroupId
+ * @private
+ */
+async function _getResourceGroupSymmetricKey (resourceGroupId) {
+  const symmetricKeyStr = crypt.decryptRSAWithJWK(
+    await session.getAccountPrivateKey(),
+    await _fetchResourceGroup(resourceGroupId)
+  );
+
+  return JSON.parse(symmetricKeyStr);
+}
+
+/**
+ * Encrypt a database doc
+ *
+ * @param resourceGroupId
+ * @param doc
+ * @private
+ */
+async function _encryptDoc (resourceGroupId, doc) {
+  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
+  const message = crypt.encryptAES(symmetricKey, JSON.stringify(doc));
+  return JSON.stringify(message);
+}
+
+/**
+ * Decrypt a database doc
+ * @param resourceGroupId
+ * @param messageJSON
+ * @private
+ */
+async function _decryptDoc (resourceGroupId, messageJSON) {
+  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
+  const message = JSON.parse(messageJSON);
+  const decrypted = crypt.decryptAES(symmetricKey, message);
+  return JSON.parse(decrypted);
 }

@@ -2,6 +2,8 @@ import srp from 'srp';
 import * as crypt from './crypt';
 import * as util from './util';
 
+const NO_SESSION = '__NO_SESSION__';
+
 /**
  * Create a new account
  *
@@ -111,18 +113,22 @@ export async function login (rawEmail, rawPassphrase) {
   // Initialize the Session //
   // ~~~~~~~~~~~~~~~~~~~~~~ //
 
-  // Store session ID (K)
-  const srpK = c.computeK().toString('hex');
-  localStorage.setItem('sid', srpK);
+  // Compute K (used for session ID)
+  const sessionId = c.computeK().toString('hex');
 
   // Get and store some extra info (salts and keys)
-  const {publicKey, encPrivateKey, saltEnc} = await whoami();
-  const sym = await crypt.deriveKey(passphrase, email, saltEnc);
+  const {publicKey, encPrivateKey, saltEnc, accountId} = await whoami(sessionId);
+  const symmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
 
-  localStorage.setItem('sym', sym);
-  localStorage.setItem('pub', publicKey);
-  localStorage.setItem('encPrv', encPrivateKey);
-  localStorage.setItem('email', email);
+  // Store the information for later
+  setSessionData(
+    sessionId,
+    accountId,
+    symmetricKey,
+    JSON.parse(publicKey),
+    JSON.parse(encPrivateKey),
+    email
+  );
 }
 
 /**
@@ -131,17 +137,69 @@ export async function login (rawEmail, rawPassphrase) {
  * @returns String
  */
 export function getPublicKey () {
-  const jwkJSON = localStorage.getItem('pub');
-  return jwkJSON ? JSON.parse(jwkJSON) : null;
+  return getSessionData().publicKey;
 }
 
-export function getEncryptedPrivateKey () {
-  const json = localStorage.getItem('encPrv');
-  return json ? JSON.parse(json) : null;
+/**
+ * Get user Account's private key by decrypting it with the symmetric key.
+ */
+export function getAccountPrivateKey () {
+  const {symmetricKey, encPrivateKey} = getSessionData();
+  const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
+  return JSON.parse(privateKeyStr);
 }
 
-export function getSymmetricKey () {
-  return localStorage.getItem('sym');
+/**
+ * Get the ID of the current session
+ */
+export function getCurrentSessionId () {
+  return localStorage.getItem('currentSessionId') || NO_SESSION;
+}
+
+/**
+ * get Data about the current session
+ * @returns Object
+ */
+export function getSessionData () {
+  const sessionId = getCurrentSessionId();
+  const messageStr = localStorage.getItem(`session__${sessionId}`);
+  const dataStr = crypt.decryptAES(sessionId, JSON.parse(messageStr));
+  return messageStr ? JSON.parse(dataStr) : null;
+}
+
+/**
+ * Set data for the new session and store it encrypted with the sessionId
+ *
+ * @param sessionId
+ * @param accountId
+ * @param symmetricKey
+ * @param publicKey
+ * @param encPrivateKey
+ * @param email
+ */
+export function setSessionData (sessionId, accountId, symmetricKey, publicKey, encPrivateKey, email) {
+  const dataStr = JSON.stringify({
+    id: sessionId,
+    accountId: accountId,
+    symmetricKey: symmetricKey,
+    publicKey: publicKey,
+    encPrivateKey: encPrivateKey,
+    email: email,
+  });
+
+  const message = crypt.encryptAES(sessionId, dataStr);
+  localStorage.setItem(`session__${sessionId}`, JSON.stringify(message));
+
+  // NOTE: We're setting this last because the stuff above might fail
+  localStorage.setItem('currentSessionId', sessionId);
+}
+
+/**
+ * Unset the session data (log out)
+ */
+export function unsetSessionData () {
+  const sessionId = getCurrentSessionId();
+  localStorage.removeItem(`session__${sessionId}`);
 }
 
 /**
@@ -150,7 +208,7 @@ export function getSymmetricKey () {
  * @returns {boolean}
  */
 export function isLoggedIn () {
-  return !!localStorage.getItem('sid');
+  return getCurrentSessionId() !== NO_SESSION;
 }
 
 /**
@@ -158,14 +216,14 @@ export function isLoggedIn () {
  */
 export async function logout () {
   await util.fetchPost('/auth/logout');
-  localStorage.removeItem('sid');
+  unsetSessionData();
 }
 
 /**
  * Who Am I
  */
-export function whoami () {
-  return util.fetchGet('/auth/whoami');
+export function whoami (sessionId = null) {
+  return util.fetchGet('/auth/whoami', sessionId);
 }
 
 

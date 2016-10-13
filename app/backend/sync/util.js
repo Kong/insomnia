@@ -1,16 +1,15 @@
-import {getModal} from '../../ui/components/modals/index';
-import LoginModal from '../../ui/components/modals/LoginModal';
 import {isDevelopment} from '../appInfo';
+import * as session from './session';
 
 export function fetchPost (path, obj) {
   return _fetch('POST', path, obj)
 }
 
-export function fetchGet (path) {
-  return _fetch('GET', path, null)
+export function fetchGet (path, sessionId = null) {
+  return _fetch('GET', path, null, sessionId)
 }
 
-async function _fetch (method, path, json) {
+async function _fetch (method, path, json, sessionId = null) {
   const config = {
     method: method,
     headers: new Headers()
@@ -21,16 +20,15 @@ async function _fetch (method, path, json) {
     config.headers.set('Content-Type', 'application/json');
   }
 
-  const sessionId = localStorage.getItem('sid') || 'no-session';
+  sessionId = sessionId || session.getCurrentSessionId();
   if (sessionId) {
     config.headers.set('X-Session-Id', sessionId)
   }
 
   const response = await fetch(_getUrl(path), config);
 
-  // TODO: Find a better place for this.
   if (response.status === 403) {
-    getModal(LoginModal).show();
+    // TODO: Somehow signal the user to login
   }
 
   if (!response.ok) {
