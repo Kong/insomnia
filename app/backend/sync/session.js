@@ -2,7 +2,6 @@ import srp from 'srp';
 import * as crypt from './crypt';
 import * as util from './util';
 
-
 /**
  * Create a new account
  *
@@ -41,6 +40,17 @@ export async function signup (rawEmail, rawPassphrase) {
   account.encPrivateKey = encPrivateKeyStr;
 
   return util.fetchPost('/auth/signup', account);
+}
+
+/**
+ * Convenience function to both signup and log in at the same time
+ *
+ * @param rawEmail
+ * @param rawPassphrase
+ */
+export async function signupAndLogin (rawEmail, rawPassphrase) {
+  await signup(rawEmail, rawPassphrase);
+  await login(rawEmail, rawPassphrase);
 }
 
 
@@ -92,8 +102,9 @@ export async function login (rawEmail, rawPassphrase) {
 /**
  * Log out
  */
-export function logout () {
-  return util.fetchPost('/auth/logout');
+export async function logout () {
+  await util.fetchPost('/auth/logout');
+  localStorage.removeItem('sid');
 }
 
 /**

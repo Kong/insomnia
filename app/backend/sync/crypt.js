@@ -114,6 +114,13 @@ export function srpGenKey () {
 }
 
 /**
+ * Generate a random AES256 key for use with symmetric encryption
+ */
+export function generateAES256Key () {
+  return forge.util.bytesToHex(forge.random.getBytesSync(32));
+}
+
+/**
  * Generate RSA keypair JWK with 2048 bits and exponent 0x10001
  *
  * @returns Object

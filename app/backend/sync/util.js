@@ -1,3 +1,6 @@
+import {getModal} from '../../ui/components/modals/index';
+import LoginModal from '../../ui/components/modals/LoginModal';
+
 export function fetchPost (path, obj) {
   return _fetch('POST', path, obj)
 }
@@ -23,6 +26,11 @@ async function _fetch (method, path, json) {
   }
 
   const response = await fetch(_getUrl(path), config);
+
+  // TODO: Find a better place for this.
+  if (response.status === 403) {
+    getModal(LoginModal).show();
+  }
 
   if (!response.ok) {
     throw new Error(`Response ${response.status} for ${path}`)

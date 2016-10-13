@@ -17,6 +17,7 @@ import * as GlobalActions from '../redux/modules/global';
 import * as db from '../../backend/database';
 import {getAppVersion} from '../../backend/appInfo';
 import {getModal} from '../components/modals/index';
+import * as session from '../../backend/sync/session';
 
 class WorkspaceDropdown extends Component {
   async _promptUpdateName () {
@@ -133,6 +134,11 @@ class WorkspaceDropdown extends Component {
             <button onClick={e => getModal(SettingsModal).show()}>
               <i className="fa fa-cog"></i> Settings
               <DropdownHint char=","></DropdownHint>
+            </button>
+          </li>
+          <li>
+            <button onClick={e => session.logout()}>
+              <i className="fa fa-export"></i> Logout
             </button>
           </li>
           <li>

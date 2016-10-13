@@ -15,6 +15,8 @@ import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
+import LoginModal from '../components/modals/LoginModal';
+import SignupModal from '../components/modals/SignupModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
@@ -547,6 +549,8 @@ class App extends Component {
         <PromptModal ref={m => addModal(m)}/>
         <AlertModal ref={m => addModal(m)}/>
         <ChangelogModal ref={m => addModal(m)}/>
+        <LoginModal ref={m => addModal(m)}/>
+        <SignupModal ref={m => addModal(m)}/>
         <SettingsModal ref={m => addModal(m)}/>
         <GenerateCodeModal ref={m => addModal(m)}/>
         <RequestSwitcherModal
