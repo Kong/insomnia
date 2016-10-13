@@ -15,13 +15,13 @@ class SignupModal extends Component {
     const email = this._emailInput.value;
     const password = this._passwordInput.value;
 
-    try {
+    // try {
       await session.signupAndLogin(email, password);
       this.modal.hide();
-    } catch (e) {
-      // TODO: Handle failures
-      console.warn('Failed to signup', e)
-    }
+    // } catch (e) {
+    //   // TODO: Handle failures
+    //   console.warn('Failed to signup', e)
+    // }
   }
 
   _handleLogin (e) {

@@ -1,6 +1,7 @@
 import * as db from '../database';
 import * as util from './util';
 import * as crypt from './crypt';
+import * as session from './session';
 
 const WHITE_LIST = {
   [db.request.type]: true,
@@ -13,17 +14,26 @@ const WHITE_LIST = {
 let resourceGroupId = 'rsgr_a2a37a72b58b4cb5acb0d64057462dc0';
 const resourceGroupCache = {};
 
-function _createResourceGroup () {
-  // TODO: ...
-  // const key = crypt.generateAES256Key();
-  // const accountPublicKey = 'TODO';
-  // const encryptedKey = crypt.encryptRSA(accountPublicKey);
+async function _createResourceGroup () {
+  // Generate symmetric key for ResourceGroup
+  const symmetricJWK = await crypt.generateAES256Key();
+  const symmetricJWKStr = JSON.stringify(symmetricJWK);
+
+  // Encrypt the symmetric key with Account public key
+  const publicJWK = session.getPublicKey();
+  const encryptedPrivateKey = session.getEncryptedPrivateKey();
+  const encryptedKey = crypt.encryptRSAWithJWK(publicJWK, symmetricJWKStr);
+  console.log('TRYING TO DECRYPT', encryptedPrivateKey, 'USING', symmetricJWK);
+  const privateJWK = crypt.decryptAES(symmetricJWK, encryptedPrivateKey);
+  console.log('ENCRYPTED', encryptedKey);
+  const decrypted = crypt.decryptRSAWithJWK(privateJWK, encryptedKey);
   // return util.fetchPost('/resource_groups', {
   //   encSymmetricKey: crypt.generateAES256Key(),
   //   name: 'My Resource Group',
   //   description: 'No Description'
   // });
 }
+_createResourceGroup();
 
 function _fetchResourceGroup (resourceGroupId) {
   return util.fetchGet(`/resource_groups/${resourceGroupId}`);

@@ -27,17 +27,17 @@ export async function signup (rawEmail, rawPassphrase) {
   ).toString('hex');
 
   // Generate keypair
-  const keypair = await crypt.generateKeyPairJWK();
+  const {publicKey, privateKey} = await crypt.generateKeyPairJWK();
 
   // Encode keypairs (and encrypt private key)
-  const privateKeyStr = JSON.stringify(keypair.privateKey);
-  const publicKeyStr = JSON.stringify(keypair.publicKey);
-  const encPrivateKey = crypt.encryptAES(encSecret, privateKeyStr, 'n/a');
-  const encPrivateKeyStr = JSON.stringify(encPrivateKey);
+  const privateJWKStr = JSON.stringify(privateKey);
+  const publicJWKStr = JSON.stringify(publicKey);
+  const encPrivateJWKMessage = crypt.encryptAES(encSecret, privateJWKStr, 'n/a');
+  const encPrivateJWKMessageStr = JSON.stringify(encPrivateJWKMessage);
 
   // Add keys to account
-  account.publicKey = publicKeyStr;
-  account.encPrivateKey = encPrivateKeyStr;
+  account.publicKey = publicJWKStr;
+  account.encPrivateKey = encPrivateJWKMessageStr;
 
   return util.fetchPost('/auth/signup', account);
 }
@@ -62,12 +62,19 @@ export async function signupAndLogin (rawEmail, rawPassphrase) {
  * @param rawPassphrase
  */
 export async function login (rawEmail, rawPassphrase) {
+
+  // ~~~~~~~~~~~~~~~ //
+  // Sanitize Inputs //
+  // ~~~~~~~~~~~~~~~ //
+
   const email = _sanitizeEmail(rawEmail);
   const passphrase = _sanitizePassphrase(rawPassphrase);
 
-  // Fetch the salt
-  const {saltKey, saltAuth} = await util.fetchPost('/auth/login-s', {email});
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+  // Fetch Salt and Submit A To Server //
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
+  const {saltKey, saltAuth} = await util.fetchPost('/auth/login-s', {email});
   const authSecret = await crypt.deriveKey(passphrase, email, saltKey);
   const secret1 = await crypt.srpGenKey();
   const c = new srp.Client(
@@ -77,26 +84,73 @@ export async function login (rawEmail, rawPassphrase) {
     Buffer.from(authSecret, 'hex'),
     Buffer.from(secret1, 'hex')
   );
-
   const srpA = c.computeA().toString('hex');
+  const {sessionStarterId, srpB} = await util.fetchPost(
+    '/auth/login-a',
+    {srpA, email}
+  );
 
-  const {sessionStarterId, srpB} = await util.fetchPost('/auth/login-a', {
-    srpA,
-    email
-  });
+  // ~~~~~~~~~~~~~~~~~~~~~ //
+  // Compute and Submit M1 //
+  // ~~~~~~~~~~~~~~~~~~~~~ //
 
   c.setB(new Buffer(srpB, 'hex'));
   const srpM1 = c.computeM1().toString('hex');
-  const srpK = c.computeK().toString('hex');
-
   const {srpM2} = await util.fetchPost('/auth/login-m1', {
     srpM1,
-    sessionStarterId
+    sessionStarterId,
   });
 
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
+  // Verify Server Identity M2 //
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
   c.checkM2(new Buffer(srpM2, 'hex'));
+
+  // ~~~~~~~~~~~~~~~~~~~~~~ //
+  // Initialize the Session //
+  // ~~~~~~~~~~~~~~~~~~~~~~ //
+
+  // Store session ID (K)
+  const srpK = c.computeK().toString('hex');
   localStorage.setItem('sid', srpK);
-  return srpK;
+
+  // Get and store some extra info (salts and keys)
+  const {publicKey, encPrivateKey, saltEnc} = await whoami();
+  const sym = await crypt.deriveKey(passphrase, email, saltEnc);
+
+  localStorage.setItem('sym', sym);
+  localStorage.setItem('pub', publicKey);
+  localStorage.setItem('encPrv', encPrivateKey);
+  localStorage.setItem('email', email);
+}
+
+/**
+ * Get public key (if we have it)
+ *
+ * @returns String
+ */
+export function getPublicKey () {
+  const jwkJSON = localStorage.getItem('pub');
+  return jwkJSON ? JSON.parse(jwkJSON) : null;
+}
+
+/**
+ *
+ * @returns {null}
+ */
+export function getEncryptedPrivateKey () {
+  const json = localStorage.getItem('encPrv');
+  return json ? JSON.parse(json) : null;
+}
+
+/**
+ * Check if we (think) we have a session
+ *
+ * @returns {boolean}
+ */
+export function isLoggedIn () {
+  return !!localStorage.getItem('sid');
 }
 
 /**

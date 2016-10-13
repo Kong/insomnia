@@ -18,18 +18,60 @@ export async function deriveKey (pass, email, salt) {
   return _pbkdf2Passphrase(pass, combinedSalt);
 }
 
+/**
+ * Encrypt with RSA256 public key
+ *
+ * @param publicKeyJWK
+ * @param plaintext
+ * @return String
+ */
+export function encryptRSAWithJWK (publicKeyJWK, plaintext) {
+  if (publicKeyJWK.alg !== 'RSA-OAEP-256') {
+    throw new Error('Public key algorithm was not RSA-OAEP-256');
+  } else if (publicKeyJWK.kty !== 'RSA') {
+    throw new Error('Public key type was not RSA');
+  } else if (!publicKeyJWK.key_ops.find(o => o === 'encrypt')) {
+    throw new Error('Public key does not have "encrypt" op');
+  }
+
+  const n = _b64UrlToBigInt(publicKeyJWK.n);
+  const e = _b64UrlToBigInt(publicKeyJWK.e);
+  const publicKey = forge.rsa.setPublicKey(n, e);
+
+  const encrypted = publicKey.encrypt(plaintext, 'RSA-OAEP');
+  return forge.util.bytesToHex(encrypted);
+}
+
+export function decryptRSAWithJWK (privateJWK, encryptedBlob) {
+  const n = _b64UrlToBigInt(privateJWK.n);
+  const e = _b64UrlToBigInt(privateJWK.e);
+  const d = _b64UrlToBigInt(privateJWK.d);
+  const p = _b64UrlToBigInt(privateJWK.p);
+  const q = _b64UrlToBigInt(privateJWK.q);
+  const dP = _b64UrlToBigInt(privateJWK.dp);
+  const dQ = _b64UrlToBigInt(privateJWK.dq);
+  const qInv = _b64UrlToBigInt(privateJWK.qi);
+
+  const privateKey = forge.rsa.setPrivateKey(n, e, d, p, q, dP, dQ, qInv);
+  return privateKey.decrypt(encryptedBlob, 'RSA-OAEP');
+}
+
 
 /**
  * Encrypt data using symmetric key
  *
- * @param key key (hex encoded)
+ * @param jwkOrKey JWK or string representing symmetric key
  * @param plaintext string of data to encrypt
  * @param additionalData any additional public data to attach
  * @returns {{iv, t, d, ad}}
  */
-export function encryptAES (key, plaintext, additionalData) {
+export function encryptAES (jwkOrKey, plaintext, additionalData) {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const key = forge.util.hexToBytes(rawKey);
+
   const iv = forge.random.getBytesSync(12);
-  const cipher = forge.cipher.createCipher('AES-GCM', forge.util.hexToBytes(key));
+  const cipher = forge.cipher.createCipher('AES-GCM', key);
 
   cipher.start({additionalData, iv, tagLength: 128});
   cipher.update(forge.util.createBuffer(plaintext));
@@ -47,21 +89,20 @@ export function encryptAES (key, plaintext, additionalData) {
 /**
  * Decrypt AES using a key
  *
- * @param key
+ * @param jwkOrKey JWK or string representing symmetric key
  * @param message
  * @returns String
  */
-export function decryptAES (key, message) {
+export function decryptAES (jwkOrKey, message) {
+  // TODO: Add assertion checks for JWK
+  const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
+  const key = forge.util.hexToBytes(rawKey);
 
   // ~~~~~~~~~~~~~~~~~~~~ //
   // Decrypt with AES-GCM //
   // ~~~~~~~~~~~~~~~~~~~~ //
 
-  const decipher = forge.cipher.createDecipher(
-    'AES-GCM',
-    forge.util.hexToBytes(key)
-  );
-
+  const decipher = forge.cipher.createDecipher('AES-GCM', key);
   decipher.start({
     iv: forge.util.hexToBytes(message.iv),
     tagLength: message.t.length * 4,
@@ -116,8 +157,29 @@ export function srpGenKey () {
 /**
  * Generate a random AES256 key for use with symmetric encryption
  */
-export function generateAES256Key () {
-  return forge.util.bytesToHex(forge.random.getBytesSync(32));
+export async function generateAES256Key () {
+  const c = window.crypto;
+  const subtle = c ? c.subtle || c.webkitSubtle : null;
+
+  if (subtle) {
+    console.log('-- Using Native AES Key Generation --');
+    const key = await subtle.generateKey(
+      {name: 'AES-GCM', length: 256},
+      true,
+      ['encrypt', 'decrypt']
+    );
+    return subtle.exportKey('jwk', key);
+  } else {
+    console.log('-- Using Falback Forge AES Key Generation --');
+    const key = forge.util.bytesToHex(forge.random.getBytesSync(32));
+    return {
+      kty: 'oct',
+      alg: 'A256GCM',
+      ext: true,
+      key_ops: ['encrypt', 'decrypt'],
+      k: _hexToB64Url(key),
+    };
+  }
 }
 
 /**
@@ -204,12 +266,28 @@ function _hkdfSalt (rawSalt, rawEmail) {
  * @returns {string}
  */
 function _bigIntToB64Url (n) {
-  const bytes = forge.util.binary.hex.decode(n.toString(16));
-  return forge.util.binary.base64.encode(bytes)
+  return _hexToB64Url(n.toString(16));
+}
+
+function _hexToB64Url (h) {
+  const bytes = forge.util.hexToBytes(h);
+  return btoa(bytes)
     .replace(/=/g, '')
     .replace(/\+/g, '-')
     .replace(/\//g, '_');
 }
+
+function _b64UrlToBigInt (s) {
+  return new forge.jsbn.BigInteger(_b64UrlToHex(s), 16);
+}
+
+function _b64UrlToHex (s) {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+  return forge.util.bytesToHex(atob(b64));
+}
+
+window.b64urltohex = _b64UrlToHex;
+window.forge = forge;
 
 /**
  * Derive key from password
