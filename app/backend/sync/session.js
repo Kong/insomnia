@@ -135,13 +135,13 @@ export function getPublicKey () {
   return jwkJSON ? JSON.parse(jwkJSON) : null;
 }
 
-/**
- *
- * @returns {null}
- */
 export function getEncryptedPrivateKey () {
   const json = localStorage.getItem('encPrv');
   return json ? JSON.parse(json) : null;
+}
+
+export function getSymmetricKey () {
+  return localStorage.getItem('sym');
 }
 
 /**

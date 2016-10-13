@@ -1,5 +1,6 @@
 import {getModal} from '../../ui/components/modals/index';
 import LoginModal from '../../ui/components/modals/LoginModal';
+import {isDevelopment} from '../appInfo';
 
 export function fetchPost (path, obj) {
   return _fetch('POST', path, obj)
@@ -44,7 +45,7 @@ async function _fetch (method, path, json) {
 }
 
 function _getUrl (path) {
-  if (window.location.hostname === 'localhost') {
+  if (isDevelopment()) {
     return `http://localhost:8000/api/v1${path}`;
   } else {
     return `https://insomnia-api.herokuapp.com/api/v1${path}`;

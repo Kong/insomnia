@@ -11,7 +11,7 @@ const WHITE_LIST = {
   [db.cookieJar.type]: true
 };
 
-let resourceGroupId = 'rsgr_a2a37a72b58b4cb5acb0d64057462dc0';
+let resourceGroupId = 'nothing';
 const resourceGroupCache = {};
 
 async function _createResourceGroup () {
@@ -24,32 +24,52 @@ async function _createResourceGroup () {
   const encRGSymmetricJWK = crypt.encryptRSAWithJWK(publicJWK, rgSymmetricJWKStr);
 
   // Create the new ResourceGroup
-  return util.fetchPost('/resource_groups', {
+  const resourceGroup = await util.fetchPost('/resource_groups', {
     encSymmetricKey: encRGSymmetricJWK,
-    name: '',
+    name: 'Test Group',
     description: ''
   });
+
+  resourceGroupId = resourceGroup.id;
+  return resourceGroup;
+}
+
+async function _getAccountPrivateKey () {
+  const symmetricKey = session.getSymmetricKey();
+  const encPrivateKey = session.getEncryptedPrivateKey();
+  const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
+  return JSON.parse(privateKeyStr);
 }
 
 function _fetchResourceGroup (resourceGroupId) {
   return util.fetchGet(`/resource_groups/${resourceGroupId}`);
 }
 
-function _encryptDoc (resourceGroupId, doc) {
-  return JSON.stringify(doc);
-}
-
-async function _decryptDoc (resourceGroupId, content) {
+async function _getResourceGroupSymmetricKey (resourceGroupId) {
   let resourceGroup = resourceGroupCache[resourceGroupId];
   if (!resourceGroup) {
     resourceGroup = await _fetchResourceGroup(resourceGroupId);
   }
 
-  return JSON.parse(content);
+  const symmetricKeyStr = crypt.decryptRSAWithJWK(
+    await _getAccountPrivateKey(),
+    resourceGroup.encSymmetricKey
+  );
+
+  return JSON.parse(symmetricKeyStr);
 }
 
-async function _getResourceGroupKey () {
-  return '1235654545433j54534145';
+async function _encryptDoc (resourceGroupId, doc) {
+  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
+  const message = crypt.encryptAES(symmetricKey, JSON.stringify(doc));
+  return JSON.stringify(message);
+}
+
+async function _decryptDoc (resourceGroupId, messageJSON) {
+  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
+  const message = JSON.parse(messageJSON);
+  const decrypted = crypt.decryptAES(symmetricKey, message);
+  return JSON.parse(decrypted);
 }
 
 export async function initSync () {
@@ -57,6 +77,15 @@ export async function initSync () {
   // ~~~~~~~~~~ //
   // SETUP PUSH //
   // ~~~~~~~~~~ //
+
+  // // SMOKE TEST
+  // const resourceGroup = await _createResourceGroup();
+  // const response = await _fetchResourceGroup(resourceGroup.id);
+  // const doc = {hello: 'world', _id: 'test:123'};
+  // const encrypted = await _encryptDoc(resourceGroup.id, doc);
+  // const decrypted = await _decryptDoc(resourceGroup.id, encrypted);
+  // console.log(decrypted, '==?', doc)
+  _createResourceGroup();
 
   db.onChange(changes => {
     for (const [event, doc] of changes) {
@@ -92,7 +121,7 @@ function addChange (event, doc) {
     const changes = Object.keys(changesMap).map(id => changesMap[id]);
     commitChanges(changes);
     changesMap = {};
-  }, 5000);
+  }, 2000);
 }
 
 async function commitChanges (changes) {
@@ -108,7 +137,7 @@ async function commitChanges (changes) {
         resourceGroupId: resourceGroupId,
         resourceDeleted: false,
         resourceType: doc.type,
-        resourceContent: _encryptDoc(resourceGroupId, doc)
+        resourceContent: await _encryptDoc(resourceGroupId, doc)
       });
     } else if (event === db.CHANGE_REMOVE) {
       body.push({
@@ -146,7 +175,7 @@ async function commitChanges (changes) {
 
   const {conflicts} = responseBody;
   for (const {resourceContent, resourceETag, resourceId, resourceGroupId} of conflicts) {
-    const serverDoc = _decryptDoc(resourceGroupId, resourceContent);
+    const serverDoc = await _decryptDoc(resourceGroupId, resourceContent);
     const existingDoc = allDocs.find(d => d._id == resourceId);
     console.log('RESOLVING CONFLICT FOR', serverDoc);
     const winner = serverDoc.modified > existingDoc.modified ? serverDoc : existingDoc;
@@ -186,10 +215,10 @@ async function fullSync () {
   // Insert all the created docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  await createdDocs.map(resource => {
+  await createdDocs.map(async resource => {
     let oldDoc;
     try {
-      oldDoc = _decryptDoc(resource.resourceGroupId, resource.resourceContent);
+      oldDoc = await _decryptDoc(resource.resourceGroupId, resource.resourceContent);
     } catch (e) {
       console.warn('Failed to decode resource', e, resource.resourceContent);
       return;
@@ -209,10 +238,10 @@ async function fullSync () {
   // Save all the updated docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  await updatedDocs.map(resource => {
+  await updatedDocs.map(async resource => {
     let oldDoc;
     try {
-      oldDoc = _decryptDoc(resource.resourceGroupId, resource.resourceContent);
+      oldDoc = await _decryptDoc(resource.resourceGroupId, resource.resourceContent);
     } catch (e) {
       console.warn('Failed to decode resource', e, resource);
       return;

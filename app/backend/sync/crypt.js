@@ -38,7 +38,9 @@ export function encryptRSAWithJWK (publicKeyJWK, plaintext) {
   const e = _b64UrlToBigInt(publicKeyJWK.e);
   const publicKey = forge.rsa.setPublicKey(n, e);
 
-  const encrypted = publicKey.encrypt(plaintext, 'RSA-OAEP');
+  const encrypted = publicKey.encrypt(plaintext, 'RSA-OAEP', {
+    md: forge.md.sha256.create()
+  });
   return forge.util.bytesToHex(encrypted);
 }
 
@@ -53,7 +55,10 @@ export function decryptRSAWithJWK (privateJWK, encryptedBlob) {
   const qInv = _b64UrlToBigInt(privateJWK.qi);
 
   const privateKey = forge.rsa.setPrivateKey(n, e, d, p, q, dP, dQ, qInv);
-  return privateKey.decrypt(encryptedBlob, 'RSA-OAEP');
+  const bytes = forge.util.hexToBytes(encryptedBlob);
+  return privateKey.decrypt(bytes, 'RSA-OAEP', {
+    md: forge.md.sha256.create()
+  });
 }
 
 
