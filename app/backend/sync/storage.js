@@ -7,9 +7,9 @@ import fsPath from 'path';
  *
  * @returns {Promise}
  */
-export function all () {
+export function findByResourceGroupId (resourceGroupId) {
   return new Promise((resolve, reject) => {
-    _getDB().find({}, (err, rawDocs) => {
+    _getDB().find({resourceGroupId}, (err, rawDocs) => {
       if (err) {
         reject(err);
       } else {
@@ -19,8 +19,71 @@ export function all () {
   });
 }
 
-export function activateResourceGroup (resourceGroup) {
-  localStorage.setItem('activeResourceGroup', JSON.stringify(resourceGroup));
+/**
+ * Get Resource by resourceID
+ *
+ * @param resourceId
+ * @returns {Promise}
+ */
+export function getByResourceId (resourceId) {
+  return new Promise((resolve, reject) => {
+    // TODO: this query should probably include resourceGroupId as well
+    _getDB().find({resourceId}, (err, rawDocs) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rawDocs.length >= 1 ? rawDocs[0] : null);
+      }
+    });
+  })
+}
+
+export function removeResource (resource) {
+  return new Promise((resolve, reject) => {
+    // TODO: this query should probably include resourceGroupId as well
+    _getDB().remove({_id: resource._id}, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  })
+}
+
+/**
+ * Create a new Resource
+ *
+ * @param resource
+ */
+export function insert (resource) {
+  return new Promise((resolve, reject) => {
+    _getDB().insert(resource, (err, newDoc) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(newDoc);
+      }
+    });
+  });
+}
+
+/**
+ * Update an existing resource
+ *
+ * @param resource
+ * @returns {Promise}
+ */
+export function update (resource) {
+  return new Promise((resolve, reject) => {
+    _getDB().update({_id: resource._id}, resource, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(resource);
+      }
+    });
+  });
 }
 
 // ~~~~~~~ //

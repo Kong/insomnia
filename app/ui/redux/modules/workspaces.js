@@ -1,4 +1,5 @@
 import {combineReducers} from 'redux';
+import * as sync from '../../../backend/sync';
 
 export const WORKSPACE_ACTIVATE = 'workspaces/activate';
 
@@ -27,5 +28,6 @@ export default combineReducers({
 // ~~~~~~~ //
 
 export function activate (workspace) {
+  sync.activateWorkspaceId(workspace._id);
   return {type: WORKSPACE_ACTIVATE, workspace};
 }
