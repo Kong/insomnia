@@ -12,7 +12,7 @@ const WHITE_LIST = {
 };
 
 // TODO: Move this stuff somewhere else
-let resourceGroupId = 'nothing';
+let resourceGroupId = '__NO_RESOURCE_GROUP__';
 const resourceGroupCache = {};
 
 export async function initSync () {

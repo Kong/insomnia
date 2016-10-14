@@ -3,7 +3,6 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from  '../constants';
 import {generateId} from '../util';
-import {isDevelopment} from '../appInfo';
 
 import * as _stats from './models/stats';
 import * as _settings from './models/settings';
@@ -50,11 +49,7 @@ export function initModel (doc) {
   return Object.assign({
     modified: Date.now(),
     created: Date.now(),
-    parentId: null,
-
-    // Server-generated fields
-    _etag: null,
-    _synced: 0
+    parentId: null
   }, doc);
 }
 
@@ -99,16 +94,14 @@ export async function initDB (config = {}, force = false) {
 
   db = {};
 
-  if (isDevelopment()) {
-    global.db = db;
-  }
-
   // Fill in the defaults
-
   ALL_TYPES.map(t => {
-    const filename = getDBFilePath(t);
-    const autoload = true;
-    const finalConfig = Object.assign({filename, autoload}, config);
+    const defaults = {
+      filename: getDBFilePath(t),
+      autoload: true
+    };
+
+    const finalConfig = Object.assign(defaults, config);
 
     db[t] = new NeDB(finalConfig);
     db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
