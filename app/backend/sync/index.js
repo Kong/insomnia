@@ -40,7 +40,7 @@ export async function initSync () {
   // ~~~~~~~~~~ //
 
   setTimeout(_syncPullChanges, 3000);
-  setInterval(_syncPullChanges, 1000 * 30);
+  setInterval(_syncPullChanges, 1000 * 10);
 }
 
 export async function activateWorkspaceId (workspaceId) {
@@ -343,7 +343,8 @@ async function _getResourceGroupSymmetricKey (resourceGroupId) {
  */
 async function _encryptDoc (resourceGroupId, doc) {
   const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
-  const message = crypt.encryptAES(symmetricKey, JSON.stringify(doc));
+  const docStr = JSON.stringify(doc);
+  const message = crypt.encryptAES(symmetricKey, docStr);
   return JSON.stringify(message);
 }
 

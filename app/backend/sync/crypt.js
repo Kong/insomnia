@@ -34,11 +34,13 @@ export function encryptRSAWithJWK (publicKeyJWK, plaintext) {
     throw new Error('Public key does not have "encrypt" op');
   }
 
+  const encodedPlaintext = encodeURIComponent(plaintext);
+
   const n = _b64UrlToBigInt(publicKeyJWK.n);
   const e = _b64UrlToBigInt(publicKeyJWK.e);
   const publicKey = forge.rsa.setPublicKey(n, e);
 
-  const encrypted = publicKey.encrypt(plaintext, 'RSA-OAEP', {
+  const encrypted = publicKey.encrypt(encodedPlaintext, 'RSA-OAEP', {
     md: forge.md.sha256.create()
   });
   return forge.util.bytesToHex(encrypted);
@@ -56,9 +58,11 @@ export function decryptRSAWithJWK (privateJWK, encryptedBlob) {
 
   const privateKey = forge.rsa.setPrivateKey(n, e, d, p, q, dP, dQ, qInv);
   const bytes = forge.util.hexToBytes(encryptedBlob);
-  return privateKey.decrypt(bytes, 'RSA-OAEP', {
+  const decrypted = privateKey.decrypt(bytes, 'RSA-OAEP', {
     md: forge.md.sha256.create()
   });
+
+  return decodeURIComponent(decrypted);
 }
 
 
@@ -78,8 +82,11 @@ export function encryptAES (jwkOrKey, plaintext, additionalData) {
   const iv = forge.random.getBytesSync(12);
   const cipher = forge.cipher.createCipher('AES-GCM', key);
 
+  // Plaintext could contain weird unicode, so we have to encode that
+  const encodedPlaintext = encodeURIComponent(plaintext);
+
   cipher.start({additionalData, iv, tagLength: 128});
-  cipher.update(forge.util.createBuffer(plaintext));
+  cipher.update(forge.util.createBuffer(encodedPlaintext));
   cipher.finish();
 
   return {
@@ -118,7 +125,7 @@ export function decryptAES (jwkOrKey, message) {
   decipher.update(forge.util.createBuffer(forge.util.hexToBytes(message.d)));
 
   if (decipher.finish()) {
-    return decipher.output.toString()
+    return decodeURIComponent(decipher.output.toString())
   } else {
     throw new Error('Failed to decrypt data')
   }
