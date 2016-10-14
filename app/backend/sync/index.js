@@ -12,7 +12,8 @@ const WHITE_LIST = {
 };
 
 // TODO: Move this stuff somewhere else
-let resourceGroupId = '__NO_RESOURCE_GROUP__';
+const NO_RESOURCE_GROUP = '__NO_RESOURCE_GROUP__';
+let resourceGroupId = NO_RESOURCE_GROUP;
 const resourceGroupCache = {};
 
 export async function initSync () {
@@ -61,6 +62,11 @@ function addChange (event, doc) {
 async function _syncPushChanges (changes) {
   if (!session.isLoggedIn()) {
     console.warn('-- Trying to sync but not logged in --');
+    return;
+  }
+
+  if (resourceGroupId === NO_RESOURCE_GROUP) {
+    console.log('-- Skipping sync with no ResourceGroup --');
     return;
   }
 
@@ -127,17 +133,22 @@ async function _syncPullChanges () {
     return;
   }
 
+  if (resourceGroupId === NO_RESOURCE_GROUP) {
+    console.log('-- Skipping sync with no ResourceGroup --');
+    return;
+  }
+
   const allDocs = [];
-  const allResources = [];
+  const resourcePairs = [];
 
   for (const type of Object.keys(WHITE_LIST)) {
     for (const doc of await db.all(type)) {
       allDocs.push(doc);
-      allResources.push({id: doc._id, etag: doc._etag});
+      resourcePairs.push({id: doc._id, etag: doc._etag});
     }
   }
 
-  const body = {resourceGroupId, resources: allResources};
+  const body = {resourceGroupId, resources: resourcePairs};
 
   let responseBody;
   try {
