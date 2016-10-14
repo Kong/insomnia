@@ -395,7 +395,8 @@ async function _createMissingLocalResources () {
   // Get all possible documents to sync //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  const allResources = await resourceStore.findByResourceGroupId(activeResourceGroupId);
+  const allResourcesEver = await resourceStore.findByResourceGroupId(activeResourceGroupId);
+  const allResources = allResourcesEver.filter(r => !r.resourceDeleted);
   const workspace = await db.workspace.getById(activeWorkspaceId);
   const allDocsEver = await db.withDescendants(workspace);
   const allDocs = allDocsEver.filter(d => WHITE_LIST[d.type]);
