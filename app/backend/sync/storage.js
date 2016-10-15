@@ -106,11 +106,14 @@ export function insert (resource) {
  * Update an existing resource
  *
  * @param resource
+ * @param patch
+ * @param patch2
  * @returns {Promise}
  */
-export function update (resource) {
+export function update (resource, patch = {}, patch2 = {}) {
   return new Promise((resolve, reject) => {
-    _getDB().update({_id: resource._id}, resource, err => {
+    const updatedResource = Object.assign(resource, patch, patch2);
+    _getDB().update({_id: resource._id}, updatedResource, err => {
       if (err) {
         reject(err);
       } else {
