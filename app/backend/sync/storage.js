@@ -3,13 +3,47 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 
 /**
- * Get all the ResourceGroups
+ * Get all the Resources
  *
  * @returns {Promise}
  */
 export function findByResourceGroupId (resourceGroupId) {
   return new Promise((resolve, reject) => {
     _getDB().find({resourceGroupId}, (err, rawDocs) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rawDocs);
+      }
+    })
+  });
+}
+
+/**
+ * Get all Resources
+ *
+ * @returns {Promise}
+ */
+export function all () {
+  return new Promise((resolve, reject) => {
+    _getDB().find({}, (err, rawDocs) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rawDocs);
+      }
+    })
+  });
+}
+
+/**
+ * Get all dirty Resources
+ *
+ * @returns {Promise}
+ */
+export function findDirty () {
+  return new Promise((resolve, reject) => {
+    _getDB().find({dirty: true}, (err, rawDocs) => {
       if (err) {
         reject(err);
       } else {

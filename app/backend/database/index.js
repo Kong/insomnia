@@ -362,6 +362,33 @@ export async function withDescendants (doc = null) {
   return await next([doc]);
 }
 
+export async function withAncestors (doc) {
+  let docsToReturn = doc ? [doc] : [];
+
+  async function next (docs) {
+    let foundDocs = [];
+
+    for (const d of docs) {
+      for (const type of ALL_TYPES) {
+        // If the doc is null, we want to search for parentId === null
+        const more = await find(type, {_id: d.parentId});
+        foundDocs = [...foundDocs, ...more]
+      }
+    }
+
+    if (foundDocs.length === 0) {
+      // Didn't find anything. We're done
+      return docsToReturn;
+    }
+
+    // Continue searching for children
+    docsToReturn = [...docsToReturn, ...foundDocs];
+    return await next(foundDocs);
+  }
+
+  return await next([doc]);
+}
+
 export async function duplicate (originalDoc, patch = {}) {
   bufferChanges();
 
