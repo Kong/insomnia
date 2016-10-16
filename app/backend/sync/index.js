@@ -4,6 +4,10 @@ import * as crypt from './crypt';
 import * as session from './session';
 import * as resourceStore from './storage';
 
+const FULL_SYNC_INTERVAL = 30E3;
+const DEBOUNCE_TIME = 9E3;
+const START_DELAY = 3E3;
+
 const WHITE_LIST = {
   [db.request.type]: true,
   [db.requestGroup.type]: true,
@@ -25,8 +29,9 @@ export async function initSync () {
     }
   });
 
-  setTimeout(_syncPullChanges, 4000);
-  setInterval(_syncPullChanges, 1000 * 30);
+  setTimeout(_syncPullChanges, START_DELAY);
+  setTimeout(_syncPushDirtyResources, START_DELAY);
+  setInterval(_syncPullChanges, FULL_SYNC_INTERVAL);
 }
 
 // ~~~~~~~ //
@@ -46,7 +51,7 @@ async function _queueChange (event, doc) {
 
   // Debounce pushing of dirty resources
   clearTimeout(commitTimeout);
-  commitTimeout = setTimeout(() => _syncPushDirtyResources(), 3000);
+  commitTimeout = setTimeout(() => _syncPushDirtyResources(), DEBOUNCE_TIME);
 }
 
 async function _syncPushDirtyResources () {
@@ -87,7 +92,6 @@ async function _syncPushDirtyResources () {
   // Resolve conflicts
   const {conflicts} = responseBody;
   for (const serverResource of conflicts) {
-    console.log(`-- Resolving conflict for ${serverResource.resourceId} --`);
 
     const localResource = await resourceStore.getByResourceId(serverResource.resourceId);
 
@@ -97,11 +101,10 @@ async function _syncPushDirtyResources () {
     const localDoc = await _decryptDoc(serverResource.resourceGroupId, localResource.resourceContent);
 
     // On conflict, choose last modified one
-    const serverIsNewer = serverDoc.modified > localDoc.modified;
+    const serverIsNewer = serverDoc.modified >= localDoc.modified;
     const winningDoc = serverIsNewer ? serverDoc : localDoc;
 
-    // Update app database
-    await db.update(winningDoc, true);
+    console.log(`-- Resolved conflict for ${serverResource.resourceId} (${serverIsNewer ? "Server" : "Local"}) --`);
 
     // Update local resource
     await resourceStore.update(localResource, {
@@ -109,6 +112,9 @@ async function _syncPushDirtyResources () {
       resourceContent: serverIsNewer ? serverResource.resourceContent : localResource.resourceContent,
       dirty: !serverIsNewer // It's dirty if we chose the local doc
     });
+
+    // Update app database (NOTE: Not silently)
+    await db.update(winningDoc);
   }
 }
 
@@ -150,11 +156,11 @@ async function _syncPullChanges () {
       const {resourceGroupId, resourceContent} = serverResource;
       const doc = await _decryptDoc(resourceGroupId, resourceContent);
 
-      // Insert into app database silently
-      await db.insert(doc, true);
-
       // Update local Resource
       await resourceStore.insert(serverResource, {dirty: false});
+
+      // Insert into app database (NOTE: not silently)
+      await db.insert(doc);
     } catch (e) {
       console.warn('Failed to decode created resource', e, serverResource);
     }
@@ -173,8 +179,8 @@ async function _syncPullChanges () {
       const {resourceGroupId, resourceContent} = serverResource;
       const doc = await _decryptDoc(resourceGroupId, resourceContent);
 
-      // Update app database silently
-      await db.update(doc, true);
+      // Update app database (NOTE: Not silently)
+      await db.update(doc);
 
       // Update local resource
       const resource = await resourceStore.getByResourceId(serverResource.resourceId);
@@ -203,9 +209,11 @@ async function _syncPullChanges () {
       throw new Error(`Could not find doc to remove ${idToRemove}`)
     }
 
-    console.log('REMOVING ID', idToRemove);
-    await db.remove(doc, true);
+    // Mark resource as deleted
     await resourceStore.update(resource, {dirty: false, resourceDeleted: true});
+
+    // Remove from DB (NOTE: Not silently)
+    await db.remove(doc);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -218,7 +226,7 @@ async function _syncPullChanges () {
       throw new Error(`Could not find Resource to push for resourceId ${idToPush}`)
     }
 
-    const doc = await db.getWhere(resource.resourceType, {_id: resource.resourceId});
+    const doc = await _decryptDoc(resource.resourceGroupId, resource.resourceContent);
     if (!doc) {
       throw new Error(`Could not find doc to push ${idToPush}`)
     }
@@ -235,13 +243,16 @@ async function _syncPullChanges () {
  * @returns {*}
  */
 async function _fetchResourceGroup (resourceGroupId) {
-  if (!resourceGroupCache.hasOwnProperty(resourceGroupId)) {
+  let resourceGroup = resourceGroupCache[resourceGroupId];
+
+  if (!resourceGroup) {
     // TODO: Handle a 404 here
-    resourceGroupCache[resourceGroupId] = await util.fetchGet(
+    resourceGroup = resourceGroupCache[resourceGroupId] = await util.fetchGet(
       `/resource_groups/${resourceGroupId}`
     );
   }
-  return resourceGroupCache[resourceGroupId];
+
+  return resourceGroup;
 }
 
 /**
@@ -320,6 +331,12 @@ async function _getOrCreateResourceForDoc (doc) {
   if (!resource) {
     // No resource yet, so create one
     const workspace = await _getWorkspaceForDoc(doc);
+
+    if (!workspace) {
+      console.error('Could not find workspace for doc!', doc, resource);
+      return;
+    }
+
     let workspaceResource = await resourceStore.getByResourceId(workspace._id);
 
     if (!workspaceResource) {

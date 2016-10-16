@@ -200,6 +200,7 @@ export function setSessionData (sessionId, accountId, symmetricKey, publicKey, e
 export function unsetSessionData () {
   const sessionId = getCurrentSessionId();
   localStorage.removeItem(`session__${sessionId}`);
+  localStorage.removeItem(`currentSessionId`);
 }
 
 /**

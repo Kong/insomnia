@@ -43,9 +43,10 @@ async function _fetch (method, path, json, sessionId = null) {
 }
 
 function _getUrl (path) {
-  if (isDevelopment()) {
-    return `http://localhost:8000/api/v1${path}`;
-  } else {
-    return `https://insomnia-api.herokuapp.com/api/v1${path}`;
-  }
+  return `http://localhost:8000/api/v1${path}`;
+  // if (isDevelopment()) {
+  //   return `http://localhost:8000/api/v1${path}`;
+  // } else {
+  //   return `https://insomnia-api.herokuapp.com/api/v1${path}`;
+  // }
 }
