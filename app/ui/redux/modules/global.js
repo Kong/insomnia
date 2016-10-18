@@ -11,6 +11,8 @@ const LOAD_STOP = 'global/load-stop';
 const REQUEST_ACTIVATE = 'global/request-activate';
 const CHANGE_FILTER = 'global/change-filter';
 const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
+const SET_SIDEBAR_WIDTH = 'global/set-sidebar-width';
+const SET_PANE_WIDTH = 'global/set-pane-width';
 
 
 // ~~~~~~~~ //
@@ -20,6 +22,18 @@ const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
 function workspaceMetaReducer (state = {}, action) {
   let newState;
   switch (action.type) {
+    case SET_PANE_WIDTH:
+      const {width: paneWidth} = action;
+      newState = Object.assign({}, state);
+      newState[action.workspaceId] = newState[action.workspaceId] || {};
+      newState[action.workspaceId].paneWidth = paneWidth || '';
+      return newState;
+    case SET_SIDEBAR_WIDTH:
+      let {width: sidebarWidth} = action;
+      newState = Object.assign({}, state);
+      newState[action.workspaceId] = newState[action.workspaceId] || {};
+      newState[action.workspaceId].sidebarWidth = sidebarWidth || '';
+      return newState;
     case CHANGE_FILTER:
       let {filter} = action;
       newState = Object.assign({}, state);
@@ -116,9 +130,25 @@ export function importFile (workspace) {
   }
 }
 
+export function setPaneWidth (workspace, width) {
+  return {
+    type: SET_PANE_WIDTH,
+    workspaceId: workspace._id,
+    width: width
+  };
+}
+
+export function setSidebarWidth (workspace, width) {
+  return {
+    type: SET_SIDEBAR_WIDTH,
+    workspaceId: workspace._id,
+    width: width
+  };
+}
+
 export function toggleSidebar (workspace) {
   return {
-    type: TOGGLE_SIDEBAR + '',
+    type: TOGGLE_SIDEBAR,
     workspaceId: workspace._id
   };
 }

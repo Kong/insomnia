@@ -44,14 +44,14 @@ class App extends Component {
   constructor (props) {
     super(props);
 
-    const workspace = this._getActiveWorkspace(props);
+    const workspaceMeta = this._getActiveWorkspaceMeta(props);
     this.state = {
       activeResponse: null,
       activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
-      sidebarWidth: workspace.metaSidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
-      paneWidth: workspace.metaPaneWidth || DEFAULT_PANE_WIDTH // % (fr)
+      sidebarWidth: workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
+      paneWidth: workspaceMeta.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
     };
 
     this.globalKeyMap = {
@@ -308,30 +308,29 @@ class App extends Component {
   }
 
   _startDragPane () {
-    this.setState({
-      draggingPane: true
-    })
+    this.setState({draggingPane: true})
   }
 
   _resetDragPane () {
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
-      this.setState({
-        paneWidth: DEFAULT_PANE_WIDTH
-      })
-
+      this.setState({paneWidth: DEFAULT_PANE_WIDTH});
       this._savePaneWidth();
     }, 50);
   }
 
   _savePaneWidth () {
-    const metaPaneWidth = this.state.paneWidth;
-    db.workspace.update(this._getActiveWorkspace(), {metaPaneWidth});
+    this.props.actions.global.setPaneWidth(
+      this._getActiveWorkspace(),
+      this.state.paneWidth
+    );
   }
 
   _saveSidebarWidth () {
-    const metaSidebarWidth = this.state.sidebarWidth;
-    db.workspace.update(this._getActiveWorkspace(), {metaSidebarWidth});
+    this.props.actions.global.setSidebarWidth(
+      this._getActiveWorkspace(),
+      this.state.sidebarWidth
+    );
   }
 
   _getActiveWorkspaceMeta (props) {
@@ -403,11 +402,6 @@ class App extends Component {
   _handleToggleSidebar () {
     const workspace = this._getActiveWorkspace();
     this.props.actions.global.toggleSidebar(workspace);
-  }
-
-  componentWillReceiveProps (nextProps) {
-    const sidebarWidth = this._getActiveWorkspace(nextProps).metaSidebarWidth;
-    this.setState({sidebarWidth});
   }
 
   async componentDidMount () {
@@ -598,7 +592,9 @@ App.propTypes = {
       importFile: PropTypes.func.isRequired,
       activateRequest: PropTypes.func.isRequired,
       changeFilter: PropTypes.func.isRequired,
-      toggleSidebar: PropTypes.func.isRequired
+      toggleSidebar: PropTypes.func.isRequired,
+      setSidebarWidth: PropTypes.func.isRequired,
+      setPaneWidth: PropTypes.func.isRequired
     }).isRequired
   }).isRequired,
   entities: PropTypes.shape({

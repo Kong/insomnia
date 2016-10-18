@@ -1,12 +1,10 @@
 import * as db from '../index';
-import {DEFAULT_SIDEBAR_WIDTH} from '../../constants';
 
 export const type = 'Workspace';
 export const prefix = 'wrk';
 export function init () {
   return db.initModel({
     name: 'New Workspace',
-    metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     metaActiveEnvironmentId: null
   });
 }
