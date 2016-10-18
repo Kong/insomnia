@@ -1,4 +1,5 @@
 import electron from 'electron';
+import {combineReducers} from 'redux';
 import fs from 'fs';
 
 import {importJSON, exportJSON} from '../../../backend/export/database';
@@ -7,29 +8,59 @@ import {trackEvent} from '../../../backend/analytics';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
-
-const initialState = {
-  loading: false
-};
+const REQUEST_ACTIVATE = 'global/request-activate';
+const CHANGE_FILTER = 'global/change-filter';
+const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
 
 
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
 
-export default function (state = initialState, action) {
+function workspaceMetaReducer (state = {}, action) {
+  let newState;
+  switch (action.type) {
+    case CHANGE_FILTER:
+      let {filter} = action;
+      newState = Object.assign({}, state);
+      newState[action.workspaceId] = newState[action.workspaceId] || {};
+      newState[action.workspaceId].filter = filter || '';
+      return newState;
+    case TOGGLE_SIDEBAR:
+      newState = Object.assign({}, state);
+      newState[action.workspaceId] = newState[action.workspaceId] || {};
+      const hidden = newState[action.workspaceId].sidebarHidden;
+      newState[action.workspaceId].sidebarHidden = !hidden;
+      return newState;
+    case REQUEST_ACTIVATE:
+      const {requestId} = action;
+      newState = Object.assign({}, state);
+      newState[action.workspaceId] = newState[action.workspaceId] || {};
+      newState[action.workspaceId].activeRequestId = requestId;
+      return newState;
+    default:
+      return state;
+  }
+}
+
+function loadingReducer (state = false, action) {
   switch (action.type) {
 
     case LOAD_START:
-      return Object.assign({}, state, {loading: true});
+      return true;
 
     case LOAD_STOP:
-      return Object.assign({}, state, {loading: false});
+      return false;
 
     default:
       return state;
   }
 }
+
+export default combineReducers({
+  loading: loadingReducer,
+  workspaceMeta: workspaceMetaReducer
+});
 
 
 // ~~~~~~~ //
@@ -69,9 +100,6 @@ export function importFile (workspace) {
       // Let's import all the paths!
       paths.map(path => {
         fs.readFile(path, 'utf8', async (err, data) => {
-          // Unset the current active request first because we might be updating it
-          await db.workspace.update(workspace, {metaActiveRequestId: null});
-
           dispatch(loadStop());
 
           if (err) {
@@ -86,6 +114,29 @@ export function importFile (workspace) {
       })
     });
   }
+}
+
+export function toggleSidebar (workspace) {
+  return {
+    type: TOGGLE_SIDEBAR + '',
+    workspaceId: workspace._id
+  };
+}
+
+export function changeFilter (workspace, filter) {
+  return {
+    type: CHANGE_FILTER,
+    filter: filter,
+    workspaceId: workspace._id
+  };
+}
+
+export function activateRequest (workspace, request) {
+  return {
+    type: REQUEST_ACTIVATE,
+    requestId: request._id,
+    workspaceId: workspace._id
+  };
 }
 
 export function exportFile (parentDoc = null) {

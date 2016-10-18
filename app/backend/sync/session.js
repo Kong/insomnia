@@ -8,14 +8,16 @@ const NO_SESSION = '__NO_SESSION__';
  * Create a new account
  *
  * @returns {Promise}
+ * @param firstName
+ * @param lastName
  * @param rawEmail
  * @param rawPassphrase
  */
-export async function signup (rawEmail, rawPassphrase) {
+export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
   const email = _sanitizeEmail(rawEmail);
   const passphrase = _sanitizePassphrase(rawPassphrase);
 
-  const account = await _initAccount(email);
+  const account = await _initAccount(firstName, lastName, email);
   const authSecret = await crypt.deriveKey(passphrase, account.email, account.saltKey);
   const encSecret = await crypt.deriveKey(passphrase, account.email, account.saltEnc);
 
@@ -42,17 +44,6 @@ export async function signup (rawEmail, rawPassphrase) {
   account.encPrivateKey = encPrivateJWKMessageStr;
 
   return util.fetchPost('/auth/signup', account);
-}
-
-/**
- * Convenience function to both signup and log in at the same time
- *
- * @param rawEmail
- * @param rawPassphrase
- */
-export async function signupAndLogin (rawEmail, rawPassphrase) {
-  await signup(rawEmail, rawPassphrase);
-  await login(rawEmail, rawPassphrase);
 }
 
 
@@ -162,6 +153,10 @@ export function getCurrentSessionId () {
  */
 export function getSessionData () {
   const sessionId = getCurrentSessionId();
+  if (!sessionId) {
+    return null;
+  }
+
   const messageStr = localStorage.getItem(`session__${sessionId}`);
   const dataStr = crypt.decryptAES(sessionId, JSON.parse(messageStr));
   return messageStr ? JSON.parse(dataStr) : null;
@@ -232,9 +227,11 @@ export function whoami (sessionId = null) {
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 
-async function _initAccount (email) {
+async function _initAccount (firstName, lastName, email) {
   return {
-    email: email,
+    email,
+    firstName,
+    lastName,
     id: await crypt.generateAccountId(),
     saltEnc: await crypt.getRandomHex(),
     saltAuth: await crypt.getRandomHex(),

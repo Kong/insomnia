@@ -7,10 +7,7 @@ export function init () {
   return db.initModel({
     name: 'New Workspace',
     metaSidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    metaActiveEnvironmentId: null,
-    metaActiveRequestId: null,
-    metaFilter: '',
-    metaSidebarHidden: false
+    metaActiveEnvironmentId: null
   });
 }
 

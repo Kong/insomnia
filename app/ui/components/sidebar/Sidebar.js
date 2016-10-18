@@ -12,6 +12,8 @@ import {COLLAPSE_SIDEBAR_REMS} from '../../../backend/constants';
 
 class Sidebar extends Component {
   _filterChildren (filter, children, extra = null) {
+    filter = filter || '';
+
     return children.filter(child => {
       if (child.doc.type !== 'Request') {
         return true;

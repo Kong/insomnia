@@ -17,7 +17,7 @@ const WHITE_LIST = {
 };
 
 // TODO: Move this stuff somewhere else
-const NO_ETAG = '__NO_ETAG__';
+const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 
 export async function initSync () {
@@ -41,11 +41,16 @@ export async function initSync () {
 let commitTimeout = null;
 
 async function _queueChange (event, doc) {
+  if (!session.isLoggedIn()) {
+    console.warn('-- Trying to queue change but not logged in --');
+    return;
+  }
+
   // Update the resource content and set dirty
   const resource = await _getOrCreateResourceForDoc(doc);
   await resourceStore.update(resource, {
-    resourceContent: await _encryptDoc(resource.resourceGroupId, doc),
-    resourceDeleted: event === db.CHANGE_REMOVE,
+    content: await _encryptDoc(resource.resourceGroupId, doc),
+    removed: event === db.CHANGE_REMOVE,
     dirty: true
   });
 
@@ -64,13 +69,18 @@ async function _syncPushDirtyResources () {
   await _getOrCreateAllResources();
   const dirtyResources = await resourceStore.findDirty();
 
+  if (!dirtyResources.length) {
+    console.log('-- No changes to sync push --');
+    return;
+  }
+
   const body = dirtyResources.map(r => ({
     resourceId: r.resourceId,
-    resourceETag: r.resourceETag,
     resourceGroupId: r.resourceGroupId,
-    resourceDeleted: r.resourceDeleted,
-    resourceType: r.resourceType,
-    resourceContent: r.resourceContent
+    version: r.version,
+    removed: r.removed,
+    type: r.type,
+    encContent: r.encContent
   }));
 
   let responseBody;
@@ -81,12 +91,12 @@ async function _syncPushDirtyResources () {
     return;
   }
 
-  // Update all resource ETags with the ones that were returned
+  // Update all resource versions with the ones that were returned
   const {updated, created} = responseBody;
-  for (const {resourceId, resourceETag} of [...created, ...updated]) {
+  for (const {resourceId, version} of [...created, ...updated]) {
     console.log(`-- Upserting doc for ${resourceId} --`);
     const resource = await resourceStore.getByResourceId(resourceId);
-    await resourceStore.update(resource, {resourceETag, dirty: false});
+    await resourceStore.update(resource, {version, dirty: false});
   }
 
   // Resolve conflicts
@@ -97,8 +107,8 @@ async function _syncPushDirtyResources () {
 
     // Decrypt the docs from the resources. Don't fetch the local doc from the
     // app database, because it might have been deleted.
-    const serverDoc = await _decryptDoc(serverResource.resourceGroupId, serverResource.resourceContent);
-    const localDoc = await _decryptDoc(serverResource.resourceGroupId, localResource.resourceContent);
+    const serverDoc = await _decryptDoc(serverResource.resourceGroupId, serverResource.encContent);
+    const localDoc = await _decryptDoc(serverResource.resourceGroupId, localResource.encContent);
 
     // On conflict, choose last modified one
     const serverIsNewer = serverDoc.modified >= localDoc.modified;
@@ -108,8 +118,8 @@ async function _syncPushDirtyResources () {
 
     // Update local resource
     await resourceStore.update(localResource, {
-      resourceETag: serverResource.resourceETag,
-      resourceContent: serverIsNewer ? serverResource.resourceContent : localResource.resourceContent,
+      version: serverResource.version,
+      encContent: serverIsNewer ? serverResource.encContent : localResource.encContent,
       dirty: !serverIsNewer // It's dirty if we chose the local doc
     });
 
@@ -128,8 +138,8 @@ async function _syncPullChanges () {
   const body = allResources.map(r => ({
     resourceId: r.resourceId,
     resourceGroupId: r.resourceGroupId,
-    resourceETag: r.resourceETag,
-    resourceDeleted: r.resourceDeleted
+    version: r.version,
+    remove: r.removed
   }));
 
   let responseBody;
@@ -153,8 +163,8 @@ async function _syncPullChanges () {
 
   await createdResources.map(async serverResource => {
     try {
-      const {resourceGroupId, resourceContent} = serverResource;
-      const doc = await _decryptDoc(resourceGroupId, resourceContent);
+      const {resourceGroupId, encContent} = serverResource;
+      const doc = await _decryptDoc(resourceGroupId, encContent);
 
       // Update local Resource
       await resourceStore.insert(serverResource, {dirty: false});
@@ -176,8 +186,8 @@ async function _syncPullChanges () {
 
   await updatedResources.map(async serverResource => {
     try {
-      const {resourceGroupId, resourceContent} = serverResource;
-      const doc = await _decryptDoc(resourceGroupId, resourceContent);
+      const {resourceGroupId, encContent} = serverResource;
+      const doc = await _decryptDoc(resourceGroupId, encContent);
 
       // Update app database (NOTE: Not silently)
       await db.update(doc);
@@ -204,13 +214,13 @@ async function _syncPullChanges () {
       throw new Error(`Could not find Resource to remove for resourceId ${idToRemove}`)
     }
 
-    const doc = await db.getWhere(resource.resourceType, {_id: resource.resourceId});
+    const doc = await db.getWhere(resource.type, {_id: resource.resourceId});
     if (!doc) {
       throw new Error(`Could not find doc to remove ${idToRemove}`)
     }
 
     // Mark resource as deleted
-    await resourceStore.update(resource, {dirty: false, resourceDeleted: true});
+    await resourceStore.update(resource, {dirty: false, removed: true});
 
     // Remove from DB (NOTE: Not silently)
     await db.remove(doc);
@@ -226,7 +236,7 @@ async function _syncPullChanges () {
       throw new Error(`Could not find Resource to push for resourceId ${idToPush}`)
     }
 
-    const doc = await _decryptDoc(resource.resourceGroupId, resource.resourceContent);
+    const doc = await _decryptDoc(resource.resourceGroupId, resource.encContent);
     if (!doc) {
       throw new Error(`Could not find doc to push ${idToPush}`)
     }
@@ -248,7 +258,7 @@ async function _fetchResourceGroup (resourceGroupId) {
   if (!resourceGroup) {
     // TODO: Handle a 404 here
     resourceGroup = resourceGroupCache[resourceGroupId] = await util.fetchGet(
-      `/resource_groups/${resourceGroupId}`
+      `/api/resource_groups/${resourceGroupId}`
     );
   }
 
@@ -302,7 +312,7 @@ async function _createResourceGroup () {
   const encRGSymmetricJWK = crypt.encryptRSAWithJWK(publicJWK, rgSymmetricJWKStr);
 
   // Create the new ResourceGroup
-  const resourceGroup = await util.fetchPost('/resource_groups', {
+  const resourceGroup = await util.fetchPost('/api/resource_groups', {
     encSymmetricKey: encRGSymmetricJWK,
     name: 'Test Group',
     description: ''
@@ -316,11 +326,11 @@ async function _createResourceGroup () {
 async function _createResource (doc, resourceGroupId) {
   return resourceStore.insert({
     resourceId: doc._id,
-    resourceETag: NO_ETAG,
     resourceGroupId: resourceGroupId,
-    resourceDeleted: false,
-    resourceType: doc.type,
-    resourceContent: await _encryptDoc(resourceGroupId, doc),
+    version: NO_VERSION,
+    removed: false,
+    type: doc.type,
+    encContent: await _encryptDoc(resourceGroupId, doc),
     dirty: true
   });
 }

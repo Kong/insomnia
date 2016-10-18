@@ -19,10 +19,6 @@ class Modal extends Component {
     let target = e.target;
     let shouldHide = false;
 
-    if (target === ReactDOM.findDOMNode(this)) {
-      shouldHide = true;
-    }
-
     for (let i = 0; i < 5; i++) {
       if (target.hasAttribute('data-close-modal')) {
         shouldHide = true;

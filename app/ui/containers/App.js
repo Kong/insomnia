@@ -28,8 +28,7 @@ import {
   DEFAULT_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
   MIN_SIDEBAR_REMS,
-  DEFAULT_SIDEBAR_WIDTH,
-  CHECK_FOR_UPDATES_INTERVAL
+  DEFAULT_SIDEBAR_WIDTH
 } from '../../backend/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
@@ -107,15 +106,17 @@ class App extends Component {
       },
 
       // Request Duplicate
-      'mod+d': () => {
-        const request = this._getActiveRequest();
-        const workspace = this._getActiveWorkspace();
+      'mod+d': async () => {
+        const activeRequest = this._getActiveRequest();
 
-        if (!request) {
+        if (!activeRequest) {
           return;
         }
 
-        db.request.duplicateAndActivate(workspace, request);
+        const request = await db.request.duplicate(activeRequest);
+
+        const workspace = this._getActiveWorkspace();
+        this.props.actions.global.activateRequest(workspace, request)
       }
     }
   }
@@ -257,7 +258,8 @@ class App extends Component {
     });
 
     const workspace = this._getActiveWorkspace();
-    db.request.createAndActivate(workspace, {parentId, name})
+    const request = await db.request.create({parentId, name});
+    this.props.actions.global.activateRequest(workspace, request);
   }
 
   _generateSidebarTree (parentId, entities) {
@@ -332,10 +334,16 @@ class App extends Component {
     db.workspace.update(this._getActiveWorkspace(), {metaSidebarWidth});
   }
 
+  _getActiveWorkspaceMeta (props) {
+    props = props || this.props;
+    const workspace = this._getActiveWorkspace();
+    return props.global.workspaceMeta[workspace._id] || {};
+  }
+
   _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
 
-    const {entities, workspaces, actions} = props || this.props;
+    const {entities, workspaces} = props || this.props;
     let workspace = entities.workspaces[workspaces.activeId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
@@ -349,8 +357,8 @@ class App extends Component {
 
     props = props || this.props;
     const {entities} = props;
-    let activeRequestId = this._getActiveWorkspace(props).metaActiveRequestId;
-    return activeRequestId ? entities.requests[activeRequestId] : null;
+    const workspaceMeta = this._getActiveWorkspaceMeta(props);
+    return entities.requests[workspaceMeta.activeRequestId];
   }
 
   _handleMouseMove (e) {
@@ -394,8 +402,7 @@ class App extends Component {
 
   _handleToggleSidebar () {
     const workspace = this._getActiveWorkspace();
-    const metaSidebarHidden = !workspace.metaSidebarHidden;
-    db.workspace.update(workspace, {metaSidebarHidden});
+    this.props.actions.global.toggleSidebar(workspace);
   }
 
   componentWillReceiveProps (nextProps) {
@@ -454,7 +461,7 @@ class App extends Component {
 
   render () {
     // throw new Error('Test Exception');
-    const {actions, entities, requests} = this.props;
+    const {actions, entities, requests, global} = this.props;
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
     const workspace = this._getActiveWorkspace();
@@ -471,7 +478,8 @@ class App extends Component {
     );
 
     const {sidebarWidth, paneWidth} = this.state;
-    const realSidebarWidth = workspace.metaSidebarHidden ? 0 : sidebarWidth;
+    const workspaceMeta = this._getActiveWorkspaceMeta();
+    const realSidebarWidth = workspaceMeta.sidebarHidden ? 0 : sidebarWidth;
     const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
     return (
@@ -481,8 +489,8 @@ class App extends Component {
           ref={n => this._sidebar = n}
           showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
           showCookiesModal={() => getModal(CookiesModal).show(workspace)}
-          activateRequest={r => db.workspace.update(workspace, {metaActiveRequestId: r._id})}
-          changeFilter={metaFilter => db.workspace.update(workspace, {metaFilter})}
+          activateRequest={r => actions.global.activateRequest(workspace, r)}
+          changeFilter={filter => actions.global.changeFilter(workspace, filter)}
           moveRequest={this._moveRequest.bind(this)}
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
@@ -491,8 +499,8 @@ class App extends Component {
           activeRequestId={activeRequestId}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
-          filter={workspace.metaFilter || ''}
-          hidden={workspace.metaSidebarHidden}
+          filter={workspaceMeta.filter}
+          hidden={workspaceMeta.sidebarHidden}
           children={children}
           width={sidebarWidth}
         />
@@ -557,7 +565,7 @@ class App extends Component {
           ref={m => addModal(m)}
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
-          activateRequest={r => db.workspace.update(workspace, {metaActiveRequestId: r._id})}
+          activateRequest={r => actions.global.activateRequest(workspace, r)}
           activateWorkspace={w => actions.workspaces.activate(w)}
         />
         <EnvironmentEditModal
@@ -587,7 +595,10 @@ App.propTypes = {
       activate: PropTypes.func.isRequired
     }).isRequired,
     global: PropTypes.shape({
-      importFile: PropTypes.func.isRequired
+      importFile: PropTypes.func.isRequired,
+      activateRequest: PropTypes.func.isRequired,
+      changeFilter: PropTypes.func.isRequired,
+      toggleSidebar: PropTypes.func.isRequired
     }).isRequired
   }).isRequired,
   entities: PropTypes.shape({
@@ -600,6 +611,9 @@ App.propTypes = {
   }).isRequired,
   requests: PropTypes.shape({
     loadingRequests: PropTypes.object.isRequired
+  }).isRequired,
+  global: PropTypes.shape({
+    workspaceMeta: PropTypes.object.isRequired
   }).isRequired
 };
 
@@ -608,7 +622,8 @@ function mapStateToProps (state) {
     actions: state.actions,
     workspaces: state.workspaces,
     requests: state.requests,
-    entities: state.entities
+    entities: state.entities,
+    global: state.global
   };
 }
 

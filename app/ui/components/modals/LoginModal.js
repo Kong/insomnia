@@ -8,6 +8,11 @@ import {getModal} from './index';
 import SignupModal from './SignupModal';
 
 class LoginModal extends Component {
+  constructor (props) {
+    super(props);
+    this.state = {step: 1}
+  }
+
   async _handleLogin (e) {
     e.preventDefault();
 
@@ -16,7 +21,7 @@ class LoginModal extends Component {
 
     try {
       await session.login(email, password);
-      this.modal.hide();
+      this.setState({step: 2});
     } catch (e) {
       // TODO: Handle failures
       console.warn('Failed to login', e)
@@ -31,48 +36,69 @@ class LoginModal extends Component {
   }
 
   show () {
+    this.setState({step: 1});
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);
   }
 
   render () {
-    return (
-      <form onSubmit={this._handleLogin.bind(this)}>
+    if (this.state.step === 1) {
+      return (
         <Modal ref={m => this.modal = m} {...this.props}>
-          <ModalHeader>Login to Your Account</ModalHeader>
-          <ModalBody className="pad changelog">
-            <label htmlFor="login-email">Email</label>
-            <div className="form-control form-control--outlined">
-              <input type="email"
-                     required="required"
-                     id="login-email"
-                     name="email"
-                     placeholder="me@mydomain.com"
-                     ref={n => this._emailInput = n}/>
-            </div>
-            <label htmlFor="login-password">Password</label>
-            <div className="form-control form-control--outlined">
-              <input type="password"
-                     required="required"
-                     id="login-password"
-                     name="password"
-                     placeholder="•••••••••••••"
-                     ref={n => this._passwordInput = n}/>
-            </div>
+          <form onSubmit={this._handleLogin.bind(this)}>
+            <ModalHeader>Login to Your Account</ModalHeader>
+            <ModalBody className="pad changelog">
+              <label htmlFor="login-email">Email</label>
+              <div className="form-control form-control--outlined">
+                <input type="email"
+                       required="required"
+                       id="login-email"
+                       name="login-email"
+                       placeholder="me@mydomain.com"
+                       ref={n => this._emailInput = n}/>
+              </div>
+              <label htmlFor="login-password">Password</label>
+              <div className="form-control form-control--outlined">
+                <input type="password"
+                       required="required"
+                       id="login-password"
+                       name="login-password"
+                       placeholder="•••••••••••••••••"
+                       ref={n => this._passwordInput = n}/>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <button type="submit" className="pull-right btn">
+                Login
+              </button>
+              <div className="pad">
+                Don't have an account yet?
+                {" "}
+                <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
+              </div>
+            </ModalFooter>
+          </form>
+        </Modal>
+      )
+    } else {
+      return (
+        <Modal ref={m => this.modal = m} {...this.props}>
+          <ModalHeader>Login Success</ModalHeader>
+          <ModalBody className="pad">
+            <h1>Enjoy your stay!</h1>
+            <p>
+              You are now logged in to the app.
+            </p>
           </ModalBody>
           <ModalFooter>
-            <button type="submit" className="pull-right btn">
-              Login
+            <button type="submit" className="pull-right btn"
+                    onClick={e => this.modal.hide()}>
+              Close
             </button>
-            <div className="pad">
-              Don't have an account yet?
-              {" "}
-              <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
-            </div>
           </ModalFooter>
         </Modal>
-      </form>
-    )
+      )
+    }
   }
 }
 

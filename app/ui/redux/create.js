@@ -1,4 +1,5 @@
 import {createStore, applyMiddleware} from 'redux';
+import createLogger from 'redux-logger';
 import thunkMiddleware from 'redux-thunk'
 import localStorageMiddleware, {getState} from './middleware/localstorage';
 import rootReducer from './reducer';
@@ -12,7 +13,7 @@ export default function configureStore () {
   ];
 
   if (__DEV__) {
-    // middleware.push(createLogger({collapsed: true}));
+    middleware.push(createLogger({collapsed: true}));
   }
 
   // Create the store and apply middleware
@@ -24,7 +25,7 @@ export default function configureStore () {
 
   if (module.hot) {
     module.hot.accept('./reducer', () => {
-      const nextReducer = require('./reducer.js').default;
+      const nextReducer = require('./reducer');
       store.replaceReducer(nextReducer);
     })
   }

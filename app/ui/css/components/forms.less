@@ -12,10 +12,8 @@
     height: 100%;
   }
 
-  &.form-control--error {
-    input {
-      text-decoration: underline;
-    }
+  input:invalid {
+    border: 1px solid @warning !important;
   }
 
   &.form-control--outlined,

@@ -1,11 +1,13 @@
 import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
+import {bindActionCreators} from 'redux';
 import PromptButton from '../components/base/PromptButton';
 import Dropdown from '../components/base/Dropdown';
 import DropdownHint from '../components/base/DropdownHint';
 import DropdownDivider from '../components/base/DropdownDivider';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
+import * as GlobalActions from '../redux/modules/global';
 import * as db from '../../backend/database';
 import {getModal} from '../components/modals/index';
 
@@ -31,12 +33,13 @@ class RequestGroupActionsDropdown extends Component {
     const workspace = this._getActiveWorkspace();
     const {requestGroup} = this.props;
     const parentId = requestGroup._id;
-    db.request.createAndActivate(workspace, {parentId, name})
+    const request = await db.request.create({parentId, name});
+    this.props.actions.global.activateRequest(workspace, request);
   }
 
   _requestGroupDuplicate () {
     const {requestGroup} = this.props;
-    db.requestGroup.duplicate(requestGroup)
+    db.requestGroup.duplicate(requestGroup);
   }
 
   _getActiveWorkspace (props) {
@@ -101,6 +104,12 @@ RequestGroupActionsDropdown.propTypes = {
     workspaces: PropTypes.object.isRequired
   }).isRequired,
 
+  actions: PropTypes.shape({
+    global: PropTypes.shape({
+      activateRequest: PropTypes.func.isRequired
+    }).isRequired,
+  }),
+
   workspaces: PropTypes.shape({
     activeId: PropTypes.string
   }),
@@ -117,7 +126,11 @@ function mapStateToProps (state) {
 }
 
 function mapDispatchToProps (dispatch) {
-  return {}
+  return {
+    actions: {
+      global: bindActionCreators(GlobalActions, dispatch)
+    }
+  }
 }
 
 export default connect(

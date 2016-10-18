@@ -20,12 +20,6 @@ export function init () {
   });
 }
 
-export async function createAndActivate (workspace, patch = {}) {
-  const r = await create(patch);
-  await db.workspace.update(workspace, {metaActiveRequestId: r._id});
-  return r;
-}
-
 export function create (patch = {}) {
   if (!patch.parentId) {
     throw new Error('New Requests missing `parentId`', patch);
@@ -62,17 +56,6 @@ export function updateContentType (request, contentType) {
   }
 
   return db.docUpdate(request, {headers});
-}
-
-export async function duplicateAndActivate (workspace, request) {
-  db.bufferChanges();
-
-  const r = await duplicate(request);
-  await db.workspace.update(workspace, {metaActiveRequestId: r._id});
-
-  db.flushChanges();
-
-  return r;
 }
 
 export function duplicate (request) {
