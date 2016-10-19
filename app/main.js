@@ -95,7 +95,7 @@ function checkForUpdates () {
   }
 
   if (IS_DEV) {
-    console.log('Skipping update check in Development');
+    console.log('-- Skipping update check in Development --');
     return;
   }
 
