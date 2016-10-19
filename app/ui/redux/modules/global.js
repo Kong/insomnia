@@ -11,9 +11,10 @@ const LOAD_STOP = 'global/load-stop';
 const REQUEST_ACTIVATE = 'global/request-activate';
 const CHANGE_FILTER = 'global/change-filter';
 const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
+const ACTIVATE_WORKSPACE = 'global/activate-workspace';
 const SET_SIDEBAR_WIDTH = 'global/set-sidebar-width';
 const SET_PANE_WIDTH = 'global/set-pane-width';
-const ACTIVATE_WORKSPACE = 'global/activate-workspace';
+const SET_SYNC_STATE = 'global/set-sync-state';
 
 
 // ~~~~~~~~ //
@@ -86,7 +87,7 @@ function loadingReducer (state = false, action) {
 export default combineReducers({
   loading: loadingReducer,
   workspaceMeta: workspaceMetaReducer,
-  activeWorkspaceId: activeWorkspaceReducer
+  activeWorkspaceId: activeWorkspaceReducer,
 });
 
 

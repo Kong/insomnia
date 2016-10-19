@@ -4,13 +4,12 @@ import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
+import SyncButton from '../SyncButton';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
 import {
   SIDEBAR_SKINNY_REMS,
   COLLAPSE_SIDEBAR_REMS
 } from '../../../backend/constants';
-import {getModal} from '../modals/index';
-import SyncModal from '../modals/SyncModal';
 
 
 class Sidebar extends Component {
@@ -146,11 +145,7 @@ class Sidebar extends Component {
 
         {showSyncSettings ? (
           <div className="sidebar__footer">
-            <button className="btn btn--super-compact wide"
-                    onClick={e => getModal(SyncModal).show()}>
-              {/*<i className="fa fa-refresh fa-spin"></i>*/}
-              Sync Settings
-            </button>
+            <SyncButton/>
           </div>
         ) : null}
       </aside>
