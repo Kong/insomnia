@@ -1,7 +1,7 @@
 port module UrlBar exposing (main)
 
 import Html exposing (Html, input, div, button, text, form)
-import Html.Attributes exposing (class, type', value, placeholder)
+import Html.Attributes exposing (class, type', defaultValue, placeholder)
 import Html.Events exposing (onInput, onSubmit)
 import Html.App as App
 import Base.Dropdown as Dropdown
@@ -100,12 +100,8 @@ update msg model =
             let
                 dropdown =
                     Dropdown.updateButtonText model.dropdown data.method
-
-                -- Keep Url the same so we don't overwrite typing
-                dataWithOldUrl =
-                    { data | url = model.data.url }
             in
-                { model | data = dataWithOldUrl, dropdown = dropdown } ! []
+                { model | data = data, dropdown = dropdown } ! []
 
         SendRequest ->
             model ! [ onSendRequest True ]
@@ -144,28 +140,21 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    let
-        method =
-            model.data.method
-
-        url =
-            model.data.url
-    in
-        div [ class "urlbar" ]
-            [ App.map DropdownMessage <| Dropdown.view model.dropdown
-            , form [ onSubmit SendRequest ]
-                [ div [ class "form-control" ]
-                    [ input
-                        [ type' "text"
-                        , value url
-                        , onInput NewUrl
-                        , placeholder "https://api.myproduct.com/v1/users"
-                        ]
-                        []
+    div [ class "urlbar" ]
+        [ App.map DropdownMessage <| Dropdown.view model.dropdown
+        , form [ onSubmit SendRequest ]
+            [ div [ class "form-control" ]
+                [ input
+                    [ type' "text"
+                    , defaultValue model.data.url
+                    , onInput NewUrl
+                    , placeholder "https://api.myproduct.com/v1/users"
                     ]
-                , button [ type' "submit" ] [ text "Send" ]
+                    []
                 ]
+            , button [ type' "submit" ] [ text "Send" ]
             ]
+        ]
 
 
 

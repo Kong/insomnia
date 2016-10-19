@@ -69,11 +69,13 @@ class BodyEditor extends Component {
 
     if (contentType === CONTENT_TYPE_FORM_URLENCODED) {
       return (
-        <div className="scrollable tall wide">
-          <KeyValueEditor
-            onChange={pairs => onChange(BodyEditor._getBodyFromPairs(pairs))}
-            pairs={BodyEditor._getPairsFromBody(request.body)}
-          />
+        <div className="scrollable-container tall wide">
+          <div className="scrollable">
+            <KeyValueEditor
+              onChange={pairs => onChange(BodyEditor._getBodyFromPairs(pairs))}
+              pairs={BodyEditor._getPairsFromBody(request.body)}
+            />
+          </div>
         </div>
       )
     } else {

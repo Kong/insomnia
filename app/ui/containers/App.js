@@ -283,15 +283,14 @@ class App extends Component {
     }
   }
 
-  async _handleUrlChanged (url) {
+  async _handleUrlChanged (request, url) {
     // TODO: Should this be moved elsewhere?
     const requestPatch = importCurl(url);
-
     if (requestPatch) {
       // TODO: If the user typed in a curl cmd, dissect it and update the whole request
-      db.request.update(this._getActiveRequest(), requestPatch);
+      db.request.update(request, requestPatch);
     } else {
-      db.request.update(this._getActiveRequest(), {url});
+      db.request.update(request, {url});
     }
   }
 
@@ -520,7 +519,7 @@ class App extends Component {
           editorLineWrapping={settings.editorLineWrapping}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           updateRequestBody={body => db.request.update(activeRequest, {body})}
-          updateRequestUrl={url => this._handleUrlChanged(url)}
+          updateRequestUrl={url => this._handleUrlChanged(activeRequest, url)}
           updateRequestMethod={method => db.request.update(activeRequest, {method})}
           updateRequestParameters={parameters => db.request.update(activeRequest, {parameters})}
           updateRequestAuthentication={authentication => db.request.update(activeRequest, {authentication})}
