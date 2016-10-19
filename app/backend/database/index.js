@@ -110,7 +110,7 @@ export async function initDB (config = {}, force = false) {
   // Done
 
   initialized = true;
-  console.log(`-- Initialize DB at ${getDBFilePath('t')} --`);
+  console.log(`-- Initialized DB at ${getDBFilePath('${type}')} --`);
 }
 
 

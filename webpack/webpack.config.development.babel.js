@@ -13,7 +13,7 @@ export default {
   ],
   output: {
     ...baseConfig.output,
-    publicPath: `http://localhost:${PORT}/build/`
+    publicPath: `http://localhost:${PORT}/build`
   },
   plugins: [
     ...baseConfig.plugins,

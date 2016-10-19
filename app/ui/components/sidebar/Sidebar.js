@@ -139,6 +139,9 @@ class Sidebar extends Component {
           {this._renderChildren(children)}
         </ul>
 
+        <div className="sidebar__actions">
+
+        </div>
       </aside>
     )
   }

@@ -17,9 +17,21 @@ export default function configureStore () {
   }
 
   // Create the store and apply middleware
+  const restoredState = getState(LOCALSTORAGE_KEY);
+
+  // Remove unused keys from restored state (migrate it)
+  const initialState = rootReducer(undefined, {type: 'insomnia-init'});
+  for (const key of Object.keys(restoredState)) {
+    if (!initialState.hasOwnProperty(key)) {
+      // TODO: Make this recursive
+      console.warn('Deleting unused key from restored state', key);
+      delete restoredState[key];
+    }
+  }
+
   const store = createStore(
     rootReducer,
-    getState(LOCALSTORAGE_KEY),
+    restoredState,
     applyMiddleware(...middleware)
   );
 
