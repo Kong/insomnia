@@ -13,6 +13,7 @@ const CHANGE_FILTER = 'global/change-filter';
 const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
 const SET_SIDEBAR_WIDTH = 'global/set-sidebar-width';
 const SET_PANE_WIDTH = 'global/set-pane-width';
+const ACTIVATE_WORKSPACE = 'global/activate-workspace';
 
 
 // ~~~~~~~~ //
@@ -57,6 +58,17 @@ function workspaceMetaReducer (state = {}, action) {
   }
 }
 
+function activeWorkspaceReducer (state = '', action) {
+  switch (action.type) {
+
+    case ACTIVATE_WORKSPACE:
+      return action.workspace._id;
+
+    default:
+      return state;
+  }
+}
+
 function loadingReducer (state = false, action) {
   switch (action.type) {
 
@@ -73,7 +85,8 @@ function loadingReducer (state = false, action) {
 
 export default combineReducers({
   loading: loadingReducer,
-  workspaceMeta: workspaceMetaReducer
+  workspaceMeta: workspaceMetaReducer,
+  activeWorkspaceId: activeWorkspaceReducer
 });
 
 
@@ -87,6 +100,10 @@ export function loadStart () {
 
 export function loadStop () {
   return {type: LOAD_STOP};
+}
+
+export function activateWorkspace (workspace) {
+  return {type: ACTIVATE_WORKSPACE, workspace};
 }
 
 export function importFile (workspace) {

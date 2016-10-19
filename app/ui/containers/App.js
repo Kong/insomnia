@@ -32,7 +32,6 @@ import {
 } from '../../backend/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
-import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as db from '../../backend/database';
 import {importCurl} from '../../backend/export/curl';
 import {trackEvent} from '../../backend/analytics';
@@ -341,9 +340,10 @@ class App extends Component {
   _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
 
-    const {entities, workspaces} = props || this.props;
-    let workspace = entities.workspaces[workspaces.activeId];
+    const {entities, global} = props || this.props;
+    let workspace = entities.workspaces[global.activeWorkspaceId];
     if (!workspace) {
+      // If no workspace, fallback to a basically random one
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
     }
 
@@ -559,7 +559,7 @@ class App extends Component {
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
           activateRequest={r => actions.global.activateRequest(workspace, r)}
-          activateWorkspace={w => actions.workspaces.activate(w)}
+          activateWorkspace={w => actions.global.activateWorkspace(w)}
         />
         <EnvironmentEditModal
           ref={m => addModal(m)}
@@ -584,12 +584,10 @@ App.propTypes = {
     requests: PropTypes.shape({
       send: PropTypes.func.isRequired
     }).isRequired,
-    workspaces: PropTypes.shape({
-      activate: PropTypes.func.isRequired
-    }).isRequired,
     global: PropTypes.shape({
       importFile: PropTypes.func.isRequired,
       activateRequest: PropTypes.func.isRequired,
+      activateWorkspace: PropTypes.func.isRequired,
       changeFilter: PropTypes.func.isRequired,
       toggleSidebar: PropTypes.func.isRequired,
       setSidebarWidth: PropTypes.func.isRequired,
@@ -601,21 +599,18 @@ App.propTypes = {
     requestGroups: PropTypes.object.isRequired,
     responses: PropTypes.object.isRequired
   }).isRequired,
-  workspaces: PropTypes.shape({
-    activeId: PropTypes.string
-  }).isRequired,
   requests: PropTypes.shape({
     loadingRequests: PropTypes.object.isRequired
   }).isRequired,
   global: PropTypes.shape({
-    workspaceMeta: PropTypes.object.isRequired
+    workspaceMeta: PropTypes.object.isRequired,
+    activeWorkspaceId: PropTypes.string.isRequired
   }).isRequired
 };
 
 function mapStateToProps (state) {
   return {
     actions: state.actions,
-    workspaces: state.workspaces,
     requests: state.requests,
     entities: state.entities,
     global: state.global
@@ -626,8 +621,7 @@ function mapDispatchToProps (dispatch) {
   return {
     actions: {
       global: bindActionCreators(GlobalActions, dispatch),
-      requests: bindActionCreators(RequestActions, dispatch),
-      workspaces: bindActionCreators(WorkspaceActions, dispatch)
+      requests: bindActionCreators(RequestActions, dispatch)
     }
   }
 }
