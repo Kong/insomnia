@@ -64,7 +64,7 @@ for (const model of MODELS) {
 // HELPERS //
 // ~~~~~~~ //
 
-let db = null;
+let db = {};
 
 function getDBFilePath (modelType) {
   // NOTE: Do not EVER change this. EVER!
@@ -73,29 +73,25 @@ function getDBFilePath (modelType) {
 }
 
 /**
- * Initialize the database. This should be called once on app start.
- * @returns {Promise}
- */
-let initialized = false;
-
-/**
  * Initialize the database. Note that this isn't actually async, but might be
  * in the future!
  *
  * @param config
- * @param force
+ * @param forceReset
  * @returns {null}
  */
-export async function initDB (config = {}, force = false) {
-  // Only init once
-  if (initialized && !force) {
-    return null;
+export async function initDB (config = {}, forceReset = false) {
+  if (forceReset) {
+    db = {};
   }
-
-  db = {};
 
   // Fill in the defaults
   ALL_TYPES.map(t => {
+    if (db[t]) {
+      console.warn(`-- Already initialized DB.${t} --`);
+      return;
+    }
+
     const defaults = {
       filename: getDBFilePath(t),
       autoload: true
@@ -108,8 +104,6 @@ export async function initDB (config = {}, force = false) {
   });
 
   // Done
-
-  initialized = true;
   console.log(`-- Initialized DB at ${getDBFilePath('${type}')} --`);
 }
 

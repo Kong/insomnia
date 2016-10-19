@@ -1,13 +1,16 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-
 import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
-import {SIDEBAR_SKINNY_REMS} from '../../../backend/constants';
-import {COLLAPSE_SIDEBAR_REMS} from '../../../backend/constants';
+import {
+  SIDEBAR_SKINNY_REMS,
+  COLLAPSE_SIDEBAR_REMS
+} from '../../../backend/constants';
+import {getModal} from '../modals/index';
+import SyncModal from '../modals/SyncModal';
 
 
 class Sidebar extends Component {
@@ -106,6 +109,7 @@ class Sidebar extends Component {
       hidden,
       requestCreate,
       requestGroupCreate,
+      showSyncSettings,
       width
     } = this.props;
 
@@ -121,7 +125,8 @@ class Sidebar extends Component {
 
         <div className="sidebar__menu">
           <EnvironmentsDropdown />
-          <button className="btn btn--super-compact" onClick={e => showCookiesModal()}>
+          <button className="btn btn--super-compact"
+                  onClick={e => showCookiesModal()}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -139,9 +144,15 @@ class Sidebar extends Component {
           {this._renderChildren(children)}
         </ul>
 
-        <div className="sidebar__actions">
-
-        </div>
+        {showSyncSettings ? (
+          <div className="sidebar__footer">
+            <button className="btn btn--super-compact wide"
+                    onClick={e => getModal(SyncModal).show()}>
+              {/*<i className="fa fa-refresh fa-spin"></i>*/}
+              Sync Settings
+            </button>
+          </div>
+        ) : null}
       </aside>
     )
   }
@@ -162,6 +173,7 @@ Sidebar.propTypes = {
   showCookiesModal: PropTypes.func.isRequired,
   width: PropTypes.number.isRequired,
   hidden: PropTypes.bool.isRequired,
+  showSyncSettings: PropTypes.bool.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,

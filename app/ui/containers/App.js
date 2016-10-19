@@ -15,6 +15,7 @@ import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
+import SyncModal from '../components/modals/SyncModal';
 import LoginModal from '../components/modals/LoginModal';
 import SignupModal from '../components/modals/SignupModal';
 import SettingsModal from '../components/modals/SettingsModal';
@@ -454,7 +455,7 @@ class App extends Component {
 
   render () {
     // throw new Error('Test Exception');
-    const {actions, entities, requests, global} = this.props;
+    const {actions, entities, requests} = this.props;
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
     const workspace = this._getActiveWorkspace();
@@ -494,6 +495,7 @@ class App extends Component {
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
           filter={workspaceMeta.filter || ''}
           hidden={workspaceMeta.sidebarHidden || false}
+          showSyncSettings={settings.optSyncBeta}
           children={children}
           width={sidebarWidth}
         />
@@ -550,6 +552,7 @@ class App extends Component {
         <PromptModal ref={m => addModal(m)}/>
         <AlertModal ref={m => addModal(m)}/>
         <ChangelogModal ref={m => addModal(m)}/>
+        <SyncModal ref={m => addModal(m)}/>
         <LoginModal ref={m => addModal(m)}/>
         <SignupModal ref={m => addModal(m)}/>
         <SettingsModal ref={m => addModal(m)}/>

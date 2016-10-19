@@ -9,11 +9,11 @@ export default {
   devtool: 'eval-source-map',
   entry: [
     ...baseConfig.entry,
-    'webpack-hot-middleware/client?dynamicPublicPath=true'
+    `webpack-hot-middleware/client?path=http://localhost:${PORT}/__webpack_hmr`
   ],
   output: {
     ...baseConfig.output,
-    publicPath: `http://localhost:${PORT}/build`
+    publicPath: `http://localhost:${PORT}/build/`
   },
   plugins: [
     ...baseConfig.plugins,

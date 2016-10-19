@@ -11,7 +11,14 @@ import ModalFooter from '../base/ModalFooter';
 import KeyboardShortcutsTable from '../KeyboardShortcutsTable';
 import * as GlobalActions from '../../redux/modules/global';
 import * as db from '../../../backend/database';
-import {getAppVersion, getAppName, getAppLongName} from '../../../backend/appInfo';
+import {
+  getAppVersion,
+  getAppName,
+  getAppLongName
+} from '../../../backend/appInfo';
+import {getModal} from './index';
+import LoginModal from './LoginModal';
+import SignupModal from './SignupModal';
 
 
 class SettingsTabs extends Component {
@@ -154,6 +161,7 @@ class SettingsTabs extends Component {
               />
             </div>
           </div>
+
           <br/>
           <h2 className="txt-md pad-top-sm">
             <label className="label--small">Network Proxy (Experimental)</label>
@@ -186,7 +194,34 @@ class SettingsTabs extends Component {
               />
             </div>
           </div>
+
+          <br/>
+          <br/>
+          <br/>
+          <br/>
+          <br/>
+          <hr/>
+          <h2 className="txt-md pad-top-sm">
+            <label className="label--small">Beta Features</label>
+          </h2>
+          <div className="pad-top-sm">
+            <input
+              id="setting-opt-sync-beta"
+              type="checkbox"
+              checked={settings.optSyncBeta}
+              onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-opt-sync-beta">
+              Cloud sync beta
+            </label>
+            {" "}
+            <span className="faint txt-sm pad-top">
+              (experimental and will be paid once out of beta)
+            </span>
+          </div>
         </TabPanel>
+
         <TabPanel className="pad">
           <label className="label--small">Code Editor Settings</label>
           <div className="pad-top">

@@ -4,7 +4,7 @@ export const type = 'Settings';
 export const prefix = 'set';
 export function init () {
   return db.initModel({
-    showPasswords: true,
+    showPasswords: false,
     useBulkHeaderEditor: false,
     followRedirects: false,
     editorFontSize: 12,
@@ -12,7 +12,8 @@ export function init () {
     httpProxy: '',
     httpsProxy: '',
     timeout: 0,
-    validateSSL: true
+    validateSSL: true,
+    optSyncBeta: false,
   });
 }
 
