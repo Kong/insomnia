@@ -132,14 +132,12 @@ class CookiesModal extends Component {
           </div>
         </ModalBody>
         <ModalFooter>
-          <div className="pull-right">
-            <button className="btn" onClick={e => this.modal.hide()}>
-              Done
-            </button>
-          </div>
-          <div className="pad faint italic txt-sm tall">
+          <div className="margin-left faint italic txt-sm tall">
             * cookies are automatically sent with relevant requests
           </div>
+          <button className="btn" onClick={e => this.modal.hide()}>
+            Done
+          </button>
         </ModalFooter>
       </Modal>
     );

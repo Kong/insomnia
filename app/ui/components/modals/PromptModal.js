@@ -73,7 +73,8 @@ class PromptModal extends Component {
           </form>
         </ModalBody>
         <ModalFooter>
-          <div className="pull-right">
+          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
+          <div>
             <button className="btn" onClick={() => this.modal.hide()}>
               Cancel
             </button>
@@ -81,7 +82,6 @@ class PromptModal extends Component {
               {submitName || 'Save'}
             </button>
           </div>
-          <div className="pad faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
         </ModalFooter>
       </Modal>
     )

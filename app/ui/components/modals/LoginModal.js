@@ -91,7 +91,8 @@ class LoginModal extends Component {
             </p>
           </ModalBody>
           <ModalFooter>
-            <button type="submit" className="pull-right btn"
+            <button type="submit"
+                    className="btn"
                     onClick={e => this.modal.hide()}>
               Close
             </button>

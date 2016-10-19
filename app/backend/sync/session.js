@@ -108,43 +108,47 @@ export async function login (rawEmail, rawPassphrase) {
   const sessionId = c.computeK().toString('hex');
 
   // Get and store some extra info (salts and keys)
-  const {publicKey, encPrivateKey, saltEnc, accountId} = await whoami(sessionId);
+  const {
+    publicKey,
+    encPrivateKey,
+    saltEnc,
+    accountId,
+    firstName
+  } = await whoami(sessionId);
   const symmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
 
   // Store the information for later
   setSessionData(
     sessionId,
     accountId,
+    firstName,
+    email,
     symmetricKey,
     JSON.parse(publicKey),
     JSON.parse(encPrivateKey),
-    email
   );
 }
 
-/**
- * Get public key (if we have it)
- *
- * @returns String
- */
 export function getPublicKey () {
   return getSessionData().publicKey;
 }
 
-/**
- * Get user Account's private key by decrypting it with the symmetric key.
- */
 export function getAccountPrivateKey () {
   const {symmetricKey, encPrivateKey} = getSessionData();
   const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr);
 }
 
-/**
- * Get the ID of the current session
- */
 export function getCurrentSessionId () {
   return localStorage.getItem('currentSessionId') || NO_SESSION;
+}
+
+export function getEmail () {
+  return getSessionData().email;
+}
+
+export function getFirstName () {
+  return getSessionData().firstName;
 }
 
 /**
@@ -167,12 +171,21 @@ export function getSessionData () {
  *
  * @param sessionId
  * @param accountId
+ * @param firstName
  * @param symmetricKey
  * @param publicKey
  * @param encPrivateKey
  * @param email
  */
-export function setSessionData (sessionId, accountId, symmetricKey, publicKey, encPrivateKey, email) {
+export function setSessionData (
+  sessionId,
+  accountId,
+  firstName,
+  email,
+  symmetricKey,
+  publicKey,
+  encPrivateKey
+) {
   const dataStr = JSON.stringify({
     id: sessionId,
     accountId: accountId,
@@ -180,6 +193,7 @@ export function setSessionData (sessionId, accountId, symmetricKey, publicKey, e
     publicKey: publicKey,
     encPrivateKey: encPrivateKey,
     email: email,
+    firstName: firstName,
   });
 
   const message = crypt.encryptAES(sessionId, dataStr);

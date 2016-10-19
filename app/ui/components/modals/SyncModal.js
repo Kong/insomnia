@@ -6,12 +6,32 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../backend/sync/session';
 
 class SyncModal extends Component {
+  constructor (props) {
+    super(props);
+    this.state = {
+      firstName: 'n/a',
+      email: 'n/a',
+      sessionId: 'n/a'
+    }
+  }
+
   _handleLogout () {
     session.logout();
     this.hide();
   }
 
   show () {
+    if (!session.isLoggedIn()) {
+      console.error('Not logged in');
+      return;
+    }
+
+    this.setState({
+      email: session.getEmail(),
+      firstName: session.getFirstName(),
+      sessionId: session.getCurrentSessionId(),
+    });
+
     this.modal.show();
   }
 
@@ -25,7 +45,7 @@ class SyncModal extends Component {
         <ModalHeader>Sync Settings</ModalHeader>
         <ModalBody className="wide pad">
           <p>
-            Hello there
+            Hi {this.state.firstName}!
           </p>
           <p>
             <button className="btn btn--super-compact btn--outlined"
@@ -35,7 +55,8 @@ class SyncModal extends Component {
           </p>
         </ModalBody>
         <ModalFooter>
-          <button className="btn pull-right" onClick={e => this.modal.hide()}>
+          <code className="txt-xs selectable margin-left">{this.state.sessionId}</code>
+          <button className="btn" onClick={e => this.modal.hide()}>
             Done
           </button>
         </ModalFooter>

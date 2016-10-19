@@ -196,18 +196,16 @@ class WorkspaceEnvironmentsEditModal extends Component {
           </div>
         </ModalBody>
         <ModalFooter>
-          <div className="pull-right">
-            <button className="btn" disabled={!isValid}
-                    onClick={e => this.modal.hide()}>
-              Done
-            </button>
-          </div>
-          <div className="pad faint italic txt-sm tall">
+          <div className="margin-left faint italic txt-sm tall">
             * environment data can be used for&nbsp;
             <Link href="https://mozilla.github.io/nunjucks/templating.html">
               Nunjucks Templating
             </Link> in your requests
           </div>
+          <button className="btn" disabled={!isValid}
+                  onClick={e => this.modal.hide()}>
+            Done
+          </button>
         </ModalFooter>
       </Modal>
     );

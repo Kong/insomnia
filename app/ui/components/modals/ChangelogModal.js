@@ -86,14 +86,17 @@ class ChangelogModal extends Component {
           if (!Array.isArray(change.summary)) {
             html = [
               ...html,
-              <p key={`summary.${i}`} dangerouslySetInnerHTML={{__html: change.summary}}/>
+              <p key={`summary.${i}`}
+                 dangerouslySetInnerHTML={{__html: change.summary}}/>
             ]
           } else {
             html = [
               ...html,
-              <p key={`summary.${i}`}><strong dangerouslySetInnerHTML={{__html: change.summary[0]}}/></p>,
+              <p key={`summary.${i}`}><strong
+                dangerouslySetInnerHTML={{__html: change.summary[0]}}/></p>,
               ...change.summary.slice(1).map(
-                (text, j) => <p key={`summary.${i}[${j}]`} dangerouslySetInnerHTML={{__html: text}}/>
+                (text, j) => <p key={`summary.${i}[${j}]`}
+                                dangerouslySetInnerHTML={{__html: text}}/>
               )
             ]
           }
@@ -142,12 +145,10 @@ class ChangelogModal extends Component {
         <ModalBody className="pad changelog">
           {html}
         </ModalBody>
-        <ModalFooter className="text-right">
-          <div className="pull-right">
-            <button className="btn" onClick={e => this.modal.hide()}>
-              Close
-            </button>
-          </div>
+        <ModalFooter>
+          <button className="btn" onClick={e => this.modal.hide()}>
+            Close
+          </button>
         </ModalFooter>
       </Modal>
     );

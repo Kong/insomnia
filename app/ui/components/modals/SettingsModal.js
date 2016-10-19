@@ -386,7 +386,7 @@ class SettingsModal extends Component {
           />
         </ModalBody>
         <ModalFooter>
-          <button className="btn pull-right" onClick={() => this.modal.hide()}>
+          <button className="btn" onClick={() => this.modal.hide()}>
             Done
           </button>
         </ModalFooter>

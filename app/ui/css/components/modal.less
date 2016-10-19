@@ -88,6 +88,16 @@
   .modal__footer {
     border-top: 1px solid @hl-md;
     background-color: @bg-super-light;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal__footer > *:last-child {
+    // Push last item of footer to right. This is very important to pull right
+    // if there is only a single item in the footer.
+    margin-left: auto;
   }
 
   .modal__content > *:not(.modal__backdrop):last-child {

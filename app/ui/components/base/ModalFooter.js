@@ -1,10 +1,9 @@
 import React from 'react';
+import classnames from 'classnames';
 
-const ModalFooter = ({className, children }) => (
-  <div className="modal__footer">
-    <div className={className}>
-      {children}
-    </div>
+const ModalFooter = ({children, className}) => (
+  <div className={classnames('modal__footer', className)}>
+    {children}
   </div>
 );
 

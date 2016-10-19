@@ -114,7 +114,8 @@ class SignupModal extends Component {
             </p>
           </ModalBody>
           <ModalFooter>
-            <button type="submit" className="pull-right btn"
+            <button type="submit"
+                    className="btn"
                     onClick={e => this._handleLogin(e)}>
               Proceed to Login
             </button>
