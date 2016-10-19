@@ -72,14 +72,19 @@ export function getByResourceId (resourceId) {
   })
 }
 
-export function removeResource (resource) {
+/**
+ * Get a Resource by Id
+ *
+ * @param id
+ * @returns {Promise}
+ */
+export function getById (id) {
   return new Promise((resolve, reject) => {
-    // TODO: this query should probably include resourceGroupId as well
-    _getDB().remove({_id: resource._id}, err => {
+    _getDB().find({_id: id}, (err, rawDocs) => {
       if (err) {
         reject(err);
       } else {
-        resolve();
+        resolve(rawDocs.length >= 1 ? rawDocs[0] : null);
       }
     });
   })

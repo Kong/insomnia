@@ -493,8 +493,8 @@ class App extends Component {
           activeRequestId={activeRequestId}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
-          filter={workspaceMeta.filter}
-          hidden={workspaceMeta.sidebarHidden}
+          filter={workspaceMeta.filter || ''}
+          hidden={workspaceMeta.sidebarHidden || false}
           children={children}
           width={sidebarWidth}
         />

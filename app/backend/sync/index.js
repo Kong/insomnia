@@ -102,7 +102,6 @@ async function _syncPushDirtyResources () {
   // Resolve conflicts
   const {conflicts} = responseBody;
   for (const serverResource of conflicts) {
-
     const localResource = await resourceStore.getByResourceId(serverResource.resourceId);
 
     // Decrypt the docs from the resources. Don't fetch the local doc from the
@@ -114,7 +113,7 @@ async function _syncPushDirtyResources () {
     const serverIsNewer = serverDoc.modified >= localDoc.modified;
     const winningDoc = serverIsNewer ? serverDoc : localDoc;
 
-    console.log(`-- Resolved conflict for ${serverResource.resourceId} (${serverIsNewer ? "Server" : "Local"}) --`);
+    console.log(`-- Resolved conflict for ${serverDoc._id} (${serverIsNewer ? "Server" : "Local"}) --`);
 
     // Update local resource
     await resourceStore.update(localResource, {
@@ -211,10 +210,10 @@ async function _syncPullChanges () {
   for (const idToRemove of resourceIdsToRemove) {
     const resource = await resourceStore.getByResourceId(idToRemove);
     if (!resource) {
-      throw new Error(`Could not find Resource to remove for resourceId ${idToRemove}`)
+      throw new Error(`Could not find Resource to remove for ${idToRemove}`)
     }
 
-    const doc = await db.getWhere(resource.type, {_id: resource.resourceId});
+    const doc = await _decryptDoc(resource.resourceGroupId, resource.encContent);
     if (!doc) {
       throw new Error(`Could not find doc to remove ${idToRemove}`)
     }
