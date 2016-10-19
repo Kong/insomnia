@@ -35,8 +35,12 @@ class SyncButton extends Component {
   }
 
   componentDidMount () {
-    setInterval(() => this._updateState(), 1000);
+    this._interval = setInterval(() => this._updateState(), 2000);
     this._updateState();
+  }
+
+  componentWillUnmount () {
+    clearInterval(this._interval);
   }
 
   render () {

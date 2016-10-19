@@ -68,14 +68,14 @@ class LoginModal extends Component {
               </div>
             </ModalBody>
             <ModalFooter>
-              <button type="submit" className="pull-right btn">
-                Login
-              </button>
-              <div className="pad">
+              <div className="margin-left">
                 Don't have an account yet?
                 {" "}
                 <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
               </div>
+              <button type="submit" className="btn">
+                Login
+              </button>
             </ModalFooter>
           </form>
         </Modal>

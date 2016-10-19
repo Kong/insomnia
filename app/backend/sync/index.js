@@ -16,17 +16,55 @@ const WHITE_LIST = {
   [db.cookieJar.type]: true
 };
 
+class Logger {
+  constructor () {
+    this._logs = [];
+  }
+
+  debug (message, ...args) {
+    this._log('debug', message, ...args);
+  }
+
+  warn (message, ...args) {
+    this._log('warn', message, ...args);
+  }
+
+  error (message, ...args) {
+    this._log('error', message, ...args);
+  }
+
+  tail () {
+    return this._logs;
+  }
+
+  /** @private */
+  _log (type, message, ...args) {
+    let fn;
+    if (type === 'debug') {
+      fn = 'log';
+    } else if (type === 'warn') {
+      fn = 'warn';
+    } else {
+      fn = 'error';
+    }
+
+    console[fn](`-- Sync ${message} --`, ...args);
+    const timestamp = Date.now();
+    this._logs.push({type, timestamp, message});
+  }
+}
+
+export const logger = new Logger();
+
 // TODO: Move this stuff somewhere else
 const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 
 export async function initSync () {
   db.onChange(changes => {
-    for (const [event, doc] of changes) {
-      if (WHITE_LIST[doc.type]) {
-        _queueChange(event, doc);
-      }
-    }
+    changes
+      .filter(c => WHITE_LIST.hasOwnProperty(c[1].type))
+      .map(c => _queueChange(c[0], c[1]));
   });
 
   setTimeout(_syncPullChanges, START_DELAY);
@@ -42,7 +80,7 @@ let commitTimeout = null;
 
 async function _queueChange (event, doc) {
   if (!session.isLoggedIn()) {
-    console.warn('-- Trying to queue change but not logged in --');
+    logger.warn('Not logged in');
     return;
   }
 
@@ -54,6 +92,8 @@ async function _queueChange (event, doc) {
     dirty: true
   });
 
+  logger.debug(`Marked ${doc._id} dirty`);
+
   // Debounce pushing of dirty resources
   clearTimeout(commitTimeout);
   commitTimeout = setTimeout(() => _syncPushDirtyResources(), DEBOUNCE_TIME);
@@ -61,16 +101,14 @@ async function _queueChange (event, doc) {
 
 async function _syncPushDirtyResources () {
   if (!session.isLoggedIn()) {
-    console.warn('-- Trying to sync but not logged in --');
+    logger.warn('Not logged in');
     return;
   }
 
-  // Make sure we have everything
-  await _getOrCreateAllResources();
   const dirtyResources = await resourceStore.findDirty();
 
   if (!dirtyResources.length) {
-    console.log('-- No changes to sync push --');
+    logger.debug('No changes to push');
     return;
   }
 
@@ -87,16 +125,24 @@ async function _syncPushDirtyResources () {
   try {
     responseBody = await util.fetchPost('/sync/push', body);
   } catch (e) {
-    console.error('Failed to push changes', e);
+    logger.error('Failed to push changes', e);
     return;
   }
 
   // Update all resource versions with the ones that were returned
-  const {updated, created} = responseBody;
-  for (const {resourceId, version} of [...created, ...updated]) {
-    console.log(`-- Upserting doc for ${resourceId} --`);
+  const {updated} = responseBody;
+  for (const {resourceId, version} of updated) {
     const resource = await resourceStore.getByResourceId(resourceId);
     await resourceStore.update(resource, {version, dirty: false});
+    logger.debug(`Updated from ${resourceId}`);
+  }
+
+  // Update all resource versions with the ones that were returned
+  const {created} = responseBody;
+  for (const {resourceId, version} of created) {
+    const resource = await resourceStore.getByResourceId(resourceId);
+    await resourceStore.update(resource, {version, dirty: false});
+    logger.debug(`Created from ${resourceId}`);
   }
 
   // Resolve conflicts
@@ -113,7 +159,7 @@ async function _syncPushDirtyResources () {
     const serverIsNewer = serverDoc.modified >= localDoc.modified;
     const winningDoc = serverIsNewer ? serverDoc : localDoc;
 
-    console.log(`-- Resolved conflict for ${serverDoc._id} (${serverIsNewer ? "Server" : "Local"}) --`);
+    logger.debug(`Resolved conflict for ${serverDoc._id} (${serverIsNewer ? 'Server' : 'Local'})`);
 
     // Update local resource
     await resourceStore.update(localResource, {
@@ -129,7 +175,7 @@ async function _syncPushDirtyResources () {
 
 async function _syncPullChanges () {
   if (!session.isLoggedIn()) {
-    console.warn('-- Trying to sync but not logged in --');
+    logger.warn('Not logged in');
     return;
   }
 
@@ -141,11 +187,13 @@ async function _syncPullChanges () {
     remove: r.removed
   }));
 
+  logger.debug(`Doing full sync with ${allResources.length} resources`);
+
   let responseBody;
   try {
     responseBody = await util.fetchPost('/sync/pull', body);
   } catch (e) {
-    console.error('Failed to sync changes', e, body);
+    logger.error('Failed to sync changes', e, body);
     return;
   }
 
@@ -171,12 +219,12 @@ async function _syncPullChanges () {
       // Insert into app database (NOTE: not silently)
       await db.insert(doc);
     } catch (e) {
-      console.warn('Failed to decode created resource', e, serverResource);
+      logger.warn('Failed to decode created resource', e, serverResource);
     }
   });
 
   if (createdResources.length) {
-    console.log(`Sync created ${createdResources.length} docs`, createdResources);
+    logger.debug(`Created ${createdResources.length} resources`, createdResources);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -195,12 +243,12 @@ async function _syncPullChanges () {
       const resource = await resourceStore.getByResourceId(serverResource.resourceId);
       await resourceStore.update(resource, serverResource, {dirty: false});
     } catch (e) {
-      console.warn('Failed to decode updated resource', e, serverResource);
+      logger.warn('Failed to decode updated resource', e, serverResource);
     }
   });
 
   if (updatedResources.length) {
-    console.log(`Sync updated ${updatedResources.length} docs`, updatedResources);
+    logger.debug(`Updated ${updatedResources.length} resources`, updatedResources);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -240,7 +288,6 @@ async function _syncPullChanges () {
       throw new Error(`Could not find doc to push ${idToPush}`)
     }
 
-    console.log('NEED TO PUSH', idToPush);
     _queueChange(db.CHANGE_UPDATE, doc)
   }
 }
@@ -301,7 +348,7 @@ async function _getWorkspaceForDoc (doc) {
   return ancestors.find(d => d.type === db.workspace.type);
 }
 
-async function _createResourceGroup () {
+async function _createResourceGroup (name = '', description = '') {
   // Generate symmetric key for ResourceGroup
   const rgSymmetricJWK = await crypt.generateAES256Key();
   const rgSymmetricJWKStr = JSON.stringify(rgSymmetricJWK);
@@ -312,12 +359,12 @@ async function _createResourceGroup () {
 
   // Create the new ResourceGroup
   const resourceGroup = await util.fetchPost('/api/resource_groups', {
+    name,
+    description,
     encSymmetricKey: encRGSymmetricJWK,
-    name: 'Test Group',
-    description: ''
   });
 
-  console.log(`-- Created ResourceGroup ${resourceGroup.id} --`);
+  logger.debug(`Created ResourceGroup ${resourceGroup.id}`);
 
   return resourceGroup;
 }
@@ -342,7 +389,7 @@ async function _getOrCreateResourceForDoc (doc) {
     const workspace = await _getWorkspaceForDoc(doc);
 
     if (!workspace) {
-      console.error('Could not find workspace for doc!', doc, resource);
+      logger.error('Could not find workspace for doc!', doc, resource);
       return;
     }
 
@@ -350,7 +397,10 @@ async function _getOrCreateResourceForDoc (doc) {
 
     if (!workspaceResource) {
       // TODO: Don't auto create a ResourceGroup
-      const workspaceResourceGroup = await _createResourceGroup();
+      const workspaceResourceGroup = await _createResourceGroup(
+        `${workspace.name}`,
+        `Workspace ID: ${workspace._id}`
+      );
       workspaceResource = await _createResource(workspace, workspaceResourceGroup.id);
     }
 

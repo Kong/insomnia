@@ -128,6 +128,24 @@ export function update (resource, patch = {}, patch2 = {}) {
   });
 }
 
+/**
+ * Remove an existing resource
+ *
+ * @param resource
+ * @returns {Promise}
+ */
+export function remove (resource) {
+  return new Promise((resolve, reject) => {
+    _getDB().remove({_id: resource._id}, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 // ~~~~~~~ //
 // Helpers //
 // ~~~~~~~ //
