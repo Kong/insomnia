@@ -48,6 +48,9 @@ class SyncModal extends Component {
             Hi {this.state.firstName}!
           </p>
           <p>
+            Welcome to the sync beta. I'm glad you could make it!
+          </p>
+          <p>
             <button className="btn btn--super-compact btn--outlined"
                     onClick={e => this._handleLogout()}>
               Logout

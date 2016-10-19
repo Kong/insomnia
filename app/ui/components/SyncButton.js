@@ -5,24 +5,32 @@ import * as syncStorage from '../../backend/sync/storage';
 import * as session from '../../backend/sync/session';
 import LoginModal from './modals/LoginModal';
 
+const STATE_OK = 'synced';
+const STATE_BEHIND = 'behind';
+const STATE_AHEAD = 'dirty';
+
 class SyncButton extends Component {
   constructor (props) {
     super(props);
     this.state = {
-      dirty: false,
+      state: STATE_OK,
       loggedIn: false
     }
   }
 
-  _updateState () {
-    const loggedIn = session.isLoggedIn();
-    if (loggedIn !== this.state.loggedIn) {
-      this.setState({loggedIn});
-    }
+  async _updateState () {
+    const dirtyDocs = await syncStorage.findDirty();
+    const newState = Object.assign({}, this.state, {
+      state: dirtyDocs.length > 0 ? STATE_AHEAD : STATE_OK,
+      loggedIn: session.isLoggedIn(),
+    });
 
-    const dirty = syncStorage.findDirty().length > 0;
-    if (dirty !== this.state.dirty) {
-      this.setState({dirty});
+    // Only reset the state if something has changed
+    for (const k of Object.keys(newState)) {
+      if (newState[k] !== this.state[k]) {
+        this.setState(newState);
+        break;
+      }
     }
   }
 
@@ -36,10 +44,8 @@ class SyncButton extends Component {
       return (
         <button className="btn btn--super-compact btn--outlined wide"
                 onClick={e => getModal(SyncModal).show()}>
-          {this.state.dirty ? (
-            <i className="fa fa-refresh fa-spin"></i>
-          ) : null}
           Cloud Sync
+          {this.state.state ? <span>&nbsp;({this.state.state})</span> : null}
         </button>
       )
     } else {
