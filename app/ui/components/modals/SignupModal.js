@@ -90,14 +90,14 @@ class SignupModal extends Component {
               </div>
             </ModalBody>
             <ModalFooter>
-              <button type="submit" className="pull-right btn">
-                Create Account
-              </button>
-              <div className="pad">
+              <div className="margin-left">
                 Already have an account?
                 {" "}
                 <a href="#" onClick={this._handleLogin.bind(this)}>Login</a>
               </div>
+              <button type="submit" className="btn">
+                Create Account
+              </button>
             </ModalFooter>
           </form>
         </Modal>

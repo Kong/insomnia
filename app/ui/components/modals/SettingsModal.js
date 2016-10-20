@@ -214,11 +214,11 @@ class SettingsTabs extends Component {
             &nbsp;&nbsp;
             <label htmlFor="setting-opt-sync-beta">
               Cloud sync beta
-            </label>
-            {" "}
-            <span className="faint txt-sm pad-top">
+              {" "}
+              <span className="faint txt-sm pad-top">
               (experimental and will be paid once out of beta)
             </span>
+            </label>
           </div>
         </TabPanel>
 
