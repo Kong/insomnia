@@ -5,9 +5,9 @@ import * as session from './session';
 import * as resourceStore from './storage';
 
 export const FULL_SYNC_INTERVAL = 30E3;
-export const DEBOUNCE_TIME = 10E3;
+export const DEBOUNCE_TIME = 2E3;
 export const START_PULL_DELAY = 5E3;
-export const START_PUSH_DELAY = 10E3;
+export const START_PUSH_DELAY = 2E3;
 
 const WHITE_LIST = {
   [db.request.type]: true,
@@ -49,9 +49,9 @@ class Logger {
       fn = 'error';
     }
 
-    console[fn](`-- Sync ${message} --`, ...args);
-    const timestamp = Date.now();
-    this._logs.push({type, timestamp, message});
+    console[fn](`[sync] ${message}`, ...args);
+    const date = new Date();
+    this._logs.push({type, date, message});
   }
 }
 
@@ -88,12 +88,14 @@ async function _queueChange (event, doc) {
   // Update the resource content and set dirty
   const resource = await _getOrCreateResourceForDoc(doc);
   await resourceStore.update(resource, {
+    lastEdited: Date.now(), // Don't use doc.modified because that doesn't work for removal
+    lastEditedBy: session.getAccountId(),
     content: await _encryptDoc(resource.resourceGroupId, doc),
     removed: event === db.CHANGE_REMOVE,
     dirty: true
   });
 
-  logger.debug(`Marked ${doc._id} dirty`);
+  logger.debug(`Queue ${event} ${doc._id}`);
 
   // Debounce pushing of dirty resources
   clearTimeout(commitTimeout);
@@ -113,18 +115,9 @@ async function _syncPushDirtyResources () {
     return;
   }
 
-  const body = dirtyResources.map(r => ({
-    resourceId: r.resourceId,
-    resourceGroupId: r.resourceGroupId,
-    version: r.version,
-    removed: r.removed,
-    type: r.type,
-    encContent: r.encContent
-  }));
-
   let responseBody;
   try {
-    responseBody = await util.fetchPost('/sync/push', body);
+    responseBody = await util.fetchPost('/sync/push', dirtyResources);
   } catch (e) {
     logger.error('Failed to push changes', e);
     return;
@@ -132,45 +125,53 @@ async function _syncPushDirtyResources () {
 
   // Update all resource versions with the ones that were returned
   const {updated} = responseBody;
-  for (const {resourceId, version} of updated) {
-    const resource = await resourceStore.getByResourceId(resourceId);
+  for (const {id, version} of updated) {
+    const resource = await resourceStore.getById(id);
     await resourceStore.update(resource, {version, dirty: false});
-    logger.debug(`Updated from ${resourceId}`);
+    logger.debug(`Updated ${id}`);
   }
 
   // Update all resource versions with the ones that were returned
   const {created} = responseBody;
-  for (const {resourceId, version} of created) {
-    const resource = await resourceStore.getByResourceId(resourceId);
+  for (const {id, version} of created) {
+    const resource = await resourceStore.getById(id);
     await resourceStore.update(resource, {version, dirty: false});
-    logger.debug(`Created from ${resourceId}`);
+    logger.debug(`Created ${id}`);
+  }
+
+  // Update all resource versions with the ones that were returned
+  const {removed} = responseBody;
+  for (const {id, version} of removed) {
+    const resource = await resourceStore.getById(id);
+    await resourceStore.update(resource, {version, dirty: false});
+    logger.debug(`Removed ${id}`);
   }
 
   // Resolve conflicts
   const {conflicts} = responseBody;
   for (const serverResource of conflicts) {
-    const localResource = await resourceStore.getByResourceId(serverResource.resourceId);
+    const localResource = await resourceStore.getById(serverResource.id);
+
+    // On conflict, choose last edited one
+    const serverIsNewer = serverResource.lastEdited > localResource.lastEdited;
+    const winner = serverIsNewer ? serverResource : localResource;
 
     // Decrypt the docs from the resources. Don't fetch the local doc from the
     // app database, because it might have been deleted.
-    const serverDoc = await _decryptDoc(serverResource.resourceGroupId, serverResource.encContent);
-    const localDoc = await _decryptDoc(serverResource.resourceGroupId, localResource.encContent);
-
-    // On conflict, choose last modified one
-    const serverIsNewer = serverDoc.modified >= localDoc.modified;
-    const winningDoc = serverIsNewer ? serverDoc : localDoc;
-
-    logger.debug(`Resolved conflict for ${serverDoc._id} (${serverIsNewer ? 'Server' : 'Local'})`);
+    logger.debug(`Resolved conflict for ${serverResource.id} (${serverIsNewer ? 'Server' : 'Local'})`, winner);
 
     // Update local resource
-    await resourceStore.update(localResource, {
-      version: serverResource.version,
-      encContent: serverIsNewer ? serverResource.encContent : localResource.encContent,
+    // NOTE: using localResource as the base to make sure we have _id
+    await resourceStore.update(localResource, winner, {
+      version: serverResource.version, // Act as the server resource no matter what
       dirty: !serverIsNewer // It's dirty if we chose the local doc
     });
 
     // Update app database (NOTE: Not silently)
-    await db.update(winningDoc);
+    if (!winner.removed) {
+      const doc = await _decryptDoc(winner.resourceGroupId, winner.encContent);
+      await db.update(doc);
+    }
   }
 }
 
@@ -182,13 +183,13 @@ async function _syncPullChanges () {
 
   const allResources = await _getOrCreateAllResources();
   const body = allResources.map(r => ({
-    resourceId: r.resourceId,
+    id: r.id,
     resourceGroupId: r.resourceGroupId,
     version: r.version,
-    remove: r.removed
+    removed: r.removed
   }));
 
-  logger.debug(`Checking ${allResources.length} resources`);
+  logger.debug(`Checking ${allResources.length} resources`, allResources);
 
   let responseBody;
   try {
@@ -201,8 +202,8 @@ async function _syncPullChanges () {
   const {
     updatedResources,
     createdResources,
-    resourceIdsToPush,
-    resourceIdsToRemove
+    idsToPush,
+    idsToRemove
   } = responseBody;
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -241,7 +242,7 @@ async function _syncPullChanges () {
       await db.update(doc);
 
       // Update local resource
-      const resource = await resourceStore.getByResourceId(serverResource.resourceId);
+      const resource = await resourceStore.getById(serverResource.id);
       await resourceStore.update(resource, serverResource, {dirty: false});
     } catch (e) {
       logger.warn('Failed to decode updated resource', e, serverResource);
@@ -256,15 +257,15 @@ async function _syncPullChanges () {
   // Remove all the docs that need removing //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  for (const idToRemove of resourceIdsToRemove) {
-    const resource = await resourceStore.getByResourceId(idToRemove);
+  for (const id of idsToRemove) {
+    const resource = await resourceStore.getById(id);
     if (!resource) {
-      throw new Error(`Could not find Resource to remove for ${idToRemove}`)
+      throw new Error(`Could not find Resource to remove for ${id}`)
     }
 
     const doc = await _decryptDoc(resource.resourceGroupId, resource.encContent);
     if (!doc) {
-      throw new Error(`Could not find doc to remove ${idToRemove}`)
+      throw new Error(`Could not find doc to remove ${id}`)
     }
 
     // Mark resource as deleted
@@ -278,15 +279,15 @@ async function _syncPullChanges () {
   // Push all the docs that need pushing //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  for (const idToPush of resourceIdsToPush) {
-    const resource = await resourceStore.getByResourceId(idToPush);
+  for (const id of idsToPush) {
+    const resource = await resourceStore.getById(id);
     if (!resource) {
-      throw new Error(`Could not find Resource to push for resourceId ${idToPush}`)
+      throw new Error(`Could not find Resource to push for id ${id}`)
     }
 
     const doc = await _decryptDoc(resource.resourceGroupId, resource.encContent);
     if (!doc) {
-      throw new Error(`Could not find doc to push ${idToPush}`)
+      throw new Error(`Could not find doc to push ${id}`)
     }
 
     _queueChange(db.CHANGE_UPDATE, doc)
@@ -320,7 +321,7 @@ async function _fetchResourceGroup (resourceGroupId) {
  */
 async function _getResourceGroupSymmetricKey (resourceGroupId) {
   const resourceGroup = await _fetchResourceGroup(resourceGroupId);
-  const accountPrivateKey = await session.getAccountPrivateKey();
+  const accountPrivateKey = await session.getPrivateKey();
 
   const symmetricKeyStr = crypt.decryptRSAWithJWK(
     accountPrivateKey,
@@ -365,16 +366,18 @@ async function _createResourceGroup (name = '', description = '') {
     encSymmetricKey: encRGSymmetricJWK,
   });
 
-  logger.debug(`Created ResourceGroup ${resourceGroup.id}`);
+  logger.debug(`created ResourceGroup ${resourceGroup.id}`);
 
   return resourceGroup;
 }
 
 async function _createResource (doc, resourceGroupId) {
   return resourceStore.insert({
-    resourceId: doc._id,
+    id: doc._id,
     resourceGroupId: resourceGroupId,
     version: NO_VERSION,
+    lastEdited: doc.modified,
+    lastEditedBy: session.getAccountId(),
     removed: false,
     type: doc.type,
     encContent: await _encryptDoc(resourceGroupId, doc),
@@ -382,50 +385,59 @@ async function _createResource (doc, resourceGroupId) {
   });
 }
 
+async function _createResourceForDoc (doc) {
+  // No resource yet, so create one
+  const workspace = await _getWorkspaceForDoc(doc);
+
+  if (!workspace) {
+    logger.error('Could not find workspace for doc!', doc);
+    return;
+  }
+
+  let workspaceResource = await resourceStore.getById(workspace._id);
+
+  if (!workspaceResource) {
+    // TODO: Don't auto create a ResourceGroup
+    const workspaceResourceGroup = await _createResourceGroup(
+      `${workspace.name}`,
+      `Workspace ID: ${workspace._id}`
+    );
+    workspaceResource = await _createResource(workspace, workspaceResourceGroup.id);
+  }
+
+  if (workspace === doc) {
+    // If the current doc IS a Workspace, just return it
+    return workspaceResource;
+  } else {
+    return await _createResource(doc, workspaceResource.resourceGroupId);
+  }
+}
+
 async function _getOrCreateResourceForDoc (doc) {
-  let resource = await resourceStore.getByResourceId(doc._id);
+  let resource = await resourceStore.getById(doc._id);
 
   if (!resource) {
-    // No resource yet, so create one
-    const workspace = await _getWorkspaceForDoc(doc);
-
-    if (!workspace) {
-      logger.error('Could not find workspace for doc!', doc, resource);
-      return;
-    }
-
-    let workspaceResource = await resourceStore.getByResourceId(workspace._id);
-
-    if (!workspaceResource) {
-      // TODO: Don't auto create a ResourceGroup
-      const workspaceResourceGroup = await _createResourceGroup(
-        `${workspace.name}`,
-        `Workspace ID: ${workspace._id}`
-      );
-      workspaceResource = await _createResource(workspace, workspaceResourceGroup.id);
-    }
-
-    if (workspace === doc) {
-      // If the current doc IS a Workspace, just return it
-      resource = workspaceResource;
-    } else {
-      resource = await _createResource(doc, workspaceResource.resourceGroupId);
-    }
+    resource = await _createResourceForDoc(doc);
   }
 
   return resource;
 }
 
 async function _getOrCreateAllResources () {
-  const allResources = [];
+  const allResourcesMap = {};
+  for (const r of await resourceStore.all()) {
+    allResourcesMap[r.id] = r;
+  }
 
   // TODO: This is REALLY slow (relatively speaking)
   for (const type of Object.keys(WHITE_LIST)) {
     for (const doc of await db.all(type)) {
-      const resource = await _getOrCreateResourceForDoc(doc);
-      allResources.push(resource);
+      const resource = allResourcesMap[doc._id];
+      if (!resource) {
+        allResourcesMap[doc._id] = await _createResourceForDoc(doc);
+      }
     }
   }
 
-  return allResources;
+  return Object.keys(allResourcesMap).map(k => allResourcesMap[k]);
 }

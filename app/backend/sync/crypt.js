@@ -74,7 +74,7 @@ export function decryptRSAWithJWK (privateJWK, encryptedBlob) {
  * @param additionalData any additional public data to attach
  * @returns {{iv, t, d, ad}}
  */
-export function encryptAES (jwkOrKey, plaintext, additionalData) {
+export function encryptAES (jwkOrKey, plaintext, additionalData = '') {
   // TODO: Add assertion checks for JWK
   const rawKey = typeof jwkOrKey === 'string' ? jwkOrKey : _b64UrlToHex(jwkOrKey.k);
   const key = forge.util.hexToBytes(rawKey);

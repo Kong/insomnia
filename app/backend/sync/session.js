@@ -19,7 +19,7 @@ export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
 
   const account = await _initAccount(firstName, lastName, email);
   const authSecret = await crypt.deriveKey(passphrase, account.email, account.saltKey);
-  const encSecret = await crypt.deriveKey(passphrase, account.email, account.saltEnc);
+  const derivedSymmetricKey = await crypt.deriveKey(passphrase, account.email, account.saltEnc);
 
   // Compute the verifier key
   // Add verifier to account object
@@ -32,16 +32,16 @@ export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
 
   // Generate keypair
   const {publicKey, privateKey} = await crypt.generateKeyPairJWK();
+  const symmetricKeyJWK = await crypt.generateAES256Key();
 
-  // Encode keypairs (and encrypt private key)
-  const privateJWKStr = JSON.stringify(privateKey);
-  const publicJWKStr = JSON.stringify(publicKey);
-  const encPrivateJWKMessage = crypt.encryptAES(encSecret, privateJWKStr, 'n/a');
-  const encPrivateJWKMessageStr = JSON.stringify(encPrivateJWKMessage);
+  // Encode keypair
+  const encSymmetricJWKMessage = crypt.encryptAES(derivedSymmetricKey, JSON.stringify(symmetricKeyJWK));
+  const encPrivateJWKMessage = crypt.encryptAES(symmetricKeyJWK, JSON.stringify(privateKey));
 
   // Add keys to account
-  account.publicKey = publicJWKStr;
-  account.encPrivateKey = encPrivateJWKMessageStr;
+  account.publicKey = JSON.stringify(publicKey);
+  account.encPrivateKey = JSON.stringify(encPrivateJWKMessage);
+  account.encSymmetricKey = JSON.stringify(encSymmetricJWKMessage);
 
   return util.fetchPost('/auth/signup', account);
 }
@@ -111,11 +111,14 @@ export async function login (rawEmail, rawPassphrase) {
   const {
     publicKey,
     encPrivateKey,
+    encSymmetricKey,
     saltEnc,
     accountId,
     firstName
   } = await whoami(sessionId);
-  const symmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
+
+  const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
+  const symmetricKeyStr = await crypt.decryptAES(derivedSymmetricKey, JSON.parse(encSymmetricKey));
 
   // Store the information for later
   setSessionData(
@@ -123,7 +126,7 @@ export async function login (rawEmail, rawPassphrase) {
     accountId,
     firstName,
     email,
-    symmetricKey,
+    JSON.parse(symmetricKeyStr),
     JSON.parse(publicKey),
     JSON.parse(encPrivateKey),
   );
@@ -133,7 +136,7 @@ export function getPublicKey () {
   return getSessionData().publicKey;
 }
 
-export function getAccountPrivateKey () {
+export function getPrivateKey () {
   const {symmetricKey, encPrivateKey} = getSessionData();
   const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr);
@@ -141,6 +144,10 @@ export function getAccountPrivateKey () {
 
 export function getCurrentSessionId () {
   return localStorage.getItem('currentSessionId') || NO_SESSION;
+}
+
+export function getAccountId () {
+  return getSessionData().accountId;
 }
 
 export function getEmail () {
@@ -157,13 +164,12 @@ export function getFirstName () {
  */
 export function getSessionData () {
   const sessionId = getCurrentSessionId();
-  if (!sessionId) {
-    return null;
+  if (sessionId == NO_SESSION) {
+    return {};
   }
 
-  const messageStr = localStorage.getItem(`session__${sessionId}`);
-  const dataStr = crypt.decryptAES(sessionId, JSON.parse(messageStr));
-  return messageStr ? JSON.parse(dataStr) : null;
+  const dataStr = localStorage.getItem(_getSessionKey(sessionId));
+  return JSON.parse(dataStr);
 }
 
 /**
@@ -196,8 +202,7 @@ export function setSessionData (
     firstName: firstName,
   });
 
-  const message = crypt.encryptAES(sessionId, dataStr);
-  localStorage.setItem(`session__${sessionId}`, JSON.stringify(message));
+  localStorage.setItem(_getSessionKey(sessionId), dataStr);
 
   // NOTE: We're setting this last because the stuff above might fail
   localStorage.setItem('currentSessionId', sessionId);
@@ -208,7 +213,7 @@ export function setSessionData (
  */
 export function unsetSessionData () {
   const sessionId = getCurrentSessionId();
-  localStorage.removeItem(`session__${sessionId}`);
+  localStorage.removeItem(_getSessionKey(sessionId));
   localStorage.removeItem(`currentSessionId`);
 }
 
@@ -240,6 +245,10 @@ export function whoami (sessionId = null) {
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
+
+function _getSessionKey (sessionId) {
+  return `session__${sessionId.slice(0, 10)}`
+}
 
 async function _initAccount (firstName, lastName, email) {
   return {

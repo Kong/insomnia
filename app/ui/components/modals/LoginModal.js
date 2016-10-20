@@ -19,13 +19,13 @@ class LoginModal extends Component {
     const email = this._emailInput.value;
     const password = this._passwordInput.value;
 
-    try {
+    // try {
       await session.login(email, password);
       this.setState({step: 2});
-    } catch (e) {
-      // TODO: Handle failures
-      console.warn('Failed to login', e)
-    }
+    // } catch (e) {
+    //   TODO: Handle failures
+      // console.warn('Failed to login', e.stack)
+    // }
   }
 
   _handleSignup (e) {

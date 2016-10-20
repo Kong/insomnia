@@ -37,7 +37,7 @@ class SyncModal extends Component {
     const totalResources = (await syncStorage.all()).length;
     const numDirty = (await syncStorage.findDirty()).length;
     const numSynced = totalResources - numDirty;
-    const percentSynced = parseInt(numSynced / totalResources * 10) / 10 * 100;
+    const percentSynced = totalResources === 0 ? 0 : parseInt(numSynced / totalResources * 10) / 10 * 100;
 
     this.setState({
       numDirty: numDirty,
@@ -84,12 +84,13 @@ class SyncModal extends Component {
 
     // Show last N logs
     const allLogs = sync.logger.tail();
-    const logs = allLogs.slice(allLogs.length - 100);
+    const logs = allLogs.slice(allLogs.length - 2000);
 
     return (
       <Modal ref={m => this.modal = m}>
         <ModalHeader>
-          Sync Settings <span className="faint txt-md monospace">({s.email})</span>
+          Sync Settings <span
+          className="faint txt-md monospace">({s.email})</span>
         </ModalHeader>
         <ModalBody className="wide pad">
           <h2>Hi {this.state.firstName}! Here is some useful debug info.</h2>
@@ -104,16 +105,29 @@ class SyncModal extends Component {
             </tbody>
           </table>
           <hr/>
-          <pre
-            className="wide outlined pad-sm selectable txt-sm monospace scrollable"
-            style={{maxHeight: '10rem'}}>
+          <pre style={{maxHeight: '13rem'}}
+               className="wide outlined pad-sm selectable txt-sm monospace scrollable">
             {logs.map((entry, i) => {
-              const timeString = new Date(entry.timestamp)
-                .toISOString()
-                .replace(/\..*/, '')
-                .replace('T', ' ');
+              function pad (n, length) {
+                let s = n + '';
+                while (s.length < length) {
+                  s = '0' + s;
+                }
+                return s;
+              }
+
+              const dateString =
+                pad(entry.date.getFullYear(), 4) + '/' +
+                pad(entry.date.getMonth(), 2) + '/' +
+                pad(entry.date.getDay(), 2) + ' ' +
+                pad(entry.date.getHours(), 2) + ':' +
+                pad(entry.date.getMinutes(), 2) + ':' +
+                pad(entry.date.getSeconds(), 2);
+
+              //.replace(/\..*/, '')
+              //.replace('T', ' ');
               return <div className="no-wrap" key={i}>
-                <span className="faint">{timeString}</span>
+                <span className="faint">{dateString}</span>
                 {" "}
                 <span className={classnames(colors[entry.type], 'inline-block')}
                       style={{minWidth: '4rem'}}>

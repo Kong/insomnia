@@ -1,6 +1,7 @@
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
+import crypto from 'crypto';
 
 /**
  * Get all the Resources
@@ -56,31 +57,13 @@ export function findDirty () {
 /**
  * Get Resource by resourceID
  *
- * @param resourceId
- * @returns {Promise}
- */
-export function getByResourceId (resourceId) {
-  return new Promise((resolve, reject) => {
-    // TODO: this query should probably include resourceGroupId as well
-    _getDB().find({resourceId}, (err, rawDocs) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rawDocs.length >= 1 ? rawDocs[0] : null);
-      }
-    });
-  })
-}
-
-/**
- * Get a Resource by Id
- *
  * @param id
  * @returns {Promise}
  */
 export function getById (id) {
   return new Promise((resolve, reject) => {
-    _getDB().find({_id: id}, (err, rawDocs) => {
+    // TODO: this query should probably include resourceGroupId as well
+    _getDB().find({id}, (err, rawDocs) => {
       if (err) {
         reject(err);
       } else {
@@ -97,6 +80,10 @@ export function getById (id) {
  */
 export function insert (resource) {
   return new Promise((resolve, reject) => {
+    const h = crypto.createHash('md5');
+    h.update(resource.resourceGroupId);
+    h.update(resource.id);
+    resource._id = `rs_${h.digest('hex')}`;
     _getDB().insert(resource, (err, newDoc) => {
       if (err) {
         reject(err);

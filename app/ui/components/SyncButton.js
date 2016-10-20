@@ -3,7 +3,7 @@ import SyncModal from './modals/SyncModal';
 import {getModal} from './modals/index';
 import * as syncStorage from '../../backend/sync/storage';
 import * as session from '../../backend/sync/session';
-import LoginModal from './modals/LoginModal';
+import SignupModal from './modals/SignupModal';
 
 const STATE_OK = 'synced';
 const STATE_BEHIND = 'behind';
@@ -55,7 +55,7 @@ class SyncButton extends Component {
     } else {
       return (
         <button className="btn btn--super-compact btn--outlined wide"
-                onClick={e => getModal(LoginModal).show()}>
+                onClick={e => getModal(SignupModal).show()}>
           Login to Cloud Sync
         </button>
       )

@@ -31,7 +31,7 @@ export default function (key) {
 
 export function getState (key) {
   if (!localStorage[key]) {
-    return undefined;
+    return {};
   }
 
   return JSON.parse(localStorage[key]);
