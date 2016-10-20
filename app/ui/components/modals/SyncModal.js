@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import classnames from 'classnames';
+import GravatarImg from '../GravatarImg';
 import Modal from '../base/Modal';
 import PromptButton from '../base/PromptButton';
 import ModalBody from '../base/ModalBody';
@@ -94,6 +95,7 @@ class SyncModal extends Component {
         </ModalHeader>
         <ModalBody className="wide pad">
           <h2>Hi {this.state.firstName}! Here is some useful debug info.</h2>
+          <GravatarImg email={this.state.email}></GravatarImg>
           <table>
             <tbody>
             {data.map(([label, value]) => (
