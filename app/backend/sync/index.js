@@ -4,9 +4,10 @@ import * as crypt from './crypt';
 import * as session from './session';
 import * as resourceStore from './storage';
 
-const FULL_SYNC_INTERVAL = 30E3;
-const DEBOUNCE_TIME = 9E3;
-const START_DELAY = 3E3;
+export const FULL_SYNC_INTERVAL = 30E3;
+export const DEBOUNCE_TIME = 10E3;
+export const START_PULL_DELAY = 5E3;
+export const START_PUSH_DELAY = 10E3;
 
 const WHITE_LIST = {
   [db.request.type]: true,
@@ -67,8 +68,8 @@ export async function initSync () {
       .map(c => _queueChange(c[0], c[1]));
   });
 
-  setTimeout(_syncPullChanges, START_DELAY);
-  setTimeout(_syncPushDirtyResources, START_DELAY);
+  setTimeout(_syncPullChanges, START_PULL_DELAY);
+  setTimeout(_syncPushDirtyResources, START_PUSH_DELAY);
   setInterval(_syncPullChanges, FULL_SYNC_INTERVAL);
 }
 
@@ -187,7 +188,7 @@ async function _syncPullChanges () {
     remove: r.removed
   }));
 
-  logger.debug(`Doing full sync with ${allResources.length} resources`);
+  logger.debug(`Checking ${allResources.length} resources`);
 
   let responseBody;
   try {
