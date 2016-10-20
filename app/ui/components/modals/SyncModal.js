@@ -44,17 +44,15 @@ class SyncModal extends Component {
   async _updateModal () {
     const workspaces = await db.workspace.all();
     const workspaceData = [];
-    for (const w of workspaces) {
-      workspaceData.push({
-        doc: w,
-        resource: await syncStorage.getById(w._id)
-      });
+    for (const doc of workspaces) {
+      const resource = await syncStorage.getById(doc._id);
+      workspaceData.push({doc, resource});
     }
 
     const totalResources = (await syncStorage.all()).length;
     const numDirty = (await syncStorage.findDirty()).length;
     const numSynced = totalResources - numDirty;
-    const percentSynced = totalResources === 0 ? 0 : parseInt(numSynced / totalResources * 10) / 10 * 100;
+    const percentSynced = parseInt(numSynced / totalResources * 10) / 10 * 100 || 0;
 
     this.setState({
       workspaceData,
