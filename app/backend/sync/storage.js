@@ -8,9 +8,9 @@ import crypto from 'crypto';
  *
  * @returns {Promise}
  */
-export function findByResourceGroupId (resourceGroupId) {
+export function findByType (type) {
   return new Promise((resolve, reject) => {
-    _getDB().find({resourceGroupId}, (err, rawDocs) => {
+    _getDB().find({type}, (err, rawDocs) => {
       if (err) {
         reject(err);
       } else {

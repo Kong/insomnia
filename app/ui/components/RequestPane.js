@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs'
+import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 
 import KeyValueEditor from './base/KeyValueEditor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
