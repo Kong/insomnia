@@ -155,24 +155,24 @@ class SyncModal extends Component {
                 <thead>
                 <tr>
                   <th>Sync</th>
-                  <th>Created By</th>
-                  <th>Name</th>
-                  <th>Members</th>
+                  <th>Workspace</th>
+                  <th>Team</th>
                 </tr>
                 </thead>
                 <tbody>
                 {this.state.workspaceData.map(wd => (
                   <tr key={wd.doc._id}>
                     <td>
-                      <input type="checkbox" checked={!!wd.resource}
-                             onChange={this._handleEnableSync.bind(this, wd)}/>
+                      <select name="sync-type" id="sync-type" onChange={e => {console.log(e.target.value)}}>
+                        <option value="on">On</option>
+                        <option value="off">Off</option>
+                      </select>
                     </td>
-                    <td>{(wd.resource || {}).createdBy === session.getAccountId() ? 'You' : 'Someone Else'}</td>
                     <td>{wd.doc.name}</td>
-                    <td>
-                      <GravatarImg email={this.state.email}
-                                   className="img--circle"
-                                   size={25}/>
+                    <td className="faint italic">
+                      <select name="team" id="team" disabled="disabled">
+                        <option value="other">Coming soon...</option>
+                      </select>
                     </td>
                   </tr>
                 ))}

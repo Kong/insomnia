@@ -334,7 +334,7 @@ class App extends Component {
 
   _getActiveWorkspaceMeta (props) {
     props = props || this.props;
-    const workspace = this._getActiveWorkspace();
+    const workspace = this._getActiveWorkspace(props);
     return props.global.workspaceMeta[workspace._id] || {};
   }
 

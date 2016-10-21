@@ -5,7 +5,7 @@ import * as session from './session';
 import * as resourceStore from './storage';
 import Logger from './logger';
 
-export const FULL_SYNC_INTERVAL = 30E3;
+export const FULL_SYNC_INTERVAL = 60E3;
 export const DEBOUNCE_TIME = 5E3;
 export const START_PULL_DELAY = 5E3;
 export const START_PUSH_DELAY = 2E3;

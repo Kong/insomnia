@@ -3,13 +3,16 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import crypto from 'crypto';
 
+const TYPE_RESOURCE = 'Resource';
+const TYPE_RESOURCE_GROUP_CONFIG = 'ResourceGroupConfig';
+
 /**
  * Get all Resources
  *
  * @returns {Promise}
  */
 export function allResources () {
-  return _promisifyCallback(_getDB(), 'find', {});
+  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', {});
 }
 
 /**
@@ -18,7 +21,7 @@ export function allResources () {
  * @returns {Promise}
  */
 export function findResources (query) {
-  return _promisifyCallback(_getDB(), 'find', query);
+  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', query);
 }
 
 /**
@@ -37,7 +40,7 @@ export function findDirtyResources () {
  */
 export async function getResourceById (id) {
   // TODO: this query should probably include resourceGroupId as well
-  const rawDocs = await _promisifyCallback(_getDB(), 'find', {id});
+  const rawDocs = await _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', {id});
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
@@ -51,7 +54,7 @@ export function insertResource (resource) {
   h.update(resource.resourceGroupId);
   h.update(resource.id);
   const newResource = Object.assign({}, resource, {_id: `rs_${h.digest('hex')}`});
-  return _promisifyCallback(_getDB(), 'insert', newResource);
+  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'insert', newResource);
 }
 
 /**
@@ -63,7 +66,7 @@ export function insertResource (resource) {
  */
 export function updateResource (resource, ...patches) {
   return _promisifyCallback(
-    _getDB(),
+    _getDB(TYPE_RESOURCE),
     'update',
     {_id: resource._id},
     Object.assign(resource, ...patches)
@@ -77,7 +80,22 @@ export function updateResource (resource, ...patches) {
  * @returns {Promise}
  */
 export function removeResource (resource) {
-  return _promisifyCallback(_getDB(), 'remove', {_id: resource._id});
+  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'remove', {_id: resource._id});
+}
+
+/**
+ * Get ResourceGroupConfig by ResourceGroupId
+ *
+ * @param resourceGroupId
+ * @returns {null}
+ */
+export async function getResourceGroupConfigByResourceGroupId (resourceGroupId) {
+  const rawDocs = _promisifyCallback(
+    _getDB(TYPE_RESOURCE_GROUP_CONFIG),
+    'find',
+    {resourceGroupId}
+  );
+  return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
 // ~~~~~~~ //
@@ -85,20 +103,24 @@ export function removeResource (resource) {
 // ~~~~~~~ //
 
 let _database = null;
-function _getDB () {
+function _getDB (type) {
   if (!_database) {
-    // NOTE: Do not EVER change this. EVER!
     const basePath = electron.remote.app.getPath('userData');
-    const filePath = fsPath.join(basePath, `sync.Resource.db`);
+    _database = {};
+
+    // NOTE: Do not EVER change this. EVER!
+    const resourcePath = fsPath.join(basePath, 'sync/Resource.db');
+    const resourceGroupConfigPath = fsPath.join(basePath, 'sync/ResourceGroupConfig.db');
 
     // Fill in the defaults
-    _database = new NeDB({filename: filePath, autoload: true});
+    _database['Resource'] = new NeDB({filename: resourcePath, autoload: true});
+    _database['ResourceGroupConfig'] = new NeDB({filename: resourceGroupConfigPath, autoload: true});
 
     // Done
-    console.log(`-- Initialize Sync DB at ${filePath} --`);
+    console.log(`-- Initialize Sync DB at ${basePath} --`);
   }
 
-  return _database;
+  return _database[type];
 }
 
 function _promisifyCallback (obj, fnName, ...args) {
