@@ -161,9 +161,10 @@ class SyncModal extends Component {
               <table>
                 <thead>
                 <tr>
-                  <th style={{width: '5rem'}}>Sync</th>
+                  <th>Sync</th>
+                  <th>Created By</th>
                   <th>Name</th>
-                  <th style={{width: '5rem'}}>Members</th>
+                  <th>Members</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -173,6 +174,7 @@ class SyncModal extends Component {
                       <input type="checkbox" checked={!!wd.resource}
                              onChange={this._handleEnableSync.bind(this, wd)}/>
                     </td>
+                    <td>{(wd.resource || {}).createdBy === session.getAccountId() ? 'You' : 'Someone Else'}</td>
                     <td>{wd.doc.name}</td>
                     <td>
                       <GravatarImg email={this.state.email}

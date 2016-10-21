@@ -1,3 +1,4 @@
+import uuid from 'node-uuid';
 import {parse as urlParse, format as urlFormat} from 'url';
 
 export function getBasicAuthHeader (username, password) {
@@ -41,18 +42,12 @@ export function setDefaultProtocol (url, defaultProto = 'http:') {
  * @returns {string}
  */
 export function generateId (prefix) {
-  const CHARS = '23456789abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ'.split('');
-  const dateString = Date.now().toString(36);
-  let randString = '';
-
-  for (let i = 0; i < 16; i++) {
-    randString += CHARS[Math.floor(Math.random() * CHARS.length)];
-  }
+  const id = uuid.v4().replace(/-/g, '');
 
   if (prefix) {
-    return `${prefix}_${dateString}${randString}`;
+    return `${prefix}_${id}`;
   } else {
-    return `${dateString}${randString}`;
+    return id;
   }
 }
 
@@ -69,21 +64,6 @@ export function flexibleEncodeComponent (str) {
   }
 
   return encodeURIComponent(decoded);
-}
-
-export function flexibleEncode (str) {
-  // Sometimes spaces screw things up because of url.parse
-  str = str.replace(/%20/g, ' ');
-
-  let decoded;
-  try {
-    decoded = decodeURI(str);
-  } catch (e) {
-    // Malformed (probably not encoded) so assume it's decoded already
-    decoded = str;
-  }
-
-  return encodeURI(decoded);
 }
 
 export function prepareUrlForSending (url) {

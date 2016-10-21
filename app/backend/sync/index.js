@@ -401,6 +401,7 @@ async function _createResource (doc, resourceGroupId) {
     id: doc._id,
     resourceGroupId: resourceGroupId,
     version: NO_VERSION,
+    createdBy: session.getAccountId(),
     lastEdited: doc.modified,
     lastEditedBy: session.getAccountId(),
     removed: false,
