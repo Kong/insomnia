@@ -70,25 +70,3 @@ export function remove (request) {
 export function all () {
   return db.all(type);
 }
-
-export async function getAncestors (request) {
-  const ancestors = [];
-
-  async function next (doc) {
-    const rg = await db.requestGroup.getById(doc.parentId);
-    const w = await db.workspace.getById(doc.parentId);
-
-    if (rg) {
-      ancestors.unshift(rg);
-      return await next(rg);
-    } else if (w) {
-      ancestors.unshift(w);
-      return await next(w);
-    } else {
-      // We're finished
-      return ancestors;
-    }
-  }
-
-  return await next(request);
-}
