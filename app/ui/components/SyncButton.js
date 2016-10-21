@@ -19,7 +19,7 @@ class SyncButton extends Component {
   }
 
   async _updateState () {
-    const dirtyDocs = await syncStorage.findDirtyResources();
+    const dirtyDocs = await syncStorage.findActiveDirtyResources();
     const newState = Object.assign({}, this.state, {
       state: dirtyDocs.length > 0 ? STATE_AHEAD : STATE_OK,
       loggedIn: session.isLoggedIn(),

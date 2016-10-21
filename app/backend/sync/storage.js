@@ -2,17 +2,21 @@ import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import crypto from 'crypto';
+import * as util from '../util';
 
 const TYPE_RESOURCE = 'Resource';
-const TYPE_RESOURCE_GROUP_CONFIG = 'ResourceGroupConfig';
+const TYPE_CONFIG = 'Config';
+
+export const SYNC_MODE_OFF = 'off';
+export const SYNC_MODE_ON = 'on';
 
 /**
  * Get all Resources
  *
  * @returns {Promise}
  */
-export function allResources () {
-  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', {});
+export function activeResources () {
+  return findActiveResources({});
 }
 
 /**
@@ -20,7 +24,10 @@ export function allResources () {
  *
  * @returns {Promise}
  */
-export function findResources (query) {
+export async function findActiveResources (query) {
+  const configs = await findActiveConfigs();
+  const resourceGroupIds = configs.map(c => c.resourceGroupId);
+  query.resourceGroupId = {$in: resourceGroupIds};
   return _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', query);
 }
 
@@ -28,8 +35,8 @@ export function findResources (query) {
  * Get all dirty resources
  * @returns {Promise}
  */
-export function findDirtyResources () {
-  return findResources({dirty: true});
+export async function findActiveDirtyResources () {
+  return findActiveResources({dirty: true});
 }
 
 /**
@@ -49,12 +56,13 @@ export async function getResourceById (id) {
  *
  * @param resource
  */
-export function insertResource (resource) {
+export async function insertResource (resource) {
   const h = crypto.createHash('md5');
   h.update(resource.resourceGroupId);
   h.update(resource.id);
   const newResource = Object.assign({}, resource, {_id: `rs_${h.digest('hex')}`});
-  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'insert', newResource);
+  await _promisifyCallback(_getDB(TYPE_RESOURCE), 'insert', newResource);
+  return newResource;
 }
 
 /**
@@ -64,13 +72,10 @@ export function insertResource (resource) {
  * @param patches
  * @returns {Promise}
  */
-export function updateResource (resource, ...patches) {
-  return _promisifyCallback(
-    _getDB(TYPE_RESOURCE),
-    'update',
-    {_id: resource._id},
-    Object.assign(resource, ...patches)
-  );
+export async function updateResource (resource, ...patches) {
+  const newDoc = Object.assign(resource, ...patches);
+  await _promisifyCallback(_getDB(TYPE_RESOURCE), 'update', {_id: resource._id}, newDoc);
+  return newDoc
 }
 
 /**
@@ -83,19 +88,55 @@ export function removeResource (resource) {
   return _promisifyCallback(_getDB(TYPE_RESOURCE), 'remove', {_id: resource._id});
 }
 
+// ~~~~~~ //
+// Config //
+// ~~~~~~ //
+
 /**
- * Get ResourceGroupConfig by ResourceGroupId
+ * Get Config
  *
  * @param resourceGroupId
- * @returns {null}
  */
-export async function getResourceGroupConfigByResourceGroupId (resourceGroupId) {
-  const rawDocs = _promisifyCallback(
-    _getDB(TYPE_RESOURCE_GROUP_CONFIG),
-    'find',
-    {resourceGroupId}
+export async function getConfig (resourceGroupId) {
+  const rawDocs = await _promisifyCallback(_getDB(TYPE_CONFIG), 'find', {resourceGroupId});
+  return rawDocs.length >= 1 ? _defaultConfig(rawDocs[0]) : null;
+}
+
+/**
+ * Save a Config
+ * @param config
+ * @param patches
+ */
+export async function updateConfig (config, ...patches) {
+  const newDoc = Object.assign(config, ...patches);
+  await _promisifyCallback(
+    _getDB(TYPE_CONFIG),
+    'update',
+    {_id: newDoc._id},
+    newDoc
   );
-  return rawDocs.length >= 1 ? rawDocs[0] : null;
+  return newDoc;
+}
+
+/**
+ * Get all the active configs
+ */
+export function findActiveConfigs () {
+  return _promisifyCallback(_getDB(TYPE_CONFIG), 'find', {$not: {syncMode: SYNC_MODE_OFF}})
+}
+
+export async function insertConfig (config) {
+  const id = util.generateId('scf');
+  const doc = Object.assign({_id: id}, config);
+  await _promisifyCallback(_getDB(TYPE_CONFIG), 'insert', config);
+  return doc;
+}
+
+function _defaultConfig (data) {
+  return Object.assign({
+    syncMode: SYNC_MODE_OFF,
+    resourceGroupId: null
+  }, data);
 }
 
 // ~~~~~~~ //
@@ -110,11 +151,14 @@ function _getDB (type) {
 
     // NOTE: Do not EVER change this. EVER!
     const resourcePath = fsPath.join(basePath, 'sync/Resource.db');
-    const resourceGroupConfigPath = fsPath.join(basePath, 'sync/ResourceGroupConfig.db');
+    const configPath = fsPath.join(basePath, 'sync/Config.db');
 
     // Fill in the defaults
     _database['Resource'] = new NeDB({filename: resourcePath, autoload: true});
-    _database['ResourceGroupConfig'] = new NeDB({filename: resourceGroupConfigPath, autoload: true});
+    _database['Config'] = new NeDB({
+      filename: configPath,
+      autoload: true
+    });
 
     // Done
     console.log(`-- Initialize Sync DB at ${basePath} --`);

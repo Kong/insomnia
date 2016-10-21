@@ -5,10 +5,10 @@ import * as session from './session';
 import * as resourceStore from './storage';
 import Logger from './logger';
 
-export const FULL_SYNC_INTERVAL = 60E3;
+export const FULL_SYNC_INTERVAL = 20E3;
 export const DEBOUNCE_TIME = 5E3;
-export const START_PULL_DELAY = 5E3;
-export const START_PUSH_DELAY = 2E3;
+export const START_PULL_DELAY = 3E3;
+export const START_PUSH_DELAY = 1E3;
 
 const WHITE_LIST = {
   [db.request.type]: true,
@@ -77,7 +77,7 @@ async function _queueChange (event, doc) {
   }
 
   // Update the resource content and set dirty
-  const resource = await _getOrCreateResourceForDoc(doc);
+  const resource = await getOrCreateResourceForDoc(doc);
   await resourceStore.updateResource(resource, {
     lastEdited: Date.now(), // Don't use doc.modified because that doesn't work for removal
     lastEditedBy: session.getAccountId(),
@@ -99,7 +99,7 @@ async function _syncPushDirtyResources () {
     return;
   }
 
-  const dirtyResources = await resourceStore.findDirtyResources();
+  const dirtyResources = await resourceStore.findActiveDirtyResources();
 
   if (!dirtyResources.length) {
     logger.debug('No changes to push');
@@ -173,14 +173,17 @@ async function _syncPullChanges () {
   }
 
   const allResources = await _getOrCreateAllResources();
-  const body = allResources.map(r => ({
+  const resourceGroupIds = [...new Set(allResources.map(r => r.resourceGroupId))];
+  const resources = allResources.map(r => ({
     id: r.id,
     resourceGroupId: r.resourceGroupId,
     version: r.version,
     removed: r.removed
   }));
 
-  logger.debug(`Checking ${allResources.length} resources`);
+  const body = {resources, resourceGroupIds};
+
+  logger.debug(`Checking ${resources.length} resources`);
 
   let responseBody;
   try {
@@ -402,8 +405,7 @@ async function _createResourceForDoc (doc) {
   const workspace = await _getWorkspaceForDoc(doc);
 
   if (!workspace) {
-    logger.error('Could not find workspace for doc!', doc);
-    return;
+    throw new Error(`Could not find workspace for doc ${doc._id}`);
   }
 
   let workspaceResource = await resourceStore.getResourceById(workspace._id);
@@ -425,7 +427,7 @@ async function _createResourceForDoc (doc) {
   }
 }
 
-async function _getOrCreateResourceForDoc (doc) {
+export async function getOrCreateResourceForDoc (doc) {
   let resource = await resourceStore.getResourceById(doc._id);
 
   if (!resource) {
@@ -436,20 +438,21 @@ async function _getOrCreateResourceForDoc (doc) {
 }
 
 async function _getOrCreateAllResources () {
-  const allResourcesMap = {};
-  for (const r of await resourceStore.allResources()) {
-    allResourcesMap[r.id] = r;
+  const activeResourceMap = {};
+  const activeResources = await resourceStore.activeResources();
+  for (const r of activeResources) {
+    activeResourceMap[r.id] = r;
   }
 
   // TODO: This is REALLY slow (relatively speaking)
   for (const type of Object.keys(WHITE_LIST)) {
     for (const doc of await db.all(type)) {
-      const resource = allResourcesMap[doc._id];
+      const resource = await resourceStore.getResourceById(doc._id);
       if (!resource) {
-        allResourcesMap[doc._id] = await _createResourceForDoc(doc);
+        activeResourceMap[doc._id] = await _createResourceForDoc(doc);
       }
     }
   }
 
-  return Object.keys(allResourcesMap).map(k => allResourcesMap[k]);
+  return Object.keys(activeResourceMap).map(k => activeResourceMap[k]);
 }

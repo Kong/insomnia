@@ -20,16 +20,31 @@ class SyncModal extends Component {
       email: 'n/a',
       sessionId: 'n/a',
       dirty: [],
-      workspaceData: []
+      syncData: []
     }
   }
 
-  async _handleEnableSync (workspaceData) {
-    console.log('Enable sync', workspaceData);
+  async _handleSyncModeChange (syncData, e) {
+    const syncMode = e.target.value;
+    const workspace = syncData.workspace;
+    const resource = await sync.getOrCreateResourceForDoc(workspace);
+
+    const resourceGroupId = resource.resourceGroupId;
+    const config = await syncStorage.getConfig(resource.resourceGroupId);
+    const patch = {resourceGroupId, syncMode};
+
+    if (config) {
+      await syncStorage.updateConfig(config, patch);
+    } else {
+      await syncStorage.insertConfig(patch);
+    }
+
+    // Refresh the modal
+    this._updateModal();
   }
 
   async _handleReset () {
-    for (const r of await syncStorage.allResources()) {
+    for (const r of await syncStorage.activeResources()) {
       await syncStorage.removeResource(r);
     }
     await session.logout();
@@ -43,19 +58,21 @@ class SyncModal extends Component {
 
   async _updateModal () {
     const workspaces = await db.workspace.all();
-    const workspaceData = [];
-    for (const doc of workspaces) {
-      const resource = await syncStorage.getResourceById(doc._id);
-      workspaceData.push({doc, resource});
+    const syncData = [];
+    for (const workspace of workspaces) {
+      const resource = await syncStorage.getResourceById(workspace._id);
+      const resourceGroupId = resource ? resource.resourceGroupId : null;
+      const workspaceConfig = await syncStorage.getConfig(resourceGroupId);
+      syncData.push({workspace, resource, workspaceConfig});
     }
 
-    const totalResources = (await syncStorage.allResources()).length;
-    const numDirty = (await syncStorage.findDirtyResources()).length;
+    const totalResources = (await syncStorage.activeResources()).length;
+    const numDirty = (await syncStorage.findActiveDirtyResources()).length;
     const numSynced = totalResources - numDirty;
     const percentSynced = parseInt(numSynced / totalResources * 10) / 10 * 100 || 0;
 
     this.setState({
-      workspaceData,
+      syncData,
       numDirty,
       numSynced,
       totalResources,
@@ -160,15 +177,18 @@ class SyncModal extends Component {
                 </tr>
                 </thead>
                 <tbody>
-                {this.state.workspaceData.map(wd => (
-                  <tr key={wd.doc._id}>
+                {this.state.syncData.map(data => (
+                  <tr key={data.workspace._id}>
                     <td>
-                      <select name="sync-type" id="sync-type" onChange={e => {console.log(e.target.value)}}>
-                        <option value="on">On</option>
-                        <option value="off">Off</option>
+                      <select name="sync-type"
+                              id="sync-type"
+                              value={data.workspaceConfig ? data.workspaceConfig.syncMode : syncStorage.SYNC_MODE_OFF}
+                              onChange={this._handleSyncModeChange.bind(this, data)}>
+                        <option value={syncStorage.SYNC_MODE_ON}>On</option>
+                        <option value={syncStorage.SYNC_MODE_OFF}>Off</option>
                       </select>
                     </td>
-                    <td>{wd.doc.name}</td>
+                    <td>{data.workspace.name}</td>
                     <td className="faint italic">
                       <select name="team" id="team" disabled="disabled">
                         <option value="other">Coming soon...</option>

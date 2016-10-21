@@ -43,7 +43,6 @@ import {getModal} from '../components/modals/index';
 class App extends Component {
   constructor (props) {
     super(props);
-
     const workspaceMeta = this._getActiveWorkspaceMeta(props);
     this.state = {
       activeResponse: null,
@@ -477,7 +476,8 @@ class App extends Component {
     const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
     return (
-      <div id="wrapper" className="wrapper"
+      <div id="wrapper"
+           className="wrapper"
            style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref={n => this._sidebar = n}
