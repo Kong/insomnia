@@ -16,9 +16,6 @@ import {
   getAppName,
   getAppLongName
 } from '../../../backend/appInfo';
-import {getModal} from './index';
-import LoginModal from './LoginModal';
-import SignupModal from './SignupModal';
 
 
 class SettingsTabs extends Component {
@@ -26,6 +23,9 @@ class SettingsTabs extends Component {
     super(props);
     this._currentTabIndex = -1;
     this._currentVersion = null;
+    this.state = {
+      showSyncSetting: false
+    }
   }
 
   _importFile () {
@@ -91,7 +91,7 @@ class SettingsTabs extends Component {
             <button>About</button>
           </Tab>
         </TabList>
-        <TabPanel className="pad">
+        <TabPanel className="pad scrollable">
           <h2 className="txt-md">
             <label className="label--small">General Settings</label>
           </h2>
@@ -195,34 +195,30 @@ class SettingsTabs extends Component {
             </div>
           </div>
 
+          {/*<hr/>*/}
+          {/*<h2 className="txt-md pad-top-sm">*/}
+          {/*<label className="label--small">Beta Features</label>*/}
+          {/*</h2>*/}
+          {/*<div className="pad-top-sm">*/}
+          {/*<input*/}
+          {/*id="setting-opt-sync-beta"*/}
+          {/*type="checkbox"*/}
+          {/*checked={settings.optSyncBeta}*/}
+          {/*onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}*/}
+          {/*/>*/}
+          {/*&nbsp;&nbsp;*/}
+          {/*<label htmlFor="setting-opt-sync-beta">*/}
+          {/*Cloud sync beta*/}
+          {/*{" "}*/}
+          {/*<span className="faint txt-sm pad-top">*/}
+          {/*(experimental and will be paid once out of beta)*/}
+          {/*</span>*/}
+          {/*</label>*/}
+          {/*</div>*/}
           <br/>
-          <br/>
-          <br/>
-          <br/>
-          <br/>
-          <hr/>
-          <h2 className="txt-md pad-top-sm">
-            <label className="label--small">Beta Features</label>
-          </h2>
-          <div className="pad-top-sm">
-            <input
-              id="setting-opt-sync-beta"
-              type="checkbox"
-              checked={settings.optSyncBeta}
-              onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}
-            />
-            &nbsp;&nbsp;
-            <label htmlFor="setting-opt-sync-beta">
-              Cloud sync beta
-              {" "}
-              <span className="faint txt-sm pad-top">
-              (experimental and will be paid once out of beta)
-            </span>
-            </label>
-          </div>
         </TabPanel>
 
-        <TabPanel className="pad">
+        <TabPanel className="pad scrollable">
           <label className="label--small">Code Editor Settings</label>
           <div className="pad-top">
             <input
@@ -252,7 +248,7 @@ class SettingsTabs extends Component {
             </div>
           </div>
         </TabPanel>
-        <TabPanel className="pad">
+        <TabPanel className="pad scrollable">
           <p>This will export all app data for all workspaces.</p>
           <p>Be aware that you may be exporting <strong>private data</strong>
           </p>
@@ -273,26 +269,53 @@ class SettingsTabs extends Component {
             </button>
           </p>
         </TabPanel>
-        <TabPanel className="pad">
+        <TabPanel className="pad scrollable">
           <KeyboardShortcutsTable />
         </TabPanel>
-        <TabPanel className="pad">
+        <TabPanel className="pad scrollable">
           <h1>Hi there!</h1>
           <p>
-            <Link href="http://insomnia.rest">{getAppName()}</Link> is made with
-            love by me,&nbsp;
+            <Link href="http://insomnia.rest">
+              {getAppName()}
+            </Link> is made with love by me,
+            {" "}
             <Link href="http://schier.co">Gregory Schier</Link>.
           </p>
           <p>
-            You can help me out by sending your feedback to&nbsp;
-            <Link
-              href="mailto:support@insomnia.rest">support@insomnia.rest</Link>
-            or tweet&nbsp;
+            You can help me out by sending your feedback to
+            {" "}
+            <Link href="mailto:support@insomnia.rest">
+              support@insomnia.rest
+            </Link>
+            {" "}
+            or tweet
+            {" "}
             <Link href="https://twitter.com/GetInsomnia">@GetInsomnia</Link>.
           </p>
           <p>Thanks!</p>
           <br/>
-          <p>~Gregory</p>
+          <p
+            onDoubleClick={e => this.setState({showSyncSetting: !this.state.showSyncSetting})}>
+            ~ Gregory
+          </p>
+
+          {this.state.showSyncSetting ? (
+            <div>
+              <hr/>
+              <div className="pad-top-sm">
+                <input
+                  id="setting-opt-sync-beta"
+                  type="checkbox"
+                  checked={settings.optSyncBeta}
+                  onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}
+                />
+                &nbsp;&nbsp;
+                <label htmlFor="setting-opt-sync-beta">
+                  Enable Cloud Sync Features
+                </label>
+              </div>
+            </div>
+          ) : null}
         </TabPanel>
       </Tabs>
     );
@@ -378,7 +401,7 @@ class SettingsModal extends Component {
           &nbsp;&nbsp;
           <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody noScroll={true}>
           <ConnectedSettingsTabs
             version={version}
             hide={() => this.modal.hide()}
