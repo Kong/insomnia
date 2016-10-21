@@ -3,6 +3,7 @@ import * as util from './util';
 import * as crypt from './crypt';
 import * as session from './session';
 import * as resourceStore from './storage';
+import Logger from './logger';
 
 export const FULL_SYNC_INTERVAL = 30E3;
 export const DEBOUNCE_TIME = 5E3;
@@ -17,44 +18,6 @@ const WHITE_LIST = {
   [db.cookieJar.type]: true
 };
 
-class Logger {
-  constructor () {
-    this._logs = [];
-  }
-
-  debug (message, ...args) {
-    this._log('debug', message, ...args);
-  }
-
-  warn (message, ...args) {
-    this._log('warn', message, ...args);
-  }
-
-  error (message, ...args) {
-    this._log('error', message, ...args);
-  }
-
-  tail () {
-    return this._logs;
-  }
-
-  /** @private */
-  _log (type, message, ...args) {
-    let fn;
-    if (type === 'debug') {
-      fn = 'log';
-    } else if (type === 'warn') {
-      fn = 'warn';
-    } else {
-      fn = 'error';
-    }
-
-    console[fn](`[sync] ${message}`, ...args);
-    const date = new Date();
-    this._logs.push({type, date, message});
-  }
-}
-
 export const logger = new Logger();
 
 // TODO: Move this stuff somewhere else
@@ -62,11 +25,27 @@ const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 
 export async function forceSync () {
+  // Make sure sync is on
+  await initSync();
+
+  // Force an update
   await _syncPushDirtyResources();
   await _syncPullChanges();
 }
 
+let isInitialized = false;
 export async function initSync () {
+  const settings = await db.settings.getOrCreate();
+  if (!settings.optSyncBeta) {
+    logger.debug('Not enabled');
+    return;
+  }
+
+  if (isInitialized) {
+    logger.debug('Already enabled');
+    return;
+  }
+
   db.onChange(changes => {
     changes
       .filter(c => WHITE_LIST.hasOwnProperty(c[1].type))
@@ -76,6 +55,8 @@ export async function initSync () {
   setTimeout(_syncPullChanges, START_PULL_DELAY);
   setTimeout(_syncPushDirtyResources, START_PUSH_DELAY);
   setInterval(_syncPullChanges, FULL_SYNC_INTERVAL);
+  isInitialized = true;
+  logger.debug('Initialized');
 }
 
 // ~~~~~~~ //

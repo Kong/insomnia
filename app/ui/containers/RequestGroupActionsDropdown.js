@@ -7,7 +7,7 @@ import DropdownHint from '../components/base/DropdownHint';
 import DropdownDivider from '../components/base/DropdownDivider';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
-import * as GlobalActions from '../redux/modules/global';
+import * as globalActions from '../redux/modules/global';
 import * as db from '../../backend/database';
 import {getModal} from '../components/modals/index';
 
@@ -128,7 +128,7 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     actions: {
-      global: bindActionCreators(GlobalActions, dispatch)
+      global: bindActionCreators(globalActions, dispatch)
     }
   }
 }

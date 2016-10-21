@@ -87,8 +87,8 @@ class SyncModal extends Component {
   render () {
     const s = this.state;
     const data = [
-      ['Synced', `${s.numSynced}/${s.totalResources} (${s.percentSynced}%)`],
-      ['Session ID', s.sessionId],
+      ['Status', `${s.numSynced}/${s.totalResources} (${s.percentSynced}%)`],
+      ['Session', s.sessionId.slice(0, 30)],
       ['Full Sync', `${sync.FULL_SYNC_INTERVAL / 1000} second interval`],
       ['Partial Sync', `${sync.DEBOUNCE_TIME / 1000} seconds after change`],
     ];
@@ -113,7 +113,7 @@ class SyncModal extends Component {
           <Tabs>
             <TabList>
               <Tab>
-                <button>Status</button>
+                <button>Beta Info</button>
               </Tab>
               <Tab>
                 <button>Teams</button>
@@ -122,7 +122,10 @@ class SyncModal extends Component {
                 <button>Workspaces</button>
               </Tab>
               <Tab>
-                <button>Logs</button>
+                <button>Debug Info</button>
+              </Tab>
+              <Tab>
+                <button>Debug Logs</button>
               </Tab>
             </TabList>
             <TabPanel className="pad">
@@ -142,16 +145,10 @@ class SyncModal extends Component {
                 </div>
               </div>
               <hr/>
-              <table>
-                <tbody>
-                {data.map(([label, value]) => (
-                  <tr key={label}>
-                    <td>{label}</td>
-                    <td><code className="txt-sm selectable">{value}</code></td>
-                  </tr>
-                ))}
-                </tbody>
-              </table>
+              <h2>Welcome to the beta</h2>
+              <p>
+                The sync beta is
+              </p>
             </TabPanel>
             <TabPanel className="pad">
               <h2>Team</h2>
@@ -169,7 +166,7 @@ class SyncModal extends Component {
                 </thead>
                 <tbody>
                 {this.state.workspaceData.map(wd => (
-                  <tr>
+                  <tr key={wd.doc._id}>
                     <td>
                       <input type="checkbox" checked={!!wd.resource}
                              onChange={this._handleEnableSync.bind(this, wd)}/>
@@ -181,6 +178,21 @@ class SyncModal extends Component {
                                    className="img--circle"
                                    size={25}/>
                     </td>
+                  </tr>
+                ))}
+                </tbody>
+              </table>
+            </TabPanel>
+            <TabPanel className="pad">
+              <p>
+                Here is some useful debug info in case you need to report a bug.
+              </p>
+              <table>
+                <tbody>
+                {data.map(([label, value]) => (
+                  <tr key={label}>
+                    <td>{label}</td>
+                    <td><code className="txt-sm selectable">{value}</code></td>
                   </tr>
                 ))}
                 </tbody>
