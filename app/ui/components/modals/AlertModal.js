@@ -26,7 +26,7 @@ class AlertModal extends Component {
           {message}
         </ModalBody>
         <ModalFooter>
-          <button className="btn pull-right" onClick={e => this.modal.hide()}>
+          <button className="btn" onClick={e => this.modal.hide()}>
             Ok
           </button>
         </ModalFooter>

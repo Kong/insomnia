@@ -14,8 +14,8 @@ class EnvironmentsDropdown extends Component {
   _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
 
-    const {entities, workspaces} = props || this.props;
-    let workspace = entities.workspaces[workspaces.activeId];
+    const {entities, global} = props || this.props;
+    let workspace = entities.workspaces[global.activeWorkspaceId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
     }
@@ -77,8 +77,8 @@ class EnvironmentsDropdown extends Component {
 }
 
 EnvironmentsDropdown.propTypes = {
-  workspaces: PropTypes.shape({
-    activeId: PropTypes.string
+  global: PropTypes.shape({
+    activeWorkspaceId: PropTypes.string
   }),
   entities: PropTypes.shape({
     workspaces: PropTypes.object.isRequired,
@@ -88,7 +88,7 @@ EnvironmentsDropdown.propTypes = {
 
 function mapStateToProps (state) {
   return {
-    workspaces: state.workspaces,
+    global: state.global,
     entities: state.entities,
     actions: state.actions
   };

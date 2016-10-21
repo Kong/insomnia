@@ -64,14 +64,12 @@ class EnvironmentEditModal extends Component {
           />
         </ModalBody>
         <ModalFooter>
-          <div className="pull-right">
-            <button className="btn" disabled={!isValid} onClick={e => this.modal.hide()}>
-              Done
-            </button>
-          </div>
-          <div className="pad faint italic txt-sm tall">
+          <div className="margin-left faint italic txt-sm">
             * this can be used to override data in the global environment
           </div>
+          <button className="btn" disabled={!isValid} onClick={e => this.modal.hide()}>
+            Done
+          </button>
         </ModalFooter>
       </Modal>
     );

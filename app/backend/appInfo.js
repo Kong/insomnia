@@ -12,10 +12,22 @@ export function getAppName () {
   return appJson.productName;
 }
 
+export function getAppPlatform () {
+  return process.platform;
+}
+
+export function getAppEnvironment () {
+  return process.env.INSOMNIA_ENV || 'unknown';
+}
+
 export function isMac () {
-  return process.platform === 'darwin';
+  return getAppPlatform() === 'darwin';
 }
 
 export function isDevelopment () {
-  return process.env.INSOMNIA_ENV === 'development';
+  return getAppEnvironment() === 'development';
+}
+
+export function getClientString () {
+  return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`
 }

@@ -1,17 +1,21 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-
 import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
+import SyncButton from '../SyncButton';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
-import {SIDEBAR_SKINNY_REMS} from '../../../backend/constants';
-import {COLLAPSE_SIDEBAR_REMS} from '../../../backend/constants';
+import {
+  SIDEBAR_SKINNY_REMS,
+  COLLAPSE_SIDEBAR_REMS
+} from '../../../backend/constants';
 
 
 class Sidebar extends Component {
   _filterChildren (filter, children, extra = null) {
+    filter = filter || '';
+
     return children.filter(child => {
       if (child.doc.type !== 'Request') {
         return true;
@@ -104,6 +108,7 @@ class Sidebar extends Component {
       hidden,
       requestCreate,
       requestGroupCreate,
+      showSyncSettings,
       width
     } = this.props;
 
@@ -119,7 +124,8 @@ class Sidebar extends Component {
 
         <div className="sidebar__menu">
           <EnvironmentsDropdown />
-          <button className="btn btn--super-compact" onClick={e => showCookiesModal()}>
+          <button className="btn btn--super-compact"
+                  onClick={e => showCookiesModal()}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -137,6 +143,11 @@ class Sidebar extends Component {
           {this._renderChildren(children)}
         </ul>
 
+        {showSyncSettings ? (
+          <div className="sidebar__footer">
+            <SyncButton/>
+          </div>
+        ) : null}
       </aside>
     )
   }
@@ -157,6 +168,7 @@ Sidebar.propTypes = {
   showCookiesModal: PropTypes.func.isRequired,
   width: PropTypes.number.isRequired,
   hidden: PropTypes.bool.isRequired,
+  showSyncSettings: PropTypes.bool.isRequired,
 
   // Other
   children: PropTypes.array.isRequired,

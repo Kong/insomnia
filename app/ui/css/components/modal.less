@@ -39,6 +39,7 @@
     grid-template-rows: auto minmax(0, 1fr) auto;
     color: @font-super-light-bg;
     border-radius: @radius-md;
+    overflow: hidden;
     box-sizing: border-box;
     box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.2);
     width: @modal-width;
@@ -87,6 +88,16 @@
   .modal__footer {
     border-top: 1px solid @hl-md;
     background-color: @bg-super-light;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal__footer > *:last-child {
+    // Push last item of footer to right. This is very important to pull right
+    // if there is only a single item in the footer.
+    margin-left: auto;
   }
 
   .modal__content > *:not(.modal__backdrop):last-child {

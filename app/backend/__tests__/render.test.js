@@ -11,7 +11,7 @@ describe('render()', () => {
 
   it('renders custom tag: uuid', () => {
     const rendered = renderUtils.render('Hello {% uuid %}!');
-    expect(rendered).toBe('Hello b5c2f089-2c0c-46b6-a6f1-8d5b86cbc603!');
+    expect(rendered).toMatch(/Hello [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}!/);
   });
 
   it('renders custom tag: timestamp', () => {

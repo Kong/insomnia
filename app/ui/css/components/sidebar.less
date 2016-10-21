@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav auto auto minmax(0, 1fr);
+  grid-template-rows: @height-nav auto auto minmax(0, 1fr) auto;
   grid-template-columns: 100%;
 
   background-color: @bg-dark;
@@ -325,5 +325,14 @@
   .sidebar__item:hover .sidebar__actions > button,
   .sidebar__item:hover .sidebar__actions > .dropdown > button {
     display: initial;
+  }
+
+  // ~~~~~~~~~~~~~~ //
+  // Sidebar Footer //
+  // ~~~~~~~~~~~~~~ //
+
+  .sidebar__footer {
+    padding: @padding-xs;
+    color: @hl;
   }
 }

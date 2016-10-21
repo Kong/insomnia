@@ -3,7 +3,6 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from  '../constants';
 import {generateId} from '../util';
-import {isDevelopment} from '../appInfo';
 
 import * as _stats from './models/stats';
 import * as _settings from './models/settings';
@@ -65,7 +64,7 @@ for (const model of MODELS) {
 // HELPERS //
 // ~~~~~~~ //
 
-let db = null;
+let db = {};
 
 function getDBFilePath (modelType) {
   // NOTE: Do not EVER change this. EVER!
@@ -74,46 +73,38 @@ function getDBFilePath (modelType) {
 }
 
 /**
- * Initialize the database. This should be called once on app start.
- * @returns {Promise}
- */
-let initialized = false;
-
-/**
  * Initialize the database. Note that this isn't actually async, but might be
  * in the future!
  *
  * @param config
- * @param force
+ * @param forceReset
  * @returns {null}
  */
-export async function initDB (config = {}, force = false) {
-  // Only init once
-  if (initialized && !force) {
-    return null;
-  }
-
-  db = {};
-
-  if (isDevelopment()) {
-    global.db = db;
+export async function initDB (config = {}, forceReset = false) {
+  if (forceReset) {
+    db = {};
   }
 
   // Fill in the defaults
-
   ALL_TYPES.map(t => {
-    const filename = getDBFilePath(t);
-    const autoload = true;
-    const finalConfig = Object.assign({filename, autoload}, config);
+    if (db[t]) {
+      console.warn(`-- Already initialized DB.${t} --`);
+      return;
+    }
+
+    const defaults = {
+      filename: getDBFilePath(t),
+      autoload: true
+    };
+
+    const finalConfig = Object.assign(defaults, config);
 
     db[t] = new NeDB(finalConfig);
     db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
   });
 
   // Done
-
-  initialized = true;
-  console.log(`-- Initialize DB at ${getDBFilePath('t')} --`);
+  console.log(`-- Initialized DB at ${getDBFilePath('${type}')} --`);
 }
 
 
@@ -233,33 +224,39 @@ export function count (type, query = {}) {
   });
 }
 
-export function insert (doc) {
+export function insert (doc, silent = false) {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {
       if (err) {
         return reject(err);
       }
 
+      if (!silent) {
+        notifyOfChange(CHANGE_INSERT, doc);
+      }
+
       resolve(newDoc);
-      notifyOfChange(CHANGE_INSERT, doc);
     });
   });
 }
 
-export function update (doc) {
+export function update (doc, silent = false) {
   return new Promise((resolve, reject) => {
     db[doc.type].update({_id: doc._id}, doc, err => {
       if (err) {
         return reject(err);
       }
 
+      if (!silent) {
+        notifyOfChange(CHANGE_UPDATE, doc);
+      }
+
       resolve(doc);
-      notifyOfChange(CHANGE_UPDATE, doc);
     });
   });
 }
 
-export async function remove (doc) {
+export async function remove (doc, silent = false) {
   bufferChanges();
 
   const docs = await withDescendants(doc);
@@ -269,7 +266,9 @@ export async function remove (doc) {
   // Don't really need to wait for this to be over;
   types.map(t => db[t].remove({_id: {$in: docIds}}, {multi: true}));
 
-  docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
+  if (!silent) {
+    docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
+  }
 
   flushChanges();
 }
@@ -340,6 +339,33 @@ export async function withDescendants (doc = null) {
         // If the doc is null, we want to search for parentId === null
         const parentId = d ? d._id : null;
         const more = await find(type, {parentId});
+        foundDocs = [...foundDocs, ...more]
+      }
+    }
+
+    if (foundDocs.length === 0) {
+      // Didn't find anything. We're done
+      return docsToReturn;
+    }
+
+    // Continue searching for children
+    docsToReturn = [...docsToReturn, ...foundDocs];
+    return await next(foundDocs);
+  }
+
+  return await next([doc]);
+}
+
+export async function withAncestors (doc) {
+  let docsToReturn = doc ? [doc] : [];
+
+  async function next (docs) {
+    let foundDocs = [];
+
+    for (const d of docs) {
+      for (const type of ALL_TYPES) {
+        // If the doc is null, we want to search for parentId === null
+        const more = await find(type, {_id: d.parentId});
         foundDocs = [...foundDocs, ...more]
       }
     }

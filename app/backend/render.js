@@ -109,7 +109,7 @@ export function recursiveRender (obj, context) {
 }
 
 export async function getRenderedRequest (request) {
-  const ancestors = await db.request.getAncestors(request);
+  const ancestors = await db.withAncestors(request);
   const workspace = ancestors.find(doc => doc.type === db.workspace.type);
 
   const rootEnvironment = await db.environment.getOrCreateForWorkspace(workspace);

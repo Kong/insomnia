@@ -51,6 +51,7 @@ em {
 
 label {
   display: inline-block;
+  padding-top: @padding-xs;
 }
 
 p {
@@ -93,6 +94,9 @@ code {
   background: @hl-xs;
   padding: @padding-xs @padding-sm;
   color: @hl;
+}
+
+code, pre, .monospace {
   font-family: @font-monospace;
 }
 
@@ -112,12 +116,20 @@ code {
   float: right;
 }
 
+.img--circle {
+  border-radius: 50%;
+}
+
 .tall {
   height: 100% !important;
 }
 
 .faint {
   color: @hl;
+}
+
+.outlined {
+  border: 1px solid @hl-md;
 }
 
 .super-faint {
@@ -134,6 +146,7 @@ code {
 
 .wide {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .relative {
@@ -168,6 +181,11 @@ i.fa {
   padding: @padding-md;
 }
 
+.pad-sm {
+  box-sizing: border-box;
+  padding: @padding-sm;
+}
+
 .pad-left {
   box-sizing: border-box;
   padding-left: @padding-md;
@@ -190,6 +208,10 @@ i.fa {
 
 .margin-top-sm {
   margin-top: @padding-sm;
+}
+
+.margin-left {
+  margin-left: @padding-md;
 }
 
 .pad-bottom {

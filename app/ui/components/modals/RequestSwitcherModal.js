@@ -285,6 +285,7 @@ class RequestSwitcherModal extends Component {
               <p>
                 No matches found for <strong>{searchString}</strong>
               </p>
+
               <button className="btn btn--outlined btn--compact"
                       onClick={e => this._activateCurrentIndex()}>
                 Create a request named {searchString}

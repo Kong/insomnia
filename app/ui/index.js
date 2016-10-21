@@ -7,12 +7,13 @@ import createStore from './redux/create';
 import App from './containers/App';
 
 // Global CSS
-import './css/lib/fontawesome/css/font-awesome.css'
-import './css/lib/fonts/open-sans.css'
-import './css/index.less'
-import './css/lib/chrome/platform_app.css'
+import './css/lib/fontawesome/css/font-awesome.css';
+import './css/lib/fonts/open-sans.css';
+import './css/index.less';
+import './css/lib/chrome/platform_app.css';
 import {initStore} from './redux/initstore';
 import {initDB} from '../backend/database';
+import {initSync} from '../backend/sync';
 import {getAppVersion} from '../backend/appInfo';
 import {initAnalytics} from '../backend/analytics';
 
@@ -25,6 +26,7 @@ console.log(`-- Loading App v${getAppVersion()} --`);
 
 (async function () {
   await initDB();
+  await initSync();
   await initStore(store.dispatch);
   await initAnalytics();
   console.log('-- Rendering App --');

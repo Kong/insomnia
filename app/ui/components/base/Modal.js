@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import {isMac} from '../../../backend/appInfo';
 
@@ -18,10 +17,6 @@ class Modal extends Component {
     // way to check this?
     let target = e.target;
     let shouldHide = false;
-
-    if (target === ReactDOM.findDOMNode(this)) {
-      shouldHide = true;
-    }
 
     for (let i = 0; i < 5; i++) {
       if (target.hasAttribute('data-close-modal')) {
@@ -103,11 +98,12 @@ class Modal extends Component {
       {'modal--open': open},
       {'modal--fixed-height': tall},
       {'modal--fixed-top': top},
-      {'modal--wide': wide}
+      {'modal--wide': wide},
     );
 
     return (
-      <div ref={n => this._node = n} tabIndex="-1" className={classes} onClick={this._handleClick.bind(this)}>
+      <div ref={n => this._node = n} tabIndex="-1" className={classes}
+           onClick={this._handleClick.bind(this)}>
         <div className="modal__content">
           <div className="modal__backdrop" onClick={() => this.hide()}></div>
           {this.props.children}

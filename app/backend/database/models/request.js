@@ -1,5 +1,3 @@
-'use strict';
-
 import {PREVIEW_MODE_SOURCE} from '../../previewModes';
 import {METHOD_GET} from '../../constants';
 import * as db from '../index';
@@ -20,12 +18,6 @@ export function init () {
     metaResponseFilter: '',
     metaSortKey: -1 * Date.now()
   });
-}
-
-export async function createAndActivate (workspace, patch = {}) {
-  const r = await create(patch);
-  await db.workspace.update(workspace, {metaActiveRequestId: r._id});
-  return r;
 }
 
 export function create (patch = {}) {
@@ -66,17 +58,6 @@ export function updateContentType (request, contentType) {
   return db.docUpdate(request, {headers});
 }
 
-export async function duplicateAndActivate (workspace, request) {
-  db.bufferChanges();
-
-  const r = await duplicate(request);
-  await db.workspace.update(workspace, {metaActiveRequestId: r._id});
-
-  db.flushChanges();
-
-  return r;
-}
-
 export function duplicate (request) {
   const name = `${request.name} (Copy)`;
   return db.duplicate(request, {name})
@@ -88,26 +69,4 @@ export function remove (request) {
 
 export function all () {
   return db.all(type);
-}
-
-export async function getAncestors (request) {
-  const ancestors = [];
-
-  async function next (doc) {
-    const rg = await db.requestGroup.getById(doc.parentId);
-    const w = await db.workspace.getById(doc.parentId);
-
-    if (rg) {
-      ancestors.unshift(rg);
-      return await next(rg);
-    } else if (w) {
-      ancestors.unshift(w);
-      return await next(w);
-    } else {
-      // We're finished
-      return ancestors;
-    }
-  }
-
-  return await next(request);
 }

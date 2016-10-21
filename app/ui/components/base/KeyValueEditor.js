@@ -151,6 +151,7 @@ class KeyValueEditor extends Component {
     // NOTE: Only ever re-render if we're changing length. This prevents cursor jumping
     // inside inputs.
     return (
+      nextProps.valueInputType !== this.props.valueInputType ||
       nextProps.pairs.length !== this.state.pairs.length ||
       nextState.pairs.length !== this.state.pairs.length
     );

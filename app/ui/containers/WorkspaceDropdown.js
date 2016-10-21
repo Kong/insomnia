@@ -12,7 +12,6 @@ import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
-import * as WorkspaceActions from '../redux/modules/workspaces';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../../backend/database';
 import {getAppVersion} from '../../backend/appInfo';
@@ -39,7 +38,7 @@ class WorkspaceDropdown extends Component {
     });
 
     const workspace = await db.workspace.create({name});
-    this.props.actions.workspaces.activate(workspace);
+    this.props.actions.global.activateWorkspace(workspace);
   }
 
   async _workspaceRemove () {
@@ -57,8 +56,8 @@ class WorkspaceDropdown extends Component {
   _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
 
-    const {entities, workspaces} = props || this.props;
-    let workspace = entities.workspaces[workspaces.activeId];
+    const {entities, global} = props || this.props;
+    let workspace = entities.workspaces[global.activeWorkspaceId];
     if (!workspace) {
       workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
     }
@@ -67,7 +66,7 @@ class WorkspaceDropdown extends Component {
   }
 
   render () {
-    const {className, actions, loading, entities, ...other} = this.props;
+    const {className, actions, global, entities, ...other} = this.props;
 
     const allWorkspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
     const workspace = this._getActiveWorkspace(this.props);
@@ -77,7 +76,7 @@ class WorkspaceDropdown extends Component {
         <button className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
-              {loading ?
+              {global.loading ?
                 <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
               <i className="fa fa-caret-down"></i>
             </div>
@@ -108,7 +107,7 @@ class WorkspaceDropdown extends Component {
           {allWorkspaces.map(w => {
             return w._id === workspace._id ? null : (
               <li key={w._id}>
-                <button onClick={() => actions.workspaces.activate(w)}>
+                <button onClick={() => actions.global.activateWorkspace(w)}>
                   <i className="fa fa-random"></i> Switch to
                   {" "}
                   <strong>{w.name}</strong>
@@ -147,37 +146,33 @@ class WorkspaceDropdown extends Component {
 }
 
 WorkspaceDropdown.propTypes = {
-  loading: PropTypes.bool.isRequired,
-  workspaces: PropTypes.shape({
-    activeId: PropTypes.string
+  global: PropTypes.shape({
+    loading: PropTypes.bool.isRequired,
+    activeWorkspaceId: PropTypes.string.isRequired
   }),
   entities: PropTypes.shape({
     workspaces: PropTypes.object.isRequired
   }).isRequired,
   actions: PropTypes.shape({
-    workspaces: PropTypes.shape({
-      activate: PropTypes.func.isRequired,
-    }),
     global: PropTypes.shape({
       importFile: PropTypes.func.isRequired,
       exportFile: PropTypes.func.isRequired,
+      activateWorkspace: PropTypes.func.isRequired,
     })
   })
 };
 
 function mapStateToProps (state) {
   return {
-    workspaces: state.workspaces,
+    global: state.global,
     entities: state.entities,
-    actions: state.actions,
-    loading: state.global.loading
+    actions: state.actions
   };
 }
 
 function mapDispatchToProps (dispatch) {
   return {
     actions: {
-      workspaces: bindActionCreators(WorkspaceActions, dispatch),
       global: bindActionCreators(GlobalActions, dispatch)
     }
   }

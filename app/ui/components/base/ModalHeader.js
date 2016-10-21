@@ -6,7 +6,7 @@ const ModalHeader = ({hideCloseButton, className, children}) => {
 
   if (!hideCloseButton) {
     closeButton = (
-      <button className="btn btn--compact modal__close-btn" data-close-modal="true">
+      <button type="button" className="btn btn--compact modal__close-btn" data-close-modal="true">
         <i className="fa fa-times"></i>
       </button>
     )
