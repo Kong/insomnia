@@ -97,7 +97,7 @@ export function recursiveRender (obj, context) {
     traverse(newObj).forEach(function (x) {
       if (typeof x === 'string') {
         const str = render(x, context);
-        this.update(str);
+        this.updateResource(str);
       }
     });
   } catch (e) {

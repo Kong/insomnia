@@ -7,7 +7,7 @@ import SignupModal from './modals/SignupModal';
 
 const STATE_OK = 'synced';
 const STATE_BEHIND = 'behind';
-const STATE_AHEAD = 'dirty';
+const STATE_AHEAD = 'pending';
 
 class SyncButton extends Component {
   constructor (props) {
@@ -19,7 +19,7 @@ class SyncButton extends Component {
   }
 
   async _updateState () {
-    const dirtyDocs = await syncStorage.findDirty();
+    const dirtyDocs = await syncStorage.findDirtyResources();
     const newState = Object.assign({}, this.state, {
       state: dirtyDocs.length > 0 ? STATE_AHEAD : STATE_OK,
       loggedIn: session.isLoggedIn(),

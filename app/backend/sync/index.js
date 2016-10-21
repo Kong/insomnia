@@ -73,7 +73,7 @@ async function _queueChange (event, doc) {
 
   // Update the resource content and set dirty
   const resource = await _getOrCreateResourceForDoc(doc);
-  await resourceStore.update(resource, {
+  await resourceStore.updateResource(resource, {
     lastEdited: Date.now(), // Don't use doc.modified because that doesn't work for removal
     lastEditedBy: session.getAccountId(),
     content: await _encryptDoc(resource.resourceGroupId, doc),
@@ -94,7 +94,7 @@ async function _syncPushDirtyResources () {
     return;
   }
 
-  const dirtyResources = await resourceStore.findDirty();
+  const dirtyResources = await resourceStore.findDirtyResources();
 
   if (!dirtyResources.length) {
     logger.debug('No changes to push');
@@ -112,31 +112,31 @@ async function _syncPushDirtyResources () {
   // Update all resource versions with the ones that were returned
   const {updated} = responseBody;
   for (const {id, version} of updated) {
-    const resource = await resourceStore.getById(id);
-    await resourceStore.update(resource, {version, dirty: false});
+    const resource = await resourceStore.getResourceById(id);
+    await resourceStore.updateResource(resource, {version, dirty: false});
     logger.debug(`Updated ${id}`);
   }
 
   // Update all resource versions with the ones that were returned
   const {created} = responseBody;
   for (const {id, version} of created) {
-    const resource = await resourceStore.getById(id);
-    await resourceStore.update(resource, {version, dirty: false});
+    const resource = await resourceStore.getResourceById(id);
+    await resourceStore.updateResource(resource, {version, dirty: false});
     logger.debug(`Created ${id}`);
   }
 
   // Update all resource versions with the ones that were returned
   const {removed} = responseBody;
   for (const {id, version} of removed) {
-    const resource = await resourceStore.getById(id);
-    await resourceStore.update(resource, {version, dirty: false});
+    const resource = await resourceStore.getResourceById(id);
+    await resourceStore.updateResource(resource, {version, dirty: false});
     logger.debug(`Removed ${id}`);
   }
 
   // Resolve conflicts
   const {conflicts} = responseBody;
   for (const serverResource of conflicts) {
-    const localResource = await resourceStore.getById(serverResource.id);
+    const localResource = await resourceStore.getResourceById(serverResource.id);
 
     // On conflict, choose last edited one
     const serverIsNewer = serverResource.lastEdited > localResource.lastEdited;
@@ -148,7 +148,7 @@ async function _syncPushDirtyResources () {
 
     // Update local resource
     // NOTE: using localResource as the base to make sure we have _id
-    await resourceStore.update(localResource, winner, {
+    await resourceStore.updateResource(localResource, winner, {
       version: serverResource.version, // Act as the server resource no matter what
       dirty: !serverIsNewer // It's dirty if we chose the local doc
     });
@@ -202,7 +202,7 @@ async function _syncPullChanges () {
       const doc = await _decryptDoc(resourceGroupId, encContent);
 
       // Update local Resource
-      await resourceStore.insert(serverResource, {dirty: false});
+      await resourceStore.insertResource(serverResource, {dirty: false});
 
       // Insert into app database (NOTE: not silently)
       await db.insert(doc);
@@ -228,8 +228,8 @@ async function _syncPullChanges () {
       await db.update(doc);
 
       // Update local resource
-      const resource = await resourceStore.getById(serverResource.id);
-      await resourceStore.update(resource, serverResource, {dirty: false});
+      const resource = await resourceStore.getResourceById(serverResource.id);
+      await resourceStore.updateResource(resource, serverResource, {dirty: false});
     } catch (e) {
       logger.warn('Failed to decode updated resource', e, serverResource);
     }
@@ -244,7 +244,7 @@ async function _syncPullChanges () {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   for (const id of idsToRemove) {
-    const resource = await resourceStore.getById(id);
+    const resource = await resourceStore.getResourceById(id);
     if (!resource) {
       throw new Error(`Could not find Resource to remove for ${id}`)
     }
@@ -255,7 +255,7 @@ async function _syncPullChanges () {
     }
 
     // Mark resource as deleted
-    await resourceStore.update(resource, {dirty: false, removed: true});
+    await resourceStore.updateResource(resource, {dirty: false, removed: true});
 
     // Remove from DB (NOTE: Not silently)
     await db.remove(doc);
@@ -266,7 +266,7 @@ async function _syncPullChanges () {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   for (const id of idsToPush) {
-    const resource = await resourceStore.getById(id);
+    const resource = await resourceStore.getResourceById(id);
     if (!resource) {
       throw new Error(`Could not find Resource to push for id ${id}`)
     }
@@ -378,7 +378,7 @@ async function _createResourceGroup (name = '', description = '') {
 }
 
 async function _createResource (doc, resourceGroupId) {
-  return resourceStore.insert({
+  return resourceStore.insertResource({
     id: doc._id,
     resourceGroupId: resourceGroupId,
     version: NO_VERSION,
@@ -401,7 +401,7 @@ async function _createResourceForDoc (doc) {
     return;
   }
 
-  let workspaceResource = await resourceStore.getById(workspace._id);
+  let workspaceResource = await resourceStore.getResourceById(workspace._id);
 
   if (!workspaceResource) {
     // TODO: Don't auto create a ResourceGroup
@@ -421,7 +421,7 @@ async function _createResourceForDoc (doc) {
 }
 
 async function _getOrCreateResourceForDoc (doc) {
-  let resource = await resourceStore.getById(doc._id);
+  let resource = await resourceStore.getResourceById(doc._id);
 
   if (!resource) {
     resource = await _createResourceForDoc(doc);
@@ -432,7 +432,7 @@ async function _getOrCreateResourceForDoc (doc) {
 
 async function _getOrCreateAllResources () {
   const allResourcesMap = {};
-  for (const r of await resourceStore.all()) {
+  for (const r of await resourceStore.allResources()) {
     allResourcesMap[r.id] = r;
   }
 

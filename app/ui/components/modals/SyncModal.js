@@ -29,8 +29,8 @@ class SyncModal extends Component {
   }
 
   async _handleReset () {
-    for (const r of await syncStorage.all()) {
-      await syncStorage.remove(r);
+    for (const r of await syncStorage.allResources()) {
+      await syncStorage.removeResource(r);
     }
     await session.logout();
     this.hide();
@@ -45,12 +45,12 @@ class SyncModal extends Component {
     const workspaces = await db.workspace.all();
     const workspaceData = [];
     for (const doc of workspaces) {
-      const resource = await syncStorage.getById(doc._id);
+      const resource = await syncStorage.getResourceById(doc._id);
       workspaceData.push({doc, resource});
     }
 
-    const totalResources = (await syncStorage.all()).length;
-    const numDirty = (await syncStorage.findDirty()).length;
+    const totalResources = (await syncStorage.allResources()).length;
+    const numDirty = (await syncStorage.findDirtyResources()).length;
     const numSynced = totalResources - numDirty;
     const percentSynced = parseInt(numSynced / totalResources * 10) / 10 * 100 || 0;
 

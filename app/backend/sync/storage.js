@@ -4,28 +4,11 @@ import fsPath from 'path';
 import crypto from 'crypto';
 
 /**
- * Get all the Resources
- *
- * @returns {Promise}
- */
-export function findByType (type) {
-  return new Promise((resolve, reject) => {
-    _getDB().find({type}, (err, rawDocs) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rawDocs);
-      }
-    })
-  });
-}
-
-/**
  * Get all Resources
  *
  * @returns {Promise}
  */
-export function all () {
+export function allResources () {
   return new Promise((resolve, reject) => {
     _getDB().find({}, (err, rawDocs) => {
       if (err) {
@@ -38,13 +21,13 @@ export function all () {
 }
 
 /**
- * Get all dirty Resources
+ * Find resources by query
  *
  * @returns {Promise}
  */
-export function findDirty () {
+export function findResources (query) {
   return new Promise((resolve, reject) => {
-    _getDB().find({dirty: true}, (err, rawDocs) => {
+    _getDB().find(query, (err, rawDocs) => {
       if (err) {
         reject(err);
       } else {
@@ -55,12 +38,20 @@ export function findDirty () {
 }
 
 /**
+ * Get all dirty resources
+ * @returns {Promise}
+ */
+export function findDirtyResources () {
+  return findResources({dirty: true});
+}
+
+/**
  * Get Resource by resourceID
  *
  * @param id
  * @returns {Promise}
  */
-export function getById (id) {
+export function getResourceById (id) {
   return new Promise((resolve, reject) => {
     // TODO: this query should probably include resourceGroupId as well
     _getDB().find({id}, (err, rawDocs) => {
@@ -78,7 +69,7 @@ export function getById (id) {
  *
  * @param resource
  */
-export function insert (resource) {
+export function insertResource (resource) {
   return new Promise((resolve, reject) => {
     const h = crypto.createHash('md5');
     h.update(resource.resourceGroupId);
@@ -98,13 +89,12 @@ export function insert (resource) {
  * Update an existing resource
  *
  * @param resource
- * @param patch
- * @param patch2
+ * @param patches
  * @returns {Promise}
  */
-export function update (resource, patch = {}, patch2 = {}) {
+export function updateResource (resource, ...patches) {
   return new Promise((resolve, reject) => {
-    const updatedResource = Object.assign(resource, patch, patch2);
+    const updatedResource = Object.assign(resource, ...patches);
     _getDB().update({_id: resource._id}, updatedResource, err => {
       if (err) {
         reject(err);
@@ -121,7 +111,7 @@ export function update (resource, patch = {}, patch2 = {}) {
  * @param resource
  * @returns {Promise}
  */
-export function remove (resource) {
+export function removeResource (resource) {
   return new Promise((resolve, reject) => {
     _getDB().remove({_id: resource._id}, err => {
       if (err) {
