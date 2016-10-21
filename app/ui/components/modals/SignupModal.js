@@ -7,15 +7,20 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../backend/sync/session';
 import {getModal} from './index';
 import LoginModal from './LoginModal';
+import * as sync from '../../../backend/sync';
 
 class SignupModal extends Component {
   constructor (props) {
     super(props);
-    this.state = {step: 1}
+    this.state = {
+      step: 1,
+      error: ''
+    }
   }
 
   async _handleSignup (e) {
     e.preventDefault();
+    this.setState({error: ''});
 
     const email = this._emailInput.value;
     const password = this._passwordInput.value;
@@ -25,9 +30,9 @@ class SignupModal extends Component {
     try {
       await session.signup(firstName, lastName, email, password);
       this.setState({step: 2});
+      sync.forceSync();
     } catch (e) {
-      // TODO: Handle failures
-      console.error('Failed to signup', e)
+      this.setState({error: e.message})
     }
   }
 
@@ -88,6 +93,9 @@ class SignupModal extends Component {
                        placeholder="•••••••••••••"
                        ref={n => this._passwordInput = n}/>
               </div>
+              {this.state.error ? (
+                <div className="danger pad-top">** {this.state.error}</div>
+              ) : null}
             </ModalBody>
             <ModalFooter>
               <div className="margin-left">

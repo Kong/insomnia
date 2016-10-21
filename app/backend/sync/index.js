@@ -61,6 +61,11 @@ export const logger = new Logger();
 const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 
+export async function forceSync () {
+  await _syncPushDirtyResources();
+  await _syncPullChanges();
+}
+
 export async function initSync () {
   db.onChange(changes => {
     changes

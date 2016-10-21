@@ -6,26 +6,31 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../backend/sync/session';
 import {getModal} from './index';
 import SignupModal from './SignupModal';
+import * as sync from '../../../backend/sync';
 
 class LoginModal extends Component {
   constructor (props) {
     super(props);
-    this.state = {step: 1}
+    this.state = {
+      step: 1,
+      error: ''
+    }
   }
 
   async _handleLogin (e) {
     e.preventDefault();
+    this.setState({error: ''});
 
     const email = this._emailInput.value;
     const password = this._passwordInput.value;
 
-    // try {
+    try {
       await session.login(email, password);
       this.setState({step: 2});
-    // } catch (e) {
-    //   TODO: Handle failures
-      // console.warn('Failed to login', e.stack)
-    // }
+      sync.forceSync();
+    } catch (e) {
+      this.setState({error: e.message})
+    }
   }
 
   _handleSignup (e) {
@@ -36,7 +41,7 @@ class LoginModal extends Component {
   }
 
   show () {
-    this.setState({step: 1});
+    this.setState({step: 1, error: ''});
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);
   }
@@ -66,6 +71,9 @@ class LoginModal extends Component {
                        placeholder="•••••••••••••••••"
                        ref={n => this._passwordInput = n}/>
               </div>
+              {this.state.error ? (
+                <div className="danger pad-top">** {this.state.error}</div>
+              ) : null}
             </ModalBody>
             <ModalFooter>
               <div className="margin-left">

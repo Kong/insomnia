@@ -36,7 +36,9 @@ async function _fetch (method, path, json, sessionId = null) {
   }
 
   if (!response.ok) {
-    throw new Error(`Response ${response.status} for ${path}`)
+    const err = new Error(`Response ${response.status} for ${path}`);
+    err.message = await response.text();
+    throw err
   }
 
   if (response.headers.get('content-type') === 'application/json') {
