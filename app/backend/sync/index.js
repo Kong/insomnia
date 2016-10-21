@@ -47,6 +47,14 @@ export async function initSync () {
   }
 
   db.onChange(changes => {
+    for (const [event, doc] of changes) {
+      if (!WHITE_LIST[doc.type]) {
+        continue;
+      }
+
+      // Make sure it happens async
+      process.nextTick(() => _queueChange(event, doc));
+    }
     changes
       .filter(c => WHITE_LIST.hasOwnProperty(c[1].type))
       .map(c => _queueChange(c[0], c[1]));
@@ -175,7 +183,7 @@ async function _syncPullChanges () {
     removed: r.removed
   }));
 
-  logger.debug(`Checking ${allResources.length} resources`, allResources);
+  logger.debug(`Checking ${allResources.length} resources`);
 
   let responseBody;
   try {
