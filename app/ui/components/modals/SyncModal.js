@@ -126,11 +126,22 @@ class SyncModal extends Component {
               </Tab>
             </TabList>
             <TabPanel className="pad">
-              <p>
+              <div className="pad-top">
                 <GravatarImg email={this.state.email}
-                             className="img--circle"
-                             size={75}/>
-              </p>
+                             className="inline-block img--circle"
+                             size={50}/>
+                <div className="inline-block pad-left">
+                  <h2 className="no-pad-bottom no-margin">
+                    Hi {this.state.firstName}!
+                  </h2>
+                  <p>
+                    You are currently signed in with
+                    {" "}
+                    <code>{this.state.email}</code>
+                  </p>
+                </div>
+              </div>
+              <hr/>
               <table>
                 <tbody>
                 {data.map(([label, value]) => (
@@ -150,9 +161,9 @@ class SyncModal extends Component {
               <table>
                 <thead>
                 <tr>
-                  <th>Sync</th>
+                  <th style={{width: '5rem'}}>Sync</th>
                   <th>Name</th>
-                  <th>Members</th>
+                  <th style={{width: '5rem'}}>Members</th>
                 </tr>
                 </thead>
                 <tbody>

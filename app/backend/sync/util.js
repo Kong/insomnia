@@ -1,5 +1,6 @@
 import {isDevelopment} from '../appInfo';
 import * as session from './session';
+import * as appInfo from '../appInfo';
 
 export function fetchPost (path, obj) {
   return _fetch('POST', path, obj)
@@ -14,6 +15,9 @@ async function _fetch (method, path, json, sessionId = null) {
     method: method,
     headers: new Headers()
   };
+
+  // Set some client information
+  config.headers.set('X-Insomnia-Client', appInfo.getClientString());
 
   if (json) {
     config.body = JSON.stringify(json, null, 2);
