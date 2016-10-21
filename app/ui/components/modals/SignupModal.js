@@ -14,13 +14,14 @@ class SignupModal extends Component {
     super(props);
     this.state = {
       step: 1,
-      error: ''
+      error: '',
+      loading: false
     }
   }
 
   async _handleSignup (e) {
     e.preventDefault();
-    this.setState({error: ''});
+    this.setState({error: '', loading: true});
 
     const email = this._emailInput.value;
     const password = this._passwordInput.value;
@@ -29,10 +30,10 @@ class SignupModal extends Component {
 
     try {
       await session.signup(firstName, lastName, email, password);
-      this.setState({step: 2});
+      this.setState({step: 2, loading: false});
       sync.forceSync();
     } catch (e) {
-      this.setState({error: e.message})
+      this.setState({error: e.message, loading: false})
     }
   }
 
@@ -104,6 +105,7 @@ class SignupModal extends Component {
                 <a href="#" onClick={this._handleLogin.bind(this)}>Login</a>
               </div>
               <button type="submit" className="btn">
+                {this.state.loading ? <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
                 Create Account
               </button>
             </ModalFooter>

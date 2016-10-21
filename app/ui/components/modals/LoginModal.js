@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -13,23 +14,24 @@ class LoginModal extends Component {
     super(props);
     this.state = {
       step: 1,
+      loading: false,
       error: ''
     }
   }
 
   async _handleLogin (e) {
     e.preventDefault();
-    this.setState({error: ''});
+    this.setState({error: '', loading: true});
 
     const email = this._emailInput.value;
     const password = this._passwordInput.value;
 
     try {
       await session.login(email, password);
-      this.setState({step: 2});
+      this.setState({step: 2, loading: false});
       sync.forceSync();
     } catch (e) {
-      this.setState({error: e.message})
+      this.setState({error: e.message, loading: false})
     }
   }
 
@@ -82,6 +84,7 @@ class LoginModal extends Component {
                 <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
               </div>
               <button type="submit" className="btn">
+                {this.state.loading ? <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
                 Login
               </button>
             </ModalFooter>
@@ -95,7 +98,11 @@ class LoginModal extends Component {
           <ModalBody className="pad">
             <h1>Enjoy your stay!</h1>
             <p>
-              You are now logged in to the app.
+              If you have any questions or concerns, send you email to
+              {" "}
+              <Link href="mailto:support@insomnia.rest">
+                support@insomnia.rest
+              </Link>
             </p>
           </ModalBody>
           <ModalFooter>
