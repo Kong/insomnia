@@ -305,9 +305,14 @@ async function _fetchResourceGroup (resourceGroupId) {
 
   if (!resourceGroup) {
     // TODO: Handle a 404 here
-    resourceGroup = resourceGroupCache[resourceGroupId] = await util.fetchGet(
-      `/api/resource_groups/${resourceGroupId}`
-    );
+    try {
+      resourceGroup = resourceGroupCache[resourceGroupId] = await util.fetchGet(
+        `/api/resource_groups/${resourceGroupId}`
+      );
+    } catch (e) {
+      logger.error(`Failed to get ResourceGroup ${resourceGroupId}: ${e}`);
+      throw e;
+    }
   }
 
   return resourceGroup;
@@ -332,17 +337,27 @@ async function _getResourceGroupSymmetricKey (resourceGroupId) {
 }
 
 async function _encryptDoc (resourceGroupId, doc) {
-  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
-  const docStr = JSON.stringify(doc);
-  const message = crypt.encryptAES(symmetricKey, docStr);
-  return JSON.stringify(message);
+  try {
+    const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
+    const docStr = JSON.stringify(doc);
+    const message = crypt.encryptAES(symmetricKey, docStr);
+    return JSON.stringify(message);
+  } catch (e) {
+    logger.error(`Failed to encrypt for ${resourceGroupId}: ${e}`);
+    throw e;
+  }
 }
 
 async function _decryptDoc (resourceGroupId, messageJSON) {
-  const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
-  const message = JSON.parse(messageJSON);
-  const decrypted = crypt.decryptAES(symmetricKey, message);
-  return JSON.parse(decrypted);
+  try {
+    const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
+    const message = JSON.parse(messageJSON);
+    const decrypted = crypt.decryptAES(symmetricKey, message);
+    return JSON.parse(decrypted);
+  } catch (e) {
+    logger.error(`Failed to decrypt from ${resourceGroupId}: ${e}`);
+    throw e;
+  }
 }
 
 async function _getWorkspaceForDoc (doc) {
@@ -360,14 +375,19 @@ async function _createResourceGroup (name = '', description = '') {
   const encRGSymmetricJWK = crypt.encryptRSAWithJWK(publicJWK, rgSymmetricJWKStr);
 
   // Create the new ResourceGroup
-  const resourceGroup = await util.fetchPost('/api/resource_groups', {
-    name,
-    description,
-    encSymmetricKey: encRGSymmetricJWK,
-  });
+  let resourceGroup;
+  try {
+    resourceGroup = await util.fetchPost('/api/resource_groups', {
+      name,
+      description,
+      encSymmetricKey: encRGSymmetricJWK,
+    });
+  } catch (e) {
+    logger.error(`Failed to create ResourceGroup: ${e}`);
+    throw e
+  }
 
   logger.debug(`created ResourceGroup ${resourceGroup.id}`);
-
   return resourceGroup;
 }
 

@@ -116,6 +116,9 @@ class SyncModal extends Component {
                 <button>Status</button>
               </Tab>
               <Tab>
+                <button>Teams</button>
+              </Tab>
+              <Tab>
                 <button>Workspaces</button>
               </Tab>
               <Tab>
@@ -138,6 +141,10 @@ class SyncModal extends Component {
                 ))}
                 </tbody>
               </table>
+            </TabPanel>
+            <TabPanel className="pad">
+              <h2>Team</h2>
+              <p>This is where you configure your team</p>
             </TabPanel>
             <TabPanel className="pad">
               <table>
