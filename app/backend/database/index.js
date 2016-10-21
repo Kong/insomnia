@@ -383,7 +383,7 @@ export async function withAncestors (doc) {
   return await next([doc]);
 }
 
-export async function duplicate (originalDoc, patch = {}) {
+export async function duplicate (originalDoc, patch = {}, first = true) {
   bufferChanges();
 
   // 1. Copy the doc
@@ -399,11 +399,13 @@ export async function duplicate (originalDoc, patch = {}) {
     const parentId = originalDoc._id;
     const children = await find(type, {parentId});
     for (const doc of children) {
-      await duplicate(doc, {parentId: createdDoc._id})
+      await duplicate(doc, {parentId: createdDoc._id}, false)
     }
   }
 
-  flushChanges();
+  if (first) {
+    flushChanges();
+  }
 
   return createdDoc;
 }

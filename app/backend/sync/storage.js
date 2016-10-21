@@ -9,15 +9,7 @@ import crypto from 'crypto';
  * @returns {Promise}
  */
 export function allResources () {
-  return new Promise((resolve, reject) => {
-    _getDB().find({}, (err, rawDocs) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rawDocs);
-      }
-    })
-  });
+  return _promisifyCallback(_getDB(), 'find', {});
 }
 
 /**
@@ -26,15 +18,7 @@ export function allResources () {
  * @returns {Promise}
  */
 export function findResources (query) {
-  return new Promise((resolve, reject) => {
-    _getDB().find(query, (err, rawDocs) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rawDocs);
-      }
-    })
-  });
+  return _promisifyCallback(_getDB(), 'find', query);
 }
 
 /**
@@ -51,17 +35,10 @@ export function findDirtyResources () {
  * @param id
  * @returns {Promise}
  */
-export function getResourceById (id) {
-  return new Promise((resolve, reject) => {
-    // TODO: this query should probably include resourceGroupId as well
-    _getDB().find({id}, (err, rawDocs) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rawDocs.length >= 1 ? rawDocs[0] : null);
-      }
-    });
-  })
+export async function getResourceById (id) {
+  // TODO: this query should probably include resourceGroupId as well
+  const rawDocs = await _promisifyCallback(_getDB(), 'find', {id});
+  return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
 /**
@@ -70,19 +47,11 @@ export function getResourceById (id) {
  * @param resource
  */
 export function insertResource (resource) {
-  return new Promise((resolve, reject) => {
-    const h = crypto.createHash('md5');
-    h.update(resource.resourceGroupId);
-    h.update(resource.id);
-    resource._id = `rs_${h.digest('hex')}`;
-    _getDB().insert(resource, (err, newDoc) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(newDoc);
-      }
-    });
-  });
+  const h = crypto.createHash('md5');
+  h.update(resource.resourceGroupId);
+  h.update(resource.id);
+  const newResource = Object.assign({}, resource, {_id: `rs_${h.digest('hex')}`});
+  return _promisifyCallback(_getDB(), 'insert', newResource);
 }
 
 /**
@@ -93,16 +62,12 @@ export function insertResource (resource) {
  * @returns {Promise}
  */
 export function updateResource (resource, ...patches) {
-  return new Promise((resolve, reject) => {
-    const updatedResource = Object.assign(resource, ...patches);
-    _getDB().update({_id: resource._id}, updatedResource, err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(resource);
-      }
-    });
-  });
+  return _promisifyCallback(
+    _getDB(),
+    'update',
+    {_id: resource._id},
+    Object.assign(resource, ...patches)
+  );
 }
 
 /**
@@ -112,15 +77,7 @@ export function updateResource (resource, ...patches) {
  * @returns {Promise}
  */
 export function removeResource (resource) {
-  return new Promise((resolve, reject) => {
-    _getDB().remove({_id: resource._id}, err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+  return _promisifyCallback(_getDB(), 'remove', {_id: resource._id});
 }
 
 // ~~~~~~~ //
@@ -132,7 +89,7 @@ function _getDB () {
   if (!_database) {
     // NOTE: Do not EVER change this. EVER!
     const basePath = electron.remote.app.getPath('userData');
-    const filePath = fsPath.join(basePath, `insomnia.sync.resources.db`);
+    const filePath = fsPath.join(basePath, `sync.Resource.db`);
 
     // Fill in the defaults
     _database = new NeDB({filename: filePath, autoload: true});
@@ -142,4 +99,16 @@ function _getDB () {
   }
 
   return _database;
+}
+
+function _promisifyCallback (obj, fnName, ...args) {
+  return new Promise((resolve, reject) => {
+    obj[fnName](...args, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
 }

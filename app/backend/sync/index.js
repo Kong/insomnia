@@ -55,9 +55,6 @@ export async function initSync () {
       // Make sure it happens async
       process.nextTick(() => _queueChange(event, doc));
     }
-    changes
-      .filter(c => WHITE_LIST.hasOwnProperty(c[1].type))
-      .map(c => _queueChange(c[0], c[1]));
   });
 
   setTimeout(_syncPullChanges, START_PULL_DELAY);

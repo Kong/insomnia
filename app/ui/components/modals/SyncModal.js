@@ -116,10 +116,10 @@ class SyncModal extends Component {
                 <button>Beta Info</button>
               </Tab>
               <Tab>
-                <button>Teams</button>
+                <button>Workspaces</button>
               </Tab>
               <Tab>
-                <button>Workspaces</button>
+                <button>Teams</button>
               </Tab>
               <Tab>
                 <button>Debug Info</button>
@@ -151,10 +151,6 @@ class SyncModal extends Component {
               </p>
             </TabPanel>
             <TabPanel className="pad">
-              <h2>Team</h2>
-              <p>This is where you configure your team</p>
-            </TabPanel>
-            <TabPanel className="pad">
               <table>
                 <thead>
                 <tr>
@@ -182,6 +178,10 @@ class SyncModal extends Component {
                 ))}
                 </tbody>
               </table>
+            </TabPanel>
+            <TabPanel className="pad">
+              <h2>Team</h2>
+              <p>Team management features are coming soon...</p>
             </TabPanel>
             <TabPanel className="pad">
               <p>
