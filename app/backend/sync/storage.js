@@ -7,55 +7,45 @@ import * as util from '../util';
 const TYPE_RESOURCE = 'Resource';
 const TYPE_CONFIG = 'Config';
 
-export const SYNC_MODE_OFF = 'off';
-export const SYNC_MODE_ON = 'on';
+export const SYNC_MODE_OFF = 'paused';
+export const SYNC_MODE_ON = 'active';
 
-/**
- * Get all Resources
- *
- * @returns {Promise}
- */
 export function activeResources () {
   return findActiveResources({});
 }
 
-/**
- * Find resources by query
- *
- * @returns {Promise}
- */
-export async function findActiveResources (query) {
-  const configs = await findActiveConfigs();
-  const resourceGroupIds = configs.map(c => c.resourceGroupId);
-  query.resourceGroupId = {$in: resourceGroupIds};
+export function allResources () {
+  return findResources({});
+}
+
+export async function findResources (query) {
   return _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', query);
 }
 
-/**
- * Get all dirty resources
- * @returns {Promise}
- */
+export async function findActiveResources (query) {
+  const configs = await findActiveConfigs();
+  const resourceGroupIds = configs.map(c => c.resourceGroupId);
+  return findResources(Object.assign({resourceGroupId: {$in: resourceGroupIds}}, query));
+}
+
 export async function findActiveDirtyResources () {
   return findActiveResources({dirty: true});
 }
 
-/**
- * Get Resource by resourceID
- *
- * @param id
- * @returns {Promise}
- */
+export async function findActiveDirtyResourcesForResourceGroup (resourceGroupId) {
+  return findActiveResources({dirty: true, resourceGroupId});
+}
+
+export async function findResourcesForResourceGroup (resourceGroupId) {
+  return findResources({resourceGroupId});
+}
+
 export async function getResourceById (id) {
   // TODO: this query should probably include resourceGroupId as well
   const rawDocs = await _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', {id});
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
-/**
- * Create a new Resource
- *
- * @param resource
- */
 export async function insertResource (resource) {
   const h = crypto.createHash('md5');
   h.update(resource.resourceGroupId);
@@ -65,25 +55,12 @@ export async function insertResource (resource) {
   return newResource;
 }
 
-/**
- * Update an existing resource
- *
- * @param resource
- * @param patches
- * @returns {Promise}
- */
 export async function updateResource (resource, ...patches) {
   const newDoc = Object.assign(resource, ...patches);
   await _promisifyCallback(_getDB(TYPE_RESOURCE), 'update', {_id: resource._id}, newDoc);
   return newDoc
 }
 
-/**
- * Remove an existing resource
- *
- * @param resource
- * @returns {Promise}
- */
 export function removeResource (resource) {
   return _promisifyCallback(_getDB(TYPE_RESOURCE), 'remove', {_id: resource._id});
 }
@@ -92,21 +69,19 @@ export function removeResource (resource) {
 // Config //
 // ~~~~~~ //
 
-/**
- * Get Config
- *
- * @param resourceGroupId
- */
+export function findConfigs (query) {
+  return _promisifyCallback(_getDB(TYPE_CONFIG), 'find', query)
+}
+
+export function allConfigs () {
+  return findConfigs({})
+}
+
 export async function getConfig (resourceGroupId) {
   const rawDocs = await _promisifyCallback(_getDB(TYPE_CONFIG), 'find', {resourceGroupId});
   return rawDocs.length >= 1 ? _defaultConfig(rawDocs[0]) : null;
 }
 
-/**
- * Save a Config
- * @param config
- * @param patches
- */
 export async function updateConfig (config, ...patches) {
   const newDoc = Object.assign(config, ...patches);
   await _promisifyCallback(
@@ -118,11 +93,12 @@ export async function updateConfig (config, ...patches) {
   return newDoc;
 }
 
-/**
- * Get all the active configs
- */
+export function removeConfig (config) {
+  return _promisifyCallback(_getDB(TYPE_CONFIG), 'remove', {_id: config._id});
+}
+
 export function findActiveConfigs () {
-  return _promisifyCallback(_getDB(TYPE_CONFIG), 'find', {$not: {syncMode: SYNC_MODE_OFF}})
+  return findConfigs({$not: {syncMode: SYNC_MODE_OFF}})
 }
 
 export async function insertConfig (config) {

@@ -5,9 +5,9 @@ import * as session from './session';
 import * as resourceStore from './storage';
 import Logger from './logger';
 
-export const FULL_SYNC_INTERVAL = 20E3;
-export const DEBOUNCE_TIME = 5E3;
-export const START_PULL_DELAY = 3E3;
+export const FULL_SYNC_INTERVAL = 30E3;
+export const DEBOUNCE_TIME = 10E3;
+export const START_PULL_DELAY = 2E3;
 export const START_PUSH_DELAY = 1E3;
 
 const WHITE_LIST = {
@@ -173,6 +173,11 @@ async function _syncPullChanges () {
   }
 
   const allResources = await _getOrCreateAllResources();
+  if (allResources.length === 0) {
+    logger.debug('No resources to sync');
+    return;
+  }
+
   const resourceGroupIds = [...new Set(allResources.map(r => r.resourceGroupId))];
   const resources = allResources.map(r => ({
     id: r.id,
@@ -183,7 +188,7 @@ async function _syncPullChanges () {
 
   const body = {resources, resourceGroupIds};
 
-  logger.debug(`Checking ${resources.length} resources`);
+  logger.debug(`Diffing ${resources.length} tags`);
 
   let responseBody;
   try {

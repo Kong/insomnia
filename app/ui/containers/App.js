@@ -496,6 +496,7 @@ class App extends Component {
           filter={workspaceMeta.filter || ''}
           hidden={workspaceMeta.sidebarHidden || false}
           showSyncSettings={settings.optSyncBeta}
+          workspaceId={workspace._id}
           children={children}
           width={sidebarWidth}
         />

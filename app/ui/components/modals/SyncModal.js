@@ -41,11 +41,15 @@ class SyncModal extends Component {
 
     // Refresh the modal
     this._updateModal();
+    sync.forceSync();
   }
 
   async _handleReset () {
-    for (const r of await syncStorage.activeResources()) {
+    for (const r of await syncStorage.allResources()) {
       await syncStorage.removeResource(r);
+    }
+    for (const c of await syncStorage.allConfigs()) {
+      await syncStorage.removeConfig(c);
     }
     await session.logout();
     this.hide();
@@ -63,20 +67,18 @@ class SyncModal extends Component {
       const resource = await syncStorage.getResourceById(workspace._id);
       const resourceGroupId = resource ? resource.resourceGroupId : null;
       const workspaceConfig = await syncStorage.getConfig(resourceGroupId);
-      syncData.push({workspace, resource, workspaceConfig});
+      const dirty = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
+      const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
+      syncData.push({
+        workspace,
+        resource,
+        workspaceConfig,
+        syncPercent: parseInt((all.length - dirty.length) / all.length * 10) / 10 * 100
+      });
     }
-
-    const totalResources = (await syncStorage.activeResources()).length;
-    const numDirty = (await syncStorage.findActiveDirtyResources()).length;
-    const numSynced = totalResources - numDirty;
-    const percentSynced = parseInt(numSynced / totalResources * 10) / 10 * 100 || 0;
 
     this.setState({
       syncData,
-      numDirty,
-      numSynced,
-      totalResources,
-      percentSynced,
       email: session.getEmail(),
       firstName: session.getFirstName(),
       sessionId: session.getCurrentSessionId(),
@@ -104,11 +106,12 @@ class SyncModal extends Component {
   render () {
     const s = this.state;
     const data = [
-      ['Status', `${s.numSynced}/${s.totalResources} (${s.percentSynced}%)`],
-      ['Session', s.sessionId.slice(0, 30)],
+      ['Email', s.email],
+      ['Session', s.sessionId],
       ['Full Sync', `${sync.FULL_SYNC_INTERVAL / 1000} second interval`],
       ['Partial Sync', `${sync.DEBOUNCE_TIME / 1000} seconds after change`],
     ];
+
     const colors = {
       debug: 'info',
       warn: 'warning',
@@ -117,7 +120,7 @@ class SyncModal extends Component {
 
     // Show last N logs
     const allLogs = sync.logger.tail();
-    const logs = allLogs.slice(allLogs.length - 2000);
+    const logs = allLogs.slice(allLogs.length - 1000);
 
     return (
       <Modal ref={m => this.modal = m} tall={true} wide={true}>
@@ -130,13 +133,7 @@ class SyncModal extends Component {
           <Tabs>
             <TabList>
               <Tab>
-                <button>Beta Info</button>
-              </Tab>
-              <Tab>
-                <button>Workspaces</button>
-              </Tab>
-              <Tab>
-                <button>Teams</button>
+                <button>Overview</button>
               </Tab>
               <Tab>
                 <button>Debug Info</button>
@@ -145,7 +142,7 @@ class SyncModal extends Component {
                 <button>Debug Logs</button>
               </Tab>
             </TabList>
-            <TabPanel className="pad">
+            <TabPanel className="pad scrollable">
               <div className="pad-top">
                 <GravatarImg email={this.state.email}
                              className="inline-block img--circle"
@@ -162,33 +159,31 @@ class SyncModal extends Component {
                 </div>
               </div>
               <hr/>
-              <h2>Welcome to the beta</h2>
-              <p>
-                The sync beta is
-              </p>
-            </TabPanel>
-            <TabPanel className="pad">
               <table>
                 <thead>
                 <tr>
-                  <th>Sync</th>
                   <th>Workspace</th>
+                  <th>Sync</th>
+                  <th>Synced</th>
                   <th>Team</th>
                 </tr>
                 </thead>
                 <tbody>
                 {this.state.syncData.map(data => (
                   <tr key={data.workspace._id}>
+                    <td>{data.workspace.name}</td>
                     <td>
                       <select name="sync-type"
                               id="sync-type"
                               value={data.workspaceConfig ? data.workspaceConfig.syncMode : syncStorage.SYNC_MODE_OFF}
                               onChange={this._handleSyncModeChange.bind(this, data)}>
-                        <option value={syncStorage.SYNC_MODE_ON}>On</option>
-                        <option value={syncStorage.SYNC_MODE_OFF}>Off</option>
+                        <option value={syncStorage.SYNC_MODE_ON}>Active</option>
+                        <option value={syncStorage.SYNC_MODE_OFF}>Paused</option>
                       </select>
                     </td>
-                    <td>{data.workspace.name}</td>
+                    <td className={data.syncPercent < 99 ? 'warning' : ''}>
+                      {data.syncPercent}%
+                    </td>
                     <td className="faint italic">
                       <select name="team" id="team" disabled="disabled">
                         <option value="other">Coming soon...</option>
@@ -199,11 +194,7 @@ class SyncModal extends Component {
                 </tbody>
               </table>
             </TabPanel>
-            <TabPanel className="pad">
-              <h2>Team</h2>
-              <p>Team management features are coming soon...</p>
-            </TabPanel>
-            <TabPanel className="pad">
+            <TabPanel className="pad scrollable">
               <p>
                 Here is some useful debug info in case you need to report a bug.
               </p>

@@ -109,7 +109,8 @@ class Sidebar extends Component {
       requestCreate,
       requestGroupCreate,
       showSyncSettings,
-      width
+      width,
+      workspaceId
     } = this.props;
 
     return (
@@ -145,7 +146,7 @@ class Sidebar extends Component {
 
         {showSyncSettings ? (
           <div className="sidebar__footer">
-            <SyncButton/>
+            <SyncButton workspaceId={workspaceId}/>
           </div>
         ) : null}
       </aside>
@@ -172,6 +173,7 @@ Sidebar.propTypes = {
 
   // Other
   children: PropTypes.array.isRequired,
+  workspaceId: PropTypes.string.isRequired,
 
   // Optional
   filter: PropTypes.string,
