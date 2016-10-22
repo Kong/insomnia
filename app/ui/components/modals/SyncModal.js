@@ -20,8 +20,41 @@ class SyncModal extends Component {
       email: 'n/a',
       sessionId: 'n/a',
       dirty: [],
-      syncData: []
+      syncData: [],
+      pushingWorkspaces: {},
+      pullingWorkspaces: {}
     }
+  }
+
+  async _handlePushWorkspace (workspace) {
+    // Set loading state
+    const pushingWorkspaces = Object.assign({}, this.state.pushingWorkspaces);
+    pushingWorkspaces[workspace._id] = true;
+    this.setState({pushingWorkspaces});
+
+    const resource = await sync.getOrCreateResourceForDoc(workspace);
+    await sync.push(resource.resourceGroupId);
+
+    // Unset loading state
+    delete pushingWorkspaces[workspace._id];
+    this.setState({pushingWorkspaces});
+    this._updateModal();
+  }
+
+  async _handlePullWorkspace (workspace) {
+    // Set loading state
+    const pullingWorkspaces = Object.assign({}, this.state.pullingWorkspaces);
+    pullingWorkspaces[workspace._id] = true;
+    this.setState({pullingWorkspaces});
+
+    // Do the actual sync
+    const resource = await sync.getOrCreateResourceForDoc(workspace);
+    const numChanges = await sync.pull(resource.resourceGroupId);
+
+    // Unset loading state
+    delete pullingWorkspaces[workspace._id];
+    this.setState({pullingWorkspaces});
+    this._updateModal();
   }
 
   async _handleSyncModeChange (syncData, e) {
@@ -41,7 +74,9 @@ class SyncModal extends Component {
 
     // Refresh the modal
     this._updateModal();
-    sync.forceSync();
+
+    // Trigger a sync cycle right away
+    await sync.triggerSync();
   }
 
   async _handleReset () {
@@ -178,8 +213,27 @@ class SyncModal extends Component {
                               value={data.workspaceConfig ? data.workspaceConfig.syncMode : syncStorage.SYNC_MODE_OFF}
                               onChange={this._handleSyncModeChange.bind(this, data)}>
                         <option value={syncStorage.SYNC_MODE_ON}>Active</option>
-                        <option value={syncStorage.SYNC_MODE_OFF}>Paused</option>
+                        <option value={syncStorage.SYNC_MODE_OFF}>Paused
+                        </option>
                       </select>
+                      &nbsp;&nbsp;
+                      <button title="Push Changes"
+                              disabled={data.syncPercent >= 99}
+                              className="btn btn--super-duper-compact"
+                              onClick={e => this._handlePushWorkspace(data.workspace)}>
+                        <i className={classnames(
+                          'fa fa-cloud-upload',
+                          {'fa-spin': this.state.pushingWorkspaces[data.workspace._id]}
+                        )}></i>
+                      </button>
+                      <button title="Pull Changes"
+                              className="btn btn--super-duper-compact"
+                              onClick={e => this._handlePullWorkspace(data.workspace)}>
+                        <i className={classnames(
+                          'fa fa-cloud-download',
+                          {'fa-spin': this.state.pullingWorkspaces[data.workspace._id]}
+                        )}></i>
+                      </button>
                     </td>
                     <td className={data.syncPercent < 99 ? 'warning' : ''}>
                       {data.syncPercent}%

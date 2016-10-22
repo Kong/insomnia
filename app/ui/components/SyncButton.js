@@ -29,6 +29,8 @@ class SyncButton extends Component {
       state = STATE_OFF;
     } else if (config && dirtyDocs.length > 0) {
       state = STATE_AHEAD;
+    } else if (!config) {
+      state = STATE_OFF;
     } else {
       state = STATE_OK;
     }

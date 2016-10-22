@@ -14,6 +14,10 @@ export function activeResources () {
   return findActiveResources({});
 }
 
+export function activeResourcesForResourceGroup (resourceGroupId) {
+  return findActiveResources({resourceGroupId});
+}
+
 export function allResources () {
   return findResources({});
 }

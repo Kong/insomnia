@@ -24,13 +24,14 @@ export const logger = new Logger();
 const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 
-export async function forceSync () {
-  // Make sure sync is on
+/**
+ * Trigger a full sync cycle. Useful if you don't want to wait for the next
+ * tick.
+ */
+export async function triggerSync () {
   await initSync();
-
-  // Force an update
-  await _syncPushDirtyResources();
-  await _syncPullChanges();
+  await push();
+  await pull();
 }
 
 let isInitialized = false;
@@ -57,9 +58,9 @@ export async function initSync () {
     }
   });
 
-  setTimeout(_syncPullChanges, START_PULL_DELAY);
-  setTimeout(_syncPushDirtyResources, START_PUSH_DELAY);
-  setInterval(_syncPullChanges, FULL_SYNC_INTERVAL);
+  setTimeout(pull, START_PULL_DELAY);
+  setTimeout(push, START_PUSH_DELAY);
+  setInterval(pull, FULL_SYNC_INTERVAL);
   isInitialized = true;
   logger.debug('Initialized');
 }
@@ -90,16 +91,21 @@ async function _queueChange (event, doc) {
 
   // Debounce pushing of dirty resources
   clearTimeout(commitTimeout);
-  commitTimeout = setTimeout(() => _syncPushDirtyResources(), DEBOUNCE_TIME);
+  commitTimeout = setTimeout(() => push(), DEBOUNCE_TIME);
 }
 
-async function _syncPushDirtyResources () {
+export async function push (resourceGroupId = null) {
   if (!session.isLoggedIn()) {
     logger.warn('Not logged in');
     return;
   }
 
-  const dirtyResources = await resourceStore.findActiveDirtyResources();
+  let dirtyResources = [];
+  if (resourceGroupId) {
+    dirtyResources = await resourceStore.findActiveDirtyResourcesForResourceGroup(resourceGroupId)
+  } else {
+    dirtyResources = await resourceStore.findActiveDirtyResources()
+  }
 
   if (!dirtyResources.length) {
     logger.debug('No changes to push');
@@ -166,13 +172,13 @@ async function _syncPushDirtyResources () {
   }
 }
 
-async function _syncPullChanges () {
+export async function pull (resourceGroupId = null) {
   if (!session.isLoggedIn()) {
     logger.warn('Not logged in');
     return;
   }
 
-  const allResources = await _getOrCreateAllResources();
+  const allResources = await _getOrCreateAllActiveResources(resourceGroupId);
   if (allResources.length === 0) {
     logger.debug('No resources to sync');
     return;
@@ -272,6 +278,7 @@ async function _syncPullChanges () {
 
     // Remove from DB (NOTE: Not silently)
     await db.remove(doc);
+    return updatedResources.length + createdResources.length;
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -442,9 +449,16 @@ export async function getOrCreateResourceForDoc (doc) {
   return resource;
 }
 
-async function _getOrCreateAllResources () {
+async function _getOrCreateAllActiveResources (resourceGroupId = null) {
   const activeResourceMap = {};
-  const activeResources = await resourceStore.activeResources();
+
+  let activeResources;
+  if (resourceGroupId) {
+    activeResources = await resourceStore.activeResourcesForResourceGroup(resourceGroupId);
+  } else {
+    activeResources = await resourceStore.activeResources();
+  }
+
   for (const r of activeResources) {
     activeResourceMap[r.id] = r;
   }
