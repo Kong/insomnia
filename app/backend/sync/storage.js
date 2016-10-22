@@ -81,6 +81,14 @@ export function allConfigs () {
   return findConfigs({})
 }
 
+export function findActiveConfigs (resourceGroupId = null) {
+  if (resourceGroupId) {
+    return findConfigs({$not: {syncMode: SYNC_MODE_OFF}, resourceGroupId})
+  } else {
+    return findConfigs({$not: {syncMode: SYNC_MODE_OFF}})
+  }
+}
+
 export async function getConfig (resourceGroupId) {
   const rawDocs = await _promisifyCallback(_getDB(TYPE_CONFIG), 'find', {resourceGroupId});
   return rawDocs.length >= 1 ? _defaultConfig(rawDocs[0]) : null;
@@ -99,10 +107,6 @@ export async function updateConfig (config, ...patches) {
 
 export function removeConfig (config) {
   return _promisifyCallback(_getDB(TYPE_CONFIG), 'remove', {_id: config._id});
-}
-
-export function findActiveConfigs () {
-  return findConfigs({$not: {syncMode: SYNC_MODE_OFF}})
 }
 
 export async function insertConfig (config) {

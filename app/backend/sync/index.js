@@ -2,7 +2,7 @@ import * as db from '../database';
 import * as util from './util';
 import * as crypt from './crypt';
 import * as session from './session';
-import * as resourceStore from './storage';
+import * as store from './storage';
 import Logger from './logger';
 
 export const FULL_SYNC_INTERVAL = 30E3;
@@ -79,7 +79,7 @@ async function _queueChange (event, doc) {
 
   // Update the resource content and set dirty
   const resource = await getOrCreateResourceForDoc(doc);
-  await resourceStore.updateResource(resource, {
+  await store.updateResource(resource, {
     lastEdited: Date.now(), // Don't use doc.modified because that doesn't work for removal
     lastEditedBy: session.getAccountId(),
     content: await _encryptDoc(resource.resourceGroupId, doc),
@@ -102,9 +102,9 @@ export async function push (resourceGroupId = null) {
 
   let dirtyResources = [];
   if (resourceGroupId) {
-    dirtyResources = await resourceStore.findActiveDirtyResourcesForResourceGroup(resourceGroupId)
+    dirtyResources = await store.findActiveDirtyResourcesForResourceGroup(resourceGroupId)
   } else {
-    dirtyResources = await resourceStore.findActiveDirtyResources()
+    dirtyResources = await store.findActiveDirtyResources()
   }
 
   if (!dirtyResources.length) {
@@ -123,31 +123,31 @@ export async function push (resourceGroupId = null) {
   // Update all resource versions with the ones that were returned
   const {updated} = responseBody;
   for (const {id, version} of updated) {
-    const resource = await resourceStore.getResourceById(id);
-    await resourceStore.updateResource(resource, {version, dirty: false});
+    const resource = await store.getResourceById(id);
+    await store.updateResource(resource, {version, dirty: false});
     logger.debug(`Updated ${id}`);
   }
 
   // Update all resource versions with the ones that were returned
   const {created} = responseBody;
   for (const {id, version} of created) {
-    const resource = await resourceStore.getResourceById(id);
-    await resourceStore.updateResource(resource, {version, dirty: false});
+    const resource = await store.getResourceById(id);
+    await store.updateResource(resource, {version, dirty: false});
     logger.debug(`Created ${id}`);
   }
 
   // Update all resource versions with the ones that were returned
   const {removed} = responseBody;
   for (const {id, version} of removed) {
-    const resource = await resourceStore.getResourceById(id);
-    await resourceStore.updateResource(resource, {version, dirty: false});
+    const resource = await store.getResourceById(id);
+    await store.updateResource(resource, {version, dirty: false});
     logger.debug(`Removed ${id}`);
   }
 
   // Resolve conflicts
   const {conflicts} = responseBody;
   for (const serverResource of conflicts) {
-    const localResource = await resourceStore.getResourceById(serverResource.id);
+    const localResource = await store.getResourceById(serverResource.id);
 
     // On conflict, choose last edited one
     const serverIsNewer = serverResource.lastEdited > localResource.lastEdited;
@@ -159,7 +159,7 @@ export async function push (resourceGroupId = null) {
 
     // Update local resource
     // NOTE: using localResource as the base to make sure we have _id
-    await resourceStore.updateResource(localResource, winner, {
+    await store.updateResource(localResource, winner, {
       version: serverResource.version, // Act as the server resource no matter what
       dirty: !serverIsNewer // It's dirty if we chose the local doc
     });
@@ -179,12 +179,14 @@ export async function pull (resourceGroupId = null) {
   }
 
   const allResources = await _getOrCreateAllActiveResources(resourceGroupId);
-  if (allResources.length === 0) {
-    logger.debug('No resources to sync');
+  const allConfigs = await store.findActiveConfigs(resourceGroupId);
+  const resourceGroupIds = allConfigs.map(c => c.resourceGroupId);
+
+  if (resourceGroupIds.length === 0) {
+    logger.warn('Nothing to sync');
     return;
   }
 
-  const resourceGroupIds = [...new Set(allResources.map(r => r.resourceGroupId))];
   const resources = allResources.map(r => ({
     id: r.id,
     resourceGroupId: r.resourceGroupId,
@@ -208,7 +210,7 @@ export async function pull (resourceGroupId = null) {
     updatedResources,
     createdResources,
     idsToPush,
-    idsToRemove
+    idsToRemove,
   } = responseBody;
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -221,7 +223,7 @@ export async function pull (resourceGroupId = null) {
       const doc = await _decryptDoc(resourceGroupId, encContent);
 
       // Update local Resource
-      await resourceStore.insertResource(serverResource, {dirty: false});
+      await store.insertResource(serverResource, {dirty: false});
 
       // Insert into app database (NOTE: not silently)
       await db.insert(doc);
@@ -247,8 +249,8 @@ export async function pull (resourceGroupId = null) {
       await db.update(doc);
 
       // Update local resource
-      const resource = await resourceStore.getResourceById(serverResource.id);
-      await resourceStore.updateResource(resource, serverResource, {dirty: false});
+      const resource = await store.getResourceById(serverResource.id);
+      await store.updateResource(resource, serverResource, {dirty: false});
     } catch (e) {
       logger.warn('Failed to decode updated resource', e, serverResource);
     }
@@ -263,7 +265,7 @@ export async function pull (resourceGroupId = null) {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   for (const id of idsToRemove) {
-    const resource = await resourceStore.getResourceById(id);
+    const resource = await store.getResourceById(id);
     if (!resource) {
       throw new Error(`Could not find Resource to remove for ${id}`)
     }
@@ -274,11 +276,10 @@ export async function pull (resourceGroupId = null) {
     }
 
     // Mark resource as deleted
-    await resourceStore.updateResource(resource, {dirty: false, removed: true});
+    await store.updateResource(resource, {dirty: false, removed: true});
 
     // Remove from DB (NOTE: Not silently)
     await db.remove(doc);
-    return updatedResources.length + createdResources.length;
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -286,7 +287,7 @@ export async function pull (resourceGroupId = null) {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   for (const id of idsToPush) {
-    const resource = await resourceStore.getResourceById(id);
+    const resource = await store.getResourceById(id);
     if (!resource) {
       throw new Error(`Could not find Resource to push for id ${id}`)
     }
@@ -297,6 +298,37 @@ export async function pull (resourceGroupId = null) {
     }
 
     _queueChange(db.CHANGE_UPDATE, doc)
+  }
+
+  return updatedResources.length + createdResources.length;
+}
+
+export async function fetchMissingResourceGroups () {
+  const configs = await store.allConfigs();
+
+  const resourceGroupIds = configs.map(c => c.resourceGroupId);
+  const resourceGroups = await util.fetchGet('/api/resource_groups');
+  return resourceGroups.filter(rg => !resourceGroupIds.find(id => rg.id === id));
+}
+
+export async function getOrCreateConfig (resourceGroupId) {
+  const config = await store.getConfig(resourceGroupId);
+
+  if (!config) {
+    return await store.insertConfig({resourceGroupId});
+  } else {
+    return config;
+  }
+}
+
+export async function createOrUpdateConfig (resourceGroupId, syncMode) {
+  const config = await store.getConfig(resourceGroupId);
+  const patch = {resourceGroupId, syncMode};
+
+  if (config) {
+    return await store.updateConfig(config, patch);
+  } else {
+    return await store.insertConfig(patch);
   }
 }
 
@@ -371,7 +403,7 @@ async function _getWorkspaceForDoc (doc) {
   return ancestors.find(d => d.type === db.workspace.type);
 }
 
-async function _createResourceGroup (name = '', description = '') {
+async function _createResourceGroup (name = '') {
   // Generate symmetric key for ResourceGroup
   const rgSymmetricJWK = await crypt.generateAES256Key();
   const rgSymmetricJWKStr = JSON.stringify(rgSymmetricJWK);
@@ -385,7 +417,6 @@ async function _createResourceGroup (name = '', description = '') {
   try {
     resourceGroup = await util.fetchPost('/api/resource_groups', {
       name,
-      description,
       encSymmetricKey: encRGSymmetricJWK,
     });
   } catch (e) {
@@ -393,12 +424,15 @@ async function _createResourceGroup (name = '', description = '') {
     throw e
   }
 
+  // Create a config for it
+  await createOrUpdateConfig(resourceGroup.id, store.SYNC_MODE_OFF);
+
   logger.debug(`created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;
 }
 
 async function _createResource (doc, resourceGroupId) {
-  return resourceStore.insertResource({
+  return store.insertResource({
     id: doc._id,
     resourceGroupId: resourceGroupId,
     version: NO_VERSION,
@@ -420,14 +454,11 @@ async function _createResourceForDoc (doc) {
     throw new Error(`Could not find workspace for doc ${doc._id}`);
   }
 
-  let workspaceResource = await resourceStore.getResourceById(workspace._id);
+  let workspaceResource = await store.getResourceById(workspace._id);
 
   if (!workspaceResource) {
     // TODO: Don't auto create a ResourceGroup
-    const workspaceResourceGroup = await _createResourceGroup(
-      `${workspace.name}`,
-      `Workspace ID: ${workspace._id}`
-    );
+    const workspaceResourceGroup = await _createResourceGroup(workspace.name);
     workspaceResource = await _createResource(workspace, workspaceResourceGroup.id);
   }
 
@@ -440,7 +471,7 @@ async function _createResourceForDoc (doc) {
 }
 
 export async function getOrCreateResourceForDoc (doc) {
-  let resource = await resourceStore.getResourceById(doc._id);
+  let resource = await store.getResourceById(doc._id);
 
   if (!resource) {
     resource = await _createResourceForDoc(doc);
@@ -454,9 +485,9 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
 
   let activeResources;
   if (resourceGroupId) {
-    activeResources = await resourceStore.activeResourcesForResourceGroup(resourceGroupId);
+    activeResources = await store.activeResourcesForResourceGroup(resourceGroupId);
   } else {
-    activeResources = await resourceStore.activeResources();
+    activeResources = await store.activeResources();
   }
 
   for (const r of activeResources) {
@@ -466,7 +497,7 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
   // TODO: This is REALLY slow (relatively speaking)
   for (const type of Object.keys(WHITE_LIST)) {
     for (const doc of await db.all(type)) {
-      const resource = await resourceStore.getResourceById(doc._id);
+      const resource = await store.getResourceById(doc._id);
       if (!resource) {
         activeResourceMap[doc._id] = await _createResourceForDoc(doc);
       }

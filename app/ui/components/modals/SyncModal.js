@@ -21,8 +21,9 @@ class SyncModal extends Component {
       sessionId: 'n/a',
       dirty: [],
       syncData: [],
+      remoteResourceGroups: [],
       pushingWorkspaces: {},
-      pullingWorkspaces: {}
+      pullingWorkspaces: {},
     }
   }
 
@@ -39,6 +40,12 @@ class SyncModal extends Component {
     delete pushingWorkspaces[workspace._id];
     this.setState({pushingWorkspaces});
     this._updateModal();
+  }
+
+  async _handlePullResourceGroup (resourceGroup) {
+    await sync.getOrCreateConfig(resourceGroup.id);
+    await sync.pull(resourceGroup.id);
+    await this._refreshRemoteResourceGroups();
   }
 
   async _handlePullWorkspace (workspace) {
@@ -61,16 +68,7 @@ class SyncModal extends Component {
     const syncMode = e.target.value;
     const workspace = syncData.workspace;
     const resource = await sync.getOrCreateResourceForDoc(workspace);
-
-    const resourceGroupId = resource.resourceGroupId;
-    const config = await syncStorage.getConfig(resource.resourceGroupId);
-    const patch = {resourceGroupId, syncMode};
-
-    if (config) {
-      await syncStorage.updateConfig(config, patch);
-    } else {
-      await syncStorage.insertConfig(patch);
-    }
+    await sync.createOrUpdateConfig(resource.resourceGroupId, syncMode);
 
     // Refresh the modal
     this._updateModal();
@@ -99,16 +97,23 @@ class SyncModal extends Component {
     const workspaces = await db.workspace.all();
     const syncData = [];
     for (const workspace of workspaces) {
-      const resource = await syncStorage.getResourceById(workspace._id);
-      const resourceGroupId = resource ? resource.resourceGroupId : null;
-      const workspaceConfig = await syncStorage.getConfig(resourceGroupId);
+
+      // Get or create any related sync data
+      const resource = await sync.getOrCreateResourceForDoc(workspace);
+      const resourceGroupId = resource.resourceGroupId;
+      const workspaceConfig = await sync.getOrCreateConfig(resourceGroupId);
+
+      // Analyze it
       const dirty = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
       const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
+      const numClean = all.length - dirty.length;
+      const syncPercent = parseInt(numClean / all.length * 1000) / 10;
+
       syncData.push({
         workspace,
         resource,
         workspaceConfig,
-        syncPercent: parseInt((all.length - dirty.length) / all.length * 10) / 10 * 100
+        syncPercent,
       });
     }
 
@@ -120,6 +125,12 @@ class SyncModal extends Component {
     });
   }
 
+  async _refreshRemoteResourceGroups () {
+    // Fetch missing groups (do this last because it's slow)
+    const remoteResourceGroups = await sync.fetchMissingResourceGroups();
+    this.setState({remoteResourceGroups});
+  }
+
   async show () {
     if (!session.isLoggedIn()) {
       console.error('Not logged in');
@@ -127,10 +138,12 @@ class SyncModal extends Component {
     }
 
     clearInterval(this._interval);
-    this._interval = setInterval(() => this._updateModal(), 2000);
     await this._updateModal();
+    this._interval = setInterval(() => this._updateModal(), 2000);
 
     this.modal.show();
+
+    await this._refreshRemoteResourceGroups();
   }
 
   hide () {
@@ -155,7 +168,7 @@ class SyncModal extends Component {
 
     // Show last N logs
     const allLogs = sync.logger.tail();
-    const logs = allLogs.slice(allLogs.length - 1000);
+    const logs = allLogs.slice(allLogs.length - 500);
 
     return (
       <Modal ref={m => this.modal = m} tall={true} wide={true}>
@@ -204,47 +217,82 @@ class SyncModal extends Component {
                 </tr>
                 </thead>
                 <tbody>
-                {this.state.syncData.map(data => (
-                  <tr key={data.workspace._id}>
-                    <td>{data.workspace.name}</td>
-                    <td>
-                      <select name="sync-type"
-                              id="sync-type"
-                              value={data.workspaceConfig ? data.workspaceConfig.syncMode : syncStorage.SYNC_MODE_OFF}
-                              onChange={this._handleSyncModeChange.bind(this, data)}>
-                        <option value={syncStorage.SYNC_MODE_ON}>Active</option>
-                        <option value={syncStorage.SYNC_MODE_OFF}>Paused
-                        </option>
-                      </select>
-                      &nbsp;&nbsp;
-                      <button title="Push Changes"
-                              disabled={data.syncPercent >= 99}
-                              className="btn btn--super-duper-compact"
-                              onClick={e => this._handlePushWorkspace(data.workspace)}>
-                        <i className={classnames(
-                          'fa fa-cloud-upload',
-                          {'fa-spin': this.state.pushingWorkspaces[data.workspace._id]}
-                        )}></i>
-                      </button>
-                      <button title="Pull Changes"
-                              className="btn btn--super-duper-compact"
-                              onClick={e => this._handlePullWorkspace(data.workspace)}>
-                        <i className={classnames(
-                          'fa fa-cloud-download',
-                          {'fa-spin': this.state.pullingWorkspaces[data.workspace._id]}
-                        )}></i>
-                      </button>
-                    </td>
-                    <td className={data.syncPercent < 99 ? 'warning' : ''}>
-                      {data.syncPercent}%
-                    </td>
-                    <td className="faint italic">
-                      <select name="team" id="team" disabled="disabled">
-                        <option value="other">Coming soon...</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
+                {this.state.syncData.map(data => {
+                    const {workspaceConfig, workspace, syncPercent} = data;
+                    const syncMode = workspaceConfig.syncMode;
+                    return (
+                      <tr key={workspace._id}>
+                        <td>{workspace.name}</td>
+                        <td>
+                          <select name="sync-type"
+                                  id="sync-type"
+                                  value={syncMode}
+                                  onChange={this._handleSyncModeChange.bind(this, data)}>
+                            <option value={syncStorage.SYNC_MODE_ON}>Automatic
+                            </option>
+                            <option value={syncStorage.SYNC_MODE_OFF}>Manual
+                            </option>
+                          </select>
+                          &nbsp;&nbsp;
+                          <button title="Check for remote changes"
+                                  className="btn btn--super-duper-compact btn--outlined"
+                                  onClick={e => this._handlePullWorkspace(workspace)}>
+                            <i className={classnames(
+                              'fa fa-download',
+                              {'fa-spin': this.state.pullingWorkspaces[workspace._id]}
+                            )}></i>
+                            {" "}
+                            Pull
+                          </button>
+                          {" "}
+                          <button
+                            title={syncPercent >= 99 ? 'Nothing to push' : 'Push local changes'}
+                            disabled={syncPercent >= 99}
+                            className="btn btn--super-duper-compact btn--outlined"
+                            onClick={e => this._handlePushWorkspace(workspace)}>
+                            <i className={classnames(
+                              'fa fa-upload',
+                              {'fa-spin': this.state.pushingWorkspaces[workspace._id]}
+                            )}></i>
+                            {" "}
+                            Push
+                          </button>
+                        </td>
+                        <td className={syncPercent < 99 ? 'warning' : ''}>
+                          {syncPercent || 0}%
+                        </td>
+                        <td className="faint italic">
+                          <select name="team" id="team" disabled="disabled">
+                            <option value="other">Coming soon...</option>
+                          </select>
+                        </td>
+                      </tr>
+                    )
+                  }
+                )}
+                {this.state.remoteResourceGroups.map(resourceGroup => {
+                  return (
+                    <tr key={resourceGroup.id}>
+                      <td>
+                        {resourceGroup.name}
+                        {" "}
+                        <i className="fa fa-cloud faint"
+                           title="No local copy yet"></i>
+                      </td>
+                      <td>
+                        <button title="Start Syncing"
+                                className="btn btn--super-duper-compact btn--outlined"
+                                onClick={e => this._handlePullResourceGroup(resourceGroup)}>
+                          <i className="fa fa-refresh"></i>
+                          {" "}
+                          Start Syncing
+                        </button>
+                      </td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  )
+                })}
                 </tbody>
               </table>
             </TabPanel>
@@ -257,7 +305,9 @@ class SyncModal extends Component {
                 {data.map(([label, value]) => (
                   <tr key={label}>
                     <td>{label}</td>
-                    <td><code className="txt-sm selectable">{value}</code></td>
+                    <td>
+                      <code className="txt-sm selectable">{value}</code>
+                    </td>
                   </tr>
                 ))}
                 </tbody>
@@ -283,15 +333,15 @@ class SyncModal extends Component {
                     pad(entry.date.getSeconds(), 2);
                   return (
                     <pre key={i}>
-                      <span className="faint">{dateString}</span>
+                  <span className="faint">{dateString}</span>
                       {" "}
                       <span style={{minWidth: '4rem'}}
                             className={classnames(colors[entry.type], 'inline-block')}>
-                      [{entry.type}]
-                    </span>
+                  [{entry.type}]
+                  </span>
                       {" "}
                       {entry.message}
-                    </pre>
+                  </pre>
                   )
                 })}
               </div>
