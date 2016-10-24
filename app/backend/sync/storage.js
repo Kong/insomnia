@@ -81,28 +81,36 @@ export function allConfigs () {
   return findConfigs({})
 }
 
+export function findInactiveConfigs (resourceGroupId = null) {
+  if (resourceGroupId) {
+    return findConfigs({syncMode: SYNC_MODE_OFF, $not: {resourceGroupId}})
+  } else {
+    return findConfigs({syncMode: SYNC_MODE_OFF})
+  }
+}
+
 export function findActiveConfigs (resourceGroupId = null) {
   if (resourceGroupId) {
-    return findConfigs({$not: {syncMode: SYNC_MODE_OFF}, resourceGroupId})
+    return findConfigs({syncMode: SYNC_MODE_ON, resourceGroupId})
   } else {
-    return findConfigs({$not: {syncMode: SYNC_MODE_OFF}})
+    return findConfigs({syncMode: SYNC_MODE_ON})
   }
 }
 
 export async function getConfig (resourceGroupId) {
   const rawDocs = await _promisifyCallback(_getDB(TYPE_CONFIG), 'find', {resourceGroupId});
-  return rawDocs.length >= 1 ? _defaultConfig(rawDocs[0]) : null;
+  return rawDocs.length >= 1 ? _initConfig(rawDocs[0]) : null;
 }
 
 export async function updateConfig (config, ...patches) {
-  const newDoc = Object.assign(config, ...patches);
+  const doc = _initConfig(Object.assign(config, ...patches));
   await _promisifyCallback(
     _getDB(TYPE_CONFIG),
     'update',
-    {_id: newDoc._id},
-    newDoc
+    {_id: doc._id},
+    doc
   );
-  return newDoc;
+  return doc;
 }
 
 export function removeConfig (config) {
@@ -110,14 +118,14 @@ export function removeConfig (config) {
 }
 
 export async function insertConfig (config) {
-  const id = util.generateId('scf');
-  const doc = Object.assign({_id: id}, config);
-  await _promisifyCallback(_getDB(TYPE_CONFIG), 'insert', config);
+  const doc = _initConfig(config);
+  await _promisifyCallback(_getDB(TYPE_CONFIG), 'insert', doc);
   return doc;
 }
 
-function _defaultConfig (data) {
+function _initConfig (data) {
   return Object.assign({
+    _id: util.generateId('scf'),
     syncMode: SYNC_MODE_OFF,
     resourceGroupId: null
   }, data);

@@ -31,7 +31,8 @@ function loadingRequestsReducer(state = {}, action) {
 }
 
 export default combineReducers({
-  loadingRequests: loadingRequestsReducer
+  loadingRequests: loadingRequestsReducer,
+  doNotPersist: () => true,
 });
 
 

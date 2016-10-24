@@ -21,54 +21,47 @@ class SyncModal extends Component {
       sessionId: 'n/a',
       dirty: [],
       syncData: [],
-      remoteResourceGroups: [],
-      pushingWorkspaces: {},
-      pullingWorkspaces: {},
+      pushingResourceGroups: {},
+      pullingResourceGroups: {},
     }
   }
 
-  async _handlePushWorkspace (workspace) {
+  async _handlePushResourceGroupId (resourceGroupId) {
     // Set loading state
-    const pushingWorkspaces = Object.assign({}, this.state.pushingWorkspaces);
-    pushingWorkspaces[workspace._id] = true;
-    this.setState({pushingWorkspaces});
+    const pushingResourceGroups = Object.assign({}, this.state.pushingResourceGroups);
+    pushingResourceGroups[resourceGroupId] = true;
+    this.setState({pushingResourceGroups});
 
-    const resource = await sync.getOrCreateResourceForDoc(workspace);
-    await sync.push(resource.resourceGroupId);
+    await sync.getOrCreateConfig(resourceGroupId);
+    await sync.push(resourceGroupId);
 
     // Unset loading state
-    delete pushingWorkspaces[workspace._id];
-    this.setState({pushingWorkspaces});
-    this._updateModal();
+    delete pushingResourceGroups[resourceGroupId];
+    this.setState({pushingResourceGroups});
+
+    await this._updateModal();
   }
 
-  async _handlePullResourceGroup (resourceGroup) {
-    await sync.getOrCreateConfig(resourceGroup.id);
-    await sync.pull(resourceGroup.id);
-    await this._refreshRemoteResourceGroups();
-  }
-
-  async _handlePullWorkspace (workspace) {
+  async _handlePullResourceGroupId (resourceGroupId) {
     // Set loading state
-    const pullingWorkspaces = Object.assign({}, this.state.pullingWorkspaces);
-    pullingWorkspaces[workspace._id] = true;
-    this.setState({pullingWorkspaces});
+    const pullingResourceGroups = Object.assign({}, this.state.pushingResourceGroups);
+    pullingResourceGroups[resourceGroupId] = true;
+    this.setState({pullingResourceGroups});
 
-    // Do the actual sync
-    const resource = await sync.getOrCreateResourceForDoc(workspace);
-    const numChanges = await sync.pull(resource.resourceGroupId);
+    await sync.getOrCreateConfig(resourceGroupId);
+    await sync.pull(resourceGroupId);
 
     // Unset loading state
-    delete pullingWorkspaces[workspace._id];
-    this.setState({pullingWorkspaces});
-    this._updateModal();
+    delete pullingResourceGroups[resourceGroupId];
+    this.setState({pullingResourceGroups});
+
+    await this._updateModal();
   }
 
   async _handleSyncModeChange (syncData, e) {
     const syncMode = e.target.value;
-    const workspace = syncData.workspace;
-    const resource = await sync.getOrCreateResourceForDoc(workspace);
-    await sync.createOrUpdateConfig(resource.resourceGroupId, syncMode);
+    const {resourceGroupId} = syncData.resource;
+    await sync.createOrUpdateConfig(resourceGroupId, syncMode);
 
     // Refresh the modal
     this._updateModal();
@@ -101,19 +94,25 @@ class SyncModal extends Component {
       // Get or create any related sync data
       const resource = await sync.getOrCreateResourceForDoc(workspace);
       const resourceGroupId = resource.resourceGroupId;
-      const workspaceConfig = await sync.getOrCreateConfig(resourceGroupId);
+      const config = await sync.getOrCreateConfig(resourceGroupId);
 
       // Analyze it
       const dirty = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
       const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
       const numClean = all.length - dirty.length;
-      const syncPercent = parseInt(numClean / all.length * 1000) / 10;
+
+      let syncPercent;
+      if (all.length === 0) {
+        syncPercent = 100;
+      } else {
+        syncPercent = parseInt(numClean / all.length * 1000) / 10
+      }
 
       syncData.push({
-        workspace,
         resource,
-        workspaceConfig,
         syncPercent,
+        syncMode: config.syncMode,
+        name: workspace.name,
       });
     }
 
@@ -125,25 +124,17 @@ class SyncModal extends Component {
     });
   }
 
-  async _refreshRemoteResourceGroups () {
-    // Fetch missing groups (do this last because it's slow)
-    const remoteResourceGroups = await sync.fetchMissingResourceGroups();
-    this.setState({remoteResourceGroups});
-  }
-
   async show () {
     if (!session.isLoggedIn()) {
       console.error('Not logged in');
       return;
     }
 
+    this.modal.show();
+
     clearInterval(this._interval);
     await this._updateModal();
     this._interval = setInterval(() => this._updateModal(), 2000);
-
-    this.modal.show();
-
-    await this._refreshRemoteResourceGroups();
   }
 
   hide () {
@@ -218,11 +209,11 @@ class SyncModal extends Component {
                 </thead>
                 <tbody>
                 {this.state.syncData.map(data => {
-                    const {workspaceConfig, workspace, syncPercent} = data;
-                    const syncMode = workspaceConfig.syncMode;
+                    const {syncMode, name, syncPercent, resource} = data;
+                    const {resourceGroupId} = resource;
                     return (
-                      <tr key={workspace._id}>
-                        <td>{workspace.name}</td>
+                      <tr key={resource._id}>
+                        <td>{name}</td>
                         <td>
                           <select name="sync-type"
                                   id="sync-type"
@@ -236,10 +227,10 @@ class SyncModal extends Component {
                           &nbsp;&nbsp;
                           <button title="Check for remote changes"
                                   className="btn btn--super-duper-compact btn--outlined"
-                                  onClick={e => this._handlePullWorkspace(workspace)}>
+                                  onClick={e => this._handlePullResourceGroupId(resourceGroupId)}>
                             <i className={classnames(
                               'fa fa-download',
-                              {'fa-spin': this.state.pullingWorkspaces[workspace._id]}
+                              {'fa-spin': this.state.pullingResourceGroups[resourceGroupId]}
                             )}></i>
                             {" "}
                             Pull
@@ -249,17 +240,17 @@ class SyncModal extends Component {
                             title={syncPercent >= 99 ? 'Nothing to push' : 'Push local changes'}
                             disabled={syncPercent >= 99}
                             className="btn btn--super-duper-compact btn--outlined"
-                            onClick={e => this._handlePushWorkspace(workspace)}>
+                            onClick={e => this._handlePushResourceGroupId(resourceGroupId)}>
                             <i className={classnames(
                               'fa fa-upload',
-                              {'fa-spin': this.state.pushingWorkspaces[workspace._id]}
+                              {'fa-spin': this.state.pushingResourceGroups[resourceGroupId]}
                             )}></i>
                             {" "}
                             Push
                           </button>
                         </td>
                         <td className={syncPercent < 99 ? 'warning' : ''}>
-                          {syncPercent || 0}%
+                          {syncPercent}%
                         </td>
                         <td className="faint italic">
                           <select name="team" id="team" disabled="disabled">
@@ -270,29 +261,6 @@ class SyncModal extends Component {
                     )
                   }
                 )}
-                {this.state.remoteResourceGroups.map(resourceGroup => {
-                  return (
-                    <tr key={resourceGroup.id}>
-                      <td>
-                        {resourceGroup.name}
-                        {" "}
-                        <i className="fa fa-cloud faint"
-                           title="No local copy yet"></i>
-                      </td>
-                      <td>
-                        <button title="Start Syncing"
-                                className="btn btn--super-duper-compact btn--outlined"
-                                onClick={e => this._handlePullResourceGroup(resourceGroup)}>
-                          <i className="fa fa-refresh"></i>
-                          {" "}
-                          Start Syncing
-                        </button>
-                      </td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  )
-                })}
                 </tbody>
               </table>
             </TabPanel>

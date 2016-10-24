@@ -5,7 +5,7 @@ import * as session from './session';
 import * as store from './storage';
 import Logger from './logger';
 
-export const FULL_SYNC_INTERVAL = 30E3;
+export const FULL_SYNC_INTERVAL = 60E3;
 export const DEBOUNCE_TIME = 10E3;
 export const START_PULL_DELAY = 2E3;
 export const START_PUSH_DELAY = 1E3;
@@ -48,13 +48,18 @@ export async function initSync () {
   }
 
   db.onChange(changes => {
-    for (const [event, doc] of changes) {
+    for (const [event, doc, fromSync] of changes) {
       if (!WHITE_LIST[doc.type]) {
         continue;
       }
 
+      if (fromSync) {
+        // Change was triggered from sync, so do nothing.
+        continue;
+      }
+
       // Make sure it happens async
-      process.nextTick(() => _queueChange(event, doc));
+      process.nextTick(() => _queueChange(event, doc, fromSync));
     }
   });
 
@@ -63,35 +68,6 @@ export async function initSync () {
   setInterval(pull, FULL_SYNC_INTERVAL);
   isInitialized = true;
   logger.debug('Initialized');
-}
-
-// ~~~~~~~ //
-// HELPERS //
-// ~~~~~~~ //
-
-let commitTimeout = null;
-
-async function _queueChange (event, doc) {
-  if (!session.isLoggedIn()) {
-    logger.warn('Not logged in');
-    return;
-  }
-
-  // Update the resource content and set dirty
-  const resource = await getOrCreateResourceForDoc(doc);
-  await store.updateResource(resource, {
-    lastEdited: Date.now(), // Don't use doc.modified because that doesn't work for removal
-    lastEditedBy: session.getAccountId(),
-    content: await _encryptDoc(resource.resourceGroupId, doc),
-    removed: event === db.CHANGE_REMOVE,
-    dirty: true
-  });
-
-  logger.debug(`Queue ${event} ${doc._id}`);
-
-  // Debounce pushing of dirty resources
-  clearTimeout(commitTimeout);
-  commitTimeout = setTimeout(() => push(), DEBOUNCE_TIME);
 }
 
 export async function push (resourceGroupId = null) {
@@ -167,7 +143,7 @@ export async function push (resourceGroupId = null) {
     // Update app database (NOTE: Not silently)
     if (!winner.removed) {
       const doc = await _decryptDoc(winner.resourceGroupId, winner.encContent);
-      await db.update(doc);
+      await db.update(doc, serverIsNewer);
     }
   }
 }
@@ -179,13 +155,18 @@ export async function pull (resourceGroupId = null) {
   }
 
   const allResources = await _getOrCreateAllActiveResources(resourceGroupId);
-  const allConfigs = await store.findActiveConfigs(resourceGroupId);
-  const resourceGroupIds = allConfigs.map(c => c.resourceGroupId);
 
-  if (resourceGroupIds.length === 0) {
-    logger.warn('Nothing to sync');
-    return;
+  let blacklistedConfigs;
+  if (resourceGroupId) {
+    // When doing a partial sync, blacklist === (everything except syncing)
+    const allConfigs = await store.allConfigs();
+    blacklistedConfigs = allConfigs.filter(c => c.resourceGroupId !== resourceGroupId)
+  } else {
+    // When doing a full sync, blacklist === inactive
+    blacklistedConfigs = await store.findInactiveConfigs(resourceGroupId);
   }
+
+  const blacklistedResourceGroupIds = blacklistedConfigs.map(c => c.resourceGroupId);
 
   const resources = allResources.map(r => ({
     id: r.id,
@@ -194,7 +175,7 @@ export async function pull (resourceGroupId = null) {
     removed: r.removed
   }));
 
-  const body = {resources, resourceGroupIds};
+  const body = {resources, blacklist: blacklistedResourceGroupIds};
 
   logger.debug(`Diffing ${resources.length} tags`);
 
@@ -226,7 +207,7 @@ export async function pull (resourceGroupId = null) {
       await store.insertResource(serverResource, {dirty: false});
 
       // Insert into app database (NOTE: not silently)
-      await db.insert(doc);
+      await db.insert(doc, true);
     } catch (e) {
       logger.warn('Failed to decode created resource', e, serverResource);
     }
@@ -246,7 +227,7 @@ export async function pull (resourceGroupId = null) {
       const doc = await _decryptDoc(resourceGroupId, encContent);
 
       // Update app database (NOTE: Not silently)
-      await db.update(doc);
+      await db.update(doc, true);
 
       // Update local resource
       const resource = await store.getResourceById(serverResource.id);
@@ -279,7 +260,7 @@ export async function pull (resourceGroupId = null) {
     await store.updateResource(resource, {dirty: false, removed: true});
 
     // Remove from DB (NOTE: Not silently)
-    await db.remove(doc);
+    await db.remove(doc, true);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -303,14 +284,6 @@ export async function pull (resourceGroupId = null) {
   return updatedResources.length + createdResources.length;
 }
 
-export async function fetchMissingResourceGroups () {
-  const configs = await store.allConfigs();
-
-  const resourceGroupIds = configs.map(c => c.resourceGroupId);
-  const resourceGroups = await util.fetchGet('/api/resource_groups');
-  return resourceGroups.filter(rg => !resourceGroupIds.find(id => rg.id === id));
-}
-
 export async function getOrCreateConfig (resourceGroupId) {
   const config = await store.getConfig(resourceGroupId);
 
@@ -330,6 +303,35 @@ export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   } else {
     return await store.insertConfig(patch);
   }
+}
+
+// ~~~~~~~ //
+// HELPERS //
+// ~~~~~~~ //
+
+let commitTimeout = null;
+
+async function _queueChange (event, doc) {
+  if (!session.isLoggedIn()) {
+    logger.warn('Not logged in');
+    return;
+  }
+
+  // Update the resource content and set dirty
+  const resource = await getOrCreateResourceForDoc(doc);
+  await store.updateResource(resource, {
+    lastEdited: Date.now(), // Don't use doc.modified because that doesn't work for removal
+    lastEditedBy: session.getAccountId(),
+    encContent: await _encryptDoc(resource.resourceGroupId, doc),
+    removed: event === db.CHANGE_REMOVE,
+    dirty: true
+  });
+
+  logger.debug(`Queue ${event} ${doc._id}`, {doc});
+
+  // Debounce pushing of dirty resources
+  clearTimeout(commitTimeout);
+  commitTimeout = setTimeout(() => push(), DEBOUNCE_TIME);
 }
 
 /**
