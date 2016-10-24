@@ -148,7 +148,7 @@ class SyncModal extends Component {
       ['Email', s.email],
       ['Session', s.sessionId],
       ['Full Sync', `${sync.FULL_SYNC_INTERVAL / 1000} second interval`],
-      ['Partial Sync', `${sync.DEBOUNCE_TIME / 1000} seconds after change`],
+      ['Partial Sync', `${sync.PUSH_DEBOUNCE_TIME / 1000} seconds after change`],
     ];
 
     const colors = {

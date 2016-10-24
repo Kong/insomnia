@@ -59,7 +59,7 @@ class SyncButton extends Component {
   render () {
     if (session.isLoggedIn()) {
       return (
-        <button className="btn btn--super-compact btn--outlined wide ellipsis"
+        <button className="btn btn--super-duper-compact btn--outlined wide ellipsis"
                 onClick={e => getModal(SyncModal).show()}>
           Sync
           {this.state.state ? <span>&nbsp;({this.state.state})</span> : null}

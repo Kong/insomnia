@@ -6,7 +6,8 @@ import * as store from './storage';
 import Logger from './logger';
 
 export const FULL_SYNC_INTERVAL = 60E3;
-export const DEBOUNCE_TIME = 10E3;
+export const QUEUE_DEBOUNCE_TIME = 1E3;
+export const PUSH_DEBOUNCE_TIME = 10E3;
 export const START_PULL_DELAY = 2E3;
 export const START_PUSH_DELAY = 1E3;
 
@@ -309,7 +310,9 @@ export async function createOrUpdateConfig (resourceGroupId, syncMode) {
 // HELPERS //
 // ~~~~~~~ //
 
-let commitTimeout = null;
+let _queuedChanges = {};
+let _queuedChangesTimeout = null;
+let _pushChangesTimeout = null;
 
 async function _queueChange (event, doc) {
   if (!session.isLoggedIn()) {
@@ -317,21 +320,41 @@ async function _queueChange (event, doc) {
     return;
   }
 
-  // Update the resource content and set dirty
-  const resource = await getOrCreateResourceForDoc(doc);
-  await store.updateResource(resource, {
-    lastEdited: Date.now(), // Don't use doc.modified because that doesn't work for removal
-    lastEditedBy: session.getAccountId(),
-    encContent: await _encryptDoc(resource.resourceGroupId, doc),
-    removed: event === db.CHANGE_REMOVE,
-    dirty: true
-  });
+  // How this works?
+  // First, debounce updates to Resources because they are heavy (encryption)
+  // Second, debounce pushes to the server, because they are slow (network)
+  // ... Using _queuedChanges as a map so that future changes to the same doc
+  //     don't trigger more than 1 update.
 
-  logger.debug(`Queue ${event} ${doc._id}`, {doc});
+  // NOTE: Don't use doc.modified because that doesn't work for removal
+  _queuedChanges[doc._id + event] = [event, doc, Date.now()];
 
-  // Debounce pushing of dirty resources
-  clearTimeout(commitTimeout);
-  commitTimeout = setTimeout(() => push(), DEBOUNCE_TIME);
+  clearTimeout(_queuedChangesTimeout);
+  _queuedChangesTimeout = setTimeout(async () => {
+
+    const queuedChangesCopy = Object.assign({}, _queuedChanges);
+    _queuedChanges = {};
+
+    for (const k of Object.keys(queuedChangesCopy)) {
+      const [event, doc, ts] = queuedChangesCopy[k];
+
+      // Update the resource content and set dirty
+      const resource = await getOrCreateResourceForDoc(doc);
+      await store.updateResource(resource, {
+        lastEdited: ts,
+        lastEditedBy: session.getAccountId(),
+        encContent: await _encryptDoc(resource.resourceGroupId, doc),
+        removed: event === db.CHANGE_REMOVE,
+        dirty: true
+      });
+
+      logger.debug(`Queue ${event} ${doc._id}`);
+
+      // Debounce pushing of dirty resources
+      clearTimeout(_pushChangesTimeout);
+      _pushChangesTimeout = setTimeout(() => push(), PUSH_DEBOUNCE_TIME);
+    }
+  }, QUEUE_DEBOUNCE_TIME);
 }
 
 /**
