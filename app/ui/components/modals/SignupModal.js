@@ -31,7 +31,7 @@ class SignupModal extends Component {
     try {
       await session.signup(firstName, lastName, email, password);
       this.setState({step: 2, loading: false});
-      sync.forceSync();
+      sync.initSync();
     } catch (e) {
       this.setState({error: e.message, loading: false})
     }

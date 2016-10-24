@@ -43,13 +43,13 @@ import {getModal} from '../components/modals/index';
 class App extends Component {
   constructor (props) {
     super(props);
-
     const workspaceMeta = this._getActiveWorkspaceMeta(props);
     this.state = {
       activeResponse: null,
       activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
+      forceRefreshCounter: 0,
       sidebarWidth: workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
       paneWidth: workspaceMeta.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
     };
@@ -431,6 +431,30 @@ class App extends Component {
       getModal(ChangelogModal).show();
     }
 
+    db.onChange(changes => {
+      for (const change of changes) {
+        const [event, doc, fromSync] = change;
+
+        // Not a sync-related change
+        if (!fromSync) {
+          return;
+        }
+
+        // Only force the UI to refresh if the active Request changes
+        // This is because things like the URL and Body editor don't update
+        // when you tell them to.
+        const activeRequest = this._getActiveRequest(this.props);
+        if (doc._id !== activeRequest._id) {
+          return;
+        }
+
+        console.log('[App] Forcing update');
+
+        // All sync-related changes to data force-refresh the app.
+        this.setState({forceRefreshCounter: this.state.forceRefreshCounter + 1});
+      }
+    });
+
     db.stats.update({
       launches: launches + 1,
       lastLaunch: Date.now(),
@@ -454,7 +478,6 @@ class App extends Component {
   }
 
   render () {
-    // throw new Error('Test Exception');
     const {actions, entities, requests} = this.props;
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
@@ -471,13 +494,14 @@ class App extends Component {
       allRequests.concat(allRequestGroups)
     );
 
-    const {sidebarWidth, paneWidth} = this.state;
+    const {sidebarWidth, paneWidth, forceRefreshCounter} = this.state;
     const workspaceMeta = this._getActiveWorkspaceMeta();
     const realSidebarWidth = workspaceMeta.sidebarHidden ? 0 : sidebarWidth;
     const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
 
     return (
-      <div id="wrapper" className="wrapper"
+      <div id="wrapper"
+           className="wrapper"
            style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref={n => this._sidebar = n}
@@ -496,6 +520,7 @@ class App extends Component {
           filter={workspaceMeta.filter || ''}
           hidden={workspaceMeta.sidebarHidden || false}
           showSyncSettings={settings.optSyncBeta}
+          workspaceId={workspace._id}
           children={children}
           width={sidebarWidth}
         />
@@ -510,7 +535,7 @@ class App extends Component {
         </div>
 
         <RequestPane
-          key={activeRequest ? activeRequest._id : 'n/a'}
+          key={(activeRequest ? activeRequest._id : 'n/a') + forceRefreshCounter}
           ref={n => this._requestPane = n}
           importFile={this._importFile.bind(this)}
           request={activeRequest}

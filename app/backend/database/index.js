@@ -147,8 +147,8 @@ export function flushChanges () {
   })
 }
 
-function notifyOfChange (event, doc) {
-  changeBuffer.push([event, doc]);
+function notifyOfChange (event, doc, fromSync) {
+  changeBuffer.push([event, doc, fromSync]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
@@ -224,39 +224,35 @@ export function count (type, query = {}) {
   });
 }
 
-export function insert (doc, silent = false) {
+export function insert (doc, fromSync = false) {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {
       if (err) {
         return reject(err);
       }
 
-      if (!silent) {
-        notifyOfChange(CHANGE_INSERT, doc);
-      }
+      notifyOfChange(CHANGE_INSERT, doc, fromSync);
 
       resolve(newDoc);
     });
   });
 }
 
-export function update (doc, silent = false) {
+export function update (doc, fromSync = false) {
   return new Promise((resolve, reject) => {
     db[doc.type].update({_id: doc._id}, doc, err => {
       if (err) {
         return reject(err);
       }
 
-      if (!silent) {
-        notifyOfChange(CHANGE_UPDATE, doc);
-      }
+      notifyOfChange(CHANGE_UPDATE, doc, fromSync);
 
       resolve(doc);
     });
   });
 }
 
-export async function remove (doc, silent = false) {
+export async function remove (doc, fromSync = false) {
   bufferChanges();
 
   const docs = await withDescendants(doc);
@@ -266,9 +262,7 @@ export async function remove (doc, silent = false) {
   // Don't really need to wait for this to be over;
   types.map(t => db[t].remove({_id: {$in: docIds}}, {multi: true}));
 
-  if (!silent) {
-    docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
-  }
+  docs.map(d => notifyOfChange(CHANGE_REMOVE, d, fromSync));
 
   flushChanges();
 }

@@ -6,8 +6,8 @@ import * as session from '../../backend/sync/session';
 import SignupModal from './modals/SignupModal';
 
 const STATE_OK = 'synced';
-const STATE_BEHIND = 'behind';
 const STATE_AHEAD = 'pending';
+const STATE_OFF = 'paused';
 
 class SyncButton extends Component {
   constructor (props) {
@@ -19,11 +19,24 @@ class SyncButton extends Component {
   }
 
   async _updateState () {
-    const dirtyDocs = await syncStorage.findDirtyResources();
-    const newState = Object.assign({}, this.state, {
-      state: dirtyDocs.length > 0 ? STATE_AHEAD : STATE_OK,
-      loggedIn: session.isLoggedIn(),
-    });
+    const {workspaceId} = this.props;
+    const resource = await syncStorage.getResourceById(workspaceId);
+    const resourceGroupId = resource ? resource.resourceGroupId : null;
+    const config = await syncStorage.getConfig(resourceGroupId);
+    const dirtyDocs = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
+    let state;
+    if (config && config.syncMode === syncStorage.SYNC_MODE_OFF) {
+      state = STATE_OFF;
+    } else if (config && dirtyDocs.length > 0) {
+      state = STATE_AHEAD;
+    } else if (!config) {
+      state = STATE_OFF;
+    } else {
+      state = STATE_OK;
+    }
+
+    const loggedIn = session.isLoggedIn();
+    const newState = Object.assign({}, this.state, {state, loggedIn});
 
     // Only reset the state if something has changed
     for (const k of Object.keys(newState)) {
@@ -46,9 +59,9 @@ class SyncButton extends Component {
   render () {
     if (session.isLoggedIn()) {
       return (
-        <button className="btn btn--super-compact btn--outlined wide"
+        <button className="btn btn--super-compact btn--outlined wide ellipsis"
                 onClick={e => getModal(SyncModal).show()}>
-          Cloud Sync
+          Sync
           {this.state.state ? <span>&nbsp;({this.state.state})</span> : null}
         </button>
       )
@@ -63,6 +76,8 @@ class SyncButton extends Component {
   }
 }
 
-SyncButton.propTypes = {};
+SyncButton.propTypes = {
+  workspaceId: PropTypes.string.isRequired
+};
 
 export default SyncButton;

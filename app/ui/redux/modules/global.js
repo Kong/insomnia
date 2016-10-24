@@ -3,7 +3,6 @@ import {combineReducers} from 'redux';
 import fs from 'fs';
 
 import {importJSON, exportJSON} from '../../../backend/export/database';
-import * as db from '../../../backend/database/index';
 import {trackEvent} from '../../../backend/analytics';
 
 const LOAD_START = 'global/load-start';
@@ -14,7 +13,6 @@ const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
 const ACTIVATE_WORKSPACE = 'global/activate-workspace';
 const SET_SIDEBAR_WIDTH = 'global/set-sidebar-width';
 const SET_PANE_WIDTH = 'global/set-pane-width';
-const SET_SYNC_STATE = 'global/set-sync-state';
 
 
 // ~~~~~~~~ //
