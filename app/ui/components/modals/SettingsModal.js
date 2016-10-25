@@ -311,7 +311,7 @@ class SettingsTabs extends Component {
                 />
                 &nbsp;&nbsp;
                 <label htmlFor="setting-opt-sync-beta">
-                  Enable Cloud Sync Features (requires restart)
+                  Enable Insomnia Plus Features
                 </label>
               </div>
             </div>

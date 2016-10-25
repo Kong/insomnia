@@ -67,7 +67,7 @@ class SyncButton extends Component {
       )
     } else {
       return (
-        <button className="btn btn--super-compact btn--outlined wide"
+        <button className="btn btn--super-duper-compact btn--outlined wide"
                 onClick={e => getModal(SignupModal).show()}>
           Login to Cloud Sync
         </button>

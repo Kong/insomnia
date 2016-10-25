@@ -28,8 +28,15 @@ class LoginModal extends Component {
 
     try {
       await session.login(email, password);
-      this.setState({step: 2, loading: false});
+
+      // Clear all existing sync data that might be there and enable sync
+      await sync.resetLocalData();
+
+      // NOTE: enable sync but don't block on it
       sync.initSync();
+      sync.pull();
+
+      this.setState({step: 2, loading: false});
     } catch (e) {
       this.setState({error: e.message, loading: false})
     }

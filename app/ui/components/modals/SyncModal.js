@@ -71,19 +71,16 @@ class SyncModal extends Component {
   }
 
   async _handleReset () {
-    for (const r of await syncStorage.allResources()) {
-      await syncStorage.removeResource(r);
-    }
-    for (const c of await syncStorage.allConfigs()) {
-      await syncStorage.removeConfig(c);
-    }
-    await session.logout();
     this.hide();
+    await sync.resetLocalData();
+    await sync.resetRemoteData();
+    await session.logout();
   }
 
-  _handleLogout () {
-    session.logout();
+  async _handleLogout () {
     this.hide();
+    await sync.resetLocalData();
+    await session.logout();
   }
 
   async _updateModal () {

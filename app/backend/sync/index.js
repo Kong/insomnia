@@ -306,6 +306,20 @@ export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   }
 }
 
+export async function resetLocalData () {
+  for (const r of await store.allResources()) {
+    await store.removeResource(r);
+  }
+
+  for (const c of await store.allConfigs()) {
+    await store.removeConfig(c);
+  }
+}
+
+export async function resetRemoteData () {
+  await util.fetchPost('/auth/reset');
+}
+
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
