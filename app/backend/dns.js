@@ -10,10 +10,12 @@ import {parse as urlParse, format as urlFormat} from 'url';
 function lookupIPv6 (url) {
   return new Promise((resolve, reject) => {
     const {hostname} = urlParse(url);
+
     const options = {
       hints: dns.ADDRCONFIG,
       family: 6,
     };
+
     dns.lookup(hostname, options, (err, results) => {
       if (err) {
         reject(err);
