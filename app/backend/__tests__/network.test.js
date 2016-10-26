@@ -104,7 +104,7 @@ describe('actuallySend()', () => {
       cookies
     });
 
-    mock = nock('http://127.0.0.1')
+    mock = nock('http://[::1]:80')
       .matchHeader('Content-Type', 'application/json')
       .matchHeader('Authorization', 'Basic dXNlcjpwYXNz')
       .matchHeader('Cookie', 'foo=barrrrr')
@@ -129,7 +129,7 @@ describe('actuallySend()', () => {
 
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(renderedRequest, settings);
-    expect(mock.basePath).toBe('http://127.0.0.1:80');
+    expect(mock.basePath).toBe('http://::1:80');
     expect(response.url).toBe('http://localhost/?foo%20bar=hello%26world');
     expect(response.body).toBe('response body');
     expect(response.statusCode).toBe(200);
