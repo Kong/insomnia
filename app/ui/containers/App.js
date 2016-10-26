@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
+import classnames from 'classnames';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
@@ -501,7 +502,7 @@ class App extends Component {
 
     return (
       <div id="wrapper"
-           className="wrapper"
+           className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
            style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref={n => this._sidebar = n}

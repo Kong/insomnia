@@ -53,24 +53,28 @@
   }
 }
 
+.wrapper--vertical {
+  .request-pane {
+    grid-column-start: 3;
+    grid-column-end: span 3;
+    grid-row-start: 1;
+    grid-row-end: span 1;
+  }
+
+  .response-pane {
+    grid-column-start: 3;
+    grid-column-end: span 3;
+    grid-row-start: 2;
+    grid-row-end: span 1;
+  }
+
+  .drag--pane {
+    display: none;
+  }
+}
+
 @media (max-width: @breakpoint-md) {
   .wrapper {
-    .request-pane {
-      grid-column-start: 3;
-      grid-column-end: span 3;
-      grid-row-start: 1;
-      grid-row-end: span 1;
-    }
-
-    .response-pane {
-      grid-column-start: 3;
-      grid-column-end: span 3;
-      grid-row-start: 2;
-      grid-row-end: span 1;
-    }
-
-    .drag--pane {
-      display: none;
-    }
+    .wrapper--vertical();
   }
 }

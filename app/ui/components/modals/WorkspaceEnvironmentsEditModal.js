@@ -57,7 +57,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
   async _handleAddEnvironment () {
     const {rootEnvironment, workspace} = this.state;
-    const environment = await db.environment.create({parentId: rootEnvironment._id})
+    const parentId = rootEnvironment._id;
+    const environment = await db.environment.create({parentId});
     this._load(workspace, environment);
   }
 
@@ -87,7 +88,11 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
   async _handleChangeEnvironmentName (environment, name) {
     const {workspace} = this.state;
-    await db.environment.update(environment, {name});
+
+    // NOTE: Fetch the environment first because it might not be up to date.
+    // For example, editing the body updates silently.
+    const realEnvironment = await db.environment.getById(environment._id);
+    await db.environment.update(realEnvironment, {name});
     this._load(workspace);
   }
 
@@ -117,10 +122,10 @@ class WorkspaceEnvironmentsEditModal extends Component {
       return;
     }
 
-    const environment = this._envEditor.getValue();
+    const data = this._envEditor.getValue();
     const activeEnvironment = this._getActiveEnvironment();
 
-    db.environment.update(activeEnvironment, {data: environment});
+    db.environment.update(activeEnvironment, {data});
   }
 
   render () {

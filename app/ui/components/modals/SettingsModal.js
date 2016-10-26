@@ -195,26 +195,22 @@ class SettingsTabs extends Component {
             </div>
           </div>
 
-          {/*<hr/>*/}
-          {/*<h2 className="txt-md pad-top-sm">*/}
-          {/*<label className="label--small">Beta Features</label>*/}
-          {/*</h2>*/}
-          {/*<div className="pad-top-sm">*/}
-          {/*<input*/}
-          {/*id="setting-opt-sync-beta"*/}
-          {/*type="checkbox"*/}
-          {/*checked={settings.optSyncBeta}*/}
-          {/*onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}*/}
-          {/*/>*/}
-          {/*&nbsp;&nbsp;*/}
-          {/*<label htmlFor="setting-opt-sync-beta">*/}
-          {/*Cloud sync beta*/}
-          {/*{" "}*/}
-          {/*<span className="faint txt-sm pad-top">*/}
-          {/*(experimental and will be paid once out of beta)*/}
-          {/*</span>*/}
-          {/*</label>*/}
-          {/*</div>*/}
+          <br/>
+          <h2 className="txt-md pad-top-sm">
+            <label className="label--small">Layout Settings</label>
+          </h2>
+          <div>
+            <input
+              id="setting-stacked-layout"
+              type="checkbox"
+              checked={settings.forceVerticalLayout}
+              onChange={e => db.settings.update(settings, {forceVerticalLayout: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-stacked-layout">
+              Force stacked layout
+            </label>
+          </div>
           <br/>
         </TabPanel>
 

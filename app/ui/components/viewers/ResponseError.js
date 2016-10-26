@@ -34,7 +34,7 @@ class ResponseError extends Component {
 
     return (
       <div>
-        <pre className="selectable pad">
+        <pre className="selectable pad force-word-wrap">
           {error}
         </pre>
         <hr/>
