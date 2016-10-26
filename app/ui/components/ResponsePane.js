@@ -204,6 +204,7 @@ class ResponsePane extends Component {
               filter={response.error ? '' : responseFilter}
               updateFilter={response.error ? null : updateResponseFilter}
               body={response.error ? response.error : response.body}
+              encoding={response.encoding}
               error={!!response.error}
               responseId={response._id}
               editorLineWrapping={editorLineWrapping}

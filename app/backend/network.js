@@ -44,6 +44,9 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
     // Use keep-alive by default
     forever: true,
+
+    // Force request to return response body as a Buffer instead of string
+    encoding: null,
   };
 
   // Set the URL, including the query parameters
@@ -126,20 +129,6 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         return reject(err);
       }
 
-      // TODO: Add image support to Insomnia
-      const contentType = networkResponse.headers['content-type'];
-      if (contentType && contentType.toLowerCase().indexOf('image/') === 0) {
-        const err = new Error(`Content-Type ${contentType} not supported`);
-
-        await db.response.create({
-          parentId: renderedRequest._id,
-          error: err.toString(),
-          statusMessage: 'UNSUPPORTED'
-        });
-
-        return reject(err);
-      }
-
       // Format the headers into Insomnia format
       // TODO: Move this to a better place
       const headers = [];
@@ -171,7 +160,8 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         url: originalUrl, // TODO: Handle redirects somehow
         elapsedTime: networkResponse.elapsedTime,
         bytesRead: networkResponse.connection.bytesRead,
-        body: networkResponse.body,
+        body: networkResponse.body.toString('base64'),
+        encoding: 'base64',
         headers: headers
       };
 

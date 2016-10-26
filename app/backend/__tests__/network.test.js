@@ -16,6 +16,7 @@ describe('buildRequestConfig()', () => {
     const config = networkUtils._buildRequestConfig(renderedRequest);
     expect(config).toEqual({
       body: '',
+      encoding: null,
       followAllRedirects: true,
       followRedirect: true,
       forever: true,
@@ -50,6 +51,7 @@ describe('buildRequestConfig()', () => {
     const config = networkUtils._buildRequestConfig(renderedRequest);
     expect(config).toEqual({
       body: 'foo=bar',
+      encoding: null,
       followAllRedirects: true,
       followRedirect: true,
       forever: true,
@@ -131,7 +133,7 @@ describe('actuallySend()', () => {
     const response = await networkUtils._actuallySend(renderedRequest, settings);
     expect(mock.basePath).toBe('http://::1:80');
     expect(response.url).toBe('http://localhost/?foo%20bar=hello%26world');
-    expect(response.body).toBe('response body');
+    expect(response.body).toBe(new Buffer('response body').toString('base64'));
     expect(response.statusCode).toBe(200);
   });
 });

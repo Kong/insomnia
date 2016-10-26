@@ -3,6 +3,7 @@ import React, {Component, PropTypes} from 'react';
 class ResponseWebview extends Component {
   _setBody () {
     const {body, contentType, url} = this.props;
+    console.log('ContentType', contentType);
 
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
     this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);

@@ -73,13 +73,16 @@ class ResponseViewer extends Component {
       editorLineWrapping,
       editorFontSize,
       updateFilter,
-      body,
+      body: base64Body,
+      encoding,
       url,
       error
     } = this.props;
 
+    const bodyBuffer = new Buffer(base64Body, encoding);
+
     if (error) {
-      return <ResponseError url={url} error={body}/>
+      return <ResponseError url={url} error={bodyBuffer.toString('utf8')}/>
     }
 
     const {blockingBecauseTooLarge} = this.state;
@@ -107,15 +110,33 @@ class ResponseViewer extends Component {
 
     switch (previewMode) {
       case PREVIEW_MODE_FRIENDLY:
-        return (
-          <ResponseWebview
-            body={body}
-            contentType={contentType}
-            url={url}
-          />
-        );
+        if (contentType.toLowerCase().indexOf('image/') === 0) {
+          const justContentType = contentType.split(';')[0];
+          return (
+            <div className="scrollable-container tall wide">
+              <div className="scrollable">
+                <img src={`data:${justContentType};base64,${base64Body}`}
+                     className="pad block"
+                     style={{
+                       maxWidth: '100%',
+                       maxHeight: '100%',
+                       margin: 'auto',
+                     }}/>
+              </div>
+            </div>
+          )
+        } else {
+          return (
+            <ResponseWebview
+              body={bodyBuffer.toString('utf8')}
+              contentType={contentType}
+              url={url}
+            />
+          );
+        }
       case PREVIEW_MODE_SOURCE:
         let mode = contentType;
+        const body = bodyBuffer.toString('utf8');
 
         try {
           // FEATURE: Detect JSON even without content-type
@@ -127,7 +148,7 @@ class ResponseViewer extends Component {
 
         return (
           <Editor
-            value={body || ''}
+            value={body}
             updateFilter={updateFilter}
             filter={filter}
             autoPrettify={true}
@@ -140,7 +161,10 @@ class ResponseViewer extends Component {
         );
       default: // Raw
         return (
-          <ResponseRaw value={body} fontSize={editorFontSize}/>
+          <ResponseRaw
+            value={bodyBuffer.toString('utf8')}
+            fontSize={editorFontSize}
+          />
         )
     }
   }
@@ -148,6 +172,7 @@ class ResponseViewer extends Component {
 
 ResponseViewer.propTypes = {
   body: PropTypes.string.isRequired,
+  encoding: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,

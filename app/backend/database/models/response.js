@@ -13,6 +13,7 @@ export function init () {
     headers: [],
     cookies: [],
     body: '',
+    encoding: 'utf8', // Legacy format
     error: ''
   })
 }
