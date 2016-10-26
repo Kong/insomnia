@@ -94,3 +94,7 @@ export function prepareUrlForSending (url) {
 export function delay (milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
+
+export function removeVowels (str) {
+  return str.replace(/[aeiouyAEIOUY]/g, '');
+}

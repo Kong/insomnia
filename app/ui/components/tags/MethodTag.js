@@ -1,5 +1,6 @@
 import React, {PropTypes} from 'react';
 import * as constants from '../../../backend/constants';
+import * as util from '../../../backend/util';
 
 const MethodTag = ({method, fullNames}) => {
   let methodName = method;
@@ -7,10 +8,8 @@ const MethodTag = ({method, fullNames}) => {
   if (!fullNames) {
     if (method === constants.METHOD_DELETE || method === constants.METHOD_OPTIONS) {
       methodName = method.slice(0, 3);
-    } else if (method === constants.METHOD_PATCH) {
-      methodName = 'PTCH';
-    } else {
-      methodName = method.slice(0, 4);
+    } else if (method.length > 4) {
+      methodName = util.removeVowels(method).slice(0, 4);
     }
   }
 

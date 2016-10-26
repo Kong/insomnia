@@ -126,7 +126,7 @@ export async function insertConfig (config) {
 function _initConfig (data) {
   return Object.assign({
     _id: util.generateId('scf'),
-    syncMode: SYNC_MODE_OFF,
+    syncMode: SYNC_MODE_ON,
     resourceGroupId: null
   }, data);
 }

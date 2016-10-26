@@ -169,4 +169,7 @@ getMethods =
     , "DELETE"
     , "OPTIONS"
     , "HEAD"
+    , "PURGE"
+    , "FIND"
+    , "DELETEHARD"
     ]

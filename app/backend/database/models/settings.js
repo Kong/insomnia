@@ -6,7 +6,7 @@ export function init () {
   return db.initModel({
     showPasswords: false,
     useBulkHeaderEditor: false,
-    followRedirects: false,
+    followRedirects: true,
     editorFontSize: 12,
     editorLineWrapping: true,
     httpProxy: '',

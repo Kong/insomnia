@@ -17,7 +17,9 @@
     function showUpdateNotification () {
       console.log('-- Update Available --');
       new Notification('Insomnia Update Ready', {
-        body: 'Relaunch the app for it to take effect'
+        body: 'Relaunch the app for it to take effect',
+        silent: true,
+        sticky: true,
       });
     }
 

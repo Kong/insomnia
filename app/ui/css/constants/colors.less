@@ -27,12 +27,18 @@
 @hl-xxl: rgba(150, 150, 150, 0.8);
 @hl: rgba(150, 150, 150, 1);
 
-@success: #88bd29;
-@notice: #e5d550;
-@warning: #f59d00;
+@success: #90ca2d;
+@notice: #edd64c;
+@warning: #ffa500;
 @danger: #ff5a63;
-@surprise: #8f78ff;
-@info: #22a9d7;
+@surprise: #9b81ff;
+@info: #24cfff;
+
+[class^="method-"],
+[class*=" method-"] {
+  // Default method color
+  color: @hl;
+}
 
 .success,
 .method-POST {

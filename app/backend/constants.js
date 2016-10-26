@@ -32,16 +32,9 @@ export const METHOD_PATCH = 'PATCH';
 export const METHOD_DELETE = 'DELETE';
 export const METHOD_OPTIONS = 'OPTIONS';
 export const METHOD_HEAD = 'HEAD';
-
-export const METHODS = [
-  METHOD_GET,
-  METHOD_POST,
-  METHOD_PUT,
-  METHOD_DELETE,
-  METHOD_PATCH,
-  METHOD_OPTIONS,
-  METHOD_HEAD
-];
+export const METHOD_FIND = 'FIND';
+export const METHOD_PURGE = 'PURGE';
+export const METHOD_DELETE_HARD = 'DELETEHARD';
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS = {
