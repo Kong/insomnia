@@ -433,7 +433,7 @@ function createWindow () {
               return;
             }
 
-            const zoomFactor = Math.min(1.8, getZoomFactor() + 0.1);
+            const zoomFactor = Math.min(1.8, getZoomFactor() + 0.05);
             window.webContents.setZoomFactor(zoomFactor);
 
             saveZoomFactor(zoomFactor);
@@ -448,7 +448,7 @@ function createWindow () {
               return;
             }
 
-            const zoomFactor = Math.max(0.5, getZoomFactor() - 0.1);
+            const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
             window.webContents.setZoomFactor(zoomFactor);
             saveZoomFactor(zoomFactor);
           }

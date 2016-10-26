@@ -62,7 +62,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
-export function _actuallySend (renderedRequest, settings) {
+export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
   return new Promise(async (resolve, reject) => {
     // Detect and set the proxy based on the request protocol
     // NOTE: request does not have a separate settings for http/https proxies
@@ -97,13 +97,20 @@ export function _actuallySend (renderedRequest, settings) {
     // getaddrinfo by default. Instead, it first tries to reach out
     // to the network.
     const originalUrl = config.url;
-    config.url = await swapHost(config.url);
+    config.url = await swapHost(config.url, forceIPv4);
 
     // TODO: Handle redirects ourselves
     const requestStartTime = Date.now();
     const req = networkRequest(config, async (err, networkResponse) => {
       if (err) {
         const isShittyParseError = err.toString() === 'Error: Parse Error';
+
+        // Failed to connect while prioritizing IPv6 address, fallback to IPv4
+        if (!forceIPv4 && err.code === 'ECONNREFUSED') {
+          console.log('-- Falling back to IPv4 --');
+          _actuallySend(renderedRequest, settings, true).then(resolve, reject);
+          return;
+        }
 
         let message = err.toString();
         if (isShittyParseError) {
