@@ -6,7 +6,7 @@ export function init () {
   return db.initModel({
     statusCode: 0,
     statusMessage: '',
-    contentType: 'text/plain',
+    contentType: '',
     url: '',
     bytesRead: 0,
     elapsedTime: 0,

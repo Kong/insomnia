@@ -197,8 +197,8 @@ class ResponsePane extends Component {
           <TabPanel>
             <ResponseViewer
               key={response._id}
-              contentType={response.contentType}
               bytes={response.bytesRead}
+              contentType={response.contentType || ''}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
               filter={response.error ? '' : responseFilter}
               updateFilter={response.error ? null : updateResponseFilter}

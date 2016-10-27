@@ -180,10 +180,10 @@ ResponseViewer.propTypes = {
   url: PropTypes.string.isRequired,
   bytes: PropTypes.number.isRequired,
   responseId: PropTypes.string.isRequired,
+  contentType: PropTypes.string.isRequired,
 
   // Optional
   updateFilter: PropTypes.func,
-  contentType: PropTypes.string,
   error: PropTypes.bool
 };
 

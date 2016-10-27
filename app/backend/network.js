@@ -156,8 +156,8 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         parentId: renderedRequest._id,
         statusCode: networkResponse.statusCode,
         statusMessage: networkResponse.statusMessage,
-        contentType: networkResponse.headers['content-type'],
         url: originalUrl, // TODO: Handle redirects somehow
+        contentType: networkResponse.headers['content-type'] || '',
         elapsedTime: networkResponse.elapsedTime,
         bytesRead: networkResponse.connection.bytesRead,
         body: networkResponse.body.toString('base64'),
