@@ -30,9 +30,13 @@ function lookup (url, forceIPv4) {
       const v6 = results.find(r => r.family === 6);
       if (v6) {
         resolve(v6.address);
-      } else {
+      } else if (results.length) {
         // If no v6, return the first result
         resolve(results[0].address);
+      } else {
+        // The only case I can find that hits this is sending in an IPv6
+        // address like `::1`
+        reject(new Error('Could not resolve host'))
       }
     });
   })

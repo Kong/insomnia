@@ -297,7 +297,7 @@ export async function getOrCreateConfig (resourceGroupId) {
 
 export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   const config = await store.getConfig(resourceGroupId);
-  const patch = {resourceGroupId, syncMode};
+  const patch = {resourceGroupId};
 
   if (config) {
     return await store.updateConfig(config, patch);
@@ -464,7 +464,7 @@ async function _createResourceGroup (name = '') {
   }
 
   // Create a config for it
-  await createOrUpdateConfig(resourceGroup.id, store.SYNC_MODE_OFF);
+  await createOrUpdateConfig(resourceGroup.id, store.SYNC_MODE_ON);
 
   logger.debug(`created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;

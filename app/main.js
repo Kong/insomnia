@@ -26,8 +26,8 @@ if (!IS_DEV) {
 const request = require('request');
 const path = require('path');
 const {version: appVersion, productName: appName} = require('./package.json');
-const {LocalStorage} = require('./localstorage');
 const electron = require('electron');
+const mkdirp = require('mkdirp');
 const fs = require('fs');
 const {
   app,
@@ -40,6 +40,8 @@ const {
   webContents
 } = require('electron');
 
+const LOCAL_STORAGE_DIR = path.join(app.getPath('userData'), 'localStorage');
+
 const UPDATE_URLS = {
   // Add `r` param to help cache bust
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
@@ -50,7 +52,6 @@ const UPDATE_URLS = {
 const DOWNLOAD_URL = 'http://download.insomnia.rest';
 
 let mainWindow = null;
-let localStorage = null;
 let hasPromptedForUpdates = false;
 
 // Enable this for CSS grid layout :)
@@ -178,9 +179,14 @@ ipcMain.on('check-for-updates', () => {
   checkForUpdates();
 });
 
+
+const _localStorageTimeouts = {};
 function storeValue (key, obj) {
   try {
-    localStorage.setItem(key, JSON.stringify(obj));
+    clearTimeout(_localStorageTimeouts[key]);
+    _localStorageTimeouts[key] = setTimeout(() => {
+      fs.writeFileSync(path.join(LOCAL_STORAGE_DIR, key), JSON.stringify(obj));
+    }, 100);
   } catch (e) {
     console.error('Failed to save to LocalStorage', obj, e);
     ravenClient.captureError(e, {
@@ -190,8 +196,18 @@ function storeValue (key, obj) {
 }
 
 function getValue (key, defaultObj) {
+  let value = null;
   try {
-    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultObj))
+    value = fs.readFileSync(path.join(LOCAL_STORAGE_DIR, key));
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      // If we fail to read it, write the default value to it
+      storeValue(key, defaultObj);
+    }
+  }
+
+  try {
+    return JSON.parse(value || JSON.stringify(defaultObj))
   } catch (e) {
     console.error('Failed to get from LocalStorage', e);
     ravenClient.captureError(e, {
@@ -274,10 +290,11 @@ app.on('ready', () => {
 });
 
 function initLocalStorage () {
-  if (!localStorage) {
-    localStorage = new LocalStorage(
-      path.join(app.getPath('userData'), 'localStorage')
-    );
+  try {
+    mkdirp.sync(LOCAL_STORAGE_DIR);
+    console.log('[localStorage] initialized');
+  } catch (e) {
+    console.warn('[localStorage] Failed to create directory', path, e);
   }
 }
 
