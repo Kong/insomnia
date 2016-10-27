@@ -28,7 +28,7 @@ export async function initLegacyAnalytics () {
     }
   });
 
-  console.log(`-- Analytics Initialized for ${userId} --`);
+  console.log(`-- Legacy analytics Initialized for ${userId} --`);
 }
 
 export function trackLegacyEvent (event, properties = {}) {
