@@ -197,7 +197,7 @@ class SettingsTabs extends Component {
 
           <br/>
           <h2 className="txt-md pad-top-sm">
-            <label className="label--small">Layout Settings</label>
+            <label className="label--small">Other Settings</label>
           </h2>
           <div>
             <input
@@ -211,6 +211,19 @@ class SettingsTabs extends Component {
               Force stacked layout
             </label>
           </div>
+          <div>
+            <input
+              id="setting-opt-sync-beta"
+              type="checkbox"
+              checked={settings.optSyncBeta}
+              onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-opt-sync-beta">
+              Opt in to sync beta
+            </label>
+          </div>
+
           <br/>
         </TabPanel>
 
@@ -296,21 +309,7 @@ class SettingsTabs extends Component {
           </p>
 
           {this.state.showSyncSetting ? (
-            <div>
-              <hr/>
-              <div className="pad-top-sm">
-                <input
-                  id="setting-opt-sync-beta"
-                  type="checkbox"
-                  checked={settings.optSyncBeta}
-                  onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}
-                />
-                &nbsp;&nbsp;
-                <label htmlFor="setting-opt-sync-beta">
-                  Enable Insomnia Plus Features
-                </label>
-              </div>
-            </div>
+            <p className="italic faint">This setting has moved to the main panel.</p>
           ) : null}
         </TabPanel>
       </Tabs>
