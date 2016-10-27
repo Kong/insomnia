@@ -1,7 +1,8 @@
 import {combineReducers} from 'redux';
 
-import {trackEvent} from '../../../backend/analytics';
+import {trackLegacyEvent} from '../../../backend/analytics';
 import * as network from '../../../backend/network';
+import {trackEvent} from '../../../backend/ganalytics';
 
 export const REQUEST_SEND_START = 'requests/start';
 export const REQUEST_SEND_STOP = 'requests/stop';
@@ -44,7 +45,8 @@ export function send(request) {
   return async function (dispatch) {
     dispatch({type: REQUEST_SEND_START, requestId: request._id});
 
-    trackEvent('Request Send');
+    trackEvent('Request', 'Send');
+    trackLegacyEvent('Request Send');
 
     try {
       await network.send(request._id);

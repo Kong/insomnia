@@ -12,11 +12,10 @@ const IS_LINUX = !IS_MAC && !IS_WINDOWS;
 
 var raven = require('raven');
 var ravenClient = new raven.Client(
-  'https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a' +
-  '4189a68efb63c38fc50b@app.getsentry.com/88289', {
+  'https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
     environment: process.env.INSOMNIA_ENV || 'production',
     release: require('./package.json').version,
-    logger: 'main'
+    logger: 'electron.main'
   });
 
 if (!IS_DEV) {
@@ -66,13 +65,10 @@ process.on('uncaughtException', e => {
 });
 
 autoUpdater.on('error', e => {
-  // Failed to launch auto updater
   if (IS_DEV) {
     console.error(e);
-  } else if (e.toString().indexOf('')) {
-    ravenClient.captureError(e, {
-      level: 'warning'
-    });
+  } else {
+    // Don't report autoUpdater error. They are way too noisy
   }
 });
 

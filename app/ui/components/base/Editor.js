@@ -42,7 +42,6 @@ import {getModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
 import {DEBOUNCE_MILLIS} from '../../../backend/constants';
-import {trackEvent} from '../../../backend/analytics';
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -159,7 +158,6 @@ class Editor extends Component {
 
   _handleBeautify () {
     this._prettify(this.codeMirror.getValue());
-    trackEvent('Beautify', {mode: this.props.mode});
   }
 
   async _prettify (code) {

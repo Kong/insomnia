@@ -10,7 +10,7 @@ echo "-- Creating Release $APP_VERSION --"
 # Create a new release #
 # ~~~~~~~~~~~~~~~~~~~~ #
 
-curl https://app.getsentry.com/api/0/projects/schierco/insomnia-electron/releases/ \
+curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/ \
   -X POST \
   -u "$SENTRY_TOKEN:" \
   -H 'Content-Type: application/json' \
@@ -23,20 +23,20 @@ echo "-- Uploading Source Maps for $APP_VERSION --"
 # Upload files for the given release #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-curl https://app.getsentry.com/api/0/projects/schierco/insomnia-electron/releases/${APP_VERSION}/files/ \
+curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/${APP_VERSION}/files/ \
   -X POST \
   -u "$SENTRY_TOKEN:" \
   -F file=@./build/bundle.js \
   -F name="bundle.js"
 
-curl https://app.getsentry.com/api/0/projects/schierco/insomnia-electron/releases/${APP_VERSION}/files/ \
+curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/${APP_VERSION}/files/ \
   -X POST \
   -u "$SENTRY_TOKEN:" \
   -F file=@./build/bundle.js \
   -F name="bundle.js"
 
 # Upload a file for the given release
-curl https://app.getsentry.com/api/0/projects/schierco/insomnia-electron/releases/${APP_VERSION}/files/ \
+curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/${APP_VERSION}/files/ \
   -X POST \
   -u "$SENTRY_TOKEN:" \
   -F file=@./build/bundle.js.map \

@@ -15,7 +15,8 @@ import {initStore} from './redux/initstore';
 import {initDB} from '../backend/database';
 import {initSync} from '../backend/sync';
 import {getAppVersion} from '../backend/appInfo';
-import {initAnalytics} from '../backend/analytics';
+import {initLegacyAnalytics} from '../backend/analytics';
+import {initAnalytics} from '../backend/ganalytics';
 
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
@@ -29,6 +30,7 @@ console.log(`-- Loading App v${getAppVersion()} --`);
   await initSync();
   await initStore(store.dispatch);
   await initAnalytics();
+  await initLegacyAnalytics();
   console.log('-- Rendering App --');
   render(
     <Provider store={store}><App /></Provider>,

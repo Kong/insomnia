@@ -28,12 +28,11 @@ function lookup (url, forceIPv4) {
       }
 
       const v6 = results.find(r => r.family === 6);
-      const v4 = results.find(r => r.family === 4);
-
       if (v6) {
         resolve(v6.address);
       } else {
-        resolve(v4.address);
+        // If no v6, return the first result
+        resolve(results[0].address);
       }
     });
   })

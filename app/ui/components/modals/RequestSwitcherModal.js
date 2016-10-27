@@ -6,7 +6,7 @@ import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
 import * as db from '../../../backend/database';
-import {trackEvent} from '../../../backend/analytics';
+import {trackLegacyEvent} from '../../../backend/analytics';
 
 
 class RequestSwitcherModal extends Component {
@@ -165,7 +165,7 @@ class RequestSwitcherModal extends Component {
   }
 
   show () {
-    trackEvent('Show Quick Switcher');
+    trackEvent('Modal', 'Show', 'Quick Switcher');
     this.modal.show();
     this._handleChange('');
   }

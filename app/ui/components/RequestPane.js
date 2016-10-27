@@ -1,6 +1,5 @@
 import React, {Component, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-
 import KeyValueEditor from './base/KeyValueEditor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
@@ -9,11 +8,11 @@ import BodyEditor from './editors/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
 import {UrlBar} from './UrlBar.elm';
 import ElmComponent from './ElmComponent';
-
-import {getContentTypeName} from '../../backend/contentTypes';
-import {getContentTypeFromHeaders} from '../../backend/contentTypes';
+import {
+  getContentTypeName,
+  getContentTypeFromHeaders
+} from '../../backend/contentTypes';
 import {MOD_SYM} from '../../backend/constants';
-import {trackEvent} from '../../backend/analytics';
 import {debounce} from '../lib/debounce';
 
 class RequestPane extends Component {
@@ -104,31 +103,27 @@ class RequestPane extends Component {
         <Tabs className="pane__body">
           <TabList>
             <Tab>
-              <button
-                onClick={e => trackEvent('Request Tab Clicked', {name: 'Body'})}>
+              <button>
                 {getContentTypeName(getContentTypeFromHeaders(request.headers))}
               </button>
               <ContentTypeDropdown
                 updateRequestContentType={updateRequestContentType}/>
             </Tab>
             <Tab>
-              <button
-                onClick={e => trackEvent('Request Tab Clicked', {name: 'Auth'})}>
+              <button>
                 Auth {request.authentication.username ?
                 <i className="fa fa-lock txt-sm"></i> : ''}
               </button>
             </Tab>
             <Tab>
-              <button
-                onClick={e => trackEvent('Request Tab Clicked', {name: 'Params'})}>
+              <button>
                 Query {request.parameters.length ?
                 <span
                   className="txt-sm">({request.parameters.length})</span> : null}
               </button>
             </Tab>
             <Tab>
-              <button
-                onClick={e => trackEvent('Request Tab Clicked', {name: 'Headers'})}>
+              <button>
                 Headers {request.headers.length ? (
                 <span
                   className="txt-sm">({request.headers.length})</span> ) : null}

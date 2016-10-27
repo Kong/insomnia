@@ -11,11 +11,13 @@
   "dependencies": {
     "analytics-node": "^2.1.0",
     "electron-context-menu": "^0.4.0",
+    "electron-cookies": "^1.1.0",
     "electron-squirrel-startup": "^1.0.0",
     "hkdf": "0.0.2",
     "httpsnippet": "git@github.com:getinsomnia/httpsnippet.git#a3a2c0a0167fa844bf92df52a1442fa1d68a9053",
     "json-lint": "^0.1.0",
     "jsonpath-plus": "^0.15.0",
+    "mkdirp": "^0.5.1",
     "nedb": "^1.8.0",
     "node-forge": "^0.6.43",
     "node-uuid": "^1.4.7",

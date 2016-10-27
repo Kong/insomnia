@@ -36,7 +36,7 @@ import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
 import * as db from '../../backend/database';
 import {importCurl} from '../../backend/export/curl';
-import {trackEvent} from '../../backend/analytics';
+import {trackLegacyEvent} from '../../backend/analytics';
 import {getAppVersion} from '../../backend/appInfo';
 import {getModal} from '../components/modals/index';
 
@@ -420,14 +420,14 @@ class App extends Component {
     });
 
     // Do The Analytics
-    trackEvent('App Launched');
+    trackLegacyEvent('App Launched');
 
     // Update Stats Object
     const {lastVersion, launches} = await db.stats.get();
     const firstLaunch = !lastVersion;
     if (firstLaunch) {
       // TODO: Show a welcome message
-      trackEvent('First Launch');
+      trackLegacyEvent('First Launch');
     } else if (lastVersion !== getAppVersion()) {
       getModal(ChangelogModal).show();
     }

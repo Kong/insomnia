@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>Insomnia</title>
+  <script>
+  </script>
 </head>
 <body>
 <div id="root"></div>
@@ -37,9 +39,8 @@
   // Sentry
 
   if (process.env.INSOMNIA_ENV !== 'development') {
-    Raven.config('https://fb3242f902b54cdd934b8ffa204426c0:23430fbe203a4189a68efb63c38fc50b@app.getsentry.com/88289', {
-      allowSecretKey: true,
-      logger: 'renderer',
+    Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
+      logger: 'electron.renderer',
       environment: process.env.INSOMNIA_ENV || 'production',
       level: 'warning',
       release: require('./package.json').version,

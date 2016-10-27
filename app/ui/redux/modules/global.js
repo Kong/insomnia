@@ -3,7 +3,7 @@ import {combineReducers} from 'redux';
 import fs from 'fs';
 
 import {importJSON, exportJSON} from '../../../backend/export/database';
-import {trackEvent} from '../../../backend/analytics';
+import {trackEvent} from '../../../backend/ganalytics';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
@@ -123,7 +123,7 @@ export function importFile (workspace) {
       if (!paths) {
         // It was cancelled, so let's bail out
         dispatch(loadStop());
-        trackEvent('Import Cancel');
+        trackEvent('import', 'Cancel');
         return;
       }
 
@@ -133,13 +133,13 @@ export function importFile (workspace) {
           dispatch(loadStop());
 
           if (err) {
-            trackEvent('Import Fail');
+            trackEvent('Import', 'Failure');
             console.warn('Import Failed', err);
             return;
           }
 
           importJSON(workspace, data);
-          trackEvent('Import');
+          trackEvent('Import', 'Success');
         });
       })
     });
@@ -200,7 +200,7 @@ export function exportFile (parentDoc = null) {
 
     electron.remote.dialog.showSaveDialog(options, filename => {
       if (!filename) {
-        trackEvent('Export Cancel');
+        trackEvent('Export',  'Cancel');
         // It was cancelled, so let's bail out
         dispatch(loadStop());
         return;
@@ -209,10 +209,10 @@ export function exportFile (parentDoc = null) {
       fs.writeFile(filename, json, {}, err => {
         if (err) {
           console.warn('Export failed', err);
-          trackEvent('Export Fail');
+          trackEvent('Export', 'Failure');
           return;
         }
-        trackEvent('Export');
+        trackEvent('Export', 'Success');
         dispatch(loadStop());
       });
     });

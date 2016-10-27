@@ -11,11 +11,13 @@ import {
   getPreviewModeName,
   PREVIEW_MODE_SOURCE
 } from '../../backend/previewModes';
-import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../../backend/constants';
-import {trackEvent} from '../../backend/analytics';
+import {
+  REQUEST_TIME_TO_SHOW_COUNTER,
+  MOD_SYM,
+  RESPONSE_CODE_DESCRIPTIONS
+} from '../../backend/constants';
 import {getSetCookieHeaders} from '../../backend/util';
 import {cancelCurrentRequest} from '../../backend/network';
-import {RESPONSE_CODE_DESCRIPTIONS} from '../../backend/constants';
 
 class ResponsePane extends Component {
   constructor (props) {
@@ -165,8 +167,7 @@ class ResponsePane extends Component {
         <Tabs className="pane__body">
           <TabList>
             <Tab>
-              <button
-                onClick={e => trackEvent('Response Tab Clicked', {name: 'Body'})}>
+              <button>
                 {getPreviewModeName(previewMode)}
               </button>
               <PreviewModeDropdown
@@ -175,8 +176,7 @@ class ResponsePane extends Component {
               />
             </Tab>
             <Tab>
-              <button
-                onClick={e => trackEvent('Cookies Tab Clicked', {name: 'Cookies'})}>
+              <button>
                 Cookies {cookieHeaders.length ? (
                 <span className="txt-sm">
                     ({cookieHeaders.length})
@@ -185,8 +185,7 @@ class ResponsePane extends Component {
               </button>
             </Tab>
             <Tab>
-              <button
-                onClick={e => trackEvent('Response Tab Clicked', {name: 'Headers'})}>
+              <button>
                 Headers {response.headers.length ? (
                 <span className="txt-sm">
                   ({response.headers.length})

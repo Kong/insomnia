@@ -6,7 +6,7 @@ import {SEGMENT_WRITE_KEY} from  './constants';
 let analytics = null;
 let userId = null;
 
-export async function initAnalytics () {
+export async function initLegacyAnalytics () {
   analytics = new Analytics(SEGMENT_WRITE_KEY);
 
   if (!userId) {
@@ -14,7 +14,7 @@ export async function initAnalytics () {
     userId = stats._id;
 
     // Recurse now that we have a userId
-    return await initAnalytics();
+    return await initLegacyAnalytics();
   }
 
   analytics.identify({
@@ -31,7 +31,7 @@ export async function initAnalytics () {
   console.log(`-- Analytics Initialized for ${userId} --`);
 }
 
-export function trackEvent (event, properties = {}) {
+export function trackLegacyEvent (event, properties = {}) {
   // Don't track events if we haven't set them up yet
   if (analytics) {
     // Add base properties
