@@ -27,8 +27,9 @@ if (!IS_DEV) {
 const request = require('request');
 const path = require('path');
 const {version: appVersion, productName: appName} = require('./package.json');
-const {LocalStorage} = require('node-localstorage');
+const {LocalStorage} = require('./localstorage');
 const electron = require('electron');
+const fs = require('fs');
 const {
   app,
   dialog,
@@ -68,7 +69,7 @@ autoUpdater.on('error', e => {
   // Failed to launch auto updater
   if (IS_DEV) {
     console.error(e);
-  } else {
+  } else if (e.toString().indexOf('')) {
     ravenClient.captureError(e, {
       level: 'warning'
     });
@@ -260,7 +261,13 @@ app.on('window-all-closed', () => {
 app.on('activate', (e, hasVisibleWindows) => {
   // Create a new window when clicking the doc icon if there isn't one open
   if (!hasVisibleWindows) {
-    createWindow()
+    try {
+      createWindow()
+    } catch (e) {
+      // This might happen if 'ready' hasn't fired yet. So we're just going
+      // to silence these errors.
+      console.log('-- App not ready to "activate" yet --');
+    }
   }
 });
 
@@ -272,7 +279,9 @@ app.on('ready', () => {
 
 function initLocalStorage () {
   if (!localStorage) {
-    localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
+    localStorage = new LocalStorage(
+      path.join(app.getPath('userData'), 'localStorage')
+    );
   }
 }
 
