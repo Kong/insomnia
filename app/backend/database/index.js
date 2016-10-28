@@ -224,6 +224,15 @@ export function count (type, query = {}) {
   });
 }
 
+export async function upsert (doc, fromSync = false) {
+  const existingDoc = await get(doc.type, doc._id);
+  if (existingDoc) {
+    return update(doc, fromSync);
+  } else {
+    return insert(doc, fromSync);
+  }
+}
+
 export function insert (doc, fromSync = false) {
   return new Promise((resolve, reject) => {
     db[doc.type].insert(doc, (err, newDoc) => {

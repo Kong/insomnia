@@ -37,6 +37,10 @@
 <script>
   // Sentry (with rate limiting)
   (function () {
+    if (process.env.INSOMNIA_ENV === 'development') {
+      console.log('-- Not initializing Sentry for dev --');
+      return;
+    }
     // Send a maximum of n errors per interval
     const MAX_ERRORS_PER_INTERVAL = 5;
     const MAX_ERRORS_INTERVAL = 1000 * 60;
@@ -59,10 +63,6 @@
         /^(?!.*raven.min.js$).*$/ // Ignore raven stuff
       ],
       shouldSendCallback: function (data) {
-        if (process.env.INSOMNIA_ENV === 'development') {
-          return false;
-        }
-
         if (intervalErrorCount++ > MAX_ERRORS_PER_INTERVAL) {
           console.log('-- Throttling Sentry Exceptions --');
           return false;

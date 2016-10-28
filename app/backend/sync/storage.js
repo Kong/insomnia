@@ -10,8 +10,12 @@ const TYPE_CONFIG = 'Config';
 export const SYNC_MODE_OFF = 'paused';
 export const SYNC_MODE_ON = 'active';
 
-export function activeResources () {
-  return findActiveResources({});
+export function allActiveResources (resourceGroupId = null) {
+  if (resourceGroupId) {
+    return findActiveResources({resourceGroupId});
+  } else {
+    return findActiveResources({});
+  }
 }
 
 export function activeResourcesForResourceGroup (resourceGroupId) {
@@ -125,7 +129,7 @@ export async function insertConfig (config) {
 function _initConfig (data) {
   return Object.assign({
     _id: util.generateId('scf'),
-    syncMode: SYNC_MODE_ON,
+    syncMode: SYNC_MODE_OFF,
     resourceGroupId: null
   }, data);
 }

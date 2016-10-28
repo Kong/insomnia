@@ -71,6 +71,22 @@ export async function initSync () {
   logger.debug('Initialized');
 }
 
+/**
+ * Non-blocking function to perform initial sync for an account. This will pull
+ * all remote resources (if they exist) before initializing sync.
+ */
+export function doInitialSync () {
+  process.nextTick(async () => {
+    // First, pull down all remote resources, without first creating new ones.
+    // This makes sure that the first sync won't create resources locally, when
+    // they already exist on the server.
+    await pull(null, false);
+
+    // Make sure sync is on (start the timers)
+    initSync();
+  });
+}
+
 export async function push (resourceGroupId = null) {
   if (!session.isLoggedIn()) {
     logger.warn('Not logged in');
@@ -141,33 +157,42 @@ export async function push (resourceGroupId = null) {
       dirty: !serverIsNewer // It's dirty if we chose the local doc
     });
 
-    // Update app database (NOTE: Not silently)
-    if (!winner.removed) {
+    // If the server won, update ourselves. If we won, we already have the
+    // latest version, so do nothing.
+    if (serverIsNewer) {
       const doc = await _decryptDoc(winner.resourceGroupId, winner.encContent);
-      await db.update(doc, serverIsNewer);
+      if (winner.removed) {
+        await db.remove(doc, true);
+      } else {
+        await db.update(doc, true);
+      }
     }
   }
 }
 
-export async function pull (resourceGroupId = null) {
+export async function pull (resourceGroupId = null, createMissingResources = true) {
   if (!session.isLoggedIn()) {
     logger.warn('Not logged in');
     return;
   }
 
-  const allResources = await _getOrCreateAllActiveResources(resourceGroupId);
+  let allResources;
+  if (createMissingResources) {
+    allResources = await _getOrCreateAllActiveResources(resourceGroupId);
+  } else {
+    allResources = await store.allActiveResources(resourceGroupId);
+  }
 
   let blacklistedConfigs;
   if (resourceGroupId) {
-    // When doing a partial sync, blacklist === (everything except syncing)
+    // When doing a partial sync, blacklist all configs except the one we're
+    // trying to sync.
     const allConfigs = await store.allConfigs();
     blacklistedConfigs = allConfigs.filter(c => c.resourceGroupId !== resourceGroupId)
   } else {
-    // When doing a full sync, blacklist === inactive
+    // When doing a full sync, blacklist the inactive configs
     blacklistedConfigs = await store.findInactiveConfigs(resourceGroupId);
   }
-
-  const blacklistedResourceGroupIds = blacklistedConfigs.map(c => c.resourceGroupId);
 
   const resources = allResources.map(r => ({
     id: r.id,
@@ -176,6 +201,7 @@ export async function pull (resourceGroupId = null) {
     removed: r.removed
   }));
 
+  const blacklistedResourceGroupIds = blacklistedConfigs.map(c => c.resourceGroupId);
   const body = {resources, blacklist: blacklistedResourceGroupIds};
 
   logger.debug(`Diffing ${resources.length} tags`);
@@ -200,18 +226,31 @@ export async function pull (resourceGroupId = null) {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   await createdResources.map(async serverResource => {
+    let doc;
+
     try {
       const {resourceGroupId, encContent} = serverResource;
-      const doc = await _decryptDoc(resourceGroupId, encContent);
-
-      // Update local Resource
-      await store.insertResource(serverResource, {dirty: false});
-
-      // Insert into app database (NOTE: not silently)
-      await db.insert(doc, true);
+      doc = await _decryptDoc(resourceGroupId, encContent);
     } catch (e) {
       logger.warn('Failed to decode created resource', e, serverResource);
+      return;
     }
+
+    // Update local Resource
+    try {
+      await store.insertResource(serverResource, {dirty: false});
+    } catch (e) {
+      // This probably means we already have it. This should never happen, but
+      // might due to a rare race condition.
+      logger.error('Failed to insert resource', e);
+      return;
+    }
+
+    // NOTE: If the above Resource insert succeeded, that means we have safely
+    // insert the document. However, we're using an upsert here instead because
+    // it's very possible that the client already had that document locally.
+    // This might happen, for example, if the user logs out and back in again.
+    await db.upsert(doc, true);
   });
 
   if (createdResources.length) {
@@ -227,7 +266,7 @@ export async function pull (resourceGroupId = null) {
       const {resourceGroupId, encContent} = serverResource;
       const doc = await _decryptDoc(resourceGroupId, encContent);
 
-      // Update app database (NOTE: Not silently)
+      // Update app database
       await db.update(doc, true);
 
       // Update local resource
@@ -260,7 +299,7 @@ export async function pull (resourceGroupId = null) {
     // Mark resource as deleted
     await store.updateResource(resource, {dirty: false, removed: true});
 
-    // Remove from DB (NOTE: Not silently)
+    // Remove from DB
     await db.remove(doc, true);
   }
 
@@ -297,7 +336,7 @@ export async function getOrCreateConfig (resourceGroupId) {
 
 export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   const config = await store.getConfig(resourceGroupId);
-  const patch = {resourceGroupId};
+  const patch = {resourceGroupId, syncMode};
 
   if (config) {
     return await store.updateConfig(config, patch);
@@ -464,7 +503,7 @@ async function _createResourceGroup (name = '') {
   }
 
   // Create a config for it
-  await createOrUpdateConfig(resourceGroup.id, store.SYNC_MODE_ON);
+  await createOrUpdateConfig(resourceGroup.id, store.SYNC_MODE_OFF);
 
   logger.debug(`created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;
@@ -526,7 +565,7 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
   if (resourceGroupId) {
     activeResources = await store.activeResourcesForResourceGroup(resourceGroupId);
   } else {
-    activeResources = await store.activeResources();
+    activeResources = await store.allActiveResources();
   }
 
   for (const r of activeResources) {

@@ -72,9 +72,9 @@ class SyncModal extends Component {
 
   async _handleReset () {
     this.hide();
+    await session.logout();
     await sync.resetLocalData();
     await sync.resetRemoteData();
-    await session.logout();
   }
 
   async _handleLogout () {

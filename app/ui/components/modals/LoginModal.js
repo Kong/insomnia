@@ -31,10 +31,7 @@ class LoginModal extends Component {
 
       // Clear all existing sync data that might be there and enable sync
       await sync.resetLocalData();
-
-      // NOTE: enable sync but don't block on it
-      sync.initSync();
-      sync.pull();
+      sync.doInitialSync();
 
       this.setState({step: 2, loading: false});
     } catch (e) {
