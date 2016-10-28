@@ -1,8 +1,9 @@
 import React, {PropTypes} from 'react';
 import Dropdown from '../base/Dropdown';
+import DropdownDivider from '../base/DropdownDivider';
 import {PREVIEW_MODES, getPreviewModeName} from '../../../backend/previewModes';
 
-const PreviewModeDropdown = ({updatePreviewMode}) => (
+const PreviewModeDropdown = ({updatePreviewMode, download}) => (
   <Dropdown>
     <button className="tall">
       <i className="fa fa-caret-down"></i>
@@ -15,6 +16,10 @@ const PreviewModeDropdown = ({updatePreviewMode}) => (
           }}>{getPreviewModeName(previewMode)}</button>
         </li>
       ))}
+      <DropdownDivider></DropdownDivider>
+      <li>
+        <button onClick={download}>Download</button>
+      </li>
     </ul>
   </Dropdown>
 );
@@ -22,6 +27,7 @@ const PreviewModeDropdown = ({updatePreviewMode}) => (
 PreviewModeDropdown.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
+  download: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired

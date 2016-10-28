@@ -1,7 +1,6 @@
 import * as constants from './constants';
 import {isDevelopment} from './appInfo';
 
-let _ga = null;
 let _sessionId = null;
 
 export function initAnalytics () {
@@ -11,7 +10,7 @@ export function initAnalytics () {
   }
 
   if (!_sessionId) {
-    _ga = _initGA();
+    _injectGoogleAnalyticsScript();
   }
 
   if (!localStorage['gaClientId']) {
@@ -20,25 +19,25 @@ export function initAnalytics () {
 
   const _sessionId = window.localStorage['gaClientId'];
 
-  _ga('create', constants.GA_ID, {'storage': 'none', 'clientId': _sessionId});
+  window.ga('create', constants.GA_ID, {'storage': 'none', 'clientId': _sessionId});
 
   // Disable URL protocol check
-  _ga('set', 'checkProtocolTask', () => null);
+  window.ga('set', 'checkProtocolTask', () => null);
 
   // Set a fake location
-  _ga('set', 'location', `https://${constants.GA_HOST}/`);
+  window.ga('set', 'location', `https://${constants.GA_HOST}/`);
 
   // Track the initial page view
-  _ga('send', 'pageview');
+  window.ga('send', 'pageview');
 
   console.log(`-- Analytics Initialized for ${_sessionId} --`);
 }
 
 export function trackEvent (category, action, label) {
-  _ga && _ga('send', 'event', category, action, label);
+  window.ga && window.ga('send', 'event', category, action, label);
 }
 
-function _initGA () {
+function _injectGoogleAnalyticsScript () {
   (function (i, s, o, g, r, a, m) {
     i['GoogleAnalyticsObject'] = r;
     i[r] = i[r] || function () {
@@ -50,6 +49,4 @@ function _initGA () {
     a.src = g;
     m.parentNode.insertBefore(a, m)
   })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
-
-  return window.ga;
 }

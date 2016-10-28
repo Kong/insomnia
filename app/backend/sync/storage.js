@@ -81,9 +81,9 @@ export function allConfigs () {
   return findConfigs({})
 }
 
-export function findInactiveConfigs (resourceGroupId = null) {
-  if (resourceGroupId) {
-    return findConfigs({syncMode: SYNC_MODE_OFF, $not: {resourceGroupId}})
+export function findInactiveConfigs (excludedResourceGroupId = null) {
+  if (excludedResourceGroupId) {
+    return findConfigs({syncMode: SYNC_MODE_OFF, $not: {excludedResourceGroupId}})
   } else {
     return findConfigs({syncMode: SYNC_MODE_OFF})
   }

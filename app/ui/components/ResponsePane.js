@@ -1,4 +1,7 @@
 import React, {PropTypes, Component} from 'react';
+import fs from 'fs';
+import mime from 'mime-types';
+import {remote} from 'electron';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import ElmComponent from './ElmComponent';
 import {ResponsePaneHeader} from './ResponsePaneHeader.elm';
@@ -18,6 +21,7 @@ import {
 } from '../../backend/constants';
 import {getSetCookieHeaders} from '../../backend/util';
 import {cancelCurrentRequest} from '../../backend/network';
+import {trackEvent} from '../../backend/ganalytics';
 
 class ResponsePane extends Component {
   constructor (props) {
@@ -35,6 +39,43 @@ class ResponsePane extends Component {
       const response = await db.response.getLatestByParentId(request._id);
       this.setState({response});
     }
+  }
+
+  async _handleDownloadResponseBody () {
+    if (!this.state.response) {
+      // Should never happen
+      console.warn('No response to download');
+      return;
+    }
+
+    const {body, encoding, contentType} = this.state.response;
+    const bodyBuffer = new Buffer(body, encoding);
+    const extension = mime.extension(contentType) || '';
+
+    const options = {
+      title: 'Save Response',
+      buttonLabel: 'Save',
+      filters: [{
+        name: 'Download', extensions: [extension],
+      }]
+    };
+
+    remote.dialog.showSaveDialog(options, filename => {
+      if (!filename) {
+        trackEvent('Save Response',  'Cancel');
+        return;
+      }
+
+      fs.writeFile(filename, bodyBuffer, {}, err => {
+        if (err) {
+          console.warn('Failed to save response body', err);
+          trackEvent('Save Response',  'Failure');
+        } else {
+          trackEvent('Save Response',  'Success');
+
+        }
+      });
+    });
   }
 
   componentWillReceiveProps (nextProps) {
@@ -171,6 +212,7 @@ class ResponsePane extends Component {
                 {getPreviewModeName(previewMode)}
               </button>
               <PreviewModeDropdown
+                download={this._handleDownloadResponseBody.bind(this)}
                 previewMode={previewMode}
                 updatePreviewMode={updatePreviewMode}
               />

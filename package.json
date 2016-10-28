@@ -67,6 +67,7 @@
     "httpsnippet": "git@github.com:getinsomnia/httpsnippet.git#a3a2c0a0167fa844bf92df52a1442fa1d68a9053",
     "json-lint": "^0.1.0",
     "jsonpath-plus": "^0.15.0",
+    "mime-types": "^2.1.12",
     "mkdirp": "^0.5.1",
     "mousetrap": "^1.6.0",
     "nedb": "^1.8.0",
