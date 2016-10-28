@@ -94,6 +94,10 @@ class SignupModal extends Component {
                        placeholder="•••••••••••••"
                        ref={n => this._passwordInput = n}/>
               </div>
+              <p className="italic faint pad-top-sm">
+                NOTE: your password is used for end-to-end encryption so try not
+                to lose it
+              </p>
               {this.state.error ? (
                 <div className="danger pad-top">** {this.state.error}</div>
               ) : null}
