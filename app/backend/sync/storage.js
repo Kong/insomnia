@@ -45,7 +45,6 @@ export async function findResourcesForResourceGroup (resourceGroupId) {
 }
 
 export async function getResourceById (id) {
-  // TODO: this query should probably include resourceGroupId as well
   const rawDocs = await _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', {id});
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
