@@ -39,6 +39,7 @@ import {importCurl} from '../../backend/export/curl';
 import {trackLegacyEvent} from '../../backend/analytics';
 import {getAppVersion} from '../../backend/appInfo';
 import {getModal} from '../components/modals/index';
+import {trackEvent} from '../../backend/ganalytics';
 
 
 class App extends Component {
@@ -429,6 +430,7 @@ class App extends Component {
       // TODO: Show a welcome message
       trackLegacyEvent('First Launch');
     } else if (lastVersion !== getAppVersion()) {
+      trackEvent('General', 'Updated', getAppVersion());
       getModal(ChangelogModal).show();
     }
 
