@@ -8,6 +8,7 @@ import * as session from '../../../backend/sync/session';
 import {getModal} from './index';
 import LoginModal from './LoginModal';
 import * as sync from '../../../backend/sync';
+import {trackEvent} from '../../../backend/ganalytics';
 
 class SignupModal extends Component {
   constructor (props) {
@@ -33,7 +34,7 @@ class SignupModal extends Component {
       this.setState({step: 2, loading: false});
       sync.initSync();
     } catch (e) {
-      this.setState({error: e.message, loading: false})
+      this.setState({error: e.message, loading: false});
     }
   }
 
@@ -41,7 +42,8 @@ class SignupModal extends Component {
     e.preventDefault();
 
     this.modal.hide();
-    getModal(LoginModal).show()
+    getModal(LoginModal).show();
+    trackEvent('Auth', 'Signup', 'Switch');
   }
 
   show () {

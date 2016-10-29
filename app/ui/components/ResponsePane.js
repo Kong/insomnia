@@ -62,16 +62,16 @@ class ResponsePane extends Component {
 
     remote.dialog.showSaveDialog(options, filename => {
       if (!filename) {
-        trackEvent('Save Response',  'Cancel');
+        trackEvent('Response', 'Save', 'Cancel');
         return;
       }
 
       fs.writeFile(filename, bodyBuffer, {}, err => {
         if (err) {
           console.warn('Failed to save response body', err);
-          trackEvent('Save Response',  'Failure');
+          trackEvent('Response', 'Save', 'Failure');
         } else {
-          trackEvent('Save Response',  'Success');
+          trackEvent('Response', 'Save', 'Success');
 
         }
       });

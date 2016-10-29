@@ -1,6 +1,8 @@
 import srp from 'srp';
 import * as crypt from './crypt';
 import * as util from './util';
+import * as ganalytics from '../ganalytics';
+import {trackEvent} from '../ganalytics';
 
 const NO_SESSION = '__NO_SESSION__';
 
@@ -43,7 +45,11 @@ export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
   account.encPrivateKey = JSON.stringify(encPrivateJWKMessage);
   account.encSymmetricKey = JSON.stringify(encSymmetricJWKMessage);
 
-  return util.fetchPost('/auth/signup', account);
+  const response = await util.fetchPost('/auth/signup', account);
+
+  trackEvent('Session', 'Signup');
+
+  return response;
 }
 
 
@@ -130,6 +136,11 @@ export async function login (rawEmail, rawPassphrase) {
     JSON.parse(publicKey),
     JSON.parse(encPrivateKey),
   );
+
+  // Set the ID for Google Analytics
+  ganalytics.setAccountId(accountId);
+
+  trackEvent('Session', 'Login');
 }
 
 export function getPublicKey () {
@@ -232,6 +243,7 @@ export function isLoggedIn () {
 export async function logout () {
   await util.fetchPost('/auth/logout');
   unsetSessionData();
+  trackEvent('Session', 'Logout');
 }
 
 /**

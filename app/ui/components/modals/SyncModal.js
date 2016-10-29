@@ -11,6 +11,7 @@ import * as session from '../../../backend/sync/session';
 import * as syncStorage from '../../../backend/sync/storage';
 import * as sync from '../../../backend/sync';
 import * as db from '../../../backend/database';
+import {trackEvent} from '../../../backend/ganalytics';
 
 class SyncModal extends Component {
   constructor (props) {
@@ -40,6 +41,8 @@ class SyncModal extends Component {
     this.setState({pushingResourceGroups});
 
     await this._updateModal();
+
+    trackEvent('Sync', 'Push');
   }
 
   async _handlePullResourceGroupId (resourceGroupId) {
@@ -56,6 +59,8 @@ class SyncModal extends Component {
     this.setState({pullingResourceGroups});
 
     await this._updateModal();
+
+    trackEvent('Sync', 'Pull');
   }
 
   async _handleSyncModeChange (syncData, e) {
@@ -68,10 +73,13 @@ class SyncModal extends Component {
 
     // Trigger a sync cycle right away
     await sync.triggerSync();
+
+    trackEvent('Sync', 'Change Mode', syncMode);
   }
 
   async _handleReset () {
     this.hide();
+    trackEvent('Sync', 'Reset');
     await session.logout();
     await sync.resetLocalData();
     await sync.resetRemoteData();

@@ -3,7 +3,7 @@ import {isDevelopment} from './appInfo';
 
 let _sessionId = null;
 
-export function initAnalytics () {
+export function initAnalytics (accountId = null) {
   if (isDevelopment()) {
     console.log('-- Not initializing analytics for dev --');
     return;
@@ -19,7 +19,10 @@ export function initAnalytics () {
 
   const _sessionId = window.localStorage['gaClientId'];
 
-  window.ga('create', constants.GA_ID, {'storage': 'none', 'clientId': _sessionId});
+  window.ga('create', constants.GA_ID, {
+    'storage': 'none',
+    'clientId': _sessionId
+  });
 
   // Disable URL protocol check
   window.ga('set', 'checkProtocolTask', () => null);
@@ -30,7 +33,15 @@ export function initAnalytics () {
   // Track the initial page view
   window.ga('send', 'pageview');
 
+  if (accountId) {
+    setAccountId(accountId);
+  }
+
   console.log(`-- Analytics Initialized for ${_sessionId} --`);
+}
+
+export function setAccountId (accountId) {
+  window.ga('set', 'userId', accountId);
 }
 
 export function trackEvent (category, action, label) {
