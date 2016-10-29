@@ -2,11 +2,17 @@ import Analytics from 'analytics-node';
 import {getAppVersion} from './appInfo';
 import * as db from './database';
 import {SEGMENT_WRITE_KEY} from  './constants';
+import {isDevelopment} from './appInfo';
 
 let analytics = null;
 let userId = null;
 
 export async function initLegacyAnalytics () {
+  if (isDevelopment()) {
+    console.log('-- Not initializing Legacy analytics in dev --');
+    return;
+  }
+
   analytics = new Analytics(SEGMENT_WRITE_KEY);
 
   if (!userId) {

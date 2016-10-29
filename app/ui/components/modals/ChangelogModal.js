@@ -1,11 +1,10 @@
 import React, {Component} from 'react';
-import request from 'request';
-
+import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import {CHANGELOG_URL} from '../../../backend/constants';
+import * as constants from '../../../backend/constants';
 import {getAppVersion} from '../../../backend/appInfo';
 
 class ChangelogModal extends Component {
@@ -25,32 +24,17 @@ class ChangelogModal extends Component {
     }
   }
 
-  componentDidMount () {
-    request.get(CHANGELOG_URL, (err, response) => {
-      if (err) {
-        console.warn('Failed to load changelog', err);
-        return;
-      }
+  async componentDidMount () {
+    let changelog;
+    try {
+      const response = await fetch(`${constants.CHANGELOG_URL}?bust=${Date.now()}`);
+      changelog = await response.json();
+    } catch (e) {
+      console.warn('Failed to fetch changelog', e);
+      return;
+    }
 
-      if (response.statusCode !== 200) {
-        console.warn(
-          'Failed to fetch changelog',
-          response.statusCode,
-          response.body
-        );
-        return;
-      }
-
-      let changelog;
-      try {
-        changelog = JSON.parse(response.body);
-      } catch (e) {
-        console.error('Failed to parse changelog', e);
-        return;
-      }
-
-      this.setState({changelog});
-    });
+    this.setState({changelog});
   }
 
   shouldComponentUpdate (nextProps, nextState) {
@@ -86,17 +70,14 @@ class ChangelogModal extends Component {
           if (!Array.isArray(change.summary)) {
             html = [
               ...html,
-              <p key={`summary.${i}`}
-                 dangerouslySetInnerHTML={{__html: change.summary}}/>
+              <p key={`summary.${i}`}>{change.summary}</p>
             ]
           } else {
             html = [
               ...html,
-              <p key={`summary.${i}`}><strong
-                dangerouslySetInnerHTML={{__html: change.summary[0]}}/></p>,
+              <p key={`summary.${i}`}><strong>{change.summary[0]}</strong></p>,
               ...change.summary.slice(1).map(
-                (text, j) => <p key={`summary.${i}[${j}]`}
-                                dangerouslySetInnerHTML={{__html: text}}/>
+                (text, j) => <p key={`summary.${i}[${j}]`}>{text}</p>
               )
             ]
           }
@@ -146,9 +127,9 @@ class ChangelogModal extends Component {
           {html}
         </ModalBody>
         <ModalFooter>
-          <button className="btn" onClick={e => this.modal.hide()}>
-            Close
-          </button>
+          <Link className="btn" href={constants.CHANGELOG_PAGE} button={true}>
+            Visit Full Changelog
+          </Link>
         </ModalFooter>
       </Modal>
     );

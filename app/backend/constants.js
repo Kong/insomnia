@@ -8,7 +8,10 @@ export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
 export const GA_HOST = 'desktop.insomnia.rest';
-export const CHANGELOG_URL = 'https://changelog.insomnia.rest/changelog.json';
+export const CHANGELOG_URL = isDevelopment() ?
+  'http://localhost:1313/changelog-json/' :
+  'https://insomnia.rest/changelog-json/';
+export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_PEBKAC = -333;
 export const LARGE_RESPONSE_MB = 10;
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
