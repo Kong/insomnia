@@ -109,7 +109,12 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         const isShittyParseError = err.toString() === 'Error: Parse Error';
 
         // Failed to connect while prioritizing IPv6 address, fallback to IPv4
-        if (!forceIPv4 && err.code === 'ECONNREFUSED') {
+        const isNetworkRelatedError = (
+          err.code === 'ECONNREFUSED' || // Could not talk to server
+          err.code === 'ENETUNREACH' // Could not access the network
+        );
+
+        if (!forceIPv4 && isNetworkRelatedError) {
           console.log('-- Falling back to IPv4 --');
           _actuallySend(renderedRequest, settings, true).then(resolve, reject);
           return;
