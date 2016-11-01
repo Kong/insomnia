@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "3.6.6",
+  "version": "3.6.7",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "A simple and beautiful REST API client",
@@ -26,7 +26,7 @@
     "raven": "^0.12.1",
     "request": "^2.71.0",
     "sjcl": "^1.0.6",
-    "srp": "git@github.com:getinsomnia/node-srp.git#6ebd8c3acfbcf69645e4c6e6f8f6b55138ff22c3",
+    "srp": "git@github.com:getinsomnia/srp-js.git#6ebd8c3acfbcf69645e4c6e6f8f6b55138ff22c3",
     "tough-cookie": "^2.3.1",
     "traverse": "^0.6.6",
     "vkbeautify": "^0.99.1",
