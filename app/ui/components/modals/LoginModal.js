@@ -5,7 +5,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../backend/sync/session';
-import {getModal} from './index';
+import {showModal} from './index';
 import SignupModal from './SignupModal';
 import * as sync from '../../../backend/sync';
 import {trackEvent} from '../../../backend/ganalytics';
@@ -44,8 +44,8 @@ class LoginModal extends Component {
     e.preventDefault();
 
     this.modal.hide();
-    getModal(SignupModal).show();
-    trackEvent('Auth', 'Login', 'Switch');
+    showModal(SignupModal);
+    trackEvent('Auth', 'Switch', 'To Signup');
   }
 
   show () {

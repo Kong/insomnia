@@ -120,7 +120,8 @@ export async function login (rawEmail, rawPassphrase) {
     encSymmetricKey,
     saltEnc,
     accountId,
-    firstName
+    firstName,
+    lastName,
   } = await whoami(sessionId);
 
   const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
@@ -131,6 +132,7 @@ export async function login (rawEmail, rawPassphrase) {
     sessionId,
     accountId,
     firstName,
+    lastName,
     email,
     JSON.parse(symmetricKeyStr),
     JSON.parse(publicKey),
@@ -141,6 +143,16 @@ export async function login (rawEmail, rawPassphrase) {
   ganalytics.setAccountId(accountId);
 
   trackEvent('Session', 'Login');
+}
+
+export async function subscribe (tokenId, planId) {
+  const response = await util.fetchPost('/api/billing/subscription', {
+    token: tokenId,
+    quantity: 1,
+    plan: planId,
+  });
+  trackEvent('Session', 'Add Card');
+  return response;
 }
 
 export function getPublicKey () {
@@ -169,6 +181,11 @@ export function getFirstName () {
   return getSessionData().firstName;
 }
 
+export function getFullName () {
+  const {firstName, lastName} = getSessionData();
+  return `${firstName || ''} ${lastName || ''}`.trim();
+}
+
 /**
  * get Data about the current session
  * @returns Object
@@ -189,20 +206,20 @@ export function getSessionData () {
  * @param sessionId
  * @param accountId
  * @param firstName
+ * @param lastName
  * @param symmetricKey
  * @param publicKey
  * @param encPrivateKey
  * @param email
  */
-export function setSessionData (
-  sessionId,
-  accountId,
-  firstName,
-  email,
-  symmetricKey,
-  publicKey,
-  encPrivateKey
-) {
+export function setSessionData (sessionId,
+                                accountId,
+                                firstName,
+                                lastName,
+                                email,
+                                symmetricKey,
+                                publicKey,
+                                encPrivateKey) {
   const dataStr = JSON.stringify({
     id: sessionId,
     accountId: accountId,
@@ -211,6 +228,7 @@ export function setSessionData (
     encPrivateKey: encPrivateKey,
     email: email,
     firstName: firstName,
+    lastName: lastName,
   });
 
   localStorage.setItem(_getSessionKey(sessionId), dataStr);

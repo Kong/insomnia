@@ -38,7 +38,7 @@ import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
 import '../../css/components/editor.less';
-import {getModal} from '../modals/index';
+import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
 import {DEBOUNCE_MILLIS} from '../../../backend/constants';
@@ -300,7 +300,7 @@ class Editor extends Component {
       </Link>
     );
 
-    getModal(AlertModal).show({
+    showModal(AlertModal, {
       headerName: 'Response Filtering Help',
       message: (
         <div>

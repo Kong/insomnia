@@ -7,7 +7,7 @@ import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
 import Mousetrap from '../lib/mousetrap';
-import {addModal} from '../components/modals';
+import {registerModal} from '../components/modals';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
@@ -20,6 +20,7 @@ import SyncModal from '../components/modals/SyncModal';
 import LoginModal from '../components/modals/LoginModal';
 import SignupModal from '../components/modals/SignupModal';
 import SettingsModal from '../components/modals/SettingsModal';
+import PaymentModal from '../components/modals/PaymentModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/sidebar/Sidebar';
@@ -38,7 +39,7 @@ import * as db from '../../backend/database';
 import {importCurl} from '../../backend/export/curl';
 import {trackLegacyEvent} from '../../backend/analytics';
 import {getAppVersion} from '../../backend/appInfo';
-import {getModal} from '../components/modals/index';
+import {toggleModal, showModal} from '../components/modals';
 import {trackEvent} from '../../backend/ganalytics';
 
 
@@ -61,12 +62,11 @@ class App extends Component {
       // Show Settings
       'mod+,': () => {
         // NOTE: This is controlled via a global menu shortcut in app.js
-        // getModal(SettingsModal).toggle();
       },
 
       // Show Request Switcher
       'mod+p': () => {
-        getModal(RequestSwitcherModal).toggle();
+        toggleModal(RequestSwitcherModal);
       },
 
       // Request Send
@@ -79,7 +79,7 @@ class App extends Component {
 
       // Edit Workspace Environments
       'mod+e': () => {
-        getModal(WorkspaceEnvironmentsEditModal).toggle(this._getActiveWorkspace());
+        toggleModal(WorkspaceEnvironmentsEditModal, this._getActiveWorkspace());
       },
 
       // Focus URL Bar
@@ -90,7 +90,7 @@ class App extends Component {
 
       // Edit Cookies
       'mod+k': () => {
-        getModal(CookiesModal).toggle(this._getActiveWorkspace());
+        toggleModal(CookiesModal, this._getActiveWorkspace());
       },
 
       // Request Create
@@ -243,7 +243,7 @@ class App extends Component {
   }
 
   async _requestGroupCreate (parentId) {
-    const name = await getModal(PromptModal).show({
+    const name = await showModal(PromptModal, {
       headerName: 'Create New Folder',
       defaultValue: 'My Folder',
       selectText: true
@@ -253,7 +253,7 @@ class App extends Component {
   }
 
   async _requestCreate (parentId) {
-    const name = await getModal(PromptModal).show({
+    const name = await showModal(PromptModal, {
       headerName: 'Create New Request',
       defaultValue: 'My Request',
       selectText: true
@@ -431,7 +431,7 @@ class App extends Component {
       trackLegacyEvent('First Launch');
     } else if (lastVersion !== getAppVersion()) {
       trackEvent('General', 'Updated', getAppVersion());
-      getModal(ChangelogModal).show();
+      showModal(ChangelogModal);
     }
 
     db.onChange(changes => {
@@ -443,10 +443,17 @@ class App extends Component {
           return;
         }
 
+        const activeRequest = this._getActiveRequest(this.props);
+
+        // No active request at the moment, so it doesn't matter
+        if (!activeRequest) {
+          return;
+        }
+
         // Only force the UI to refresh if the active Request changes
         // This is because things like the URL and Body editor don't update
         // when you tell them to.
-        const activeRequest = this._getActiveRequest(this.props);
+
         if (doc._id !== activeRequest._id) {
           return;
         }
@@ -465,7 +472,7 @@ class App extends Component {
     });
 
     ipcRenderer.on('toggle-preferences', () => {
-      getModal(SettingsModal).toggle();
+      toggleModal(SettingsModal);
     });
 
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));
@@ -508,8 +515,8 @@ class App extends Component {
            style={{gridTemplateColumns: gridTemplateColumns}}>
         <Sidebar
           ref={n => this._sidebar = n}
-          showEnvironmentsModal={() => getModal(WorkspaceEnvironmentsEditModal).show(workspace)}
-          showCookiesModal={() => getModal(CookiesModal).show(workspace)}
+          showEnvironmentsModal={() => showModal(WorkspaceEnvironmentsEditModal, workspace)}
+          showCookiesModal={() => showModal(CookiesModal, workspace)}
           activateRequest={r => actions.global.activateRequest(workspace, r)}
           changeFilter={filter => actions.global.changeFilter(workspace, filter)}
           moveRequest={this._moveRequest.bind(this)}
@@ -574,31 +581,32 @@ class App extends Component {
           updatePreviewMode={metaPreviewMode => db.request.update(activeRequest, {metaPreviewMode})}
           updateResponseFilter={metaResponseFilter => db.request.update(activeRequest, {metaResponseFilter})}
           loadingRequests={requests.loadingRequests}
-          showCookiesModal={() => getModal(CookiesModal).show(workspace)}
+          showCookiesModal={() => showModal(CookiesModal, workspace)}
         />
 
-        <PromptModal ref={m => addModal(m)}/>
-        <AlertModal ref={m => addModal(m)}/>
-        <ChangelogModal ref={m => addModal(m)}/>
-        <SyncModal ref={m => addModal(m)}/>
-        <LoginModal ref={m => addModal(m)}/>
-        <SignupModal ref={m => addModal(m)}/>
-        <SettingsModal ref={m => addModal(m)}/>
-        <GenerateCodeModal ref={m => addModal(m)}/>
+        <PromptModal ref={m => registerModal(m)}/>
+        <AlertModal ref={m => registerModal(m)}/>
+        <ChangelogModal ref={m => registerModal(m)}/>
+        <SyncModal ref={m => registerModal(m)}/>
+        <LoginModal ref={m => registerModal(m)}/>
+        <SignupModal ref={m => registerModal(m)}/>
+        <SettingsModal ref={m => registerModal(m)}/>
+        <PaymentModal ref={m => registerModal(m)}/>
+        <GenerateCodeModal ref={m => registerModal(m)}/>
         <RequestSwitcherModal
-          ref={m => addModal(m)}
+          ref={m => registerModal(m)}
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
           activateRequest={r => actions.global.activateRequest(workspace, r)}
           activateWorkspace={w => actions.global.activateWorkspace(w)}
         />
         <EnvironmentEditModal
-          ref={m => addModal(m)}
+          ref={m => registerModal(m)}
           onChange={rg => db.requestGroup.update(rg)}/>
         <WorkspaceEnvironmentsEditModal
-          ref={m => addModal(m)}
+          ref={m => registerModal(m)}
           onChange={w => db.workspace.update(w)}/>
-        <CookiesModal ref={m => addModal(m)}/>
+        <CookiesModal ref={m => registerModal(m)}/>
 
         {/*<div className="toast toast--show">*/}
         {/*<div className="toast__message">How's it going?</div>*/}

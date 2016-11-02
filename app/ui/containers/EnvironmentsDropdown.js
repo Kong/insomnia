@@ -6,7 +6,7 @@ import classnames from 'classnames';
 import EnvironmentsModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
-import {getModal} from '../components/modals/index';
+import {showModal} from '../components/modals/index';
 import * as db from '../../backend/database';
 
 
@@ -66,7 +66,7 @@ class EnvironmentsDropdown extends Component {
           </li>
           <DropdownDivider name="General"/>
           <li>
-            <button onClick={e => getModal(EnvironmentsModal).show(workspace)}>
+            <button onClick={e => showModal(EnvironmentsModal, workspace)}>
               <i className="fa fa-wrench"></i> Manage Environments
             </button>
           </li>

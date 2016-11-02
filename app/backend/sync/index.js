@@ -345,6 +345,11 @@ export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   }
 }
 
+export async function logout () {
+  await resetLocalData();
+  await session.logout();
+}
+
 export async function resetLocalData () {
   for (const r of await store.allResources()) {
     await store.removeResource(r);

@@ -33,6 +33,8 @@ async function _fetch (method, path, json, sessionId = null) {
 
   if (response.status === 403) {
     // TODO: Somehow signal the user to login
+  } else if (response.status === 402) {
+    // TODO: Somehow signal that payment is required
   }
 
   if (!response.ok) {

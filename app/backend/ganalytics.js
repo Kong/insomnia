@@ -41,7 +41,7 @@ export function initAnalytics (accountId = null) {
 }
 
 export function setAccountId (accountId) {
-  window.ga('set', 'userId', accountId);
+  window.ga && window.ga('set', 'userId', accountId);
 }
 
 export function trackEvent (category, action, label) {

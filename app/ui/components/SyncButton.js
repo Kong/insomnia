@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import SyncModal from './modals/SyncModal';
-import {getModal} from './modals/index';
+import {showModal} from './modals/index';
 import * as syncStorage from '../../backend/sync/storage';
 import * as session from '../../backend/sync/session';
 import SignupModal from './modals/SignupModal';
@@ -60,7 +60,7 @@ class SyncButton extends Component {
     if (session.isLoggedIn()) {
       return (
         <button className="btn btn--super-duper-compact btn--outlined wide ellipsis"
-                onClick={e => getModal(SyncModal).show()}>
+                onClick={e => showModal(SyncModal)}>
           Sync
           {this.state.state ? <span>&nbsp;({this.state.state})</span> : null}
         </button>
@@ -68,7 +68,7 @@ class SyncButton extends Component {
     } else {
       return (
         <button className="btn btn--super-duper-compact btn--outlined wide"
-                onClick={e => getModal(SignupModal).show()}>
+                onClick={e => showModal(SignupModal)}>
           Login to Cloud Sync
         </button>
       )

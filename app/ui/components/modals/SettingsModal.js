@@ -4,6 +4,7 @@ import {bindActionCreators} from 'redux';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import {shell} from 'electron';
 import Link from '../base/Link';
+import PromptButton from '../base/PromptButton';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -16,6 +17,10 @@ import {
   getAppName,
   getAppLongName
 } from '../../../backend/appInfo';
+import * as session from '../../../backend/sync/session';
+import {showModal} from './index';
+import SignupModal from './SignupModal';
+import * as sync from '../../../backend/sync/index';
 
 
 class SettingsTabs extends Component {
@@ -68,7 +73,7 @@ class SettingsTabs extends Component {
   }
 
   render () {
-    const {entities} = this.props;
+    const {entities, hide} = this.props;
     const settings = entities.settings[Object.keys(entities.settings)[0]];
 
     return (
@@ -79,10 +84,10 @@ class SettingsTabs extends Component {
             <button>General</button>
           </Tab>
           <Tab selected={this._currentTabIndex === 1}>
-            <button>Editor</button>
+            <button>Import/Export</button>
           </Tab>
           <Tab selected={this._currentTabIndex === 2}>
-            <button>Import/Export</button>
+            <button>Cloud Sync</button>
           </Tab>
           <Tab selected={this._currentTabIndex === 3}>
             <button>Shortcuts</button>
@@ -164,6 +169,38 @@ class SettingsTabs extends Component {
 
           <br/>
           <h2 className="txt-md pad-top-sm">
+            <label className="label--small">Code Editors</label>
+          </h2>
+          <div>
+            <input
+              id="setting-editor-line-wrapping"
+              type="checkbox"
+              checked={settings.editorLineWrapping}
+              onChange={e => db.settings.update(settings, {editorLineWrapping: e.target.checked})}
+            />
+            &nbsp;&nbsp;
+            <label htmlFor="setting-editor-line-wrapping">
+              Wrap Long Lines
+            </label>
+          </div>
+          <div>
+            <label htmlFor="setting-editor-font-size" className="pad-top">
+              Font Size (px)
+            </label>
+            <div className="form-control form-control--outlined no-margin">
+              <input
+                id="setting-editor-font-size"
+                type="number"
+                min={8}
+                max={20}
+                value={settings.editorFontSize}
+                onChange={e => db.settings.update(settings, {editorFontSize: parseInt(e.target.value, 10)})}
+              />
+            </div>
+          </div>
+
+          <br/>
+          <h2 className="txt-md pad-top-sm">
             <label className="label--small">Network Proxy (Experimental)</label>
           </h2>
           <div>
@@ -211,55 +248,13 @@ class SettingsTabs extends Component {
               Force stacked layout
             </label>
           </div>
-          <div>
-            <input
-              id="setting-opt-sync-beta"
-              type="checkbox"
-              checked={settings.optSyncBeta}
-              onChange={e => db.settings.update(settings, {optSyncBeta: e.target.checked})}
-            />
-            &nbsp;&nbsp;
-            <label htmlFor="setting-opt-sync-beta">
-              Opt in to sync beta
-            </label>
-          </div>
-
           <br/>
         </TabPanel>
 
         <TabPanel className="pad scrollable">
-          <label className="label--small">Code Editor Settings</label>
-          <div className="pad-top">
-            <input
-              id="setting-editor-line-wrapping"
-              type="checkbox"
-              checked={settings.editorLineWrapping}
-              onChange={e => db.settings.update(settings, {editorLineWrapping: e.target.checked})}
-            />
-            &nbsp;&nbsp;
-            <label htmlFor="setting-editor-line-wrapping">
-              Wrap Long Lines
-            </label>
-          </div>
-          <div>
-            <label htmlFor="setting-editor-font-size" className="pad-top">
-              Font Size (px)
-            </label>
-            <div className="form-control form-control--outlined no-margin">
-              <input
-                id="setting-editor-font-size"
-                type="number"
-                min={8}
-                max={20}
-                value={settings.editorFontSize}
-                onChange={e => db.settings.update(settings, {editorFontSize: parseInt(e.target.value, 10)})}
-              />
-            </div>
-          </div>
-        </TabPanel>
-        <TabPanel className="pad scrollable">
-          <p>This will export all app data for all workspaces.</p>
-          <p>Be aware that you may be exporting <strong>private data</strong>
+          <p>
+            Be aware that you may be exporting <strong>private data</strong>.
+            Also, any imported data may overwrite existing data.
           </p>
           <p>
             <button className="btn btn--super-compact btn--outlined"
@@ -277,6 +272,64 @@ class SettingsTabs extends Component {
               Export Current Workspace
             </button>
           </p>
+        </TabPanel>
+        <TabPanel className="pad scrollable">
+          <p>
+            Cloud Sync is part of
+            {" "}
+            <Link href="https://insomnia.rest/plus">Insomnia Plus</Link> – a
+            $5/month add-on to Insomnia.
+          </p>
+          <p>
+            Plus provides end-to-end encrypted data sync across all your
+            devices, while also acting as an up-to-date backup in case the
+            worst happens.
+          </p>
+
+          {!session.isLoggedIn() ? (
+            <p className="pad-top-sm">
+              <button className="btn btn--super-compact btn--outlined"
+                      onClick={() => {
+                        hide();
+                        showModal(SignupModal);
+                        db.settings.update(settings, {optSyncBeta: true})
+                      }}>
+                Start 14 Day Trial
+              </button>
+            </p>
+          ) : (
+            <div>
+              <p className="pad-top-sm">
+                Hello {session.getFirstName()}!
+              </p>
+              <p>Thanks for signing up for Insomnia Plus.</p>
+              <p>
+                <PromptButton
+                  className="btn btn--super-compact btn--outlined danger"
+                  onClick={() => db.settings.update(settings, {optSyncBeta: false})}>
+                  Close Account
+                </PromptButton>
+                {" "}
+                <PromptButton
+                  className="btn btn--super-compact btn--outlined warning"
+                  onClick={() => {
+                    db.settings.update(settings, {optSyncBeta: false});
+                    sync.logout();
+                    hide()
+                  }}>
+                  Disable Sync
+                </PromptButton>
+                {" "}
+                <PromptButton className="btn btn--super-compact btn--outlined"
+                              onClick={() => {
+                                hide();
+                                sync.logout()
+                              }}>
+                  Log Out
+                </PromptButton>
+              </p>
+            </div>
+          )}
         </TabPanel>
         <TabPanel className="pad scrollable">
           <KeyboardShortcutsTable />
@@ -309,7 +362,8 @@ class SettingsTabs extends Component {
           </p>
 
           {this.state.showSyncSetting ? (
-            <p className="italic faint">This setting has moved to the main panel.</p>
+            <p className="italic faint">This setting has moved to the main
+              panel.</p>
           ) : null}
         </TabPanel>
       </Tabs>
