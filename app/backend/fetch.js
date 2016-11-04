@@ -1,13 +1,33 @@
-import {isDevelopment} from '../appInfo';
-import * as session from './session';
-import * as appInfo from '../appInfo';
+import {parse as urlParse} from 'url';
+import {isDevelopment} from './appInfo';
+import * as session from './sync/session';
+import * as appInfo from './appInfo';
 
-export function fetchPost (path, obj) {
+let commandListeners = [];
+export function onCommand (callback) {
+  console.log(`-- Added DB Listener -- `);
+  commandListeners.push(callback);
+}
+
+export function offCommand (callback) {
+  console.log(`-- Removed DB Listener -- `);
+  commandListeners = commandListeners.filter(l => l !== callback);
+}
+
+export function post (path, obj) {
   return _fetch('POST', path, obj)
 }
 
-export function fetchGet (path, sessionId = null) {
+export function get (path, sessionId = null) {
   return _fetch('GET', path, null, sessionId)
+}
+
+export function del (path, sessionId = null) {
+  return _fetch('DELETE', path, null, sessionId)
+}
+
+export function put (path, sessionId = null) {
+  return _fetch('PUT', path, null, sessionId)
 }
 
 async function _fetch (method, path, json, sessionId = null) {
@@ -37,6 +57,9 @@ async function _fetch (method, path, json, sessionId = null) {
     // TODO: Somehow signal that payment is required
   }
 
+  const uri = response.headers.get('x-insomnia-command');
+  uri && _notifyCommandListeners(uri);
+
   if (!response.ok) {
     const err = new Error(`Response ${response.status} for ${path}`);
     err.message = await response.text();
@@ -57,3 +80,13 @@ function _getUrl (path) {
     return `https://insomnia-api.herokuapp.com${path}`;
   }
 }
+
+function _notifyCommandListeners (uri) {
+  const parsed = urlParse(uri, true);
+
+  const command = `${parsed.hostname}${parsed.pathname}`;
+  const args = JSON.parse(JSON.stringify(parsed.query));
+
+  commandListeners.map(fn => fn(command, args));
+}
+

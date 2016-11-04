@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import Link from '../base/Link';
+import Nl2Br from '../Nl2Br';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -30,6 +31,8 @@ class PaymentModal extends Component {
   constructor (props) {
     super(props);
     this.state = {
+      title: '',
+      message: '',
       error: '',
       loading: false,
       cardType: '',
@@ -37,10 +40,14 @@ class PaymentModal extends Component {
     }
   }
 
-  show () {
-    this.setState({error: ''});
+  show ({message, title}) {
+    this.setState({error: '', message, title});
     this.modal.show();
     setTimeout(() => this._nameInput.focus(), 100);
+  }
+
+  hide () {
+    this.modal.hide();
   }
 
   _handlePlanChange (selectedPlan) {
@@ -104,6 +111,7 @@ class PaymentModal extends Component {
         try {
           await session.subscribe(response.id, this.state.selectedPlan);
           this.setState({error: '', loading: false});
+          this.hide();
         } catch (e) {
           this.setState({error: e.message, loading: false});
         }
@@ -114,18 +122,22 @@ class PaymentModal extends Component {
   }
 
   render () {
-    const {selectedPlan, cardType} = this.state;
+    const {selectedPlan, cardType, message, title} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} {...this.props}>
-        <form onSubmit={this._handleSubmit.bind(this)}>
-          <ModalHeader>Enter Payment Method</ModalHeader>
+      <form onSubmit={this._handleSubmit.bind(this)}
+            key={session.getCurrentSessionId()}>
+        <Modal ref={m => this.modal = m} {...this.props}>
+          <ModalHeader>{title || "Enter Payment Method"}</ModalHeader>
           <ModalBody className="pad changelog">
-            <div style={{maxWidth: '30rem', margin: 'auto'}}>
+            <div style={{maxWidth: '32rem', margin: 'auto'}}>
+              {message ? (
+                <Nl2Br className="notice info">{message}</Nl2Br>
+              ) : null}
               <div>
-                <label htmlFor="payment-cycle">Billing Cycle</label>
-                <div className="pad-left-half pad-top-sm">
-                  <div className="inline-block" style={{width: '50%'}}>
+                <div className="pad-left-half">
+                  <div className="inline-block text-center"
+                       style={{width: '50%'}}>
                     <input
                       id="plan-plus-monthly-1"
                       type="radio"
@@ -134,10 +146,12 @@ class PaymentModal extends Component {
                       onChange={e => this._handlePlanChange('plus-monthly-1')}
                     />
                     &nbsp;&nbsp;
-                    <label htmlFor="plan-plus-monthly-1">Per Month
-                      ($5/mo)</label>
+                    <label htmlFor="plan-plus-monthly-1">
+                      Per Month ($5/mo)
+                    </label>
                   </div>
-                  <div className="inline-block" style={{width: '50%'}}>
+                  <div className="inline-block text-center"
+                       style={{width: '50%'}}>
                     <input
                       id="plan-plus-yearly-1"
                       type="radio"
@@ -164,7 +178,7 @@ class PaymentModal extends Component {
                 </div>
               </div>
 
-              <div className="pad-top">
+              <div>
                 <label htmlFor="payment-card-number">
                   Card Number {cardType ? `(${cardType})` : ''}
                 </label>
@@ -184,7 +198,7 @@ class PaymentModal extends Component {
                   <label htmlFor="payment-expiry">
                     Expiration Date
                   </label>
-                  <div className="pad-top-sm pad-left-half">
+                  <div className="pad-left-half pad-top-sm">
                     <select name="payment-expiration-month"
                             id="payment-expiration-month"
                             ref={n => this._expiryMonthInput = n}>
@@ -204,7 +218,7 @@ class PaymentModal extends Component {
                   </div>
                 </div>
 
-                <div className="pad-top inline-block" style={{width: '34%'}}>
+                <div className="inline-block" style={{width: '34%'}}>
                   <label htmlFor="payment-cvc">Security Code (CVC)</label>
                   <div className="form-control form-control--outlined">
                     <input type="text"
@@ -230,14 +244,20 @@ class PaymentModal extends Component {
               {" "}
               <Link href="https://stripe.com">Stripe</Link>
             </div>
-            <button type="submit" className="btn">
-              {this.state.loading ? (
+            {this.state.loading ? (
+              <button type="submit" className="btn">
                 <i className="fa fa-spin fa-refresh margin-right-sm"></i>
-              ) : null} Submit Details
-            </button>
+                {" "}
+                Processing
+              </button>
+            ) : (
+              <button type="submit" className="btn">
+                Submit Details
+              </button>
+            )}
           </ModalFooter>
-        </form>
-      </Modal>
+        </Modal>
+      </form>
     )
   }
 }

@@ -13,8 +13,8 @@ class RenderedQueryString extends Component {
   }
 
   _update (props, delay = false) {
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(async () => {
+    clearTimeout(this._askTimeout);
+    this._askTimeout = setTimeout(async () => {
       const {url, parameters} = await getRenderedRequest(props.request);
       const qs = querystring.buildFromParams(parameters);
       const fullUrl = querystring.joinURL(url, qs);
@@ -27,7 +27,7 @@ class RenderedQueryString extends Component {
   }
 
   componentWillUnmount () {
-    clearTimeout(this._timeout);
+    clearTimeout(this._askTimeout);
   }
 
   componentWillReceiveProps (nextProps) {

@@ -248,8 +248,8 @@ class Editor extends Component {
     }
 
     // Debounce URL changes so we don't update the app so much
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
+    clearTimeout(this._askTimeout);
+    this._askTimeout = setTimeout(() => {
       // Update our cached value
       var newValue = doc.getValue();
       this.props.onChange(newValue);
@@ -301,7 +301,7 @@ class Editor extends Component {
     );
 
     showModal(AlertModal, {
-      headerName: 'Response Filtering Help',
+      title: 'Response Filtering Help',
       message: (
         <div>
           <p>

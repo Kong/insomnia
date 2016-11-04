@@ -10,18 +10,18 @@ class AlertModal extends Component {
     this.state = {};
   }
 
-  show ({headerName, message}) {
+  show ({title, message}) {
     this.modal.show();
-    this.setState({headerName, message});
+    this.setState({title, message});
   }
 
   render () {
     const {extraProps} = this.props;
-    const {message, headerName} = this.state;
+    const {message, title} = this.state;
 
     return (
       <Modal ref={m => this.modal = m} closeOnKeyCodes={[13]} {...extraProps}>
-        <ModalHeader>{headerName || 'Uh Oh!'}</ModalHeader>
+        <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
           {message}
         </ModalBody>

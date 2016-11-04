@@ -45,7 +45,7 @@ class WorkspaceDropdown extends Component {
     const count = await db.workspace.count();
     if (count <= 1) {
       showModal(AlertModal, {
-        message: 'You cannot delete your last workspace'
+        title: 'You cannot delete your last workspace'
       });
     } else {
       const workspace = this._getActiveWorkspace(this.props);

@@ -1,7 +1,7 @@
-import React, {Component} from 'react';
-import {MOD_SYM} from '../../backend/constants';
+import React from 'react';
+import {MOD_SYM} from '../../../backend/constants';
 
-const KeyboardShortcutsTable = () => (
+const SettingsShortcuts = () => (
   <table className="wide">
     <tbody>
     <tr>
@@ -44,6 +44,6 @@ const KeyboardShortcutsTable = () => (
   </table>
 );
 
-KeyboardShortcutsTable.propTypes = {};
+SettingsShortcuts.propTypes = {};
 
-export default KeyboardShortcutsTable;
+export default SettingsShortcuts;

@@ -2,12 +2,16 @@ import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import {isMac} from '../../../backend/appInfo';
 
+// Keep global z-index reference so that every modal will
+// appear over top of an existing one.
+let globalZIndex = 1000;
 
 class Modal extends Component {
   constructor (props) {
     super(props);
     this.state = {
-      open: false
+      open: false,
+      zIndex: globalZIndex,
     };
   }
 
@@ -33,7 +37,7 @@ class Modal extends Component {
   }
 
   show () {
-    this.setState({open: true});
+    this.setState({open: true, zIndex: globalZIndex++});
 
     if (this.props.dontFocus) {
       return;
@@ -90,7 +94,7 @@ class Modal extends Component {
 
   render () {
     const {tall, top, wide, className} = this.props;
-    const {open} = this.state;
+    const {open, zIndex} = this.state;
 
     const classes = classnames(
       'modal',
@@ -103,6 +107,7 @@ class Modal extends Component {
 
     return (
       <div ref={n => this._node = n} tabIndex="-1" className={classes}
+           style={{zIndex: zIndex}}
            onClick={this._handleClick.bind(this)}>
         <div className="modal__content">
           <div className="modal__backdrop" onClick={() => this.hide()}></div>

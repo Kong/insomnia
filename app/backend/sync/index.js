@@ -1,5 +1,5 @@
 import * as db from '../database';
-import * as util from './util';
+import * as fetch from '../fetch';
 import * as crypt from './crypt';
 import * as session from './session';
 import * as store from './storage';
@@ -107,7 +107,7 @@ export async function push (resourceGroupId = null) {
 
   let responseBody;
   try {
-    responseBody = await util.fetchPost('/sync/push', dirtyResources);
+    responseBody = await fetch.post('/sync/push', dirtyResources);
   } catch (e) {
     logger.error('Failed to push changes', e);
     return;
@@ -208,7 +208,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
 
   let responseBody;
   try {
-    responseBody = await util.fetchPost('/sync/pull', body);
+    responseBody = await fetch.post('/sync/pull', body);
   } catch (e) {
     logger.error('Failed to sync changes', e, body);
     return;
@@ -350,6 +350,11 @@ export async function logout () {
   await session.logout();
 }
 
+export async function cancelAccount () {
+  await session.cancelAccount();
+  await logout();
+}
+
 export async function resetLocalData () {
   for (const r of await store.allResources()) {
     await store.removeResource(r);
@@ -361,7 +366,7 @@ export async function resetLocalData () {
 }
 
 export async function resetRemoteData () {
-  await util.fetchPost('/auth/reset');
+  await fetch.post('/auth/reset');
 }
 
 // ~~~~~~~ //
@@ -427,7 +432,7 @@ async function _fetchResourceGroup (resourceGroupId) {
   if (!resourceGroup) {
     // TODO: Handle a 404 here
     try {
-      resourceGroup = resourceGroupCache[resourceGroupId] = await util.fetchGet(
+      resourceGroup = resourceGroupCache[resourceGroupId] = await fetch.get(
         `/api/resource_groups/${resourceGroupId}`
       );
     } catch (e) {
@@ -498,7 +503,7 @@ async function _createResourceGroup (name = '') {
   // Create the new ResourceGroup
   let resourceGroup;
   try {
-    resourceGroup = await util.fetchPost('/api/resource_groups', {
+    resourceGroup = await fetch.post('/api/resource_groups', {
       name,
       encSymmetricKey: encRGSymmetricJWK,
     });
