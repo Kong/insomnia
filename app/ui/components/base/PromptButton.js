@@ -21,6 +21,11 @@ class PromptButton extends Component {
     this._doneTimeout = setTimeout(() => {
       this.setState({state: STATE_DONE});
     }, 100);
+
+    // Set a timeout to hide the confirmation
+    this._askTimeout = setTimeout(() => {
+      this.setState({state: STATE_DEFAULT});
+    }, 2000);
   }
 
   _ask (e) {

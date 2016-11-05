@@ -7,6 +7,7 @@ import {trackEvent} from '../../../backend/ganalytics';
 import AlertModal from '../../components/modals/AlertModal';
 import {showModal} from '../../components/modals/index';
 import PaymentModal from '../../components/modals/PaymentModal';
+import LoginModal from '../../components/modals/LoginModal';
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
@@ -17,6 +18,7 @@ const ACTIVATE_WORKSPACE = 'global/activate-workspace';
 const SET_SIDEBAR_WIDTH = 'global/set-sidebar-width';
 const SET_PANE_WIDTH = 'global/set-pane-width';
 const COMMAND_ALERT = 'app/alert';
+const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
 
 
@@ -25,10 +27,8 @@ const COMMAND_TRIAL_END = 'app/billing/trial-end';
 // ~~~~~~~~ //
 
 /** Helper to update workspace metadata */
-function updateMeta (state = {}, action, key) {
+function updateMeta (state = {}, workspaceId, value, key) {
   const newState = Object.assign({}, state);
-  const {workspaceId} = action;
-  const value = action[key];
   newState[workspaceId] = newState[workspaceId] || {};
   newState[workspaceId][key] = value;
   return newState;
@@ -37,15 +37,22 @@ function updateMeta (state = {}, action, key) {
 function workspaceMetaReducer (state = {}, action) {
   switch (action.type) {
     case SET_PANE_WIDTH:
-      return updateMeta(state, action, 'paneWidth');
+      return updateMeta(state, action.workspaceId, action.width, 'paneWidth');
     case SET_SIDEBAR_WIDTH:
-      return updateMeta(state, action, 'sidebarWidth');
+      return updateMeta(state, action.workspaceId, action.width, 'sidebarWidth');
     case CHANGE_FILTER:
-      return updateMeta(state, action, 'filter');
+      return updateMeta(state, action.workspaceId, action.filter, 'filter');
     case TOGGLE_SIDEBAR:
-      return updateMeta(state, action, 'sidebarHidden');
+      const meta = state[action.workspaceId];
+      const on = meta ? !meta.sidebarHidden : false;
+      return updateMeta(state, action.workspaceId, on, 'sidebarHidden');
     case REQUEST_ACTIVATE:
-      return updateMeta(state, action, 'activeRequestId');
+      return updateMeta(
+        state,
+        action.workspaceId,
+        action.requestId,
+        'activeRequestId'
+      );
     default:
       return state;
   }
@@ -96,6 +103,9 @@ export function newCommand (command, args) {
   if (command === COMMAND_ALERT) {
     const {message, title} = args;
     showModal(AlertModal, {title, message});
+  } else if (command === COMMAND_LOGIN) {
+      const {title, message} = args;
+      showModal(LoginModal, {title, message});
   } else if (command === COMMAND_TRIAL_END) {
     const {message, title} = args;
     showModal(PaymentModal, {message, title});

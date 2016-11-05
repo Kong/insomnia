@@ -42,7 +42,7 @@ class SignupModal extends Component {
     e.preventDefault();
 
     this.modal.hide();
-    showModal(LoginModal);
+    showModal(LoginModal, {});
     trackEvent('Auth', 'Switch', 'To Login');
   }
 

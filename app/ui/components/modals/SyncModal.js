@@ -34,7 +34,7 @@ class SyncModal extends Component {
     this.setState({pushingResourceGroups});
 
     await sync.getOrCreateConfig(resourceGroupId);
-    await sync.push(resourceGroupId);
+    await sync.pushActiveDirtyResources(resourceGroupId);
 
     // Unset loading state
     delete pushingResourceGroups[resourceGroupId];
@@ -80,9 +80,9 @@ class SyncModal extends Component {
   async _handleReset () {
     this.hide();
     trackEvent('Sync', 'Reset');
-    await session.logout();
-    await sync.resetLocalData();
     await sync.resetRemoteData();
+    await sync.resetLocalData();
+    await session.logout();
   }
 
   async _handleLogout () {

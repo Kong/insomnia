@@ -16,7 +16,9 @@ class LoginModal extends Component {
     this.state = {
       step: 1,
       loading: false,
-      error: ''
+      error: '',
+      title: '',
+      message: '',
     }
   }
 
@@ -48,19 +50,23 @@ class LoginModal extends Component {
     trackEvent('Auth', 'Switch', 'To Signup');
   }
 
-  show () {
-    this.setState({step: 1, error: ''});
+  show ({title, message}) {
+    this.setState({step: 1, error: '', title, message});
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);
   }
 
   render () {
-    if (this.state.step === 1) {
+    const {step, title, message} = this.state;
+    if (step === 1) {
       return (
         <Modal ref={m => this.modal = m} {...this.props}>
           <form onSubmit={this._handleLogin.bind(this)}>
-            <ModalHeader>Login to Your Account</ModalHeader>
+            <ModalHeader>{title || "Login to Your Account"}</ModalHeader>
             <ModalBody className="pad changelog">
+              {message ? (
+                <p className="notice info">{message}</p>
+              ) : null}
               <label htmlFor="login-email">Email</label>
               <div className="form-control form-control--outlined">
                 <input type="email"

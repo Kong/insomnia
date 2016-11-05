@@ -26,20 +26,6 @@ const SettingsSync = ({
 
     {loggedIn ? [
       <p key="1">
-        All Insomnia Plus plans start with a 14 day trial period.
-      </p>,
-      <p key="2" className="pad-top-sm">
-        <button className="btn btn--super-compact btn--outlined"
-                onClick={() => {
-                  handleExit();
-                  handleShowSignup();
-                  handleUpdateSetting('optSyncBeta', true);
-                }}>
-          Join Insomnia Plus
-        </button>
-      </p>
-    ] : [
-      <p key="1">
         Hi {firstName}! Thanks for signing up for Insomnia
         Plus.
       </p>,
@@ -70,6 +56,20 @@ const SettingsSync = ({
                       }}>
           Log Out
         </PromptButton>
+      </p>
+    ] : [
+      <p key="1">
+        All Insomnia Plus plans start with a 14 day trial period.
+      </p>,
+      <p key="2" className="pad-top-sm">
+        <button className="btn btn--super-compact btn--outlined"
+                onClick={() => {
+                  handleExit();
+                  handleShowSignup();
+                  handleUpdateSetting('optSyncBeta', true);
+                }}>
+          Join Insomnia Plus
+        </button>
       </p>
     ]}
   </div>
