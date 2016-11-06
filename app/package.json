@@ -10,7 +10,6 @@
   "main": "main.js",
   "dependencies": {
     "analytics-node": "^2.1.0",
-    "codemirror": "^5.18.2",
     "classnames": "^2.2.3",
     "electron-context-menu": "^0.4.0",
     "electron-cookies": "^1.1.0",
