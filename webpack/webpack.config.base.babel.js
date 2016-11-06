@@ -22,11 +22,6 @@ export default {
         exclude: [/node_modules/, /__fixtures__/, /__tests__/]
       },
       {
-        test: /\.elm$/,
-        exclude: [/elm-stuff/, /node_modules/],
-        loader: 'elm-hot!elm-webpack'
-      },
-      {
         test: /\.json$/,
         loader: 'json'
       },

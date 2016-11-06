@@ -3,8 +3,9 @@ import fs from 'fs';
 import mime from 'mime-types';
 import {remote} from 'electron';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import ElmComponent from './ElmComponent';
-import {ResponsePaneHeader} from './ResponsePaneHeader.elm';
+import SizeTag from './tags/SizeTag';
+import StatusTag from './tags/StatusTag';
+import TimeTag from './tags/TimeTag';
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
@@ -14,11 +15,7 @@ import {
   getPreviewModeName,
   PREVIEW_MODE_SOURCE
 } from '../../backend/previewModes';
-import {
-  REQUEST_TIME_TO_SHOW_COUNTER,
-  MOD_SYM,
-  RESPONSE_CODE_DESCRIPTIONS
-} from '../../backend/constants';
+import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../../backend/constants';
 import {getSetCookieHeaders} from '../../backend/util';
 import {cancelCurrentRequest} from '../../backend/network';
 import {trackEvent} from '../../backend/ganalytics';
@@ -194,16 +191,14 @@ class ResponsePane extends Component {
       <section className="response-pane pane">
         {timer}
         {!response ? null : (
-          <ElmComponent
-            component={ResponsePaneHeader}
-            container={<header
-              className="pane__header pad-left pad-right no-wrap"/>}
-            statusCode={response.statusCode}
-            statusDescription={RESPONSE_CODE_DESCRIPTIONS[response.statusCode] || ''}
-            statusMessage={response.statusMessage}
-            elapsedTime={response.elapsedTime}
-            bytesRead={response.bytesRead}
-          />
+          <header className="pane__header">
+            <StatusTag
+              statusCode={response.statusCode}
+              statusMessage={response.statusMessage}
+            />
+            <TimeTag milliseconds={response.elapsedTime}/>
+            <SizeTag bytes={response.bytesRead}/>
+          </header>
         )}
         <Tabs className="pane__body">
           <TabList>
