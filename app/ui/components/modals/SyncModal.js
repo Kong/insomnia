@@ -241,8 +241,8 @@ class SyncModal extends Component {
                           </button>
                           {" "}
                           <button
-                            title={syncPercent >= 99 ? 'Nothing to push' : 'Push local changes'}
-                            disabled={syncPercent >= 99}
+                            title={syncPercent === 100 ? 'Nothing to push' : 'Push local changes'}
+                            disabled={syncPercent === 100}
                             className="btn btn--super-duper-compact btn--outlined"
                             onClick={e => this._handlePushResourceGroupId(resourceGroupId)}>
                             <i className={classnames(
@@ -253,7 +253,7 @@ class SyncModal extends Component {
                             Push
                           </button>
                         </td>
-                        <td className={syncPercent < 99 ? 'warning' : ''}>
+                        <td className={syncPercent < 100 ? 'warning' : ''}>
                           {syncPercent}%
                         </td>
                         <td className="faint italic">

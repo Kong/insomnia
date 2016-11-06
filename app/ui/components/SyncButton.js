@@ -6,8 +6,7 @@ import * as session from '../../backend/sync/session';
 import SignupModal from './modals/SignupModal';
 
 const STATE_OK = 'synced';
-const STATE_AHEAD = 'pending';
-const STATE_OFF = 'paused';
+const STATE_AHEAD = 'dirty';
 
 class SyncButton extends Component {
   constructor (props) {
@@ -22,15 +21,10 @@ class SyncButton extends Component {
     const {workspaceId} = this.props;
     const resource = await syncStorage.getResourceById(workspaceId);
     const resourceGroupId = resource ? resource.resourceGroupId : null;
-    const config = await syncStorage.getConfig(resourceGroupId);
-    const dirtyDocs = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
+    const isDirty = await syncStorage.hasDirtyResourcesForResourceGroup(resourceGroupId);
     let state;
-    if (config && config.syncMode === syncStorage.SYNC_MODE_OFF) {
-      state = STATE_OFF;
-    } else if (config && dirtyDocs.length > 0) {
+    if (isDirty) {
       state = STATE_AHEAD;
-    } else if (!config) {
-      state = STATE_OFF;
     } else {
       state = STATE_OK;
     }

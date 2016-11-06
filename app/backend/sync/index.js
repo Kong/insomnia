@@ -26,16 +26,6 @@ const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 const resourceGroupSymmetricKeysCache = {};
 
-/**
- * Trigger a full sync cycle. Useful if you don't want to wait for the next
- * tick.
- */
-export async function triggerSync () {
-  await initSync();
-  await pushActiveDirtyResources();
-  await pull();
-}
-
 let isInitialized = false;
 export async function initSync () {
   const settings = await db.settings.getOrCreate();
@@ -70,6 +60,16 @@ export async function initSync () {
   setInterval(pull, FULL_SYNC_INTERVAL);
   isInitialized = true;
   logger.debug('Initialized');
+}
+
+/**
+ * Trigger a full sync cycle. Useful if you don't want to wait for the next
+ * tick.
+ */
+export async function triggerSync () {
+  await initSync();
+  await pushActiveDirtyResources();
+  await pull();
 }
 
 /**
@@ -128,21 +128,21 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
   for (const {id, version} of updated) {
     const resource = await store.getResourceById(id);
     await store.updateResource(resource, {version, dirty: false});
-    logger.debug(`Push updated ${id}`);
+    // logger.debug(`Push updated ${id}`);
   }
 
   // Update all resource versions with the ones that were returned
   for (const {id, version} of created) {
     const resource = await store.getResourceById(id);
     await store.updateResource(resource, {version, dirty: false});
-    logger.debug(`Push created ${id}`);
+    // logger.debug(`Push created ${id}`);
   }
 
   // Update all resource versions with the ones that were returned
   for (const {id, version} of removed) {
     const resource = await store.getResourceById(id);
     await store.updateResource(resource, {version, dirty: false});
-    logger.debug(`Push removed ${id}`);
+    // logger.debug(`Push removed ${id}`);
   }
 
   // Resolve conflicts
