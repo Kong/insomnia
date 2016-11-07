@@ -6,9 +6,7 @@ import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
 import BodyEditor from './editors/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
-// import {UrlBar} from './UrlBar.elm';
 import RequestUrlBar from './RequestUrlBar.js';
-import ElmComponent from './ElmComponent';
 import {
   getContentTypeName,
   getContentTypeFromHeaders

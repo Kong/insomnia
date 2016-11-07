@@ -33,16 +33,16 @@ const SettingsSync = ({
         <PromptButton
           className="btn btn--super-compact btn--outlined danger"
           onClick={async () => {
-            await handleCancelAccount();
             handleExit();
+            await handleCancelAccount();
           }}>
           Cancel Subscription
         </PromptButton>
         {" "}
         <PromptButton className="btn btn--super-compact btn--outlined"
                       onClick={async () => {
-                        await handleLogout();
                         handleExit();
+                        await handleLogout();
                       }}>
           Log Out
         </PromptButton>

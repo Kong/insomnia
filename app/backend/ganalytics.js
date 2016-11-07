@@ -44,8 +44,12 @@ export function setAccountId (accountId) {
   window.ga && window.ga('set', 'userId', accountId);
 }
 
-export function trackEvent (category, action, label) {
-  window.ga && window.ga('send', 'event', category, action, label);
+export function trackEvent (...googleAnalyticsArgs) {
+  if (!window.ga) {
+    return;
+  }
+
+  window.ga('send', 'event', ...googleAnalyticsArgs);
 }
 
 function _injectGoogleAnalyticsScript () {

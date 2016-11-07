@@ -144,7 +144,7 @@ export function importFile (workspace) {
       if (!paths) {
         // It was cancelled, so let's bail out
         dispatch(loadStop());
-        trackEvent('import', 'Cancel');
+        trackEvent('Import', 'Cancel');
         return;
       }
 

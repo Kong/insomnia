@@ -63,16 +63,6 @@ export async function initSync () {
 }
 
 /**
- * Trigger a full sync cycle. Useful if you don't want to wait for the next
- * tick.
- */
-export async function triggerSync () {
-  await initSync();
-  await pushActiveDirtyResources();
-  await pull();
-}
-
-/**
  * Non-blocking function to perform initial sync for an account. This will pull
  * all remote resources (if they exist) before initializing sync.
  */
@@ -153,16 +143,17 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
     const serverIsNewer = serverResource.lastEdited > localResource.lastEdited;
     const winner = serverIsNewer ? serverResource : localResource;
 
-    // Decrypt the docs from the resources. Don't fetch the local doc from the
-    // app database, because it might have been deleted.
-    logger.debug(`Resolved conflict for ${serverResource.id} (${serverIsNewer ? 'Server' : 'Local'})`, winner);
-
     // Update local resource
     // NOTE: using localResource as the base to make sure we have _id
     await store.updateResource(localResource, winner, {
       version: serverResource.version, // Act as the server resource no matter what
       dirty: !serverIsNewer // It's dirty if we chose the local doc
     });
+
+    // Decrypt the docs from the resources. Don't fetch the local doc from the
+    // app database, because it might have been deleted.
+    const winnerName = serverIsNewer ? 'Server' : 'Local';
+    logger.debug(`Resolved conflict for ${serverResource.id} (${winnerName})`);
 
     // If the server won, update ourselves. If we won, we already have the
     // latest version, so do nothing.

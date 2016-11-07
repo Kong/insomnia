@@ -151,7 +151,7 @@ export async function subscribe (tokenId, planId) {
     quantity: 1,
     plan: planId,
   });
-  trackEvent('Session', 'Add Card');
+  trackEvent('Session', 'Subscribe', planId, 1);
   return response;
 }
 

@@ -20,9 +20,3 @@ pids
 
 # Optional REPL history
 .node_repl_history
-
-# GitBook
-_book
-
-# Elm
-elm-stuff
