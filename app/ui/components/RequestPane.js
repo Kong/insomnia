@@ -6,8 +6,7 @@ import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
 import BodyEditor from './editors/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
-import {UrlBar} from './UrlBar.elm';
-import ElmComponent from './ElmComponent';
+import RequestUrlBar from './RequestUrlBar.js';
 import {
   getContentTypeName,
   getContentTypeFromHeaders
@@ -89,17 +88,15 @@ class RequestPane extends Component {
 
     return (
       <section className="pane request-pane">
-        <ElmComponent
-          container={<header className="pane__header"/>}
-          ports={{
-            onUrlChange: debounce(updateRequestUrl),
-            onSendRequest: sendRequest.bind(null, request),
-            onMethodChange: updateRequestMethod
-          }}
-          component={UrlBar}
-          method={request.method}
-          url={request.url}
-        />
+        <header className="pane__header">
+          <RequestUrlBar
+            method={request.method}
+            onMethodChange={updateRequestMethod}
+            onUrlChange={debounce(updateRequestUrl)}
+            sendRequest={sendRequest.bind(null, request)}
+            url={request.url}
+          />
+        </header>
         <Tabs className="pane__body">
           <TabList>
             <Tab>
@@ -174,8 +171,9 @@ class RequestPane extends Component {
             />
 
             <div className="pad-right text-right">
-              <button className="margin-top-sm btn btn--outlined btn--super-compact"
-                      onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
+              <button
+                className="margin-top-sm btn btn--outlined btn--super-compact"
+                onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
                 {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>

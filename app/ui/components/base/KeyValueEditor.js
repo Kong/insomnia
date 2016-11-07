@@ -24,8 +24,8 @@ class KeyValueEditor extends Component {
   }
 
   _onChange (pairs, updateState = true) {
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
+    clearTimeout(this._askTimeout);
+    this._askTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
     updateState && this.setState({pairs});
   }
 

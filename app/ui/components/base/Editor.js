@@ -38,7 +38,7 @@ import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
 import '../../css/components/editor.less';
-import {getModal} from '../modals/index';
+import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
 import {DEBOUNCE_MILLIS} from '../../../backend/constants';
@@ -248,8 +248,8 @@ class Editor extends Component {
     }
 
     // Debounce URL changes so we don't update the app so much
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
+    clearTimeout(this._askTimeout);
+    this._askTimeout = setTimeout(() => {
       // Update our cached value
       var newValue = doc.getValue();
       this.props.onChange(newValue);
@@ -300,8 +300,8 @@ class Editor extends Component {
       </Link>
     );
 
-    getModal(AlertModal).show({
-      headerName: 'Response Filtering Help',
+    showModal(AlertModal, {
+      title: 'Response Filtering Help',
       message: (
         <div>
           <p>

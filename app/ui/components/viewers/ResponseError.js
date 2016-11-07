@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 
 import Link from '../../components/base/Link';
-import {getModal} from '../modals/index';
+import {showModal} from '../modals/index';
 import SettingsModal from '../modals/SettingsModal';
 
 class ResponseError extends Component {
@@ -12,14 +12,14 @@ class ResponseError extends Component {
     if (error && error.toLowerCase().indexOf('certificate') !== -1) {
       msg = (
         <button className="btn btn--super-compact btn--outlined"
-                onClick={() => getModal(SettingsModal).show()}>
+                onClick={() => showModal(SettingsModal)}>
           Disable SSL Validation
         </button>
       )
     } else if (error && error.toLowerCase().indexOf('getaddrinfo') !== -1) {
       msg = (
         <button className="btn btn--super-compact btn--outlined"
-                onClick={() => getModal(SettingsModal).show()}>
+                onClick={() => showModal(SettingsModal)}>
           Setup Network Proxy
         </button>
       )

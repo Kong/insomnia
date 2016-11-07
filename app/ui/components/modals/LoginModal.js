@@ -5,7 +5,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../backend/sync/session';
-import {getModal} from './index';
+import {showModal} from './index';
 import SignupModal from './SignupModal';
 import * as sync from '../../../backend/sync';
 import {trackEvent} from '../../../backend/ganalytics';
@@ -16,7 +16,9 @@ class LoginModal extends Component {
     this.state = {
       step: 1,
       loading: false,
-      error: ''
+      error: '',
+      title: '',
+      message: '',
     }
   }
 
@@ -44,23 +46,27 @@ class LoginModal extends Component {
     e.preventDefault();
 
     this.modal.hide();
-    getModal(SignupModal).show();
-    trackEvent('Auth', 'Login', 'Switch');
+    showModal(SignupModal);
+    trackEvent('Auth', 'Switch', 'To Signup');
   }
 
-  show () {
-    this.setState({step: 1, error: ''});
+  show ({title, message}) {
+    this.setState({step: 1, error: '', title, message});
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);
   }
 
   render () {
-    if (this.state.step === 1) {
+    const {step, title, message} = this.state;
+    if (step === 1) {
       return (
         <Modal ref={m => this.modal = m} {...this.props}>
           <form onSubmit={this._handleLogin.bind(this)}>
-            <ModalHeader>Login to Your Account</ModalHeader>
+            <ModalHeader>{title || "Login to Your Account"}</ModalHeader>
             <ModalBody className="pad changelog">
+              {message ? (
+                <p className="notice info">{message}</p>
+              ) : null}
               <label htmlFor="login-email">Email</label>
               <div className="form-control form-control--outlined">
                 <input type="email"

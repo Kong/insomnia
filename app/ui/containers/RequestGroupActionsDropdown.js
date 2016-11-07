@@ -9,13 +9,13 @@ import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../backend/database';
-import {getModal} from '../components/modals/index';
+import {showModal} from '../components/modals/index';
 
 class RequestGroupActionsDropdown extends Component {
   async _promptUpdateName () {
     const {requestGroup} = this.props;
 
-    const name = await getModal(PromptModal).show({
+    const name = await showModal(PromptModal, {
       headerName: 'Rename Folder',
       defaultValue: requestGroup.name
     });
@@ -24,7 +24,7 @@ class RequestGroupActionsDropdown extends Component {
   }
 
   async _requestCreate () {
-    const name = await getModal(PromptModal).show({
+    const name = await showModal(PromptModal, {
       headerName: 'Create New Request',
       defaultValue: 'My Request',
       selectText: true
@@ -82,7 +82,7 @@ class RequestGroupActionsDropdown extends Component {
           </li>
           <li>
             <button
-              onClick={e => getModal(EnvironmentEditModal).show(requestGroup)}>
+              onClick={e => showModal(EnvironmentEditModal, requestGroup)}>
               <i className="fa fa-code"></i> Environment
             </button>
           </li>

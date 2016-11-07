@@ -56,8 +56,8 @@ class CookiesModal extends Component {
   }
 
   _onFilterChange (filter) {
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
+    clearTimeout(this._askTimeout);
+    this._askTimeout = setTimeout(() => {
       this.setState({filter});
     }, DEBOUNCE_MILLIS);
   }

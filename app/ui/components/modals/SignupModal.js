@@ -5,7 +5,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../backend/sync/session';
-import {getModal} from './index';
+import {showModal} from './index';
 import LoginModal from './LoginModal';
 import * as sync from '../../../backend/sync';
 import {trackEvent} from '../../../backend/ganalytics';
@@ -42,8 +42,8 @@ class SignupModal extends Component {
     e.preventDefault();
 
     this.modal.hide();
-    getModal(LoginModal).show();
-    trackEvent('Auth', 'Signup', 'Switch');
+    showModal(LoginModal, {});
+    trackEvent('Auth', 'Switch', 'To Login');
   }
 
   show () {
@@ -53,7 +53,8 @@ class SignupModal extends Component {
   }
 
   render () {
-    if (this.state.step === 1) {
+    const {step} = this.state;
+    if (step === 1) {
       return (
         <Modal ref={m => this.modal = m} {...this.props}>
           <form onSubmit={this._handleSignup.bind(this)}>

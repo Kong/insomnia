@@ -27,7 +27,7 @@ export function allResources () {
 }
 
 export async function findResources (query) {
-  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', query);
+  return _execDB(TYPE_RESOURCE, 'find', query);
 }
 
 export async function findActiveResources (query) {
@@ -44,12 +44,20 @@ export async function findActiveDirtyResourcesForResourceGroup (resourceGroupId)
   return findActiveResources({dirty: true, resourceGroupId});
 }
 
+export async function hasDirtyResourcesForResourceGroup (resourceGroupId) {
+  return new Promise(resolve => {
+    _getDB(TYPE_RESOURCE).find({dirty: true, resourceGroupId}).limit(1).exec((err, docs) => {
+      err ? resolve(false) : resolve(docs.length > 0)
+    })
+  });
+}
+
 export async function findResourcesForResourceGroup (resourceGroupId) {
   return findResources({resourceGroupId});
 }
 
-export async function getResourceById (id) {
-  const rawDocs = await _promisifyCallback(_getDB(TYPE_RESOURCE), 'find', {id});
+export async function getResourceByDocId (id) {
+  const rawDocs = await _execDB(TYPE_RESOURCE, 'find', {id});
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
@@ -58,18 +66,18 @@ export async function insertResource (resource) {
   h.update(resource.resourceGroupId);
   h.update(resource.id);
   const newResource = Object.assign({}, resource, {_id: `rs_${h.digest('hex')}`});
-  await _promisifyCallback(_getDB(TYPE_RESOURCE), 'insert', newResource);
+  await _execDB(TYPE_RESOURCE, 'insert', newResource);
   return newResource;
 }
 
 export async function updateResource (resource, ...patches) {
   const newDoc = Object.assign(resource, ...patches);
-  await _promisifyCallback(_getDB(TYPE_RESOURCE), 'update', {_id: resource._id}, newDoc);
+  await _execDB(TYPE_RESOURCE, 'update', {_id: resource._id}, newDoc);
   return newDoc
 }
 
 export function removeResource (resource) {
-  return _promisifyCallback(_getDB(TYPE_RESOURCE), 'remove', {_id: resource._id});
+  return _execDB(TYPE_RESOURCE, 'remove', {_id: resource._id});
 }
 
 // ~~~~~~ //
@@ -77,7 +85,7 @@ export function removeResource (resource) {
 // ~~~~~~ //
 
 export function findConfigs (query) {
-  return _promisifyCallback(_getDB(TYPE_CONFIG), 'find', query)
+  return _execDB(TYPE_CONFIG, 'find', query)
 }
 
 export function allConfigs () {
@@ -86,7 +94,10 @@ export function allConfigs () {
 
 export function findInactiveConfigs (excludedResourceGroupId = null) {
   if (excludedResourceGroupId) {
-    return findConfigs({syncMode: SYNC_MODE_OFF, $not: {excludedResourceGroupId}})
+    return findConfigs({
+      syncMode: SYNC_MODE_OFF,
+      $not: {excludedResourceGroupId}
+    })
   } else {
     return findConfigs({syncMode: SYNC_MODE_OFF})
   }
@@ -101,28 +112,23 @@ export function findActiveConfigs (resourceGroupId = null) {
 }
 
 export async function getConfig (resourceGroupId) {
-  const rawDocs = await _promisifyCallback(_getDB(TYPE_CONFIG), 'find', {resourceGroupId});
+  const rawDocs = await _execDB(TYPE_CONFIG, 'find', {resourceGroupId});
   return rawDocs.length >= 1 ? _initConfig(rawDocs[0]) : null;
 }
 
 export async function updateConfig (config, ...patches) {
   const doc = _initConfig(Object.assign(config, ...patches));
-  await _promisifyCallback(
-    _getDB(TYPE_CONFIG),
-    'update',
-    {_id: doc._id},
-    doc
-  );
+  await _execDB(TYPE_CONFIG, 'update', {_id: doc._id}, doc);
   return doc;
 }
 
 export function removeConfig (config) {
-  return _promisifyCallback(_getDB(TYPE_CONFIG), 'remove', {_id: config._id});
+  return _execDB(TYPE_CONFIG, 'remove', {_id: config._id});
 }
 
 export async function insertConfig (config) {
   const doc = _initConfig(config);
-  await _promisifyCallback(_getDB(TYPE_CONFIG), 'insert', doc);
+  await _execDB(TYPE_CONFIG, 'insert', doc);
   return doc;
 }
 
@@ -162,14 +168,10 @@ function _getDB (type) {
   return _database[type];
 }
 
-function _promisifyCallback (obj, fnName, ...args) {
+function _execDB (type, fnName, ...args) {
   return new Promise((resolve, reject) => {
-    obj[fnName](...args, (err, data) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
+    _getDB(type)[fnName](...args, (err, data) => {
+      err ? reject(err) : resolve(data);
     });
   });
 }

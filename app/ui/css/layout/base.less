@@ -100,6 +100,22 @@ code, pre, .monospace {
   font-family: @font-monospace;
 }
 
+.notice {
+  color: @font-light-bg !important;
+  padding: @padding-sm;
+  border-radius: @radius-md;
+}
+
+.notice.warning {
+  background: fadeout(@warning, 80);
+  border: 1px solid @warning;
+}
+
+.notice.info {
+  background: fadeout(@info, 80);
+  border: 1px solid @info;
+}
+
 .text-center {
   text-align: center;
 }

@@ -22,45 +22,27 @@ class SyncModal extends Component {
       sessionId: 'n/a',
       dirty: [],
       syncData: [],
-      pushingResourceGroups: {},
-      pullingResourceGroups: {},
+      syncingResourceGroups: {},
     }
   }
 
-  async _handlePushResourceGroupId (resourceGroupId) {
+  async _handleSyncResourceGroupId (resourceGroupId) {
     // Set loading state
-    const pushingResourceGroups = Object.assign({}, this.state.pushingResourceGroups);
-    pushingResourceGroups[resourceGroupId] = true;
-    this.setState({pushingResourceGroups});
+    const syncingResourceGroups = Object.assign({}, this.state.syncingResourceGroups);
+    syncingResourceGroups[resourceGroupId] = true;
+    this.setState({syncingResourceGroups});
 
     await sync.getOrCreateConfig(resourceGroupId);
-    await sync.push(resourceGroupId);
+    await sync.pull(resourceGroupId);
+    await sync.pushActiveDirtyResources(resourceGroupId);
 
     // Unset loading state
-    delete pushingResourceGroups[resourceGroupId];
-    this.setState({pushingResourceGroups});
+    delete syncingResourceGroups[resourceGroupId];
+    this.setState({syncingResourceGroups});
 
     await this._updateModal();
 
     trackEvent('Sync', 'Push');
-  }
-
-  async _handlePullResourceGroupId (resourceGroupId) {
-    // Set loading state
-    const pullingResourceGroups = Object.assign({}, this.state.pushingResourceGroups);
-    pullingResourceGroups[resourceGroupId] = true;
-    this.setState({pullingResourceGroups});
-
-    await sync.getOrCreateConfig(resourceGroupId);
-    await sync.pull(resourceGroupId);
-
-    // Unset loading state
-    delete pullingResourceGroups[resourceGroupId];
-    this.setState({pullingResourceGroups});
-
-    await this._updateModal();
-
-    trackEvent('Sync', 'Pull');
   }
 
   async _handleSyncModeChange (syncData, e) {
@@ -71,24 +53,20 @@ class SyncModal extends Component {
     // Refresh the modal
     this._updateModal();
 
-    // Trigger a sync cycle right away
-    await sync.triggerSync();
-
     trackEvent('Sync', 'Change Mode', syncMode);
   }
 
   async _handleReset () {
     this.hide();
     trackEvent('Sync', 'Reset');
-    await session.logout();
-    await sync.resetLocalData();
     await sync.resetRemoteData();
+    await sync.resetLocalData();
+    await session.logout();
   }
 
   async _handleLogout () {
     this.hide();
-    await sync.resetLocalData();
-    await session.logout();
+    sync.logout();
   }
 
   async _updateModal () {
@@ -230,31 +208,20 @@ class SyncModal extends Component {
                             </option>
                           </select>
                           &nbsp;&nbsp;
-                          <button title="Check for remote changes"
-                                  className="btn btn--super-duper-compact btn--outlined"
-                                  onClick={e => this._handlePullResourceGroupId(resourceGroupId)}>
-                            <i className={classnames(
-                              'fa fa-download',
-                              {'fa-spin': this.state.pullingResourceGroups[resourceGroupId]}
-                            )}></i>
-                            {" "}
-                            Pull
-                          </button>
-                          {" "}
                           <button
-                            title={syncPercent >= 99 ? 'Nothing to push' : 'Push local changes'}
-                            disabled={syncPercent >= 99}
+                            title={syncPercent === 100 ? 'Nothing to push' : 'Push local changes'}
+                            disabled={syncPercent === 100}
                             className="btn btn--super-duper-compact btn--outlined"
-                            onClick={e => this._handlePushResourceGroupId(resourceGroupId)}>
+                            onClick={e => this._handleSyncResourceGroupId(resourceGroupId)}>
                             <i className={classnames(
-                              'fa fa-upload',
-                              {'fa-spin': this.state.pushingResourceGroups[resourceGroupId]}
+                              'fa fa-refresh',
+                              {'fa-spin': this.state.syncingResourceGroups[resourceGroupId]}
                             )}></i>
                             {" "}
-                            Push
+                            Sync
                           </button>
                         </td>
-                        <td className={syncPercent < 99 ? 'warning' : ''}>
+                        <td className={syncPercent < 100 ? 'warning' : ''}>
                           {syncPercent}%
                         </td>
                         <td className="faint italic">
@@ -299,8 +266,8 @@ class SyncModal extends Component {
 
                   const dateString =
                     pad(entry.date.getFullYear(), 4) + '/' +
-                    pad(entry.date.getMonth(), 2) + '/' +
-                    pad(entry.date.getDay(), 2) + ' ' +
+                    pad(entry.date.getMonth() + 1, 2) + '/' +
+                    pad(entry.date.getDate(), 2) + ' ' +
                     pad(entry.date.getHours(), 2) + ':' +
                     pad(entry.date.getMinutes(), 2) + ':' +
                     pad(entry.date.getSeconds(), 2);

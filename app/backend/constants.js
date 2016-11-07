@@ -10,7 +10,7 @@ export const GA_ID = 'UA-86416787-1';
 export const GA_HOST = 'desktop.insomnia.rest';
 export const CHANGELOG_URL = isDevelopment() ?
   'http://localhost:1313/changelog-json/' :
-  'https://insomnia.rest/changelog-json/';
+  'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_PEBKAC = -333;
 export const LARGE_RESPONSE_MB = 10;
@@ -40,6 +40,18 @@ export const METHOD_HEAD = 'HEAD';
 export const METHOD_FIND = 'FIND';
 export const METHOD_PURGE = 'PURGE';
 export const METHOD_DELETE_HARD = 'DELETEHARD';
+export const METHODS = [
+  METHOD_GET,
+  METHOD_POST,
+  METHOD_PUT,
+  METHOD_PATCH,
+  METHOD_DELETE,
+  METHOD_OPTIONS,
+  METHOD_HEAD,
+  METHOD_FIND,
+  METHOD_PURGE,
+  METHOD_DELETE_HARD,
+];
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS = {

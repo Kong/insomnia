@@ -1,6 +1,6 @@
 import srp from 'srp';
 import * as crypt from './crypt';
-import * as util from './util';
+import * as util from '../fetch';
 import * as ganalytics from '../ganalytics';
 import {trackEvent} from '../ganalytics';
 
@@ -45,7 +45,7 @@ export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
   account.encPrivateKey = JSON.stringify(encPrivateJWKMessage);
   account.encSymmetricKey = JSON.stringify(encSymmetricJWKMessage);
 
-  const response = await util.fetchPost('/auth/signup', account);
+  const response = await util.post('/auth/signup', account);
 
   trackEvent('Session', 'Signup');
 
@@ -73,7 +73,7 @@ export async function login (rawEmail, rawPassphrase) {
   // Fetch Salt and Submit A To Server //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  const {saltKey, saltAuth} = await util.fetchPost('/auth/login-s', {email});
+  const {saltKey, saltAuth} = await util.post('/auth/login-s', {email});
   const authSecret = await crypt.deriveKey(passphrase, email, saltKey);
   const secret1 = await crypt.srpGenKey();
   const c = new srp.Client(
@@ -84,7 +84,7 @@ export async function login (rawEmail, rawPassphrase) {
     Buffer.from(secret1, 'hex')
   );
   const srpA = c.computeA().toString('hex');
-  const {sessionStarterId, srpB} = await util.fetchPost(
+  const {sessionStarterId, srpB} = await util.post(
     '/auth/login-a',
     {srpA, email}
   );
@@ -95,7 +95,7 @@ export async function login (rawEmail, rawPassphrase) {
 
   c.setB(new Buffer(srpB, 'hex'));
   const srpM1 = c.computeM1().toString('hex');
-  const {srpM2} = await util.fetchPost('/auth/login-m1', {
+  const {srpM2} = await util.post('/auth/login-m1', {
     srpM1,
     sessionStarterId,
   });
@@ -120,7 +120,8 @@ export async function login (rawEmail, rawPassphrase) {
     encSymmetricKey,
     saltEnc,
     accountId,
-    firstName
+    firstName,
+    lastName,
   } = await whoami(sessionId);
 
   const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
@@ -131,6 +132,7 @@ export async function login (rawEmail, rawPassphrase) {
     sessionId,
     accountId,
     firstName,
+    lastName,
     email,
     JSON.parse(symmetricKeyStr),
     JSON.parse(publicKey),
@@ -141,6 +143,16 @@ export async function login (rawEmail, rawPassphrase) {
   ganalytics.setAccountId(accountId);
 
   trackEvent('Session', 'Login');
+}
+
+export async function subscribe (tokenId, planId) {
+  const response = await util.post('/api/billing/subscriptions', {
+    token: tokenId,
+    quantity: 1,
+    plan: planId,
+  });
+  trackEvent('Session', 'Subscribe', planId, 1);
+  return response;
 }
 
 export function getPublicKey () {
@@ -169,6 +181,11 @@ export function getFirstName () {
   return getSessionData().firstName;
 }
 
+export function getFullName () {
+  const {firstName, lastName} = getSessionData();
+  return `${firstName || ''} ${lastName || ''}`.trim();
+}
+
 /**
  * get Data about the current session
  * @returns Object
@@ -189,20 +206,20 @@ export function getSessionData () {
  * @param sessionId
  * @param accountId
  * @param firstName
+ * @param lastName
  * @param symmetricKey
  * @param publicKey
  * @param encPrivateKey
  * @param email
  */
-export function setSessionData (
-  sessionId,
-  accountId,
-  firstName,
-  email,
-  symmetricKey,
-  publicKey,
-  encPrivateKey
-) {
+export function setSessionData (sessionId,
+                                accountId,
+                                firstName,
+                                lastName,
+                                email,
+                                symmetricKey,
+                                publicKey,
+                                encPrivateKey) {
   const dataStr = JSON.stringify({
     id: sessionId,
     accountId: accountId,
@@ -211,6 +228,7 @@ export function setSessionData (
     encPrivateKey: encPrivateKey,
     email: email,
     firstName: firstName,
+    lastName: lastName,
   });
 
   localStorage.setItem(_getSessionKey(sessionId), dataStr);
@@ -241,16 +259,24 @@ export function isLoggedIn () {
  * Log out
  */
 export async function logout () {
-  await util.fetchPost('/auth/logout');
+  await util.post('/auth/logout');
   unsetSessionData();
   trackEvent('Session', 'Logout');
+}
+
+/**
+ * Cancel Account
+ */
+export async function cancelAccount () {
+  await util.del('/api/billing/subscriptions');
+  trackEvent('Session', 'Cancel Account');
 }
 
 /**
  * Who Am I
  */
 export function whoami (sessionId = null) {
-  return util.fetchGet('/auth/whoami', sessionId);
+  return util.get('/auth/whoami', sessionId);
 }
 
 

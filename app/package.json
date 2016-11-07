@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "3.6.7",
+  "version": "3.6.8",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "A simple and beautiful REST API client",
@@ -10,6 +10,7 @@
   "main": "main.js",
   "dependencies": {
     "analytics-node": "^2.1.0",
+    "classnames": "^2.2.3",
     "electron-context-menu": "^0.4.0",
     "electron-cookies": "^1.1.0",
     "electron-squirrel-startup": "^1.0.0",
@@ -22,7 +23,7 @@
     "nedb": "^1.8.0",
     "node-forge": "^0.6.43",
     "node-uuid": "^1.4.7",
-    "nunjucks": "git@github.com:getinsomnia/nunjucks.git#80485468cd577f1a1a8067bedf6c5bfa878712ea",
+    "nunjucks": "^3.0.0",
     "raven": "^0.12.1",
     "request": "^2.71.0",
     "sjcl": "^1.0.6",

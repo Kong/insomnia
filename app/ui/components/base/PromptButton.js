@@ -1,65 +1,81 @@
 import React, {Component, PropTypes} from 'react';
 
+const STATE_DEFAULT = 'default';
+const STATE_ASK = 'ask';
+const STATE_DONE = 'done';
+
 class PromptButton extends Component {
   constructor (props) {
     super(props);
-    this.state = {
-      showConfirmation: false
-    }
+    this.state = {state: STATE_DEFAULT}
   }
 
   _confirm (e) {
     // Clear existing timeouts
-    clearTimeout(this._timeout);
-
-    // Reset the state
-    this.setState({showConfirmation: false});
+    clearTimeout(this._askTimeout);
 
     // Fire the click handler
     this.props.onClick(e);
+
+    // Set the state to done (but delay a bit to not alarm user)
+    this._doneTimeout = setTimeout(() => {
+      this.setState({state: STATE_DONE});
+    }, 100);
+
+    // Set a timeout to hide the confirmation
+    this._askTimeout = setTimeout(() => {
+      this.setState({state: STATE_DEFAULT});
+    }, 2000);
   }
 
-  _toggle (e) {
+  _ask (e) {
     // Prevent events (ex. won't close dropdown if it's in one)
     e.preventDefault();
     e.stopPropagation();
 
     // Toggle the confirmation notice
-    this.setState({showConfirmation: true});
+    this.setState({state: STATE_ASK});
 
     // Set a timeout to hide the confirmation
-    this._timeout = setTimeout(() => {
-      this.setState({showConfirmation: false});
+    this._askTimeout = setTimeout(() => {
+      this.setState({state: STATE_DEFAULT});
     }, 2000);
   }
 
   _handleClick (e) {
-    if (this.state.showConfirmation) {
+    const {state} = this.state;
+    if (state === STATE_ASK) {
       this._confirm(e)
+    } else if (state === STATE_DEFAULT) {
+      this._ask(e)
     } else {
-      this._toggle(e)
+      // Do nothing
     }
   }
 
   componentWillUnmount () {
-    clearTimeout(this._timeout);
+    clearTimeout(this._askTimeout);
+    clearTimeout(this._doneTimeout);
   }
 
   render () {
-    const {children, onClick, addIcon, confirmMessage, ...other} = this.props;
-    const {showConfirmation} = this.state;
+    const {children, onClick, addIcon, confirmMessage, doneMessage, ...other} = this.props;
+    const {state} = this.state;
 
     const CONFIRM_MESSAGE = confirmMessage || 'Click to confirm';
+    const DONE_MESSAGE = doneMessage || 'Done';
 
     let innerMsg;
-    if (showConfirmation && addIcon) {
+    if (state === STATE_ASK && addIcon) {
       innerMsg = (
         <span className="danger">
           <i className="fa fa-exclamation-circle"></i> {CONFIRM_MESSAGE}
         </span>
       )
-    } else if (showConfirmation) {
+    } else if (state === STATE_ASK) {
       innerMsg = <span className="danger">{CONFIRM_MESSAGE}</span>
+    } else if (state === STATE_DONE) {
+      innerMsg = DONE_MESSAGE
     } else {
       innerMsg = children
     }

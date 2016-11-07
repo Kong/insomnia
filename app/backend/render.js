@@ -124,10 +124,7 @@ export async function getRenderedRequest (request) {
   );
 
   // Render all request properties
-  const renderedRequest = recursiveRender(
-    request,
-    renderContext
-  );
+  const renderedRequest = recursiveRender(request, renderContext);
 
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
@@ -140,7 +137,6 @@ export async function getRenderedRequest (request) {
   if (missingAuthHeader && renderedRequest.authentication.username) {
     const {username, password} = renderedRequest.authentication;
     const header = getBasicAuthHeader(username, password);
-
     renderedRequest.headers.push(header);
   }
 

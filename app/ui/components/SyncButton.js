@@ -1,13 +1,12 @@
 import React, {Component, PropTypes} from 'react';
 import SyncModal from './modals/SyncModal';
-import {getModal} from './modals/index';
+import {showModal} from './modals/index';
 import * as syncStorage from '../../backend/sync/storage';
 import * as session from '../../backend/sync/session';
 import SignupModal from './modals/SignupModal';
 
 const STATE_OK = 'synced';
-const STATE_AHEAD = 'pending';
-const STATE_OFF = 'paused';
+const STATE_AHEAD = 'dirty';
 
 class SyncButton extends Component {
   constructor (props) {
@@ -20,17 +19,12 @@ class SyncButton extends Component {
 
   async _updateState () {
     const {workspaceId} = this.props;
-    const resource = await syncStorage.getResourceById(workspaceId);
+    const resource = await syncStorage.getResourceByDocId(workspaceId);
     const resourceGroupId = resource ? resource.resourceGroupId : null;
-    const config = await syncStorage.getConfig(resourceGroupId);
-    const dirtyDocs = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
+    const isDirty = await syncStorage.hasDirtyResourcesForResourceGroup(resourceGroupId);
     let state;
-    if (config && config.syncMode === syncStorage.SYNC_MODE_OFF) {
-      state = STATE_OFF;
-    } else if (config && dirtyDocs.length > 0) {
+    if (isDirty) {
       state = STATE_AHEAD;
-    } else if (!config) {
-      state = STATE_OFF;
     } else {
       state = STATE_OK;
     }
@@ -60,7 +54,7 @@ class SyncButton extends Component {
     if (session.isLoggedIn()) {
       return (
         <button className="btn btn--super-duper-compact btn--outlined wide ellipsis"
-                onClick={e => getModal(SyncModal).show()}>
+                onClick={e => showModal(SyncModal)}>
           Sync
           {this.state.state ? <span>&nbsp;({this.state.state})</span> : null}
         </button>
@@ -68,7 +62,7 @@ class SyncButton extends Component {
     } else {
       return (
         <button className="btn btn--super-duper-compact btn--outlined wide"
-                onClick={e => getModal(SignupModal).show()}>
+                onClick={e => showModal(SignupModal)}>
           Login to Cloud Sync
         </button>
       )

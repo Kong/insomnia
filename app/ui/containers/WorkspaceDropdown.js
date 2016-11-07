@@ -15,13 +15,13 @@ import ChangelogModal from '../components/modals/ChangelogModal';
 import * as GlobalActions from '../redux/modules/global';
 import * as db from '../../backend/database';
 import {getAppVersion} from '../../backend/appInfo';
-import {getModal} from '../components/modals/index';
+import {showModal} from '../components/modals/index';
 
 class WorkspaceDropdown extends Component {
   async _promptUpdateName () {
     const workspace = this._getActiveWorkspace(this.props);
 
-    const name = await getModal(PromptModal).show({
+    const name = await showModal(PromptModal, {
       headerName: 'Rename Workspace',
       defaultValue: workspace.name
     });
@@ -30,7 +30,7 @@ class WorkspaceDropdown extends Component {
   }
 
   async _workspaceCreate () {
-    const name = await getModal(PromptModal).show({
+    const name = await showModal(PromptModal, {
       headerName: 'Create New Workspace',
       defaultValue: 'My Workspace',
       submitName: 'Create',
@@ -44,8 +44,9 @@ class WorkspaceDropdown extends Component {
   async _workspaceRemove () {
     const count = await db.workspace.count();
     if (count <= 1) {
-      getModal(AlertModal).show({
-        message: 'You cannot delete your last workspace'
+      showModal(AlertModal, {
+        title: 'Delete Unsuccessful',
+        message: 'You cannot delete your last workspace.'
       });
     } else {
       const workspace = this._getActiveWorkspace(this.props);
@@ -72,7 +73,9 @@ class WorkspaceDropdown extends Component {
     const workspace = this._getActiveWorkspace(this.props);
 
     return (
-      <Dropdown {...other} className={className + ' wide workspace-dropdown'}>
+      <Dropdown key={workspace._id}
+                className={className + ' wide workspace-dropdown'}
+                {...other}>
         <button className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
@@ -124,18 +127,23 @@ class WorkspaceDropdown extends Component {
           <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
           <li>
-            <button onClick={e => getModal(SettingsModal).show(2)}>
+            <button onClick={e => showModal(SettingsModal, 1)}>
               <i className="fa fa-share"></i> Import/Export
             </button>
           </li>
           <li>
-            <button onClick={e => getModal(SettingsModal).show()}>
+            <button onClick={e => showModal(SettingsModal, 2)}>
+              <i className="fa fa-refresh"></i> Cloud Sync
+            </button>
+          </li>
+          <li>
+            <button onClick={e => showModal(SettingsModal)}>
               <i className="fa fa-cog"></i> Settings
               <DropdownHint char=","></DropdownHint>
             </button>
           </li>
           <li>
-            <button onClick={e => getModal(ChangelogModal).show()}>
+            <button onClick={e => showModal(ChangelogModal)}>
               <i className="fa fa-blank"></i> Changelog
             </button>
           </li>
