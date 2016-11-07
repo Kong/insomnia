@@ -43,10 +43,8 @@ function lookup (url, forceIPv4) {
 }
 
 export async function swapHost (url, forceIPv4) {
-  let ip;
-
   try {
-    ip = await lookup(url, forceIPv4);
+    const ip = await lookup(url, forceIPv4);
     const parsedUrl = urlParse(url);
     delete parsedUrl.host; // So it doesn't build with old host
     parsedUrl.hostname = ip;
