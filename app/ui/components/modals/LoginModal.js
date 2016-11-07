@@ -33,8 +33,10 @@ class LoginModal extends Component {
       await session.login(email, password);
 
       // Clear all existing sync data that might be there and enable sync
-      await sync.resetLocalData();
-      sync.doInitialSync();
+      process.nextTick(async () => {
+        await sync.resetLocalData();
+        await sync.doInitialSync();
+      });
 
       this.setState({step: 2, loading: false});
     } catch (e) {
@@ -60,8 +62,8 @@ class LoginModal extends Component {
     const {step, title, message} = this.state;
     if (step === 1) {
       return (
-        <Modal ref={m => this.modal = m} {...this.props}>
-          <form onSubmit={this._handleLogin.bind(this)}>
+        <form onSubmit={this._handleLogin.bind(this)}>
+          <Modal ref={m => this.modal = m} {...this.props}>
             <ModalHeader>{title || "Login to Your Account"}</ModalHeader>
             <ModalBody className="pad changelog">
               {message ? (
@@ -96,12 +98,13 @@ class LoginModal extends Component {
                 <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
               </div>
               <button type="submit" className="btn">
-                {this.state.loading ? <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
+                {this.state.loading ? <i
+                  className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
                 Login
               </button>
             </ModalFooter>
-          </form>
-        </Modal>
+          </Modal>
+        </form>
       )
     } else {
       return (

@@ -56,8 +56,15 @@ export async function findResourcesForResourceGroup (resourceGroupId) {
   return findResources({resourceGroupId});
 }
 
-export async function getResourceByDocId (id) {
-  const rawDocs = await _execDB(TYPE_RESOURCE, 'find', {id});
+export async function getResourceByDocId (id, resourceGroupId = null) {
+  let query;
+  if (resourceGroupId) {
+    query = {id, resourceGroupId};
+  } else {
+    query = {id};
+  }
+
+  const rawDocs = await _execDB(TYPE_RESOURCE, 'find', query);
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 

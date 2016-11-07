@@ -137,7 +137,10 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
 
   // Resolve conflicts
   for (const serverResource of conflicts) {
-    const localResource = await store.getResourceByDocId(serverResource.id);
+    const localResource = await store.getResourceByDocId(
+      serverResource.id,
+      serverResource.resourceGroupId
+    );
 
     // On conflict, choose last edited one
     const serverIsNewer = serverResource.lastEdited > localResource.lastEdited;
@@ -268,7 +271,10 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
       await db.update(doc, true);
 
       // Update local resource
-      const resource = await store.getResourceByDocId(serverResource.id);
+      const resource = await store.getResourceByDocId(
+        serverResource.id,
+        serverResource.resourceGroupId
+      );
       await store.updateResource(resource, serverResource, {dirty: false});
     } catch (e) {
       logger.warn('Failed to decode updated resource', e, serverResource);
@@ -402,6 +408,7 @@ async function _queueChange (event, doc) {
       // TODO: Remove one of these steps since it does encryption twice
       // in the case where the resource does not exist yet
       const resource = await getOrCreateResourceForDoc(doc);
+
       const updatedResource = await store.updateResource(resource, {
         name: doc.name || 'n/a',
         lastEdited: timestamp,
@@ -620,7 +627,11 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
     for (const doc of await db.all(type)) {
       const resource = await store.getResourceByDocId(doc._id);
       if (!resource) {
-        activeResourceMap[doc._id] = await _createResourceForDoc(doc);
+        try {
+          activeResourceMap[doc._id] = await _createResourceForDoc(doc);
+        } catch (e) {
+          logger.error(`Failed to create resource for ${doc._id}`, doc);
+        }
       }
     }
   }

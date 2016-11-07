@@ -165,22 +165,6 @@ class SyncModal extends Component {
               </Tab>
             </TabList>
             <TabPanel className="pad scrollable">
-              <div className="pad-top">
-                <GravatarImg email={this.state.email}
-                             className="inline-block img--circle"
-                             size={50}/>
-                <div className="inline-block pad-left">
-                  <h2 className="no-pad-bottom no-margin">
-                    Hi {this.state.firstName}!
-                  </h2>
-                  <p>
-                    You are currently signed in with
-                    {" "}
-                    <code>{this.state.email}</code>
-                  </p>
-                </div>
-              </div>
-              <hr/>
               <table>
                 <thead>
                 <tr>
