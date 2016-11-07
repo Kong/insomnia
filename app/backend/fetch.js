@@ -77,7 +77,7 @@ function _getUrl (path) {
   if (isDevelopment()) {
     return `http://localhost:8000${path}`;
   } else {
-    return `https://insomnia-api.herokuapp.com${path}`;
+    return `https://api.insomnia.rest${path}`;
   }
 }
 
