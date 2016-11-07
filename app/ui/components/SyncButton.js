@@ -19,7 +19,7 @@ class SyncButton extends Component {
 
   async _updateState () {
     const {workspaceId} = this.props;
-    const resource = await syncStorage.getResourceById(workspaceId);
+    const resource = await syncStorage.getResourceByDocId(workspaceId);
     const resourceGroupId = resource ? resource.resourceGroupId : null;
     const isDirty = await syncStorage.hasDirtyResourcesForResourceGroup(resourceGroupId);
     let state;
