@@ -39,16 +39,6 @@ const SettingsSync = ({
           Cancel Subscription
         </PromptButton>
         {" "}
-        <PromptButton
-          className="btn btn--super-compact btn--outlined warning"
-          onClick={async () => {
-            await handleUpdateSetting('optSyncBeta', false);
-            await handleLogout();
-            handleExit()
-          }}>
-          Disable Sync
-        </PromptButton>
-        {" "}
         <PromptButton className="btn btn--super-compact btn--outlined"
                       onClick={async () => {
                         await handleLogout();

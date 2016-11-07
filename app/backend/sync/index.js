@@ -405,14 +405,15 @@ async function _queueChange (event, doc) {
     _queuedChanges = {};
 
     for (const k of Object.keys(queuedChangesCopy)) {
-      const [event, doc, ts] = queuedChangesCopy[k];
+      const [event, doc, timestamp] = queuedChangesCopy[k];
 
       // Update the resource content and set dirty
       // TODO: Remove one of these steps since it does encryption twice
       // in the case where the resource does not exist yet
       const resource = await getOrCreateResourceForDoc(doc);
       const updatedResource = await store.updateResource(resource, {
-        lastEdited: ts,
+        name: doc.name || 'n/a',
+        lastEdited: timestamp,
         lastEditedBy: session.getAccountId(),
         encContent: await _encryptDoc(resource.resourceGroupId, doc),
         removed: event === db.CHANGE_REMOVE,
@@ -433,22 +434,46 @@ async function _queueChange (event, doc) {
  * @param resourceGroupId
  * @returns {*}
  */
-async function _fetchResourceGroup (resourceGroupId) {
-  let resourceGroup = resourceGroupCache[resourceGroupId];
-
-  if (!resourceGroup) {
-    // TODO: Handle a 404 here
-    try {
-      resourceGroup = resourceGroupCache[resourceGroupId] = await fetch.get(
-        `/api/resource_groups/${resourceGroupId}`
-      );
-    } catch (e) {
-      logger.error(`Failed to get ResourceGroup ${resourceGroupId}: ${e}`);
-      throw e;
-    }
+const _fetchResourceGroupPromises = {};
+function _fetchResourceGroup (resourceGroupId) {
+  // PERF: If we're currently fetching, return stored promise
+  // TODO: Maybe move parallel fetch caching into the fetch helper
+  if (_fetchResourceGroupPromises[resourceGroupId]) {
+    return _fetchResourceGroupPromises[resourceGroupId];
   }
 
-  return resourceGroup;
+  const promise = new Promise(async (resolve, reject) => {
+    let resourceGroup = resourceGroupCache[resourceGroupId];
+
+    if (!resourceGroup) {
+      // TODO: Handle a 404 here
+      try {
+        resourceGroup = await fetch.get(
+          `/api/resource_groups/${resourceGroupId}`
+        );
+      } catch (e) {
+        logger.error(`Failed to get ResourceGroup ${resourceGroupId}: ${e}`);
+        reject(e);
+      }
+
+      // Also make sure a config exists when we first fetch it.
+      // TODO: This exists in multiple places, so move it to one place.
+      createOrUpdateConfig(resourceGroupId, store.SYNC_MODE_OFF);
+    }
+
+    // Bust cached promise because we're done with it.
+    _fetchResourceGroupPromises[resourceGroupId] = null;
+
+    // Cache the ResourceGroup for next time (they never change)
+    resourceGroupCache[resourceGroupId] = resourceGroup;
+
+    // Return the ResourceGroup
+    resolve(resourceGroup);
+  });
+
+  // Cache the Promise in case we get asked for the same thing before done
+  _fetchResourceGroupPromises[resourceGroupId] = promise;
+  return promise;
 }
 
 /**
@@ -531,13 +556,14 @@ async function _createResourceGroup (name = '') {
   // Create a config for it
   await createOrUpdateConfig(resourceGroup.id, store.SYNC_MODE_OFF);
 
-  logger.debug(`created ResourceGroup ${resourceGroup.id}`);
+  logger.debug(`Created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;
 }
 
 async function _createResource (doc, resourceGroupId) {
   return store.insertResource({
     id: doc._id,
+    name: doc.name || 'n/a', // Set name to the doc name if it has one
     resourceGroupId: resourceGroupId,
     version: NO_VERSION,
     createdBy: session.getAccountId(),

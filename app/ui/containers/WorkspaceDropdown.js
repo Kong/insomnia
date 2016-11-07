@@ -45,7 +45,8 @@ class WorkspaceDropdown extends Component {
     const count = await db.workspace.count();
     if (count <= 1) {
       showModal(AlertModal, {
-        title: 'You cannot delete your last workspace'
+        title: 'Delete Unsuccessful',
+        message: 'You cannot delete your last workspace.'
       });
     } else {
       const workspace = this._getActiveWorkspace(this.props);
@@ -72,7 +73,9 @@ class WorkspaceDropdown extends Component {
     const workspace = this._getActiveWorkspace(this.props);
 
     return (
-      <Dropdown {...other} className={className + ' wide workspace-dropdown'}>
+      <Dropdown key={workspace._id}
+                className={className + ' wide workspace-dropdown'}
+                {...other}>
         <button className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
