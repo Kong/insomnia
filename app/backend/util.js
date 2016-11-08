@@ -1,5 +1,6 @@
 import uuid from 'node-uuid';
 import {parse as urlParse, format as urlFormat} from 'url';
+import {DEBOUNCE_MILLIS} from "./constants";
 
 export function getBasicAuthHeader (username, password) {
   const name = 'Authorization';
@@ -97,4 +98,14 @@ export function delay (milliseconds) {
 
 export function removeVowels (str) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
+}
+
+export function debounce (callback, millis = DEBOUNCE_MILLIS) {
+  let timeout = null;
+  return function () {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      callback.apply(null, arguments)
+    }, millis);
+  }
 }

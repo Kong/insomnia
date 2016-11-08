@@ -5,7 +5,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as session from '../../../backend/sync/session';
+import * as session from '../../../sync/session';
 
 const MONTHS = [
   {name: 'January', value: '01'},

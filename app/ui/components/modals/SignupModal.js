@@ -4,10 +4,10 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as session from '../../../backend/sync/session';
+import * as session from '../../../sync/session';
 import {showModal} from './index';
 import LoginModal from './LoginModal';
-import * as sync from '../../../backend/sync';
+import * as sync from '../../../sync';
 import {trackEvent} from '../../../backend/ganalytics';
 
 class SignupModal extends Component {

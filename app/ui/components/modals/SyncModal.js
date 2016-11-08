@@ -1,15 +1,14 @@
 import React, {Component} from 'react';
 import classnames from 'classnames';
-import GravatarImg from '../GravatarImg';
 import Modal from '../base/Modal';
 import PromptButton from '../base/PromptButton';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import * as session from '../../../backend/sync/session';
-import * as syncStorage from '../../../backend/sync/storage';
-import * as sync from '../../../backend/sync';
+import * as session from '../../../sync/session';
+import * as syncStorage from '../../../sync/storage';
+import * as sync from '../../../sync';
 import * as db from '../../../backend/database';
 import {trackEvent} from '../../../backend/ganalytics';
 

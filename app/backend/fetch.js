@@ -1,6 +1,6 @@
 import {parse as urlParse} from 'url';
 import {isDevelopment} from './appInfo';
-import * as session from './sync/session';
+import * as session from '../sync/session';
 import * as appInfo from './appInfo';
 
 let commandListeners = [];
