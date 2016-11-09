@@ -1,5 +1,5 @@
-import * as db from '../database';
-import * as fetch from '../fetch';
+import * as db from '../backend/database';
+import * as fetch from '../backend/fetch';
 import * as crypt from './crypt';
 import * as session from './session';
 import * as store from './storage';
@@ -136,6 +136,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
   }
 
   // Resolve conflicts
+  db.bufferChanges();
   for (const serverResource of conflicts) {
     const localResource = await store.getResourceByDocId(
       serverResource.id,
@@ -169,6 +170,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
       }
     }
   }
+  db.flushChanges();
 }
 
 export async function pull (resourceGroupId = null, createMissingResources = true) {
@@ -226,7 +228,8 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   // Insert all the created docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  await createdResources.map(async serverResource => {
+  db.bufferChanges();
+  for (const serverResource of createdResources) {
     let doc;
 
     try {
@@ -252,7 +255,8 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // it's very possible that the client already had that document locally.
     // This might happen, for example, if the user logs out and back in again.
     await db.upsert(doc, true);
-  });
+  }
+  db.flushChanges();
 
   if (createdResources.length) {
     logger.debug(`Pull created ${createdResources.length} resources`);
@@ -262,7 +266,8 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   // Save all the updated docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  await updatedResources.map(async serverResource => {
+  db.bufferChanges();
+  for (const serverResource of updatedResources) {
     try {
       const {resourceGroupId, encContent} = serverResource;
       const doc = await _decryptDoc(resourceGroupId, encContent);
@@ -279,7 +284,8 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     } catch (e) {
       logger.warn('Failed to decode updated resource', e, serverResource);
     }
-  });
+  }
+  db.flushChanges();
 
   if (updatedResources.length) {
     logger.debug(`Pull updated ${updatedResources.length} resources`);
@@ -289,6 +295,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   // Remove all the docs that need removing //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
+  db.bufferChanges();
   for (const id of idsToRemove) {
     const resource = await store.getResourceByDocId(id);
     if (!resource) {
@@ -306,6 +313,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // Remove from DB
     await db.remove(doc, true);
   }
+  db.flushChanges();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Push all the docs that need pushing //

@@ -12,7 +12,7 @@ import {
   getContentTypeFromHeaders
 } from '../../backend/contentTypes';
 import {MOD_SYM} from '../../backend/constants';
-import {debounce} from '../lib/debounce';
+import {debounce} from '../../backend/util';
 
 class RequestPane extends Component {
   render () {

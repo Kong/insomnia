@@ -10,11 +10,11 @@ import './css/index.less';
 import './css/lib/chrome/platform_app.css';
 import {initStore} from './redux/initstore';
 import {initDB} from '../backend/database';
-import {initSync} from '../backend/sync';
+import {initSync} from '../sync';
 import {getAppVersion} from '../backend/appInfo';
 import {initLegacyAnalytics} from '../backend/analytics';
 import {initAnalytics} from '../backend/ganalytics';
-import * as session from '../backend/sync/session';
+import * as session from '../sync/session';
 
 // Global CSS
 

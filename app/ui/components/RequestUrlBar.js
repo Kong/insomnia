@@ -56,7 +56,7 @@ class RequestUrlBar extends Component {
               <li key={method}>
                 <button onClick={e => {
                   onMethodChange(method);
-                  trackEvent('Changed Method', {method});
+                  trackEvent('Request', 'Method Change', {method});
                 }}>
                   <div className={classnames('dropdown__inner', `method-${method}`)}>
                     <span className="dropdown__text">

@@ -44,7 +44,7 @@ class Modal extends Component {
     }
 
     setTimeout(() => {
-      this._node.focus();
+      this._node && this._node.focus();
     });
   }
 

@@ -1,8 +1,8 @@
 import React, {Component, PropTypes} from 'react';
 import SyncModal from './modals/SyncModal';
 import {showModal} from './modals/index';
-import * as syncStorage from '../../backend/sync/storage';
-import * as session from '../../backend/sync/session';
+import * as syncStorage from '../../sync/storage';
+import * as session from '../../sync/session';
 import SignupModal from './modals/SignupModal';
 
 const STATE_OK = 'synced';

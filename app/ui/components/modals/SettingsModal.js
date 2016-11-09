@@ -18,10 +18,10 @@ import {
   getAppVersion,
   getAppLongName
 } from '../../../backend/appInfo';
-import * as session from '../../../backend/sync/session';
+import * as session from '../../../sync/session';
 import {showModal} from './index';
 import SignupModal from './SignupModal';
-import * as sync from '../../../backend/sync/index';
+import * as sync from '../../../sync';
 
 
 class SettingsTabs extends Component {
