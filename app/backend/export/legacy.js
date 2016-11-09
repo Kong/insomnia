@@ -1,4 +1,4 @@
-import * as db from '../database/index';
+import * as db from '../database';
 import {getContentTypeFromHeaders} from '../contentTypes';
 
 const FORMAT_MAP = {

@@ -1,6 +1,4 @@
-'use strict';
-
-const db = require('../index');
+import * as db from '../database';
 
 export const type = 'Environment';
 export const prefix = 'env';

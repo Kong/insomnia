@@ -1,8 +1,8 @@
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import {DB_PERSIST_INTERVAL} from  '../constants';
-import {generateId} from '../util';
+import {DB_PERSIST_INTERVAL} from  './constants';
+import {generateId} from './util';
 
 import * as _stats from './models/stats';
 import * as _settings from './models/settings';
