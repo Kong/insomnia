@@ -6,7 +6,7 @@ import classnames from 'classnames';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
-import Mousetrap from '../lib/mousetrap';
+import Mousetrap from '../mousetrap';
 import {registerModal} from '../components/modals';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import CookiesModal from '../components/modals/CookiesModal';
@@ -289,8 +289,8 @@ class App extends Component {
     // TODO: Should this be moved elsewhere?
     const requestPatch = importCurl(url);
     if (requestPatch) {
-      // TODO: If the user typed in a curl cmd, dissect it and update the whole request
-      db.request.update(request, requestPatch);
+      await db.request.update(request, requestPatch);
+      this._forceHardRefresh();
     } else {
       db.request.update(request, {url});
     }
@@ -406,6 +406,10 @@ class App extends Component {
     this.props.actions.global.toggleSidebar(workspace);
   }
 
+  _forceHardRefresh () {
+    this.setState({forceRefreshCounter: this.state.forceRefreshCounter + 1});
+  }
+
   async componentDidMount () {
     // Bind handlers before we use them
     this._handleMouseUp = this._handleMouseUp.bind(this);
@@ -461,7 +465,7 @@ class App extends Component {
         console.log('[App] Forcing update');
 
         // All sync-related changes to data force-refresh the app.
-        this.setState({forceRefreshCounter: this.state.forceRefreshCounter + 1});
+        this._forceHardRefresh();
       }
     });
 
