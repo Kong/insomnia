@@ -4,8 +4,8 @@ import * as fetch from '../common/fetch';
 import * as crypt from './crypt';
 import * as session from './session';
 import * as store from './storage';
-import Logger from './logger';
 import * as misc from '../common/misc';
+import Logger from './logger';
 
 export const FULL_SYNC_INTERVAL = 60E3;
 export const QUEUE_DEBOUNCE_TIME = 1E3;

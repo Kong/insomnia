@@ -51,12 +51,13 @@ class SyncButton extends Component {
   }
 
   render () {
+    const {workspaceId} = this.props;
+    const {state: buttonState} = this.state;
     if (session.isLoggedIn()) {
       return (
         <button className="btn btn--super-duper-compact btn--outlined wide ellipsis"
-                onClick={e => showModal(SyncModal)}>
-          Sync
-          {this.state.state ? <span>&nbsp;({this.state.state})</span> : null}
+                onClick={e => showModal(SyncModal, workspaceId)}>
+          Sync {buttonState ? `(${buttonState})` : null}
         </button>
       )
     } else {
