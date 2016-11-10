@@ -35,26 +35,23 @@ export async function initSync () {
     return;
   }
 
-  const _queueChange = misc.keyedDebounce(results => {
+  // Debounce changes before we push, because encryption is expensive and slow
+  const _queueChangeDebounced = misc.keyedDebounce(results => {
     for (const k of Object.keys(results)) {
-      _pushChange(...results[k]);
+      _handleChangeAndPush(...results[k]);
     }
   }, QUEUE_DEBOUNCE_TIME);
 
   db.onChange(changes => {
     for (const [event, doc, fromSync] of changes) {
-      if (!WHITE_LIST[doc.type]) {
-        continue;
-      }
-
-      if (fromSync) {
-        // Change was triggered from sync, so do nothing.
+      const notOnWhitelist = !WHITE_LIST[doc.type];
+      if (notOnWhitelist || fromSync) {
         continue;
       }
 
       // Make sure it happens async
       const key = `${event}:${doc._id}`;
-      _queueChange(key, event, doc, Date.now());
+      _queueChangeDebounced(key, event, doc, Date.now());
     }
   });
 
@@ -388,7 +385,7 @@ export async function resetRemoteData () {
 // ~~~~~~~ //
 
 let _pushChangesTimeout = null;
-async function _pushChange (event, doc, timestamp) {
+async function _handleChangeAndPush (event, doc, timestamp) {
   // Update the resource content and set dirty
   // TODO: Remove one of these steps since it does encryption twice
   // in the case where the resource does not exist yet
