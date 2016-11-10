@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import LocalStorage from '../localstorage';
+import LocalStorage from '../LocalStorage';
 
 describe('LocalStorage()', () => {
   beforeEach(() => {

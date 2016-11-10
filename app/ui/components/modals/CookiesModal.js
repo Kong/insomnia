@@ -1,12 +1,10 @@
 import React, {PropTypes, Component} from 'react';
-
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import CookiesEditor from '../editors/CookiesEditor';
 import * as models from '../../../models';
-import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 class CookiesModal extends Component {
   constructor (props) {
@@ -15,7 +13,7 @@ class CookiesModal extends Component {
       cookieJar: null,
       workspace: null,
       filter: ''
-    }
+    };
   }
 
   async _saveChanges () {
@@ -56,10 +54,7 @@ class CookiesModal extends Component {
   }
 
   _onFilterChange (filter) {
-    clearTimeout(this._askTimeout);
-    this._askTimeout = setTimeout(() => {
-      this.setState({filter});
-    }, DEBOUNCE_MILLIS);
+    this.setState({filter});
   }
 
   _getFilteredSortedCookies () {

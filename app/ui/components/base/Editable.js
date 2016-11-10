@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import * as misc from '../../../common/misc';
 
 class Editable extends Component {
   constructor (props) {
@@ -18,7 +18,7 @@ class Editable extends Component {
     });
   }
 
-  _handleEditEnd () {
+  async _handleEditEnd () {
     const value = this._input.value.trim();
 
     if (!value) {
@@ -26,13 +26,12 @@ class Editable extends Component {
       return;
     }
 
+    this.props.onSubmit(value);
+
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
-    setTimeout(() => {
-      this.setState({editing: false});
-    }, DEBOUNCE_MILLIS);
-
-    this.props.onSubmit(value);
+    await misc.delay(100);
+    this.setState({editing: false});
   }
 
   _handleEditKeyDown (e) {
@@ -41,6 +40,8 @@ class Editable extends Component {
       this._handleEditEnd();
     } else if (e.keyCode === 27) {
       // Pressed Escape
+      // NOTE: This blur causes a save because we save on blur
+      // TODO: Make escape blur without saving
       this._input && this._input.blur();
     }
   }

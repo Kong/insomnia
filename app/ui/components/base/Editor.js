@@ -42,7 +42,7 @@ import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
-import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import * as misc from '../../../common/misc';
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -122,8 +122,8 @@ class Editor extends Component {
     const {value} = this.props;
 
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
-    this.codeMirror.on('change', this._codemirrorValueChanged.bind(this));
-    this.codeMirror.on('paste', this._codemirrorValueChanged.bind(this));
+    this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged.bind(this)));
+    this.codeMirror.on('paste', misc.debounce(this._codemirrorValueChanged.bind(this)));
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
@@ -248,13 +248,8 @@ class Editor extends Component {
       return;
     }
 
-    // Debounce URL changes so we don't update the app so much
-    clearTimeout(this._askTimeout);
-    this._askTimeout = setTimeout(() => {
-      // Update our cached value
-      var newValue = doc.getValue();
-      this.props.onChange(newValue);
-    }, DEBOUNCE_MILLIS)
+    var newValue = doc.getValue();
+    this.props.onChange(newValue);
   }
 
   /**
@@ -280,7 +275,7 @@ class Editor extends Component {
       if (this.props.updateFilter) {
         this.props.updateFilter(filter);
       }
-    }, DEBOUNCE_MILLIS * 3);
+    }, 400);
   }
 
   _canPrettify () {

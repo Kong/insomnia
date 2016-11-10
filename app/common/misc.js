@@ -101,7 +101,7 @@ export function prepareUrlForSending (url) {
   return urlFormat(parsedUrl);
 }
 
-export function delay (milliseconds) {
+export function delay (milliseconds = DEBOUNCE_MILLIS) {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 
@@ -109,12 +109,28 @@ export function removeVowels (str) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
 
-export function debounce (callback, millis = DEBOUNCE_MILLIS) {
+export function keyedDebounce (callback, millis = DEBOUNCE_MILLIS) {
   let timeout = null;
-  return function () {
+  let results = {};
+
+  return function (key, ...args) {
+    results[key] = args;
+
     clearTimeout(timeout);
     timeout = setTimeout(() => {
-      callback.apply(null, arguments)
+      if (!Object.keys(results).length) {
+        return;
+      }
+
+      callback(results);
+      results = {};
     }, millis);
   }
+}
+
+export function debounce (callback, millis = DEBOUNCE_MILLIS) {
+  // For regular debounce, just use a keyed debounce with a fixed key
+  return keyedDebounce(results => {
+    callback.apply(null, results['__key__'])
+  }, millis).bind(null, '__key__');
 }

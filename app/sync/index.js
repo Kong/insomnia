@@ -5,6 +5,7 @@ import * as crypt from './crypt';
 import * as session from './session';
 import * as store from './storage';
 import Logger from './logger';
+import * as misc from '../common/misc';
 
 export const FULL_SYNC_INTERVAL = 60E3;
 export const QUEUE_DEBOUNCE_TIME = 1E3;
@@ -29,16 +30,16 @@ const resourceGroupSymmetricKeysCache = {};
 
 let isInitialized = false;
 export async function initSync () {
-  const settings = await models.settings.getOrCreate();
-  if (!settings.optSyncBeta) {
-    logger.debug('Not enabled');
-    return;
-  }
-
   if (isInitialized) {
     logger.debug('Already enabled');
     return;
   }
+
+  const _queueChange = misc.keyedDebounce(results => {
+    for (const k of Object.keys(results)) {
+      _pushChange(...results[k]);
+    }
+  }, QUEUE_DEBOUNCE_TIME);
 
   db.onChange(changes => {
     for (const [event, doc, fromSync] of changes) {
@@ -52,7 +53,8 @@ export async function initSync () {
       }
 
       // Make sure it happens async
-      process.nextTick(() => _queueChange(event, doc, fromSync));
+      const key = `${event}:${doc._id}`;
+      _queueChange(key, event, doc, Date.now());
     }
   });
 
@@ -385,54 +387,28 @@ export async function resetRemoteData () {
 // HELPERS //
 // ~~~~~~~ //
 
-let _queuedChanges = {};
-let _queuedChangesTimeout = null;
 let _pushChangesTimeout = null;
+async function _pushChange (event, doc, timestamp) {
+  // Update the resource content and set dirty
+  // TODO: Remove one of these steps since it does encryption twice
+  // in the case where the resource does not exist yet
+  const resource = await getOrCreateResourceForDoc(doc);
 
-async function _queueChange (event, doc) {
-  if (!session.isLoggedIn()) {
-    logger.warn('Not logged in');
-    return;
-  }
+  const updatedResource = await store.updateResource(resource, {
+    name: doc.name || 'n/a',
+    lastEdited: timestamp,
+    lastEditedBy: session.getAccountId(),
+    encContent: await _encryptDoc(resource.resourceGroupId, doc),
+    removed: event === db.CHANGE_REMOVE,
+    dirty: true
+  });
 
-  // How this works?
-  // First, debounce updates to Resources because they are heavy (encryption)
-  // Second, debounce pushes to the server, because they are slow (network)
-  // ... Using _queuedChanges as a map so that future changes to the same doc
-  //     don't trigger more than 1 update.
-
-  // NOTE: Don't use doc.modified because that doesn't work for removal
-  _queuedChanges[doc._id + event] = [event, doc, Date.now()];
-
-  clearTimeout(_queuedChangesTimeout);
-  _queuedChangesTimeout = setTimeout(async () => {
-
-    const queuedChangesCopy = Object.assign({}, _queuedChanges);
-    _queuedChanges = {};
-
-    for (const k of Object.keys(queuedChangesCopy)) {
-      const [event, doc, timestamp] = queuedChangesCopy[k];
-
-      // Update the resource content and set dirty
-      // TODO: Remove one of these steps since it does encryption twice
-      // in the case where the resource does not exist yet
-      const resource = await getOrCreateResourceForDoc(doc);
-
-      const updatedResource = await store.updateResource(resource, {
-        name: doc.name || 'n/a',
-        lastEdited: timestamp,
-        lastEditedBy: session.getAccountId(),
-        encContent: await _encryptDoc(resource.resourceGroupId, doc),
-        removed: event === db.CHANGE_REMOVE,
-        dirty: true
-      });
-
-      // Debounce pushing of dirty resources
-      logger.debug(`Queue ${event} ${updatedResource.id}`);
-      clearTimeout(_pushChangesTimeout);
-      _pushChangesTimeout = setTimeout(() => pushActiveDirtyResources(), PUSH_DEBOUNCE_TIME);
-    }
-  }, QUEUE_DEBOUNCE_TIME);
+  // Debounce pushing of dirty resources
+  logger.debug(`Queue ${event} ${updatedResource.id}`);
+  clearTimeout(_pushChangesTimeout);
+  _pushChangesTimeout = setTimeout(() => {
+    pushActiveDirtyResources()
+  }, PUSH_DEBOUNCE_TIME);
 }
 
 /**
