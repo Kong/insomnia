@@ -1,18 +1,22 @@
 import * as util from '../common/misc.js';
 
+/** Join a URL with a querystring  */
+export function joinURL (url, qs) {
+  if (!qs) {
+    return url;
+  }
+
+  // TODO: Make this work with URLs that have a #hash component
+  url = url || '';
+  return url + getJoiner(url) + qs;
+}
+
 export function getJoiner (url) {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';
 }
 
-export function joinURL (url, qs) {
-  if (!qs) {
-    return url;
-  }
-  url = url || '';
-  return url + getJoiner(url) + qs;
-}
-
+/** Build a querystring param out of a name/value pair */
 export function build (param, strict = true) {
   // Skip non-name ones in strict mode
   if (strict && !param.name) {
@@ -29,10 +33,9 @@ export function build (param, strict = true) {
 }
 
 /**
- *
+ * Build a querystring from a list of name/value pairs
  * @param parameters
  * @param strict allow empty names and values
- * @returns {string}
  */
 export function buildFromParams (parameters, strict = true) {
   let items = [];
@@ -50,10 +53,9 @@ export function buildFromParams (parameters, strict = true) {
 }
 
 /**
- *
+ * Deconstruct a querystring to name/value pairs
  * @param qs
  * @param strict allow empty names and values
- * @returns {Array}
  */
 export function deconstructToParams (qs, strict = true) {
   const stringPairs = qs.split('&');
