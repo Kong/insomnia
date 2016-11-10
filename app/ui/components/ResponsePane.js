@@ -10,10 +10,10 @@ import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
-import * as models from '../../backend/models';
+import * as models from '../../models';
 import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
 import {getSetCookieHeaders} from '../../common/misc';
-import {cancelCurrentRequest} from '../../backend/network';
+import {cancelCurrentRequest} from '../../common/network';
 import {trackEvent} from '../../analytics';
 
 class ResponsePane extends Component {

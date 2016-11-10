@@ -1,5 +1,5 @@
-import * as db from '../../../backend/database';
-import * as models from '../../../backend/models';
+import * as db from '../../../common/database';
+import * as models from '../../../models';
 
 const ENTITY_BLACKLIST = {
   [models.response.type]: 1,

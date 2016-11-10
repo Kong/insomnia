@@ -4,7 +4,7 @@ import Dropdown from '../base/Dropdown';
 import DropdownHint from '../base/DropdownHint';
 import GenerateCodeModal from '../modals/GenerateCodeModal';
 import PromptModal from '../modals/PromptModal';
-import * as models from '../../../backend/models';
+import * as models from '../../../models';
 import {showModal} from '../modals/index';
 
 

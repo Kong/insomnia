@@ -7,7 +7,7 @@ import EnvironmentsModal from '../components/modals/WorkspaceEnvironmentsEditMod
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
 import {showModal} from '../components/modals/index';
-import * as models from '../../backend/models';
+import * as models from '../../models';
 
 
 class EnvironmentsDropdown extends Component {

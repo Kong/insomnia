@@ -1,5 +1,5 @@
 import * as renderUtils from '../render';
-import * as models from '../models';
+import * as models from '../../models';
 
 jest.mock('electron');
 

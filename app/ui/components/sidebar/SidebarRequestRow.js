@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import RequestActionsDropdown from '../dropdowns/RequestActionsDropdown';
 import Editable from '../base/Editable';
 import MethodTag from '../tags/MethodTag';
-import * as models from '../../../backend/models';
+import * as models from '../../../models';
 
 
 class SidebarRequestRow extends Component {

@@ -8,7 +8,7 @@ import DropdownDivider from '../components/base/DropdownDivider';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as globalActions from '../redux/modules/global';
-import * as models from '../../backend/models';
+import * as models from '../../models';
 import {showModal} from '../components/modals';
 
 class RequestGroupActionsDropdown extends Component {

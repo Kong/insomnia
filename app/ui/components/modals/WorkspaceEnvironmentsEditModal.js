@@ -9,7 +9,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as models from '../../../backend/models'
+import * as models from '../../../models'
 
 
 class WorkspaceEnvironmentsEditModal extends Component {

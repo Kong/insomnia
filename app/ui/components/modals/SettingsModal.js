@@ -13,7 +13,7 @@ import SettingsGeneral from '../settings/SettingsGeneral';
 import SettingsImportExport from '../settings/SettingsImportExport';
 import SettingsSync from '../settings/SettingsSync';
 import * as GlobalActions from '../../redux/modules/global';
-import * as models from '../../../backend/models';
+import * as models from '../../../models';
 import {getAppVersion, getAppLongName} from '../../../common/constants';
 import * as session from '../../../sync/session';
 import {showModal} from './index';

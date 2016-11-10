@@ -1,5 +1,3 @@
-'use strict';
-
 const FLAGS = [
   'cacert', 'capath', 'E', 'cert', 'cert-type', 'ciphers', 'K', 'config',
   'connect-timeout', 'C', 'continue-at', 'b',

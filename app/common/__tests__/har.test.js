@@ -1,7 +1,7 @@
-import * as harUtils from '../export/har';
+import * as harUtils from '../../export/har';
 import * as db from '../database';
 import * as render from '../render';
-import * as models from '../models';
+import * as models from '../../models';
 
 describe('exportHarWithRequest()', () => {
   beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));

@@ -2,7 +2,7 @@ import React, {PropTypes, Component} from 'react';
 import Editor from '../base/Editor';
 import KeyValueEditor from '../base/KeyValueEditor';
 import {CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders} from '../../../common/constants';
-import * as querystring from '../../../backend/querystring';
+import * as querystring from '../../../common/querystring';
 
 class BodyEditor extends Component {
   static _getBodyFromPairs (pairs) {

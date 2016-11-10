@@ -1,8 +1,8 @@
 import {bindActionCreators} from 'redux';
 import * as entitiesActions from './modules/entities';
 import * as globalActions from './modules/global';
-import * as db from '../../backend/database';
-import * as models from '../../backend/models';
+import * as db from '../../common/database';
+import * as models from '../../models';
 import * as fetch from '../../common/fetch';
 
 export async function initStore (dispatch) {

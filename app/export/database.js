@@ -1,8 +1,6 @@
-'use strict';
-
-import * as db from '../database';
+import * as db from '../common/database';
 import * as models from '../models';
-import {getAppVersion} from '../../common/constants';
+import {getAppVersion} from '../common/constants';
 import {importRequestGroupLegacy, importRequestLegacy} from './legacy';
 
 const VERSION_LEGACY = 1;

@@ -11,7 +11,7 @@ import AlertModal from '../components/modals/AlertModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import * as GlobalActions from '../redux/modules/global';
-import * as models from '../../backend/models';
+import * as models from '../../models';
 import {getAppVersion} from '../../common/constants';
 import {showModal} from '../components/modals/index';
 

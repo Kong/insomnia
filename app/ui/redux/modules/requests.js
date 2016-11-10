@@ -1,6 +1,6 @@
 import {combineReducers} from 'redux';
 
-import * as network from '../../../backend/network';
+import * as network from '../../../common/network';
 import {trackEvent, trackLegacyEvent} from '../../../analytics';
 
 export const REQUEST_SEND_START = 'requests/start';

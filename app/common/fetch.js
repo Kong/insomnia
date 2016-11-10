@@ -1,5 +1,5 @@
 import {parse as urlParse} from 'url';
-import {isDevelopment, getClientString} from '../common/constants';
+import {isDevelopment, getClientString} from './constants';
 import * as session from '../sync/session';
 
 let commandListeners = [];

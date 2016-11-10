@@ -2,7 +2,7 @@ import * as networkUtils from '../network';
 import * as db from '../database';
 import nock from 'nock';
 import {getRenderedRequest} from '../render';
-import * as models from '../models';
+import * as models from '../../models';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));

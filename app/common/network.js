@@ -1,11 +1,11 @@
 import networkRequest from 'request';
 import {parse as urlParse} from 'url';
-import * as models from './models';
+import * as models from '../models';
 import * as querystring from './querystring';
-import * as util from '../common/misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from '../common/constants';
+import * as util from './misc.js';
+import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
-import {setDefaultProtocol} from '../common/misc';
+import {setDefaultProtocol} from './misc';
 import {getRenderedRequest} from './render';
 import {swapHost} from './dns';
 import {cookieHeaderValueForUri} from './cookies';

@@ -7,7 +7,7 @@ import request from 'request';
 import path from 'path';
 import electron from 'electron';
 import * as packageJSON from './package.json';
-import LocalStorage from './backend/localstorage';
+import LocalStorage from './common/localstorage';
 
 // Some useful helpers
 const IS_DEV = process.env.INSOMNIA_ENV === 'development';

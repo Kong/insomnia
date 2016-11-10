@@ -1,4 +1,4 @@
-import * as util from '../common/misc.js';
+import * as util from './misc.js';
 
 /** Join a URL with a querystring  */
 export function joinURL (url, qs) {

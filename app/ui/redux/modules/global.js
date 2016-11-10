@@ -2,7 +2,7 @@ import electron from 'electron';
 import {combineReducers} from 'redux';
 import fs from 'fs';
 
-import {importJSON, exportJSON} from '../../../backend/export/database';
+import {importJSON, exportJSON} from '../../../export/database';
 import {trackEvent} from '../../../analytics';
 import AlertModal from '../../components/modals/AlertModal';
 import {showModal} from '../../components/modals/index';

@@ -1,5 +1,5 @@
-import {METHOD_GET, PREVIEW_MODE_SOURCE} from '../../common/constants';
-import * as db from '../database';
+import {METHOD_GET, PREVIEW_MODE_SOURCE} from '../common/constants';
+import * as db from '../common/database';
 
 export const type = 'Request';
 export const prefix = 'req';

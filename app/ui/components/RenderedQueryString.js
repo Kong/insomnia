@@ -1,6 +1,6 @@
 import React, {PropTypes, Component} from 'react';
-import {getRenderedRequest} from '../../backend/render';
-import * as querystring from '../../backend/querystring';
+import {getRenderedRequest} from '../../common/render';
+import * as querystring from '../../common/querystring';
 import * as util from '../../common/misc';
 
 

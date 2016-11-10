@@ -9,12 +9,12 @@ import './css/lib/fonts/open-sans.css';
 import './css/index.less';
 import './css/lib/chrome/platform_app.css';
 import {initStore} from './redux/initstore';
-import {initDB} from '../backend/database';
+import {initDB} from '../common/database';
 import {initSync} from '../sync';
 import {getAppVersion} from '../common/constants';
 import {initAnalytics} from '../analytics';
 import * as session from '../sync/session';
-import * as models from '../backend/models';
+import * as models from '../models';
 
 // Global CSS
 

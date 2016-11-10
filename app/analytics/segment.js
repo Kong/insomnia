@@ -1,6 +1,6 @@
 import Analytics from 'analytics-node';
 import {SEGMENT_WRITE_KEY, getAppVersion, isDevelopment} from  '../common/constants';
-import * as models from '../backend/models';
+import * as models from '../models';
 
 let analytics = null;
 let userId = null;

@@ -5,7 +5,7 @@ import Modal from '../base/Modal';
 import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
-import * as models from '../../../backend/models';
+import * as models from '../../../models';
 
 
 class RequestSwitcherModal extends Component {

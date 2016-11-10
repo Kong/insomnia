@@ -1,6 +1,6 @@
 import * as db from '../database';
-import * as models from '../models';
-import {PREVIEW_MODE_SOURCE} from '../../common/constants';
+import * as models from '../../models';
+import {PREVIEW_MODE_SOURCE} from '../constants';
 
 function loadFixture (name) {
   const fixtures = require(`../__fixtures__/${name}`);

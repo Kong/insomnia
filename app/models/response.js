@@ -1,4 +1,4 @@
-import * as db from '../database';
+import * as db from '../common/database';
 
 export const type = 'Response';
 export const prefix = 'res';

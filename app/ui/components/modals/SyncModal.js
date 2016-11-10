@@ -9,7 +9,7 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import * as session from '../../../sync/session';
 import * as syncStorage from '../../../sync/storage';
 import * as sync from '../../../sync';
-import * as models from '../../../backend/models';
+import * as models from '../../../models';
 import {trackEvent} from '../../../analytics';
 
 class SyncModal extends Component {

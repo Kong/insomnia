@@ -27,9 +27,9 @@ import Sidebar from '../components/sidebar/Sidebar';
 import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, PREVIEW_MODE_FRIENDLY} from '../../common/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
-import * as db from '../../backend/database';
-import * as models from '../../backend/models';
-import {importCurl} from '../../backend/export/curl';
+import * as db from '../../common/database';
+import * as models from '../../models';
+import {importCurl} from '../../export/curl';
 import {getAppVersion} from '../../common/constants';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
 

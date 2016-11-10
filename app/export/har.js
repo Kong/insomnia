@@ -1,7 +1,7 @@
 import * as models from '../models';
-import {getRenderedRequest} from  '../render';
-import {jarFromCookies} from '../cookies';
-import * as util from '../../common/misc';
+import {getRenderedRequest} from  '../common/render';
+import {jarFromCookies} from '../common/cookies';
+import * as util from '../common/misc';
 
 export function exportHarWithRequest (renderedRequest, addContentLength = false) {
   if (addContentLength) {

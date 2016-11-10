@@ -1,8 +1,8 @@
 import nunjucks from 'nunjucks';
 import traverse from 'traverse';
 import uuid from 'node-uuid';
-import * as models from './models';
-import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from '../common/misc';
+import * as models from '../models';
+import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
 
 const nunjucksEnvironment = nunjucks.configure({

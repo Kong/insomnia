@@ -1,4 +1,4 @@
-import * as db from '../database';
+import * as db from '../common/database';
 
 export const type = 'Workspace';
 export const prefix = 'wrk';
