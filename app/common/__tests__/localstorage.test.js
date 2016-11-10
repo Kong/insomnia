@@ -12,7 +12,7 @@ describe('LocalStorage()', () => {
 
   afterEach(() => {
     jest.clearAllTimers();
-  })
+  });
 
   it('create directory', () => {
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
