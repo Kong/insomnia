@@ -20,8 +20,19 @@ describe('LocalStorage()', () => {
   it('does basic operations', () => {
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
+
+    // Test get and set
+    localStorage.setItem('foo', 'bar 1');
     localStorage.setItem('foo', 'bar');
     expect(localStorage.getItem('foo', 'BAD')).toBe('bar');
+
+    // Test Object storage
+    localStorage.setItem('obj', {foo: 'bar', arr: [1, 2, 3]});
+    expect(localStorage.getItem('obj')).toEqual({foo: 'bar', arr: [1, 2, 3]});
+
+    // Test default values
+    expect(localStorage.getItem('dne', 'default')).toEqual('default');
+    expect(localStorage.getItem('dne')).toEqual('default');
   });
 
   it('stores a key', () => {
