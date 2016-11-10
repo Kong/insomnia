@@ -1,8 +1,14 @@
-'use strict';
-
 if (require('electron-squirrel-startup')) {
   process.exit(0);
 }
+
+import raven from 'raven';
+import request from 'request';
+import path from 'path';
+import * as packageJSON from './package.json';
+import electron from 'electron';
+import mkdirp from 'mkdirp';
+import fs from 'fs';
 
 // Some useful helpers
 const IS_DEV = process.env.INSOMNIA_ENV === 'development';
@@ -10,36 +16,20 @@ const IS_MAC = process.platform === 'darwin';
 const IS_WINDOWS = process.platform === 'win32';
 const IS_LINUX = !IS_MAC && !IS_WINDOWS;
 
-var raven = require('raven');
-var ravenClient = new raven.Client(
-  'https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
-    environment: process.env.INSOMNIA_ENV || 'production',
-    release: require('./package.json').version,
-    logger: 'electron.main'
-  });
+var ravenClient = new raven.Client('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
+  environment: process.env.INSOMNIA_ENV || 'production',
+  release: require('./package.json').version,
+  logger: 'electron.main'
+});
 
 if (!IS_DEV) {
   ravenClient.patchGlobal();
 }
 
 // Don't npm install this (it breaks). Rely on the global one.
-const request = require('request');
-const path = require('path');
-const {version: appVersion, productName: appName} = require('./package.json');
-const electron = require('electron');
-const mkdirp = require('mkdirp');
-const fs = require('fs');
-const {
-  app,
-  dialog,
-  shell,
-  ipcMain,
-  autoUpdater,
-  Menu,
-  BrowserWindow,
-  webContents
-} = require('electron');
 
+const {app, dialog, shell, ipcMain, autoUpdater, Menu, BrowserWindow, webContents} = electron;
+const {version: appVersion, productName: appName} = packageJSON;
 const LOCAL_STORAGE_DIR = path.join(app.getPath('userData'), 'localStorage');
 
 const UPDATE_URLS = {

@@ -4,7 +4,7 @@ import productionConfig from './webpack.config.production.babel';
 export default {
   ...productionConfig,
   entry: [
-    './main.js'
+    './main.development.js'
   ],
   output: {
     path: path.join(__dirname, '../build'),
