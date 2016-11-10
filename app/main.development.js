@@ -5,10 +5,9 @@ if (require('electron-squirrel-startup')) {
 import raven from 'raven';
 import request from 'request';
 import path from 'path';
-import * as packageJSON from './package.json';
 import electron from 'electron';
-import mkdirp from 'mkdirp';
-import fs from 'fs';
+import * as packageJSON from './package.json';
+import LocalStorage from './backend/localstorage';
 
 // Some useful helpers
 const IS_DEV = process.env.INSOMNIA_ENV === 'development';
@@ -26,11 +25,8 @@ if (!IS_DEV) {
   ravenClient.patchGlobal();
 }
 
-// Don't npm install this (it breaks). Rely on the global one.
-
 const {app, dialog, shell, ipcMain, autoUpdater, Menu, BrowserWindow, webContents} = electron;
 const {version: appVersion, productName: appName} = packageJSON;
-const LOCAL_STORAGE_DIR = path.join(app.getPath('userData'), 'localStorage');
 
 const UPDATE_URLS = {
   // Add `r` param to help cache bust
@@ -41,6 +37,7 @@ const UPDATE_URLS = {
 
 const DOWNLOAD_URL = 'http://download.insomnia.rest';
 
+const localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
 let mainWindow = null;
 let hasPromptedForUpdates = false;
 
@@ -169,43 +166,6 @@ ipcMain.on('check-for-updates', () => {
   checkForUpdates();
 });
 
-
-const _localStorageTimeouts = {};
-function storeValue (key, obj) {
-  try {
-    clearTimeout(_localStorageTimeouts[key]);
-    _localStorageTimeouts[key] = setTimeout(() => {
-      fs.writeFileSync(path.join(LOCAL_STORAGE_DIR, key), JSON.stringify(obj));
-    }, 100);
-  } catch (e) {
-    console.error('Failed to save to LocalStorage', obj, e);
-    ravenClient.captureError(e, {
-      level: 'warning'
-    });
-  }
-}
-
-function getValue (key, defaultObj) {
-  let value = null;
-  try {
-    value = fs.readFileSync(path.join(LOCAL_STORAGE_DIR, key));
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      // If we fail to read it, write the default value to it
-      storeValue(key, defaultObj);
-    }
-  }
-
-  try {
-    return JSON.parse(value || JSON.stringify(defaultObj))
-  } catch (e) {
-    console.error('Failed to get from LocalStorage', e);
-    ravenClient.captureError(e, {
-      level: 'warning'
-    });
-  }
-}
-
 function saveBounds () {
   if (!mainWindow) {
     return;
@@ -215,10 +175,10 @@ function saveBounds () {
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
-    storeValue('bounds', mainWindow.getBounds());
-    storeValue('fullscreen', false);
+    localStorage.setItem('bounds', mainWindow.getBounds());
+    localStorage.setItem('fullscreen', false);
   } else {
-    storeValue('fullscreen', true);
+    localStorage.setItem('fullscreen', true);
   }
 }
 
@@ -226,8 +186,8 @@ function getBounds () {
   let bounds = {};
   let fullscreen = false;
   try {
-    bounds = getValue('bounds', {});
-    fullscreen = getValue('fullscreen', false);
+    bounds = localStorage.getItem('bounds', {});
+    fullscreen = localStorage.getItem('fullscreen', false);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse window bounds', e);
@@ -237,13 +197,13 @@ function getBounds () {
 }
 
 function saveZoomFactor (zoomFactor) {
-  storeValue('zoomFactor', zoomFactor);
+  localStorage.setItem('zoomFactor', zoomFactor);
 }
 
 function getZoomFactor () {
   let zoomFactor = 1;
   try {
-    zoomFactor = getValue('zoomFactor', 1);
+    zoomFactor = localStorage.getItem('zoomFactor', 1);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse zoomFactor', e);
@@ -279,18 +239,7 @@ app.on('ready', () => {
   checkForUpdates();
 });
 
-function initLocalStorage () {
-  try {
-    mkdirp.sync(LOCAL_STORAGE_DIR);
-    console.log('[localStorage] initialized');
-  } catch (e) {
-    console.warn('[localStorage] Failed to create directory', path, e);
-  }
-}
-
 function createWindow () {
-  initLocalStorage();
-
   const zoomFactor = getZoomFactor();
   const {bounds, fullscreen} = getBounds();
   const {x, y, width, height} = bounds;

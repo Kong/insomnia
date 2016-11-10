@@ -31,7 +31,7 @@ import * as db from '../../backend/database';
 import * as models from '../../backend/models';
 import {importCurl} from '../../backend/export/curl';
 import {getAppVersion} from '../../common/constants';
-import {trackEvent, trackLegacyEvent} from '../../backend/analytics';
+import {trackEvent, trackLegacyEvent} from '../../analytics';
 
 
 class App extends Component {

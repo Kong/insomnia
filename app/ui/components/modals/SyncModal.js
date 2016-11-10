@@ -10,7 +10,7 @@ import * as session from '../../../sync/session';
 import * as syncStorage from '../../../sync/storage';
 import * as sync from '../../../sync';
 import * as models from '../../../backend/models';
-import {trackEvent} from '../../../backend/analytics';
+import {trackEvent} from '../../../analytics';
 
 class SyncModal extends Component {
   constructor (props) {

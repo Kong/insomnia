@@ -7,7 +7,7 @@ import * as session from '../../../sync/session';
 import {showModal} from './index';
 import LoginModal from './LoginModal';
 import * as sync from '../../../sync';
-import {trackEvent} from '../../../backend/analytics';
+import {trackEvent} from '../../../analytics';
 
 class SignupModal extends Component {
   constructor (props) {

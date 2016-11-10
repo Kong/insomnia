@@ -8,7 +8,7 @@ import * as session from '../../../sync/session';
 import {showModal} from './index';
 import SignupModal from './SignupModal';
 import * as sync from '../../../sync';
-import {trackEvent} from '../../../backend/analytics';
+import {trackEvent} from '../../../analytics';
 
 class LoginModal extends Component {
   constructor (props) {

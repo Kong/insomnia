@@ -14,7 +14,7 @@ import * as models from '../../backend/models';
 import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
 import {getSetCookieHeaders} from '../../common/misc';
 import {cancelCurrentRequest} from '../../backend/network';
-import {trackEvent} from '../../backend/analytics';
+import {trackEvent} from '../../analytics';
 
 class ResponsePane extends Component {
   constructor (props) {

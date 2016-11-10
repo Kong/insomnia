@@ -1,7 +1,7 @@
 import srp from 'srp';
 import * as crypt from './crypt';
 import * as util from '../common/fetch';
-import {trackEvent, setAccountId} from '../backend/analytics';
+import {trackEvent, setAccountId} from '../analytics';
 
 const NO_SESSION = '__NO_SESSION__';
 
