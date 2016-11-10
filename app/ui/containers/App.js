@@ -72,9 +72,11 @@ class App extends Component {
       // Request Send
       'mod+enter': () => {
         const request = this._getActiveRequest();
-        if (request) {
-          this.props.actions.requests.send(request);
+        if (!request) {
+          return;
         }
+
+        this._handleSendRequest(request);
       },
 
       // Edit Workspace Environments
@@ -126,6 +128,13 @@ class App extends Component {
   _importFile () {
     const workspace = this._getActiveWorkspace();
     this.props.actions.global.importFile(workspace);
+  }
+
+  async _handleSendRequest (request) {
+    const {actions} = this.props;
+    const workspace = this._getActiveWorkspace();
+    const environmentId = workspace.metaActiveEnvironmentId;
+    actions.requests.send(request, environmentId);
   }
 
   async _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
@@ -553,7 +562,7 @@ class App extends Component {
           ref={n => this._requestPane = n}
           importFile={this._importFile.bind(this)}
           request={activeRequest}
-          sendRequest={actions.requests.send}
+          sendRequest={this._handleSendRequest.bind(this)}
           showPasswords={settings.showPasswords}
           useBulkHeaderEditor={settings.useBulkHeaderEditor}
           editorFontSize={settings.editorFontSize}

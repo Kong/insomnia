@@ -17,16 +17,21 @@
     "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development ./node_modules/electron/cli.js ./app/main.js",
     "hot-server": "babel-node ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
-    "build": "npm test && bash scripts/build.sh",
-    "package": "npm test && rm -rf dist && npm run package-mac && npm run package-win && npm run package-linux",
-    "package-mac": "rm -rf dist/mac && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --mac",
-    "package-win": "rm -rf dist/win* && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --win",
-    "package-linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --linux",
+    "build:clean": "rm -rf ./build && rm -rf ./dist && mkdir ./build",
+    "build:renderer": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.production.babel.js",
+    "build:main": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.electron.babel.js",
+    "build:copy": "cp -r ./app/package.json ./app/static ./build/",
+    "build:install": "cd build && npm install",
+    "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
+    "package:mac": "rm -rf dist/mac && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --mac",
+    "package:win": "rm -rf dist/win* && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --win",
+    "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --linux",
+    "package": "npm test && rm -rf dist && npm run package:mac && npm run package:win && npm run package:linux",
     "build-n-package": "npm run build && npm run package",
     "build-n-package-win": "npm run build && npm run package-win",
     "build-n-package-mac": "npm run build && npm run package-mac",
     "build-n-package-linux": "npm run build && npm run package-linux",
-    "release": "npm test && npm run build-n-package && bash scripts/sentry-release.sh"
+    "sentry": "bash scripts/sentry-release.sh"
   },
   "jest": {
     "rootDir": "app",
@@ -36,9 +41,12 @@
     "appId": "com.insomnia.app",
     "category": "public.app-category.developer-tools",
     "compression": "normal",
+    "dmg": {
+      "icon": "build/static/icon.icns"
+    },
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
-      "icon": "build/icon.ico",
+      "icon": "build/static/icon.ico",
       "loadingGif": "build/install-spinner.gif",
       "remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
       "msi": false

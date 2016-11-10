@@ -41,7 +41,7 @@ export default combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-export function send(request) {
+export function send(request, environmentId) {
   return async function (dispatch) {
     dispatch({type: REQUEST_SEND_START, requestId: request._id});
 
@@ -49,7 +49,7 @@ export function send(request) {
     trackLegacyEvent('Request Send');
 
     try {
-      await network.send(request._id);
+      await network.send(request._id, environmentId);
       dispatch({type: REQUEST_SEND_STOP, requestId: request._id});
     } catch (e) {
       // console.info('Error sending request', e);

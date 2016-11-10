@@ -108,12 +108,12 @@ export function recursiveRender (obj, context) {
   return newObj;
 }
 
-export async function getRenderedRequest (request) {
+export async function getRenderedRequest (request, environmentId) {
   const ancestors = await db.withAncestors(request);
   const workspace = ancestors.find(doc => doc.type === db.workspace.type);
 
   const rootEnvironment = await db.environment.getOrCreateForWorkspace(workspace);
-  const subEnvironment = await db.environment.getById(workspace.metaActiveEnvironmentId);
+  const subEnvironment = await db.environment.getById(environmentId);
   const cookieJar = await db.cookieJar.getOrCreateForWorkspace(workspace);
 
   // Generate the context we need to render

@@ -189,7 +189,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
   })
 }
 
-export async function send (requestId) {
+export async function send (requestId, environmentId) {
   // First, lets wait for all debounces to finish
   await util.delay(DEBOUNCE_MILLIS);
 
@@ -199,7 +199,7 @@ export async function send (requestId) {
   let renderedRequest;
 
   try {
-    renderedRequest = await getRenderedRequest(request);
+    renderedRequest = await getRenderedRequest(request, environmentId);
   } catch (e) {
     // Failed to render. Must be the user's fault
     return await db.response.create({

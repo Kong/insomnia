@@ -1,15 +1,15 @@
-import appJson from '../package.json';
+import * as packageJSON from '../package.json';
 
 export function getAppVersion () {
-  return appJson.version;
+  return packageJSON.version;
 }
 
 export function getAppLongName () {
-  return appJson.longName;
+  return packageJSON.longName;
 }
 
 export function getAppName () {
-  return appJson.productName;
+  return packageJSON.productName;
 }
 
 export function getAppPlatform () {
