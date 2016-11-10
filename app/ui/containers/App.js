@@ -38,10 +38,9 @@ import * as RequestActions from '../redux/modules/requests';
 import * as db from '../../backend/database';
 import * as models from '../../backend/models';
 import {importCurl} from '../../backend/export/curl';
-import {trackLegacyEvent} from '../../backend/analytics';
 import {getAppVersion} from '../../backend/appInfo';
 import {toggleModal, showModal} from '../components/modals';
-import {trackEvent} from '../../backend/ganalytics';
+import {trackEvent, trackLegacyEvent} from '../../backend/analytics';
 
 
 class App extends Component {

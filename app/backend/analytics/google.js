@@ -1,9 +1,9 @@
-import * as constants from './constants';
-import {isDevelopment} from './appInfo';
+import * as constants from '../constants';
+import {isDevelopment} from '../appInfo';
 
 let _sessionId = null;
 
-export function initAnalytics (accountId = null) {
+export function init (accountId = null) {
   if (isDevelopment()) {
     console.log('-- Not initializing analytics for dev --');
     return;
@@ -63,5 +63,5 @@ function _injectGoogleAnalyticsScript () {
     a.async = 1;
     a.src = g;
     m.parentNode.insertBefore(a, m)
-  })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+  })(window, document, 'script', 'https://www.google-analytics.com/segment.js', 'ga');
 }

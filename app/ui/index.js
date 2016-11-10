@@ -12,8 +12,7 @@ import {initStore} from './redux/initstore';
 import {initDB} from '../backend/database';
 import {initSync} from '../sync';
 import {getAppVersion} from '../backend/appInfo';
-import {initLegacyAnalytics} from '../backend/analytics';
-import {initAnalytics} from '../backend/ganalytics';
+import {initAnalytics} from '../backend/analytics';
 import * as session from '../sync/session';
 import * as models from '../backend/models';
 
@@ -33,7 +32,6 @@ const accountId = session.getAccountId();
   await initSync();
   await initStore(store.dispatch);
   await initAnalytics(accountId);
-  await initLegacyAnalytics();
   console.log('-- Rendering App --');
   render(
     <Provider store={store}><App /></Provider>,

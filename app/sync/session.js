@@ -1,7 +1,7 @@
 import srp from 'srp';
 import * as crypt from './crypt';
 import * as util from '../backend/fetch';
-import * as analytics from '../backend/ganalytics';
+import {trackEvent, setAccountId} from '../backend/analytics';
 
 const NO_SESSION = '__NO_SESSION__';
 
@@ -46,7 +46,7 @@ export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
 
   const response = await util.post('/auth/signup', account);
 
-  analytics.trackEvent('Session', 'Signup');
+  trackEvent('Session', 'Signup');
 
   return response;
 }
@@ -139,8 +139,8 @@ export async function login (rawEmail, rawPassphrase) {
   );
 
   // Set the ID for Google Analytics
-  analytics.setAccountId(accountId);
-  analytics.trackEvent('Session', 'Login');
+  setAccountId(accountId);
+  trackEvent('Session', 'Login');
 }
 
 export async function subscribe (tokenId, planId) {
@@ -149,7 +149,7 @@ export async function subscribe (tokenId, planId) {
     quantity: 1,
     plan: planId,
   });
-  analytics.trackEvent('Session', 'Subscribe', planId, 1);
+  trackEvent('Session', 'Subscribe', planId, 1);
   return response;
 }
 
@@ -259,7 +259,7 @@ export function isLoggedIn () {
 export async function logout () {
   await util.post('/auth/logout');
   unsetSessionData();
-  analytics.trackEvent('Session', 'Logout');
+  trackEvent('Session', 'Logout');
 }
 
 /**
@@ -267,7 +267,7 @@ export async function logout () {
  */
 export async function cancelAccount () {
   await util.del('/api/billing/subscriptions');
-  analytics.trackEvent('Session', 'Cancel Account');
+  trackEvent('Session', 'Cancel Account');
 }
 
 /**

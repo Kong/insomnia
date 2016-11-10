@@ -3,7 +3,7 @@ import {combineReducers} from 'redux';
 import fs from 'fs';
 
 import {importJSON, exportJSON} from '../../../backend/export/database';
-import {trackEvent} from '../../../backend/ganalytics';
+import {trackEvent} from '../../../backend/analytics';
 import AlertModal from '../../components/modals/AlertModal';
 import {showModal} from '../../components/modals/index';
 import PaymentModal from '../../components/modals/PaymentModal';

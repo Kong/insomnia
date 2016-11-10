@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -8,7 +7,7 @@ import * as session from '../../../sync/session';
 import {showModal} from './index';
 import LoginModal from './LoginModal';
 import * as sync from '../../../sync';
-import {trackEvent} from '../../../backend/ganalytics';
+import {trackEvent} from '../../../backend/analytics';
 
 class SignupModal extends Component {
   constructor (props) {

@@ -1,13 +1,13 @@
 import Analytics from 'analytics-node';
-import {getAppVersion} from './appInfo';
-import {SEGMENT_WRITE_KEY} from  './constants';
-import {isDevelopment} from './appInfo';
-import * as models from './models';
+import {getAppVersion} from '../appInfo';
+import {SEGMENT_WRITE_KEY} from  '../constants';
+import {isDevelopment} from '../appInfo';
+import * as models from '../models';
 
 let analytics = null;
 let userId = null;
 
-export async function initLegacyAnalytics () {
+export async function init () {
   if (isDevelopment()) {
     console.log('-- Not initializing Legacy analytics in dev --');
     return;
@@ -20,7 +20,7 @@ export async function initLegacyAnalytics () {
     userId = stats._id;
 
     // Recurse now that we have a userId
-    return await initLegacyAnalytics();
+    return await init();
   }
 
   analytics.identify({

@@ -1,8 +1,7 @@
 import {combineReducers} from 'redux';
 
-import {trackLegacyEvent} from '../../../backend/analytics';
 import * as network from '../../../backend/network';
-import {trackEvent} from '../../../backend/ganalytics';
+import {trackEvent, trackLegacyEvent} from '../../../backend/analytics';
 
 export const REQUEST_SEND_START = 'requests/start';
 export const REQUEST_SEND_STOP = 'requests/stop';

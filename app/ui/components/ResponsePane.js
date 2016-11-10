@@ -18,7 +18,7 @@ import {
 import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../../backend/constants';
 import {getSetCookieHeaders} from '../../backend/util';
 import {cancelCurrentRequest} from '../../backend/network';
-import {trackEvent} from '../../backend/ganalytics';
+import {trackEvent} from '../../backend/analytics';
 
 class ResponsePane extends Component {
   constructor (props) {

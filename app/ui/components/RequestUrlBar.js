@@ -1,9 +1,8 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import Dropdown from './base/Dropdown';
-import MethodTag from './tags/MethodTag';
 import {METHODS, DEBOUNCE_MILLIS} from '../../backend/constants';
-import {trackEvent} from '../../backend/ganalytics';
+import {trackEvent} from '../../backend/analytics';
 import {isMac} from '../../backend/appInfo';
 
 
