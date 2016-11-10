@@ -93,10 +93,7 @@ export function flushChanges () {
     return;
   }
 
-  // Notify async so we don't block
-  process.nextTick(() => {
-    changeListeners.map(fn => fn(changes));
-  })
+  changeListeners.map(fn => fn(changes));
 }
 
 function notifyOfChange (event, doc, fromSync) {

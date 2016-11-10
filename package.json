@@ -12,7 +12,7 @@
   },
   "scripts": {
     "test:noisy": "jest",
-    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage --silent && open ./coverage/lcov-report/index.html",
     "test": "jest --silent",
     "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.development.js",
     "hot-server": "babel-node ./webpack/server.js",
@@ -36,7 +36,17 @@
   "jest": {
     "rootDir": "app",
     "verbose": false,
-    "bail": true
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "**/*.js",
+      "!**/main.development.js",
+      "!**/static/**",
+      "!**/ui/**",
+      "!**/__fixtures__/**",
+      "!**/__tests__/**",
+      "!**/__mocks__/**",
+      "!**/node_modules/**"
+    ]
   },
   "build": {
     "appId": "com.insomnia.app",

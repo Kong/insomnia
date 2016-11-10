@@ -12,6 +12,77 @@ function loadFixture (name) {
   }
 }
 
+describe('initDB()', () => {
+  it('handles being initialized twice', async () => {
+    await db.initDB(models.types(), {inMemoryOnly: true});
+    await db.initDB(models.types(), {inMemoryOnly: true});
+    expect((await db.all(models.request.type)).length).toBe(0);
+  });
+});
+
+describe('onChange()', () => {
+  it('handles change listeners', async () => {
+    const doc = {
+      type: models.request.type,
+      name: 'foo'
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.insert(doc);
+    await db.insert(doc, true);
+    expect(changesSeen.length).toBe(2);
+    expect(changesSeen).toEqual([
+      [[db.CHANGE_INSERT, doc, false]],
+      [[db.CHANGE_INSERT, doc, true]]
+    ]);
+
+    db.offChange(callback);
+    await db.insert(doc);
+    expect(changesSeen.length).toBe(2);
+  });
+});
+
+describe('bufferChanges()', () => {
+  it('properly buffers changes', async () => {
+    const doc = {
+      type: models.request.type,
+      name: 'foo'
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    db.bufferChanges();
+    await db.insert(doc);
+    await db.insert(doc, true);
+
+    // Assert no change seen before flush
+    expect(changesSeen.length).toBe(0);
+
+    // Assert changes seen after flush
+    db.flushChanges();
+    expect(changesSeen).toEqual([[
+      [db.CHANGE_INSERT, doc, false],
+      [db.CHANGE_INSERT, doc, true]
+    ]]);
+
+    // Assert no more changes seen after flush again
+    db.flushChanges();
+    expect(changesSeen).toEqual([[
+      [db.CHANGE_INSERT, doc, false],
+      [db.CHANGE_INSERT, doc, true]
+    ]]);
+  });
+});
+
 describe('requestCreate()', () => {
   beforeEach(() => {
     return db.initDB(models.types(), {inMemoryOnly: true}, true);

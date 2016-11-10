@@ -16,7 +16,7 @@ export function filterHeaders (headers, name) {
   }
 
   return headers.filter(
-    h => h.name.toLowerCase() === name.toLowerCase()
+    h => (h.name || '').toLowerCase() === name.toLowerCase()
   );
 }
 

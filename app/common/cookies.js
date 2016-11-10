@@ -25,13 +25,10 @@ export function cookiesFromJar (jar) {
  * @returns {Promise}
  */
 export function cookieHeaderValueForUri (jar, uri) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     jar.getCookies(uri, (err, cookies) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(cookies.map(c => c.cookieString()).join('; '));
-      }
+      cookies = err ? [] : cookies;
+      resolve(cookies.map(c => c.cookieString()).join('; '));
     })
   })
 }

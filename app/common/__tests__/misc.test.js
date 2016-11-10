@@ -129,3 +129,16 @@ describe('prepareUrlForSending()', () => {
     expect(url).toBe('https://google.com/?s=foo&s=foo%20%20100%25');
   });
 });
+
+describe('filterHeaders()', () => {
+  it('handles bad headers', () => {
+    expect(util.filterHeaders(null, null)).toEqual([]);
+    expect(util.filterHeaders([], null)).toEqual([]);
+    expect(util.filterHeaders(['bad'], null)).toEqual([]);
+    expect(util.filterHeaders(['bad'], 'good')).toEqual([]);
+    expect(util.filterHeaders(null, 'good')).toEqual([]);
+    expect(util.filterHeaders([{name: 'good', value: 'valid'}], null)).toEqual([]);
+    expect(util.filterHeaders([{name: 'good', value: 'valid'}], 'good'))
+      .toEqual([{name: 'good', value: 'valid'}]);
+  })
+});

@@ -10,6 +10,10 @@ describe('LocalStorage()', () => {
     setTimeout.mock.calls = [];
   });
 
+  afterEach(() => {
+    jest.clearAllTimers();
+  })
+
   it('create directory', () => {
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     new LocalStorage(basePath);
@@ -33,6 +37,32 @@ describe('LocalStorage()', () => {
     // Test default values
     expect(localStorage.getItem('dne', 'default')).toEqual('default');
     expect(localStorage.getItem('dne')).toEqual('default');
+  });
+
+  it('does handles malformed files', () => {
+    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
+    const localStorage = new LocalStorage(basePath);
+
+    // Assert default is returned on bad JSON
+    fs.writeFileSync(path.join(basePath, 'key'), '{bad JSON');
+    expect(localStorage.getItem('key', 'default')).toBe('default');
+
+    // Assert that writing our file actually works
+    fs.writeFileSync(path.join(basePath, 'key'), '{"good": "JSON"}');
+    expect(localStorage.getItem('key', 'default')).toEqual({good: 'JSON'});
+  });
+
+  it('does handles failing to write file', () => {
+    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
+    const localStorage = new LocalStorage(basePath);
+    fs.rmdirSync(basePath);
+    localStorage.setItem('key', 'value');
+
+    jest.runAllTimers();
+
+    // Since the above operation failed to write, we should now get back
+    // the default value
+    expect(localStorage.getItem('key', 'different')).toBe('different');
   });
 
   it('stores a key', () => {
