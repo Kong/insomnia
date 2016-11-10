@@ -8,6 +8,7 @@ class LocalStorage {
 
     // Debounce writes on a per key basis
     this._timeouts = {};
+    this._buffer = {};
 
     mkdirp.sync(basePath);
     console.log(`[localstorage] Initialized at ${basePath}`);
@@ -15,19 +16,14 @@ class LocalStorage {
 
   setItem (key, obj) {
     clearTimeout(this._timeouts[key]);
-    this._timeouts[key] = setTimeout(() => {
-      const path = this._getKeyPath(key);
-      const contents = JSON.stringify(obj);
-
-      try {
-        fs.writeFileSync(path, contents);
-      } catch (e) {
-        console.error(`[localstorage] Failed to save to LocalStorage: ${e}`)
-      }
-    }, 100);
+    this._buffer[key] = JSON.stringify(obj);
+    this._timeouts[key] = setTimeout(this._flush.bind(this), 100);
   }
 
   getItem (key, defaultObj) {
+    // Make sure things are flushed before we read
+    this._flush();
+
     let contents = JSON.stringify(defaultObj);
 
     const path = this._getKeyPath(key);
@@ -43,6 +39,27 @@ class LocalStorage {
       return JSON.parse(contents)
     } catch (e) {
       console.error(`[localstorage] Failed to get from LocalStorage: ${e}`)
+    }
+  }
+
+  _flush () {
+    const keys = Object.keys(this._buffer);
+
+    if (!keys.length) {
+      return;
+    }
+
+    for (const key of keys) {
+      const contents = this._buffer[key];
+      const path = this._getKeyPath(key);
+
+      delete this._buffer[key];
+
+      try {
+        fs.writeFileSync(path, contents);
+      } catch (e) {
+        console.error(`[localstorage] Failed to save to LocalStorage: ${e}`)
+      }
     }
   }
 

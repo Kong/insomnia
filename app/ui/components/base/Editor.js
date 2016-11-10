@@ -14,6 +14,7 @@ import 'codemirror/mode/shell/shell';
 import 'codemirror/mode/clike/clike';
 import 'codemirror/mode/mllike/mllike';
 import 'codemirror/mode/php/php';
+import 'codemirror/mode/markdown/markdown';
 import 'codemirror/mode/python/python';
 import 'codemirror/mode/ruby/ruby';
 import 'codemirror/mode/swift/swift';
