@@ -3,10 +3,10 @@ import * as db from '../database';
 export const type = 'Workspace';
 export const prefix = 'wrk';
 export function init () {
-  return db.initModel({
+  return {
     name: 'New Workspace',
     metaActiveEnvironmentId: null
-  });
+  };
 }
 
 export function getById (id) {

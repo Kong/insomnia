@@ -3,7 +3,7 @@ import * as db from '../database';
 export const type = 'Response';
 export const prefix = 'res';
 export function init () {
-  return db.initModel({
+  return {
     statusCode: 0,
     statusMessage: '',
     contentType: '',
@@ -15,7 +15,7 @@ export function init () {
     body: '',
     encoding: 'utf8', // Legacy format
     error: ''
-  })
+  }
 }
 
 export function create (patch = {}) {

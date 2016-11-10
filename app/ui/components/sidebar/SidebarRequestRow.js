@@ -1,12 +1,11 @@
 import React, {PropTypes, Component} from 'react';
 import ReactDOM from 'react-dom';
-import {DragSource, DropTarget} from 'react-dnd'
+import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
-
 import RequestActionsDropdown from '../dropdowns/RequestActionsDropdown';
 import Editable from '../base/Editable';
 import MethodTag from '../tags/MethodTag';
-import * as db from '../../../backend/database';
+import * as models from '../../../backend/models';
 
 
 class SidebarRequestRow extends Component {
@@ -67,7 +66,7 @@ class SidebarRequestRow extends Component {
                 <MethodTag method={request.method}/>
                 <Editable
                   value={request.name}
-                  onSubmit={name => db.request.update(request, {name})}
+                  onSubmit={name => models.request.update(request, {name})}
                 />
               </div>
             </button>

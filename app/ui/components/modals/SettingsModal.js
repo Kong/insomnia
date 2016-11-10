@@ -13,7 +13,7 @@ import SettingsGeneral from '../settings/SettingsGeneral';
 import SettingsImportExport from '../settings/SettingsImportExport';
 import SettingsSync from '../settings/SettingsSync';
 import * as GlobalActions from '../../redux/modules/global';
-import * as db from '../../../backend/database';
+import * as models from '../../../backend/models';
 import {
   getAppVersion,
   getAppLongName
@@ -100,7 +100,7 @@ class SettingsTabs extends Component {
         <TabPanel className="pad scrollable">
           <SettingsGeneral
             settings={settings}
-            updateSetting={(key, value) => db.settings.update(settings, {[key]: value})}
+            updateSetting={(key, value) => models.settings.update(settings, {[key]: value})}
           />
         </TabPanel>
         <TabPanel className="pad scrollable">
@@ -115,7 +115,7 @@ class SettingsTabs extends Component {
             loggedIn={session.isLoggedIn()}
             firstName={session.getFirstName() || ''}
             handleExit={hide}
-            handleUpdateSetting={(key, value) => db.settings.update(settings, {[key]: value})}
+            handleUpdateSetting={(key, value) => models.settings.update(settings, {[key]: value})}
             handleShowSignup={() => showModal(SignupModal)}
             handleCancelAccount={sync.cancelAccount}
             handleLogout={sync.logout}

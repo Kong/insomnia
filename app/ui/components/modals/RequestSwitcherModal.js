@@ -5,7 +5,7 @@ import Modal from '../base/Modal';
 import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
-import * as db from '../../../backend/database';
+import * as models from '../../../backend/models';
 
 
 class RequestSwitcherModal extends Component {
@@ -63,7 +63,7 @@ class RequestSwitcherModal extends Component {
       parentId: activeRequestParentId
     };
 
-    const request = await db.request.create(patch);
+    const request = await models.request.create(patch);
     this._activateRequest(request);
   }
 
@@ -88,9 +88,9 @@ class RequestSwitcherModal extends Component {
   async _handleChange (searchString) {
     const {workspaceId} = this.props;
 
-    const allRequests = await db.request.all();
-    const allRequestGroups = await db.requestGroup.all();
-    const allWorkspaces = await db.workspace.all();
+    const allRequests = await models.request.all();
+    const allRequestGroups = await models.requestGroup.all();
+    const allWorkspaces = await models.workspace.all();
 
     // TODO: Support nested RequestGroups
     // Filter out RequestGroups that don't belong to this Workspace

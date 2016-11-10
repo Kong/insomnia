@@ -6,7 +6,7 @@ export const type = 'Request';
 export const prefix = 'req';
 
 export function init () {
-  return db.initModel({
+  return {
     url: '',
     name: 'New Request',
     method: METHOD_GET,
@@ -17,7 +17,7 @@ export function init () {
     metaPreviewMode: PREVIEW_MODE_SOURCE,
     metaResponseFilter: '',
     metaSortKey: -1 * Date.now()
-  });
+  };
 }
 
 export function create (patch = {}) {
@@ -60,7 +60,8 @@ export function updateContentType (request, contentType) {
 
 export function duplicate (request) {
   const name = `${request.name} (Copy)`;
-  return db.duplicate(request, {name})
+  const metaSortKey = request.metaSortKey + 1;
+  return db.duplicate(request, {name, metaSortKey})
 }
 
 export function remove (request) {

@@ -1,11 +1,12 @@
 import * as harUtils from '../export/har';
 import * as db from '../database';
 import * as render from '../render';
+import * as models from '../models';
 
 describe('exportHarWithRequest()', () => {
-  beforeEach(() => db.initDB({inMemoryOnly: true}, true));
+  beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));
   it('renders does it correctly', async () => {
-    const workspace = await db.workspace.create();
+    const workspace = await models.workspace.create();
     const cookies = [{
       creation: new Date('2016-10-05T04:40:49.505Z'),
       key: 'foo',
@@ -17,12 +18,12 @@ describe('exportHarWithRequest()', () => {
       lastAccessed: new Date('2096-10-05T04:40:49.505Z')
     }];
 
-    await db.cookieJar.create({
+    await models.cookieJar.create({
       parentId: workspace._id,
       cookies
     });
 
-    const request = Object.assign(db.request.init(), {
+    const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
       headers: [{name: 'Content-Type', value: 'application/json'}],

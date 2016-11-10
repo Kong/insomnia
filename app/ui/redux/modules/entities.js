@@ -1,8 +1,9 @@
 import * as db from '../../../backend/database';
+import * as models from '../../../backend/models';
 
 const ENTITY_BLACKLIST = {
-  [db.response.type]: 1,
-  [db.stats.type]: 1
+  [models.response.type]: 1,
+  [models.stats.type]: 1
 };
 
 const ENTITY_CHANGES = 'entities.changes';
@@ -20,7 +21,7 @@ const initialState = {
   doNotPersist: true
 };
 
-for (const type of db.ALL_TYPES) {
+for (const type of models.types()) {
   initialState[getReducerName(type)] = {};
 }
 

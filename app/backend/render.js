@@ -1,8 +1,9 @@
 import nunjucks from 'nunjucks';
 import traverse from 'traverse';
 import uuid from 'node-uuid';
-import * as db from './database';
+import * as models from './models';
 import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './util';
+import * as db from './database';
 
 const nunjucksEnvironment = nunjucks.configure({
   autoescape: false
@@ -110,11 +111,11 @@ export function recursiveRender (obj, context) {
 
 export async function getRenderedRequest (request, environmentId) {
   const ancestors = await db.withAncestors(request);
-  const workspace = ancestors.find(doc => doc.type === db.workspace.type);
+  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
-  const rootEnvironment = await db.environment.getOrCreateForWorkspace(workspace);
-  const subEnvironment = await db.environment.getById(environmentId);
-  const cookieJar = await db.cookieJar.getOrCreateForWorkspace(workspace);
+  const rootEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+  const subEnvironment = await models.environment.getById(environmentId);
+  const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
 
   // Generate the context we need to render
   const renderContext = buildRenderContext(

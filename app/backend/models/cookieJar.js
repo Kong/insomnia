@@ -3,10 +3,10 @@ import * as db from '../database';
 export const type = 'CookieJar';
 export const prefix = 'jar';
 export function init () {
-  return db.initModel({
+  return {
     name: 'Default Jar',
     cookies: []
-  })
+  }
 }
 
 export function create (patch = {}) {

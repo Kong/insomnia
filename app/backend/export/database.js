@@ -1,6 +1,7 @@
 'use strict';
 
 import * as db from '../database';
+import * as models from '../models';
 import {getAppVersion} from '../appInfo';
 import {importRequestGroupLegacy} from './legacy';
 import {importRequestLegacy} from './legacy';
@@ -47,20 +48,20 @@ export function importJSON (workspace, json) {
     case VERSION_DESKTOP_APP:
       data.resources.map(async r => {
         if (r._type === EXPORT_TYPE_WORKSPACE) {
-          const d = await db.workspace.getById(r._id);
-          d ? db.workspace.update(d, r) : db.workspace.create(r);
+          const d = await models.workspace.getById(r._id);
+          d ? models.workspace.update(d, r) : models.workspace.create(r);
         } else if (r._type === EXPORT_TYPE_COOKIE_JAR) {
-          const d = await db.cookieJar.getById(r._id);
-          d ? db.cookieJar.update(d, r) : db.cookieJar.create(r);
+          const d = await models.cookieJar.getById(r._id);
+          d ? models.cookieJar.update(d, r) : models.cookieJar.create(r);
         } else if (r._type === EXPORT_TYPE_ENVIRONMENT) {
-          const d = await db.environment.getById(r._id);
-          d ? db.environment.update(d, r) : db.environment.create(r);
+          const d = await models.environment.getById(r._id);
+          d ? models.environment.update(d, r) : models.environment.create(r);
         } else if (r._type === EXPORT_TYPE_REQUEST_GROUP) {
-          const d = await db.requestGroup.getById(r._id);
-          d ? db.requestGroup.update(d, r) : db.requestGroup.create(r);
+          const d = await models.requestGroup.getById(r._id);
+          d ? models.requestGroup.update(d, r) : models.requestGroup.create(r);
         } else if (r._type === EXPORT_TYPE_REQUEST) {
-          const d = await db.request.getById(r._id);
-          d ? db.request.update(d, r) : db.request.create(r);
+          const d = await models.request.getById(r._id);
+          d ? models.request.update(d, r) : models.request.create(r);
         } else {
           console.error('Unknown doc type for import', r.type);
         }
@@ -86,19 +87,19 @@ export async function exportJSON (parentDoc = null) {
   const docs = await db.withDescendants(parentDoc);
 
   data.resources = docs.filter(d => (
-    d.type !== db.response.type &&
-    d.type !== db.stats.type &&
-    d.type !== db.settings.type
+    d.type !== models.response.type &&
+    d.type !== models.stats.type &&
+    d.type !== models.settings.type
   )).map(d => {
-    if (d.type === db.workspace.type) {
+    if (d.type === models.workspace.type) {
       d._type = EXPORT_TYPE_WORKSPACE;
-    } else if (d.type === db.cookieJar.type) {
+    } else if (d.type === models.cookieJar.type) {
       d._type = EXPORT_TYPE_COOKIE_JAR;
-    } else if (d.type === db.environment.type) {
+    } else if (d.type === models.environment.type) {
       d._type = EXPORT_TYPE_ENVIRONMENT;
-    } else if (d.type === db.requestGroup.type) {
+    } else if (d.type === models.requestGroup.type) {
       d._type = EXPORT_TYPE_REQUEST_GROUP;
-    } else if (d.type === db.request.type) {
+    } else if (d.type === models.request.type) {
       d._type = EXPORT_TYPE_REQUEST;
     }
 

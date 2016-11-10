@@ -2,13 +2,14 @@ import * as networkUtils from '../network';
 import * as db from '../database';
 import nock from 'nock';
 import {getRenderedRequest} from '../render';
+import * as models from '../models';
 
 describe('buildRequestConfig()', () => {
-  beforeEach(() => db.initDB({inMemoryOnly: true}, true));
+  beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));
 
   it('builds a default config', async () => {
-    const workspace = await db.workspace.create();
-    const request = Object.assign(db.request.init(), {
+    const workspace = await models.workspace.create();
+    const request = Object.assign(models.request.init(), {
       parentId: workspace._id
     });
 
@@ -33,8 +34,8 @@ describe('buildRequestConfig()', () => {
   });
 
   it('builds a complex config', async () => {
-    const workspace = await db.workspace.create();
-    const request = Object.assign(db.request.init(), {
+    const workspace = await models.workspace.create();
+    const request = Object.assign(models.request.init(), {
       parentId: workspace._id,
       headers: [{host: '', name: 'Content-Type', value: 'application/json'}],
       parameters: [{name: 'foo bar', value: 'hello&world'}],
@@ -74,13 +75,13 @@ describe('buildRequestConfig()', () => {
 });
 
 describe('actuallySend()', () => {
-  beforeEach(() => db.initDB({inMemoryOnly: true}, true));
+  beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));
 
   it('does something', async () => {
     let mock;
 
-    const workspace = await db.workspace.create();
-    const settings = await db.settings.create();
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
     const cookies = [{
       creation: new Date('2016-10-05T04:40:49.505Z'),
       key: 'foo',
@@ -101,7 +102,7 @@ describe('actuallySend()', () => {
       lastAccessed: new Date('2096-10-05T04:40:49.505Z')
     }];
 
-    await db.cookieJar.create({
+    await models.cookieJar.create({
       parentId: workspace._id,
       cookies
     });
@@ -115,7 +116,7 @@ describe('actuallySend()', () => {
       .reply(200, 'response body')
       .log(console.log);
 
-    const request = Object.assign(db.request.init(), {
+    const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
       headers: [{name: 'Content-Type', value: 'application/json'}],

@@ -7,7 +7,7 @@ import EnvironmentsModal from '../components/modals/WorkspaceEnvironmentsEditMod
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
 import {showModal} from '../components/modals/index';
-import * as db from '../../backend/database';
+import * as models from '../../backend/models';
 
 
 class EnvironmentsDropdown extends Component {
@@ -25,7 +25,7 @@ class EnvironmentsDropdown extends Component {
 
   _handleActivateEnvironment (environment) {
     const workspace = this._getActiveWorkspace();
-    db.workspace.update(workspace, {metaActiveEnvironmentId: environment._id});
+    models.workspace.update(workspace, {metaActiveEnvironmentId: environment._id});
   }
 
   render () {

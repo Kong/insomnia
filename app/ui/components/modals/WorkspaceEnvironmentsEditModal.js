@@ -9,7 +9,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as db from '../../../backend/database'
+import * as models from '../../../backend/models'
 
 
 class WorkspaceEnvironmentsEditModal extends Component {
@@ -36,8 +36,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
   }
 
   async _load (workspace, environmentToActivate = null) {
-    const rootEnvironment = await db.environment.getOrCreateForWorkspace(workspace);
-    const subEnvironments = await db.environment.findByParentId(rootEnvironment._id);
+    const rootEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+    const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
 
     let activeEnvironmentId;
 
@@ -58,7 +58,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
   async _handleAddEnvironment () {
     const {rootEnvironment, workspace} = this.state;
     const parentId = rootEnvironment._id;
-    const environment = await db.environment.create({parentId});
+    const environment = await models.environment.create({parentId});
     this._load(workspace, environment);
   }
 
@@ -81,7 +81,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     }
 
     // Delete the current one, then activate the root environment
-    await db.environment.remove(environment);
+    await models.environment.remove(environment);
 
     this._load(workspace, rootEnvironment);
   }
@@ -91,8 +91,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
     // NOTE: Fetch the environment first because it might not be up to date.
     // For example, editing the body updates silently.
-    const realEnvironment = await db.environment.getById(environment._id);
-    await db.environment.update(realEnvironment, {name});
+    const realEnvironment = await models.environment.getById(environment._id);
+    await models.environment.update(realEnvironment, {name});
     this._load(workspace);
   }
 
@@ -125,7 +125,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const data = this._envEditor.getValue();
     const activeEnvironment = this._getActiveEnvironment();
 
-    db.environment.update(activeEnvironment, {data});
+    models.environment.update(activeEnvironment, {data});
   }
 
   render () {

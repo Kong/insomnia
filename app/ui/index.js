@@ -15,6 +15,7 @@ import {getAppVersion} from '../backend/appInfo';
 import {initLegacyAnalytics} from '../backend/analytics';
 import {initAnalytics} from '../backend/ganalytics';
 import * as session from '../sync/session';
+import * as models from '../backend/models';
 
 // Global CSS
 
@@ -28,7 +29,7 @@ console.log(`-- Loading App v${getAppVersion()} --`);
 const accountId = session.getAccountId();
 
 (async function () {
-  await initDB();
+  await initDB(models.types());
   await initSync();
   await initStore(store.dispatch);
   await initAnalytics(accountId);

@@ -1,4 +1,4 @@
-import * as db from '../database';
+import * as models from '../models';
 import {getContentTypeFromHeaders} from '../contentTypes';
 
 const FORMAT_MAP = {
@@ -9,7 +9,7 @@ const FORMAT_MAP = {
 };
 
 export async function importRequestGroupLegacy (importedRequestGroup, parentId, index = 1) {
-  const requestGroup = await db.requestGroup.create({
+  const requestGroup = await models.requestGroup.create({
     parentId,
     name: importedRequestGroup.name,
     environment: (importedRequestGroup.environments || {}).base || {},
@@ -49,7 +49,7 @@ export function importRequestLegacy (importedRequest, parentId, index = 1) {
     }
   }
 
-  db.request.create({
+  models.request.create({
     parentId,
     _id: importedRequest._id,
     name: importedRequest.name,

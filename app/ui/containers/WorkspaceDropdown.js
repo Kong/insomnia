@@ -13,7 +13,7 @@ import AlertModal from '../components/modals/AlertModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import * as GlobalActions from '../redux/modules/global';
-import * as db from '../../backend/database';
+import * as models from '../../backend/models';
 import {getAppVersion} from '../../backend/appInfo';
 import {showModal} from '../components/modals/index';
 
@@ -26,7 +26,7 @@ class WorkspaceDropdown extends Component {
       defaultValue: workspace.name
     });
 
-    db.workspace.update(workspace, {name});
+    models.workspace.update(workspace, {name});
   }
 
   async _workspaceCreate () {
@@ -37,12 +37,12 @@ class WorkspaceDropdown extends Component {
       selectText: true
     });
 
-    const workspace = await db.workspace.create({name});
+    const workspace = await models.workspace.create({name});
     this.props.actions.global.activateWorkspace(workspace);
   }
 
   async _workspaceRemove () {
-    const count = await db.workspace.count();
+    const count = await models.workspace.count();
     if (count <= 1) {
       showModal(AlertModal, {
         title: 'Delete Unsuccessful',
@@ -50,7 +50,7 @@ class WorkspaceDropdown extends Component {
       });
     } else {
       const workspace = this._getActiveWorkspace(this.props);
-      db.workspace.remove(workspace);
+      models.workspace.remove(workspace);
     }
   }
 

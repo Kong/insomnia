@@ -5,7 +5,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import CookiesEditor from '../editors/CookiesEditor';
-import * as db from '../../../backend/database';
+import * as models from '../../../backend/models';
 import {DEBOUNCE_MILLIS} from '../../../backend/constants';
 
 class CookiesModal extends Component {
@@ -20,7 +20,7 @@ class CookiesModal extends Component {
 
   async _saveChanges () {
     const {cookieJar} = this.state;
-    await db.cookieJar.update(cookieJar);
+    await models.cookieJar.update(cookieJar);
     this._load(this.state.workspace);
   }
 
@@ -78,7 +78,7 @@ class CookiesModal extends Component {
   }
 
   async _load (workspace) {
-    const cookieJar = await db.cookieJar.getOrCreateForWorkspace(workspace);
+    const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
     this.setState({cookieJar, workspace});
   }
 

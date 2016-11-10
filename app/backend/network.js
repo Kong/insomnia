@@ -1,6 +1,6 @@
 import networkRequest from 'request';
 import {parse as urlParse} from 'url';
-import * as db from './database';
+import * as models from './models';
 import * as querystring from './querystring';
 import * as util from './util.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
@@ -126,7 +126,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
           message += `Code: ${err.code}`;
         }
 
-        await db.response.create({
+        await models.response.create({
           parentId: renderedRequest._id,
           error: message
         });
@@ -155,7 +155,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         }
       }
       const cookies = await cookiesFromJar(jar);
-      await db.cookieJar.update(cookieJar, {cookies});
+      await models.cookieJar.update(cookieJar, {cookies});
 
       const responsePatch = {
         parentId: renderedRequest._id,
@@ -170,14 +170,14 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         headers: headers
       };
 
-      db.response.create(responsePatch).then(resolve, reject);
+      models.response.create(responsePatch).then(resolve, reject);
     });
 
     // Kind of hacky, but this is how we cancel a request.
     cancelRequestFunction = async () => {
       req.abort();
 
-      await db.response.create({
+      await models.response.create({
         parentId: renderedRequest._id,
         elapsedTime: Date.now() - requestStartTime,
         statusMessage: 'Cancelled',
@@ -193,8 +193,8 @@ export async function send (requestId, environmentId) {
   // First, lets wait for all debounces to finish
   await util.delay(DEBOUNCE_MILLIS);
 
-  const request = await db.request.getById(requestId);
-  const settings = await db.settings.getOrCreate();
+  const request = await models.request.getById(requestId);
+  const settings = await models.settings.getOrCreate();
 
   let renderedRequest;
 
@@ -202,7 +202,7 @@ export async function send (requestId, environmentId) {
     renderedRequest = await getRenderedRequest(request, environmentId);
   } catch (e) {
     // Failed to render. Must be the user's fault
-    return await db.response.create({
+    return await models.response.create({
       parentId: request._id,
       statusCode: STATUS_CODE_PEBKAC,
       error: e.message

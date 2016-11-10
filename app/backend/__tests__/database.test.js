@@ -1,4 +1,5 @@
 import * as db from '../database';
+import * as models from '../models';
 import {PREVIEW_MODE_SOURCE} from '../previewModes';
 
 function loadFixture (name) {
@@ -13,7 +14,7 @@ function loadFixture (name) {
 
 describe('requestCreate()', () => {
   beforeEach(() => {
-    return db.initDB({inMemoryOnly: true}, true);
+    return db.initDB(models.types(), {inMemoryOnly: true}, true);
   });
 
   it('creates a valid request', async () => {
@@ -24,7 +25,7 @@ describe('requestCreate()', () => {
       parentId: 'wrk_123'
     };
 
-    const r = await db.request.create(patch);
+    const r = await models.request.create(patch);
     expect(Object.keys(r).length).toBe(15);
 
     expect(r._id).toMatch(/^req_[a-zA-Z0-9]{32}$/);
@@ -44,31 +45,31 @@ describe('requestCreate()', () => {
   });
 
   it('throws when missing parentID', () => {
-    const fn = () => db.request.create({name: 'My Request'});
+    const fn = () => models.request.create({name: 'My Request'});
     expect(fn).toThrowError('New Requests missing `parentId`');
   });
 });
 
 describe('requestGroupDuplicate()', () => {
   beforeEach(async () => {
-    await db.initDB({inMemoryOnly: true}, true);
+    await db.initDB(models.types(), {inMemoryOnly: true}, true);
     await loadFixture('nestedfolders');
   });
 
   it('duplicates a RequestGroup', async () => {
-    const requestGroup = await db.requestGroup.getById('fld_1');
+    const requestGroup = await models.requestGroup.getById('fld_1');
     expect(requestGroup.name).toBe('Fld 1');
 
-    const newRequestGroup = await db.requestGroup.duplicate(requestGroup);
+    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
     expect(newRequestGroup._id).not.toBe(requestGroup._id);
     expect(newRequestGroup.name).toBe('Fld 1 (Copy)');
 
-    const allRequests = await db.request.all();
-    const allRequestGroups = await db.requestGroup.all();
-    const childRequests = await db.request.findByParentId(requestGroup._id);
-    const childRequestGroups = await db.requestGroup.findByParentId(requestGroup._id);
-    const newChildRequests = await db.request.findByParentId(newRequestGroup._id);
-    const newChildRequestGroups = await db.requestGroup.findByParentId(newRequestGroup._id);
+    const allRequests = await models.request.all();
+    const allRequestGroups = await models.requestGroup.all();
+    const childRequests = await models.request.findByParentId(requestGroup._id);
+    const childRequestGroups = await models.requestGroup.findByParentId(requestGroup._id);
+    const newChildRequests = await models.request.findByParentId(newRequestGroup._id);
+    const newChildRequestGroups = await models.requestGroup.findByParentId(newRequestGroup._id);
     // This asserting is pretty garbage but it at least checks
     // to see that the recursion worked (for the most part)
     expect(allRequests.length).toBe(8);

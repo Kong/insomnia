@@ -36,6 +36,7 @@ import {
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
 import * as db from '../../backend/database';
+import * as models from '../../backend/models';
 import {importCurl} from '../../backend/export/curl';
 import {trackLegacyEvent} from '../../backend/analytics';
 import {getAppVersion} from '../../backend/appInfo';
@@ -117,7 +118,7 @@ class App extends Component {
           return;
         }
 
-        const request = await db.request.duplicate(activeRequest);
+        const request = await models.request.duplicate(activeRequest);
 
         const workspace = this._getActiveWorkspace();
         this.props.actions.global.activateRequest(workspace, request)
@@ -146,7 +147,7 @@ class App extends Component {
     }
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
-    let requestGroups = await db.requestGroup.findByParentId(requestGroupToTarget.parentId);
+    let requestGroups = await models.requestGroup.findByParentId(requestGroupToTarget.parentId);
     requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
     // Find the index of request B so we can re-order and save everything
@@ -176,14 +177,14 @@ class App extends Component {
 
           db.bufferChanges(300);
           requestGroups.map((r, i) => {
-            db.requestGroup.update(r, {
+            models.requestGroup.update(r, {
               metaSortKey: i * 100,
               parentId: requestGroupToTarget.parentId
             });
           });
         } else {
           const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-          db.requestGroup.update(requestGroupToMove, {
+          models.requestGroup.update(requestGroupToMove, {
             metaSortKey,
             parentId: requestGroupToTarget.parentId
           });
@@ -204,12 +205,12 @@ class App extends Component {
 
     if (targetId === null) {
       // We are moving to an empty area. No sorting required
-      db.request.update(requestToMove, {parentId});
+      models.request.update(requestToMove, {parentId});
       return;
     }
 
     // NOTE: using requestToTarget's parentId so we can switch parents!
-    let requests = await db.request.findByParentId(parentId);
+    let requests = await models.request.findByParentId(parentId);
     requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
     // Find the index of request B so we can re-order and save everything
@@ -239,11 +240,11 @@ class App extends Component {
 
           db.bufferChanges(300);
           requests.map((r, i) => {
-            db.request.update(r, {metaSortKey: i * 100, parentId});
+            models.request.update(r, {metaSortKey: i * 100, parentId});
           });
         } else {
           const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-          db.request.update(requestToMove, {metaSortKey, parentId});
+          models.request.update(requestToMove, {metaSortKey, parentId});
         }
 
         break;
@@ -258,7 +259,7 @@ class App extends Component {
       selectText: true
     });
 
-    db.requestGroup.create({parentId, name})
+    models.requestGroup.create({parentId, name})
   }
 
   async _requestCreate (parentId) {
@@ -269,7 +270,7 @@ class App extends Component {
     });
 
     const workspace = this._getActiveWorkspace();
-    const request = await db.request.create({parentId, name});
+    const request = await models.request.create({parentId, name});
     this.props.actions.global.activateRequest(workspace, request);
   }
 
@@ -298,10 +299,10 @@ class App extends Component {
     // TODO: Should this be moved elsewhere?
     const requestPatch = importCurl(url);
     if (requestPatch) {
-      await db.request.update(request, requestPatch);
+      await models.request.update(request, requestPatch);
       this._forceHardRefresh();
     } else {
-      db.request.update(request, {url});
+      models.request.update(request, {url});
     }
   }
 
@@ -437,7 +438,7 @@ class App extends Component {
     trackLegacyEvent('App Launched');
 
     // Update Stats Object
-    const {lastVersion, launches} = await db.stats.get();
+    const {lastVersion, launches} = await models.stats.get();
     const firstLaunch = !lastVersion;
     if (firstLaunch) {
       // TODO: Show a welcome message
@@ -478,7 +479,7 @@ class App extends Component {
       }
     });
 
-    db.stats.update({
+    models.stats.update({
       launches: launches + 1,
       lastLaunch: Date.now(),
       lastVersion: getAppVersion()
@@ -536,7 +537,7 @@ class App extends Component {
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           addRequestToWorkspace={() => this._requestCreate(workspace._id)}
-          toggleRequestGroup={requestGroup => db.requestGroup.update(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
+          toggleRequestGroup={requestGroup => models.requestGroup.update(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
           activeRequestId={activeRequestId}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
@@ -568,15 +569,15 @@ class App extends Component {
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
-          updateRequestBody={body => db.request.update(activeRequest, {body})}
+          updateRequestBody={body => models.request.update(activeRequest, {body})}
           updateRequestUrl={url => this._handleUrlChanged(activeRequest, url)}
-          updateRequestMethod={method => db.request.update(activeRequest, {method})}
-          updateRequestParameters={parameters => db.request.update(activeRequest, {parameters})}
-          updateRequestAuthentication={authentication => db.request.update(activeRequest, {authentication})}
-          updateRequestHeaders={headers => db.request.update(activeRequest, {headers})}
-          updateRequestContentType={contentType => db.request.updateContentType(activeRequest, contentType)}
-          updateSettingsShowPasswords={showPasswords => db.settings.update(settings, {showPasswords})}
-          updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => db.settings.update(settings, {useBulkHeaderEditor})}
+          updateRequestMethod={method => models.request.update(activeRequest, {method})}
+          updateRequestParameters={parameters => models.request.update(activeRequest, {parameters})}
+          updateRequestAuthentication={authentication => models.request.update(activeRequest, {authentication})}
+          updateRequestHeaders={headers => models.request.update(activeRequest, {headers})}
+          updateRequestContentType={contentType => models.request.updateContentType(activeRequest, contentType)}
+          updateSettingsShowPasswords={showPasswords => models.settings.update(settings, {showPasswords})}
+          updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => models.settings.update(settings, {useBulkHeaderEditor})}
         />
 
         <div className="drag drag--pane">
@@ -591,8 +592,8 @@ class App extends Component {
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
           responseFilter={activeRequest ? activeRequest.metaResponseFilter : ''}
-          updatePreviewMode={metaPreviewMode => db.request.update(activeRequest, {metaPreviewMode})}
-          updateResponseFilter={metaResponseFilter => db.request.update(activeRequest, {metaResponseFilter})}
+          updatePreviewMode={metaPreviewMode => models.request.update(activeRequest, {metaPreviewMode})}
+          updateResponseFilter={metaResponseFilter => models.request.update(activeRequest, {metaResponseFilter})}
           loadingRequests={requests.loadingRequests}
           showCookiesModal={() => showModal(CookiesModal, workspace)}
         />
@@ -615,10 +616,10 @@ class App extends Component {
         />
         <EnvironmentEditModal
           ref={m => registerModal(m)}
-          onChange={rg => db.requestGroup.update(rg)}/>
+          onChange={rg => models.requestGroup.update(rg)}/>
         <WorkspaceEnvironmentsEditModal
           ref={m => registerModal(m)}
-          onChange={w => db.workspace.update(w)}/>
+          onChange={w => models.workspace.update(w)}/>
         <CookiesModal ref={m => registerModal(m)}/>
 
         {/*<div className="toast toast--show">*/}
