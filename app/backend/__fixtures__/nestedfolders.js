@@ -1,12 +1,12 @@
-import * as db from '../database';
+import * as models from '../models';
 
 export default {
-  [db.workspace.type]: [{
+  [models.workspace.type]: [{
     _id: 'wrk_1',
     name: 'Wrk 1'
   }],
 
-  [db.requestGroup.type]: [{
+  [models.requestGroup.type]: [{
     _id: 'fld_1',
     parentId: 'wrk_1',
     name: 'Fld 1'
@@ -20,7 +20,7 @@ export default {
     name: 'Fld 3'
   }],
 
-  [db.request.type]: [{
+  [models.request.type]: [{
     _id: 'req_1',
     parentId: 'fld_1',
     name: 'Req 1'

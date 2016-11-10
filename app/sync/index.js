@@ -1,4 +1,5 @@
 import * as db from '../backend/database';
+import * as models from '../backend/models';
 import * as fetch from '../backend/fetch';
 import * as crypt from './crypt';
 import * as session from './session';
@@ -12,11 +13,11 @@ export const START_PULL_DELAY = 2E3;
 export const START_PUSH_DELAY = 1E3;
 
 const WHITE_LIST = {
-  [db.request.type]: true,
-  [db.requestGroup.type]: true,
-  [db.workspace.type]: true,
-  [db.environment.type]: true,
-  [db.cookieJar.type]: true
+  [models.request.type]: true,
+  [models.requestGroup.type]: true,
+  [models.workspace.type]: true,
+  [models.environment.type]: true,
+  [models.cookieJar.type]: true
 };
 
 export const logger = new Logger();
@@ -28,7 +29,7 @@ const resourceGroupSymmetricKeysCache = {};
 
 let isInitialized = false;
 export async function initSync () {
-  const settings = await db.settings.getOrCreate();
+  const settings = await models.settings.getOrCreate();
   if (!settings.optSyncBeta) {
     logger.debug('Not enabled');
     return;
@@ -535,7 +536,7 @@ async function _decryptDoc (resourceGroupId, messageJSON) {
 
 async function _getWorkspaceForDoc (doc) {
   const ancestors = await db.withAncestors(doc);
-  return ancestors.find(d => d.type === db.workspace.type);
+  return ancestors.find(d => d.type === models.workspace.type);
 }
 
 async function _createResourceGroup (name = '') {

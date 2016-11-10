@@ -1,8 +1,8 @@
 import Analytics from 'analytics-node';
 import {getAppVersion} from './appInfo';
-import * as db from './database';
 import {SEGMENT_WRITE_KEY} from  './constants';
 import {isDevelopment} from './appInfo';
+import * as models from './models';
 
 let analytics = null;
 let userId = null;
@@ -16,7 +16,7 @@ export async function initLegacyAnalytics () {
   analytics = new Analytics(SEGMENT_WRITE_KEY);
 
   if (!userId) {
-    const stats = await db.stats.get();
+    const stats = await models.stats.get();
     userId = stats._id;
 
     // Recurse now that we have a userId

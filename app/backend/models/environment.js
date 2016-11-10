@@ -3,10 +3,10 @@ import * as db from '../database';
 export const type = 'Environment';
 export const prefix = 'env';
 export function init () {
-  return db.initModel({
+  return {
     name: 'New Environment',
     data: {},
-  })
+  }
 }
 
 export function create (patch = {}) {

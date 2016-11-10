@@ -9,7 +9,7 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import * as session from '../../../sync/session';
 import * as syncStorage from '../../../sync/storage';
 import * as sync from '../../../sync';
-import * as db from '../../../backend/database';
+import * as models from '../../../backend/models';
 import {trackEvent} from '../../../backend/ganalytics';
 
 class SyncModal extends Component {
@@ -69,7 +69,7 @@ class SyncModal extends Component {
   }
 
   async _updateModal () {
-    const workspaces = await db.workspace.all();
+    const workspaces = await models.workspace.all();
     const syncData = [];
     for (const workspace of workspaces) {
 

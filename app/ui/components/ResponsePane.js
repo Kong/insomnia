@@ -10,7 +10,7 @@ import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
-import * as db from '../../backend/database';
+import * as models from '../../backend/models';
 import {
   getPreviewModeName,
   PREVIEW_MODE_SOURCE
@@ -33,7 +33,7 @@ class ResponsePane extends Component {
     if (!request) {
       this.setState({response: null});
     } else {
-      const response = await db.response.getLatestByParentId(request._id);
+      const response = await models.response.getLatestByParentId(request._id);
       this.setState({response});
     }
   }

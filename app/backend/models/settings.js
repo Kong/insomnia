@@ -3,7 +3,7 @@ import * as db from '../database';
 export const type = 'Settings';
 export const prefix = 'set';
 export function init () {
-  return db.initModel({
+  return {
     showPasswords: false,
     useBulkHeaderEditor: false,
     followRedirects: true,
@@ -15,7 +15,7 @@ export function init () {
     validateSSL: true,
     optSyncBeta: false,
     forceVerticalLayout: false,
-  });
+  };
 }
 
 export async function create (patch = {}) {

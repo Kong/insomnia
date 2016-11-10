@@ -1,4 +1,4 @@
-import * as db from '../database';
+import * as models from '../models';
 import {getRenderedRequest} from  '../render';
 import {jarFromCookies} from '../cookies';
 import * as util from '../../backend/util';
@@ -30,7 +30,7 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
 }
 
 export async function exportHar (requestId, addContentLength = false) {
-  const request = await db.request.getById(requestId);
+  const request = await models.request.getById(requestId);
   const renderedRequest = await getRenderedRequest(request);
   return exportHarWithRequest(renderedRequest, addContentLength);
 }

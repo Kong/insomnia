@@ -3,11 +3,11 @@ import * as db from '../database';
 export const type = 'Stats';
 export const prefix = 'sta';
 export function init () {
-  return db.initModel({
+  return {
     lastLaunch: Date.now(),
     lastVersion: null,
     launches: 0
-  });
+  };
 }
 
 export function create (patch = {}) {

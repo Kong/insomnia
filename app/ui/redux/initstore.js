@@ -2,6 +2,7 @@ import {bindActionCreators} from 'redux';
 import * as entitiesActions from './modules/entities';
 import * as globalActions from './modules/global';
 import * as db from '../../backend/database';
+import * as models from '../../backend/models';
 import * as fetch from '../../backend/fetch';
 
 export async function initStore (dispatch) {
@@ -19,12 +20,12 @@ export async function initStore (dispatch) {
 
   // Restore docs in parent->child->grandchild order
   const results = [
-    await db.settings.getOrCreate(),
-    await db.workspace.all(),
-    await db.environment.all(),
-    await db.cookieJar.all(),
-    await db.requestGroup.all(),
-    await db.request.all()
+    await models.settings.getOrCreate(),
+    await models.workspace.all(),
+    await models.environment.all(),
+    await models.cookieJar.all(),
+    await models.requestGroup.all(),
+    await models.request.all()
   ];
 
   for (let docs of results) {

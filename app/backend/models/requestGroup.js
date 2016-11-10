@@ -3,12 +3,12 @@ import * as db from '../database';
 export const type = 'RequestGroup';
 export const prefix = 'fld';
 export function init () {
-  return db.initModel({
+  return {
     name: 'New Folder',
     environment: {},
     metaCollapsed: false,
     metaSortKey: -1 * Date.now()
-  })
+  }
 }
 
 export function create (patch = {}) {

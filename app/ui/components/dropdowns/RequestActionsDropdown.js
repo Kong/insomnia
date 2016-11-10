@@ -4,7 +4,7 @@ import Dropdown from '../base/Dropdown';
 import DropdownHint from '../base/DropdownHint';
 import GenerateCodeModal from '../modals/GenerateCodeModal';
 import PromptModal from '../modals/PromptModal';
-import * as db from '../../../backend/database';
+import * as models from '../../../backend/models';
 import {showModal} from '../modals/index';
 
 
@@ -18,7 +18,7 @@ class RequestActionsDropdown extends Component {
       hint: 'also rename requests by double clicking in the sidebar'
     });
 
-    db.request.update(request, {name});
+    models.request.update(request, {name});
   }
 
   render () {
@@ -31,7 +31,7 @@ class RequestActionsDropdown extends Component {
         </button>
         <ul>
           <li>
-            <button onClick={e => db.request.duplicate(request)}>
+            <button onClick={e => models.request.duplicate(request)}>
               <i className="fa fa-copy"></i> Duplicate
               <DropdownHint char="D"></DropdownHint>
             </button>
@@ -47,7 +47,7 @@ class RequestActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <PromptButton onClick={e => db.request.remove(request)}
+            <PromptButton onClick={e => models.request.remove(request)}
                           addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
             </PromptButton>

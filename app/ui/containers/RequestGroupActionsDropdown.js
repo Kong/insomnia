@@ -8,8 +8,8 @@ import DropdownDivider from '../components/base/DropdownDivider';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as globalActions from '../redux/modules/global';
-import * as db from '../../backend/database';
-import {showModal} from '../components/modals/index';
+import * as models from '../../backend/models';
+import {showModal} from '../components/modals';
 
 class RequestGroupActionsDropdown extends Component {
   async _promptUpdateName () {
@@ -20,7 +20,7 @@ class RequestGroupActionsDropdown extends Component {
       defaultValue: requestGroup.name
     });
 
-    db.requestGroup.update(requestGroup, {name});
+    models.requestGroup.update(requestGroup, {name});
   }
 
   async _requestCreate () {
@@ -33,13 +33,13 @@ class RequestGroupActionsDropdown extends Component {
     const workspace = this._getActiveWorkspace();
     const {requestGroup} = this.props;
     const parentId = requestGroup._id;
-    const request = await db.request.create({parentId, name});
+    const request = await models.request.create({parentId, name});
     this.props.actions.global.activateRequest(workspace, request);
   }
 
   _requestGroupDuplicate () {
     const {requestGroup} = this.props;
-    db.requestGroup.duplicate(requestGroup);
+    models.requestGroup.duplicate(requestGroup);
   }
 
   _getActiveWorkspace (props) {
@@ -87,7 +87,7 @@ class RequestGroupActionsDropdown extends Component {
             </button>
           </li>
           <li>
-            <PromptButton onClick={e => db.requestGroup.remove(requestGroup)}
+            <PromptButton onClick={e => models.requestGroup.remove(requestGroup)}
                           addIcon={true}>
               <i className="fa fa-trash-o"></i> Delete
             </PromptButton>

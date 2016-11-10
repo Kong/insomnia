@@ -1,5 +1,5 @@
 import * as renderUtils from '../render';
-import * as db from '../database';
+import * as models from '../models';
 
 jest.mock('electron');
 
@@ -28,20 +28,20 @@ describe('render()', () => {
 describe('buildRenderContext()', () => {
   it('cascades properly', () => {
     const ancestors = [{
-      type: db.requestGroup.type,
+      type: models.requestGroup.type,
       environment: {foo: 'group 2', ancestor: true}
     }, {
-      type: db.requestGroup.type,
+      type: models.requestGroup.type,
       environment: {foo: 'group 1', ancestor: true}
     }];
 
     const rootEnvironment = {
-      type: db.environment.type,
+      type: models.environment.type,
       data: {foo: 'root', root: true}
     };
 
     const subEnvironment = {
-      type: db.environment.type,
+      type: models.environment.type,
       data: {foo: 'sub', sub: true}
     };
 
@@ -61,20 +61,20 @@ describe('buildRenderContext()', () => {
 
   it('cascades properly and renders', () => {
     const ancestors = [{
-      type: db.requestGroup.type,
+      type: models.requestGroup.type,
       environment: {bar: '{{ foo }} 2', recursive: '{{ recursive }}', ancestor: true}
     }, {
-      type: db.requestGroup.type,
+      type: models.requestGroup.type,
       environment: {bar: '{{ foo }} 1', ancestor: true}
     }];
 
     const rootEnvironment = {
-      type: db.environment.type,
+      type: models.environment.type,
       data: {foo: 'root', root: true}
     };
 
     const subEnvironment = {
-      type: db.environment.type,
+      type: models.environment.type,
       data: {foo: 'sub', sub: true}
     };
 

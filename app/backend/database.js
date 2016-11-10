@@ -1,70 +1,23 @@
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import {DB_PERSIST_INTERVAL} from  './constants';
+import {DB_PERSIST_INTERVAL} from './constants';
 import {generateId} from './util';
-
-import * as _stats from './models/stats';
-import * as _settings from './models/settings';
-import * as _workspace from './models/workspace';
-import * as _environment from './models/environment';
-import * as _cookieJar from './models/cookieJar';
-import * as _requestGroup from './models/requestGroup';
-import * as _request from './models/request';
-import * as _response from './models/response';
+import {getModel, initModel} from './models';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
 export const CHANGE_REMOVE = 'remove';
 
-
-// ~~~~~~ //
-// MODELS //
-// ~~~~~~ //
-
-const MODELS = [
-  _stats,
-  _settings,
-  _workspace,
-  _environment,
-  _cookieJar,
-  _requestGroup,
-  _request,
-  _response
-];
-
-export const stats = _stats;
-export const settings = _settings;
-export const workspace = _workspace;
-export const environment = _environment;
-export const cookieJar = _cookieJar;
-export const requestGroup = _requestGroup;
-export const request = _request;
-export const response = _response;
-
-
-const MODEL_MAP = {};
-
-export function initModel (doc) {
-  return Object.assign({
-    modified: Date.now(),
-    created: Date.now(),
-    parentId: null
-  }, doc);
-}
-
-export const ALL_TYPES = MODELS.map(m => m.type);
-
-for (const model of MODELS) {
-  MODEL_MAP[model.type] = model;
-}
-
+let db = {};
 
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
 
-let db = {};
+function allTypes () {
+  return Object.keys(db);
+}
 
 function getDBFilePath (modelType) {
   // NOTE: Do not EVER change this. EVER!
@@ -76,35 +29,34 @@ function getDBFilePath (modelType) {
  * Initialize the database. Note that this isn't actually async, but might be
  * in the future!
  *
+ * @param types
  * @param config
  * @param forceReset
  * @returns {null}
  */
-export async function initDB (config = {}, forceReset = false) {
+export async function initDB (types, config = {}, forceReset = false) {
   if (forceReset) {
     db = {};
   }
 
   // Fill in the defaults
-  ALL_TYPES.map(t => {
-    if (db[t]) {
-      console.warn(`-- Already initialized DB.${t} --`);
-      return;
+  for (const modelType of types) {
+    if (db[modelType]) {
+      console.warn(`-- Already initialized DB.${modelType} --`);
+      continue;
     }
 
-    const defaults = {
-      filename: getDBFilePath(t),
+    const filePath = getDBFilePath(modelType);
+
+    db[modelType] = new NeDB(Object.assign({
+      filename: filePath,
       autoload: true
-    };
+    }, config));
 
-    const finalConfig = Object.assign(defaults, config);
+    db[modelType].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
 
-    db[t] = new NeDB(finalConfig);
-    db[t].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL)
-  });
-
-  // Done
-  console.log(`-- Initialized DB at ${getDBFilePath('${type}')} --`);
+    console.log(`-- Initialized DB at ${filePath} --`);
+  }
 }
 
 
@@ -176,7 +128,7 @@ export function find (type, query = {}) {
         return reject(err);
       }
 
-      const modelDefaults = MODEL_MAP[type].init();
+      const modelDefaults = initModel(type);
       const docs = rawDocs.map(rawDoc => {
         return Object.assign({}, modelDefaults, rawDoc);
       });
@@ -202,7 +154,7 @@ export function getWhere (type, query) {
         return resolve(null);
       }
 
-      const modelDefaults = MODEL_MAP[type].init();
+      const modelDefaults = initModel(type);
       resolve(Object.assign({}, modelDefaults, rawDocs[0]));
     })
   })
@@ -296,7 +248,7 @@ export function removeBulkSilently (type, query) {
 
 export function docUpdate (originalDoc, patch = {}) {
   const doc = Object.assign(
-    MODEL_MAP[originalDoc.type].init(),
+    initModel(originalDoc.type),
     originalDoc,
     patch,
     {modified: Date.now()}
@@ -306,7 +258,7 @@ export function docUpdate (originalDoc, patch = {}) {
 }
 
 export function docCreate (type, patch = {}) {
-  const idPrefix = MODEL_MAP[type].prefix;
+  const idPrefix = getModel(type).prefix;
 
   if (!idPrefix) {
     throw new Error(`No ID prefix for ${type}`)
@@ -314,7 +266,7 @@ export function docCreate (type, patch = {}) {
 
   const doc = Object.assign(
     {_id: generateId(idPrefix)},
-    MODEL_MAP[type].init(),
+    initModel(type),
     patch,
 
     // Fields that the user can't touch
@@ -338,7 +290,7 @@ export async function withDescendants (doc = null) {
     let foundDocs = [];
 
     for (const d of docs) {
-      for (const type of ALL_TYPES) {
+      for (const type of allTypes()) {
         // If the doc is null, we want to search for parentId === null
         const parentId = d ? d._id : null;
         const more = await find(type, {parentId});
@@ -366,7 +318,7 @@ export async function withAncestors (doc) {
     let foundDocs = [];
 
     for (const d of docs) {
-      for (const type of ALL_TYPES) {
+      for (const type of allTypes()) {
         // If the doc is null, we want to search for parentId === null
         const more = await find(type, {_id: d.parentId});
         foundDocs = [...foundDocs, ...more]
@@ -398,7 +350,7 @@ export async function duplicate (originalDoc, patch = {}, first = true) {
   const createdDoc = await docCreate(newDoc.type, newDoc);
 
   // 2. Get all the children
-  for (const type of ALL_TYPES) {
+  for (const type of allTypes()) {
     const parentId = originalDoc._id;
     const children = await find(type, {parentId});
     for (const doc of children) {
