@@ -1,5 +1,7 @@
 import {METHOD_GET, PREVIEW_MODE_SOURCE} from '../common/constants';
 import * as db from '../common/database';
+import * as misc from '../common/misc';
+import {getContentTypeHeader} from '../common/misc';
 
 export const type = 'Request';
 export const prefix = 'req';
@@ -41,9 +43,7 @@ export function update (request, patch) {
 
 export function updateContentType (request, contentType) {
   let headers = [...request.headers];
-  const contentTypeHeader = headers.find(
-    h => h.name.toLowerCase() === 'content-type'
-  );
+  const contentTypeHeader = getContentTypeHeader(headers);
 
   if (!contentType) {
     // Remove the contentType header if we are un-setting it
@@ -54,7 +54,7 @@ export function updateContentType (request, contentType) {
     headers.push({name: 'Content-Type', value: contentType})
   }
 
-  return db.docUpdate(request, {headers});
+  return update(request, {headers});
 }
 
 export function duplicate (request) {

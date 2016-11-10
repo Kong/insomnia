@@ -15,9 +15,13 @@ export function filterHeaders (headers, name) {
     return [];
   }
 
-  return headers.filter(
-    h => (h.name || '').toLowerCase() === name.toLowerCase()
-  );
+  return headers.filter(h => {
+    if (!h || !h.name) {
+      return false;
+    } else {
+      return h.name.toLowerCase() === name.toLowerCase()
+    }
+  });
 }
 
 export function hasAuthHeader (headers) {
@@ -26,6 +30,11 @@ export function hasAuthHeader (headers) {
 
 export function getSetCookieHeaders (headers) {
   return filterHeaders(headers, 'set-cookie');
+}
+
+export function getContentTypeHeader (headers) {
+  const matches = filterHeaders(headers, 'content-type');
+  return matches.length ? matches[0] : null;
 }
 
 export function setDefaultProtocol (url, defaultProto = 'http:') {
