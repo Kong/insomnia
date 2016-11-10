@@ -14,7 +14,6 @@
     "test:noisy": "jest",
     "test:watch": "jest --watch",
     "test": "jest --silent",
-
     "start-hot": "cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.development.js",
     "hot-server": "babel-node ./webpack/server.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
@@ -119,7 +118,7 @@
     "concurrently": "^2.0.0",
     "cross-env": "^2.0.0",
     "css-loader": "^0.23.1",
-    "electron": "^1.4.4",
+    "electron": "^1.4.6",
     "electron-builder": "^6.3.5",
     "express": "^4.14.0",
     "file-loader": "^0.9.0",
