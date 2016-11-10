@@ -14,11 +14,13 @@ export function initAnalytics(accountId) {
 }
 
 export function trackEvent (...args) {
-  google.trackEvent(...args)
+  google.trackEvent(...args);
+  console.log(`[analytics] track ${args.join(', ')}`);
 }
 
 export function setAccountId (accountId) {
   google.setAccountId(accountId);
+  console.log(`[analytics] account Id ${accountId}`);
 }
 
 export function trackLegacyEvent (event, properties) {

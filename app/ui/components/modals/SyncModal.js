@@ -45,8 +45,7 @@ class SyncModal extends Component {
     trackEvent('Sync', 'Push');
   }
 
-  async _handleSyncModeChange (syncData, e) {
-    const syncMode = e.target.value;
+  async _handleSyncModeChange (syncData, syncMode) {
     const {resourceGroupId} = syncData.resource;
     await sync.createOrUpdateConfig(resourceGroupId, syncMode);
 
@@ -169,7 +168,7 @@ class SyncModal extends Component {
               <select name="sync-type"
                       id="sync-type"
                       value={syncMode}
-                      onChange={this._handleSyncModeChange.bind(this, syncData)}>
+                      onChange={e => this._handleSyncModeChange(syncData, e.target.value)}>
                 <option value={syncStorage.SYNC_MODE_ON}>Automatic</option>
                 <option value={syncStorage.SYNC_MODE_OFF}>Manual</option>
               </select>

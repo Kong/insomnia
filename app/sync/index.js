@@ -118,21 +118,27 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
   for (const {id, version} of updated) {
     const resource = await store.getResourceByDocId(id);
     await store.updateResource(resource, {version, dirty: false});
-    // logger.debug(`Push updated ${id}`);
+  }
+  if (updated.length) {
+    logger.debug(`Push updated ${updated.length} resources`);
   }
 
   // Update all resource versions with the ones that were returned
   for (const {id, version} of created) {
     const resource = await store.getResourceByDocId(id);
     await store.updateResource(resource, {version, dirty: false});
-    // logger.debug(`Push created ${id}`);
+  }
+  if (created.length) {
+    logger.debug(`Push created ${created.length} resources`);
   }
 
   // Update all resource versions with the ones that were returned
   for (const {id, version} of removed) {
     const resource = await store.getResourceByDocId(id);
     await store.updateResource(resource, {version, dirty: false});
-    // logger.debug(`Push removed ${id}`);
+  }
+  if (removed.length) {
+    logger.debug(`Push removed ${removed.length} resources`);
   }
 
   // Resolve conflicts
@@ -345,6 +351,13 @@ export async function getOrCreateConfig (resourceGroupId) {
   }
 }
 
+export async function ensureConfigExists (resourceGroupId, syncMode) {
+  const config = await store.getConfig(resourceGroupId);
+  if (!config) {
+    await store.insertConfig({resourceGroupId, syncMode});
+  }
+}
+
 export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   const config = await store.getConfig(resourceGroupId);
   const patch = {resourceGroupId, syncMode};
@@ -438,7 +451,9 @@ function _fetchResourceGroup (resourceGroupId) {
 
       // Also make sure a config exists when we first fetch it.
       // TODO: This exists in multiple places, so move it to one place.
-      createOrUpdateConfig(resourceGroupId, store.SYNC_MODE_OFF);
+      const config = await getOrCreateConfig(resourceGroupId);
+      const syncMode = config ? config.syncMode : store.SYNC_MODE_OFF;
+      createOrUpdateConfig(resourceGroupId, syncMode);
     }
 
     // Bust cached promise because we're done with it.
@@ -534,7 +549,7 @@ async function _createResourceGroup (name = '') {
   }
 
   // Create a config for it
-  await createOrUpdateConfig(resourceGroup.id, store.SYNC_MODE_OFF);
+  await ensureConfigExists(resourceGroup.id, store.SYNC_MODE_OFF);
 
   logger.debug(`Created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;
@@ -568,7 +583,7 @@ async function _createResourceForDoc (doc) {
 
   if (!workspaceResource) {
     const workspaceResourceGroup = await _createResourceGroup(workspace.name);
-    await createOrUpdateConfig(workspaceResourceGroup.id, store.SYNC_MODE_OFF);
+    await ensureConfigExists(workspaceResourceGroup.id, store.SYNC_MODE_OFF);
     workspaceResource = await _createResource(workspace, workspaceResourceGroup.id);
   }
 
