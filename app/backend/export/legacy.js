@@ -1,5 +1,5 @@
 import * as models from '../models';
-import {getContentTypeFromHeaders} from '../contentTypes';
+import {getContentTypeFromHeaders} from '../../common/constants';
 
 const FORMAT_MAP = {
   json: 'application/json',

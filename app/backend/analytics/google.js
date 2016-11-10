@@ -1,10 +1,9 @@
-import * as constants from '../constants';
-import {isDevelopment} from '../appInfo';
+import * as constants from '../../common/constants';
 
 let _sessionId = null;
 
 export function init (accountId = null) {
-  if (isDevelopment()) {
+  if (constants.isDevelopment()) {
     console.log('-- Not initializing analytics for dev --');
     return;
   }

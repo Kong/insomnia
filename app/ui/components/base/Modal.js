@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-import {isMac} from '../../../backend/appInfo';
+import {isMac} from '../../../common/constants';
 
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.

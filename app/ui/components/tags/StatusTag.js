@@ -3,7 +3,7 @@ import React, {PropTypes} from 'react';
 import {
   RESPONSE_CODE_DESCRIPTIONS,
   STATUS_CODE_PEBKAC
-} from '../../../backend/constants';
+} from '../../../common/constants';
 
 const StatusTag = ({statusMessage, statusCode}) => {
   statusCode = String(statusCode);

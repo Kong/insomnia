@@ -1,8 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import Editor from '../base/Editor';
 import KeyValueEditor from '../base/KeyValueEditor';
-import {CONTENT_TYPE_FORM_URLENCODED} from '../../../backend/contentTypes';
-import {getContentTypeFromHeaders} from '../../../backend/contentTypes';
+import {CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders} from '../../../common/constants';
 import * as querystring from '../../../backend/querystring';
 
 class BodyEditor extends Component {

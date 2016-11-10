@@ -11,12 +11,8 @@ import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import * as models from '../../backend/models';
-import {
-  getPreviewModeName,
-  PREVIEW_MODE_SOURCE
-} from '../../backend/previewModes';
-import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM} from '../../backend/constants';
-import {getSetCookieHeaders} from '../../backend/util';
+import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
+import {getSetCookieHeaders} from '../../common/misc';
 import {cancelCurrentRequest} from '../../backend/network';
 import {trackEvent} from '../../backend/analytics';
 

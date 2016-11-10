@@ -14,10 +14,7 @@ import SettingsImportExport from '../settings/SettingsImportExport';
 import SettingsSync from '../settings/SettingsSync';
 import * as GlobalActions from '../../redux/modules/global';
 import * as models from '../../../backend/models';
-import {
-  getAppVersion,
-  getAppLongName
-} from '../../../backend/appInfo';
+import {getAppVersion, getAppLongName} from '../../../common/constants';
 import * as session from '../../../sync/session';
 import {showModal} from './index';
 import SignupModal from './SignupModal';

@@ -1,39 +1,34 @@
 import srp from 'srp';
 import * as crypt from './crypt';
-import * as util from '../backend/fetch';
+import * as util from '../common/fetch';
 import {trackEvent, setAccountId} from '../backend/analytics';
 
 const NO_SESSION = '__NO_SESSION__';
 
-/**
- * Create a new account
- *
- * @returns {Promise}
- * @param firstName
- * @param lastName
- * @param rawEmail
- * @param rawPassphrase
- */
+/** Create a new Account for the user */
 export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
+
   const email = _sanitizeEmail(rawEmail);
   const passphrase = _sanitizePassphrase(rawPassphrase);
 
+  // Get a fancy new Account object
   const account = await _initAccount(firstName, lastName, email);
+
+  // Generate some secrets for the user base'd on password
   const authSecret = await crypt.deriveKey(passphrase, account.email, account.saltKey);
   const derivedSymmetricKey = await crypt.deriveKey(passphrase, account.email, account.saltEnc);
 
-  // Compute the verifier key
-  // Add verifier to account object
+  // Generate public/private keypair and symmetric key for Account
+  const {publicKey, privateKey} = await crypt.generateKeyPairJWK();
+  const symmetricKeyJWK = await crypt.generateAES256Key();
+
+  // Compute the verifier key and add it to the Account object
   account.verifier = srp.computeVerifier(
     _getSrpParams(),
     Buffer.from(account.saltAuth, 'hex'),
     Buffer.from(account.email, 'utf8'),
     Buffer.from(authSecret, 'hex')
   ).toString('hex');
-
-  // Generate keypair
-  const {publicKey, privateKey} = await crypt.generateKeyPairJWK();
-  const symmetricKeyJWK = await crypt.generateAES256Key();
 
   // Encode keypair
   const encSymmetricJWKMessage = crypt.encryptAES(derivedSymmetricKey, JSON.stringify(symmetricKeyJWK));
@@ -52,13 +47,7 @@ export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
 }
 
 
-/**
- * Create a new session
- *
- * @returns {Promise}
- * @param rawEmail
- * @param rawPassphrase
- */
+/** Create a new session for the user */
 export async function login (rawEmail, rawPassphrase) {
 
   // ~~~~~~~~~~~~~~~ //
@@ -83,10 +72,7 @@ export async function login (rawEmail, rawPassphrase) {
     Buffer.from(secret1, 'hex')
   );
   const srpA = c.computeA().toString('hex');
-  const {sessionStarterId, srpB} = await util.post(
-    '/auth/login-a',
-    {srpA, email}
-  );
+  const {sessionStarterId, srpB} = await util.post('/auth/login-a', {srpA, email});
 
   // ~~~~~~~~~~~~~~~~~~~~~ //
   // Compute and Submit M1 //
@@ -94,10 +80,7 @@ export async function login (rawEmail, rawPassphrase) {
 
   c.setB(new Buffer(srpB, 'hex'));
   const srpM1 = c.computeM1().toString('hex');
-  const {srpM2} = await util.post('/auth/login-m1', {
-    srpM1,
-    sessionStarterId,
-  });
+  const {srpM2} = await util.post('/auth/login-m1', {srpM1, sessionStarterId,});
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Verify Server Identity M2 //
@@ -121,7 +104,7 @@ export async function login (rawEmail, rawPassphrase) {
     accountId,
     firstName,
     lastName,
-  } = await whoami(sessionId);
+  } = await _whoami(sessionId);
 
   const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
   const symmetricKeyStr = await crypt.decryptAES(derivedSymmetricKey, JSON.parse(encSymmetricKey));
@@ -198,18 +181,7 @@ export function getSessionData () {
   return JSON.parse(dataStr);
 }
 
-/**
- * Set data for the new session and store it encrypted with the sessionId
- *
- * @param sessionId
- * @param accountId
- * @param firstName
- * @param lastName
- * @param symmetricKey
- * @param publicKey
- * @param encPrivateKey
- * @param email
- */
+/** Set data for the new session and store it encrypted with the sessionId */
 export function setSessionData (sessionId,
                                 accountId,
                                 firstName,
@@ -235,52 +207,39 @@ export function setSessionData (sessionId,
   localStorage.setItem('currentSessionId', sessionId);
 }
 
-/**
- * Unset the session data (log out)
- */
+/** Unset the session data (log out) */
 export function unsetSessionData () {
   const sessionId = getCurrentSessionId();
   localStorage.removeItem(_getSessionKey(sessionId));
   localStorage.removeItem(`currentSessionId`);
 }
 
-/**
- * Check if we (think) we have a session
- *
- * @returns {boolean}
- */
+/** Check if we (think) we have a session */
 export function isLoggedIn () {
   return getCurrentSessionId() !== NO_SESSION;
 }
 
-/**
- * Log out
- */
+/** Log out and delete session data */
 export async function logout () {
   await util.post('/auth/logout');
   unsetSessionData();
   trackEvent('Session', 'Logout');
 }
 
-/**
- * Cancel Account
- */
+/** Cancel the user's subscription Account */
 export async function cancelAccount () {
   await util.del('/api/billing/subscriptions');
   trackEvent('Session', 'Cancel Account');
-}
-
-/**
- * Who Am I
- */
-export function whoami (sessionId = null) {
-  return util.get('/auth/whoami', sessionId);
 }
 
 
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
+
+function _whoami (sessionId = null) {
+  return util.get('/auth/whoami', sessionId);
+}
 
 function _getSessionKey (sessionId) {
   return `session__${sessionId.slice(0, 10)}`

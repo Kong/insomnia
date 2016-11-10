@@ -1,13 +1,9 @@
 import React, {Component, PropTypes} from 'react';
 import Editor from '../base/Editor';
-import ResponseWebview from './ResponseWebview';
+import ResponseWebView from './ResponseWebview';
 import ResponseRaw from './ResponseRaw';
 import ResponseError from './ResponseError';
-import {
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODE_SOURCE
-} from '../../../backend/previewModes';
-import {LARGE_RESPONSE_MB} from '../../../backend/constants';
+import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../../../common/constants';
 
 let alwaysShowLargeResponses = false;
 
@@ -127,7 +123,7 @@ class ResponseViewer extends Component {
           )
         } else {
           return (
-            <ResponseWebview
+            <ResponseWebView
               body={bodyBuffer.toString('utf8')}
               contentType={contentType}
               url={url}

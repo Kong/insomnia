@@ -2,7 +2,7 @@ import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import crypto from 'crypto';
-import * as util from '../backend/util';
+import * as util from '../common/misc';
 
 const TYPE_RESOURCE = 'Resource';
 const TYPE_CONFIG = 'Config';

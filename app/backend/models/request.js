@@ -1,5 +1,4 @@
-import {PREVIEW_MODE_SOURCE} from '../previewModes';
-import {METHOD_GET} from '../constants';
+import {METHOD_GET, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as db from '../database';
 
 export const type = 'Request';

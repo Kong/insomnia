@@ -7,7 +7,7 @@ import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
 import Mousetrap from '../mousetrap';
-import {registerModal} from '../components/modals';
+import {registerModal, toggleModal, showModal} from '../components/modals';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
@@ -24,22 +24,13 @@ import PaymentModal from '../components/modals/PaymentModal';
 import RequestPane from '../components/RequestPane';
 import ResponsePane from '../components/ResponsePane';
 import Sidebar from '../components/sidebar/Sidebar';
-import {PREVIEW_MODE_FRIENDLY} from '../../backend/previewModes';
-import {
-  MAX_PANE_WIDTH,
-  MIN_PANE_WIDTH,
-  DEFAULT_PANE_WIDTH,
-  MAX_SIDEBAR_REMS,
-  MIN_SIDEBAR_REMS,
-  DEFAULT_SIDEBAR_WIDTH
-} from '../../backend/constants';
+import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, PREVIEW_MODE_FRIENDLY} from '../../common/constants';
 import * as GlobalActions from '../redux/modules/global';
 import * as RequestActions from '../redux/modules/requests';
 import * as db from '../../backend/database';
 import * as models from '../../backend/models';
 import {importCurl} from '../../backend/export/curl';
-import {getAppVersion} from '../../backend/appInfo';
-import {toggleModal, showModal} from '../components/modals';
+import {getAppVersion} from '../../common/constants';
 import {trackEvent, trackLegacyEvent} from '../../backend/analytics';
 
 

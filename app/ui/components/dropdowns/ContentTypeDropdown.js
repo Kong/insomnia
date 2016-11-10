@@ -1,6 +1,6 @@
 import React, {PropTypes} from 'react';
 import Dropdown from '../base/Dropdown';
-import {CONTENT_TYPES, getContentTypeName} from '../../../backend/contentTypes';
+import {CONTENT_TYPES, getContentTypeName} from '../../../common/constants';
 
 const ContentTypeDropdown = ({updateRequestContentType}) => {
   return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from '../base/Link';
-import {getAppName} from '../../../backend/appInfo';
+import {getAppName} from '../../../common/constants';
 
 const SettingsAbout = () => (
   <div>

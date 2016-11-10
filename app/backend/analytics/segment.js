@@ -1,7 +1,5 @@
 import Analytics from 'analytics-node';
-import {getAppVersion} from '../appInfo';
-import {SEGMENT_WRITE_KEY} from  '../constants';
-import {isDevelopment} from '../appInfo';
+import {SEGMENT_WRITE_KEY, getAppVersion, isDevelopment} from  '../../common/constants';
 import * as models from '../models';
 
 let analytics = null;

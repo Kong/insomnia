@@ -1,8 +1,8 @@
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import {DB_PERSIST_INTERVAL} from './constants';
-import {generateId} from './util';
+import {DB_PERSIST_INTERVAL} from '../common/constants';
+import {generateId} from '../common/misc';
 import {getModel, initModel} from './models';
 
 export const CHANGE_INSERT = 'insert';

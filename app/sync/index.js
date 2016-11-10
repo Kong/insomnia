@@ -1,6 +1,6 @@
 import * as db from '../backend/database';
 import * as models from '../backend/models';
-import * as fetch from '../backend/fetch';
+import * as fetch from '../common/fetch';
 import * as crypt from './crypt';
 import * as session from './session';
 import * as store from './storage';

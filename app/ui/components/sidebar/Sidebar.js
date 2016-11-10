@@ -9,7 +9,7 @@ import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
 import {
   SIDEBAR_SKINNY_REMS,
   COLLAPSE_SIDEBAR_REMS
-} from '../../../backend/constants';
+} from '../../../common/constants';
 
 
 class Sidebar extends Component {

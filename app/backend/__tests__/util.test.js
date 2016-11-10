@@ -1,4 +1,4 @@
-import * as util from '../util';
+import * as util from '../../common/misc';
 
 describe('getBasicAuthHeader()', () => {
   it('succeed with username and password', () => {

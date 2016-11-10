@@ -41,7 +41,7 @@ import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
-import {DEBOUNCE_MILLIS} from '../../../backend/constants';
+import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 
 const BASE_CODEMIRROR_OPTIONS = {

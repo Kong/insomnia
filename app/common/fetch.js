@@ -1,7 +1,6 @@
 import {parse as urlParse} from 'url';
-import {isDevelopment} from './appInfo';
+import {isDevelopment, getClientString} from '../common/constants';
 import * as session from '../sync/session';
-import * as appInfo from './appInfo';
 
 let commandListeners = [];
 export function onCommand (callback) {
@@ -37,7 +36,7 @@ async function _fetch (method, path, json, sessionId = null) {
   };
 
   // Set some client information
-  config.headers.set('X-Insomnia-Client', appInfo.getClientString());
+  config.headers.set('X-Insomnia-Client', getClientString());
 
   if (json) {
     config.body = JSON.stringify(json, null, 2);

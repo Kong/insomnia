@@ -1,7 +1,7 @@
 import React, {PropTypes} from 'react';
 import Dropdown from '../base/Dropdown';
 import DropdownDivider from '../base/DropdownDivider';
-import {PREVIEW_MODES, getPreviewModeName} from '../../../backend/previewModes';
+import {PREVIEW_MODES, getPreviewModeName} from '../../../common/constants';
 
 const PreviewModeDropdown = ({updatePreviewMode, download}) => (
   <Dropdown>

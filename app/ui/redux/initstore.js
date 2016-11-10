@@ -3,7 +3,7 @@ import * as entitiesActions from './modules/entities';
 import * as globalActions from './modules/global';
 import * as db from '../../backend/database';
 import * as models from '../../backend/models';
-import * as fetch from '../../backend/fetch';
+import * as fetch from '../../common/fetch';
 
 export async function initStore (dispatch) {
   const entities = bindActionCreators(entitiesActions, dispatch);

@@ -1,9 +1,7 @@
 import React, {Component, PropTypes} from 'react';
-import {ipcRenderer} from 'electron';
+import {ipcRenderer, shell} from 'electron';
 import {bindActionCreators} from 'redux';
-import {connect} from 'react-redux'
-import {shell} from 'electron';
-
+import {connect} from 'react-redux';
 import PromptButton from '../components/base/PromptButton';
 import Dropdown from '../components/base/Dropdown';
 import DropdownDivider from '../components/base/DropdownDivider';
@@ -14,7 +12,7 @@ import SettingsModal from '../components/modals/SettingsModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import * as GlobalActions from '../redux/modules/global';
 import * as models from '../../backend/models';
-import {getAppVersion} from '../../backend/appInfo';
+import {getAppVersion} from '../../common/constants';
 import {showModal} from '../components/modals/index';
 
 class WorkspaceDropdown extends Component {

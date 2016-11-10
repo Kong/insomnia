@@ -4,8 +4,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as constants from '../../../backend/constants';
-import {getAppVersion} from '../../../backend/appInfo';
+import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/constants';
 
 class ChangelogModal extends Component {
   constructor (props) {
@@ -27,7 +26,7 @@ class ChangelogModal extends Component {
   async componentDidMount () {
     let changelog;
     try {
-      const response = await fetch(`${constants.CHANGELOG_URL}?bust=${Date.now()}`);
+      const response = await fetch(`${CHANGELOG_URL}?bust=${Date.now()}`);
       changelog = await response.json();
     } catch (e) {
       console.warn('Failed to fetch changelog', e);
@@ -127,7 +126,7 @@ class ChangelogModal extends Component {
           {html}
         </ModalBody>
         <ModalFooter>
-          <Link className="btn" href={constants.CHANGELOG_PAGE} button={true}>
+          <Link className="btn" href={CHANGELOG_PAGE} button={true}>
             Visit Full Changelog
           </Link>
         </ModalFooter>

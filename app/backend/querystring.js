@@ -1,4 +1,4 @@
-import * as util from './util.js';
+import * as util from '../common/misc.js';
 
 export function getJoiner (url) {
   url = url || '';

@@ -2,9 +2,8 @@
 
 import * as db from '../database';
 import * as models from '../models';
-import {getAppVersion} from '../appInfo';
-import {importRequestGroupLegacy} from './legacy';
-import {importRequestLegacy} from './legacy';
+import {getAppVersion} from '../../common/constants';
+import {importRequestGroupLegacy, importRequestLegacy} from './legacy';
 
 const VERSION_LEGACY = 1;
 const VERSION_DESKTOP_APP = 2;

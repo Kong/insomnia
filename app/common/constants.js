@@ -1,5 +1,38 @@
-import {isDevelopment} from './appInfo';
-import {isMac} from './appInfo';
+import * as packageJSON from '../package.json';
+
+// App Stuff
+
+export function getAppVersion () {
+  return packageJSON.version;
+}
+
+export function getAppLongName () {
+  return packageJSON.longName;
+}
+
+export function getAppName () {
+  return packageJSON.productName;
+}
+
+export function getAppPlatform () {
+  return process.platform;
+}
+
+export function getAppEnvironment () {
+  return process.env.INSOMNIA_ENV || 'unknown';
+}
+
+export function isMac () {
+  return getAppPlatform() === 'darwin';
+}
+
+export function isDevelopment () {
+  return getAppEnvironment() === 'development';
+}
+
+export function getClientString () {
+  return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`
+}
 
 // Global Stuff
 export const LOCALSTORAGE_KEY = 'insomnia.state';
@@ -52,6 +85,62 @@ export const METHODS = [
   METHOD_PURGE,
   METHOD_DELETE_HARD,
 ];
+
+// Preview Modes
+export const PREVIEW_MODE_FRIENDLY = 'friendly';
+export const PREVIEW_MODE_SOURCE = 'source';
+export const PREVIEW_MODE_RAW = 'raw';
+
+const previewModeMap = {
+  [PREVIEW_MODE_FRIENDLY]: 'Visual',
+  [PREVIEW_MODE_SOURCE]: 'Source',
+  [PREVIEW_MODE_RAW]: 'Raw'
+};
+
+export const PREVIEW_MODES = Object.keys(previewModeMap);
+
+/**
+ * Get the friendly name for a given preview mode
+ *
+ * @param previewMode
+ * @returns {*|string}
+ */
+export function getPreviewModeName (previewMode) {
+  // TODO: Make this more robust maybe...
+  return previewModeMap[previewMode] || 'Unknown';
+}
+
+// Content Types
+export const CONTENT_TYPE_JSON = 'application/json';
+export const CONTENT_TYPE_XML = 'application/xml';
+export const CONTENT_TYPE_TEXT = 'text/plain';
+export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
+export const CONTENT_TYPE_OTHER = '';
+
+const contentTypeMap = {
+  [CONTENT_TYPE_JSON]: 'JSON',
+  [CONTENT_TYPE_XML]: 'XML',
+  [CONTENT_TYPE_FORM_URLENCODED]: 'Form Encoded',
+  [CONTENT_TYPE_TEXT]: 'Plain Text',
+  [CONTENT_TYPE_OTHER]: 'Other'
+};
+
+export const CONTENT_TYPES = Object.keys(contentTypeMap);
+
+/**
+ * Get the friendly name for a given content type
+ *
+ * @param contentType
+ * @returns {*|string}
+ */
+export function getContentTypeName (contentType) {
+  return contentTypeMap[contentType] || contentTypeMap[CONTENT_TYPE_OTHER];
+}
+
+export function getContentTypeFromHeaders (headers) {
+  const header = headers.find(({name}) => name.toLowerCase() === 'content-type');
+  return header ? header.value : null;
+}
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS = {

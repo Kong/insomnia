@@ -11,7 +11,7 @@ import './css/lib/chrome/platform_app.css';
 import {initStore} from './redux/initstore';
 import {initDB} from '../backend/database';
 import {initSync} from '../sync';
-import {getAppVersion} from '../backend/appInfo';
+import {getAppVersion} from '../common/constants';
 import {initAnalytics} from '../backend/analytics';
 import * as session from '../sync/session';
 import * as models from '../backend/models';

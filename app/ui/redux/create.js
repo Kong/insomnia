@@ -2,7 +2,7 @@ import {createStore, applyMiddleware} from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import localStorageMiddleware, {getState} from './middleware/localstorage';
 import rootReducer from './reducer';
-import {LOCALSTORAGE_KEY} from '../../backend/constants';
+import {LOCALSTORAGE_KEY} from '../../common/constants';
 
 
 export default function configureStore () {

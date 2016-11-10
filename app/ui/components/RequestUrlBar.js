@@ -1,9 +1,8 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import Dropdown from './base/Dropdown';
-import {METHODS, DEBOUNCE_MILLIS} from '../../backend/constants';
+import {METHODS, DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {trackEvent} from '../../backend/analytics';
-import {isMac} from '../../backend/appInfo';
 
 
 class RequestUrlBar extends Component {

@@ -6,7 +6,7 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import CookiesEditor from '../editors/CookiesEditor';
 import * as models from '../../../backend/models';
-import {DEBOUNCE_MILLIS} from '../../../backend/constants';
+import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 class CookiesModal extends Component {
   constructor (props) {

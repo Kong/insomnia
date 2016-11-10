@@ -1,5 +1,5 @@
 import React from 'react';
-import {MOD_SYM} from '../../../backend/constants';
+import {MOD_SYM} from '../../../common/constants';
 
 const SettingsShortcuts = () => (
   <table className="wide">
