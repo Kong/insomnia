@@ -19,6 +19,7 @@ import * as session from '../../../sync/session';
 import {showModal} from './index';
 import SignupModal from './SignupModal';
 import * as sync from '../../../sync';
+import {trackEvent} from '../../../analytics/index';
 
 
 class SettingsTabs extends Component {
@@ -50,6 +51,15 @@ class SettingsTabs extends Component {
     this.props.actions.global.exportFile(this._getActiveWorkspace());
     this.props.hide();
   }
+
+  async _handleSyncReset () {
+    this.props.hide();
+    trackEvent('Sync', 'Reset');
+    await sync.resetRemoteData();
+    await sync.resetLocalData();
+    await session.logout();
+  }
+
 
   _getActiveWorkspace (props) {
     // TODO: Factor this out into a selector
@@ -115,6 +125,7 @@ class SettingsTabs extends Component {
             handleUpdateSetting={(key, value) => models.settings.update(settings, {[key]: value})}
             handleShowSignup={() => showModal(SignupModal)}
             handleCancelAccount={sync.cancelAccount}
+            handleReset={() => this._handleSyncReset()}
             handleLogout={sync.logout}
           />
         </TabPanel>

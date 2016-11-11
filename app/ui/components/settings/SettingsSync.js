@@ -10,6 +10,7 @@ const SettingsSync = ({
   handleShowSignup,
   handleCancelAccount,
   handleLogout,
+  handleReset,
 }) => (
   <div>
     <p>
@@ -29,7 +30,7 @@ const SettingsSync = ({
         Hi {firstName}! Thanks for signing up for Insomnia
         Plus.
       </p>,
-      <p key="2">
+      <p key="2" className="pad-top">
         <PromptButton
           className="btn btn--super-compact btn--outlined danger"
           onClick={async () => {
@@ -37,6 +38,12 @@ const SettingsSync = ({
             await handleCancelAccount();
           }}>
           Cancel Subscription
+        </PromptButton>
+        {" "}
+        <PromptButton className="btn btn--super-compact btn--outlined warning"
+                      onClick={handleReset}
+                      confirmMessage="Delete all sync-related data?">
+          Reset Remote Data
         </PromptButton>
         {" "}
         <PromptButton className="btn btn--super-compact btn--outlined"
@@ -73,6 +80,7 @@ SettingsSync.propTypes = {
   handleShowSignup: PropTypes.func.isRequired,
   handleCancelAccount: PropTypes.func.isRequired,
   handleLogout: PropTypes.func.isRequired,
+  handleReset: PropTypes.func.isRequired,
 };
 
 export default SettingsSync;

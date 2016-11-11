@@ -17,6 +17,7 @@ import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import SyncModal from '../components/modals/SyncModal';
+import SyncLogsModal from '../components/modals/SyncLogsModal';
 import LoginModal from '../components/modals/LoginModal';
 import SignupModal from '../components/modals/SignupModal';
 import SettingsModal from '../components/modals/SettingsModal';
@@ -592,6 +593,7 @@ class App extends Component {
         <AlertModal ref={m => registerModal(m)}/>
         <ChangelogModal ref={m => registerModal(m)}/>
         <SyncModal ref={m => registerModal(m)}/>
+        <SyncLogsModal ref={m => registerModal(m)}/>
         <LoginModal ref={m => registerModal(m)}/>
         <SignupModal ref={m => registerModal(m)}/>
         <SettingsModal ref={m => registerModal(m)}/>
