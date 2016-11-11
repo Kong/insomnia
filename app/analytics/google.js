@@ -2,7 +2,7 @@ import * as constants from '../common/constants';
 
 let _sessionId = null;
 
-export function init (accountId = null) {
+export function init (userId = null) {
   if (constants.isDevelopment()) {
     console.log('-- Not initializing analytics for dev --');
     return;
@@ -32,18 +32,18 @@ export function init (accountId = null) {
   // Track the initial page view
   window.ga('send', 'pageview');
 
-  if (accountId) {
-    setAccountId(accountId);
+  if (userId) {
+    setUserId(userId);
   }
 
   console.log(`-- Analytics Initialized for ${_sessionId} --`);
 }
 
-export function setAccountId (accountId) {
+export function setUserId (accountId) {
   window.ga && window.ga('set', 'userId', accountId);
 }
 
-export function trackEvent (...googleAnalyticsArgs) {
+export function sendEvent (...googleAnalyticsArgs) {
   window.ga && window.ga('send', 'event', ...googleAnalyticsArgs);
 }
 

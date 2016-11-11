@@ -332,7 +332,15 @@
   // ~~~~~~~~~~~~~~ //
 
   .sidebar__footer {
-    padding: @padding-xs;
+    height: @line-height-xs;
+    border-top: 1px solid @hl-md;
+  }
+
+  .sidebar__footer .dropdown > button {
+    font-size: @font-size-sm;
+    padding: @padding-xs @padding-md;
+    height: 100%;
+    margin: 0;
     color: @hl;
     width: 100%;
     box-sizing: border-box;

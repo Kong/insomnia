@@ -113,8 +113,8 @@ class Dropdown extends Component {
     }
 
     let children = [];
-    if (dropdownButtons.length > 1) {
-      console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`);
+    if (dropdownButtons.length !== 1) {
+      console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`, this.props);
     } else if (dropdownItems.length === 0) {
       console.error(`Dropdown needs at least one DropdownItem!`);
     } else {

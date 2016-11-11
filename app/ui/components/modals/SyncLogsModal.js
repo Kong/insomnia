@@ -18,6 +18,7 @@ class SyncLogsModal extends Component {
   show () {
     clearInterval(this._interval);
     this._interval = setInterval(() => this._updateModal(), 2000);
+    this._updateModal();
     this.modal.show();
   }
 
@@ -87,7 +88,7 @@ class SyncLogsModal extends Component {
   render () {
     const rows = this._formatLogs();
     return (
-      <Modal ref={m => this.modal = m} tall={true} wide={true}>
+      <Modal ref={m => this.modal = m} tall={true}>
         <ModalHeader>Sync Debug Logs</ModalHeader>
         <ModalBody className="pad selectable txt-sm monospace">
           {rows.map(row => row.jsx)}

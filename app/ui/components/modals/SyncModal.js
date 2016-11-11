@@ -129,11 +129,10 @@ class SyncModal extends Component {
                 'fa fa-refresh', {'fa-spin': syncingResourceGroups[resourceGroupId]}
               )}></i> Sync
             </button>
-            <button className="btn btn--super-duper-compact btn--outlined"
-                    onClick={e => {
-                      this.hide();
-                      showModal(SyncLogsModal)
-                    }}>
+            <button className="btn btn--super-duper-compact btn--outlined" onClick={e => {
+              this.hide();
+              showModal(SyncLogsModal)
+            }}>
               View Debug Logs
             </button>
             <div>

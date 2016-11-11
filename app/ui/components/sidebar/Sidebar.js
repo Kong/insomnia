@@ -4,7 +4,7 @@ import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
-import SyncButton from '../SyncButton';
+import SyncButton from '../dropdowns/SyncDropdown';
 import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
 import {
   SIDEBAR_SKINNY_REMS,

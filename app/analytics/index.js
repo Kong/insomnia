@@ -14,12 +14,12 @@ export function initAnalytics(accountId) {
 }
 
 export function trackEvent (...args) {
-  google.trackEvent(...args);
+  google.sendEvent(...args);
   console.log(`[analytics] track ${args.join(', ')}`);
 }
 
 export function setAccountId (accountId) {
-  google.setAccountId(accountId);
+  google.setUserId(accountId);
   console.log(`[analytics] account Id ${accountId}`);
 }
 

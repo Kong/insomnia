@@ -95,19 +95,15 @@ class GenerateCodeModal extends Component {
             </Dropdown>
             &nbsp;&nbsp;
             <Dropdown outline={true}>
-              <button className="btn btn--super-compact btn--outlined">
+              <DropdownButton className="btn btn--super-compact btn--outlined">
                 {client.title}
                 <i className="fa fa-caret-down"></i>
-              </button>
-              <ul>
-                {target.clients.map(client => (
-                  <li key={client.key}>
-                    <button onClick={() => this._handleClientChange(client)}>
-                      {client.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              </DropdownButton>
+              {target.clients.map(client => (
+                <DropdownItem key={client.key} onClick={() => this._handleClientChange(client)}>
+                  {client.title}
+                </DropdownItem>
+              ))}
             </Dropdown>
             &nbsp;&nbsp;
             <CopyButton content={cmd}
