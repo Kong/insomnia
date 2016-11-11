@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-import Dropdown from './base/Dropdown';
+import {Dropdown, DropdownButton, DropdownItem} from './base/dropdown';
 import {METHODS, DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {trackEvent} from '../../analytics';
 
@@ -45,26 +45,17 @@ class RequestUrlBar extends Component {
     return (
       <div className="urlbar">
         <Dropdown>
-          <button type="button">
-            {method}
-            <i className="fa fa-caret-down"/>
-          </button>
-          <ul>
-            {METHODS.map(method => (
-              <li key={method}>
-                <button onClick={e => {
-                  onMethodChange(method);
-                  trackEvent('Request', 'Method Change', {method});
-                }}>
-                  <div className={classnames('dropdown__inner', `method-${method}`)}>
-                    <span className="dropdown__text">
-                    {method}
-                    </span>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <DropdownButton type="button">
+            {method} <i className="fa fa-caret-down"/>
+          </DropdownButton>
+          {METHODS.map(method => (
+            <DropdownItem key={method} className={`method-${method}`} onClick={e => {
+              onMethodChange(method);
+              trackEvent('Request', 'Method Change', {method});
+            }}>
+              {method}
+            </DropdownItem>
+          ))}
         </Dropdown>
         <form onSubmit={this._handleFormSubmit.bind(this)}>
           <div className="form-control">

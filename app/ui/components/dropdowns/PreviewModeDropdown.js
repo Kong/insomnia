@@ -1,26 +1,21 @@
 import React, {PropTypes} from 'react';
-import Dropdown from '../base/Dropdown';
-import DropdownDivider from '../base/DropdownDivider';
+import {Dropdown, DropdownDivider, DropdownButton, DropdownItem} from '../base/dropdown';
 import {PREVIEW_MODES, getPreviewModeName} from '../../../common/constants';
 
 const PreviewModeDropdown = ({updatePreviewMode, download}) => (
   <Dropdown>
-    <button className="tall">
+    <DropdownButton className="tall">
       <i className="fa fa-caret-down"></i>
-    </button>
-    <ul>
-      {PREVIEW_MODES.map(previewMode => (
-        <li key={previewMode}>
-          <button onClick={() => {
-            updatePreviewMode(previewMode);
-          }}>{getPreviewModeName(previewMode)}</button>
-        </li>
-      ))}
-      <DropdownDivider></DropdownDivider>
-      <li>
-        <button onClick={download}>Download</button>
-      </li>
-    </ul>
+    </DropdownButton>
+    {PREVIEW_MODES.map(previewMode => (
+      <DropdownItem key={previewMode} onClick={() => updatePreviewMode(previewMode)}>
+        {getPreviewModeName(previewMode)}
+      </DropdownItem>
+    ))}
+    <DropdownDivider></DropdownDivider>
+    <DropdownItem onClick={download}>
+      Download
+    </DropdownItem>
   </Dropdown>
 );
 

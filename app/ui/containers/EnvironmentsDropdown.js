@@ -4,8 +4,7 @@ import {connect} from 'react-redux';
 import classnames from 'classnames';
 
 import EnvironmentsModal from '../components/modals/WorkspaceEnvironmentsEditModal';
-import Dropdown from '../components/base/Dropdown';
-import DropdownDivider from '../components/base/DropdownDivider';
+import {Dropdown, DropdownDivider, DropdownButton, DropdownItem} from '../components/base/dropdown';
 import {showModal} from '../components/modals/index';
 import * as models from '../../models';
 
@@ -41,7 +40,7 @@ class EnvironmentsDropdown extends Component {
 
     return (
       <Dropdown {...other} className={classnames(className, 'wide')}>
-        <button className="btn btn--super-compact no-wrap">
+        <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
             <span>
               {activeEnvironment && activeEnvironment !== baseEnvironment ? activeEnvironment.name : 'No Environment'}
@@ -49,28 +48,22 @@ class EnvironmentsDropdown extends Component {
             &nbsp;
             <i className="fa fa-caret-down"></i>
           </div>
-        </button>
-        <ul>
-          <DropdownDivider name="Change Environment"/>
-          {subEnvironments.map(environment => (
-            <li key={environment._id}>
-              <button onClick={() => this._handleActivateEnvironment(environment)}>
-                <i className="fa fa-random"></i> Use <strong>{environment.name}</strong>
-              </button>
-            </li>
-          ))}
-          <li>
-            <button onClick={() => baseEnvironment && this._handleActivateEnvironment(baseEnvironment)}>
-              <i className="fa fa-empty"></i> No Environment
-            </button>
-          </li>
-          <DropdownDivider name="General"/>
-          <li>
-            <button onClick={e => showModal(EnvironmentsModal, workspace)}>
-              <i className="fa fa-wrench"></i> Manage Environments
-            </button>
-          </li>
-        </ul>
+        </DropdownButton>
+        <DropdownDivider name="Change Environment"/>
+        {subEnvironments.map(environment => (
+          <DropdownItem key={environment._id}
+                        onClick={() => this._handleActivateEnvironment(environment)}>
+            <i className="fa fa-random"></i> Use <strong>{environment.name}</strong>
+          </DropdownItem>
+        ))}
+        <DropdownItem
+          onClick={() => baseEnvironment && this._handleActivateEnvironment(baseEnvironment)}>
+          <i className="fa fa-empty"></i> No Environment
+        </DropdownItem>
+        <DropdownDivider name="General"/>
+        <DropdownItem onClick={e => showModal(EnvironmentsModal, workspace)}>
+          <i className="fa fa-wrench"></i> Manage Environments
+        </DropdownItem>
       </Dropdown>
     )
   }

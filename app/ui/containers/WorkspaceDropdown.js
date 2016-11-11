@@ -3,9 +3,7 @@ import {ipcRenderer, shell} from 'electron';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 import PromptButton from '../components/base/PromptButton';
-import Dropdown from '../components/base/Dropdown';
-import DropdownDivider from '../components/base/DropdownDivider';
-import DropdownHint from '../components/base/DropdownHint';
+import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../components/base/dropdown';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import SettingsModal from '../components/modals/SettingsModal';
@@ -71,10 +69,8 @@ class WorkspaceDropdown extends Component {
     const workspace = this._getActiveWorkspace(this.props);
 
     return (
-      <Dropdown key={workspace._id}
-                className={className + ' wide workspace-dropdown'}
-                {...other}>
-        <button className="btn wide">
+      <Dropdown key={workspace._id} className={className + ' wide workspace-dropdown'} {...other}>
+        <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
               {global.loading ?
@@ -83,69 +79,49 @@ class WorkspaceDropdown extends Component {
             </div>
             {workspace.name}
           </h1>
-        </button>
-        <ul>
+        </DropdownButton>
+        <DropdownDivider name="Current Workspace"/>
+        <DropdownItem onClick={e => this._promptUpdateName()}>
+          <i className="fa fa-pencil-square-o"></i> Rename
+          {" "}
+          <strong>{workspace.name}</strong>
+        </DropdownItem>
+        <DropdownItem buttonClass={PromptButton}
+                      onClick={e => this._workspaceRemove()}
+                      addIcon={true}>
+          <i className="fa fa-trash-o"></i> Delete
+          {" "}
+          <strong>{workspace.name}</strong>
+        </DropdownItem>
 
-          <DropdownDivider name="Current Workspace"/>
+        <DropdownDivider name="Workspaces"/>
 
-          <li>
-            <button onClick={e => this._promptUpdateName()}>
-              <i className="fa fa-pencil-square-o"></i> Rename
-              {" "}
-              <strong>{workspace.name}</strong>
-            </button>
-          </li>
-          <li>
-            <PromptButton onClick={e => this._workspaceRemove()} addIcon={true}>
-              <i className="fa fa-trash-o"></i> Delete
-              {" "}
-              <strong>{workspace.name}</strong>
-            </PromptButton>
-          </li>
+        {allWorkspaces.map(w => w._id === workspace._id ? null : (
+          <DropdownItem key={w._id} onClick={() => actions.global.activateWorkspace(w)}>
+            <i className="fa fa-random"></i> Switch to
+            {" "}
+            <strong>{w.name}</strong>
+          </DropdownItem>
+        ))}
+        <DropdownItem onClick={e => this._workspaceCreate()}>
+          <i className="fa fa-blank"></i> New Workspace
+        </DropdownItem>
 
-          <DropdownDivider name="Workspaces"/>
+        <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
-          {allWorkspaces.map(w => {
-            return w._id === workspace._id ? null : (
-              <li key={w._id}>
-                <button onClick={() => actions.global.activateWorkspace(w)}>
-                  <i className="fa fa-random"></i> Switch to
-                  {" "}
-                  <strong>{w.name}</strong>
-                </button>
-              </li>
-            )
-          })}
-          <li>
-            <button onClick={e => this._workspaceCreate()}>
-              <i className="fa fa-blank"></i> New Workspace
-            </button>
-          </li>
-
-          <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
-
-          <li>
-            <button onClick={e => showModal(SettingsModal, 1)}>
-              <i className="fa fa-share"></i> Import/Export
-            </button>
-          </li>
-          <li>
-            <button onClick={e => showModal(SettingsModal, 2)}>
-              <i className="fa fa-refresh"></i> Cloud Sync
-            </button>
-          </li>
-          <li>
-            <button onClick={e => showModal(SettingsModal)}>
-              <i className="fa fa-cog"></i> Settings
-              <DropdownHint char=","></DropdownHint>
-            </button>
-          </li>
-          <li>
-            <button onClick={e => showModal(ChangelogModal)}>
-              <i className="fa fa-blank"></i> Changelog
-            </button>
-          </li>
-        </ul>
+        <DropdownItem onClick={e => showModal(SettingsModal, 1)}>
+          <i className="fa fa-share"></i> Import/Export
+        </DropdownItem>
+        <DropdownItem onClick={e => showModal(SettingsModal, 2)}>
+          <i className="fa fa-refresh"></i> Cloud Sync
+        </DropdownItem>
+        <DropdownItem onClick={e => showModal(SettingsModal)}>
+          <i className="fa fa-cog"></i> Settings
+          <DropdownHint char=","></DropdownHint>
+        </DropdownItem>
+        <DropdownItem onClick={e => showModal(ChangelogModal)}>
+          <i className="fa fa-blank"></i> Changelog
+        </DropdownItem>
       </Dropdown>
     )
   }

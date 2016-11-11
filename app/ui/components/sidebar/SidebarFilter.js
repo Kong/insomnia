@@ -1,6 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import Dropdown from '../base/Dropdown';
-import DropdownHint from '../base/DropdownHint';
+import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 
@@ -26,22 +25,16 @@ class SidebarFilter extends Component {
           />
         </div>
         <Dropdown right={true}>
-          <button className="btn btn--compact">
+          <DropdownButton className="btn btn--compact">
             <i className="fa fa-plus-circle"></i>
-          </button>
-          <ul>
-            <li>
-              <button onClick={e => requestCreate()}>
-                <i className="fa fa-plus-circle"></i> New Request
-                <DropdownHint char="N"></DropdownHint>
-              </button>
-            </li>
-            <li>
-              <button onClick={e => requestGroupCreate()}>
-                <i className="fa fa-folder"></i> New Folder
-              </button>
-            </li>
-          </ul>
+          </DropdownButton>
+          <DropdownItem onClick={e => requestCreate()}>
+            <i className="fa fa-plus-circle"></i> New Request
+            <DropdownHint char="N"></DropdownHint>
+          </DropdownItem>
+          <DropdownItem onClick={e => requestGroupCreate()}>
+            <i className="fa fa-folder"></i> New Folder
+          </DropdownItem>
         </Dropdown>
       </div>
 

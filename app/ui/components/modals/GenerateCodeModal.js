@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 
 import CopyButton from '../base/CopyButton';
-import Dropdown from '../base/Dropdown';
+import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import Editor from '../base/Editor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -83,19 +83,15 @@ class GenerateCodeModal extends Component {
         }}>
           <div className="pad">
             <Dropdown outline={true}>
-              <button className="btn btn--super-compact btn--outlined">
+              <DropdownButton className="btn btn--super-compact btn--outlined">
                 {target.title}
                 <i className="fa fa-caret-down"></i>
-              </button>
-              <ul>
-                {targets.map(target => (
-                  <li key={target.key}>
-                    <button onClick={() => this._handleTargetChange(target)}>
-                      {target.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              </DropdownButton>
+              {targets.map(target => (
+                <DropdownItem key={target.key} onClick={() => this._handleTargetChange(target)}>
+                  {target.title}
+                </DropdownItem>
+              ))}
             </Dropdown>
             &nbsp;&nbsp;
             <Dropdown outline={true}>

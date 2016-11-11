@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import SyncModal from './modals/SyncModal';
+import {Dropdown, DropdownItem, DropdownButton} from './base/dropdown';
 import {showModal} from './modals/index';
 import * as syncStorage from '../../sync/storage';
 import * as session from '../../sync/session';
@@ -55,11 +55,18 @@ class SyncButton extends Component {
     const {state: buttonState} = this.state;
     if (session.isLoggedIn()) {
       return (
-        <button className="btn btn--super-duper-compact btn--outlined wide ellipsis"
-                onClick={e => showModal(SyncModal, workspaceId)}>
-          Sync {buttonState ? `(${buttonState})` : null}
-        </button>
-      )
+        <Dropdown wide={true} className="wide">
+          <DropdownButton className="btn btn--super-duper-compact btn--outlined wide ellipsis">
+            Sync {buttonState ? `(${buttonState})` : null}
+          </DropdownButton>
+          <DropdownItem>
+            Hello A
+          </DropdownItem>
+          <DropdownItem>
+            Hello B
+          </DropdownItem>
+        </Dropdown>
+      );
     } else {
       return (
         <button className="btn btn--super-duper-compact btn--outlined wide"

@@ -1,22 +1,18 @@
 import React, {PropTypes} from 'react';
-import Dropdown from '../base/Dropdown';
+import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import {CONTENT_TYPES, getContentTypeName} from '../../../common/constants';
 
 const ContentTypeDropdown = ({updateRequestContentType}) => {
   return (
     <Dropdown>
-      <button className="tall">
+      <DropdownButton className="tall">
         <i className="fa fa-caret-down"></i>
-      </button>
-      <ul>
-        {CONTENT_TYPES.map(contentType => (
-          <li key={contentType}>
-            <button onClick={e => {
-              updateRequestContentType(contentType)
-            }}>{getContentTypeName(contentType)}</button>
-          </li>
-        ))}
-      </ul>
+      </DropdownButton>
+      {CONTENT_TYPES.map(contentType => (
+        <DropdownItem key={contentType} onClick={e => updateRequestContentType(contentType)}>
+          {getContentTypeName(contentType)}
+        </DropdownItem>
+      ))}
     </Dropdown>
   )
 };

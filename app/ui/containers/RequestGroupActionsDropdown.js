@@ -2,9 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import PromptButton from '../components/base/PromptButton';
-import Dropdown from '../components/base/Dropdown';
-import DropdownHint from '../components/base/DropdownHint';
-import DropdownDivider from '../components/base/DropdownDivider';
+import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from '../components/base/dropdown';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import PromptModal from '../components/modals/PromptModal';
 import * as globalActions from '../redux/modules/global';
@@ -59,40 +57,29 @@ class RequestGroupActionsDropdown extends Component {
 
     return (
       <Dropdown {...other}>
-        <button>
+        <DropdownButton>
           <i className="fa fa-caret-down"></i>
-        </button>
-        <ul>
-          <li>
-            <button onClick={e => this._requestCreate()}>
-              <i className="fa fa-plus-circle"></i> New Request
-              <DropdownHint char="N"></DropdownHint>
-            </button>
-          </li>
-          <DropdownDivider />
-          <li>
-            <button onClick={e => this._requestGroupDuplicate()}>
-              <i className="fa fa-copy"></i> Duplicate
-            </button>
-          </li>
-          <li>
-            <button onClick={e => this._promptUpdateName()}>
-              <i className="fa fa-edit"></i> Rename
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={e => showModal(EnvironmentEditModal, requestGroup)}>
-              <i className="fa fa-code"></i> Environment
-            </button>
-          </li>
-          <li>
-            <PromptButton onClick={e => models.requestGroup.remove(requestGroup)}
-                          addIcon={true}>
-              <i className="fa fa-trash-o"></i> Delete
-            </PromptButton>
-          </li>
-        </ul>
+        </DropdownButton>
+        <DropdownItem onClick={e => this._requestCreate()}>
+          <i className="fa fa-plus-circle"></i> New Request
+          <DropdownHint char="N"></DropdownHint>
+        </DropdownItem>
+        <DropdownDivider />
+        <DropdownItem onClick={e => this._requestGroupDuplicate()}>
+          <i className="fa fa-copy"></i> Duplicate
+        </DropdownItem>
+        <DropdownItem onClick={e => this._promptUpdateName()}>
+          <i className="fa fa-edit"></i> Rename
+        </DropdownItem>
+        <DropdownItem
+          onClick={e => showModal(EnvironmentEditModal, requestGroup)}>
+          <i className="fa fa-code"></i> Environment
+        </DropdownItem>
+        <DropdownItem buttonClass={PromptButton}
+                      onClick={e => models.requestGroup.remove(requestGroup)}
+                      addIcon={true}>
+          <i className="fa fa-trash-o"></i> Delete
+        </DropdownItem>
       </Dropdown>
     )
   }

@@ -5,6 +5,7 @@
 .dropdown {
   position: relative;
   display: inline-block;
+  box-sizing: border-box;
 
   &.dropdown--outlined ul {
     border: 1px solid @hl-md;
@@ -15,7 +16,6 @@
   }
 
   .dropdown__backdrop {
-    //background: rgba(255, 0, 0, 0.1);
     display: none;
     position: fixed;
     z-index: 999;
@@ -131,5 +131,10 @@
   &.dropdown--right ul {
     right: 0;
     left: auto;
+  }
+
+  &.dropdown--wide ul {
+    left: 0;
+    right: 0;
   }
 }
