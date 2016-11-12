@@ -37,16 +37,13 @@ class EnvironmentsDropdown extends Component {
     const baseEnvironment = allEnvironments.find(e => e.parentId === workspace._id);
     const subEnvironments = allEnvironments.filter(e => e.parentId === (baseEnvironment && baseEnvironment._id));
     const activeEnvironment = allEnvironments.find(e => e._id === workspace.metaActiveEnvironmentId) || baseEnvironment;
+    const description = activeEnvironment !== baseEnvironment ? activeEnvironment.name : 'No Environment';
 
     return (
       <Dropdown {...other} className={classnames(className, 'wide')}>
         <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
-            <span>
-              {activeEnvironment && activeEnvironment !== baseEnvironment ? activeEnvironment.name : 'No Environment'}
-              </span>
-            &nbsp;
-            <i className="fa fa-caret-down"></i>
+            <span>{description}</span> <i className="fa fa-caret-down"></i>
           </div>
         </DropdownButton>
         <DropdownDivider name="Switch Environment"/>
@@ -58,7 +55,7 @@ class EnvironmentsDropdown extends Component {
           </DropdownItem>
         ))}
         <DropdownItem disabled={!activeEnvironment || activeEnvironment._id === baseEnvironment._id}
-                        onClick={() => baseEnvironment && this._handleActivateEnvironment(baseEnvironment)}>
+                      onClick={() => baseEnvironment && this._handleActivateEnvironment(baseEnvironment)}>
           <i className="fa fa-empty"></i> No Environment
         </DropdownItem>
         <DropdownDivider name="General"/>

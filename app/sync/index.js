@@ -45,7 +45,8 @@ export async function initSync () {
   db.onChange(changes => {
     for (const [event, doc, fromSync] of changes) {
       const notOnWhitelist = !WHITE_LIST[doc.type];
-      if (notOnWhitelist || fromSync) {
+      const notLoggedIn = !session.isLoggedIn();
+      if (notLoggedIn || notOnWhitelist || fromSync) {
         continue;
       }
 
@@ -549,7 +550,7 @@ async function _createResourceGroup (name = '') {
   }
 
   // Create a config for it
-  await ensureConfigExists(resourceGroup.id, store.SYNC_MODE_OFF);
+  await ensureConfigExists(resourceGroup.id, store.SYNC_MODE_ON);
 
   logger.debug(`Created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;

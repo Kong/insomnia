@@ -8,6 +8,7 @@ import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 import * as analytics from '../../../analytics/index';
 import * as models from '../../../models/index';
+import SettingsModal from '../modals/SettingsModal';
 
 class SyncDropdown extends Component {
   constructor (props) {
@@ -53,6 +54,10 @@ class SyncDropdown extends Component {
   }
 
   async _reloadData () {
+    if (!session.isLoggedIn()) {
+      return;
+    }
+
     // Get or create any related sync data
     const workspace = await models.workspace.getById(this.props.workspaceId);
     const {resourceGroupId} = await sync.getOrCreateResourceForDoc(workspace);
@@ -107,20 +112,28 @@ class SyncDropdown extends Component {
             {syncMode === syncStorage.SYNC_MODE_OFF ?
               <i className="fa fa-toggle-off"></i> :
               <i className="fa fa-toggle-on"></i>}
-            Sync Automatically
+            Automatic Sync
           </DropdownItem>
           <DropdownItem>
             <i className="fa fa-share-alt"></i>
             Share Workspace
           </DropdownItem>
+          {syncMode === syncStorage.SYNC_MODE_OFF ? (
+            <DropdownItem onClick={e => this._handleSyncResourceGroupId(resourceGroupId)}
+                          disabled={syncPercent === 100}
+                          stayOpenAfterClick={true}>
+              {loading ?
+                <i className="fa fa-refresh fa-spin"></i> :
+                <i className="fa fa-cloud-upload"></i>}
+              Sync Now {syncPercent === 100 ? '(up to date)' : ''}
+            </DropdownItem>
+          ) : null}
+
           <DropdownDivider name="Other"/>
-          <DropdownItem onClick={e => this._handleSyncResourceGroupId(resourceGroupId)}
-                        disabled={syncPercent === 100}
-                        stayOpenAfterClick={true}>
-            {loading ?
-              <i className="fa fa-refresh fa-spin"></i> :
-              <i className="fa fa-cloud-upload"></i>}
-            Sync Now {syncPercent === 100 ? '(up to date)' : ''}
+
+          <DropdownItem onClick={e => showModal(SettingsModal, 2)}>
+            <i className="fa fa-user"></i>
+            Manage Account
           </DropdownItem>
           <DropdownItem onClick={e => showModal(SyncLogsModal)}>
             <i className="fa fa-bug"></i>
@@ -128,11 +141,15 @@ class SyncDropdown extends Component {
           </DropdownItem>
         </Dropdown>
       );
-    } else if (!syncData) {
-      return null;
+    } else if (session.isLoggedIn() && !syncData) {
+      return (
+        <button className="btn btn--compact wide" disabled={true}>
+          Initializing Sync...
+        </button>
+      )
     } else {
       return (
-        <button className="btn btn--super-duper-compact btn--outlined wide"
+        <button className="btn btn--compact wide"
                 onClick={e => showModal(SignupModal)}>
           Login to Cloud Sync
         </button>
