@@ -87,12 +87,8 @@ class SyncDropdown extends Component {
   _getSyncDescription (syncMode, syncPercentage) {
     if (syncPercentage === 100) {
       return 'Up To Date'
-    }
-
-    if (syncMode === syncStorage.SYNC_MODE_ON) {
-      return 'Pending'
     } else {
-      return 'Sync Required'
+      return syncMode === syncStorage.SYNC_MODE_ON ? 'Sync Pending' : 'Sync Required'
     }
   }
 

@@ -146,7 +146,7 @@ class Sidebar extends Component {
 
         {showSyncSettings ? (
           <div className="sidebar__footer">
-            <SyncButton workspaceId={workspaceId}/>
+            <SyncButton key={workspaceId} workspaceId={workspaceId}/>
           </div>
         ) : null}
       </aside>
