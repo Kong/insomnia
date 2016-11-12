@@ -55,8 +55,7 @@ class SyncDropdown extends Component {
   async _reloadData () {
     // Get or create any related sync data
     const workspace = await models.workspace.getById(this.props.workspaceId);
-    const resource = await sync.getOrCreateResourceForDoc(workspace);
-    const resourceGroupId = resource.resourceGroupId;
+    const {resourceGroupId} = await sync.getOrCreateResourceForDoc(workspace);
     const config = await sync.getOrCreateConfig(resourceGroupId);
 
     // Analyze it
@@ -66,7 +65,7 @@ class SyncDropdown extends Component {
     const syncPercent = all.length === 0 ? 100 : parseInt(numClean / all.length * 1000) / 10;
 
     const syncData = {
-      resource,
+      resourceGroupId,
       syncPercent,
       syncMode: config.syncMode,
       name: workspace.name,
@@ -95,7 +94,7 @@ class SyncDropdown extends Component {
   render () {
     const {syncData, loading} = this.state;
     if (syncData && session.isLoggedIn()) {
-      const {resource, syncMode, syncPercent} = syncData;
+      const {resourceGroupId, syncMode, syncPercent} = syncData;
       const description = this._getSyncDescription(syncMode, syncPercent);
       return (
         <Dropdown wide={true} className="wide tall">
@@ -103,13 +102,11 @@ class SyncDropdown extends Component {
             {description}
           </DropdownButton>
           <DropdownDivider name={`Workspace Synced ${syncPercent}%`}/>
-          <DropdownItem onClick={e => this._handleToggleSyncMode(resource.resourceGroupId)}
+          <DropdownItem onClick={e => this._handleToggleSyncMode(resourceGroupId)}
                         stayOpenAfterClick={true}>
-            {syncMode === syncStorage.SYNC_MODE_OFF ? (
-              <i className="fa fa-toggle-off"></i>
-            ) : (
-              <i className="fa fa-toggle-on"></i>
-            )}
+            {syncMode === syncStorage.SYNC_MODE_OFF ?
+              <i className="fa fa-toggle-off"></i> :
+              <i className="fa fa-toggle-on"></i>}
             Sync Automatically
           </DropdownItem>
           <DropdownItem>
@@ -117,7 +114,7 @@ class SyncDropdown extends Component {
             Share Workspace
           </DropdownItem>
           <DropdownDivider name="Other"/>
-          <DropdownItem onClick={e => this._handleSyncResourceGroupId(resource.resourceGroupId)}
+          <DropdownItem onClick={e => this._handleSyncResourceGroupId(resourceGroupId)}
                         disabled={syncPercent === 100}
                         stayOpenAfterClick={true}>
             {loading ?
