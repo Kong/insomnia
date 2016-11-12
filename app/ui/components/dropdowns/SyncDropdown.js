@@ -124,7 +124,7 @@ class SyncDropdown extends Component {
           </DropdownItem>
           <DropdownItem onClick={e => showModal(SyncLogsModal)}>
             <i className="fa fa-bug"></i>
-            Debug Logs
+            Show Debug Logs
           </DropdownItem>
         </Dropdown>
       );

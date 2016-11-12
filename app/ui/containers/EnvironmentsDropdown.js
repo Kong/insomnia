@@ -49,15 +49,16 @@ class EnvironmentsDropdown extends Component {
             <i className="fa fa-caret-down"></i>
           </div>
         </DropdownButton>
-        <DropdownDivider name="Change Environment"/>
+        <DropdownDivider name="Switch Environment"/>
         {subEnvironments.map(environment => (
           <DropdownItem key={environment._id}
+                        disabled={environment._id === activeEnvironment._id}
                         onClick={() => this._handleActivateEnvironment(environment)}>
             <i className="fa fa-random"></i> Use <strong>{environment.name}</strong>
           </DropdownItem>
         ))}
-        <DropdownItem
-          onClick={() => baseEnvironment && this._handleActivateEnvironment(baseEnvironment)}>
+        <DropdownItem disabled={!activeEnvironment || activeEnvironment._id === baseEnvironment._id}
+                        onClick={() => baseEnvironment && this._handleActivateEnvironment(baseEnvironment)}>
           <i className="fa fa-empty"></i> No Environment
         </DropdownItem>
         <DropdownDivider name="General"/>
