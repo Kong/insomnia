@@ -16,7 +16,6 @@ import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
-import SyncModal from '../components/modals/SyncModal';
 import SyncLogsModal from '../components/modals/SyncLogsModal';
 import LoginModal from '../components/modals/LoginModal';
 import SignupModal from '../components/modals/SignupModal';
@@ -528,7 +527,7 @@ class App extends Component {
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
           addRequestToWorkspace={() => this._requestCreate(workspace._id)}
-          toggleRequestGroup={requestGroup => models.requestGroup.update(requestGroup, {metaCollapsed: !requestGroup.metaCollapsed})}
+          toggleRequestGroup={requestGroup => actions.global.toggleRequestGroup(requestGroup)}
           activeRequestId={activeRequestId}
           requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
           requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
@@ -592,7 +591,6 @@ class App extends Component {
         <PromptModal ref={m => registerModal(m)}/>
         <AlertModal ref={m => registerModal(m)}/>
         <ChangelogModal ref={m => registerModal(m)}/>
-        <SyncModal ref={m => registerModal(m)}/>
         <SyncLogsModal ref={m => registerModal(m)}/>
         <LoginModal ref={m => registerModal(m)}/>
         <SignupModal ref={m => registerModal(m)}/>
@@ -636,7 +634,8 @@ App.propTypes = {
       changeFilter: PropTypes.func.isRequired,
       toggleSidebar: PropTypes.func.isRequired,
       setSidebarWidth: PropTypes.func.isRequired,
-      setPaneWidth: PropTypes.func.isRequired
+      setPaneWidth: PropTypes.func.isRequired,
+      toggleRequestGroup: PropTypes.func.isRequired,
     }).isRequired
   }).isRequired,
   entities: PropTypes.shape({

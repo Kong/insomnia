@@ -8,21 +8,35 @@ import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 import * as analytics from '../../../analytics/index';
 import * as models from '../../../models/index';
-import * as misc from '../../../common/misc';
 
 class SyncDropdown extends Component {
   constructor (props) {
     super(props);
     this.state = {
       syncData: null,
-      workspace: null,
       loading: false,
     }
   }
 
-  async _handleSyncResourceGroupId (syncData) {
-    const {resourceGroupId} = syncData.resource;
+  async _handleToggleSyncMode (resourceGroupId) {
+    const config = await sync.getOrCreateConfig(resourceGroupId);
 
+    let syncMode = config.syncMode === syncStorage.SYNC_MODE_OFF ?
+      syncStorage.SYNC_MODE_ON : syncStorage.SYNC_MODE_OFF;
+
+    await sync.createOrUpdateConfig(resourceGroupId, syncMode);
+
+    await this._reloadData();
+
+    // Trigger a sync right away if we're turning it on
+    if (syncMode === syncStorage.SYNC_MODE_ON) {
+      await this._handleSyncResourceGroupId(resourceGroupId);
+    }
+
+    analytics.trackEvent('Sync', 'Change Mode', syncMode);
+  }
+
+  async _handleSyncResourceGroupId (resourceGroupId) {
     // Set loading state
     this.setState({loading: true});
 
@@ -58,7 +72,7 @@ class SyncDropdown extends Component {
       name: workspace.name,
     };
 
-    this.setState({syncData, workspace});
+    this.setState({syncData});
   }
 
   componentWillMount () {
@@ -70,30 +84,51 @@ class SyncDropdown extends Component {
     clearInterval(this._interval);
   }
 
+  _getSyncDescription (syncMode, syncPercentage) {
+    if (syncPercentage === 100) {
+      return 'Up To Date'
+    }
+
+    if (syncMode === syncStorage.SYNC_MODE_ON) {
+      return 'Pending'
+    } else {
+      return 'Sync Required'
+    }
+  }
+
   render () {
-    const {syncData, workspace, loading} = this.state;
+    const {syncData, loading} = this.state;
     if (syncData && session.isLoggedIn()) {
+      const {resource, syncMode, syncPercent} = syncData;
+      const description = this._getSyncDescription(syncMode, syncPercent);
       return (
         <Dropdown wide={true} className="wide tall">
           <DropdownButton className="btn btn--compact wide">
-            {syncData.syncPercent === 100 ? 'Synced' : `Syncing...`}
+            {description}
           </DropdownButton>
-          <DropdownDivider name={`Workspace Synced ${syncData.syncPercent}%`}/>
-          {syncData.resource.resourceGroupId ? (
-            <DropdownItem onClick={e => this._handleSyncResourceGroupId(syncData)}
-                          stayOpenAfterClick={true}>
-              {loading ?
-                <i className="fa fa-refresh fa-spin"></i> :
-                <i className="fa fa-cloud-upload"></i>
-              }
-              Force Sync
-            </DropdownItem>
-          ) : null}
+          <DropdownDivider name={`Workspace Synced ${syncPercent}%`}/>
+          <DropdownItem onClick={e => this._handleToggleSyncMode(resource.resourceGroupId)}
+                        stayOpenAfterClick={true}>
+            {syncMode === syncStorage.SYNC_MODE_OFF ? (
+              <i className="fa fa-toggle-off"></i>
+            ) : (
+              <i className="fa fa-toggle-on"></i>
+            )}
+            Sync Automatically
+          </DropdownItem>
           <DropdownItem>
             <i className="fa fa-share-alt"></i>
-            Hello
+            Share Workspace
           </DropdownItem>
-          <DropdownDivider name="hello"/>
+          <DropdownDivider name="Other"/>
+          <DropdownItem onClick={e => this._handleSyncResourceGroupId(resource.resourceGroupId)}
+                        disabled={syncPercent === 100}
+                        stayOpenAfterClick={true}>
+            {loading ?
+              <i className="fa fa-refresh fa-spin"></i> :
+              <i className="fa fa-cloud-upload"></i>}
+            Sync Now {syncPercent === 100 ? '(up to date)' : ''}
+          </DropdownItem>
           <DropdownItem onClick={e => showModal(SyncLogsModal)}>
             <i className="fa fa-bug"></i>
             Debug Logs

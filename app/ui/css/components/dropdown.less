@@ -57,12 +57,12 @@
         color: @font-super-light-bg !important;
         white-space: nowrap;
 
-        &:hover,
-        &:focus {
+        &:hover:not(:disabled),
+        &:focus:not(:disabled) {
           background: @hl-sm;
         }
 
-        &:active {
+        &:active:not(:disabled) {
           background: @hl-md;
         }
 

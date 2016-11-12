@@ -12,6 +12,7 @@ import LoginModal from '../../components/modals/LoginModal';
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
 const REQUEST_ACTIVATE = 'global/request-activate';
+const REQUEST_GROUP_TOGGLE_COLLAPSE = 'global/request-group-toggle';
 const CHANGE_FILTER = 'global/change-filter';
 const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
 const ACTIVATE_WORKSPACE = 'global/activate-workspace';
@@ -27,27 +28,69 @@ const COMMAND_TRIAL_END = 'app/billing/trial-end';
 // ~~~~~~~~ //
 
 /** Helper to update workspace metadata */
-function updateMeta (state = {}, workspaceId, value, key) {
+function updateWorkspaceMeta (state = {}, workspaceId, value, key) {
   const newState = Object.assign({}, state);
   newState[workspaceId] = newState[workspaceId] || {};
   newState[workspaceId][key] = value;
   return newState;
 }
 
+/** Helper to update requestGroup metadata */
+function updateRequestGroupMeta (state = {}, requestGroupId, value, key) {
+  const newState = Object.assign({}, state);
+  newState[requestGroupId] = newState[requestGroupId] || {};
+  newState[requestGroupId][key] = value;
+  return newState;
+}
+
+function requestGroupMetaReducer (state = {}, action) {
+  switch (action.type) {
+    case REQUEST_GROUP_TOGGLE_COLLAPSE:
+      const meta = state[action.requestGroupId];
+      return updateRequestGroupMeta(
+        state,
+        action.requestGroupId,
+        meta ? !meta.collapsed : false,
+        'collapsed'
+      );
+    default:
+      return state;
+  }
+}
+
 function workspaceMetaReducer (state = {}, action) {
   switch (action.type) {
     case SET_PANE_WIDTH:
-      return updateMeta(state, action.workspaceId, action.width, 'paneWidth');
+      return updateWorkspaceMeta(
+        state,
+        action.workspaceId,
+        action.width,
+        'paneWidth'
+      );
     case SET_SIDEBAR_WIDTH:
-      return updateMeta(state, action.workspaceId, action.width, 'sidebarWidth');
+      return updateWorkspaceMeta(
+        state,
+        action.workspaceId,
+        action.width,
+        'sidebarWidth'
+      );
     case CHANGE_FILTER:
-      return updateMeta(state, action.workspaceId, action.filter, 'filter');
+      return updateWorkspaceMeta(
+        state,
+        action.workspaceId,
+        action.filter,
+        'filter'
+      );
     case TOGGLE_SIDEBAR:
       const meta = state[action.workspaceId];
-      const on = meta ? !meta.sidebarHidden : false;
-      return updateMeta(state, action.workspaceId, on, 'sidebarHidden');
+      return updateWorkspaceMeta(
+        state,
+        action.workspaceId,
+        meta ? !meta.sidebarHidden : false,
+        'sidebarHidden'
+      );
     case REQUEST_ACTIVATE:
-      return updateMeta(
+      return updateWorkspaceMeta(
         state,
         action.workspaceId,
         action.requestId,
@@ -89,6 +132,7 @@ function commandReducer (state = {}, action) {
 export default combineReducers({
   loading: loadingReducer,
   workspaceMeta: workspaceMetaReducer,
+  requestGroupMeta: requestGroupMetaReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   command: commandReducer,
 });
@@ -104,8 +148,8 @@ export function newCommand (command, args) {
     const {message, title} = args;
     showModal(AlertModal, {title, message});
   } else if (command === COMMAND_LOGIN) {
-      const {title, message} = args;
-      showModal(LoginModal, {title, message});
+    const {title, message} = args;
+    showModal(LoginModal, {title, message});
   } else if (command === COMMAND_TRIAL_END) {
     const {message, title} = args;
     showModal(PaymentModal, {message, title});
@@ -124,6 +168,13 @@ export function loadStop () {
 
 export function activateWorkspace (workspace) {
   return {type: ACTIVATE_WORKSPACE, workspace};
+}
+
+export function toggleRequestGroup (requestGroup) {
+  return {
+    type: REQUEST_GROUP_TOGGLE_COLLAPSE,
+    requestGroupId: requestGroup._id
+  };
 }
 
 export function importFile (workspace) {
