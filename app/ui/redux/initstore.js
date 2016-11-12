@@ -8,32 +8,49 @@ import * as fetch from '../../common/fetch';
 export async function initStore (dispatch) {
   const entities = bindActionCreators(entitiesActions, dispatch);
   const global = bindActionCreators(globalActions, dispatch);
-  const handleNewChanges = entities.addChanges;
-  const handleCommand = global.newCommand;
-
-  console.log('-- Restoring Store --');
-
-  const start = Date.now();
-
-  db.offChange(handleNewChanges);
-  fetch.offCommand(handleCommand);
 
   // Restore docs in parent->child->grandchild order
-  const results = [
-    await models.settings.getOrCreate(),
-    await models.workspace.all(),
-    await models.environment.all(),
-    await models.cookieJar.all(),
-    await models.requestGroup.all(),
-    await models.request.all()
+  const allDocs = [
+    ...(await models.settings.all()),
+    ...(await models.workspace.all()),
+    ...(await models.environment.all()),
+    ...(await models.cookieJar.all()),
+    ...(await models.requestGroup.all()),
+    ...(await models.request.all())
   ];
 
-  for (let docs of results) {
-    docs = Array.isArray(docs) ? docs : [docs];
-    handleNewChanges(docs.map(doc => [db.CHANGE_UPDATE, doc]));
+  // Link DB changes to entities reducer/actions
+  const changes = allDocs.map(doc => [db.CHANGE_UPDATE, doc]);
+  entities.addChanges(changes);
+  db.onChange(entities.addChanges);
+
+  // Bind to fetch commands
+  fetch.onCommand(global.newCommand);
+
+  // Load all saved app state
+  const activeRequests = JSON.parse(localStorage.getItem(`insomnia.app.activeRequest`) || '{}');
+  const sidebarHidden = JSON.parse(localStorage.getItem(`insomnia.app.sidebarHidden`) || '{}');
+  const sidebarWidth = JSON.parse(localStorage.getItem(`insomnia.app.sidebarWidth`) || '{}');
+  const paneWidth = JSON.parse(localStorage.getItem(`insomnia.app.paneWidth`) || '{}');
+  const filter = JSON.parse(localStorage.getItem(`insomnia.app.filter`) || '{}');
+
+  for (const workspaceId of Object.keys(activeRequests)) {
+    global.activateRequest(workspaceId, activeRequests[workspaceId]);
   }
 
-  console.log(`-- Restored DB in ${(Date.now() - start) / 1000} s --`);
-  db.onChange(handleNewChanges);
-  fetch.onCommand(handleCommand);
+  for (const workspaceId of Object.keys(sidebarHidden)) {
+    global.setSidebarHidden(workspaceId, sidebarHidden[workspaceId]);
+  }
+
+  // for (const workspaceId of Object.keys(sidebarWidth)) {
+  //   global.activateRequest(workspaceId, sidebarWidth[workspaceId]);
+  // }
+  //
+  // for (const workspaceId of Object.keys(paneWidth)) {
+  //   global.activateRequest(workspaceId, paneWidth[workspaceId]);
+  // }
+
+  for (const workspaceId of Object.keys(filter)) {
+    global.changeFilter(workspaceId, filter[workspaceId]);
+  }
 }

@@ -18,6 +18,10 @@ export function init () {
   };
 }
 
+export async function all () {
+  return db.all(type);
+}
+
 export async function create (patch = {}) {
   return db.docCreate(type, patch);
 }

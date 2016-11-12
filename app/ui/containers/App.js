@@ -403,7 +403,9 @@ class App extends Component {
 
   _handleToggleSidebar () {
     const workspace = this._getActiveWorkspace();
-    this.props.actions.global.toggleSidebar(workspace);
+    const workspaceMeta = this._getActiveWorkspaceMeta();
+    const hidden = !workspaceMeta.sidebarHidden;
+    this.props.actions.global.setSidebarHidden(workspace._id, hidden);
   }
 
   _forceHardRefresh () {
@@ -521,8 +523,8 @@ class App extends Component {
           ref={n => this._sidebar = n}
           showEnvironmentsModal={() => showModal(WorkspaceEnvironmentsEditModal, workspace)}
           showCookiesModal={() => showModal(CookiesModal, workspace)}
-          activateRequest={r => actions.global.activateRequest(workspace, r)}
-          changeFilter={filter => actions.global.changeFilter(workspace, filter)}
+          activateRequest={r => actions.global.activateRequest(workspace._id, r._id)}
+          changeFilter={filter => actions.global.changeFilter(workspace._id, filter)}
           moveRequest={this._moveRequest.bind(this)}
           moveRequestGroup={this._moveRequestGroup.bind(this)}
           addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
@@ -601,7 +603,7 @@ class App extends Component {
           ref={m => registerModal(m)}
           workspaceId={workspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
-          activateRequest={r => actions.global.activateRequest(workspace, r)}
+          activateRequest={r => actions.global.activateRequest(workspace._id, r._id)}
           activateWorkspace={w => actions.global.activateWorkspace(w)}
         />
         <EnvironmentEditModal

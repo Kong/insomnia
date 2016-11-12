@@ -14,7 +14,7 @@ const LOAD_STOP = 'global/load-stop';
 const REQUEST_ACTIVATE = 'global/request-activate';
 const REQUEST_GROUP_TOGGLE_COLLAPSE = 'global/request-group-toggle';
 const CHANGE_FILTER = 'global/change-filter';
-const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
+const SIDEBAR_SET_HIDDEN = 'global/sidebar-set-hidden';
 const ACTIVATE_WORKSPACE = 'global/activate-workspace';
 const SET_SIDEBAR_WIDTH = 'global/set-sidebar-width';
 const SET_PANE_WIDTH = 'global/set-pane-width';
@@ -81,12 +81,11 @@ function workspaceMetaReducer (state = {}, action) {
         action.filter,
         'filter'
       );
-    case TOGGLE_SIDEBAR:
-      const meta = state[action.workspaceId];
+    case SIDEBAR_SET_HIDDEN:
       return updateWorkspaceMeta(
         state,
         action.workspaceId,
-        meta ? !meta.sidebarHidden : false,
+        action.hidden,
         'sidebarHidden'
       );
     case REQUEST_ACTIVATE:
@@ -234,27 +233,25 @@ export function setSidebarWidth (workspace, width) {
   };
 }
 
-export function toggleSidebar (workspace) {
-  return {
-    type: TOGGLE_SIDEBAR,
-    workspaceId: workspace._id
-  };
+export function setSidebarHidden (workspaceId, hidden) {
+  const data = JSON.parse(localStorage.getItem(`insomnia.app.sidebarHidden`) || '{}');
+  data[workspaceId] = hidden;
+  localStorage.setItem('insomnia.app.sidebarHidden', JSON.stringify(data, null, 2));
+  return {type: SIDEBAR_SET_HIDDEN, workspaceId, hidden};
 }
 
-export function changeFilter (workspace, filter) {
-  return {
-    type: CHANGE_FILTER,
-    filter: filter,
-    workspaceId: workspace._id
-  };
+export function changeFilter (workspaceId, filter) {
+  const data = JSON.parse(localStorage.getItem(`insomnia.app.filter`) || '{}');
+  data[workspaceId] = filter;
+  localStorage.setItem('insomnia.app.filter', JSON.stringify(data, null, 2));
+  return {type: CHANGE_FILTER, filter, workspaceId};
 }
 
-export function activateRequest (workspace, request) {
-  return {
-    type: REQUEST_ACTIVATE,
-    requestId: request._id,
-    workspaceId: workspace._id
-  };
+export function activateRequest (workspaceId, requestId) {
+  const data = JSON.parse(localStorage.getItem(`insomnia.app.activeRequests`) || '{}');
+  data[workspaceId] = requestId;
+  localStorage.setItem('insomnia.app.activeRequests', JSON.stringify(data, null, 2));
+  return {type: REQUEST_ACTIVATE, requestId, workspaceId};
 }
 
 export function exportFile (parentDoc = null) {
