@@ -14,12 +14,12 @@ class RequestPane extends Component {
   render () {
     const {
       request,
-      importFile,
+      handleImportFileToWorkspace,
       showPasswords,
       editorFontSize,
       editorLineWrapping,
-      requestCreate,
-      sendRequest,
+      handleCreateRequest,
+      handleSend,
       useBulkHeaderEditor,
       updateRequestUrl,
       updateRequestMethod,
@@ -67,11 +67,11 @@ class RequestPane extends Component {
               </table>
 
               <div className="text-center pane__body--placeholder__cta">
-                <button onClick={e => importFile()}
+                <button onClick={e => handleImportFile()}
                         className="btn inline-block btn--super-compact btn--outlined">
                   Import from File
                 </button>
-                <button onClick={e => requestCreate()}
+                <button onClick={e => handleCreateRequest()}
                         className="btn inline-block btn--super-compact btn--outlined">
                   New Request
                 </button>
@@ -89,7 +89,7 @@ class RequestPane extends Component {
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={debounce(updateRequestUrl)}
-            sendRequest={sendRequest.bind(null, request)}
+            handleSend={handleSend}
             url={request.url}
           />
         </header>
@@ -182,8 +182,8 @@ class RequestPane extends Component {
 
 RequestPane.propTypes = {
   // Functions
-  sendRequest: PropTypes.func.isRequired,
-  requestCreate: PropTypes.func.isRequired,
+  handleSend: PropTypes.func.isRequired,
+  handleCreateRequest: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,
@@ -193,7 +193,7 @@ RequestPane.propTypes = {
   updateRequestContentType: PropTypes.func.isRequired,
   updateSettingsShowPasswords: PropTypes.func.isRequired,
   updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
-  importFile: PropTypes.func.isRequired,
+  handleImportFile: PropTypes.func.isRequired,
 
   // Other
   useBulkHeaderEditor: PropTypes.bool.isRequired,

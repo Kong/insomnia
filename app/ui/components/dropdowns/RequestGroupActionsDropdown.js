@@ -1,13 +1,10 @@
 import React, {Component, PropTypes} from 'react';
-import {connect} from 'react-redux';
-import {bindActionCreators} from 'redux';
-import PromptButton from '../components/base/PromptButton';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from '../components/base/dropdown';
-import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
-import PromptModal from '../components/modals/PromptModal';
-import * as globalActions from '../redux/modules/global';
-import * as models from '../../models';
-import {showModal} from '../components/modals';
+import PromptButton from '../base/PromptButton';
+import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from '../base/dropdown';
+import EnvironmentEditModal from '../modals/EnvironmentEditModal';
+import PromptModal from '../modals/PromptModal';
+import * as models from '../../../models';
+import {showModal} from '../modals';
 
 class RequestGroupActionsDropdown extends Component {
   async _promptUpdateName () {
@@ -28,8 +25,7 @@ class RequestGroupActionsDropdown extends Component {
       selectText: true
     });
 
-    const workspace = this._getActiveWorkspace();
-    const {requestGroup} = this.props;
+    const {workspace, requestGroup} = this.props;
     const parentId = requestGroup._id;
     const request = await models.request.create({parentId, name});
     this.props.actions.global.activateRequest(workspace, request);
@@ -38,18 +34,6 @@ class RequestGroupActionsDropdown extends Component {
   _requestGroupDuplicate () {
     const {requestGroup} = this.props;
     models.requestGroup.duplicate(requestGroup);
-  }
-
-  _getActiveWorkspace (props) {
-    // TODO: Factor this out into a selector
-
-    const {entities, global} = props || this.props;
-    let workspace = entities.workspaces[global.activeWorkspaceId];
-    if (!workspace) {
-      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
-    }
-
-    return workspace;
   }
 
   render () {
@@ -86,41 +70,10 @@ class RequestGroupActionsDropdown extends Component {
 }
 
 RequestGroupActionsDropdown.propTypes = {
-  // Required
-  entities: PropTypes.shape({
-    workspaces: PropTypes.object.isRequired
-  }).isRequired,
-
-  actions: PropTypes.shape({
-    global: PropTypes.shape({
-      activateRequest: PropTypes.func.isRequired
-    }).isRequired,
-  }),
-
-  global: PropTypes.shape({
-    activeWorkspaceId: PropTypes.string
-  }),
+  workspace: PropTypes.object.isRequired,
 
   // Optional
   requestGroup: PropTypes.object
 };
 
-function mapStateToProps (state) {
-  return {
-    global: state.global,
-    entities: state.entities
-  };
-}
-
-function mapDispatchToProps (dispatch) {
-  return {
-    actions: {
-      global: bindActionCreators(globalActions, dispatch)
-    }
-  }
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(RequestGroupActionsDropdown);
+export default RequestGroupActionsDropdown;

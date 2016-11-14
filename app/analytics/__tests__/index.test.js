@@ -21,7 +21,7 @@ describe('init()', () => {
     analytics.setAccountId('acct_premature');
 
     window.ga = jest.genMockFunction();
-    analytics.initAnalytics('acct_123');
+    analytics.init('acct_123');
 
     // Verify that Google Analytics works
     expect(window.ga.mock.calls.length).toBe(5);
@@ -44,7 +44,7 @@ describe('init()', () => {
     expect(window.ga.mock.calls[6]).toEqual(['set', 'userId', 'acct_456']);
 
     // Try reinitializing
-    analytics.initAnalytics();
+    analytics.init();
     expect(window.ga.mock.calls.length).toBe(7);
 
     // TODO: Verify that Segment works (although it's not that important)

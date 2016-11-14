@@ -6,10 +6,10 @@ const ENTITY_BLACKLIST = {
   [models.stats.type]: 1
 };
 
-const ENTITY_CHANGES = 'entities.changes';
+const ENTITY_CHANGES = 'entities/changes';
 
 // ~~~~~~~~ //
-// REDUCERS //
+// Reducers //
 // ~~~~~~~~ //
 
 function getReducerName (type) {
@@ -17,19 +17,18 @@ function getReducerName (type) {
   return `${type.slice(0, 1).toLowerCase()}${type.slice(1)}${trailer}`;
 }
 
-const initialState = {
-  doNotPersist: true
-};
+const initialState = {};
 
 for (const type of models.types()) {
   initialState[getReducerName(type)] = {};
 }
 
-export default function reducer (state = initialState, action) {
+export default function (state = initialState, action) {
   switch (action.type) {
     case ENTITY_CHANGES:
-      const newState = {...state};
+      const newState = Object.assign({}, state);
       const {changes} = action;
+
       for (const [event, doc] of changes) {
         const referenceName = getReducerName(doc.type);
 
@@ -60,7 +59,7 @@ export default function reducer (state = initialState, action) {
 
 
 // ~~~~~~~ //
-// ACTIONS //
+// Actions //
 // ~~~~~~~ //
 
 export function addChanges (changes) {

@@ -15,7 +15,7 @@ const FLAGS = [
   'socks5-hostname', 'socks5-gssapi-service', 'Y', 'speed-limit',
   'y', 'speed-time', 'stderr', 'tftp-blksize', 'z', 'time-cond', 'trace',
   'trace-ascii', 'T', 'upload-file',
-  'url', // TODO: Handle this
+  'url',
   'u', 'user', 'tlsuser', 'tlspassword', 'tlsauthtype',
   'A', 'user-agent', // TODO: Handle this
   'w', 'write-out'
@@ -177,7 +177,12 @@ export function importCurl (blob) {
     .replace(/ "/g, ' ').replace(/" /g, ' ')    // double-quotes
     .replace(/ '/g, ' ').replace(/' /g, ' ');   // single-quotes
 
-  const url = /curl\s+['"]?((?!('|")).*)['"]?/.exec(cmd)[1].trim();
+  let url;
+  if (flags.url && flags.url.length) {
+    url = flags.url[0];
+  } else {
+    url = /curl\s+['"]?((?!('|")).*)['"]?/.exec(cmd)[1].trim();
+  }
 
   return {
     url: url,

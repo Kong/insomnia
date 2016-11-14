@@ -58,12 +58,12 @@ const SettingsSync = ({
       <p key="1">
         All Insomnia Plus plans start with a 14 day trial period.
       </p>,
-      <p key="2" className="pad-top-sm">
-        <button className="btn btn--super-compact btn--outlined"
+      <p key="2" className="pad-top text-center">
+        <br/>
+        <button className="btn txt-lg btn--outlined"
                 onClick={() => {
                   handleExit();
-                  handleShowSignup();
-                  handleUpdateSetting('optSyncBeta', true);
+                  handleShowSignup()
                 }}>
           Join Insomnia Plus
         </button>

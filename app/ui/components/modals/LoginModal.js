@@ -52,7 +52,8 @@ class LoginModal extends Component {
     trackEvent('Auth', 'Switch', 'To Signup');
   }
 
-  show ({title, message}) {
+  show (options = {}) {
+    const {title, message} = options;
     this.setState({step: 1, error: '', title, message});
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);

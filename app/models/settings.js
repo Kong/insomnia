@@ -13,13 +13,17 @@ export function init () {
     httpsProxy: '',
     timeout: 0,
     validateSSL: true,
-    optSyncBeta: false,
     forceVerticalLayout: false,
   };
 }
 
 export async function all () {
-  return db.all(type);
+  const settings = await db.all(type);
+  if (settings.length === 0) {
+    return [await getOrCreate()];
+  } else {
+    return settings;
+  }
 }
 
 export async function create (patch = {}) {

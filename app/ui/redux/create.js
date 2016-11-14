@@ -1,22 +1,20 @@
 import {createStore, applyMiddleware} from 'redux';
 import createLogger from 'redux-logger';
 import thunkMiddleware from 'redux-thunk';
-import rootReducer from './reducer';
+import {reducer} from './modules';
 
 export default function configureStore () {
   const middleware = [thunkMiddleware];
 
-  if (false && __DEV__) {
+  if (__DEV__) {
     middleware.push(createLogger({collapsed: true}));
   }
 
-  const store = createStore(rootReducer, applyMiddleware(...middleware));
-
-  if (module.hot) {
-    module.hot.accept('./reducer', () => {
-      const nextReducer = require('./reducer');
-      store.replaceReducer(nextReducer);
-    })
+  const store = createStore(reducer, applyMiddleware(...middleware));
+  if (__DEV__ && module.hot) {
+    module.hot.accept('./modules/index', () => {
+      store.replaceReducer(require('./modules').reducer);
+    });
   }
 
   return store;

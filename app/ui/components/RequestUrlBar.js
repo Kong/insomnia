@@ -8,7 +8,7 @@ import {trackEvent} from '../../analytics';
 class RequestUrlBar extends Component {
   _handleFormSubmit (e) {
     e.preventDefault();
-    this.props.sendRequest();
+    this.props.handleSend();
   }
 
   _handleUrlChange (url) {
@@ -75,7 +75,7 @@ class RequestUrlBar extends Component {
 }
 
 RequestUrlBar.propTypes = {
-  sendRequest: PropTypes.func.isRequired,
+  handleSend: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,
   url: PropTypes.string.isRequired,

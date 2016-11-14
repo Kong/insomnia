@@ -100,24 +100,11 @@ export async function exportJSON (parentDoc = null) {
       d._type = EXPORT_TYPE_REQUEST;
     }
 
-    const doc = removeMetaKeys(d);
+    // Delete the type property because we add our own (_type)
+    delete d.type;
 
-    delete doc.type;
-
-    return doc;
+    return d;
   });
 
   return JSON.stringify(data, null, 2);
-}
-
-
-function removeMetaKeys (obj) {
-  const newObj = Object.assign({}, obj);
-  for (const key of Object.keys(newObj)) {
-    if (key.indexOf('meta') === 0) {
-      delete newObj[key];
-    }
-  }
-
-  return newObj;
 }

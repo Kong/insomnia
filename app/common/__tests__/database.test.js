@@ -1,6 +1,5 @@
 import * as db from '../database';
 import * as models from '../../models';
-import {PREVIEW_MODE_SOURCE} from '../constants';
 
 function loadFixture (name) {
   const fixtures = require(`../__fixtures__/${name}`);
@@ -12,10 +11,10 @@ function loadFixture (name) {
   }
 }
 
-describe('initDB()', () => {
+describe('init()', () => {
   it('handles being initialized twice', async () => {
-    await db.initDB(models.types(), {inMemoryOnly: true});
-    await db.initDB(models.types(), {inMemoryOnly: true});
+    await db.init(models.types(), {inMemoryOnly: true});
+    await db.init(models.types(), {inMemoryOnly: true});
     expect((await db.all(models.request.type)).length).toBe(0);
   });
 });
@@ -85,7 +84,7 @@ describe('bufferChanges()', () => {
 
 describe('requestCreate()', () => {
   beforeEach(() => {
-    return db.initDB(models.types(), {inMemoryOnly: true}, true);
+    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
 
   it('creates a valid request', async () => {
@@ -97,7 +96,7 @@ describe('requestCreate()', () => {
     };
 
     const r = await models.request.create(patch);
-    expect(Object.keys(r).length).toBe(15);
+    expect(Object.keys(r).length).toBe(13);
 
     expect(r._id).toMatch(/^req_[a-zA-Z0-9]{32}$/);
     expect(r.created).toBeGreaterThanOrEqual(now);
@@ -111,7 +110,6 @@ describe('requestCreate()', () => {
     expect(r.headers).toEqual([]);
     expect(r.authentication).toEqual({});
     expect(r.metaSortKey).toBeLessThanOrEqual(-1 * now);
-    expect(r.metaPreviewMode).toEqual(PREVIEW_MODE_SOURCE);
     expect(r.parentId).toBe('wrk_123');
   });
 
@@ -123,7 +121,7 @@ describe('requestCreate()', () => {
 
 describe('requestGroupDuplicate()', () => {
   beforeEach(async () => {
-    await db.initDB(models.types(), {inMemoryOnly: true}, true);
+    await db.init(models.types(), {inMemoryOnly: true}, true);
     await loadFixture('nestedfolders');
   });
 

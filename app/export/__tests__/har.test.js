@@ -4,7 +4,7 @@ import * as render from '../../common/render';
 import * as models from '../../models';
 
 describe('exportHarWithRequest()', () => {
-  beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
   it('renders does it correctly', async () => {
     const workspace = await models.workspace.create();
     const cookies = [{

@@ -24,22 +24,16 @@ class PromptModal extends Component {
     this.modal.hide();
   }
 
-  _setDefaultValueFromState () {
-    if (this.state.defaultValue) {
-      this._input.value = this.state.defaultValue;
-    }
+  show ({headerName, defaultValue, submitName, selectText, hint}) {
+    this.modal.show();
+
+    this._input.value = defaultValue || '';
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
       this._input.focus();
-      if (this.state.selectText) {
-        this._input.select();
-      }
+      selectText && this._input.select();
     }, 100);
-  }
-
-  show ({headerName, defaultValue, submitName, selectText, hint}) {
-    this.modal.show();
 
     return new Promise(resolve => {
       this._onSubmitCallback = resolve;
@@ -52,10 +46,6 @@ class PromptModal extends Component {
         hint
       })
     });
-  }
-
-  componentDidUpdate () {
-    this._setDefaultValueFromState();
   }
 
   render () {

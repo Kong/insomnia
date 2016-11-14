@@ -72,7 +72,7 @@ class RequestSwitcherModal extends Component {
       return;
     }
 
-    this.props.activateWorkspace(workspace);
+    this.props.handleSetActiveWorkspace(workspace._id);
     this.modal.hide();
   }
 
@@ -297,8 +297,8 @@ class RequestSwitcherModal extends Component {
 }
 
 RequestSwitcherModal.propTypes = {
+  handleSetActiveWorkspace: PropTypes.func.isRequired,
   activateRequest: PropTypes.func.isRequired,
-  activateWorkspace: PropTypes.func.isRequired,
   workspaceId: PropTypes.string.isRequired,
   activeRequestParentId: PropTypes.string.isRequired
 };

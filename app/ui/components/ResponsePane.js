@@ -83,21 +83,20 @@ class ResponsePane extends Component {
     const {
       request,
       previewMode,
-      updatePreviewMode,
-      updateResponseFilter,
-      loadingRequests,
+      handleSetPreviewMode,
+      handleSetFilter,
+      loadStartTime,
       editorLineWrapping,
       editorFontSize,
-      responseFilter,
+      filter,
       showCookiesModal
     } = this.props;
 
     const {response} = this.state;
 
-    const loadStartTime = loadingRequests[request ? request._id : '__NONE__'];
     let timer = null;
 
-    if (loadStartTime) {
+    if (loadStartTime >= 0) {
       // Set a timer to update the UI again soon
       // TODO: Move this into a child component so we don't rerender too much
       setTimeout(() => {
@@ -205,7 +204,7 @@ class ResponsePane extends Component {
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody.bind(this)}
                 previewMode={previewMode}
-                updatePreviewMode={updatePreviewMode}
+                updatePreviewMode={handleSetPreviewMode}
               />
             </Tab>
             <Tab>
@@ -233,8 +232,8 @@ class ResponsePane extends Component {
               bytes={response.bytesRead}
               contentType={response.contentType || ''}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-              filter={response.error ? '' : responseFilter}
-              updateFilter={response.error ? null : updateResponseFilter}
+              filter={filter}
+              updateFilter={response.error ? null : handleSetFilter}
               body={response.error ? response.error : response.body}
               encoding={response.encoding}
               error={!!response.error}
@@ -269,19 +268,19 @@ class ResponsePane extends Component {
 
 ResponsePane.propTypes = {
   // Functions
-  updatePreviewMode: PropTypes.func.isRequired,
-  updateResponseFilter: PropTypes.func.isRequired,
+  handleSetFilter: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
+  handleSetPreviewMode: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,
-  responseFilter: PropTypes.string.isRequired,
-  loadingRequests: PropTypes.object.isRequired,
+  filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  loadStartTime: PropTypes.number.isRequired,
 
   // Other
-  request: PropTypes.object
+  request: PropTypes.object,
 };
 
 export default ResponsePane;
