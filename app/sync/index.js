@@ -254,7 +254,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     } catch (e) {
       // This probably means we already have it. This should never happen, but
       // might due to a rare race condition.
-      logger.error('Failed to insert resource', e);
+      logger.error('Failed to insert resource', e, serverResource);
       return;
     }
 

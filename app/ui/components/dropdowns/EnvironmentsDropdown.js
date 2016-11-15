@@ -37,13 +37,11 @@ const EnvironmentsDropdown = ({
       <DropdownDivider name="Switch Environment"/>
       {subEnvironments.map(environment => (
         <DropdownItem key={environment._id}
-                      disabled={environment === activeEnvironment}
                       onClick={e => handleChangeEnvironment(environment._id)}>
           <i className="fa fa-random"></i> Use <strong>{environment.name}</strong>
         </DropdownItem>
       ))}
-      <DropdownItem disabled={!activeEnvironment || activeEnvironment === baseEnvironment}
-                    onClick={() => baseEnvironment && handleChangeEnvironment(null)}>
+      <DropdownItem onClick={() => baseEnvironment && handleChangeEnvironment(null)}>
         <i className="fa fa-empty"></i> No Environment
       </DropdownItem>
       <DropdownDivider name="General"/>

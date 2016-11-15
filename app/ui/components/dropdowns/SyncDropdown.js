@@ -77,7 +77,7 @@ class SyncDropdown extends Component {
     const config = await sync.getOrCreateConfig(resourceGroupId);
 
     // Analyze it
-    const dirty = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
+    const dirty = await syncStorage.findDirtyResourcesForResourceGroup(resourceGroupId);
     const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
     const numClean = all.length - dirty.length;
     const syncPercent = all.length === 0 ? 100 : parseInt(numClean / all.length * 1000) / 10;
@@ -122,9 +122,9 @@ class SyncDropdown extends Component {
         <div className={className}>
           <Dropdown wide={true} className="wide tall">
             <DropdownButton className="btn btn--compact wide">
-              Cloud Sync
+              Sync Settings
             </DropdownButton>
-            <DropdownDivider name="Insomnia Plus"/>
+            <DropdownDivider name="Insomnia Cloud Sync"/>
             <DropdownItem onClick={e => showModal(SettingsModal, TAB_PLUS)}>
               <i className="fa fa-user"></i>
               Create Account
@@ -171,20 +171,14 @@ class SyncDropdown extends Component {
                 <i className="fa fa-toggle-on"></i>}
               Automatic Sync
             </DropdownItem>
-            <DropdownItem>
-              <i className="fa fa-share-alt"></i>
-              Share Workspace
+            <DropdownItem onClick={e => this._handleSyncResourceGroupId(resourceGroupId)}
+                          disabled={syncPercent === 100}
+                          stayOpenAfterClick={true}>
+              {loading ?
+                <i className="fa fa-refresh fa-spin"></i> :
+                <i className="fa fa-cloud-upload"></i>}
+              Sync Now {syncPercent === 100 ? '(up to date)' : ''}
             </DropdownItem>
-            {syncMode === syncStorage.SYNC_MODE_OFF ? (
-              <DropdownItem onClick={e => this._handleSyncResourceGroupId(resourceGroupId)}
-                            disabled={syncPercent === 100}
-                            stayOpenAfterClick={true}>
-                {loading ?
-                  <i className="fa fa-refresh fa-spin"></i> :
-                  <i className="fa fa-cloud-upload"></i>}
-                Sync Now {syncPercent === 100 ? '(up to date)' : ''}
-              </DropdownItem>
-            ) : null}
 
             <DropdownDivider name="Other"/>
 

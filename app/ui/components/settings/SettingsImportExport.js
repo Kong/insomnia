@@ -13,10 +13,6 @@ const SettingsImportExport = ({
       Also, any imported data may overwrite existing data.
     </p>
     <p>
-      <button className="btn btn--super-compact btn--outlined" onClick={e => handleImport()}>
-        Import Data
-      </button>
-      &nbsp;&nbsp;
       <Dropdown outline={true}>
         <DropdownButton className="btn btn--super-compact btn--outlined">
           Export Data <i className="fa fa-caret-down"></i>
@@ -31,7 +27,14 @@ const SettingsImportExport = ({
           All Workspaces
         </DropdownItem>
       </Dropdown>
+      &nbsp;&nbsp;
+      <button className="btn btn--super-compact btn--outlined" onClick={e => handleImport()}>
+        Import Data
+      </button>
     </p>
+    {/*<p className="faint txt-sm">*/}
+      {/** Tip: You can also paste Curl commands into the URL bar*/}
+    {/*</p>*/}
   </div>
 );
 

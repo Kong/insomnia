@@ -14,16 +14,6 @@ const SettingsSync = ({
 }) => (
   <div className="pad">
     <h1>Cloud Sync and Backup</h1>
-    <p>
-      <Link href="https://insomnia.rest/plus">Insomnia Plus</Link> helps you <i>rest</i> easy by
-      keeping your workspaces securely backed up and synced across all of your devices.
-    </p>
-    <p>
-      Upgrade today to start enjoying
-      {" "}
-      <Link href="https://insomnia.rest/pricing/">all of the benefits</Link>, while also helping
-      support my continuous effort of making Insomnia awesome! <i className="fa fa-smile-o txt-xl"/>
-    </p>
 
     {loggedIn ? [
       <p key="1">
@@ -33,9 +23,9 @@ const SettingsSync = ({
       <p key="2" className="pad-top">
         <PromptButton
           className="btn btn--super-compact btn--outlined danger"
-          onClick={async () => {
+          onClick={() => {
             handleExit();
-            await handleCancelAccount();
+            handleCancelAccount();
           }}>
           Cancel Subscription
         </PromptButton>
@@ -55,6 +45,16 @@ const SettingsSync = ({
         </PromptButton>
       </p>
     ] : [
+      <p key="0">
+        <Link href="https://insomnia.rest/plus">Insomnia Plus</Link> helps you <i>rest</i> easy by
+        keeping your workspaces securely backed up and synced across all of your devices.
+      </p>,
+      <p key="1">
+        Upgrade today to start enjoying
+        {" "}
+        <Link href="https://insomnia.rest/pricing/">all of the benefits</Link>, while also helping
+        support my continuous effort of making Insomnia awesome! <i className="fa fa-smile-o txt-xl"/>
+      </p>,
       <p key="2" className="pad-top text-center">
         <button className="btn txt-lg btn--outlined"
                 onClick={() => {

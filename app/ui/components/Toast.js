@@ -3,9 +3,10 @@ import classnames from 'classnames';
 import {TAB_PLUS} from './modals/SettingsModal';
 import SettingsModal from './modals/SettingsModal';
 import {showModal} from './modals';
+import * as analytics from '../../analytics/index';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
-const KEY_PLUS_IS_HERE = 'plus-is-here-2';
+const KEY_PLUS_IS_HERE = 'plus-is-here';
 
 class Toast extends Component {
   constructor (props) {
@@ -18,7 +19,7 @@ class Toast extends Component {
 
     this._notifications = [{
       key: KEY_PLUS_IS_HERE,
-      message: 'Insomnia Plus is here!',
+      message: 'Cloud sync is here!',
       cta: 'Show'
     }];
   }
@@ -43,6 +44,8 @@ class Toast extends Component {
       showModal(SettingsModal, TAB_PLUS);
     }
 
+    analytics.trackEvent('Notification', 'Click', notification.key);
+
     this._markAsRead(notification);
   }
 
@@ -66,7 +69,7 @@ class Toast extends Component {
 
   componentDidMount () {
     setTimeout(() => this._handleShowNotifications(), 1000 * 10);
-    setTimeout(() => this._handleHideActiveNotification(), 1000 * 60);
+    setTimeout(() => this._handleHideActiveNotification(), 1000 * 100);
   }
 
   render () {

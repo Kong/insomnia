@@ -44,12 +44,8 @@ export async function findActiveDirtyResourcesForResourceGroup (resourceGroupId)
   return findActiveResources({dirty: true, resourceGroupId});
 }
 
-export async function hasDirtyResourcesForResourceGroup (resourceGroupId) {
-  return new Promise(resolve => {
-    _getDB(TYPE_RESOURCE).find({dirty: true, resourceGroupId}).limit(1).exec((err, docs) => {
-      err ? resolve(false) : resolve(docs.length > 0)
-    })
-  });
+export async function findDirtyResourcesForResourceGroup (resourceGroupId) {
+  return findResources({dirty: true, resourceGroupId});
 }
 
 export async function findResourcesForResourceGroup (resourceGroupId) {
