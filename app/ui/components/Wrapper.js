@@ -67,6 +67,7 @@ const Wrapper = props => {
   const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
   const handleImportFile = handleImportFileToWorkspace.bind(null, activeWorkspace._id);
   const handleExportWorkspaceToFile = handleExportFile.bind(null, activeWorkspace._id);
+  const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
 
   return (
     <div id="wrapper"
@@ -145,8 +146,8 @@ const Wrapper = props => {
         filter={responseFilter}
         loadStartTime={loadStartTime}
         showCookiesModal={() => showModal(CookiesModal, activeWorkspace)}
-        handleSetPreviewMode={handleSetResponsePreviewMode.bind(null, activeRequest._id)}
-        handleSetFilter={handleSetResponseFilter.bind(null, activeRequest._id)}
+        handleSetPreviewMode={handleSetResponsePreviewMode.bind(null, activeRequestId)}
+        handleSetFilter={handleSetResponseFilter.bind(null, activeRequestId)}
       />
 
       <PromptModal ref={m => registerModal(m)}/>
@@ -178,12 +179,6 @@ const Wrapper = props => {
         ref={m => registerModal(m)}
         onChange={w => models.workspace.update(w)}/>
       <CookiesModal ref={m => registerModal(m)}/>
-
-      {/*<div className="toast toast--show">*/}
-      {/*<div className="toast__message">How's it going?</div>*/}
-      {/*<button className="toast__action">Great!</button>*/}
-      {/*<button className="toast__action">Horrible :(</button>*/}
-      {/*</div>*/}
     </div>
   )
 };

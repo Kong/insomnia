@@ -168,6 +168,6 @@ function targetCollect (connect, monitor) {
   };
 }
 
-const source = DragSource('SIDEBAR_ROW', dragSource, sourceCollect)(SidebarRequestRow);
-const target = DropTarget('SIDEBAR_ROW', dragTarget, targetCollect)(source);
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
+const target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 export default target;

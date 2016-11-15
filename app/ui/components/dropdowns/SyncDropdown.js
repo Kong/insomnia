@@ -1,15 +1,14 @@
 import React, {Component, PropTypes} from 'react';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
-import {showModal} from '../modals/index';
-import SignupModal from '../modals/SignupModal';
+import {showModal} from '../modals';
 import SyncLogsModal from '../modals/SyncLogsModal';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
-import * as analytics from '../../../analytics/index';
-import SettingsModal from '../modals/SettingsModal';
-import {TAB_INDEX_SYNC} from '../modals/SettingsModal';
+import * as analytics from '../../../analytics';
+import SettingsModal, {TAB_PLUS} from '../modals/SettingsModal';
 import LoginModal from '../modals/LoginModal';
+import PromptButton from '../base/PromptButton';
 
 class SyncDropdown extends Component {
   constructor (props) {
@@ -20,6 +19,11 @@ class SyncDropdown extends Component {
       loading: false,
       hide: false,
     }
+  }
+
+  _handleHideMenu () {
+    this.setState({hide: true});
+    analytics.trackEvent('Sync', 'Hide Menu')
   }
 
   async _handleToggleSyncMode (resourceGroupId) {
@@ -120,19 +124,22 @@ class SyncDropdown extends Component {
             <DropdownButton className="btn btn--compact wide">
               Cloud Sync
             </DropdownButton>
-            <DropdownDivider name="Cloud Sync"/>
-            <DropdownItem onClick={e => showModal(SettingsModal, TAB_INDEX_SYNC)}>
+            <DropdownDivider name="Insomnia Plus"/>
+            <DropdownItem onClick={e => showModal(SettingsModal, TAB_PLUS)}>
               <i className="fa fa-user"></i>
-              Join Insomnia Plus
+              Create Account
             </DropdownItem>
             <DropdownItem onClick={e => showModal(LoginModal)}>
               <i className="fa fa-empty"></i>
               Login
             </DropdownItem>
-            {/*<DropdownItem onClick={e => this.setState({hide: true})}>*/}
-              {/*<i className="fa fa-empty"></i>*/}
-              {/*Hide This Button*/}
-            {/*</DropdownItem>*/}
+            <DropdownDivider/>
+            <DropdownItem buttonClass={PromptButton}
+                          addIcon={true}
+                          onClick={e => this._handleHideMenu()}>
+              <i className="fa fa-eye-slash"></i>
+              Hide This Menu
+            </DropdownItem>
           </Dropdown>
         </div>
       )
@@ -181,7 +188,7 @@ class SyncDropdown extends Component {
 
             <DropdownDivider name="Other"/>
 
-            <DropdownItem onClick={e => showModal(SettingsModal, TAB_INDEX_SYNC)}>
+            <DropdownItem onClick={e => showModal(SettingsModal, TAB_PLUS)}>
               <i className="fa fa-user"></i>
               Manage Account
             </DropdownItem>

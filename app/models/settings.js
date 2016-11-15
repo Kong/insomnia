@@ -4,7 +4,7 @@ export const type = 'Settings';
 export const prefix = 'set';
 export function init () {
   return {
-    showPasswords: false,
+    showPasswords: true,
     useBulkHeaderEditor: false,
     followRedirects: true,
     editorFontSize: 12,

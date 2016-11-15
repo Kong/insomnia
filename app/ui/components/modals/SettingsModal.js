@@ -4,7 +4,6 @@ import {shell} from 'electron';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
 import SettingsShortcuts from '../settings/SettingsShortcuts';
 import SettingsAbout from '../settings/SettingsAbout';
 import SettingsGeneral from '../settings/SettingsGeneral';
@@ -18,8 +17,8 @@ import SignupModal from './SignupModal';
 import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics/index';
 
-export const TAB_INDEX_SYNC = 2;
 export const TAB_INDEX_EXPORT = 1;
+export const TAB_PLUS = 3;
 
 class SettingsModal extends Component {
   constructor (props) {
@@ -80,11 +79,11 @@ class SettingsModal extends Component {
               <Tab selected={this._currentTabIndex === 1}>
                 <button>Import/Export</button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 2}>
-                <button>Cloud Sync</button>
-              </Tab>
               <Tab selected={this._currentTabIndex === 3}>
                 <button>Shortcuts</button>
+              </Tab>
+              <Tab selected={this._currentTabIndex === 2}>
+                <button>Insomnia Plus</button>
               </Tab>
               <Tab selected={this._currentTabIndex === 4}>
                 <button>About</button>
@@ -113,6 +112,9 @@ class SettingsModal extends Component {
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
+              <SettingsShortcuts />
+            </TabPanel>
+            <TabPanel className="pad scrollable">
               <SettingsSync
                 loggedIn={session.isLoggedIn()}
                 firstName={session.getFirstName() || ''}
@@ -125,18 +127,10 @@ class SettingsModal extends Component {
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
-              <SettingsShortcuts />
-            </TabPanel>
-            <TabPanel className="pad scrollable">
               <SettingsAbout/>
             </TabPanel>
           </Tabs>
         </ModalBody>
-        <ModalFooter>
-          <button className="btn" onClick={() => this.modal.hide()}>
-            Done
-          </button>
-        </ModalFooter>
       </Modal>
     );
   }

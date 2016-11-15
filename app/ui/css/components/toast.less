@@ -14,24 +14,23 @@
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: row;
-  border-radius: @radius-md;
+  font-size: @font-size-sm;
+  transition: opacity 300ms;
 
   &.toast--show {
     opacity: 1;
-    transition: opacity 2s 5s ease-in;
   }
 
   .toast__message,
   .toast__action {
-    padding: @padding-sm @padding-md;
+    padding: @padding-sm * 1.3 @padding-md * 1.3;
     height: auto;
   }
 
   .toast__action {
-    color: @font-light-bg;
-    font-weight: bold;
+    color: darken(@surprise, 10);
+    text-transform: uppercase;
     font-size: @font-size-sm;
-    border-left: 1px solid @hl-md;
 
     &:hover {
       background: @hl-xs;

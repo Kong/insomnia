@@ -77,7 +77,21 @@ class Sidebar extends Component {
       // We have a RequestGroup!
 
       const requestGroup = child.doc;
-      const isActive = !!child.children.find(c => c.doc._id === activeRequestId);
+
+      function hasActiveChild (children) {
+        for (const c of children) {
+          if (c.children.length) {
+            return hasActiveChild(c.children);
+          } else if (c.doc._id === activeRequestId) {
+            return true;
+          }
+        }
+
+        // Didn't find anything, so return
+        return false;
+      }
+
+      const isActive = hasActiveChild(child.children);
 
       const children = this._renderChildren(child.children, requestGroup);
 
@@ -113,7 +127,6 @@ class Sidebar extends Component {
       hidden,
       handleCreateRequest,
       handleCreateRequestGroup,
-      showSyncSettings,
       width,
       workspace,
       workspaces,

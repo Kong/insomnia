@@ -38,6 +38,11 @@ class SidebarRequestGroupRow extends Component {
       workspace,
     } = this.props;
 
+    if (!requestGroup) {
+      console.log(this.props);
+      return connectDragSource(connectDropTarget(<li>--</li>))
+    }
+
     const {dragDirection} = this.state;
 
     let folderIconClass = 'fa-folder';
@@ -101,9 +106,9 @@ SidebarRequestGroupRow.propTypes = {
 
   // Other
   isActive: PropTypes.bool.isRequired,
-  requestGroup: PropTypes.object.isRequired,
   isCollapsed: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
+  requestGroup: PropTypes.object,
 
   // React DnD
   isDragging: PropTypes.bool,
@@ -164,6 +169,6 @@ function targetCollect (connect, monitor) {
   };
 }
 
-const source = DragSource('SIDEBAR_ROW_2', dragSource, sourceCollect)(SidebarRequestGroupRow);
-const target = DropTarget('SIDEBAR_ROW_2', dragTarget, targetCollect)(source);
+const source = DragSource('SIDEBAR_REQUEST_GROUP_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
+const target = DropTarget('SIDEBAR_REQUEST_GROUP_ROW', dragTarget, targetCollect)(source);
 export default target;

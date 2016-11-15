@@ -9,6 +9,7 @@ import Mousetrap from '../mousetrap';
 import {toggleModal, showModal} from '../components/modals';
 import Wrapper from '../components/Wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
+import Toast from '../components/Toast';
 import CookiesModal from '../components/modals/CookiesModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import PromptModal from '../components/modals/PromptModal';
@@ -34,6 +35,15 @@ class App extends Component {
       draggingPane: false,
       forceRefreshCounter: 0,
     };
+
+    // Bind functions once, so we don't have to on every render
+    this._boundStartDragSidebar = this._startDragSidebar.bind(this);
+    this._boundResetDragSidebar = this._resetDragSidebar.bind(this);
+    this._boundStartDragPane = this._startDragPane.bind(this);
+    this._boundResetDragPane = this._resetDragPane.bind(this);
+    this._boundHandleUrlChange = this._handleUrlChanged.bind(this);
+    this._boundRequestCreate = this._requestCreate.bind(this);
+    this._boundRequestGroupCreate = this._requestGroupCreate.bind(this);
 
     this.globalKeyMap = {
 
@@ -117,27 +127,6 @@ class App extends Component {
     const request = await models.request.create({parentId, name});
 
     handleSetActiveRequest(activeWorkspace._id, request._id);
-  }
-
-  _generateSidebarTree (parentId, entities) {
-    const children = entities.filter(
-      e => e.parentId === parentId
-    ).sort((a, b) => {
-      if (a.metaSortKey === b.metaSortKey) {
-        return a._id > b._id ? -1 : 1;
-      } else {
-        return a.metaSortKey < b.metaSortKey ? -1 : 1;
-      }
-    });
-
-    if (children.length > 0) {
-      return children.map(c => ({
-        doc: c,
-        children: this._generateSidebarTree(c._id, entities)
-      }));
-    } else {
-      return children;
-    }
   }
 
   async _handleUrlChanged (request, url) {
@@ -298,20 +287,23 @@ class App extends Component {
 
   render () {
     return (
-      <Wrapper
-        key={this.state.forceRefreshCounter}
-        handleSetRequestPaneRef={n => this._requestPane = n}
-        handleSetResponsePaneRef={n => this._responsePane = n}
-        handleSetSidebarRef={n => this._sidebar = n}
-        handleStartDragSidebar={this._startDragSidebar.bind(this)}
-        handleResetDragSidebar={this._resetDragSidebar.bind(this)}
-        handleStartDragPane={this._startDragPane.bind(this)}
-        handleResetDragPane={this._resetDragPane.bind(this)}
-        handleUpdateRequestUrl={this._handleUrlChanged.bind(this)}
-        handleCreateRequest={this._requestCreate.bind(this)}
-        handleCreateRequestGroup={this._requestGroupCreate.bind(this)}
-        {...this.props}
-      />
+      <div className="app">
+        <Wrapper
+          key={this.state.forceRefreshCounter}
+          handleSetRequestPaneRef={n => this._requestPane = n}
+          handleSetResponsePaneRef={n => this._responsePane = n}
+          handleSetSidebarRef={n => this._sidebar = n}
+          handleStartDragSidebar={this._boundStartDragSidebar}
+          handleResetDragSidebar={this._boundResetDragSidebar}
+          handleStartDragPane={this._boundStartDragPane}
+          handleResetDragPane={this._boundResetDragPane}
+          handleUpdateRequestUrl={this._boundHandleUrlChange}
+          handleCreateRequest={this._boundRequestCreate}
+          handleCreateRequestGroup={this._boundRequestGroupCreate}
+          {...this.props}
+        />
+        <Toast/>
+      </div>
     )
   }
 }
@@ -435,6 +427,11 @@ function _generateSidebarTree (parentId, entities, collapsed) {
   const children = entities.filter(
     e => e.parentId === parentId
   ).sort((a, b) => {
+    // Always sort folders above
+    if (a.type === models.requestGroup.type && b.type !== models.requestGroup.type) {
+      return -1;
+    }
+
     if (a.metaSortKey === b.metaSortKey) {
       return a._id > b._id ? -1 : 1;
     } else {

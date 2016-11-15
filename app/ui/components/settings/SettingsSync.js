@@ -12,17 +12,17 @@ const SettingsSync = ({
   handleLogout,
   handleReset,
 }) => (
-  <div>
+  <div className="pad">
+    <h1>Cloud Sync and Backup</h1>
     <p>
-      Cloud Sync is part of
-      {" "}
-      <Link href="https://insomnia.rest/plus">Insomnia Plus</Link> – a
-      $5/month add-on to Insomnia.
+      <Link href="https://insomnia.rest/plus">Insomnia Plus</Link> helps you <i>rest</i> easy by
+      keeping your workspaces securely backed up and synced across all of your devices.
     </p>
     <p>
-      Plus provides end-to-end encrypted data sync across all your
-      devices, while also acting as an up-to-date backup in case something
-      bad happens.
+      Upgrade today to start enjoying
+      {" "}
+      <Link href="https://insomnia.rest/pricing/">all of the benefits</Link>, while also helping
+      support my continuous effort of making Insomnia awesome! <i className="fa fa-smile-o txt-xl"/>
     </p>
 
     {loggedIn ? [
@@ -55,18 +55,20 @@ const SettingsSync = ({
         </PromptButton>
       </p>
     ] : [
-      <p key="1">
-        All Insomnia Plus plans start with a 14 day trial period.
-      </p>,
       <p key="2" className="pad-top text-center">
-        <br/>
         <button className="btn txt-lg btn--outlined"
                 onClick={() => {
                   handleExit();
                   handleShowSignup()
                 }}>
-          Join Insomnia Plus
+          Upgrade to Plus
         </button>
+      </p>,
+      <p key="3" className="text-center italic">
+        $5 per month or $50 per year
+        <div className="txt-sm faint pad-top-sm">
+          14-day trial (credit card required) cancel at any time
+        </div>
       </p>
     ]}
   </div>

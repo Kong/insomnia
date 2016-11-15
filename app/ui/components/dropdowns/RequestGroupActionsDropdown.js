@@ -36,6 +36,17 @@ class RequestGroupActionsDropdown extends Component {
     models.requestGroup.duplicate(requestGroup);
   }
 
+  async _requestGroupCreate () {
+    const name = await showModal(PromptModal, {
+      headerName: 'Create New Folder',
+      defaultValue: 'My Folder',
+      selectText: true
+    });
+
+    const {requestGroup} = this.props;
+    models.requestGroup.create({parentId: requestGroup._id, name});
+  }
+
   render () {
     const {requestGroup, ...other} = this.props;
 
@@ -47,6 +58,9 @@ class RequestGroupActionsDropdown extends Component {
         <DropdownItem onClick={e => this._requestCreate()}>
           <i className="fa fa-plus-circle"></i> New Request
           <DropdownHint char="N"></DropdownHint>
+        </DropdownItem>
+        <DropdownItem onClick={e => this._requestGroupCreate()}>
+          <i className="fa fa-folder"></i> New Folder
         </DropdownItem>
         <DropdownDivider />
         <DropdownItem onClick={e => this._requestGroupDuplicate()}>
