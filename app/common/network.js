@@ -147,15 +147,18 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
 
       // Update the cookie jar
       // NOTE: Since we're doing own DNS, we can't rely on Request to do this
-      for (const h of util.getSetCookieHeaders(headers)) {
-        try {
-          jar.setCookieSync(h.value, originalUrl);
-        } catch (e) {
-          console.warn('Failed to parse set-cookie', h.value);
+      const setCookieHeaders = util.getSetCookieHeaders(headers);
+      if (setCookieHeaders.length) {
+        for (const h of setCookieHeaders) {
+          try {
+            jar.setCookieSync(h.value, originalUrl);
+          } catch (e) {
+            console.warn('Failed to parse set-cookie', h.value);
+          }
         }
+        const cookies = await cookiesFromJar(jar);
+        await models.cookieJar.update(cookieJar, {cookies});
       }
-      const cookies = await cookiesFromJar(jar);
-      await models.cookieJar.update(cookieJar, {cookies});
 
       const responsePatch = {
         parentId: renderedRequest._id,
@@ -164,7 +167,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         url: originalUrl, // TODO: Handle redirects somehow
         contentType: networkResponse.headers['content-type'] || '',
         elapsedTime: networkResponse.elapsedTime,
-        bytesRead: networkResponse.connection.bytesRead,
+        bytesRead: networkResponse.body ? networkResponse.body.length : 0,
         body: networkResponse.body.toString('base64'),
         encoding: 'base64',
         headers: headers

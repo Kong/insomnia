@@ -1,11 +1,11 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
-import EnvironmentsDropdown from '../../containers/EnvironmentsDropdown';
+import EnvironmentsDropdown from '../dropdowns/EnvironmentsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
 import SyncButton from '../dropdowns/SyncDropdown';
-import WorkspaceDropdown from '../../containers/WorkspaceDropdown';
+import WorkspaceDropdown from '../dropdowns/WorkspaceDropdown';
 import {
   SIDEBAR_SKINNY_REMS,
   COLLAPSE_SIDEBAR_REMS
@@ -42,13 +42,13 @@ class Sidebar extends Component {
   _renderChildren (children, requestGroup) {
     const {
       filter,
-      toggleRequestGroup,
-      addRequestToRequestGroup,
-      addRequestToWorkspace,
+      handleCreateRequest,
+      handleSetRequestGroupCollapsed,
       moveRequest,
       moveRequestGroup,
-      activateRequest,
-      activeRequestId
+      handleActivateRequest,
+      activeRequest,
+      workspace,
     } = this.props;
 
     const filteredChildren = this._filterChildren(
@@ -57,16 +57,19 @@ class Sidebar extends Component {
       requestGroup && requestGroup.name
     );
 
+    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+
     return filteredChildren.map(child => {
       if (child.doc.type === 'Request') {
         return (
           <SidebarRequestRow
             key={child.doc._id}
             moveRequest={moveRequest}
-            activateRequest={activateRequest}
-            requestCreate={addRequestToWorkspace}
+            handleActivateRequest={handleActivateRequest}
+            requestCreate={handleCreateRequest.bind(null, workspace._id)}
             isActive={child.doc._id === activeRequestId}
             request={child.doc}
+            workspace={workspace}
           />
         )
       }
@@ -74,7 +77,21 @@ class Sidebar extends Component {
       // We have a RequestGroup!
 
       const requestGroup = child.doc;
-      const isActive = !!child.children.find(c => c.doc._id === activeRequestId);
+
+      function hasActiveChild (children) {
+        for (const c of children) {
+          if (c.children.length) {
+            return hasActiveChild(c.children);
+          } else if (c.doc._id === activeRequestId) {
+            return true;
+          }
+        }
+
+        // Didn't find anything, so return
+        return false;
+      }
+
+      const isActive = hasActiveChild(child.children);
 
       const children = this._renderChildren(child.children, requestGroup);
 
@@ -85,16 +102,19 @@ class Sidebar extends Component {
 
       return (
         <SidebarRequestGroupRow
+          handleActivateRequest={handleActivateRequest}
           key={requestGroup._id}
           isActive={isActive}
           moveRequestGroup={moveRequestGroup}
           moveRequest={moveRequest}
-          toggleRequestGroup={toggleRequestGroup}
-          addRequestToRequestGroup={() => addRequestToRequestGroup(requestGroup)}
+          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          isCollapsed={child.collapsed}
+          handleCreateRequest={handleCreateRequest.bind(null, requestGroup._id)}
           numChildren={child.children.length}
-          requestGroup={requestGroup}>
-          {children}
-        </SidebarRequestGroupRow>
+          workspace={workspace}
+          requestGroup={requestGroup}
+          children={children}
+        />
       )
     })
   }
@@ -102,15 +122,22 @@ class Sidebar extends Component {
   render () {
     const {
       showCookiesModal,
-      changeFilter,
       filter,
       children,
       hidden,
-      requestCreate,
-      requestGroupCreate,
-      showSyncSettings,
+      handleCreateRequest,
+      handleCreateRequestGroup,
       width,
-      workspaceId
+      workspace,
+      workspaces,
+      environments,
+      activeEnvironment,
+      handleSetActiveEnvironment,
+      handleSetActiveWorkspace,
+      handleImportFile,
+      handleExportFile,
+      handleChangeFilter,
+      isLoading,
     } = this.props;
 
     return (
@@ -121,10 +148,21 @@ class Sidebar extends Component {
       })}>
         <WorkspaceDropdown
           className="sidebar__header"
+          activeWorkspace={workspace}
+          workspaces={workspaces}
+          handleExportFile={handleExportFile}
+          handleImportFile={handleImportFile}
+          handleSetActiveWorkspace={handleSetActiveWorkspace}
+          isLoading={isLoading}
         />
 
         <div className="sidebar__menu">
-          <EnvironmentsDropdown />
+          <EnvironmentsDropdown
+            handleChangeEnvironment={id => handleSetActiveEnvironment(workspace._id, id)}
+            activeEnvironment={activeEnvironment}
+            environments={environments}
+            workspace={workspace}
+          />
           <button className="btn btn--super-compact"
                   onClick={e => showCookiesModal()}>
             <div className="sidebar__menu__thing">
@@ -134,9 +172,9 @@ class Sidebar extends Component {
         </div>
 
         <SidebarFilter
-          onChange={filter => changeFilter(filter)}
-          requestCreate={requestCreate}
-          requestGroupCreate={requestGroupCreate}
+          onChange={filter => handleChangeFilter(filter)}
+          requestCreate={handleCreateRequest.bind(null, workspace._id)}
+          requestGroupCreate={handleCreateRequestGroup.bind(null, workspace._id)}
           filter={filter}
         />
 
@@ -144,11 +182,11 @@ class Sidebar extends Component {
           {this._renderChildren(children)}
         </ul>
 
-        {showSyncSettings ? (
-          <div className="sidebar__footer">
-            <SyncButton key={workspaceId} workspaceId={workspaceId}/>
-          </div>
-        ) : null}
+        <SyncButton
+          className="sidebar__footer"
+          key={workspace._id}
+          workspace={workspace}
+        />
       </aside>
     )
   }
@@ -156,28 +194,33 @@ class Sidebar extends Component {
 
 Sidebar.propTypes = {
   // Functions
-  activateRequest: PropTypes.func.isRequired,
-  toggleRequestGroup: PropTypes.func.isRequired,
-  addRequestToRequestGroup: PropTypes.func.isRequired,
-  addRequestToWorkspace: PropTypes.func.isRequired,
-  changeFilter: PropTypes.func.isRequired,
+  handleActivateRequest: PropTypes.func.isRequired,
+  handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
+  handleChangeFilter: PropTypes.func.isRequired,
+  handleImportFile: PropTypes.func.isRequired,
+  handleExportFile: PropTypes.func.isRequired,
+  handleSetActiveWorkspace: PropTypes.func.isRequired,
+  handleSetActiveEnvironment: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
-  requestCreate: PropTypes.func.isRequired,
-  requestGroupCreate: PropTypes.func.isRequired,
+  handleCreateRequest: PropTypes.func.isRequired,
+  handleCreateRequestGroup: PropTypes.func.isRequired,
   showEnvironmentsModal: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
-  width: PropTypes.number.isRequired,
-  hidden: PropTypes.bool.isRequired,
-  showSyncSettings: PropTypes.bool.isRequired,
 
   // Other
+  hidden: PropTypes.bool.isRequired,
+  width: PropTypes.number.isRequired,
+  isLoading: PropTypes.bool.isRequired,
   children: PropTypes.array.isRequired,
-  workspaceId: PropTypes.string.isRequired,
+  workspace: PropTypes.object.isRequired,
+  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
+  environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
   filter: PropTypes.string,
-  activeRequestId: PropTypes.string
+  activeRequest: PropTypes.object,
+  activeEnvironment: PropTypes.object,
 };
 
 export default Sidebar;

@@ -3,7 +3,7 @@ import * as models from '../../models';
 
 describe('init()', () => {
   beforeEach(() => {
-    return db.initDB(models.types(), {inMemoryOnly: true}, true);
+    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
   it('contains all required fields', async () => {
     Date.now = jest.genMockFunction().mockReturnValue(1478795580200);
@@ -11,8 +11,6 @@ describe('init()', () => {
       authentication: {},
       body: '',
       headers: [],
-      metaPreviewMode: 'source',
-      metaResponseFilter: '',
       metaSortKey: -1478795580200,
       method: 'GET',
       name: 'New Request',
@@ -24,7 +22,7 @@ describe('init()', () => {
 
 describe('create()', async () => {
   beforeEach(() => {
-    return db.initDB(models.types(), {inMemoryOnly: true}, true);
+    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
 
   it('creates a valid request', async () => {
@@ -40,8 +38,6 @@ describe('create()', async () => {
       authentication: {},
       body: '',
       headers: [],
-      metaPreviewMode: 'source',
-      metaResponseFilter: '',
       metaSortKey: -1478795580200,
       method: 'GET',
       name: 'Test Request',
@@ -61,7 +57,7 @@ describe('create()', async () => {
 
 describe('updateContentType()', async () => {
   beforeEach(() => {
-    return db.initDB(models.types(), {inMemoryOnly: true}, true);
+    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
 
   it('adds header when does not exist', async () => {

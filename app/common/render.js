@@ -74,7 +74,9 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
     ancestors = [];
   }
 
-  for (let doc of ancestors) {
+  // Merge all environments. Note that we're reversing ancestors because we want to merge
+  // from top-down (closest ancestor should win)
+  for (let doc of ancestors.reverse()) {
     if (!doc.environment) {
       continue;
     }

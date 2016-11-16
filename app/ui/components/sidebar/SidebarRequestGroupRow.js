@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd'
 import classnames from 'classnames';
 
-import RequestGroupActionsDropdown from '../../containers/RequestGroupActionsDropdown';
+import RequestGroupActionsDropdown from '../dropdowns/RequestGroupActionsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 
 class SidebarRequestGroupRow extends Component {
@@ -28,19 +28,26 @@ class SidebarRequestGroupRow extends Component {
       moveRequest,
       children,
       requestGroup,
+      isCollapsed,
       isActive,
-      toggleRequestGroup,
-      addRequestToRequestGroup,
+      handleSetRequestGroupCollapsed,
+      handleActivateRequest,
+      handleCreateRequest,
       isDragging,
       isDraggingOver,
+      workspace,
     } = this.props;
+
+    if (!requestGroup) {
+      console.log(this.props);
+      return connectDragSource(connectDropTarget(<li>--</li>))
+    }
 
     const {dragDirection} = this.state;
 
     let folderIconClass = 'fa-folder';
-    let expanded = !requestGroup.metaCollapsed;
 
-    folderIconClass += !expanded ? '' : '-open';
+    folderIconClass += isCollapsed ? '' : '-open';
     folderIconClass += isActive ? '' : '-o';
 
     const classes = classnames('sidebar__row', {
@@ -53,7 +60,7 @@ class SidebarRequestGroupRow extends Component {
       <li key={requestGroup._id} className={classes}>
         <div
           className={classnames('sidebar__item sidebar__item--big', {'sidebar__item--active': isActive})}>
-          <button onClick={e => toggleRequestGroup(requestGroup)}>
+          <button onClick={e => handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed)}>
             <div className="sidebar__clickable">
               <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
               <span>{requestGroup.name}</span>
@@ -61,10 +68,9 @@ class SidebarRequestGroupRow extends Component {
           </button>
 
           <div className="sidebar__actions">
-            {/*<button onClick={(e) => addRequestToRequestGroup(requestGroup)}>*/}
-            {/*<i className="fa fa-plus-circle"></i>*/}
-            {/*</button>*/}
             <RequestGroupActionsDropdown
+              handleActivateRequest={handleActivateRequest}
+              workspace={workspace}
               requestGroup={requestGroup}
               right={true}
             />
@@ -72,16 +78,18 @@ class SidebarRequestGroupRow extends Component {
         </div>
 
         <ul className="sidebar__list">
-          {!expanded || children.length > 0 ? null : (
+          {!isCollapsed && children.length === 0 ? (
             <SidebarRequestRow
-              activateRequest={() => null}
+              handleActivateRequest={() => null}
               moveRequest={moveRequest}
               isActive={false}
               request={null}
               requestGroup={requestGroup}
-              requestCreate={addRequestToRequestGroup}/>
-          )}
-          {expanded ? children : null}
+              workspace={workspace}
+              requestCreate={handleCreateRequest}
+            />
+          ) : null}
+          {isCollapsed ? null : children}
         </ul>
       </li>
     ));
@@ -90,20 +98,23 @@ class SidebarRequestGroupRow extends Component {
 
 SidebarRequestGroupRow.propTypes = {
   // Functions
-  toggleRequestGroup: PropTypes.func.isRequired,
-  addRequestToRequestGroup: PropTypes.func.isRequired,
+  handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
+  handleActivateRequest: PropTypes.func.isRequired,
+  handleCreateRequest: PropTypes.func.isRequired,
 
   // Other
   isActive: PropTypes.bool.isRequired,
-  requestGroup: PropTypes.object.isRequired,
+  isCollapsed: PropTypes.bool.isRequired,
+  workspace: PropTypes.object.isRequired,
+  requestGroup: PropTypes.object,
 
   // React DnD
-  isDragging: PropTypes.bool.isRequired,
-  isDraggingOver: PropTypes.bool.isRequired,
-  connectDragSource: PropTypes.func.isRequired,
-  connectDropTarget: PropTypes.func.isRequired
+  isDragging: PropTypes.bool,
+  isDraggingOver: PropTypes.bool,
+  connectDragSource: PropTypes.func,
+  connectDropTarget: PropTypes.func
 };
 
 /**
@@ -158,6 +169,6 @@ function targetCollect (connect, monitor) {
   };
 }
 
-const source = DragSource('SIDEBAR_ROW_2', dragSource, sourceCollect)(SidebarRequestGroupRow);
-const target = DropTarget('SIDEBAR_ROW_2', dragTarget, targetCollect)(source);
+const source = DragSource('SIDEBAR_REQUEST_GROUP_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
+const target = DropTarget('SIDEBAR_REQUEST_GROUP_ROW', dragTarget, targetCollect)(source);
 export default target;

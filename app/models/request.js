@@ -15,8 +15,6 @@ export function init () {
     parameters: [],
     headers: [],
     authentication: {},
-    metaPreviewMode: PREVIEW_MODE_SOURCE,
-    metaResponseFilter: '',
     metaSortKey: -1 * Date.now()
   };
 }

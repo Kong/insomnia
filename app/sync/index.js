@@ -9,7 +9,7 @@ import Logger from './logger';
 
 export const FULL_SYNC_INTERVAL = 60E3;
 export const QUEUE_DEBOUNCE_TIME = 1E3;
-export const PUSH_DEBOUNCE_TIME = 10E3;
+export const PUSH_DEBOUNCE_TIME = 20E3;
 export const START_PULL_DELAY = 2E3;
 export const START_PUSH_DELAY = 1E3;
 
@@ -29,7 +29,8 @@ const resourceGroupCache = {};
 const resourceGroupSymmetricKeysCache = {};
 
 let isInitialized = false;
-export async function initSync () {
+
+export async function init () {
   if (isInitialized) {
     logger.debug('Already enabled');
     return;
@@ -78,7 +79,7 @@ export function doInitialSync () {
     await _getOrCreateAllActiveResources();
 
     // Make sure sync is on (start the timers)
-    await initSync();
+    await init();
   });
 }
 
@@ -253,7 +254,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     } catch (e) {
       // This probably means we already have it. This should never happen, but
       // might due to a rare race condition.
-      logger.error('Failed to insert resource', e);
+      logger.error('Failed to insert resource', e, serverResource);
       return;
     }
 
@@ -263,11 +264,12 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // This might happen, for example, if the user logs out and back in again.
     await db.upsert(doc, true);
   }
-  db.flushChanges();
 
   if (createdResources.length) {
     logger.debug(`Pull created ${createdResources.length} resources`);
   }
+
+  db.flushChanges();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Save all the updated docs to the DB //
@@ -417,9 +419,7 @@ async function _handleChangeAndPush (event, doc, timestamp) {
   // Debounce pushing of dirty resources
   logger.debug(`Queue ${event} ${updatedResource.id}`);
   clearTimeout(_pushChangesTimeout);
-  _pushChangesTimeout = setTimeout(() => {
-    pushActiveDirtyResources()
-  }, PUSH_DEBOUNCE_TIME);
+  _pushChangesTimeout = setTimeout(pushActiveDirtyResources, PUSH_DEBOUNCE_TIME);
 }
 
 /**

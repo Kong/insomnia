@@ -2,51 +2,48 @@ import React, {Component, PropTypes} from 'react';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
-import classnames from 'classnames';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
 import Mousetrap from '../mousetrap';
-import {registerModal, toggleModal, showModal} from '../components/modals';
+import {toggleModal, showModal} from '../components/modals';
+import Wrapper from '../components/Wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
+import Toast from '../components/Toast';
 import CookiesModal from '../components/modals/CookiesModal';
-import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
-import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
-import AlertModal from '../components/modals/AlertModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
-import SyncLogsModal from '../components/modals/SyncLogsModal';
-import LoginModal from '../components/modals/LoginModal';
-import SignupModal from '../components/modals/SignupModal';
 import SettingsModal from '../components/modals/SettingsModal';
-import PaymentModal from '../components/modals/PaymentModal';
-import RequestPane from '../components/RequestPane';
-import ResponsePane from '../components/ResponsePane';
-import Sidebar from '../components/sidebar/Sidebar';
-import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, PREVIEW_MODE_FRIENDLY} from '../../common/constants';
-import * as GlobalActions from '../redux/modules/global';
-import * as RequestActions from '../redux/modules/requests';
+import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion} from '../../common/constants';
+import * as globalActions from '../redux/modules/global';
+import * as workspaceMetaActions from '../redux/modules/workspaceMeta';
+import * as requestMetaActions from '../redux/modules/requestMeta';
+import * as requestGroupMetaActions from '../redux/modules/requestGroupMeta';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {importCurl} from '../../export/curl';
-import {getAppVersion} from '../../common/constants';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
+import {PREVIEW_MODE_SOURCE} from '../../common/constants';
 
 
 class App extends Component {
   constructor (props) {
     super(props);
-    const workspaceMeta = this._getActiveWorkspaceMeta(props);
     this.state = {
-      activeResponse: null,
-      activeRequest: null,
       draggingSidebar: false,
       draggingPane: false,
       forceRefreshCounter: 0,
-      sidebarWidth: workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH, // rem
-      paneWidth: workspaceMeta.paneWidth || DEFAULT_PANE_WIDTH // % (fr)
     };
+
+    // Bind functions once, so we don't have to on every render
+    this._boundStartDragSidebar = this._startDragSidebar.bind(this);
+    this._boundResetDragSidebar = this._resetDragSidebar.bind(this);
+    this._boundStartDragPane = this._startDragPane.bind(this);
+    this._boundResetDragPane = this._resetDragPane.bind(this);
+    this._boundHandleUrlChange = this._handleUrlChanged.bind(this);
+    this._boundRequestCreate = this._requestCreate.bind(this);
+    this._boundRequestGroupCreate = this._requestGroupCreate.bind(this);
 
     this.globalKeyMap = {
 
@@ -62,17 +59,17 @@ class App extends Component {
 
       // Request Send
       'mod+enter': () => {
-        const request = this._getActiveRequest();
-        if (!request) {
-          return;
-        }
-
-        this._handleSendRequest(request);
+        const {handleSendRequestWithEnvironment, activeRequest, activeEnvironment} = this.props;
+        handleSendRequestWithEnvironment(
+          activeRequest ? activeRequest._id : 'n/a',
+          activeEnvironment ? activeEnvironment._id : 'n/a',
+        );
       },
 
       // Edit Workspace Environments
       'mod+e': () => {
-        toggleModal(WorkspaceEnvironmentsEditModal, this._getActiveWorkspace());
+        const {activeWorkspace} = this.props;
+        toggleModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
       },
 
       // Focus URL Bar
@@ -83,161 +80,28 @@ class App extends Component {
 
       // Edit Cookies
       'mod+k': () => {
-        toggleModal(CookiesModal, this._getActiveWorkspace());
+        const {activeWorkspace} = this.props;
+        toggleModal(CookiesModal, activeWorkspace);
       },
 
       // Request Create
       'mod+n': () => {
-        const workspace = this._getActiveWorkspace();
-        const request = this._getActiveRequest();
+        const {activeRequest, activeWorkspace} = this.props;
 
-        if (!workspace) {
-          // Nothing to do if no workspace
-          return;
-        }
-
-        const parentId = request ? request.parentId : workspace._id;
+        const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
         this._requestCreate(parentId);
       },
 
       // Request Duplicate
       'mod+d': async () => {
-        const activeRequest = this._getActiveRequest();
+        const {activeWorkspace, activeRequest, handleSetActiveRequest} = this.props;
 
         if (!activeRequest) {
           return;
         }
 
         const request = await models.request.duplicate(activeRequest);
-
-        const workspace = this._getActiveWorkspace();
-        this.props.actions.global.activateRequest(workspace, request)
-      }
-    }
-  }
-
-  _importFile () {
-    const workspace = this._getActiveWorkspace();
-    this.props.actions.global.importFile(workspace);
-  }
-
-  async _handleSendRequest (request) {
-    const {actions} = this.props;
-    const workspace = this._getActiveWorkspace();
-    const environmentId = workspace.metaActiveEnvironmentId;
-    actions.requests.send(request, environmentId);
-  }
-
-  async _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
-    // Oh God, this function is awful...
-
-    if (requestGroupToMove._id === requestGroupToTarget._id) {
-      // Nothing to do
-      return;
-    }
-
-    // NOTE: using requestToTarget's parentId so we can switch parents!
-    let requestGroups = await models.requestGroup.findByParentId(requestGroupToTarget.parentId);
-    requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
-
-    // Find the index of request B so we can re-order and save everything
-    for (let i = 0; i < requestGroups.length; i++) {
-      const request = requestGroups[i];
-
-      if (request._id === requestGroupToTarget._id) {
-        let before, after;
-        if (targetOffset < 0) {
-          // We're moving to below
-          before = requestGroups[i];
-          after = requestGroups[i + 1];
-        } else {
-          // We're moving to above
-          before = requestGroups[i - 1];
-          after = requestGroups[i];
-        }
-
-        const beforeKey = before ? before.metaSortKey : requestGroups[0].metaSortKey - 100;
-        const afterKey = after ? after.metaSortKey : requestGroups[requestGroups.length - 1].metaSortKey + 100;
-
-        if (Math.abs(afterKey - beforeKey) < 0.000001) {
-          // If sort keys get too close together, we need to redistribute the list. This is
-          // not performant at all (need to update all siblings in DB), but it is extremely rare
-          // anyway
-          console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
-
-          db.bufferChanges(300);
-          requestGroups.map((r, i) => {
-            models.requestGroup.update(r, {
-              metaSortKey: i * 100,
-              parentId: requestGroupToTarget.parentId
-            });
-          });
-        } else {
-          const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-          models.requestGroup.update(requestGroupToMove, {
-            metaSortKey,
-            parentId: requestGroupToTarget.parentId
-          });
-        }
-
-        break;
-      }
-    }
-  }
-
-  async _moveRequest (requestToMove, parentId, targetId, targetOffset) {
-    // Oh God, this function is awful...
-
-    if (requestToMove._id === targetId) {
-      // Nothing to do. We are in the same spot as we started
-      return;
-    }
-
-    if (targetId === null) {
-      // We are moving to an empty area. No sorting required
-      models.request.update(requestToMove, {parentId});
-      return;
-    }
-
-    // NOTE: using requestToTarget's parentId so we can switch parents!
-    let requests = await models.request.findByParentId(parentId);
-    requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
-
-    // Find the index of request B so we can re-order and save everything
-    for (let i = 0; i < requests.length; i++) {
-      const request = requests[i];
-
-      if (request._id === targetId) {
-        let before, after;
-        if (targetOffset < 0) {
-          // We're moving to below
-          before = requests[i];
-          after = requests[i + 1];
-        } else {
-          // We're moving to above
-          before = requests[i - 1];
-          after = requests[i];
-        }
-
-        const beforeKey = before ? before.metaSortKey : requests[0].metaSortKey - 100;
-        const afterKey = after ? after.metaSortKey : requests[requests.length - 1].metaSortKey + 100;
-
-        if (Math.abs(afterKey - beforeKey) < 0.000001) {
-          // If sort keys get too close together, we need to redistribute the list. This is
-          // not performant at all (need to update all siblings in DB), but it is extremely rare
-          // anyway
-          console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
-
-          db.bufferChanges(300);
-          requests.map((r, i) => {
-            models.request.update(r, {metaSortKey: i * 100, parentId});
-          });
-        } else {
-          const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-          models.request.update(requestToMove, {metaSortKey, parentId});
-        }
-
-        break;
+        handleSetActiveRequest(activeWorkspace._id, request._id)
       }
     }
   }
@@ -259,30 +123,10 @@ class App extends Component {
       selectText: true
     });
 
-    const workspace = this._getActiveWorkspace();
+    const {activeWorkspace, handleSetActiveRequest} = this.props;
     const request = await models.request.create({parentId, name});
-    this.props.actions.global.activateRequest(workspace, request);
-  }
 
-  _generateSidebarTree (parentId, entities) {
-    const children = entities.filter(
-      e => e.parentId === parentId
-    ).sort((a, b) => {
-      if (a.metaSortKey === b.metaSortKey) {
-        return a._id > b._id ? -1 : 1;
-      } else {
-        return a.metaSortKey < b.metaSortKey ? -1 : 1;
-      }
-    });
-
-    if (children.length > 0) {
-      return children.map(c => ({
-        doc: c,
-        children: this._generateSidebarTree(c._id, entities)
-      }));
-    } else {
-      return children;
-    }
+    handleSetActiveRequest(activeWorkspace._id, request._id);
   }
 
   async _handleUrlChanged (request, url) {
@@ -303,8 +147,8 @@ class App extends Component {
   _resetDragSidebar () {
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
-      this.setState({sidebarWidth: DEFAULT_SIDEBAR_WIDTH});
-      this._saveSidebarWidth();
+      const {handleSetSidebarWidth, activeWorkspace} = this.props;
+      handleSetSidebarWidth(activeWorkspace._id, DEFAULT_SIDEBAR_WIDTH)
     }, 50);
   }
 
@@ -315,51 +159,9 @@ class App extends Component {
   _resetDragPane () {
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
-      this.setState({paneWidth: DEFAULT_PANE_WIDTH});
-      this._savePaneWidth();
+      const {handleSetPaneWidth, activeWorkspace} = this.props;
+      handleSetPaneWidth(activeWorkspace._id, DEFAULT_PANE_WIDTH);
     }, 50);
-  }
-
-  _savePaneWidth () {
-    this.props.actions.global.setPaneWidth(
-      this._getActiveWorkspace(),
-      this.state.paneWidth
-    );
-  }
-
-  _saveSidebarWidth () {
-    this.props.actions.global.setSidebarWidth(
-      this._getActiveWorkspace(),
-      this.state.sidebarWidth
-    );
-  }
-
-  _getActiveWorkspaceMeta (props) {
-    props = props || this.props;
-    const workspace = this._getActiveWorkspace(props);
-    return props.global.workspaceMeta[workspace._id] || {};
-  }
-
-  _getActiveWorkspace (props) {
-    // TODO: Factor this out into a selector
-
-    const {entities, global} = props || this.props;
-    let workspace = entities.workspaces[global.activeWorkspaceId];
-    if (!workspace) {
-      // If no workspace, fallback to a basically random one
-      workspace = entities.workspaces[Object.keys(entities.workspaces)[0]];
-    }
-
-    return workspace;
-  }
-
-  _getActiveRequest (props) {
-    // TODO: Factor this out into a selector
-
-    props = props || this.props;
-    const {entities} = props;
-    const workspaceMeta = this._getActiveWorkspaceMeta(props);
-    return entities.requests[workspaceMeta.activeRequestId];
   }
 
   _handleMouseMove (e) {
@@ -372,38 +174,30 @@ class App extends Component {
       const pixelOffset = e.clientX - requestPane.offsetLeft;
       let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
       paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
-      this.setState({paneWidth});
+      this.props.handleSetPaneWidth(this.props.activeWorkspace._id, paneWidth);
 
     } else if (this.state.draggingSidebar) {
       const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
-      const width = this.state.sidebarWidth * ratio;
+      const width = this.props.sidebarWidth * ratio;
       let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
-      this.setState({sidebarWidth})
+      this.props.handleSetSidebarWidth(this.props.activeWorkspace._id, sidebarWidth);
     }
   }
 
   _handleMouseUp () {
     if (this.state.draggingSidebar) {
-      this.setState({
-        draggingSidebar: false
-      });
-
-      this._saveSidebarWidth();
+      this.setState({draggingSidebar: false});
     }
 
     if (this.state.draggingPane) {
-      this.setState({
-        draggingPane: false
-      });
-
-      this._savePaneWidth();
+      this.setState({draggingPane: false});
     }
   }
 
   _handleToggleSidebar () {
-    const workspace = this._getActiveWorkspace();
-    this.props.actions.global.toggleSidebar(workspace);
+    const {activeWorkspace, sidebarHidden, handleSetSidebarHidden} = this.props;
+    handleSetSidebarHidden(activeWorkspace._id, !sidebarHidden);
   }
 
   _forceHardRefresh () {
@@ -447,7 +241,7 @@ class App extends Component {
           return;
         }
 
-        const activeRequest = this._getActiveRequest(this.props);
+        const {activeRequest} = this.props;
 
         // No active request at the moment, so it doesn't matter
         if (!activeRequest) {
@@ -492,188 +286,284 @@ class App extends Component {
   }
 
   render () {
-    const {actions, entities, requests} = this.props;
-    const settings = entities.settings[Object.keys(entities.settings)[0]];
-
-    const workspace = this._getActiveWorkspace();
-
-    const activeRequest = this._getActiveRequest();
-    const activeRequestId = activeRequest ? activeRequest._id : null;
-
-    const allRequests = Object.keys(entities.requests).map(id => entities.requests[id]);
-    const allRequestGroups = Object.keys(entities.requestGroups).map(id => entities.requestGroups[id]);
-
-    const children = this._generateSidebarTree(
-      workspace._id,
-      allRequests.concat(allRequestGroups)
-    );
-
-    const {sidebarWidth, paneWidth, forceRefreshCounter} = this.state;
-    const workspaceMeta = this._getActiveWorkspaceMeta();
-    const realSidebarWidth = workspaceMeta.sidebarHidden ? 0 : sidebarWidth;
-    const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
-
     return (
-      <div id="wrapper"
-           className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
-           style={{gridTemplateColumns: gridTemplateColumns}}>
-        <Sidebar
-          ref={n => this._sidebar = n}
-          showEnvironmentsModal={() => showModal(WorkspaceEnvironmentsEditModal, workspace)}
-          showCookiesModal={() => showModal(CookiesModal, workspace)}
-          activateRequest={r => actions.global.activateRequest(workspace, r)}
-          changeFilter={filter => actions.global.changeFilter(workspace, filter)}
-          moveRequest={this._moveRequest.bind(this)}
-          moveRequestGroup={this._moveRequestGroup.bind(this)}
-          addRequestToRequestGroup={requestGroup => this._requestCreate(requestGroup._id)}
-          addRequestToWorkspace={() => this._requestCreate(workspace._id)}
-          toggleRequestGroup={requestGroup => actions.global.toggleRequestGroup(requestGroup)}
-          activeRequestId={activeRequestId}
-          requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
-          requestGroupCreate={() => this._requestGroupCreate(workspace._id)}
-          filter={workspaceMeta.filter || ''}
-          hidden={workspaceMeta.sidebarHidden || false}
-          showSyncSettings={settings.optSyncBeta}
-          workspaceId={workspace._id}
-          children={children}
-          width={sidebarWidth}
+      <div className="app">
+        <Wrapper
+          key={this.state.forceRefreshCounter}
+          handleSetRequestPaneRef={n => this._requestPane = n}
+          handleSetResponsePaneRef={n => this._responsePane = n}
+          handleSetSidebarRef={n => this._sidebar = n}
+          handleStartDragSidebar={this._boundStartDragSidebar}
+          handleResetDragSidebar={this._boundResetDragSidebar}
+          handleStartDragPane={this._boundStartDragPane}
+          handleResetDragPane={this._boundResetDragPane}
+          handleUpdateRequestUrl={this._boundHandleUrlChange}
+          handleCreateRequest={this._boundRequestCreate}
+          handleCreateRequestGroup={this._boundRequestGroupCreate}
+          {...this.props}
         />
-
-        <div className="drag drag--sidebar">
-          <div onMouseDown={e => {
-            e.preventDefault();
-            this._startDragSidebar()
-          }}
-               onDoubleClick={() => this._resetDragSidebar()}>
-          </div>
-        </div>
-
-        <RequestPane
-          key={(activeRequest ? activeRequest._id : 'n/a') + forceRefreshCounter}
-          ref={n => this._requestPane = n}
-          importFile={this._importFile.bind(this)}
-          request={activeRequest}
-          sendRequest={this._handleSendRequest.bind(this)}
-          showPasswords={settings.showPasswords}
-          useBulkHeaderEditor={settings.useBulkHeaderEditor}
-          editorFontSize={settings.editorFontSize}
-          editorLineWrapping={settings.editorLineWrapping}
-          requestCreate={() => this._requestCreate(activeRequest ? activeRequest.parentId : workspace._id)}
-          updateRequestBody={body => models.request.update(activeRequest, {body})}
-          updateRequestUrl={url => this._handleUrlChanged(activeRequest, url)}
-          updateRequestMethod={method => models.request.update(activeRequest, {method})}
-          updateRequestParameters={parameters => models.request.update(activeRequest, {parameters})}
-          updateRequestAuthentication={authentication => models.request.update(activeRequest, {authentication})}
-          updateRequestHeaders={headers => models.request.update(activeRequest, {headers})}
-          updateRequestContentType={contentType => models.request.updateContentType(activeRequest, contentType)}
-          updateSettingsShowPasswords={showPasswords => models.settings.update(settings, {showPasswords})}
-          updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => models.settings.update(settings, {useBulkHeaderEditor})}
-        />
-
-        <div className="drag drag--pane">
-          <div onMouseDown={() => this._startDragPane()}
-               onDoubleClick={() => this._resetDragPane()}></div>
-        </div>
-
-        <ResponsePane
-          ref={n => this._responsePane = n}
-          request={activeRequest}
-          editorFontSize={settings.editorFontSize}
-          editorLineWrapping={settings.editorLineWrapping}
-          previewMode={activeRequest ? activeRequest.metaPreviewMode : PREVIEW_MODE_FRIENDLY}
-          responseFilter={activeRequest ? activeRequest.metaResponseFilter : ''}
-          updatePreviewMode={metaPreviewMode => models.request.update(activeRequest, {metaPreviewMode})}
-          updateResponseFilter={metaResponseFilter => models.request.update(activeRequest, {metaResponseFilter})}
-          loadingRequests={requests.loadingRequests}
-          showCookiesModal={() => showModal(CookiesModal, workspace)}
-        />
-
-        <PromptModal ref={m => registerModal(m)}/>
-        <AlertModal ref={m => registerModal(m)}/>
-        <ChangelogModal ref={m => registerModal(m)}/>
-        <SyncLogsModal ref={m => registerModal(m)}/>
-        <LoginModal ref={m => registerModal(m)}/>
-        <SignupModal ref={m => registerModal(m)}/>
-        <SettingsModal ref={m => registerModal(m)}/>
-        <PaymentModal ref={m => registerModal(m)}/>
-        <GenerateCodeModal ref={m => registerModal(m)}/>
-        <RequestSwitcherModal
-          ref={m => registerModal(m)}
-          workspaceId={workspace._id}
-          activeRequestParentId={activeRequest ? activeRequest.parentId : workspace._id}
-          activateRequest={r => actions.global.activateRequest(workspace, r)}
-          activateWorkspace={w => actions.global.activateWorkspace(w)}
-        />
-        <EnvironmentEditModal
-          ref={m => registerModal(m)}
-          onChange={rg => models.requestGroup.update(rg)}/>
-        <WorkspaceEnvironmentsEditModal
-          ref={m => registerModal(m)}
-          onChange={w => models.workspace.update(w)}/>
-        <CookiesModal ref={m => registerModal(m)}/>
-
-        {/*<div className="toast toast--show">*/}
-        {/*<div className="toast__message">How's it going?</div>*/}
-        {/*<button className="toast__action">Great!</button>*/}
-        {/*<button className="toast__action">Horrible :(</button>*/}
-        {/*</div>*/}
+        <Toast/>
       </div>
     )
   }
 }
 
-App.propTypes = {
-  actions: PropTypes.shape({
-    requests: PropTypes.shape({
-      send: PropTypes.func.isRequired
-    }).isRequired,
-    global: PropTypes.shape({
-      importFile: PropTypes.func.isRequired,
-      activateRequest: PropTypes.func.isRequired,
-      activateWorkspace: PropTypes.func.isRequired,
-      changeFilter: PropTypes.func.isRequired,
-      toggleSidebar: PropTypes.func.isRequired,
-      setSidebarWidth: PropTypes.func.isRequired,
-      setPaneWidth: PropTypes.func.isRequired,
-      toggleRequestGroup: PropTypes.func.isRequired,
-    }).isRequired
-  }).isRequired,
-  entities: PropTypes.shape({
-    requests: PropTypes.object.isRequired,
-    requestGroups: PropTypes.object.isRequired,
-    responses: PropTypes.object.isRequired
-  }).isRequired,
-  requests: PropTypes.shape({
-    loadingRequests: PropTypes.object.isRequired
-  }).isRequired,
-  global: PropTypes.shape({
-    workspaceMeta: PropTypes.object.isRequired,
-    activeWorkspaceId: PropTypes.string.isRequired
-  }).isRequired
-};
-
 function mapStateToProps (state) {
-  return {
-    actions: state.actions,
-    requests: state.requests,
-    entities: state.entities,
-    global: state.global
-  };
+  const {
+    entities,
+    global,
+    workspaceMeta,
+    requestMeta,
+    requestGroupMeta
+  } = state;
+
+  const {
+    activeRequestIds,
+    activeEnvironmentIds,
+    sidebarHiddens,
+    sidebarFilters,
+    sidebarWidths,
+    paneWidths
+  } = workspaceMeta;
+
+  const {
+    loadingRequestIds,
+    previewModes,
+    responseFilters,
+  } = requestMeta;
+
+  const {
+    isLoading,
+  } = global;
+
+  // Entities
+  // TODO: Use selectors for these...
+  const workspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
+  const environments = Object.keys(entities.environments).map(id => entities.environments[id]);
+  const requests = Object.keys(entities.requests).map(id => entities.requests[id]);
+  const requestGroups = Object.keys(entities.requestGroups).map(id => entities.requestGroups[id]);
+  const settings = entities.settings[Object.keys(entities.settings)[0]];
+
+  // Workspace stuff
+  const activeWorkspace = entities.workspaces[global.activeWorkspaceId] || workspaces[0];
+  const activeWorkspaceId = activeWorkspace._id;
+  const sidebarHidden = !!sidebarHiddens[activeWorkspaceId];
+  const sidebarFilter = sidebarFilters[activeWorkspaceId] || '';
+  const sidebarWidth = sidebarWidths[activeWorkspaceId] || DEFAULT_SIDEBAR_WIDTH;
+  const paneWidth = paneWidths[activeWorkspaceId] || DEFAULT_PANE_WIDTH;
+
+  // Request stuff
+  const activeRequestId = activeRequestIds[activeWorkspaceId];
+  const activeRequest = entities.requests[activeRequestIds[activeWorkspaceId]];
+  const responsePreviewMode = previewModes[activeRequestId] || PREVIEW_MODE_SOURCE;
+  const responseFilter = responseFilters[activeRequestId] || '';
+
+  // Environment stuff
+  const activeEnvironmentId = activeEnvironmentIds[activeWorkspaceId];
+  const activeEnvironment = entities.environments[activeEnvironmentId];
+
+  // Find other meta things
+  const loadStartTime = loadingRequestIds[activeRequestId] || -1;
+  const sidebarChildren = _generateSidebarTree(
+    activeWorkspace._id,
+    requests.concat(requestGroups),
+    requestGroupMeta.collapsed,
+  );
+
+  return Object.assign({}, state, {
+      settings,
+      workspaces,
+      requestGroups,
+      requests,
+      isLoading,
+      loadStartTime,
+      activeWorkspace,
+      activeRequest,
+      sidebarHidden,
+      sidebarFilter,
+      sidebarWidth,
+      responsePreviewMode,
+      responseFilter,
+      paneWidth,
+      sidebarChildren,
+      environments,
+      activeEnvironment,
+    }
+  );
 }
 
 function mapDispatchToProps (dispatch) {
+  const legacyActions = {
+    global: bindActionCreators(globalActions, dispatch)
+  };
+
+  const workspace = bindActionCreators(workspaceMetaActions, dispatch);
+  const requestGroups = bindActionCreators(requestGroupMetaActions, dispatch);
+  const requests = bindActionCreators(requestMetaActions, dispatch);
+
   return {
-    actions: {
-      global: bindActionCreators(GlobalActions, dispatch),
-      requests: bindActionCreators(RequestActions, dispatch)
+    actions: legacyActions,
+    handleSetPaneWidth: workspace.setPaneWidth,
+    handleSetActiveRequest: workspace.setActiveRequest,
+    handleSetActiveEnvironment: workspace.setActiveEnvironment,
+    handleSetSidebarWidth: workspace.setSidebarWidth,
+    handleSetSidebarHidden: workspace.setSidebarHidden,
+    handleSetSidebarFilter: workspace.setSidebarFilter,
+    handleSendRequestWithEnvironment: requests.send,
+    handleSetResponsePreviewMode: requests.setPreviewMode,
+    handleSetResponseFilter: requests.setResponseFilter,
+
+    handleSetActiveWorkspace: legacyActions.global.setActiveWorkspace,
+    handleImportFileToWorkspace: legacyActions.global.importFile,
+    handleExportFile: legacyActions.global.exportFile,
+    handleMoveRequest: _moveRequest,
+    handleMoveRequestGroup: _moveRequestGroup,
+
+    handleSetRequestGroupCollapsed: requestGroups.setCollapsed,
+  };
+}
+
+function _generateSidebarTree (parentId, entities, collapsed) {
+  const children = entities.filter(
+    e => e.parentId === parentId
+  ).sort((a, b) => {
+    // Always sort folders above
+    if (a.type === models.requestGroup.type && b.type !== models.requestGroup.type) {
+      return -1;
+    }
+
+    if (a.metaSortKey === b.metaSortKey) {
+      return a._id > b._id ? -1 : 1;
+    } else {
+      return a.metaSortKey < b.metaSortKey ? -1 : 1;
+    }
+  });
+
+  if (children.length > 0) {
+    return children.map(c => ({
+      doc: c,
+      children: _generateSidebarTree(c._id, entities, collapsed),
+      collapsed: !!collapsed[c._id],
+    }));
+  } else {
+    return children;
+  }
+}
+
+async function _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
+  // Oh God, this function is awful...
+
+  if (requestGroupToMove._id === requestGroupToTarget._id) {
+    // Nothing to do
+    return;
+  }
+
+  // NOTE: using requestToTarget's parentId so we can switch parents!
+  let requestGroups = await models.requestGroup.findByParentId(requestGroupToTarget.parentId);
+  requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+
+  // Find the index of request B so we can re-order and save everything
+  for (let i = 0; i < requestGroups.length; i++) {
+    const request = requestGroups[i];
+
+    if (request._id === requestGroupToTarget._id) {
+      let before, after;
+      if (targetOffset < 0) {
+        // We're moving to below
+        before = requestGroups[i];
+        after = requestGroups[i + 1];
+      } else {
+        // We're moving to above
+        before = requestGroups[i - 1];
+        after = requestGroups[i];
+      }
+
+      const beforeKey = before ? before.metaSortKey : requestGroups[0].metaSortKey - 100;
+      const afterKey = after ? after.metaSortKey : requestGroups[requestGroups.length - 1].metaSortKey + 100;
+
+      if (Math.abs(afterKey - beforeKey) < 0.000001) {
+        // If sort keys get too close together, we need to redistribute the list. This is
+        // not performant at all (need to update all siblings in DB), but it is extremely rare
+        // anyway
+        console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
+
+        db.bufferChanges(300);
+        requestGroups.map((r, i) => {
+          models.requestGroup.update(r, {
+            metaSortKey: i * 100,
+            parentId: requestGroupToTarget.parentId
+          });
+        });
+      } else {
+        const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+        models.requestGroup.update(requestGroupToMove, {
+          metaSortKey,
+          parentId: requestGroupToTarget.parentId
+        });
+      }
+
+      break;
     }
   }
 }
 
-const reduxApp = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(App);
+async function _moveRequest (requestToMove, parentId, targetId, targetOffset) {
+  // Oh God, this function is awful...
 
+  if (requestToMove._id === targetId) {
+    // Nothing to do. We are in the same spot as we started
+    return;
+  }
+
+  if (targetId === null) {
+    // We are moving to an empty area. No sorting required
+    models.request.update(requestToMove, {parentId});
+    return;
+  }
+
+  // NOTE: using requestToTarget's parentId so we can switch parents!
+  let requests = await models.request.findByParentId(parentId);
+  requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+
+  // Find the index of request B so we can re-order and save everything
+  for (let i = 0; i < requests.length; i++) {
+    const request = requests[i];
+
+    if (request._id === targetId) {
+      let before, after;
+      if (targetOffset < 0) {
+        // We're moving to below
+        before = requests[i];
+        after = requests[i + 1];
+      } else {
+        // We're moving to above
+        before = requests[i - 1];
+        after = requests[i];
+      }
+
+      const beforeKey = before ? before.metaSortKey : requests[0].metaSortKey - 100;
+      const afterKey = after ? after.metaSortKey : requests[requests.length - 1].metaSortKey + 100;
+
+      if (Math.abs(afterKey - beforeKey) < 0.000001) {
+        // If sort keys get too close together, we need to redistribute the list. This is
+        // not performant at all (need to update all siblings in DB), but it is extremely rare
+        // anyway
+        console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
+
+        db.bufferChanges(300);
+        requests.map((r, i) => {
+          models.request.update(r, {metaSortKey: i * 100, parentId});
+        });
+      } else {
+        const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+        models.request.update(requestToMove, {metaSortKey, parentId});
+      }
+
+      break;
+    }
+  }
+}
+
+const reduxApp = connect(mapStateToProps, mapDispatchToProps)(App);
 export default DragDropContext(HTML5Backend)(reduxApp);
 

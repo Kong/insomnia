@@ -37,7 +37,9 @@ const UPDATE_URLS = {
 
 const DOWNLOAD_URL = 'http://download.insomnia.rest';
 
-const localStorage = new LocalStorage(path.join(app.getPath('userData'), 'localStorage'));
+const localStoragePath = path.join(app.getPath('userData'), 'localStorage');
+const localStorage = new LocalStorage(localStoragePath);
+
 let mainWindow = null;
 let hasPromptedForUpdates = false;
 

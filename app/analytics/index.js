@@ -2,7 +2,7 @@ import * as segment from './segment';
 import * as google from './google';
 
 let initialized = false;
-export function initAnalytics(accountId) {
+export function init (accountId) {
   if (initialized) {
     return;
   }

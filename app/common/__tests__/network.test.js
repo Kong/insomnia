@@ -5,7 +5,7 @@ import {getRenderedRequest} from '../render';
 import * as models from '../../models';
 
 describe('buildRequestConfig()', () => {
-  beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
 
   it('builds a default config', async () => {
     const workspace = await models.workspace.create();
@@ -75,7 +75,7 @@ describe('buildRequestConfig()', () => {
 });
 
 describe('actuallySend()', () => {
-  beforeEach(() => db.initDB(models.types(), {inMemoryOnly: true}, true));
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
 
   it('does something', async () => {
     let mock;

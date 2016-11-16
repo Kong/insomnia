@@ -65,8 +65,8 @@ class GenerateCodeModal extends Component {
   }
 
   show (request) {
-    this.modal.show();
     this._generateCode(request, DEFAULT_TARGET, DEFAULT_CLIENT);
+    this.modal.show();
   }
 
   render () {

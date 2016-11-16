@@ -31,7 +31,7 @@ class SignupModal extends Component {
     try {
       await session.signup(firstName, lastName, email, password);
       this.setState({step: 2, loading: false});
-      sync.initSync();
+      sync.init();
     } catch (e) {
       this.setState({error: e.message, loading: false});
     }
@@ -55,8 +55,8 @@ class SignupModal extends Component {
     const {step} = this.state;
     if (step === 1) {
       return (
-        <Modal ref={m => this.modal = m} {...this.props}>
-          <form onSubmit={this._handleSignup.bind(this)}>
+        <form onSubmit={this._handleSignup.bind(this)}>
+          <Modal ref={m => this.modal = m} {...this.props}>
             <ModalHeader>Sign Up For a New Account</ModalHeader>
             <ModalBody className="pad">
               <label htmlFor="signup-name-first">First Name</label>
@@ -111,12 +111,13 @@ class SignupModal extends Component {
                 <a href="#" onClick={this._handleLogin.bind(this)}>Login</a>
               </div>
               <button type="submit" className="btn">
-                {this.state.loading ? <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
+                {this.state.loading ?
+                  <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
                 Create Account
               </button>
             </ModalFooter>
-          </form>
-        </Modal>
+          </Modal>
+        </form>
       )
     } else {
       return (

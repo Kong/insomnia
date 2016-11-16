@@ -27,13 +27,16 @@ describe('render()', () => {
 
 describe('buildRenderContext()', () => {
   it('cascades properly', () => {
-    const ancestors = [{
-      type: models.requestGroup.type,
-      environment: {foo: 'group 2', ancestor: true}
-    }, {
-      type: models.requestGroup.type,
-      environment: {foo: 'group 1', ancestor: true}
-    }];
+    const ancestors = [
+      {
+        type: models.requestGroup.type,
+        environment: {foo: 'parent', ancestor: true}
+      },
+      {
+        type: models.requestGroup.type,
+        environment: {foo: 'grandparent', ancestor: true}
+      },
+    ];
 
     const rootEnvironment = {
       type: models.environment.type,
@@ -52,7 +55,7 @@ describe('buildRenderContext()', () => {
     );
 
     expect(context).toEqual({
-      foo: 'group 1',
+      foo: 'parent',
       ancestor: true,
       root: true,
       sub: true
@@ -60,13 +63,16 @@ describe('buildRenderContext()', () => {
   });
 
   it('cascades properly and renders', () => {
-    const ancestors = [{
-      type: models.requestGroup.type,
-      environment: {bar: '{{ foo }} 2', recursive: '{{ recursive }}', ancestor: true}
-    }, {
-      type: models.requestGroup.type,
-      environment: {bar: '{{ foo }} 1', ancestor: true}
-    }];
+    const ancestors = [
+      {
+        type: models.requestGroup.type,
+        environment: {bar: '{{ foo }} parent', recursive: '{{ recursive }}', ancestor: true}
+      },
+      {
+        type: models.requestGroup.type,
+        environment: {bar: '{{ foo }} grandparent', ancestor: true}
+      }
+    ];
 
     const rootEnvironment = {
       type: models.environment.type,
@@ -86,7 +92,7 @@ describe('buildRenderContext()', () => {
 
     expect(context).toEqual({
       foo: 'sub',
-      bar: 'sub 1',
+      bar: 'sub parent',
       recursive: '{{ recursive }}',
       ancestor: true,
       root: true,
@@ -134,7 +140,7 @@ describe('recursiveRender()', () => {
       num: 1234,
       nested: {
         foo: '{{ foo }}',
-        arr: [1,2, '{{ foo }}']
+        arr: [1, 2, '{{ foo }}']
       }
     };
 
@@ -148,7 +154,7 @@ describe('recursiveRender()', () => {
       num: 1234,
       nested: {
         foo: 'bar',
-        arr: [1,2, 'bar']
+        arr: [1, 2, 'bar']
       }
     });
 

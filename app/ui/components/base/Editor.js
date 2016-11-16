@@ -317,7 +317,7 @@ class Editor extends Component {
               <td><code className="selectable">
                 {json ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
               </code></td>
-              <td>Get books costing more than $10</td>
+              <td>Get books costing less than $10</td>
             </tr>
             <tr>
               <td><code className="selectable">
@@ -405,11 +405,12 @@ class Editor extends Component {
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
         <div className="editor__container">
-        <textarea
-          ref={n => this._initEditor(n)}
-          readOnly={readOnly}
-          autoComplete='off'>
-        </textarea>
+          <textarea
+            ref={n => this._initEditor(n)}
+            defaultValue=" "
+            readOnly={readOnly}
+            autoComplete="off"
+          />
         </div>
         {toolbar}
       </div>

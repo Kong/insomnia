@@ -77,10 +77,10 @@ class CookiesModal extends Component {
     this.setState({cookieJar, workspace});
   }
 
-  show (workspace) {
+  async show (workspace) {
+    await this._load(workspace);
     this.modal.show();
     this.filterInput.focus();
-    this._load(workspace);
   }
 
   toggle (workspace) {

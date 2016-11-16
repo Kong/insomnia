@@ -1,31 +1,27 @@
 import React from 'react';
 import Link from '../base/Link';
-import {getAppName} from '../../../common/constants';
 
 const SettingsAbout = () => (
-  <div>
-    <h1>Hi there!</h1>
+  <div className="pad">
+    <h1>Hi, I'm Greg!</h1>
     <p>
-      <Link href="http://insomnia.rest">
-        {getAppName()}
-      </Link> is made with love by me,
-      {" "}
-      <Link href="http://schier.co">Gregory Schier</Link>.
+      Insomnia started as a side-project of mine in 2014 and transitioned into what I do full-time
+      in mid 2016.
     </p>
     <p>
-      You can help me out by sending your feedback to
+      If you have any question or concerns, don't hesitate to reach out. And, if you want access to
+      cloud sync or just feel like being awesome, you can sign up for
       {" "}
-      <Link href="mailto:support@insomnia.rest">
-        support@insomnia.rest
-      </Link>
+      <Link href="https://insomnia.rest/pricing/">Plus Plan</Link>
       {" "}
-      or tweet
-      {" "}
-      <Link href="https://twitter.com/GetInsomnia">@GetInsomnia</Link>.
+      <i className="fa fa-smile-o txt-xl"/>
     </p>
-    <p>Thanks!</p>
-    <br/>
-    <p>~ Gregory</p>
+    <p>
+      Thanks, and I hope you enjoy the app!
+    </p>
+    <p>
+      ~ Gregory
+    </p>
   </div>
 );
 

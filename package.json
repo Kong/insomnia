@@ -52,13 +52,14 @@
     "appId": "com.insomnia.app",
     "category": "public.app-category.developer-tools",
     "compression": "normal",
-    "dmg": {
-      "icon": "build/static/icon.icns"
+    "mac": {
+      "icon": "build/static/icon.icns",
+      "identipy": "Developer ID Application: Gregory Schier (7PU3P6ELJ8)"
     },
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
       "icon": "build/static/icon.ico",
-      "loadingGif": "build/install-spinner.gif",
+      "loadingGif": "build/static/install-spinner.gif",
       "remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
       "msi": false
     },

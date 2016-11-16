@@ -34,7 +34,7 @@ function getDBFilePath (modelType) {
  * @param forceReset
  * @returns {null}
  */
-export async function initDB (types, config = {}, forceReset = false) {
+export async function init (types, config = {}, forceReset = false) {
   if (forceReset) {
     db = {};
   }

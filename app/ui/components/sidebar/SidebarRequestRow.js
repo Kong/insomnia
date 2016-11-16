@@ -32,7 +32,7 @@ class SidebarRequestRow extends Component {
       request,
       requestGroup,
       isActive,
-      activateRequest,
+      handleActivateRequest,
       requestCreate
     } = this.props;
 
@@ -61,7 +61,7 @@ class SidebarRequestRow extends Component {
       node = (
         <li className={classes}>
           <div className={classnames('sidebar__item', {'sidebar__item--active': isActive})}>
-            <button className="wide" onClick={e => activateRequest(request)}>
+            <button className="wide" onClick={e => handleActivateRequest(request)}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
                 <Editable
@@ -90,7 +90,7 @@ class SidebarRequestRow extends Component {
 
 SidebarRequestRow.propTypes = {
   // Functions
-  activateRequest: PropTypes.func.isRequired,
+  handleActivateRequest: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
 
@@ -98,10 +98,10 @@ SidebarRequestRow.propTypes = {
   isActive: PropTypes.bool.isRequired,
 
   // React DnD
-  isDragging: PropTypes.bool.isRequired,
-  isDraggingOver: PropTypes.bool.isRequired,
-  connectDragSource: PropTypes.func.isRequired,
-  connectDropTarget: PropTypes.func.isRequired,
+  isDragging: PropTypes.bool,
+  isDraggingOver: PropTypes.bool,
+  connectDragSource: PropTypes.func,
+  connectDropTarget: PropTypes.func,
 
   // Optional
   requestGroup: PropTypes.object,
@@ -168,6 +168,6 @@ function targetCollect (connect, monitor) {
   };
 }
 
-const source = DragSource('SIDEBAR_ROW', dragSource, sourceCollect)(SidebarRequestRow);
-const target = DropTarget('SIDEBAR_ROW', dragTarget, targetCollect)(source);
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
+const target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 export default target;

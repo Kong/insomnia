@@ -8,16 +8,14 @@ import AlertModal from '../../components/modals/AlertModal';
 import {showModal} from '../../components/modals/index';
 import PaymentModal from '../../components/modals/PaymentModal';
 import LoginModal from '../../components/modals/LoginModal';
+import * as models from '../../../models';
+
+const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
-const REQUEST_ACTIVATE = 'global/request-activate';
 const REQUEST_GROUP_TOGGLE_COLLAPSE = 'global/request-group-toggle';
-const CHANGE_FILTER = 'global/change-filter';
-const TOGGLE_SIDEBAR = 'global/toggle-sidebar';
-const ACTIVATE_WORKSPACE = 'global/activate-workspace';
-const SET_SIDEBAR_WIDTH = 'global/set-sidebar-width';
-const SET_PANE_WIDTH = 'global/set-pane-width';
+const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -26,14 +24,6 @@ const COMMAND_TRIAL_END = 'app/billing/trial-end';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
-
-/** Helper to update workspace metadata */
-function updateWorkspaceMeta (state = {}, workspaceId, value, key) {
-  const newState = Object.assign({}, state);
-  newState[workspaceId] = newState[workspaceId] || {};
-  newState[workspaceId][key] = value;
-  return newState;
-}
 
 /** Helper to update requestGroup metadata */
 function updateRequestGroupMeta (state = {}, requestGroupId, value, key) {
@@ -58,53 +48,10 @@ function requestGroupMetaReducer (state = {}, action) {
   }
 }
 
-function workspaceMetaReducer (state = {}, action) {
+function activeWorkspaceReducer (state = null, action) {
   switch (action.type) {
-    case SET_PANE_WIDTH:
-      return updateWorkspaceMeta(
-        state,
-        action.workspaceId,
-        action.width,
-        'paneWidth'
-      );
-    case SET_SIDEBAR_WIDTH:
-      return updateWorkspaceMeta(
-        state,
-        action.workspaceId,
-        action.width,
-        'sidebarWidth'
-      );
-    case CHANGE_FILTER:
-      return updateWorkspaceMeta(
-        state,
-        action.workspaceId,
-        action.filter,
-        'filter'
-      );
-    case TOGGLE_SIDEBAR:
-      const meta = state[action.workspaceId];
-      return updateWorkspaceMeta(
-        state,
-        action.workspaceId,
-        meta ? !meta.sidebarHidden : false,
-        'sidebarHidden'
-      );
-    case REQUEST_ACTIVATE:
-      return updateWorkspaceMeta(
-        state,
-        action.workspaceId,
-        action.requestId,
-        'activeRequestId'
-      );
-    default:
-      return state;
-  }
-}
-
-function activeWorkspaceReducer (state = '', action) {
-  switch (action.type) {
-    case ACTIVATE_WORKSPACE:
-      return action.workspace._id;
+    case SET_ACTIVE_WORKSPACE:
+      return action.workspaceId;
     default:
       return state;
   }
@@ -130,8 +77,7 @@ function commandReducer (state = {}, action) {
 }
 
 export default combineReducers({
-  loading: loadingReducer,
-  workspaceMeta: workspaceMetaReducer,
+  isLoading: loadingReducer,
   requestGroupMeta: requestGroupMetaReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   command: commandReducer,
@@ -166,8 +112,9 @@ export function loadStop () {
   return {type: LOAD_STOP};
 }
 
-export function activateWorkspace (workspace) {
-  return {type: ACTIVATE_WORKSPACE, workspace};
+export function setActiveWorkspace (workspaceId) {
+  localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`, JSON.stringify(workspaceId));
+  return {type: SET_ACTIVE_WORKSPACE, workspaceId};
 }
 
 export function toggleRequestGroup (requestGroup) {
@@ -177,9 +124,11 @@ export function toggleRequestGroup (requestGroup) {
   };
 }
 
-export function importFile (workspace) {
-  return dispatch => {
+export function importFile (workspaceId) {
+  return async dispatch => {
     dispatch(loadStart());
+
+    const workspace = await models.workspace.getById(workspaceId);
 
     const options = {
       title: 'Import Insomnia Data',
@@ -218,50 +167,12 @@ export function importFile (workspace) {
   }
 }
 
-export function setPaneWidth (workspace, width) {
-  return {
-    type: SET_PANE_WIDTH,
-    workspaceId: workspace._id,
-    width: width
-  };
-}
-
-export function setSidebarWidth (workspace, width) {
-  return {
-    type: SET_SIDEBAR_WIDTH,
-    workspaceId: workspace._id,
-    width: width
-  };
-}
-
-export function toggleSidebar (workspace) {
-  return {
-    type: TOGGLE_SIDEBAR,
-    workspaceId: workspace._id
-  };
-}
-
-export function changeFilter (workspace, filter) {
-  return {
-    type: CHANGE_FILTER,
-    filter: filter,
-    workspaceId: workspace._id
-  };
-}
-
-export function activateRequest (workspace, request) {
-  return {
-    type: REQUEST_ACTIVATE,
-    requestId: request._id,
-    workspaceId: workspace._id
-  };
-}
-
-export function exportFile (parentDoc = null) {
+export function exportFile (workspaceId = null) {
   return async dispatch => {
     dispatch(loadStart());
 
-    const json = await exportJSON(parentDoc);
+    const workspace = await models.workspace.getById(workspaceId);
+    const json = await exportJSON(workspace);
     const options = {
       title: 'Export Insomnia Data',
       buttonLabel: 'Export',
@@ -289,4 +200,16 @@ export function exportFile (parentDoc = null) {
       });
     });
   }
+}
+
+export function init () {
+  let workspaceId = null;
+
+  try {
+    workspaceId = JSON.parse(localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`));
+  } catch (e) {
+    // Nothing here...
+  }
+
+  return setActiveWorkspace(workspaceId);
 }

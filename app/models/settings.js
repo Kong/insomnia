@@ -4,7 +4,7 @@ export const type = 'Settings';
 export const prefix = 'set';
 export function init () {
   return {
-    showPasswords: false,
+    showPasswords: true,
     useBulkHeaderEditor: false,
     followRedirects: true,
     editorFontSize: 12,
@@ -13,9 +13,17 @@ export function init () {
     httpsProxy: '',
     timeout: 0,
     validateSSL: true,
-    optSyncBeta: false,
     forceVerticalLayout: false,
   };
+}
+
+export async function all () {
+  const settings = await db.all(type);
+  if (settings.length === 0) {
+    return [await getOrCreate()];
+  } else {
+    return settings;
+  }
 }
 
 export async function create (patch = {}) {

@@ -1,22 +1,29 @@
 import React, {Component, PropTypes} from 'react';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
-import {showModal} from '../modals/index';
-import SignupModal from '../modals/SignupModal';
+import {showModal} from '../modals';
 import SyncLogsModal from '../modals/SyncLogsModal';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
-import * as analytics from '../../../analytics/index';
-import * as models from '../../../models/index';
-import SettingsModal from '../modals/SettingsModal';
+import * as analytics from '../../../analytics';
+import SettingsModal, {TAB_PLUS} from '../modals/SettingsModal';
+import LoginModal from '../modals/LoginModal';
+import PromptButton from '../base/PromptButton';
 
 class SyncDropdown extends Component {
   constructor (props) {
     super(props);
     this.state = {
+      loggedIn: null,
       syncData: null,
       loading: false,
+      hide: false,
     }
+  }
+
+  _handleHideMenu () {
+    this.setState({hide: true});
+    analytics.trackEvent('Sync', 'Hide Menu')
   }
 
   async _handleToggleSyncMode (resourceGroupId) {
@@ -54,17 +61,23 @@ class SyncDropdown extends Component {
   }
 
   async _reloadData () {
-    if (!session.isLoggedIn()) {
+    const loggedIn = session.isLoggedIn();
+
+    if (loggedIn !== this.state.loggedIn) {
+      this.setState({loggedIn});
+    }
+
+    if (!loggedIn) {
       return;
     }
 
     // Get or create any related sync data
-    const workspace = await models.workspace.getById(this.props.workspaceId);
+    const {workspace} = this.props;
     const {resourceGroupId} = await sync.getOrCreateResourceForDoc(workspace);
     const config = await sync.getOrCreateConfig(resourceGroupId);
 
     // Analyze it
-    const dirty = await syncStorage.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
+    const dirty = await syncStorage.findDirtyResourcesForResourceGroup(resourceGroupId);
     const all = await syncStorage.findResourcesForResourceGroup(resourceGroupId);
     const numClean = all.length - dirty.length;
     const syncPercent = all.length === 0 ? 100 : parseInt(numClean / all.length * 1000) / 10;
@@ -97,28 +110,67 @@ class SyncDropdown extends Component {
   }
 
   render () {
-    const {syncData, loading} = this.state;
-    if (syncData && session.isLoggedIn()) {
+    const {className} = this.props;
+    const {syncData, loading, loggedIn, hide} = this.state;
+
+    if (hide) {
+      return null;
+    }
+
+    if (!loggedIn) {
+      return (
+        <div className={className}>
+          <Dropdown wide={true} className="wide tall">
+            <DropdownButton className="btn btn--compact wide">
+              Sync Settings
+            </DropdownButton>
+            <DropdownDivider name="Insomnia Cloud Sync"/>
+            <DropdownItem onClick={e => showModal(SettingsModal, TAB_PLUS)}>
+              <i className="fa fa-user"></i>
+              Create Account
+            </DropdownItem>
+            <DropdownItem onClick={e => showModal(LoginModal)}>
+              <i className="fa fa-empty"></i>
+              Login
+            </DropdownItem>
+            <DropdownDivider/>
+            <DropdownItem buttonClass={PromptButton}
+                          addIcon={true}
+                          onClick={e => this._handleHideMenu()}>
+              <i className="fa fa-eye-slash"></i>
+              Hide This Menu
+            </DropdownItem>
+          </Dropdown>
+        </div>
+      )
+    }
+
+    if (!syncData) {
+      return (
+        <div className={className}>
+          <button className="btn btn--compact wide" disabled={true}>
+            Initializing Sync...
+          </button>
+        </div>
+      )
+    } else {
       const {resourceGroupId, syncMode, syncPercent} = syncData;
       const description = this._getSyncDescription(syncMode, syncPercent);
+
       return (
-        <Dropdown wide={true} className="wide tall">
-          <DropdownButton className="btn btn--compact wide">
-            {description}
-          </DropdownButton>
-          <DropdownDivider name={`Workspace Synced ${syncPercent}%`}/>
-          <DropdownItem onClick={e => this._handleToggleSyncMode(resourceGroupId)}
-                        stayOpenAfterClick={true}>
-            {syncMode === syncStorage.SYNC_MODE_OFF ?
-              <i className="fa fa-toggle-off"></i> :
-              <i className="fa fa-toggle-on"></i>}
-            Automatic Sync
-          </DropdownItem>
-          <DropdownItem>
-            <i className="fa fa-share-alt"></i>
-            Share Workspace
-          </DropdownItem>
-          {syncMode === syncStorage.SYNC_MODE_OFF ? (
+        <div className={className}>
+          <Dropdown wide={true} className="wide tall">
+            <DropdownButton className="btn btn--compact wide">
+              {description}
+            </DropdownButton>
+            <DropdownDivider name={`Workspace Synced ${syncPercent}%`}/>
+            <DropdownItem onClick={e => this._handleToggleSyncMode(resourceGroupId)}
+                          stayOpenAfterClick={true}>
+              {syncMode === syncStorage.SYNC_MODE_OFF ?
+                <i className="fa fa-toggle-off"></i> :
+                <i className="fa fa-toggle-on"></i>}
+              Automatic Sync
+            </DropdownItem>
             <DropdownItem onClick={e => this._handleSyncResourceGroupId(resourceGroupId)}
                           disabled={syncPercent === 100}
                           stayOpenAfterClick={true}>
@@ -127,39 +179,26 @@ class SyncDropdown extends Component {
                 <i className="fa fa-cloud-upload"></i>}
               Sync Now {syncPercent === 100 ? '(up to date)' : ''}
             </DropdownItem>
-          ) : null}
 
-          <DropdownDivider name="Other"/>
+            <DropdownDivider name="Other"/>
 
-          <DropdownItem onClick={e => showModal(SettingsModal, 2)}>
-            <i className="fa fa-user"></i>
-            Manage Account
-          </DropdownItem>
-          <DropdownItem onClick={e => showModal(SyncLogsModal)}>
-            <i className="fa fa-bug"></i>
-            Show Debug Logs
-          </DropdownItem>
-        </Dropdown>
+            <DropdownItem onClick={e => showModal(SettingsModal, TAB_PLUS)}>
+              <i className="fa fa-user"></i>
+              Manage Account
+            </DropdownItem>
+            <DropdownItem onClick={e => showModal(SyncLogsModal)}>
+              <i className="fa fa-bug"></i>
+              Show Debug Logs
+            </DropdownItem>
+          </Dropdown>
+        </div>
       );
-    } else if (session.isLoggedIn() && !syncData) {
-      return (
-        <button className="btn btn--compact wide" disabled={true}>
-          Initializing Sync...
-        </button>
-      )
-    } else {
-      return (
-        <button className="btn btn--compact wide"
-                onClick={e => showModal(SignupModal)}>
-          Login to Cloud Sync
-        </button>
-      )
     }
   }
 }
 
 SyncDropdown.propTypes = {
-  workspaceId: PropTypes.string.isRequired
+  workspace: PropTypes.object.isRequired
 };
 
 export default SyncDropdown;

@@ -6,7 +6,6 @@ export function init () {
   return {
     name: 'New Folder',
     environment: {},
-    metaCollapsed: false,
     metaSortKey: -1 * Date.now()
   }
 }

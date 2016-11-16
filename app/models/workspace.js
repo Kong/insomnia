@@ -5,7 +5,6 @@ export const prefix = 'wrk';
 export function init () {
   return {
     name: 'New Workspace',
-    metaActiveEnvironmentId: null
   };
 }
 
