@@ -1,5 +1,7 @@
 import * as analytics from '../index';
 import {GA_HOST} from '../../common/constants';
+import * as db from '../../common/database';
+import * as models from '../../models';
 
 global.document = {
   getElementsByTagName () {
@@ -14,6 +16,10 @@ global.document = {
 };
 
 describe('init()', () => {
+  beforeEach(() => {
+    return db.init(models.types(), {inMemoryOnly: true}, true);
+  });
+
   it('correctly initializes', async () => {
     window.localStorage = {};
 
@@ -21,14 +27,15 @@ describe('init()', () => {
     analytics.setAccountId('acct_premature');
 
     window.ga = jest.genMockFunction();
-    analytics.init('acct_123');
+    await analytics.init('acct_123');
 
     // Verify that Google Analytics works
     expect(window.ga.mock.calls.length).toBe(5);
-    expect(window.ga.mock.calls[0]).toEqual(['create', 'UA-86416787-1', {
-      clientId: 'dd2ccc1a-2745-477a-881a-9e8ef9d42403',
-      storage: 'none'
-    }]);
+    expect(window.ga.mock.calls[0][0]).toBe('create');
+    expect(window.ga.mock.calls[0][1]).toBe('UA-86416787-1');
+    expect(window.ga.mock.calls[0][2].storage).toBe('none');
+    expect(window.ga.mock.calls[0][2].clientId.length).toBe(36);
+    expect(window.ga.mock.calls[0].length).toBe(3);
     expect(window.ga.mock.calls[1].slice(0, 2)).toEqual(['set', 'checkProtocolTask']);
     expect(window.ga.mock.calls[1][2]()).toBeNull();
     expect(window.ga.mock.calls[2]).toEqual(['set', 'location', `https://${GA_HOST}/`]);

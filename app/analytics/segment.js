@@ -7,19 +7,14 @@ let userId = null;
 
 export async function init () {
   if (isDevelopment()) {
-    console.log('-- Not initializing Legacy analytics in dev --');
+    console.log('[segment] Not initializing for dev');
     return;
   }
 
   analytics = new Analytics(SEGMENT_WRITE_KEY);
 
-  if (!userId) {
-    const stats = await models.stats.get();
-    userId = stats._id;
-
-    // Recurse now that we have a userId
-    return await init();
-  }
+  const stats = await models.stats.get();
+  userId = stats._id;
 
   analytics.identify({
     userId,
@@ -32,13 +27,12 @@ export async function init () {
     }
   });
 
-  console.log(`-- Legacy analytics Initialized for ${userId} --`);
+  console.log(`[segment] Initialized for ${userId}`);
 }
 
 export function trackLegacyEvent (event, properties = {}) {
-  // Don't track events if we haven't set them up yet
+
   if (analytics) {
-    // Add base properties
     Object.assign(properties, {
       appPlatform: process.platform,
       appVersion: getAppVersion()
@@ -46,4 +40,6 @@ export function trackLegacyEvent (event, properties = {}) {
 
     analytics.track({userId, event, properties});
   }
+
+  console.log(`[segment] Track ${event} for ${userId}`);
 }

@@ -4,7 +4,7 @@ let _sessionId = null;
 
 export function init (userId = null) {
   if (constants.isDevelopment()) {
-    console.log('-- Not initializing analytics for dev --');
+    console.log(`[ga] Not initializing for dev`);
     return;
   }
 
@@ -36,15 +36,17 @@ export function init (userId = null) {
     setUserId(userId);
   }
 
-  console.log(`-- Analytics Initialized for ${_sessionId} --`);
+  console.log(`[ga] Initialized for ${_sessionId}`);
 }
 
-export function setUserId (accountId) {
-  window.ga && window.ga('set', 'userId', accountId);
+export function setUserId (userId) {
+  window.ga && window.ga('set', 'userId', userId);
+  console.log(`[ga] Set userId ${userId}`);
 }
 
 export function sendEvent (...googleAnalyticsArgs) {
   window.ga && window.ga('send', 'event', ...googleAnalyticsArgs);
+  console.log(`[ga] Send event [${googleAnalyticsArgs.join(', ')}]`);
 }
 
 function _injectGoogleAnalyticsScript () {
@@ -59,8 +61,8 @@ function _injectGoogleAnalyticsScript () {
       a.async = 1;
       a.src = g;
       m.parentNode.insertBefore(a, m)
-    })(window, document, 'script', 'https://www.google-analytics.com/segment.js', 'ga');
+    })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
   } catch (e) {
-    console.warn('-- Failed to inject Google Analytics --')
+    console.warn('[ga] Failed to inject Google Analytics')
   }
 }

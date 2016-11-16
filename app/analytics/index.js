@@ -2,13 +2,13 @@ import * as segment from './segment';
 import * as google from './google';
 
 let initialized = false;
-export function init (accountId) {
+export async function init (accountId) {
   if (initialized) {
     return;
   }
 
-  segment.init();
-  google.init(accountId);
+  await segment.init();
+  await google.init(accountId);
 
   initialized = true;
 }
