@@ -25,7 +25,9 @@ export function build (param, strict = true) {
 
   if (!strict || param.value) {
     const name = util.flexibleEncodeComponent(param.name || '');
-    const value = util.flexibleEncodeComponent(param.value || '');
+    const value = util.flexibleEncodeComponent(param.value || '')
+      .replace(/%2C/gi, ','); // Don't encode , in values
+
     return `${name}=${value}`
   } else {
     return util.flexibleEncodeComponent(param.name);

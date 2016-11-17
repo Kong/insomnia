@@ -126,7 +126,7 @@ describe('prepareUrlForSending()', () => {
 
   it('encodes querystring with repeated keys', () => {
     const url = misc.prepareUrlForSending('https://google.com/;@,!?s=foo,;@-!&s=foo %20100%');
-    expect(url).toBe('https://google.com/;@,!?s=foo%2C%3B%40-!&s=foo%20%20100%25');
+    expect(url).toBe('https://google.com/;@,!?s=foo,%3B%40-!&s=foo%20%20100%25');
   });
 });
 

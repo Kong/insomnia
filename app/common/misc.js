@@ -107,12 +107,10 @@ export function prepareUrlForSending (url) {
         name: flexibleEncodeComponent(name),
         value: flexibleEncodeComponent(value)
       });
-      console.log('PUSHING', name, value);
     }
 
     parsedUrl.query = querystring.buildFromParams(encodedQsParams);
     parsedUrl.search = `?${parsedUrl.query}`;
-    console.log('URL', parsedUrl);
   }
 
   return urlFormat(parsedUrl);
