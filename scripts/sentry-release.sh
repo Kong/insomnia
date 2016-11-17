@@ -26,14 +26,26 @@ echo "-- Uploading Source Maps for $APP_VERSION --"
 curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/${APP_VERSION}/files/ \
   -X POST \
   -u "$SENTRY_TOKEN:" \
-  -F file=@./build/bundle.js \
-  -F name="bundle.js"
+  -F file=@./build/main.js \
+  -F name="main.js"
+
+echo ""
+
+curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/${APP_VERSION}/files/ \
+  -X POST \
+  -u "$SENTRY_TOKEN:" \
+  -F file=@./build/main.js.map \
+  -F name="main.js.map"
+
+echo ""
 
 curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/${APP_VERSION}/files/ \
   -X POST \
   -u "$SENTRY_TOKEN:" \
   -F file=@./build/bundle.js \
   -F name="bundle.js"
+
+echo ""
 
 # Upload a file for the given release
 curl https://app.getsentry.com/api/0/projects/schierco/insomnia-app/releases/${APP_VERSION}/files/ \

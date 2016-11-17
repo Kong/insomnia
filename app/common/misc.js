@@ -1,6 +1,7 @@
 import uuid from 'node-uuid';
 import {parse as urlParse, format as urlFormat} from 'url';
 import {DEBOUNCE_MILLIS} from "./constants";
+import * as querystring from './querystring';
 
 export function getBasicAuthHeader (username, password) {
   const name = 'Authorization';
@@ -88,7 +89,10 @@ export function prepareUrlForSending (url) {
 
   if (parsedUrl.pathname) {
     const segments = parsedUrl.pathname.split('/');
-    parsedUrl.pathname = segments.map(flexibleEncodeComponent).join('/');
+    parsedUrl.pathname = segments.map(flexibleEncodeComponent).join('/')
+      .replace(/%3B/gi, ';') // Don't encode ; in pathname
+      .replace(/%40/gi, '@') // Don't encode @ in pathname
+      .replace(/%2C/gi, ','); // Don't encode , in pathname
   }
 
   // ~~~~~~~~~~~~~~ //
@@ -97,6 +101,16 @@ export function prepareUrlForSending (url) {
 
   // Deleting search key will force url.format to encode parsedURL.query
   delete parsedUrl.search;
+
+  for (const name of Object.keys(parsedUrl.query)) {
+    const value = parsedUrl.query[name];
+    delete parsedUrl[name];
+    if (Array.isArray(value)) {
+      parsedUrl[flexibleEncodeComponent(name)] = value.map(flexibleEncodeComponent);
+    } else {
+      parsedUrl[flexibleEncodeComponent(name)] = flexibleEncodeComponent(value);
+    }
+  }
 
   return urlFormat(parsedUrl);
 }

@@ -7,22 +7,38 @@ export async function init (accountId) {
     return;
   }
 
-  await segment.init();
-  await google.init(accountId);
+  try {
+    await segment.init();
+    await google.init(accountId);
 
-  initialized = true;
+    initialized = true;
+  } catch (e) {
+    // Just to be extra safe
+  }
 }
 
 export function trackEvent (...args) {
-  google.sendEvent(...args);
-  console.log(`[analytics] track ${args.join(', ')}`);
+  try {
+    google.sendEvent(...args);
+    console.log(`[analytics] track ${args.join(', ')}`);
+  } catch (e) {
+    // Just to be extra safe
+  }
 }
 
 export function setAccountId (accountId) {
-  google.setUserId(accountId);
-  console.log(`[analytics] account Id ${accountId}`);
+  try {
+    google.setUserId(accountId);
+    console.log(`[analytics] account Id ${accountId}`);
+  } catch (e) {
+    // Just to be extra safe
+  }
 }
 
 export function trackLegacyEvent (event, properties) {
-  segment.trackLegacyEvent(event, properties)
+  try {
+    segment.trackLegacyEvent(event, properties)
+  } catch (e) {
+    // Just to be extra safe
+  }
 }

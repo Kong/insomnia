@@ -40,13 +40,18 @@ class Toast extends Component {
   }
 
   _handleClick (notification) {
+    if (!notification) {
+      // Not sure how this happened, but Sentry says it has
+      return;
+    }
+
     if (notification.key === KEY_PLUS_IS_HERE) {
       showModal(SettingsModal, TAB_PLUS);
     }
 
-    analytics.trackEvent('Notification', 'Click', notification.key);
-
     this._markAsRead(notification);
+
+    analytics.trackEvent('Notification', 'Click', notification.key);
   }
 
   _handleShowNotifications () {

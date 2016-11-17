@@ -69,28 +69,55 @@ class PaymentModal extends Component {
       return;
     }
 
+    const cardType = Stripe.card.cardType(value);
     const lastChar = value[e.target.value.length - 1];
     const num = value.replace(/[^0-9]*/g, '');
-    const g1 = num.slice(0, 4);
-    const g2 = num.slice(4, 8);
-    const g3 = num.slice(8, 12);
-    const g4 = num.slice(12, 16);
+    let newNum = '';
 
-    let newNum = g1;
-    newNum += g2 ? `-${g2}` : '';
-    newNum += g3 ? `-${g3}` : '';
-    newNum += g4 ? `-${g4}` : '';
+    if (cardType === 'American Express') {
+      // 1111 222222 33333
+      const g1 = num.slice(0, 4);
+      const g2 = num.slice(4, 10);
+      const g3 = num.slice(10, 15);
 
-    // Handle trailing dash so we can add and delete dashes properly
-    const numNumbers = (g1 + g2 + g3 + g4).length;
-    if (lastChar === '-' && g4.length !== 4 && numNumbers % 4 === 0) {
-      newNum += '-';
+      newNum = g1;
+      newNum += g2 ? ` ${g2}` : '';
+      newNum += g3 ? ` ${g3}` : '';
+    } else if (cardType === 'Diners Club') {
+      // 1111 2222 3333 44
+      const g1 = num.slice(0, 4);
+      const g2 = num.slice(4, 8);
+      const g3 = num.slice(8, 12);
+      const g4 = num.slice(12, 14);
+
+      newNum = g1;
+      newNum += g2 ? ` ${g2}` : '';
+      newNum += g3 ? ` ${g3}` : '';
+      newNum += g4 ? ` ${g4}` : '';
+    } else {
+      // 1111 2222 3333 4444
+      const g1 = num.slice(0, 4);
+      const g2 = num.slice(4, 8);
+      const g3 = num.slice(8, 12);
+      const g4 = num.slice(12, 16);
+
+      newNum = g1;
+      newNum += g2 ? ` ${g2}` : '';
+      newNum += g3 ? ` ${g3}` : '';
+      newNum += g4 ? ` ${g4}` : '';
     }
 
-    const cardType = Stripe.card.cardType(newNum);
+    // Handle trailing dash so we can add and delete dashes properly
+    if (lastChar === ' ') {
+      newNum += ' ';
+    }
+
     this.setState({cardType: cardType === 'Unknown' ? '' : cardType});
 
-    e.target.value = newNum;
+    // Only update number if it changed from the user's original to prevent cursor jump
+    if (newNum !== value) {
+      e.target.value = newNum;
+    }
   }
 
   _handleSubmit (e) {
@@ -100,7 +127,7 @@ class PaymentModal extends Component {
 
     const params = {
       name: this._nameInput.value,
-      number: this._cardNumberInput.value.replace(/-/g, ''),
+      number: this._cardNumberInput.value.replace(/ /g, ''),
       cvc: this._cvcInput.value,
       exp_month: parseInt(this._expiryMonthInput.value, 10),
       exp_year: parseInt(this._expiryYearInput.value, 10),
@@ -185,9 +212,8 @@ class PaymentModal extends Component {
                 <div className="form-control form-control--outlined">
                   <input type="text"
                          required="required"
-                         pattern=".{19,20}"
                          id="payment-card-number"
-                         placeholder="4242-4242-4242-4242"
+                         placeholder="4012 8888 8888 1881"
                          onChange={this._handleCreditCardNumberChange.bind(this)}
                          ref={n => this._cardNumberInput = n}/>
                 </div>
