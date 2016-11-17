@@ -5,7 +5,7 @@ import SyncLogsModal from '../modals/SyncLogsModal';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
-import * as analytics from '../../../analytics';
+import {trackEvent} from '../../../analytics';
 import SettingsModal, {TAB_PLUS} from '../modals/SettingsModal';
 import LoginModal from '../modals/LoginModal';
 import PromptButton from '../base/PromptButton';
@@ -23,7 +23,7 @@ class SyncDropdown extends Component {
 
   _handleHideMenu () {
     this.setState({hide: true});
-    analytics.trackEvent('Sync', 'Hide Menu')
+    trackEvent('Sync', 'Hide Menu')
   }
 
   async _handleToggleSyncMode (resourceGroupId) {
@@ -41,7 +41,7 @@ class SyncDropdown extends Component {
       await this._handleSyncResourceGroupId(resourceGroupId);
     }
 
-    analytics.trackEvent('Sync', 'Change Mode', syncMode);
+    trackEvent('Sync', 'Change Mode', syncMode);
   }
 
   async _handleSyncResourceGroupId (resourceGroupId) {
@@ -57,7 +57,7 @@ class SyncDropdown extends Component {
     // Unset loading state
     this.setState({loading: false});
 
-    analytics.trackEvent('Sync', 'Manual Sync');
+    trackEvent('Sync', 'Manual Sync');
   }
 
   async _reloadData () {
@@ -120,16 +120,24 @@ class SyncDropdown extends Component {
     if (!loggedIn) {
       return (
         <div className={className}>
-          <Dropdown wide={true} className="wide tall">
+          <Dropdown wide={true}
+                    className="wide tall"
+                    onClick={e => trackEvent('Sync', 'Show Menu', 'Guest')}>
             <DropdownButton className="btn btn--compact wide">
               Sync Settings
             </DropdownButton>
             <DropdownDivider name="Insomnia Cloud Sync"/>
-            <DropdownItem onClick={e => showModal(SettingsModal, TAB_PLUS)}>
+            <DropdownItem onClick={e => {
+              showModal(SettingsModal, TAB_PLUS);
+              trackEvent('Sync', 'Create Account');
+            }}>
               <i className="fa fa-user"></i>
               Create Account
             </DropdownItem>
-            <DropdownItem onClick={e => showModal(LoginModal)}>
+            <DropdownItem onClick={e => {
+              showModal(LoginModal);
+              trackEvent('Sync', 'Login');
+            }}>
               <i className="fa fa-empty"></i>
               Login
             </DropdownItem>
@@ -159,7 +167,9 @@ class SyncDropdown extends Component {
 
       return (
         <div className={className}>
-          <Dropdown wide={true} className="wide tall">
+          <Dropdown wide={true}
+                    className="wide tall"
+                    onClick={e => trackEvent('Sync', 'Show Menu', 'Authenticated')}>
             <DropdownButton className="btn btn--compact wide">
               {description}
             </DropdownButton>

@@ -6,7 +6,7 @@ import {importJSON, exportJSON} from '../../../export/database';
 import {trackEvent} from '../../../analytics';
 import AlertModal from '../../components/modals/AlertModal';
 import {showModal} from '../../components/modals/index';
-import PaymentModal from '../../components/modals/PaymentModal';
+import PaymentNotificationModal from '../../components/modals/PaymentNotificationModal';
 import LoginModal from '../../components/modals/LoginModal';
 import * as models from '../../../models';
 
@@ -97,8 +97,7 @@ export function newCommand (command, args) {
     const {title, message} = args;
     showModal(LoginModal, {title, message});
   } else if (command === COMMAND_TRIAL_END) {
-    const {message, title} = args;
-    showModal(PaymentModal, {message, title});
+    showModal(PaymentNotificationModal);
   }
 
   return {type: command, ...args};

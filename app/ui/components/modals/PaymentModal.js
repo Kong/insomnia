@@ -40,7 +40,8 @@ class PaymentModal extends Component {
     }
   }
 
-  show ({message, title}) {
+  show (options = {}) {
+    const {message, title} = options;
     this.setState({error: '', message, title});
     this.modal.show();
     setTimeout(() => this._nameInput.focus(), 100);

@@ -9,6 +9,7 @@ import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
 import PaymentModal from '../components/modals/PaymentModal';
+import PaymentNotificationModal from '../components/modals/PaymentNotificationModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import SyncLogsModal from '../components/modals/SyncLogsModal';
 import LoginModal from '../components/modals/LoginModal';
@@ -157,6 +158,7 @@ const Wrapper = props => {
       <LoginModal ref={m => registerModal(m)}/>
       <SignupModal ref={m => registerModal(m)}/>
       <PaymentModal ref={m => registerModal(m)}/>
+      <PaymentNotificationModal ref={m => registerModal(m)}/>
       <GenerateCodeModal
         ref={m => registerModal(m)}
         environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}

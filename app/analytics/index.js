@@ -20,7 +20,6 @@ export async function init (accountId) {
 export function trackEvent (...args) {
   try {
     google.sendEvent(...args);
-    console.log(`[analytics] track ${args.join(', ')}`);
   } catch (e) {
     // Just to be extra safe
   }
@@ -29,7 +28,6 @@ export function trackEvent (...args) {
 export function setAccountId (accountId) {
   try {
     google.setUserId(accountId);
-    console.log(`[analytics] account Id ${accountId}`);
   } catch (e) {
     // Just to be extra safe
   }

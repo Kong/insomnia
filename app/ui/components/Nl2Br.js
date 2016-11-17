@@ -9,7 +9,7 @@ class Nl2Br extends Component {
       <p {...props}>{lines.map((l, i) => {
         const trimmed = l.trim();
         if (trimmed) {
-          const brs = i < lines.length - 1 ? [<br/>, <br/>] : [];
+          const brs = i < lines.length - 1 ? [<br/>] : [];
           return [trimmed, ...brs];
         } else {
           return null;
