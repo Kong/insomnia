@@ -121,13 +121,13 @@ class SignupModal extends Component {
           </div>
           {step === STEP_CONFIRM_PASSWORD ? (
             <div className="text-center pad">
-              <p className="text-center txt-lg">
+              <p className="notice info text-center txt-lg">
                 Keep your password safe because it cannot be recovered
                 <br/>
-                <span className="txt-sm faint italic">
+                <span className="txt-sm italic">
                   <Link href="https://insomnia.rest/documentation/plus/">Read More</Link>
                   {" "}
-                  on how your password is used to encrypt your data
+                  about your password is used to encrypt your data
                 </span>
               </p>
               <div className="text-left">
