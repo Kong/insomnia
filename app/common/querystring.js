@@ -62,20 +62,20 @@ export function deconstructToParams (qs, strict = true) {
   const pairs = [];
 
   for (let stringPair of stringPairs) {
-    const tmp = stringPair.split('=');
+    const [encodedName, encodedValue] = stringPair.split('=');
 
     let name = '';
     try {
-      name = decodeURIComponent(tmp[0] || '');
+      name = decodeURIComponent(encodedName || '');
     } catch (e) {
-      console.warn(`[querystring] Failed to decode name: ${tmp[0]}`, e);
+      console.warn(`[querystring] Failed to decode name: ${encodedName}`, e);
     }
 
     let value = '';
     try {
-      value = decodeURIComponent(tmp[0] || '');
+      value = decodeURIComponent(encodedValue || '');
     } catch (e) {
-      console.warn(`[querystring] Failed to decode value: ${tmp[1]}`, e);
+      console.warn(`[querystring] Failed to decode value: ${encodedValue}`, e);
     }
 
     if (strict && !name) {
