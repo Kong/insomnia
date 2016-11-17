@@ -14,7 +14,8 @@ class RequestPane extends Component {
   render () {
     const {
       request,
-      handleImportFileToWorkspace,
+      environmentId,
+      handleImportFile,
       showPasswords,
       editorFontSize,
       editorLineWrapping,
@@ -147,6 +148,7 @@ class RequestPane extends Component {
                 <code className="txt-sm block">
                   <RenderedQueryString
                     request={request}
+                    environmentId={environmentId}
                     placeholder="http://myproduct.com?name=Gregory"
                   />
                 </code>
@@ -200,6 +202,7 @@ RequestPane.propTypes = {
   showPasswords: PropTypes.bool.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  environmentId: PropTypes.string.isRequired,
 
   // Optional
   request: PropTypes.object,

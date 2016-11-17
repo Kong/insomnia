@@ -221,7 +221,14 @@ export function isLoggedIn () {
 
 /** Log out and delete session data */
 export async function logout () {
-  await util.post('/auth/logout');
+  try {
+    await util.post('/auth/logout');
+  } catch (e) {
+    // Not a huge deal if this fails, but we don't want it to prevent the
+    // user from signing out.
+    console.warn('Failed to logout', e);
+  }
+
   unsetSessionData();
   trackEvent('Session', 'Logout');
 }

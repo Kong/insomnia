@@ -66,9 +66,10 @@ const SettingsSync = ({
       </p>,
       <p key="3" className="text-center italic">
         $5 per month or $50 per year
-        <div className="txt-sm faint pad-top-sm">
+        <br/>
+        <span className="txt-sm faint pad-top-sm">
           14-day trial (credit card required) cancel at any time
-        </div>
+        </span>
       </p>
     ]}
   </div>

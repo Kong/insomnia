@@ -18,7 +18,6 @@ import Sidebar from './sidebar/Sidebar';
 import RequestPane from './RequestPane';
 import ResponsePane from './ResponsePane';
 import * as models from '../../models/index';
-import {PREVIEW_MODE_FRIENDLY} from '../../common/constants';
 
 
 const Wrapper = props => {
@@ -115,6 +114,7 @@ const Wrapper = props => {
         useBulkHeaderEditor={settings.useBulkHeaderEditor}
         editorFontSize={settings.editorFontSize}
         editorLineWrapping={settings.editorLineWrapping}
+        environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
         handleCreateRequest={handleCreateRequest.bind(null, activeRequest ? activeRequest.parentId : activeWorkspace._id)}
         updateRequestBody={body => models.request.update(activeRequest, {body})}
         updateRequestUrl={url => handleUpdateRequestUrl(activeRequest, url)}
@@ -157,7 +157,10 @@ const Wrapper = props => {
       <LoginModal ref={m => registerModal(m)}/>
       <SignupModal ref={m => registerModal(m)}/>
       <PaymentModal ref={m => registerModal(m)}/>
-      <GenerateCodeModal ref={m => registerModal(m)}/>
+      <GenerateCodeModal
+        ref={m => registerModal(m)}
+        environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+      />
       <SettingsModal
         ref={m => registerModal(m)}
         handleExportWorkspaceToFile={handleExportWorkspaceToFile}

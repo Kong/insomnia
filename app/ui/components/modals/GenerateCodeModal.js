@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {Component, PropTypes} from 'react';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 
 import CopyButton from '../base/CopyButton';
@@ -57,7 +57,8 @@ class GenerateCodeModal extends Component {
     // Some clients need a content-length for the request to succeed
     const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
 
-    const har = await exportHar(request._id, addContentLength);
+    const {environmentId} = this.props;
+    const har = await exportHar(request._id, environmentId, addContentLength);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert(target.key, client.key);
 
@@ -132,6 +133,8 @@ class GenerateCodeModal extends Component {
   }
 }
 
-GenerateCodeModal.propTypes = {};
+GenerateCodeModal.propTypes = {
+  environmentId: PropTypes.string.isRequired,
+};
 
 export default GenerateCodeModal;

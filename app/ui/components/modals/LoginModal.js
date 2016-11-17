@@ -66,7 +66,7 @@ class LoginModal extends Component {
         <form onSubmit={this._handleLogin.bind(this)}>
           <Modal ref={m => this.modal = m} {...this.props}>
             <ModalHeader>{title || "Login to Your Account"}</ModalHeader>
-            <ModalBody className="pad changelog">
+            <ModalBody className="pad">
               {message ? (
                 <p className="notice info">{message}</p>
               ) : null}

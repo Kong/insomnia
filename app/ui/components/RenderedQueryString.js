@@ -15,7 +15,8 @@ class RenderedQueryString extends Component {
   _update (props, delay = false) {
     clearTimeout(this._askTimeout);
     this._askTimeout = setTimeout(async () => {
-      const {url, parameters} = await getRenderedRequest(props.request);
+      const {request, environmentId} = props;
+      const {url, parameters} = await getRenderedRequest(request, environmentId);
       const qs = querystring.buildFromParams(parameters);
       const fullUrl = querystring.joinURL(url, qs);
       this.setState({string: util.prepareUrlForSending(fullUrl)});
@@ -53,6 +54,7 @@ class RenderedQueryString extends Component {
 
 RenderedQueryString.propTypes = {
   request: PropTypes.object.isRequired,
+  environmentId: PropTypes.string.isRequired,
 
   // Optional
   placeholder: PropTypes.string

@@ -29,9 +29,9 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
   };
 }
 
-export async function exportHar (requestId, addContentLength = false) {
+export async function exportHar (requestId, environmentId, addContentLength = false) {
   const request = await models.request.getById(requestId);
-  const renderedRequest = await getRenderedRequest(request);
+  const renderedRequest = await getRenderedRequest(request, environmentId);
   return exportHarWithRequest(renderedRequest, addContentLength);
 }
 

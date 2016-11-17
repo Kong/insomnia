@@ -64,8 +64,19 @@ export function deconstructToParams (qs, strict = true) {
   for (let stringPair of stringPairs) {
     const tmp = stringPair.split('=');
 
-    const name = decodeURIComponent(tmp[0] || '');
-    const value = decodeURIComponent(tmp[1] || '');
+    let name = '';
+    try {
+      name = decodeURIComponent(tmp[0] || '');
+    } catch (e) {
+      console.warn(`[querystring] Failed to decode name: ${tmp[0]}`, e);
+    }
+
+    let value = '';
+    try {
+      value = decodeURIComponent(tmp[0] || '');
+    } catch (e) {
+      console.warn(`[querystring] Failed to decode value: ${tmp[1]}`, e);
+    }
 
     if (strict && !name) {
       continue;
