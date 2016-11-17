@@ -81,7 +81,7 @@ export function prepareUrlForSending (url) {
   const urlWithProto = setDefaultProtocol(url);
 
   // Parse the URL into components
-  const parsedUrl = urlParse(urlWithProto, true);
+  const parsedUrl = urlParse(urlWithProto);
 
   // ~~~~~~~~~~~ //
   // 1. Pathname //
@@ -99,17 +99,20 @@ export function prepareUrlForSending (url) {
   // 2. Querystring //
   // ~~~~~~~~~~~~~~ //
 
-  // Deleting search key will force url.format to encode parsedURL.query
-  delete parsedUrl.search;
-
-  for (const name of Object.keys(parsedUrl.query)) {
-    const value = parsedUrl.query[name];
-    delete parsedUrl[name];
-    if (Array.isArray(value)) {
-      parsedUrl[flexibleEncodeComponent(name)] = value.map(flexibleEncodeComponent);
-    } else {
-      parsedUrl[flexibleEncodeComponent(name)] = flexibleEncodeComponent(value);
+  if (parsedUrl.query) {
+    const qsParams = querystring.deconstructToParams(parsedUrl.query);
+    const encodedQsParams = [];
+    for (const {name, value} of qsParams) {
+      encodedQsParams.push({
+        name: flexibleEncodeComponent(name),
+        value: flexibleEncodeComponent(value)
+      });
+      console.log('PUSHING', name, value);
     }
+
+    parsedUrl.query = querystring.buildFromParams(encodedQsParams);
+    parsedUrl.search = `?${parsedUrl.query}`;
+    console.log('URL', parsedUrl);
   }
 
   return urlFormat(parsedUrl);

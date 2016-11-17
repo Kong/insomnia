@@ -116,7 +116,7 @@ describe('prepareUrlForSending()', () => {
 
   it('encodes querystring', () => {
     const url = misc.prepareUrlForSending('https://google.com?s=foo bar 100%&hi');
-    expect(url).toBe('https://google.com/?s=foo%20bar%20100%25&hi=');
+    expect(url).toBe('https://google.com/?s=foo%20bar%20100%25&hi');
   });
 
   it('encodes querystring with mixed spaces', () => {

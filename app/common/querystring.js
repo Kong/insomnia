@@ -68,14 +68,16 @@ export function deconstructToParams (qs, strict = true) {
     try {
       name = decodeURIComponent(encodedName || '');
     } catch (e) {
-      console.warn(`[querystring] Failed to decode name: ${encodedName}`, e);
+      // Just leave it
+      name = encodedName;
     }
 
     let value = '';
     try {
       value = decodeURIComponent(encodedValue || '');
     } catch (e) {
-      console.warn(`[querystring] Failed to decode value: ${encodedValue}`, e);
+      // Just leave it
+      value = encodedValue;
     }
 
     if (strict && !name) {
