@@ -54,7 +54,7 @@ class LoginModal extends Component {
 
   show (options = {}) {
     const {title, message} = options;
-    this.setState({step: 1, error: '', title, message});
+    this.setState({step: 1, error: '', loading: false, title, message});
     this.modal.show();
     setTimeout(() => this._emailInput.focus(), 100);
   }
@@ -98,8 +98,9 @@ class LoginModal extends Component {
             <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
           </div>
           <button type="submit" className="btn">
-            {this.state.loading ? <i
-              className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
+            {this.state.loading ? (
+              <i className="fa fa-spin fa-refresh margin-right-sm"></i>
+            ) : null}
             Login
           </button>
         </ModalFooter>

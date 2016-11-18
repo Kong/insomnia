@@ -66,7 +66,7 @@ class SignupModal extends Component {
   }
 
   show () {
-    this.setState({step: STEP_BASIC_INFO});
+    this.setState({step: STEP_BASIC_INFO, loading: false, error: ''});
     this.modal.show();
     setTimeout(() => this._nameFirstInput.focus(), 200);
   }
