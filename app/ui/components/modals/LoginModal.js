@@ -61,76 +61,79 @@ class LoginModal extends Component {
 
   render () {
     const {step, title, message} = this.state;
+    let inner;
     if (step === 1) {
-      return (
-        <form onSubmit={this._handleLogin.bind(this)}>
-          <Modal ref={m => this.modal = m} {...this.props}>
-            <ModalHeader>{title || "Login to Your Account"}</ModalHeader>
-            <ModalBody className="pad">
-              {message ? (
-                <p className="notice info">{message}</p>
-              ) : null}
-              <label htmlFor="login-email">Email</label>
-              <div className="form-control form-control--outlined">
-                <input type="email"
-                       required="required"
-                       id="login-email"
-                       name="login-email"
-                       placeholder="me@mydomain.com"
-                       ref={n => this._emailInput = n}/>
-              </div>
-              <label htmlFor="login-password">Password</label>
-              <div className="form-control form-control--outlined">
-                <input type="password"
-                       required="required"
-                       id="login-password"
-                       name="login-password"
-                       placeholder="•••••••••••••••••"
-                       ref={n => this._passwordInput = n}/>
-              </div>
-              {this.state.error ? (
-                <div className="danger pad-top">** {this.state.error}</div>
-              ) : null}
-            </ModalBody>
-            <ModalFooter>
-              <div className="margin-left">
-                Don't have an account yet?
-                {" "}
-                <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
-              </div>
-              <button type="submit" className="btn">
-                {this.state.loading ? <i
-                  className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
-                Login
-              </button>
-            </ModalFooter>
-          </Modal>
-        </form>
-      )
+      inner = [
+        <ModalHeader key="header">{title || "Login to Your Account"}</ModalHeader>,
+        <ModalBody key="body" className="pad">
+          {message ? (
+            <p className="notice info">{message}</p>
+          ) : null}
+          <label htmlFor="login-email">Email</label>
+          <div className="form-control form-control--outlined">
+            <input type="email"
+                   required="required"
+                   id="login-email"
+                   name="login-email"
+                   placeholder="me@mydomain.com"
+                   ref={n => this._emailInput = n}/>
+          </div>
+          <label htmlFor="login-password">Password</label>
+          <div className="form-control form-control--outlined">
+            <input type="password"
+                   required="required"
+                   id="login-password"
+                   name="login-password"
+                   placeholder="•••••••••••••••••"
+                   ref={n => this._passwordInput = n}/>
+          </div>
+          {this.state.error ? (
+            <div className="danger pad-top">** {this.state.error}</div>
+          ) : null}
+        </ModalBody>,
+        <ModalFooter key="footer">
+          <div className="margin-left">
+            Don't have an account yet?
+            {" "}
+            <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
+          </div>
+          <button type="submit" className="btn">
+            {this.state.loading ? <i
+              className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
+            Login
+          </button>
+        </ModalFooter>
+      ]
     } else {
-      return (
-        <Modal ref={m => this.modal = m} {...this.props}>
-          <ModalHeader>Login Success</ModalHeader>
-          <ModalBody className="pad">
-            <h1>Enjoy your stay!</h1>
-            <p>
-              If you have any questions or concerns, send you email to
-              {" "}
-              <Link href="mailto:support@insomnia.rest">
-                support@insomnia.rest
-              </Link>
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <button type="submit"
-                    className="btn"
-                    onClick={e => this.modal.hide()}>
-              Close
-            </button>
-          </ModalFooter>
-        </Modal>
-      )
+      inner = [
+        <ModalHeader key="header">Login Success</ModalHeader>,
+        <ModalBody key="body" className="pad">
+          <h1>Enjoy your stay!</h1>
+          <p>
+            If you have any questions or concerns, send you email to
+            {" "}
+            <Link href="mailto:support@insomnia.rest">
+              support@insomnia.rest
+            </Link>
+          </p>
+        </ModalBody>,
+        <ModalFooter key="footer">
+          <button type="submit"
+                  className="btn"
+                  onClick={e => this.modal.hide()}>
+            Close
+          </button>
+        </ModalFooter>
+      ]
     }
+
+    return (
+      <form onSubmit={this._handleLogin.bind(this)}>
+        <Modal ref={m => this.modal = m} {...this.props}>
+          {inner}
+        </Modal>
+      </form>
+    )
   }
 }
 

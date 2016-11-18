@@ -59,7 +59,6 @@ export async function init () {
 
   setTimeout(pull, START_PULL_DELAY);
   setTimeout(pushActiveDirtyResources, START_PUSH_DELAY);
-  setInterval(pull, FULL_SYNC_INTERVAL);
   isInitialized = true;
   logger.debug('Initialized');
 }
@@ -74,9 +73,6 @@ export function doInitialSync () {
     // This makes sure that the first sync won't create resources locally, when
     // they already exist on the server.
     await pull(null, false);
-
-    // Make sure all other resources were created
-    await _getOrCreateAllActiveResources();
 
     // Make sure sync is on (start the timers)
     await init();

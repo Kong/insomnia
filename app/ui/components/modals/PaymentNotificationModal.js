@@ -19,13 +19,11 @@ class PaymentNotificationModal extends Component {
     }
 
     hidePaymentNotificationUntilNextLaunch = true;
-
     this.modal.show();
   }
 
   hide () {
     trackEvent('Billing', 'Trial Ended', 'Cancel');
-
     this.modal.hide();
   }
 
@@ -39,8 +37,8 @@ class PaymentNotificationModal extends Component {
               Hi {session.getFirstName()},
             </h1>
             <p style={{maxWidth: '30rem', margin: 'auto'}}>
-              Your free trial has ended. please enter your billing information to
-              continue using Insomnia Plus.
+              Your Insomnia Plus trial has ended. please enter your billing information to
+              continue using your account.
             </p>
             <br/>
             <p className="pad-top">

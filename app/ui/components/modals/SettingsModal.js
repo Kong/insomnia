@@ -50,7 +50,7 @@ class SettingsModal extends Component {
     trackEvent('Sync', 'Reset');
     await sync.resetRemoteData();
     await sync.resetLocalData();
-    await session.logout();
+    await sync.logout();
   }
 
   render () {
