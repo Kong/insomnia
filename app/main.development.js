@@ -219,11 +219,7 @@ function getZoomFactor () {
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!IS_MAC) {
-    if (installUpdateBeforeQuiting) {
-      autoUpdater.quitAndInstall();
-    } else {
-      app.quit();
-    }
+    app.quit();
   }
 });
 
