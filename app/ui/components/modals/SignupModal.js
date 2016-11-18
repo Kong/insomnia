@@ -127,7 +127,7 @@ class SignupModal extends Component {
                 <span className="txt-sm italic">
                   <Link href="https://insomnia.rest/documentation/plus/">Read More</Link>
                   {" "}
-                  about your password is used to encrypt your data
+                  about how your password is used to encrypt your data
                 </span>
               </p>
               <div className="text-left">
