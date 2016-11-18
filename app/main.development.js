@@ -42,6 +42,7 @@ const localStorage = new LocalStorage(localStoragePath);
 
 let mainWindow = null;
 let hasPromptedForUpdates = false;
+let installUpdateBeforeQuiting = false;
 
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
@@ -72,6 +73,7 @@ autoUpdater.on('update-available', () => {
 
 autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
   console.log(`-- Update Downloaded ${releaseName} --`);
+  installUpdateBeforeQuiting = true;
   showUpdateNotification();
 });
 
@@ -217,7 +219,22 @@ function getZoomFactor () {
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!IS_MAC) {
-    app.quit();
+    if (installUpdateBeforeQuiting) {
+      autoUpdater.quitAndInstall();
+    } else {
+      app.quit();
+    }
+  }
+});
+
+// Intercept normal quit events because we might need to install updates
+app.on('will-quit', e => {
+  if (installUpdateBeforeQuiting) {
+    // Unset this so we don't infinite loop
+    installUpdateBeforeQuiting = false;
+    e.preventDefault();
+
+    autoUpdater.quitAndInstall();
   }
 });
 
