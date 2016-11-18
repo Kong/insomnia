@@ -59,6 +59,7 @@ export async function init () {
 
   setTimeout(pull, START_PULL_DELAY);
   setTimeout(pushActiveDirtyResources, START_PUSH_DELAY);
+  setInterval(pull, FULL_SYNC_INTERVAL);
   isInitialized = true;
   logger.debug('Initialized');
 }
