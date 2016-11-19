@@ -111,6 +111,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         // Failed to connect while prioritizing IPv6 address, fallback to IPv4
         const isNetworkRelatedError = (
           err.code === 'ECONNREFUSED' || // Could not talk to server
+          err.code === 'EHOSTUNREACH' || // Could not reach host
           err.code === 'ENETUNREACH' // Could not access the network
         );
 
