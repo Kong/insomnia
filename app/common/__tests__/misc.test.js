@@ -208,3 +208,16 @@ describe('debounce()', () => {
     expect(resultList).toEqual([['foo', 'bar3']]);
   })
 });
+
+describe('strictObjectAssign()', () => {
+  it('handles assignment', () => {
+    const actual = misc.strictObjectAssign(
+      {foo: 'hi', bar: {baz: 'qux'}},
+      {foo: 'hi again', a: 'b'},
+      {a: 'c', foo: 'final foo'},
+    );
+    expect(actual).toEqual({
+      foo: 'final foo', bar: {baz: 'qux'}
+    });
+  })
+});

@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
+import * as importers from 'insomnia-importers';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
@@ -22,7 +23,7 @@ import * as requestMetaActions from '../redux/modules/requestMeta';
 import * as requestGroupMetaActions from '../redux/modules/requestGroupMeta';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {importCurl} from '../../export/curl';
+import {importRaw} from '../../common/import';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
 import {PREVIEW_MODE_SOURCE} from '../../common/constants';
 
@@ -130,14 +131,36 @@ class App extends Component {
   }
 
   async _handleUrlChanged (request, url) {
-    // TODO: Should this be moved elsewhere?
-    const requestPatch = importCurl(url);
-    if (requestPatch) {
-      await models.request.update(request, requestPatch);
-      this._forceHardRefresh();
-    } else {
-      models.request.update(request, {url});
+    // Allow user to paste any import file into the url. If it results in
+    // only one item, it will overwrite the current request.
+
+    try {
+      const {resources} = importers.import(url);
+      const r = resources[0];
+      if (r && r._type === 'request') {
+        const cookieHeaders = r.cookies.map(({name, value}) => (
+          {name: 'cookie', value: `${name}=${value}`}
+        ));
+
+        // Only pull fields that we want to update
+        await models.request.update(request, {
+          url: r.url,
+          method: r.method,
+          headers: [...r.headers, ...cookieHeaders],
+          body: r.body,
+          authentication: r.authentication,
+          parameters: r.parameters,
+        });
+
+        this._forceHardRefresh();
+
+        return;
+      }
+    } catch (e) {
+      // Import failed, that's alright
     }
+
+    models.request.update(request, {url});
   }
 
   _startDragSidebar () {

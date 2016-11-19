@@ -16,7 +16,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "hkdf": "0.0.2",
     "httpsnippet": "git@github.com:getinsomnia/httpsnippet.git#a3a2c0a0167fa844bf92df52a1442fa1d68a9053",
-    "insomnia-importers": "^0.1.3",
+    "insomnia-importers": "^0.2.0",
     "json-lint": "^0.1.0",
     "jsonpath-plus": "^0.15.0",
     "mime-types": "^2.1.12",

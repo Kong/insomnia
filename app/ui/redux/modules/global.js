@@ -2,10 +2,10 @@ import electron from 'electron';
 import {combineReducers} from 'redux';
 import fs from 'fs';
 
-import {importJSON, exportJSON} from '../../../export/insomnia';
+import {importRaw, exportJSON} from '../../../common/import';
 import {trackEvent} from '../../../analytics';
 import AlertModal from '../../components/modals/AlertModal';
-import {showModal} from '../../components/modals/index';
+import {showModal} from '../../components/modals';
 import PaymentNotificationModal from '../../components/modals/PaymentNotificationModal';
 import LoginModal from '../../components/modals/LoginModal';
 import * as models from '../../../models';
@@ -135,7 +135,7 @@ export function importFile (workspaceId) {
       properties: ['openFile'],
       filters: [{
         // Allow empty extension and JSON
-        name: 'Insomnia Import', extensions: ['', 'json']
+        name: 'Insomnia Import', extensions: ['', 'sh', 'txt', 'json']
       }]
     };
 
@@ -158,7 +158,7 @@ export function importFile (workspaceId) {
             return;
           }
 
-          importJSON(workspace, data);
+          importRaw(workspace, data);
           trackEvent('Import', 'Success');
         });
       })

@@ -1,8 +1,8 @@
 import * as importers from 'insomnia-importers';
-import * as db from '../common/database';
+import * as db from './database';
 import * as models from '../models';
-import {getAppVersion} from '../common/constants';
-import * as misc from '../common/misc';
+import {getAppVersion} from './constants';
+import * as misc from './misc';
 
 const EXPORT_TYPE_REQUEST = 'request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
@@ -21,10 +21,10 @@ const MODELS = {
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
 };
 
-export async function importJSON (workspace, json, generateNewIds = false) {
+export async function importRaw (workspace, rawContent, generateNewIds = false) {
   let data;
   try {
-    data = importers.import(json);
+    data = importers.import(rawContent);
   } catch (e) {
     console.error('Failed to import data', e);
     return;

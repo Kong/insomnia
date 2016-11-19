@@ -9,8 +9,7 @@ const SettingsImportExport = ({
   <div className="pad">
     <h1>Data Import and Export</h1>
     <p>
-      Be aware that you may be exporting <strong>private data</strong>.
-      Also, any imported data may overwrite existing data.
+      Import format will be automatically detected (<strong>Insomnia, Postman, HAR, cURL</strong>)
     </p>
     <Dropdown outline={true}>
       <DropdownButton className="btn btn--super-compact btn--outlined">
@@ -30,9 +29,9 @@ const SettingsImportExport = ({
     <button className="btn btn--super-compact btn--outlined" onClick={e => handleImport()}>
       Import Data
     </button>
-    {/*<p className="faint txt-sm">*/}
-    {/** Tip: You can also paste Curl commands into the URL bar*/}
-    {/*</p>*/}
+    <p className="italic faint pad-top">
+      * Tip: You can also paste Curl commands into the URL bar
+    </p>
   </div>
 );
 

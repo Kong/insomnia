@@ -1,6 +1,6 @@
 import * as harUtils from '../har';
-import * as db from '../../common/database';
-import * as render from '../../common/render';
+import * as db from '../database';
+import * as render from '../render';
 import * as models from '../../models';
 
 describe('exportHarWithRequest()', () => {
