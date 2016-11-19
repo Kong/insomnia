@@ -138,15 +138,11 @@ class App extends Component {
       const {resources} = importers.import(url);
       const r = resources[0];
       if (r && r._type === 'request') {
-        const cookieHeaders = r.cookies.map(({name, value}) => (
-          {name: 'cookie', value: `${name}=${value}`}
-        ));
-
         // Only pull fields that we want to update
         await models.request.update(request, {
           url: r.url,
           method: r.method,
-          headers: [...r.headers, ...cookieHeaders],
+          headers: r.headers,
           body: r.body,
           authentication: r.authentication,
           parameters: r.parameters,
