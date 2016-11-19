@@ -12,28 +12,26 @@ const SettingsImportExport = ({
       Be aware that you may be exporting <strong>private data</strong>.
       Also, any imported data may overwrite existing data.
     </p>
-    <p>
-      <Dropdown outline={true}>
-        <DropdownButton className="btn btn--super-compact btn--outlined">
-          Export Data <i className="fa fa-caret-down"></i>
-        </DropdownButton>
-        <DropdownDivider name="Choose Export Type"/>
-        <DropdownItem onClick={e => handleExportWorkspace()}>
-          <i className="fa fa-home"></i>
-          Current Workspace
-        </DropdownItem>
-        <DropdownItem onClick={e => handleExportAll()}>
-          <i className="fa fa-empty"></i>
-          All Workspaces
-        </DropdownItem>
-      </Dropdown>
-      &nbsp;&nbsp;
-      <button className="btn btn--super-compact btn--outlined" onClick={e => handleImport()}>
-        Import Data
-      </button>
-    </p>
+    <Dropdown outline={true}>
+      <DropdownButton className="btn btn--super-compact btn--outlined">
+        Export Data <i className="fa fa-caret-down"></i>
+      </DropdownButton>
+      <DropdownDivider name="Choose Export Type"/>
+      <DropdownItem onClick={e => handleExportWorkspace()}>
+        <i className="fa fa-home"></i>
+        Current Workspace
+      </DropdownItem>
+      <DropdownItem onClick={e => handleExportAll()}>
+        <i className="fa fa-empty"></i>
+        All Workspaces
+      </DropdownItem>
+    </Dropdown>
+    &nbsp;&nbsp;
+    <button className="btn btn--super-compact btn--outlined" onClick={e => handleImport()}>
+      Import Data
+    </button>
     {/*<p className="faint txt-sm">*/}
-      {/** Tip: You can also paste Curl commands into the URL bar*/}
+    {/** Tip: You can also paste Curl commands into the URL bar*/}
     {/*</p>*/}
   </div>
 );

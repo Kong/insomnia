@@ -1,4 +1,4 @@
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 import {parse as urlParse, format as urlFormat} from 'url';
 import {DEBOUNCE_MILLIS} from "./constants";
 import * as querystring from './querystring';

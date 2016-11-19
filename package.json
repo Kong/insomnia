@@ -28,9 +28,9 @@
     "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --linux",
     "package": "npm test && rm -rf dist && npm run package:mac && npm run package:win && npm run package:linux",
     "build-n-package": "npm run build && npm run package",
-    "build-n-package-win": "npm run build && npm run package-win",
-    "build-n-package-mac": "npm run build && npm run package-mac",
-    "build-n-package-linux": "npm run build && npm run package-linux",
+    "build-n-package:win": "npm run build && npm run package:win",
+    "build-n-package:mac": "npm run build && npm run package:mac",
+    "build-n-package:linux": "npm run build && npm run package:linux",
     "sentry": "bash scripts/sentry-release.sh"
   },
   "jest": {
@@ -59,7 +59,7 @@
       "iconUrl": "https://insomnia.rest/images/icon.png",
       "icon": "build/static/icon.ico",
       "loadingGif": "build/static/install-spinner.gif",
-      "remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
+      "__remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
       "target": "squirrel",
       "msi": false
     },
@@ -85,6 +85,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "hkdf": "0.0.2",
     "httpsnippet": "git@github.com:getinsomnia/httpsnippet.git#a3a2c0a0167fa844bf92df52a1442fa1d68a9053",
+    "insomnia-importers": "^0.1.3",
     "json-lint": "^0.1.0",
     "jsonpath-plus": "^0.15.0",
     "mime-types": "^2.1.12",
@@ -92,7 +93,6 @@
     "mousetrap": "^1.6.0",
     "nedb": "^1.8.0",
     "node-forge": "^0.6.43",
-    "node-uuid": "^1.4.7",
     "nunjucks": "^3.0.0",
     "raven": "^0.12.1",
     "react": "^15.3.1",
@@ -109,6 +109,7 @@
     "srp": "git@github.com:getinsomnia/srp-js.git#6ebd8c3acfbcf69645e4c6e6f8f6b55138ff22c3",
     "tough-cookie": "^2.3.1",
     "traverse": "^0.6.6",
+    "uuid": "^3.0.0",
     "vkbeautify": "^0.99.1",
     "xmldom": "^0.1.22",
     "xpath": "^0.0.23"

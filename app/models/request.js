@@ -1,6 +1,5 @@
-import {METHOD_GET, PREVIEW_MODE_SOURCE} from '../common/constants';
+import {METHOD_GET} from '../common/constants';
 import * as db from '../common/database';
-import * as misc from '../common/misc';
 import {getContentTypeHeader} from '../common/misc';
 
 export const type = 'Request';

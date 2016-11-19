@@ -1,6 +1,6 @@
 import nunjucks from 'nunjucks';
 import traverse from 'traverse';
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 import * as models from '../models';
 import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';

@@ -13,7 +13,7 @@ export function init (userId = null) {
   }
 
   if (!window.localStorage['gaClientId']) {
-    window.localStorage['gaClientId'] = require('node-uuid').v4();
+    window.localStorage['gaClientId'] = require('uuid').v4();
   }
 
   const _sessionId = window.localStorage['gaClientId'];
