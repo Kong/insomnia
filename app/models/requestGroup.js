@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 
+export const name = 'Folder';
 export const type = 'RequestGroup';
 export const prefix = 'fld';
 export function init () {

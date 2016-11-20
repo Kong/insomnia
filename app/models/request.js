@@ -2,6 +2,7 @@ import {METHOD_GET} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 
+export const name = 'Request';
 export const type = 'Request';
 export const prefix = 'req';
 

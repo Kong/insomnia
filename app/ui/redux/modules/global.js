@@ -139,7 +139,7 @@ export function importFile (workspaceId) {
       }]
     };
 
-    electron.remote.dialog.showOpenDialog(options, paths => {
+    electron.remote.dialog.showOpenDialog(options, async paths => {
       if (!paths) {
         // It was cancelled, so let's bail out
         dispatch(loadStop());
@@ -148,20 +148,32 @@ export function importFile (workspaceId) {
       }
 
       // Let's import all the paths!
-      paths.map(path => {
-        fs.readFile(path, 'utf8', async (err, data) => {
+      for (const path of paths) {
+        try {
+          const data = fs.readFileSync(path, 'utf8');
           dispatch(loadStop());
 
-          if (err) {
-            trackEvent('Import', 'Failure');
-            console.warn('Import Failed', err);
-            return;
-          }
+          const summary = await importRaw(workspace, data);
 
-          importRaw(workspace, data);
+          let statements = Object.keys(summary).map(type => {
+            const count = summary[type].length;
+            const name = models.getModelName(type, count);
+            return count === 0 ? null :`${count} ${name}`;
+          }).filter(s => s !== null);
+
+          let message;
+          if (statements.length === 0) {
+            message = 'Nothing was found to import.';
+          } else {
+            message = `You imported ${statements.join(', ')}!`;
+          }
+          showModal(AlertModal, {title: 'Import Succeeded', message});
           trackEvent('Import', 'Success');
-        });
-      })
+        } catch (e) {
+          showModal(AlertModal, {title: 'Import Failed', message: e + ''});
+          trackEvent('Import', 'Failure', e);
+        }
+      }
     });
   }
 }

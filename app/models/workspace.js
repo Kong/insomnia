@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 
+export const name = 'Workspace';
 export const type = 'Workspace';
 export const prefix = 'wrk';
 export function init () {

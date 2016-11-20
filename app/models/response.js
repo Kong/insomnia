@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 
+export const name = 'Response';
 export const type = 'Response';
 export const prefix = 'res';
 export function init () {

@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 
+export const name = 'Stats';
 export const type = 'Stats';
 export const prefix = 'sta';
 export function init () {

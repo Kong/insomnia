@@ -10,8 +10,10 @@ class AlertModal extends Component {
     this.state = {};
   }
 
-  show ({title, message}) {
+  show (options = {}) {
     this.modal.show();
+
+    const {title, message} = options;
     this.setState({title, message});
   }
 

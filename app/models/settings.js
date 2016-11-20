@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 
+export const name = 'Settings';
 export const type = 'Settings';
 export const prefix = 'set';
 export function init () {

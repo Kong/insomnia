@@ -40,6 +40,20 @@ export function getModel (type) {
   return _models[type] || null;
 }
 
+export function getModelName (type, count = 1) {
+  const model = getModel(type);
+  if (!model) {
+    return 'Unknown';
+  } else if (count === 1) {
+    return model.name;
+  } else if (!model.name.match(/s$/)) {
+    // Add an 's' if it doesn't already end in one
+    return `${model.name}s`;
+  } else {
+    return model.name
+  }
+}
+
 export function initModel (type) {
   const baseDefaults = {
     type: type,
