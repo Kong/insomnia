@@ -151,13 +151,15 @@ export function debounce (callback, millis = DEBOUNCE_MILLIS) {
 }
 
 /** Same as Object.assign but only add fields that exist on target */
-export function strictObjectAssign (target, ...sources) {
-  const patch = Object.assign(...sources);
-  for (const key of Object.keys(target)) {
-    if (patch.hasOwnProperty(key)) {
-      target[key] = patch[key];
+export function copyObjectAndUpdate (target, ...sources) {
+  // Make a new object so we don't mutate the input
+  const newObject = Object.assign({}, target, ...sources);
+
+  for (const key of Object.keys(newObject)) {
+    if (!target.hasOwnProperty(key)) {
+      delete newObject[key];
     }
   }
 
-  return target;
+  return newObject;
 }

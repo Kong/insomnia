@@ -42,11 +42,11 @@ export function getModel (type) {
 
 export function initModel (type) {
   const baseDefaults = {
+    type: type,
     _id: null,
-    type,
+    parentId: null,
     modified: Date.now(),
     created: Date.now(),
-    parentId: null
   };
 
   const modelDefaults = getModel(type).init();

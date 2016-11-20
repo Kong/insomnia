@@ -209,9 +209,9 @@ describe('debounce()', () => {
   })
 });
 
-describe('strictObjectAssign()', () => {
+describe('copyObjectAndUpdate()', () => {
   it('handles assignment', () => {
-    const actual = misc.strictObjectAssign(
+    const actual = misc.copyObjectAndUpdate(
       {foo: 'hi', bar: {baz: 'qux'}},
       {foo: 'hi again', a: 'b'},
       {a: 'c', foo: 'final foo'},
@@ -219,5 +219,12 @@ describe('strictObjectAssign()', () => {
     expect(actual).toEqual({
       foo: 'final foo', bar: {baz: 'qux'}
     });
-  })
+  });
+
+  it('makes a copy of the object', () => {
+    const obj = {foo: 'bar'};
+    const newObj = misc.copyObjectAndUpdate(obj, {hi: 'there'});
+    expect(newObj).toBe(newObj);
+    expect(newObj).not.toBe(obj);
+  });
 });

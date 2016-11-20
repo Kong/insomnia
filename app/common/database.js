@@ -127,9 +127,8 @@ export function find (type, query = {}) {
         return reject(err);
       }
 
-      const modelDefaults = initModel(type);
       const docs = rawDocs.map(rawDoc => {
-        return Object.assign(modelDefaults, rawDoc);
+        return Object.assign(initModel(type), rawDoc);
       });
 
       resolve(docs);
@@ -153,8 +152,8 @@ export function getWhere (type, query) {
         return resolve(null);
       }
 
-      const modelDefaults = initModel(type);
-      resolve(Object.assign(modelDefaults, rawDocs[0]));
+      const doc = Object.assign(initModel(type), rawDocs[0]);
+      resolve(doc);
     })
   })
 }
@@ -246,7 +245,7 @@ export function removeBulkSilently (type, query) {
 // ~~~~~~~~~~~~~~~~~~~ //
 
 export function docUpdate (originalDoc, patch = {}) {
-  const doc = misc.strictObjectAssign(
+  const doc = misc.copyObjectAndUpdate(
     initModel(originalDoc.type),
     originalDoc,
     patch,
@@ -263,7 +262,7 @@ export function docCreate (type, patch = {}) {
     throw new Error(`No ID prefix for ${type}`)
   }
 
-  const doc = misc.strictObjectAssign(
+  const doc = misc.copyObjectAndUpdate(
     initModel(type),
     {_id: generateId(idPrefix)},
     patch,

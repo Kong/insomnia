@@ -1,11 +1,6 @@
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 
-const ENTITY_BLACKLIST = {
-  [models.response.type]: 1,
-  [models.stats.type]: 1
-};
-
 const ENTITY_CHANGES = 'entities/changes';
 
 // ~~~~~~~~ //
@@ -31,10 +26,6 @@ export default function (state = initialState, action) {
 
       for (const [event, doc] of changes) {
         const referenceName = getReducerName(doc.type);
-
-        if (ENTITY_BLACKLIST[doc.type]) {
-          continue;
-        }
 
         switch (event) {
           case db.CHANGE_INSERT:
