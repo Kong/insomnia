@@ -71,6 +71,7 @@ const Wrapper = props => {
 
   return (
     <div id="wrapper"
+         key={`wrapper::${forceRefreshCounter}`}
          className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
          style={{gridTemplateColumns: gridTemplateColumns}}>
       <Sidebar
@@ -107,7 +108,6 @@ const Wrapper = props => {
       </div>
 
       <RequestPane
-        key={(activeRequest ? activeRequest._id : 'n/a') + forceRefreshCounter}
         ref={handleSetRequestPaneRef}
         handleImportFile={handleImportFile}
         request={activeRequest}

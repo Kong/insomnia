@@ -87,6 +87,7 @@ class RequestPane extends Component {
       <section className="pane request-pane">
         <header className="pane__header">
           <RequestUrlBar
+            key={request._id}
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={debounce(updateRequestUrl)}
@@ -126,6 +127,7 @@ class RequestPane extends Component {
           </TabList>
           <TabPanel className="editor-wrapper">
             <BodyEditor
+              key={request._id}
               request={request}
               onChange={updateRequestBody}
               fontSize={editorFontSize}
@@ -135,6 +137,7 @@ class RequestPane extends Component {
           <TabPanel className="scrollable-container">
             <div className="scrollable">
               <AuthEditor
+                key={request._id}
                 showPasswords={showPasswords}
                 request={request}
                 onChange={updateRequestAuthentication}
@@ -154,6 +157,7 @@ class RequestPane extends Component {
                 </code>
               </div>
               <KeyValueEditor
+                key={request._id}
                 namePlaceholder="name"
                 valuePlaceholder="value"
                 pairs={request.parameters}
@@ -163,6 +167,7 @@ class RequestPane extends Component {
           </TabPanel>
           <TabPanel className="header-editor">
             <RequestHeadersEditor
+              key={request._id}
               headers={request.headers}
               onChange={updateRequestHeaders}
               bulk={useBulkHeaderEditor}
