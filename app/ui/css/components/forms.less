@@ -16,6 +16,7 @@
     border: 1px solid @warning !important;
   }
 
+  &.form-control--padded,
   &.form-control--outlined,
   &.form-control--underlined {
     height: auto;
@@ -31,6 +32,13 @@
     textarea,
     input:focus {
       border-color: @hl-xl;
+    }
+  }
+
+  &.form-control--padded {
+    textarea,
+    input {
+      border: 0;
     }
   }
 

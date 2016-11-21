@@ -3,6 +3,7 @@ import * as db from '../common/database';
 export const name = 'Response';
 export const type = 'Response';
 export const prefix = 'res';
+
 export function init () {
   return {
     statusCode: 0,
@@ -17,6 +18,10 @@ export function init () {
     encoding: 'utf8', // Legacy format
     error: ''
   }
+}
+
+export function migrate (doc) {
+  return doc;
 }
 
 export function create (patch = {}) {

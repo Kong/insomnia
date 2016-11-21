@@ -1,20 +1,25 @@
 import * as models from '../models';
-import {getRenderedRequest} from  './render';
+import {getRenderedRequest} from './render';
 import {jarFromCookies} from './cookies';
 import * as util from './misc';
+import * as misc from './misc';
 
 export function exportHarWithRequest (renderedRequest, addContentLength = false) {
   if (addContentLength) {
-    const hasContentLengthHeader = !!renderedRequest.headers.find(
-      h => h.name.toLowerCase() === 'content-length'
-    );
+    const hasContentLengthHeader = misc.filterHeaders(
+        renderedRequest.headers,
+        'content-length'
+      ).length > 0;
 
     if (!hasContentLengthHeader) {
       const name = 'content-length';
-      const value = Buffer.byteLength(renderedRequest.body).toString();
+      const value = Buffer.byteLength(body).toString();
       renderedRequest.headers.push({name, value})
     }
   }
+
+  // Luckily, Insomnia uses the same body format as HAR :)
+  const postData = renderedRequest.body;
 
   return {
     method: renderedRequest.method,
@@ -23,7 +28,7 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
     cookies: getCookies(renderedRequest),
     headers: renderedRequest.headers,
     queryString: renderedRequest.parameters,
-    postData: {text: renderedRequest.body},
+    postData: postData,
     headersSize: -1,
     bodySize: -1
   };

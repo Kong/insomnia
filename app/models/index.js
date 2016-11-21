@@ -54,16 +54,32 @@ export function getModelName (type, count = 1) {
   }
 }
 
-export function initModel (type) {
-  const baseDefaults = {
+export function initModel (type, ...sources) {
+  const model = getModel(type);
+
+  // Define global default fields
+  const objectDefaults = Object.assign({
     type: type,
     _id: null,
+    _schema: 0,
     parentId: null,
     modified: Date.now(),
     created: Date.now(),
-  };
+  }, model.init());
 
-  const modelDefaults = getModel(type).init();
+  // Make a new object
+  const fullObject = Object.assign({}, objectDefaults, ...sources);
 
-  return Object.assign(baseDefaults, modelDefaults);
+  // Migrate the model
+  // NOTE: Do migration before pruning because we might need to look at those fields
+  const migratedObject = model.migrate(fullObject);
+
+  // Prune extra keys from doc
+  for (const key of Object.keys(migratedObject)) {
+    if (!objectDefaults.hasOwnProperty(key)) {
+      delete migratedObject[key];
+    }
+  }
+
+  return migratedObject;
 }

@@ -4,38 +4,44 @@
 .key-value-editor {
   padding: @padding-md 0;
 
-  li {
+  .key-value-editor__label {
+    padding: 0 @padding-md;
+    opacity: 0.5;
+    font-size: @font-size-sm;
+  }
 
-    .key-value-editor__label {
-      padding: 0 @padding-md;
-      opacity: 0.5;
-      font-size: @font-size-sm;
+  .key-value-editor__row {
+    display: grid;
+    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr) auto auto;
+    grid-template-rows: auto;
+
+    &.key-value-editor__row--disabled input {
+      text-decoration: line-through;
+      color: @hl-xxl;
     }
 
-    .key-value-editor__row {
-      display: grid;
-      grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr) auto;
-      grid-template-rows: auto;
+    & > * {
+      padding: 0 @padding-sm;
 
-      & > * {
-        padding: 0 @padding-sm;
-
-        &:first-child {
-          padding-left: @padding-md;
-        }
-
-        &:last-child {
-          padding-right: @padding-md;
-        }
+      &:first-child {
+        padding-left: @padding-md;
       }
 
-      & > button {
-        color: @hl;
+      &:last-child {
+        padding-right: @padding-md;
+      }
+    }
 
-        &:hover {
-          color: inherit;
-          background: transparent;
-        }
+    & > button {
+      color: @hl;
+
+      &:hover,
+      &:focus {
+        background: transparent;
+      }
+
+      &:hover {
+        color: inherit;
       }
     }
   }

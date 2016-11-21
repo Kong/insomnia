@@ -129,6 +129,22 @@ export async function getRenderedRequest (request, environmentId) {
   // Render all request properties
   const renderedRequest = recursiveRender(request, renderContext);
 
+  // Remove disabled params
+  renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
+
+  // Remove disabled headers
+  renderedRequest.headers = renderedRequest.headers.filter(p => !p.disabled);
+
+  // Remove disabled body params
+  if (renderedRequest.body && Array.isArray(renderedRequest.body.params)) {
+    renderedRequest.body.params = renderedRequest.body.params.filter(p => !p.disabled);
+  }
+
+  // Remove disabled authentication
+  if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
+    renderedRequest.authentication = {}
+  }
+
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 

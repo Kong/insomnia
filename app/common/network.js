@@ -2,13 +2,13 @@ import networkRequest from 'request';
 import {parse as urlParse} from 'url';
 import * as models from '../models';
 import * as querystring from './querystring';
+import {buildFromParams} from './querystring';
 import * as util from './misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC} from './constants';
-import {jarFromCookies, cookiesFromJar} from './cookies';
+import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED} from './constants';
+import {jarFromCookies, cookiesFromJar, cookieHeaderValueForUri} from './cookies';
 import {setDefaultProtocol} from './misc';
 import {getRenderedRequest} from './render';
 import {swapHost} from './dns';
-import {cookieHeaderValueForUri} from './cookies';
 
 let cancelRequestFunction = null;
 
@@ -20,14 +20,10 @@ export function cancelCurrentRequest () {
 
 export function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
-    method: renderedRequest.method,
-    body: renderedRequest.body,
-    headers: {},
-
     // Setup redirect rules
     followAllRedirects: true,
     followRedirect: true,
-    maxRedirects: 20,
+    maxRedirects: 50, // Arbitrary (large) number
     timeout: 0,
 
     // Unzip gzipped responses
@@ -49,18 +45,33 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     encoding: null,
   };
 
+  // Set the body
+  if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    config.body = buildFromParams(renderedRequest.body.params || [], true);
+  } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
+    // TODO: This
+  } else {
+    config.body = renderedRequest.body.text || '';
+  }
+
+  // Set the method
+  config.method = renderedRequest.method;
+
+  // Set the headers
+  const headers = {};
+  for (let i = 0; i < renderedRequest.headers.length; i++) {
+    let header = renderedRequest.headers[i];
+    if (header.name) {
+      headers[header.name] = header.value;
+    }
+  }
+  config.headers = headers;
+
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(renderedRequest.parameters);
   const url = querystring.joinURL(renderedRequest.url, qs);
   config.url = util.prepareUrlForSending(url);
   config.headers.host = urlParse(config.url).host;
-
-  for (let i = 0; i < renderedRequest.headers.length; i++) {
-    let header = renderedRequest.headers[i];
-    if (header.name) {
-      config.headers[header.name] = header.value;
-    }
-  }
 
   return Object.assign(config, patch);
 }

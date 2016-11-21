@@ -1,6 +1,8 @@
-import {METHOD_GET} from '../common/constants';
+import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
+import {deconstructToParams} from '../common/querystring';
+import {CONTENT_TYPE_JSON} from '../common/constants';
 
 export const name = 'Request';
 export const type = 'Request';
@@ -8,15 +10,50 @@ export const prefix = 'req';
 
 export function init () {
   return {
+    _schema: 1,
     url: '',
     name: 'New Request',
     method: METHOD_GET,
-    body: '',
+    body: {},
     parameters: [],
     headers: [],
     authentication: {},
     metaSortKey: -1 * Date.now()
   };
+}
+
+export function newBodyRaw (rawBody, contentType) {
+  if (!contentType) {
+    return {text: rawBody};
+  }
+
+  const mimeType = contentType.split(';')[0];
+  return {mimeType, text: rawBody};
+}
+
+export function newBodyFormUrlEncoded (parameters) {
+  return {
+    mimeType: CONTENT_TYPE_FORM_URLENCODED,
+    params: parameters
+  }
+}
+
+export function newBodyForm (parameters) {
+  return {
+    mimeType: CONTENT_TYPE_FORM_DATA,
+    params: parameters
+  }
+}
+
+export function migrate (doc) {
+  const schema = doc._schema || 0;
+
+  if (schema <= 0) {
+    doc = migrateTo1(doc);
+    doc._schema = 1;
+  }
+
+  return doc;
 }
 
 export function create (patch = {}) {
@@ -39,17 +76,31 @@ export function update (request, patch) {
   return db.docUpdate(request, patch);
 }
 
-export function updateContentType (request, contentType) {
+export function updateMimeType (request, mimeType) {
   let headers = [...request.headers];
   const contentTypeHeader = getContentTypeHeader(headers);
 
-  if (!contentType) {
+  // 1. Update Content-Type header
+
+  if (!mimeType) {
     // Remove the contentType header if we are un-setting it
     headers = headers.filter(h => h !== contentTypeHeader);
   } else if (contentTypeHeader) {
-    contentTypeHeader.value = contentType;
+    contentTypeHeader.value = mimeType;
   } else {
-    headers.push({name: 'Content-Type', value: contentType})
+    headers.push({name: 'Content-Type', value: mimeType})
+  }
+
+  // 2. Make a new request body
+  // TODO: When switching mime-type, try to convert formats nicely
+  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    request.body = newBodyFormUrlEncoded(request.body.params || []);
+  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
+    request.body = newBodyForm(request.body.params || []);
+  } else if (mimeType === CONTENT_TYPE_JSON) {
+    request.body = newBodyRaw(request.body.text || '');
+  } else {
+    request.body = newBodyRaw(request.body.text || '', mimeType);
   }
 
   return update(request, {headers});
@@ -67,4 +118,25 @@ export function remove (request) {
 
 export function all () {
   return db.all(type);
+}
+
+// ~~~~~~~~~~ //
+// Migrations //
+// ~~~~~~~~~~ //
+
+function migrateTo1 (request) {
+
+  // Second, convert all existing urlencoded bodies to new format
+  const contentType = getContentTypeFromHeaders(request.headers) || '';
+  const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
+
+  if (wasFormUrlEncoded) {
+    // Convert old-style form-encoded request bodies to new style
+    const params = deconstructToParams(request.body, false);
+    request.body = newBodyFormUrlEncoded(params);
+  } else {
+    request.body = newBodyRaw(request.body, contentType);
+  }
+
+  return request;
 }

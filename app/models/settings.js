@@ -3,6 +3,7 @@ import * as db from '../common/database';
 export const name = 'Settings';
 export const type = 'Settings';
 export const prefix = 'set';
+
 export function init () {
   return {
     showPasswords: true,
@@ -16,6 +17,10 @@ export function init () {
     validateSSL: true,
     forceVerticalLayout: false,
   };
+}
+
+export function migrate (doc) {
+  return doc;
 }
 
 export async function all () {
