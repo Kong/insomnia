@@ -625,7 +625,7 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
         try {
           activeResourceMap[doc._id] = await _createResourceForDoc(doc);
         } catch (e) {
-          logger.error(`Failed to create resource for ${doc._id}`, doc);
+          logger.error(`Failed to create resource for ${doc._id}`, e, {doc});
         }
       }
     }

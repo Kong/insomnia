@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 
+export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
 export function init () {
@@ -7,6 +8,10 @@ export function init () {
     name: 'New Environment',
     data: {},
   }
+}
+
+export function migrate (doc) {
+  return doc;
 }
 
 export function create (patch = {}) {

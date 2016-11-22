@@ -29,7 +29,9 @@ describe('exportHarWithRequest()', () => {
       headers: [{name: 'Content-Type', value: 'application/json'}],
       parameters: [{name: 'foo bar', value: 'hello&world'}],
       method: 'POST',
-      body: 'foo bar',
+      body: {
+        text: 'foo bar'
+      },
       url: 'http://google.com',
       authentication: {
         username: 'user',
@@ -62,7 +64,9 @@ describe('exportHarWithRequest()', () => {
       headersSize: -1,
       httpVersion: 'HTTP/1.1',
       method: 'POST',
-      postData: {text: 'foo bar'},
+      postData: {
+        text: 'foo bar'
+      },
       queryString: [{name: 'foo bar', value: 'hello&world'}],
       url: 'http://google.com/'
     });

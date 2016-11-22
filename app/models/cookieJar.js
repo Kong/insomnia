@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 
+export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
 export function init () {
@@ -7,6 +8,10 @@ export function init () {
     name: 'Default Jar',
     cookies: []
   }
+}
+
+export function migrate (doc) {
+  return doc;
 }
 
 export function create (patch = {}) {

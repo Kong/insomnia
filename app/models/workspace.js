@@ -1,11 +1,17 @@
 import * as db from '../common/database';
 
+export const name = 'Workspace';
 export const type = 'Workspace';
 export const prefix = 'wrk';
+
 export function init () {
   return {
     name: 'New Workspace',
   };
+}
+
+export function migrate (doc) {
+  return doc;
 }
 
 export function getById (id) {

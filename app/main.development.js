@@ -8,6 +8,7 @@ import path from 'path';
 import electron from 'electron';
 import * as packageJSON from './package.json';
 import LocalStorage from './common/LocalStorage';
+import installExtension, {REACT_DEVELOPER_TOOLS} from 'electron-devtools-installer';
 
 // Some useful helpers
 const IS_DEV = process.env.INSOMNIA_ENV === 'development';
@@ -476,6 +477,10 @@ function createWindow () {
   ];
 
   if (IS_DEV) {
+    installExtension(REACT_DEVELOPER_TOOLS)
+      .then((name) => console.log(`Added Extension:  ${name}`))
+      .catch((err) => console.log('An error occurred: ', err));
+
     template.push({
       label: 'Developer',
       position: 'before=help',

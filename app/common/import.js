@@ -41,6 +41,14 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   // Also always replace __WORKSPACE_ID__ with the current workspace if we see it
   generatedIds['__WORKSPACE_ID__'] = workspace._id;
 
+  // Import everything backwards so they get inserted in the correct order
+  data.resources.reverse();
+
+  const importedDocs = {};
+  for (const model of models.all()) {
+    importedDocs[model.type] = [];
+  }
+
   for (const resource of data.resources) {
     // Buffer DB changes
     // NOTE: Doing it inside here so it's more "scalable"
@@ -67,15 +75,16 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
     }
 
     const doc = await model.getById(resource._id);
+    const newDoc = doc ?
+      await model.update(doc, resource) :
+      await model.create(resource);
 
-    if (doc) {
-      await model.update(doc, resource)
-    } else {
-      await model.create(resource)
-    }
+    importedDocs[newDoc.type].push(newDoc);
   }
 
   db.flushChanges();
+
+  return importedDocs;
 }
 
 export async function exportJSON (parentDoc = null) {

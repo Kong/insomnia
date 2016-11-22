@@ -15,13 +15,13 @@ class CopyButton extends Component {
 
     this.setState({showConfirmation: true});
 
-    this._askTimeout = setTimeout(() => {
+    this._triggerTimeout = setTimeout(() => {
       this.setState({showConfirmation: false});
     }, 2000);
   }
 
   componentWillUnmount() {
-    clearTimeout(this._askTimeout);
+    clearTimeout(this._triggerTimeout);
   }
 
   render () {

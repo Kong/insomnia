@@ -13,14 +13,14 @@ class RenderedQueryString extends Component {
   }
 
   _update (props, delay = false) {
-    clearTimeout(this._askTimeout);
-    this._askTimeout = setTimeout(async () => {
+    clearTimeout(this._triggerTimeout);
+    this._triggerTimeout = setTimeout(async () => {
       const {request, environmentId} = props;
       const {url, parameters} = await getRenderedRequest(request, environmentId);
       const qs = querystring.buildFromParams(parameters);
       const fullUrl = querystring.joinURL(url, qs);
       this.setState({string: util.prepareUrlForSending(fullUrl)});
-    }, delay ? 300 : 0);
+    }, delay ? 200 : 0);
   }
 
   componentDidMount () {
@@ -28,7 +28,7 @@ class RenderedQueryString extends Component {
   }
 
   componentWillUnmount () {
-    clearTimeout(this._askTimeout);
+    clearTimeout(this._triggerTimeout);
   }
 
   componentWillReceiveProps (nextProps) {

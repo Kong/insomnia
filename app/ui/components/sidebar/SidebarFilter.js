@@ -5,8 +5,8 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 class SidebarFilter extends Component {
   _onChange (value) {
-    clearTimeout(this._askTimeout);
-    this._askTimeout = setTimeout(() => {
+    clearTimeout(this._triggerTimeout);
+    this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
     }, DEBOUNCE_MILLIS);
   }

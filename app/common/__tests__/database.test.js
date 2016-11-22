@@ -96,7 +96,7 @@ describe('requestCreate()', () => {
     };
 
     const r = await models.request.create(patch);
-    expect(Object.keys(r).length).toBe(13);
+    expect(Object.keys(r).length).toBe(14);
 
     expect(r._id).toMatch(/^req_[a-zA-Z0-9]{32}$/);
     expect(r.created).toBeGreaterThanOrEqual(now);
@@ -105,7 +105,7 @@ describe('requestCreate()', () => {
     expect(r.name).toBe('My Request');
     expect(r.url).toBe('');
     expect(r.method).toBe('GET');
-    expect(r.body).toBe('');
+    expect(r.body).toEqual({});
     expect(r.parameters).toEqual([]);
     expect(r.headers).toEqual([]);
     expect(r.authentication).toEqual({});

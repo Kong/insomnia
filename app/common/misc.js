@@ -38,6 +38,11 @@ export function getContentTypeHeader (headers) {
   return matches.length ? matches[0] : null;
 }
 
+export function getContentLengthHeader (headers) {
+  const matches = filterHeaders(headers, 'content-length');
+  return matches.length ? matches[0] : null;
+}
+
 export function setDefaultProtocol (url, defaultProto = 'http:') {
   // Default the proto if it doesn't exist
   if (url.indexOf('://') === -1) {
@@ -148,18 +153,4 @@ export function debounce (callback, millis = DEBOUNCE_MILLIS) {
   return keyedDebounce(results => {
     callback.apply(null, results['__key__'])
   }, millis).bind(null, '__key__');
-}
-
-/** Same as Object.assign but only add fields that exist on target */
-export function copyObjectAndUpdate (target, ...sources) {
-  // Make a new object so we don't mutate the input
-  const newObject = Object.assign({}, target, ...sources);
-
-  for (const key of Object.keys(newObject)) {
-    if (!target.hasOwnProperty(key)) {
-      delete newObject[key];
-    }
-  }
-
-  return newObject;
 }

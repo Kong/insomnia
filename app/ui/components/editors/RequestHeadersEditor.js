@@ -40,7 +40,7 @@ class RequestHeadersEditor extends Component {
     let headersString = '';
 
     for (const header of headers) {
-      if (!header.name || !header.value) {
+      if (header.disabled || !header.name || !header.value) {
         // Not a valid header
         continue;
       }

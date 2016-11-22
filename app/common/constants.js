@@ -115,17 +115,22 @@ export const CONTENT_TYPE_JSON = 'application/json';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_TEXT = 'text/plain';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
+export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_OTHER = '';
 
-const contentTypeMap = {
+export const contentTypesMap = {
   [CONTENT_TYPE_JSON]: 'JSON',
   [CONTENT_TYPE_XML]: 'XML',
-  [CONTENT_TYPE_FORM_URLENCODED]: 'Form Encoded',
+  // [CONTENT_TYPE_FORM_DATA]: 'Form Data',
+  [CONTENT_TYPE_FORM_URLENCODED]: 'Url Encoded',
   [CONTENT_TYPE_TEXT]: 'Plain Text',
-  [CONTENT_TYPE_OTHER]: 'Other'
+  [CONTENT_TYPE_OTHER]: 'Other',
 };
 
-export const CONTENT_TYPES = Object.keys(contentTypeMap);
+export const BODY_TYPE_RAW = 'raw';
+export const BODY_TYPE_FILE = 'file';
+export const BODY_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
+export const BODY_TYPE_FORM = 'multipart/form-data';
 
 /**
  * Get the friendly name for a given content type
@@ -134,10 +139,14 @@ export const CONTENT_TYPES = Object.keys(contentTypeMap);
  * @returns {*|string}
  */
 export function getContentTypeName (contentType) {
-  return contentTypeMap[contentType] || contentTypeMap[CONTENT_TYPE_OTHER];
+  return contentTypesMap[contentType] || contentTypesMap[CONTENT_TYPE_OTHER];
 }
 
 export function getContentTypeFromHeaders (headers) {
+  if (!Array.isArray(headers)) {
+    return null;
+  }
+
   const header = headers.find(({name}) => name.toLowerCase() === 'content-type');
   return header ? header.value : null;
 }
