@@ -2,10 +2,11 @@ import React, {PropTypes, Component} from 'react';
 import RawEditor from './RawEditor';
 import UrlEncodedEditor from './UrlEncodedEditor';
 import FormEditor from './FormEditor';
-import {getContentTypeFromHeaders, BODY_TYPE_FORM_URLENCODED, BODY_TYPE_FORM, BODY_TYPE_FILE} from '../../../../common/constants';
+import FileEditor from './FileEditor';
+import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA} from '../../../../common/constants';
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm} from '../../../../models/request';
-import {CONTENT_TYPE_FORM_URLENCODED} from '../../../../common/constants';
-import {CONTENT_TYPE_FORM_DATA} from '../../../../common/constants';
+import {CONTENT_TYPE_FILE} from '../../../../common/constants';
+import {newBodyFile} from '../../../../models/request';
 
 class BodyEditor extends Component {
   constructor (props) {
@@ -13,6 +14,7 @@ class BodyEditor extends Component {
     this._boundHandleRawChange = this._handleRawChange.bind(this);
     this._boundHandleFormUrlEncodedChange = this._handleFormUrlEncodedChange.bind(this);
     this._boundHandleFormChange = this._handleFormChange.bind(this);
+    this._boundHandleFileChange = this._handleFileChange.bind(this);
   }
 
   _handleRawChange (rawValue) {
@@ -33,6 +35,12 @@ class BodyEditor extends Component {
   _handleFormChange (parameters) {
     const {onChange} = this.props;
     const newBody = newBodyForm(parameters);
+    onChange(newBody);
+  }
+
+  _handleFileChange (path) {
+    const {onChange} = this.props;
+    const newBody = newBodyFile(path);
     onChange(newBody);
   }
 
@@ -57,9 +65,14 @@ class BodyEditor extends Component {
           parameters={request.body.params || []}
         />
       )
-    } else if (bodyType === BODY_TYPE_FILE) {
-      // TODO
-      return null
+    } else if (bodyType === CONTENT_TYPE_FILE) {
+      return (
+        <FileEditor
+          key={request._id}
+          onChange={this._boundHandleFileChange}
+          path={fileName || ''}
+        />
+      )
     } else {
       const contentType = getContentTypeFromHeaders(request.headers);
       return (

@@ -1,25 +1,8 @@
 import React, {PropTypes} from 'react';
+import * as misc from '../../../common/misc';
 
 const SizeTag = props => {
-  const bytes = Math.round(props.bytes * 10) / 10;
-  let size;
-
-  let unit = 'B';
-  if (bytes < 1024) {
-    size = bytes;
-    unit = 'B';
-  } else if (bytes < 1024 * 1024) {
-    size = bytes / 1024;
-    unit = 'KB';
-  } else if (bytes < 1024 * 1024) {
-    size = bytes / 1024 / 1024;
-    unit = 'MB';
-  } else {
-    size = bytes / 1024 / 1024 / 1024;
-    unit = 'GB';
-  }
-
-  const responseSizeString = Math.round(size * 10) / 10 + ' ' + unit;
+  const responseSizeString = misc.describeByteSize(props.bytes);
 
   return (
     <div className="tag">
