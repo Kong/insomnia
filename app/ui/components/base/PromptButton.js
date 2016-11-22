@@ -12,7 +12,7 @@ class PromptButton extends Component {
 
   _confirm (e) {
     // Clear existing timeouts
-    clearTimeout(this._askTimeout);
+    clearTimeout(this._triggerTimeout);
 
     // Fire the click handler
     this.props.onClick(e);
@@ -23,7 +23,7 @@ class PromptButton extends Component {
     }, 100);
 
     // Set a timeout to hide the confirmation
-    this._askTimeout = setTimeout(() => {
+    this._triggerTimeout = setTimeout(() => {
       this.setState({state: STATE_DEFAULT});
     }, 2000);
   }
@@ -37,7 +37,7 @@ class PromptButton extends Component {
     this.setState({state: STATE_ASK});
 
     // Set a timeout to hide the confirmation
-    this._askTimeout = setTimeout(() => {
+    this._triggerTimeout = setTimeout(() => {
       this.setState({state: STATE_DEFAULT});
     }, 2000);
   }
@@ -54,7 +54,7 @@ class PromptButton extends Component {
   }
 
   componentWillUnmount () {
-    clearTimeout(this._askTimeout);
+    clearTimeout(this._triggerTimeout);
     clearTimeout(this._doneTimeout);
   }
 
@@ -90,7 +90,7 @@ class PromptButton extends Component {
 
 PromptButton.propTypes = {
   addIcon: PropTypes.bool,
-  confirmMessage: PropTypes.string
+  confirmMessage: PropTypes.any,
 };
 
 export default PromptButton;

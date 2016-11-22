@@ -3,6 +3,7 @@ import * as db from '../database';
 import nock from 'nock';
 import {getRenderedRequest} from '../render';
 import * as models from '../../models';
+import {CONTENT_TYPE_FORM_URLENCODED} from '../constants';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
@@ -23,7 +24,7 @@ describe('buildRequestConfig()', () => {
       forever: true,
       gzip: true,
       headers: {host: ''},
-      maxRedirects: 20,
+      maxRedirects: 50,
       method: 'GET',
       proxy: null,
       rejectUnauthorized: true,
@@ -37,12 +38,28 @@ describe('buildRequestConfig()', () => {
     const workspace = await models.workspace.create();
     const request = Object.assign(models.request.init(), {
       parentId: workspace._id,
-      headers: [{host: '', name: 'Content-Type', value: 'application/json'}],
-      parameters: [{name: 'foo bar', value: 'hello&world'}],
+      headers: [
+        {name: 'Content-Type', value: 'application/json', disabled: false},
+        {name: 'hi', value: 'there', disabled: true},
+        {name: 'x-hello', value: 'world'},
+      ],
+      parameters: [
+        {name: 'foo bar', value: 'hello&world', disabled: false},
+        {name: 'b', value: 'bb&world', disabled: true},
+        {name: 'a', value: 'aa'},
+      ],
       method: 'POST',
-      body: 'foo=bar',
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: [
+          {name: 'X', value: 'XX', disabled: false},
+          {name: 'Y', value: 'YY', disabled: true},
+          {name: 'Z', value: 'ZZ'},
+        ]
+      },
       url: 'http://foo.com:3332/★/hi@gmail.com/foo%20bar?bar=baz',
       authentication: {
+        disabled: false,
         username: 'user',
         password: 'pass'
       }
@@ -51,7 +68,7 @@ describe('buildRequestConfig()', () => {
     const renderedRequest = await getRenderedRequest(request);
     const config = networkUtils._buildRequestConfig(renderedRequest);
     expect(config).toEqual({
-      body: 'foo=bar',
+      body: 'X=XX&Z=ZZ',
       encoding: null,
       followAllRedirects: true,
       followRedirect: true,
@@ -60,15 +77,16 @@ describe('buildRequestConfig()', () => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Basic dXNlcjpwYXNz',
-        'host': 'foo.com:3332'
+        'host': 'foo.com:3332',
+        'x-hello': 'world'
       },
-      maxRedirects: 20,
+      maxRedirects: 50,
       method: 'POST',
       proxy: null,
       rejectUnauthorized: true,
       time: true,
       timeout: 0,
-      url: 'http://foo.com:3332/%E2%98%85/hi@gmail.com/foo%20bar?bar=baz&foo%20bar=hello%26world'
+      url: 'http://foo.com:3332/%E2%98%85/hi@gmail.com/foo%20bar?bar=baz&foo%20bar=hello%26world&a=aa'
     })
   })
 });
@@ -121,7 +139,10 @@ describe('actuallySend()', () => {
       headers: [{name: 'Content-Type', value: 'application/json'}],
       parameters: [{name: 'foo bar', value: 'hello&world'}],
       method: 'POST',
-      body: 'foo=bar',
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        text: 'foo=bar'
+      },
       url: 'http://localhost',
       authentication: {
         username: 'user',

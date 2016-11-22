@@ -4,7 +4,6 @@ import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
 import {generateId} from './misc';
 import {getModel, initModel} from '../models';
-import * as misc from './misc';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -128,7 +127,7 @@ export function find (type, query = {}) {
       }
 
       const docs = rawDocs.map(rawDoc => {
-        return Object.assign(initModel(type), rawDoc);
+        return initModel(type, rawDoc);
       });
 
       resolve(docs);
@@ -152,8 +151,7 @@ export function getWhere (type, query) {
         return resolve(null);
       }
 
-      const doc = Object.assign(initModel(type), rawDocs[0]);
-      resolve(doc);
+      resolve(initModel(type, rawDocs[0]));
     })
   })
 }
@@ -245,8 +243,8 @@ export function removeBulkSilently (type, query) {
 // ~~~~~~~~~~~~~~~~~~~ //
 
 export function docUpdate (originalDoc, patch = {}) {
-  const doc = misc.copyObjectAndUpdate(
-    initModel(originalDoc.type),
+  const doc = initModel(
+    originalDoc.type,
     originalDoc,
     patch,
     {modified: Date.now()},
@@ -262,8 +260,8 @@ export function docCreate (type, patch = {}) {
     throw new Error(`No ID prefix for ${type}`)
   }
 
-  const doc = misc.copyObjectAndUpdate(
-    initModel(type),
+  const doc = initModel(
+    type,
     {_id: generateId(idPrefix)},
     patch,
 

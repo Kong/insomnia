@@ -3,12 +3,17 @@ import * as db from '../common/database';
 export const name = 'Folder';
 export const type = 'RequestGroup';
 export const prefix = 'fld';
+
 export function init () {
   return {
     name: 'New Folder',
     environment: {},
     metaSortKey: -1 * Date.now()
   }
+}
+
+export function migrate (doc) {
+  return doc;
 }
 
 export function create (patch = {}) {

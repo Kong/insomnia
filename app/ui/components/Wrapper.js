@@ -19,6 +19,7 @@ import Sidebar from './sidebar/Sidebar';
 import RequestPane from './RequestPane';
 import ResponsePane from './ResponsePane';
 import * as models from '../../models/index';
+import {updateMimeType} from '../../models/request';
 
 
 const Wrapper = props => {
@@ -123,7 +124,7 @@ const Wrapper = props => {
         updateRequestParameters={parameters => models.request.update(activeRequest, {parameters})}
         updateRequestAuthentication={authentication => models.request.update(activeRequest, {authentication})}
         updateRequestHeaders={headers => models.request.update(activeRequest, {headers})}
-        updateRequestContentType={contentType => models.request.updateContentType(activeRequest, contentType)}
+        updateRequestMimeType={mimeType => updateMimeType(activeRequest, mimeType)}
         updateSettingsShowPasswords={showPasswords => models.settings.update(settings, {showPasswords})}
         updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => models.settings.update(settings, {useBulkHeaderEditor})}
         handleSend={handleSendRequestWithEnvironment.bind(

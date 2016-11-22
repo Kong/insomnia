@@ -1,16 +1,16 @@
 import React, {PropTypes} from 'react';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
-import {CONTENT_TYPES, getContentTypeName} from '../../../common/constants';
+import {contentTypesMap} from '../../../common/constants';
 
-const ContentTypeDropdown = ({updateRequestContentType}) => {
+const ContentTypeDropdown = ({updateRequestMimeType}) => {
   return (
     <Dropdown>
       <DropdownButton className="tall">
         <i className="fa fa-caret-down"></i>
       </DropdownButton>
-      {CONTENT_TYPES.map(contentType => (
-        <DropdownItem key={contentType} onClick={e => updateRequestContentType(contentType)}>
-          {getContentTypeName(contentType)}
+      {Object.keys(contentTypesMap).map(mimeType => (
+        <DropdownItem key={mimeType} onClick={e => updateRequestMimeType(mimeType)}>
+          {contentTypesMap[mimeType]}
         </DropdownItem>
       ))}
     </Dropdown>
@@ -18,7 +18,7 @@ const ContentTypeDropdown = ({updateRequestContentType}) => {
 };
 
 ContentTypeDropdown.propTypes = {
-  updateRequestContentType: PropTypes.func.isRequired
+  updateRequestMimeType: PropTypes.func.isRequired
 };
 
 export default ContentTypeDropdown;

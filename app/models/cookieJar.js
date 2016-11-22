@@ -10,6 +10,10 @@ export function init () {
   }
 }
 
+export function migrate (doc) {
+  return doc;
+}
+
 export function create (patch = {}) {
   return db.docCreate(type, patch);
 }

@@ -4,7 +4,7 @@ import KeyValueEditor from './base/KeyValueEditor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
-import BodyEditor from './editors/BodyEditor';
+import BodyEditor from './editors/body/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
 import RequestUrlBar from './RequestUrlBar.js';
 import {MOD_SYM, getContentTypeName, getContentTypeFromHeaders} from '../../common/constants';
@@ -28,7 +28,7 @@ class RequestPane extends Component {
       updateRequestParameters,
       updateRequestAuthentication,
       updateRequestHeaders,
-      updateRequestContentType,
+      updateRequestMimeType,
       updateSettingsUseBulkHeaderEditor
     } = this.props;
 
@@ -102,7 +102,7 @@ class RequestPane extends Component {
                 {getContentTypeName(getContentTypeFromHeaders(request.headers))}
               </button>
               <ContentTypeDropdown
-                updateRequestContentType={updateRequestContentType}/>
+                updateRequestMimeType={updateRequestMimeType}/>
             </Tab>
             <Tab>
               <button>
@@ -197,7 +197,7 @@ RequestPane.propTypes = {
   updateRequestParameters: PropTypes.func.isRequired,
   updateRequestAuthentication: PropTypes.func.isRequired,
   updateRequestHeaders: PropTypes.func.isRequired,
-  updateRequestContentType: PropTypes.func.isRequired,
+  updateRequestMimeType: PropTypes.func.isRequired,
   updateSettingsShowPasswords: PropTypes.func.isRequired,
   updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,

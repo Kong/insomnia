@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import PromptButton from '../base/PromptButton';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -17,6 +18,9 @@ class KeyValueEditor extends Component {
 
     this._focusedPair = -1;
     this._focusedField = NAME;
+    this._nameInputs = {};
+    this._valueInputs = {};
+    this._focusedInput = null;
 
     this.state = {
       pairs: props.pairs
@@ -24,8 +28,8 @@ class KeyValueEditor extends Component {
   }
 
   _onChange (pairs, updateState = true) {
-    clearTimeout(this._askTimeout);
-    this._askTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
+    clearTimeout(this._triggerTimeout);
+    this._triggerTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
     updateState && this.setState({pairs});
   }
 
@@ -61,6 +65,13 @@ class KeyValueEditor extends Component {
       (p, i) => i == position ? Object.assign({}, p, pairPatch) : p
     );
     this._onChange(pairs);
+  }
+
+  _togglePair (position) {
+    const pairs = this.state.pairs.map(
+      (p, i) => i == position ? Object.assign({}, p, {disabled: !p.disabled}) : p
+    );
+    this._onChange(pairs, true);
   }
 
   _focusNext (addIfValue = false) {
@@ -136,25 +147,21 @@ class KeyValueEditor extends Component {
   }
 
   _updateFocus () {
-    const refName = `${this._focusedPair}.${this._focusedField}`;
-    const ref = this.refs[refName];
-
-    if (ref) {
-      ref.focus();
-
-      // Focus at the end of the text
-      ref.selectionStart = ref.selectionEnd = ref.value.length;
+    let ref;
+    if (this._focusedField === NAME) {
+      ref = this._nameInputs[this._focusedPair];
+    } else {
+      ref = this._valueInputs[this._focusedPair];
     }
-  }
 
-  shouldComponentUpdate (nextProps, nextState) {
-    // NOTE: Only ever re-render if we're changing length. This prevents cursor jumping
-    // inside inputs.
-    return (
-      nextProps.valueInputType !== this.props.valueInputType ||
-      nextProps.pairs.length !== this.state.pairs.length ||
-      nextState.pairs.length !== this.state.pairs.length
-    );
+    // If you focus an already focused input
+    if (!ref || this._focusedInput === ref) {
+      return;
+    }
+
+    // Focus at the end of the text
+    ref.focus();
+    ref.selectionStart = ref.selectionEnd = ref.value.length;
   }
 
   componentDidUpdate () {
@@ -166,88 +173,102 @@ class KeyValueEditor extends Component {
     const {maxPairs, className, valueInputType} = this.props;
 
     return (
-      <ul key={pairs.length}
-          className={classnames('key-value-editor', 'wide', className)}>
-        {pairs.map((pair, i) => {
-          if (typeof pair.value !== 'string') {
-            return null;
-          }
-
-          return (
-            <li key={i}>
-              <div className="key-value-editor__row">
-                <div>
-                  <div
-                    className="form-control form-control--underlined form-control--wide">
-                    <input
-                      type="text"
-                      ref={`${i}.${NAME}`}
-                      placeholder={this.props.namePlaceholder || 'Name'}
-                      defaultValue={pair.name}
-                      onChange={e => this._updatePair(i, {name: e.target.value})}
-                      onFocus={() => {
-                        this._focusedPair = i;
-                        this._focusedField = NAME
-                      }}
-                      onBlur={() => {
-                        this._focusedPair = -1
-                      }}
-                      onKeyDown={this._keyDown.bind(this)}/>
-                  </div>
-                </div>
-                <div>
-
-                  <div
-                    className="form-control form-control--underlined form-control--wide">
-                    <input
-                      type={valueInputType || 'text'}
-                      placeholder={this.props.valuePlaceholder || 'Value'}
-                      ref={`${i}.${VALUE}`}
-                      defaultValue={pair.value}
-                      onChange={e => this._updatePair(i, {value: e.target.value})}
-                      onFocus={() => {
-                        this._focusedPair = i;
-                        this._focusedField = VALUE
-                      }}
-                      onBlur={() => {
-                        this._focusedPair = -1
-                      }}
-                      onKeyDown={this._keyDown.bind(this)}/>
-                  </div>
-                </div>
-
-                <button tabIndex="-1" onClick={e => this._deletePair(i)}>
-                  <i className="fa fa-trash-o"></i>
-                </button>
+      <ul className={classnames('key-value-editor', 'wide', className)}>
+        {pairs.map((pair, i) => (
+          <li key={`${i}.pair`}
+              className={classnames(
+                'key-value-editor__row',
+                {'key-value-editor__row--disabled': pair.disabled}
+              )}>
+            <div>
+              <div className="form-control form-control--underlined form-control--wide">
+                <input
+                  type="text"
+                  key="name"
+                  ref={n => this._nameInputs[i] = n}
+                  placeholder={this.props.namePlaceholder || 'Name'}
+                  defaultValue={pair.name}
+                  onChange={e => this._updatePair(i, {name: e.target.value})}
+                  onFocus={e => {
+                    this._focusedPair = i;
+                    this._focusedField = NAME;
+                    this._focusedInput = e.target;
+                  }}
+                  onBlur={() => {
+                    this._focusedPair = -1
+                  }}
+                  onKeyDown={this._keyDown.bind(this)}
+                />
               </div>
-            </li>
-          )
-        })}
-        {maxPairs === undefined || pairs.length < maxPairs ? (
-          <li>
-            <div className="key-value-editor__row">
-              <div
-                className="form-control form-control--underlined form-control--wide">
-                <input type="text"
-                       placeholder={this.props.namePlaceholder || 'Name'}
-                       onFocus={() => {
-                         this._focusedField = NAME;
-                         this._addPair()
-                       }}/>
-              </div>
-              <div
-                className="form-control form-control--underlined form-control--wide">
-                <input type={valueInputType || 'text'}
-                       placeholder={this.props.valuePlaceholder || 'Value'}
-                       onFocus={() => {
-                         this._focusedField = VALUE;
-                         this._addPair()
-                       }}/>
-              </div>
-              <button disabled={true} tabIndex="-1">
-                <i className="fa fa-blank"></i>
-              </button>
             </div>
+            <div>
+              <div className={classnames(
+                'form-control form-control--wide', {
+                  'form-control--underlined': valueInputType !== 'file',
+                  'form-control--padded': valueInputType === 'file',
+                }
+              )}>
+                <input
+                  type={valueInputType || 'text'}
+                  placeholder={this.props.valuePlaceholder || 'Value'}
+                  ref={n => this._valueInputs[i] = n}
+                  defaultValue={pair.value}
+                  onChange={e => this._updatePair(i, {value: e.target.value})}
+                  onFocus={e => {
+                    this._focusedPair = i;
+                    this._focusedField = VALUE;
+                    this._focusedInput = e.target;
+                  }}
+                  onBlur={() => {
+                    this._focusedPair = -1
+                  }}
+                  onKeyDown={this._keyDown.bind(this)}
+                />
+              </div>
+            </div>
+
+            <button tabIndex="-1"
+                    onClick={e => this._togglePair(i)}
+                    title={pair.disabled ? 'Enable item' : 'Disable item'}>
+              {pair.disabled ?
+                <i className="fa fa-square-o"></i> :
+                <i className="fa fa-check-square-o"></i>
+              }
+            </button>
+
+            <PromptButton key={Math.random()}
+                          tabIndex="-1"
+                          onClick={e => this._deletePair(i)}
+                          title="Delete item"
+                          confirmMessage={<i className="fa fa-trash-o"></i>}>
+              <i className="fa fa-trash-o"></i>
+            </PromptButton>
+          </li>
+        ))}
+        {!maxPairs || pairs.length < maxPairs ? (
+          <li className="key-value-editor__row">
+            <div className="form-control form-control--underlined form-control--wide">
+              <input type="text"
+                     placeholder={this.props.namePlaceholder || 'Name'}
+                     onFocus={() => {
+                       this._focusedField = NAME;
+                       this._addPair()
+                     }}/>
+            </div>
+            <div className="form-control form-control--underlined form-control--wide">
+              <input type="text"
+                     placeholder={this.props.valuePlaceholder || 'Value'}
+                     onFocus={() => {
+                       this._focusedField = VALUE;
+                       this._addPair()
+                     }}/>
+            </div>
+            <button disabled={true} tabIndex="-1">
+              <i className="fa fa-blank"></i>
+            </button>
+            <button disabled={true} tabIndex="-1">
+              <i className="fa fa-blank"></i>
+            </button>
           </li>
         ) : null}
       </ul>
@@ -257,7 +278,7 @@ class KeyValueEditor extends Component {
 
 KeyValueEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
-  pairs: PropTypes.array.isRequired,
+  pairs: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
   maxPairs: PropTypes.number,
