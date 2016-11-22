@@ -116,21 +116,18 @@ export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_TEXT = 'text/plain';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
-export const CONTENT_TYPE_OTHER = '';
+export const CONTENT_TYPE_FILE = 'application/octet-stream';
+export const CONTENT_TYPE_RAW = '';
 
 export const contentTypesMap = {
   [CONTENT_TYPE_JSON]: 'JSON',
   [CONTENT_TYPE_XML]: 'XML',
   // [CONTENT_TYPE_FORM_DATA]: 'Form Data',
-  [CONTENT_TYPE_FORM_URLENCODED]: 'Url Encoded',
+  [CONTENT_TYPE_FORM_URLENCODED]: 'Form Url Encoded',
   [CONTENT_TYPE_TEXT]: 'Plain Text',
-  [CONTENT_TYPE_OTHER]: 'Other',
+  [CONTENT_TYPE_FILE]: 'File Upload',
+  [CONTENT_TYPE_RAW]: 'Raw Body',
 };
-
-export const BODY_TYPE_RAW = 'raw';
-export const BODY_TYPE_FILE = 'file';
-export const BODY_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
-export const BODY_TYPE_FORM = 'multipart/form-data';
 
 /**
  * Get the friendly name for a given content type
@@ -139,7 +136,7 @@ export const BODY_TYPE_FORM = 'multipart/form-data';
  * @returns {*|string}
  */
 export function getContentTypeName (contentType) {
-  return contentTypesMap[contentType] || contentTypesMap[CONTENT_TYPE_OTHER];
+  return contentTypesMap[contentType] || 'Other';
 }
 
 export function getContentTypeFromHeaders (headers) {

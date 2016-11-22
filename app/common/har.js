@@ -1,8 +1,11 @@
+import fs from 'fs';
 import * as models from '../models';
 import {getRenderedRequest} from './render';
 import {jarFromCookies} from './cookies';
 import * as util from './misc';
 import * as misc from './misc';
+import {CONTENT_TYPE_FILE} from './constants';
+import {newBodyRaw} from '../models/request';
 
 export function exportHarWithRequest (renderedRequest, addContentLength = false) {
   if (addContentLength) {
@@ -18,8 +21,17 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
     }
   }
 
-  // Luckily, Insomnia uses the same body format as HAR :)
-  const postData = renderedRequest.body;
+  let postData = '';
+  if (renderedRequest.body.fileName) {
+    try {
+      postData = newBodyRaw(fs.readFileSync(renderedRequest.body.fileName, 'base64'));
+    } catch (e) {
+      console.warn('[code gen] Failed to read file', e);
+    }
+  } else {
+    // For every other type, Insomnia uses the same body format as HAR
+    postData = renderedRequest.body;
+  }
 
   return {
     method: renderedRequest.method,

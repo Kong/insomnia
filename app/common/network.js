@@ -9,6 +9,8 @@ import {jarFromCookies, cookiesFromJar, cookieHeaderValueForUri} from './cookies
 import {setDefaultProtocol} from './misc';
 import {getRenderedRequest} from './render';
 import {swapHost} from './dns';
+import {CONTENT_TYPE_FILE} from './constants';
+import * as fs from 'fs';
 
 let cancelRequestFunction = null;
 
@@ -50,6 +52,8 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     config.body = buildFromParams(renderedRequest.body.params || [], true);
   } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
     // TODO: This
+  } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FILE) {
+    config.body = fs.readFileSync(renderedRequest.body.fileName);
   } else {
     config.body = renderedRequest.body.text || '';
   }
@@ -85,14 +89,25 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
     const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
 
-    const config = _buildRequestConfig(renderedRequest, {
-      jar: null, // We're doing our own cookies
-      proxy: proxy,
-      followAllRedirects: settings.followRedirects,
-      followRedirect: settings.followRedirects,
-      timeout: settings.timeout > 0 ? settings.timeout : null,
-      rejectUnauthorized: settings.validateSSL
-    }, true);
+    let config;
+    try {
+      config = _buildRequestConfig(renderedRequest, {
+        jar: null, // We're doing our own cookies
+        proxy: proxy,
+        followAllRedirects: settings.followRedirects,
+        followRedirect: settings.followRedirects,
+        timeout: settings.timeout > 0 ? settings.timeout : null,
+        rejectUnauthorized: settings.validateSSL
+      }, true);
+    } catch (e) {
+      const response = await models.response.create({
+        parentId: renderedRequest._id,
+        elapsedTime: 0,
+        statusMessage: 'Error',
+        error: e.message
+      });
+      return resolve(response);
+    }
 
     // Add the cookie header to the request
     const cookieJar = renderedRequest.cookieJar;

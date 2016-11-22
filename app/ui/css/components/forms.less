@@ -87,18 +87,28 @@ label > .form-control,
   }
 }
 
-button:disabled {
+.btn:disabled {
   opacity: 0.4;
 }
 
-button:focus:not(:disabled),
-button.focus:not(:disabled),
-button:hover:not(:disabled) {
+.btn:focus:not(:disabled),
+.btn.focus:not(:disabled),
+.btn:hover:not(:disabled) {
   background: @hl-xs;
 }
 
-button:active:not(:disabled) {
+.btn:active:not(:disabled) {
   background: @hl-md;
+}
+
+.btn.btn--no-background {
+  opacity: 0.5;
+  background: transparent;
+
+  &:hover {
+    opacity: 1;
+    background: transparent;
+  }
 }
 
 textarea, input, button {

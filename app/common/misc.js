@@ -154,3 +154,25 @@ export function debounce (callback, millis = DEBOUNCE_MILLIS) {
     callback.apply(null, results['__key__'])
   }, millis).bind(null, '__key__');
 }
+
+export function describeByteSize (bytes) {
+  bytes = Math.round(bytes * 10) / 10;
+  let size;
+
+  let unit = 'B';
+  if (bytes < 1024) {
+    size = bytes;
+    unit = 'B';
+  } else if (bytes < 1024 * 1024) {
+    size = bytes / 1024;
+    unit = 'KB';
+  } else if (bytes < 1024 * 1024) {
+    size = bytes / 1024 / 1024;
+    unit = 'MB';
+  } else {
+    size = bytes / 1024 / 1024 / 1024;
+    unit = 'GB';
+  }
+
+  return Math.round(size * 10) / 10 + ' ' + unit;
+}

@@ -3,6 +3,9 @@ import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {deconstructToParams} from '../common/querystring';
 import {CONTENT_TYPE_JSON} from '../common/constants';
+import {CONTENT_TYPE_XML} from '../common/constants';
+import {CONTENT_TYPE_FILE} from '../common/constants';
+import {CONTENT_TYPE_TEXT} from '../common/constants';
 
 export const name = 'Request';
 export const type = 'Request';
@@ -22,6 +25,24 @@ export function init () {
   };
 }
 
+export function getBodyDescription (body) {
+  if (body.fileName) {
+    return 'File Upload';
+  } else if (body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    return 'Form Url Encoded';
+  } else if (body.mimeType === CONTENT_TYPE_FORM_DATA) {
+    return 'Form Data';
+  } else if (body.mimeType === CONTENT_TYPE_JSON) {
+    return 'JSON';
+  } else if (body.mimeType === CONTENT_TYPE_XML) {
+    return 'XML';
+  } else if (body.mimeType === CONTENT_TYPE_TEXT) {
+    return 'Plain Text';
+  } else {
+    return 'Raw Body';
+  }
+}
+
 export function newBodyRaw (rawBody, contentType) {
   if (!contentType) {
     return {text: rawBody};
@@ -35,6 +56,13 @@ export function newBodyFormUrlEncoded (parameters) {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
     params: parameters
+  }
+}
+
+export function newBodyFile (path) {
+  return {
+    mimeType: CONTENT_TYPE_FILE,
+    fileName: path
   }
 }
 
@@ -99,6 +127,8 @@ export function updateMimeType (request, mimeType) {
     request.body = newBodyForm(request.body.params || []);
   } else if (mimeType === CONTENT_TYPE_JSON) {
     request.body = newBodyRaw(request.body.text || '');
+  } else if (mimeType === CONTENT_TYPE_FILE) {
+    request.body = newBodyFile('');
   } else {
     request.body = newBodyRaw(request.body.text || '', mimeType);
   }
