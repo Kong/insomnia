@@ -99,10 +99,9 @@ class RequestPane extends Component {
           <TabList>
             <Tab>
               <button>
-                {getContentTypeName(getContentTypeFromHeaders(request.headers))}
+                {getContentTypeName(request.body.mimeType)}
               </button>
-              <ContentTypeDropdown
-                updateRequestMimeType={updateRequestMimeType}/>
+              <ContentTypeDropdown updateRequestMimeType={updateRequestMimeType}/>
             </Tab>
             <Tab>
               <button>
