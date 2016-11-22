@@ -1,7 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-import PromptButton from '../base/PromptButton';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -236,13 +235,12 @@ class KeyValueEditor extends Component {
               }
             </button>
 
-            <PromptButton key={Math.random()}
-                          tabIndex="-1"
-                          onClick={e => this._deletePair(i)}
-                          title="Delete item"
-                          confirmMessage={<i className="fa fa-trash-o"></i>}>
+            <button key={Math.random()}
+                    tabIndex="-1"
+                    onClick={e => this._deletePair(i)}
+                    title="Delete item">
               <i className="fa fa-trash-o"></i>
-            </PromptButton>
+            </button>
           </li>
         ))}
         {!maxPairs || pairs.length < maxPairs ? (
