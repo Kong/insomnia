@@ -286,7 +286,7 @@ class KeyValueEditor extends Component {
           </li>
         ))}
         {!maxPairs || pairs.length < maxPairs ? (
-          <li className="key-value-editor__row">
+          <li className="key-value-editor__row faded">
             <div className="form-control form-control--underlined form-control--wide">
               <input type="text"
                      placeholder={this.props.namePlaceholder || 'Name'}
