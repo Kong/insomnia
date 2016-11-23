@@ -144,6 +144,15 @@ function showUpdateNotification () {
   hasPromptedForUpdates = true;
 }
 
+function trackEvent (...args) {
+  const window = BrowserWindow.getFocusedWindow();
+  if (!window || !window.webContents) {
+    return;
+  }
+
+  window.webContents.send('analytics-track-event', args);
+}
+
 function showDownloadModal (version) {
   hasPromptedForUpdates = true;
 
@@ -275,9 +284,23 @@ function createWindow () {
     }
   });
 
-  mainWindow.on('resize', e => saveBounds());
-  mainWindow.on('move', e => saveBounds());
-  mainWindow.on('unresponsive', e => showUnresponsiveModal());
+  let _resizeTimeout = null;
+  mainWindow.on('resize', e => {
+    saveBounds();
+
+    clearTimeout(_resizeTimeout);
+    _resizeTimeout = setTimeout(() => {
+      trackEvent('Window', 'Resize');
+    }, 1000);
+  });
+  mainWindow.on('move', e => {
+    saveBounds();
+    trackEvent('Window', 'Move');
+  });
+  mainWindow.on('unresponsive', e => {
+    showUnresponsiveModal();
+    trackEvent('Window', 'Unresponsive');
+  });
 
   // and load the app.html of the app.
   mainWindow.loadURL(`file://${__dirname}/main.html`);
@@ -288,6 +311,7 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
+    trackEvent('Window', 'Close');
   });
 
   require('electron-context-menu')({});
@@ -314,6 +338,7 @@ function createWindow () {
             }
 
             window.webContents.send('toggle-preferences');
+            trackEvent('App Menu', 'Preferences');
           }
         },
         {
@@ -386,6 +411,7 @@ function createWindow () {
             const zoomFactor = 1;
             window.webContents.setZoomFactor(zoomFactor);
             saveZoomFactor(zoomFactor);
+            trackEvent('App Menu', 'Zoom Reset');
           }
         },
         {
@@ -401,6 +427,7 @@ function createWindow () {
             window.webContents.setZoomFactor(zoomFactor);
 
             saveZoomFactor(zoomFactor);
+            trackEvent('App Menu', 'Zoom In');
           }
         },
         {
@@ -415,6 +442,7 @@ function createWindow () {
             const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
             window.webContents.setZoomFactor(zoomFactor);
             saveZoomFactor(zoomFactor);
+            trackEvent('App Menu', 'Zoom Out');
           }
         },
         {
@@ -427,6 +455,7 @@ function createWindow () {
             }
 
             window.webContents.send('toggle-sidebar');
+            trackEvent('App Menu', 'Toggle Sidebar');
           }
         }
       ]
@@ -449,13 +478,15 @@ function createWindow () {
         {
           label: "Contact Support",
           click: () => {
+            trackEvent('App Menu', 'Contact');
             shell.openExternal('mailto:support@insomnia.rest');
           }
         },
         {
           label: "Insomnia Help",
           accelerator: "CmdOrCtrl+?",
-          click: () => {
+          click: (e) => {
+            trackEvent('App Menu', 'Help');
             shell.openExternal('http://docs.insomnia.rest');
           }
         }

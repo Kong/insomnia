@@ -1,5 +1,6 @@
 import * as segment from './segment';
 import * as google from './google';
+import {ipcRenderer} from 'electron';
 
 let initialized = false;
 export async function init (accountId) {
@@ -15,6 +16,10 @@ export async function init (accountId) {
   } catch (e) {
     // Just to be extra safe
   }
+
+  ipcRenderer.on('analytics-track-event', (_, args) => {
+    trackEvent(...args);
+  });
 }
 
 export function trackEvent (...args) {
