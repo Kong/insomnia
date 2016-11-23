@@ -9,6 +9,7 @@ class Link extends Component {
     super(props);
     this._boundHandleClick = this._handleClick.bind(this);
   }
+
   _handleClick (e) {
     e && e.preventDefault();
     const {href} = this.props;
@@ -23,14 +24,21 @@ class Link extends Component {
 
     trackEvent('Link', 'Click', href)
   }
+
   render () {
     const {onClick, button, href, children, ...other} = this.props;
     return button ? (
-      <button onClick={onClick || this._boundHandleClick} {...other}>
+      <button onClick={e => {
+        onClick();
+        this._boundHandleClick(e);
+      }} {...other}>
         {children}
       </button>
-    ) :(
-      <a href={href} onClick={onClick || this._boundHandleClick} {...other}>
+    ) : (
+      <a href={href} onClick={e => {
+        onClick();
+        this._boundHandleClick(e);
+      }} {...other}>
         {children}
       </a>
     )

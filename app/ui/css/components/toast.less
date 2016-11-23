@@ -14,26 +14,44 @@
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: row;
-  font-size: @font-size-sm;
-  transition: opacity 300ms;
+  align-items: center;
+  transition: opacity 500ms;
+  padding: @padding-sm @padding-xs @padding-sm @padding-md;
 
   &.toast--show {
     opacity: 1;
   }
 
-  .toast__message,
-  .toast__action {
-    padding: @padding-sm * 1.3 @padding-md * 1.3;
-    height: auto;
+  .toast__message {
+    display: inline-block;
+    padding-left: @padding-xs;
   }
 
   .toast__action {
     color: darken(@surprise, 10);
     text-transform: uppercase;
     font-size: @font-size-sm;
+    padding-left: @padding-md;
+  }
+
+  .toast__action > button {
+    border-color: inherit;
+  }
+
+  .toast__action--close {
+    color: @hl-md;
+    padding-left: @padding-sm;
 
     &:hover {
-      background: @hl-xs;
+      color: @hl;
     }
+  }
+
+  .toast__action--close > button:hover,
+  .toast__action--close > button {
+    font-size: @font-size-xs;
+    padding: 0 @padding-xs;
+    border: 0;
+    background: transparent;
   }
 }

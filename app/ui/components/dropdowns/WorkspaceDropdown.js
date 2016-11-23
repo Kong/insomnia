@@ -122,7 +122,7 @@ class WorkspaceDropdown extends Component {
           <DropdownHint char=","></DropdownHint>
         </DropdownItem>
         <DropdownItem buttonClass={Link} href="https://insomnia.rest/teams/" button={true}>
-          <i className="fa fa-users"></i> For Teams
+          <i className="fa fa-users"></i> Insomnia for Teams
         </DropdownItem>
       </Dropdown>
     )

@@ -1,12 +1,10 @@
 import React, {PropTypes, Component} from 'react';
 import classnames from 'classnames';
-import {TAB_PLUS} from './modals/SettingsModal';
-import SettingsModal from './modals/SettingsModal';
-import {showModal} from './modals';
-import * as analytics from '../../analytics/index';
+import Link from './base/Link';
+import * as fetch from '../../common/fetch';
+import {trackEvent} from '../../analytics/index';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
-const KEY_PLUS_IS_HERE = 'plus-is-here';
 
 class Toast extends Component {
   constructor (props) {
@@ -16,15 +14,6 @@ class Toast extends Component {
       notification: null,
       visible: false,
     };
-
-    this._notifications = [
-      // TODO: Fetch these from remote server
-      // {
-      //   key: KEY_PLUS_IS_HERE,
-      //   message: 'Cloud sync is here!',
-      //   cta: 'Show'
-      // }
-    ];
   }
 
   _loadSeen () {
@@ -35,54 +24,62 @@ class Toast extends Component {
     }
   }
 
-  _markAsRead (notification) {
-    const seen = this._loadSeen();
-    seen[notification.key] = true;
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(seen, null, 2));
-    this._handleHideActiveNotification();
-  }
-
-  _handleClick (notification) {
+  _handleDismissActiveNotification () {
+    const {notification} = this.state;
     if (!notification) {
-      // Not sure how this happened, but Sentry says it has
       return;
     }
 
-    if (notification.key === KEY_PLUS_IS_HERE) {
-      showModal(SettingsModal, TAB_PLUS);
-    }
-
-    this._markAsRead(notification);
-
-    analytics.trackEvent('Notification', 'Click', notification.key);
-  }
-
-  _handleShowNotifications () {
+    // Remember that we've seen it
     const seen = this._loadSeen();
-    for (const notification of this._notifications) {
-      if (seen && seen[notification.key]) {
-        continue;
-      }
+    seen[notification.key] = true;
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(seen, null, 2));
 
-      this.setState({notification, visible: true});
-    }
-  }
-
-  _handleHideActiveNotification () {
-    const {notification} = this.state;
-    if (notification) {
-      this.setState({visible: false});
-    }
+    // Hide the currently showing notification
+    this.setState({visible: false});
 
     // Give time for toast to fade out, then remove it
     setTimeout(() => {
       this.setState({notification: null});
     }, 1000);
+
+    trackEvent('Notification', 'Dismiss', notification.key);
+  }
+
+  async _handleCheckNotifications () {
+    // If there is a notification open, skip check
+    if (this.state.notification) {
+      return;
+    }
+
+    const seenNotifications = this._loadSeen();
+
+    let notification;
+    try {
+      notification = await fetch.get('/notification');
+    } catch (e) {
+      console.warn('[toast] Failed to fetch notifications', e);
+    }
+
+    // No new notifications
+    if (!notification) {
+      return;
+    }
+
+    // We've already seen this one, so bail
+    if (seenNotifications && seenNotifications[notification.key]) {
+      return;
+    }
+
+    // Show the notification
+    this.setState({notification, visible: false});
+
+    // Fade the notification in
+    setTimeout(() => this.setState({visible: true}), 1000);
   }
 
   componentDidMount () {
-    setTimeout(() => this._handleShowNotifications(), 1000 * 10);
-    setTimeout(() => this._handleHideActiveNotification(), 1000 * 100);
+    setInterval(() => this._handleCheckNotifications(), 1000);
   }
 
   render () {
@@ -92,14 +89,29 @@ class Toast extends Component {
       return null;
     }
 
+    const actions = notification && notification.actions || [];
+
     return (
       <div className={classnames('toast', {'toast--show': visible})}>
         <div className="toast__message">
           {notification ? notification.message : 'Unknown'}
         </div>
-        <button className="toast__action" onClick={e => this._handleClick(notification)}>
-          {notification ? notification.cta : 'Hide'}
-        </button>
+        {actions.map(action => (
+          <div className="toast__action" key={action.key}>
+            <Link className="btn btn--super-duper-compact btn--outlined"
+                  onClick={e => trackEvent('Notification', 'Click', `${notification.key}/${action.key}`)}
+                  button={true}
+                  href={action.url}>
+              {action ? action.name : 'Thing'}
+            </Link>
+          </div>
+        ))}
+        <div className="toast__action toast__action--close">
+          <button className="btn btn--super-duper-compact"
+                  onClick={e => this._handleDismissActiveNotification()}>
+            <i className="fa fa-close"></i>
+          </button>
+        </div>
       </div>
     )
   }
