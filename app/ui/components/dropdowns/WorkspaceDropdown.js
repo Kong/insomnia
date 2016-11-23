@@ -11,6 +11,7 @@ import {getAppVersion} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import {TAB_INDEX_EXPORT} from '../modals/SettingsModal';
 import {trackEvent} from '../../../analytics/index';
+import Link from '../base/Link';
 
 class WorkspaceDropdown extends Component {
   async _promptUpdateName () {
@@ -120,8 +121,8 @@ class WorkspaceDropdown extends Component {
           <i className="fa fa-cog"></i> Settings
           <DropdownHint char=","></DropdownHint>
         </DropdownItem>
-        <DropdownItem onClick={e => showModal(SettingsModal, TAB_INDEX_EXPORT)}>
-          <i className="fa fa-users"></i> For Team
+        <DropdownItem buttonClass={Link} href="https://insomnia.rest/teams/" button={true}>
+          <i className="fa fa-users"></i> For Teams
         </DropdownItem>
       </Dropdown>
     )

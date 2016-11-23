@@ -24,13 +24,13 @@ class Link extends Component {
     trackEvent('Link', 'Click', href)
   }
   render () {
-    const {button, href, children, ...other} = this.props;
+    const {onClick, button, href, children, ...other} = this.props;
     return button ? (
-      <button onClick={this._boundHandleClick} {...other}>
+      <button onClick={onClick || this._boundHandleClick} {...other}>
         {children}
       </button>
     ) :(
-      <a href={href} onClick={this._boundHandleClick} {...other}>
+      <a href={href} onClick={onClick || this._boundHandleClick} {...other}>
         {children}
       </a>
     )
