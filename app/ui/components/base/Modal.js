@@ -36,6 +36,10 @@ class Modal extends Component {
     }
   }
 
+  isShown () {
+    return this.state.open;
+  }
+
   show () {
     this.setState({open: true, zIndex: globalZIndex++});
 

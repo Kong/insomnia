@@ -67,7 +67,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
       }
     }
     config.formData = formData;
-  } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FILE) {
+  } else if (renderedRequest.body.fileName) {
     config.body = fs.readFileSync(renderedRequest.body.fileName);
   } else {
     config.body = renderedRequest.body.text || '';
