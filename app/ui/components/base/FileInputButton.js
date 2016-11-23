@@ -40,7 +40,7 @@ class FileInputButton extends Component {
                       addIcon={true}
                       onClick={e => this._handleUnsetFile()}>
           <i className="fa fa-close"></i>
-          Unset
+          Clear File
         </DropdownItem>
       </Dropdown>
     )

@@ -49,9 +49,9 @@ class RequestUrlBar extends Component {
             {method} <i className="fa fa-caret-down"/>
           </DropdownButton>
           {METHODS.map(method => (
-            <DropdownItem key={method} className={`method-${method}`} onClick={e => {
+            <DropdownItem key={method} className={`method-${method}`} onClick={() => {
               onMethodChange(method);
-              trackEvent('Request', 'Method Change', {method});
+              trackEvent('Request', 'Method Change', method);
             }}>
               {method}
             </DropdownItem>

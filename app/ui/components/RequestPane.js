@@ -84,6 +84,10 @@ class RequestPane extends Component {
       )
     }
 
+    const numParameters = request.parameters.filter(p => !p.disabled).length;
+    const numHeaders = request.headers.filter(h => !h.disabled).length;
+    const hasAuth = !request.authentication.disabled;
+
     return (
       <section className="pane request-pane">
         <header className="pane__header">
@@ -106,22 +110,17 @@ class RequestPane extends Component {
             </Tab>
             <Tab>
               <button>
-                Auth {request.authentication.username ?
-                <i className="fa fa-lock txt-sm"></i> : ''}
+                Auth {hasAuth ? <i className="fa fa-lock txt-sm"></i> : null}
               </button>
             </Tab>
             <Tab>
               <button>
-                Query {request.parameters.length ?
-                <span
-                  className="txt-sm">({request.parameters.length})</span> : null}
+                Query {numParameters ? <span className="txt-sm">({numParameters})</span> : null}
               </button>
             </Tab>
             <Tab>
               <button>
-                Headers {request.headers.length ? (
-                <span
-                  className="txt-sm">({request.headers.length})</span> ) : null}
+                Headers {numHeaders ? <span className="txt-sm">({numHeaders})</span> : null}
               </button>
             </Tab>
           </TabList>
@@ -152,7 +151,7 @@ class RequestPane extends Component {
                   <RenderedQueryString
                     request={request}
                     environmentId={environmentId}
-                    placeholder="http://myproduct.com?name=Gregory"
+                    placeholder="http://awesome-api.com?name=Gregory"
                   />
                 </code>
               </div>

@@ -4,6 +4,8 @@ import * as models from '../models';
 import {getAppVersion} from './constants';
 import * as misc from './misc';
 
+const EXPORT_FORMAT = 3;
+
 const EXPORT_TYPE_REQUEST = 'request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
 const EXPORT_TYPE_WORKSPACE = 'workspace';
@@ -90,7 +92,7 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
 export async function exportJSON (parentDoc = null) {
   const data = {
     _type: 'export',
-    __export_format: 2,
+    __export_format: EXPORT_FORMAT,
     __export_date: new Date(),
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
     resources: {}
@@ -115,11 +117,12 @@ export async function exportJSON (parentDoc = null) {
       d._type = EXPORT_TYPE_REQUEST;
     }
 
-    // Delete the type property because we add our own (_type)
+    // Delete the things we don't want to export
     delete d.type;
+    delete d._schema;
 
     return d;
   });
 
-  return JSON.stringify(data, null, 2);
+  return JSON.stringify(data, null, '\t');
 }
