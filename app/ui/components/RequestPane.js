@@ -69,12 +69,18 @@ class RequestPane extends Component {
               </table>
 
               <div className="text-center pane__body--placeholder__cta">
-                <button onClick={e => handleImportFile()}
-                        className="btn inline-block btn--super-compact btn--outlined">
+                <button className="btn inline-block btn--super-compact btn--outlined"
+                        onClick={e => {
+                          handleImportFile();
+                          trackEvent('Request Pane', 'CTA', 'Import');
+                        }}>
                   Import from File
                 </button>
-                <button onClick={e => handleCreateRequest()}
-                        className="btn inline-block btn--super-compact btn--outlined">
+                <button className="btn inline-block btn--super-compact btn--outlined"
+                        onClick={e => {
+                          handleCreateRequest();
+                          trackEvent('Request Pane', 'CTA', 'New Request');
+                        }}>
                   New Request
                 </button>
               </div>

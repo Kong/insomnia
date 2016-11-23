@@ -3,6 +3,7 @@ import {shell} from 'electron';
 import {trackEvent} from '../../../analytics/index';
 import * as querystring from '../../../common/querystring';
 import {getAppVersion} from '../../../common/constants';
+import {isDevelopment} from '../../../common/constants';
 
 class Link extends Component {
   constructor (props) {
@@ -14,7 +15,8 @@ class Link extends Component {
     e && e.preventDefault();
     const {href} = this.props;
     if (href.match(/^http/i)) {
-      const qs = `utm_source=Insomnia&utm_medium=App&utm_campaign=v${getAppVersion()}`;
+      const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
+      const qs = `utm_source=${appName}&utm_medium=App&utm_campaign=v${getAppVersion()}`;
       const attributedHref = querystring.joinUrl(href, qs);
       shell.openExternal(attributedHref);
     } else {

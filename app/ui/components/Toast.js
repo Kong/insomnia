@@ -30,11 +30,6 @@ class Toast extends Component {
       return;
     }
 
-    // Remember that we've seen it
-    const seen = this._loadSeen();
-    seen[notification.key] = true;
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(seen, null, 2));
-
     // Hide the currently showing notification
     this.setState({visible: false});
 
@@ -42,8 +37,6 @@ class Toast extends Component {
     setTimeout(() => {
       this.setState({notification: null});
     }, 1000);
-
-    trackEvent('Notification', 'Dismiss', notification.key);
   }
 
   async _handleCheckNotifications () {
@@ -71,11 +64,17 @@ class Toast extends Component {
       return;
     }
 
+    // Remember that we've seen it
+    seenNotifications[notification.key] = true;
+    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(seenNotifications, null, 2));
+
     // Show the notification
     this.setState({notification, visible: false});
 
     // Fade the notification in
     setTimeout(() => this.setState({visible: true}), 1000);
+
+    trackEvent('Notification', 'Shown', notification.key);
   }
 
   componentDidMount () {
@@ -89,26 +88,28 @@ class Toast extends Component {
       return null;
     }
 
-    const actions = notification && notification.actions || [];
-
     return (
       <div className={classnames('toast', {'toast--show': visible})}>
         <div className="toast__message">
           {notification ? notification.message : 'Unknown'}
         </div>
-        {actions.map(action => (
-          <div className="toast__action" key={action.key}>
-            <Link className="btn btn--super-duper-compact btn--outlined"
-                  onClick={e => trackEvent('Notification', 'Click', `${notification.key}/${action.key}`)}
-                  button={true}
-                  href={action.url}>
-              {action ? action.name : 'Thing'}
-            </Link>
-          </div>
-        ))}
+        <div className="toast__action">
+          <Link className="btn btn--super-duper-compact btn--outlined no-wrap"
+                onClick={e => {
+                  trackEvent('Notification', 'Click', notification.key);
+                  this._handleDismissActiveNotification();
+                }}
+                button={true}
+                href={notification.url}>
+            {notification.cta}
+          </Link>
+        </div>
         <div className="toast__action toast__action--close">
           <button className="btn btn--super-duper-compact"
-                  onClick={e => this._handleDismissActiveNotification()}>
+                  onClick={e => {
+                    this._handleDismissActiveNotification();
+                    trackEvent('Notification', 'Dismiss', notification.key);
+                  }}>
             <i className="fa fa-close"></i>
           </button>
         </div>
