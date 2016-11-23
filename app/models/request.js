@@ -25,24 +25,6 @@ export function init () {
   };
 }
 
-export function getBodyDescription (body) {
-  if (body.fileName) {
-    return 'File Upload';
-  } else if (body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    return 'Form Url Encoded';
-  } else if (body.mimeType === CONTENT_TYPE_FORM_DATA) {
-    return 'Form Data';
-  } else if (body.mimeType === CONTENT_TYPE_JSON) {
-    return 'JSON';
-  } else if (body.mimeType === CONTENT_TYPE_XML) {
-    return 'XML';
-  } else if (body.mimeType === CONTENT_TYPE_TEXT) {
-    return 'Plain Text';
-  } else {
-    return 'Raw Body';
-  }
-}
-
 export function newBodyRaw (rawBody, contentType) {
   if (!contentType) {
     return {text: rawBody};
@@ -121,19 +103,18 @@ export function updateMimeType (request, mimeType) {
 
   // 2. Make a new request body
   // TODO: When switching mime-type, try to convert formats nicely
+  let body;
   if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    request.body = newBodyFormUrlEncoded(request.body.params || []);
+    body = newBodyFormUrlEncoded(request.body.params || []);
   } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    request.body = newBodyForm(request.body.params || []);
-  } else if (mimeType === CONTENT_TYPE_JSON) {
-    request.body = newBodyRaw(request.body.text || '');
+    body = newBodyForm(request.body.params || []);
   } else if (mimeType === CONTENT_TYPE_FILE) {
-    request.body = newBodyFile('');
+    body = newBodyFile('');
   } else {
-    request.body = newBodyRaw(request.body.text || '', mimeType);
+    body = newBodyRaw(request.body.text || '', mimeType);
   }
 
-  return update(request, {headers});
+  return update(request, {headers, body});
 }
 
 export function duplicate (request) {

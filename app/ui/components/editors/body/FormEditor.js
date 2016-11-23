@@ -8,7 +8,11 @@ class FormEditor extends Component {
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
-          <KeyValueEditor onChange={onChange} pairs={parameters} valueInputType="file"/>
+          <KeyValueEditor
+            onChange={onChange}
+            pairs={parameters}
+            multipart={true}
+          />
         </div>
       </div>
     )

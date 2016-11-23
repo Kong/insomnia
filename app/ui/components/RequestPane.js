@@ -7,9 +7,8 @@ import RenderedQueryString from './RenderedQueryString';
 import BodyEditor from './editors/body/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
 import RequestUrlBar from './RequestUrlBar.js';
-import {MOD_SYM, getContentTypeName, getContentTypeFromHeaders} from '../../common/constants';
+import {MOD_SYM, getContentTypeName} from '../../common/constants';
 import {debounce} from '../../common/misc';
-import {getBodyDescription} from '../../models/request';
 
 class RequestPane extends Component {
   render () {

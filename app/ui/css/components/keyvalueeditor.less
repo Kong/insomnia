@@ -12,7 +12,7 @@
 
   .key-value-editor__row {
     display: grid;
-    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr) auto auto;
+    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr) auto auto auto;
     grid-template-rows: auto;
 
     &.key-value-editor__row--disabled input {
@@ -32,7 +32,8 @@
       }
     }
 
-    & > button {
+    & > button,
+    .dropdown > button {
       color: @hl;
 
       &:hover,
@@ -40,7 +41,8 @@
         background: transparent;
       }
 
-      &:hover {
+      &:hover,
+      &:focus {
         color: inherit;
       }
     }

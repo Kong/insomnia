@@ -1,6 +1,8 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import FileInputButton from '../base/FileInputButton';
+import {Dropdown, DropdownItem, DropdownButton} from './dropdown/index';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -60,9 +62,10 @@ class KeyValueEditor extends Component {
   }
 
   _updatePair (position, pairPatch) {
-    const pairs = this.state.pairs.map(
-      (p, i) => i == position ? Object.assign({}, p, pairPatch) : p
-    );
+    const pairs = this.state.pairs.map((p, i) => (
+      i == position ? Object.assign({}, p, pairPatch) : p
+    ));
+
     this._onChange(pairs);
   }
 
@@ -169,7 +172,7 @@ class KeyValueEditor extends Component {
 
   render () {
     const {pairs} = this.state;
-    const {maxPairs, className, valueInputType} = this.props;
+    const {maxPairs, className, valueInputType, multipart} = this.props;
 
     return (
       <ul className={classnames('key-value-editor', 'wide', className)}>
@@ -200,35 +203,61 @@ class KeyValueEditor extends Component {
                 />
               </div>
             </div>
-            <div>
-              <div className={classnames(
-                'form-control form-control--wide', {
-                  'form-control--underlined': valueInputType !== 'file',
-                  'form-control--padded': valueInputType === 'file',
-                }
-              )}>
-                <input
-                  type={valueInputType || 'text'}
-                  placeholder={this.props.valuePlaceholder || 'Value'}
-                  ref={n => this._valueInputs[i] = n}
-                  defaultValue={pair.value}
-                  onChange={e => this._updatePair(i, {value: e.target.value})}
-                  onFocus={e => {
-                    this._focusedPair = i;
-                    this._focusedField = VALUE;
-                    this._focusedInput = e.target;
-                  }}
-                  onBlur={() => {
-                    this._focusedPair = -1
-                  }}
-                  onKeyDown={this._keyDown.bind(this)}
-                />
+            <div className="wide">
+              <div className="form-control form-control--wide form-control--underlined">
+                {pair.type === 'file' ? (
+                  <FileInputButton
+                    showFileName={true}
+                    className="btn btn--super-compact btn--outlined wide ellipsis txt-sm"
+                    onChange={fileName => this._updatePair(i, {fileName})}
+                    path={pair.fileName || ''}
+                  />
+                ) : (
+                  <input
+                    type={valueInputType || 'text'}
+                    placeholder={this.props.valuePlaceholder || 'Value'}
+                    ref={n => this._valueInputs[i] = n}
+                    defaultValue={pair.value}
+                    onChange={e => this._updatePair(i, {value: e.target.value})}
+                    onFocus={e => {
+                      this._focusedPair = i;
+                      this._focusedField = VALUE;
+                      this._focusedInput = e.target;
+                    }}
+                    onBlur={() => {
+                      this._focusedPair = -1
+                    }}
+                    onKeyDown={this._keyDown.bind(this)}
+                  />
+                )}
               </div>
             </div>
 
-            <button tabIndex="-1"
-                    onClick={e => this._togglePair(i)}
-                    title={pair.disabled ? 'Enable item' : 'Disable item'}>
+            {multipart ? (
+              <Dropdown right={true}>
+                <DropdownButton className="tall">
+                  <i className="fa fa-caret-down"></i>
+                </DropdownButton>
+                <DropdownItem onClick={e => this._updatePair(i, {
+                  type: 'text',
+                  value: '',
+                  fileName: ''
+                })}>
+                  Text
+                </DropdownItem>
+                <DropdownItem onClick={e => this._updatePair(i, {
+                  type: 'file',
+                  value: '',
+                  fileName: ''
+                })}>
+                  File
+                </DropdownItem>
+              </Dropdown>
+            ) : null}
+
+            <button
+              onClick={e => this._togglePair(i)}
+              title={pair.disabled ? 'Enable item' : 'Disable item'}>
               {pair.disabled ?
                 <i className="fa fa-square-o"></i> :
                 <i className="fa fa-check-square-o"></i>
@@ -261,9 +290,17 @@ class KeyValueEditor extends Component {
                        this._addPair()
                      }}/>
             </div>
+
+            {multipart ? (
+              <button disabled={true} tabIndex="-1">
+                <i className="fa fa-blank"></i>
+              </button>
+            ) : null}
+
             <button disabled={true} tabIndex="-1">
               <i className="fa fa-blank"></i>
             </button>
+
             <button disabled={true} tabIndex="-1">
               <i className="fa fa-blank"></i>
             </button>
@@ -279,6 +316,7 @@ KeyValueEditor.propTypes = {
   pairs: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
+  multipart: PropTypes.bool,
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,

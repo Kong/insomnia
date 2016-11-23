@@ -2,6 +2,7 @@ import fs from 'fs';
 import electron from 'electron';
 import React, {PropTypes, Component} from 'react';
 import FileInputButton from '../../base/FileInputButton';
+import PromptButton from '../../base/PromptButton';
 import * as misc from '../../../../common/misc';
 
 class FileEditor extends Component {
@@ -35,11 +36,18 @@ class FileEditor extends Component {
             <code className="super-faint">No file selected</code>
           )}
         </p>
-        <FileInputButton
-          path={path}
-          className="btn btn--super-compact btn--outlined"
-          onChange={onChange}
-        />
+        <div>
+          <PromptButton className="btn btn--super-compact"
+                        onClick={e => onChange('')}>
+            Reset File
+          </PromptButton>
+          &nbsp;&nbsp;
+          <FileInputButton
+            path={path}
+            className="btn btn--super-compact btn--outlined"
+            onChange={onChange}
+          />
+        </div>
       </div>
     )
   }
