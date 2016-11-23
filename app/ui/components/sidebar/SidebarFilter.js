@@ -9,8 +9,13 @@ class SidebarFilter extends Component {
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
-      trackEvent('Sidebar', 'Filter');
     }, DEBOUNCE_MILLIS);
+
+    // So we don't track on every keystroke, give analytics a longer timeout
+    clearTimeout(this._analyticsTimeout);
+    this._analyticsTimeout = setTimeout(() => {
+      trackEvent('Sidebar', 'Filter', value ? 'Change' : 'Clear');
+    }, 2000);
   }
 
   render () {
