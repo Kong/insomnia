@@ -54,7 +54,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
     const formData = {};
     for (const param of renderedRequest.body.params) {
-      if (param.fileName) {
+      if (param.type === 'file' && param.fileName) {
         formData[param.name] = {
           value: fs.readFileSync(param.fileName),
           options: {
@@ -63,7 +63,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
           }
         }
       } else {
-        formData[param.name] = param.value;
+        formData[param.name] = param.value || '';
       }
     }
     config.formData = formData;

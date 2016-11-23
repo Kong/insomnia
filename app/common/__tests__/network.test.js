@@ -1,9 +1,12 @@
 import * as networkUtils from '../network';
 import * as db from '../database';
 import nock from 'nock';
+import {resolve as pathResolve, join as pathJoin} from 'path';
 import {getRenderedRequest} from '../render';
 import * as models from '../../models';
 import {CONTENT_TYPE_FORM_URLENCODED} from '../constants';
+import {CONTENT_TYPE_FILE} from '../constants';
+import {CONTENT_TYPE_FORM_DATA} from '../constants';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
@@ -128,7 +131,7 @@ describe('actuallySend()', () => {
       .matchHeader('Content-Type', 'application/json')
       .matchHeader('Authorization', 'Basic dXNlcjpwYXNz')
       .matchHeader('Cookie', 'foo=barrrrr')
-      .post('/')
+      .post('/', 'foo=bar')
       .query({'foo bar': 'hello&world'})
       .reply(200, 'response body')
       .log(console.log);
@@ -141,7 +144,7 @@ describe('actuallySend()', () => {
       method: 'POST',
       body: {
         mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        text: 'foo=bar'
+        params: [{name: 'foo', value: 'bar'}]
       },
       url: 'http://localhost',
       authentication: {
@@ -152,9 +155,106 @@ describe('actuallySend()', () => {
 
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(renderedRequest, settings);
+
     expect(mock.basePath).toBe('http://::1:80');
+    expect(response.error).toBe('');
     expect(response.url).toBe('http://localhost/?foo%20bar=hello%26world');
     expect(response.body).toBe(new Buffer('response body').toString('base64'));
     expect(response.statusCode).toBe(200);
+  });
+
+  it('sends a file', async () => {
+    let mock;
+
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+    await models.cookieJar.create({parentId: workspace._id});
+
+    mock = nock('http://[::1]:80')
+      .matchHeader('Content-Type', 'application/octet-stream')
+      .post('/', 'Hello World!')
+      .reply(200, 'response body')
+      .log(console.log);
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      headers: [{name: 'Content-Type', value: 'application/octet-stream'}],
+      url: 'http://localhost',
+      method: 'POST',
+      body: {
+        mimeType: CONTENT_TYPE_FILE,
+        fileName: pathResolve(pathJoin(__dirname, './testfile.txt')) // Let's send ourselves
+      }
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const response = await networkUtils._actuallySend(renderedRequest, settings);
+
+    expect(mock.basePath).toBe('http://::1:80');
+    expect(response.error).toBe('');
+    expect(response.url).toBe('http://localhost/');
+    expect(response.body).toBe(new Buffer('response body').toString('base64'));
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('sends multipart form data', async () => {
+    let mock;
+
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+    await models.cookieJar.create({parentId: workspace._id});
+    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    let requestBody = 'n/a';
+    mock = nock('http://[::1]:80')
+      .matchHeader('Content-Type', /^multipart\/form-data/)
+      .post('/', body => {
+        requestBody = body;
+        return true;
+      })
+      .reply(200, 'response body')
+      .log(console.log);
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      headers: [{name: 'Content-Type', value: 'multipart/form-data'}],
+      url: 'http://localhost',
+      method: 'POST',
+      body: {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: [
+          // Should ignore value and send the file since type is set to file
+          {name: 'foo', fileName: fileName, value: 'bar', type: 'file'},
+
+          // Some extra params
+          {name: 'a', value: 'AA'},
+          {name: 'baz', value: 'qux', disabled: true},
+        ]
+      },
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const response = await networkUtils._actuallySend(renderedRequest, settings);
+
+    expect(mock.basePath).toBe('http://::1:80');
+    expect(response.error).toBe('');
+    expect(response.url).toBe('http://localhost/');
+    expect(response.body).toBe(new Buffer('response body').toString('base64'));
+    expect(response.statusCode).toBe(200);
+
+    const lines = requestBody.split(/\r\n/);
+    expect(lines.length).toBe(11);
+    expect(lines[0]).toMatch(/^----------------------------\d{24}/);
+    expect(lines[1]).toBe('Content-Disposition: form-data; name="foo"');
+    expect(lines[2]).toBe('Content-Type: text/plain');
+    expect(lines[3]).toBe('');
+    expect(lines[4]).toBe('Hello World!\n');
+    expect(lines[5]).toMatch(/^----------------------------\d{24}/);
+    expect(lines[6]).toBe('Content-Disposition: form-data; name="a"');
+    expect(lines[7]).toBe('');
+    expect(lines[8]).toBe('AA');
+    expect(lines[9]).toMatch(/^----------------------------\d{24}--/);
+    expect(lines[10]).toBe('');
   });
 });
