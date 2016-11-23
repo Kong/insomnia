@@ -78,7 +78,8 @@ class Toast extends Component {
   }
 
   componentDidMount () {
-    setInterval(() => this._handleCheckNotifications(), 1000);
+    setTimeout(() => this._handleCheckNotifications(), 1000 * 10);
+    setInterval(() => this._handleCheckNotifications(), 1000 * 60 * 10);
   }
 
   render () {

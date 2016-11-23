@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import classnames from 'classnames';
 import {Dropdown, DropdownButton, DropdownItem} from './base/dropdown';
 import {METHODS, DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {trackEvent} from '../../analytics';
@@ -67,7 +66,11 @@ class RequestUrlBar extends Component {
               onClick={e => e.preventDefault()}
               onChange={e => this._handleUrlChange(e.target.value)}/>
           </div>
-          <button type="submit">Send</button>
+          <div className="no-wrap">
+            <button type="submit">
+              Send
+            </button>
+          </div>
         </form>
       </div>
     );

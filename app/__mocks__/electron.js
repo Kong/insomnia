@@ -5,5 +5,10 @@ export default {
         return `/tmp/insomnia-tests/${name}`
       }
     }
+  },
+  ipcRenderer: {
+    on () {
+
+    }
   }
 }

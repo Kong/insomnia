@@ -303,8 +303,7 @@ class Editor extends Component {
         JSONPath
       </Link>
     ) : (
-      <Link
-        href="https://www.w3.org/TR/xpath/">
+      <Link href="https://www.w3.org/TR/xpath/">
         XPath
       </Link>
     );
@@ -322,28 +321,35 @@ class Editor extends Component {
           <table className="pad-top-sm">
             <tbody>
             <tr>
-              <td><code className="selectable">
-                {json ? '$.store.books[*].title' : '/store/books/title'}
-              </code>
+              <td>
+                <code className="selectable">
+                  {json ? '$.store.books[*].title' : '/store/books/title'}
+                </code>
               </td>
               <td>Get titles of all books in the store</td>
             </tr>
             <tr>
-              <td><code className="selectable">
-                {json ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
-              </code></td>
+              <td>
+                <code className="selectable">
+                  {json ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
+                </code>
+              </td>
               <td>Get books costing less than $10</td>
             </tr>
             <tr>
-              <td><code className="selectable">
-                {json ? '$.store.books[-1:]' : '/store/books[last()]'}
-              </code></td>
+              <td>
+                <code className="selectable">
+                  {json ? '$.store.books[-1:]' : '/store/books[last()]'}
+                </code>
+              </td>
               <td>Get the last book in the store</td>
             </tr>
             <tr>
-              <td><code className="selectable">
-                {json ? '$.store.books.length' : 'count(/store/books)'}
-              </code></td>
+              <td>
+                <code className="selectable">
+                  {json ? '$.store.books.length' : 'count(/store/books)'}
+                </code>
+              </td>
               <td>Get the number of books in the store</td>
             </tr>
             </tbody>
