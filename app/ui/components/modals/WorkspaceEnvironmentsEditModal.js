@@ -10,6 +10,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as models from '../../../models'
+import {trackEvent} from '../../../analytics/index';
 
 
 class WorkspaceEnvironmentsEditModal extends Component {
@@ -28,6 +29,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
   show (workspace) {
     this.modal.show();
     this._load(workspace);
+    trackEvent('Environment Editor', 'Show');
   }
 
   toggle (workspace) {
@@ -60,9 +62,10 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const parentId = rootEnvironment._id;
     const environment = await models.environment.create({parentId});
     this._load(workspace, environment);
+    trackEvent('Environment', 'Create');
   }
 
-  _handleActivateEnvironment (environment) {
+  _handleShowEnvironment (environment) {
     // Don't allow switching if the current one has errors
     if (!this._envEditor.isValid()) {
       return;
@@ -70,6 +73,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
     const {workspace} = this.state;
     this._load(workspace, environment);
+    trackEvent('Environment Editor', 'Show Environment');
   }
 
   async _handleDeleteEnvironment (environment) {
@@ -84,6 +88,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     await models.environment.remove(environment);
 
     this._load(workspace, rootEnvironment);
+    trackEvent('Environment', 'Delete');
   }
 
   async _handleChangeEnvironmentName (environment, name) {
@@ -94,6 +99,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const realEnvironment = await models.environment.getById(environment._id);
     await models.environment.update(realEnvironment, {name});
     this._load(workspace);
+
+    trackEvent('Environment', 'Rename');
   }
 
   _didChange () {
@@ -138,7 +145,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
         <ModalHeader>Manage Environments (JSON Format)</ModalHeader>
         <ModalBody noScroll={true} className="env-modal">
           <div className="env-modal__sidebar">
-            <li onClick={() => this._handleActivateEnvironment(rootEnvironment)}
+            <li onClick={() => this._handleShowEnvironment(rootEnvironment)}
                 className={classnames(
                   'env-modal__sidebar-root-item',
                   {'env-modal__sidebar-item--active': activeEnvironment === rootEnvironment}
@@ -161,7 +168,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 return (
                   <li key={environment._id} className={classes}>
                     <button
-                      onClick={() => this._handleActivateEnvironment(environment)}>
+                      onClick={() => this._handleShowEnvironment(environment)}>
                       <Editable
                         onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
                         value={environment.name}

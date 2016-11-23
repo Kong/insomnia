@@ -55,16 +55,16 @@ class ResponsePane extends Component {
 
     remote.dialog.showSaveDialog(options, filename => {
       if (!filename) {
-        trackEvent('Response', 'Save', 'Cancel');
+        trackEvent('Response', 'Save Cancel');
         return;
       }
 
       fs.writeFile(filename, bodyBuffer, {}, err => {
         if (err) {
           console.warn('Failed to save response body', err);
-          trackEvent('Response', 'Save', 'Failure');
+          trackEvent('Response', 'Save Failure');
         } else {
-          trackEvent('Response', 'Save', 'Success');
+          trackEvent('Response', 'Save Success');
 
         }
       });
@@ -197,7 +197,7 @@ class ResponsePane extends Component {
         )}
         <Tabs className="pane__body">
           <TabList>
-            <Tab>
+            <Tab onClick={() => trackEvent('Response Pane', 'View', 'Response')}>
               <button>
                 {getPreviewModeName(previewMode)}
               </button>
@@ -207,7 +207,7 @@ class ResponsePane extends Component {
                 updatePreviewMode={handleSetPreviewMode}
               />
             </Tab>
-            <Tab>
+            <Tab onClick={() => trackEvent('Response Pane', 'View', 'Cookies')}>
               <button>
                 Cookies {cookieHeaders.length ? (
                 <span className="txt-sm">
@@ -216,7 +216,7 @@ class ResponsePane extends Component {
               ) : null}
               </button>
             </Tab>
-            <Tab>
+            <Tab onClick={() => trackEvent('Response Pane', 'View', 'Headers')}>
               <button>
                 Headers {response.headers.length ? (
                 <span className="txt-sm">

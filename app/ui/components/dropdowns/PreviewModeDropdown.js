@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem} from '../base/dropdown';
 import {PREVIEW_MODES, getPreviewModeName} from '../../../common/constants';
+import {trackEvent} from '../../../analytics/index';
 
 const PreviewModeDropdown = ({updatePreviewMode, download}) => (
   <Dropdown>
@@ -8,7 +9,10 @@ const PreviewModeDropdown = ({updatePreviewMode, download}) => (
       <i className="fa fa-caret-down"></i>
     </DropdownButton>
     {PREVIEW_MODES.map(previewMode => (
-      <DropdownItem key={previewMode} onClick={() => updatePreviewMode(previewMode)}>
+      <DropdownItem key={previewMode} onClick={() => {
+        updatePreviewMode(previewMode);
+        trackEvent('Response', 'Preview Mode Change', previewMode);
+      }}>
         {getPreviewModeName(previewMode)}
       </DropdownItem>
     ))}

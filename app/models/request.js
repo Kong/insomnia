@@ -35,6 +35,11 @@ export function newBodyRaw (rawBody, contentType) {
 }
 
 export function newBodyFormUrlEncoded (parameters) {
+  // Remove any properties (eg. fileName) that might not fit
+  parameters = (parameters || []).map(
+    p => ({name: p.name, value: p.value})
+  );
+
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
     params: parameters
@@ -104,8 +109,10 @@ export function updateMimeType (request, mimeType) {
   // 2. Make a new request body
   // TODO: When switching mime-type, try to convert formats nicely
   let body;
-  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    body = newBodyFormUrlEncoded(request.body.params || []);
+  if (mimeType === request.body.mimeType) {
+    body = request.body;
+  } else if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    body = newBodyFormUrlEncoded(request.body.params);
   } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
     body = newBodyForm(request.body.params || []);
   } else if (mimeType === CONTENT_TYPE_FILE) {

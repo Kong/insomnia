@@ -10,6 +10,7 @@ import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import {TAB_INDEX_EXPORT} from '../modals/SettingsModal';
+import {trackEvent} from '../../../analytics/index';
 
 class WorkspaceDropdown extends Component {
   async _promptUpdateName () {
@@ -72,13 +73,19 @@ class WorkspaceDropdown extends Component {
           </h1>
         </DropdownButton>
         <DropdownDivider name="Current Workspace"/>
-        <DropdownItem onClick={e => this._promptUpdateName()}>
+        <DropdownItem onClick={e => {
+          this._promptUpdateName();
+          trackEvent('Workspace', 'Rename');
+        }}>
           <i className="fa fa-pencil-square-o"></i> Rename
           {" "}
           <strong>{activeWorkspace.name}</strong>
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton}
-                      onClick={e => this._workspaceRemove()}
+                      onClick={e => {
+                        this._workspaceRemove();
+                        trackEvent('Workspace', 'Delete');
+                      }}
                       addIcon={true}>
           <i className="fa fa-trash-o"></i> Delete
           {" "}
@@ -88,13 +95,19 @@ class WorkspaceDropdown extends Component {
         <DropdownDivider name="Workspaces"/>
 
         {workspaces.map(w => w._id === activeWorkspace._id ? null : (
-          <DropdownItem key={w._id} onClick={() => handleSetActiveWorkspace(w._id)}>
+          <DropdownItem key={w._id} onClick={() => {
+            handleSetActiveWorkspace(w._id);
+            trackEvent('Workspace', 'Switch');
+          }}>
             <i className="fa fa-random"></i> Switch to
             {" "}
             <strong>{w.name}</strong>
           </DropdownItem>
         ))}
-        <DropdownItem onClick={e => this._workspaceCreate()}>
+        <DropdownItem onClick={e => {
+          this._workspaceCreate();
+          trackEvent('Workspace', 'Create');
+        }}>
           <i className="fa fa-blank"></i> New Workspace
         </DropdownItem>
 

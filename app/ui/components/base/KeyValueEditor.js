@@ -51,6 +51,8 @@ class KeyValueEditor extends Component {
       ...this.state.pairs.slice(position)
     ];
 
+    this.props.onCreate && this.props.onCreate();
+
     this._onChange(pairs);
   }
 
@@ -58,7 +60,13 @@ class KeyValueEditor extends Component {
     if (this._focusedPair >= position) {
       this._focusedPair = this._focusedPair - 1;
     }
-    this._onChange(this.state.pairs.filter((_, i) => i !== position));
+
+    const pair = this.state.pairs[position];
+    this.props.onDelete && this.props.onDelete(pair);
+
+    const pairs = this.state.pairs.filter((_, i) => i !== position);
+
+    this._onChange(pairs);
   }
 
   _updatePair (position, pairPatch) {
@@ -73,6 +81,10 @@ class KeyValueEditor extends Component {
     const pairs = this.state.pairs.map(
       (p, i) => i == position ? Object.assign({}, p, {disabled: !p.disabled}) : p
     );
+
+    const pair = pairs[position];
+    this.props.onToggleDisable && this.props.onToggleDisable(pair);
+
     this._onChange(pairs, true);
   }
 
@@ -209,7 +221,10 @@ class KeyValueEditor extends Component {
                   <FileInputButton
                     showFileName={true}
                     className="btn btn--super-compact btn--outlined wide ellipsis txt-sm"
-                    onChange={fileName => this._updatePair(i, {fileName})}
+                    onChange={fileName => {
+                      this._updatePair(i, {fileName});
+                      this.props.onChooseFile && this.props.onChooseFile();
+                    }}
                     path={pair.fileName || ''}
                   />
                 ) : (
@@ -238,18 +253,16 @@ class KeyValueEditor extends Component {
                 <DropdownButton className="tall">
                   <i className="fa fa-caret-down"></i>
                 </DropdownButton>
-                <DropdownItem onClick={e => this._updatePair(i, {
-                  type: 'text',
-                  value: '',
-                  fileName: ''
-                })}>
+                <DropdownItem onClick={e => {
+                  this._updatePair(i, {type: 'text', value: '', fileName: ''});
+                  this.props.onChangeType && this.props.onChangeType('text');
+                }}>
                   Text
                 </DropdownItem>
-                <DropdownItem onClick={e => this._updatePair(i, {
-                  type: 'file',
-                  value: '',
-                  fileName: ''
-                })}>
+                <DropdownItem onClick={e => {
+                  this._updatePair(i, {type: 'file', value: '', fileName: ''});
+                  this.props.onChangeType && this.props.onChangeType('file');
+                }}>
                   File
                 </DropdownItem>
               </Dropdown>
@@ -320,7 +333,12 @@ KeyValueEditor.propTypes = {
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
-  valueInputType: PropTypes.string
+  valueInputType: PropTypes.string,
+  onToggleDisable: PropTypes.func,
+  onChangeType: PropTypes.func,
+  onChooseFile: PropTypes.func,
+  onDelete: PropTypes.func,
+  onCreate: PropTypes.func,
 };
 
 export default KeyValueEditor;

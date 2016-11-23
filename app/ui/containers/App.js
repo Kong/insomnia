@@ -16,16 +16,14 @@ import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import PromptModal from '../components/modals/PromptModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import SettingsModal from '../components/modals/SettingsModal';
-import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion} from '../../common/constants';
+import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as workspaceMetaActions from '../redux/modules/workspaceMeta';
 import * as requestMetaActions from '../redux/modules/requestMeta';
 import * as requestGroupMetaActions from '../redux/modules/requestGroupMeta';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {importRaw} from '../../common/import';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
-import {PREVIEW_MODE_SOURCE} from '../../common/constants';
 
 
 class App extends Component {
@@ -56,6 +54,7 @@ class App extends Component {
       // Show Request Switcher
       'mod+p': () => {
         toggleModal(RequestSwitcherModal);
+        trackEvent('HotKey', 'Quick Switcher');
       },
 
       // Request Send
@@ -65,24 +64,28 @@ class App extends Component {
           activeRequest ? activeRequest._id : 'n/a',
           activeEnvironment ? activeEnvironment._id : 'n/a',
         );
+        trackEvent('HotKey', 'Send');
       },
 
       // Edit Workspace Environments
       'mod+e': () => {
         const {activeWorkspace} = this.props;
         toggleModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
+        trackEvent('HotKey', 'Environments');
       },
 
       // Focus URL Bar
       'mod+l': () => {
         const node = document.body.querySelector('.urlbar input');
         node && node.focus();
+        trackEvent('HotKey', 'Url');
       },
 
       // Edit Cookies
       'mod+k': () => {
         const {activeWorkspace} = this.props;
         toggleModal(CookiesModal, activeWorkspace);
+        trackEvent('HotKey', 'Cookies');
       },
 
       // Request Create
@@ -91,6 +94,7 @@ class App extends Component {
 
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
         this._requestCreate(parentId);
+        trackEvent('HotKey', 'Request Create');
       },
 
       // Request Duplicate
@@ -102,7 +106,8 @@ class App extends Component {
         }
 
         const request = await models.request.duplicate(activeRequest);
-        handleSetActiveRequest(activeWorkspace._id, request._id)
+        handleSetActiveRequest(activeWorkspace._id, request._id);
+        trackEvent('HotKey', 'Request Duplicate');
       }
     }
   }
@@ -160,10 +165,12 @@ class App extends Component {
   }
 
   _startDragSidebar () {
+    trackEvent('Sidebar', 'Drag Start');
     this.setState({draggingSidebar: true})
   }
 
   _resetDragSidebar () {
+    trackEvent('Sidebar', 'Drag Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
       const {handleSetSidebarWidth, activeWorkspace} = this.props;
@@ -172,10 +179,12 @@ class App extends Component {
   }
 
   _startDragPane () {
+    trackEvent('App Pane', 'Drag Start');
     this.setState({draggingPane: true})
   }
 
   _resetDragPane () {
+    trackEvent('App Pane', 'Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
       const {handleSetPaneWidth, activeWorkspace} = this.props;
@@ -217,6 +226,7 @@ class App extends Component {
   _handleToggleSidebar () {
     const {activeWorkspace, sidebarHidden, handleSetSidebarHidden} = this.props;
     handleSetSidebarHidden(activeWorkspace._id, !sidebarHidden);
+    trackEvent('Sidebar', 'Toggle Visibility', !sidebarHidden ? 'Hide' : 'Show');
   }
 
   _forceHardRefresh () {

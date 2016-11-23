@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import EnvironmentsModal from '../modals/WorkspaceEnvironmentsEditModal';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem} from '../base/dropdown';
 import {showModal} from '../modals/index';
+import {trackEvent} from '../../../analytics/index';
 
 
 const EnvironmentsDropdown = ({
@@ -37,11 +38,17 @@ const EnvironmentsDropdown = ({
       <DropdownDivider name="Switch Environment"/>
       {subEnvironments.map(environment => (
         <DropdownItem key={environment._id}
-                      onClick={e => handleChangeEnvironment(environment._id)}>
+                      onClick={e => {
+                        handleChangeEnvironment(environment._id);
+                        trackEvent('Environment', 'Activate');
+                      }}>
           <i className="fa fa-random"></i> Use <strong>{environment.name}</strong>
         </DropdownItem>
       ))}
-      <DropdownItem onClick={() => baseEnvironment && handleChangeEnvironment(null)}>
+      <DropdownItem onClick={() => {
+        baseEnvironment && handleChangeEnvironment(null);
+        trackEvent('Environment', 'Deactivate');
+      }}>
         <i className="fa fa-empty"></i> No Environment
       </DropdownItem>
       <DropdownDivider name="General"/>

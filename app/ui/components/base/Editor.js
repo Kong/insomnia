@@ -43,6 +43,7 @@ import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
 import * as misc from '../../../common/misc';
+import {trackEvent} from '../../../analytics/index';
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -158,6 +159,7 @@ class Editor extends Component {
   }
 
   _handleBeautify () {
+    trackEvent('Request', 'Beautify');
     this._prettify(this.codeMirror.getValue());
   }
 

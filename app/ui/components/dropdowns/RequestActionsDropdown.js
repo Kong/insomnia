@@ -5,6 +5,7 @@ import GenerateCodeModal from '../modals/GenerateCodeModal';
 import PromptModal from '../modals/PromptModal';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';
+import {trackEvent} from '../../../analytics/index';
 
 
 class RequestActionsDropdown extends Component {
@@ -28,18 +29,30 @@ class RequestActionsDropdown extends Component {
         <DropdownButton>
           <i className="fa fa-caret-down"></i>
         </DropdownButton>
-        <DropdownItem onClick={e => models.request.duplicate(request)}>
+        <DropdownItem onClick={e => {
+          models.request.duplicate(request);
+          trackEvent('Request', 'Duplicate', 'Action');
+        }}>
           <i className="fa fa-copy"></i> Duplicate
           <DropdownHint char="D"></DropdownHint>
         </DropdownItem>
-        <DropdownItem onClick={e => this._promptUpdateName()}>
+        <DropdownItem onClick={e => {
+          this._promptUpdateName();
+          trackEvent('Request', 'Rename', 'Action');
+        }}>
           <i className="fa fa-edit"></i> Rename
         </DropdownItem>
-        <DropdownItem onClick={e => showModal(GenerateCodeModal, request)}>
+        <DropdownItem onClick={e => {
+          showModal(GenerateCodeModal, request);
+          trackEvent('Request', 'Action', 'Generate Code');
+        }}>
           <i className="fa fa-code"></i> Generate Code
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton}
-                      onClick={e => models.request.remove(request)}
+                      onClick={e => {
+                        models.request.remove(request);
+                        trackEvent('Request', 'Delete', 'Action');
+                      }}
                       addIcon={true}>
           <i className="fa fa-trash-o"></i> Delete
         </DropdownItem>

@@ -74,25 +74,28 @@ class SettingsModal extends Component {
           <Tabs onSelect={i => this._handleTabSelect(i)} selectedIndex={currentTabIndex}>
             <TabList>
               <Tab selected={this._currentTabIndex === 0}>
-                <button>General</button>
+                <button onClick={e => trackEvent('Setting', 'Tab General')}>General</button>
               </Tab>
               <Tab selected={this._currentTabIndex === 1}>
-                <button>Import/Export</button>
+                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>Import/Export</button>
               </Tab>
               <Tab selected={this._currentTabIndex === 3}>
-                <button>Shortcuts</button>
+                <button onClick={e => trackEvent('Setting', 'Tab Shortcuts')}>Shortcuts</button>
               </Tab>
               <Tab selected={this._currentTabIndex === 2}>
-                <button>Insomnia Plus</button>
+                <button onClick={e => trackEvent('Setting', 'Tab Plus')}>Insomnia Plus</button>
               </Tab>
               <Tab selected={this._currentTabIndex === 4}>
-                <button>About</button>
+                <button onClick={e => trackEvent('Setting', 'Tab About')}>About</button>
               </Tab>
             </TabList>
             <TabPanel className="pad scrollable">
               <SettingsGeneral
                 settings={settings}
-                updateSetting={(key, value) => models.settings.update(settings, {[key]: value})}
+                updateSetting={(key, value) => {
+                  models.settings.update(settings, {[key]: value});
+                  trackEvent('Setting', 'Change', key)
+                }}
               />
             </TabPanel>
             <TabPanel className="pad scrollable">

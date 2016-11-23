@@ -4,6 +4,7 @@ import React, {PropTypes, Component} from 'react';
 import FileInputButton from '../../base/FileInputButton';
 import PromptButton from '../../base/PromptButton';
 import * as misc from '../../../../common/misc';
+import {trackEvent} from '../../../../analytics/index';
 
 class FileEditor extends Component {
   render () {
@@ -38,14 +39,21 @@ class FileEditor extends Component {
         </p>
         <div>
           <PromptButton className="btn btn--super-compact"
-                        onClick={e => onChange('')}>
+                        disabled={!path}
+                        onClick={e => {
+                          onChange('');
+                          trackEvent('File Editor', 'Reset')
+                        }}>
             Reset File
           </PromptButton>
           &nbsp;&nbsp;
           <FileInputButton
             path={path}
             className="btn btn--super-compact btn--outlined"
-            onChange={onChange}
+            onChange={path => {
+              onChange(path);
+              trackEvent('File Editor', 'Choose')
+            }}
           />
         </div>
       </div>

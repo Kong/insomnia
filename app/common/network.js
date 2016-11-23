@@ -88,7 +88,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(renderedRequest.parameters);
-  const url = querystring.joinURL(renderedRequest.url, qs);
+  const url = querystring.joinUrl(renderedRequest.url, qs);
   config.url = util.prepareUrlForSending(url);
   config.headers.host = urlParse(config.url).host;
 

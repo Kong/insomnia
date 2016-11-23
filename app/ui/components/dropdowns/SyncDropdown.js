@@ -120,10 +120,9 @@ class SyncDropdown extends Component {
     if (!loggedIn) {
       return (
         <div className={className}>
-          <Dropdown wide={true}
-                    className="wide tall"
-                    onClick={e => trackEvent('Sync', 'Show Menu', 'Guest')}>
-            <DropdownButton className="btn btn--compact wide">
+          <Dropdown wide={true} className="wide tall">
+            <DropdownButton className="btn btn--compact wide"
+                            onClick={e => trackEvent('Sync', 'Show Menu', 'Guest')}>
               Sync Settings
             </DropdownButton>
             <DropdownDivider name="Insomnia Cloud Sync"/>
@@ -167,10 +166,9 @@ class SyncDropdown extends Component {
 
       return (
         <div className={className}>
-          <Dropdown wide={true}
-                    className="wide tall"
-                    onClick={e => trackEvent('Sync', 'Show Menu', 'Authenticated')}>
-            <DropdownButton className="btn btn--compact wide">
+          <Dropdown wide={true} className="wide tall">
+            <DropdownButton className="btn btn--compact wide"
+                            onClick={e => trackEvent('Sync', 'Show Menu', 'Authenticated')}>
               {description}
             </DropdownButton>
             <DropdownDivider name={`Workspace Synced ${syncPercent}%`}/>

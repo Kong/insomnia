@@ -1,5 +1,6 @@
 import React, {PropTypes, Component} from 'react';
 import KeyValueEditor from '../../base/KeyValueEditor';
+import {trackEvent} from '../../../../analytics/index';
 
 class UrlEncodedEditor extends Component {
   render () {
@@ -8,7 +9,13 @@ class UrlEncodedEditor extends Component {
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
-          <KeyValueEditor onChange={onChange} pairs={parameters}/>
+          <KeyValueEditor
+            onChange={onChange}
+            onToggleDisable={pair => trackEvent('Url Encoded Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable')}
+            onCreate={() => trackEvent('Url Encoded Editor', 'Create')}
+            onDelete={() => trackEvent('Url Encoded Editor', 'Delete')}
+            pairs={parameters}
+          />
         </div>
       </div>
     )

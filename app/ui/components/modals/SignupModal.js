@@ -54,7 +54,7 @@ class SignupModal extends Component {
 
     this.modal.hide();
     showModal(LoginModal, {});
-    trackEvent('Auth', 'Switch', 'To Login');
+    trackEvent('Signup', 'Switch to Login');
   }
 
   _checkPasswordsMatch () {

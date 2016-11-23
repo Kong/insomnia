@@ -126,7 +126,7 @@ export const contentTypesMap = {
   [CONTENT_TYPE_FORM_URLENCODED]: 'Form Url Encoded',
   [CONTENT_TYPE_FILE]: 'Binary',
   [CONTENT_TYPE_TEXT]: 'Plain Text',
-  [CONTENT_TYPE_RAW]: 'Raw',
+  [CONTENT_TYPE_RAW]: 'Raw Body',
 };
 
 /**
