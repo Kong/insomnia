@@ -278,6 +278,17 @@ class Editor extends Component {
         this.props.updateFilter(filter);
       }
     }, 400);
+
+    // So we don't track on every keystroke, give analytics a longer timeout
+    clearTimeout(this._analyticsTimeout);
+    const json = this._isJSON(this.props.mode);
+    this._analyticsTimeout = setTimeout(() => {
+      trackEvent(
+        'Response',
+        `Filter ${json ? 'JSONPath' : 'XPath'}`,
+        `${filter ? 'Change' : 'Clear'}`
+      );
+    }, 2000);
   }
 
   _canPrettify () {
@@ -297,6 +308,8 @@ class Editor extends Component {
         XPath
       </Link>
     );
+
+    trackEvent('Response', `Filter ${json ? 'JSONPath' : 'XPath'}`, 'Help');
 
     showModal(AlertModal, {
       title: 'Response Filtering Help',
