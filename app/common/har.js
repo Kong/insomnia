@@ -4,22 +4,9 @@ import {getRenderedRequest} from './render';
 import {jarFromCookies} from './cookies';
 import * as util from './misc';
 import * as misc from './misc';
-import {CONTENT_TYPE_FILE} from './constants';
 import {newBodyRaw} from '../models/request';
 
 export function exportHarWithRequest (renderedRequest, addContentLength = false) {
-  if (addContentLength) {
-    const hasContentLengthHeader = misc.filterHeaders(
-        renderedRequest.headers,
-        'content-length'
-      ).length > 0;
-
-    if (!hasContentLengthHeader) {
-      const name = 'content-length';
-      const value = Buffer.byteLength(body).toString();
-      renderedRequest.headers.push({name, value})
-    }
-  }
 
   let postData = '';
   if (renderedRequest.body.fileName) {
@@ -31,6 +18,19 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
   } else {
     // For every other type, Insomnia uses the same body format as HAR
     postData = renderedRequest.body;
+  }
+
+  if (addContentLength) {
+    const hasContentLengthHeader = misc.filterHeaders(
+        renderedRequest.headers,
+        'content-length'
+      ).length > 0;
+
+    if (!hasContentLengthHeader) {
+      const name = 'content-length';
+      const value = Buffer.byteLength((renderedRequest.body || {}).text || '').toString();
+      renderedRequest.headers.push({name, value})
+    }
   }
 
   return {

@@ -116,6 +116,7 @@ class App extends Component {
     const name = await showModal(PromptModal, {
       headerName: 'Create New Folder',
       defaultValue: 'My Folder',
+      submitName: 'Create',
       selectText: true
     });
 
@@ -126,7 +127,9 @@ class App extends Component {
     const name = await showModal(PromptModal, {
       headerName: 'Create New Request',
       defaultValue: 'My Request',
-      selectText: true
+      selectText: true,
+      submitName: 'Create',
+      hint: 'TIP: Import Curl command by pasting it into the URL bar'
     });
 
     const {activeWorkspace, handleSetActiveRequest} = this.props;
@@ -142,7 +145,10 @@ class App extends Component {
     try {
       const {resources} = importers.import(url);
       const r = resources[0];
+
       if (r && r._type === 'request') {
+        trackEvent('Import', 'Url Bar');
+
         // Only pull fields that we want to update
         await models.request.update(request, {
           url: r.url,

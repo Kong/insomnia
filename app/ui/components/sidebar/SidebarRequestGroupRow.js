@@ -34,6 +34,7 @@ class SidebarRequestGroupRow extends Component {
       handleSetRequestGroupCollapsed,
       handleActivateRequest,
       handleCreateRequest,
+      handleCreateRequestGroup,
       isDragging,
       isDraggingOver,
       workspace,
@@ -74,6 +75,8 @@ class SidebarRequestGroupRow extends Component {
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
               handleActivateRequest={handleActivateRequest}
+              handleCreateRequest={handleCreateRequest}
+              handleCreateRequestGroup={handleCreateRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
               right={true}

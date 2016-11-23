@@ -43,6 +43,7 @@ class Sidebar extends Component {
     const {
       filter,
       handleCreateRequest,
+      handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
       moveRequest,
       moveRequestGroup,
@@ -110,6 +111,7 @@ class Sidebar extends Component {
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest.bind(null, requestGroup._id)}
+          handleCreateRequestGroup={handleCreateRequestGroup.bind(null, requestGroup._id)}
           numChildren={child.children.length}
           workspace={workspace}
           requestGroup={requestGroup}

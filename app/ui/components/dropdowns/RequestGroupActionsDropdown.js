@@ -22,16 +22,7 @@ class RequestGroupActionsDropdown extends Component {
   }
 
   async _requestCreate () {
-    const name = await showModal(PromptModal, {
-      headerName: 'Create New Request',
-      defaultValue: 'My Request',
-      selectText: true
-    });
-
-    const {workspace, requestGroup} = this.props;
-    const parentId = requestGroup._id;
-    const request = await models.request.create({parentId, name});
-    this.props.actions.global.activateRequest(workspace, request);
+    this.props.handleCreateRequest();
     trackEvent('Request', 'Create', 'Folder Action');
   }
 
@@ -42,15 +33,7 @@ class RequestGroupActionsDropdown extends Component {
   }
 
   async _requestGroupCreate () {
-    const name = await showModal(PromptModal, {
-      headerName: 'Create New Folder',
-      defaultValue: 'My Folder',
-      selectText: true
-    });
-
-    const {requestGroup} = this.props;
-    models.requestGroup.create({parentId: requestGroup._id, name});
-
+    this.props.handleCreateRequestGroup();
     trackEvent('Folder', 'Create', 'Folder Action');
   }
 
@@ -93,6 +76,8 @@ class RequestGroupActionsDropdown extends Component {
 
 RequestGroupActionsDropdown.propTypes = {
   workspace: PropTypes.object.isRequired,
+  handleCreateRequest: PropTypes.func.isRequired,
+  handleCreateRequestGroup: PropTypes.func.isRequired,
 
   // Optional
   requestGroup: PropTypes.object

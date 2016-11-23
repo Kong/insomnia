@@ -9,6 +9,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import {exportHar} from '../../../common/har';
+import {trackEvent} from '../../../analytics/index';
 
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
 const DEFAULT_CLIENT = DEFAULT_TARGET.clients.find(t => t.key === 'curl');
@@ -40,6 +41,7 @@ class GenerateCodeModal extends Component {
   _handleClientChange (client) {
     const {target, request} = this.state;
     this._generateCode(request, target, client);
+    trackEvent('Generate Code', 'Client Change', `${target.title}/${client.title}`);
   }
 
   _handleTargetChange (target) {
@@ -51,6 +53,7 @@ class GenerateCodeModal extends Component {
 
     const client = target.clients.find(c => c.key === target.default);
     this._generateCode(this.state.request, target, client);
+    trackEvent('Generate Code', 'Target Change', target.title);
   }
 
   async _generateCode (request, target, client) {

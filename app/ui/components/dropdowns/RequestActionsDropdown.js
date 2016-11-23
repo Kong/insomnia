@@ -31,20 +31,20 @@ class RequestActionsDropdown extends Component {
         </DropdownButton>
         <DropdownItem onClick={e => {
           models.request.duplicate(request);
-          trackEvent('Request', 'Duplicate', 'Action');
+          trackEvent('Request', 'Duplicate', 'Request Action');
         }}>
           <i className="fa fa-copy"></i> Duplicate
           <DropdownHint char="D"></DropdownHint>
         </DropdownItem>
         <DropdownItem onClick={e => {
           this._promptUpdateName();
-          trackEvent('Request', 'Rename', 'Action');
+          trackEvent('Request', 'Rename', 'Request Action');
         }}>
           <i className="fa fa-edit"></i> Rename
         </DropdownItem>
         <DropdownItem onClick={e => {
           showModal(GenerateCodeModal, request);
-          trackEvent('Request', 'Action', 'Generate Code');
+          trackEvent('Request', 'Generate Code', 'Request Action');
         }}>
           <i className="fa fa-code"></i> Generate Code
         </DropdownItem>
