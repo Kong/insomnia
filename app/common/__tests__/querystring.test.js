@@ -31,7 +31,7 @@ describe('getBasicAuthHeader()', () => {
 
 describe('joinUrl()', () => {
   it('gets joiner for bare URL', () => {
-    const url = querystringUtils.joinURL(
+    const url = querystringUtils.joinUrl(
       'http://google.com',
       'foo=bar'
     );
@@ -39,7 +39,7 @@ describe('joinUrl()', () => {
   });
 
   it('gets joiner for URL with querystring', () => {
-    const url = querystringUtils.joinURL(
+    const url = querystringUtils.joinUrl(
       'http://google.com?hi=there',
       'foo=bar%20baz'
     );

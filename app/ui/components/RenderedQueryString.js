@@ -18,7 +18,7 @@ class RenderedQueryString extends Component {
       const {request, environmentId} = props;
       const {url, parameters} = await getRenderedRequest(request, environmentId);
       const qs = querystring.buildFromParams(parameters);
-      const fullUrl = querystring.joinURL(url, qs);
+      const fullUrl = querystring.joinUrl(url, qs);
       this.setState({string: util.prepareUrlForSending(fullUrl)});
     }, delay ? 200 : 0);
   }

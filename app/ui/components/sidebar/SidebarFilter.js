@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import {trackEvent} from '../../../analytics/index';
 
 
 class SidebarFilter extends Component {
@@ -8,6 +9,7 @@ class SidebarFilter extends Component {
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
+      trackEvent('Sidebar', 'Filter');
     }, DEBOUNCE_MILLIS);
   }
 
@@ -28,11 +30,17 @@ class SidebarFilter extends Component {
           <DropdownButton className="btn btn--compact">
             <i className="fa fa-plus-circle"></i>
           </DropdownButton>
-          <DropdownItem onClick={e => requestCreate()}>
+          <DropdownItem onClick={e => {
+            requestCreate();
+            trackEvent('Request', 'Create', 'Sidebar Filter');
+          }}>
             <i className="fa fa-plus-circle"></i> New Request
             <DropdownHint char="N"></DropdownHint>
           </DropdownItem>
-          <DropdownItem onClick={e => requestGroupCreate()}>
+          <DropdownItem onClick={e => {
+            requestGroupCreate();
+            trackEvent('Folder', 'Create', 'Sidebar Filter');
+          }}>
             <i className="fa fa-folder"></i> New Folder
           </DropdownItem>
         </Dropdown>

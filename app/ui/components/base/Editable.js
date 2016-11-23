@@ -16,6 +16,10 @@ class Editable extends Component {
       this._input && this._input.focus();
       this._input && this._input.select();
     });
+
+    if (this.props.onEditStart) {
+      this.props.onEditStart();
+    }
   }
 
   async _handleEditEnd () {
@@ -47,7 +51,7 @@ class Editable extends Component {
   }
 
   render () {
-    const {value, singleClick, ...extra} = this.props;
+    const {value, singleClick, onEditStart, ...extra} = this.props;
     const {editing} = this.state;
 
     if (editing) {
@@ -79,7 +83,8 @@ Editable.propTypes = {
   value: PropTypes.string.isRequired,
 
   // Optional
-  singleClick: PropTypes.bool
+  singleClick: PropTypes.bool,
+  onEditStart: PropTypes.func,
 };
 
 export default Editable;

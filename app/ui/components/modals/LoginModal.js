@@ -49,7 +49,7 @@ class LoginModal extends Component {
 
     this.modal.hide();
     showModal(SignupModal);
-    trackEvent('Auth', 'Switch', 'To Signup');
+    trackEvent('Login', 'Switch to Signup');
   }
 
   show (options = {}) {
@@ -113,7 +113,7 @@ class LoginModal extends Component {
           <p>
             If you have any questions or concerns, send you email to
             {" "}
-            <Link href="mailto:support@insomnia.rest">
+            <Link href="https://insomnia.rest/documentation/support-and-feedback/">
               support@insomnia.rest
             </Link>
           </p>

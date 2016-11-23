@@ -25,8 +25,9 @@ class ResponseError extends Component {
       )
     } else {
       msg = (
-        <Link button={true} className="btn btn--super-compact btn--outlined"
-                href="http://docs.insomnia.rest">
+        <Link button={true}
+              className="btn btn--super-compact btn--outlined"
+              href="https://insomnia.rest/documentation/">
           Documentation
         </Link>
       )
@@ -45,7 +46,7 @@ class ResponseError extends Component {
           {msg}
           &nbsp;&nbsp;
           <Link button={true} className="btn btn--super-compact btn--outlined margin-top-sm"
-                href="mailto:support@insomnia.rest">
+                href="https://insomnia.rest/documentation/support-and-feedback/">
             Contact Support
           </Link>
         </div>

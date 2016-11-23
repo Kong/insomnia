@@ -6,6 +6,7 @@ import RequestActionsDropdown from '../dropdowns/RequestActionsDropdown';
 import Editable from '../base/Editable';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
+import {trackEvent} from '../../../analytics/index';
 
 
 class SidebarRequestRow extends Component {
@@ -51,7 +52,10 @@ class SidebarRequestRow extends Component {
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
             <button className="sidebar__clickable"
-                    onClick={() => requestCreate()}>
+                    onClick={() => {
+                      requestCreate();
+                      trackEvent('Request', 'Create', 'Empty Folder');
+                    }}>
               <em>click to add first request...</em>
             </button>
           </div>
@@ -61,11 +65,15 @@ class SidebarRequestRow extends Component {
       node = (
         <li className={classes}>
           <div className={classnames('sidebar__item', {'sidebar__item--active': isActive})}>
-            <button className="wide" onClick={e => handleActivateRequest(request)}>
+            <button className="wide" onClick={e => {
+              handleActivateRequest(request);
+              trackEvent('Request', 'Activate', 'Sidebar');
+            }}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
                 <Editable
                   value={request.name}
+                  onEditStart={() => trackEvent('Request', 'Rename', 'In Place')}
                   onSubmit={name => models.request.update(request, {name})}
                 />
               </div>
@@ -113,6 +121,7 @@ SidebarRequestRow.propTypes = {
  */
 const dragSource = {
   beginDrag(props) {
+    trackEvent('Request', 'Drag', 'Begin');
     return {
       request: props.request
     };

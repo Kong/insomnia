@@ -122,9 +122,9 @@ export const CONTENT_TYPE_RAW = '';
 export const contentTypesMap = {
   [CONTENT_TYPE_JSON]: 'JSON',
   [CONTENT_TYPE_XML]: 'XML',
-  // [CONTENT_TYPE_FORM_DATA]: 'Form Data',
+  [CONTENT_TYPE_FORM_DATA]: 'Form Data',
   [CONTENT_TYPE_FORM_URLENCODED]: 'Form Url Encoded',
-  [CONTENT_TYPE_FILE]: 'File Upload',
+  [CONTENT_TYPE_FILE]: 'Binary',
   [CONTENT_TYPE_TEXT]: 'Plain Text',
   [CONTENT_TYPE_RAW]: 'Raw Body',
 };
@@ -136,7 +136,7 @@ export const contentTypesMap = {
  * @returns {*|string}
  */
 export function getContentTypeName (contentType) {
-  return contentTypesMap[contentType] || 'Other';
+  return contentTypesMap[contentType] || 'Body';
 }
 
 export function getContentTypeFromHeaders (headers) {

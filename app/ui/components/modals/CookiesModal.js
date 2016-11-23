@@ -5,6 +5,7 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import CookiesEditor from '../editors/CookiesEditor';
 import * as models from '../../../models';
+import {trackEvent} from '../../../analytics/index';
 
 class CookiesModal extends Component {
   constructor (props) {
@@ -34,6 +35,7 @@ class CookiesModal extends Component {
     ];
 
     this._saveChanges(cookieJar);
+    trackEvent('Cookie', 'Update');
   }
 
   _handleCookieAdd (cookie) {
@@ -41,6 +43,7 @@ class CookiesModal extends Component {
     const {cookies} = cookieJar;
     cookieJar.cookies = [cookie, ...cookies];
     this._saveChanges(cookieJar);
+    trackEvent('Cookie', 'Create');
   }
 
   _handleCookieDelete (cookie) {
@@ -51,10 +54,12 @@ class CookiesModal extends Component {
     cookieJar.cookies = cookies.filter(c => c !== cookie);
 
     this._saveChanges(cookieJar);
+    trackEvent('Cookie', 'Delete');
   }
 
   _onFilterChange (filter) {
     this.setState({filter});
+    trackEvent('Cookie Editor', 'Filter Change');
   }
 
   _getFilteredSortedCookies () {
@@ -81,6 +86,7 @@ class CookiesModal extends Component {
     await this._load(workspace);
     this.modal.show();
     this.filterInput.focus();
+    trackEvent('Cookie Editor', 'Show');
   }
 
   toggle (workspace) {

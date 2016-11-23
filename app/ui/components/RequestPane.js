@@ -7,9 +7,9 @@ import RenderedQueryString from './RenderedQueryString';
 import BodyEditor from './editors/body/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
 import RequestUrlBar from './RequestUrlBar.js';
-import {MOD_SYM, getContentTypeName, getContentTypeFromHeaders} from '../../common/constants';
+import {MOD_SYM, getContentTypeName} from '../../common/constants';
 import {debounce} from '../../common/misc';
-import {getBodyDescription} from '../../models/request';
+import {trackEvent} from '../../analytics/index';
 
 class RequestPane extends Component {
   render () {
@@ -102,23 +102,23 @@ class RequestPane extends Component {
         </header>
         <Tabs className="pane__body">
           <TabList>
-            <Tab>
+            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Body')}>
               <button>
-                {getContentTypeName(request.body.mimeType)}
+                {getContentTypeName(request.body.mimeType || '')}
               </button>
               <ContentTypeDropdown updateRequestMimeType={updateRequestMimeType}/>
             </Tab>
-            <Tab>
+            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Auth')}>
               <button>
                 Auth {hasAuth ? <i className="fa fa-lock txt-sm"></i> : null}
               </button>
             </Tab>
-            <Tab>
+            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Query')}>
               <button>
                 Query {numParameters ? <span className="txt-sm">({numParameters})</span> : null}
               </button>
             </Tab>
-            <Tab>
+            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Headers')}>
               <button>
                 Headers {numHeaders ? <span className="txt-sm">({numHeaders})</span> : null}
               </button>
@@ -159,6 +159,9 @@ class RequestPane extends Component {
                 key={request._id}
                 namePlaceholder="name"
                 valuePlaceholder="value"
+                onToggleDisable={pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable')}
+                onCreate={() => trackEvent('Query', 'Create')}
+                onDelete={() => trackEvent('Query', 'Delete')}
                 pairs={request.parameters}
                 onChange={updateRequestParameters}
               />
@@ -175,7 +178,10 @@ class RequestPane extends Component {
             <div className="pad-right text-right">
               <button
                 className="margin-top-sm btn btn--outlined btn--super-compact"
-                onClick={() => updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor)}>
+                onClick={() => {
+                  updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor);
+                  trackEvent('Headers', 'Toggle Bulk', !useBulkHeaderEditor ? 'On' : 'Off');
+                }}>
                 {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>

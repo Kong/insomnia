@@ -5,6 +5,7 @@ import classnames from 'classnames';
 
 import RequestGroupActionsDropdown from '../dropdowns/RequestGroupActionsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
+import {trackEvent} from '../../../analytics/index';
 
 class SidebarRequestGroupRow extends Component {
   constructor (props) {
@@ -60,7 +61,10 @@ class SidebarRequestGroupRow extends Component {
       <li key={requestGroup._id} className={classes}>
         <div
           className={classnames('sidebar__item sidebar__item--big', {'sidebar__item--active': isActive})}>
-          <button onClick={e => handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed)}>
+          <button onClick={e => {
+            handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
+            trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open')
+          }}>
             <div className="sidebar__clickable">
               <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
               <span>{requestGroup.name}</span>
@@ -122,6 +126,7 @@ SidebarRequestGroupRow.propTypes = {
  */
 const dragSource = {
   beginDrag(props) {
+    trackEvent('Folder', 'Drag', 'Begin');
     return {
       requestGroup: props.requestGroup
     };

@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 
 import KeyValueEditor from '../base/KeyValueEditor';
 import Editor from '../base/Editor';
+import {trackEvent} from '../../../analytics/index';
 
 class RequestHeadersEditor extends Component {
   _handleBulkUpdate (headersString) {
@@ -73,6 +74,9 @@ class RequestHeadersEditor extends Component {
             namePlaceholder="My-Header"
             valuePlaceholder="Value"
             pairs={headers}
+            onToggleDisable={pair => trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable')}
+            onCreate={() => trackEvent('Headers Editor', 'Create')}
+            onDelete={() => trackEvent('Headers Editor', 'Delete')}
             onChange={onChange}
           />
         </div>

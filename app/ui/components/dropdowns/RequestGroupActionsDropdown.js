@@ -5,6 +5,7 @@ import EnvironmentEditModal from '../modals/EnvironmentEditModal';
 import PromptModal from '../modals/PromptModal';
 import * as models from '../../../models';
 import {showModal} from '../modals';
+import {trackEvent} from '../../../analytics/index';
 
 class RequestGroupActionsDropdown extends Component {
   async _promptUpdateName () {
@@ -16,6 +17,8 @@ class RequestGroupActionsDropdown extends Component {
     });
 
     models.requestGroup.update(requestGroup, {name});
+
+    trackEvent('Folder', 'Rename', 'Folder Action');
   }
 
   async _requestCreate () {
@@ -29,11 +32,13 @@ class RequestGroupActionsDropdown extends Component {
     const parentId = requestGroup._id;
     const request = await models.request.create({parentId, name});
     this.props.actions.global.activateRequest(workspace, request);
+    trackEvent('Request', 'Create', 'Folder Action');
   }
 
   _requestGroupDuplicate () {
     const {requestGroup} = this.props;
     models.requestGroup.duplicate(requestGroup);
+    trackEvent('Folder', 'Duplicate', 'Folder Action');
   }
 
   async _requestGroupCreate () {
@@ -45,6 +50,8 @@ class RequestGroupActionsDropdown extends Component {
 
     const {requestGroup} = this.props;
     models.requestGroup.create({parentId: requestGroup._id, name});
+
+    trackEvent('Folder', 'Create', 'Folder Action');
   }
 
   render () {
@@ -73,9 +80,10 @@ class RequestGroupActionsDropdown extends Component {
           onClick={e => showModal(EnvironmentEditModal, requestGroup)}>
           <i className="fa fa-code"></i> Environment
         </DropdownItem>
-        <DropdownItem buttonClass={PromptButton}
-                      onClick={e => models.requestGroup.remove(requestGroup)}
-                      addIcon={true}>
+        <DropdownItem buttonClass={PromptButton} addIcon={true} onClick={e => {
+          models.requestGroup.remove(requestGroup);
+          trackEvent('Folder', 'Delete', 'Folder Action');
+        }}>
           <i className="fa fa-trash-o"></i> Delete
         </DropdownItem>
       </Dropdown>

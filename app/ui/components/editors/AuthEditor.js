@@ -1,5 +1,6 @@
 import React, {PropTypes} from 'react';
 import KeyValueEditor from '../base/KeyValueEditor';
+import {trackEvent} from '../../../analytics/index';
 
 const AuthEditor = ({request, showPasswords, onChange, ...other}) => {
   const auth = request.authentication;
@@ -16,6 +17,9 @@ const AuthEditor = ({request, showPasswords, onChange, ...other}) => {
       namePlaceholder="Username"
       valuePlaceholder="********"
       valueInputType={showPasswords ? 'text' : 'password'}
+      onToggleDisable={pair => trackEvent('Auth Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable')}
+      onCreate={() => trackEvent('Auth Editor', 'Create')}
+      onDelete={() => trackEvent('Auth Editor', 'Delete')}
       onChange={pairs => onChange({
         username: pairs.length ? pairs[0].name : '',
         password: pairs.length ? pairs[0].value : '',

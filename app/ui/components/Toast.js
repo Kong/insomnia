@@ -17,11 +17,14 @@ class Toast extends Component {
       visible: false,
     };
 
-    this._notifications = [{
-      key: KEY_PLUS_IS_HERE,
-      message: 'Cloud sync is here!',
-      cta: 'Show'
-    }];
+    this._notifications = [
+      // TODO: Fetch these from remote server
+      // {
+      //   key: KEY_PLUS_IS_HERE,
+      //   message: 'Cloud sync is here!',
+      //   cta: 'Show'
+      // }
+    ];
   }
 
   _loadSeen () {
@@ -70,6 +73,11 @@ class Toast extends Component {
     if (notification) {
       this.setState({visible: false});
     }
+
+    // Give time for toast to fade out, then remove it
+    setTimeout(() => {
+      this.setState({notification: null});
+    }, 1000);
   }
 
   componentDidMount () {
@@ -79,6 +87,10 @@ class Toast extends Component {
 
   render () {
     const {notification, visible} = this.state;
+
+    if (!notification) {
+      return null;
+    }
 
     return (
       <div className={classnames('toast', {'toast--show': visible})}>

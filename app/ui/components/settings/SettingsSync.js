@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import Link from '../base/Link';
 import PromptButton from '../base/PromptButton';
+import {trackEvent} from '../../../analytics/index';
 
 const SettingsSync = ({
   loggedIn,
@@ -46,7 +47,7 @@ const SettingsSync = ({
       </p>
     ] : [
       <p key="0">
-        <Link href="https://insomnia.rest/plus">Insomnia Plus</Link> helps you <i>rest</i> easy by
+        <Link href="https://insomnia.rest/plus/">Insomnia Plus</Link> helps you <i>rest</i> easy by
         keeping your workspaces securely backed up and synced across all of your devices.
       </p>,
       <p key="1">
@@ -59,6 +60,7 @@ const SettingsSync = ({
         <button className="btn txt-lg btn--outlined"
                 onClick={() => {
                   handleExit();
+                  trackEvent('Settings Sync', 'Click Upgrade');
                   handleShowSignup()
                 }}>
           Upgrade to Plus

@@ -1,15 +1,16 @@
 import networkRequest from 'request';
 import {parse as urlParse} from 'url';
+import mime from 'mime-types';
+import {basename as pathBasename} from 'path';
 import * as models from '../models';
 import * as querystring from './querystring';
 import {buildFromParams} from './querystring';
 import * as util from './misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED} from './constants';
+import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FILE} from './constants';
 import {jarFromCookies, cookiesFromJar, cookieHeaderValueForUri} from './cookies';
 import {setDefaultProtocol} from './misc';
 import {getRenderedRequest} from './render';
 import {swapHost} from './dns';
-import {CONTENT_TYPE_FILE} from './constants';
 import * as fs from 'fs';
 
 let cancelRequestFunction = null;
@@ -51,7 +52,21 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     config.body = buildFromParams(renderedRequest.body.params || [], true);
   } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-    // TODO: This
+    const formData = {};
+    for (const param of renderedRequest.body.params) {
+      if (param.type === 'file' && param.fileName) {
+        formData[param.name] = {
+          value: fs.readFileSync(param.fileName),
+          options: {
+            fileName: pathBasename(param.fileName),
+            contentType: mime.lookup(param.fileName) // Guess the mime-type
+          }
+        }
+      } else {
+        formData[param.name] = param.value || '';
+      }
+    }
+    config.formData = formData;
   } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FILE) {
     config.body = fs.readFileSync(renderedRequest.body.fileName);
   } else {
@@ -73,7 +88,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(renderedRequest.parameters);
-  const url = querystring.joinURL(renderedRequest.url, qs);
+  const url = querystring.joinUrl(renderedRequest.url, qs);
   config.url = util.prepareUrlForSending(url);
   config.headers.host = urlParse(config.url).host;
 

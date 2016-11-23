@@ -2,7 +2,6 @@ import React, {PropTypes} from 'react';
 
 const SettingsGeneral = ({settings, updateSetting}) => (
   <div>
-
     <div>
       <input
         id="setting-follow-redirects"

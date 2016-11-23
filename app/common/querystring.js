@@ -1,7 +1,7 @@
 import * as util from './misc.js';
 
 /** Join a URL with a querystring  */
-export function joinURL (url, qs) {
+export function joinUrl (url, qs) {
   if (!qs) {
     return url;
   }

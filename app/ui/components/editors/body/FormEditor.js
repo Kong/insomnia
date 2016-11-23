@@ -1,5 +1,6 @@
 import React, {PropTypes, Component} from 'react';
 import KeyValueEditor from '../../base/KeyValueEditor';
+import {trackEvent} from '../../../../analytics/index';
 
 class FormEditor extends Component {
   render () {
@@ -8,7 +9,16 @@ class FormEditor extends Component {
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
-          <KeyValueEditor onChange={onChange} pairs={parameters} valueInputType="file"/>
+          <KeyValueEditor
+            onToggleDisable={pair => trackEvent('Form Editor', `Toggle ${pair.type || 'text'}`, pair.disabled ? 'Disable' : 'Enable')}
+            onChangeType={type => trackEvent('Form Editor', 'Change Type', type)}
+            onChooseFile={() => trackEvent('Form Editor', 'Choose File')}
+            onCreate={() => trackEvent('Form Editor', 'Create')}
+            onDelete={() => trackEvent('Form Editor', 'Delete')}
+            onChange={onChange}
+            pairs={parameters}
+            multipart={true}
+          />
         </div>
       </div>
     )

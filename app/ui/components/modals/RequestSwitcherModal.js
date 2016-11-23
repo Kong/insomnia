@@ -207,7 +207,7 @@ class RequestSwitcherModal extends Component {
       <Modal ref={m => this.modal = m} top={true}
              dontFocus={true} {...this.props}>
         <ModalHeader hideCloseButton={true}>
-          <p className="pull-right txt-md">
+          <div className="pull-right txt-md">
             <span className="monospace">tab</span> or
             &nbsp;
             <span className="monospace">↑ ↓</span> &nbsp;to navigate
@@ -215,8 +215,8 @@ class RequestSwitcherModal extends Component {
             <span className="monospace">↵</span> &nbsp;to select
             &nbsp;&nbsp;&nbsp;
             <span className="monospace">esc</span> to dismiss
-          </p>
-          <p>Quick Switch</p>
+          </div>
+          <div>Quick Switch</div>
         </ModalHeader>
         <ModalBody className="pad request-switcher">
           <div className="form-control form-control--outlined no-margin">
