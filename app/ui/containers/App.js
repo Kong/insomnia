@@ -302,6 +302,10 @@ class App extends Component {
       toggleModal(SettingsModal);
     });
 
+    ipcRenderer.on('toggle-changelog', () => {
+      toggleModal(ChangelogModal);
+    });
+
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));
   }
 

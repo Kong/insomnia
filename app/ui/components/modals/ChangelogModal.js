@@ -9,18 +9,15 @@ import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/cons
 class ChangelogModal extends Component {
   constructor (props) {
     super(props);
-    this.state = {
-      startVersion: getAppVersion(),
-      changelog: null
-    };
+    this.state = {changelog: null};
   }
 
-  show (startVersion = null) {
+  show () {
     this.modal.show();
+  }
 
-    if (startVersion) {
-      this.setState({startVersion});
-    }
+  toggle () {
+    this.modal.toggle();
   }
 
   async componentDidMount () {
@@ -36,12 +33,8 @@ class ChangelogModal extends Component {
     this.setState({changelog});
   }
 
-  shouldComponentUpdate (nextProps, nextState) {
-    return nextState !== this.state;
-  }
-
   render () {
-    const {changelog, startVersion} = this.state;
+    const {changelog} = this.state;
 
     let html;
 
@@ -54,6 +47,7 @@ class ChangelogModal extends Component {
     } else {
       html = [];
 
+      const startVersion = getAppVersion();
       let startIndex = changelog.findIndex(c => c.version === startVersion);
       if (startIndex < 0) {
         startIndex = 0;

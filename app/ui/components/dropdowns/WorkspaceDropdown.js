@@ -120,8 +120,8 @@ class WorkspaceDropdown extends Component {
           <i className="fa fa-cog"></i> Settings
           <DropdownHint char=","></DropdownHint>
         </DropdownItem>
-        <DropdownItem onClick={e => showModal(ChangelogModal)}>
-          <i className="fa fa-blank"></i> Changelog
+        <DropdownItem onClick={e => showModal(SettingsModal, TAB_INDEX_EXPORT)}>
+          <i className="fa fa-users"></i> For Team
         </DropdownItem>
       </Dropdown>
     )

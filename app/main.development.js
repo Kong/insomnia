@@ -342,6 +342,17 @@ function createWindow () {
           }
         },
         {
+          label: "Changelog",
+          click: function (menuItem, window, e) {
+            if (!window || !window.webContents) {
+              return
+            }
+
+            window.webContents.send('toggle-changelog');
+            trackEvent('App Menu', 'Changelog');
+          }
+        },
+        {
           type: "separator",
           visible: IS_MAC
         },
