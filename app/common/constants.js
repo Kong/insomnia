@@ -124,8 +124,7 @@ export const contentTypesMap = {
   [CONTENT_TYPE_XML]: 'XML',
   [CONTENT_TYPE_FORM_DATA]: 'Form Data',
   [CONTENT_TYPE_FORM_URLENCODED]: 'Form Url Encoded',
-  [CONTENT_TYPE_FILE]: 'Binary',
-  [CONTENT_TYPE_TEXT]: 'Plain Text',
+  [CONTENT_TYPE_FILE]: 'Binary File',
   [CONTENT_TYPE_RAW]: 'Raw Body',
 };
 

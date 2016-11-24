@@ -15,7 +15,8 @@
     grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr) auto auto auto;
     grid-template-rows: auto;
 
-    &.key-value-editor__row--disabled input {
+    &.key-value-editor__row--disabled input,
+    &.key-value-editor__row--disabled button {
       text-decoration: line-through;
       color: @hl-xxl;
     }
