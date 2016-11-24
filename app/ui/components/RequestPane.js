@@ -92,7 +92,7 @@ class RequestPane extends Component {
 
     const numParameters = request.parameters.filter(p => !p.disabled).length;
     const numHeaders = request.headers.filter(h => !h.disabled).length;
-    const hasAuth = !request.authentication.disabled;
+    const hasAuth = !request.authentication.disabled && request.authentication.username;
 
     return (
       <section className="pane request-pane">

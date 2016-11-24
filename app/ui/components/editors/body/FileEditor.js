@@ -23,20 +23,23 @@ class FileEditor extends Component {
     }
 
     return (
-      <div className="text-center pad">
-        <p className="txt-sm pad-top">
+      <div className="text-center">
+        <div className="pad text-left">
+          <label className="label--small">Selected File</label>
           {path ? (
-            <code className="wrap">
+            <code className="block txt-sm">
               <span className="force-wrap selectable" title={path}>
                 {pathDescription}
               </span>
               {" "}
-              <span className="no-wrap italic">({sizeDescription})</span>
+              <span className="no-wrap">({sizeDescription})</span>
             </code>
           ) : (
-            <code className="super-faint">No file selected</code>
+            <code className="super-faint block txt-sm">
+              No file selected
+            </code>
           )}
-        </p>
+        </div>
         <div>
           <PromptButton className="btn btn--super-compact"
                         disabled={!path}
