@@ -51,7 +51,6 @@ class ChangelogModal extends Component {
       let startIndex = changelog.findIndex(c => c.version === startVersion);
       if (startIndex < 0) {
         startIndex = 0;
-        console.warn(`Failed to find changelog version for ${startVersion}`)
       }
 
       changelog.slice(startIndex).map((change, i) => {

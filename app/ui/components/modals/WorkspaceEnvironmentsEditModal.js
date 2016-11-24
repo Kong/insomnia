@@ -22,7 +22,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
       isValid: true,
       subEnvironments: [],
       rootEnvironment: null,
-      activeEnvironmentId: null
+      activeEnvironmentId: null,
+      forceRefreshKey: 0,
     }
   }
 
@@ -53,7 +54,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
       workspace,
       rootEnvironment,
       subEnvironments,
-      activeEnvironmentId
+      activeEnvironmentId,
+      forceRefreshKey: Date.now(),
     });
   }
 
@@ -136,7 +138,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
   }
 
   render () {
-    const {subEnvironments, rootEnvironment, isValid} = this.state;
+    const {subEnvironments, rootEnvironment, isValid, forceRefreshKey} = this.state;
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
@@ -199,7 +201,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
             <div className="env-modal__editor">
               <EnvironmentEditor
                 ref={n => this._envEditor = n}
-                key={activeEnvironment ? activeEnvironment._id : 'n/a'}
+                key={`${forceRefreshKey}::${(activeEnvironment ? activeEnvironment._id : 'n/a')}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange.bind(this)}
                 lightTheme={true}
