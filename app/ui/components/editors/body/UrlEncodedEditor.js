@@ -1,7 +1,6 @@
 import React, {PropTypes, Component} from 'react';
 import KeyValueEditor from '../../base/KeyValueEditor';
 import {trackEvent} from '../../../../analytics/index';
-import {CONTENT_TYPE_FORM_URLENCODED} from '../../../../common/constants';
 
 class UrlEncodedEditor extends Component {
   render () {
@@ -19,9 +18,6 @@ class UrlEncodedEditor extends Component {
             onDelete={() => trackEvent('Url Encoded Editor', 'Delete')}
             pairs={parameters}
           />
-          <div className="faded faint txt-sm italic pad no-pad-bottom">
-            Sends as <code>{CONTENT_TYPE_FORM_URLENCODED}</code>
-          </div>
         </div>
       </div>
     )

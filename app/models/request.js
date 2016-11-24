@@ -37,7 +37,7 @@ export function newBodyRaw (rawBody, contentType) {
 export function newBodyFormUrlEncoded (parameters) {
   // Remove any properties (eg. fileName) that might not fit
   parameters = (parameters || []).map(
-    p => ({name: p.name, value: p.value})
+    p => ({name: p.name, value: p.value, disabled: p.disabled})
   );
 
   return {

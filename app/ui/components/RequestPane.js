@@ -90,6 +90,10 @@ class RequestPane extends Component {
       )
     }
 
+    let numBodyParams = 0;
+    if (request.body && request.body.params) {
+      numBodyParams = request.body.params.filter(p => !p.disabled).length;
+    }
     const numParameters = request.parameters.filter(p => !p.disabled).length;
     const numHeaders = request.headers.filter(h => !h.disabled).length;
     const hasAuth = !request.authentication.disabled && request.authentication.username;
@@ -111,6 +115,8 @@ class RequestPane extends Component {
             <Tab onClick={() => trackEvent('Request Pane', 'View', 'Body')}>
               <button>
                 {getContentTypeName(request.body.mimeType || '')}
+                {" "}
+                {numBodyParams ? <span className="txt-sm">({numBodyParams})</span> : null}
               </button>
               <ContentTypeDropdown updateRequestMimeType={updateRequestMimeType}/>
             </Tab>
