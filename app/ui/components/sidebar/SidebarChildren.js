@@ -1,21 +1,9 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 
 
-class SidebarChildren extends Component {
-  shouldComponentUpdate (nextProps) {
-    for (const k of Object.keys(nextProps)) {
-      const curr = this.props[k];
-      const next = nextProps[k];
-      if (curr !== next) {
-        console.log('DIFFERENT', k, curr, next);
-        return true;
-      }
-    }
-
-    return false;
-  }
+class SidebarChildren extends PureComponent {
 
   _filterChildren (filter, children, extra = null) {
     filter = filter || '';
@@ -85,8 +73,8 @@ class SidebarChildren extends Component {
 
       function hasActiveChild (children) {
         for (const c of children) {
-          if (c.children.length) {
-            return hasActiveChild(c.children);
+          if (hasActiveChild(c.children || [])) {
+            return true;
           } else if (c.doc._id === activeRequestId) {
             return true;
           }
