@@ -8,13 +8,15 @@ import SidebarRequestRow from './SidebarRequestRow';
 import {trackEvent} from '../../../analytics/index';
 
 class SidebarRequestGroupRow extends Component {
-  constructor (props) {
-    super(props);
+  state = {dragDirection: 0};
 
-    this.state = {
-      dragDirection: 0
-    }
-  }
+  _handleCollapse = () => {
+    const {requestGroup, handleSetRequestGroupCollapsed, isCollapsed} = this.props;
+    handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
+    trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open')
+  };
+
+  _nullFunction = () => null;
 
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
@@ -31,7 +33,6 @@ class SidebarRequestGroupRow extends Component {
       requestGroup,
       isCollapsed,
       isActive,
-      handleSetRequestGroupCollapsed,
       handleActivateRequest,
       handleCreateRequest,
       handleCreateRequestGroup,
@@ -39,11 +40,6 @@ class SidebarRequestGroupRow extends Component {
       isDraggingOver,
       workspace,
     } = this.props;
-
-    if (!requestGroup) {
-      console.log(this.props);
-      return connectDragSource(connectDropTarget(<li>--</li>))
-    }
 
     const {dragDirection} = this.state;
 
@@ -62,10 +58,7 @@ class SidebarRequestGroupRow extends Component {
       <li key={requestGroup._id} className={classes}>
         <div
           className={classnames('sidebar__item sidebar__item--big', {'sidebar__item--active': isActive})}>
-          <button onClick={e => {
-            handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
-            trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open')
-          }}>
+          <button onClick={this._handleCollapse}>
             <div className="sidebar__clickable">
               <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
               <span>{requestGroup.name}</span>
@@ -87,7 +80,7 @@ class SidebarRequestGroupRow extends Component {
         <ul className="sidebar__list">
           {!isCollapsed && children.length === 0 ? (
             <SidebarRequestRow
-              handleActivateRequest={() => null}
+              handleActivateRequest={this._nullFunction}
               moveRequest={moveRequest}
               isActive={false}
               request={null}
@@ -115,7 +108,7 @@ SidebarRequestGroupRow.propTypes = {
   isActive: PropTypes.bool.isRequired,
   isCollapsed: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
-  requestGroup: PropTypes.object,
+  requestGroup: PropTypes.object.isRequired,
 
   // React DnD
   isDragging: PropTypes.bool,

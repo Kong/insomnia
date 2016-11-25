@@ -10,13 +10,24 @@ import {trackEvent} from '../../../analytics/index';
 
 
 class SidebarRequestRow extends Component {
-  constructor (props) {
-    super(props);
 
-    this.state = {
-      dragDirection: 0
+  state = {dragDirection: 0};
+
+  _handleRequestCreateFromEmpty = () => {
+    this.props.requestCreate();
+    trackEvent('Request', 'Create', 'Empty Folder');
+  };
+
+  _handleRequestActivate = () => {
+    const {isActive, request, handleActivateRequest} = this.props;
+
+    if (isActive) {
+      return;
     }
-  }
+
+    handleActivateRequest(request);
+    trackEvent('Request', 'Activate', 'Sidebar');
+  };
 
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
@@ -33,8 +44,6 @@ class SidebarRequestRow extends Component {
       request,
       requestGroup,
       isActive,
-      handleActivateRequest,
-      requestCreate
     } = this.props;
 
     const {dragDirection} = this.state;
@@ -52,10 +61,7 @@ class SidebarRequestRow extends Component {
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
             <button className="sidebar__clickable"
-                    onClick={() => {
-                      requestCreate();
-                      trackEvent('Request', 'Create', 'Empty Folder');
-                    }}>
+                    onClick={this._handleRequestCreateFromEmpty}>
               <em>click to add first request...</em>
             </button>
           </div>
@@ -65,13 +71,7 @@ class SidebarRequestRow extends Component {
       node = (
         <li className={classes}>
           <div className={classnames('sidebar__item', {'sidebar__item--active': isActive})}>
-            <button className="wide" onClick={e => {
-              if (isActive) {
-                return;
-              }
-              handleActivateRequest(request);
-              trackEvent('Request', 'Activate', 'Sidebar');
-            }}>
+            <button className="wide" onClick={this._handleRequestActivate}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
                 <Editable

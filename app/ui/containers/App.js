@@ -27,92 +27,84 @@ import {trackEvent, trackLegacyEvent} from '../../analytics';
 
 
 class App extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      draggingSidebar: false,
-      draggingPane: false,
-      forceRefreshCounter: 0,
-    };
+  state = {
+    draggingSidebar: false,
+    draggingPane: false,
+    forceRefreshCounter: 0,
+  };
 
-    // Bind functions once, so we don't have to on every render
-    this._boundStartDragSidebar = this._startDragSidebar.bind(this);
-    this._boundResetDragSidebar = this._resetDragSidebar.bind(this);
-    this._boundStartDragPane = this._startDragPane.bind(this);
-    this._boundResetDragPane = this._resetDragPane.bind(this);
-    this._boundHandleUrlChange = this._handleUrlChanged.bind(this);
-    this._boundRequestCreate = this._requestCreate.bind(this);
-    this._boundRequestGroupCreate = this._requestGroupCreate.bind(this);
+  _globalKeyMap = {
 
-    this.globalKeyMap = {
+    // Show Settings
+    'mod+,': () => {
+      // NOTE: This is controlled via a global menu shortcut in app.js
+    },
 
-      // Show Settings
-      'mod+,': () => {
-        // NOTE: This is controlled via a global menu shortcut in app.js
-      },
+    // Show Request Switcher
+    'mod+p': () => {
+      toggleModal(RequestSwitcherModal);
+      trackEvent('HotKey', 'Quick Switcher');
+    },
 
-      // Show Request Switcher
-      'mod+p': () => {
-        toggleModal(RequestSwitcherModal);
-        trackEvent('HotKey', 'Quick Switcher');
-      },
+    // Request Send
+    'mod+enter': () => {
+      const {handleSendRequestWithEnvironment, activeRequest, activeEnvironment} = this.props;
+      handleSendRequestWithEnvironment(
+        activeRequest ? activeRequest._id : 'n/a',
+        activeEnvironment ? activeEnvironment._id : 'n/a',
+      );
+      trackEvent('HotKey', 'Send');
+    },
 
-      // Request Send
-      'mod+enter': () => {
-        const {handleSendRequestWithEnvironment, activeRequest, activeEnvironment} = this.props;
-        handleSendRequestWithEnvironment(
-          activeRequest ? activeRequest._id : 'n/a',
-          activeEnvironment ? activeEnvironment._id : 'n/a',
-        );
-        trackEvent('HotKey', 'Send');
-      },
+    // Edit Workspace Environments
+    'mod+e': () => {
+      const {activeWorkspace} = this.props;
+      toggleModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
+      trackEvent('HotKey', 'Environments');
+    },
 
-      // Edit Workspace Environments
-      'mod+e': () => {
-        const {activeWorkspace} = this.props;
-        toggleModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
-        trackEvent('HotKey', 'Environments');
-      },
+    // Focus URL Bar
+    'mod+l': () => {
+      const node = document.body.querySelector('.urlbar input');
+      node && node.focus();
+      trackEvent('HotKey', 'Url');
+    },
 
-      // Focus URL Bar
-      'mod+l': () => {
-        const node = document.body.querySelector('.urlbar input');
-        node && node.focus();
-        trackEvent('HotKey', 'Url');
-      },
+    // Edit Cookies
+    'mod+k': () => {
+      const {activeWorkspace} = this.props;
+      toggleModal(CookiesModal, activeWorkspace);
+      trackEvent('HotKey', 'Cookies');
+    },
 
-      // Edit Cookies
-      'mod+k': () => {
-        const {activeWorkspace} = this.props;
-        toggleModal(CookiesModal, activeWorkspace);
-        trackEvent('HotKey', 'Cookies');
-      },
+    // Request Create
+    'mod+n': () => {
+      const {activeRequest, activeWorkspace} = this.props;
 
-      // Request Create
-      'mod+n': () => {
-        const {activeRequest, activeWorkspace} = this.props;
+      const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+      this._requestCreate(parentId);
+      trackEvent('HotKey', 'Request Create');
+    },
 
-        const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-        this._requestCreate(parentId);
-        trackEvent('HotKey', 'Request Create');
-      },
+    // Request Duplicate
+    'mod+d': async () => {
+      const {activeWorkspace, activeRequest, handleSetActiveRequest} = this.props;
 
-      // Request Duplicate
-      'mod+d': async () => {
-        const {activeWorkspace, activeRequest, handleSetActiveRequest} = this.props;
-
-        if (!activeRequest) {
-          return;
-        }
-
-        const request = await models.request.duplicate(activeRequest);
-        handleSetActiveRequest(activeWorkspace._id, request._id);
-        trackEvent('HotKey', 'Request Duplicate');
+      if (!activeRequest) {
+        return;
       }
-    }
-  }
 
-  async _requestGroupCreate (parentId) {
+      const request = await models.request.duplicate(activeRequest);
+      handleSetActiveRequest(activeWorkspace._id, request._id);
+      trackEvent('HotKey', 'Request Duplicate');
+    }
+  };
+
+  _setRequestPaneRef = n => this._requestPane = n;
+  _setResponsePaneRef = n => this._responsePane = n;
+  _setSidebarRef = n => this._sidebar = n;
+
+  _requestGroupCreate = async (parentId) => {
     const name = await showModal(PromptModal, {
       headerName: 'Create New Folder',
       defaultValue: 'My Folder',
@@ -121,9 +113,9 @@ class App extends Component {
     });
 
     models.requestGroup.create({parentId, name})
-  }
+  };
 
-  async _requestCreate (parentId) {
+  _requestCreate = async (parentId) => {
     const name = await showModal(PromptModal, {
       headerName: 'Create New Request',
       defaultValue: 'My Request',
@@ -136,9 +128,9 @@ class App extends Component {
     const request = await models.request.create({parentId, name});
 
     handleSetActiveRequest(activeWorkspace._id, request._id);
-  }
+  };
 
-  async _handleUrlChanged (request, url) {
+  _handleUrlChange = async (request, url) => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
 
@@ -168,37 +160,37 @@ class App extends Component {
     }
 
     models.request.update(request, {url});
-  }
+  };
 
-  _startDragSidebar () {
+  _startDragSidebar = () => {
     trackEvent('Sidebar', 'Drag Start');
     this.setState({draggingSidebar: true})
-  }
+  };
 
-  _resetDragSidebar () {
+  _resetDragSidebar = () => {
     trackEvent('Sidebar', 'Drag Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
       const {handleSetSidebarWidth, activeWorkspace} = this.props;
       handleSetSidebarWidth(activeWorkspace._id, DEFAULT_SIDEBAR_WIDTH)
     }, 50);
-  }
+  };
 
-  _startDragPane () {
+  _startDragPane = () => {
     trackEvent('App Pane', 'Drag Start');
     this.setState({draggingPane: true})
-  }
+  };
 
-  _resetDragPane () {
+  _resetDragPane = () => {
     trackEvent('App Pane', 'Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => {
       const {handleSetPaneWidth, activeWorkspace} = this.props;
       handleSetPaneWidth(activeWorkspace._id, DEFAULT_PANE_WIDTH);
     }, 50);
-  }
+  };
 
-  _handleMouseMove (e) {
+  _handleMouseMove = (e) => {
     if (this.state.draggingPane) {
       const requestPane = ReactDOM.findDOMNode(this._requestPane);
       const responsePane = ReactDOM.findDOMNode(this._responsePane);
@@ -217,9 +209,9 @@ class App extends Component {
       let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
       this.props.handleSetSidebarWidth(this.props.activeWorkspace._id, sidebarWidth);
     }
-  }
+  };
 
-  _handleMouseUp () {
+  _handleMouseUp = () => {
     if (this.state.draggingSidebar) {
       this.setState({draggingSidebar: false});
     }
@@ -227,30 +219,26 @@ class App extends Component {
     if (this.state.draggingPane) {
       this.setState({draggingPane: false});
     }
-  }
+  };
 
-  _handleToggleSidebar () {
+  _handleToggleSidebar = () => {
     const {activeWorkspace, sidebarHidden, handleSetSidebarHidden} = this.props;
     handleSetSidebarHidden(activeWorkspace._id, !sidebarHidden);
     trackEvent('Sidebar', 'Toggle Visibility', !sidebarHidden ? 'Hide' : 'Show');
-  }
+  };
 
   _forceHardRefresh () {
     this.setState({forceRefreshCounter: this.state.forceRefreshCounter + 1});
   }
 
   async componentDidMount () {
-    // Bind handlers before we use them
-    this._handleMouseUp = this._handleMouseUp.bind(this);
-    this._handleMouseMove = this._handleMouseMove.bind(this);
-
     // Bind mouse handlers
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
 
     // Map global keyboard shortcuts
-    Object.keys(this.globalKeyMap).map(key => {
-      Mousetrap.bindGlobal(key.split('|'), this.globalKeyMap[key]);
+    Object.keys(this._globalKeyMap).map(key => {
+      Mousetrap.bindGlobal(key.split('|'), this._globalKeyMap[key]);
     });
 
     // Do The Analytics
@@ -312,7 +300,7 @@ class App extends Component {
       toggleModal(ChangelogModal);
     });
 
-    ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar.bind(this));
+    ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
   }
 
   componentWillUnmount () {
@@ -329,16 +317,16 @@ class App extends Component {
       <div className="app">
         <Wrapper
           key={this.state.forceRefreshCounter}
-          handleSetRequestPaneRef={n => this._requestPane = n}
-          handleSetResponsePaneRef={n => this._responsePane = n}
-          handleSetSidebarRef={n => this._sidebar = n}
-          handleStartDragSidebar={this._boundStartDragSidebar}
-          handleResetDragSidebar={this._boundResetDragSidebar}
-          handleStartDragPane={this._boundStartDragPane}
-          handleResetDragPane={this._boundResetDragPane}
-          handleUpdateRequestUrl={this._boundHandleUrlChange}
-          handleCreateRequest={this._boundRequestCreate}
-          handleCreateRequestGroup={this._boundRequestGroupCreate}
+          handleSetRequestPaneRef={this._setRequestPaneRef}
+          handleSetResponsePaneRef={this._setResponsePaneRef}
+          handleSetSidebarRef={this._setSidebarRef}
+          handleStartDragSidebar={this._startDragSidebar}
+          handleResetDragSidebar={this._resetDragSidebar}
+          handleStartDragPane={this._startDragPane}
+          handleResetDragPane={this._resetDragPane}
+          handleUpdateRequestUrl={this._handleUrlChange}
+          handleCreateRequest={this._requestCreate}
+          handleCreateRequestGroup={this._requestGroupCreate}
           {...this.props}
         />
         <Toast/>

@@ -34,6 +34,26 @@
     "build-n-package:linux": "npm run build && npm run package:linux",
     "sentry": "bash scripts/sentry-release.sh"
   },
+  "babel": {
+    "presets": [
+      "es2015",
+      "react"
+    ],
+    "plugins": [
+      "transform-object-rest-spread",
+      "transform-class-properties",
+      "add-module-exports",
+      "transform-regenerator",
+      "transform-runtime"
+    ],
+    "env": {
+      "development": {
+        "presets": [
+          "react-hmre"
+        ]
+      }
+    }
+  },
   "jest": {
     "rootDir": "app",
     "verbose": false,
@@ -121,6 +141,7 @@
     "babel-jest": "^15.0.0",
     "babel-loader": "^6.2.4",
     "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-transform-class-properties": "^6.19.0",
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-plugin-transform-regenerator": "^6.16.1",
     "babel-plugin-transform-runtime": "^6.15.0",

@@ -8,7 +8,7 @@ import {isDevelopment} from '../../../common/constants';
 class Link extends Component {
   constructor (props) {
     super(props);
-    this._boundHandleClick = this._handleClick.bind(this);
+    this._boundHandleCollapse = this._handleClick.bind(this);
   }
 
   _handleClick (e) {
@@ -32,14 +32,14 @@ class Link extends Component {
     return button ? (
       <button onClick={e => {
         onClick && onClick(e);
-        this._boundHandleClick(e);
+        this._boundHandleCollapse(e);
       }} {...other}>
         {children}
       </button>
     ) : (
       <a href={href} onClick={e => {
         onClick && onClick(e);
-        this._boundHandleClick(e);
+        this._boundHandleCollapse(e);
       }} {...other}>
         {children}
       </a>

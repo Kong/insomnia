@@ -7,40 +7,33 @@ import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FO
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 
 class BodyEditor extends Component {
-  constructor (props) {
-    super(props);
-    this._boundHandleRawChange = this._handleRawChange.bind(this);
-    this._boundHandleFormUrlEncodedChange = this._handleFormUrlEncodedChange.bind(this);
-    this._boundHandleFormChange = this._handleFormChange.bind(this);
-    this._boundHandleFileChange = this._handleFileChange.bind(this);
-  }
 
-  _handleRawChange (rawValue) {
+  _handleRawChange = (rawValue) => {
     const {onChange, request} = this.props;
 
     const contentType = getContentTypeFromHeaders(request.headers);
     const newBody = newBodyRaw(rawValue, contentType || '');
 
     onChange(newBody);
-  }
+  };
 
-  _handleFormUrlEncodedChange (parameters) {
+  _handleFormUrlEncodedChange = (parameters) => {
     const {onChange} = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(newBody);
-  }
+  };
 
-  _handleFormChange (parameters) {
+  _handleFormChange = (parameters) => {
     const {onChange} = this.props;
     const newBody = newBodyForm(parameters);
     onChange(newBody);
-  }
+  };
 
-  _handleFileChange (path) {
+  _handleFileChange = (path) => {
     const {onChange} = this.props;
     const newBody = newBodyFile(path);
     onChange(newBody);
-  }
+  };
 
   render () {
     const {fontSize, lineWrapping, request} = this.props;
@@ -51,7 +44,7 @@ class BodyEditor extends Component {
       return (
         <UrlEncodedEditor
           key={request._id}
-          onChange={this._boundHandleFormUrlEncodedChange}
+          onChange={this._handleFormUrlEncodedChange}
           parameters={request.body.params || []}
         />
       )
@@ -59,7 +52,7 @@ class BodyEditor extends Component {
       return (
         <FormEditor
           key={request._id}
-          onChange={this._boundHandleFormChange}
+          onChange={this._handleFormChange}
           parameters={request.body.params || []}
         />
       )
@@ -67,7 +60,7 @@ class BodyEditor extends Component {
       return (
         <FileEditor
           key={request._id}
-          onChange={this._boundHandleFileChange}
+          onChange={this._handleFileChange}
           path={fileName || ''}
         />
       )
@@ -80,7 +73,7 @@ class BodyEditor extends Component {
           lineWrapping={lineWrapping}
           contentType={contentType || 'text/plain'}
           content={request.body.text || ''}
-          onChange={this._boundHandleRawChange}
+          onChange={this._handleRawChange}
         />
       )
     } else {
