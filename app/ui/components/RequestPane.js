@@ -114,11 +114,13 @@ class RequestPane extends Component {
           <TabList>
             <Tab onClick={() => trackEvent('Request Pane', 'View', 'Body')}>
               <button>
-                {getContentTypeName(request.body.mimeType || '')}
+                {getContentTypeName(request.body.mimeType)}
                 {" "}
                 {numBodyParams ? <span className="txt-sm">({numBodyParams})</span> : null}
               </button>
-              <ContentTypeDropdown updateRequestMimeType={updateRequestMimeType}/>
+              <ContentTypeDropdown updateRequestMimeType={updateRequestMimeType} className="tall">
+                <i className="fa fa-caret-down"></i>
+              </ContentTypeDropdown>
             </Tab>
             <Tab onClick={() => trackEvent('Request Pane', 'View', 'Auth')}>
               <button>
@@ -138,6 +140,7 @@ class RequestPane extends Component {
           </TabList>
           <TabPanel className="editor-wrapper">
             <BodyEditor
+              handleUpdateRequestMimeType={updateRequestMimeType}
               key={request._id}
               request={request}
               onChange={updateRequestBody}

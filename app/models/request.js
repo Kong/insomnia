@@ -26,7 +26,7 @@ export function init () {
 }
 
 export function newBodyRaw (rawBody, contentType) {
-  if (!contentType) {
+  if (typeof contentType !== 'string') {
     return {text: rawBody};
   }
 

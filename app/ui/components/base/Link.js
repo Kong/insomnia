@@ -31,14 +31,14 @@ class Link extends Component {
     const {onClick, button, href, children, ...other} = this.props;
     return button ? (
       <button onClick={e => {
-        onClick();
+        onClick && onClick(e);
         this._boundHandleClick(e);
       }} {...other}>
         {children}
       </button>
     ) : (
       <a href={href} onClick={e => {
-        onClick();
+        onClick && onClick(e);
         this._boundHandleClick(e);
       }} {...other}>
         {children}

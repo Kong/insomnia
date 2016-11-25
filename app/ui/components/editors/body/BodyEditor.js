@@ -3,10 +3,8 @@ import RawEditor from './RawEditor';
 import UrlEncodedEditor from './UrlEncodedEditor';
 import FormEditor from './FormEditor';
 import FileEditor from './FileEditor';
-import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA} from '../../../../common/constants';
-import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm} from '../../../../models/request';
-import {CONTENT_TYPE_FILE} from '../../../../common/constants';
-import {newBodyFile} from '../../../../models/request';
+import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../../../../common/constants';
+import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 
 class BodyEditor extends Component {
   constructor (props) {
@@ -21,7 +19,7 @@ class BodyEditor extends Component {
     const {onChange, request} = this.props;
 
     const contentType = getContentTypeFromHeaders(request.headers);
-    const newBody = newBodyRaw(rawValue, contentType);
+    const newBody = newBodyRaw(rawValue, contentType || '');
 
     onChange(newBody);
   }
@@ -46,10 +44,10 @@ class BodyEditor extends Component {
 
   render () {
     const {fontSize, lineWrapping, request} = this.props;
-    const bodyType = request.body.mimeType;
     const fileName = request.body.fileName;
+    const mimeType = request.body.mimeType;
 
-    if (bodyType === CONTENT_TYPE_FORM_URLENCODED) {
+    if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
       return (
         <UrlEncodedEditor
           key={request._id}
@@ -57,7 +55,7 @@ class BodyEditor extends Component {
           parameters={request.body.params || []}
         />
       )
-    } else if (bodyType === CONTENT_TYPE_FORM_DATA) {
+    } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
       return (
         <FormEditor
           key={request._id}
@@ -65,7 +63,7 @@ class BodyEditor extends Component {
           parameters={request.body.params || []}
         />
       )
-    } else if (bodyType === CONTENT_TYPE_FILE) {
+    } else if (mimeType === CONTENT_TYPE_FILE) {
       return (
         <FileEditor
           key={request._id}
@@ -73,8 +71,8 @@ class BodyEditor extends Component {
           path={fileName || ''}
         />
       )
-    } else {
-      const contentType = getContentTypeFromHeaders(request.headers);
+    } else if (typeof mimeType === 'string') {
+      const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
           key={`${request._id}::${contentType}`}
@@ -85,6 +83,14 @@ class BodyEditor extends Component {
           onChange={this._boundHandleRawChange}
         />
       )
+    } else {
+      return (
+        <div className="pad center-container text-center">
+          <p className="pad super-faint text-sm text-center">
+            No body type is selected
+          </p>
+        </div>
+      )
     }
   }
 }
@@ -92,6 +98,7 @@ class BodyEditor extends Component {
 BodyEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
+  handleUpdateRequestMimeType: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
 
   // Optional

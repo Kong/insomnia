@@ -30,11 +30,28 @@ const TO_ADD_CONTENT_LENGTH = {
 class GenerateCodeModal extends Component {
   constructor (props) {
     super(props);
+
+    let client;
+    let target;
+
+    // Load preferences from localStorage
+
+    try {
+      target = JSON.parse(localStorage.getItem('insomnia::generateCode::target'));
+    } catch (e) {
+      target = DEFAULT_TARGET;
+    }
+    try {
+      client = JSON.parse(localStorage.getItem('insomnia::generateCode::client'));
+    } catch (e) {
+      client = DEFAULT_CLIENT;
+    }
+
     this.state = {
       cmd: '',
       request: null,
-      target: DEFAULT_TARGET,
-      client: DEFAULT_CLIENT
+      target: target,
+      client: client,
     };
   }
 
@@ -66,16 +83,28 @@ class GenerateCodeModal extends Component {
     const cmd = snippet.convert(target.key, client.key);
 
     this.setState({request, cmd, client, target});
+
+    // Save client/target for next time
+    localStorage.setItem('insomnia::generateCode::client', JSON.stringify(client));
+    localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
   }
 
   show (request) {
-    this._generateCode(request, DEFAULT_TARGET, DEFAULT_CLIENT);
+    const {client, target} = this.state;
+    this._generateCode(request, target, client);
     this.modal.show();
   }
 
   render () {
     const {cmd, target, client} = this.state;
+
     const targets = availableTargets();
+
+    // NOTE: Just some extra precautions in case the target is messed up
+    let clients = [];
+    if (target && Array.isArray(target.clients)) {
+      clients = target.clients;
+    }
 
     return (
       <Modal ref={m => this.modal = m} tall={true} {...this.props}>
@@ -103,7 +132,7 @@ class GenerateCodeModal extends Component {
                 {client.title}
                 <i className="fa fa-caret-down"></i>
               </DropdownButton>
-              {target.clients.map(client => (
+              {clients.map(client => (
                 <DropdownItem key={client.key} onClick={() => this._handleClientChange(client)}>
                   {client.title}
                 </DropdownItem>

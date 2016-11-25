@@ -66,6 +66,9 @@ class SidebarRequestRow extends Component {
         <li className={classes}>
           <div className={classnames('sidebar__item', {'sidebar__item--active': isActive})}>
             <button className="wide" onClick={e => {
+              if (isActive) {
+                return;
+              }
               handleActivateRequest(request);
               trackEvent('Request', 'Activate', 'Sidebar');
             }}>

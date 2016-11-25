@@ -41,6 +41,15 @@ class Dropdown extends Component {
     document.body.removeEventListener('keydown', this._bodyKeydownHandler);
   }
 
+  componentDidUpdate () {
+    // Make the dropdown scroll if it drops off screen.
+    if (this.state.open) {
+      const rect = this._dropdownList.getBoundingClientRect();
+      const maxHeight = document.body.clientHeight - rect.top - 10;
+      this._dropdownList.style.maxHeight = `${maxHeight}px`;
+    }
+  }
+
   hide () {
     this.setState({open: false});
     this._removeKeyListener();
@@ -118,7 +127,10 @@ class Dropdown extends Component {
     } else if (dropdownItems.length === 0) {
       console.error(`Dropdown needs at least one DropdownItem!`);
     } else {
-      children = [dropdownButtons[0], <ul key="items">{dropdownItems}</ul>]
+      children = [
+        dropdownButtons[0],
+        <ul key="items" ref={n => this._dropdownList = n}>{dropdownItems}</ul>
+      ]
     }
 
     return (

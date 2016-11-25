@@ -117,15 +117,15 @@ export const CONTENT_TYPE_TEXT = 'text/plain';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
-export const CONTENT_TYPE_RAW = '';
+export const CONTENT_TYPE_OTHER = '';
 
 export const contentTypesMap = {
   [CONTENT_TYPE_JSON]: 'JSON',
   [CONTENT_TYPE_XML]: 'XML',
   [CONTENT_TYPE_FORM_DATA]: 'Form Data',
-  [CONTENT_TYPE_FORM_URLENCODED]: 'Form Url Encoded',
+  [CONTENT_TYPE_FORM_URLENCODED]: 'Url Encoded',
   [CONTENT_TYPE_FILE]: 'Binary File',
-  [CONTENT_TYPE_RAW]: 'Raw Body',
+  [CONTENT_TYPE_OTHER]: 'Other'
 };
 
 /**
@@ -135,7 +135,11 @@ export const contentTypesMap = {
  * @returns {*|string}
  */
 export function getContentTypeName (contentType) {
-  return contentTypesMap[contentType] || 'Body';
+  if (typeof contentType !== 'string') {
+    return 'Body';
+  } else {
+    return contentTypesMap[contentType] || '';
+  }
 }
 
 export function getContentTypeFromHeaders (headers) {

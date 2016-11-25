@@ -6,6 +6,7 @@
   position: relative;
   display: inline-block;
   box-sizing: border-box;
+  text-align: left;
 
   &.dropdown--outlined ul {
     border: 1px solid @hl-md;
@@ -34,6 +35,7 @@
     z-index: 1000;
     min-width: @dropdown-min-width;
     box-shadow: 0 0 1rem 0 @hl-md;
+    box-sizing: border-box;
 
     // Separate it from the button a bit
     margin-top: @padding-xxs;
@@ -44,7 +46,7 @@
 
     border-radius: @radius-md;
     background: @bg-super-light;
-    overflow: hidden;
+    overflow: auto;
 
     li {
 
