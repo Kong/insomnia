@@ -1,125 +1,29 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import EnvironmentsDropdown from '../dropdowns/EnvironmentsDropdown';
-import SidebarRequestRow from './SidebarRequestRow';
-import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 import SidebarFilter from './SidebarFilter';
+import SidebarChildren from './SidebarChildren';
 import SyncButton from '../dropdowns/SyncDropdown';
 import WorkspaceDropdown from '../dropdowns/WorkspaceDropdown';
-import {
-  SIDEBAR_SKINNY_REMS,
-  COLLAPSE_SIDEBAR_REMS
-} from '../../../common/constants';
+import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/constants';
 
 
 class Sidebar extends Component {
-  _filterChildren (filter, children, extra = null) {
-    filter = filter || '';
 
-    return children.filter(child => {
-      if (child.doc.type !== 'Request') {
-        return true;
-      }
+  _handleChangeEnvironment = (id) => {
+    const {workspace, handleSetActiveEnvironment} = this.props;
+    handleSetActiveEnvironment(workspace._id, id);
+  };
 
-      const request = child.doc;
+  _handleCreateRequestInWorkspace = () => {
+    const {workspace, handleCreateRequest} = this.props;
+    handleCreateRequest(workspace._id);
+  };
 
-      const otherMatches = extra || '';
-      const toMatch = `${request.method}❅${request.name}❅${otherMatches}`.toLowerCase();
-      const matchTokens = filter.toLowerCase().split(' ');
-
-      for (let i = 0; i < matchTokens.length; i++) {
-        let token = `${matchTokens[i]}`;
-        if (toMatch.indexOf(token) === -1) {
-          // Filter failed. Don't render children
-          return false;
-        }
-      }
-
-      return true;
-    })
-  }
-
-  _renderChildren (children, requestGroup) {
-    const {
-      filter,
-      handleCreateRequest,
-      handleCreateRequestGroup,
-      handleSetRequestGroupCollapsed,
-      moveRequest,
-      moveRequestGroup,
-      handleActivateRequest,
-      activeRequest,
-      workspace,
-    } = this.props;
-
-    const filteredChildren = this._filterChildren(
-      filter,
-      children,
-      requestGroup && requestGroup.name
-    );
-
-    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-
-    return filteredChildren.map(child => {
-      if (child.doc.type === 'Request') {
-        return (
-          <SidebarRequestRow
-            key={child.doc._id}
-            moveRequest={moveRequest}
-            handleActivateRequest={handleActivateRequest}
-            requestCreate={handleCreateRequest.bind(null, workspace._id)}
-            isActive={child.doc._id === activeRequestId}
-            request={child.doc}
-            workspace={workspace}
-          />
-        )
-      }
-
-      // We have a RequestGroup!
-
-      const requestGroup = child.doc;
-
-      function hasActiveChild (children) {
-        for (const c of children) {
-          if (c.children.length) {
-            return hasActiveChild(c.children);
-          } else if (c.doc._id === activeRequestId) {
-            return true;
-          }
-        }
-
-        // Didn't find anything, so return
-        return false;
-      }
-
-      const isActive = hasActiveChild(child.children);
-
-      const children = this._renderChildren(child.children, requestGroup);
-
-      // Don't render the row if there are no children while filtering
-      if (filter && !children.length) {
-        return null;
-      }
-
-      return (
-        <SidebarRequestGroupRow
-          handleActivateRequest={handleActivateRequest}
-          key={requestGroup._id}
-          isActive={isActive}
-          moveRequestGroup={moveRequestGroup}
-          moveRequest={moveRequest}
-          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          isCollapsed={child.collapsed}
-          handleCreateRequest={handleCreateRequest.bind(null, requestGroup._id)}
-          handleCreateRequestGroup={handleCreateRequestGroup.bind(null, requestGroup._id)}
-          numChildren={child.children.length}
-          workspace={workspace}
-          requestGroup={requestGroup}
-          children={children}
-        />
-      )
-    })
-  }
+  _handleCreateRequestGroupInWorkspace = () => {
+    const {workspace, handleCreateRequestGroup} = this.props;
+    handleCreateRequestGroup(workspace._id);
+  };
 
   render () {
     const {
@@ -127,19 +31,23 @@ class Sidebar extends Component {
       filter,
       children,
       hidden,
-      handleCreateRequest,
-      handleCreateRequestGroup,
       width,
       workspace,
       workspaces,
       environments,
       activeEnvironment,
-      handleSetActiveEnvironment,
       handleSetActiveWorkspace,
       handleImportFile,
       handleExportFile,
       handleChangeFilter,
       isLoading,
+      handleCreateRequest,
+      handleCreateRequestGroup,
+      handleSetRequestGroupCollapsed,
+      moveRequest,
+      moveRequestGroup,
+      handleActivateRequest,
+      activeRequest,
     } = this.props;
 
     return (
@@ -160,13 +68,12 @@ class Sidebar extends Component {
 
         <div className="sidebar__menu">
           <EnvironmentsDropdown
-            handleChangeEnvironment={id => handleSetActiveEnvironment(workspace._id, id)}
+            handleChangeEnvironment={this._handleChangeEnvironment}
             activeEnvironment={activeEnvironment}
             environments={environments}
             workspace={workspace}
           />
-          <button className="btn btn--super-compact"
-                  onClick={e => showCookiesModal()}>
+          <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
@@ -174,15 +81,24 @@ class Sidebar extends Component {
         </div>
 
         <SidebarFilter
-          onChange={filter => handleChangeFilter(filter)}
-          requestCreate={handleCreateRequest.bind(null, workspace._id)}
-          requestGroupCreate={handleCreateRequestGroup.bind(null, workspace._id)}
-          filter={filter}
+          onChange={handleChangeFilter}
+          requestCreate={this._handleCreateRequestInWorkspace}
+          requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
+          filter={filter || ''}
         />
 
-        <ul className="sidebar__list sidebar__list-root">
-          {this._renderChildren(children)}
-        </ul>
+        <SidebarChildren
+          children={children}
+          handleActivateRequest={handleActivateRequest}
+          handleCreateRequest={handleCreateRequest}
+          handleCreateRequestGroup={handleCreateRequestGroup}
+          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          moveRequest={moveRequest}
+          moveRequestGroup={moveRequestGroup}
+          filter={filter}
+          workspace={workspace}
+          activeRequest={activeRequest}
+        />
 
         <SyncButton
           className="sidebar__footer"

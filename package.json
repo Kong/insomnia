@@ -126,6 +126,7 @@
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.0.1",
     "request": "^2.74.0",
+    "reselect": "^2.5.4",
     "sjcl": "^1.0.6",
     "srp": "git@github.com:getinsomnia/srp-js.git#6ebd8c3acfbcf69645e4c6e6f8f6b55138ff22c3",
     "tough-cookie": "^2.3.1",

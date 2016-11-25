@@ -81,7 +81,7 @@ class RequestSwitcherModal extends Component {
       return;
     }
 
-    this.props.activateRequest(request);
+    this.props.activateRequest(request._id);
     this.modal.hide();
   }
 

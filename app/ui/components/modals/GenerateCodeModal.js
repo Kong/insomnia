@@ -39,19 +39,19 @@ class GenerateCodeModal extends Component {
     try {
       target = JSON.parse(localStorage.getItem('insomnia::generateCode::target'));
     } catch (e) {
-      target = DEFAULT_TARGET;
     }
     try {
       client = JSON.parse(localStorage.getItem('insomnia::generateCode::client'));
     } catch (e) {
-      client = DEFAULT_CLIENT;
     }
+
+    console.log(client, target);
 
     this.state = {
       cmd: '',
       request: null,
-      target: target,
-      client: client,
+      target: target || DEFAULT_TARGET,
+      client: client || DEFAULT_CLIENT,
     };
   }
 
@@ -117,7 +117,7 @@ class GenerateCodeModal extends Component {
           <div className="pad">
             <Dropdown outline={true}>
               <DropdownButton className="btn btn--super-compact btn--outlined">
-                {target.title}
+                {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down"></i>
               </DropdownButton>
               {targets.map(target => (
@@ -129,7 +129,7 @@ class GenerateCodeModal extends Component {
             &nbsp;&nbsp;
             <Dropdown outline={true}>
               <DropdownButton className="btn btn--super-compact btn--outlined">
-                {client.title}
+                {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down"></i>
               </DropdownButton>
               {clients.map(client => (

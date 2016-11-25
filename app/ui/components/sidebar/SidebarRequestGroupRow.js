@@ -1,8 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import ReactDOM from 'react-dom';
-import {DragSource, DropTarget} from 'react-dnd'
+import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
-
 import RequestGroupActionsDropdown from '../dropdowns/RequestGroupActionsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import {trackEvent} from '../../../analytics/index';
@@ -33,7 +32,6 @@ class SidebarRequestGroupRow extends Component {
       requestGroup,
       isCollapsed,
       isActive,
-      handleActivateRequest,
       handleCreateRequest,
       handleCreateRequestGroup,
       isDragging,
@@ -67,7 +65,6 @@ class SidebarRequestGroupRow extends Component {
 
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
-              handleActivateRequest={handleActivateRequest}
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               workspace={workspace}

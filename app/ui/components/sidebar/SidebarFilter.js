@@ -5,7 +5,9 @@ import {trackEvent} from '../../../analytics/index';
 
 
 class SidebarFilter extends Component {
-  _onChange (value) {
+  _handleOnChange = (e) => {
+    const value = e.target.value;
+
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
@@ -16,36 +18,38 @@ class SidebarFilter extends Component {
     this._analyticsTimeout = setTimeout(() => {
       trackEvent('Sidebar', 'Filter', value ? 'Change' : 'Clear');
     }, 2000);
-  }
+  };
+
+  _handleRequestGroupCreate = () => {
+    this.props.requestGroupCreate();
+    trackEvent('Folder', 'Create', 'Sidebar Filter');
+  };
+
+  _handleRequestCreate = () => {
+    this.props.requestCreate();
+    trackEvent('Request', 'Create', 'Sidebar Filter');
+  };
 
   render () {
-    const {filter, requestCreate, requestGroupCreate} = this.props;
-
     return (
       <div className="sidebar__filter">
         <div className="form-control form-control--outlined">
           <input
             type="text"
             placeholder="Filter"
-            defaultValue={filter}
-            onChange={e => this._onChange(e.target.value)}
+            defaultValue={this.props.filter}
+            onChange={this._handleOnChange}
           />
         </div>
         <Dropdown right={true}>
           <DropdownButton className="btn btn--compact">
             <i className="fa fa-plus-circle"></i>
           </DropdownButton>
-          <DropdownItem onClick={e => {
-            requestCreate();
-            trackEvent('Request', 'Create', 'Sidebar Filter');
-          }}>
+          <DropdownItem onClick={this._handleRequestCreate}>
             <i className="fa fa-plus-circle"></i> New Request
             <DropdownHint char="N"></DropdownHint>
           </DropdownItem>
-          <DropdownItem onClick={e => {
-            requestGroupCreate();
-            trackEvent('Folder', 'Create', 'Sidebar Filter');
-          }}>
+          <DropdownItem onClick={this._handleRequestGroupCreate}>
             <i className="fa fa-folder"></i> New Folder
           </DropdownItem>
         </Dropdown>
@@ -60,9 +64,7 @@ SidebarFilter.propTypes = {
   onChange: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   requestGroupCreate: PropTypes.func.isRequired,
-
-  // Optional
-  filter: PropTypes.string
+  filter: PropTypes.string.isRequired
 };
 
 export default SidebarFilter;

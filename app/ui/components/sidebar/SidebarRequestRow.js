@@ -14,7 +14,8 @@ class SidebarRequestRow extends Component {
   state = {dragDirection: 0};
 
   _handleRequestCreateFromEmpty = () => {
-    this.props.requestCreate();
+    const parentId = this.props.requestGroup._id;
+    this.props.requestCreate(parentId);
     trackEvent('Request', 'Create', 'Empty Folder');
   };
 
@@ -25,7 +26,7 @@ class SidebarRequestRow extends Component {
       return;
     }
 
-    handleActivateRequest(request);
+    handleActivateRequest(request._id);
     trackEvent('Request', 'Activate', 'Sidebar');
   };
 

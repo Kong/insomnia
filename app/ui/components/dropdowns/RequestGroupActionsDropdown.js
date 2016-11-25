@@ -22,7 +22,7 @@ class RequestGroupActionsDropdown extends Component {
   }
 
   async _requestCreate () {
-    this.props.handleCreateRequest();
+    this.props.handleCreateRequest(this.props.requestGroup._id);
     trackEvent('Request', 'Create', 'Folder Action');
   }
 
@@ -33,7 +33,7 @@ class RequestGroupActionsDropdown extends Component {
   }
 
   async _requestGroupCreate () {
-    this.props.handleCreateRequestGroup();
+    this.props.handleCreateRequestGroup(this.props.requestGroup._id);
     trackEvent('Folder', 'Create', 'Folder Action');
   }
 
@@ -63,7 +63,7 @@ class RequestGroupActionsDropdown extends Component {
           onClick={e => showModal(EnvironmentEditModal, requestGroup)}>
           <i className="fa fa-code"></i> Environment
         </DropdownItem>
-        <DropdownItem buttonClass={PromptButton} addIcon={true} onClick={e => {
+        <DropdownItem buttonClass={PromptButton} addIcon={true} onClick={() => {
           models.requestGroup.remove(requestGroup);
           trackEvent('Folder', 'Delete', 'Folder Action');
         }}>

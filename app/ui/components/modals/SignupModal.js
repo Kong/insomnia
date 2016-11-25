@@ -175,10 +175,9 @@ class SignupModal extends Component {
       inner = [
         <ModalHeader key="header">Account Created</ModalHeader>,
         <ModalBody key="body" className="pad">
-          <h1>Please verify your account</h1>
+          <h1>Thanks for signing up!</h1>
           <p>
-            A verification email has been sent to your email address. Once
-            you have received it, you may login.
+            A verification email has been sent to your email address.
           </p>
         </ModalBody>,
         <ModalFooter key="footer">

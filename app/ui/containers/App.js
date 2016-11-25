@@ -24,6 +24,7 @@ import * as requestGroupMetaActions from '../redux/modules/requestGroupMeta';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
+import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren} from '../redux/selectors';
 
 
 class App extends Component {
@@ -128,6 +129,15 @@ class App extends Component {
     const request = await models.request.create({parentId, name});
 
     handleSetActiveRequest(activeWorkspace._id, request._id);
+  };
+
+  _requestCreateForWorkspace = () => {
+    this._requestCreate(this.props.activeWorkspace._id);
+  };
+
+  _handleActivateRequest = async (requestId) => {
+    const {activeWorkspace, handleSetActiveRequest} = this.props;
+    handleSetActiveRequest(activeWorkspace._id, requestId);
   };
 
   _handleUrlChange = async (request, url) => {
@@ -317,6 +327,8 @@ class App extends Component {
       <div className="app">
         <Wrapper
           key={this.state.forceRefreshCounter}
+          handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+          handleActivateRequest={this._handleActivateRequest}
           handleSetRequestPaneRef={this._setRequestPaneRef}
           handleSetResponsePaneRef={this._setResponsePaneRef}
           handleSetSidebarRef={this._setSidebarRef}
@@ -335,7 +347,7 @@ class App extends Component {
   }
 }
 
-function mapStateToProps (state) {
+function mapStateToProps (state, props) {
   const {
     entities,
     global,
@@ -364,15 +376,18 @@ function mapStateToProps (state) {
   } = global;
 
   // Entities
-  // TODO: Use selectors for these...
-  const workspaces = Object.keys(entities.workspaces).map(id => entities.workspaces[id]);
-  const environments = Object.keys(entities.environments).map(id => entities.environments[id]);
-  const requests = Object.keys(entities.requests).map(id => entities.requests[id]);
-  const requestGroups = Object.keys(entities.requestGroups).map(id => entities.requestGroups[id]);
-  const settings = entities.settings[Object.keys(entities.settings)[0]];
+  const entitiesLists = selectEntitiesLists(state, props);
+  const {
+    workspaces,
+    environments,
+    requests,
+    requestGroups
+  } = entitiesLists;
+
+  const settings = entitiesLists.settings[0];
 
   // Workspace stuff
-  const activeWorkspace = entities.workspaces[global.activeWorkspaceId] || workspaces[0];
+  const activeWorkspace = selectActiveWorkspace(state, props);
   const activeWorkspaceId = activeWorkspace._id;
   const sidebarHidden = !!sidebarHiddens[activeWorkspaceId];
   const sidebarFilter = sidebarFilters[activeWorkspaceId] || '';
@@ -391,11 +406,7 @@ function mapStateToProps (state) {
 
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequestId] || -1;
-  const sidebarChildren = _generateSidebarTree(
-    activeWorkspace._id,
-    requests.concat(requestGroups),
-    requestGroupMeta.collapsed,
-  );
+  const sidebarChildren = selectSidebarChildren(state, props);
 
   return Object.assign({}, state, {
       settings,
@@ -448,33 +459,6 @@ function mapDispatchToProps (dispatch) {
 
     handleSetRequestGroupCollapsed: requestGroups.setCollapsed,
   };
-}
-
-function _generateSidebarTree (parentId, entities, collapsed) {
-  const children = entities.filter(
-    e => e.parentId === parentId
-  ).sort((a, b) => {
-    // Always sort folders above
-    if (a.type === models.requestGroup.type && b.type !== models.requestGroup.type) {
-      return -1;
-    }
-
-    if (a.metaSortKey === b.metaSortKey) {
-      return a._id > b._id ? -1 : 1;
-    } else {
-      return a.metaSortKey < b.metaSortKey ? -1 : 1;
-    }
-  });
-
-  if (children.length > 0) {
-    return children.map(c => ({
-      doc: c,
-      children: _generateSidebarTree(c._id, entities, collapsed),
-      collapsed: !!collapsed[c._id],
-    }));
-  } else {
-    return children;
-  }
 }
 
 async function _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {

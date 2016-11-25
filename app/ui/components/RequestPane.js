@@ -54,12 +54,6 @@ class RequestPane extends Component {
                   </td>
                 </tr>
                 <tr>
-                  <td>Manage Cookies</td>
-                  <td className="text-right">
-                    <code>{MOD_SYM}K</code>
-                  </td>
-                </tr>
-                <tr>
                   <td>Edit Environments</td>
                   <td className="text-right">
                     <code>{MOD_SYM}E</code>
@@ -78,7 +72,7 @@ class RequestPane extends Component {
                 </button>
                 <button className="btn inline-block btn--super-compact btn--outlined"
                         onClick={e => {
-                          handleCreateRequest();
+                          handleCreateRequest(this.props.request);
                           trackEvent('Request Pane', 'CTA', 'New Request');
                         }}>
                   New Request
