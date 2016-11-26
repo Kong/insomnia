@@ -5,13 +5,9 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
 class ImportSummaryModal extends Component {
-  constructor (props) {
-    super(props);
-
-    this.state = {
-      summary: {}
-    };
-  }
+  state = {
+    summary: {}
+  };
 
   show ({summary}) {
     this.modal.show();

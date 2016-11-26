@@ -14,18 +14,14 @@ import {trackEvent} from '../../../analytics/index';
 
 
 class WorkspaceEnvironmentsEditModal extends Component {
-  constructor (props) {
-    super(props);
-
-    this.state = {
-      workspace: null,
-      isValid: true,
-      subEnvironments: [],
-      rootEnvironment: null,
-      activeEnvironmentId: null,
-      forceRefreshKey: 0,
-    }
-  }
+  state = {
+    workspace: null,
+    isValid: true,
+    subEnvironments: [],
+    rootEnvironment: null,
+    activeEnvironmentId: null,
+    forceRefreshKey: 0,
+  };
 
   show (workspace) {
     this.modal.show();

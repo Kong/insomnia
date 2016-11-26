@@ -6,13 +6,7 @@ import DropdownItem from './DropdownItem';
 import DropdownDivider from './DropdownDivider';
 
 class Dropdown extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      open: false,
-      dropUp: false
-    };
-  }
+  state = {open: false, dropUp: false};
 
   _handleClick () {
     this.toggle();

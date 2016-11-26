@@ -5,10 +5,7 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
 class AlertModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {};
-  }
+  state = {title: '', message: ''};
 
   show (options = {}) {
     this.modal.show();

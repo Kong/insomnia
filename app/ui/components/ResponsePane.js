@@ -17,13 +17,7 @@ import {cancelCurrentRequest} from '../../common/network';
 import {trackEvent} from '../../analytics';
 
 class ResponsePane extends Component {
-  constructor (props) {
-    super(props);
-
-    this.state = {
-      response: null
-    }
-  }
+  state = {response: null};
 
   async _getResponse (request) {
     if (!request) {

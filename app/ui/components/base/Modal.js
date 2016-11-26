@@ -7,13 +7,7 @@ import {isMac} from '../../../common/constants';
 let globalZIndex = 1000;
 
 class Modal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      open: false,
-      zIndex: globalZIndex,
-    };
-  }
+  state = {open: false, zIndex: globalZIndex};
 
   _handleClick (e) {
     // Did we click a close button. Let's check a few parent nodes up as well

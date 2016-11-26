@@ -15,21 +15,37 @@ class RequestPane extends PureComponent {
   _handleHidePasswords = () => this.props.updateSettingsShowPasswords(false);
   _handleShowPasswords = () => this.props.updateSettingsShowPasswords(true);
 
-  _updateSettingsUseBulkHeaderEditor = () => {
+  _handleUpdateSettingsUseBulkHeaderEditor = () => {
     const {useBulkHeaderEditor, updateSettingsUseBulkHeaderEditor} = this.props;
     updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor);
     trackEvent('Headers', 'Toggle Bulk', !useBulkHeaderEditor ? 'On' : 'Off');
   };
 
+  _handleImportFile = () => {
+    this.props.handleImportFile();
+    trackEvent('Request Pane', 'CTA', 'Import');
+  };
+
+  _handleCreateRequest = () => {
+    this.props.handleCreateRequest(this.props.request);
+    trackEvent('Request Pane', 'CTA', 'New Request');
+  };
+
+  _trackQueryToggle = pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
+  _trackQueryCreate = () => trackEvent('Query', 'Create');
+  _trackQueryDelete = () => trackEvent('Query', 'Delete');
+  _trackTabBody = () => trackEvent('Request Pane', 'View', 'Body');
+  _trackTabHeaders = () => trackEvent('Request Pane', 'View', 'Headers');
+  _trackTabAuthentication = () => trackEvent('Request Pane', 'View', 'Authentication');
+  _trackTabQuery = () => trackEvent('Request Pane', 'View', 'Query');
+
   render () {
     const {
       request,
       environmentId,
-      handleImportFile,
       showPasswords,
       editorFontSize,
       editorLineWrapping,
-      handleCreateRequest,
       handleSend,
       useBulkHeaderEditor,
       updateRequestUrl,
@@ -72,18 +88,11 @@ class RequestPane extends PureComponent {
               </table>
 
               <div className="text-center pane__body--placeholder__cta">
-                <button className="btn inline-block btn--clicky"
-                        onClick={() => {
-                          handleImportFile();
-                          trackEvent('Request Pane', 'CTA', 'Import');
-                        }}>
+                <button className="btn inline-block btn--clicky" onClick={this._handleImportFile}>
                   Import from File
                 </button>
                 <button className="btn inline-block btn--clicky"
-                        onClick={() => {
-                          handleCreateRequest(this.props.request);
-                          trackEvent('Request Pane', 'CTA', 'New Request');
-                        }}>
+                        onClick={this._handleCreateRequest}>
                   New Request
                 </button>
               </div>
@@ -97,6 +106,7 @@ class RequestPane extends PureComponent {
     if (request.body && request.body.params) {
       numBodyParams = request.body.params.filter(p => !p.disabled).length;
     }
+
     const numParameters = request.parameters.filter(p => !p.disabled).length;
     const numHeaders = request.headers.filter(h => !h.disabled).length;
     const hasAuth = !request.authentication.disabled && request.authentication.username;
@@ -115,7 +125,7 @@ class RequestPane extends PureComponent {
         </header>
         <Tabs className="pane__body">
           <TabList>
-            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Body')}>
+            <Tab onClick={this._trackTabBody}>
               <button>
                 {getContentTypeName(request.body.mimeType)}
                 {" "}
@@ -125,17 +135,17 @@ class RequestPane extends PureComponent {
                 <i className="fa fa-caret-down"></i>
               </ContentTypeDropdown>
             </Tab>
-            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Auth')}>
+            <Tab onClick={this._trackTabAuthentication}>
               <button>
                 Auth {hasAuth ? <i className="fa fa-lock txt-sm"></i> : null}
               </button>
             </Tab>
-            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Query')}>
+            <Tab onClick={this._trackTabQuery}>
               <button>
                 Query {numParameters ? <span className="txt-sm">({numParameters})</span> : null}
               </button>
             </Tab>
-            <Tab onClick={() => trackEvent('Request Pane', 'View', 'Headers')}>
+            <Tab onClick={this._trackTabHeaders}>
               <button>
                 Headers {numHeaders ? <span className="txt-sm">({numHeaders})</span> : null}
               </button>
@@ -189,9 +199,9 @@ class RequestPane extends PureComponent {
                 key={request._id}
                 namePlaceholder="name"
                 valuePlaceholder="value"
-                onToggleDisable={pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable')}
-                onCreate={() => trackEvent('Query', 'Create')}
-                onDelete={() => trackEvent('Query', 'Delete')}
+                onToggleDisable={this._trackQueryToggle}
+                onCreate={this._trackQueryCreate}
+                onDelete={this._trackQueryDelete}
                 pairs={request.parameters}
                 onChange={updateRequestParameters}
               />
@@ -207,7 +217,7 @@ class RequestPane extends PureComponent {
 
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
-                      onClick={this._updateSettingsUseBulkHeaderEditor}>
+                      onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
                 {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>

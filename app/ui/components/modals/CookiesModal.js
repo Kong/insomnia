@@ -8,14 +8,11 @@ import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
 class CookiesModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      cookieJar: null,
-      workspace: null,
-      filter: ''
-    };
-  }
+  state = {
+    cookieJar: null,
+    workspace: null,
+    filter: ''
+  };
 
   async _saveChanges () {
     const {cookieJar} = this.state;

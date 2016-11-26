@@ -5,17 +5,13 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
 class PromptModal extends Component {
-  constructor (props) {
-    super(props);
-
-    this.state = {
-      headerName: 'Not Set',
-      defaultValue: '',
-      submitName: 'Not Set',
-      selectText: false,
-      hint: null
-    };
-  }
+  state = {
+    headerName: 'Not Set',
+    defaultValue: '',
+    submitName: 'Not Set',
+    selectText: false,
+    hint: null
+  };
 
   _onSubmit (e) {
     e.preventDefault();

@@ -5,10 +5,7 @@ const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
 class PromptButton extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {state: STATE_DEFAULT}
-  }
+  state = {state: STATE_DEFAULT};
 
   _confirm (e) {
     // Clear existing timeouts

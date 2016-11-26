@@ -7,10 +7,7 @@ import ModalFooter from '../base/ModalFooter';
 import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/constants';
 
 class ChangelogModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {changelog: null};
-  }
+  state = {changelog: null};
 
   show () {
     this.modal.show();

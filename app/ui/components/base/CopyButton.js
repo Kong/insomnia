@@ -2,12 +2,8 @@ import React, {Component, PropTypes} from 'react';
 const {clipboard} = require('electron');
 
 class CopyButton extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      showConfirmation: false
-    }
-  }
+  state = {showConfirmation: false};
+
   _handleClick (e) {
     e.preventDefault();
 
@@ -20,7 +16,7 @@ class CopyButton extends Component {
     }, 2000);
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     clearTimeout(this._triggerTimeout);
   }
 

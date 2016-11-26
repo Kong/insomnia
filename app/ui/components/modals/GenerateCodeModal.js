@@ -45,8 +45,6 @@ class GenerateCodeModal extends Component {
     } catch (e) {
     }
 
-    console.log(client, target);
-
     this.state = {
       cmd: '',
       request: null,

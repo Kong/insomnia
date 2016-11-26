@@ -8,12 +8,9 @@ import ModalFooter from '../base/ModalFooter';
 import * as sync from '../../../sync';
 
 class SyncLogsModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      logs: []
-    }
-  }
+  state = {
+    logs: []
+  };
 
   show () {
     clearInterval(this._interval);

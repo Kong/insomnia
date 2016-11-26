@@ -8,14 +8,10 @@ import ModalFooter from '../base/ModalFooter';
 
 
 class EnvironmentEditModal extends Component {
-  constructor (props) {
-    super(props);
-
-    this.state = {
-      requestGroup: null,
-      isValid: true
-    }
-  }
+  state = {
+    requestGroup: null,
+    isValid: true
+  };
 
   _saveChanges () {
     if (!this._envEditor.isValid()) {

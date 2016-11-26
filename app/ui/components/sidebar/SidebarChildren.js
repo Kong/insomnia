@@ -85,7 +85,6 @@ class SidebarChildren extends PureComponent {
       }
 
       const isActive = hasActiveChild(child.children);
-
       const children = this._renderChildren(child.children, requestGroup);
 
       // Don't render the row if there are no children while filtering

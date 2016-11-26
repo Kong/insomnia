@@ -6,7 +6,7 @@ export const prefix = 'set';
 
 export function init () {
   return {
-    showPasswords: true,
+    showPasswords: false,
     useBulkHeaderEditor: false,
     followRedirects: true,
     editorFontSize: 12,

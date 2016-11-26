@@ -11,16 +11,13 @@ import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics';
 
 class LoginModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      step: 1,
-      loading: false,
-      error: '',
-      title: '',
-      message: '',
-    }
-  }
+  state = {
+    step: 1,
+    loading: false,
+    error: '',
+    title: '',
+    message: '',
+  };
 
   async _handleLogin (e) {
     e.preventDefault();

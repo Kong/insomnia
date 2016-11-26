@@ -75,7 +75,7 @@ class SidebarRequestGroupRow extends PureComponent {
         </div>
 
         <ul className={classnames('sidebar__list', {'sidebar__list--collapsed': isCollapsed})}>
-          {children.length === 0 ? (
+          {children.length > 0 ? children : (
             <SidebarRequestRow
               handleActivateRequest={this._nullFunction}
               moveRequest={moveRequest}
@@ -85,7 +85,7 @@ class SidebarRequestGroupRow extends PureComponent {
               workspace={workspace}
               requestCreate={handleCreateRequest}
             />
-          ) : children}
+          )}
         </ul>
       </li>
     ));

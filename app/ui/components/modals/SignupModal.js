@@ -16,14 +16,11 @@ const STEP_CONFIRM_PASSWORD = 'confirm';
 const STEP_LOGIN_INFO = 'done';
 
 class SignupModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      step: STEP_BASIC_INFO,
-      error: '',
-      loading: false
-    }
-  }
+  state = {
+    step: STEP_BASIC_INFO,
+    error: '',
+    loading: false
+  };
 
   async _handleSignup (e) {
     e.preventDefault();

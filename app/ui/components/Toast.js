@@ -7,14 +7,7 @@ import {trackEvent} from '../../analytics/index';
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
 class Toast extends Component {
-  constructor (props) {
-    super(props);
-
-    this.state = {
-      notification: null,
-      visible: false,
-    };
-  }
+  state = {notification: null, visible: false};
 
   _loadSeen () {
     try {

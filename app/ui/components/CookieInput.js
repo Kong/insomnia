@@ -3,12 +3,7 @@ import {Cookie} from 'tough-cookie';
 
 
 class CookieInput extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      isValid: true
-    };
-  }
+  state = {isValid: true};
 
   _handleChange () {
     const isValid = this._isValid();

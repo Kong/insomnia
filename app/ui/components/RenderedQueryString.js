@@ -1,16 +1,11 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import {getRenderedRequest} from '../../common/render';
 import * as querystring from '../../common/querystring';
 import * as util from '../../common/misc';
 
 
-class RenderedQueryString extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      string: ''
-    }
-  }
+class RenderedQueryString extends PureComponent {
+  state = {string: ''};
 
   _update (props, delay = false) {
     clearTimeout(this._triggerTimeout);

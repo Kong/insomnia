@@ -11,15 +11,12 @@ import LoginModal from '../modals/LoginModal';
 import PromptButton from '../base/PromptButton';
 
 class SyncDropdown extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      loggedIn: null,
-      syncData: null,
-      loading: false,
-      hide: false,
-    }
-  }
+  state = {
+    loggedIn: null,
+    syncData: null,
+    loading: false,
+    hide: false,
+  };
 
   _handleHideMenu () {
     this.setState({hide: true});

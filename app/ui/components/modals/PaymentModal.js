@@ -28,17 +28,14 @@ for (let i = 0; i < 20; i++) {
 }
 
 class PaymentModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      title: '',
-      message: '',
-      error: '',
-      loading: false,
-      cardType: '',
-      selectedPlan: 'plus-monthly-1'
-    }
-  }
+  state = {
+    title: '',
+    message: '',
+    error: '',
+    loading: false,
+    cardType: '',
+    selectedPlan: 'plus-monthly-1'
+  };
 
   show (options = {}) {
     const {message, title} = options;

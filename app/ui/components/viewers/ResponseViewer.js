@@ -8,11 +8,8 @@ import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../
 let alwaysShowLargeResponses = false;
 
 class ResponseViewer extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      blockingBecauseTooLarge: false
-    };
+  state = {
+    blockingBecauseTooLarge: false
   };
 
   _handleDismissBlocker () {

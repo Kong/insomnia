@@ -2,12 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import * as misc from '../../../common/misc';
 
 class Editable extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      editing: false
-    }
-  }
+  state = {editing: false};
 
   _handleEditStart () {
     this.setState({editing: true});

@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
 import EnvironmentsDropdown from '../dropdowns/EnvironmentsDropdown';
 import SidebarFilter from './SidebarFilter';
@@ -8,9 +8,8 @@ import WorkspaceDropdown from '../dropdowns/WorkspaceDropdown';
 import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/constants';
 
 
-class Sidebar extends Component {
-
-  _handleChangeEnvironment = (id) => {
+class Sidebar extends PureComponent {
+  _handleChangeEnvironment = id => {
     const {workspace, handleSetActiveEnvironment} = this.props;
     handleSetActiveEnvironment(workspace._id, id);
   };
@@ -130,8 +129,8 @@ Sidebar.propTypes = {
   hidden: PropTypes.bool.isRequired,
   width: PropTypes.number.isRequired,
   isLoading: PropTypes.bool.isRequired,
-  children: PropTypes.array.isRequired,
   workspace: PropTypes.object.isRequired,
+  children: PropTypes.arrayOf(PropTypes.object).isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 

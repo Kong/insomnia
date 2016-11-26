@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import RawEditor from './RawEditor';
 import UrlEncodedEditor from './UrlEncodedEditor';
 import FormEditor from './FormEditor';
@@ -6,7 +6,7 @@ import FileEditor from './FileEditor';
 import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../../../../common/constants';
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 
-class BodyEditor extends Component {
+class BodyEditor extends PureComponent {
   _handleRawChange = (rawValue) => {
     const {onChange, request} = this.props;
 
