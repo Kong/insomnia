@@ -204,8 +204,7 @@ class RequestSwitcherModal extends Component {
     } = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} top={true}
-             dontFocus={true} {...this.props}>
+      <Modal ref={m => this.modal = m} top={true} dontFocus={true} {...this.props}>
         <ModalHeader hideCloseButton={true}>
           <div className="pull-right txt-md">
             <span className="monospace">tab</span> or
@@ -285,6 +284,7 @@ class RequestSwitcherModal extends Component {
               </p>
 
               <button className="btn btn--outlined btn--compact"
+                      disabled={!searchString}
                       onClick={e => this._activateCurrentIndex()}>
                 Create a request named {searchString}
               </button>
