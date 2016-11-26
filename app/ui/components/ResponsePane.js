@@ -120,7 +120,7 @@ class ResponsePane extends Component {
 
           <br/>
           <div className="pad">
-            <button className="btn btn--super-compact btn--outlined"
+            <button className="btn btn--clicky"
                     onClick={() => cancelCurrentRequest()}>
               Cancel Request
             </button>

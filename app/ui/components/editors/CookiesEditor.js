@@ -77,7 +77,7 @@ class CookiesEditor extends Component {
               I couldn't find any cookies for you.
             </p>
             <p>
-              <button className="btn btn--super-compact btn--outlined"
+              <button className="btn btn--clicky"
                       onClick={e => this._handleCookieAdd()}>
                 Add Cookie <i className="fa fa-plus-circle"></i>
               </button>

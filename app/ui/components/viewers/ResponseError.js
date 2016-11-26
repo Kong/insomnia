@@ -11,14 +11,14 @@ class ResponseError extends Component {
     let msg = null;
     if (error && error.toLowerCase().indexOf('certificate') !== -1) {
       msg = (
-        <button className="btn btn--super-compact btn--outlined"
+        <button className="btn btn--clicky"
                 onClick={() => showModal(SettingsModal)}>
           Disable SSL Validation
         </button>
       )
     } else if (error && error.toLowerCase().indexOf('getaddrinfo') !== -1) {
       msg = (
-        <button className="btn btn--super-compact btn--outlined"
+        <button className="btn btn--clicky"
                 onClick={() => showModal(SettingsModal)}>
           Setup Network Proxy
         </button>
@@ -26,7 +26,7 @@ class ResponseError extends Component {
     } else {
       msg = (
         <Link button={true}
-              className="btn btn--super-compact btn--outlined"
+              className="btn btn--clicky"
               href="https://insomnia.rest/documentation/">
           Documentation
         </Link>
@@ -45,7 +45,7 @@ class ResponseError extends Component {
           </p>
           {msg}
           &nbsp;&nbsp;
-          <Link button={true} className="btn btn--super-compact btn--outlined margin-top-sm"
+          <Link button={true} className="btn btn--clicky margin-top-sm"
                 href="https://insomnia.rest/documentation/support-and-feedback/">
             Contact Support
           </Link>

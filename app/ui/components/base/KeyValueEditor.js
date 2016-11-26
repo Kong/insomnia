@@ -220,7 +220,7 @@ class KeyValueEditor extends Component {
                 {pair.type === 'file' ? (
                   <FileInputButton
                     showFileName={true}
-                    className="btn btn--super-compact btn--outlined wide ellipsis txt-sm"
+                    className="btn btn--clicky wide ellipsis txt-sm"
                     onChange={fileName => {
                       this._updatePair(i, {fileName});
                       this.props.onChooseFile && this.props.onChooseFile();

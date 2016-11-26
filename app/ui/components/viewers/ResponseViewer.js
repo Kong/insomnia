@@ -91,7 +91,7 @@ class ResponseViewer extends Component {
           </p>
           <p>
             <button onClick={e => this._handleDismissBlocker()}
-                    className="inline-block btn btn--super-compact btn--outlined">
+                    className="inline-block btn btn--clicky">
               Show Response
             </button>
             {" "}

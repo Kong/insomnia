@@ -191,7 +191,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 />
               </h1>
               {rootEnvironment !== activeEnvironment ? (
-                <PromptButton className="btn btn--super-compact btn--outlined"
+                <PromptButton className="btn btn--clicky"
                               confirmMessage="Confirm"
                               onClick={() => this._handleDeleteEnvironment(activeEnvironment)}>
                   <i className="fa fa-trash-o"></i>

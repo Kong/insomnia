@@ -26,7 +26,7 @@ const ResponseHeadersViewer = ({headers}) => {
       </table>
       <p className="pad-top">
         <CopyButton
-          className="pull-right btn btn--super-compact btn--outlined"
+          className="pull-right btn btn--clicky"
           content={headersString}
         />
       </p>

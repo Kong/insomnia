@@ -116,7 +116,7 @@ class GenerateCodeModal extends Component {
         }}>
           <div className="pad">
             <Dropdown outline={true}>
-              <DropdownButton className="btn btn--super-compact btn--outlined">
+              <DropdownButton className="btn btn--clicky">
                 {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down"></i>
               </DropdownButton>
@@ -128,7 +128,7 @@ class GenerateCodeModal extends Component {
             </Dropdown>
             &nbsp;&nbsp;
             <Dropdown outline={true}>
-              <DropdownButton className="btn btn--super-compact btn--outlined">
+              <DropdownButton className="btn btn--clicky">
                 {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down"></i>
               </DropdownButton>
@@ -140,7 +140,7 @@ class GenerateCodeModal extends Component {
             </Dropdown>
             &nbsp;&nbsp;
             <CopyButton content={cmd}
-                        className="pull-right btn btn--super-compact btn--outlined"/>
+                        className="pull-right btn btn--clicky"/>
           </div>
           <Editor
             className="border-top"

@@ -23,7 +23,7 @@ const SettingsSync = ({
       </p>,
       <p key="2" className="pad-top">
         <PromptButton
-          className="btn btn--super-compact btn--outlined danger"
+          className="btn btn--clicky danger"
           onClick={() => {
             handleExit();
             handleCancelAccount();
@@ -31,13 +31,13 @@ const SettingsSync = ({
           Cancel Subscription
         </PromptButton>
         {" "}
-        <PromptButton className="btn btn--super-compact btn--outlined warning"
+        <PromptButton className="btn btn--clicky warning"
                       onClick={handleReset}
                       confirmMessage="Delete all sync-related data?">
           Reset Remote Data
         </PromptButton>
         {" "}
-        <PromptButton className="btn btn--super-compact btn--outlined"
+        <PromptButton className="btn btn--clicky"
                       onClick={async () => {
                         handleExit();
                         await handleLogout();

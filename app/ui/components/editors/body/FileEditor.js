@@ -52,7 +52,7 @@ class FileEditor extends Component {
           &nbsp;&nbsp;
           <FileInputButton
             path={path}
-            className="btn btn--super-compact btn--outlined"
+            className="btn btn--clicky"
             onChange={path => {
               onChange(path);
               trackEvent('File Editor', 'Choose')

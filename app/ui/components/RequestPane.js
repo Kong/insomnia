@@ -15,6 +15,12 @@ class RequestPane extends PureComponent {
   _handleHidePasswords = () => this.props.updateSettingsShowPasswords(false);
   _handleShowPasswords = () => this.props.updateSettingsShowPasswords(true);
 
+  _updateSettingsUseBulkHeaderEditor = () => {
+    const {useBulkHeaderEditor, updateSettingsUseBulkHeaderEditor} = this.props;
+    updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor);
+    trackEvent('Headers', 'Toggle Bulk', !useBulkHeaderEditor ? 'On' : 'Off');
+  };
+
   render () {
     const {
       request,
@@ -33,7 +39,6 @@ class RequestPane extends PureComponent {
       updateRequestAuthentication,
       updateRequestHeaders,
       updateRequestMimeType,
-      updateSettingsUseBulkHeaderEditor,
       updateSettingsShowPasswords,
     } = this.props;
 
@@ -67,15 +72,15 @@ class RequestPane extends PureComponent {
               </table>
 
               <div className="text-center pane__body--placeholder__cta">
-                <button className="btn inline-block btn--super-compact btn--outlined"
-                        onClick={e => {
+                <button className="btn inline-block btn--clicky"
+                        onClick={() => {
                           handleImportFile();
                           trackEvent('Request Pane', 'CTA', 'Import');
                         }}>
                   Import from File
                 </button>
-                <button className="btn inline-block btn--super-compact btn--outlined"
-                        onClick={e => {
+                <button className="btn inline-block btn--clicky"
+                        onClick={() => {
                           handleCreateRequest(this.props.request);
                           trackEvent('Request Pane', 'CTA', 'New Request');
                         }}>
@@ -157,13 +162,11 @@ class RequestPane extends PureComponent {
               />
               <div className="pad pull-right">
                 {showPasswords ? (
-                  <button className="btn btn--super-compact btn--outlined"
-                          onClick={this._handleHidePasswords}>
+                  <button className="btn btn--clicky" onClick={this._handleHidePasswords}>
                     Hide Password
                   </button>
                 ) : (
-                  <button className="btn btn--super-compact btn--outlined"
-                          onClick={this._handleShowPasswords}>
+                  <button className="btn btn--clicky" onClick={this._handleShowPasswords}>
                     Show Password
                   </button>
                 )}
@@ -203,12 +206,8 @@ class RequestPane extends PureComponent {
             />
 
             <div className="pad-right text-right">
-              <button
-                className="margin-top-sm btn btn--outlined btn--super-compact"
-                onClick={() => {
-                  updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor);
-                  trackEvent('Headers', 'Toggle Bulk', !useBulkHeaderEditor ? 'On' : 'Off');
-                }}>
+              <button className="margin-top-sm btn btn--clicky"
+                      onClick={this._updateSettingsUseBulkHeaderEditor}>
                 {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>

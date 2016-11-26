@@ -12,7 +12,7 @@ const SettingsImportExport = ({
       Import format will be automatically detected (<strong>Insomnia, Postman, HAR, cURL</strong>)
     </p>
     <Dropdown outline={true}>
-      <DropdownButton className="btn btn--super-compact btn--outlined">
+      <DropdownButton className="btn btn--clicky">
         Export Data <i className="fa fa-caret-down"></i>
       </DropdownButton>
       <DropdownDivider name="Choose Export Type"/>
@@ -26,7 +26,7 @@ const SettingsImportExport = ({
       </DropdownItem>
     </Dropdown>
     &nbsp;&nbsp;
-    <button className="btn btn--super-compact btn--outlined" onClick={e => handleImport()}>
+    <button className="btn btn--clicky" onClick={e => handleImport()}>
       Import Data
     </button>
     <p className="italic faint pad-top">

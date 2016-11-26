@@ -34,7 +34,7 @@ const ResponseCookiesViewer = ({headers, showCookiesModal}) => {
         </tbody>
       </table>
       <p className="pad-top">
-        <button className="pull-right btn btn--super-compact btn--outlined"
+        <button className="pull-right btn btn--clicky"
                 onClick={e => showCookiesModal()}>
           Manage Cookies
         </button>
