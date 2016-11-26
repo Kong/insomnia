@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
@@ -9,7 +9,7 @@ import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
 
-class SidebarRequestRow extends Component {
+class SidebarRequestRow extends PureComponent {
 
   state = {dragDirection: 0};
 

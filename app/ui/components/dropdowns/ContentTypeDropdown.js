@@ -31,10 +31,10 @@ class ContentTypeDropdown extends Component {
         <DropdownDivider name="Raw Text"/>
         {this._renderDropdownItem(constants.CONTENT_TYPE_JSON, 'fa-code')}
         {this._renderDropdownItem(constants.CONTENT_TYPE_XML, 'fa-code')}
-        {this._renderDropdownItem(constants.CONTENT_TYPE_OTHER)}
+        {this._renderDropdownItem(constants.CONTENT_TYPE_OTHER, 'fa-code')}
         <DropdownDivider name="Other"/>
         {this._renderDropdownItem(constants.CONTENT_TYPE_FILE, 'fa-file-o')}
-        {this._renderDropdownItem(null, null, 'Empty')}
+        {this._renderDropdownItem(null, 'fa-ban', 'No Body')}
       </Dropdown>
     )
   }

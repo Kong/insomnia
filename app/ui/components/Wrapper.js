@@ -20,19 +20,72 @@ import RequestPane from './RequestPane';
 import ResponsePane from './ResponsePane';
 import * as models from '../../models/index';
 import {updateMimeType} from '../../models/request';
+import {trackEvent} from '../../analytics/index';
+import * as importers from 'insomnia-importers';
 
+const rUpdate = models.request.update;
+const sUpdate = models.settings.update;
 
 class Wrapper extends Component {
-  _handleImportFile = () => {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
+  state = {forceRefreshRequestPaneCounter: Date.now()};
+
+  // Request updaters
+  _handleUpdateRequestBody = body => rUpdate(this.props.activeRequest, {body});
+  _handleUpdateRequestMethod = method => rUpdate(this.props.activeRequest, {method});
+  _handleUpdateRequestParameters = parameters => rUpdate(this.props.activeRequest, {parameters});
+  _handleUpdateRequestAuthentication = authentication => rUpdate(this.props.activeRequest, {authentication});
+  _handleUpdateRequestHeaders = headers => rUpdate(this.props.activeRequest, {headers});
+
+  // Special request updaters
+  _handleUpdateRequestMimeType = mimeType => updateMimeType(this.props.activeRequest, mimeType);
+  _handleUpdateRequestUrl = async url => {
+    // Allow user to paste any import file into the url. If it results in
+    // only one item, it will overwrite the current request.
+    const {activeRequest} = this.props;
+
+    try {
+      const {resources} = importers.import(url);
+      const r = resources[0];
+
+      if (r && r._type === 'request') {
+        trackEvent('Import', 'Url Bar');
+
+        // Only pull fields that we want to update
+        await models.request.update(activeRequest, {
+          url: r.url,
+          method: r.method,
+          headers: r.headers,
+          body: r.body,
+          authentication: r.authentication,
+          parameters: r.parameters,
+        });
+
+        this.forceRequestPaneRefresh();
+        return;
+      }
+    } catch (e) {
+      // Import failed, that's alright
+    }
+
+    models.request.update(activeRequest, {url});
   };
 
-  _handleExportWorkspaceToFile = () => {
-    this.props.handleExportFile(this.props.activeWorkspace._id);
-  };
+  // Settings updaters
+  _handleUpdateSettingsShowPasswords = showPasswords => sUpdate(this.props.settings, {showPasswords});
+  _handleUpdateSettingsUseBulkHeaderEditor = useBulkHeaderEditor => sUpdate(this.props.settings, {useBulkHeaderEditor});
 
-  _handleShowCookiesModal = () => {
-    showModal(CookiesModal, this.props.activeWorkspace);
+  // Other Helpers
+  _handleImportFile = () => this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
+  _handleExportWorkspaceToFile = () => this.props.handleExportFile(this.props.activeWorkspace._id);
+  _handleSetSidebarFilter = filter => this.props.handleSetSidebarFilter(this.props.activeWorkspace._id, filter);
+  _handleShowEnvironmentsModal = () => showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
+  _handleShowCookiesModal = () => showModal(CookiesModal, this.props.activeWorkspace);
+
+  _handleSendRequestWithActiveEnvironment = () => {
+    const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
+    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   };
 
   _handleSetPreviewMode = (previewMode) => {
@@ -41,24 +94,15 @@ class Wrapper extends Component {
     this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
   };
 
-  _handleSetResponseFilter = (filter) => {
+  _handleSetResponseFilter = filter => {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponseFilter(activeRequestId, filter);
   };
 
-  _handleSetSidebarFilter = (filter) => {
-    this.props.handleSetSidebarFilter(this.props.activeWorkspace._id, filter);
-  };
-
-  _showEnvironmentsModal = () => {
-    showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
-  };
-
-  _showCookiesModal = () => {
-    showModal(CookiesModal, this.props.activeWorkspace);
-  };
-
+  forceRequestPaneRefresh () {
+    this.setState({forceRefreshRequestPaneCounter: Date.now()});
+  }
 
   render () {
     const {
@@ -77,7 +121,6 @@ class Wrapper extends Component {
       environments,
       responsePreviewMode,
       responseFilter,
-      handleSendRequestWithEnvironment,
       handleCreateRequest,
       handleCreateRequestForWorkspace,
       handleCreateRequestGroup,
@@ -95,7 +138,6 @@ class Wrapper extends Component {
       handleResetDragSidebar,
       handleStartDragPane,
       handleResetDragPane,
-      handleUpdateRequestUrl,
       sidebarChildren,
     } = this.props;
 
@@ -107,10 +149,11 @@ class Wrapper extends Component {
            key={`wrapper::${forceRefreshCounter}`}
            className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
            style={{gridTemplateColumns: gridTemplateColumns}}>
+
         <Sidebar
           ref={handleSetSidebarRef}
-          showEnvironmentsModal={this._showEnvironmentsModal}
-          showCookiesModal={this._showCookiesModal}
+          showEnvironmentsModal={this._handleShowEnvironmentsModal}
+          showCookiesModal={this._handleShowCookiesModal}
           handleActivateRequest={handleActivateRequest}
           handleChangeFilter={this._handleSetSidebarFilter}
           handleImportFile={this._handleImportFile}
@@ -142,6 +185,7 @@ class Wrapper extends Component {
         </div>
 
         <RequestPane
+          key={this.state.forceRefreshRequestPaneCounter}
           ref={handleSetRequestPaneRef}
           handleImportFile={this._handleImportFile}
           request={activeRequest}
@@ -151,20 +195,16 @@ class Wrapper extends Component {
           editorLineWrapping={settings.editorLineWrapping}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           handleCreateRequest={handleCreateRequestForWorkspace}
-          updateRequestBody={body => models.request.update(activeRequest, {body})}
-          updateRequestUrl={url => handleUpdateRequestUrl(activeRequest, url)}
-          updateRequestMethod={method => models.request.update(activeRequest, {method})}
-          updateRequestParameters={parameters => models.request.update(activeRequest, {parameters})}
-          updateRequestAuthentication={authentication => models.request.update(activeRequest, {authentication})}
-          updateRequestHeaders={headers => models.request.update(activeRequest, {headers})}
-          updateRequestMimeType={mimeType => updateMimeType(activeRequest, mimeType)}
-          updateSettingsShowPasswords={showPasswords => models.settings.update(settings, {showPasswords})}
-          updateSettingsUseBulkHeaderEditor={useBulkHeaderEditor => models.settings.update(settings, {useBulkHeaderEditor})}
-          handleSend={handleSendRequestWithEnvironment.bind(
-            null,
-            activeRequest ? activeRequest._id : 'n/a',
-            activeEnvironment ? activeEnvironment._id : 'n/a'
-          )}
+          updateRequestBody={this._handleUpdateRequestBody}
+          updateRequestUrl={this._handleUpdateRequestUrl}
+          updateRequestMethod={this._handleUpdateRequestMethod}
+          updateRequestParameters={this._handleUpdateRequestParameters}
+          updateRequestAuthentication={this._handleUpdateRequestAuthentication}
+          updateRequestHeaders={this._handleUpdateRequestHeaders}
+          updateRequestMimeType={this._handleUpdateRequestMimeType}
+          updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+          updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+          handleSend={this._handleSendRequestWithActiveEnvironment}
         />
 
         <div className="drag drag--pane">
@@ -248,7 +288,6 @@ Wrapper.propTypes = {
   handleResetDragSidebar: PropTypes.func.isRequired,
   handleStartDragPane: PropTypes.func.isRequired,
   handleResetDragPane: PropTypes.func.isRequired,
-  handleUpdateRequestUrl: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleSendRequestWithEnvironment: PropTypes.func.isRequired,
 

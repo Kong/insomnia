@@ -31,7 +31,6 @@ class App extends Component {
   state = {
     draggingSidebar: false,
     draggingPane: false,
-    forceRefreshCounter: 0,
   };
 
   _globalKeyMap = {
@@ -140,38 +139,6 @@ class App extends Component {
     handleSetActiveRequest(activeWorkspace._id, requestId);
   };
 
-  _handleUrlChange = async (request, url) => {
-    // Allow user to paste any import file into the url. If it results in
-    // only one item, it will overwrite the current request.
-
-    try {
-      const {resources} = importers.import(url);
-      const r = resources[0];
-
-      if (r && r._type === 'request') {
-        trackEvent('Import', 'Url Bar');
-
-        // Only pull fields that we want to update
-        await models.request.update(request, {
-          url: r.url,
-          method: r.method,
-          headers: r.headers,
-          body: r.body,
-          authentication: r.authentication,
-          parameters: r.parameters,
-        });
-
-        this._forceHardRefresh();
-
-        return;
-      }
-    } catch (e) {
-      // Import failed, that's alright
-    }
-
-    models.request.update(request, {url});
-  };
-
   _startDragSidebar = () => {
     trackEvent('Sidebar', 'Drag Start');
     this.setState({draggingSidebar: true})
@@ -237,9 +204,9 @@ class App extends Component {
     trackEvent('Sidebar', 'Toggle Visibility', !sidebarHidden ? 'Hide' : 'Show');
   };
 
-  _forceHardRefresh () {
-    this.setState({forceRefreshCounter: this.state.forceRefreshCounter + 1});
-  }
+  _setWrapperRef = n => {
+    this._wrapper = n;
+  };
 
   async componentDidMount () {
     // Bind mouse handlers
@@ -292,7 +259,7 @@ class App extends Component {
         console.log('[App] Forcing update');
 
         // All sync-related changes to data force-refresh the app.
-        this._forceHardRefresh();
+        this._wrapper.forceRequestPaneRefresh();
       }
     });
 
@@ -326,7 +293,7 @@ class App extends Component {
     return (
       <div className="app">
         <Wrapper
-          key={this.state.forceRefreshCounter}
+          ref={this._setWrapperRef}
           handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
           handleActivateRequest={this._handleActivateRequest}
           handleSetRequestPaneRef={this._setRequestPaneRef}
@@ -336,7 +303,6 @@ class App extends Component {
           handleResetDragSidebar={this._resetDragSidebar}
           handleStartDragPane={this._startDragPane}
           handleResetDragPane={this._resetDragPane}
-          handleUpdateRequestUrl={this._handleUrlChange}
           handleCreateRequest={this._requestCreate}
           handleCreateRequestGroup={this._requestGroupCreate}
           {...this.props}

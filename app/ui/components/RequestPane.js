@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import KeyValueEditor from './base/KeyValueEditor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
@@ -11,7 +11,10 @@ import {MOD_SYM, getContentTypeName} from '../../common/constants';
 import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
 
-class RequestPane extends Component {
+class RequestPane extends PureComponent {
+  _handleHidePasswords = () => this.props.updateSettingsShowPasswords(false);
+  _handleShowPasswords = () => this.props.updateSettingsShowPasswords(true);
+
   render () {
     const {
       request,
@@ -30,7 +33,8 @@ class RequestPane extends Component {
       updateRequestAuthentication,
       updateRequestHeaders,
       updateRequestMimeType,
-      updateSettingsUseBulkHeaderEditor
+      updateSettingsUseBulkHeaderEditor,
+      updateSettingsShowPasswords,
     } = this.props;
 
     if (!request) {
@@ -147,9 +151,23 @@ class RequestPane extends Component {
               <AuthEditor
                 key={request._id}
                 showPasswords={showPasswords}
-                request={request}
+                authentication={request.authentication}
+                handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                 onChange={updateRequestAuthentication}
               />
+              <div className="pad pull-right">
+                {showPasswords ? (
+                  <button className="btn btn--super-compact btn--outlined"
+                          onClick={this._handleHidePasswords}>
+                    Hide Password
+                  </button>
+                ) : (
+                  <button className="btn btn--super-compact btn--outlined"
+                          onClick={this._handleShowPasswords}>
+                    Show Password
+                  </button>
+                )}
+              </div>
             </div>
           </TabPanel>
           <TabPanel className="scrollable-container">

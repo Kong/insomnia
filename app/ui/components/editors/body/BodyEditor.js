@@ -7,7 +7,6 @@ import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FO
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 
 class BodyEditor extends Component {
-
   _handleRawChange = (rawValue) => {
     const {onChange, request} = this.props;
 
@@ -39,6 +38,7 @@ class BodyEditor extends Component {
     const {fontSize, lineWrapping, request} = this.props;
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
+    const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
 
     if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
       return (
@@ -64,7 +64,7 @@ class BodyEditor extends Component {
           path={fileName || ''}
         />
       )
-    } else if (typeof mimeType === 'string') {
+    } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
@@ -80,7 +80,10 @@ class BodyEditor extends Component {
       return (
         <div className="pad center-container text-center">
           <p className="pad super-faint text-sm text-center">
-            No body type is selected
+            <i className="fa fa-ban" style={{fontSize: '11rem', opacity: 0.2}}></i>
+            <br/>
+            <br/>
+            No body type selected
           </p>
         </div>
       )

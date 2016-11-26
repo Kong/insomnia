@@ -6,6 +6,7 @@
   display: grid;
   grid-template-rows: @height-nav auto auto minmax(0, 1fr) auto;
   grid-template-columns: 100%;
+  z-index: 10;
 
   background-color: @bg-dark;
   color: @font-dark-bg;
@@ -172,6 +173,10 @@
     &:hover::-webkit-scrollbar {
       display: block;
     }
+  }
+
+  .sidebar__list--collapsed > * {
+    display: none;
   }
 
   // ~~~~~~~~~~~ //

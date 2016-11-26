@@ -2,12 +2,11 @@ import React, {PropTypes} from 'react';
 import KeyValueEditor from '../base/KeyValueEditor';
 import {trackEvent} from '../../../analytics/index';
 
-const AuthEditor = ({request, showPasswords, onChange, ...other}) => {
-  const auth = request.authentication;
+const AuthEditor = ({authentication, showPasswords, onChange, ...other}) => {
   const pairs = [{
-    name: auth.username || '',
-    value: auth.password || '',
-    disabled: auth.disabled || false,
+    name: authentication.username || '',
+    value: authentication.password || '',
+    disabled: authentication.disabled || false,
   }];
 
   return (
@@ -31,11 +30,10 @@ const AuthEditor = ({request, showPasswords, onChange, ...other}) => {
 };
 
 AuthEditor.propTypes = {
+  handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
-  request: PropTypes.shape({
-    authentication: PropTypes.object.isRequired
-  }),
-  showPasswords: PropTypes.bool.isRequired
+  authentication: PropTypes.object.isRequired,
+  showPasswords: PropTypes.bool.isRequired,
 };
 
 export default AuthEditor;

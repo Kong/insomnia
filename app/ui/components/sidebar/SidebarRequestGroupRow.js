@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
@@ -6,7 +6,7 @@ import RequestGroupActionsDropdown from '../dropdowns/RequestGroupActionsDropdow
 import SidebarRequestRow from './SidebarRequestRow';
 import {trackEvent} from '../../../analytics/index';
 
-class SidebarRequestGroupRow extends Component {
+class SidebarRequestGroupRow extends PureComponent {
   state = {dragDirection: 0};
 
   _handleCollapse = () => {
@@ -74,8 +74,8 @@ class SidebarRequestGroupRow extends Component {
           </div>
         </div>
 
-        <ul className="sidebar__list">
-          {!isCollapsed && children.length === 0 ? (
+        <ul className={classnames('sidebar__list', {'sidebar__list--collapsed': isCollapsed})}>
+          {children.length === 0 ? (
             <SidebarRequestRow
               handleActivateRequest={this._nullFunction}
               moveRequest={moveRequest}
@@ -85,8 +85,7 @@ class SidebarRequestGroupRow extends Component {
               workspace={workspace}
               requestCreate={handleCreateRequest}
             />
-          ) : null}
-          {isCollapsed ? null : children}
+          ) : children}
         </ul>
       </li>
     ));
