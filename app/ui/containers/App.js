@@ -1,7 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
-import * as importers from 'insomnia-importers';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
@@ -24,7 +23,7 @@ import * as requestGroupMetaActions from '../redux/modules/requestGroupMeta';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
-import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren} from '../redux/selectors';
+import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 
 
 class App extends Component {
@@ -318,8 +317,7 @@ function mapStateToProps (state, props) {
     entities,
     global,
     workspaceMeta,
-    requestMeta,
-    requestGroupMeta
+    requestMeta
   } = state;
 
   const {
@@ -373,6 +371,7 @@ function mapStateToProps (state, props) {
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequestId] || -1;
   const sidebarChildren = selectSidebarChildren(state, props);
+  const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
 
   return Object.assign({}, state, {
       settings,
@@ -392,6 +391,7 @@ function mapStateToProps (state, props) {
       sidebarChildren,
       environments,
       activeEnvironment,
+      workspaceChildren,
     }
   );
 }

@@ -117,6 +117,7 @@ class Wrapper extends Component {
       paneWidth,
       forceRefreshCounter,
       workspaces,
+      workspaceChildren,
       settings,
       environments,
       responsePreviewMode,
@@ -250,6 +251,7 @@ class Wrapper extends Component {
         />
         <RequestSwitcherModal
           ref={registerModal}
+          workspaceChildren={workspaceChildren}
           workspaceId={activeWorkspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
           activateRequest={handleActivateRequest}
@@ -303,6 +305,7 @@ Wrapper.propTypes = {
   sidebarChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
   settings: PropTypes.object.isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
+  workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional

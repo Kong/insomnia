@@ -80,7 +80,7 @@ class BodyEditor extends Component {
       return (
         <div className="pad center-container text-center">
           <p className="pad super-faint text-sm text-center">
-            <i className="fa fa-ban" style={{fontSize: '11rem', opacity: 0.2}}></i>
+            <i className="fa fa-ban" style={{fontSize: '6rem', opacity: 0.2}}></i>
             <br/>
             <br/>
             No body type selected

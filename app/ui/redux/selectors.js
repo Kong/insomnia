@@ -67,3 +67,25 @@ export const selectSidebarChildren = createSelector(
     return next(activeWorkspace._id, false);
   }
 );
+
+export const selectWorkspaceRequestsAndRequestGroups = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesLists,
+  (activeWorkspace, entities) => {
+    function getChildren (doc) {
+      const requests = entities.requests.filter(r => r.parentId === doc._id);
+      const requestGroups = entities.requestGroups.filter(rg => rg.parentId === doc._id);
+      const requestGroupChildren = [];
+
+      for (const requestGroup of requestGroups) {
+        for (const requestGroupChild of getChildren(requestGroup)) {
+          requestGroupChildren.push(requestGroupChild);
+        }
+      }
+
+      return [...requests, ...requestGroups, ...requestGroupChildren];
+    }
+
+    return getChildren(activeWorkspace);
+  }
+);

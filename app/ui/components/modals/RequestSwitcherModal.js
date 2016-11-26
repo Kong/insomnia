@@ -6,19 +6,19 @@ import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
+import * as db from '../../../common/database';
 
 
 class RequestSwitcherModal extends Component {
-  constructor (props) {
-    super(props);
-    this.state = {
-      searchString: '',
-      matchedRequests: [],
-      matchedWorkspaces: [],
-      requestGroups: [],
-      activeIndex: -1
-    }
-  }
+  state = {
+    searchString: '',
+    requestGroups: [],
+    requests: [],
+    workspaces: [],
+    matchedRequests: [],
+    matchedWorkspaces: [],
+    activeIndex: -1
+  };
 
   _setActiveIndex (activeIndex) {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
@@ -86,28 +86,11 @@ class RequestSwitcherModal extends Component {
   }
 
   async _handleChange (searchString) {
-    const {workspaceId} = this.props;
+    const {workspaceChildren} = this.props;
+    const {workspaceId, activeRequestParentId} = this.props;
 
-    const allRequests = await models.request.all();
-    const allRequestGroups = await models.requestGroup.all();
-    const allWorkspaces = await models.workspace.all();
-
-    // TODO: Support nested RequestGroups
-    // Filter out RequestGroups that don't belong to this Workspace
-    const requestGroups = allRequestGroups.filter(
-      rg => rg.parentId === workspaceId
-    );
-
-    // Filter out Requests that don't belong to this Workspace
-    const requests = allRequests.filter(r => {
-      if (r.parentId === workspaceId) {
-        return true;
-      } else {
-        return !!requestGroups.find(rg => rg._id === r.parentId);
-      }
-    });
-
-    const parentId = this.props.activeRequestParentId;
+    const requests = workspaceChildren.filter(d => d.type === models.request.type);
+    const workspaces = workspaceChildren.filter(d => d.type === models.workspace.type);
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = requests;
@@ -119,19 +102,17 @@ class RequestSwitcherModal extends Component {
       });
     }
 
-    // OPTIMIZATION: Apply sort after the filter so we have to sort less
     matchedRequests = matchedRequests.sort(
       (a, b) => {
         if (a.parentId === b.parentId) {
           // Sort Requests by name inside of the same parent
-          // TODO: Sort by quality of match (eg. start of string vs
-          // mid string, etc)
+          // TODO: Sort by quality of match (eg. start vs mid string, etc)
           return a.name > b.name ? 1 : -1;
         } else {
           // Sort RequestGroups by relevance if Request isn't in same parent
-          if (a.parentId === parentId) {
+          if (a.parentId === activeRequestParentId) {
             return -1;
-          } else if (b.parentId === parentId) {
+          } else if (b.parentId === activeRequestParentId) {
             return 1;
           } else {
             return a.parentId > b.parentId ? -1 : 1;
@@ -143,7 +124,7 @@ class RequestSwitcherModal extends Component {
     let matchedWorkspaces = [];
     if (searchString) {
       // Only match workspaces if there is a search
-      matchedWorkspaces = allWorkspaces
+      matchedWorkspaces = workspaces
         .filter(w => w._id !== workspaceId)
         .filter(w => {
           const name = w.name.toLowerCase();
@@ -156,19 +137,18 @@ class RequestSwitcherModal extends Component {
 
     this.setState({
       activeIndex,
+      searchString,
       matchedRequests,
       matchedWorkspaces,
-      requestGroups,
-      searchString
     });
   }
 
-  show () {
+  async show () {
     this.modal.show();
     this._handleChange('');
   }
 
-  toggle () {
+  async toggle () {
     this.modal.toggle();
     this._handleChange('');
   }
@@ -196,15 +176,17 @@ class RequestSwitcherModal extends Component {
 
   render () {
     const {
-      matchedRequests,
-      matchedWorkspaces,
-      requestGroups,
       searchString,
-      activeIndex
+      activeIndex,
+      matchedRequests,
+      matchedWorkspaces
     } = this.state;
 
+    const {workspaceChildren} = this.props;
+    const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
+
     return (
-      <Modal ref={m => this.modal = m} top={true} dontFocus={true} {...this.props}>
+      <Modal ref={m => this.modal = m} top={true} dontFocus={true}>
         <ModalHeader hideCloseButton={true}>
           <div className="pull-right txt-md">
             <span className="monospace">tab</span> or
@@ -228,9 +210,7 @@ class RequestSwitcherModal extends Component {
           </div>
           <ul className="pad-top">
             {matchedRequests.map((r, i) => {
-              const requestGroup = requestGroups.find(
-                rg => rg._id === r.parentId
-              );
+              const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
                 'btn btn--compact wide text-left',
                 {focus: activeIndex === i}
@@ -238,8 +218,7 @@ class RequestSwitcherModal extends Component {
 
               return (
                 <li key={r._id}>
-                  <button onClick={e => this._activateRequest(r)}
-                          className={buttonClasses}>
+                  <button onClick={e => this._activateRequest(r)} className={buttonClasses}>
                     {requestGroup ? (
                       <div className="pull-right faint italic">
                         {requestGroup.name}
@@ -254,9 +233,7 @@ class RequestSwitcherModal extends Component {
               )
             })}
 
-            {matchedRequests.length && matchedWorkspaces.length ? (
-              <hr/>
-            ) : null}
+            {matchedRequests.length && matchedWorkspaces.length ? <hr/> : null}
 
             {matchedWorkspaces.map((w, i) => {
               const buttonClasses = classnames(
@@ -266,8 +243,7 @@ class RequestSwitcherModal extends Component {
 
               return (
                 <li key={w._id}>
-                  <button onClick={e => this._activateRequest(w)}
-                          className={buttonClasses}>
+                  <button onClick={e => this._activateRequest(w)} className={buttonClasses}>
                     <i className="fa fa-random"></i>
                     &nbsp;&nbsp;&nbsp;
                     Switch to <strong>{w.name}</strong>
@@ -300,7 +276,8 @@ RequestSwitcherModal.propTypes = {
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   activateRequest: PropTypes.func.isRequired,
   workspaceId: PropTypes.string.isRequired,
-  activeRequestParentId: PropTypes.string.isRequired
+  activeRequestParentId: PropTypes.string.isRequired,
+  workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default RequestSwitcherModal;
