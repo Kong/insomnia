@@ -186,7 +186,9 @@ class RequestPane extends PureComponent {
           <TabPanel className="scrollable-container">
             <div className="scrollable">
               <div className="pad no-pad-bottom">
-                <label className="label--small">Url Preview</label>
+                <label className="label--small">
+                  Url Preview
+                </label>
                 <code className="txt-sm block">
                   <RenderedQueryString
                     request={request}
