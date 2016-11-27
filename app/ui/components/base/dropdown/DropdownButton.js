@@ -1,7 +1,7 @@
 import React from 'react';
 
 const DropdownButton = ({children, ...props}) => (
-  <button {...props}>
+  <button type="button" {...props}>
     {children}
   </button>
 );

@@ -5,6 +5,7 @@ import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnviro
 import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
+import RequestCreateModal from '../components/modals/RequestCreateModal';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
@@ -233,6 +234,7 @@ class Wrapper extends Component {
         <PromptModal ref={registerModal}/>
         <SignupModal ref={registerModal}/>
         <PaymentModal ref={registerModal}/>
+        <RequestCreateModal ref={registerModal}/>
         <PaymentNotificationModal ref={registerModal}/>
         <EnvironmentEditModal
           ref={registerModal}

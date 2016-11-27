@@ -12,6 +12,16 @@ import {trackEvent} from '../../../analytics';
 let hidePaymentNotificationUntilNextLaunch = false;
 
 class PaymentNotificationModal extends Component {
+  _handleHide = () => {
+    this.hide();
+  };
+
+  _handleProceedToPayment = () => {
+    this.hide();
+    showModal(PaymentModal);
+    trackEvent('Billing', 'Trial Ended', 'Proceed')
+  };
+
   show () {
     // Don't trigger automatically if user has dismissed it already
     if (hidePaymentNotificationUntilNextLaunch) {
@@ -42,23 +52,17 @@ class PaymentNotificationModal extends Component {
             </p>
             <br/>
             <p className="pad-top">
-              <button className="btn btn--compact btn--outlined" onClick={e => {
-                this.hide();
-                showModal(PaymentModal);
-                trackEvent('Billing', 'Trial Ended', 'Proceed')
-              }}>
+              <button className="btn btn--compact btn--outlined"
+                      onClick={this._handleProceedToPayment}>
                 Proceed to Billing
               </button>
             </p>
           </div>
         </ModalBody>
         <ModalFooter>
-          <button className="btn" onClick={e => {
-            this.hide();
-            showModal(PaymentModal);
-          }}>Maybe Later
+          <button className="btn" onClick={this._handleHide}>
+            Maybe Later
           </button>
-
           <div></div>
         </ModalFooter>
       </Modal>

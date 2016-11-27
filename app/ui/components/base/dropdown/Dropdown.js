@@ -6,7 +6,11 @@ import DropdownItem from './DropdownItem';
 import DropdownDivider from './DropdownDivider';
 
 class Dropdown extends Component {
-  state = {open: false, dropUp: false};
+  state = {
+    open: false,
+    dropUp: false,
+    focused: false,
+  };
 
   _handleClick () {
     this.toggle();
@@ -14,15 +18,13 @@ class Dropdown extends Component {
 
   _addKeyListener () {
     this._bodyKeydownHandler = e => {
-      if (!this.state.open) {
-        return;
+      // Catch all key presses if we're open
+      if (this.state.open) {
+        e.stopPropagation();
       }
 
-      // Catch all key presses if we're open
-      e.stopPropagation();
-
       // Pressed escape?
-      if (e.keyCode === 27) {
+      if (this.state.open && e.keyCode === 27) {
         e.preventDefault();
         this.hide();
       }
@@ -64,6 +66,10 @@ class Dropdown extends Component {
     } else {
       this.show();
     }
+  }
+
+  isOpen () {
+    return this.state.open;
   }
 
   componentWillUnmount () {
@@ -123,7 +129,9 @@ class Dropdown extends Component {
     } else {
       children = [
         dropdownButtons[0],
-        <ul key="items" ref={n => this._dropdownList = n}>{dropdownItems}</ul>
+        <ul key="items" ref={n => this._dropdownList = n}>
+          {dropdownItems}
+        </ul>
       ]
     }
 

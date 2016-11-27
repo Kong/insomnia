@@ -111,10 +111,15 @@ function notifyOfChange (event, doc, fromSync) {
 // Helpers //
 // ~~~~~~~ //
 
-export function getMostRecentlyModified (type, query = {}) {
+export async function getMostRecentlyModified (type, query = {}) {
+  const docs = await findMostRecentlyModified(type, query, 1);
+  return docs.length ? docs[0] : null;
+}
+
+export function findMostRecentlyModified (type, query = {}, limit = null) {
   return new Promise(resolve => {
-    db[type].find(query).sort({modified: -1}).limit(1).exec((err, docs) => {
-      resolve(docs.length ? docs[0] : null);
+    db[type].find(query).sort({modified: -1}).limit(limit).exec((err, docs) => {
+      resolve(docs);
     })
   })
 }
@@ -262,11 +267,11 @@ export function docCreate (type, patch = {}) {
 
   const doc = initModel(
     type,
-    {_id: generateId(idPrefix)},
     patch,
 
     // Fields that the user can't touch
     {
+      _id: generateId(idPrefix),
       type: type,
       modified: Date.now()
     }

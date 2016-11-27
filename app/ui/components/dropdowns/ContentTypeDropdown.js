@@ -9,7 +9,7 @@ class ContentTypeDropdown extends Component {
   _renderDropdownItem (mimeType, iconClass, forcedName = null) {
     return (
       <DropdownItem onClick={e => {
-        this.props.updateRequestMimeType(mimeType);
+        this.props.onChange(mimeType);
         trackEvent('Request', 'Content-Type Change', contentTypesMap[mimeType]);
       }}>
         <i className={`fa ${iconClass || 'fa-empty'}`}/>
@@ -19,9 +19,9 @@ class ContentTypeDropdown extends Component {
   }
 
   render () {
-    const {children, className} = this.props;
+    const {children, className, ...extraProps} = this.props;
     return (
-      <Dropdown debug="true">
+      <Dropdown debug="true" {...extraProps}>
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
@@ -41,7 +41,7 @@ class ContentTypeDropdown extends Component {
 }
 
 ContentTypeDropdown.propTypes = {
-  updateRequestMimeType: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired
 };
 
 export default ContentTypeDropdown;

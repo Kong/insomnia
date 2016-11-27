@@ -78,7 +78,7 @@ class BodyEditor extends PureComponent {
       )
     } else {
       return (
-        <div className="pad center-container text-center">
+        <div className="pad valign-center text-center">
           <p className="pad super-faint text-sm text-center">
             <i className="fa fa-ban" style={{fontSize: '6rem', opacity: 0.2}}></i>
             <br/>

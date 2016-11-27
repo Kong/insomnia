@@ -150,16 +150,6 @@ code, pre, .monospace {
   opacity: 0.7;
 }
 
-.center-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  align-content: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-}
-
 .auto-margin {
   margin: auto;
 }
@@ -174,6 +164,24 @@ code, pre, .monospace {
 
 .valign-bottom {
   vertical-align: bottom;
+}
+
+.row-fill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: stretch;
+  width: 100%;
+}
+
+.valign-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
 }
 
 .pointer {
@@ -275,7 +283,7 @@ i.fa {
   padding-top: 0;
 }
 
-.pad-left-half {
+.pad-left-sm {
   padding-left: @padding-md / 2;
 }
 

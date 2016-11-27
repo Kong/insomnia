@@ -128,7 +128,7 @@ class SignupModal extends Component {
                 </span>
               </p>
               <div className="text-left">
-                <label htmlFor="signup-password-confirm" className="pad-left-half">
+                <label htmlFor="signup-password-confirm" className="pad-left-sm">
                   Confirm your Password
                 </label>
                 <div className="form-control form-control--outlined">

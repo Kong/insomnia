@@ -24,6 +24,7 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
 import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import RequestCreateModal from '../components/modals/RequestCreateModal';
 
 
 class App extends Component {
@@ -115,16 +116,8 @@ class App extends Component {
   };
 
   _requestCreate = async (parentId) => {
-    const name = await showModal(PromptModal, {
-      headerName: 'Create New Request',
-      defaultValue: 'My Request',
-      selectText: true,
-      submitName: 'Create',
-      hint: 'TIP: Import Curl command by pasting it into the URL bar'
-    });
-
+    const request = await showModal(RequestCreateModal, {parentId});
     const {activeWorkspace, handleSetActiveRequest} = this.props;
-    const request = await models.request.create({parentId, name});
 
     handleSetActiveRequest(activeWorkspace._id, request._id);
   };

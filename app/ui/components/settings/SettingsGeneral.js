@@ -131,7 +131,7 @@ const SettingsGeneral = ({settings, updateSetting}) => (
         </div>
       </div>
       <div className="inline-block" style={{width: '50%'}}>
-        <div className="pad-left-half">
+        <div className="pad-left-sm">
           <label htmlFor="setting-https-proxy">
             HTTPS Proxy
           </label>

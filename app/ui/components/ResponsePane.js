@@ -8,10 +8,12 @@ import StatusTag from './tags/StatusTag';
 import TimeTag from './tags/TimeTag';
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
+import ResponseHistoryDropdown from './dropdowns/ResponseHistoryDropdown';
+import ResponseTimer from './ResponseTimer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import * as models from '../../models';
-import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
+import {MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
 import {getSetCookieHeaders} from '../../common/misc';
 import {cancelCurrentRequest} from '../../common/network';
 import {trackEvent} from '../../analytics';
@@ -88,41 +90,6 @@ class ResponsePane extends Component {
 
     const {response} = this.state;
 
-    let timer = null;
-
-    if (loadStartTime >= 0) {
-      // Set a timer to update the UI again soon
-      // TODO: Move this into a child component so we don't rerender too much
-      setTimeout(() => {
-        this.forceUpdate();
-      }, 100);
-
-      // NOTE: subtract 200ms because the request has some time on either end
-      const millis = Date.now() - loadStartTime - 200;
-      const elapsedTime = Math.round(millis / 100) / 10;
-
-      timer = (
-        <div className="response-pane__overlay">
-          {elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER ? (
-            <h2>{elapsedTime} seconds...</h2>
-          ) : (
-            <h2>Loading...</h2>
-          )}
-
-          <br/>
-          <i className="fa fa-refresh fa-spin"></i>
-
-          <br/>
-          <div className="pad">
-            <button className="btn btn--clicky"
-                    onClick={() => cancelCurrentRequest()}>
-              Cancel Request
-            </button>
-          </div>
-        </div>
-      )
-    }
-
     if (!request) {
       return (
         <section className="response-pane pane">
@@ -135,7 +102,11 @@ class ResponsePane extends Component {
     if (!response) {
       return (
         <section className="response-pane pane">
-          {timer}
+          <ResponseTimer
+            className="response-pane__overlay"
+            handleCancel={cancelCurrentRequest}
+            loadStartTime={loadStartTime}
+          />
 
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
@@ -178,9 +149,21 @@ class ResponsePane extends Component {
 
     return (
       <section className="response-pane pane">
-        {timer}
+        <ResponseTimer
+          className="response-pane__overlay"
+          handleCancel={cancelCurrentRequest}
+          loadStartTime={loadStartTime}
+        />
         {!response ? null : (
           <header className="pane__header">
+            <div className="pane__header__right">
+              <ResponseHistoryDropdown
+                requestId={request._id}
+                onChange={() => null}
+                className="tall"
+                right={true}
+              />
+            </div>
             <StatusTag
               statusCode={response.statusCode}
               statusMessage={response.statusMessage}

@@ -9,6 +9,7 @@ const DropdownItem = ({stayOpenAfterClick, buttonClass, onClick, children, class
   );
 
   const buttonProps = {
+    type: 'button',
     onClick: stayOpenAfterClick ? e => {e.stopPropagation(); onClick(e)} : onClick,
     ...props
   };

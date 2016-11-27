@@ -38,6 +38,7 @@ export function getClientString () {
 export const LOCALSTORAGE_KEY = 'insomnia.state';
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 10;
 export const DEBOUNCE_MILLIS = 100;
+export const MAX_RESPONSES = 10;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
 export const GA_HOST = 'desktop.insomnia.rest';
@@ -73,7 +74,7 @@ export const METHOD_HEAD = 'HEAD';
 export const METHOD_FIND = 'FIND';
 export const METHOD_PURGE = 'PURGE';
 export const METHOD_DELETE_HARD = 'DELETEHARD';
-export const METHODS = [
+export const HTTP_METHODS = [
   METHOD_GET,
   METHOD_POST,
   METHOD_PUT,
