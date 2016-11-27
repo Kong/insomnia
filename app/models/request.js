@@ -1,12 +1,7 @@
-import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA} from '../common/constants';
+import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {deconstructToParams} from '../common/querystring';
-import {CONTENT_TYPE_JSON} from '../common/constants';
-import {CONTENT_TYPE_XML} from '../common/constants';
-import {CONTENT_TYPE_FILE} from '../common/constants';
-import {CONTENT_TYPE_TEXT} from '../common/constants';
-import {initModel} from './index';
 
 export const name = 'Request';
 export const type = 'Request';

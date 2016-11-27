@@ -21,13 +21,14 @@ import {trackEvent} from '../../analytics';
 class ResponsePane extends Component {
   state = {response: null};
 
-  async _getResponse (request) {
-    if (!request) {
-      this.setState({response: null});
-    } else {
-      const response = await models.response.getLatestByParentId(request._id);
-      this.setState({response});
+  async _getResponse (requestId, responseId) {
+    let response = await models.response.getById(responseId);
+
+    if (!response) {
+      response = await models.response.getLatestByParentId(requestId);
     }
+
+    this.setState({response});
   }
 
   async _handleDownloadResponseBody () {
@@ -68,11 +69,15 @@ class ResponsePane extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    this._getResponse(nextProps.request);
+    const activeRequestId = nextProps.request ? nextProps.request._id : null;
+    const activeResponseId = nextProps.activeResponseId;
+    this._getResponse(activeRequestId, activeResponseId);
   }
 
   componentDidMount () {
-    this._getResponse(this.props.request);
+    const activeRequestId = this.props.request ? this.props.request._id : null;
+    const activeResponseId = this.props.activeResponseId;
+    this._getResponse(activeRequestId, activeResponseId);
   }
 
   render () {
@@ -80,11 +85,14 @@ class ResponsePane extends Component {
       request,
       previewMode,
       handleSetPreviewMode,
+      handleSetActiveResponse,
+      handleDeleteResponses,
       handleSetFilter,
       loadStartTime,
       editorLineWrapping,
       editorFontSize,
       filter,
+      activeResponseId,
       showCookiesModal
     } = this.props;
 
@@ -155,21 +163,25 @@ class ResponsePane extends Component {
           loadStartTime={loadStartTime}
         />
         {!response ? null : (
-          <header className="pane__header">
-            <div className="pane__header__right">
-              <ResponseHistoryDropdown
-                requestId={request._id}
-                onChange={() => null}
-                className="tall"
-                right={true}
+          <header className="pane__header row-spaced">
+            <div className="no-wrap scrollable scrollable--no-bars pad-left">
+              <StatusTag
+                statusCode={response.statusCode}
+                statusMessage={response.statusMessage || null}
               />
+              <TimeTag milliseconds={response.elapsedTime}/>
+              <SizeTag bytes={response.bytesRead}/>
             </div>
-            <StatusTag
-              statusCode={response.statusCode}
-              statusMessage={response.statusMessage}
+            <ResponseHistoryDropdown
+              requestId={request._id}
+              isLatestResponseActive={!activeResponseId}
+              activeResponseId={response._id}
+              handleSetActiveResponse={handleSetActiveResponse}
+              handleDeleteResponses={handleDeleteResponses}
+              onChange={() => null}
+              className="tall pane__header__right"
+              right={true}
             />
-            <TimeTag milliseconds={response.elapsedTime}/>
-            <SizeTag bytes={response.bytesRead}/>
           </header>
         )}
         <Tabs className="pane__body">
@@ -248,6 +260,8 @@ ResponsePane.propTypes = {
   handleSetFilter: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
   handleSetPreviewMode: PropTypes.func.isRequired,
+  handleSetActiveResponse: PropTypes.func.isRequired,
+  handleDeleteResponses: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,
@@ -255,6 +269,7 @@ ResponsePane.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   loadStartTime: PropTypes.number.isRequired,
+  activeResponseId: PropTypes.string.isRequired,
 
   // Other
   request: PropTypes.object,

@@ -25,8 +25,16 @@ export function migrate (doc) {
   return doc;
 }
 
+export function getById (id) {
+  return db.get(type, id);
+}
+
 export function all () {
   return db.all(type);
+}
+
+export async function removeForRequest (parentId) {
+  db.removeBulkSilently(type, {parentId});
 }
 
 export function findRecentForRequest (requestId, limit) {

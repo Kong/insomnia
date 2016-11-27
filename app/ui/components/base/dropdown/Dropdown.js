@@ -12,43 +12,58 @@ class Dropdown extends Component {
     focused: false,
   };
 
-  _handleClick () {
+  _handleKeyDown = e => {
+    // Catch all key presses if we're open
+    if (this.state.open) {
+      e.stopPropagation();
+    }
+
+    // Pressed escape?
+    if (this.state.open && e.keyCode === 27) {
+      e.preventDefault();
+      this.hide();
+    }
+  };
+
+  _checkSize = () => {
+    if (!this.state.open) {
+      return;
+    }
+
+    // Make the dropdown scroll if it drops off screen.
+    const rect = this._dropdownList.getBoundingClientRect();
+    const maxHeight = document.body.clientHeight - rect.top - 10;
+    this._dropdownList.style.maxHeight = `${maxHeight}px`;
+  };
+
+  _handleClick = () => {
     this.toggle();
-  }
+  };
 
-  _addKeyListener () {
-    this._bodyKeydownHandler = e => {
-      // Catch all key presses if we're open
-      if (this.state.open) {
-        e.stopPropagation();
-      }
+  _handleMouseDown = e => {
+    // Intercept mouse down so that clicks don't trigger things like
+    // drag and drop.
+    e.preventDefault();
+  };
 
-      // Pressed escape?
-      if (this.state.open && e.keyCode === 27) {
-        e.preventDefault();
-        this.hide();
-      }
-    };
-
-    document.body.addEventListener('keydown', this._bodyKeydownHandler);
-  }
-
-  _removeKeyListener () {
-    document.body.removeEventListener('keydown', this._bodyKeydownHandler);
-  }
+  _addDropdownListRef = n => this._dropdownList = n;
 
   componentDidUpdate () {
-    // Make the dropdown scroll if it drops off screen.
-    if (this.state.open) {
-      const rect = this._dropdownList.getBoundingClientRect();
-      const maxHeight = document.body.clientHeight - rect.top - 10;
-      this._dropdownList.style.maxHeight = `${maxHeight}px`;
-    }
+    this._checkSize();
+  }
+
+  componentDidMount () {
+    document.body.addEventListener('keydown', this._handleKeyDown);
+    window.addEventListener('resize', this._checkSize);
+  }
+
+  componentWillUnmount () {
+    document.body.removeEventListener('keydown', this._handleKeyDown);
+    window.removeEventListener('resize', this._checkSize);
   }
 
   hide () {
     this.setState({open: false});
-    this._removeKeyListener();
   }
 
   show () {
@@ -57,7 +72,6 @@ class Dropdown extends Component {
     const dropUp = dropdownTop > bodyHeight * 0.65;
 
     this.setState({open: true, dropUp});
-    this._addKeyListener();
   }
 
   toggle () {
@@ -66,14 +80,6 @@ class Dropdown extends Component {
     } else {
       this.show();
     }
-  }
-
-  isOpen () {
-    return this.state.open;
-  }
-
-  componentWillUnmount () {
-    this._removeKeyListener();
   }
 
   _getFlattenedChildren (children) {
@@ -125,11 +131,11 @@ class Dropdown extends Component {
     if (dropdownButtons.length !== 1) {
       console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`, this.props);
     } else if (dropdownItems.length === 0) {
-      console.error(`Dropdown needs at least one DropdownItem!`);
+      children = dropdownButtons;
     } else {
       children = [
         dropdownButtons[0],
-        <ul key="items" ref={n => this._dropdownList = n}>
+        <ul key="items" ref={this._addDropdownListRef}>
           {dropdownItems}
         </ul>
       ]
@@ -137,8 +143,8 @@ class Dropdown extends Component {
 
     return (
       <div className={classes}
-           onClick={this._handleClick.bind(this)}
-           onMouseDown={e => e.preventDefault()}>
+           onClick={this._handleClick}
+           onMouseDown={this._handleMouseDown}>
         {children}
         <div className="dropdown__backdrop"></div>
       </div>

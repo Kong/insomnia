@@ -324,6 +324,7 @@ function mapStateToProps (state, props) {
 
   const {
     loadingRequestIds,
+    activeResponseIds,
     previewModes,
     responseFilters,
   } = requestMeta;
@@ -357,6 +358,9 @@ function mapStateToProps (state, props) {
   const responsePreviewMode = previewModes[activeRequestId] || PREVIEW_MODE_SOURCE;
   const responseFilter = responseFilters[activeRequestId] || '';
 
+  // Response Stuff
+  const activeResponseId = activeResponseIds[activeRequestId] || '';
+
   // Environment stuff
   const activeEnvironmentId = activeEnvironmentIds[activeWorkspaceId];
   const activeEnvironment = entities.environments[activeEnvironmentId];
@@ -375,6 +379,7 @@ function mapStateToProps (state, props) {
       loadStartTime,
       activeWorkspace,
       activeRequest,
+      activeResponseId,
       sidebarHidden,
       sidebarFilter,
       sidebarWidth,
@@ -409,6 +414,7 @@ function mapDispatchToProps (dispatch) {
     handleSendRequestWithEnvironment: requests.send,
     handleSetResponsePreviewMode: requests.setPreviewMode,
     handleSetResponseFilter: requests.setResponseFilter,
+    handleSetActiveResponse: requests.setActiveResponse,
 
     handleSetActiveWorkspace: legacyActions.global.setActiveWorkspace,
     handleImportFileToWorkspace: legacyActions.global.importFile,

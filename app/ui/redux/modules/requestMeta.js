@@ -8,6 +8,7 @@ const START_LOADING = 'requests/start-loading';
 const STOP_LOADING = 'requests/stop-loading';
 const SET_PREVIEW_MODE = 'requests/preview-mode';
 const SET_RESPONSE_FILTER = 'requests/response-filter';
+const SET_ACTIVE_RESPONSE = 'requests/active-response';
 
 
 // ~~~~~~~~ //
@@ -18,6 +19,7 @@ export default combineReducers({
   loadingRequestIds: loadingReducer,
   ..._makePropertyReducer(SET_PREVIEW_MODE, 'previewModes', 'previewMode'),
   ..._makePropertyReducer(SET_RESPONSE_FILTER, 'responseFilters', 'filter'),
+  ..._makePropertyReducer(SET_ACTIVE_RESPONSE, 'activeResponseIds', 'responseId'),
 });
 
 function loadingReducer (state = {}, action) {
@@ -54,6 +56,11 @@ export function setResponseFilter (requestId, filter) {
   return {type: SET_RESPONSE_FILTER, requestId, filter};
 }
 
+export function setActiveResponse (requestId, responseId) {
+  _setMeta(requestId, 'activeResponseIds', responseId);
+  return {type: SET_ACTIVE_RESPONSE, requestId, responseId};
+}
+
 export function send(requestId, environmentId) {
   return async function (dispatch) {
     dispatch(startLoading(requestId));
@@ -67,6 +74,10 @@ export function send(requestId, environmentId) {
       // It's OK
     }
 
+    // Unset pinned response
+    dispatch(setActiveResponse(requestId, null));
+
+    // Stop loading
     dispatch(stopLoading(requestId));
   }
 }
@@ -87,6 +98,7 @@ export function init () {
 
     callAction('previewModes', setPreviewMode);
     callAction('responseFilters', setResponseFilter);
+    callAction('activeResponseIds', setActiveResponse);
   }
 }
 

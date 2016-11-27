@@ -79,8 +79,14 @@ class Wrapper extends Component {
   _handleImportFile = () => this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
   _handleExportWorkspaceToFile = () => this.props.handleExportFile(this.props.activeWorkspace._id);
   _handleSetSidebarFilter = filter => this.props.handleSetSidebarFilter(this.props.activeWorkspace._id, filter);
+  _handleSetActiveResponse = responseId => this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   _handleShowEnvironmentsModal = () => showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   _handleShowCookiesModal = () => showModal(CookiesModal, this.props.activeWorkspace);
+
+  _handleDeleteResponses = () => {
+    models.response.removeForRequest(this.props.activeRequest._id);
+    this._handleSetActiveResponse(null);
+  };
 
   _handleSendRequestWithActiveEnvironment = () => {
     const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
@@ -112,6 +118,7 @@ class Wrapper extends Component {
       activeWorkspace,
       activeRequest,
       activeEnvironment,
+      activeResponseId,
       sidebarHidden,
       sidebarFilter,
       sidebarWidth,
@@ -219,10 +226,13 @@ class Wrapper extends Component {
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={responsePreviewMode}
+          activeResponseId={activeResponseId}
           filter={responseFilter}
           loadStartTime={loadStartTime}
           showCookiesModal={this._handleShowCookiesModal}
+          handleSetActiveResponse={this._handleSetActiveResponse}
           handleSetPreviewMode={this._handleSetPreviewMode}
+          handleDeleteResponses={this._handleDeleteResponses}
           handleSetFilter={this._handleSetResponseFilter}
         />
 
@@ -287,6 +297,7 @@ Wrapper.propTypes = {
   handleSetResponsePaneRef: PropTypes.func.isRequired,
   handleSetResponsePreviewMode: PropTypes.func.isRequired,
   handleSetResponseFilter: PropTypes.func.isRequired,
+  handleSetActiveResponse: PropTypes.func.isRequired,
   handleSetSidebarRef: PropTypes.func.isRequired,
   handleStartDragSidebar: PropTypes.func.isRequired,
   handleResetDragSidebar: PropTypes.func.isRequired,
@@ -301,6 +312,7 @@ Wrapper.propTypes = {
   paneWidth: PropTypes.number.isRequired,
   responsePreviewMode: PropTypes.string.isRequired,
   responseFilter: PropTypes.string.isRequired,
+  activeResponseId: PropTypes.string.isRequired,
   sidebarWidth: PropTypes.number.isRequired,
   sidebarHidden: PropTypes.bool.isRequired,
   sidebarFilter: PropTypes.string.isRequired,

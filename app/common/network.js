@@ -116,6 +116,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
       }, true);
     } catch (e) {
       const response = await models.response.create({
+        url: renderedRequest.url,
         parentId: renderedRequest._id,
         elapsedTime: 0,
         statusMessage: 'Error',
@@ -169,7 +170,9 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         }
 
         await models.response.create({
+          url: originalUrl,
           parentId: renderedRequest._id,
+          statusMessage: 'Error',
           error: message
         });
 
@@ -223,6 +226,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
       req.abort();
 
       await models.response.create({
+        url: originalUrl,
         parentId: renderedRequest._id,
         elapsedTime: Date.now() - requestStartTime,
         statusMessage: 'Cancelled',

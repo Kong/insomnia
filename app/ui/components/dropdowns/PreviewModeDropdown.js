@@ -3,22 +3,25 @@ import {Dropdown, DropdownDivider, DropdownButton, DropdownItem} from '../base/d
 import {PREVIEW_MODES, getPreviewModeName} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 
-const PreviewModeDropdown = ({updatePreviewMode, download}) => (
+const PreviewModeDropdown = ({updatePreviewMode, download, previewMode}) => (
   <Dropdown>
     <DropdownButton className="tall">
       <i className="fa fa-caret-down"></i>
     </DropdownButton>
-    {PREVIEW_MODES.map(previewMode => (
-      <DropdownItem key={previewMode} onClick={() => {
-        updatePreviewMode(previewMode);
-        trackEvent('Response', 'Preview Mode Change', previewMode);
+    <DropdownDivider name="Preview Mode"/>
+    {PREVIEW_MODES.map(mode => (
+      <DropdownItem key={mode} onClick={() => {
+        updatePreviewMode(mode);
+        trackEvent('Response', 'Preview Mode Change', mode);
       }}>
-        {getPreviewModeName(previewMode)}
+        {previewMode === mode ? <i className="fa fa-check"/> : <i className="fa fa-empty"/>}
+        {getPreviewModeName(mode)}
       </DropdownItem>
     ))}
-    <DropdownDivider></DropdownDivider>
+    <DropdownDivider name="Response"/>
     <DropdownItem onClick={download}>
-      Download
+      <i className="fa fa-save"></i>
+      Save to File
     </DropdownItem>
   </Dropdown>
 );

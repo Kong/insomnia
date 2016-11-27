@@ -6,8 +6,8 @@ export default function configureStore () {
   const middleware = [thunkMiddleware];
 
   if (__DEV__) {
-    // const createLogger = require('redux-logger');
-    // middleware.push(createLogger({collapsed: true}));
+    const createLogger = require('redux-logger');
+    middleware.push(createLogger({collapsed: true}));
   }
 
   const store = createStore(reducer, applyMiddleware(...middleware));

@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
+import classnames from 'classnames';
 
-const TimeTag = ({milliseconds}) => {
+const TimeTag = ({milliseconds, small, className}) => {
   let unit = 'ms';
   let number = milliseconds;
 
@@ -16,14 +17,18 @@ const TimeTag = ({milliseconds}) => {
   number = Math.round(number * 100) / 100;
 
   return (
-    <div className="tag">
+    <div className={classnames('tag', {'tag--small': small}, className)}>
       <strong>TIME</strong> {number} {unit}
     </div>
   )
-}
+};
 
 TimeTag.propTypes = {
-  milliseconds: PropTypes.number.isRequired
+  // Required
+  milliseconds: PropTypes.number.isRequired,
+
+  // Optional
+  small: PropTypes.bool,
 };
 
 export default TimeTag;
