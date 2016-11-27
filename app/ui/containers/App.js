@@ -88,14 +88,7 @@ class App extends Component {
 
     // Request Duplicate
     'mod+d': async () => {
-      const {activeWorkspace, activeRequest, handleSetActiveRequest} = this.props;
-
-      if (!activeRequest) {
-        return;
-      }
-
-      const request = await models.request.duplicate(activeRequest);
-      handleSetActiveRequest(activeWorkspace._id, request._id);
+      this._requestDuplicate(this.props.activeRequest);
       trackEvent('HotKey', 'Request Duplicate');
     }
   };
@@ -120,6 +113,17 @@ class App extends Component {
     const {activeWorkspace, handleSetActiveRequest} = this.props;
 
     handleSetActiveRequest(activeWorkspace._id, request._id);
+  };
+
+  _requestDuplicate = async (request) => {
+    const {activeWorkspace, handleSetActiveRequest} = this.props;
+
+    if (!request) {
+      return;
+    }
+
+    const newRequest = await models.request.duplicate(request);
+    handleSetActiveRequest(activeWorkspace._id, newRequest._id);
   };
 
   _requestCreateForWorkspace = () => {
@@ -296,6 +300,7 @@ class App extends Component {
           handleStartDragPane={this._startDragPane}
           handleResetDragPane={this._resetDragPane}
           handleCreateRequest={this._requestCreate}
+          handleDuplicateRequest={this._requestDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}
           {...this.props}
         />

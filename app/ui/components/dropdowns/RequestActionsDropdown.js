@@ -9,7 +9,19 @@ import {trackEvent} from '../../../analytics/index';
 
 
 class RequestActionsDropdown extends Component {
-  async _promptUpdateName () {
+  _handleDuplicate = () => {
+    const {request, handleDuplicateRequest} = this.props;
+    handleDuplicateRequest(request);
+    trackEvent('Request', 'Duplicate', 'Request Action');
+  };
+
+  _handleGenerateCode = () => {
+    const {request} = this.props;
+    showModal(GenerateCodeModal, request);
+    trackEvent('Request', 'Generate Code', 'Request Action');
+  };
+
+  _handlePromptUpdateName = async () => {
     const {request} = this.props;
 
     const name = await showModal(PromptModal, {
@@ -19,7 +31,15 @@ class RequestActionsDropdown extends Component {
     });
 
     models.request.update(request, {name});
-  }
+
+    trackEvent('Request', 'Rename', 'Request Action');
+  };
+
+  _handleRemove = () => {
+    const {request} = this.props;
+    models.request.remove(request);
+    trackEvent('Request', 'Delete', 'Action');
+  };
 
   render () {
     const {request, ...other} = this.props;
@@ -29,31 +49,17 @@ class RequestActionsDropdown extends Component {
         <DropdownButton>
           <i className="fa fa-caret-down"></i>
         </DropdownButton>
-        <DropdownItem onClick={e => {
-          models.request.duplicate(request);
-          trackEvent('Request', 'Duplicate', 'Request Action');
-        }}>
+        <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy"></i> Duplicate
           <DropdownHint char="D"></DropdownHint>
         </DropdownItem>
-        <DropdownItem onClick={e => {
-          this._promptUpdateName();
-          trackEvent('Request', 'Rename', 'Request Action');
-        }}>
+        <DropdownItem onClick={this._handlePromptUpdateName}>
           <i className="fa fa-edit"></i> Rename
         </DropdownItem>
-        <DropdownItem onClick={e => {
-          showModal(GenerateCodeModal, request);
-          trackEvent('Request', 'Generate Code', 'Request Action');
-        }}>
+        <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code"></i> Generate Code
         </DropdownItem>
-        <DropdownItem buttonClass={PromptButton}
-                      onClick={e => {
-                        models.request.remove(request);
-                        trackEvent('Request', 'Delete', 'Action');
-                      }}
-                      addIcon={true}>
+        <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon={true}>
           <i className="fa fa-trash-o"></i> Delete
         </DropdownItem>
       </Dropdown>
@@ -62,7 +68,8 @@ class RequestActionsDropdown extends Component {
 }
 
 RequestActionsDropdown.propTypes = {
-  request: PropTypes.object.isRequired
+  handleDuplicateRequest: PropTypes.func.isRequired,
+  request: PropTypes.object.isRequired,
 };
 
 export default RequestActionsDropdown;

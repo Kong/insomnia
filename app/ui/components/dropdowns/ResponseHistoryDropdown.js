@@ -45,7 +45,8 @@ class ResponseHistoryDropdown extends Component {
     return (
       <DropdownItem key={response._id}
                     disabled={active}
-                    onClick={e => handleSetActiveResponse(i === 0 ? null : response._id)}>
+                    value={i === 0 ? null : response._id}
+                    onClick={handleSetActiveResponse}>
         {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
         <StatusTag statusCode={response.statusCode}
                    statusMessage={response.statusMessage || 'Error'}
@@ -69,7 +70,8 @@ class ResponseHistoryDropdown extends Component {
     return (
       <Dropdown {...extraProps}>
         <DropdownButton className="btn btn--super-compact tall">
-          {isLatestResponseActive ? <i className="fa fa-clock-o"/> :
+          {isLatestResponseActive ?
+            <i className="fa fa-history"/> :
             <i className="fa fa-thumb-tack"/>}
         </DropdownButton>
         <DropdownDivider name="Response History"/>

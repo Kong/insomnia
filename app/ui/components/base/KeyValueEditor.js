@@ -221,11 +221,11 @@ class KeyValueEditor extends Component {
                   <FileInputButton
                     showFileName={true}
                     className="btn btn--clicky wide ellipsis txt-sm"
+                    path={pair.fileName || ''}
                     onChange={fileName => {
                       this._updatePair(i, {fileName});
                       this.props.onChooseFile && this.props.onChooseFile();
                     }}
-                    path={pair.fileName || ''}
                   />
                 ) : (
                   <input
@@ -234,15 +234,13 @@ class KeyValueEditor extends Component {
                     ref={n => this._valueInputs[i] = n}
                     defaultValue={pair.value}
                     onChange={e => this._updatePair(i, {value: e.target.value})}
+                    onBlur={() => this._focusedPair = -1}
+                    onKeyDown={this._keyDown.bind(this)}
                     onFocus={e => {
                       this._focusedPair = i;
                       this._focusedField = VALUE;
                       this._focusedInput = e.target;
                     }}
-                    onBlur={() => {
-                      this._focusedPair = -1
-                    }}
-                    onKeyDown={this._keyDown.bind(this)}
                   />
                 )}
               </div>

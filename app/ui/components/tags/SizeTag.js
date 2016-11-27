@@ -6,7 +6,8 @@ const SizeTag = ({bytes, small, className}) => {
   const responseSizeString = misc.describeByteSize(bytes);
 
   return (
-    <div className={classnames('tag', {'tag--small': small}, className)}>
+    <div className={classnames('tag', {'tag--small': small}, className)}
+         title={`${bytes} bytes`}>
       <strong>SIZE</strong>&nbsp;{responseSizeString}
     </div>
   );

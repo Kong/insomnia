@@ -8,6 +8,11 @@ import {getContentTypeName} from '../../../common/constants';
 const EMPTY_MIME_TYPE = null;
 
 class ContentTypeDropdown extends Component {
+  _handleChangeMimeType = mimeType => {
+    this.props.onChange(mimeType);
+    trackEvent('Request', 'Content-Type Change', contentTypesMap[mimeType]);
+  };
+
   _renderDropdownItem (mimeType, forcedName = null) {
     const contentType = typeof this.props.contentType !== 'string' ?
       EMPTY_MIME_TYPE : this.props.contentType;
@@ -15,10 +20,7 @@ class ContentTypeDropdown extends Component {
     const iconClass = mimeType === contentType ? 'fa-check' : 'fa-empty';
 
     return (
-      <DropdownItem onClick={e => {
-        this.props.onChange(mimeType);
-        trackEvent('Request', 'Content-Type Change', contentTypesMap[mimeType]);
-      }}>
+      <DropdownItem onClick={this._handleChangeMimeType} value={mimeType}>
         <i className={`fa ${iconClass}`}/>
         {forcedName || getContentTypeName(mimeType)}
       </DropdownItem>

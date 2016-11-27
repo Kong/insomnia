@@ -113,41 +113,42 @@ class Wrapper extends Component {
 
   render () {
     const {
-      isLoading,
-      loadStartTime,
-      activeWorkspace,
-      activeRequest,
       activeEnvironment,
+      activeRequest,
       activeResponseId,
-      sidebarHidden,
-      sidebarFilter,
-      sidebarWidth,
-      paneWidth,
-      forceRefreshCounter,
-      workspaces,
-      workspaceChildren,
-      settings,
+      activeWorkspace,
       environments,
-      responsePreviewMode,
-      responseFilter,
+      forceRefreshCounter,
+      handleActivateRequest,
       handleCreateRequest,
       handleCreateRequestForWorkspace,
       handleCreateRequestGroup,
+      handleDuplicateRequest,
       handleExportFile,
-      handleActivateRequest,
-      handleSetActiveWorkspace,
-      handleSetActiveEnvironment,
-      handleSetRequestGroupCollapsed,
       handleMoveRequest,
       handleMoveRequestGroup,
+      handleResetDragPane,
+      handleResetDragSidebar,
+      handleSetActiveEnvironment,
+      handleSetActiveWorkspace,
+      handleSetRequestGroupCollapsed,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
       handleSetSidebarRef,
-      handleStartDragSidebar,
-      handleResetDragSidebar,
       handleStartDragPane,
-      handleResetDragPane,
+      handleStartDragSidebar,
+      isLoading,
+      loadStartTime,
+      paneWidth,
+      responseFilter,
+      responsePreviewMode,
+      settings,
       sidebarChildren,
+      sidebarFilter,
+      sidebarHidden,
+      sidebarWidth,
+      workspaceChildren,
+      workspaces,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -168,6 +169,7 @@ class Wrapper extends Component {
           handleImportFile={this._handleImportFile}
           handleExportFile={handleExportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
+          handleDuplicateRequest={handleDuplicateRequest}
           handleSetActiveEnvironment={handleSetActiveEnvironment}
           moveRequest={handleMoveRequest}
           moveRequestGroup={handleMoveRequestGroup}
@@ -291,6 +293,7 @@ Wrapper.propTypes = {
   handleMoveRequest: PropTypes.func.isRequired,
   handleMoveRequestGroup: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
+  handleDuplicateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
   handleCreateRequestForWorkspace: PropTypes.func.isRequired,
   handleSetRequestPaneRef: PropTypes.func.isRequired,

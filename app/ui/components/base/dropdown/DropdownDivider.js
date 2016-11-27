@@ -17,7 +17,7 @@ const DropdownDivider = ({name}) => {
 };
 
 DropdownDivider.propTypes = {
-  name: PropTypes.string
+  name: PropTypes.any
 };
 
 export default DropdownDivider;

@@ -13,7 +13,8 @@ class MethodDropdown extends Component {
         {constants.HTTP_METHODS.map(method => (
           <DropdownItem key={method}
                         className={`http-method-${method}`}
-                        onClick={() => onChange(method)}>
+                        onClick={onChange}
+                        value={method}>
             {method}
           </DropdownItem>
         ))}
