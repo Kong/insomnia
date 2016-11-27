@@ -1,11 +1,7 @@
-import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA} from '../common/constants';
+import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {deconstructToParams} from '../common/querystring';
-import {CONTENT_TYPE_JSON} from '../common/constants';
-import {CONTENT_TYPE_XML} from '../common/constants';
-import {CONTENT_TYPE_FILE} from '../common/constants';
-import {CONTENT_TYPE_TEXT} from '../common/constants';
 
 export const name = 'Request';
 export const type = 'Request';
@@ -91,8 +87,8 @@ export function update (request, patch) {
   return db.docUpdate(request, patch);
 }
 
-export function updateMimeType (request, mimeType) {
-  let headers = [...request.headers];
+export function updateMimeType (request, mimeType, doCreate = false) {
+  let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);
 
   // 1. Update Content-Type header
@@ -121,7 +117,11 @@ export function updateMimeType (request, mimeType) {
     body = newBodyRaw(request.body.text || '', mimeType);
   }
 
-  return update(request, {headers, body});
+  if (doCreate) {
+    return create(Object.assign({}, request, {headers, body}));
+  } else {
+    return update(request, {headers, body});
+  }
 }
 
 export function duplicate (request) {

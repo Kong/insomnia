@@ -131,7 +131,9 @@ class RequestPane extends PureComponent {
                 {" "}
                 {numBodyParams ? <span className="txt-sm">({numBodyParams})</span> : null}
               </button>
-              <ContentTypeDropdown updateRequestMimeType={updateRequestMimeType} className="tall">
+              <ContentTypeDropdown onChange={updateRequestMimeType}
+                                   contentType={request.body.mimeType}
+                                   className="tall">
                 <i className="fa fa-caret-down"></i>
               </ContentTypeDropdown>
             </Tab>

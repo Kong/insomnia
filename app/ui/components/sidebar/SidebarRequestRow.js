@@ -38,6 +38,7 @@ class SidebarRequestRow extends PureComponent {
 
   render () {
     const {
+      handleDuplicateRequest,
       connectDragSource,
       connectDropTarget,
       isDragging,
@@ -85,6 +86,7 @@ class SidebarRequestRow extends PureComponent {
 
             <div className="sidebar__actions">
               <RequestActionsDropdown
+                handleDuplicateRequest={handleDuplicateRequest}
                 right={true}
                 request={request}
                 requestGroup={requestGroup}
@@ -103,6 +105,7 @@ class SidebarRequestRow extends PureComponent {
 SidebarRequestRow.propTypes = {
   // Functions
   handleActivateRequest: PropTypes.func.isRequired,
+  handleDuplicateRequest: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
 

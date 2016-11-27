@@ -14,7 +14,7 @@ const MethodTag = ({method, fullNames}) => {
   }
 
   return (
-    <div className={'tag tag--no-bg tag--small method-' + method}>
+    <div className={'tag tag--no-bg tag--small http-method-' + method}>
       <span className='tag__inner'>{methodName}</span>
     </div>
   )

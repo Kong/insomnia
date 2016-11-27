@@ -4,6 +4,7 @@ import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
 import {generateId} from './misc';
 import {getModel, initModel} from '../models';
+import * as models from '../models/index';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -111,10 +112,15 @@ function notifyOfChange (event, doc, fromSync) {
 // Helpers //
 // ~~~~~~~ //
 
-export function getMostRecentlyModified (type, query = {}) {
+export async function getMostRecentlyModified (type, query = {}) {
+  const docs = await findMostRecentlyModified(type, query, 1);
+  return docs.length ? docs[0] : null;
+}
+
+export function findMostRecentlyModified (type, query = {}, limit = null) {
   return new Promise(resolve => {
-    db[type].find(query).sort({modified: -1}).limit(1).exec((err, docs) => {
-      resolve(docs.length ? docs[0] : null);
+    db[type].find(query).sort({modified: -1}).limit(limit).exec((err, docs) => {
+      resolve(docs);
     })
   })
 }
@@ -262,11 +268,11 @@ export function docCreate (type, patch = {}) {
 
   const doc = initModel(
     type,
-    {_id: generateId(idPrefix)},
     patch,
 
     // Fields that the user can't touch
     {
+      _id: generateId(idPrefix),
       type: type,
       modified: Date.now()
     }
@@ -347,6 +353,11 @@ export async function duplicate (originalDoc, patch = {}, first = true) {
 
   // 2. Get all the children
   for (const type of allTypes()) {
+    // Note: We never want to duplicate a response
+    if (type === models.response.type) {
+      continue;
+    }
+
     const parentId = originalDoc._id;
     const children = await find(type, {parentId});
     for (const doc of children) {

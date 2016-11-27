@@ -1,0 +1,100 @@
+import React, {PropTypes, Component} from 'react';
+import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
+import SizeTag from '../tags/SizeTag';
+import StatusTag from '../tags/StatusTag';
+import TimeTag from '../tags/TimeTag';
+import * as models from '../../../models/index';
+import PromptButton from '../base/PromptButton';
+
+class ResponseHistoryDropdown extends Component {
+  state = {
+    responses: [],
+  };
+
+  _handleDeleteResponses = () => {
+    this.props.handleDeleteResponses(this.props.requestId);
+  };
+
+  async _load (requestId) {
+    const responses = await models.response.findRecentForRequest(requestId);
+
+    // NOTE: this is bad practice, but I can't figure out a better way.
+    // This component may not be mounted if the user switches to a request that
+    // doesn't have a response
+    if (!this._unmounted) {
+      this.setState({responses});
+    }
+  }
+
+  componentWillUnmount () {
+    this._unmounted = true;
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this._load(nextProps.requestId);
+  }
+
+  componentDidMount () {
+    this._unmounted = false;
+    this._load(this.props.requestId);
+  }
+
+  renderDropdownItem = (response, i) => {
+    const {activeResponseId, handleSetActiveResponse} = this.props;
+    const active = response._id === activeResponseId;
+    return (
+      <DropdownItem key={response._id}
+                    disabled={active}
+                    value={i === 0 ? null : response._id}
+                    onClick={handleSetActiveResponse}>
+        {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
+        <StatusTag statusCode={response.statusCode}
+                   statusMessage={response.statusMessage || 'Error'}
+                   small={true}/>
+        <TimeTag milliseconds={response.elapsedTime} small={true}/>
+        <SizeTag bytes={response.bytesRead} small={true}/>
+      </DropdownItem>
+    )
+  };
+
+  render () {
+    const {
+      activeResponseId,
+      handleSetActiveResponse,
+      handleDeleteResponses,
+      isLatestResponseActive,
+      ...extraProps
+    } = this.props;
+    const {responses} = this.state;
+
+    return (
+      <Dropdown {...extraProps}>
+        <DropdownButton className="btn btn--super-compact tall">
+          {isLatestResponseActive ?
+            <i className="fa fa-history"/> :
+            <i className="fa fa-thumb-tack"/>}
+        </DropdownButton>
+        <DropdownDivider name="Response History"/>
+        <DropdownItem buttonClass={PromptButton}
+                      addIcon={true}
+                      onClick={this._handleDeleteResponses}>
+          <i className="fa fa-trash-o"/>
+          Clear History
+        </DropdownItem>
+        <DropdownDivider name="Past Responses"/>
+        {responses.map(this.renderDropdownItem)}
+      </Dropdown>
+    )
+  }
+}
+
+ResponseHistoryDropdown.propTypes = {
+  handleSetActiveResponse: PropTypes.func.isRequired,
+  handleDeleteResponses: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
+  requestId: PropTypes.string.isRequired,
+  activeResponseId: PropTypes.string.isRequired,
+  isLatestResponseActive: PropTypes.bool.isRequired,
+};
+
+export default ResponseHistoryDropdown;

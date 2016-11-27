@@ -150,16 +150,6 @@ code, pre, .monospace {
   opacity: 0.7;
 }
 
-.center-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  align-content: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-}
-
 .auto-margin {
   margin: auto;
 }
@@ -174,6 +164,40 @@ code, pre, .monospace {
 
 .valign-bottom {
   vertical-align: bottom;
+}
+
+.row-fill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: stretch;
+  width: 100%;
+}
+
+.row-spaced {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between !important;
+  width: 100%;
+}
+
+.row-stretch {
+  display: flex;
+  flex-direction: row;
+  align-content: stretch;
+  align-items: stretch;
+  width: 100%;
+}
+
+.valign-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
 }
 
 .pointer {
@@ -210,6 +234,10 @@ i.fa {
 
 .no-wrap {
   white-space: nowrap;
+}
+
+.overflow-hidden {
+  overflow: hidden;
 }
 
 .wrap {
@@ -271,15 +299,19 @@ i.fa {
   padding-bottom: 0;
 }
 
+.no-pad-left {
+  padding-left: 0;
+}
+
 .no-pad-top {
   padding-top: 0;
 }
 
-.pad-left-half {
+.pad-left-sm {
   padding-left: @padding-md / 2;
 }
 
-.pad-right-half {
+.pad-right-sm {
   padding-right: @padding-md / 2;
 }
 
@@ -327,7 +359,12 @@ i.fa {
 .scrollable {
   overflow: auto;
   position: relative;
+
+  &.scrollable--no-bars::-webkit-scrollbar {
+    display: none;
+  }
 }
+
 
 .scrollable-container {
   position: relative;

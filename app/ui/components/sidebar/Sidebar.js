@@ -41,6 +41,7 @@ class Sidebar extends PureComponent {
       handleChangeFilter,
       isLoading,
       handleCreateRequest,
+      handleDuplicateRequest,
       handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
       moveRequest,
@@ -92,6 +93,7 @@ class Sidebar extends PureComponent {
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          handleDuplicateRequest={handleDuplicateRequest}
           moveRequest={moveRequest}
           moveRequestGroup={moveRequestGroup}
           filter={filter}
@@ -122,6 +124,7 @@ Sidebar.propTypes = {
   moveRequestGroup: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
+  handleDuplicateRequest: PropTypes.func.isRequired,
   showEnvironmentsModal: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
 

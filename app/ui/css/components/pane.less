@@ -7,6 +7,7 @@
   grid-template-columns: 100%;
 
   .pane__header {
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -19,6 +20,11 @@
     &.pane__header--grey {
       background: @bg-light;
       border-left: 1px solid @hl-xs;
+    }
+
+    .pane__header__right {
+      box-shadow: -@padding-md 0 @padding-md -@padding-sm fade(@bg-super-light, 85%);
+      background: @bg-super-light;
     }
   }
 

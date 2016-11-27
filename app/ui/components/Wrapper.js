@@ -5,6 +5,7 @@ import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnviro
 import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
+import RequestCreateModal from '../components/modals/RequestCreateModal';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import PromptModal from '../components/modals/PromptModal';
 import AlertModal from '../components/modals/AlertModal';
@@ -78,8 +79,14 @@ class Wrapper extends Component {
   _handleImportFile = () => this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
   _handleExportWorkspaceToFile = () => this.props.handleExportFile(this.props.activeWorkspace._id);
   _handleSetSidebarFilter = filter => this.props.handleSetSidebarFilter(this.props.activeWorkspace._id, filter);
+  _handleSetActiveResponse = responseId => this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   _handleShowEnvironmentsModal = () => showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   _handleShowCookiesModal = () => showModal(CookiesModal, this.props.activeWorkspace);
+
+  _handleDeleteResponses = () => {
+    models.response.removeForRequest(this.props.activeRequest._id);
+    this._handleSetActiveResponse(null);
+  };
 
   _handleSendRequestWithActiveEnvironment = () => {
     const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
@@ -106,40 +113,42 @@ class Wrapper extends Component {
 
   render () {
     const {
-      isLoading,
-      loadStartTime,
-      activeWorkspace,
-      activeRequest,
       activeEnvironment,
-      sidebarHidden,
-      sidebarFilter,
-      sidebarWidth,
-      paneWidth,
-      forceRefreshCounter,
-      workspaces,
-      workspaceChildren,
-      settings,
+      activeRequest,
+      activeResponseId,
+      activeWorkspace,
       environments,
-      responsePreviewMode,
-      responseFilter,
+      forceRefreshCounter,
+      handleActivateRequest,
       handleCreateRequest,
       handleCreateRequestForWorkspace,
       handleCreateRequestGroup,
+      handleDuplicateRequest,
       handleExportFile,
-      handleActivateRequest,
-      handleSetActiveWorkspace,
-      handleSetActiveEnvironment,
-      handleSetRequestGroupCollapsed,
       handleMoveRequest,
       handleMoveRequestGroup,
+      handleResetDragPane,
+      handleResetDragSidebar,
+      handleSetActiveEnvironment,
+      handleSetActiveWorkspace,
+      handleSetRequestGroupCollapsed,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
       handleSetSidebarRef,
-      handleStartDragSidebar,
-      handleResetDragSidebar,
       handleStartDragPane,
-      handleResetDragPane,
+      handleStartDragSidebar,
+      isLoading,
+      loadStartTime,
+      paneWidth,
+      responseFilter,
+      responsePreviewMode,
+      settings,
       sidebarChildren,
+      sidebarFilter,
+      sidebarHidden,
+      sidebarWidth,
+      workspaceChildren,
+      workspaces,
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -160,6 +169,7 @@ class Wrapper extends Component {
           handleImportFile={this._handleImportFile}
           handleExportFile={handleExportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
+          handleDuplicateRequest={handleDuplicateRequest}
           handleSetActiveEnvironment={handleSetActiveEnvironment}
           moveRequest={handleMoveRequest}
           moveRequestGroup={handleMoveRequestGroup}
@@ -218,10 +228,13 @@ class Wrapper extends Component {
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={responsePreviewMode}
+          activeResponseId={activeResponseId}
           filter={responseFilter}
           loadStartTime={loadStartTime}
           showCookiesModal={this._handleShowCookiesModal}
+          handleSetActiveResponse={this._handleSetActiveResponse}
           handleSetPreviewMode={this._handleSetPreviewMode}
+          handleDeleteResponses={this._handleDeleteResponses}
           handleSetFilter={this._handleSetResponseFilter}
         />
 
@@ -233,6 +246,7 @@ class Wrapper extends Component {
         <PromptModal ref={registerModal}/>
         <SignupModal ref={registerModal}/>
         <PaymentModal ref={registerModal}/>
+        <RequestCreateModal ref={registerModal}/>
         <PaymentNotificationModal ref={registerModal}/>
         <EnvironmentEditModal
           ref={registerModal}
@@ -279,12 +293,14 @@ Wrapper.propTypes = {
   handleMoveRequest: PropTypes.func.isRequired,
   handleMoveRequestGroup: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
+  handleDuplicateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
   handleCreateRequestForWorkspace: PropTypes.func.isRequired,
   handleSetRequestPaneRef: PropTypes.func.isRequired,
   handleSetResponsePaneRef: PropTypes.func.isRequired,
   handleSetResponsePreviewMode: PropTypes.func.isRequired,
   handleSetResponseFilter: PropTypes.func.isRequired,
+  handleSetActiveResponse: PropTypes.func.isRequired,
   handleSetSidebarRef: PropTypes.func.isRequired,
   handleStartDragSidebar: PropTypes.func.isRequired,
   handleResetDragSidebar: PropTypes.func.isRequired,
@@ -299,6 +315,7 @@ Wrapper.propTypes = {
   paneWidth: PropTypes.number.isRequired,
   responsePreviewMode: PropTypes.string.isRequired,
   responseFilter: PropTypes.string.isRequired,
+  activeResponseId: PropTypes.string.isRequired,
   sidebarWidth: PropTypes.number.isRequired,
   sidebarHidden: PropTypes.bool.isRequired,
   sidebarFilter: PropTypes.string.isRequired,

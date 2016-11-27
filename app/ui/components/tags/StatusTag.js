@@ -5,7 +5,7 @@ import {
   STATUS_CODE_PEBKAC
 } from '../../../common/constants';
 
-const StatusTag = ({statusMessage, statusCode}) => {
+const StatusTag = ({statusMessage, statusCode, small}) => {
   statusCode = String(statusCode);
 
   let colorClass;
@@ -42,14 +42,21 @@ const StatusTag = ({statusMessage, statusCode}) => {
   const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
 
   return (
-    <div className={classnames('tag', colorClass)} title={description}>
-      <strong>{statusCode}</strong> {statusMessage || backupStatusMessage}
+    <div className={classnames('tag', colorClass, {'tag--small': small})}
+         title={description}>
+      <strong>{statusCode}</strong>
+      {" "}
+      {typeof statusMessage === 'string' ? statusMessage : backupStatusMessage}
     </div>
   );
 };
 
 StatusTag.propTypes = {
+  // Required
   statusCode: PropTypes.number.isRequired,
+
+  // Optional
+  small: PropTypes.bool,
   statusMessage: PropTypes.string
 };
 

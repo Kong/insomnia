@@ -1,21 +1,28 @@
 import React, {Component, PropTypes} from 'react';
-import {Dropdown, DropdownButton, DropdownItem} from './base/dropdown';
-import {METHODS, DEBOUNCE_MILLIS, isMac} from '../../common/constants';
+import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {trackEvent} from '../../analytics';
+import MethodDropdown from './dropdowns/MethodDropdown';
 
 
 class RequestUrlBar extends Component {
-  _handleFormSubmit (e) {
+  _handleFormSubmit = e => {
     e.preventDefault();
     this.props.handleSend();
-  }
+  };
 
-  _handleUrlChange (url) {
+  _handleMethodChange = method => {
+    this.props.onMethodChange(method);
+    trackEvent('Request', 'Method Change', method);
+  };
+
+  _handleUrlChange = e => {
+    const url = e.target.value;
+
     clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
       this.props.onUrlChange(url);
     }, DEBOUNCE_MILLIS);
-  }
+  };
 
   componentDidMount () {
     this._bodyKeydownHandler = e => {
@@ -40,31 +47,20 @@ class RequestUrlBar extends Component {
   }
 
   render () {
-    const {onMethodChange, url, method} = this.props;
+    const {url, method} = this.props;
     return (
       <div className="urlbar">
-        <Dropdown>
-          <DropdownButton type="button">
-            {method} <i className="fa fa-caret-down"/>
-          </DropdownButton>
-          {METHODS.map(method => (
-            <DropdownItem key={method} className={`method-${method}`} onClick={() => {
-              onMethodChange(method);
-              trackEvent('Request', 'Method Change', method);
-            }}>
-              {method}
-            </DropdownItem>
-          ))}
-        </Dropdown>
-        <form onSubmit={this._handleFormSubmit.bind(this)}>
+        <MethodDropdown onChange={this._handleMethodChange} method={method}>
+          {method} <i className="fa fa-caret-down"/>
+        </MethodDropdown>
+        <form onSubmit={this._handleFormSubmit}>
           <div className="form-control">
             <input
               ref={n => this._input = n}
               type="text"
               placeholder="https://api.myproduct.com/v1/users"
               defaultValue={url}
-              onClick={e => e.preventDefault()}
-              onChange={e => this._handleUrlChange(e.target.value)}/>
+              onChange={this._handleUrlChange}/>
           </div>
           <div className="no-wrap">
             <button type="submit">

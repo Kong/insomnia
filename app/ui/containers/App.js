@@ -24,6 +24,7 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
 import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import RequestCreateModal from '../components/modals/RequestCreateModal';
 
 
 class App extends Component {
@@ -87,14 +88,7 @@ class App extends Component {
 
     // Request Duplicate
     'mod+d': async () => {
-      const {activeWorkspace, activeRequest, handleSetActiveRequest} = this.props;
-
-      if (!activeRequest) {
-        return;
-      }
-
-      const request = await models.request.duplicate(activeRequest);
-      handleSetActiveRequest(activeWorkspace._id, request._id);
+      this._requestDuplicate(this.props.activeRequest);
       trackEvent('HotKey', 'Request Duplicate');
     }
   };
@@ -115,18 +109,21 @@ class App extends Component {
   };
 
   _requestCreate = async (parentId) => {
-    const name = await showModal(PromptModal, {
-      headerName: 'Create New Request',
-      defaultValue: 'My Request',
-      selectText: true,
-      submitName: 'Create',
-      hint: 'TIP: Import Curl command by pasting it into the URL bar'
-    });
-
+    const request = await showModal(RequestCreateModal, {parentId});
     const {activeWorkspace, handleSetActiveRequest} = this.props;
-    const request = await models.request.create({parentId, name});
 
     handleSetActiveRequest(activeWorkspace._id, request._id);
+  };
+
+  _requestDuplicate = async (request) => {
+    const {activeWorkspace, handleSetActiveRequest} = this.props;
+
+    if (!request) {
+      return;
+    }
+
+    const newRequest = await models.request.duplicate(request);
+    handleSetActiveRequest(activeWorkspace._id, newRequest._id);
   };
 
   _requestCreateForWorkspace = () => {
@@ -303,6 +300,7 @@ class App extends Component {
           handleStartDragPane={this._startDragPane}
           handleResetDragPane={this._resetDragPane}
           handleCreateRequest={this._requestCreate}
+          handleDuplicateRequest={this._requestDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}
           {...this.props}
         />
@@ -331,6 +329,7 @@ function mapStateToProps (state, props) {
 
   const {
     loadingRequestIds,
+    activeResponseIds,
     previewModes,
     responseFilters,
   } = requestMeta;
@@ -364,6 +363,9 @@ function mapStateToProps (state, props) {
   const responsePreviewMode = previewModes[activeRequestId] || PREVIEW_MODE_SOURCE;
   const responseFilter = responseFilters[activeRequestId] || '';
 
+  // Response Stuff
+  const activeResponseId = activeResponseIds[activeRequestId] || '';
+
   // Environment stuff
   const activeEnvironmentId = activeEnvironmentIds[activeWorkspaceId];
   const activeEnvironment = entities.environments[activeEnvironmentId];
@@ -382,6 +384,7 @@ function mapStateToProps (state, props) {
       loadStartTime,
       activeWorkspace,
       activeRequest,
+      activeResponseId,
       sidebarHidden,
       sidebarFilter,
       sidebarWidth,
@@ -416,6 +419,7 @@ function mapDispatchToProps (dispatch) {
     handleSendRequestWithEnvironment: requests.send,
     handleSetResponsePreviewMode: requests.setPreviewMode,
     handleSetResponseFilter: requests.setResponseFilter,
+    handleSetActiveResponse: requests.setActiveResponse,
 
     handleSetActiveWorkspace: legacyActions.global.setActiveWorkspace,
     handleImportFileToWorkspace: legacyActions.global.importFile,

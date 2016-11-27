@@ -1,27 +1,57 @@
-import React, {PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
 
-const DropdownItem = ({stayOpenAfterClick, buttonClass, onClick, children, className, ...props}) => {
-  const inner = (
-    <div className={classnames('dropdown__inner', className)}>
-      <span className="dropdown__text">{children}</span>
-    </div>
-  );
+class DropdownItem extends PureComponent {
+  _handleClick = e => {
+    const {stayOpenAfterClick, onClick, disabled} = this.props;
 
-  const buttonProps = {
-    onClick: stayOpenAfterClick ? e => {e.stopPropagation(); onClick(e)} : onClick,
-    ...props
+    if (stayOpenAfterClick) {
+      e.stopPropagation();
+    }
+
+    if (!onClick || disabled) {
+      return;
+    }
+
+    if (this.props.hasOwnProperty('value')) {
+      onClick(this.props.value, e);
+    } else {
+      onClick(e);
+    }
   };
 
-  const button = React.createElement(buttonClass || 'button', buttonProps, inner);
-  return (
-    <li>{button}</li>
-  )
-};
+  render () {
+    const {
+      buttonClass,
+      children,
+      className,
+      onClick, // Don't want this in ...props
+      ...props
+    } = this.props;
+
+    const inner = (
+      <div className={classnames('dropdown__inner', className)}>
+        <span className="dropdown__text">{children}</span>
+      </div>
+    );
+
+    const buttonProps = {
+      type: 'button',
+      onClick: this._handleClick,
+      ...props
+    };
+
+    const button = React.createElement(buttonClass || 'button', buttonProps, inner);
+    return (
+      <li>{button}</li>
+    )
+  }
+}
 
 DropdownItem.propTypes = {
   buttonClass: PropTypes.any,
-  stayOpenAfterClick: PropTypes.bool
+  stayOpenAfterClick: PropTypes.bool,
+  value: PropTypes.any,
 };
 
 export default DropdownItem;

@@ -160,7 +160,7 @@ class PaymentModal extends Component {
                 <Nl2Br className="notice info">{message}</Nl2Br>
               ) : null}
               <div>
-                <div className="pad-left-half">
+                <div className="pad-left-sm">
                   <div className="inline-block text-center"
                        style={{width: '50%'}}>
                     <input
@@ -222,7 +222,7 @@ class PaymentModal extends Component {
                   <label htmlFor="payment-expiry">
                     Expiration Date
                   </label>
-                  <div className="pad-left-half pad-top-sm">
+                  <div className="pad-left-sm pad-top-sm">
                     <select name="payment-expiration-month"
                             id="payment-expiration-month"
                             ref={n => this._expiryMonthInput = n}>

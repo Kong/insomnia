@@ -8,10 +8,12 @@ import StatusTag from './tags/StatusTag';
 import TimeTag from './tags/TimeTag';
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
+import ResponseHistoryDropdown from './dropdowns/ResponseHistoryDropdown';
+import ResponseTimer from './ResponseTimer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import * as models from '../../models';
-import {REQUEST_TIME_TO_SHOW_COUNTER, MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
+import {MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
 import {getSetCookieHeaders} from '../../common/misc';
 import {cancelCurrentRequest} from '../../common/network';
 import {trackEvent} from '../../analytics';
@@ -19,13 +21,14 @@ import {trackEvent} from '../../analytics';
 class ResponsePane extends Component {
   state = {response: null};
 
-  async _getResponse (request) {
-    if (!request) {
-      this.setState({response: null});
-    } else {
-      const response = await models.response.getLatestByParentId(request._id);
-      this.setState({response});
+  async _getResponse (requestId, responseId) {
+    let response = await models.response.getById(responseId);
+
+    if (!response) {
+      response = await models.response.getLatestByParentId(requestId);
     }
+
+    this.setState({response});
   }
 
   async _handleDownloadResponseBody () {
@@ -66,11 +69,15 @@ class ResponsePane extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    this._getResponse(nextProps.request);
+    const activeRequestId = nextProps.request ? nextProps.request._id : null;
+    const activeResponseId = nextProps.activeResponseId;
+    this._getResponse(activeRequestId, activeResponseId);
   }
 
   componentDidMount () {
-    this._getResponse(this.props.request);
+    const activeRequestId = this.props.request ? this.props.request._id : null;
+    const activeResponseId = this.props.activeResponseId;
+    this._getResponse(activeRequestId, activeResponseId);
   }
 
   render () {
@@ -78,50 +85,18 @@ class ResponsePane extends Component {
       request,
       previewMode,
       handleSetPreviewMode,
+      handleSetActiveResponse,
+      handleDeleteResponses,
       handleSetFilter,
       loadStartTime,
       editorLineWrapping,
       editorFontSize,
       filter,
+      activeResponseId,
       showCookiesModal
     } = this.props;
 
     const {response} = this.state;
-
-    let timer = null;
-
-    if (loadStartTime >= 0) {
-      // Set a timer to update the UI again soon
-      // TODO: Move this into a child component so we don't rerender too much
-      setTimeout(() => {
-        this.forceUpdate();
-      }, 100);
-
-      // NOTE: subtract 200ms because the request has some time on either end
-      const millis = Date.now() - loadStartTime - 200;
-      const elapsedTime = Math.round(millis / 100) / 10;
-
-      timer = (
-        <div className="response-pane__overlay">
-          {elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER ? (
-            <h2>{elapsedTime} seconds...</h2>
-          ) : (
-            <h2>Loading...</h2>
-          )}
-
-          <br/>
-          <i className="fa fa-refresh fa-spin"></i>
-
-          <br/>
-          <div className="pad">
-            <button className="btn btn--clicky"
-                    onClick={() => cancelCurrentRequest()}>
-              Cancel Request
-            </button>
-          </div>
-        </div>
-      )
-    }
 
     if (!request) {
       return (
@@ -135,7 +110,11 @@ class ResponsePane extends Component {
     if (!response) {
       return (
         <section className="response-pane pane">
-          {timer}
+          <ResponseTimer
+            className="response-pane__overlay"
+            handleCancel={cancelCurrentRequest}
+            loadStartTime={loadStartTime}
+          />
 
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
@@ -178,15 +157,31 @@ class ResponsePane extends Component {
 
     return (
       <section className="response-pane pane">
-        {timer}
+        <ResponseTimer
+          className="response-pane__overlay"
+          handleCancel={cancelCurrentRequest}
+          loadStartTime={loadStartTime}
+        />
         {!response ? null : (
-          <header className="pane__header">
-            <StatusTag
-              statusCode={response.statusCode}
-              statusMessage={response.statusMessage}
+          <header className="pane__header row-spaced">
+            <div className="no-wrap scrollable scrollable--no-bars pad-left">
+              <StatusTag
+                statusCode={response.statusCode}
+                statusMessage={response.statusMessage || null}
+              />
+              <TimeTag milliseconds={response.elapsedTime} startTime={response.created}/>
+              <SizeTag bytes={response.bytesRead}/>
+            </div>
+            <ResponseHistoryDropdown
+              requestId={request._id}
+              isLatestResponseActive={!activeResponseId}
+              activeResponseId={response._id}
+              handleSetActiveResponse={handleSetActiveResponse}
+              handleDeleteResponses={handleDeleteResponses}
+              onChange={() => null}
+              className="tall pane__header__right"
+              right={true}
             />
-            <TimeTag milliseconds={response.elapsedTime}/>
-            <SizeTag bytes={response.bytesRead}/>
           </header>
         )}
         <Tabs className="pane__body">
@@ -265,6 +260,8 @@ ResponsePane.propTypes = {
   handleSetFilter: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
   handleSetPreviewMode: PropTypes.func.isRequired,
+  handleSetActiveResponse: PropTypes.func.isRequired,
+  handleDeleteResponses: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,
@@ -272,6 +269,7 @@ ResponsePane.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   loadStartTime: PropTypes.number.isRequired,
+  activeResponseId: PropTypes.string.isRequired,
 
   // Other
   request: PropTypes.object,

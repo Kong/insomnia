@@ -35,9 +35,9 @@ export function getClientString () {
 }
 
 // Global Stuff
-export const LOCALSTORAGE_KEY = 'insomnia.state';
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 10;
 export const DEBOUNCE_MILLIS = 100;
+export const MAX_RESPONSES = 20;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
 export const GA_HOST = 'desktop.insomnia.rest';
@@ -73,7 +73,7 @@ export const METHOD_HEAD = 'HEAD';
 export const METHOD_FIND = 'FIND';
 export const METHOD_PURGE = 'PURGE';
 export const METHOD_DELETE_HARD = 'DELETEHARD';
-export const METHODS = [
+export const HTTP_METHODS = [
   METHOD_GET,
   METHOD_POST,
   METHOD_PUT,
@@ -113,7 +113,6 @@ export function getPreviewModeName (previewMode) {
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
 export const CONTENT_TYPE_XML = 'application/xml';
-export const CONTENT_TYPE_TEXT = 'text/plain';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';

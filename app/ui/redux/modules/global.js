@@ -25,29 +25,6 @@ const COMMAND_TRIAL_END = 'app/billing/trial-end';
 // REDUCERS //
 // ~~~~~~~~ //
 
-/** Helper to update requestGroup metadata */
-function updateRequestGroupMeta (state = {}, requestGroupId, value, key) {
-  const newState = Object.assign({}, state);
-  newState[requestGroupId] = newState[requestGroupId] || {};
-  newState[requestGroupId][key] = value;
-  return newState;
-}
-
-function requestGroupMetaReducer (state = {}, action) {
-  switch (action.type) {
-    case REQUEST_GROUP_TOGGLE_COLLAPSE:
-      const meta = state[action.requestGroupId];
-      return updateRequestGroupMeta(
-        state,
-        action.requestGroupId,
-        meta ? !meta.collapsed : false,
-        'collapsed'
-      );
-    default:
-      return state;
-  }
-}
-
 function activeWorkspaceReducer (state = null, action) {
   switch (action.type) {
     case SET_ACTIVE_WORKSPACE:
@@ -68,19 +45,9 @@ function loadingReducer (state = false, action) {
   }
 }
 
-function commandReducer (state = {}, action) {
-  switch (action.type) {
-    // Nothing yet...
-    default:
-      return state;
-  }
-}
-
 export default combineReducers({
   isLoading: loadingReducer,
-  requestGroupMeta: requestGroupMetaReducer,
   activeWorkspaceId: activeWorkspaceReducer,
-  command: commandReducer,
 });
 
 
