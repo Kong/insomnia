@@ -61,14 +61,17 @@
     height: @line-height-md;
     font-size: @font-size-lg;
     line-height: @line-height-md;
-    padding: 0 @padding-md;
-    position: relative;
     background-color: @bg-light;
+    display: flex;
+    flex-direction: row;
+
+    .modal__header__children {
+      padding-left: @padding-md;
+      width: 100%;
+    }
 
     .modal__close-btn {
-      position: absolute;
       height: 100%;
-      right: 0;
     }
   }
 
@@ -88,6 +91,7 @@
   .modal__footer {
     border-top: 1px solid @hl-md;
     background-color: @bg-super-light;
+    height: @line-height-md;
     display: flex;
     flex-direction: row;
     align-items: center;

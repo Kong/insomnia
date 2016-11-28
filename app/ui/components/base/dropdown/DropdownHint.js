@@ -2,9 +2,9 @@ import React, {PropTypes} from 'react';
 import {MOD_SYM} from '../../../../common/constants';
 
 const DropdownHint = ({char}) => (
-  <div className="dropdown__hint">
-    <span>{MOD_SYM}{char}</span>
-  </div>
+  <span className="dropdown__hint">
+    {MOD_SYM}{char}
+  </span>
 );
 
 DropdownHint.propTypes = {

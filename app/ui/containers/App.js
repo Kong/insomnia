@@ -26,6 +26,7 @@ import {trackEvent, trackLegacyEvent} from '../../analytics';
 import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/RequestCreateModal';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
+import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
 
 
 class App extends Component {
@@ -39,6 +40,14 @@ class App extends Component {
     // Show Settings
     'mod+,': () => {
       // NOTE: This is controlled via a global menu shortcut in app.js
+    },
+
+    // Show Settings
+    'mod+shift+,': () => {
+      // NOTE: This is controlled via a global menu shortcut in app.js
+      const {activeWorkspace} = this.props;
+      toggleModal(WorkspaceSettingsModal, activeWorkspace);
+      trackEvent('HotKey', 'Workspace Settings');
     },
 
     // Show Request Switcher

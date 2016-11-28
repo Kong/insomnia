@@ -6,6 +6,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as sync from '../../../sync';
+import PromptButton from '../base/PromptButton';
 
 class WorkspaceSettingsModal extends Component {
   state = {
@@ -14,25 +15,37 @@ class WorkspaceSettingsModal extends Component {
 
   _handleSetModalRef = n => this.modal = n;
 
-  show ({workspace}) {
+  toggle (workspace) {
+    this.modal.toggle();
+    this.setState({workspace});
+  }
+
+  show (workspace) {
     this.modal.show();
-    this.setState({
-      workspace
-    });
+    this.setState({workspace});
   }
 
   hide () {
     this.modal.hide();
   }
 
-  renderBody () {
-    const {workspace} = this.state;
-    if (!workspace) {
-      return null;
-    }
-
+  renderModalBody (workspace) {
     return (
-      <h2>Welcome!</h2>
+      <ModalBody className="pad">
+        <PromptButton onClick={this._handleWorkspaceRemove}
+                      addIcon={true}
+                      className="pull-right btn btn--clicky">
+          <i className="fa fa-trash-o"/> Delete <strong>{workspace.name}</strong>
+        </PromptButton>
+      </ModalBody>
+    )
+  }
+
+  renderModalHeader (workspace) {
+    return (
+      <ModalHeader>
+        {workspace.name} Configuration
+      </ModalHeader>
     )
   }
 
@@ -40,10 +53,8 @@ class WorkspaceSettingsModal extends Component {
     const {workspace} = this.state;
     return (
       <Modal ref={this._handleSetModalRef} tall={true}>
-        <ModalHeader>{workspace ? workspace.name : ''} Configuration</ModalHeader>
-        <ModalBody className="pad selectable txt-sm monospace">
-          {this.renderBody()}
-        </ModalBody>
+        {workspace ? this.renderModalHeader(workspace) : null}
+        {workspace ? this.renderModalBody(workspace) : null}
       </Modal>
     )
   }

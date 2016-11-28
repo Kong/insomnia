@@ -88,36 +88,32 @@ class WorkspaceDropdown extends Component {
         </DropdownButton>
         <DropdownDivider name={activeWorkspace.name}/>
         <DropdownItem onClick={this._handleShowWorkspaceSettings}>
-          <i className="fa fa-wrench"/> Configuration
-        </DropdownItem>
-        <DropdownItem buttonClass={PromptButton}
-                      onClick={this._handleWorkspaceRemove}
-                      addIcon={true}>
-          <i className="fa fa-trash-o"/> Delete <strong>{activeWorkspace.name}</strong>
+          <i className="fa fa-wrench"/> Configure Workspace
+          <DropdownHint char="&#8679;,"/>
         </DropdownItem>
 
-        <DropdownDivider name="All Workspaces"/>
+        <DropdownDivider name="Switch Workspace"/>
 
         {nonActiveWorkspaces.map(w => (
           <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
-            <i className="fa fa-random"/> Switch to <strong>{w.name}</strong>
+            <i className="fa fa-random"/> To <strong>{w.name}</strong>
           </DropdownItem>
         ))}
         <DropdownItem onClick={this._handleWorkspaceCreate}>
-          <i className="fa fa-blank"/> New Workspace
+          <i className="fa fa-empty"/> New Workspace
         </DropdownItem>
 
         <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
-        <DropdownItem onClick={this._handleShowExport}>
-          <i className="fa fa-share"/> Import/Export
-        </DropdownItem>
         <DropdownItem onClick={this._handleShowSettings}>
           <i className="fa fa-cog"/> Preferences
           <DropdownHint char=","></DropdownHint>
         </DropdownItem>
+        <DropdownItem onClick={this._handleShowExport}>
+          <i className="fa fa-share"/> Import/Export
+        </DropdownItem>
         <DropdownItem buttonClass={Link} href="https://insomnia.rest/teams/" button={true}>
-          <i className="fa fa-users"/> Insomnia for Teams
+          <i className="fa fa-users"/> Invite Your Team
         </DropdownItem>
       </Dropdown>
     )

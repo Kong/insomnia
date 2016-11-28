@@ -73,11 +73,6 @@
           width: 2.2em;
           text-align: center;
         }
-
-        .dropdown__hint {
-          color: @hl-xxl;
-          float: right;
-        }
       }
     }
   }
@@ -85,6 +80,27 @@
   &.dropdown--up ul {
     top: auto;
     bottom: 100%;
+  }
+
+  .dropdown__inner {
+    width: 100%;
+  }
+
+  .dropdown__text {
+    white-space: nowrap;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    & > *:not(:first-child) {
+      padding-left: 0.3em;
+    }
+
+    .dropdown__hint {
+      color: @hl-xxl;
+      margin-left: auto;
+      padding-left: @padding-lg;
+    }
   }
 
   li.dropdown__divider {

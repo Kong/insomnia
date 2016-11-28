@@ -4,6 +4,7 @@ import {shell} from 'electron';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
+import ModalFooter from '../base/ModalFooter';
 import SettingsShortcuts from '../settings/SettingsShortcuts';
 import SettingsAbout from '../settings/SettingsAbout';
 import SettingsGeneral from '../settings/SettingsGeneral';
@@ -26,6 +27,10 @@ class SettingsModal extends Component {
     this._currentTabIndex = -1;
     this.state = {}
   }
+
+  _handleHide = () => {
+    this.hide();
+  };
 
   show (currentTabIndex = 0) {
     this.setState({currentTabIndex});
@@ -134,6 +139,9 @@ class SettingsModal extends Component {
             </TabPanel>
           </Tabs>
         </ModalBody>
+        <ModalFooter>
+          <button onClick={this._handleHide} className="btn">Done</button>
+        </ModalFooter>
       </Modal>
     );
   }
