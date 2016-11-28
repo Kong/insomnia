@@ -10,7 +10,7 @@ import SettingsGeneral from '../settings/SettingsGeneral';
 import SettingsImportExport from '../settings/SettingsImportExport';
 import SettingsSync from '../settings/SettingsSync';
 import * as models from '../../../models';
-import {getAppVersion, getAppLongName} from '../../../common/constants';
+import {getAppVersion, getAppName} from '../../../common/constants';
 import * as session from '../../../sync/session';
 import {showModal} from './index';
 import SignupModal from './SignupModal';
@@ -66,7 +66,7 @@ class SettingsModal extends Component {
     return (
       <Modal ref={m => this.modal = m} tall={true} {...this.props}>
         <ModalHeader>
-          {getAppLongName()}
+          {getAppName()} Preferences
           &nbsp;&nbsp;
           <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>

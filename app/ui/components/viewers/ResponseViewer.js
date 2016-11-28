@@ -66,6 +66,7 @@ class ResponseViewer extends Component {
       editorLineWrapping,
       editorFontSize,
       updateFilter,
+      statusCode,
       body: base64Body,
       encoding,
       url,
@@ -75,7 +76,13 @@ class ResponseViewer extends Component {
     const bodyBuffer = new Buffer(base64Body, encoding);
 
     if (error) {
-      return <ResponseError url={url} error={bodyBuffer.toString('utf8')}/>
+      return (
+        <ResponseError
+          url={url}
+          error={bodyBuffer.toString('utf8')}
+          statusCode={statusCode}
+        />
+      )
     }
 
     const {blockingBecauseTooLarge} = this.state;
@@ -172,6 +179,7 @@ ResponseViewer.propTypes = {
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,
   bytes: PropTypes.number.isRequired,
+  statusCode: PropTypes.number.isRequired,
   responseId: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
 

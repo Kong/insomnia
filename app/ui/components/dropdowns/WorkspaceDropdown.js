@@ -1,31 +1,33 @@
 import React, {Component, PropTypes} from 'react';
+import classnames from 'classnames';
 import {ipcRenderer, shell} from 'electron';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../base/dropdown';
 import PromptModal from '../modals/PromptModal';
 import AlertModal from '../modals/AlertModal';
-import SettingsModal from '../modals/SettingsModal';
-import ChangelogModal from '../modals/ChangelogModal';
+import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/SettingsModal';
 import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
 import {showModal} from '../modals/index';
-import {TAB_INDEX_EXPORT} from '../modals/SettingsModal';
 import {trackEvent} from '../../../analytics/index';
 import Link from '../base/Link';
+import WorkspaceSettingsModal from '../modals/WorkspaceSettingsModal';
 
 class WorkspaceDropdown extends Component {
-  async _promptUpdateName () {
-    const {activeWorkspace} = this.props;
-
-    const name = await showModal(PromptModal, {
-      headerName: 'Rename Workspace',
-      defaultValue: activeWorkspace.name
+  _handleShowExport = () => showModal(SettingsModal, TAB_INDEX_EXPORT);
+  _handleShowSettings = () => showModal(SettingsModal);
+  _handleShowWorkspaceSettings = () => {
+    showModal(WorkspaceSettingsModal, {
+      workspace: this.props.activeWorkspace,
     });
+  };
 
-    models.workspace.update(activeWorkspace, {name});
-  }
+  _handleSwitchWorkspace = workspaceId => {
+    this.props.handleSetActiveWorkspace(workspaceId);
+    trackEvent('Workspace', 'Switch');
+  };
 
-  async _workspaceCreate () {
+  _handleWorkspaceCreate = async noTrack => {
     const name = await showModal(PromptModal, {
       headerName: 'Create New Workspace',
       defaultValue: 'My Workspace',
@@ -35,94 +37,87 @@ class WorkspaceDropdown extends Component {
 
     const workspace = await models.workspace.create({name});
     this.props.handleSetActiveWorkspace(workspace._id);
-  }
 
-  async _workspaceRemove () {
+    if (!noTrack) {
+      trackEvent('Workspace', 'Create');
+    }
+  };
+
+  _handleWorkspaceRemove = async () => {
     const {workspaces, activeWorkspace} = this.props;
     if (workspaces.length <= 1) {
-      showModal(AlertModal, {
-        title: 'Delete Unsuccessful',
-        message: 'You cannot delete your last workspace.'
+      await showModal(AlertModal, {
+        title: 'Deleting Last Workspace',
+        message: 'Since you are deleting your only workspace, a new one will be created for you'
       });
+
+      await this._handleWorkspaceCreate(true);
+
+      trackEvent('Workspace', 'Delete', 'Last');
     } else {
-      models.workspace.remove(activeWorkspace);
+      trackEvent('Workspace', 'Delete');
     }
-  }
+
+    models.workspace.remove(activeWorkspace);
+  };
 
   render () {
     const {
       className,
       workspaces,
       activeWorkspace,
-      handleSetActiveWorkspace,
       isLoading,
       ...other
     } = this.props;
 
+    const nonActiveWorkspaces = workspaces.filter(w => w._id !== activeWorkspace._id);
+
     return (
       <Dropdown key={activeWorkspace._id}
-                className={className + ' wide workspace-dropdown'}
+                className={classnames(className, 'wide', 'workspace-dropdown')}
                 {...other}>
         <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
-              {isLoading ?
-                <i className="fa fa-refresh fa-spin txt-lg"></i> : ''}&nbsp;
-              <i className="fa fa-caret-down"></i>
+              {isLoading ? <i className="fa fa-refresh fa-spin txt-lg"/> : null}
+              {" "}
+              <i className="fa fa-caret-down"/>
             </div>
             {activeWorkspace.name}
           </h1>
         </DropdownButton>
-        <DropdownDivider name="Current Workspace"/>
-        <DropdownItem onClick={e => {
-          this._promptUpdateName();
-          trackEvent('Workspace', 'Rename');
-        }}>
-          <i className="fa fa-pencil-square-o"></i> Rename
-          {" "}
-          <strong>{activeWorkspace.name}</strong>
+        <DropdownDivider name={activeWorkspace.name}/>
+        <DropdownItem onClick={this._handleShowWorkspaceSettings}>
+          <i className="fa fa-wrench"/> Configuration
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton}
-                      onClick={e => {
-                        this._workspaceRemove();
-                        trackEvent('Workspace', 'Delete');
-                      }}
+                      onClick={this._handleWorkspaceRemove}
                       addIcon={true}>
-          <i className="fa fa-trash-o"></i> Delete
-          {" "}
-          <strong>{activeWorkspace.name}</strong>
+          <i className="fa fa-trash-o"/> Delete <strong>{activeWorkspace.name}</strong>
         </DropdownItem>
 
-        <DropdownDivider name="Workspaces"/>
+        <DropdownDivider name="All Workspaces"/>
 
-        {workspaces.map(w => w._id === activeWorkspace._id ? null : (
-          <DropdownItem key={w._id} onClick={() => {
-            handleSetActiveWorkspace(w._id);
-            trackEvent('Workspace', 'Switch');
-          }}>
-            <i className="fa fa-random"></i> Switch to
-            {" "}
-            <strong>{w.name}</strong>
+        {nonActiveWorkspaces.map(w => (
+          <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
+            <i className="fa fa-random"/> Switch to <strong>{w.name}</strong>
           </DropdownItem>
         ))}
-        <DropdownItem onClick={e => {
-          this._workspaceCreate();
-          trackEvent('Workspace', 'Create');
-        }}>
-          <i className="fa fa-blank"></i> New Workspace
+        <DropdownItem onClick={this._handleWorkspaceCreate}>
+          <i className="fa fa-blank"/> New Workspace
         </DropdownItem>
 
         <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
 
-        <DropdownItem onClick={e => showModal(SettingsModal, TAB_INDEX_EXPORT)}>
-          <i className="fa fa-share"></i> Import/Export
+        <DropdownItem onClick={this._handleShowExport}>
+          <i className="fa fa-share"/> Import/Export
         </DropdownItem>
-        <DropdownItem onClick={e => showModal(SettingsModal)}>
-          <i className="fa fa-cog"></i> Settings
+        <DropdownItem onClick={this._handleShowSettings}>
+          <i className="fa fa-cog"/> Preferences
           <DropdownHint char=","></DropdownHint>
         </DropdownItem>
         <DropdownItem buttonClass={Link} href="https://insomnia.rest/teams/" button={true}>
-          <i className="fa fa-users"></i> Insomnia for Teams
+          <i className="fa fa-users"/> Insomnia for Teams
         </DropdownItem>
       </Dropdown>
     )

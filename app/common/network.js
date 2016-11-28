@@ -6,7 +6,7 @@ import * as models from '../models';
 import * as querystring from './querystring';
 import {buildFromParams} from './querystring';
 import * as util from './misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FILE} from './constants';
+import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FILE} from './constants';
 import {jarFromCookies, cookiesFromJar, cookieHeaderValueForUri} from './cookies';
 import {setDefaultProtocol} from './misc';
 import {getRenderedRequest} from './render';
@@ -253,7 +253,7 @@ export async function send (requestId, environmentId) {
     // Failed to render. Must be the user's fault
     return await models.response.create({
       parentId: request._id,
-      statusCode: STATUS_CODE_PEBKAC,
+      statusCode: STATUS_CODE_RENDER_FAILED,
       error: e.message
     });
   }
