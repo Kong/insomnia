@@ -8,7 +8,7 @@ import {showModal} from '../modals';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestGroupActionsDropdown extends Component {
-  async _promptUpdateName () {
+  _handleRename = async () => {
     const {requestGroup} = this.props;
 
     const name = await showModal(PromptModal, {
@@ -19,23 +19,31 @@ class RequestGroupActionsDropdown extends Component {
     models.requestGroup.update(requestGroup, {name});
 
     trackEvent('Folder', 'Rename', 'Folder Action');
-  }
+  };
 
-  async _requestCreate () {
+  _handleRequestCreate = async () => {
     this.props.handleCreateRequest(this.props.requestGroup._id);
     trackEvent('Request', 'Create', 'Folder Action');
-  }
+  };
 
-  _requestGroupDuplicate () {
-    const {requestGroup} = this.props;
-    models.requestGroup.duplicate(requestGroup);
+  _handleRequestGroupDuplicate = () => {
+    this.props.handleDuplicateRequestGroup(this.props.requestGroup);
     trackEvent('Folder', 'Duplicate', 'Folder Action');
-  }
+  };
 
-  async _requestGroupCreate () {
+  _handleRequestGroupCreate = async () => {
     this.props.handleCreateRequestGroup(this.props.requestGroup._id);
     trackEvent('Folder', 'Create', 'Folder Action');
-  }
+  };
+
+  _handleDeleteFolder = () => {
+    models.requestGroup.remove(this.props.requestGroup);
+    trackEvent('Folder', 'Delete', 'Folder Action');
+  };
+
+  _handleEditEnvironment = () => {
+    showModal(EnvironmentEditModal, this.props.requestGroup);
+  };
 
   render () {
     const {requestGroup, ...other} = this.props;
@@ -45,28 +53,24 @@ class RequestGroupActionsDropdown extends Component {
         <DropdownButton>
           <i className="fa fa-caret-down"></i>
         </DropdownButton>
-        <DropdownItem onClick={e => this._requestCreate()}>
+        <DropdownItem onClick={this._handleRequestCreate}>
           <i className="fa fa-plus-circle"></i> New Request
           <DropdownHint char="N"></DropdownHint>
         </DropdownItem>
-        <DropdownItem onClick={e => this._requestGroupCreate()}>
+        <DropdownItem onClick={this._handleRequestGroupCreate}>
           <i className="fa fa-folder"></i> New Folder
         </DropdownItem>
         <DropdownDivider />
-        <DropdownItem onClick={e => this._requestGroupDuplicate()}>
+        <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy"></i> Duplicate
         </DropdownItem>
-        <DropdownItem onClick={e => this._promptUpdateName()}>
+        <DropdownItem onClick={this._handleRename}>
           <i className="fa fa-edit"></i> Rename
         </DropdownItem>
-        <DropdownItem
-          onClick={e => showModal(EnvironmentEditModal, requestGroup)}>
+        <DropdownItem onClick={this._handleEditEnvironment}>
           <i className="fa fa-code"></i> Environment
         </DropdownItem>
-        <DropdownItem buttonClass={PromptButton} addIcon={true} onClick={() => {
-          models.requestGroup.remove(requestGroup);
-          trackEvent('Folder', 'Delete', 'Folder Action');
-        }}>
+        <DropdownItem buttonClass={PromptButton} addIcon={true} onClick={this._handleDeleteFolder}>
           <i className="fa fa-trash-o"></i> Delete
         </DropdownItem>
       </Dropdown>
@@ -78,6 +82,7 @@ RequestGroupActionsDropdown.propTypes = {
   workspace: PropTypes.object.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
+  handleDuplicateRequestGroup: PropTypes.func.isRequired,
 
   // Optional
   requestGroup: PropTypes.object

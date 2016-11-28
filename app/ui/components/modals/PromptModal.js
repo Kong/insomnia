@@ -10,17 +10,20 @@ class PromptModal extends Component {
     defaultValue: '',
     submitName: 'Not Set',
     selectText: false,
-    hint: null
+    hint: null,
+    inputType: 'text'
   };
 
-  _onSubmit (e) {
+  _handleSubmit = e => {
     e.preventDefault();
 
     this._onSubmitCallback && this._onSubmitCallback(this._input.value);
     this.modal.hide();
-  }
+  };
 
-  show ({headerName, defaultValue, submitName, selectText, hint}) {
+  _handleCancel = e => this.modal.hide();
+
+  show ({headerName, defaultValue, submitName, selectText, hint, inputType, placeholder, label}) {
     this.modal.show();
 
     this._input.value = defaultValue || '';
@@ -39,33 +42,48 @@ class PromptModal extends Component {
         defaultValue,
         submitName,
         selectText,
-        hint
+        placeholder,
+        hint,
+        inputType,
+        label,
       })
     });
   }
 
   render () {
     const {extraProps} = this.props;
-    const {submitName, headerName, hint} = this.state;
+    const {submitName, headerName, hint, inputType, placeholder, label} = this.state;
 
     return (
       <Modal ref={m => this.modal = m} {...extraProps}>
         <ModalHeader>{headerName}</ModalHeader>
         <ModalBody className="wide">
-          <form onSubmit={e => this._onSubmit(e)} className="wide pad">
+          <form onSubmit={this._handleSubmit} className="wide pad">
             <div className="form-control form-control--outlined form-control--wide">
-              <input ref={n => this._input = n} type="text"/>
+              {label ? (
+                <label htmlFor="prompt-input" className="label--small">
+                  {label}
+                </label>
+              ) : null}
+              <input
+                ref={n => this._input = n}
+                id="prompt-input"
+                type={inputType === 'decimal' ? 'number' : (inputType || 'text')}
+                step={inputType === 'decimal' ? '0.1' : null}
+                min={inputType === 'decimal' ? '0.5' : null}
+                placeholder={placeholder || ''}
+              />
             </div>
           </form>
         </ModalBody>
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
           <div>
-            <button className="btn" onClick={() => this.modal.hide()}>
+            <button className="btn" onClick={this._handleCancel}>
               Cancel
             </button>
-            <button className="btn" onClick={this._onSubmit.bind(this)}>
-              {submitName || 'Save'}
+            <button className="btn" onClick={this._handleSubmit}>
+              {submitName || 'Submit'}
             </button>
           </div>
         </ModalFooter>

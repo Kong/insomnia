@@ -38,6 +38,8 @@ class SidebarChildren extends PureComponent {
       handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
+      handleDuplicateRequestGroup,
+      handleGenerateCode,
       moveRequest,
       moveRequestGroup,
       handleActivateRequest,
@@ -60,9 +62,10 @@ class SidebarChildren extends PureComponent {
             key={child.doc._id}
             moveRequest={moveRequest}
             handleActivateRequest={handleActivateRequest}
+            handleDuplicateRequest={handleDuplicateRequest}
+            handleGenerateCode={handleGenerateCode}
             requestCreate={handleCreateRequest}
             isActive={child.doc._id === activeRequestId}
-            handleDuplicateRequest={handleDuplicateRequest}
             request={child.doc}
             workspace={workspace}
           />
@@ -102,6 +105,7 @@ class SidebarChildren extends PureComponent {
           moveRequestGroup={moveRequestGroup}
           moveRequest={moveRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
@@ -132,6 +136,8 @@ SidebarChildren.propTypes = {
   handleCreateRequestGroup: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleDuplicateRequest: PropTypes.func.isRequired,
+  handleDuplicateRequestGroup: PropTypes.func.isRequired,
+  handleGenerateCode: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
   children: PropTypes.arrayOf(PropTypes.object).isRequired,

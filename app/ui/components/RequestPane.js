@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import {parse as urlParse} from 'url';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import KeyValueEditor from './base/KeyValueEditor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
@@ -10,6 +11,7 @@ import RequestUrlBar from './RequestUrlBar.js';
 import {MOD_SYM, getContentTypeName} from '../../common/constants';
 import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
+import * as querystring from '../../common/querystring';
 
 class RequestPane extends PureComponent {
   _handleHidePasswords = () => this.props.updateSettingsShowPasswords(false);
@@ -31,6 +33,27 @@ class RequestPane extends PureComponent {
     trackEvent('Request Pane', 'CTA', 'New Request');
   };
 
+  _handleImportQueryFromUrl = e => {
+    const {request} = this.props;
+
+    let parsed;
+    try {
+      parsed = urlParse(request.url);
+    } catch (e) {
+      console.warn('Failed to parse url to import querystring');
+      return;
+    }
+
+    // Remove the search string (?foo=bar&...) from the Url
+    const url = request.url.replace(parsed.search, '');
+    const parameters = [
+      ...request.parameters,
+      ...querystring.deconstructToParams(parsed.query),
+    ];
+
+    this.props.updateRequest({url, parameters});
+  };
+
   _trackQueryToggle = pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
   _trackQueryCreate = () => trackEvent('Query', 'Create');
   _trackQueryDelete = () => trackEvent('Query', 'Delete');
@@ -47,7 +70,9 @@ class RequestPane extends PureComponent {
       editorFontSize,
       editorLineWrapping,
       handleSend,
+      forceRefreshCounter,
       useBulkHeaderEditor,
+      handleGenerateCode,
       updateRequestUrl,
       updateRequestMethod,
       updateRequestBody,
@@ -110,15 +135,19 @@ class RequestPane extends PureComponent {
     const numParameters = request.parameters.filter(p => !p.disabled).length;
     const numHeaders = request.headers.filter(h => !h.disabled).length;
     const hasAuth = !request.authentication.disabled && request.authentication.username;
+    const urlHasQueryParameters = request.url.indexOf('?') >= 0;
+
+    const uniqueKey = `${forceRefreshCounter}::${request._id}`;
 
     return (
       <section className="pane request-pane">
         <header className="pane__header">
           <RequestUrlBar
-            key={request._id}
+            key={uniqueKey}
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={debounce(updateRequestUrl)}
+            handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
             url={request.url}
           />
@@ -156,7 +185,7 @@ class RequestPane extends PureComponent {
           <TabPanel className="editor-wrapper">
             <BodyEditor
               handleUpdateRequestMimeType={updateRequestMimeType}
-              key={request._id}
+              key={uniqueKey}
               request={request}
               onChange={updateRequestBody}
               fontSize={editorFontSize}
@@ -166,7 +195,7 @@ class RequestPane extends PureComponent {
           <TabPanel className="scrollable-container">
             <div className="scrollable">
               <AuthEditor
-                key={request._id}
+                key={uniqueKey}
                 showPasswords={showPasswords}
                 authentication={request.authentication}
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
@@ -185,35 +214,46 @@ class RequestPane extends PureComponent {
               </div>
             </div>
           </TabPanel>
-          <TabPanel className="scrollable-container">
-            <div className="scrollable">
-              <div className="pad no-pad-bottom">
-                <label className="label--small">
-                  Url Preview
-                </label>
-                <code className="txt-sm block">
-                  <RenderedQueryString
-                    request={request}
-                    environmentId={environmentId}
-                    placeholder="http://awesome-api.com?name=Gregory"
-                  />
-                </code>
+          <TabPanel className="query-editor">
+            <div className="pad no-pad-bottom">
+              <label className="label--small">
+                Url Preview
+              </label>
+              <code className="txt-sm block">
+                <RenderedQueryString
+                  request={request}
+                  environmentId={environmentId}
+                  placeholder="http://awesome-api.com?name=Gregory"
+                />
+              </code>
+            </div>
+            <div className="scrollable-container">
+              <div className="scrollable">
+                <KeyValueEditor
+                  key={uniqueKey}
+                  namePlaceholder="name"
+                  valuePlaceholder="value"
+                  onToggleDisable={this._trackQueryToggle}
+                  onCreate={this._trackQueryCreate}
+                  onDelete={this._trackQueryDelete}
+                  pairs={request.parameters}
+                  onChange={updateRequestParameters}
+                />
               </div>
-              <KeyValueEditor
-                key={request._id}
-                namePlaceholder="name"
-                valuePlaceholder="value"
-                onToggleDisable={this._trackQueryToggle}
-                onCreate={this._trackQueryCreate}
-                onDelete={this._trackQueryDelete}
-                pairs={request.parameters}
-                onChange={updateRequestParameters}
-              />
+            </div>
+
+            <div className="pad-right text-right">
+              <button className="margin-top-sm btn btn--clicky"
+                      disabled={!urlHasQueryParameters}
+                      title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
+                      onClick={this._handleImportQueryFromUrl}>
+                Import from Url
+              </button>
             </div>
           </TabPanel>
           <TabPanel className="header-editor">
             <RequestHeadersEditor
-              key={request._id}
+              key={uniqueKey}
               headers={request.headers}
               onChange={updateRequestHeaders}
               bulk={useBulkHeaderEditor}
@@ -236,6 +276,8 @@ RequestPane.propTypes = {
   // Functions
   handleSend: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
+  handleGenerateCode: PropTypes.func.isRequired,
+  updateRequest: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,
@@ -253,6 +295,7 @@ RequestPane.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   environmentId: PropTypes.string.isRequired,
+  forceRefreshCounter: PropTypes.number.isRequired,
 
   // Optional
   request: PropTypes.object,

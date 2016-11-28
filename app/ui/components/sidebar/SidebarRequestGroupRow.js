@@ -34,6 +34,7 @@ class SidebarRequestGroupRow extends PureComponent {
       isActive,
       handleCreateRequest,
       handleCreateRequestGroup,
+      handleDuplicateRequestGroup,
       isDragging,
       isDraggingOver,
       workspace,
@@ -67,6 +68,7 @@ class SidebarRequestGroupRow extends PureComponent {
             <RequestGroupActionsDropdown
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
+              handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
               right={true}
@@ -78,6 +80,8 @@ class SidebarRequestGroupRow extends PureComponent {
           {children.length > 0 ? children : (
             <SidebarRequestRow
               handleActivateRequest={this._nullFunction}
+              handleDuplicateRequest={this._nullFunction}
+              handleGenerateCode={this._nullFunction}
               moveRequest={moveRequest}
               isActive={false}
               request={null}
@@ -95,6 +99,7 @@ class SidebarRequestGroupRow extends PureComponent {
 SidebarRequestGroupRow.propTypes = {
   // Functions
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
+  handleDuplicateRequestGroup: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
   handleActivateRequest: PropTypes.func.isRequired,

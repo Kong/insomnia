@@ -26,7 +26,7 @@ class RequestCreateModal extends Component {
     }
 
     this.state = {
-      selectedContentType: contentType || null,
+      selectedContentType: typeof contentType === 'string' ? contentType : null,
       selectedMethod: method || METHOD_GET,
       parentId: null,
     };
@@ -44,7 +44,7 @@ class RequestCreateModal extends Component {
 
     const finalRequest = await models.request.updateMimeType(
       request,
-      selectedContentType,
+      this._shouldNotHaveBody() ? null : selectedContentType,
       true,
     );
 
@@ -73,6 +73,15 @@ class RequestCreateModal extends Component {
 
   _handleHide = () => this.hide();
 
+  _shouldNotHaveBody () {
+    const {selectedMethod} = this.state;
+    return (
+      selectedMethod === METHOD_GET ||
+      selectedMethod === METHOD_HEAD ||
+      selectedMethod === METHOD_OPTIONS
+    );
+  }
+
   hide () {
     this.modal.hide();
   }
@@ -94,10 +103,6 @@ class RequestCreateModal extends Component {
 
   render () {
     const {selectedContentType, selectedMethod} = this.state;
-    const shouldNotHaveBody =
-      selectedMethod === METHOD_GET ||
-      selectedMethod === METHOD_HEAD ||
-      selectedMethod === METHOD_OPTIONS;
 
     return (
       <Modal ref={m => this.modal = m}>
@@ -115,10 +120,11 @@ class RequestCreateModal extends Component {
                 onChange={this._handleChangeSelectedMethod}
               />
             </div>
-            {!shouldNotHaveBody ? (
+            {!this._shouldNotHaveBody() ? (
               <div className="pad-left-sm">
                 <ContentTypeDropdown className="btn btn--clicky no-wrap"
                                      right={true}
+                                     contentType={selectedContentType}
                                      onChange={this._handleChangeSelectedContentType}>
                   {getContentTypeName(selectedContentType)}
                   {" "}

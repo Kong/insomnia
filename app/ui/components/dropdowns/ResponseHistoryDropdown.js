@@ -48,6 +48,7 @@ class ResponseHistoryDropdown extends Component {
                     value={i === 0 ? null : response._id}
                     onClick={handleSetActiveResponse}>
         {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
+        {" "}
         <StatusTag statusCode={response.statusCode}
                    statusMessage={response.statusMessage || 'Error'}
                    small={true}/>

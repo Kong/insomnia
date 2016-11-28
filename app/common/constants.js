@@ -135,7 +135,7 @@ export const contentTypesMap = {
  */
 export function getContentTypeName (contentType) {
   if (typeof contentType !== 'string') {
-    return 'Body';
+    return 'No Body';
   } else {
     return contentTypesMap[contentType] || '';
   }

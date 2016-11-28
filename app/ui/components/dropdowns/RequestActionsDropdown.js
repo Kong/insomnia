@@ -16,8 +16,7 @@ class RequestActionsDropdown extends Component {
   };
 
   _handleGenerateCode = () => {
-    const {request} = this.props;
-    showModal(GenerateCodeModal, request);
+    this.props.handleGenerateCode(this.props.request);
     trackEvent('Request', 'Generate Code', 'Request Action');
   };
 
@@ -69,6 +68,7 @@ class RequestActionsDropdown extends Component {
 
 RequestActionsDropdown.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
+  handleGenerateCode: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
 };
 

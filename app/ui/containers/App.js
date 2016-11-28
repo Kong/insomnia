@@ -25,6 +25,7 @@ import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
 import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/RequestCreateModal';
+import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 
 
 class App extends Component {
@@ -115,7 +116,13 @@ class App extends Component {
     handleSetActiveRequest(activeWorkspace._id, request._id);
   };
 
-  _requestDuplicate = async (request) => {
+  _requestGroupDuplicate = async requestGroup => {
+    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
+    // Default duplicated groups to collapsed state
+    this.props.handleSetRequestGroupCollapsed(newRequestGroup._id, true);
+  };
+
+  _requestDuplicate = async request => {
     const {activeWorkspace, handleSetActiveRequest} = this.props;
 
     if (!request) {
@@ -126,11 +133,15 @@ class App extends Component {
     handleSetActiveRequest(activeWorkspace._id, newRequest._id);
   };
 
+  _handleGenerateCode = () => {
+    showModal(GenerateCodeModal, this.props.activeRequest);
+  };
+
   _requestCreateForWorkspace = () => {
     this._requestCreate(this.props.activeWorkspace._id);
   };
 
-  _handleActivateRequest = async (requestId) => {
+  _handleActivateRequest = async requestId => {
     const {activeWorkspace, handleSetActiveRequest} = this.props;
     handleSetActiveRequest(activeWorkspace._id, requestId);
   };
@@ -301,7 +312,9 @@ class App extends Component {
           handleResetDragPane={this._resetDragPane}
           handleCreateRequest={this._requestCreate}
           handleDuplicateRequest={this._requestDuplicate}
+          handleDuplicateRequestGroup={this._requestGroupDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}
+          handleGenerateCode={this._handleGenerateCode}
           {...this.props}
         />
         <Toast/>
@@ -364,7 +377,7 @@ function mapStateToProps (state, props) {
   const responseFilter = responseFilters[activeRequestId] || '';
 
   // Response Stuff
-  const activeResponseId = activeResponseIds[activeRequestId] || '';
+  const activeResponseId = (activeResponseIds || {})[activeRequestId] || '';
 
   // Environment stuff
   const activeEnvironmentId = activeEnvironmentIds[activeWorkspaceId];

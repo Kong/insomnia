@@ -169,7 +169,7 @@ class ResponsePane extends Component {
                 statusCode={response.statusCode}
                 statusMessage={response.statusMessage || null}
               />
-              <TimeTag milliseconds={response.elapsedTime} startTime={response.created}/>
+              <TimeTag milliseconds={response.elapsedTime}/>
               <SizeTag bytes={response.bytesRead}/>
             </div>
             <ResponseHistoryDropdown

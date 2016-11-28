@@ -31,6 +31,11 @@ class Wrapper extends Component {
   state = {forceRefreshRequestPaneCounter: Date.now()};
 
   // Request updaters
+  _handleUpdateRequest = async patch => {
+    await rUpdate(this.props.activeRequest, patch);
+    this.forceRequestPaneRefresh();
+  };
+
   _handleUpdateRequestBody = body => rUpdate(this.props.activeRequest, {body});
   _handleUpdateRequestMethod = method => rUpdate(this.props.activeRequest, {method});
   _handleUpdateRequestParameters = parameters => rUpdate(this.props.activeRequest, {parameters});
@@ -118,12 +123,12 @@ class Wrapper extends Component {
       activeResponseId,
       activeWorkspace,
       environments,
-      forceRefreshCounter,
       handleActivateRequest,
       handleCreateRequest,
       handleCreateRequestForWorkspace,
       handleCreateRequestGroup,
       handleDuplicateRequest,
+      handleDuplicateRequestGroup,
       handleExportFile,
       handleMoveRequest,
       handleMoveRequestGroup,
@@ -137,6 +142,7 @@ class Wrapper extends Component {
       handleSetSidebarRef,
       handleStartDragPane,
       handleStartDragSidebar,
+      handleGenerateCode,
       isLoading,
       loadStartTime,
       paneWidth,
@@ -156,7 +162,6 @@ class Wrapper extends Component {
 
     return (
       <div id="wrapper"
-           key={`wrapper::${forceRefreshCounter}`}
            className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
            style={{gridTemplateColumns: gridTemplateColumns}}>
 
@@ -170,6 +175,8 @@ class Wrapper extends Component {
           handleExportFile={handleExportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
           handleDuplicateRequest={handleDuplicateRequest}
+          handleGenerateCode={handleGenerateCode}
+          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleSetActiveEnvironment={handleSetActiveEnvironment}
           moveRequest={handleMoveRequest}
           moveRequestGroup={handleMoveRequestGroup}
@@ -196,7 +203,6 @@ class Wrapper extends Component {
         </div>
 
         <RequestPane
-          key={this.state.forceRefreshRequestPaneCounter}
           ref={handleSetRequestPaneRef}
           handleImportFile={this._handleImportFile}
           request={activeRequest}
@@ -206,6 +212,8 @@ class Wrapper extends Component {
           editorLineWrapping={settings.editorLineWrapping}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           handleCreateRequest={handleCreateRequestForWorkspace}
+          handleGenerateCode={handleGenerateCode}
+          updateRequest={this._handleUpdateRequest}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
           updateRequestMethod={this._handleUpdateRequestMethod}
@@ -215,6 +223,7 @@ class Wrapper extends Component {
           updateRequestMimeType={this._handleUpdateRequestMimeType}
           updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
           updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+          forceRefreshCounter={this.state.forceRefreshRequestPaneCounter}
           handleSend={this._handleSendRequestWithActiveEnvironment}
         />
 
@@ -294,7 +303,9 @@ Wrapper.propTypes = {
   handleMoveRequestGroup: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleDuplicateRequest: PropTypes.func.isRequired,
+  handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
+  handleGenerateCode: PropTypes.func.isRequired,
   handleCreateRequestForWorkspace: PropTypes.func.isRequired,
   handleSetRequestPaneRef: PropTypes.func.isRequired,
   handleSetResponsePaneRef: PropTypes.func.isRequired,

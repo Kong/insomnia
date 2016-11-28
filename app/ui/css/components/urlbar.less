@@ -30,9 +30,11 @@
     min-width: 0;
   }
 
-  form button {
+  .urlbar__send-btn {
     padding-right: @padding-md;
     padding-left: @padding-md;
+    min-width: 5em;
+    text-align: center;
   }
 
   .form-control {
@@ -47,7 +49,7 @@
     flex-direction: row;
   }
 
-  form button,
+  .urlbar__send-btn,
   & > .dropdown {
     height: 100%;
   }
@@ -56,7 +58,7 @@
     background-color: @hl-xs;
   }
 
-  .dropdown > button {
+  & > .dropdown > button {
     padding-left: @padding-md;
     padding-right: @padding-md / 2;
   }

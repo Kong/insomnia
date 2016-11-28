@@ -7,8 +7,18 @@ import * as misc from '../../../../common/misc';
 import {trackEvent} from '../../../../analytics/index';
 
 class FileEditor extends Component {
+  _handleResetFile = () => {
+    this.props.onChange('');
+    trackEvent('File Editor', 'Reset');
+  };
+
+  _handleChooseFile = path => {
+    this.props.onChange(path);
+    trackEvent('File Editor', 'Choose');
+  };
+
   render () {
-    const {path, onChange} = this.props;
+    const {path} = this.props;
 
     // Replace home path with ~/ to make the path shorter
     const homeDirectory = electron.remote.app.getPath('home');
@@ -43,20 +53,14 @@ class FileEditor extends Component {
         <div>
           <PromptButton className="btn btn--super-compact"
                         disabled={!path}
-                        onClick={e => {
-                          onChange('');
-                          trackEvent('File Editor', 'Reset')
-                        }}>
+                        onClick={this._handleResetFile}>
             Reset File
           </PromptButton>
           &nbsp;&nbsp;
           <FileInputButton
             path={path}
             className="btn btn--clicky"
-            onChange={path => {
-              onChange(path);
-              trackEvent('File Editor', 'Choose')
-            }}
+            onChange={this._handleChooseFile}
           />
         </div>
       </div>

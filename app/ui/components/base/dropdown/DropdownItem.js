@@ -26,6 +26,7 @@ class DropdownItem extends PureComponent {
       children,
       className,
       onClick, // Don't want this in ...props
+      stayOpenAfterClick, // Don't want this in ...props
       ...props
     } = this.props;
 
