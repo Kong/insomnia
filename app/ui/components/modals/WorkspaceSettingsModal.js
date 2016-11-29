@@ -22,7 +22,6 @@ class WorkspaceSettingsModal extends Component {
 
   _workspaceUpdate = patch => models.workspace.update(this.props.workspace, patch);
 
-  _handleClose = () => this.hide();
   _handleSetModalRef = n => this.modal = n;
   _handleRemoveWorkspace = () => {
     this.props.handleRemoveWorkspace();
@@ -36,6 +35,7 @@ class WorkspaceSettingsModal extends Component {
   _handleRename = name => this._workspaceUpdate({name});
   _handleDescriptionChange = description => this._workspaceUpdate({description});
 
+  _handleCreateHostChange = e => this.setState({host: e.target.value});
   _handleCreatePfxChange = pfxPath => this.setState({pfxPath});
   _handleCreateCrtChange = crtPath => this.setState({crtPath});
   _handleCreateKeyChange = keyPath => this.setState({keyPath});
@@ -193,7 +193,7 @@ class WorkspaceSettingsModal extends Component {
                           <i className="fa fa-remove"/>
                         }
                       </span>
-                      <span className="pad-right no-wrap">
+                      <span className="pad-right no-wrap" title={certificate.passphrase || null}>
                         <strong>Passphrase:</strong>
                         {" "}
                         {certificate.passphrase ?
@@ -202,7 +202,9 @@ class WorkspaceSettingsModal extends Component {
                         }
                       </span>
                       <span className="pad-right">
-                        <strong>Host:</strong> {certificate.host}
+                        <strong>Host:</strong>
+                        {" "}
+                        <span className="monospace selectable">{certificate.host}</span>
                       </span>
                     </div>
                     <div className="no-wrap">
@@ -315,7 +317,7 @@ class WorkspaceSettingsModal extends Component {
   render () {
     const {workspace} = this.props;
     return (
-      <Modal ref={this._handleSetModalRef} tall={true}>
+      <Modal ref={this._handleSetModalRef} tall={true} freshState={true}>
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
         {/*<ModalFooter>*/}

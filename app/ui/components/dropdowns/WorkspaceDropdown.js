@@ -66,7 +66,7 @@ class WorkspaceDropdown extends Component {
         </DropdownButton>
         <DropdownDivider name={activeWorkspace.name}/>
         <DropdownItem onClick={this._handleShowWorkspaceSettings}>
-          <i className="fa fa-wrench"/> Configure Workspace
+          <i className="fa fa-wrench"/> Workspace Settings
           <DropdownHint char="&#8679;,"/>
         </DropdownItem>
 

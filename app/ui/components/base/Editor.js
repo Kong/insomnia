@@ -109,7 +109,7 @@ class Editor extends Component {
     return this.codeMirror.getValue();
   }
 
-  _initEditor (textarea) {
+  _handleInitTextarea = textarea => {
     if (!textarea) {
       // Not mounted
       return;
@@ -140,7 +140,7 @@ class Editor extends Component {
     }, 50);
 
     this._codemirrorSetOptions();
-  }
+  };
 
   _isJSON (mode) {
     if (!mode) {
@@ -427,7 +427,7 @@ class Editor extends Component {
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
         <div className="editor__container">
           <textarea
-            ref={n => this._initEditor(n)}
+            ref={this._handleInitTextarea}
             defaultValue=" "
             readOnly={readOnly}
             autoComplete="off"

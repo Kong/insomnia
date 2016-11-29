@@ -4,7 +4,15 @@ import * as misc from '../../../common/misc';
 class Editable extends Component {
   state = {editing: false};
 
-  _handleEditStart () {
+  _handleSetInputRef = n => this._input = n;
+
+  _handleSingleClickEditStart = () => {
+    if (this.props.singleClick) {
+      this._handleEditStart();
+    }
+  };
+
+  _handleEditStart = () => {
     this.setState({editing: true});
 
     setTimeout(() => {
@@ -15,9 +23,9 @@ class Editable extends Component {
     if (this.props.onEditStart) {
       this.props.onEditStart();
     }
-  }
+  };
 
-  async _handleEditEnd () {
+  _handleEditEnd = async () => {
     const value = this._input.value.trim();
 
     if (!value) {
@@ -31,9 +39,9 @@ class Editable extends Component {
     // It should give the UI enough time to redraw the new value.
     await misc.delay(100);
     this.setState({editing: false});
-  }
+  };
 
-  _handleEditKeyDown (e) {
+  _handleEditKeyDown = e => {
     if (e.keyCode === 13) {
       // Pressed Enter
       this._handleEditEnd();
@@ -43,7 +51,7 @@ class Editable extends Component {
       // TODO: Make escape blur without saving
       this._input && this._input.blur();
     }
-  }
+  };
 
   render () {
     const {value, singleClick, onEditStart, ...extra} = this.props;
@@ -54,18 +62,19 @@ class Editable extends Component {
         <input
           className="editable"
           type="text"
-          ref={n => this._input = n}
+          ref={this._handleSetInputRef}
           defaultValue={value}
-          onKeyDown={e => this._handleEditKeyDown(e)}
-          onBlur={e => this._handleEditEnd()}
+          onKeyDown={this._handleEditKeyDown}
+          onBlur={this._handleEditEnd}
           {...extra}
         />
       )
     } else {
       return (
         <div className="editable"
-             onClick={e => singleClick && this._handleEditStart()}
-             onDoubleClick={e => this._handleEditStart()} {...extra}>
+             onClick={this._handleSingleClickEditStart}
+             onDoubleClick={this._handleEditStart}
+             {...extra}>
           {value}
         </div>
       )

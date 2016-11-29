@@ -7,9 +7,15 @@ import {isMac} from '../../../common/constants';
 let globalZIndex = 1000;
 
 class Modal extends Component {
-  state = {open: false, zIndex: globalZIndex};
+  state = {
+    open: false,
+    forceRefreshCounter: 0,
+    zIndex: globalZIndex
+  };
 
-  _handleClick (e) {
+  _handleSetNodeRef = n => this._node = n;
+
+  _handleClick = e => {
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
@@ -28,14 +34,17 @@ class Modal extends Component {
     if (shouldHide) {
       this.hide();
     }
-  }
-
-  isShown () {
-    return this.state.open;
-  }
+  };
 
   show () {
-    this.setState({open: true, zIndex: globalZIndex++});
+    const {freshState} = this.props;
+    const {forceRefreshCounter} = this.state;
+
+    this.setState({
+      open: true,
+      zIndex: globalZIndex++,
+      forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
+    });
 
     if (this.props.dontFocus) {
       return;
@@ -92,7 +101,7 @@ class Modal extends Component {
 
   render () {
     const {tall, top, wide, className} = this.props;
-    const {open, zIndex} = this.state;
+    const {open, zIndex, forceRefreshCounter} = this.state;
 
     const classes = classnames(
       'modal',
@@ -104,10 +113,12 @@ class Modal extends Component {
     );
 
     return (
-      <div ref={n => this._node = n} tabIndex="-1" className={classes}
+      <div ref={this._handleSetNodeRef}
+           tabIndex="-1"
+           className={classes}
            style={{zIndex: zIndex}}
-           onClick={this._handleClick.bind(this)}>
-        <div className="modal__content">
+           onClick={this._handleClick}>
+        <div className="modal__content" key={forceRefreshCounter}>
           <div className="modal__backdrop" onClick={() => this.hide()}></div>
           {this.props.children}
         </div>
@@ -121,7 +132,8 @@ Modal.propTypes = {
   top: PropTypes.bool,
   wide: PropTypes.bool,
   dontFocus: PropTypes.bool,
-  closeOnKeyCodes: PropTypes.array
+  closeOnKeyCodes: PropTypes.array,
+  freshState: PropTypes.bool,
 };
 
 export default Modal;
