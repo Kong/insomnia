@@ -39,7 +39,7 @@ class PromptButton extends Component {
     }, 2000);
   }
 
-  _handleClick (e) {
+  _handleClick = e => {
     const {state} = this.state;
     if (state === STATE_ASK) {
       this._confirm(e)
@@ -48,7 +48,7 @@ class PromptButton extends Component {
     } else {
       // Do nothing
     }
-  }
+  };
 
   componentWillUnmount () {
     clearTimeout(this._triggerTimeout);
@@ -78,7 +78,7 @@ class PromptButton extends Component {
     }
 
     return (
-      <button onClick={this._handleClick.bind(this)} {...other}>
+      <button onClick={this._handleClick} {...other}>
         {innerMsg}
       </button>
     )

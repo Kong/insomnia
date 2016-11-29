@@ -3,6 +3,19 @@ import KeyValueEditor from '../../base/KeyValueEditor';
 import {trackEvent} from '../../../../analytics/index';
 
 class FormEditor extends Component {
+  _handleTrackToggle = pair => {
+    trackEvent(
+      'Form Editor',
+      `Toggle ${pair.type || 'text'}`,
+      pair.disabled ? 'Disable' : 'Enable'
+    );
+  };
+
+  _handleTrackChangeType = type => trackEvent('Form Editor', 'Change Type', type);
+  _handleTrackChooseFile = () => trackEvent('Form Editor', 'Choose File');
+  _handleTrackCreate = () => trackEvent('Form Editor', 'Create');
+  _handleTrackDelete = () => trackEvent('Form Editor', 'Delete');
+
   render () {
     const {parameters, onChange} = this.props;
 
@@ -12,11 +25,11 @@ class FormEditor extends Component {
           <KeyValueEditor
             namePlaceholder="name"
             valuePlaceholder="value"
-            onToggleDisable={pair => trackEvent('Form Editor', `Toggle ${pair.type || 'text'}`, pair.disabled ? 'Disable' : 'Enable')}
-            onChangeType={type => trackEvent('Form Editor', 'Change Type', type)}
-            onChooseFile={() => trackEvent('Form Editor', 'Choose File')}
-            onCreate={() => trackEvent('Form Editor', 'Create')}
-            onDelete={() => trackEvent('Form Editor', 'Delete')}
+            onToggleDisable={this._handleTrackToggle}
+            onChangeType={this._handleTrackChangeType}
+            onChooseFile={this._handleTrackChooseFile}
+            onCreate={this._handleTrackCreate}
+            onDelete={this._handleTrackDelete}
             onChange={onChange}
             pairs={parameters}
             multipart={true}

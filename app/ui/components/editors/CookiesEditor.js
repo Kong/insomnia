@@ -6,12 +6,7 @@ import {cookieToString} from '../../../common/cookies';
 
 
 class CookiesEditor extends Component {
-  _handleCookieUpdate (cookie, cookieStr) {
-    const newCookie = Cookie.parse(cookieStr);
-    this.props.onCookieUpdate(cookie, newCookie);
-  }
-
-  _handleCookieAdd () {
+  _handleCookieAdd = () => {
     const newCookie = new Cookie({
       key: 'foo',
       value: 'bar',
@@ -20,6 +15,11 @@ class CookiesEditor extends Component {
     });
 
     this.props.onCookieAdd(newCookie);
+  };
+
+  _handleCookieUpdate (cookie, cookieStr) {
+    const newCookie = Cookie.parse(cookieStr);
+    this.props.onCookieUpdate(cookie, newCookie);
   }
 
   _handleDeleteCookie (cookie) {
@@ -37,7 +37,7 @@ class CookiesEditor extends Component {
             <th style={{width: '90%'}}>Cookie</th>
             <th style={{width: '2rem'}} className="text-right">
               <button className="btn btn--super-compact"
-                      onClick={e => this._handleCookieAdd()}
+                      onClick={this._handleCookieAdd}
                       title="Add cookie">
                 <i className="fa fa-plus-circle"></i>
               </button>

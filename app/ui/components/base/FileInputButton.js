@@ -3,7 +3,7 @@ import {basename as pathBasename} from 'path';
 import {remote} from 'electron';
 
 class FileInputButton extends Component {
-  _handleChooseFile () {
+  _handleChooseFile = () => {
     const options = {
       title: 'Import File',
       buttonLabel: 'Import',
@@ -19,13 +19,13 @@ class FileInputButton extends Component {
       const path = paths[0];
       this.props.onChange(path);
     })
-  }
+  };
 
   render () {
     const {showFileName, path, name, ...extraProps} = this.props;
     const fileName = pathBasename(path);
     return (
-      <button type="button" onClick={e => this._handleChooseFile()} {...extraProps}>
+      <button type="button" onClick={this._handleChooseFile} {...extraProps}>
         {showFileName && fileName ? `${fileName}`: `Choose ${name || 'File'}`}
       </button>
     )

@@ -5,9 +5,13 @@ import Editor from '../base/Editor';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestHeadersEditor extends Component {
-  _handleBulkUpdate (headersString) {
+  _handleBulkUpdate = headersString => {
     this.props.onChange(this._getHeadersFromString(headersString));
-  }
+  };
+
+  _handleTrackToggle = pair => trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
+  _handleTrackCreate = () => trackEvent('Headers Editor', 'Create');
+  _handleTrackDelete = () => trackEvent('Headers Editor', 'Delete');
 
   _getHeadersFromString (headersString) {
     const headers = [];
@@ -63,7 +67,7 @@ class RequestHeadersEditor extends Component {
     return bulk ? (
       <div className="tall">
         <Editor
-          onChange={v => this._handleBulkUpdate(v)}
+          onChange={this._handleBulkUpdate}
           value={this._getHeadersString()}
         />
       </div>
@@ -74,9 +78,9 @@ class RequestHeadersEditor extends Component {
             namePlaceholder="My-Header"
             valuePlaceholder="Value"
             pairs={headers}
-            onToggleDisable={pair => trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable')}
-            onCreate={() => trackEvent('Headers Editor', 'Create')}
-            onDelete={() => trackEvent('Headers Editor', 'Delete')}
+            onToggleDisable={this._handleTrackToggle}
+            onCreate={this._handleTrackCreate}
+            onDelete={this._handleTrackDelete}
             onChange={onChange}
           />
         </div>

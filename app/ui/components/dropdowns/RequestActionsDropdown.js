@@ -1,7 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
-import GenerateCodeModal from '../modals/GenerateCodeModal';
 import PromptModal from '../modals/PromptModal';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';

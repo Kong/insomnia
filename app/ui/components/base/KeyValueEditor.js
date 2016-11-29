@@ -299,29 +299,21 @@ class KeyValueEditor extends Component {
               <input
                 type="text"
                 placeholder={this.props.namePlaceholder || 'Name'}
-                onKeyDown={this._handleAddFromName}
+                onFocus={this._handleAddFromName}
               />
             </div>
             <div className="form-control form-control--underlined form-control--wide faded">
               <input
                 type="text"
                 placeholder={this.props.valuePlaceholder || 'Value'}
-                onKeyDown={this._handleAddFromValue}
+                onFocus={this._handleAddFromValue}
               />
             </div>
 
             {multipart ? (
-              <Dropdown right={true}>
-                <DropdownButton className="tall faded">
-                  <i className="fa fa-caret-down"></i>
-                </DropdownButton>
-                <DropdownItem onClick={this._handleAddFromMultipart} value="text">
-                  Text
-                </DropdownItem>
-                <DropdownItem onClick={this._handleAddFromMultipart} value="file">
-                  File
-                </DropdownItem>
-              </Dropdown>
+              <button disabled={true} tabIndex="-1">
+                <i className="fa fa-blank"></i>
+              </button>
             ) : null}
 
             <button disabled={true} tabIndex="-1">

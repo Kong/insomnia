@@ -3,6 +3,12 @@ import KeyValueEditor from '../../base/KeyValueEditor';
 import {trackEvent} from '../../../../analytics/index';
 
 class UrlEncodedEditor extends Component {
+  _handleTrackToggle = pair => {
+    trackEvent('Url Encoded Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable')
+  };
+  _handleTrackCreate = () => trackEvent('Url Encoded Editor', 'Create');
+  _handleTrackDelete = () => trackEvent('Url Encoded Editor', 'Delete');
+
   render () {
     const {parameters, onChange} = this.props;
 
@@ -13,9 +19,9 @@ class UrlEncodedEditor extends Component {
             namePlaceholder="name"
             valuePlaceholder="value"
             onChange={onChange}
-            onToggleDisable={pair => trackEvent('Url Encoded Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable')}
-            onCreate={() => trackEvent('Url Encoded Editor', 'Create')}
-            onDelete={() => trackEvent('Url Encoded Editor', 'Delete')}
+            onToggleDisable={this._handleTrackToggle}
+            onCreate={this._handleTrackCreate}
+            onDelete={this._handleTrackDelete}
             pairs={parameters}
           />
         </div>

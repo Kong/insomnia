@@ -2,6 +2,12 @@ import React, {PropTypes, Component} from 'react';
 import Editor from '../base/Editor';
 
 class EnvironmentEditor extends Component {
+  _handleChange = () => {
+    this.props.didChange();
+  };
+
+  _setEditorRef = n => this._editor = n;
+
   getValue () {
     return JSON.parse(this._editor.getValue());
   }
@@ -15,17 +21,13 @@ class EnvironmentEditor extends Component {
     }
   }
 
-  _handleChange () {
-    this.props.didChange();
-  }
-
   render () {
     const {environment, ...props} = this.props;
 
     return (
       <Editor
-        ref={n => this._editor = n}
-        onChange={this._handleChange.bind(this)}
+        ref={this._setEditorRef}
+        onChange={this._handleChange}
         value={JSON.stringify(environment)}
         autoPrettify={true}
         mode="application/json"

@@ -6,14 +6,13 @@ import {getAppVersion} from '../../../common/constants';
 import {isDevelopment} from '../../../common/constants';
 
 class Link extends Component {
-  constructor (props) {
-    super(props);
-    this._boundHandleCollapse = this._handleClick.bind(this);
-  }
-
-  _handleClick (e) {
+  _handleClick = e => {
     e && e.preventDefault();
-    const {href} = this.props;
+    const {href, onClick} = this.props;
+
+    // Also call onClick that was passed to us if there was one
+    onClick && onClick(e);
+
     if (href.match(/^http/i)) {
       const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
       const qs = `utm_source=${appName}&utm_medium=App&utm_campaign=v${getAppVersion()}`;
@@ -24,26 +23,14 @@ class Link extends Component {
       shell.openExternal(href);
     }
 
-    trackEvent('Link', 'Click', href)
-  }
+    trackEvent('Link', 'Click', href);
+  };
 
   render () {
     const {onClick, button, href, children, ...other} = this.props;
-    return button ? (
-      <button onClick={e => {
-        onClick && onClick(e);
-        this._boundHandleCollapse(e);
-      }} {...other}>
-        {children}
-      </button>
-    ) : (
-      <a href={href} onClick={e => {
-        onClick && onClick(e);
-        this._boundHandleCollapse(e);
-      }} {...other}>
-        {children}
-      </a>
-    )
+    return button ?
+      <button onClick={this._handleClick} {...other}>{children}</button> :
+      <a href={href} onClick={this._handleClick} {...other}>{children}</a>
   }
 }
 
