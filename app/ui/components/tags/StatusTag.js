@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, {PropTypes} from 'react';
 import {
   RESPONSE_CODE_DESCRIPTIONS,
-  STATUS_CODE_PEBKAC
+  STATUS_CODE_RENDER_FAILED
 } from '../../../common/constants';
 
 const StatusTag = ({statusMessage, statusCode, small}) => {
@@ -30,9 +30,9 @@ const StatusTag = ({statusMessage, statusCode, small}) => {
     colorClass = 'bg-danger';
     backupStatusMessage = 'ERROR';
     statusCode = '';  // Don't print a 0 status code
-  } else if (statusCode === STATUS_CODE_PEBKAC.toString()) {
+  } else if (statusCode === STATUS_CODE_RENDER_FAILED.toString()) {
     colorClass = 'bg-danger';
-    backupStatusMessage = 'PEBKAC\xa0\xa0٩◔̯◔۶';
+    backupStatusMessage = 'Uh Oh!\xa0\xa0٩◔̯◔۶';
     statusCode = '';  // Don't print status code
   } else {
     colorClass = 'bg-danger';
@@ -40,13 +40,12 @@ const StatusTag = ({statusMessage, statusCode, small}) => {
   }
 
   const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
+  const message = typeof statusMessage === 'string' ? statusMessage : backupStatusMessage;
 
   return (
     <div className={classnames('tag', colorClass, {'tag--small': small})}
          title={description}>
-      <strong>{statusCode}</strong>
-      {" "}
-      {typeof statusMessage === 'string' ? statusMessage : backupStatusMessage}
+      <strong>{statusCode}</strong> {message.toUpperCase()}
     </div>
   );
 };

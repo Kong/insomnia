@@ -138,9 +138,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} top={true}
-             tall={true} {...this.props}>
-        <ModalHeader>Manage Environments (JSON Format)</ModalHeader>
+      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
+        <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll={true} className="env-modal">
           <div className="env-modal__sidebar">
             <li onClick={() => this._handleShowEnvironment(rootEnvironment)}
@@ -151,7 +150,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
               <button>{rootEnvironment ? rootEnvironment.name : ''}</button>
             </li>
             <div className="pad env-modal__sidebar-heading">
-              <h3>Sub Environments</h3>
+              <h3 className="no-margin">Sub Environments</h3>
               <button onClick={() => this._handleAddEnvironment()}>
                 <i className="fa fa-plus-circle"></i>
               </button>
@@ -165,8 +164,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
                 return (
                   <li key={environment._id} className={classes}>
-                    <button
-                      onClick={() => this._handleShowEnvironment(environment)}>
+                    <button onClick={() => this._handleShowEnvironment(environment)}>
                       <Editable
                         onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
                         value={environment.name}
@@ -190,7 +188,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 <PromptButton className="btn btn--clicky"
                               confirmMessage="Confirm"
                               onClick={() => this._handleDeleteEnvironment(activeEnvironment)}>
-                  <i className="fa fa-trash-o"></i>
+                  <i className="fa fa-trash-o"/> Delete
                 </PromptButton>
               ) : null}
             </div>

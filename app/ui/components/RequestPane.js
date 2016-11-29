@@ -70,6 +70,7 @@ class RequestPane extends PureComponent {
       editorFontSize,
       editorLineWrapping,
       handleSend,
+      workspace,
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,
@@ -294,6 +295,7 @@ RequestPane.propTypes = {
   showPasswords: PropTypes.bool.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  workspace: PropTypes.object.isRequired,
   environmentId: PropTypes.string.isRequired,
   forceRefreshCounter: PropTypes.number.isRequired,
 

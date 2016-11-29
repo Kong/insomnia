@@ -154,7 +154,11 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, settings);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      workspace,
+      settings
+    );
 
     expect(mock.basePath).toBe('http://::1:80');
     expect(response.error).toBe('');
@@ -189,7 +193,11 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, settings);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      workspace,
+      settings
+    );
 
     expect(mock.basePath).toBe('http://::1:80');
     expect(response.error).toBe('');
@@ -235,7 +243,11 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, settings);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      workspace,
+      settings
+    );
 
     expect(mock.basePath).toBe('http://::1:80');
     expect(response.error).toBe('');

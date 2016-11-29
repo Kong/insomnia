@@ -185,7 +185,7 @@ class RequestUrlBar extends Component {
             <DropdownHint char="Enter"/>
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
-          <i className="fa fa-code"/> Generate Client Code
+            <i className="fa fa-code"/> Generate Client Code
           </DropdownItem>
           <DropdownDivider name="Advanced"/>
           <DropdownItem onClick={this._handleSendAfterDelay}>
@@ -213,14 +213,12 @@ class RequestUrlBar extends Component {
           {method} <i className="fa fa-caret-down"/>
         </MethodDropdown>
         <form onSubmit={this._handleFormSubmit}>
-          <div className="form-control">
-            <input
-              ref={n => this._input = n}
-              type="text"
-              placeholder="https://api.myproduct.com/v1/users"
-              defaultValue={url}
-              onChange={this._handleUrlChange}/>
-          </div>
+          <input
+            ref={n => this._input = n}
+            type="text"
+            placeholder="https://api.myproduct.com/v1/users"
+            defaultValue={url}
+            onChange={this._handleUrlChange}/>
           {this.renderSendButton()}
         </form>
       </div>

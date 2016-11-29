@@ -42,6 +42,10 @@
     &:hover {
       background-color: lighten(@bg-brand, 1);
     }
+
+    h1 {
+      margin: 0;
+    }
   }
 
   // ~~~~~~~~~~~~~~~ //
@@ -57,9 +61,11 @@
     align-items: center;
 
     .btn {
-      padding: 0 (@padding-md - @padding-xxs);
+      padding: 0 (@padding-md - @padding-xs);
       margin-right: @padding-xxs;
       border-radius: @radius-md;
+      margin-left: @padding-xxs;
+      margin-bottom: @padding-xxs;
       color: @hl;
 
       &:hover,
@@ -69,11 +75,12 @@
     }
 
     .form-control {
-      padding: 0 @padding-xxs 0 0;
-      margin: @padding-sm 0 @padding-sm @padding-sm;
+      padding: 0 @padding-sm 0 0;
+      margin: 0 0 @padding-sm @padding-sm;
 
       input {
         padding: @padding-xs;
+        background: transparent;
       }
     }
   }

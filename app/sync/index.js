@@ -574,6 +574,8 @@ async function _createResourceForDoc (doc) {
   const workspace = await _getWorkspaceForDoc(doc);
 
   if (!workspace) {
+    // Workspace was probably deleted before it's children could be synced.
+    // TODO: Handle this case better (maybe store
     throw new Error(`Could not find workspace for doc ${doc._id}`);
   }
 

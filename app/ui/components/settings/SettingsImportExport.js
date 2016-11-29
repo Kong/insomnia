@@ -6,8 +6,8 @@ const SettingsImportExport = ({
   handleExportAll,
   handleExportWorkspace
 }) => (
-  <div className="pad">
-    <h1>Data Import and Export</h1>
+  <div>
+    <h1 className="no-margin-top">Data Import and Export</h1>
     <p>
       Import format will be automatically detected (<strong>Insomnia, Postman, HAR, cURL</strong>)
     </p>

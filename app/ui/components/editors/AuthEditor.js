@@ -34,7 +34,7 @@ class AuthEditor extends PureComponent {
         pairs={pairs}
         maxPairs={1}
         namePlaceholder="Username"
-        valuePlaceholder="********"
+        valuePlaceholder="•••••••••••"
         valueInputType={showPasswords ? 'text' : 'password'}
         onToggleDisable={this._handleToggleDisable}
         onCreate={this._handleOnCreate}

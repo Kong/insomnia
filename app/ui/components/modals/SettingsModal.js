@@ -4,13 +4,14 @@ import {shell} from 'electron';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
+import ModalFooter from '../base/ModalFooter';
 import SettingsShortcuts from '../settings/SettingsShortcuts';
 import SettingsAbout from '../settings/SettingsAbout';
 import SettingsGeneral from '../settings/SettingsGeneral';
 import SettingsImportExport from '../settings/SettingsImportExport';
 import SettingsSync from '../settings/SettingsSync';
 import * as models from '../../../models';
-import {getAppVersion, getAppLongName} from '../../../common/constants';
+import {getAppVersion, getAppName} from '../../../common/constants';
 import * as session from '../../../sync/session';
 import {showModal} from './index';
 import SignupModal from './SignupModal';
@@ -26,6 +27,10 @@ class SettingsModal extends Component {
     this._currentTabIndex = -1;
     this.state = {}
   }
+
+  _handleClose = () => {
+    this.hide();
+  };
 
   show (currentTabIndex = 0) {
     this.setState({currentTabIndex});
@@ -66,7 +71,7 @@ class SettingsModal extends Component {
     return (
       <Modal ref={m => this.modal = m} tall={true} {...this.props}>
         <ModalHeader>
-          {getAppLongName()}
+          {getAppName()} Preferences
           &nbsp;&nbsp;
           <span className="faint txt-sm">v{getAppVersion()}</span>
         </ModalHeader>
@@ -134,6 +139,11 @@ class SettingsModal extends Component {
             </TabPanel>
           </Tabs>
         </ModalBody>
+        {/*<ModalFooter>*/}
+          {/*<button className="btn" onClick={this._handleClose}>*/}
+            {/*Close*/}
+          {/*</button>*/}
+        {/*</ModalFooter>*/}
       </Modal>
     );
   }

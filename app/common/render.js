@@ -96,17 +96,18 @@ export function recursiveRender (obj, context) {
   // Make a copy so no one gets mad :)
   const newObj = traverse.clone(obj);
 
-  try {
-    traverse(newObj).forEach(function (x) {
+  traverse(newObj).forEach(function (x) {
+    try {
       if (typeof x === 'string') {
         const str = render(x, context);
         this.update(str);
       }
-    });
-  } catch (e) {
-    // Failed to render Request
-    throw new Error(`Render Failed: "${e.message}"`);
-  }
+    } catch (e) {
+      // Failed to render Request
+      const path = this.path.join('.');
+      throw new Error(`Failed to render Request.${path}: "${e.message}"`);
+    }
+  });
 
   return newObj;
 }

@@ -129,7 +129,7 @@ describe('migrate()', () => {
     const expected = {
       _schema: 1,
       headers: [],
-      body: {text: 'hello world!'}
+      body: {mimeType: "", text: 'hello world!'}
     };
 
     expect(requestModel.migrate(original)).toEqual(expected);
@@ -237,6 +237,7 @@ describe('migrate()', () => {
     const expected = {
       _schema: 1,
       body: {
+        mimeType: "",
         text: 'foo bar!'
       }
     };

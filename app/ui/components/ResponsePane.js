@@ -221,6 +221,7 @@ class ResponsePane extends Component {
               bytes={response.bytesRead}
               contentType={response.contentType || ''}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              statusCode={response.statusCode}
               filter={filter}
               updateFilter={response.error ? null : handleSetFilter}
               body={response.error ? response.error : response.body}

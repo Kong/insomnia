@@ -6,12 +6,13 @@ import * as models from '../models';
 import * as querystring from './querystring';
 import {buildFromParams} from './querystring';
 import * as util from './misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_PEBKAC, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FILE} from './constants';
+import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FILE} from './constants';
 import {jarFromCookies, cookiesFromJar, cookieHeaderValueForUri} from './cookies';
 import {setDefaultProtocol} from './misc';
 import {getRenderedRequest} from './render';
 import {swapHost} from './dns';
 import * as fs from 'fs';
+import * as db from './database';
 
 let cancelRequestFunction = null;
 
@@ -95,7 +96,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
-export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
+export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 = false) {
   return new Promise(async (resolve, reject) => {
     // Detect and set the proxy based on the request protocol
     // NOTE: request does not have a separate settings for http/https proxies
@@ -123,6 +124,28 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
         error: e.message
       });
       return resolve(response);
+    }
+
+    // Add certs if needed
+    // https://vanjakom.wordpress.com/2011/08/11/client-and-server-side-ssl-with-nodejs/
+    const {hostname, port} = urlParse(config.url);
+    const certificate = workspace.certificates.find(certificate => {
+      const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
+      const {hostname: cHostname, port: cPort} = urlParse(cHostWithProtocol);
+
+      const assumedPort = parseInt(port) || 443;
+      const assumedCPort = parseInt(cPort) || 443;
+
+      // Exact host match (includes port)
+      return cHostname === hostname && assumedCPort === assumedPort;
+    });
+
+    if (certificate && !certificate.disabled) {
+      const {passphrase, cert, key, pfx} = certificate;
+      config.cert = cert ? Buffer.from(cert, 'base64') : null;
+      config.key = key ? Buffer.from(key, 'base64') : null;
+      config.pfx = pfx ? Buffer.from(pfx, 'base64') : null;
+      config.passphrase = passphrase || null;
     }
 
     // Add the cookie header to the request
@@ -240,7 +263,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
 
 export async function send (requestId, environmentId) {
   // First, lets wait for all debounces to finish
-  await util.delay(DEBOUNCE_MILLIS);
+  await util.delay(DEBOUNCE_MILLIS * 2);
 
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
@@ -253,11 +276,15 @@ export async function send (requestId, environmentId) {
     // Failed to render. Must be the user's fault
     return await models.response.create({
       parentId: request._id,
-      statusCode: STATUS_CODE_PEBKAC,
+      statusCode: STATUS_CODE_RENDER_FAILED,
       error: e.message
     });
   }
 
+  // Get the workspace for the request
+  const ancestors = await db.withAncestors(request);
+  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+
   // Render succeeded so we're good to go!
-  return await _actuallySend(renderedRequest, settings);
+  return await _actuallySend(renderedRequest, workspace, settings);
 }

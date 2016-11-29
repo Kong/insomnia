@@ -5,13 +5,27 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
 class AlertModal extends Component {
-  state = {title: '', message: ''};
+  state = {
+    title: '',
+    message: '',
+  };
+
+  _handleOk = () => {
+    this.hide();
+    this._okCallback();
+  };
+
+  hide () {
+    this.modal.hide();
+  }
 
   show (options = {}) {
     this.modal.show();
 
     const {title, message} = options;
     this.setState({title, message});
+
+    return new Promise(resolve => this._okCallback = resolve);
   }
 
   render () {
@@ -25,7 +39,7 @@ class AlertModal extends Component {
           {message}
         </ModalBody>
         <ModalFooter>
-          <button className="btn" onClick={e => this.modal.hide()}>
+          <button className="btn" onClick={this._handleOk}>
             Ok
           </button>
         </ModalFooter>

@@ -32,7 +32,7 @@ class DropdownItem extends PureComponent {
 
     const inner = (
       <div className={classnames('dropdown__inner', className)}>
-        <span className="dropdown__text">{children}</span>
+        <div className="dropdown__text">{children}</div>
       </div>
     );
 

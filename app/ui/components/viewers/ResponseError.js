@@ -3,23 +3,30 @@ import React, {Component, PropTypes} from 'react';
 import Link from '../../components/base/Link';
 import {showModal} from '../modals/index';
 import SettingsModal from '../modals/SettingsModal';
+import {STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
 
 class ResponseError extends Component {
   render () {
-    const {error} = this.props;
+    const {error, statusCode} = this.props;
 
     let msg = null;
-    if (error && error.toLowerCase().indexOf('certificate') !== -1) {
+    if (statusCode === STATUS_CODE_RENDER_FAILED) {
       msg = (
-        <button className="btn btn--clicky"
-                onClick={() => showModal(SettingsModal)}>
+        <Link button={true}
+              className="btn btn--clicky"
+              href="https://insomnia.rest/documentation/templating/">
+          Template Documentation
+        </Link>
+      )
+    } else if (error && error.toLowerCase().indexOf('certificate') !== -1) {
+      msg = (
+        <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Disable SSL Validation
         </button>
       )
     } else if (error && error.toLowerCase().indexOf('getaddrinfo') !== -1) {
       msg = (
-        <button className="btn btn--clicky"
-                onClick={() => showModal(SettingsModal)}>
+        <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Setup Network Proxy
         </button>
       )
@@ -56,8 +63,10 @@ class ResponseError extends Component {
 }
 
 ResponseError.propTypes = {
+  // Required
   error: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired
+  url: PropTypes.string.isRequired,
+  statusCode: PropTypes.number.isRequired,
 };
 
 export default ResponseError;

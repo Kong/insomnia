@@ -4,33 +4,51 @@
 .form-control {
   outline: none;
   border: 0;
-  height: @line-height-md;
+  padding-top: @padding-sm;
+  width: 100%;
+  box-sizing: border-box;
 
+  button,
   textarea,
-  input {
+  input[type="number"],
+  input[type="password"],
+  input[type="color"],
+  input[type="date"],
+  input[type="text"] {
     width: 100%;
     height: 100%;
+    display: block;
+    margin-top: @padding-xs;
+  }
+
+  & > button {
+    width: auto;
   }
 
   input:invalid {
     border: 1px solid @warning !important;
   }
 
+  label {
+    font-size: @font-size-md;
+    font-weight: 600;
+    display: block;
+  }
+
   &.form-control--padded,
   &.form-control--outlined,
   &.form-control--underlined {
-    height: auto;
-    margin: @padding-sm;
-
     textarea,
     input {
       border: 1px solid @hl-md;
       padding: @padding-sm;
       border-radius: @radius-md;
+      background-color: @hl-xxxs;
     }
 
-    textarea,
+    textarea:focus,
     input:focus {
+      background-color: transparent;
       border-color: @hl-xl;
     }
   }
@@ -53,8 +71,6 @@
   }
 }
 
-// Push form all the way to the sides if inside label
-label > .form-control,
 .form-control--wide {
   margin-left: 0 !important;
   margin-right: 0 !important;
@@ -141,8 +157,14 @@ button {
   width: auto;
   padding: 0;
   margin: 0;
+  white-space: nowrap;
 }
 
 textarea.no-resize {
   resize: none;
+}
+
+input[type="color"] {
+  height: @line-height-xs !important;
+  padding: @padding-xxs !important;
 }

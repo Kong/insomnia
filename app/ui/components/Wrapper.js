@@ -1,24 +1,25 @@
 import React, {PropTypes, Component} from 'react';
 import classnames from 'classnames';
 import {showModal, registerModal} from './modals/index';
-import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
+import AlertModal from '../components/modals/AlertModal';
+import ChangelogModal from '../components/modals/ChangelogModal';
 import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
-import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
-import RequestCreateModal from '../components/modals/RequestCreateModal';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
-import PromptModal from '../components/modals/PromptModal';
-import AlertModal from '../components/modals/AlertModal';
+import LoginModal from '../components/modals/LoginModal';
 import PaymentModal from '../components/modals/PaymentModal';
 import PaymentNotificationModal from '../components/modals/PaymentNotificationModal';
-import ChangelogModal from '../components/modals/ChangelogModal';
-import SyncLogsModal from '../components/modals/SyncLogsModal';
-import LoginModal from '../components/modals/LoginModal';
-import SignupModal from '../components/modals/SignupModal';
+import PromptModal from '../components/modals/PromptModal';
+import RequestCreateModal from '../components/modals/RequestCreateModal';
+import RequestPane from './RequestPane';
+import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
+import ResponsePane from './ResponsePane';
 import SettingsModal from '../components/modals/SettingsModal';
 import Sidebar from './sidebar/Sidebar';
-import RequestPane from './RequestPane';
-import ResponsePane from './ResponsePane';
+import SignupModal from '../components/modals/SignupModal';
+import SyncLogsModal from '../components/modals/SyncLogsModal';
+import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
+import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
 import * as models from '../../models/index';
 import {updateMimeType} from '../../models/request';
 import {trackEvent} from '../../analytics/index';
@@ -91,6 +92,23 @@ class Wrapper extends Component {
   _handleDeleteResponses = () => {
     models.response.removeForRequest(this.props.activeRequest._id);
     this._handleSetActiveResponse(null);
+  };
+
+  _handleRemoveActiveWorkspace = async () => {
+    const {workspaces, activeWorkspace} = this.props;
+    if (workspaces.length <= 1) {
+      showModal(AlertModal, {
+        title: 'Deleting Last Workspace',
+        message: 'Since you deleted your only workspace, a new one has been created for you.'
+      });
+
+      models.workspace.create({name: 'Insomnia'});
+      trackEvent('Workspace', 'Delete', 'Last');
+    } else {
+      trackEvent('Workspace', 'Delete');
+    }
+
+    models.workspace.remove(activeWorkspace);
   };
 
   _handleSendRequestWithActiveEnvironment = () => {
@@ -211,6 +229,7 @@ class Wrapper extends Component {
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+          workspace={activeWorkspace}
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCode}
           updateRequest={this._handleUpdateRequest}
@@ -257,6 +276,10 @@ class Wrapper extends Component {
         <PaymentModal ref={registerModal}/>
         <RequestCreateModal ref={registerModal}/>
         <PaymentNotificationModal ref={registerModal}/>
+        <WorkspaceSettingsModal
+          ref={registerModal}
+          workspace={activeWorkspace}
+          handleRemoveWorkspace={this._handleRemoveActiveWorkspace}/>
         <EnvironmentEditModal
           ref={registerModal}
           onChange={models.requestGroup.update}

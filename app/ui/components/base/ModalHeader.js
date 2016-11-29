@@ -14,8 +14,10 @@ const ModalHeader = ({hideCloseButton, className, children}) => {
 
   return (
     <div className={classnames('modal__header', className)}>
+      <div className="modal__header__children">
+        {children}
+      </div>
       {closeButton}
-      {children}
     </div>
   );
 };

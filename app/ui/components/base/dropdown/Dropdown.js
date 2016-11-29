@@ -102,7 +102,7 @@ class Dropdown extends Component {
   }
 
   render () {
-    const {right, className, outline, wide} = this.props;
+    const {right, outline, wide, className, style} = this.props;
     const {dropUp, open} = this.state;
 
     const classes = classnames(
@@ -142,7 +142,8 @@ class Dropdown extends Component {
     }
 
     return (
-      <div className={classes}
+      <div style={style}
+           className={classes}
            onClick={this._handleClick}
            onMouseDown={this._handleMouseDown}>
         {children}
