@@ -240,7 +240,7 @@ export function _actuallySend (renderedRequest, settings, forceIPv4 = false) {
 
 export async function send (requestId, environmentId) {
   // First, lets wait for all debounces to finish
-  await util.delay(DEBOUNCE_MILLIS);
+  await util.delay(DEBOUNCE_MILLIS * 2);
 
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();

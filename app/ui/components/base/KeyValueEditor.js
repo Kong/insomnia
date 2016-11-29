@@ -28,13 +28,28 @@ class KeyValueEditor extends Component {
     }
   }
 
+  _handleAddFromName = () => {
+    this._focusedField = NAME;
+    this._addPair();
+  };
+
+  _handleAddFromValue = () => {
+    this._focusedField = VALUE;
+    this._addPair();
+  };
+
+  _handleAddFromMultipart = type => {
+    this._focusedField = null;
+    this._addPair(this.state.pairs.length, {type});
+  };
+
   _onChange (pairs, updateState = true) {
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
     updateState && this.setState({pairs});
   }
 
-  _addPair (position) {
+  _addPair (position, patch) {
     const numPairs = this.state.pairs.length;
     const {maxPairs} = this.props;
 
@@ -47,7 +62,7 @@ class KeyValueEditor extends Component {
     this._focusedPair = position;
     const pairs = [
       ...this.state.pairs.slice(0, position),
-      {name: '', value: ''},
+      Object.assign({name: '', value: ''}, patch),
       ...this.state.pairs.slice(position)
     ];
 
@@ -194,56 +209,52 @@ class KeyValueEditor extends Component {
                 'key-value-editor__row',
                 {'key-value-editor__row--disabled': pair.disabled}
               )}>
-            <div>
-              <div className="form-control form-control--underlined form-control--wide">
+            <div className="form-control form-control--underlined form-control--wide">
+              <input
+                type="text"
+                key="name"
+                ref={n => this._nameInputs[i] = n}
+                placeholder={this.props.namePlaceholder || 'Name'}
+                defaultValue={pair.name}
+                onChange={e => this._updatePair(i, {name: e.target.value})}
+                onFocus={e => {
+                  this._focusedPair = i;
+                  this._focusedField = NAME;
+                  this._focusedInput = e.target;
+                }}
+                onBlur={() => {
+                  this._focusedPair = -1
+                }}
+                onKeyDown={this._keyDown.bind(this)}
+              />
+            </div>
+            <div className="form-control form-control--wide wide form-control--underlined">
+              {pair.type === 'file' ? (
+                <FileInputButton
+                  showFileName={true}
+                  className="btn btn--clicky wide ellipsis txt-sm"
+                  path={pair.fileName || ''}
+                  onChange={fileName => {
+                    this._updatePair(i, {fileName});
+                    this.props.onChooseFile && this.props.onChooseFile();
+                  }}
+                />
+              ) : (
                 <input
-                  type="text"
-                  key="name"
-                  ref={n => this._nameInputs[i] = n}
-                  placeholder={this.props.namePlaceholder || 'Name'}
-                  defaultValue={pair.name}
-                  onChange={e => this._updatePair(i, {name: e.target.value})}
+                  type={valueInputType || 'text'}
+                  placeholder={this.props.valuePlaceholder || 'Value'}
+                  ref={n => this._valueInputs[i] = n}
+                  defaultValue={pair.value}
+                  onChange={e => this._updatePair(i, {value: e.target.value})}
+                  onBlur={() => this._focusedPair = -1}
+                  onKeyDown={this._keyDown.bind(this)}
                   onFocus={e => {
                     this._focusedPair = i;
-                    this._focusedField = NAME;
+                    this._focusedField = VALUE;
                     this._focusedInput = e.target;
                   }}
-                  onBlur={() => {
-                    this._focusedPair = -1
-                  }}
-                  onKeyDown={this._keyDown.bind(this)}
                 />
-              </div>
-            </div>
-            <div className="wide">
-              <div className="form-control form-control--wide form-control--underlined">
-                {pair.type === 'file' ? (
-                  <FileInputButton
-                    showFileName={true}
-                    className="btn btn--clicky wide ellipsis txt-sm"
-                    path={pair.fileName || ''}
-                    onChange={fileName => {
-                      this._updatePair(i, {fileName});
-                      this.props.onChooseFile && this.props.onChooseFile();
-                    }}
-                  />
-                ) : (
-                  <input
-                    type={valueInputType || 'text'}
-                    placeholder={this.props.valuePlaceholder || 'Value'}
-                    ref={n => this._valueInputs[i] = n}
-                    defaultValue={pair.value}
-                    onChange={e => this._updatePair(i, {value: e.target.value})}
-                    onBlur={() => this._focusedPair = -1}
-                    onKeyDown={this._keyDown.bind(this)}
-                    onFocus={e => {
-                      this._focusedPair = i;
-                      this._focusedField = VALUE;
-                      this._focusedInput = e.target;
-                    }}
-                  />
-                )}
-              </div>
+              )}
             </div>
 
             {multipart ? (
@@ -266,12 +277,11 @@ class KeyValueEditor extends Component {
               </Dropdown>
             ) : null}
 
-            <button
-              onClick={e => this._togglePair(i)}
-              title={pair.disabled ? 'Enable item' : 'Disable item'}>
+            <button onClick={e => this._togglePair(i)}
+                    title={pair.disabled ? 'Enable item' : 'Disable item'}>
               {pair.disabled ?
-                <i className="fa fa-square-o"></i> :
-                <i className="fa fa-check-square-o"></i>
+                <i className="fa fa-square-o"/> :
+                <i className="fa fa-check-square-o"/>
               }
             </button>
 
@@ -284,28 +294,34 @@ class KeyValueEditor extends Component {
           </li>
         ))}
         {!maxPairs || pairs.length < maxPairs ? (
-          <li className="key-value-editor__row faded">
-            <div className="form-control form-control--underlined form-control--wide">
-              <input type="text"
-                     placeholder={this.props.namePlaceholder || 'Name'}
-                     onFocus={() => {
-                       this._focusedField = NAME;
-                       this._addPair()
-                     }}/>
+          <li className="key-value-editor__row">
+            <div className="form-control form-control--underlined form-control--wide faded">
+              <input
+                type="text"
+                placeholder={this.props.namePlaceholder || 'Name'}
+                onKeyDown={this._handleAddFromName}
+              />
             </div>
-            <div className="form-control form-control--underlined form-control--wide">
-              <input type="text"
-                     placeholder={this.props.valuePlaceholder || 'Value'}
-                     onFocus={() => {
-                       this._focusedField = VALUE;
-                       this._addPair()
-                     }}/>
+            <div className="form-control form-control--underlined form-control--wide faded">
+              <input
+                type="text"
+                placeholder={this.props.valuePlaceholder || 'Value'}
+                onKeyDown={this._handleAddFromValue}
+              />
             </div>
 
             {multipart ? (
-              <button disabled={true} tabIndex="-1">
-                <i className="fa fa-blank"></i>
-              </button>
+              <Dropdown right={true}>
+                <DropdownButton className="tall faded">
+                  <i className="fa fa-caret-down"></i>
+                </DropdownButton>
+                <DropdownItem onClick={this._handleAddFromMultipart} value="text">
+                  Text
+                </DropdownItem>
+                <DropdownItem onClick={this._handleAddFromMultipart} value="file">
+                  File
+                </DropdownItem>
+              </Dropdown>
             ) : null}
 
             <button disabled={true} tabIndex="-1">

@@ -2,8 +2,8 @@ import React from 'react';
 import Link from '../base/Link';
 
 const SettingsAbout = () => (
-  <div className="pad">
-    <h1>Hi, I'm Greg!</h1>
+  <div>
+    <h1 className="no-margin-top">Hi, I'm Greg!</h1>
     <p>
       Insomnia started as a side-project of mine in 2014 and transitioned into what I do full-time
       in mid 2016.

@@ -7,6 +7,10 @@ export const prefix = 'wrk';
 export function init () {
   return {
     name: 'New Workspace',
+    description: '',
+    certificates: [
+      // {host, port, cert, key, passphrase}
+    ]
   };
 }
 

@@ -34,7 +34,8 @@ h3 {
 }
 
 h1, h2, h3 {
-  padding-bottom: 1em;
+  margin-bottom: @padding-sm;
+  margin-top: @padding-md;
 }
 
 hr {
@@ -43,6 +44,10 @@ hr {
   border: 0;
   border-bottom: 1px solid @hl-md;
   margin: @padding-md 0;
+}
+
+hr.hr--spaced {
+  margin: @padding-lg 0;
 }
 
 em {
@@ -95,6 +100,8 @@ code {
   background: @hl-xs;
   padding: @padding-xs @padding-sm;
   color: @hl;
+  border: 1px solid @hl-xxxs;
+  font-size: 0.9em;
 }
 
 code, pre, .monospace {
@@ -172,6 +179,18 @@ code, pre, .monospace {
   align-items: center;
   align-content: stretch;
   width: 100%;
+
+  & > * {
+    width: 100%;
+  }
+
+  & > *:not(:first-child) {
+    padding-left: @padding-xs;
+  }
+
+  & > *:not(:last-child) {
+    padding-right: @padding-xs;
+  }
 }
 
 .row-spaced {
@@ -205,8 +224,12 @@ code, pre, .monospace {
 }
 
 .wide {
-  width: 100%;
+  width: 100% !important;
   box-sizing: border-box;
+}
+
+.width-auto {
+  width: auto !important;
 }
 
 .hide {
@@ -304,7 +327,15 @@ i.fa {
 }
 
 .no-pad-top {
-  padding-top: 0;
+  padding-top: 0 !important;
+}
+
+.no-margin {
+  margin: 0 !important;
+}
+
+.no-margin-top {
+  margin-top: 0 !important;
 }
 
 .pad-left-sm {
@@ -319,8 +350,8 @@ i.fa {
   padding: 0 !important;
 }
 
-.no-margin {
-  margin: 0 !important;
+.no-margin-left {
+  margin-left: 0 !important;
 }
 
 .block {
@@ -364,7 +395,6 @@ i.fa {
     display: none;
   }
 }
-
 
 .scrollable-container {
   position: relative;

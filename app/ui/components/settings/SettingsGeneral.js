@@ -80,69 +80,50 @@ const SettingsGeneral = ({settings, updateSetting}) => (
       </label>
     </div>
 
-    <div>
-      <label htmlFor="setting-editor-font-size" className="pad-top">
-        Code Editor Font Size (px)
-      </label>
-      <div className="form-control form-control--outlined no-margin">
+    <div className="form-control form-control--outlined">
+      <label>Request/Response Font Size (px)
         <input
-          id="setting-editor-font-size"
           type="number"
           min={8}
           max={20}
           value={settings.editorFontSize}
           onChange={e => updateSetting('editorFontSize', parseInt(e.target.value, 10))}
         />
-      </div>
-
-      <div>
-        <label htmlFor="setting-request-timeout" className="pad-top">
-          Request Timeout (ms) (0 for no timeout)
-        </label>
-        <div className="form-control form-control--outlined no-margin">
-          <input
-            id="setting-request-timeout"
-            type="number"
-            min={0}
-            value={settings.timeout}
-            onChange={e => updateSetting('timeout', parseInt(e.target.value, 10))}
-          />
-        </div>
-      </div>
+      </label>
     </div>
 
-    <br/>
-    <h2 className="txt-md pad-top-sm">
-      <label className="label--small">Network Proxy (Experimental)</label>
-    </h2>
-    <div>
+    <div className="form-control form-control--outlined">
+      <label>Request Timeout (ms) (0 for no timeout)
+        <input
+          type="number"
+          min={0}
+          value={settings.timeout}
+          onChange={e => updateSetting('timeout', parseInt(e.target.value, 10))}
+        />
+      </label>
       <div className="inline-block" style={{width: '50%'}}>
-        <label htmlFor="setting-http-proxy">
-          HTTP Proxy
-        </label>
-        <div className="form-control form-control--outlined no-margin">
-          <input
-            id="setting-http-proxy"
-            type="string"
-            placeholder="localhost:8005"
-            defaultValue={settings.httpProxy}
-            onChange={e => updateSetting('httpProxy', e.target.value)}
-          />
+        <div className="form-control form-control--outlined">
+          <label>HTTP Proxy
+            <input
+              type="text"
+              placeholder="localhost:8005"
+              defaultValue={settings.httpProxy}
+              onChange={e => updateSetting('httpProxy', e.target.value)}
+            />
+          </label>
         </div>
       </div>
       <div className="inline-block" style={{width: '50%'}}>
         <div className="pad-left-sm">
-          <label htmlFor="setting-https-proxy">
-            HTTPS Proxy
-          </label>
-          <div className="form-control form-control--outlined no-margin">
-            <input
-              id="setting-https-proxy"
-              placeholder="localhost:8005"
-              type="string"
-              defaultValue={settings.httpsProxy}
-              onChange={e => updateSetting('httpsProxy', e.target.value)}
-            />
+          <div className="form-control form-control--outlined">
+            <label>HTTPS Proxy
+              <input
+                placeholder="localhost:8005"
+                type="text"
+                defaultValue={settings.httpsProxy}
+                onChange={e => updateSetting('httpsProxy', e.target.value)}
+              />
+            </label>
           </div>
         </div>
       </div>

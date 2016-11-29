@@ -109,9 +109,10 @@ class App extends Component {
 
   _requestGroupCreate = async (parentId) => {
     const name = await showModal(PromptModal, {
-      headerName: 'Create New Folder',
+      headerName: 'New Folder',
       defaultValue: 'My Folder',
       submitName: 'Create',
+      label: 'Name',
       selectText: true
     });
 

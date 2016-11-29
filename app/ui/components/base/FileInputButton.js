@@ -12,7 +12,8 @@ class FileInputButton extends Component {
 
     remote.dialog.showOpenDialog(options, async paths => {
       if (!paths || paths.length === 0) {
-        return;
+        // Cancelling will clear the value
+        this.props.onChange('');
       }
 
       const path = paths[0];
@@ -24,7 +25,7 @@ class FileInputButton extends Component {
     const {showFileName, path, ...extraProps} = this.props;
     const fileName = pathBasename(path);
     return (
-      <button onClick={e => this._handleChooseFile()} {...extraProps}>
+      <button type="button" onClick={e => this._handleChooseFile()} {...extraProps}>
         {showFileName && fileName ? `${fileName}`: 'Choose File'}
       </button>
     )

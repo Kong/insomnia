@@ -28,7 +28,7 @@ class SettingsModal extends Component {
     this.state = {}
   }
 
-  _handleHide = () => {
+  _handleClose = () => {
     this.hide();
   };
 
@@ -140,7 +140,9 @@ class SettingsModal extends Component {
           </Tabs>
         </ModalBody>
         <ModalFooter>
-          <button onClick={this._handleHide} className="btn">Done</button>
+          <button className="btn" onClick={this._handleClose}>
+            Close
+          </button>
         </ModalFooter>
       </Modal>
     );

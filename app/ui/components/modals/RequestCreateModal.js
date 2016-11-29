@@ -106,46 +106,55 @@ class RequestCreateModal extends Component {
 
     return (
       <Modal ref={m => this.modal = m}>
-        <ModalHeader>Create HTTP Request</ModalHeader>
+        <ModalHeader>New Request</ModalHeader>
         <ModalBody noScroll={true}>
-          <form onSubmit={this._handleSubmit} className="pad row-fill">
-            <div className="form-control form-control--outlined form-control--wide wide">
-              <input ref={n => this._input = n} type="text"/>
-            </div>
-            <div className="pad-left-sm">
-              <MethodDropdown
-                className="btn btn--clicky no-wrap"
-                right={true}
-                method={selectedMethod}
-                onChange={this._handleChangeSelectedMethod}
-              />
-            </div>
-            {!this._shouldNotHaveBody() ? (
-              <div className="pad-left-sm">
-                <ContentTypeDropdown className="btn btn--clicky no-wrap"
-                                     right={true}
-                                     contentType={selectedContentType}
-                                     onChange={this._handleChangeSelectedContentType}>
-                  {getContentTypeName(selectedContentType)}
-                  {" "}
-                  <i className="fa fa-caret-down"></i>
-                </ContentTypeDropdown>
+          <form onSubmit={this._handleSubmit} className="pad no-pad-top">
+            <div className="row-fill">
+              <div className="form-control form-control--outlined">
+                <label>Name
+                  <input ref={n => this._input = n} type="text"/>
+                </label>
               </div>
-            ) : null}
+              <div className="form-control" style={{width: 'auto'}}>
+                <label htmlFor="nothing">&nbsp;
+                  <MethodDropdown
+                    className="btn btn--clicky no-wrap"
+                    right={true}
+                    method={selectedMethod}
+                    onChange={this._handleChangeSelectedMethod}
+                  />
+                </label>
+              </div>
+              <div className="form-control" style={{width: 'auto'}}>
+                <label htmlFor="nothing">&nbsp;
+                </label>
+              </div>
+              {!this._shouldNotHaveBody() ? (
+                <div className="form-control" style={{width: 'auto'}}>
+                  <label htmlFor="nothing">&nbsp;
+                    <ContentTypeDropdown className="btn btn--clicky no-wrap"
+                                         right={true}
+                                         contentType={selectedContentType}
+                                         onChange={this._handleChangeSelectedContentType}>
+                      {getContentTypeName(selectedContentType)}
+                      {" "}
+                      <i className="fa fa-caret-down"></i>
+                    </ContentTypeDropdown>
+                  </label>
+                </div>
+              ) : null}
+            </div>
+            {/*<div className="form-control form-control--outlined">*/}
+              {/*<label>Description*/}
+                {/*<textarea rows="3" placeholder="This request will create a new user"/>*/}
+              {/*</label>*/}
+            {/*</div>*/}
           </form>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">
-            * hint: 'TIP: Import Curl command by pasting it into the URL bar'
-          </div>
-          <div>
-            <button className="btn" onClick={this._handleHide}>
-              Cancel
-            </button>
-            <button className="btn" onClick={this._handleSubmit}>
-              Create
-            </button>
-          </div>
+          <button className="btn" onClick={this._handleSubmit}>
+            Create
+          </button>
         </ModalFooter>
       </Modal>
     )

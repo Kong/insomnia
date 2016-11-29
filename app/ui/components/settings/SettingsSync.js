@@ -13,8 +13,8 @@ const SettingsSync = ({
   handleLogout,
   handleReset,
 }) => (
-  <div className="pad">
-    <h1>Cloud Sync and Backup</h1>
+  <div>
+    <h1 className="no-margin-top">Cloud Sync and Backup</h1>
 
     {loggedIn ? [
       <p key="1">

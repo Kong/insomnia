@@ -49,7 +49,6 @@
     overflow: auto;
 
     li {
-
       & > button {
         font-size: @font-size-md;
         text-align: left;
@@ -58,6 +57,7 @@
         display: block;
         color: @font-super-light-bg !important;
         white-space: nowrap;
+        margin: 0;
 
         &:hover:not(:disabled),
         &:focus:not(:disabled) {
@@ -96,7 +96,8 @@
       padding-left: 0.3em;
     }
 
-    .dropdown__hint {
+    .dropdown__hint,
+    .dropdown__right {
       color: @hl-xxl;
       margin-left: auto;
       padding-left: @padding-lg;

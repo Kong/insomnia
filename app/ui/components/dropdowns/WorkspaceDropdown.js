@@ -1,10 +1,8 @@
 import React, {Component, PropTypes} from 'react';
 import classnames from 'classnames';
 import {ipcRenderer, shell} from 'electron';
-import PromptButton from '../base/PromptButton';
-import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../base/dropdown';
+import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint, DropdownRight} from '../base/dropdown';
 import PromptModal from '../modals/PromptModal';
-import AlertModal from '../modals/AlertModal';
 import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/SettingsModal';
 import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
@@ -43,24 +41,6 @@ class WorkspaceDropdown extends Component {
     }
   };
 
-  _handleWorkspaceRemove = async () => {
-    const {workspaces, activeWorkspace} = this.props;
-    if (workspaces.length <= 1) {
-      await showModal(AlertModal, {
-        title: 'Deleting Last Workspace',
-        message: 'Since you are deleting your only workspace, a new one will be created for you'
-      });
-
-      await this._handleWorkspaceCreate(true);
-
-      trackEvent('Workspace', 'Delete', 'Last');
-    } else {
-      trackEvent('Workspace', 'Delete');
-    }
-
-    models.workspace.remove(activeWorkspace);
-  };
-
   render () {
     const {
       className,
@@ -73,9 +53,7 @@ class WorkspaceDropdown extends Component {
     const nonActiveWorkspaces = workspaces.filter(w => w._id !== activeWorkspace._id);
 
     return (
-      <Dropdown key={activeWorkspace._id}
-                className={classnames(className, 'wide', 'workspace-dropdown')}
-                {...other}>
+      <Dropdown className={classnames(className, 'wide', 'workspace-dropdown')} {...other}>
         <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
@@ -107,7 +85,7 @@ class WorkspaceDropdown extends Component {
 
         <DropdownItem onClick={this._handleShowSettings}>
           <i className="fa fa-cog"/> Preferences
-          <DropdownHint char=","></DropdownHint>
+          <DropdownHint char=","/>
         </DropdownItem>
         <DropdownItem onClick={this._handleShowExport}>
           <i className="fa fa-share"/> Import/Export

@@ -94,6 +94,23 @@ class Wrapper extends Component {
     this._handleSetActiveResponse(null);
   };
 
+  _handleRemoveActiveWorkspace = async () => {
+    const {workspaces, activeWorkspace} = this.props;
+    if (workspaces.length <= 1) {
+      showModal(AlertModal, {
+        title: 'Deleting Last Workspace',
+        message: 'Since you deleted your only workspace, a new one has been created for you.'
+      });
+
+      models.workspace.create({name: 'Insomnia'});
+      trackEvent('Workspace', 'Delete', 'Last');
+    } else {
+      trackEvent('Workspace', 'Delete');
+    }
+
+    models.workspace.remove(activeWorkspace);
+  };
+
   _handleSendRequestWithActiveEnvironment = () => {
     const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -212,6 +229,7 @@ class Wrapper extends Component {
           editorFontSize={settings.editorFontSize}
           editorLineWrapping={settings.editorLineWrapping}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+          workspace={activeWorkspace}
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCode}
           updateRequest={this._handleUpdateRequest}
@@ -258,7 +276,10 @@ class Wrapper extends Component {
         <PaymentModal ref={registerModal}/>
         <RequestCreateModal ref={registerModal}/>
         <PaymentNotificationModal ref={registerModal}/>
-        <WorkspaceSettingsModal ref={registerModal}/>
+        <WorkspaceSettingsModal
+          ref={registerModal}
+          workspace={activeWorkspace}
+          handleRemoveWorkspace={this._handleRemoveActiveWorkspace}/>
         <EnvironmentEditModal
           ref={registerModal}
           onChange={models.requestGroup.update}
