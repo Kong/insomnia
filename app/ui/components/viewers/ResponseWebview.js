@@ -1,10 +1,10 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 
-class ResponseWebview extends Component {
+class ResponseWebview extends PureComponent {
+  _handleSetWebviewRef = n => this._webview = n;
+
   _setBody () {
     const {body, contentType, url} = this.props;
-    console.log('ContentType', contentType);
-
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
     this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
   }
@@ -13,30 +13,16 @@ class ResponseWebview extends Component {
     this._setBody();
   }
 
-  shouldComponentUpdate (nextProps) {
-    for (let key in nextProps) {
-      if (nextProps.hasOwnProperty(key)) {
-        if (nextProps[key] !== this.props[key]) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
   componentDidMount () {
-    const cb = () => {
+    this._webview.addEventListener('dom-ready', () => {
       this._webview.removeEventListener('dom-ready', cb);
       this._setBody();
-    };
-
-    this._webview.addEventListener('dom-ready', cb);
+    });
   }
 
   render () {
     return (
-      <webview ref={node => this._webview = node} src="about:blank"></webview>
+      <webview ref={this._handleSetWebviewRef} src="about:blank"></webview>
     );
   }
 }

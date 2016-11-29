@@ -9,7 +9,7 @@ export function init () {
     name: 'New Workspace',
     description: '',
     certificates: [
-      // {host, port, cert, key, passphrase}
+      // {host, port, cert, key, pfx, passphrase}
     ]
   };
 }

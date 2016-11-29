@@ -139,11 +139,11 @@ class SettingsModal extends Component {
             </TabPanel>
           </Tabs>
         </ModalBody>
-        <ModalFooter>
-          <button className="btn" onClick={this._handleClose}>
-            Close
-          </button>
-        </ModalFooter>
+        {/*<ModalFooter>*/}
+          {/*<button className="btn" onClick={this._handleClose}>*/}
+            {/*Close*/}
+          {/*</button>*/}
+        {/*</ModalFooter>*/}
       </Modal>
     );
   }

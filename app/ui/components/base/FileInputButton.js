@@ -22,11 +22,11 @@ class FileInputButton extends Component {
   }
 
   render () {
-    const {showFileName, path, ...extraProps} = this.props;
+    const {showFileName, path, name, ...extraProps} = this.props;
     const fileName = pathBasename(path);
     return (
       <button type="button" onClick={e => this._handleChooseFile()} {...extraProps}>
-        {showFileName && fileName ? `${fileName}`: 'Choose File'}
+        {showFileName && fileName ? `${fileName}`: `Choose ${name || 'File'}`}
       </button>
     )
   }
@@ -39,6 +39,7 @@ FileInputButton.propTypes = {
 
   // Optional
   showFileName: PropTypes.bool,
+  name: PropTypes.string,
 };
 
 export default FileInputButton;

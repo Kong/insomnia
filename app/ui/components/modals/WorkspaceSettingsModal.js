@@ -5,7 +5,6 @@ import FileInputButton from '../base/FileInputButton';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
 import PromptButton from '../base/PromptButton';
 import * as models from '../../../models/index';
 import * as fs from 'fs';
@@ -16,6 +15,7 @@ class WorkspaceSettingsModal extends Component {
     showAddCertificateForm: false,
     crtPath: '',
     keyPath: '',
+    pfxPath: '',
     host: '',
     passphrase: '',
   };
@@ -35,21 +35,21 @@ class WorkspaceSettingsModal extends Component {
 
   _handleRename = name => this._workspaceUpdate({name});
   _handleDescriptionChange = description => this._workspaceUpdate({description});
-  _handleColorChange = color => this._workspaceUpdate({color});
 
+  _handleCreatePfxChange = pfxPath => this.setState({pfxPath});
   _handleCreateCrtChange = crtPath => this.setState({crtPath});
   _handleCreateKeyChange = keyPath => this.setState({keyPath});
-  _handleCreateHostChange = e => this.setState({host: e.target.value});
   _handleCreatePassphraseChange = e => this.setState({passphrase: e.target.value});
   _handleSubmitCertificate = async e => {
     e.preventDefault();
 
     const {workspace} = this.props;
-    const {crtPath, keyPath, host, passphrase} = this.state;
-    const cert = crtPath ? fs.readFileSync(crtPath) : null;
-    const key = keyPath ? fs.readFileSync(keyPath) : null;
+    const {pfxPath, crtPath, keyPath, host, passphrase} = this.state;
+    const cert = crtPath ? fs.readFileSync(crtPath, 'base64') : null;
+    const key = keyPath ? fs.readFileSync(keyPath, 'base64') : null;
+    const pfx = pfxPath ? fs.readFileSync(pfxPath, 'base64') : null;
 
-    const certificate = {host, passphrase, cert, key, disabled: false};
+    const certificate = {host, passphrase, cert, key, pfx, disabled: false};
     const certificates = [
       ...workspace.certificates.filter(c => c.host !== certificate.host),
       certificate,
@@ -75,12 +75,27 @@ class WorkspaceSettingsModal extends Component {
 
   toggle (workspace) {
     this.modal.toggle();
-    this.setState({workspace, showAddCertificateForm: false});
+    this.setState({
+      workspace,
+      showAddCertificateForm: false,
+      crtPath: '',
+      keyPath: '',
+      pfxPath: '',
+      host: '',
+      passphrase: '',
+    });
   }
 
   show () {
     this.modal.show();
-    this.setState({showAddCertificateForm: false});
+    this.setState({
+      showAddCertificateForm: false,
+      crtPath: '',
+      keyPath: '',
+      pfxPath: '',
+      host: '',
+      passphrase: '',
+    });
   }
 
   hide () {
@@ -98,7 +113,7 @@ class WorkspaceSettingsModal extends Component {
 
   renderModalBody () {
     const {workspace} = this.props;
-    const {crtPath, keyPath, showAddCertificateForm} = this.state;
+    const {pfxPath, crtPath, keyPath, showAddCertificateForm} = this.state;
     return (
       <ModalBody key={`body::${workspace._id}`} noScroll={true}>
         <Tabs>
@@ -154,33 +169,41 @@ class WorkspaceSettingsModal extends Component {
                 ) : workspace.certificates.map(certificate => (
                   <div key={certificate.host} className="row-spaced">
                     <div>
-                  <span className="pad-right no-wrap">
-                    <strong>CRT:</strong>
-                    {" "}
-                    {certificate.cert ?
-                      <i className="fa fa-check"/> :
-                      <i className="fa fa-remove"/>
-                    }
-                  </span>
                       <span className="pad-right no-wrap">
-                    <strong>Key:</strong>
+                        <strong>PFX:</strong>
+                        {" "}
+                        {certificate.pfx ?
+                          <i className="fa fa-check"/> :
+                          <i className="fa fa-remove"/>
+                        }
+                      </span>
+                      <span className="pad-right no-wrap">
+                        <strong>CRT:</strong>
+                        {" "}
+                        {certificate.cert ?
+                          <i className="fa fa-check"/> :
+                          <i className="fa fa-remove"/>
+                        }
+                      </span>
+                      <span className="pad-right no-wrap">
+                        <strong>Key:</strong>
                         {" "}
                         {certificate.key ?
                           <i className="fa fa-check"/> :
                           <i className="fa fa-remove"/>
                         }
-                  </span>
+                      </span>
                       <span className="pad-right no-wrap">
-                    <strong>Passphrase:</strong>
+                        <strong>Passphrase:</strong>
                         {" "}
                         {certificate.passphrase ?
                           <i className="fa fa-check"/> :
                           <i className="fa fa-remove"/>
                         }
-                  </span>
+                      </span>
                       <span className="pad-right">
-                    <strong>Host:</strong> {certificate.host}
-                  </span>
+                        <strong>Host:</strong> {certificate.host}
+                      </span>
                     </div>
                     <div className="no-wrap">
                       <button className="btn btn--super-compact width-auto"
@@ -211,7 +234,7 @@ class WorkspaceSettingsModal extends Component {
             ) : (
               <form onSubmit={this._handleSubmitCertificate}>
                 <div className="form-control form-control--outlined no-pad-top">
-                  <label>Hostname
+                  <label>Host <span className="faint">(port optional)</span>
                     <input
                       type="text"
                       required="required"
@@ -222,34 +245,52 @@ class WorkspaceSettingsModal extends Component {
                   </label>
                 </div>
                 <div className="row-fill">
-                  <div className="form-control width-auto">
-                    <label>CRT File
+                  <div className="form-control">
+                    <label>PFX <span className="faint">(or PKCS12)</span>
                       <FileInputButton
                         className="btn btn--clicky"
-                        onChange={this._handleCreateCrtChange}
-                        path={crtPath}
+                        onChange={this._handleCreatePfxChange}
+                        path={pfxPath}
                         showFileName={true}
                       />
                     </label>
                   </div>
-                  <div className="form-control width-auto">
-                    <label>Key File
-                      <FileInputButton
-                        className="btn btn--clicky"
-                        onChange={this._handleCreateKeyChange}
-                        path={keyPath}
-                        showFileName={true}/>
-                    </label>
+                  <div className="width-auto">
+                    <br/><br/>
+                    &nbsp;&nbsp;Or&nbsp;&nbsp;
                   </div>
-                  <div className="form-control form-control--outlined">
-                    <label>Passphrase
-                      <input
-                        type="password"
-                        placeholder="•••••••••••"
-                        onChange={this._handleCreatePassphraseChange}
-                      />
-                    </label>
+                  <div className="no-wrap row-fill">
+                    <div className="form-control">
+                      <label>CRT File
+                        <FileInputButton
+                          className="btn btn--clicky"
+                          name="Cert"
+                          onChange={this._handleCreateCrtChange}
+                          path={crtPath}
+                          showFileName={true}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-control">
+                      <label>Key File
+                        <FileInputButton
+                          className="btn btn--clicky"
+                          name="Key"
+                          onChange={this._handleCreateKeyChange}
+                          path={keyPath}
+                          showFileName={true}/>
+                      </label>
+                    </div>
                   </div>
+                </div>
+                <div className="form-control form-control--outlined">
+                  <label>Passphrase
+                    <input
+                      type="password"
+                      placeholder="•••••••••••"
+                      onChange={this._handleCreatePassphraseChange}
+                    />
+                  </label>
                 </div>
                 <br/>
                 <div className="pad-top text-right">
@@ -260,7 +301,7 @@ class WorkspaceSettingsModal extends Component {
                   </button>
                   {" "}
                   <button className="btn btn--clicky" type="submit">
-                    Create Certificate
+                    Import Certificate
                   </button>
                 </div>
               </form>
@@ -277,11 +318,11 @@ class WorkspaceSettingsModal extends Component {
       <Modal ref={this._handleSetModalRef} tall={true}>
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
-        <ModalFooter>
-          <button className="btn" onClick={this._handleClose}>
-            Close
-          </button>
-        </ModalFooter>
+        {/*<ModalFooter>*/}
+        {/*<button className="btn" onClick={this._handleClose}>*/}
+        {/*Close*/}
+        {/*</button>*/}
+        {/*</ModalFooter>*/}
       </Modal>
     )
   }
