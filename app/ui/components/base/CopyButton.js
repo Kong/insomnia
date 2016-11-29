@@ -4,7 +4,7 @@ const {clipboard} = require('electron');
 class CopyButton extends Component {
   state = {showConfirmation: false};
 
-  _handleClick (e) {
+  _handleClick = e => {
     e.preventDefault();
 
     clipboard.writeText(this.props.content);
@@ -14,7 +14,7 @@ class CopyButton extends Component {
     this._triggerTimeout = setTimeout(() => {
       this.setState({showConfirmation: false});
     }, 2000);
-  }
+  };
 
   componentWillUnmount () {
     clearTimeout(this._triggerTimeout);
@@ -25,10 +25,11 @@ class CopyButton extends Component {
     const {showConfirmation} = this.state;
 
     return (
-      <button onClick={this._handleClick.bind(this)} {...other}>
-        {showConfirmation ? (
-          <span>Copied <i className="fa fa-check-circle-o"></i></span>
-        ) : 'Copy to Clipboard'}
+      <button onClick={this._handleClick} {...other}>
+        {showConfirmation ?
+          <span>Copied <i className="fa fa-check-circle-o"></i></span> :
+          'Copy to Clipboard'
+        }
       </button>
     )
   }

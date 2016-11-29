@@ -23,7 +23,7 @@ class PreviewModeDropdown extends PureComponent {
             {getPreviewModeName(mode)}
           </DropdownItem>
         ))}
-        <DropdownDivider name="Response"/>
+        <DropdownDivider name="Actions"/>
         <DropdownItem onClick={download}>
           <i className="fa fa-save"></i>
           Save to File
