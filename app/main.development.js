@@ -16,7 +16,7 @@ const IS_MAC = process.platform === 'darwin';
 const IS_WINDOWS = process.platform === 'win32';
 const IS_LINUX = !IS_MAC && !IS_WINDOWS;
 
-var ravenClient = new raven.Client('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
+const ravenClient = new raven.Client('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
   environment: process.env.INSOMNIA_ENV || 'production',
   release: require('./package.json').version,
   logger: 'electron.main'
@@ -474,12 +474,8 @@ function createWindow () {
       label: "Window",
       role: "window",
       submenu: [
-        {
-          role: 'minimize'
-        },
-        {
-          role: 'close'
-        }
+        {role: 'minimize'},
+        ...(IS_MAC ? [{role: 'close'}] : [])
       ]
     }, {
       label: "Help",

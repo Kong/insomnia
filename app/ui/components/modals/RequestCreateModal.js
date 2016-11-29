@@ -10,27 +10,11 @@ import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestCreateModal extends Component {
-  constructor (props) {
-    super(props);
-
-    let contentType;
-    try {
-      contentType = JSON.parse(localStorage.getItem('insomnia::createRequest::contentType'));
-    } catch (e) {
-    }
-
-    let method;
-    try {
-      method = JSON.parse(localStorage.getItem('insomnia::createRequest::method'));
-    } catch (e) {
-    }
-
-    this.state = {
-      selectedContentType: typeof contentType === 'string' ? contentType : null,
-      selectedMethod: method || METHOD_GET,
-      parentId: null,
-    };
-  }
+  state = {
+    selectedContentType: null,
+    selectedMethod: METHOD_GET,
+    parentId: null,
+  };
 
   _handleSubmit = async e => {
     e.preventDefault();
@@ -55,23 +39,13 @@ class RequestCreateModal extends Component {
 
   _handleChangeSelectedContentType = selectedContentType => {
     this.setState({selectedContentType});
-    localStorage.setItem(
-      'insomnia::createRequest::contentType',
-      JSON.stringify(selectedContentType)
-    );
     trackEvent('Request Create', 'Content Type Change', selectedContentType);
   };
 
   _handleChangeSelectedMethod = selectedMethod => {
     this.setState({selectedMethod});
-    localStorage.setItem(
-      'insomnia::createRequest::method',
-      JSON.stringify(selectedMethod)
-    );
     trackEvent('Request Create', 'Method Change', selectedMethod);
   };
-
-  _handleHide = () => this.hide();
 
   _shouldNotHaveBody () {
     const {selectedMethod} = this.state;
@@ -90,7 +64,11 @@ class RequestCreateModal extends Component {
     this.modal.show();
 
     this._input.value = 'My Request';
-    this.setState({parentId});
+    this.setState({
+      parentId,
+      selectedContentType: null,
+      selectedMethod: METHOD_GET
+    });
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
@@ -125,10 +103,6 @@ class RequestCreateModal extends Component {
                   />
                 </label>
               </div>
-              <div className="form-control" style={{width: 'auto'}}>
-                <label htmlFor="nothing">&nbsp;
-                </label>
-              </div>
               {!this._shouldNotHaveBody() ? (
                 <div className="form-control" style={{width: 'auto'}}>
                   <label htmlFor="nothing">&nbsp;
@@ -144,11 +118,6 @@ class RequestCreateModal extends Component {
                 </div>
               ) : null}
             </div>
-            {/*<div className="form-control form-control--outlined">*/}
-              {/*<label>Description*/}
-                {/*<textarea rows="3" placeholder="This request will create a new user"/>*/}
-              {/*</label>*/}
-            {/*</div>*/}
           </form>
         </ModalBody>
         <ModalFooter>
