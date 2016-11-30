@@ -3,6 +3,7 @@ import entitiesReducer from './entities';
 import * as entities from './entities';
 import globalReducer from './global';
 import * as global from './global';
+import configureStore from '../create';
 import workspaceMetaReducer from './workspaceMeta';
 import * as workspaceMeta from './workspaceMeta';
 import requestMetaReducer from './requestMeta';
@@ -13,9 +14,12 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import * as fetch from '../../../common/fetch';
 
-export async function init (dispatch) {
-  const {addChanges} = bindActionCreators(entities, dispatch);
-  const {newCommand} = bindActionCreators(global, dispatch);
+export async function init () {
+  const store = configureStore();
+
+  // Do things that must happen before initial render
+  const {addChanges} = bindActionCreators(entities, store.dispatch);
+  const {newCommand} = bindActionCreators(global, store.dispatch);
 
   // Restore docs in parent->child->grandchild order
   const allDocs = [
@@ -35,10 +39,12 @@ export async function init (dispatch) {
   // Bind to fetch commands
   fetch.onCommand(newCommand);
 
-  dispatch(requestMeta.init());
-  dispatch(requestGroupMeta.init());
-  dispatch(workspaceMeta.init());
-  dispatch(global.init());
+  store.dispatch(requestMeta.init());
+  store.dispatch(requestGroupMeta.init());
+  store.dispatch(workspaceMeta.init());
+  store.dispatch(global.init());
+
+  return store;
 }
 
 export const reducer = combineReducers({

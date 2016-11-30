@@ -66,23 +66,23 @@ class LoginModal extends Component {
           {message ? (
             <p className="notice info">{message}</p>
           ) : null}
-          <label htmlFor="login-email">Email</label>
           <div className="form-control form-control--outlined">
-            <input type="email"
-                   required="required"
-                   id="login-email"
-                   name="login-email"
-                   placeholder="me@mydomain.com"
-                   ref={n => this._emailInput = n}/>
+            <label>Email
+              <input
+                type="email"
+                required="required"
+                placeholder="me@mydomain.com"
+                ref={n => this._emailInput = n}
+              />
+            </label>
           </div>
-          <label htmlFor="login-password">Password</label>
           <div className="form-control form-control--outlined">
-            <input type="password"
-                   required="required"
-                   id="login-password"
-                   name="login-password"
-                   placeholder="•••••••••••••••••"
-                   ref={n => this._passwordInput = n}/>
+            <label>Password
+              <input type="password"
+                     required="required"
+                     placeholder="•••••••••••••••••"
+                     ref={n => this._passwordInput = n}/>
+            </label>
           </div>
           {this.state.error ? (
             <div className="danger pad-top">** {this.state.error}</div>

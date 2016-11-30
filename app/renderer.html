@@ -69,8 +69,8 @@
         return true;
       },
       dataCallback: function (data) {
-        var normalize = function (filename) {
-          var match = filename.match(/\/(app.asar|build)\/(.*)/);
+        const normalize = function (filename) {
+          const match = filename.match(/\/(app.asar|build)\/(.*)/);
           if (match) {
             return match[2]; // return everything after ../app.asar/*
           } else {

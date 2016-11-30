@@ -5,8 +5,8 @@ export default {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
   entry: [
-    './ui/index.js',
-    './main.html'
+    './renderer.js',
+    './renderer.html'
   ],
   output: {
     path: path.join(__dirname, '../build'),

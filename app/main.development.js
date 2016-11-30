@@ -303,7 +303,7 @@ function createWindow () {
   });
 
   // and load the app.html of the app.
-  mainWindow.loadURL(`file://${__dirname}/main.html`);
+  mainWindow.loadURL(`file://${__dirname}/renderer.html`);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {

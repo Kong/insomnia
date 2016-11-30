@@ -77,43 +77,49 @@ class SignupModal extends Component {
         <ModalHeader key="header">Sign Up For a New Account</ModalHeader>,
         <ModalBody key="body" className="pad">
           <div className={classnames({hide: step !== STEP_BASIC_INFO})}>
-            <label htmlFor="signup-name-first">First Name</label>
             <div className="form-control form-control--outlined">
-              <input type="text"
-                     required="required"
-                     id="signup-name-first"
-                     name="signup-name-first"
-                     placeholder="Jane"
-                     ref={n => this._nameFirstInput = n}/>
+              <label>First Name
+                <input
+                  type="text"
+                  required="required"
+                  name="signup-name-first"
+                  placeholder="Jane"
+                  ref={n => this._nameFirstInput = n}
+                />
+              </label>
             </div>
-            <label htmlFor="signup-name-last">Last Name</label>
             <div className="form-control form-control--outlined">
-              <input type="text"
-                     id="signup-name-last"
-                     name="signup-name-last"
-                     placeholder="Doe"
-                     ref={n => this._nameLastInput = n}/>
+              <label>Last Name
+                <input
+                  type="text"
+                  name="signup-name-last"
+                  placeholder="Doe"
+                  ref={n => this._nameLastInput = n}
+                />
+              </label>
             </div>
-            <label htmlFor="signup-email">Email Address</label>
             <div className="form-control form-control--outlined">
-              <input type="email"
-                     required="required"
-                     id="signup-email"
-                     name="signup-email"
-                     placeholder="me@mydomain.com"
-                     ref={n => this._emailInput = n}/>
+              <label>Email Address
+                <input
+                  type="email"
+                  required="required"
+                  name="signup-email"
+                  placeholder="me@mydomain.com"
+                  ref={n => this._emailInput = n}
+                />
+              </label>
             </div>
-            <label htmlFor="signup-password">
-              Password <span className="faint">(minimum 6 characters)</span>
-            </label>
             <div className="form-control form-control--outlined">
-              <input type="password"
-                     required="required"
-                     pattern=".{6,}"
-                     id="signup-password"
-                     name="signup-password"
-                     placeholder="•••••••••••••"
-                     ref={n => this._passwordInput = n}/>
+              <label>Password <span className="faint">(minimum 6 characters)</span>
+                <input
+                  type="password"
+                  required="required"
+                  pattern=".{6,}"
+                  name="signup-password"
+                  placeholder="•••••••••••••"
+                  ref={n => this._passwordInput = n}
+                />
+              </label>
             </div>
           </div>
           {step === STEP_CONFIRM_PASSWORD ? (
@@ -128,24 +134,25 @@ class SignupModal extends Component {
                 </span>
               </p>
               <div className="text-left">
-                <label htmlFor="signup-password-confirm" className="pad-left-sm">
-                  Confirm your Password
-                </label>
                 <div className="form-control form-control--outlined">
-                  <input type="password"
-                         required="required"
-                         pattern=".{6,}"
-                         id="signup-password-confirm"
-                         name="signup-password-confirm"
-                         placeholder="•••••••••••••"
-                         autoFocus="autoFocus"
-                         onChange={this._checkPasswordsMatch.bind(this)}
-                         ref={n => this._passwordConfirmInput = n}/>
+                  <label className="pad-left-sm">Confirm your Password
+                    <input
+                      type="password"
+                      required="required"
+                      pattern=".{6,}"
+                      id="signup-password-confirm"
+                      name="signup-password-confirm"
+                      placeholder="•••••••••••••"
+                      autoFocus="autoFocus"
+                      onChange={this._checkPasswordsMatch.bind(this)}
+                      ref={n => this._passwordConfirmInput = n}
+                    />
+                  </label>
                 </div>
                 <button type="button"
                         className="pad-sm faint"
                         onClick={e => this.setState({step: STEP_BASIC_INFO})}>
-                  <i className="fa fa-caret-left"></i>
+                  <i className="fa fa-caret-left"/>
                   Go back
                 </button>
               </div>
@@ -163,7 +170,7 @@ class SignupModal extends Component {
           </div>
           <button type="submit" className="btn">
             {this.state.loading ?
-              <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
+              <i className="fa fa-spin fa-refresh margin-right-sm"/> : null}
             Create Account
           </button>
         </ModalFooter>
