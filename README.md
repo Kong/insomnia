@@ -1,6 +1,6 @@
 # Insomnia REST Client [![Build Status](https://travis-ci.com/getinsomnia/app.svg?branch=master)](https://travis-ci.com/getinsomnia/app)
 
-An elegant and simple REST API client.
+A simple REST API client, build with [Electron](http://electron.atom.io/).
 
 ![Insomnia REST Client](https://insomnia.rest/images/docs/promo.png)
 
