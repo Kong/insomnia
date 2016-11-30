@@ -192,7 +192,7 @@ class RequestUrlBar extends Component {
             <i className="fa fa-clock-o"/> Send After Delay
           </DropdownItem>
           <DropdownItem onClick={this._handleSendOnInterval}>
-            <i className="fa fa-repeat"/> Send on Interval
+            <i className="fa fa-repeat"/> Repeat on Interval
           </DropdownItem>
         </Dropdown>
       )

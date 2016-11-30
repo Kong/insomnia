@@ -75,7 +75,7 @@ class ChangelogModal extends Component {
         if (change.major && change.major.length) {
           html = [
             ...html,
-            <h3 key={`major.${i}`}>Noteworthy</h3>,
+            <h3 key={`major.${i}`}>Major</h3>,
             <ul key={`major.${i}.list`}>
               {change.major.map((text, i) => <li key={i}>{text}</li>)}
             </ul>
@@ -85,7 +85,7 @@ class ChangelogModal extends Component {
         if (change.fixes && change.fixes.length) {
           html = [
             ...html,
-            <h3 key={`fixes.${i}`}>Fixes</h3>,
+            <h3 key={`fixes.${i}`}>Bug Fixes</h3>,
             <ul key={`fixes.${i}.list`}>
               {change.fixes.map((text, j) => <li key={j}>{text}</li>)}
             </ul>
@@ -95,7 +95,7 @@ class ChangelogModal extends Component {
         if (change.minor && change.minor.length) {
           html = [
             ...html,
-            <h3 key={`minor.${i}`}>Minor Changes</h3>,
+            <h3 key={`minor.${i}`}>Minor</h3>,
             <ul key={`minor.${i}.list`}>
               {change.minor.map((text, i) => <li key={i}>{text}</li>)}
             </ul>

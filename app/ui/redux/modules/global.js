@@ -102,7 +102,9 @@ export function importFile (workspaceId) {
       properties: ['openFile'],
       filters: [{
         // Allow empty extension and JSON
-        name: 'Insomnia Import', extensions: ['', 'sh', 'txt', 'json']
+        name: 'Insomnia Import', extensions: [
+          '', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell'
+        ]
       }]
     };
 

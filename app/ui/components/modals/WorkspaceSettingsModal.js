@@ -106,7 +106,7 @@ class WorkspaceSettingsModal extends Component {
     const {workspace} = this.props;
     return (
       <ModalHeader key={`header::${workspace._id}`}>
-        Workspace Configuration
+        Workspace Settings
       </ModalHeader>
     )
   }
@@ -122,7 +122,7 @@ class WorkspaceSettingsModal extends Component {
               <button>Overview</button>
             </Tab>
             <Tab>
-              <button>SSL Certificates</button>
+              <button>Client Certificates</button>
             </Tab>
           </TabList>
           <TabPanel className="pad no-pad-top scrollable">
@@ -164,7 +164,7 @@ class WorkspaceSettingsModal extends Component {
               <div>
                 {workspace.certificates.length === 0 ? (
                   <p className="notice info margin-top-sm">
-                    You have not yet added any SSL client certificates
+                    You have not yet added any certificates
                   </p>
                 ) : workspace.certificates.map(certificate => (
                   <div key={certificate.host} className="row-spaced">

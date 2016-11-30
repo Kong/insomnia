@@ -272,9 +272,12 @@ export function docCreate (type, patch = {}) {
 
     // Fields that the user can't touch
     {
-      _id: generateId(idPrefix),
       type: type,
-      modified: Date.now()
+      modified: Date.now(),
+
+      // This is here so that we can regenerate _id if it's
+      // set to null
+      _id: patch._id || generateId(idPrefix),
     }
   );
 

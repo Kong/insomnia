@@ -67,19 +67,52 @@ export function generateId (prefix) {
   }
 }
 
-export function flexibleEncodeComponent (str) {
+export function flexibleEncodeComponent (str, ignore = '') {
   // Sometimes spaces screw things up because of url.parse
   str = str.replace(/%20/g, ' ');
 
-  let decoded;
-  try {
-    decoded = decodeURIComponent(str);
-  } catch (e) {
-    // Malformed (probably not encoded) so assume it's decoded already
-    decoded = str;
+  const ignoredChars = ignore.split('');
+
+  // Do a special encode of ignored chars, so they aren't touched.
+  // This first pass, surrounds them with a special tag (anything unique
+  // will work), so it can change them back later
+  // Example: will replace %40 with __LEAVE_40_LEAVE__, and we'll change
+  // it back to %40 at the end.
+  for (const c of ignoredChars) {
+    const code = encodeURIComponent(c).replace('%', '');
+
+    // Replace encoded versions
+    const re = new RegExp(encodeURIComponent(c), 'g');
+    str = str.replace(re, `__ENCODED_${code}_ENCODED__`);
+
+    // Replace raw versions
+    const re2 = new RegExp(c, 'g');
+    str = str.replace(re2, `__RAW_${code}_RAW__`);
   }
 
-  return encodeURIComponent(decoded);
+  try {
+    str = decodeURIComponent(str);
+  } catch (e) {
+    // Malformed (probably not encoded) so assume it's decoded already
+  }
+
+  // Encode it
+  str = encodeURIComponent(str);
+
+  // Put back the encoded version of the ignored chars
+  for (const c of ignoredChars) {
+    const code = encodeURIComponent(c).replace('%', '');
+
+    // Put back encoded versions
+    const re = new RegExp(`__ENCODED_${code}_ENCODED__`, 'g');
+    str = str.replace(re, encodeURIComponent(c));
+
+    // Put back raw versions
+    const re2 = new RegExp(`__RAW_${code}_RAW__`, 'g');
+    str = str.replace(re2, c);
+  }
+
+  return str;
 }
 
 export function prepareUrlForSending (url) {
@@ -94,10 +127,9 @@ export function prepareUrlForSending (url) {
 
   if (parsedUrl.pathname) {
     const segments = parsedUrl.pathname.split('/');
-    parsedUrl.pathname = segments.map(flexibleEncodeComponent).join('/')
-      .replace(/%3B/gi, ';') // Don't encode ; in pathname
-      .replace(/%40/gi, '@') // Don't encode @ in pathname
-      .replace(/%2C/gi, ','); // Don't encode , in pathname
+    parsedUrl.pathname = segments.map(
+      s => flexibleEncodeComponent(s, ',;@')
+    ).join('/')
   }
 
   // ~~~~~~~~~~~~~~ //
@@ -159,14 +191,17 @@ export function describeByteSize (bytes) {
   bytes = Math.round(bytes * 10) / 10;
   let size;
 
+  // NOTE: We multiply these by 2 so we don't end up with
+  // values like 0 GB
+
   let unit = 'B';
-  if (bytes < 1024) {
+  if (bytes < 1024 * 2) {
     size = bytes;
     unit = 'B';
-  } else if (bytes < 1024 * 1024) {
+  } else if (bytes < 1024 * 1024 * 2) {
     size = bytes / 1024;
     unit = 'KB';
-  } else if (bytes < 1024 * 1024) {
+  } else if (bytes < 1024 * 1024 * 2) {
     size = bytes / 1024 / 1024;
     unit = 'MB';
   } else {

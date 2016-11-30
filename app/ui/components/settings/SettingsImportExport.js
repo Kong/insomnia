@@ -9,7 +9,7 @@ const SettingsImportExport = ({
   <div>
     <h1 className="no-margin-top">Data Import and Export</h1>
     <p>
-      Import format will be automatically detected (<strong>Insomnia, Postman, HAR, cURL</strong>)
+      Import format will be automatically detected (<strong>Insomnia, Postman v2, HAR, Curl</strong>)
     </p>
     <Dropdown outline={true}>
       <DropdownButton className="btn btn--clicky">
