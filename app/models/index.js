@@ -70,7 +70,6 @@ export function initModel (type, ...sources) {
   const objectDefaults = Object.assign({
     type: type,
     _id: null,
-    _schema: 0,
     parentId: null,
     modified: Date.now(),
     created: Date.now(),

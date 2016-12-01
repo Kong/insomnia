@@ -1,6 +1,8 @@
 import * as db from '../../common/database';
 import * as requestModel from '../../models/request';
 import {types as allModelTypes} from '../../models';
+import {initModel} from '../index';
+import * as models from '../index';
 
 describe('init()', () => {
   beforeEach(() => {
@@ -10,7 +12,6 @@ describe('init()', () => {
   it('contains all required fields', async () => {
     Date.now = jest.genMockFunction().mockReturnValue(1478795580200);
     expect(requestModel.init()).toEqual({
-      _schema: 1,
       authentication: {},
       body: {},
       headers: [],
@@ -34,7 +35,6 @@ describe('create()', async () => {
     const request = await requestModel.create({name: 'Test Request', parentId: 'fld_124'});
     const expected = {
       _id: 'req_dd2ccc1a2745477a881a9e8ef9d42403',
-      _schema: 1,
       created: 1478795580200,
       modified: 1478795580200,
       parentId: 'fld_124',
@@ -127,7 +127,6 @@ describe('migrate()', () => {
     };
 
     const expected = {
-      _schema: 1,
       headers: [],
       body: {mimeType: "", text: 'hello world!'}
     };
@@ -142,7 +141,6 @@ describe('migrate()', () => {
     };
 
     const expected = {
-      _schema: 1,
       headers: [{name: 'content-type', value: 'application/x-www-form-urlencoded'}],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
@@ -163,7 +161,6 @@ describe('migrate()', () => {
     };
 
     const expected = {
-      _schema: 1,
       headers: [{name: 'content-type', value: 'application/x-www-form-urlencoded; charset=utf-8'}],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
@@ -184,7 +181,6 @@ describe('migrate()', () => {
     };
 
     const expected = {
-      _schema: 1,
       headers: [{name: 'content-type', value: 'application/x-www-form-urlencoded'}],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
@@ -211,7 +207,6 @@ describe('migrate()', () => {
       };
 
       const expected = {
-        _schema: 1,
         headers: [{name: 'content-type', value: contentType}],
         body: {mimeType: contentToMimeMap[contentType], text: ''}
       };
@@ -222,29 +217,60 @@ describe('migrate()', () => {
 
   it('skips migrate for schema 1', () => {
     const original = {
-      _schema: 1,
       body: {mimeType: 'text/plain', text: 'foo'}
     };
 
     expect(requestModel.migrate(original)).toBe(original);
   });
 
-  it('migrates with no schema and schema < 1', () => {
-    const withoutSchema = {body: 'foo bar!'};
-    const withSchema = {_schema: 0, body: 'foo bar!'};
-    const withWeirdSchema = {_schema: -4, body: 'foo bar!'};
+  it('migrates with weird data', () => {
+    const newBody = {body: {mimeType: '', text: 'foo bar!'}};
+    const stringBody = {body: 'foo bar!'};
+    const nullBody = {body: null};
+    const noBody = {};
 
     const expected = {
-      _schema: 1,
       body: {
         mimeType: "",
         text: 'foo bar!'
       }
     };
 
-    expect(requestModel.migrate(withSchema)).toEqual(expected);
-    expect(requestModel.migrate(withoutSchema)).toEqual(expected);
-    expect(requestModel.migrate(withWeirdSchema)).toEqual(expected);
+    const expected2 = {
+      body: {}
+    };
+
+    expect(requestModel.migrate(newBody)).toEqual(expected);
+    expect(requestModel.migrate(stringBody)).toEqual(expected);
+    expect(requestModel.migrate(nullBody)).toEqual(expected2);
+    expect(requestModel.migrate(noBody)).toEqual(expected2);
+  });
+
+  it('migrates from initModel()', () => {
+    const original = {
+      _id: 'req_123',
+      headers: [],
+      body: 'hello world!'
+    };
+
+    const expected = {
+      _id: 'req_123',
+      type: 'Request',
+      url: '',
+      created: 1478795580200,
+      modified: 1478795580200,
+      metaSortKey: -1478795580200,
+      name: 'New Request',
+      method: 'GET',
+      headers: [],
+      authentication: {},
+      parameters: [],
+      parentId: null,
+      body: {mimeType: '', text: 'hello world!'}
+    };
+
+    const migrated = initModel(models.request.type, original);
+    expect(migrated).toEqual(expected);
   });
 });
 

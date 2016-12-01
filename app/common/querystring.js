@@ -60,7 +60,7 @@ export function buildFromParams (parameters, strict = true) {
  * @param strict allow empty names and values
  */
 export function deconstructToParams (qs, strict = true) {
-  if (qs === '') {
+  if (!qs) {
     return [];
   }
 

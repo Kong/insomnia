@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "Insomnia App",
-  "main": "electron.js",
+  "main": "main.js",
   "licence": "GNU AGPLv3",
   "homepage": "http://insomnia.rest",
   "repository": {
@@ -77,7 +77,7 @@
     },
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
-      "__remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
+      "remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
       "target": "squirrel",
       "msi": false
     },

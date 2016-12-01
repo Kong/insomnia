@@ -133,7 +133,6 @@ export async function exportJSON (parentDoc = null) {
 
     // Delete the things we don't want to export
     delete d.type;
-    delete d._schema;
 
     return d;
   });

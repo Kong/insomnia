@@ -250,8 +250,7 @@ class Editor extends Component {
       return;
     }
 
-    var newValue = doc.getValue();
-    this.props.onChange(newValue);
+    this.props.onChange(doc.getValue());
   }
 
   /**
@@ -265,7 +264,7 @@ class Editor extends Component {
     if (this.props.autoPrettify && this._canPrettify()) {
       this._prettify(code);
     } else {
-      this.codeMirror.setValue(code);
+      this.codeMirror.setValue(code || '');
     }
   }
 

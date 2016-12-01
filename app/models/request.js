@@ -9,7 +9,6 @@ export const prefix = 'req';
 
 export function init () {
   return {
-    _schema: 1,
     url: '',
     name: 'New Request',
     method: METHOD_GET,
@@ -57,13 +56,7 @@ export function newBodyForm (parameters) {
 }
 
 export function migrate (doc) {
-  const schema = doc._schema || 0;
-
-  if (schema <= 0) {
-    doc = migrateTo1(doc);
-    doc._schema = 1;
-  }
-
+  doc = migrateTo1(doc);
   return doc;
 }
 
@@ -143,6 +136,9 @@ export function all () {
 // ~~~~~~~~~~ //
 
 function migrateTo1 (request) {
+  if (request.body && typeof request.body === 'object') {
+    return request;
+  }
 
   // Second, convert all existing urlencoded bodies to new format
   const contentType = getContentTypeFromHeaders(request.headers) || '';
@@ -152,6 +148,8 @@ function migrateTo1 (request) {
     // Convert old-style form-encoded request bodies to new style
     const params = deconstructToParams(request.body, false);
     request.body = newBodyFormUrlEncoded(params);
+  } else if (!request.body && !contentType) {
+    request.body = {};
   } else {
     request.body = newBodyRaw(request.body, contentType);
   }

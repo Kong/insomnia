@@ -275,12 +275,14 @@ export function docCreate (type, patch = {}) {
     {
       type: type,
       modified: Date.now(),
-
-      // This is here so that we can regenerate _id if it's
-      // set to null
-      _id: patch._id || generateId(idPrefix),
     }
   );
+
+  // NOTE: This CAN'T be inside initModel() because initModel checks
+  // for _id existence to do migrations and stuff
+  if (!doc._id) {
+    doc._id = generateId(idPrefix);
+  }
 
   return insert(doc);
 }
