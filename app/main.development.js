@@ -294,9 +294,15 @@ function createWindow () {
       trackEvent('Window', 'Resize');
     }, 1000);
   });
+
+  let _moveTimeout = null;
   mainWindow.on('move', e => {
     saveBounds();
-    trackEvent('Window', 'Move');
+
+    clearTimeout(_moveTimeout);
+    _moveTimeout = setTimeout(() => {
+      trackEvent('Window', 'Move');
+    });
   });
   mainWindow.on('unresponsive', e => {
     showUnresponsiveModal();
