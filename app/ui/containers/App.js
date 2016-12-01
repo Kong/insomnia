@@ -17,23 +17,27 @@ import ChangelogModal from '../components/modals/ChangelogModal';
 import SettingsModal from '../components/modals/SettingsModal';
 import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
-import * as workspaceMetaActions from '../redux/modules/workspaceMeta';
-import * as requestMetaActions from '../redux/modules/requestMeta';
-import * as requestGroupMetaActions from '../redux/modules/requestGroupMeta';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
-import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups, selectActiveRequestMeta, selectActiveRequest, selectActiveWorkspaceMeta} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/RequestCreateModal';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
+import * as network from '../../common/network';
+import {debounce} from '../../common/misc';
 
 
 class App extends Component {
-  state = {
-    draggingSidebar: false,
-    draggingPane: false,
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      draggingSidebar: false,
+      draggingPane: false,
+      sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
+      paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
+    };
+  }
 
   _globalKeyMap = {
 
@@ -58,8 +62,8 @@ class App extends Component {
 
     // Request Send
     'mod+enter': () => {
-      const {handleSendRequestWithEnvironment, activeRequest, activeEnvironment} = this.props;
-      handleSendRequestWithEnvironment(
+      const {activeRequest, activeEnvironment} = this.props;
+      this._handleSendRequestWithEnvironment(
         activeRequest ? activeRequest._id : 'n/a',
         activeEnvironment ? activeEnvironment._id : 'n/a',
       );
@@ -127,9 +131,7 @@ class App extends Component {
   };
 
   _requestGroupDuplicate = async requestGroup => {
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
-    // Default duplicated groups to collapsed state
-    this.props.handleSetRequestGroupCollapsed(newRequestGroup._id, true);
+    models.requestGroup.duplicate(requestGroup);
   };
 
   _requestDuplicate = async request => {
@@ -147,13 +149,99 @@ class App extends Component {
     showModal(GenerateCodeModal, this.props.activeRequest);
   };
 
-  _requestCreateForWorkspace = () => {
-    this._requestCreate(this.props.activeWorkspace._id);
+  _updateRequestGroupMetaByParentId = async (requestGroupId, patch) => {
+    const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
+    if (requestGroupMeta) {
+      await models.requestGroupMeta.update(requestGroupMeta, patch);
+    } else {
+      await models.requestGroupMeta.create({parentId: requestGroupId}, patch);
+    }
   };
 
-  _handleActivateRequest = async requestId => {
-    const {activeWorkspace, handleSetActiveRequest} = this.props;
-    handleSetActiveRequest(activeWorkspace._id, requestId);
+  _updateActiveWorkspaceMeta = async (patch) => {
+    const workspaceId = this.props.activeWorkspace._id;
+    const requestMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    if (requestMeta) {
+      await models.workspaceMeta.update(requestMeta, patch);
+    } else {
+      await models.workspaceMeta.create({parentId: workspaceId}, patch);
+    }
+  };
+
+  _updateRequestMetaByParentId = async (requestId, patch) => {
+    const requestMeta = await models.requestMeta.getByParentId(requestId);
+    if (requestMeta) {
+      await models.requestMeta.update(requestMeta, patch);
+    } else {
+      await models.requestMeta.create({parentId: requestId}, patch);
+    }
+  };
+
+  _savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
+  _handleSetPaneWidth = paneWidth => {
+    this.setState({paneWidth});
+    this._savePaneWidth(paneWidth);
+  };
+
+  _handleSetActiveRequest = activeRequestId => {
+    this._updateActiveWorkspaceMeta({activeRequestId});
+  };
+
+  _handleSetActiveEnvironment = activeEnvironmentId => {
+    this._updateActiveWorkspaceMeta({activeEnvironmentId});
+  };
+
+  _saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
+  _handleSetSidebarWidth = sidebarWidth => {
+    this.setState({sidebarWidth});
+    this._saveSidebarWidth(sidebarWidth);
+  };
+
+  _handleSetSidebarHidden = sidebarHidden => {
+    this._updateActiveWorkspaceMeta({sidebarHidden});
+  };
+
+  _handleSetSidebarFilter = sidebarFilter => {
+    this._updateActiveWorkspaceMeta({sidebarFilter});
+  };
+
+  _handleSetRequestGroupCollapsed = (requestGroupId, collapsed) => {
+    this._updateRequestGroupMetaByParentId(requestGroupId, {collapsed});
+  };
+
+  _handleSetResponsePreviewMode = (requestId, previewMode) => {
+    this._updateRequestMetaByParentId(requestId, {previewMode});
+  };
+
+  _handleSetResponseFilter = (requestId, responseFilter) => {
+    this._updateRequestMetaByParentId(requestId, {responseFilter});
+  };
+
+  _handleSendRequestWithEnvironment = async (requestId, environmentId) => {
+    this.props.handleStartLoading(requestId);
+
+    trackEvent('Request', 'Send');
+    trackLegacyEvent('Request Send');
+
+    try {
+      await network.send(requestId, environmentId);
+    } catch (e) {
+      // It's OK
+    }
+
+    // Unset active response because we just made a new one
+    await this._updateRequestMetaByParentId(requestId, {activeResponseId: null});
+
+    // Stop loading
+    this.props.handleStopLoading(requestId);
+  };
+
+  _handleSetActiveResponse = (requestId, activeResponseId) => {
+    this._updateRequestMetaByParentId(requestId, {activeResponseId});
+  };
+
+  _requestCreateForWorkspace = () => {
+    this._requestCreate(this.props.activeWorkspace._id);
   };
 
   _startDragSidebar = () => {
@@ -164,10 +252,7 @@ class App extends Component {
   _resetDragSidebar = () => {
     trackEvent('Sidebar', 'Drag Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
-    setTimeout(() => {
-      const {handleSetSidebarWidth, activeWorkspace} = this.props;
-      handleSetSidebarWidth(activeWorkspace._id, DEFAULT_SIDEBAR_WIDTH)
-    }, 50);
+    setTimeout(() => this._handleSetSidebarWidth(DEFAULT_SIDEBAR_WIDTH), 50);
   };
 
   _startDragPane = () => {
@@ -178,10 +263,7 @@ class App extends Component {
   _resetDragPane = () => {
     trackEvent('App Pane', 'Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
-    setTimeout(() => {
-      const {handleSetPaneWidth, activeWorkspace} = this.props;
-      handleSetPaneWidth(activeWorkspace._id, DEFAULT_PANE_WIDTH);
-    }, 50);
+    setTimeout(() => this._handleSetPaneWidth(DEFAULT_PANE_WIDTH), 50);
   };
 
   _handleMouseMove = (e) => {
@@ -194,14 +276,14 @@ class App extends Component {
       const pixelOffset = e.clientX - requestPane.offsetLeft;
       let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
       paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
-      this.props.handleSetPaneWidth(this.props.activeWorkspace._id, paneWidth);
+      this._handleSetPaneWidth(paneWidth);
 
     } else if (this.state.draggingSidebar) {
       const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
-      const width = this.props.sidebarWidth * ratio;
+      const width = this.state.sidebarWidth * ratio;
       let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
-      this.props.handleSetSidebarWidth(this.props.activeWorkspace._id, sidebarWidth);
+      this._handleSetSidebarWidth(sidebarWidth);
     }
   };
 
@@ -216,9 +298,9 @@ class App extends Component {
   };
 
   _handleToggleSidebar = () => {
-    const {activeWorkspace, sidebarHidden, handleSetSidebarHidden} = this.props;
-    handleSetSidebarHidden(activeWorkspace._id, !sidebarHidden);
-    trackEvent('Sidebar', 'Toggle Visibility', !sidebarHidden ? 'Hide' : 'Show');
+    const sidebarHidden = !this.props.sidebarHidden;
+    this._handleSetSidebarHidden(sidebarHidden);
+    trackEvent('Sidebar', 'Toggle Visibility', sidebarHidden ? 'Hide' : 'Show');
   };
 
   _setWrapperRef = n => {
@@ -310,9 +392,13 @@ class App extends Component {
     return (
       <div className="app">
         <Wrapper
+          {...this.props}
           ref={this._setWrapperRef}
+          paneWidth={this.state.paneWidth}
+          sidebarWidth={this.state.sidebarWidth}
           handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-          handleActivateRequest={this._handleActivateRequest}
+          handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+          handleActivateRequest={this._handleSetActiveRequest}
           handleSetRequestPaneRef={this._setRequestPaneRef}
           handleSetResponsePaneRef={this._setResponsePaneRef}
           handleSetSidebarRef={this._setSidebarRef}
@@ -325,7 +411,13 @@ class App extends Component {
           handleDuplicateRequestGroup={this._requestGroupDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}
           handleGenerateCode={this._handleGenerateCode}
-          {...this.props}
+          handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+          handleSetResponseFilter={this._handleSetResponseFilter}
+          handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+          handleSetActiveResponse={this._handleSetActiveResponse}
+          handleSetActiveRequest={this._handleSetActiveRequest}
+          handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+          handleSetSidebarFilter={this._handleSetSidebarFilter}
         />
         <Toast/>
       </div>
@@ -336,29 +428,12 @@ class App extends Component {
 function mapStateToProps (state, props) {
   const {
     entities,
-    global,
-    workspaceMeta,
-    requestMeta
+    global
   } = state;
 
   const {
-    activeRequestIds,
-    activeEnvironmentIds,
-    sidebarHiddens,
-    sidebarFilters,
-    sidebarWidths,
-    paneWidths
-  } = workspaceMeta;
-
-  const {
-    loadingRequestIds,
-    activeResponseIds,
-    previewModes,
-    responseFilters,
-  } = requestMeta;
-
-  const {
     isLoading,
+    loadingRequestIds,
   } = global;
 
   // Entities
@@ -373,28 +448,27 @@ function mapStateToProps (state, props) {
   const settings = entitiesLists.settings[0];
 
   // Workspace stuff
+
+  const workspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
   const activeWorkspace = selectActiveWorkspace(state, props);
-  const activeWorkspaceId = activeWorkspace._id;
-  const sidebarHidden = !!sidebarHiddens[activeWorkspaceId];
-  const sidebarFilter = sidebarFilters[activeWorkspaceId] || '';
-  const sidebarWidth = sidebarWidths[activeWorkspaceId] || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = paneWidths[activeWorkspaceId] || DEFAULT_PANE_WIDTH;
+  const sidebarHidden = workspaceMeta.sidebarHidden || false;
+  const sidebarFilter = workspaceMeta.sidebarFilter || '';
+  const sidebarWidth = workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
+  const paneWidth = workspaceMeta.paneWidth || DEFAULT_PANE_WIDTH;
 
   // Request stuff
-  const activeRequestId = activeRequestIds[activeWorkspaceId];
-  const activeRequest = entities.requests[activeRequestIds[activeWorkspaceId]];
-  const responsePreviewMode = previewModes[activeRequestId] || PREVIEW_MODE_SOURCE;
-  const responseFilter = responseFilters[activeRequestId] || '';
-
-  // Response Stuff
-  const activeResponseId = (activeResponseIds || {})[activeRequestId] || '';
+  const requestMeta = selectActiveRequestMeta(state, props) || {};
+  const activeRequest = selectActiveRequest(state, props);
+  const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
+  const responseFilter = requestMeta.responseFilter || '';
+  const activeResponseId = requestMeta.activeResponseId || '';
 
   // Environment stuff
-  const activeEnvironmentId = activeEnvironmentIds[activeWorkspaceId];
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
 
   // Find other meta things
-  const loadStartTime = loadingRequestIds[activeRequestId] || -1;
+  const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
   const sidebarChildren = selectSidebarChildren(state, props);
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
 
@@ -411,9 +485,9 @@ function mapStateToProps (state, props) {
       sidebarHidden,
       sidebarFilter,
       sidebarWidth,
+      paneWidth,
       responsePreviewMode,
       responseFilter,
-      paneWidth,
       sidebarChildren,
       environments,
       activeEnvironment,
@@ -423,34 +497,17 @@ function mapStateToProps (state, props) {
 }
 
 function mapDispatchToProps (dispatch) {
-  const legacyActions = {
-    global: bindActionCreators(globalActions, dispatch)
-  };
-
-  const workspace = bindActionCreators(workspaceMetaActions, dispatch);
-  const requestGroups = bindActionCreators(requestGroupMetaActions, dispatch);
-  const requests = bindActionCreators(requestMetaActions, dispatch);
+  const global = bindActionCreators(globalActions, dispatch);
 
   return {
-    actions: legacyActions,
-    handleSetPaneWidth: workspace.setPaneWidth,
-    handleSetActiveRequest: workspace.setActiveRequest,
-    handleSetActiveEnvironment: workspace.setActiveEnvironment,
-    handleSetSidebarWidth: workspace.setSidebarWidth,
-    handleSetSidebarHidden: workspace.setSidebarHidden,
-    handleSetSidebarFilter: workspace.setSidebarFilter,
-    handleSendRequestWithEnvironment: requests.send,
-    handleSetResponsePreviewMode: requests.setPreviewMode,
-    handleSetResponseFilter: requests.setResponseFilter,
-    handleSetActiveResponse: requests.setActiveResponse,
+    handleStartLoading: global.loadRequestStart,
+    handleStopLoading: global.loadRequestStop,
 
-    handleSetActiveWorkspace: legacyActions.global.setActiveWorkspace,
-    handleImportFileToWorkspace: legacyActions.global.importFile,
-    handleExportFile: legacyActions.global.exportFile,
+    handleSetActiveWorkspace: global.setActiveWorkspace,
+    handleImportFileToWorkspace: global.importFile,
+    handleExportFile: global.exportFile,
     handleMoveRequest: _moveRequest,
     handleMoveRequestGroup: _moveRequestGroup,
-
-    handleSetRequestGroupCollapsed: requestGroups.setCollapsed,
   };
 }
 

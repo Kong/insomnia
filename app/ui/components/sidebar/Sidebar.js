@@ -10,8 +10,8 @@ import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/consta
 
 class Sidebar extends PureComponent {
   _handleChangeEnvironment = id => {
-    const {workspace, handleSetActiveEnvironment} = this.props;
-    handleSetActiveEnvironment(workspace._id, id);
+    const {handleSetActiveEnvironment} = this.props;
+    handleSetActiveEnvironment(id);
   };
 
   _handleCreateRequestInWorkspace = () => {

@@ -1,30 +1,39 @@
 import * as _stats from './stats';
 import * as _settings from './settings';
 import * as _workspace from './workspace';
+import * as _workspaceMeta from './workspaceMeta';
 import * as _environment from './environment';
 import * as _cookieJar from './cookieJar';
 import * as _requestGroup from './requestGroup';
+import * as _requestGroupMeta from './requestGroupMeta';
 import * as _request from './request';
+import * as _requestMeta from './requestMeta';
 import * as _response from './response';
 
 // Reference to each model
 export const stats = _stats;
 export const settings = _settings;
 export const workspace = _workspace;
+export const workspaceMeta = _workspaceMeta;
 export const environment = _environment;
 export const cookieJar = _cookieJar;
 export const requestGroup = _requestGroup;
+export const requestGroupMeta = _requestGroupMeta;
 export const request = _request;
+export const requestMeta = _requestMeta;
 export const response = _response;
 
 const _models = {
   [stats.type]: stats,
   [settings.type]: settings,
   [workspace.type]: workspace,
+  [workspaceMeta.type]: workspaceMeta,
   [environment.type]: environment,
   [cookieJar.type]: cookieJar,
   [requestGroup.type]: requestGroup,
+  [requestGroupMeta.type]: requestGroupMeta,
   [request.type]: request,
+  [requestMeta.type]: requestMeta,
   [response.type]: response,
 };
 

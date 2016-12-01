@@ -14,6 +14,8 @@ const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
+const LOAD_REQUEST_START = 'global/load-request-start';
+const LOAD_REQUEST_STOP = 'global/load-request-stop';
 const REQUEST_GROUP_TOGGLE_COLLAPSE = 'global/request-group-toggle';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 const COMMAND_ALERT = 'app/alert';
@@ -45,8 +47,20 @@ function loadingReducer (state = false, action) {
   }
 }
 
+function loadingRequestsReducer (state = {}, action) {
+  switch (action.type) {
+    case LOAD_REQUEST_START:
+      return Object.assign({}, state, {[action.requestId]: action.time});
+    case LOAD_REQUEST_STOP:
+      return Object.assign({}, state, {[action.requestId]: -1});
+    default:
+      return state;
+  }
+}
+
 export default combineReducers({
   isLoading: loadingReducer,
+  loadingRequestIds: loadingRequestsReducer,
   activeWorkspaceId: activeWorkspaceReducer,
 });
 
@@ -76,6 +90,14 @@ export function loadStart () {
 
 export function loadStop () {
   return {type: LOAD_STOP};
+}
+
+export function loadRequestStart (requestId) {
+  return {type: LOAD_REQUEST_START, requestId, time: Date.now()};
+}
+
+export function loadRequestStop (requestId) {
+  return {type: LOAD_REQUEST_STOP, requestId};
 }
 
 export function setActiveWorkspace (workspaceId) {

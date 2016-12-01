@@ -33,13 +33,26 @@ export const selectRequestsAndRequestGroups = createSelector(
   entities => [...entities.requests, ...entities.requestGroups]
 );
 
+export const selectCollapsedRequestGroups = createSelector(
+  selectEntitiesLists,
+  entities => {
+    const collapsed = {};
+    for (const meta of entities.requestGroupMetas) {
+      if (meta.collapsed) {
+        collapsed[meta.parentId] = true;
+      }
+    }
+    return collapsed;
+  }
+);
+
 export const selectSidebarChildren = createSelector(
-  state => state.requestGroupMeta.collapsed,
+  selectCollapsedRequestGroups,
   selectRequestsAndRequestGroups,
   selectActiveWorkspace,
-  (collapsed, docs, activeWorkspace) => {
+  (collapsed, requestsAndRequestGroups, activeWorkspace) => {
     function next (parentId) {
-      const children = docs
+      const children = requestsAndRequestGroups
         .filter(e => e.parentId === parentId)
         .sort((a, b) => {
           // Always sort folders above
@@ -88,5 +101,32 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
     }
 
     return getChildren(activeWorkspace);
+  }
+);
+
+export const selectActiveWorkspaceMeta = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesLists,
+  (activeWorkspace, entities) => {
+    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
+    return entities.workspaceMetas.find(m => m.parentId === id);
+  }
+);
+
+export const selectActiveRequest = createSelector(
+  state => state.entities,
+  selectActiveWorkspaceMeta,
+  (entities, workspaceMeta) => {
+    const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
+    return entities.requests[id] || null;
+  }
+);
+
+export const selectActiveRequestMeta = createSelector(
+  selectActiveRequest,
+  selectEntitiesLists,
+  (activeRequest, entities) => {
+    const id = activeRequest ? activeRequest._id : 'n/a';
+    return entities.requestMetas.find(m => m.parentId === id);
   }
 );

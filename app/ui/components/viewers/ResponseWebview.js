@@ -2,6 +2,10 @@ import React, {PureComponent, PropTypes} from 'react';
 
 class ResponseWebview extends PureComponent {
   _handleSetWebviewRef = n => this._webview = n;
+  _handleDOMReady = () => {
+    this._webview.removeEventListener('dom-ready', this._handleDOMReady);
+    this._setBody();
+  };
 
   _setBody () {
     const {body, contentType, url} = this.props;
@@ -14,10 +18,7 @@ class ResponseWebview extends PureComponent {
   }
 
   componentDidMount () {
-    this._webview.addEventListener('dom-ready', () => {
-      this._webview.removeEventListener('dom-ready', cb);
-      this._setBody();
-    });
+    this._webview.addEventListener('dom-ready', this._handleDOMReady);
   }
 
   render () {
