@@ -19,7 +19,6 @@ import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MI
 import * as globalActions from '../redux/modules/global';
 import * as workspaceMetaActions from '../redux/modules/workspaceMeta';
 import * as requestMetaActions from '../redux/modules/requestMeta';
-import * as requestGroupMetaActions from '../redux/modules/requestGroupMeta';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
@@ -127,9 +126,7 @@ class App extends Component {
   };
 
   _requestGroupDuplicate = async requestGroup => {
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
-    // Default duplicated groups to collapsed state
-    this.props.handleSetRequestGroupCollapsed(newRequestGroup._id, true);
+    models.requestGroup.duplicate(requestGroup);
   };
 
   _requestDuplicate = async request => {
@@ -145,6 +142,37 @@ class App extends Component {
 
   _handleGenerateCode = () => {
     showModal(GenerateCodeModal, this.props.activeRequest);
+  };
+
+  _updateRequestGroupMetaByParentId = async (requestGroupId, patch) => {
+    const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
+    if (requestGroupMeta) {
+      models.requestGroupMeta.update(requestGroupMeta, patch);
+    } else {
+      models.requestGroupMeta.create({parentId: requestGroupId}, patch);
+    }
+  };
+
+  _updateWorkspaceMetaByParentId = async (workspaceId, patch) => {
+    const requestMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    if (requestMeta) {
+      models.workspaceMeta.update(requestMeta, patch);
+    } else {
+      models.workspaceMeta.create({parentId: workspaceId}, patch);
+    }
+  };
+
+  _updateRequestMetaByParentId = async (requestId, patch) => {
+    const requestMeta = await models.requestMeta.getByParentId(requestId);
+    if (requestMeta) {
+      models.requestMeta.update(requestMeta, patch);
+    } else {
+      models.requestMeta.create({parentId: requestId}, patch);
+    }
+  };
+
+  _handleSetRequestGroupCollapsed = (requestGroupId, collapsed) => {
+    this._updateRequestGroupMetaByParentId(requestGroupId, {collapsed});
   };
 
   _requestCreateForWorkspace = () => {
@@ -312,6 +340,7 @@ class App extends Component {
         <Wrapper
           ref={this._setWrapperRef}
           handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+          handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
           handleActivateRequest={this._handleActivateRequest}
           handleSetRequestPaneRef={this._setRequestPaneRef}
           handleSetResponsePaneRef={this._setResponsePaneRef}
@@ -428,7 +457,6 @@ function mapDispatchToProps (dispatch) {
   };
 
   const workspace = bindActionCreators(workspaceMetaActions, dispatch);
-  const requestGroups = bindActionCreators(requestGroupMetaActions, dispatch);
   const requests = bindActionCreators(requestMetaActions, dispatch);
 
   return {
@@ -449,8 +477,6 @@ function mapDispatchToProps (dispatch) {
     handleExportFile: legacyActions.global.exportFile,
     handleMoveRequest: _moveRequest,
     handleMoveRequestGroup: _moveRequestGroup,
-
-    handleSetRequestGroupCollapsed: requestGroups.setCollapsed,
   };
 }
 

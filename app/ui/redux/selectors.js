@@ -33,13 +33,26 @@ export const selectRequestsAndRequestGroups = createSelector(
   entities => [...entities.requests, ...entities.requestGroups]
 );
 
+export const selectCollapsedRequestGroups = createSelector(
+  selectEntitiesLists,
+  entities => {
+    const collapsed = {};
+    for (const meta of entities.requestGroupMetas) {
+      if (meta.collapsed) {
+        collapsed[meta.parentId] = true;
+      }
+    }
+    return collapsed;
+  }
+);
+
 export const selectSidebarChildren = createSelector(
-  state => state.requestGroupMeta.collapsed,
+  selectCollapsedRequestGroups,
   selectRequestsAndRequestGroups,
   selectActiveWorkspace,
-  (collapsed, docs, activeWorkspace) => {
+  (collapsed, requestsAndRequestGroups, activeWorkspace) => {
     function next (parentId) {
-      const children = docs
+      const children = requestsAndRequestGroups
         .filter(e => e.parentId === parentId)
         .sort((a, b) => {
           // Always sort folders above
