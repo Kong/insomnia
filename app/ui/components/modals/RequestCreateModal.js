@@ -5,7 +5,7 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS} from '../../../common/constants';
+import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_DELETE} from '../../../common/constants';
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
 
@@ -52,6 +52,7 @@ class RequestCreateModal extends Component {
     return (
       selectedMethod === METHOD_GET ||
       selectedMethod === METHOD_HEAD ||
+      selectedMethod === METHOD_DELETE ||
       selectedMethod === METHOD_OPTIONS
     );
   }

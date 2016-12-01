@@ -70,7 +70,6 @@ class RequestPane extends PureComponent {
       editorFontSize,
       editorLineWrapping,
       handleSend,
-      workspace,
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,

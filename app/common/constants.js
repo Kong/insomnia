@@ -137,7 +137,7 @@ export function getContentTypeName (contentType) {
   if (typeof contentType !== 'string') {
     return 'No Body';
   } else {
-    return contentTypesMap[contentType] || '';
+    return contentTypesMap[contentType] || 'Other';
   }
 }
 

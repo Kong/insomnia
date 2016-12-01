@@ -117,7 +117,6 @@ export function importFile (workspaceId) {
     dispatch(loadStart());
 
     const workspace = await models.workspace.getById(workspaceId);
-
     const options = {
       title: 'Import Insomnia Data',
       buttonLabel: 'Import',
@@ -144,12 +143,18 @@ export function importFile (workspaceId) {
           const data = fs.readFileSync(path, 'utf8');
           dispatch(loadStop());
 
-          const {summary, source} = await importRaw(workspace, data);
+          const result = await importRaw(workspace, data);
+          const {summary, source, error} = result;
+
+          if (error) {
+            showModal(AlertModal, {title: 'Import Failed', message: error});
+            return;
+          }
 
           let statements = Object.keys(summary).map(type => {
             const count = summary[type].length;
             const name = models.getModelName(type, count);
-            return count === 0 ? null :`${count} ${name}`;
+            return count === 0 ? null : `${count} ${name}`;
           }).filter(s => s !== null);
 
           let message;
@@ -159,10 +164,10 @@ export function importFile (workspaceId) {
             message = `You imported ${statements.join(', ')}!`;
           }
           showModal(AlertModal, {title: 'Import Succeeded', message});
-          trackEvent('Import', source, 'Success');
+          trackEvent('Import', 'Success', source);
         } catch (e) {
           showModal(AlertModal, {title: 'Import Failed', message: e + ''});
-          trackEvent('Import', source, 'Failure');
+          trackEvent('Import', 'Failure');
         }
       }
     });

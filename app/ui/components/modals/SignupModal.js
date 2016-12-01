@@ -77,7 +77,7 @@ class SignupModal extends Component {
         <ModalHeader key="header">Sign Up For a New Account</ModalHeader>,
         <ModalBody key="body" className="pad">
           <div className={classnames({hide: step !== STEP_BASIC_INFO})}>
-            <div className="form-control form-control--outlined">
+            <div className="form-control form-control--outlined no-pad-top">
               <label>First Name
                 <input
                   type="text"
@@ -178,10 +178,11 @@ class SignupModal extends Component {
     } else {
       inner = [
         <ModalHeader key="header">Account Created</ModalHeader>,
-        <ModalBody key="body" className="pad">
+        <ModalBody key="body" className="pad no-pad-top">
           <h1>Thanks for signing up!</h1>
           <p>
-            A verification email has been sent to your email address.
+            A verification email has been sent to your email address. You may now
+            log in.
           </p>
         </ModalBody>,
         <ModalFooter key="footer">

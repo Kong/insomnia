@@ -125,9 +125,7 @@ class App extends Component {
 
   _requestCreate = async (parentId) => {
     const request = await showModal(RequestCreateModal, {parentId});
-    const {activeWorkspace, handleSetActiveRequest} = this.props;
-
-    handleSetActiveRequest(activeWorkspace._id, request._id);
+    this._handleSetActiveRequest(request._id)
   };
 
   _requestGroupDuplicate = async requestGroup => {
@@ -135,14 +133,12 @@ class App extends Component {
   };
 
   _requestDuplicate = async request => {
-    const {activeWorkspace, handleSetActiveRequest} = this.props;
-
     if (!request) {
       return;
     }
 
     const newRequest = await models.request.duplicate(request);
-    handleSetActiveRequest(activeWorkspace._id, newRequest._id);
+    this._handleSetActiveRequest(newRequest._id)
   };
 
   _handleGenerateCode = () => {
@@ -154,7 +150,8 @@ class App extends Component {
     if (requestGroupMeta) {
       await models.requestGroupMeta.update(requestGroupMeta, patch);
     } else {
-      await models.requestGroupMeta.create({parentId: requestGroupId}, patch);
+      const newPatch = Object.assign({parentId: requestGroupId}, patch);
+      await models.requestGroupMeta.create(newPatch);
     }
   };
 
@@ -164,7 +161,8 @@ class App extends Component {
     if (requestMeta) {
       await models.workspaceMeta.update(requestMeta, patch);
     } else {
-      await models.workspaceMeta.create({parentId: workspaceId}, patch);
+      const newPatch = Object.assign({parentId: workspaceId}, patch);
+      await models.workspaceMeta.create(newPatch);
     }
   };
 
@@ -173,7 +171,8 @@ class App extends Component {
     if (requestMeta) {
       await models.requestMeta.update(requestMeta, patch);
     } else {
-      await models.requestMeta.create({parentId: requestId}, patch);
+      const newPatch = Object.assign({parentId: requestId}, patch);
+      await models.requestMeta.create(newPatch);
     }
   };
 

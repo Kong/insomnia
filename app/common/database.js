@@ -189,13 +189,13 @@ export async function upsert (doc, fromSync = false) {
 
 export function insert (doc, fromSync = false) {
   return new Promise((resolve, reject) => {
-    db[doc.type].insert(doc, (err, newDoc) => {
+    const docWithDefaults = initModel(doc.type, doc);
+    db[doc.type].insert(docWithDefaults, (err, newDoc) => {
       if (err) {
         return reject(err);
       }
 
-      notifyOfChange(CHANGE_INSERT, doc, fromSync);
-
+      notifyOfChange(CHANGE_INSERT, newDoc, fromSync);
       resolve(newDoc);
     });
   });
@@ -203,14 +203,15 @@ export function insert (doc, fromSync = false) {
 
 export function update (doc, fromSync = false) {
   return new Promise((resolve, reject) => {
-    db[doc.type].update({_id: doc._id}, doc, err => {
+    const docWithDefaults = initModel(doc.type, doc);
+    db[doc.type].update({_id: docWithDefaults._id}, docWithDefaults, err => {
       if (err) {
         return reject(err);
       }
 
-      notifyOfChange(CHANGE_UPDATE, doc, fromSync);
+      notifyOfChange(CHANGE_UPDATE, docWithDefaults, fromSync);
 
-      resolve(doc);
+      resolve(docWithDefaults);
     });
   });
 }

@@ -19,7 +19,7 @@ class LoginModal extends Component {
     message: '',
   };
 
-  async _handleLogin (e) {
+  _handleLogin = async e => {
     e.preventDefault();
     this.setState({error: '', loading: true});
 
@@ -39,15 +39,15 @@ class LoginModal extends Component {
     } catch (e) {
       this.setState({error: e.message, loading: false});
     }
-  }
+  };
 
-  _handleSignup (e) {
+  _handleSignup = e => {
     e.preventDefault();
 
     this.modal.hide();
     showModal(SignupModal);
     trackEvent('Login', 'Switch to Signup');
-  }
+  };
 
   show (options = {}) {
     const {title, message} = options;
@@ -66,7 +66,7 @@ class LoginModal extends Component {
           {message ? (
             <p className="notice info">{message}</p>
           ) : null}
-          <div className="form-control form-control--outlined">
+          <div className="form-control form-control--outlined no-pad-top">
             <label>Email
               <input
                 type="email"
@@ -92,7 +92,7 @@ class LoginModal extends Component {
           <div className="margin-left">
             Don't have an account yet?
             {" "}
-            <a href="#" onClick={this._handleSignup.bind(this)}>Signup</a>
+            <a href="#" onClick={this._handleSignup}>Signup</a>
           </div>
           <button type="submit" className="btn">
             {this.state.loading ? (
@@ -105,7 +105,7 @@ class LoginModal extends Component {
     } else {
       inner = [
         <ModalHeader key="header">Login Success</ModalHeader>,
-        <ModalBody key="body" className="pad">
+        <ModalBody key="body" className="pad no-pad-top">
           <h1>Enjoy your stay!</h1>
           <p>
             If you have any questions or concerns, send you email to
@@ -126,7 +126,7 @@ class LoginModal extends Component {
     }
 
     return (
-      <form onSubmit={this._handleLogin.bind(this)}>
+      <form onSubmit={this._handleLogin}>
         <Modal ref={m => this.modal = m} {...this.props}>
           {inner}
         </Modal>

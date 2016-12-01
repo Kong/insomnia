@@ -51,7 +51,8 @@ class Wrapper extends Component {
     const {activeRequest} = this.props;
 
     try {
-      const {resources} = importers.import(url);
+      const {data} = importers.convert(url);
+      const {resources} = data;
       const r = resources[0];
 
       if (r && r._type === 'request') {
@@ -82,7 +83,10 @@ class Wrapper extends Component {
   _handleUpdateSettingsUseBulkHeaderEditor = useBulkHeaderEditor => sUpdate(this.props.settings, {useBulkHeaderEditor});
 
   // Other Helpers
-  _handleImportFile = () => this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
+  _handleImportFile = () => {
+    console.log('IMPORT', this.props);
+    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
+  }
   _handleExportWorkspaceToFile = () => this.props.handleExportFile(this.props.activeWorkspace._id);
   _handleSetActiveResponse = responseId => this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   _handleShowEnvironmentsModal = () => showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);

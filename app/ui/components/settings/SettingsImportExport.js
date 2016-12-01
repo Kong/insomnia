@@ -23,17 +23,17 @@ const SettingsImportExport = ({
           Export Data <i className="fa fa-caret-down"></i>
         </DropdownButton>
         <DropdownDivider name="Choose Export Type"/>
-        <DropdownItem onClick={e => handleExportWorkspace()}>
+        <DropdownItem onClick={handleExportWorkspace}>
           <i className="fa fa-home"></i>
           Current Workspace
         </DropdownItem>
-        <DropdownItem onClick={e => handleExportAll()}>
+        <DropdownItem onClick={handleExportAll}>
           <i className="fa fa-empty"></i>
           All Workspaces
         </DropdownItem>
       </Dropdown>
       &nbsp;&nbsp;
-      <button className="btn btn--clicky" onClick={e => handleImport()}>
+      <button className="btn btn--clicky" onClick={handleImport}>
         Import Data
       </button>
     </div>

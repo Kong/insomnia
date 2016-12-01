@@ -28,11 +28,18 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   try {
     results = convert(rawContent);
   } catch (e) {
-    console.error('Failed to import data', e);
-    return;
+    console.warn('Failed to import data', e);
+    return {
+      source: 'not found',
+      error: 'No importers found for file',
+      summary: {}
+    };
   }
 
   const {data} = results;
+
+  // Fetch the base environment in case we need it
+  const baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
 
   // Generate all the ids we may need
   const generatedIds = {};
@@ -42,8 +49,9 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
     }
   }
 
-  // Also always replace __WORKSPACE_ID__ with the current workspace if we see it
+  // Always replace these "constants"
   generatedIds['__WORKSPACE_ID__'] = workspace._id;
+  generatedIds['__BASE_ENVIRONMENT_ID__'] = baseEnvironment._id;
 
   // Import everything backwards so they get inserted in the correct order
   data.resources.reverse();
@@ -90,7 +98,8 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
 
   return {
     source: results.type.id,
-    summary: importedDocs
+    summary: importedDocs,
+    error: null
   };
 }
 
