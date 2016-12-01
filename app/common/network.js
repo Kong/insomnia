@@ -182,7 +182,7 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
 
         if (!forceIPv4 && isNetworkRelatedError) {
           console.log('-- Falling back to IPv4 --');
-          _actuallySend(renderedRequest, settings, true).then(resolve, reject);
+          _actuallySend(renderedRequest, workspace, settings, true).then(resolve, reject);
           return;
         }
 

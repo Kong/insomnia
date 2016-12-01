@@ -73,8 +73,6 @@
     "appId": "com.insomnia.app",
     "category": "public.app-category.developer-tools",
     "compression": "normal",
-    "mac": {
-    },
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
       "remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
