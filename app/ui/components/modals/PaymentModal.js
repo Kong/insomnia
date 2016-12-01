@@ -6,6 +6,8 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
+import AlertModal from './AlertModal';
+import {showModal} from './index';
 
 const MONTHS = [
   {name: 'January', value: '01'},
@@ -136,6 +138,10 @@ class PaymentModal extends Component {
         try {
           await session.subscribe(response.id, this.state.selectedPlan);
           this.setState({error: '', loading: false});
+          showModal(AlertModal, {
+            title: 'Payment Succeeded',
+            message: 'Thanks for supporting Insomnia! You may now continue using the app.'
+          });
           this.hide();
         } catch (e) {
           this.setState({error: e.message, loading: false});

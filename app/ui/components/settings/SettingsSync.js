@@ -2,6 +2,8 @@ import React, {PropTypes} from 'react';
 import Link from '../base/Link';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
+import {showModal} from '../modals/index';
+import PaymentModal from '../modals/PaymentModal';
 
 const SettingsSync = ({
   loggedIn,
@@ -37,6 +39,14 @@ const SettingsSync = ({
           Reset Remote Data
         </PromptButton>
         {" "}
+        <button className="btn btn--clicky"
+                onClick={async () => {
+                  handleExit();
+                  showModal(PaymentModal);
+                }}>
+          Update Billing
+        </button>
+        {" "}
         <PromptButton className="btn btn--clicky"
                       onClick={async () => {
                         handleExit();
@@ -54,7 +64,8 @@ const SettingsSync = ({
         Upgrade today to start enjoying
         {" "}
         <Link href="https://insomnia.rest/pricing/">all of the benefits</Link>, while also helping
-        support my continuous effort of making Insomnia awesome! <i className="fa fa-smile-o txt-xl"/>
+        support my continuous effort of making Insomnia awesome! <i
+        className="fa fa-smile-o txt-xl"/>
       </p>,
       <p key="2" className="pad-top text-center">
         <button className="btn txt-lg btn--outlined"
