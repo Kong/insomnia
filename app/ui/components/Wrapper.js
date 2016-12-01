@@ -84,7 +84,6 @@ class Wrapper extends Component {
   // Other Helpers
   _handleImportFile = () => this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
   _handleExportWorkspaceToFile = () => this.props.handleExportFile(this.props.activeWorkspace._id);
-  _handleSetSidebarFilter = filter => this.props.handleSetSidebarFilter(this.props.activeWorkspace._id, filter);
   _handleSetActiveResponse = responseId => this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   _handleShowEnvironmentsModal = () => showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   _handleShowCookiesModal = () => showModal(CookiesModal, this.props.activeWorkspace);
@@ -118,7 +117,7 @@ class Wrapper extends Component {
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   };
 
-  _handleSetPreviewMode = (previewMode) => {
+  _handleSetPreviewMode = previewMode => {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
@@ -160,6 +159,7 @@ class Wrapper extends Component {
       handleSetSidebarRef,
       handleStartDragPane,
       handleStartDragSidebar,
+      handleSetSidebarFilter,
       handleGenerateCode,
       isLoading,
       loadStartTime,
@@ -188,7 +188,7 @@ class Wrapper extends Component {
           showEnvironmentsModal={this._handleShowEnvironmentsModal}
           showCookiesModal={this._handleShowCookiesModal}
           handleActivateRequest={handleActivateRequest}
-          handleChangeFilter={this._handleSetSidebarFilter}
+          handleChangeFilter={handleSetSidebarFilter}
           handleImportFile={this._handleImportFile}
           handleExportFile={handleExportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
@@ -315,9 +315,6 @@ Wrapper.propTypes = {
   // Helper Functions
   handleActivateRequest: PropTypes.func.isRequired,
   handleSetSidebarFilter: PropTypes.func.isRequired,
-  handleSetSidebarHidden: PropTypes.func.isRequired,
-  handleSetSidebarWidth: PropTypes.func.isRequired,
-  handleSetPaneWidth: PropTypes.func.isRequired,
   handleImportFileToWorkspace: PropTypes.func.isRequired,
   handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,

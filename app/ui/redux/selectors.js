@@ -103,3 +103,30 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
     return getChildren(activeWorkspace);
   }
 );
+
+export const selectActiveWorkspaceMeta = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesLists,
+  (activeWorkspace, entities) => {
+    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
+    return entities.workspaceMetas.find(m => m.parentId === id);
+  }
+);
+
+export const selectActiveRequest = createSelector(
+  state => state.entities,
+  selectActiveWorkspaceMeta,
+  (entities, workspaceMeta) => {
+    const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
+    return entities.requests[id] || null;
+  }
+);
+
+export const selectActiveRequestMeta = createSelector(
+  selectActiveRequest,
+  selectEntitiesLists,
+  (activeRequest, entities) => {
+    const id = activeRequest ? activeRequest._id : 'n/a';
+    return entities.requestMetas.find(m => m.parentId === id);
+  }
+);

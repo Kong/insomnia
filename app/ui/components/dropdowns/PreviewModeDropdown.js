@@ -6,7 +6,7 @@ import {trackEvent} from '../../../analytics/index';
 class PreviewModeDropdown extends PureComponent {
   _handleClick = previewMode => {
     this.props.updatePreviewMode(previewMode);
-    trackEvent('Response', 'Preview Mode Change', mode);
+    trackEvent('Response', 'Preview Mode Change', previewMode);
   };
 
   render () {

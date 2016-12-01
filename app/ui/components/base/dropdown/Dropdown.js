@@ -69,7 +69,7 @@ class Dropdown extends Component {
   show () {
     const bodyHeight = document.body.getBoundingClientRect().height;
     const dropdownTop = ReactDOM.findDOMNode(this).getBoundingClientRect().top;
-    const dropUp = dropdownTop > bodyHeight * 0.65;
+    const dropUp = dropdownTop > bodyHeight - 200;
 
     this.setState({open: true, dropUp});
   }

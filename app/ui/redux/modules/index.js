@@ -1,13 +1,9 @@
 import {bindActionCreators, combineReducers} from 'redux';
 import entitiesReducer from './entities';
 import * as entities from './entities';
+import configureStore from '../create';
 import globalReducer from './global';
 import * as global from './global';
-import configureStore from '../create';
-import workspaceMetaReducer from './workspaceMeta';
-import * as workspaceMeta from './workspaceMeta';
-import requestMetaReducer from './requestMeta';
-import * as requestMeta from './requestMeta';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import * as fetch from '../../../common/fetch';
@@ -40,8 +36,6 @@ export async function init () {
   // Bind to fetch commands
   fetch.onCommand(newCommand);
 
-  store.dispatch(requestMeta.init());
-  store.dispatch(workspaceMeta.init());
   store.dispatch(global.init());
 
   return store;
@@ -49,7 +43,5 @@ export async function init () {
 
 export const reducer = combineReducers({
   entities: entitiesReducer,
-  workspaceMeta: workspaceMetaReducer,
-  requestMeta: requestMetaReducer,
   global: globalReducer,
 });
