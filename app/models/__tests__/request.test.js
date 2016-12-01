@@ -231,7 +231,7 @@ describe('migrate()', () => {
 
     const expected = {
       body: {
-        mimeType: "",
+        mimeType: '',
         text: 'foo bar!'
       }
     };

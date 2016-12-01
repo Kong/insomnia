@@ -80,14 +80,14 @@ export function initModel (type, ...sources) {
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedObject = model.migrate(fullObject);
+  model.migrate(fullObject);
 
   // Prune extra keys from doc
-  for (const key of Object.keys(migratedObject)) {
+  for (const key of Object.keys(fullObject)) {
     if (!objectDefaults.hasOwnProperty(key)) {
-      delete migratedObject[key];
+      delete fullObject[key];
     }
   }
 
-  return migratedObject;
+  return fullObject;
 }
