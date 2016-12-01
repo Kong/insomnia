@@ -21,7 +21,7 @@
     "build:clean": "rm -rf ./build && rm -rf ./dist && mkdir ./build",
     "build:renderer": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.production.babel.js",
     "build:main": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.electron.babel.js",
-    "build:copy": "cp -r ./app/package.json ./app/static ./build/",
+    "build:copy": "cp -r ./app/package.json ./app/static ./app/icons/* ./build/",
     "build:install": "cd build && npm install",
     "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
     "package:mac": "rm -rf dist/mac && node node_modules/electron-builder/out/build-cli.js --publish=never --x64 --mac",
@@ -74,12 +74,9 @@
     "category": "public.app-category.developer-tools",
     "compression": "normal",
     "mac": {
-      "icon": "build/static/icon.icns"
     },
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
-      "icon": "build/static/icon.ico",
-      "loadingGif": "build/static/install-spinner.gif",
       "__remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
       "target": "squirrel",
       "msi": false

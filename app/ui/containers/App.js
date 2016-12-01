@@ -325,6 +325,7 @@ class App extends Component {
     if (firstLaunch) {
       // TODO: Show a welcome message
       trackLegacyEvent('First Launch');
+      trackEvent('General', 'First Launch', getAppVersion());
     } else if (lastVersion !== getAppVersion()) {
       trackEvent('General', 'Updated', getAppVersion());
       showModal(ChangelogModal);

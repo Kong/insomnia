@@ -23,6 +23,7 @@ describe('onChange()', () => {
   it('handles change listeners', async () => {
     const doc = {
       type: models.request.type,
+      parentId: 'nothing',
       name: 'foo'
     };
 
@@ -32,16 +33,17 @@ describe('onChange()', () => {
     };
     db.onChange(callback);
 
-    await db.insert(doc);
-    await db.insert(doc, true);
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, {name: 'bar'});
     expect(changesSeen.length).toBe(2);
+
     expect(changesSeen).toEqual([
-      [[db.CHANGE_INSERT, doc, false]],
-      [[db.CHANGE_INSERT, doc, true]]
+      [[db.CHANGE_INSERT, newDoc, false]],
+      [[db.CHANGE_UPDATE, updatedDoc, false]],
     ]);
 
     db.offChange(callback);
-    await db.insert(doc);
+    await models.request.create(doc);
     expect(changesSeen.length).toBe(2);
   });
 });
@@ -50,6 +52,7 @@ describe('bufferChanges()', () => {
   it('properly buffers changes', async () => {
     const doc = {
       type: models.request.type,
+      parentId: 'n/a',
       name: 'foo'
     };
 
@@ -60,8 +63,8 @@ describe('bufferChanges()', () => {
     db.onChange(callback);
 
     db.bufferChanges();
-    await db.insert(doc);
-    await db.insert(doc, true);
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
 
     // Assert no change seen before flush
     expect(changesSeen.length).toBe(0);
@@ -69,15 +72,15 @@ describe('bufferChanges()', () => {
     // Assert changes seen after flush
     db.flushChanges();
     expect(changesSeen).toEqual([[
-      [db.CHANGE_INSERT, doc, false],
-      [db.CHANGE_INSERT, doc, true]
+      [db.CHANGE_INSERT, newDoc, false],
+      [db.CHANGE_UPDATE, updatedDoc, false]
     ]]);
 
     // Assert no more changes seen after flush again
     db.flushChanges();
     expect(changesSeen).toEqual([[
-      [db.CHANGE_INSERT, doc, false],
-      [db.CHANGE_INSERT, doc, true]
+      [db.CHANGE_INSERT, newDoc, false],
+      [db.CHANGE_UPDATE, updatedDoc, false]
     ]]);
   });
 });
