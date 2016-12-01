@@ -53,7 +53,7 @@ export const SEGMENT_WRITE_KEY = isDevelopment() ?
   'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
 
 // UI Stuff
-export const MAX_SIDEBAR_REMS = 35;
+export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;
 export const COLLAPSE_SIDEBAR_REMS = 4;
 export const SIDEBAR_SKINNY_REMS = 10;

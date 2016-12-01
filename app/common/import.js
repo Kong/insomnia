@@ -1,4 +1,4 @@
-import * as importers from 'insomnia-importers';
+import {convert} from 'insomnia-importers';
 import * as db from './database';
 import * as models from '../models';
 import {getAppVersion} from './constants';
@@ -24,13 +24,15 @@ const MODELS = {
 };
 
 export async function importRaw (workspace, rawContent, generateNewIds = false) {
-  let data;
+  let results;
   try {
-    data = importers.import(rawContent);
+    results = convert(rawContent);
   } catch (e) {
     console.error('Failed to import data', e);
     return;
   }
+
+  const {data} = results;
 
   // Generate all the ids we may need
   const generatedIds = {};
@@ -86,7 +88,10 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
 
   db.flushChanges();
 
-  return importedDocs;
+  return {
+    source: results.type.id,
+    summary: importedDocs
+  };
 }
 
 export async function exportJSON (parentDoc = null) {

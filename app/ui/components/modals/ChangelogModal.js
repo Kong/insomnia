@@ -55,6 +55,7 @@ class ChangelogModal extends Component {
           ...html,
           <h1 key={`changes.${i}`}>v{change.version} Changes</h1>
         ];
+
         if (change.summary) {
           if (!Array.isArray(change.summary)) {
             html = [
@@ -70,6 +71,15 @@ class ChangelogModal extends Component {
               )
             ]
           }
+        }
+
+        if (change.link) {
+          html = [
+            ...html,
+            <Link href={change.link} className="btn btn--clicky" button={true} key="link">
+              Read More
+            </Link>
+          ]
         }
 
         if (change.major && change.major.length) {

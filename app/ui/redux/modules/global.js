@@ -122,7 +122,7 @@ export function importFile (workspaceId) {
           const data = fs.readFileSync(path, 'utf8');
           dispatch(loadStop());
 
-          const summary = await importRaw(workspace, data);
+          const {summary, source} = await importRaw(workspace, data);
 
           let statements = Object.keys(summary).map(type => {
             const count = summary[type].length;
@@ -137,10 +137,10 @@ export function importFile (workspaceId) {
             message = `You imported ${statements.join(', ')}!`;
           }
           showModal(AlertModal, {title: 'Import Succeeded', message});
-          trackEvent('Import', 'Success');
+          trackEvent('Import', source, 'Success');
         } catch (e) {
           showModal(AlertModal, {title: 'Import Failed', message: e + ''});
-          trackEvent('Import', 'Failure', e);
+          trackEvent('Import', source, 'Failure');
         }
       }
     });
