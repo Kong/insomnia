@@ -83,7 +83,8 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
 
     const model = MODELS[resource._type];
     if (!model) {
-      console.error('Unknown doc type for import', resource._type);
+      console.warn('Unknown doc type for import', resource._type);
+      continue;
     }
 
     const doc = await model.getById(resource._id);
@@ -115,9 +116,11 @@ export async function exportJSON (parentDoc = null) {
   const docs = await db.withDescendants(parentDoc);
 
   data.resources = docs.filter(d => (
-    d.type !== models.response.type &&
-    d.type !== models.stats.type &&
-    d.type !== models.settings.type
+    d.type === models.request.type ||
+    d.type === models.requestGroup.type ||
+    d.type === models.workspace.type ||
+    d.type === models.cookieJar.type ||
+    d.type === models.environment.type
   )).map(d => {
     if (d.type === models.workspace.type) {
       d._type = EXPORT_TYPE_WORKSPACE;

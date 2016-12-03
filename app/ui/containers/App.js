@@ -334,31 +334,23 @@ class App extends Component {
     db.onChange(changes => {
       for (const change of changes) {
         const [event, doc, fromSync] = change;
-
-        // Not a sync-related change
-        if (!fromSync) {
-          return;
-        }
-
         const {activeRequest} = this.props;
 
-        // No active request at the moment, so it doesn't matter
+        // No active request, so we don't need to force refresh anything
         if (!activeRequest) {
           return;
         }
 
-        // Only force the UI to refresh if the active Request changes
-        // This is because things like the URL and Body editor don't update
-        // when you tell them to.
-
-        if (doc._id !== activeRequest._id) {
-          return;
+        // Force refresh if environment changes
+        if (doc.type === models.environment.type) {
+          this._wrapper.forceRequestPaneRefresh();
         }
 
-        console.log('[App] Forcing update');
-
-        // All sync-related changes to data force-refresh the app.
-        this._wrapper.forceRequestPaneRefresh();
+        // Force refresh if sync changes the active request
+        if (fromSync && doc._id === activeRequest._id) {
+          this._wrapper.forceRequestPaneRefresh();
+          console.log('[App] Forcing update');
+        }
       }
     });
 
