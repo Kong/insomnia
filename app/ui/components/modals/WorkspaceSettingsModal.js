@@ -8,6 +8,7 @@ import ModalHeader from '../base/ModalHeader';
 import PromptButton from '../base/PromptButton';
 import * as models from '../../../models/index';
 import * as fs from 'fs';
+import {trackEvent} from '../../../analytics/index';
 
 
 class WorkspaceSettingsModal extends Component {
@@ -57,12 +58,14 @@ class WorkspaceSettingsModal extends Component {
 
     await models.workspace.update(workspace, {certificates});
     this._handleToggleCertificateForm();
+    trackEvent('Certificates', 'Create');
   };
 
   _handleDeleteCertificate = certificate => {
     const {workspace} = this.props;
     const certificates = workspace.certificates.filter(c => c.host !== certificate.host);
     models.workspace.update(workspace, {certificates});
+    trackEvent('Certificates', 'Delete');
   };
 
   _handleToggleCertificate = certificate => {
@@ -71,6 +74,7 @@ class WorkspaceSettingsModal extends Component {
       c => c === certificate ? Object.assign({}, c, {disabled: !c.disabled}) : c
     );
     models.workspace.update(workspace, {certificates});
+    trackEvent('Certificates', 'Toggle');
   };
 
   toggle (workspace) {
@@ -303,7 +307,7 @@ class WorkspaceSettingsModal extends Component {
                   </button>
                   {" "}
                   <button className="btn btn--clicky" type="submit">
-                    Import Certificate
+                    Add Certificate
                   </button>
                 </div>
               </form>
@@ -320,11 +324,6 @@ class WorkspaceSettingsModal extends Component {
       <Modal ref={this._handleSetModalRef} tall={true} freshState={true}>
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
-        {/*<ModalFooter>*/}
-        {/*<button className="btn" onClick={this._handleClose}>*/}
-        {/*Close*/}
-        {/*</button>*/}
-        {/*</ModalFooter>*/}
       </Modal>
     )
   }

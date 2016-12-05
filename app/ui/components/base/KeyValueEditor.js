@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import FileInputButton from '../base/FileInputButton';
 import {Dropdown, DropdownItem, DropdownButton} from './dropdown/index';
+import PromptButton from '../base/PromptButton';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -202,7 +203,7 @@ class KeyValueEditor extends Component {
     const {maxPairs, className, valueInputType, multipart} = this.props;
 
     return (
-      <ul className={classnames('key-value-editor', 'wide', className)}>
+      <ul key={pairs.length} className={classnames('key-value-editor', 'wide', className)}>
         {pairs.map((pair, i) => (
           <li key={`${i}.pair`}
               className={classnames(
@@ -285,12 +286,14 @@ class KeyValueEditor extends Component {
               }
             </button>
 
-            <button key={Math.random()}
-                    tabIndex="-1"
-                    onClick={e => this._deletePair(i)}
-                    title="Delete item">
+            <PromptButton key={Math.random()}
+                          tabIndex="-1"
+                          confirmMessage=" "
+                          addIcon={true}
+                          onClick={e => this._deletePair(i)}
+                          title="Delete item">
               <i className="fa fa-trash-o"></i>
-            </button>
+            </PromptButton>
           </li>
         ))}
         {!maxPairs || pairs.length < maxPairs ? (

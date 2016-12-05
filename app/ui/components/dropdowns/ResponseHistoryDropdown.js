@@ -5,6 +5,7 @@ import StatusTag from '../tags/StatusTag';
 import TimeTag from '../tags/TimeTag';
 import * as models from '../../../models/index';
 import PromptButton from '../base/PromptButton';
+import {trackEvent} from '../../../analytics/index';
 
 class ResponseHistoryDropdown extends Component {
   state = {
@@ -12,7 +13,13 @@ class ResponseHistoryDropdown extends Component {
   };
 
   _handleDeleteResponses = () => {
+    trackEvent('History', 'Delete Responses');
     this.props.handleDeleteResponses(this.props.requestId);
+  };
+
+  _handleSetActiveResponse = responseId => {
+    trackEvent('History', 'Activate Response');
+    this.props.handleSetActiveResponse(responseId);
   };
 
   async _load (requestId) {
@@ -40,13 +47,13 @@ class ResponseHistoryDropdown extends Component {
   }
 
   renderDropdownItem = (response, i) => {
-    const {activeResponseId, handleSetActiveResponse} = this.props;
+    const {activeResponseId} = this.props;
     const active = response._id === activeResponseId;
     return (
       <DropdownItem key={response._id}
                     disabled={active}
                     value={i === 0 ? null : response._id}
-                    onClick={handleSetActiveResponse}>
+                    onClick={this._handleSetActiveResponse}>
         {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
         {" "}
         <StatusTag statusCode={response.statusCode}
@@ -60,9 +67,9 @@ class ResponseHistoryDropdown extends Component {
 
   render () {
     const {
-      activeResponseId,
-      handleSetActiveResponse,
-      handleDeleteResponses,
+      activeResponseId, // Don't want this in ...extraProps
+      handleSetActiveResponse, // Don't want this in ...extraProps
+      handleDeleteResponses, // Don't want this in ...extraProps
       isLatestResponseActive,
       ...extraProps
     } = this.props;

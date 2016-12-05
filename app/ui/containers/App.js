@@ -217,10 +217,21 @@ class App extends Component {
   };
 
   _handleSendRequestWithEnvironment = async (requestId, environmentId) => {
-    this.props.handleStartLoading(requestId);
+    const request = await models.request.getById(requestId);
+    if (!request) {
+      return;
+    }
 
-    trackEvent('Request', 'Send');
-    trackLegacyEvent('Request Send');
+    // NOTE: Since request is by far the most popular event, we will throttle
+    // it so that we only track it if the request has changed since the last noe
+    const key = `${request._id}::${request.modified}`;
+    if (this._sendRequestTrackingKey !== key) {
+      trackEvent('Request', 'Send');
+      trackLegacyEvent('Request Send');
+      this._sendRequestTrackingKey = key;
+    }
+
+    this.props.handleStartLoading(requestId);
 
     try {
       await network.send(requestId, environmentId);
@@ -244,12 +255,12 @@ class App extends Component {
   };
 
   _startDragSidebar = () => {
-    trackEvent('Sidebar', 'Drag Start');
+    trackEvent('Sidebar', 'Drag');
     this.setState({draggingSidebar: true})
   };
 
   _resetDragSidebar = () => {
-    trackEvent('Sidebar', 'Drag Reset');
+    trackEvent('Sidebar', 'Drag');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetSidebarWidth(DEFAULT_SIDEBAR_WIDTH), 50);
   };
@@ -260,7 +271,7 @@ class App extends Component {
   };
 
   _resetDragPane = () => {
-    trackEvent('App Pane', 'Reset');
+    trackEvent('App Pane', 'Drag Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetPaneWidth(DEFAULT_PANE_WIDTH), 50);
   };
@@ -329,6 +340,8 @@ class App extends Component {
     } else if (lastVersion !== getAppVersion()) {
       trackEvent('General', 'Updated', getAppVersion());
       showModal(ChangelogModal);
+    } else {
+      trackEvent('General', 'Launched', getAppVersion());
     }
 
     db.onChange(changes => {

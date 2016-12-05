@@ -280,6 +280,7 @@ function createWindow () {
     minHeight: 500,
     minWidth: 500,
     acceptFirstMouse: true,
+    icon: path.resolve(__dirname, 'icons/icon.png'),
     webPreferences: {
       zoomFactor: zoomFactor
     }
@@ -302,7 +303,7 @@ function createWindow () {
     clearTimeout(_moveTimeout);
     _moveTimeout = setTimeout(() => {
       trackEvent('Window', 'Move');
-    });
+    }, 1000);
   });
   mainWindow.on('unresponsive', e => {
     showUnresponsiveModal();

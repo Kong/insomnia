@@ -1,6 +1,7 @@
 import * as segment from './segment';
 import * as google from './google';
 import {ipcRenderer} from 'electron';
+import {getAppVersion, getAppPlatform} from '../common/constants';
 
 let initialized = false;
 export async function init (accountId) {
@@ -10,7 +11,7 @@ export async function init (accountId) {
 
   try {
     await segment.init();
-    await google.init(accountId);
+    await google.init(accountId, getAppPlatform(), getAppVersion());
 
     initialized = true;
   } catch (e) {

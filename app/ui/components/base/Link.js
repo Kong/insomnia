@@ -15,7 +15,7 @@ class Link extends Component {
 
     if (href.match(/^http/i)) {
       const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
-      const qs = `utm_source=${appName}&utm_medium=App&utm_campaign=v${getAppVersion()}`;
+      const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
       const attributedHref = querystring.joinUrl(href, qs);
       shell.openExternal(attributedHref);
     } else {

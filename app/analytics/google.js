@@ -2,7 +2,10 @@ import * as constants from '../common/constants';
 
 let _sessionId = null;
 
-export function init (userId = null) {
+const DIMENSION_PLATFORM = 'dimension1';
+const DIMENSION_VERSION = 'dimension2';
+
+export function init (userId, platform, version) {
   if (constants.isDevelopment()) {
     console.log(`[ga] Not initializing for dev`);
     return;
@@ -29,18 +32,40 @@ export function init (userId = null) {
   // Set a fake location
   window.ga('set', 'location', `https://${constants.GA_HOST}/`);
 
+  setUserId(userId);
+  setPlatform(platform);
+  setVersion(version);
+
   // Track the initial page view
   window.ga('send', 'pageview');
-
-  if (userId) {
-    setUserId(userId);
-  }
 
   console.log(`[ga] Initialized for ${_sessionId}`);
 }
 
+export function setPlatform (platform) {
+  if (!window.ga || !platform) {
+    return;
+  }
+
+  ga('set', DIMENSION_PLATFORM, platform);
+  console.log(`[ga] Set platform ${platform}`);
+}
+
+export function setVersion (version) {
+  if (!window.ga || !version) {
+    return;
+  }
+
+  ga('set', DIMENSION_VERSION, version);
+  console.log(`[ga] Set version ${version}`);
+}
+
 export function setUserId (userId) {
-  window.ga && window.ga('set', 'userId', userId);
+  if (!window.ga || !userId) {
+    return;
+  }
+
+  window.ga('set', 'userId', userId);
   console.log(`[ga] Set userId ${userId}`);
 }
 
