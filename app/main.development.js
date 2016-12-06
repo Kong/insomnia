@@ -9,7 +9,6 @@ import path from 'path';
 import electron from 'electron';
 import * as packageJSON from './package.json';
 import LocalStorage from './common/LocalStorage';
-import installExtension, {REACT_DEVELOPER_TOOLS} from 'electron-devtools-installer';
 
 // Some useful helpers
 const IS_DEV = process.env.INSOMNIA_ENV === 'development';
@@ -39,8 +38,7 @@ const UPDATE_URLS = {
 
 const DOWNLOAD_URL = 'http://download.insomnia.rest';
 
-const localStoragePath = path.join(app.getPath('userData'), 'localStorage');
-const localStorage = new LocalStorage(localStoragePath);
+let localStorage = null;
 
 let mainWindow = null;
 let hasPromptedForUpdates = false;
@@ -248,9 +246,15 @@ app.on('activate', (e, hasVisibleWindows) => {
 
 // When the app is first launched
 app.on('ready', () => {
+  initLocalStorage();
   createWindow();
   checkForUpdates();
 });
+
+function initLocalStorage () {
+  const localStoragePath = path.join(app.getPath('userData'), 'localStorage');
+  localStorage = new LocalStorage(localStoragePath);
+}
 
 function createWindow () {
   const zoomFactor = getZoomFactor();
@@ -511,10 +515,6 @@ function createWindow () {
   ];
 
   if (IS_DEV) {
-    installExtension(REACT_DEVELOPER_TOOLS)
-      .then((name) => console.log(`Added Extension:  ${name}`))
-      .catch((err) => console.log('An error occurred: ', err));
-
     template.push({
       label: 'Developer',
       position: 'before=help',
