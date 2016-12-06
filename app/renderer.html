@@ -24,7 +24,9 @@
 
     const {ipcRenderer} = require('electron');
     ipcRenderer.on('update-available', () => {
-      showUpdateNotification();
+      // Give it a few seconds before showing this. Sometimes, when
+      // you relaunch too soon it doesn't work the first time.
+      setTimeout(() => showUpdateNotification(), 1000 * 10)
     });
 
     setInterval(() => {
