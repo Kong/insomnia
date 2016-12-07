@@ -84,9 +84,9 @@ class Wrapper extends Component {
 
   // Other Helpers
   _handleImportFile = () => {
-    console.log('IMPORT', this.props);
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
-  }
+  };
+
   _handleExportWorkspaceToFile = () => this.props.handleExportFile(this.props.activeWorkspace._id);
   _handleSetActiveResponse = responseId => this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   _handleShowEnvironmentsModal = () => showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);

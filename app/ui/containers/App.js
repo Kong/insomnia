@@ -336,12 +336,12 @@ class App extends Component {
     if (firstLaunch) {
       // TODO: Show a welcome message
       trackLegacyEvent('First Launch');
-      trackEvent('General', 'First Launch', getAppVersion());
+      trackEvent('General', 'First Launch', getAppVersion(), {nonInteraction: true});
     } else if (lastVersion !== getAppVersion()) {
-      trackEvent('General', 'Updated', getAppVersion());
+      trackEvent('General', 'Updated', getAppVersion(), {nonInteraction: true});
       showModal(ChangelogModal);
     } else {
-      trackEvent('General', 'Launched', getAppVersion());
+      trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
     }
 
     db.onChange(changes => {
