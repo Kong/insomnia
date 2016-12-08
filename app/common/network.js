@@ -7,10 +7,9 @@ import * as querystring from './querystring';
 import {buildFromParams} from './querystring';
 import * as util from './misc.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FILE} from './constants';
-import {jarFromCookies, cookiesFromJar, cookieHeaderValueForUri} from './cookies';
+import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol} from './misc';
 import {getRenderedRequest} from './render';
-import {swapHost} from './dns';
 import * as fs from 'fs';
 import * as db from './database';
 
@@ -150,26 +149,11 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
 
     // Add the cookie header to the request
     const cookieJar = renderedRequest.cookieJar;
-    const jar = jarFromCookies(cookieJar.cookies);
-    const existingCookieHeaderName = Object.keys(config.headers).find(k => k.toLowerCase() === 'cookie');
-    const cookieString = await cookieHeaderValueForUri(jar, config.url);
+    const jar = networkRequest.jar();
+    jar._jar = jarFromCookies(cookieJar.cookies);
+    config.jar = jar;
 
-    if (cookieString && existingCookieHeaderName) {
-      config.headers[existingCookieHeaderName] += `; ${cookieString}`;
-    } else if (cookieString) {
-      config.headers['Cookie'] = cookieString;
-    }
-
-    // Do DNS lookup ourselves
-    // We don't want to let NodeJS do DNS, because it doesn't use
-    // getaddrinfo by default. Instead, it first tries to reach out
-    // to the network.
-    const originalUrl = config.url;
-    config.url = await swapHost(config.url, forceIPv4);
-
-    // TODO: Handle redirects ourselves
-    const requestStartTime = Date.now();
-    const req = networkRequest(config, async (err, networkResponse) => {
+    config.callback = async (err, networkResponse) => {
       if (err) {
         const isShittyParseError = err.toString() === 'Error: Parse Error';
 
@@ -193,7 +177,7 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
         }
 
         await models.response.create({
-          url: originalUrl,
+          url: config.url,
           parentId: renderedRequest._id,
           statusMessage: 'Error',
           error: message
@@ -213,26 +197,14 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
         }
       }
 
-      // Update the cookie jar
-      // NOTE: Since we're doing own DNS, we can't rely on Request to do this
-      const setCookieHeaders = util.getSetCookieHeaders(headers);
-      if (setCookieHeaders.length) {
-        for (const h of setCookieHeaders) {
-          try {
-            jar.setCookieSync(h.value, originalUrl);
-          } catch (e) {
-            console.warn('Failed to parse set-cookie', h.value);
-          }
-        }
-        const cookies = await cookiesFromJar(jar);
-        await models.cookieJar.update(cookieJar, {cookies});
-      }
+      const cookies = await cookiesFromJar(jar._jar);
+      await models.cookieJar.update(cookieJar, {cookies});
 
       const responsePatch = {
         parentId: renderedRequest._id,
         statusCode: networkResponse.statusCode,
         statusMessage: networkResponse.statusMessage,
-        url: originalUrl, // TODO: Handle redirects somehow
+        url: config.url,
         contentType: networkResponse.headers['content-type'] || '',
         elapsedTime: networkResponse.elapsedTime,
         bytesRead: networkResponse.body ? networkResponse.body.length : 0,
@@ -242,14 +214,20 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
       };
 
       models.response.create(responsePatch).then(resolve, reject);
-    });
+    };
+
+    // Set the IP family. This fallback behaviour is copied from Curl
+    config.family = forceIPv4 ? 4 : 6;
+
+    const requestStartTime = Date.now();
+    const req = new networkRequest.Request(config);
 
     // Kind of hacky, but this is how we cancel a request.
     cancelRequestFunction = async () => {
       req.abort();
 
       await models.response.create({
-        url: originalUrl,
+        url: config.url,
         parentId: renderedRequest._id,
         elapsedTime: Date.now() - requestStartTime,
         statusMessage: 'Cancelled',
