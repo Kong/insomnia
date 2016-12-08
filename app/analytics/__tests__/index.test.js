@@ -21,13 +21,16 @@ describe('init()', () => {
   });
 
   it('correctly initializes', async () => {
+    jest.useFakeTimers();
     window.localStorage = {};
 
     analytics.trackEvent('premature', 'event');
     analytics.setAccountId('acct_premature');
+    jest.runAllTicks();
 
     window.ga = jest.genMockFunction();
     await analytics.init('acct_123');
+    jest.runAllTicks();
 
     // Verify that Google Analytics works
     expect(window.ga.mock.calls.length).toBe(7);
@@ -45,15 +48,18 @@ describe('init()', () => {
     expect(window.ga.mock.calls[6]).toEqual(['send', 'pageview']);
 
     analytics.trackEvent('foo', 'bar', 'baz');
+    jest.runAllTicks();
     expect(window.ga.mock.calls.length).toBe(8);
     expect(window.ga.mock.calls[7]).toEqual(['send', 'event', 'foo', 'bar', 'baz']);
 
     analytics.setAccountId('acct_456');
+    jest.runAllTicks();
     expect(window.ga.mock.calls.length).toBe(9);
     expect(window.ga.mock.calls[8]).toEqual(['set', 'userId', 'acct_456']);
 
     // Try reinitializing
     analytics.init();
+    jest.runAllTicks();
     expect(window.ga.mock.calls.length).toBe(9);
 
     // TODO: Verify that Segment works (although it's not that important)

@@ -128,7 +128,8 @@ describe('migrate()', () => {
 
     const expected = {
       headers: [],
-      body: {mimeType: "", text: 'hello world!'}
+      body: {mimeType: "", text: 'hello world!'},
+      url: ''
     };
 
     expect(requestModel.migrate(original)).toEqual(expected);
@@ -145,10 +146,11 @@ describe('migrate()', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'foo', value: 'bar'},
-          {name: 'baz', value: '{{ hello }}'}
+          {name: 'foo', value: 'bar', disabled: false},
+          {name: 'baz', value: '{{ hello }}', disabled: false}
         ]
-      }
+      },
+      url: ''
     };
 
     expect(requestModel.migrate(original)).toEqual(expected);
@@ -165,10 +167,11 @@ describe('migrate()', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'foo', value: 'bar'},
-          {name: 'baz', value: '{{ hello }}'}
+          {name: 'foo', value: 'bar', disabled: false},
+          {name: 'baz', value: '{{ hello }}', disabled: false}
         ]
-      }
+      },
+      url: ''
     };
 
     expect(requestModel.migrate(original)).toEqual(expected);
@@ -185,9 +188,10 @@ describe('migrate()', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: '{"foo": "bar"}', value: ''}
-        ]
-      }
+          {name: '{"foo": "bar"}', value: '', disabled: false}
+        ],
+      },
+      url: ''
     };
 
     expect(requestModel.migrate(original)).toEqual(expected);
@@ -208,7 +212,8 @@ describe('migrate()', () => {
 
       const expected = {
         headers: [{name: 'content-type', value: contentType}],
-        body: {mimeType: contentToMimeMap[contentType], text: ''}
+        body: {mimeType: contentToMimeMap[contentType], text: ''},
+        url: '',
       };
 
       expect(requestModel.migrate(original)).toEqual(expected);
@@ -233,11 +238,13 @@ describe('migrate()', () => {
       body: {
         mimeType: '',
         text: 'foo bar!'
-      }
+      },
+      url: '',
     };
 
     const expected2 = {
-      body: {}
+      body: {},
+      url: ''
     };
 
     expect(requestModel.migrate(newBody)).toEqual(expected);

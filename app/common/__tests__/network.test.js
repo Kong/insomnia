@@ -4,7 +4,7 @@ import nock from 'nock';
 import {resolve as pathResolve, join as pathJoin} from 'path';
 import {getRenderedRequest} from '../render';
 import * as models from '../../models';
-import {CONTENT_TYPE_FORM_URLENCODED} from '../constants';
+import {CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../constants';
 import {CONTENT_TYPE_FILE} from '../constants';
 import {CONTENT_TYPE_FORM_DATA} from '../constants';
 
@@ -26,7 +26,11 @@ describe('buildRequestConfig()', () => {
       followRedirect: true,
       forever: true,
       gzip: true,
-      headers: {host: ''},
+      headers: {
+        'host': '',
+        'Accept': '*/*',
+        'User-Agent': `insomnia/${getAppVersion()}`
+      },
       maxRedirects: 50,
       method: 'GET',
       proxy: null,
@@ -81,6 +85,8 @@ describe('buildRequestConfig()', () => {
         'Content-Type': 'application/json',
         'Authorization': 'Basic dXNlcjpwYXNz',
         'host': 'foo.com:3332',
+        'Accept': '*/*',
+        'User-Agent': `insomnia/${getAppVersion()}`,
         'x-hello': 'world'
       },
       maxRedirects: 50,
@@ -130,6 +136,8 @@ describe('actuallySend()', () => {
     mock = nock('http://localhost')
       .matchHeader('Content-Type', 'application/json')
       .matchHeader('Authorization', 'Basic dXNlcjpwYXNz')
+      .matchHeader('Accept', '*/*')
+      .matchHeader('User-Agent', `insomnia/${getAppVersion()}`)
       .matchHeader('Cookie', 'foo=barrrrr')
       .post('/', 'foo=bar')
       .query({'foo bar': 'hello&world'})
@@ -176,6 +184,8 @@ describe('actuallySend()', () => {
 
     mock = nock('http://localhost')
       .matchHeader('Content-Type', 'application/octet-stream')
+      .matchHeader('Accept', '*/*')
+      .matchHeader('User-Agent', `insomnia/${getAppVersion()}`)
       .post('/', 'Hello World!')
       .reply(200, 'response body')
       .log(console.log);
@@ -216,6 +226,8 @@ describe('actuallySend()', () => {
     let requestBody = 'n/a';
     mock = nock('http://localhost')
       .matchHeader('Content-Type', /^multipart\/form-data/)
+      .matchHeader('Accept', '*/*')
+      .matchHeader('User-Agent', `insomnia/${getAppVersion()}`)
       .post('/', body => {
         requestBody = body;
         return true;

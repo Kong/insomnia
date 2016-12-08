@@ -107,6 +107,18 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
 export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 = false) {
   return new Promise(async (resolve, reject) => {
+    async function handleError (err, prefix = '') {
+      await models.response.create({
+        url: renderedRequest.url,
+        parentId: renderedRequest._id,
+        elapsedTime: 0,
+        statusMessage: 'Error',
+        error: prefix ? `${prefix}: ${err.message}` : err.message
+      });
+
+      reject(err);
+    }
+
     // Detect and set the proxy based on the request protocol
     // NOTE: request does not have a separate settings for http/https proxies
     const {protocol} = urlParse(renderedRequest.url);
@@ -124,47 +136,50 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
         timeout: settings.timeout > 0 ? settings.timeout : null,
         rejectUnauthorized: settings.validateSSL
       }, true);
-    } catch (e) {
-      const response = await models.response.create({
-        url: renderedRequest.url,
-        parentId: renderedRequest._id,
-        elapsedTime: 0,
-        statusMessage: 'Error',
-        error: e.message
+    } catch (err) {
+      return handleError(err, 'Failed to setup request');
+    }
+
+    try {
+      // Add certs if needed
+      // https://vanjakom.wordpress.com/2011/08/11/client-and-server-side-ssl-with-nodejs/
+      const {hostname, port} = urlParse(config.url);
+      const certificate = workspace.certificates.find(certificate => {
+        const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
+        const {hostname: cHostname, port: cPort} = urlParse(cHostWithProtocol);
+
+        const assumedPort = parseInt(port) || 443;
+        const assumedCPort = parseInt(cPort) || 443;
+
+        // Exact host match (includes port)
+        return cHostname === hostname && assumedCPort === assumedPort;
       });
-      return resolve(response);
+
+      if (certificate && !certificate.disabled) {
+        const {passphrase, cert, key, pfx} = certificate;
+        config.cert = cert ? Buffer.from(cert, 'base64') : null;
+        config.key = key ? Buffer.from(key, 'base64') : null;
+        config.pfx = pfx ? Buffer.from(pfx, 'base64') : null;
+        config.passphrase = passphrase || null;
+      }
+    } catch (err) {
+      return handleError(err, 'Failed to set certificate');
     }
 
-    // Add certs if needed
-    // https://vanjakom.wordpress.com/2011/08/11/client-and-server-side-ssl-with-nodejs/
-    const {hostname, port} = urlParse(config.url);
-    const certificate = workspace.certificates.find(certificate => {
-      const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
-      const {hostname: cHostname, port: cPort} = urlParse(cHostWithProtocol);
-
-      const assumedPort = parseInt(port) || 443;
-      const assumedCPort = parseInt(cPort) || 443;
-
-      // Exact host match (includes port)
-      return cHostname === hostname && assumedCPort === assumedPort;
-    });
-
-    if (certificate && !certificate.disabled) {
-      const {passphrase, cert, key, pfx} = certificate;
-      config.cert = cert ? Buffer.from(cert, 'base64') : null;
-      config.key = key ? Buffer.from(key, 'base64') : null;
-      config.pfx = pfx ? Buffer.from(pfx, 'base64') : null;
-      config.passphrase = passphrase || null;
+    try {
+      // Add the cookie header to the request
+      config.jar = networkRequest.jar();
+      config.jar._jar = jarFromCookies(renderedRequest.cookieJar.cookies);
+    } catch (err) {
+      return handleError(err, 'Failed to set cookie jar');
     }
-
-    // Add the cookie header to the request
-    const cookieJar = renderedRequest.cookieJar;
-    const jar = networkRequest.jar();
-    jar._jar = jarFromCookies(cookieJar.cookies);
-    config.jar = jar;
 
     // Set the IP family. This fallback behaviour is copied from Curl
-    config.family = forceIPv4 ? 4 : 6;
+    try {
+      config.family = forceIPv4 ? 4 : 6;
+    } catch (err) {
+      return handleError(err, 'Failed to set IP family');
+    }
 
     config.callback = async (err, networkResponse) => {
       if (err) {
@@ -201,19 +216,26 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
         return reject(err);
       }
 
-      // Format the headers into Insomnia format
-      // TODO: Move this to a better place
+      // handle response headers
       const headers = [];
-      for (const name of Object.keys(networkResponse.headers)) {
-        const tmp = networkResponse.headers[name];
-        const values = Array.isArray(tmp) ? tmp : [tmp];
-        for (const value of values) {
-          headers.push({name, value});
+      try {
+        for (const name of Object.keys(networkResponse.headers)) {
+          const tmp = networkResponse.headers[name];
+          const values = Array.isArray(tmp) ? tmp : [tmp];
+          for (const value of values) {
+            headers.push({name, value});
+          }
         }
+      } catch (err) {
+        return handleError(err, 'Failed to parse response headers');
       }
 
-      const cookies = await cookiesFromJar(jar._jar);
-      await models.cookieJar.update(cookieJar, {cookies});
+      try {
+        const cookies = await cookiesFromJar(config.jar._jar);
+        await models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+      } catch (err) {
+        return handleError(err, 'Failed to update cookie jar');
+      }
 
       const responsePatch = {
         parentId: renderedRequest._id,

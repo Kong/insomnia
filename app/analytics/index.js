@@ -10,8 +10,8 @@ export async function init (accountId) {
   }
 
   process.nextTick(() => {
-    segment.init();
     google.init(accountId, getAppPlatform(), getAppVersion());
+    segment.init();
 
     initialized = true;
   });
