@@ -9,14 +9,12 @@ export async function init (accountId) {
     return;
   }
 
-  try {
-    await segment.init();
-    await google.init(accountId, getAppPlatform(), getAppVersion());
+  process.nextTick(() => {
+    segment.init();
+    google.init(accountId, getAppPlatform(), getAppVersion());
 
     initialized = true;
-  } catch (e) {
-    // Just to be extra safe
-  }
+  });
 
   ipcRenderer.on('analytics-track-event', (_, args) => {
     trackEvent(...args);
@@ -24,25 +22,21 @@ export async function init (accountId) {
 }
 
 export function trackEvent (...args) {
-  try {
+  // Do on next tick in case it fails or blocks
+  process.nextTick(() => {
     google.sendEvent(...args);
-  } catch (e) {
-    // Just to be extra safe
-  }
+  });
 }
 
 export function setAccountId (accountId) {
-  try {
+  // Do on next tick in case it fails or blocks
+  process.nextTick(() => {
     google.setUserId(accountId);
-  } catch (e) {
-    // Just to be extra safe
-  }
+  });
 }
 
 export function trackLegacyEvent (event, properties) {
-  try {
+  process.nextTick(() => {
     segment.trackLegacyEvent(event, properties)
-  } catch (e) {
-    // Just to be extra safe
-  }
+  });
 }

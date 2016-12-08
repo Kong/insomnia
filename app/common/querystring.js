@@ -41,6 +41,7 @@ export function build (param, strict = true) {
  */
 export function buildFromParams (parameters, strict = true) {
   let items = [];
+
   for (const param of parameters) {
     let built = build(param, strict);
 

@@ -15,6 +15,10 @@ export function init () {
 }
 
 export function migrate (doc) {
+  // There was a bug on import that would set this to the current workspace ID.
+  // Let's remove it here so that nothing bad happens.
+  doc.parentId = null;
+
   return doc;
 }
 

@@ -499,7 +499,7 @@ function createWindow () {
           label: "Contact Support",
           click: () => {
             trackEvent('App Menu', 'Contact');
-            shell.openExternal('mailto:support@insomnia.rest');
+            shell.openExternal('https://insomnia.rest/documentation/support-and-feedback/');
           }
         },
         {
@@ -507,7 +507,7 @@ function createWindow () {
           accelerator: "CmdOrCtrl+?",
           click: (e) => {
             trackEvent('App Menu', 'Help');
-            shell.openExternal('http://docs.insomnia.rest');
+            shell.openExternal('https://insomnia.rest/documentation');
           }
         }
       ]
