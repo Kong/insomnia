@@ -237,16 +237,27 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
         return handleError(err, 'Failed to update cookie jar');
       }
 
+      let contentType = '';
+      if (networkResponse.headers) {
+        contentType = networkResponse.headers['content-type'] || ''
+      }
+
+      let bytesRead = 0;
+      if (networkResponse.body) {
+        bytesRead = networkResponse.body.length;
+      }
+
+      const bodyEncoding = 'base64';
       const responsePatch = {
         parentId: renderedRequest._id,
         statusCode: networkResponse.statusCode,
         statusMessage: networkResponse.statusMessage,
         url: config.url,
-        contentType: networkResponse.headers['content-type'] || '',
+        contentType: contentType,
         elapsedTime: networkResponse.elapsedTime,
-        bytesRead: networkResponse.body ? networkResponse.body.length : 0,
-        body: networkResponse.body.toString('base64'),
-        encoding: 'base64',
+        bytesRead: bytesRead,
+        body: networkResponse.body.toString(bodyEncoding),
+        encoding: bodyEncoding,
         headers: headers
       };
 
