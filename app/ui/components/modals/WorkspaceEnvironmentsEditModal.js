@@ -42,7 +42,12 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
     if (environmentToActivate) {
       activeEnvironmentId = environmentToActivate._id
+    } else if (this.state.workspace && workspace._id !== this.state.workspace._id) {
+      // We've changed workspaces, so load the root one
+      activeEnvironmentId = rootEnvironment._id;
     } else {
+      // We haven't changed workspaces, so try loading the last environment, and fall back
+      // to the root one
       activeEnvironmentId = this.state.activeEnvironmentId || rootEnvironment._id;
     }
 
