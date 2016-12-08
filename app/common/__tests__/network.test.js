@@ -127,7 +127,7 @@ describe('actuallySend()', () => {
       cookies
     });
 
-    mock = nock('http://[::1]:80')
+    mock = nock('http://localhost')
       .matchHeader('Content-Type', 'application/json')
       .matchHeader('Authorization', 'Basic dXNlcjpwYXNz')
       .matchHeader('Cookie', 'foo=barrrrr')
@@ -160,7 +160,7 @@ describe('actuallySend()', () => {
       settings
     );
 
-    expect(mock.basePath).toBe('http://::1:80');
+    expect(mock.basePath).toBe('http://localhost:80');
     expect(response.error).toBe('');
     expect(response.url).toBe('http://localhost/?foo%20bar=hello%26world');
     expect(response.body).toBe(new Buffer('response body').toString('base64'));
@@ -174,7 +174,7 @@ describe('actuallySend()', () => {
     const settings = await models.settings.create();
     await models.cookieJar.create({parentId: workspace._id});
 
-    mock = nock('http://[::1]:80')
+    mock = nock('http://localhost')
       .matchHeader('Content-Type', 'application/octet-stream')
       .post('/', 'Hello World!')
       .reply(200, 'response body')
@@ -199,7 +199,7 @@ describe('actuallySend()', () => {
       settings
     );
 
-    expect(mock.basePath).toBe('http://::1:80');
+    expect(mock.basePath).toBe('http://localhost:80');
     expect(response.error).toBe('');
     expect(response.url).toBe('http://localhost/');
     expect(response.body).toBe(new Buffer('response body').toString('base64'));
@@ -214,7 +214,7 @@ describe('actuallySend()', () => {
     await models.cookieJar.create({parentId: workspace._id});
     const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
     let requestBody = 'n/a';
-    mock = nock('http://[::1]:80')
+    mock = nock('http://localhost')
       .matchHeader('Content-Type', /^multipart\/form-data/)
       .post('/', body => {
         requestBody = body;
@@ -249,7 +249,7 @@ describe('actuallySend()', () => {
       settings
     );
 
-    expect(mock.basePath).toBe('http://::1:80');
+    expect(mock.basePath).toBe('http://localhost:80');
     expect(response.error).toBe('');
     expect(response.url).toBe('http://localhost/');
     expect(response.body).toBe(new Buffer('response body').toString('base64'));

@@ -58,7 +58,7 @@ export function jarFromCookies (cookies) {
 }
 
 export function cookieToString (cookie) {
-  var str = cookie.toString();
+  let str = cookie.toString();
 
   // tough-cookie toString() doesn't put domain on all the time.
   // This hack adds when tough-cookie won't
