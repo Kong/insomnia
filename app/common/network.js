@@ -153,6 +153,9 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
     jar._jar = jarFromCookies(cookieJar.cookies);
     config.jar = jar;
 
+    // Set the IP family. This fallback behaviour is copied from Curl
+    config.family = forceIPv4 ? 4 : 6;
+
     config.callback = async (err, networkResponse) => {
       if (err) {
         const isShittyParseError = err.toString() === 'Error: Parse Error';
@@ -215,9 +218,6 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
 
       models.response.create(responsePatch).then(resolve, reject);
     };
-
-    // Set the IP family. This fallback behaviour is copied from Curl
-    config.family = forceIPv4 ? 4 : 6;
 
     const requestStartTime = Date.now();
     const req = new networkRequest.Request(config);

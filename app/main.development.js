@@ -505,7 +505,7 @@ function createWindow () {
         {
           label: "Insomnia Help",
           accelerator: "CmdOrCtrl+?",
-          click: (e) => {
+          click: () => {
             trackEvent('App Menu', 'Help');
             shell.openExternal('https://insomnia.rest/documentation');
           }

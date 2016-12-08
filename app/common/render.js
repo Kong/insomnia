@@ -86,10 +86,7 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
 
   // Now we're going to render the renderContext with itself.
   // This is to support templating inside environments
-  const stringifiedEnvironment = JSON.stringify(renderContext);
-  return JSON.parse(
-    render(stringifiedEnvironment, renderContext)
-  )
+  return recursiveRender(renderContext, renderContext);
 }
 
 export function recursiveRender (obj, context) {
