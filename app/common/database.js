@@ -55,7 +55,6 @@ export async function init (types, config = {}, forceReset = false) {
     }, config));
 
     db[modelType].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
-
   }
 
   console.log(`-- Initialized DB at ${getDBFilePath('$TYPE')} --`);

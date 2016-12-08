@@ -26,8 +26,6 @@ export async function init () {
       createdAt: new Date()
     }
   });
-
-  console.log(`[segment] Initialized for ${userId}`);
 }
 
 export function trackLegacyEvent (event, properties = {}) {
@@ -40,6 +38,4 @@ export function trackLegacyEvent (event, properties = {}) {
 
     analytics.track({userId, event, properties});
   }
-
-  console.log(`[segment] Track ${event} for ${userId}`);
 }

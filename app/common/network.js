@@ -6,9 +6,9 @@ import * as models from '../models';
 import * as querystring from './querystring';
 import {buildFromParams} from './querystring';
 import * as util from './misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FILE} from './constants';
+import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
-import {setDefaultProtocol} from './misc';
+import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from './misc';
 import {getRenderedRequest} from './render';
 import * as fs from 'fs';
 import * as db from './database';
@@ -86,6 +86,16 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   }
   config.headers = headers;
 
+  // Set the Accept header if it doesn't exist
+  if (!hasAcceptHeader(renderedRequest.headers)) {
+    config.headers['Accept'] = '*/*';
+  }
+
+  // Set UserAgent if it doesn't exist
+  if (!hasUserAgentHeader(renderedRequest.headers)) {
+    config.headers['User-Agent'] = `insomnia/${getAppVersion()}`
+  }
+
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(renderedRequest.parameters);
   const url = querystring.joinUrl(renderedRequest.url, qs);
@@ -162,6 +172,8 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
 
         // Failed to connect while prioritizing IPv6 address, fallback to IPv4
         const isNetworkRelatedError = (
+          err.code === 'ENODATA' || // DNS resolve failed
+          err.code === 'ENOTFOUND' || // Could not resolve DNS
           err.code === 'ECONNREFUSED' || // Could not talk to server
           err.code === 'EHOSTUNREACH' || // Could not reach host
           err.code === 'ENETUNREACH' // Could not access the network

@@ -56,7 +56,8 @@ export function newBodyForm (parameters) {
 }
 
 export function migrate (doc) {
-  doc = migrateTo1(doc);
+  doc = migrateBody(doc);
+  doc = migrateWeirdUrls(doc);
   return doc;
 }
 
@@ -135,7 +136,7 @@ export function all () {
 // Migrations //
 // ~~~~~~~~~~ //
 
-function migrateTo1 (request) {
+function migrateBody (request) {
   if (request.body && typeof request.body === 'object') {
     return request;
   }
@@ -152,6 +153,17 @@ function migrateTo1 (request) {
     request.body = {};
   } else {
     request.body = newBodyRaw(request.body, contentType);
+  }
+
+  return request;
+}
+
+function migrateWeirdUrls (request) {
+  // Some people seem to have requests with URLs that don't have the indexOf
+  // function. This should clear that up. This can be removed at a later date.
+
+  if (typeof request.url !== 'string') {
+    request.url = '';
   }
 
   return request;

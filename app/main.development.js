@@ -284,7 +284,7 @@ function createWindow () {
     minHeight: 500,
     minWidth: 500,
     acceptFirstMouse: true,
-    icon: path.resolve(__dirname, 'icons/icon.png'),
+    icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
       zoomFactor: zoomFactor
     }

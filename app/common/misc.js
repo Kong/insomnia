@@ -29,6 +29,14 @@ export function hasAuthHeader (headers) {
   return filterHeaders(headers, 'authorization').length > 0;
 }
 
+export function hasAcceptHeader (headers) {
+  return filterHeaders(headers, 'accept').length > 0;
+}
+
+export function hasUserAgentHeader (headers) {
+  return filterHeaders(headers, 'user-agent').length > 0;
+}
+
 export function getSetCookieHeaders (headers) {
   return filterHeaders(headers, 'set-cookie');
 }
