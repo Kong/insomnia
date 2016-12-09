@@ -329,7 +329,7 @@ function createWindow () {
 
   require('electron-context-menu')({});
 
-  var template = [
+  let template = [
     {
       label: "Application",
       submenu: [
@@ -514,7 +514,7 @@ function createWindow () {
     }
   ];
 
-  if (IS_DEV) {
+  if (IS_DEV || process.env.INSOMNIA_FORCE_DEBUG) {
     template.push({
       label: 'Developer',
       position: 'before=help',
