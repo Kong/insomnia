@@ -7,7 +7,6 @@ import CookiesModal from '../components/modals/CookiesModal';
 import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
 import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import LoginModal from '../components/modals/LoginModal';
-import PaymentModal from '../components/modals/PaymentModal';
 import PaymentNotificationModal from '../components/modals/PaymentNotificationModal';
 import PromptModal from '../components/modals/PromptModal';
 import RequestCreateModal from '../components/modals/RequestCreateModal';
@@ -16,10 +15,10 @@ import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import ResponsePane from './ResponsePane';
 import SettingsModal from '../components/modals/SettingsModal';
 import Sidebar from './sidebar/Sidebar';
-import SignupModal from '../components/modals/SignupModal';
 import SyncLogsModal from '../components/modals/SyncLogsModal';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
+import WorkspaceShareSettingsModal from '../components/modals/WorkspaceShareSettingsModal';
 import * as models from '../../models/index';
 import {updateMimeType} from '../../models/request';
 import {trackEvent} from '../../analytics/index';
@@ -276,14 +275,15 @@ class Wrapper extends Component {
         <SyncLogsModal ref={registerModal}/>
         <LoginModal ref={registerModal}/>
         <PromptModal ref={registerModal}/>
-        <SignupModal ref={registerModal}/>
-        <PaymentModal ref={registerModal}/>
         <RequestCreateModal ref={registerModal}/>
         <PaymentNotificationModal ref={registerModal}/>
         <WorkspaceSettingsModal
           ref={registerModal}
           workspace={activeWorkspace}
           handleRemoveWorkspace={this._handleRemoveActiveWorkspace}/>
+        <WorkspaceShareSettingsModal
+          ref={registerModal}
+          workspace={activeWorkspace}/>
         <EnvironmentEditModal
           ref={registerModal}
           onChange={models.requestGroup.update}

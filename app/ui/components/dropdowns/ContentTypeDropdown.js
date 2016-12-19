@@ -34,14 +34,14 @@ class ContentTypeDropdown extends Component {
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
-        <DropdownDivider name={<span><i className="fa fa-bars"></i> Form Data</span>}/>
+        <DropdownDivider><span><i className="fa fa-bars"></i> Form Data</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_DATA)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_URLENCODED)}
-        <DropdownDivider name={<span><i className="fa fa-code"></i> Raw Text</span>}/>
+        <DropdownDivider><span><i className="fa fa-code"></i> Raw Text</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_JSON)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_XML)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_OTHER)}
-        <DropdownDivider name={<span><i className="fa fa-ellipsis-h"></i> Other</span>}/>
+        <DropdownDivider><span><i className="fa fa-ellipsis-h"></i> Other</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_FILE)}
         {this._renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
       </Dropdown>

@@ -102,7 +102,7 @@ class Dropdown extends Component {
   }
 
   render () {
-    const {right, outline, wide, className, style} = this.props;
+    const {right, outline, wide, className, style, children} = this.props;
     const {dropUp, open} = this.state;
 
     const classes = classnames(
@@ -117,7 +117,9 @@ class Dropdown extends Component {
 
     const dropdownButtons = [];
     const dropdownItems = [];
-    for (const child of this._getFlattenedChildren(this.props.children)) {
+
+    const allChildren = this._getFlattenedChildren(Array.isArray(children) ? children : [children]);
+    for (const child of allChildren) {
       if (child.type === DropdownButton) {
         dropdownButtons.push(child);
       } else if (child.type === DropdownItem) {
@@ -127,13 +129,11 @@ class Dropdown extends Component {
       }
     }
 
-    let children = [];
+    let finalChildren = [];
     if (dropdownButtons.length !== 1) {
       console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`, this.props);
-    } else if (dropdownItems.length === 0) {
-      children = dropdownButtons;
     } else {
-      children = [
+      finalChildren = [
         dropdownButtons[0],
         <ul key="items" ref={this._addDropdownListRef}>
           {dropdownItems}
@@ -146,7 +146,7 @@ class Dropdown extends Component {
            className={classes}
            onClick={this._handleClick}
            onMouseDown={this._handleMouseDown}>
-        {children}
+        {finalChildren}
         <div className="dropdown__backdrop"></div>
       </div>
     )

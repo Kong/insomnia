@@ -9,12 +9,10 @@ export async function init (accountId) {
     return;
   }
 
-  process.nextTick(() => {
-    google.init(accountId, getAppPlatform(), getAppVersion());
-    segment.init();
+  await segment.init();
+  await google.init(accountId, getAppPlatform(), getAppVersion());
 
-    initialized = true;
-  });
+  initialized = true;
 
   ipcRenderer.on('analytics-track-event', (_, args) => {
     trackEvent(...args);

@@ -82,14 +82,14 @@ class ResponseHistoryDropdown extends Component {
             <i className="fa fa-history"/> :
             <i className="fa fa-thumb-tack"/>}
         </DropdownButton>
-        <DropdownDivider name="Response History"/>
+        <DropdownDivider>Response History</DropdownDivider>
         <DropdownItem buttonClass={PromptButton}
                       addIcon={true}
                       onClick={this._handleDeleteResponses}>
           <i className="fa fa-trash-o"/>
           Clear History
         </DropdownItem>
-        <DropdownDivider name="Past Responses"/>
+        <DropdownDivider>Past Responses</DropdownDivider>
         {responses.map(this.renderDropdownItem)}
       </Dropdown>
     )

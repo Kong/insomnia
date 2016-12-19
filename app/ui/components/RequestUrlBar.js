@@ -179,7 +179,7 @@ class RequestUrlBar extends Component {
           <DropdownButton className={classnames('urlbar__send-btn', {hide: !showAdvanced})}>
             <i className="fa fa-caret-down"></i>
           </DropdownButton>
-          <DropdownDivider name="Basic"/>
+          <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
             <i className="fa fa-arrow-circle-o-right"/> Send Now
             <DropdownHint char="Enter"/>
@@ -188,6 +188,7 @@ class RequestUrlBar extends Component {
             <i className="fa fa-code"/> Generate Client Code
           </DropdownItem>
           <DropdownDivider name="Advanced"/>
+          <DropdownDivider>Advanced</DropdownDivider>
           <DropdownItem onClick={this._handleSendAfterDelay}>
             <i className="fa fa-clock-o"/> Send After Delay
           </DropdownItem>

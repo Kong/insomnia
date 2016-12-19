@@ -16,14 +16,14 @@ class PreviewModeDropdown extends PureComponent {
         <DropdownButton className="tall">
           <i className="fa fa-caret-down"></i>
         </DropdownButton>
-        <DropdownDivider name="Preview Mode"/>
+        <DropdownDivider>Preview Mode</DropdownDivider>
         {PREVIEW_MODES.map(mode => (
           <DropdownItem key={mode} onClick={this._handleClick} value={mode}>
             {previewMode === mode ? <i className="fa fa-check"/> : <i className="fa fa-empty"/>}
             {getPreviewModeName(mode)}
           </DropdownItem>
         ))}
-        <DropdownDivider name="Actions"/>
+        <DropdownDivider>Actions</DropdownDivider>
         <DropdownItem onClick={download}>
           <i className="fa fa-save"></i>
           Save to File

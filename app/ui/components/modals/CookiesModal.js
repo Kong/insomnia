@@ -97,23 +97,18 @@ class CookiesModal extends Component {
     const {filter} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} top={true}
-             tall={true} {...this.props}>
-        <ModalHeader>
-          Manage Cookies
-        </ModalHeader>
+      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
+        <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody className="cookie-editor">
-          <div>
-            <div
-              className="cookie-editor__filter form-control form-control--outlined">
-              <label className="label--small">Filter Cookies</label>
-              <input
-                ref={n => this.filterInput = n}
-                onChange={e => this._onFilterChange(e.target.value)}
-                type="text"
-                placeholder="twitter.com"
-                defaultValue=""
-              />
+          <div className="pad">
+            <div className="form-control form-control--outlined">
+              <label>Filter Cookies
+                <input ref={n => this.filterInput = n}
+                       onChange={e => this._onFilterChange(e.target.value)}
+                       type="text"
+                       placeholder="twitter.com"
+                       defaultValue=""/>
+              </label>
             </div>
           </div>
           <div className="cookie-editor__editor border-top">

@@ -63,6 +63,10 @@ p {
   line-height: 1.7em;
 }
 
+small {
+  font-size: 0.85em;
+}
+
 label.label--small,
 table th {
   color: @hl;
@@ -110,18 +114,19 @@ code, pre, .monospace {
 .notice {
   text-align: center;
   color: @font-light-bg !important;
-  padding: @padding-sm;
+  padding: @padding-sm * 1.5;
+  border: 1px solid;
   border-radius: @radius-md;
 }
 
 .notice.warning {
-  background: fadeout(@warning, 85);
-  border: 1px solid @warning;
+  background: fadeout(@warning, 90);
+  border-color: @warning;
 }
 
 .notice.info {
-  background: fadeout(@info, 85);
-  border: 1px solid @info;
+  background: fadeout(@info, 90);
+  border-color: @info;
 }
 
 .text-center {
