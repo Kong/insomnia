@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import * as misc from '../../../common/misc';
 
 class Editable extends Component {
   state = {editing: false};
@@ -25,7 +24,7 @@ class Editable extends Component {
     }
   };
 
-  _handleEditEnd = async () => {
+  _handleEditEnd = () => {
     const value = this._input.value.trim();
 
     if (!value) {
@@ -37,8 +36,7 @@ class Editable extends Component {
 
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
-    await misc.delay(100);
-    this.setState({editing: false});
+    setTimeout(async () => this.setState({editing: false}), 100);
   };
 
   _handleEditKeyDown = e => {

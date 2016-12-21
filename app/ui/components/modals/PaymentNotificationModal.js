@@ -1,10 +1,9 @@
 import React, {Component} from 'react';
+import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import PaymentModal from './PaymentModal';
-import {showModal} from './index';
 import * as session from '../../../sync/session';
 import {trackEvent} from '../../../analytics';
 
@@ -14,12 +13,6 @@ let hidePaymentNotificationUntilNextLaunch = false;
 class PaymentNotificationModal extends Component {
   _handleHide = () => {
     this.hide();
-  };
-
-  _handleProceedToPayment = () => {
-    this.hide();
-    showModal(PaymentModal);
-    trackEvent('Billing', 'Trial Ended', 'Proceed')
   };
 
   show () {
@@ -52,10 +45,9 @@ class PaymentNotificationModal extends Component {
             </p>
             <br/>
             <p className="pad-top">
-              <button className="btn btn--compact btn--outlined"
-                      onClick={this._handleProceedToPayment}>
-                Proceed to Billing
-              </button>
+              <Link button={true} href="https://insomnia.rest/app/subscribe/" className="btn btn--compact btn--outlined">
+                Enter Billing Info
+              </Link>
             </p>
           </div>
         </ModalBody>
@@ -63,7 +55,7 @@ class PaymentNotificationModal extends Component {
           <button className="btn" onClick={this._handleHide}>
             Maybe Later
           </button>
-          <div></div>
+          &nbsp;
         </ModalFooter>
       </Modal>
     )

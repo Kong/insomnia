@@ -10,8 +10,19 @@ import {trackEvent} from '../../../analytics/index';
 
 
 class SidebarRequestRow extends PureComponent {
+  state = {
+    dragDirection: 0,
+    isEditing: false,
+  };
 
-  state = {dragDirection: 0};
+  _handleEditStart = () => {
+    trackEvent('Request', 'Rename', 'In Place');
+    this.setState({isEditing: true});
+  };
+
+  _handleRequestUpdateName = name => {
+    models.request.update(this.props.request, {name})
+  };
 
   _handleRequestCreateFromEmpty = () => {
     const parentId = this.props.requestGroup._id;
@@ -63,8 +74,7 @@ class SidebarRequestRow extends PureComponent {
       node = (
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
-            <button className="sidebar__clickable"
-                    onClick={this._handleRequestCreateFromEmpty}>
+            <button className="sidebar__clickable" onClick={this._handleRequestCreateFromEmpty}>
               <em>click to add first request...</em>
             </button>
           </div>
@@ -77,14 +87,11 @@ class SidebarRequestRow extends PureComponent {
             <button className="wide" onClick={this._handleRequestActivate}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
-                <Editable
-                  value={request.name}
-                  onEditStart={() => trackEvent('Request', 'Rename', 'In Place')}
-                  onSubmit={name => models.request.update(request, {name})}
-                />
+                <Editable value={request.name}
+                          onEditStart={this._handleEditStart}
+                          onSubmit={this._handleRequestUpdateName}/>
               </div>
             </button>
-
             <div className="sidebar__actions">
               <RequestActionsDropdown
                 handleDuplicateRequest={handleDuplicateRequest}
@@ -94,13 +101,16 @@ class SidebarRequestRow extends PureComponent {
                 requestGroup={requestGroup}
               />
             </div>
-
           </div>
         </li>
       )
     }
 
-    return connectDragSource(connectDropTarget(node));
+    if (!this.state.isEditing) {
+      return connectDragSource(connectDropTarget(node));
+    } else {
+      return connectDropTarget(node);
+    }
   }
 }
 

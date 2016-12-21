@@ -4,7 +4,6 @@ import {shell} from 'electron';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
 import SettingsShortcuts from '../settings/SettingsShortcuts';
 import SettingsAbout from '../settings/SettingsAbout';
 import SettingsGeneral from '../settings/SettingsGeneral';
@@ -14,7 +13,6 @@ import * as models from '../../../models';
 import {getAppVersion, getAppName} from '../../../common/constants';
 import * as session from '../../../sync/session';
 import {showModal} from './index';
-import SignupModal from './SignupModal';
 import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics/index';
 
@@ -82,7 +80,8 @@ class SettingsModal extends Component {
                 <button onClick={e => trackEvent('Setting', 'Tab General')}>General</button>
               </Tab>
               <Tab selected={this._currentTabIndex === 1}>
-                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>Import/Export</button>
+                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>Import/Export
+                </button>
               </Tab>
               <Tab selected={this._currentTabIndex === 3}>
                 <button onClick={e => trackEvent('Setting', 'Tab Shortcuts')}>Shortcuts</button>
@@ -126,9 +125,8 @@ class SettingsModal extends Component {
               <SettingsSync
                 loggedIn={session.isLoggedIn()}
                 firstName={session.getFirstName() || ''}
-                handleExit={() => this.modal.hide()}
-                handleUpdateSetting={(key, value) => models.settings.update(settings, {[key]: value})}
-                handleShowSignup={() => showModal(SignupModal)}
+                email={session.getEmail() || ''}
+                handleExit={this._handleClose}
                 handleCancelAccount={sync.cancelAccount}
                 handleReset={() => this._handleSyncReset()}
                 handleLogout={sync.logout}
@@ -139,11 +137,6 @@ class SettingsModal extends Component {
             </TabPanel>
           </Tabs>
         </ModalBody>
-        {/*<ModalFooter>*/}
-          {/*<button className="btn" onClick={this._handleClose}>*/}
-            {/*Close*/}
-          {/*</button>*/}
-        {/*</ModalFooter>*/}
       </Modal>
     );
   }

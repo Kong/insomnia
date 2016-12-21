@@ -22,7 +22,7 @@ const SettingsImportExport = ({
         <DropdownButton className="btn btn--clicky">
           Export Data <i className="fa fa-caret-down"></i>
         </DropdownButton>
-        <DropdownDivider name="Choose Export Type"/>
+        <DropdownDivider>Choose Export Type</DropdownDivider>
         <DropdownItem onClick={handleExportWorkspace}>
           <i className="fa fa-home"></i>
           Current Workspace

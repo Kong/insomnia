@@ -1,23 +1,21 @@
-import React, {PropTypes} from 'react';
+import React from 'react';
 import classnames from 'classnames';
 
-const DropdownDivider = ({name}) => {
+const DropdownDivider = ({children}) => {
   const classes = classnames(
     'dropdown__divider',
-    {'dropdown__divider--no-name': !name}
+    {'dropdown__divider--no-name': !children}
   );
 
   return (
     <li className={classes}>
       <span className="dropdown__divider__label">
-        {name}
+        {children}
       </span>
     </li>
   )
 };
 
-DropdownDivider.propTypes = {
-  name: PropTypes.any
-};
+DropdownDivider.propTypes = {};
 
 export default DropdownDivider;

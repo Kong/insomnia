@@ -1,7 +1,9 @@
 import HKDF from 'hkdf';
-import sjcl from 'sjcl';
 import srp from 'srp';
-import forge from 'node-forge';
+import initForge from 'node-forge';
+
+// Initialize Forge
+const forge = initForge();
 
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1E5; // 100,000
@@ -182,7 +184,7 @@ export async function generateAES256Key () {
     );
     return subtle.exportKey('jwk', key);
   } else {
-    console.log('-- Using Falback Forge AES Key Generation --');
+    console.log('-- Using Fallback Forge AES Key Generation --');
     const key = forge.util.bytesToHex(forge.random.getBytesSync(32));
     return {
       kty: 'oct',
@@ -200,7 +202,7 @@ export async function generateAES256Key () {
  * @returns Object
  */
 export async function generateKeyPairJWK () {
-  // NOTE: Safari has crypto.webkitSubtle, but does not support RSA-OAEP-SHA256
+  // NOTE: Safari has crypto.webkitSubtle, but it does not support RSA-OAEP-SHA256
   const subtle = window.crypto && window.crypto.subtle;
 
   if (subtle) {
@@ -298,9 +300,6 @@ function _b64UrlToHex (s) {
   return forge.util.bytesToHex(atob(b64));
 }
 
-window.b64urltohex = _b64UrlToHex;
-window.forge = forge;
-
 /**
  * Derive key from password
  *
@@ -329,26 +328,15 @@ async function _pbkdf2Passphrase (passphrase, salt) {
     const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
     return new Buffer(derivedKeyRaw).toString('hex');
   } else {
-    console.log('-- Using SJCL PBKDF2 --');
-
-    const derivedKeyRaw = sjcl.misc.pbkdf2(
+    console.log('-- Using Forge PBKDF2 --');
+    const derivedKeyRaw = forge.pkcs5.pbkdf2(
       passphrase,
-      sjcl.codec.hex.toBits(salt),
+      forge.util.hexToBytes(salt),
       DEFAULT_PBKDF2_ITERATIONS,
-      DEFAULT_BYTE_LENGTH * 8,
-      sjcl.hash.sha1
+      DEFAULT_BYTE_LENGTH,
+      forge.md.sha256.create()
     );
 
-    return sjcl.codec.hex.fromBits(derivedKeyRaw);
-
-    // NOTE: SJCL (above) is about 10x faster than Forge
-    // const derivedKeyRaw = forge.pkcs5.pbkdf2(
-    //   passphrase,
-    //   forge.util.hexToBytes(salt),
-    //   DEFAULT_PBKDF2_ITERATIONS,
-    //   DEFAULT_BYTE_LENGTH,
-    //   forge.md.sha256.create()
-    // );
-    // const derivedKey = forge.util.bytesToHex(derivedKeyRaw);
+    return forge.util.bytesToHex(derivedKeyRaw);
   }
 }

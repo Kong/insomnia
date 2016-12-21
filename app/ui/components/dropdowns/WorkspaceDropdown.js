@@ -10,12 +10,18 @@ import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import Link from '../base/Link';
 import WorkspaceSettingsModal from '../modals/WorkspaceSettingsModal';
+import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
 
 class WorkspaceDropdown extends Component {
   _handleShowExport = () => showModal(SettingsModal, TAB_INDEX_EXPORT);
   _handleShowSettings = () => showModal(SettingsModal);
   _handleShowWorkspaceSettings = () => {
     showModal(WorkspaceSettingsModal, {
+      workspace: this.props.activeWorkspace,
+    });
+  };
+  _handleShowShareSettings = () => {
+    showModal(WorkspaceShareSettingsModal, {
       workspace: this.props.activeWorkspace,
     });
   };
@@ -64,13 +70,16 @@ class WorkspaceDropdown extends Component {
             {activeWorkspace.name}
           </h1>
         </DropdownButton>
-        <DropdownDivider name={activeWorkspace.name}/>
+        <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
         <DropdownItem onClick={this._handleShowWorkspaceSettings}>
           <i className="fa fa-wrench"/> Workspace Settings
           <DropdownHint char="&#8679;,"/>
         </DropdownItem>
+        {/*<DropdownItem onClick={this._handleShowShareSettings}>*/}
+          {/*<i className="fa fa-user"/> Share <strong>{activeWorkspace.name}</strong>*/}
+        {/*</DropdownItem>*/}
 
-        <DropdownDivider name="Switch Workspace"/>
+        <DropdownDivider>Switch Workspace</DropdownDivider>
 
         {nonActiveWorkspaces.map(w => (
           <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
@@ -81,10 +90,10 @@ class WorkspaceDropdown extends Component {
           <i className="fa fa-empty"/> New Workspace
         </DropdownItem>
 
-        <DropdownDivider name={`Insomnia Version ${getAppVersion()}`}/>
+        <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
 
         <DropdownItem onClick={this._handleShowSettings}>
-          <i className="fa fa-cog"/> Preferences
+          <i className="fa fa-cog"/> App Settings
           <DropdownHint char=","/>
         </DropdownItem>
         <DropdownItem onClick={this._handleShowExport}>

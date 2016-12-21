@@ -5,10 +5,7 @@ import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
-import {showModal} from './index';
-import SignupModal from './SignupModal';
 import * as sync from '../../../sync';
-import {trackEvent} from '../../../analytics';
 
 class LoginModal extends Component {
   state = {
@@ -39,14 +36,6 @@ class LoginModal extends Component {
     } catch (e) {
       this.setState({error: e.message, loading: false});
     }
-  };
-
-  _handleSignup = e => {
-    e.preventDefault();
-
-    this.modal.hide();
-    showModal(SignupModal);
-    trackEvent('Login', 'Switch to Signup');
   };
 
   show (options = {}) {
@@ -92,7 +81,7 @@ class LoginModal extends Component {
           <div className="margin-left">
             Don't have an account yet?
             {" "}
-            <a href="#" onClick={this._handleSignup}>Signup</a>
+            <Link href="https://insomnia.rest/app/">Signup</Link>
           </div>
           <button type="submit" className="btn">
             {this.state.loading ? (

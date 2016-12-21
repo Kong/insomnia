@@ -17,6 +17,7 @@ class RequestUrlBar extends Component {
 
   _handleFormSubmit = e => {
     e.preventDefault();
+    e.stopPropagation();
     this.props.handleSend();
   };
 
@@ -117,8 +118,8 @@ class RequestUrlBar extends Component {
     clearTimeout(this._sendInterval);
     if (this.state.currentInterval) {
       this.setState({currentInterval: null});
+      trackEvent('Request', 'Stop Send Interval');
     }
-    trackEvent('Request', 'Stop Send Interval');
   };
 
   _handleStopTimeout = () => {
@@ -127,6 +128,20 @@ class RequestUrlBar extends Component {
       this.setState({currentTimeout: null});
     }
     trackEvent('Request', 'Stop Send Timeout');
+  };
+
+  _handleClickSend = e => {
+    const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
+
+    // If we're pressing a meta key, let the dropdown open
+    if (metaPressed) {
+      e.preventDefault(); // Don't submit the form
+      return;
+    }
+
+    // If we're not pressing a meta key, cancel dropdown and send the request
+    e.stopPropagation(); // Don't trigger the dropdown
+    this._handleFormSubmit(e);
   };
 
   componentDidMount () {
@@ -140,7 +155,7 @@ class RequestUrlBar extends Component {
   }
 
   renderSendButton () {
-    const {showAdvanced, currentInterval, currentTimeout} = this.state;
+    const {currentInterval, currentTimeout} = this.state;
 
     let cancelButton = null;
     if (currentInterval) {
@@ -164,22 +179,15 @@ class RequestUrlBar extends Component {
     }
 
     let sendButton;
-    if (!cancelButton && !showAdvanced) {
-      sendButton = (
-        <button key="send" type="submit" className="urlbar__send-btn">
-          Send
-        </button>
-      )
-    }
-
-    let dropdown = null;
     if (!cancelButton) {
-      dropdown = (
+      sendButton = (
         <Dropdown key="dropdown" className="tall" right={true}>
-          <DropdownButton className={classnames('urlbar__send-btn', {hide: !showAdvanced})}>
-            <i className="fa fa-caret-down"></i>
+          <DropdownButton className="urlbar__send-btn"
+                          onClick={this._handleClickSend}
+                          type="submit">
+            Send
           </DropdownButton>
-          <DropdownDivider name="Basic"/>
+          <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
             <i className="fa fa-arrow-circle-o-right"/> Send Now
             <DropdownHint char="Enter"/>
@@ -187,7 +195,7 @@ class RequestUrlBar extends Component {
           <DropdownItem onClick={this._handleGenerateCode}>
             <i className="fa fa-code"/> Generate Client Code
           </DropdownItem>
-          <DropdownDivider name="Advanced"/>
+          <DropdownDivider>Advanced</DropdownDivider>
           <DropdownItem onClick={this._handleSendAfterDelay}>
             <i className="fa fa-clock-o"/> Send After Delay
           </DropdownItem>
@@ -201,7 +209,6 @@ class RequestUrlBar extends Component {
     return [
       cancelButton,
       sendButton,
-      dropdown,
     ]
   }
 

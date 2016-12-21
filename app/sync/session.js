@@ -233,7 +233,10 @@ export async function logout () {
   trackEvent('Session', 'Logout');
 }
 
-/** Cancel the user's subscription Account */
+export async function listTeams () {
+  return util.get('/api/teams');
+}
+
 export async function cancelAccount () {
   await util.del('/api/billing/subscriptions');
   trackEvent('Session', 'Cancel Account');

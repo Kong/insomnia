@@ -5,6 +5,8 @@ import PromptModal from '../modals/PromptModal';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
+import AlertModal from '../modals/AlertModal';
+import {MOD_SYM} from '../../../common/constants';
 
 
 class RequestActionsDropdown extends Component {
@@ -17,6 +19,19 @@ class RequestActionsDropdown extends Component {
   _handleGenerateCode = () => {
     this.props.handleGenerateCode(this.props.request);
     trackEvent('Request', 'Generate Code', 'Request Action');
+  };
+
+  _handleAdvancedSend = () => {
+    trackEvent('Request', 'Advanced Send Hint', 'Request Action');
+    showModal(AlertModal, {
+      title: 'Advanced Sending',
+      message: (
+        <div>
+          For advanced sending options, hold <code>{MOD_SYM}</code> while
+          clicking the send button next to the Url.
+        </div>
+      )
+    });
   };
 
   _handlePromptUpdateName = async () => {
@@ -56,6 +71,9 @@ class RequestActionsDropdown extends Component {
         </DropdownItem>
         <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code"></i> Generate Code
+        </DropdownItem>
+        <DropdownItem onClick={this._handleAdvancedSend}>
+          <i className="fa fa-refresh"></i> Advanced Sending
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon={true}>
           <i className="fa fa-trash-o"></i> Delete

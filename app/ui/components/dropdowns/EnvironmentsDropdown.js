@@ -2,10 +2,9 @@ import React, {Component, PropTypes} from 'react';
 import {ipcRenderer} from 'electron';
 import classnames from 'classnames';
 import EnvironmentsModal from '../modals/WorkspaceEnvironmentsEditModal';
-import {Dropdown, DropdownDivider, DropdownButton, DropdownItem} from '../base/dropdown';
+import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../base/dropdown';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
-
 
 const EnvironmentsDropdown = ({
   className,
@@ -17,7 +16,9 @@ const EnvironmentsDropdown = ({
 }) => {
   // NOTE: Base environment might not exist if the users hasn't managed environments yet.
   const baseEnvironment = environments.find(e => e.parentId === workspace._id);
-  const subEnvironments = environments.filter(e => e.parentId === (baseEnvironment && baseEnvironment._id));
+  const subEnvironments = environments.filter(
+    e => e.parentId === (baseEnvironment && baseEnvironment._id)
+  );
 
   let description;
   if (!activeEnvironment || activeEnvironment === baseEnvironment) {
@@ -35,7 +36,7 @@ const EnvironmentsDropdown = ({
           <i className="fa fa-caret-down"></i>
         </div>
       </DropdownButton>
-      <DropdownDivider name="Switch Environment"/>
+      <DropdownDivider>Switch Environment</DropdownDivider>
       {subEnvironments.map(environment => (
         <DropdownItem key={environment._id}
                       onClick={e => {
@@ -51,9 +52,10 @@ const EnvironmentsDropdown = ({
       }}>
         <i className="fa fa-empty"></i> No Environment
       </DropdownItem>
-      <DropdownDivider name="General"/>
+      <DropdownDivider>General</DropdownDivider>
       <DropdownItem onClick={e => showModal(EnvironmentsModal, workspace)}>
         <i className="fa fa-wrench"></i> Manage Environments
+        <DropdownHint char="E"/>
       </DropdownItem>
     </Dropdown>
   )

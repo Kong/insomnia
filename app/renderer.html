@@ -117,16 +117,5 @@
   // SOME HELPERS
   document.body.setAttribute('data-platform', process.platform);
 </script>
-
-<!-- Other Scripts -->
-<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
-<script>
-  (function () {
-    const key = process.env.INSOMNIA_ENV === 'development' ?
-      'pk_test_MbOhGu5jCPvr7Jt4VC6oySdH' :
-      'pk_live_lntbVSXY3v1RAytACIQJ5BBH';
-    Stripe.setPublishableKey(key);
-  })();
-</script>
 </body>
 </html>

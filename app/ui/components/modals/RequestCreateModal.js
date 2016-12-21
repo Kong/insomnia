@@ -87,7 +87,7 @@ class RequestCreateModal extends Component {
       <Modal ref={m => this.modal = m}>
         <ModalHeader>New Request</ModalHeader>
         <ModalBody noScroll={true}>
-          <form onSubmit={this._handleSubmit} className="pad no-pad-top">
+          <form onSubmit={this._handleSubmit} className="pad">
             <div className="row-fill">
               <div className="form-control form-control--outlined">
                 <label>Name
@@ -95,14 +95,13 @@ class RequestCreateModal extends Component {
                 </label>
               </div>
               <div className="form-control" style={{width: 'auto'}}>
-                <label htmlFor="nothing">&nbsp;
-                  <MethodDropdown
-                    className="btn btn--clicky no-wrap"
-                    right={true}
-                    method={selectedMethod}
-                    onChange={this._handleChangeSelectedMethod}
-                  />
-                </label>
+                <label>&nbsp;</label>
+                <MethodDropdown
+                  className="btn btn--clicky no-wrap"
+                  right={true}
+                  method={selectedMethod}
+                  onChange={this._handleChangeSelectedMethod}
+                />
               </div>
               {!this._shouldNotHaveBody() ? (
                 <div className="form-control" style={{width: 'auto'}}>

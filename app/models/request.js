@@ -107,6 +107,8 @@ export function updateMimeType (request, mimeType, doCreate = false) {
     body = newBodyForm(request.body.params || []);
   } else if (mimeType === CONTENT_TYPE_FILE) {
     body = newBodyFile('');
+  } else if (typeof mimeType !== 'string') {
+    body = newBodyRaw('');
   } else {
     body = newBodyRaw(request.body.text || '', mimeType);
   }

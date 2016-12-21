@@ -250,8 +250,8 @@ class WorkspaceSettingsModal extends Component {
                     />
                   </label>
                 </div>
-                <div className="row-fill">
-                  <div className="form-control">
+                <div className="form-row">
+                  <div className="form-control width-auto">
                     <label>PFX <span className="faint">(or PKCS12)</span>
                       <FileInputButton
                         className="btn btn--clicky"
@@ -261,11 +261,11 @@ class WorkspaceSettingsModal extends Component {
                       />
                     </label>
                   </div>
-                  <div className="width-auto">
+                  <div className="text-center">
                     <br/><br/>
                     &nbsp;&nbsp;Or&nbsp;&nbsp;
                   </div>
-                  <div className="no-wrap row-fill">
+                  <div className="row-fill">
                     <div className="form-control">
                       <label>CRT File
                         <FileInputButton
