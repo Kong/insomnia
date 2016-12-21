@@ -2,11 +2,17 @@ import React, {PropTypes, Component} from 'react';
 import Link from '../base/Link';
 import PromptButton from '../base/PromptButton';
 import {showModal} from '../modals/index';
+import LoginModal from '../modals/LoginModal';
 
 class SettingsSync extends Component {
   _handleClickLogout = async () => {
     this.props.handleExit();
     await this.props.handleLogout();
+  };
+
+  _handleClickLogin = async () => {
+    this.props.handleExit();
+    showModal(LoginModal);
   };
 
   render () {
@@ -54,6 +60,8 @@ class SettingsSync extends Component {
                   className="btn txt-lg btn--outlined">
               Create an Account
             </Link>
+            {" "}
+            <button className="btn" onClick={this._handleClickLogin}>Log In</button>
           </p>,
           <p key="3" className="text-center italic">
             <span className="txt-sm faint pad-top-sm">all plans include a free trial</span>
