@@ -1,6 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import Link from '../base/Link';
 import PromptButton from '../base/PromptButton';
+import {showModal} from '../modals/index';
 
 class SettingsSync extends Component {
   _handleClickLogout = async () => {
@@ -12,6 +13,7 @@ class SettingsSync extends Component {
     const {
       loggedIn,
       firstName,
+      email,
     } = this.props;
 
     return (
@@ -21,7 +23,7 @@ class SettingsSync extends Component {
         {loggedIn ? [
           <p key="1">
             Hi {firstName}! Thanks for signing up for Insomnia
-            Plus.
+            Plus. You are currently signed in with {email}
           </p>,
           <p key="2" className="pad-top">
             <Link button={true} className="btn btn--clicky" href="https://insomnia.rest/app/">
@@ -65,6 +67,7 @@ class SettingsSync extends Component {
 SettingsSync.propTypes = {
   loggedIn: PropTypes.bool.isRequired,
   firstName: PropTypes.string.isRequired,
+  email: PropTypes.string.isRequired,
   handleExit: PropTypes.func.isRequired,
   handleCancelAccount: PropTypes.func.isRequired,
   handleLogout: PropTypes.func.isRequired,

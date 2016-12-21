@@ -11,7 +11,11 @@ import {showModal} from './index';
 
 class WorkspaceShareSettingsModal extends Component {
   state = {
-    team: null
+    teams: []
+  };
+
+  _handleShareWithTeam = team => {
+    console.log('Share with ', team);
   };
 
   async _load () {
@@ -20,15 +24,11 @@ class WorkspaceShareSettingsModal extends Component {
     }
 
     const teams = await session.listTeams();
-    console.log('TEAMS', teams);
-    const accountId = session.getAccountId();
-    const team = teams.find(t => t.ownerAccountId === accountId);
-    this.setState({team});
+    this.setState({teams});
   }
 
   _handleSubmit = e => {
     e.preventDefault();
-    console.log('Submit');
   };
 
   _handleClose = () => this.hide();
@@ -43,7 +43,7 @@ class WorkspaceShareSettingsModal extends Component {
   }
 
   render () {
-    const {team} = this.state;
+    const {teams} = this.state;
 
     return (
       <form onSubmit={this._handleSubmit}>
@@ -59,11 +59,11 @@ class WorkspaceShareSettingsModal extends Component {
                 <DropdownButton type="button" className="btn btn--clicky">
                   <i className="fa fa-lock"/> Private <i className="fa fa-caret-down"/>
                 </DropdownButton>
-                {team ? (
-                  <DropdownItem>
+                {teams.map(team => (
+                  <DropdownItem key={team._id} onClick={e => this._handleShareWithTeam(team)}>
                     <i className="fa fa-users"/> Share with <strong>{team.name}</strong>
                   </DropdownItem>
-                ) : null}
+                ))}
                 <DropdownDivider>Other</DropdownDivider>
                 <DropdownItem>
                   <i className="fa fa-lock"/> Private

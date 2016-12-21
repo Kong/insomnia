@@ -45,7 +45,7 @@ class PaymentNotificationModal extends Component {
             </p>
             <br/>
             <p className="pad-top">
-              <Link button={true} href="https://insomnia.rest/app/" className="btn btn--compact btn--outlined">
+              <Link button={true} href="https://insomnia.rest/app/subscribe/" className="btn btn--compact btn--outlined">
                 Enter Billing Info
               </Link>
             </p>

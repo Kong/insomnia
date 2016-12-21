@@ -6,7 +6,6 @@ import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} f
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 
-
 const EnvironmentsDropdown = ({
   className,
   workspace,
@@ -17,7 +16,9 @@ const EnvironmentsDropdown = ({
 }) => {
   // NOTE: Base environment might not exist if the users hasn't managed environments yet.
   const baseEnvironment = environments.find(e => e.parentId === workspace._id);
-  const subEnvironments = environments.filter(e => e.parentId === (baseEnvironment && baseEnvironment._id));
+  const subEnvironments = environments.filter(
+    e => e.parentId === (baseEnvironment && baseEnvironment._id)
+  );
 
   let description;
   if (!activeEnvironment || activeEnvironment === baseEnvironment) {

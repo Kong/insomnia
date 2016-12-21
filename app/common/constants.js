@@ -121,7 +121,7 @@ export const CONTENT_TYPE_OTHER = '';
 export const contentTypesMap = {
   [CONTENT_TYPE_JSON]: 'JSON',
   [CONTENT_TYPE_XML]: 'XML',
-  [CONTENT_TYPE_FORM_DATA]: 'Form Data',
+  [CONTENT_TYPE_FORM_DATA]: 'Multipart Form',
   [CONTENT_TYPE_FORM_URLENCODED]: 'Url Encoded',
   [CONTENT_TYPE_FILE]: 'Binary File',
   [CONTENT_TYPE_OTHER]: 'Other'

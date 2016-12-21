@@ -80,7 +80,8 @@ class SettingsModal extends Component {
                 <button onClick={e => trackEvent('Setting', 'Tab General')}>General</button>
               </Tab>
               <Tab selected={this._currentTabIndex === 1}>
-                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>Import/Export</button>
+                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>Import/Export
+                </button>
               </Tab>
               <Tab selected={this._currentTabIndex === 3}>
                 <button onClick={e => trackEvent('Setting', 'Tab Shortcuts')}>Shortcuts</button>
@@ -124,6 +125,7 @@ class SettingsModal extends Component {
               <SettingsSync
                 loggedIn={session.isLoggedIn()}
                 firstName={session.getFirstName() || ''}
+                email={session.getEmail() || ''}
                 handleExit={this._handleClose}
                 handleCancelAccount={sync.cancelAccount}
                 handleReset={() => this._handleSyncReset()}
@@ -135,11 +137,6 @@ class SettingsModal extends Component {
             </TabPanel>
           </Tabs>
         </ModalBody>
-        {/*<ModalFooter>*/}
-          {/*<button className="btn" onClick={this._handleClose}>*/}
-            {/*Close*/}
-          {/*</button>*/}
-        {/*</ModalFooter>*/}
       </Modal>
     );
   }
