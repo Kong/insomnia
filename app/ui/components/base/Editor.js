@@ -30,6 +30,7 @@ import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/addon/edit/matchbrackets';
+import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/search/matchesonscrollbar';
 import 'codemirror/addon/search/matchesonscrollbar.css';
 import 'codemirror/addon/fold/foldgutter';
@@ -56,6 +57,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   lint: true,
   tabSize: 4,
   matchBrackets: true,
+  autoCloseBrackets: true,
   indentUnit: 4,
   indentWithTabs: true,
   gutters: [
@@ -227,12 +229,6 @@ class Editor extends Component {
 
     // Strip of charset if there is one
     options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
-
-    if (this._isJSON(options.mode)) {
-      // set LD JSON because it highlights the keys a different color
-      options.mode = {name: 'javascript', jsonld: true}
-    }
-
     Object.keys(options).map(key => {
       this.codeMirror.setOption(key, options[key]);
     });

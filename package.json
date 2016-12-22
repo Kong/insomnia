@@ -95,7 +95,7 @@
   "dependencies": {
     "analytics-node": "^2.1.0",
     "classnames": "^2.2.3",
-    "codemirror": "^5.18.2",
+    "codemirror": "^5.22.0",
     "electron-context-menu": "^0.4.0",
     "electron-cookies": "^1.1.0",
     "electron-squirrel-startup": "^1.0.0",

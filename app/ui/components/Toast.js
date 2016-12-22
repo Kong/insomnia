@@ -54,7 +54,7 @@ class Toast extends Component {
     // Fade the notification in
     setTimeout(() => this.setState({visible: true}), 1000);
 
-    trackEvent('Notification', 'Shown', notification.key);
+    trackEvent('Notification', 'Shown', notification.key, {nonInteraction: true});
   };
 
   _loadSeen () {
