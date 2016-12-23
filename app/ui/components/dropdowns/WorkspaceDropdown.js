@@ -11,8 +11,25 @@ import {trackEvent} from '../../../analytics/index';
 import Link from '../base/Link';
 import WorkspaceSettingsModal from '../modals/WorkspaceSettingsModal';
 import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
+import * as session from '../../../sync/session';
+import PromptButton from '../base/PromptButton';
+import LoginModal from '../modals/LoginModal';
 
 class WorkspaceDropdown extends Component {
+  state = {
+    loggedIn: false
+  };
+
+  _handleDropdownOpen = () => {
+    if (this.state.loggedIn !== session.isLoggedIn()) {
+      this.setState({loggedIn: session.isLoggedIn()});
+    }
+  };
+
+  _handleShowLogin = () => {
+    showModal(LoginModal);
+  };
+
   _handleShowExport = () => showModal(SettingsModal, TAB_INDEX_EXPORT);
   _handleShowSettings = () => showModal(SettingsModal);
   _handleShowWorkspaceSettings = () => {
@@ -20,11 +37,11 @@ class WorkspaceDropdown extends Component {
       workspace: this.props.activeWorkspace,
     });
   };
-  _handleShowShareSettings = () => {
-    showModal(WorkspaceShareSettingsModal, {
-      workspace: this.props.activeWorkspace,
-    });
-  };
+  // _handleShowShareSettings = () => {
+  //   showModal(WorkspaceShareSettingsModal, {
+  //     workspace: this.props.activeWorkspace,
+  //   });
+  // };
 
   _handleSwitchWorkspace = workspaceId => {
     this.props.handleSetActiveWorkspace(workspaceId);
@@ -58,8 +75,9 @@ class WorkspaceDropdown extends Component {
 
     const nonActiveWorkspaces = workspaces.filter(w => w._id !== activeWorkspace._id);
 
+    const classes = classnames(className, 'wide', 'workspace-dropdown');
     return (
-      <Dropdown className={classnames(className, 'wide', 'workspace-dropdown')} {...other}>
+      <Dropdown className={classes} onOpen={this._handleDropdownOpen} {...other}>
         <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
@@ -76,7 +94,7 @@ class WorkspaceDropdown extends Component {
           <DropdownHint char="&#8679;,"/>
         </DropdownItem>
         {/*<DropdownItem onClick={this._handleShowShareSettings}>*/}
-          {/*<i className="fa fa-user"/> Share <strong>{activeWorkspace.name}</strong>*/}
+        {/*<i className="fa fa-user"/> Share <strong>{activeWorkspace.name}</strong>*/}
         {/*</DropdownItem>*/}
 
         <DropdownDivider>Switch Workspace</DropdownDivider>
@@ -99,9 +117,32 @@ class WorkspaceDropdown extends Component {
         <DropdownItem onClick={this._handleShowExport}>
           <i className="fa fa-share"/> Import/Export
         </DropdownItem>
-        <DropdownItem buttonClass={Link} href="https://insomnia.rest/teams/" button={true}>
-          <i className="fa fa-users"/> Invite Your Team
-        </DropdownItem>
+        {!this.state.loggedIn ? [
+            <DropdownItem key="login"
+                          onClick={this._handleShowLogin}
+                          addIcon={true}>
+              <i className="fa fa-sign-in"/> Log In
+            </DropdownItem>,
+            <DropdownItem key="invite"
+                          buttonClass={Link}
+                          href="https://insomnia.rest/pricing/"
+                          button={true}>
+              <i className="fa fa-users"/> Upgrade to Plus
+            </DropdownItem>,
+          ] : [
+            <DropdownItem key="manage"
+                          buttonClass={Link}
+                          href="https://insomnia.rest/app/"
+                          button={true}>
+              <i className="fa fa-user"/> Manage Account
+            </DropdownItem>,
+            <DropdownItem key="logout"
+                          buttonClass={PromptButton}
+                          onClick={session.logout}
+                          addIcon={true}>
+              <i className="fa fa-sign-out"/> Log Out
+            </DropdownItem>,
+          ]}
       </Dropdown>
     )
   }

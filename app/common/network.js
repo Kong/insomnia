@@ -13,6 +13,13 @@ import {getRenderedRequest} from './render';
 import * as fs from 'fs';
 import * as db from './database';
 
+// Defined fallback strategies for DNS lookup
+const FAMILY_FALLBACKS = [
+  6, // IPv6
+  4, // IPv4
+  null // If those don't work, don't specify and let request do it's thing
+];
+
 let cancelRequestFunction = null;
 
 export function cancelCurrentRequest () {
@@ -105,7 +112,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
-export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 = false) {
+export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {
   return new Promise(async (resolve, reject) => {
     async function handleError (err, prefix = '') {
       await models.response.create({
@@ -176,7 +183,10 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
 
     // Set the IP family. This fallback behaviour is copied from Curl
     try {
-      config.family = forceIPv4 ? 4 : 6;
+      const family = FAMILY_FALLBACKS[familyIndex];
+      if (family) {
+        config.family = family;
+      }
     } catch (err) {
       return handleError(err, 'Failed to set IP family');
     }
@@ -187,6 +197,7 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
 
         // Failed to connect while prioritizing IPv6 address, fallback to IPv4
         const isNetworkRelatedError = (
+          err.code === 'ENOENT' || // No entry
           err.code === 'ENODATA' || // DNS resolve failed
           err.code === 'ENOTFOUND' || // Could not resolve DNS
           err.code === 'ECONNREFUSED' || // Could not talk to server
@@ -194,9 +205,12 @@ export function _actuallySend (renderedRequest, workspace, settings, forceIPv4 =
           err.code === 'ENETUNREACH' // Could not access the network
         );
 
-        if (!forceIPv4 && isNetworkRelatedError) {
-          console.log('-- Falling back to IPv4 --');
-          _actuallySend(renderedRequest, workspace, settings, true).then(resolve, reject);
+        const nextFamilyIndex = familyIndex + 1;
+        if (isNetworkRelatedError && nextFamilyIndex < FAMILY_FALLBACKS.length) {
+          const family = FAMILY_FALLBACKS[nextFamilyIndex];
+          console.log(`-- Falling back to family ${family} --`);
+          _actuallySend(renderedRequest, workspace, settings, nextFamilyIndex)
+            .then(resolve, reject);
           return;
         }
 

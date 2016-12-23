@@ -64,6 +64,7 @@ class Dropdown extends Component {
 
   hide () {
     this.setState({open: false});
+    this.props.onHide && this.props.onHide();
   }
 
   show () {
@@ -72,6 +73,7 @@ class Dropdown extends Component {
     const dropUp = dropdownTop > bodyHeight - 200;
 
     this.setState({open: true, dropUp});
+    this.props.onOpen && this.props.onOpen();
   }
 
   toggle () {
@@ -156,7 +158,9 @@ class Dropdown extends Component {
 Dropdown.propTypes = {
   right: PropTypes.bool,
   outline: PropTypes.bool,
-  wide: PropTypes.bool
+  wide: PropTypes.bool,
+  onOpen: PropTypes.func,
+  onHide: PropTypes.func,
 };
 
 export default Dropdown;
