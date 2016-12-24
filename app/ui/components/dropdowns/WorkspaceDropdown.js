@@ -118,9 +118,7 @@ class WorkspaceDropdown extends Component {
           <i className="fa fa-share"/> Import/Export
         </DropdownItem>
         {!this.state.loggedIn ? [
-            <DropdownItem key="login"
-                          onClick={this._handleShowLogin}
-                          addIcon={true}>
+            <DropdownItem key="login" onClick={this._handleShowLogin}>
               <i className="fa fa-sign-in"/> Log In
             </DropdownItem>,
             <DropdownItem key="invite"

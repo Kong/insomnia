@@ -21,6 +21,14 @@ module.exports = function (options) {
     }
   };
 
+  forge.md = {
+    sha256: {
+      create () {
+        return 'TODO'
+      }
+    }
+  };
+
   forge.random = {
     getBytesSync(n) {
       let s = '';
