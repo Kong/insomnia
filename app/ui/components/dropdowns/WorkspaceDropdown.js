@@ -37,11 +37,12 @@ class WorkspaceDropdown extends Component {
       workspace: this.props.activeWorkspace,
     });
   };
-  // _handleShowShareSettings = () => {
-  //   showModal(WorkspaceShareSettingsModal, {
-  //     workspace: this.props.activeWorkspace,
-  //   });
-  // };
+
+  _handleShowShareSettings = () => {
+    showModal(WorkspaceShareSettingsModal, {
+      workspace: this.props.activeWorkspace,
+    });
+  };
 
   _handleSwitchWorkspace = workspaceId => {
     this.props.handleSetActiveWorkspace(workspaceId);
@@ -93,8 +94,9 @@ class WorkspaceDropdown extends Component {
           <i className="fa fa-wrench"/> Workspace Settings
           <DropdownHint char="&#8679;,"/>
         </DropdownItem>
+
         {/*<DropdownItem onClick={this._handleShowShareSettings}>*/}
-        {/*<i className="fa fa-user"/> Share <strong>{activeWorkspace.name}</strong>*/}
+          {/*<i className="fa fa-user"/> Share <strong>{activeWorkspace.name}</strong>*/}
         {/*</DropdownItem>*/}
 
         <DropdownDivider>Switch Workspace</DropdownDivider>

@@ -13,11 +13,14 @@ import {getRenderedRequest} from './render';
 import * as fs from 'fs';
 import * as db from './database';
 
-// Defined fallback strategies for DNS lookup
+// Defined fallback strategies for DNS lookup. By default, request uses Node's
+// default dns.resolve which uses c-ares to do lookups. This doesn't work for
+// some people, so we also fallback to IPv6 then IPv4 to force it to use
+// getaddrinfo (OS lookup) instead of c-ares (external lookup).
 const FAMILY_FALLBACKS = [
+  null, // Use the request library default lookup
   6, // IPv6
   4, // IPv4
-  null // If those don't work, don't specify and let request do it's thing
 ];
 
 let cancelRequestFunction = null;
@@ -65,7 +68,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
         formData[param.name] = {
           value: fs.readFileSync(param.fileName),
           options: {
-            fileName: pathBasename(param.fileName),
+            filename: pathBasename(param.fileName),
             contentType: mime.lookup(param.fileName) // Guess the mime-type
           }
         }
@@ -197,6 +200,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
 
         // Failed to connect while prioritizing IPv6 address, fallback to IPv4
         const isNetworkRelatedError = (
+          err.code === 'EAI_AGAIN' || // No entry
           err.code === 'ENOENT' || // No entry
           err.code === 'ENODATA' || // DNS resolve failed
           err.code === 'ENOTFOUND' || // Could not resolve DNS
@@ -209,8 +213,9 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         if (isNetworkRelatedError && nextFamilyIndex < FAMILY_FALLBACKS.length) {
           const family = FAMILY_FALLBACKS[nextFamilyIndex];
           console.log(`-- Falling back to family ${family} --`);
-          _actuallySend(renderedRequest, workspace, settings, nextFamilyIndex)
-            .then(resolve, reject);
+          _actuallySend(
+            renderedRequest, workspace, settings, nextFamilyIndex
+          ).then(resolve, reject);
           return;
         }
 

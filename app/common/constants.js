@@ -46,7 +46,7 @@ export const CHANGELOG_URL = isDevelopment() ?
   'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_RENDER_FAILED = -333;
-export const LARGE_RESPONSE_MB = 10;
+export const LARGE_RESPONSE_MB = 5;
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
 export const SEGMENT_WRITE_KEY = isDevelopment() ?
   'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy' :

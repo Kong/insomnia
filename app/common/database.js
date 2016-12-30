@@ -1,10 +1,13 @@
 import electron from 'electron';
 import NeDB from 'nedb';
+import fs from 'fs';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
 import {generateId} from './misc';
 import {getModel, initModel} from '../models';
 import * as models from '../models/index';
+import AlertModal from '../ui/components/modals/AlertModal';
+import {showModal} from '../ui/components/modals/index';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -49,9 +52,26 @@ export async function init (types, config = {}, forceReset = false) {
 
     const filePath = getDBFilePath(modelType);
 
+    const MBs = fs.statSync(filePath).size / 1024 / 1024;
+    if (modelType === models.response.type && MBs > 256) {
+      // NOTE: Node.js can't have a string longer than 256MB. Since the response DB can reach
+      // sizes that big, let's not even load it if it's bigger than that. Just start over.
+      console.warn(`Response DB too big (${MBs}). Deleting...`);
+      fs.unlinkSync(filePath);
+
+      // Can't show alert until the app renders, so delay for a bit first
+      setTimeout(() => {
+        showModal(AlertModal, {
+          title: 'Response DB Too Large',
+          message: 'Your combined responses have exceeded 256MB and have been flushed. ' +
+          'NOTE: A better solution to this will be implemented in a future release.'
+        });
+      }, 1000);
+    }
+
     db[modelType] = new NeDB(Object.assign({
+      autoload: true,
       filename: filePath,
-      autoload: true
     }, config));
 
     db[modelType].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);

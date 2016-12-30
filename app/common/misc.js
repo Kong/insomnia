@@ -209,7 +209,7 @@ export function describeByteSize (bytes) {
   } else if (bytes < 1024 * 1024 * 2) {
     size = bytes / 1024;
     unit = 'KB';
-  } else if (bytes < 1024 * 1024 * 2) {
+  } else if (bytes < 1024 * 1024 * 1024 * 2) {
     size = bytes / 1024 / 1024;
     unit = 'MB';
   } else {

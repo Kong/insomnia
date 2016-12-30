@@ -270,7 +270,7 @@ describe('actuallySend()', () => {
     const lines = requestBody.split(/\r\n/);
     expect(lines.length).toBe(11);
     expect(lines[0]).toMatch(/^----------------------------\d{24}/);
-    expect(lines[1]).toBe('Content-Disposition: form-data; name="foo"');
+    expect(lines[1]).toBe('Content-Disposition: form-data; name="foo"; filename="testfile.txt"');
     expect(lines[2]).toBe('Content-Type: text/plain');
     expect(lines[3]).toBe('');
     expect(lines[4]).toBe('Hello World!\n');
