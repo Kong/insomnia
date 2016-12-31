@@ -27,7 +27,7 @@ class RequestActionsDropdown extends Component {
       title: 'Advanced Sending',
       message: (
         <div>
-          For advanced sending options, hold <code>{MOD_SYM}</code> while
+          For advanced sending options, hold <code>{MOD_SYM.replace('+', '')}</code> while
           clicking the send button next to the Url.
         </div>
       )

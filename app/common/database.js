@@ -52,21 +52,27 @@ export async function init (types, config = {}, forceReset = false) {
 
     const filePath = getDBFilePath(modelType);
 
-    const MBs = fs.statSync(filePath).size / 1024 / 1024;
-    if (modelType === models.response.type && MBs > 256) {
-      // NOTE: Node.js can't have a string longer than 256MB. Since the response DB can reach
-      // sizes that big, let's not even load it if it's bigger than that. Just start over.
-      console.warn(`Response DB too big (${MBs}). Deleting...`);
-      fs.unlinkSync(filePath);
+    // Check to make sure the responses DB file isn't too big to parse. If it is, we
+    // should delete it
+    try {
+      const MBs = fs.statSync(filePath).size / 1024 / 1024;
+      if (modelType === models.response.type && MBs > 256) {
+        // NOTE: Node.js can't have a string longer than 256MB. Since the response DB can reach
+        // sizes that big, let's not even load it if it's bigger than that. Just start over.
+        console.warn(`Response DB too big (${MBs}). Deleting...`);
+        fs.unlinkSync(filePath);
 
-      // Can't show alert until the app renders, so delay for a bit first
-      setTimeout(() => {
-        showModal(AlertModal, {
-          title: 'Response DB Too Large',
-          message: 'Your combined responses have exceeded 256MB and have been flushed. ' +
-          'NOTE: A better solution to this will be implemented in a future release.'
-        });
-      }, 1000);
+        // Can't show alert until the app renders, so delay for a bit first
+        setTimeout(() => {
+          showModal(AlertModal, {
+            title: 'Response DB Too Large',
+            message: 'Your combined responses have exceeded 256MB and have been flushed. ' +
+            'NOTE: A better solution to this will be implemented in a future release.'
+          });
+        }, 1000);
+      }
+    } catch (err) {
+      // File probably did not exist probably, so no big deal
     }
 
     db[modelType] = new NeDB(Object.assign({
