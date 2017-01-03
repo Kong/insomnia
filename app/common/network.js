@@ -1,4 +1,6 @@
 import networkRequest from 'request';
+import CombinedStream from 'combined-stream';
+import FormData from 'form-data';
 import {parse as urlParse} from 'url';
 import mime from 'mime-types';
 import {basename as pathBasename} from 'path';
@@ -12,6 +14,7 @@ import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from './misc';
 import {getRenderedRequest} from './render';
 import * as fs from 'fs';
 import * as db from './database';
+import {remote} from 'electron';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
 // default dns.resolve which uses c-ares to do lookups. This doesn't work for
@@ -115,7 +118,182 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
+function _getProxy (renderedRequest, settings) {
+  // Detect and set the proxy based on the request protocol
+  // NOTE: request does not have a separate settings for http/https proxies
+  const {protocol} = urlParse(renderedRequest.url);
+  const {httpProxy, httpsProxy} = settings;
+  const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+  return proxyHost ? setDefaultProtocol(proxyHost) : null;
+}
+
+function _getSession (requestId) {
+  // NOTE: Partition name without "Persist:" prefix will be in-memory
+  const session = remote.session.fromPartition(requestId);
+  session.setUserAgent(`insomnia/${getAppVersion()}`);
+
+  // ~~~~~~~~~~~~ //
+  // Clear caches //
+  // ~~~~~~~~~~~~ //
+
+  session.clearCache(() => {
+    console.log('Cache cleared');
+  });
+
+  session.clearHostResolverCache(() => {
+    console.log('Host cache cleared');
+  });
+
+  // session.clearAuthCache(); // Probably don't want to do this every time?
+
+  // Disable network emulation if set
+  session.disableNetworkEmulation();
+
+  // Clear appcache, cookies, filesystem, indexdb, local storage,
+  // shadercache, websql, serviceworkers
+  session.clearStorageData({}, () => {
+    console.log('Cleared storage data')
+  });
+
+  // TODO: Set the proxy
+  session.setProxy({
+    pacScript: null,
+    proxyRules: null,
+    proxyBypassRules: null,
+  }, () => {
+    // Done setting proxy
+  });
+
+  // Define method for verifying SSL certificates
+  session.setCertificateVerifyProc((hostname, certificate, callback) => {
+    // TODO: Always return true if SSL validation is off
+    callback(true);
+  });
+
+  return session;
+}
+
+function _actuallySend2 (renderedRequest, workspace, settings) {
+  // const proxy = _getProxy(renderedRequest, settings);
+  const session = _getSession(renderedRequest._id);
+
+  // ~~~~~~~~~~~~ //
+  // Init request //
+  // ~~~~~~~~~~~~ //
+
+  const startTime = performance.now();
+  const request = remote.net.request({
+    url: renderedRequest.url,
+    method: renderedRequest.method,
+    session: session,
+  });
+
+  // Send body in chunks
+  request.chunkedEncoding = true;
+
+  // ~~~~~~~~~~~~~~~~~~~ //
+  // Listen for response //
+  // ~~~~~~~~~~~~~~~~~~~ //
+
+  let data = '';
+  request.on('response', response => {
+    console.log('++++++++ RESPONSE', response.statusCode);
+
+    response.on('end', () => {
+      window.response = response;
+      const duration = performance.now() - startTime;
+      console.log('++++++++ END', duration, data, response);
+    });
+
+    response.on('data', chunk => {
+      // console.log('++++++++ DATA', chunk.length);
+      data += chunk;
+    });
+  });
+
+  request.on('data', chunk => {
+    console.log('REQUEST CHUNK', chunk);
+  });
+
+  request.on('end', () => {
+    console.log('REQUEST DONE');
+  });
+
+  // ~~~~~~~~~~~~~ //
+  // Handle events //
+  // ~~~~~~~~~~~~~ //
+
+  request.on('login', (authInfo, callback) => {
+    // TODO: Handle login requests
+    console.log('++++++++ LOGIN', authInfo);
+    callback('myUsername', 'myPassword');
+  });
+
+  request.on('finish', () => {
+    // Request body wrote last byte
+    console.log('++++++++ FINISH');
+  });
+
+  request.on('abort', () => {
+    // Request was aborted (not fired if already closed)
+    console.log('++++++++ ABORT');
+  });
+
+  request.on('close', () => {
+    // Request and response are completely done emitting events
+    console.log('++++++++ CLOSE');
+  });
+
+  // ~~~~~~~~~~~~~~~ //
+  // Set the headers //
+  // ~~~~~~~~~~~~~~~ //
+
+  for (const header of renderedRequest.headers) {
+    request.setHeader(header.name, header.value);
+  }
+
+  // ~~~~~~~~~~~~~~ //
+  // Write the body //
+  // ~~~~~~~~~~~~~~ //
+
+  if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    request.end(buildFromParams(renderedRequest.body.params || [], true));
+  } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
+    const form = new FormData();
+
+    for (const param of renderedRequest.body.params) {
+      if (param.type === 'file' && param.fileName) {
+        form.append(param.name, fs.createReadStream(param.fileName));
+      } else {
+        form.append(param.name, param.value || '');
+      }
+    }
+
+    const headers = form.getHeaders();
+    for (const name of Object.keys(headers)) {
+      request.setHeader(name, headers[name]);
+    }
+
+    // form-data's combined-stream doesn't work well with Electron.net so
+    // this is a hack to drain the stream and send it to the request.
+    // (form.pipe(request) should work, but it doesn't)
+    // TODO: Do this a better way
+    const dummyStream = CombinedStream.create();
+    form.on('data', chunk => request.write(chunk));
+    form.on('end', () => request.end());
+    form.pipe(dummyStream);
+  } else if (renderedRequest.body.fileName) {
+    fs.createReadStream(renderedRequest.body.fileName).pipe(request);
+  } else if (renderedRequest.body.text) {
+    request.end(renderedRequest.body.text);
+  }
+}
+
 export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {
+  if (familyIndex === 0) {
+    return _actuallySend2(renderedRequest, workspace, settings);
+  }
+
   return new Promise(async (resolve, reject) => {
     async function handleError (err, prefix = '') {
       await models.response.create({

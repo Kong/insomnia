@@ -13,6 +13,7 @@
     "classnames": "^2.2.3",
     "electron-context-menu": "^0.4.0",
     "electron-squirrel-startup": "^1.0.0",
+    "form-data": "^2.1.2",
     "hkdf": "0.0.2",
     "httpsnippet": "git@github.com:getinsomnia/httpsnippet.git#a3a2c0a0167fa844bf92df52a1442fa1d68a9053",
     "insomnia-importers": "^1.3.0",
