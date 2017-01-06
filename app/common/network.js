@@ -59,6 +59,9 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
     // Force request to return response body as a Buffer instead of string
     encoding: null,
+
+    // Send authentication before unauthorized response
+    sendImmediately: true,
   };
 
   // Set the body
@@ -177,6 +180,14 @@ function _actuallySend2 (renderedRequest, workspace, settings) {
   // const proxy = _getProxy(renderedRequest, settings);
   const session = _getSession(renderedRequest._id);
 
+  // THis doesn't work for some reason
+  // session.webRequest.onBeforeSendHeaders((details, callback) => {
+  //   console.log('REDIRECT', details);
+  //   callback({
+  //     cancel: false,
+  //   });
+  // });
+
   // ~~~~~~~~~~~~ //
   // Init request //
   // ~~~~~~~~~~~~ //
@@ -197,12 +208,16 @@ function _actuallySend2 (renderedRequest, workspace, settings) {
 
   let data = '';
   request.on('response', response => {
+    window.session = session;
+    window.request = request;
+    window.response = response;
+
     console.log('++++++++ RESPONSE', response.statusCode);
 
     response.on('end', () => {
       window.response = response;
       const duration = performance.now() - startTime;
-      console.log('++++++++ END', duration, data, response);
+      console.log('++++++++ END', duration, data.length, response);
     });
 
     response.on('data', chunk => {
@@ -286,6 +301,8 @@ function _actuallySend2 (renderedRequest, workspace, settings) {
     fs.createReadStream(renderedRequest.body.fileName).pipe(request);
   } else if (renderedRequest.body.text) {
     request.end(renderedRequest.body.text);
+  } else {
+    request.end();
   }
 }
 
