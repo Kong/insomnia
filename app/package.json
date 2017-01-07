@@ -30,6 +30,7 @@
     "traverse": "^0.6.6",
     "uuid": "^3.0.0",
     "vkbeautify": "^0.99.1",
+    "whatwg-fetch": "^2.0.1",
     "xpath": "^0.0.23",
     "xmldom": "^0.1.22"
   }

@@ -38,8 +38,9 @@ function getDBFilePath (modelType) {
  * @param forceReset
  * @returns {null}
  */
-export async function init (types, config = {}, forceReset = false) {
+export function init (types, config = {}, forceReset = false) {
   if (forceReset) {
+    changeListeners = [];
     db = {};
   }
 
@@ -96,12 +97,10 @@ let changeBuffer = [];
 let changeListeners = [];
 
 export function onChange (callback) {
-  console.log(`-- Added DB Listener -- `);
   changeListeners.push(callback);
 }
 
 export function offChange (callback) {
-  console.log(`-- Removed DB Listener -- `);
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
@@ -110,7 +109,7 @@ export function bufferChanges (millis = 1000) {
   setTimeout(flushChanges, millis);
 }
 
-export function flushChanges () {
+export async function flushChanges () {
   bufferingChanges = false;
   const changes = [...changeBuffer];
   changeBuffer = [];
@@ -120,7 +119,9 @@ export function flushChanges () {
     return;
   }
 
-  changeListeners.map(fn => fn(changes));
+  for (const fn of changeListeners) {
+    await fn(changes);
+  }
 }
 
 function notifyOfChange (event, doc, fromSync) {

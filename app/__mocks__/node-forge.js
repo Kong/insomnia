@@ -4,8 +4,12 @@
  * play along with Jest.
  */
 
+const jsbn = require('jsbn');
+
 module.exports = function (options) {
   const forge = require('../../node_modules/node-forge/js/forge')(options);
+
+  forge.jsbn = jsbn;
 
   forge.util = {
     hexToBytes: forge.hexToBytes,
@@ -29,6 +33,23 @@ module.exports = function (options) {
     }
   };
 
+  forge.rsa = {
+    setPublicKey() {
+      return {
+        encrypt (str) {
+          return str
+        }
+      }
+    },
+    setPrivateKey() {
+      return {
+        decrypt (str) {
+          return str
+        }
+      }
+    }
+  };
+
   forge.random = {
     getBytesSync(n) {
       let s = '';
@@ -36,6 +57,29 @@ module.exports = function (options) {
         s += 'a';
       }
       return s;
+    }
+  };
+
+  forge.pki = {
+    rsa: {
+      generateKeyPair() {
+        return {
+          privateKey: {
+            d: 'a',
+            dP: 'a',
+            dQ: 'a',
+            e: 'a',
+            n: 'a',
+            p: 'a',
+            q: 'a',
+            qInv: 'a',
+          },
+          publicKey: {
+            e: 'a',
+            n: 'a',
+          }
+        }
+      }
     }
   };
 
@@ -70,4 +114,5 @@ module.exports = function (options) {
   };
 
   return forge;
-};
+}
+;

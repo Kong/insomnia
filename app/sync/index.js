@@ -1,6 +1,5 @@
 import * as db from '../common/database';
 import * as models from '../models';
-import * as fetch from '../common/fetch';
 import * as crypt from './crypt';
 import * as session from './session';
 import * as store from './storage';
@@ -10,8 +9,7 @@ import Logger from './logger';
 export const FULL_SYNC_INTERVAL = 60E3;
 export const QUEUE_DEBOUNCE_TIME = 1E3;
 export const PUSH_DEBOUNCE_TIME = 20E3;
-export const START_PULL_DELAY = 2E3;
-export const START_PUSH_DELAY = 1E3;
+export const START_DELAY = 1E3;
 
 const WHITE_LIST = {
   [models.request.type]: true,
@@ -27,41 +25,60 @@ export const logger = new Logger();
 const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 const resourceGroupSymmetricKeysCache = {};
-
-let isInitialized = false;
+let _pullInterval = null;
+let _isInitialized = false;
+let _changesToPush = {};
+let _changesToPushTimeout = null;
 
 export async function init () {
-  if (isInitialized) {
+  if (_isInitialized) {
     logger.debug('Already enabled');
     return;
   }
-
-  // Debounce changes before we push, because encryption is expensive and slow
-  const _queueChangeDebounced = misc.keyedDebounce(results => {
-    for (const k of Object.keys(results)) {
-      _handleChangeAndPush(...results[k]);
-    }
-  }, QUEUE_DEBOUNCE_TIME);
 
   db.onChange(changes => {
     for (const [event, doc, fromSync] of changes) {
       const notOnWhitelist = !WHITE_LIST[doc.type];
       const notLoggedIn = !session.isLoggedIn();
+
       if (notLoggedIn || notOnWhitelist || fromSync) {
         continue;
       }
 
       // Make sure it happens async
       const key = `${event}:${doc._id}`;
-      _queueChangeDebounced(key, event, doc, Date.now());
+      _changesToPush[key] = [event, doc, Date.now()];
+      _changesToPushTimeout = setTimeout(flushChangesToPush, QUEUE_DEBOUNCE_TIME);
     }
   });
 
-  setTimeout(pull, START_PULL_DELAY);
-  setTimeout(pushActiveDirtyResources, START_PUSH_DELAY);
-  setInterval(pull, FULL_SYNC_INTERVAL);
-  isInitialized = true;
+  await misc.delay(START_DELAY);
+  await pushActiveDirtyResources();
+  await pull();
+
+  _pullInterval = setInterval(pull, FULL_SYNC_INTERVAL);
+
+  _isInitialized = true;
   logger.debug('Initialized');
+}
+
+export async function flushChangesToPush () {
+  // Clear the timeout in case this was triggered prematurely
+  clearTimeout(_changesToPushTimeout);
+
+  // Copy changes and reset them
+  const changesToPushCopy = Object.assign({}, _changesToPush);
+  _changesToPush = {};
+
+  for (const key of Object.keys(changesToPushCopy)) {
+    const [event, doc, timestamp] = changesToPushCopy[key];
+    await _handleChangeAndPush(event, doc, timestamp);
+  }
+}
+
+export function _testReset() {
+  _isInitialized = false;
+  clearInterval(_pullInterval);
 }
 
 /**
@@ -90,7 +107,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
   if (resourceGroupId) {
     dirtyResources = await store.findActiveDirtyResourcesForResourceGroup(resourceGroupId)
   } else {
-    dirtyResources = await store.findActiveDirtyResources()
+    dirtyResources = await store.findActiveDirtyResources();
   }
 
   if (!dirtyResources.length) {
@@ -100,7 +117,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
 
   let responseBody;
   try {
-    responseBody = await fetch.post('/sync/push', dirtyResources);
+    responseBody = await session.syncPush(dirtyResources);
   } catch (e) {
     logger.error('Failed to push changes', e);
     return;
@@ -216,7 +233,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
 
   let responseBody;
   try {
-    responseBody = await fetch.post('/sync/pull', body);
+    responseBody = await session.syncPull(body);
   } catch (e) {
     logger.error('Failed to sync changes', e, body);
     return;
@@ -390,7 +407,7 @@ export async function resetLocalData () {
 }
 
 export async function resetRemoteData () {
-  await fetch.post('/auth/reset');
+  await session.syncResetData();;
 }
 
 // ~~~~~~~ //
@@ -439,9 +456,7 @@ function _fetchResourceGroup (resourceGroupId) {
     if (!resourceGroup) {
       // TODO: Handle a 404 here
       try {
-        resourceGroup = await fetch.get(
-          `/api/resource_groups/${resourceGroupId}`
-        );
+        resourceGroup = await session.syncGetResourceGroup(resourceGroupId);
       } catch (e) {
         logger.error(`Failed to get ResourceGroup ${resourceGroupId}: ${e}`);
         reject(e);
@@ -451,7 +466,8 @@ function _fetchResourceGroup (resourceGroupId) {
       // TODO: This exists in multiple places, so move it to one place.
       const config = await getOrCreateConfig(resourceGroupId);
       const syncMode = config ? config.syncMode : store.SYNC_MODE_OFF;
-      createOrUpdateConfig(resourceGroupId, syncMode);
+
+      await createOrUpdateConfig(resourceGroupId, syncMode);
     }
 
     // Bust cached promise because we're done with it.
@@ -537,7 +553,7 @@ async function _createResourceGroup (name = '') {
   // Create the new ResourceGroup
   let resourceGroup;
   try {
-    resourceGroup = await fetch.post('/api/resource_groups', {
+    resourceGroup = await session.syncCreateResourceGroup({
       name,
       encSymmetricKey: encRGSymmetricJWK,
     });
@@ -569,13 +585,13 @@ async function _createResource (doc, resourceGroupId) {
   });
 }
 
-async function _createResourceForDoc (doc) {
+export async function createResourceForDoc (doc) {
   // No resource yet, so create one
   const workspace = await _getWorkspaceForDoc(doc);
 
   if (!workspace) {
     // Workspace was probably deleted before it's children could be synced.
-    // TODO: Handle this case better (maybe store
+    // TODO: Handle this case better
     throw new Error(`Could not find workspace for doc ${doc._id}`);
   }
 
@@ -601,7 +617,7 @@ export async function getOrCreateResourceForDoc (doc) {
   if (resource) {
     return resource;
   } else {
-    return await _createResourceForDoc(doc);
+    return await createResourceForDoc(doc);
   }
 }
 
@@ -625,7 +641,7 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
       const resource = await store.getResourceByDocId(doc._id);
       if (!resource) {
         try {
-          activeResourceMap[doc._id] = await _createResourceForDoc(doc);
+          activeResourceMap[doc._id] = await createResourceForDoc(doc);
         } catch (e) {
           logger.error(`Failed to create resource for ${doc._id}`, e, {doc});
         }
