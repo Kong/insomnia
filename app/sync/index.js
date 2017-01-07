@@ -525,7 +525,7 @@ async function _getWorkspaceForDoc (doc) {
   return ancestors.find(d => d.type === models.workspace.type);
 }
 
-async function _createResourceGroup (name = '') {
+export async function createResourceGroup (name = '') {
   // Generate symmetric key for ResourceGroup
   const rgSymmetricJWK = await crypt.generateAES256Key();
   const rgSymmetricJWKStr = JSON.stringify(rgSymmetricJWK);
@@ -553,7 +553,7 @@ async function _createResourceGroup (name = '') {
   return resourceGroup;
 }
 
-async function _createResource (doc, resourceGroupId) {
+export async function createResource (doc, resourceGroupId) {
   return store.insertResource({
     id: doc._id,
     name: doc.name || 'n/a', // Set name to the doc name if it has one
@@ -582,16 +582,16 @@ export async function createResourceForDoc (doc) {
   let workspaceResource = await store.getResourceByDocId(workspace._id);
 
   if (!workspaceResource) {
-    const workspaceResourceGroup = await _createResourceGroup(workspace.name);
+    const workspaceResourceGroup = await createResourceGroup(workspace.name);
     await ensureConfigExists(workspaceResourceGroup.id, store.SYNC_MODE_OFF);
-    workspaceResource = await _createResource(workspace, workspaceResourceGroup.id);
+    workspaceResource = await createResource(workspace, workspaceResourceGroup.id);
   }
 
   if (workspace === doc) {
     // If the current doc IS a Workspace, just return it
     return workspaceResource;
   } else {
-    return await _createResource(doc, workspaceResource.resourceGroupId);
+    return await createResource(doc, workspaceResource.resourceGroupId);
   }
 }
 

@@ -5,53 +5,82 @@ import * as db from '../../common/database';
 import * as syncStorage from '../storage';
 import * as crypt from '../crypt';
 
-describe('Broad sync integration tests', () => {
+describe('Test push behaviour', () => {
+  beforeEach(async () => {
+    // Reset some things
+    sync._testReset();
+    await _setSessionData();
+    await _setupSessionMocks();
+
+    // Init sync and storage
+    const config = {inMemoryOnly: true, autoload: false, filename: null};
+    await syncStorage.initDB(config, true);
+    await db.init(models.types(), config, true);
+
+    // Add some data
+    await models.workspace.create({_id: 'wrk_1', name: 'Workspace 1'});
+    await models.workspace.create({_id: 'wrk_2', name: 'Workspace 2'});
+    await models.request.create({_id: 'req_1', name: 'Request 1', parentId: 'wrk_1'});
+    await models.request.create({_id: 'req_2', name: 'Request 2', parentId: 'wrk_2'});
+  });
+
+  it('Pushes sync mode with and without resource group id', async () => {
+    const request = await models.request.getById('req_1');
+    const request2 = await models.request.getById('req_2');
+    const rg = await sync.createResourceGroup('Synced Resource Group');
+    const rg2 = await sync.createResourceGroup('Unsynced Resource Group');
+    await sync.createOrUpdateConfig(rg.id, syncStorage.SYNC_MODE_ON);
+    await sync.createOrUpdateConfig(rg2.id, syncStorage.SYNC_MODE_OFF);
+    await sync.createResource(request, rg.id);
+    await sync.createResource(request2, rg2.id);
+
+    await sync.pushActiveDirtyResources(); // Push only active configs
+    await sync.pushActiveDirtyResources(rg.id); // Force push rg_1
+    await sync.pushActiveDirtyResources(rg2.id); // Force push rg_2
+
+    expect(session.syncPush.mock.calls.length).toBe(3);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(1);
+    expect(session.syncPush.mock.calls[0][0][0].id).toBe('req_1');
+    expect(session.syncPush.mock.calls[1][0].length).toBe(1);
+    expect(session.syncPush.mock.calls[1][0][0].id).toBe('req_1');
+    expect(session.syncPush.mock.calls[2][0].length).toBe(1);
+    expect(session.syncPush.mock.calls[2][0][0].id).toBe('req_2');
+  });
+
+  it('Updates dirty flag for push response', async () => {
+    const request = await models.request.getById('req_1');
+    const rg = await sync.createResourceGroup('Synced Resource Group');
+    await sync.createOrUpdateConfig(rg.id, syncStorage.SYNC_MODE_ON);
+    await sync.createResourceForDoc(request, rg.id);
+
+    session.syncPush.mockReturnValueOnce({
+      updated: [],
+      created: [{id: request._id, version: 'new-version'}],
+      removed: [],
+      conflicts: [],
+    });
+
+    const resourceBefore = await syncStorage.getResourceByDocId(request._id);
+    await sync.pushActiveDirtyResources();
+    const resourceAfter = await syncStorage.getResourceByDocId(request._id);
+
+    expect(session.syncPush.mock.calls.length).toBe(1);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(session.syncPush.mock.calls[0][0][0].id).toBe('req_1');
+    expect(session.syncPush.mock.calls[0][0][1].id).toBe('wrk_1');
+    expect(resourceBefore.dirty).toBe(true);
+    expect(resourceAfter.dirty).toBe(false);
+  });
+});
+
+describe('Integration tests for creating Resources and pushing', () => {
   beforeEach(async () => {
     // Reset some things
     await _setSessionData();
     sync._testReset();
 
     // Mock some things
-    const resourceGroups = {};
-    session.syncCreateResourceGroup = jest.fn(body => {
-      const id = `rg_${Object.keys(resourceGroups).length + 1}`;
-
-      // Generate a public key and use a symmetric equal to it's Id for
-      // convenience
-      const publicKey = session.getPublicKey();
-      const symmetricKeyStr = JSON.stringify({k: id});
-      const encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
-
-      // Store the resource group and return it
-      resourceGroups[id] = Object.assign({}, {id, encSymmetricKey}, body);
-      return resourceGroups[id];
-    });
-
-    session.syncGetResourceGroup = jest.fn(id => {
-      if (resourceGroups[id]) {
-        return resourceGroups[id];
-      }
-
-      const err = new Error('Not Found');
-      err.message = 'Not Found';
-      err.statusCode = 404;
-      throw err
-    });
-
-    session.syncPull = jest.fn(body => ({
-      updatedResources: [],
-      createdResources: [],
-      idsToPush: [],
-      idsToRemove: [],
-    }));
-
-    session.syncPush = jest.fn(body => ({
-      conflicts: [],
-      updated: [],
-      created: [],
-      removed: [],
-    }));
-
+    await _setupSessionMocks();
     jest.useFakeTimers();
 
     // Init storage
@@ -221,4 +250,46 @@ async function _setSessionData () {
     publicKey,
     encPrivateKey,
   );
+}
+
+async function _setupSessionMocks () {
+  const resourceGroups = {};
+
+  session.syncCreateResourceGroup = jest.fn(body => {
+    const id = `rg_${Object.keys(resourceGroups).length + 1}`;
+
+    // Generate a public key and use a symmetric equal to it's Id for
+    // convenience
+    const publicKey = session.getPublicKey();
+    const symmetricKeyStr = JSON.stringify({k: id});
+    const encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
+
+    // Store the resource group and return it
+    resourceGroups[id] = Object.assign({}, {id, encSymmetricKey}, body);
+    return resourceGroups[id];
+  });
+
+  session.syncGetResourceGroup = jest.fn(id => {
+    if (resourceGroups[id]) {
+      return resourceGroups[id];
+    }
+
+    const err = new Error(`Not Found for ${id}`);
+    err.statusCode = 404;
+    throw err
+  });
+
+  session.syncPull = jest.fn(body => ({
+    updatedResources: [],
+    createdResources: [],
+    idsToPush: [],
+    idsToRemove: [],
+  }));
+
+  session.syncPush = jest.fn(body => ({
+    conflicts: [],
+    updated: [],
+    created: [],
+    removed: [],
+  }));
 }
