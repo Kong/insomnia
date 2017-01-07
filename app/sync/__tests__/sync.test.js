@@ -5,7 +5,7 @@ import * as db from '../../common/database';
 import * as syncStorage from '../storage';
 import * as crypt from '../crypt';
 
-describe('Generic sync tests', () => {
+describe('Broad sync integration tests', () => {
   beforeEach(async () => {
     // Reset some things
     await _setSessionData();
@@ -89,39 +89,46 @@ describe('Generic sync tests', () => {
 
   it('Resources created on DB change', async () => {
     // Fetch the workspace and create a new request
+    db.bufferChanges();
     await models.request.create({
       _id: 'req_t',
       url: 'https://google.com',
       parentId: 'wrk_1'
     });
 
-    // Push changes
-    await _drainDBToSync();
+    await db.flushChanges();
+    await sync.pushActiveDirtyResources();
+
+    // Push changes and get resource
+    const resource = await syncStorage.getResourceByDocId('req_t');
 
     // Assert
-    const resource = await syncStorage.getResourceByDocId('req_t');
     expect((await syncStorage.allConfigs()).length).toBe(2);
     expect((await syncStorage.allResources()).length).toBe(8);
     expect(_decryptResource(resource).url).toBe('https://google.com');
     expect(resource.removed).toBe(false);
 
-    expect(session.syncPush.mock.calls.length).toBe(1);
+    expect(session.syncPush.mock.calls.length).toBe(2);
     expect(session.syncPush.mock.calls[0][0].length).toBe(7);
+    // NOTE: This would be 1 if we were mocking the "push" response properly
+    // and telling the client to set the created docs to dirty=false
+    expect(session.syncPush.mock.calls[1][0].length).toBe(8);
 
     expect(session.syncPull.mock.calls.length).toBe(1);
     expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
     expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
-    expect(session.syncPull.mock.calls[0][0]).toEqual(0); // Fail on purpose to see diff
   });
 
   it('Resources update on DB change', async () => {
     // Create, update a request, and fetch it's resource
     const request = await models.request.getById('req_1');
     const resource = await syncStorage.getResourceByDocId(request._id);
+    db.bufferChanges();
     const updatedRequest = await models.request.update(request, {name: 'New Name'});
 
     // Drain and fetch new resource
-    await _drainDBToSync();
+    await db.flushChanges();
+    await sync.pushActiveDirtyResources();
     const updatedResource = await syncStorage.getResourceByDocId(request._id);
 
     // Assert
@@ -130,21 +137,39 @@ describe('Generic sync tests', () => {
     expect(updatedRequest.name).toBe('New Name');
     expect(_decryptResource(updatedResource).name).toBe('New Name');
     expect(resource.removed).toBe(false);
+
+    expect(session.syncPush.mock.calls.length).toBe(2);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(7);
+    expect(session.syncPush.mock.calls[1][0].length).toBe(7);
+
+    expect(session.syncPull.mock.calls.length).toBe(1);
+    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
+    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
   });
 
   it('Resources removed on DB change', async () => {
     // Create, update a request, and fetch it's resource
     const request = await models.request.getById('req_1');
     const resource = await syncStorage.getResourceByDocId(request._id);
+    db.bufferChanges();
     await models.request.remove(request);
 
     // Drain and fetch new resource
-    await _drainDBToSync();
+    await db.flushChanges();
+    await sync.pushActiveDirtyResources();
     const updatedResource = await syncStorage.getResourceByDocId(request._id);
 
     // Assert
     expect(resource.removed).toBe(false);
     expect(updatedResource.removed).toBe(true);
+
+    expect(session.syncPush.mock.calls.length).toBe(2);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(7);
+    expect(session.syncPush.mock.calls[1][0].length).toBe(7);
+
+    expect(session.syncPull.mock.calls.length).toBe(1);
+    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
+    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
   });
 });
 
@@ -157,11 +182,6 @@ function _decryptResource (resource) {
   const fakeKey = 'aaaaa';
   const docJSON = crypt.decryptAES(fakeKey, message);
   return JSON.parse(docJSON);
-}
-
-async function _drainDBToSync () {
-  await db.flushChanges();
-  await sync.flushChangesToPush();
 }
 
 async function _setSessionData () {

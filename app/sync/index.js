@@ -7,14 +7,13 @@ import * as misc from '../common/misc';
 import Logger from './logger';
 
 export const FULL_SYNC_INTERVAL = 60E3;
-export const QUEUE_DEBOUNCE_TIME = 1E3;
 export const PUSH_DEBOUNCE_TIME = 20E3;
 export const START_DELAY = 1E3;
 
 const WHITE_LIST = {
+  [models.workspace.type]: true,
   [models.request.type]: true,
   [models.requestGroup.type]: true,
-  [models.workspace.type]: true,
   [models.environment.type]: true,
   [models.cookieJar.type]: true
 };
@@ -27,8 +26,6 @@ const resourceGroupCache = {};
 const resourceGroupSymmetricKeysCache = {};
 let _pullInterval = null;
 let _isInitialized = false;
-let _changesToPush = {};
-let _changesToPushTimeout = null;
 
 export async function init () {
   if (_isInitialized) {
@@ -36,7 +33,7 @@ export async function init () {
     return;
   }
 
-  db.onChange(changes => {
+  db.onChange(async changes => {
     for (const [event, doc, fromSync] of changes) {
       const notOnWhitelist = !WHITE_LIST[doc.type];
       const notLoggedIn = !session.isLoggedIn();
@@ -45,10 +42,7 @@ export async function init () {
         continue;
       }
 
-      // Make sure it happens async
-      const key = `${event}:${doc._id}`;
-      _changesToPush[key] = [event, doc, Date.now()];
-      _changesToPushTimeout = setTimeout(flushChangesToPush, QUEUE_DEBOUNCE_TIME);
+      await _handleChangeAndPush(event, doc, Date.now());
     }
   });
 
@@ -62,21 +56,8 @@ export async function init () {
   logger.debug('Initialized');
 }
 
-export async function flushChangesToPush () {
-  // Clear the timeout in case this was triggered prematurely
-  clearTimeout(_changesToPushTimeout);
-
-  // Copy changes and reset them
-  const changesToPushCopy = Object.assign({}, _changesToPush);
-  _changesToPush = {};
-
-  for (const key of Object.keys(changesToPushCopy)) {
-    const [event, doc, timestamp] = changesToPushCopy[key];
-    await _handleChangeAndPush(event, doc, timestamp);
-  }
-}
-
-export function _testReset() {
+// Used only during tests!
+export function _testReset () {
   _isInitialized = false;
   clearInterval(_pullInterval);
 }
@@ -98,6 +79,9 @@ export function doInitialSync () {
 }
 
 export async function pushActiveDirtyResources (resourceGroupId = null) {
+  // Just in case we called it directly...
+  clearTimeout(_pushChangesTimeout);
+
   if (!session.isLoggedIn()) {
     logger.warn('Not logged in');
     return;
@@ -407,7 +391,7 @@ export async function resetLocalData () {
 }
 
 export async function resetRemoteData () {
-  await session.syncResetData();;
+  await session.syncResetData();
 }
 
 // ~~~~~~~ //
@@ -636,7 +620,11 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
     activeResourceMap[r.id] = r;
   }
 
-  for (const type of Object.keys(WHITE_LIST)) {
+  // Make sure Workspace is first, because the loop below depends on it
+  const modelTypes = Object.keys(WHITE_LIST)
+    .sort((a, b) => a.type === models.workspace.type ? 1 : -1);
+
+  for (const type of modelTypes) {
     for (const doc of await db.all(type)) {
       const resource = await store.getResourceByDocId(doc._id);
       if (!resource) {
