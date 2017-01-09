@@ -136,6 +136,26 @@ export async function subscribe (tokenId, planId) {
   return response;
 }
 
+export function syncCreateResourceGroup (parentResourceId, name, encSymmetricKey) {
+  return util.post('/api/resource_groups', {parentResourceId, name, encSymmetricKey});
+}
+
+export function syncGetResourceGroup (id) {
+  return util.get(`/api/resource_groups/${id}`);
+}
+
+export function syncPull (body) {
+  return util.post('/sync/pull', body);
+}
+
+export function syncPush (body) {
+  return util.post('/sync/push', body);
+}
+
+export function syncResetData () {
+  return util.post('/auth/reset');
+}
+
 export function getPublicKey () {
   return getSessionData().publicKey;
 }
@@ -177,7 +197,7 @@ export function getSessionData () {
     return {};
   }
 
-  const dataStr = localStorage.getItem(_getSessionKey(sessionId));
+  const dataStr = localStorage.getItem(getSessionKey(sessionId));
   return JSON.parse(dataStr);
 }
 
@@ -201,7 +221,7 @@ export function setSessionData (sessionId,
     lastName: lastName,
   });
 
-  localStorage.setItem(_getSessionKey(sessionId), dataStr);
+  localStorage.setItem(getSessionKey(sessionId), dataStr);
 
   // NOTE: We're setting this last because the stuff above might fail
   localStorage.setItem('currentSessionId', sessionId);
@@ -210,7 +230,7 @@ export function setSessionData (sessionId,
 /** Unset the session data (log out) */
 export function unsetSessionData () {
   const sessionId = getCurrentSessionId();
-  localStorage.removeItem(_getSessionKey(sessionId));
+  localStorage.removeItem(getSessionKey(sessionId));
   localStorage.removeItem(`currentSessionId`);
 }
 
@@ -243,6 +263,10 @@ export async function cancelAccount () {
 }
 
 
+export function getSessionKey (sessionId) {
+  return `session__${sessionId.slice(0, 10)}`
+}
+
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
@@ -251,11 +275,7 @@ function _whoami (sessionId = null) {
   return util.get('/auth/whoami', sessionId);
 }
 
-function _getSessionKey (sessionId) {
-  return `session__${sessionId.slice(0, 10)}`
-}
-
-async function _initAccount (firstName, lastName, email) {
+export async function _initAccount (firstName, lastName, email) {
   return {
     email,
     firstName,

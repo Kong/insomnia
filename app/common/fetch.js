@@ -1,15 +1,14 @@
+import 'whatwg-fetch';
 import {parse as urlParse} from 'url';
 import {isDevelopment, getClientString} from './constants';
 import * as session from '../sync/session';
 
 let commandListeners = [];
 export function onCommand (callback) {
-  console.log(`-- Added DB Listener -- `);
   commandListeners.push(callback);
 }
 
 export function offCommand (callback) {
-  console.log(`-- Removed DB Listener -- `);
   commandListeners = commandListeners.filter(l => l !== callback);
 }
 

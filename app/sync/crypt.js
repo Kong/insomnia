@@ -176,7 +176,7 @@ export async function generateAES256Key () {
   const subtle = c ? c.subtle || c.webkitSubtle : null;
 
   if (subtle) {
-    console.log('-- Using Native AES Key Generation --');
+    // console.log('-- Using Native AES Key Generation --');
     const key = await subtle.generateKey(
       {name: 'AES-GCM', length: 256},
       true,
@@ -184,7 +184,7 @@ export async function generateAES256Key () {
     );
     return subtle.exportKey('jwk', key);
   } else {
-    console.log('-- Using Fallback Forge AES Key Generation --');
+    // console.log('-- Using Fallback Forge AES Key Generation --');
     const key = forge.util.bytesToHex(forge.random.getBytesSync(32));
     return {
       kty: 'oct',
@@ -206,7 +206,7 @@ export async function generateKeyPairJWK () {
   const subtle = window.crypto && window.crypto.subtle;
 
   if (subtle) {
-    console.log('-- Using Native RSA Generation --');
+    // console.log('-- Using Native RSA Generation --');
 
     const pair = await subtle.generateKey({
         name: 'RSA-OAEP',
@@ -223,7 +223,7 @@ export async function generateKeyPairJWK () {
       privateKey: await subtle.exportKey('jwk', pair.privateKey)
     };
   } else {
-    console.log('-- Using Forge RSA Generation --');
+    // console.log('-- Using Forge RSA Generation --');
 
     const pair = forge.pki.rsa.generateKeyPair({bits: 2048, e: 0x10001});
     const privateKey = {
@@ -308,7 +308,7 @@ function _b64UrlToHex (s) {
  */
 async function _pbkdf2Passphrase (passphrase, salt) {
   if (window.crypto && window.crypto.subtle) {
-    console.log('-- Using native PBKDF2 --');
+    // console.log('-- Using native PBKDF2 --');
 
     const k = await window.crypto.subtle.importKey(
       'raw',
@@ -328,7 +328,7 @@ async function _pbkdf2Passphrase (passphrase, salt) {
     const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
     return new Buffer(derivedKeyRaw).toString('hex');
   } else {
-    console.log('-- Using Forge PBKDF2 --');
+    // console.log('-- Using Forge PBKDF2 --');
     const derivedKeyRaw = forge.pkcs5.pbkdf2(
       passphrase,
       forge.util.hexToBytes(salt),

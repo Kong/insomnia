@@ -1,22 +1,19 @@
 import * as db from '../common/database';
 import * as models from '../models';
-import * as fetch from '../common/fetch';
 import * as crypt from './crypt';
 import * as session from './session';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
 
-export const FULL_SYNC_INTERVAL = 60E3;
-export const QUEUE_DEBOUNCE_TIME = 1E3;
-export const PUSH_DEBOUNCE_TIME = 20E3;
-export const START_PULL_DELAY = 2E3;
-export const START_PUSH_DELAY = 1E3;
+export const FULL_SYNC_INTERVAL = 30E3;
+export const PUSH_DEBOUNCE_TIME = 15E3;
+export const START_DELAY = 1E3;
 
 const WHITE_LIST = {
+  [models.workspace.type]: true,
   [models.request.type]: true,
   [models.requestGroup.type]: true,
-  [models.workspace.type]: true,
   [models.environment.type]: true,
   [models.cookieJar.type]: true
 };
@@ -27,41 +24,52 @@ export const logger = new Logger();
 const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 const resourceGroupSymmetricKeysCache = {};
-
-let isInitialized = false;
+let _pullChangesInterval = null;
+let _pushChangesTimeout = null;
+let _isInitialized = false;
 
 export async function init () {
-  if (isInitialized) {
+  if (_isInitialized) {
     logger.debug('Already enabled');
     return;
   }
 
-  // Debounce changes before we push, because encryption is expensive and slow
-  const _queueChangeDebounced = misc.keyedDebounce(results => {
-    for (const k of Object.keys(results)) {
-      _handleChangeAndPush(...results[k]);
-    }
-  }, QUEUE_DEBOUNCE_TIME);
+  // NOTE: This is at the top to prevent race conditions
+  _isInitialized = true;
 
-  db.onChange(changes => {
-    for (const [event, doc, fromSync] of changes) {
+  db.onChange(async changes => {
+    // To help prevent bugs, put Workspaces first
+    const sortedChanges = changes.sort(
+      ([event, doc, fromSync]) => doc.type === models.workspace.type ? 1 : -1
+    );
+
+    for (const [event, doc, fromSync] of sortedChanges) {
+      
       const notOnWhitelist = !WHITE_LIST[doc.type];
       const notLoggedIn = !session.isLoggedIn();
+
       if (notLoggedIn || notOnWhitelist || fromSync) {
         continue;
       }
 
-      // Make sure it happens async
-      const key = `${event}:${doc._id}`;
-      _queueChangeDebounced(key, event, doc, Date.now());
+      await _handleChangeAndPush(event, doc, Date.now());
     }
   });
 
-  setTimeout(pull, START_PULL_DELAY);
-  setTimeout(pushActiveDirtyResources, START_PUSH_DELAY);
-  setInterval(pull, FULL_SYNC_INTERVAL);
-  isInitialized = true;
+  await misc.delay(START_DELAY);
+  await pushActiveDirtyResources();
+  await pull();
+
+  _pullChangesInterval = setInterval(pull, FULL_SYNC_INTERVAL);
+
   logger.debug('Initialized');
+}
+
+// Used only during tests!
+export function _testReset () {
+  _isInitialized = false;
+  clearInterval(_pullChangesInterval);
+  clearTimeout(_pushChangesTimeout);
 }
 
 /**
@@ -81,6 +89,9 @@ export function doInitialSync () {
 }
 
 export async function pushActiveDirtyResources (resourceGroupId = null) {
+  // Just in case we called it directly...
+  clearTimeout(_pushChangesTimeout);
+
   if (!session.isLoggedIn()) {
     logger.warn('Not logged in');
     return;
@@ -90,7 +101,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
   if (resourceGroupId) {
     dirtyResources = await store.findActiveDirtyResourcesForResourceGroup(resourceGroupId)
   } else {
-    dirtyResources = await store.findActiveDirtyResources()
+    dirtyResources = await store.findActiveDirtyResources();
   }
 
   if (!dirtyResources.length) {
@@ -100,7 +111,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
 
   let responseBody;
   try {
-    responseBody = await fetch.post('/sync/push', dirtyResources);
+    responseBody = await session.syncPush(dirtyResources);
   } catch (e) {
     logger.error('Failed to push changes', e);
     return;
@@ -167,7 +178,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
     // If the server won, update ourselves. If we won, we already have the
     // latest version, so do nothing.
     if (serverIsNewer) {
-      const doc = await _decryptDoc(winner.resourceGroupId, winner.encContent);
+      const doc = await decryptDoc(winner.resourceGroupId, winner.encContent);
       if (winner.removed) {
         await db.remove(doc, true);
       } else {
@@ -175,6 +186,7 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
       }
     }
   }
+
   db.flushChanges();
 }
 
@@ -186,7 +198,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
 
   let allResources;
   if (createMissingResources) {
-    allResources = await _getOrCreateAllActiveResources(resourceGroupId);
+    allResources = await getOrCreateAllActiveResources(resourceGroupId);
   } else {
     allResources = await store.allActiveResources(resourceGroupId);
   }
@@ -216,7 +228,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
 
   let responseBody;
   try {
-    responseBody = await fetch.post('/sync/pull', body);
+    responseBody = await session.syncPull(body);
   } catch (e) {
     logger.error('Failed to sync changes', e, body);
     return;
@@ -239,7 +251,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
 
     try {
       const {resourceGroupId, encContent} = serverResource;
-      doc = await _decryptDoc(resourceGroupId, encContent);
+      doc = await decryptDoc(resourceGroupId, encContent);
     } catch (e) {
       logger.warn('Failed to decode created resource', e, serverResource);
       return;
@@ -276,7 +288,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   for (const serverResource of updatedResources) {
     try {
       const {resourceGroupId, encContent} = serverResource;
-      const doc = await _decryptDoc(resourceGroupId, encContent);
+      const doc = await decryptDoc(resourceGroupId, encContent);
 
       // Update app database
       await db.update(doc, true);
@@ -308,7 +320,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
       throw new Error(`Could not find Resource to remove for ${id}`)
     }
 
-    const doc = await _decryptDoc(resource.resourceGroupId, resource.encContent);
+    const doc = await decryptDoc(resource.resourceGroupId, resource.encContent);
     if (!doc) {
       throw new Error(`Could not find doc to remove ${id}`)
     }
@@ -390,14 +402,13 @@ export async function resetLocalData () {
 }
 
 export async function resetRemoteData () {
-  await fetch.post('/auth/reset');
+  await session.syncResetData();
 }
 
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
 
-let _pushChangesTimeout = null;
 async function _handleChangeAndPush (event, doc, timestamp) {
   // Update the resource content and set dirty
   // TODO: Remove one of these steps since it does encryption twice
@@ -408,7 +419,7 @@ async function _handleChangeAndPush (event, doc, timestamp) {
     name: doc.name || 'n/a',
     lastEdited: timestamp,
     lastEditedBy: session.getAccountId(),
-    encContent: await _encryptDoc(resource.resourceGroupId, doc),
+    encContent: await encryptDoc(resource.resourceGroupId, doc),
     removed: event === db.CHANGE_REMOVE,
     dirty: true
   });
@@ -439,9 +450,7 @@ function _fetchResourceGroup (resourceGroupId) {
     if (!resourceGroup) {
       // TODO: Handle a 404 here
       try {
-        resourceGroup = await fetch.get(
-          `/api/resource_groups/${resourceGroupId}`
-        );
+        resourceGroup = await session.syncGetResourceGroup(resourceGroupId);
       } catch (e) {
         logger.error(`Failed to get ResourceGroup ${resourceGroupId}: ${e}`);
         reject(e);
@@ -451,7 +460,8 @@ function _fetchResourceGroup (resourceGroupId) {
       // TODO: This exists in multiple places, so move it to one place.
       const config = await getOrCreateConfig(resourceGroupId);
       const syncMode = config ? config.syncMode : store.SYNC_MODE_OFF;
-      createOrUpdateConfig(resourceGroupId, syncMode);
+
+      await createOrUpdateConfig(resourceGroupId, syncMode);
     }
 
     // Bust cached promise because we're done with it.
@@ -496,7 +506,7 @@ async function _getResourceGroupSymmetricKey (resourceGroupId) {
   return key;
 }
 
-async function _encryptDoc (resourceGroupId, doc) {
+export async function encryptDoc (resourceGroupId, doc) {
   try {
     const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
     const docStr = JSON.stringify(doc);
@@ -508,14 +518,21 @@ async function _encryptDoc (resourceGroupId, doc) {
   }
 }
 
-async function _decryptDoc (resourceGroupId, messageJSON) {
+export async function decryptDoc (resourceGroupId, messageJSON) {
+  let decrypted;
   try {
     const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
     const message = JSON.parse(messageJSON);
-    const decrypted = crypt.decryptAES(symmetricKey, message);
+    decrypted = crypt.decryptAES(symmetricKey, message);
+  } catch (e) {
+    logger.error(`Failed to decrypt from ${resourceGroupId}: ${e}`, messageJSON);
+    throw e;
+  }
+
+  try {
     return JSON.parse(decrypted);
   } catch (e) {
-    logger.error(`Failed to decrypt from ${resourceGroupId}: ${e}`);
+    logger.error(`Failed to parse after decrypt from ${resourceGroupId}: ${e}`, decrypted);
     throw e;
   }
 }
@@ -525,7 +542,7 @@ async function _getWorkspaceForDoc (doc) {
   return ancestors.find(d => d.type === models.workspace.type);
 }
 
-async function _createResourceGroup (name = '') {
+export async function createResourceGroup (parentId, name) {
   // Generate symmetric key for ResourceGroup
   const rgSymmetricJWK = await crypt.generateAES256Key();
   const rgSymmetricJWKStr = JSON.stringify(rgSymmetricJWK);
@@ -537,10 +554,7 @@ async function _createResourceGroup (name = '') {
   // Create the new ResourceGroup
   let resourceGroup;
   try {
-    resourceGroup = await fetch.post('/api/resource_groups', {
-      name,
-      encSymmetricKey: encRGSymmetricJWK,
-    });
+    resourceGroup = await session.syncCreateResourceGroup(parentId, name, encRGSymmetricJWK);
   } catch (e) {
     logger.error(`Failed to create ResourceGroup: ${e}`);
     throw e
@@ -553,7 +567,7 @@ async function _createResourceGroup (name = '') {
   return resourceGroup;
 }
 
-async function _createResource (doc, resourceGroupId) {
+export async function createResource (doc, resourceGroupId) {
   return store.insertResource({
     id: doc._id,
     name: doc.name || 'n/a', // Set name to the doc name if it has one
@@ -564,34 +578,34 @@ async function _createResource (doc, resourceGroupId) {
     lastEditedBy: session.getAccountId(),
     removed: false,
     type: doc.type,
-    encContent: await _encryptDoc(resourceGroupId, doc),
+    encContent: await encryptDoc(resourceGroupId, doc),
     dirty: true
   });
 }
 
-async function _createResourceForDoc (doc) {
+export async function createResourceForDoc (doc) {
   // No resource yet, so create one
   const workspace = await _getWorkspaceForDoc(doc);
 
   if (!workspace) {
     // Workspace was probably deleted before it's children could be synced.
-    // TODO: Handle this case better (maybe store
+    // TODO: Handle this case better
     throw new Error(`Could not find workspace for doc ${doc._id}`);
   }
 
   let workspaceResource = await store.getResourceByDocId(workspace._id);
 
   if (!workspaceResource) {
-    const workspaceResourceGroup = await _createResourceGroup(workspace.name);
+    const workspaceResourceGroup = await createResourceGroup(workspace._id, workspace.name);
     await ensureConfigExists(workspaceResourceGroup.id, store.SYNC_MODE_OFF);
-    workspaceResource = await _createResource(workspace, workspaceResourceGroup.id);
+    workspaceResource = await createResource(workspace, workspaceResourceGroup.id);
   }
 
   if (workspace === doc) {
     // If the current doc IS a Workspace, just return it
     return workspaceResource;
   } else {
-    return await _createResource(doc, workspaceResource.resourceGroupId);
+    return await createResource(doc, workspaceResource.resourceGroupId);
   }
 }
 
@@ -601,11 +615,11 @@ export async function getOrCreateResourceForDoc (doc) {
   if (resource) {
     return resource;
   } else {
-    return await _createResourceForDoc(doc);
+    return await createResourceForDoc(doc);
   }
 }
 
-async function _getOrCreateAllActiveResources (resourceGroupId = null) {
+export async function getOrCreateAllActiveResources (resourceGroupId = null) {
   const startTime = Date.now();
   const activeResourceMap = {};
 
@@ -620,12 +634,16 @@ async function _getOrCreateAllActiveResources (resourceGroupId = null) {
     activeResourceMap[r.id] = r;
   }
 
-  for (const type of Object.keys(WHITE_LIST)) {
+  // Make sure Workspace is first, because the loop below depends on it
+  const modelTypes = Object.keys(WHITE_LIST)
+    .sort((a, b) => a.type === models.workspace.type ? 1 : -1);
+
+  for (const type of modelTypes) {
     for (const doc of await db.all(type)) {
       const resource = await store.getResourceByDocId(doc._id);
       if (!resource) {
         try {
-          activeResourceMap[doc._id] = await _createResourceForDoc(doc);
+          activeResourceMap[doc._id] = await createResourceForDoc(doc);
         } catch (e) {
           logger.error(`Failed to create resource for ${doc._id}`, e, {doc});
         }
