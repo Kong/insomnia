@@ -5,7 +5,7 @@ import * as db from '../../common/database';
 import * as syncStorage from '../storage';
 import * as crypt from '../crypt';
 
-describe('Test push behaviour', () => {
+describe('Test push/pull behaviour', () => {
   beforeEach(async () => {
     // Reset some things
     sync._testReset();
@@ -22,36 +22,45 @@ describe('Test push behaviour', () => {
     await models.workspace.create({_id: 'wrk_2', name: 'Workspace 2'});
     await models.request.create({_id: 'req_1', name: 'Request 1', parentId: 'wrk_1'});
     await models.request.create({_id: 'req_2', name: 'Request 2', parentId: 'wrk_2'});
+
+    // Create resources, resource groups, and configs
+    const workspaces = await models.workspace.all();
+    const requests = await models.request.all();
+    for (const d of [...workspaces, ...requests]) {
+      await sync.getOrCreateResourceForDoc(d);
+    }
   });
 
   it('Pushes sync mode with and without resource group id', async () => {
     const request = await models.request.getById('req_1');
     const request2 = await models.request.getById('req_2');
-    const rg = await sync.createResourceGroup('Synced Resource Group');
-    const rg2 = await sync.createResourceGroup('Unsynced Resource Group');
-    await sync.createOrUpdateConfig(rg.id, syncStorage.SYNC_MODE_ON);
-    await sync.createOrUpdateConfig(rg2.id, syncStorage.SYNC_MODE_OFF);
-    await sync.createResource(request, rg.id);
-    await sync.createResource(request2, rg2.id);
+    const resourceRequest = await syncStorage.getResourceByDocId(request._id);
+    const resourceRequest2 = await syncStorage.getResourceByDocId(request2._id);
+
+    // Set up sync modes
+    await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
+    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_OFF);
 
     await sync.pushActiveDirtyResources(); // Push only active configs
-    await sync.pushActiveDirtyResources(rg.id); // Force push rg_1
-    await sync.pushActiveDirtyResources(rg2.id); // Force push rg_2
+    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId); // Force push rg_1
+    await sync.pushActiveDirtyResources(resourceRequest2.resourceGroupId); // Force push rg_2
 
     expect(session.syncPush.mock.calls.length).toBe(3);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0][0].id).toBe('req_1');
-    expect(session.syncPush.mock.calls[1][0].length).toBe(1);
-    expect(session.syncPush.mock.calls[1][0][0].id).toBe('req_1');
-    expect(session.syncPush.mock.calls[2][0].length).toBe(1);
-    expect(session.syncPush.mock.calls[2][0][0].id).toBe('req_2');
+    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(session.syncPush.mock.calls[0][0][0].id).toBe('wrk_1');
+    expect(session.syncPush.mock.calls[0][0][1].id).toBe('req_1');
+    expect(session.syncPush.mock.calls[1][0].length).toBe(2);
+    expect(session.syncPush.mock.calls[1][0][0].id).toBe('wrk_1');
+    expect(session.syncPush.mock.calls[1][0][1].id).toBe('req_1');
+    expect(session.syncPush.mock.calls[2][0].length).toBe(2);
+    expect(session.syncPush.mock.calls[2][0][0].id).toBe('wrk_2');
+    expect(session.syncPush.mock.calls[2][0][1].id).toBe('req_2');
   });
 
   it('Updates dirty flag for push response', async () => {
     const request = await models.request.getById('req_1');
-    const rg = await sync.createResourceGroup('Synced Resource Group');
-    await sync.createOrUpdateConfig(rg.id, syncStorage.SYNC_MODE_ON);
-    await sync.createResourceForDoc(request, rg.id);
+    const resourceRequest = await syncStorage.getResourceByDocId(request._id);
+    await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
@@ -61,15 +70,157 @@ describe('Test push behaviour', () => {
     });
 
     const resourceBefore = await syncStorage.getResourceByDocId(request._id);
-    await sync.pushActiveDirtyResources();
+    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(request._id);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
     expect(session.syncPush.mock.calls[0][0].length).toBe(2);
-    expect(session.syncPush.mock.calls[0][0][0].id).toBe('req_1');
-    expect(session.syncPush.mock.calls[0][0][1].id).toBe('wrk_1');
+    expect(session.syncPush.mock.calls[0][0][0].id).toBe('wrk_1');
+    expect(session.syncPush.mock.calls[0][0][1].id).toBe('req_1');
     expect(resourceBefore.dirty).toBe(true);
     expect(resourceAfter.dirty).toBe(false);
+  });
+
+  it('Updates resources for pull response', async () => {
+    const request = await models.request.getById('req_1');
+    const request2 = await models.request.getById('req_2');
+    const requestNew = Object.assign({}, request, {_id: 'req_new', name: 'New Request'});
+    const resourceBefore = await syncStorage.getResourceByDocId(request._id);
+    const resource2Before = await syncStorage.getResourceByDocId(requestNew._id);
+    await sync.createOrUpdateConfig(resourceBefore.resourceGroupId, syncStorage.SYNC_MODE_ON);
+    const updatedRequest = Object.assign({}, request, {name: 'Request Updated'});
+    const updatedResource = Object.assign({}, resourceBefore, {
+      version: 'ver1',
+      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, updatedRequest)
+    });
+    const createdResourceNew = Object.assign({}, resourceBefore, {
+      id: requestNew._id,
+      resourceGroupId: 'rg_1',
+      encContent: await sync.encryptDoc(resourceBefore.resourceGroupId, requestNew)
+    });
+
+    session.syncPull.mockReturnValueOnce({
+      updatedResources: [updatedResource],
+      createdResources: [createdResourceNew],
+      idsToPush: [],
+      idsToRemove: ['req_2'],
+    });
+
+    // Pull and get docs/resources
+    await sync.pull(resourceBefore.resourceGroupId);
+    const requestAfter = await models.request.getById(request._id);
+    const request2After = await models.request.getById(request2._id);
+    const requestNewAfter = await models.request.getById('req_new');
+    const resourceAfter = await syncStorage.getResourceByDocId(request._id, resourceBefore.resourceGroupId);
+    const resource2After = await syncStorage.getResourceByDocId(request2._id);
+    const resourceNewAfter = await syncStorage.getResourceByDocId(requestNewAfter._id);
+
+    // Assert
+    expect(resourceBefore.version).toBe('__NO_VERSION__');
+    expect(resourceAfter.version).toBe(updatedResource.version);
+    expect(resourceBefore.dirty).toBe(true);
+    expect(resource2Before).toBe(null);
+    expect(resourceAfter.dirty).toBe(false);
+    expect(resource2After.removed).toBe(true);
+    expect(requestAfter.name).toBe('Request Updated');
+    expect(request2After).toBe(null);
+    expect(resourceNewAfter).not.toBe(null);
+  });
+
+  it('Conflict: local version wins on modified before', async () => {
+    const requestClient = await models.request.getById('req_1');
+    const requestServer = Object.assign({}, requestClient, {name: 'Server Request'});
+    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
+    const resourceConflict = Object.assign({}, resourceRequest, {
+      version: 'ver-2',
+      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
+      lastEdited: resourceRequest.lastEdited - 1000, // Same edited time
+    });
+
+    session.syncPush.mockReturnValueOnce({
+      updated: [],
+      created: [],
+      removed: [],
+      conflicts: [resourceConflict],
+    });
+
+    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
+    const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
+    const requestAfter = await models.request.getById(requestClient._id);
+
+    // Assert
+    expect(session.syncPush.mock.calls.length).toBe(1);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    // Even when local wins, local resource gets the remove resource version
+    expect(resourceAfter.version).toBe(resourceConflict.version);
+    // Local resource gets marked as dirty so it's pushed right away
+    expect(resourceAfter.dirty).toBe(true);
+    // Local db should not be changed since the local won
+    expect(requestAfter).toEqual(requestClient);
+  });
+
+  it('Conflict: local version wins on modified tie', async () => {
+    const requestClient = await models.request.getById('req_1');
+    const requestServer = Object.assign({}, requestClient, {name: 'Server Request'});
+    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
+    const resourceConflict = Object.assign({}, resourceRequest, {
+      version: 'ver-2',
+      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
+      lastEdited: resourceRequest.lastEdited, // Same edited time
+    });
+
+    session.syncPush.mockReturnValueOnce({
+      updated: [],
+      created: [],
+      removed: [],
+      conflicts: [resourceConflict],
+    });
+
+    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
+    const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
+    const requestAfter = await models.request.getById(requestClient._id);
+
+    // Assert
+    expect(session.syncPush.mock.calls.length).toBe(1);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    // Even when local wins, local resource gets the remove resource version
+    expect(resourceAfter.version).toBe(resourceConflict.version);
+    // Local resource gets marked as dirty so it's pushed right away
+    expect(resourceAfter.dirty).toBe(true);
+    // Local db should not be changed since the local won
+    expect(requestAfter).toEqual(requestClient);
+  });
+
+  it('Conflict: server version wins if modified after', async () => {
+    const requestClient = await models.request.getById('req_1');
+    const requestServer = Object.assign({}, requestClient, {name: 'Server Request'});
+    const resourceRequest = await syncStorage.getResourceByDocId(requestClient._id);
+    const resourceConflict = Object.assign({}, resourceRequest, {
+      version: 'ver-2',
+      encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
+      lastEdited: resourceRequest.lastEdited + 1000,
+    });
+
+    session.syncPush.mockReturnValueOnce({
+      updated: [],
+      created: [],
+      removed: [],
+      conflicts: [resourceConflict],
+    });
+
+    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
+    const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
+    const requestAfter = await models.request.getById(requestClient._id);
+
+    // Assert
+    expect(session.syncPush.mock.calls.length).toBe(1);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(2);
+    expect(resourceAfter.lastEdited).toBeGreaterThan(resourceRequest.lastEdited);
+    expect(resourceAfter.version).toBe(resourceConflict.version);
+    // Local resource gets marked as dirty so it's pushed right away
+    expect(resourceAfter.dirty).toBe(false);
+    expect(requestAfter.name).toBe('Server Request');
+    expect(requestAfter.modified).toBe(requestServer.modified);
   });
 });
 
@@ -146,6 +297,37 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(session.syncPull.mock.calls.length).toBe(1);
     expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
     expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
+  });
+
+  it('Resources revived on DB change', async () => {
+    // Fetch the workspace and create a new request
+    db.bufferChanges();
+    const request = await models.request.create({
+      _id: 'req_t',
+      name: 'Original Request',
+      parentId: 'wrk_1'
+    });
+    await db.flushChanges();
+    await sync.pushActiveDirtyResources();
+
+    // Mark resource as removed
+    const originalResource = await syncStorage.getResourceByDocId('req_t');
+    const updatedResource = await syncStorage.updateResource(
+      originalResource,
+      {removed: true},
+    );
+
+    // Update it and push it again
+    db.bufferChanges();
+    await models.request.update(request, {name: 'New Name'});
+    await db.flushChanges();
+    await sync.pushActiveDirtyResources();
+    const finalResource = await syncStorage.getResourceByDocId('req_t');
+
+    // Assert
+    expect(originalResource.removed).toBe(false);
+    expect(updatedResource.removed).toBe(true);
+    expect(finalResource.removed).toBe(false);
   });
 
   it('Resources update on DB change', async () => {
@@ -255,7 +437,7 @@ async function _setSessionData () {
 async function _setupSessionMocks () {
   const resourceGroups = {};
 
-  session.syncCreateResourceGroup = jest.fn(body => {
+  session.syncCreateResourceGroup = jest.fn((parentId, name, _) => {
     const id = `rg_${Object.keys(resourceGroups).length + 1}`;
 
     // Generate a public key and use a symmetric equal to it's Id for
@@ -265,7 +447,11 @@ async function _setupSessionMocks () {
     const encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
 
     // Store the resource group and return it
-    resourceGroups[id] = Object.assign({}, {id, encSymmetricKey}, body);
+    resourceGroups[id] = Object.assign({}, {id, encSymmetricKey}, {
+      parentResourceId: parentId,
+      name: name,
+      encSymmetricKey: encSymmetricKey,
+    });
     return resourceGroups[id];
   });
 

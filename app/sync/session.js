@@ -136,8 +136,8 @@ export async function subscribe (tokenId, planId) {
   return response;
 }
 
-export function syncCreateResourceGroup (body) {
-  return util.post('/api/resource_groups', body);
+export function syncCreateResourceGroup (parentResourceId, name, encSymmetricKey) {
+  return util.post('/api/resource_groups', {parentResourceId, name, encSymmetricKey});
 }
 
 export function syncGetResourceGroup (id) {

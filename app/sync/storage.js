@@ -74,7 +74,7 @@ export async function insertResource (resource) {
 }
 
 export async function updateResource (resource, ...patches) {
-  const newDoc = Object.assign(resource, ...patches);
+  const newDoc = Object.assign({}, resource, ...patches);
   await _execDB(TYPE_RESOURCE, 'update', {_id: resource._id}, newDoc);
   return newDoc
 }
