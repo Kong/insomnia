@@ -10,6 +10,7 @@ import {trackEvent} from '../analytics/index';
 export const START_DELAY = 1E3;
 export const PULL_PERIOD = 15E3;
 export const PUSH_PERIOD = 10E3;
+export const WRITE_PERIOD = 1E3;
 
 const WHITE_LIST = {
   [models.workspace.type]: true,
@@ -26,6 +27,8 @@ const NO_VERSION = '__NO_VERSION__';
 const resourceGroupSymmetricKeysCache = {};
 let _pullChangesInterval = null;
 let _pushChangesInterval = null;
+let _writeChangesInterval = null;
+let _pendingDBChanges = {};
 let _isInitialized = false;
 
 export async function init () {
@@ -36,7 +39,6 @@ export async function init () {
 
   // NOTE: This is at the top to prevent race conditions
   _isInitialized = true;
-
   db.onChange(async changes => {
     // To help prevent bugs, put Workspaces first
     const sortedChanges = changes.sort(
@@ -44,7 +46,6 @@ export async function init () {
     );
 
     for (const [event, doc, fromSync] of sortedChanges) {
-      
       const notOnWhitelist = !WHITE_LIST[doc.type];
       const notLoggedIn = !session.isLoggedIn();
 
@@ -52,7 +53,8 @@ export async function init () {
         continue;
       }
 
-      await _handleChangeAndPush(event, doc, Date.now());
+      const key = `${event}:${doc._id}`;
+      _pendingDBChanges[key] = [event, doc, Date.now()];
     }
   });
 
@@ -62,6 +64,7 @@ export async function init () {
 
   _pullChangesInterval = setInterval(pull, PULL_PERIOD);
   _pushChangesInterval = setInterval(push, PUSH_PERIOD);
+  _writeChangesInterval = setInterval(writePendingChanges, WRITE_PERIOD);
 
   logger.debug('Initialized');
 }
@@ -71,6 +74,7 @@ export function _testReset () {
   _isInitialized = false;
   clearInterval(_pullChangesInterval);
   clearInterval(_pushChangesInterval);
+  clearInterval(_writeChangesInterval);
 }
 
 /**
@@ -125,6 +129,24 @@ export async function fixDuplicateResourceGroups () {
     trackEvent('Sync', 'Fixed Duplicate');
   } else {
     logger.debug('No dupes found to fix');
+  }
+}
+
+export async function writePendingChanges () {
+  // First make a copy and clear pending changes
+  const changes = Object.assign({}, _pendingDBChanges);
+  _pendingDBChanges = {};
+
+  const keys = Object.keys(changes);
+
+  if (keys.length === 0) {
+    // No changes, just return
+    return;
+  }
+
+  for (const key of Object.keys(changes)) {
+    const [event, doc, timestamp] = changes[key];
+    await _handleChangeAndPush(event, doc, timestamp);
   }
 }
 

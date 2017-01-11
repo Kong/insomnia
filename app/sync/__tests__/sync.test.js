@@ -250,6 +250,7 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Flush changes just to be sure they won't affect our tests
     await db.flushChanges();
+    await sync.writePendingChanges();
 
     // Assert that all our new models were created
     expect((await models.workspace.all()).length).toBe(2);
@@ -280,6 +281,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     });
 
     await db.flushChanges();
+    await sync.writePendingChanges();
     await sync.push();
 
     // Push changes and get resource
@@ -311,6 +313,7 @@ describe('Integration tests for creating Resources and pushing', () => {
       parentId: 'wrk_1'
     });
     await db.flushChanges();
+    await sync.writePendingChanges();
     await sync.push();
 
     // Mark resource as removed
@@ -324,6 +327,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     db.bufferChanges();
     await models.request.update(request, {name: 'New Name'});
     await db.flushChanges();
+    await sync.writePendingChanges();
     await sync.push();
     const finalResource = await syncStorage.getResourceByDocId('req_t');
 
@@ -342,6 +346,7 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Drain and fetch new resource
     await db.flushChanges();
+    await sync.writePendingChanges();
     await sync.push();
     const updatedResource = await syncStorage.getResourceByDocId(request._id);
 
@@ -370,6 +375,7 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Drain and fetch new resource
     await db.flushChanges();
+    await sync.writePendingChanges();
     await sync.push();
     const updatedResource = await syncStorage.getResourceByDocId(request._id);
 
