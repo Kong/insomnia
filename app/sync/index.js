@@ -9,7 +9,7 @@ import {trackEvent} from '../analytics/index';
 
 export const START_DELAY = 1E3;
 export const PULL_PERIOD = 15E3;
-export const PUSH_PERIOD = 10E3;
+export const PUSH_PERIOD = 15E3;
 export const WRITE_PERIOD = 1E3;
 
 const WHITE_LIST = {
