@@ -27,7 +27,6 @@ describe('buildRequestConfig()', () => {
       forever: true,
       gzip: true,
       headers: {
-        'host': '',
         'Accept': '*/*',
         'User-Agent': `insomnia/${getAppVersion()}`
       },
@@ -84,7 +83,6 @@ describe('buildRequestConfig()', () => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Basic dXNlcjpwYXNz',
-        'host': 'foo.com:3332',
         'Accept': '*/*',
         'User-Agent': `insomnia/${getAppVersion()}`,
         'x-hello': 'world'
