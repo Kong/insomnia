@@ -77,9 +77,7 @@ SettingsSync.propTypes = {
   firstName: PropTypes.string.isRequired,
   email: PropTypes.string.isRequired,
   handleExit: PropTypes.func.isRequired,
-  handleCancelAccount: PropTypes.func.isRequired,
   handleLogout: PropTypes.func.isRequired,
-  handleReset: PropTypes.func.isRequired,
 };
 
 export default SettingsSync;

@@ -19,7 +19,7 @@ export function getAppPlatform () {
 }
 
 export function getAppEnvironment () {
-  return process.env.INSOMNIA_ENV || 'unknown';
+  return process.env.INSOMNIA_ENV || 'production';
 }
 
 export function isMac () {

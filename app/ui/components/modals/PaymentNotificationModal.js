@@ -1,17 +1,19 @@
 import React, {Component} from 'react';
+import PromptButton from '../base/PromptButton';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
-import * as session from '../../../sync/session';
 import {trackEvent} from '../../../analytics';
+import * as session from '../../../sync/session';
+import * as sync from '../../../sync/index';
 
 
 let hidePaymentNotificationUntilNextLaunch = false;
 
 class PaymentNotificationModal extends Component {
-  _handleHide = () => {
+  _handleCancel = async () => {
+    await sync.cancelTrial();
     this.hide();
   };
 
@@ -33,30 +35,28 @@ class PaymentNotificationModal extends Component {
   render () {
     return (
       <Modal ref={m => this.modal = m}>
-        <ModalHeader>Free Trial has Ended</ModalHeader>
+        <ModalHeader>Upgrade Now to Insomnia Plus</ModalHeader>
         <ModalBody className="pad changelog">
           <div className="text-center pad">
-            <h1>
-              Hi {session.getFirstName()},
-            </h1>
+            <h1>Hi {session.getFirstName()},</h1>
             <p style={{maxWidth: '30rem', margin: 'auto'}}>
-              Your Insomnia Plus trial has ended. please enter your billing information to
-              continue using your account.
+              Your Insomnia Plus trial has come to an end. Subscribe to a plan
+              to continue using Plus features like encrypted data synchronization and backup.
             </p>
             <br/>
             <p className="pad-top">
-              <Link button={true} href="https://insomnia.rest/app/subscribe/" className="btn btn--compact btn--outlined">
-                Enter Billing Info
+              <PromptButton onClick={this._handleCancel} className="btn btn--compact faint">
+                End Subscription
+              </PromptButton>
+              {" "}
+              <Link button={true}
+                    href="https://insomnia.rest/app/subscribe/"
+                    className="btn btn--compact btn--outlined">
+                Subscribe Now
               </Link>
             </p>
           </div>
         </ModalBody>
-        <ModalFooter>
-          <button className="btn" onClick={this._handleHide}>
-            Maybe Later
-          </button>
-          &nbsp;
-        </ModalFooter>
       </Modal>
     )
   }

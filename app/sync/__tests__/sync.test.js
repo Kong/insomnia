@@ -41,9 +41,9 @@ describe('Test push/pull behaviour', () => {
     await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
     await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_OFF);
 
-    await sync.pushActiveDirtyResources(); // Push only active configs
-    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId); // Force push rg_1
-    await sync.pushActiveDirtyResources(resourceRequest2.resourceGroupId); // Force push rg_2
+    await sync.push(); // Push only active configs
+    await sync.push(resourceRequest.resourceGroupId); // Force push rg_1
+    await sync.push(resourceRequest2.resourceGroupId); // Force push rg_2
 
     expect(session.syncPush.mock.calls.length).toBe(3);
     expect(session.syncPush.mock.calls[0][0].length).toBe(2);
@@ -70,7 +70,7 @@ describe('Test push/pull behaviour', () => {
     });
 
     const resourceBefore = await syncStorage.getResourceByDocId(request._id);
-    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
+    await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(request._id);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
@@ -144,7 +144,7 @@ describe('Test push/pull behaviour', () => {
       conflicts: [resourceConflict],
     });
 
-    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
+    await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
     const requestAfter = await models.request.getById(requestClient._id);
 
@@ -176,7 +176,7 @@ describe('Test push/pull behaviour', () => {
       conflicts: [resourceConflict],
     });
 
-    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
+    await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
     const requestAfter = await models.request.getById(requestClient._id);
 
@@ -208,7 +208,7 @@ describe('Test push/pull behaviour', () => {
       conflicts: [resourceConflict],
     });
 
-    await sync.pushActiveDirtyResources(resourceRequest.resourceGroupId);
+    await sync.push(resourceRequest.resourceGroupId);
     const resourceAfter = await syncStorage.getResourceByDocId(requestClient._id, resourceRequest.resourceGroupId);
     const requestAfter = await models.request.getById(requestClient._id);
 
@@ -265,6 +265,9 @@ describe('Integration tests for creating Resources and pushing', () => {
     await promise;
     expect((await syncStorage.allConfigs()).length).toBe(2);
     expect((await syncStorage.allResources()).length).toBe(7);
+
+    // Do initial push
+    await sync.push();
   });
 
   it('Resources created on DB change', async () => {
@@ -277,7 +280,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     });
 
     await db.flushChanges();
-    await sync.pushActiveDirtyResources();
+    await sync.push();
 
     // Push changes and get resource
     const resource = await syncStorage.getResourceByDocId('req_t');
@@ -308,7 +311,7 @@ describe('Integration tests for creating Resources and pushing', () => {
       parentId: 'wrk_1'
     });
     await db.flushChanges();
-    await sync.pushActiveDirtyResources();
+    await sync.push();
 
     // Mark resource as removed
     const originalResource = await syncStorage.getResourceByDocId('req_t');
@@ -321,7 +324,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     db.bufferChanges();
     await models.request.update(request, {name: 'New Name'});
     await db.flushChanges();
-    await sync.pushActiveDirtyResources();
+    await sync.push();
     const finalResource = await syncStorage.getResourceByDocId('req_t');
 
     // Assert
@@ -339,7 +342,7 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Drain and fetch new resource
     await db.flushChanges();
-    await sync.pushActiveDirtyResources();
+    await sync.push();
     const updatedResource = await syncStorage.getResourceByDocId(request._id);
 
     // Assert
@@ -367,7 +370,7 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Drain and fetch new resource
     await db.flushChanges();
-    await sync.pushActiveDirtyResources();
+    await sync.push();
     const updatedResource = await syncStorage.getResourceByDocId(request._id);
 
     // Assert

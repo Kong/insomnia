@@ -66,7 +66,7 @@ class PromptModal extends Component {
       <Modal ref={m => this.modal = m} {...extraProps}>
         <ModalHeader>{headerName}</ModalHeader>
         <ModalBody className="wide">
-          <form onSubmit={this._handleSubmit} className="wide pad no-pad-top">
+          <form onSubmit={this._handleSubmit} className="wide pad">
             <div className="form-control form-control--outlined form-control--wide">
               {label ? <label>{label}{input}</label> : input}
             </div>

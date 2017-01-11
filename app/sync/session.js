@@ -104,7 +104,7 @@ export async function login (rawEmail, rawPassphrase) {
     accountId,
     firstName,
     lastName,
-  } = await _whoami(sessionId);
+  } = await whoami(sessionId);
 
   const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
   const symmetricKeyStr = await crypt.decryptAES(derivedSymmetricKey, JSON.parse(encSymmetricKey));
@@ -154,6 +154,49 @@ export function syncPush (body) {
 
 export function syncResetData () {
   return util.post('/auth/reset');
+}
+
+export function syncFixDupes (resourceGroupIds) {
+  return util.post('/sync/fix-dupes', {ids: resourceGroupIds});
+}
+
+export function unshareWithAllTeams (resourceGroupId) {
+  return util.put(`/api/resource_groups/${resourceGroupId}/unshare`);
+}
+
+export async function shareWithTeam (resourceGroupId, teamId, rawPassphrase) {
+  // Ask the server what we need to do to invite the member
+  const instructions = await util.post(`/api/resource_groups/${resourceGroupId}/share-a`, {teamId});
+
+  // Compute keys necessary to invite the member
+  const passPhrase = _sanitizePassphrase(rawPassphrase);
+  const {email, saltEnc, encPrivateKey, encSymmetricKey} = await whoami();
+  const secret = await crypt.deriveKey(passPhrase, email, saltEnc);
+  let symmetricKey;
+  try {
+    symmetricKey = crypt.decryptAES(secret, JSON.parse(encSymmetricKey));
+  } catch (err) {
+    throw new Error('Invalid password');
+  }
+  const privateKey = crypt.decryptAES(JSON.parse(symmetricKey), JSON.parse(encPrivateKey));
+  const privateKeyJWK = JSON.parse(privateKey);
+  const resourceGroupSymmetricKey = crypt.decryptRSAWithJWK(
+    privateKeyJWK,
+    instructions.encSymmetricKey
+  );
+
+  // Build the invite data request
+  const newKeys = {};
+  for (const accountId of Object.keys(instructions.keys)) {
+    const accountPublicKeyJWK = JSON.parse(instructions.keys[accountId]);
+    newKeys[accountId] = crypt.encryptRSAWithJWK(
+      accountPublicKeyJWK,
+      resourceGroupSymmetricKey,
+    );
+  }
+
+  // Actually share it with the team
+  await util.post(`/api/resource_groups/${resourceGroupId}/share-b`, {teamId, keys: newKeys});
 }
 
 export function getPublicKey () {
@@ -257,11 +300,14 @@ export async function listTeams () {
   return util.get('/api/teams');
 }
 
-export async function cancelAccount () {
-  await util.del('/api/billing/subscriptions');
-  trackEvent('Session', 'Cancel Account');
+export async function endTrial () {
+  await util.put('/api/billing/end-trial');
+  trackEvent('Session', 'End Trial');
 }
 
+function whoami (sessionId = null) {
+  return util.get('/auth/whoami', sessionId);
+}
 
 export function getSessionKey (sessionId) {
   return `session__${sessionId.slice(0, 10)}`
@@ -270,10 +316,6 @@ export function getSessionKey (sessionId) {
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
-
-function _whoami (sessionId = null) {
-  return util.get('/auth/whoami', sessionId);
-}
 
 export async function _initAccount (firstName, lastName, email) {
   return {

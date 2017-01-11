@@ -64,6 +64,27 @@ export async function getResourceByDocId (id, resourceGroupId = null) {
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
+/**
+ * This function is temporary and should only be called when cleaning
+ * up duplicate ResourceGroups
+ * @param id
+ * @returns {*}
+ */
+export function findResourcesByDocId (id) {
+  return _execDB(TYPE_RESOURCE, 'find', {id});
+}
+
+/**
+ * This function is temporary and should only be called when cleaning
+ * up duplicate ResourceGroups
+ * @param resourceGroupId
+ * @returns {*}
+ */
+export async function removeResourceGroup (resourceGroupId) {
+  await _execDB(TYPE_RESOURCE, 'remove', {resourceGroupId}, {multi: true});
+  await _execDB(TYPE_CONFIG, 'remove', {resourceGroupId}, {multi: true});
+}
+
 export async function insertResource (resource) {
   const h = crypto.createHash('md5');
   h.update(resource.resourceGroupId);
