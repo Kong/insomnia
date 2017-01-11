@@ -476,7 +476,7 @@ async function _handleChangeAndPush (event, doc, timestamp) {
  * @returns {*}
  */
 const _fetchResourceGroupPromises = {};
-function _fetchResourceGroup (resourceGroupId) {
+export async function fetchResourceGroup (resourceGroupId) {
   // PERF: If we're currently fetching, return stored promise
   // TODO: Maybe move parallel fetch caching into the fetch helper
   if (_fetchResourceGroupPromises[resourceGroupId]) {
@@ -487,12 +487,12 @@ function _fetchResourceGroup (resourceGroupId) {
     let resourceGroup = resourceGroupCache[resourceGroupId];
 
     if (!resourceGroup) {
-      // TODO: Handle a 404 here
       try {
         resourceGroup = await session.syncGetResourceGroup(resourceGroupId);
       } catch (e) {
         if (e.statusCode === 404) {
-          logger.debug('ResourceGroup not found');
+          await store.removeResourceGroup(resourceGroupId);
+          logger.debug('ResourceGroup not found. Deleting...');
           reject(new Error('ResourceGroup was not found'));
           return;
         } else {
@@ -542,7 +542,7 @@ async function _getResourceGroupSymmetricKey (resourceGroupId) {
   let key = resourceGroupSymmetricKeysCache[resourceGroupId];
 
   if (!key) {
-    const resourceGroup = await _fetchResourceGroup(resourceGroupId);
+    const resourceGroup = await fetchResourceGroup(resourceGroupId);
     const accountPrivateKey = await session.getPrivateKey();
 
     const symmetricKeyStr = crypt.decryptRSAWithJWK(

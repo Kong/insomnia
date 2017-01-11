@@ -11,6 +11,7 @@ import LoginModal from './LoginModal';
 import {showModal} from './index';
 import PromptModal from './PromptModal';
 import PromptButton from '../base/PromptButton';
+import {trackEvent} from '../../../analytics/index';
 
 class WorkspaceShareSettingsModal extends Component {
   state = {};
@@ -61,13 +62,16 @@ class WorkspaceShareSettingsModal extends Component {
     const {workspace} = this.props;
     const resource = await sync.getOrCreateResourceForDoc(workspace);
 
-    const teamsPromise = session.listTeams();
-    const resourceGroupPromise = session.syncGetResourceGroup(resource.resourceGroupId);
+    const teams = await session.listTeams();
 
-    const teams = await teamsPromise;
-    const resourceGroup = await resourceGroupPromise;
-
-    this.setState({teams, resourceGroup, loading: false, error: ''});
+    try {
+      const resourceGroup = await sync.fetchResourceGroup(resource.resourceGroupId);
+      this.setState({teams, resourceGroup, loading: false, error: ''});
+    } catch (err) {
+      console.warn('Failed to fetch ResourceGroup', err);
+      this.setState({error: 'No sync info found. Please try again.', loading: false});
+      trackEvent('Sync', 'Error', 'Share Fetch Fail');
+    }
   }
 
   _resetState (patch = {}) {

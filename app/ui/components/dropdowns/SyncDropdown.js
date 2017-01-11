@@ -160,7 +160,7 @@ class SyncDropdown extends Component {
             <DropdownDivider>Other</DropdownDivider>
             <DropdownItem onClick={this._handleShowShareSettings}>
               <i className="fa fa-users"></i>
-              Share <strong>{workspace.name}</strong>
+              Configure Sharing
             </DropdownItem>
             <DropdownItem onClick={this._handleShowLogs}>
               <i className="fa fa-bug"></i>

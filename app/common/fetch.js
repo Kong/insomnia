@@ -48,19 +48,13 @@ async function _fetch (method, path, json, sessionId = null) {
   }
 
   const response = await fetch(_getUrl(path), config);
-
-  if (response.status === 403) {
-    // TODO: Somehow signal the user to login
-  } else if (response.status === 402) {
-    // TODO: Somehow signal that payment is required
-  }
-
   const uri = response.headers.get('x-insomnia-command');
   uri && _notifyCommandListeners(uri);
 
   if (!response.ok) {
     const err = new Error(`Response ${response.status} for ${path}`);
     err.message = await response.text();
+    err.statusCode = response.status;
     throw err
   }
 
