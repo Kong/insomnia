@@ -16,6 +16,9 @@ class LoginModal extends Component {
     message: '',
   };
 
+  _setModalRef = m => this.modal = m;
+  _hide = () => this.hide();
+
   _handleLogin = async e => {
     e.preventDefault();
     this.setState({error: '', loading: true});
@@ -45,8 +48,12 @@ class LoginModal extends Component {
     setTimeout(() => this._emailInput.focus(), 100);
   }
 
+  hide () {
+    this.modal.hide();
+  }
+
   render () {
-    const {step, title, message} = this.state;
+    const {step, title, message, loading, error} = this.state;
     let inner;
     if (step === 1) {
       inner = [
@@ -73,9 +80,7 @@ class LoginModal extends Component {
                      ref={n => this._passwordInput = n}/>
             </label>
           </div>
-          {this.state.error ? (
-            <div className="danger pad-top">** {this.state.error}</div>
-          ) : null}
+          {error ? <div className="danger pad-top">** {error}</div> : null}
         </ModalBody>,
         <ModalFooter key="footer">
           <div className="margin-left">
@@ -84,9 +89,7 @@ class LoginModal extends Component {
             <Link href="https://insomnia.rest/app/">Signup</Link>
           </div>
           <button type="submit" className="btn">
-            {this.state.loading ? (
-              <i className="fa fa-spin fa-refresh margin-right-sm"></i>
-            ) : null}
+            {loading ? <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
             Login
           </button>
         </ModalFooter>
@@ -105,9 +108,7 @@ class LoginModal extends Component {
           </p>
         </ModalBody>,
         <ModalFooter key="footer">
-          <button type="submit"
-                  className="btn"
-                  onClick={e => this.modal.hide()}>
+          <button type="button" className="btn" onClick={this._hide}>
             Close
           </button>
         </ModalFooter>
@@ -116,7 +117,7 @@ class LoginModal extends Component {
 
     return (
       <form onSubmit={this._handleLogin}>
-        <Modal ref={m => this.modal = m} {...this.props}>
+        <Modal ref={this._setModalRef} {...this.props}>
           {inner}
         </Modal>
       </form>

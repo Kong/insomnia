@@ -6,6 +6,7 @@ import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics';
+import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
 
 class SyncDropdown extends Component {
   state = {
@@ -16,6 +17,10 @@ class SyncDropdown extends Component {
 
   _trackShowMenu = () => trackEvent('Sync', 'Show Menu', 'Authenticated');
   _handleShowLogs = () => showModal(SyncLogsModal);
+
+  _handleShowShareSettings = () => {
+    showModal(WorkspaceShareSettingsModal, {workspace: this.props.workspace});
+  };
 
   _handleToggleSyncMode = async () => {
     const {syncData} = this.state;
@@ -47,7 +52,7 @@ class SyncDropdown extends Component {
 
     await sync.getOrCreateConfig(resourceGroupId);
     await sync.pull(resourceGroupId);
-    await sync.pushActiveDirtyResources(resourceGroupId);
+    await sync.push(resourceGroupId);
 
     await this._reloadData();
 
@@ -107,7 +112,7 @@ class SyncDropdown extends Component {
   }
 
   render () {
-    const {className} = this.props;
+    const {className, workspace} = this.props;
     const {syncData, loading, loggedIn} = this.state;
 
     // Don't show the sync menu unless we're logged in
@@ -126,11 +131,13 @@ class SyncDropdown extends Component {
     } else {
       const {syncMode, syncPercent} = syncData;
       const description = this._getSyncDescription(syncMode, syncPercent);
+      const isPaused = syncMode === syncStorage.SYNC_MODE_OFF;
 
       return (
         <div className={className}>
           <Dropdown wide={true} className="wide tall">
             <DropdownButton className="btn btn--compact wide" onClick={this._trackShowMenu}>
+              {isPaused ? <span><i className="fa fa-pause-circle"/>&nbsp;</span> : null}
               {description}
             </DropdownButton>
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
@@ -151,6 +158,10 @@ class SyncDropdown extends Component {
             </DropdownItem>
 
             <DropdownDivider>Other</DropdownDivider>
+            <DropdownItem onClick={this._handleShowShareSettings}>
+              <i className="fa fa-users"></i>
+              Share <strong>{workspace.name}</strong>
+            </DropdownItem>
             <DropdownItem onClick={this._handleShowLogs}>
               <i className="fa fa-bug"></i>
               Show Debug Logs

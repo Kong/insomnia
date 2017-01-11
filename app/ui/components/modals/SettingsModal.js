@@ -127,8 +127,6 @@ class SettingsModal extends Component {
                 firstName={session.getFirstName() || ''}
                 email={session.getEmail() || ''}
                 handleExit={this._handleClose}
-                handleCancelAccount={sync.cancelAccount}
-                handleReset={() => this._handleSyncReset()}
                 handleLogout={sync.logout}
               />
             </TabPanel>

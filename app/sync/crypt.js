@@ -67,6 +67,10 @@ export function decryptRSAWithJWK (privateJWK, encryptedBlob) {
   return decodeURIComponent(decrypted);
 }
 
+export function recryptRSAWithJWK (privateJWK, publicJWK, encryptedBlob) {
+  const decrypted = decryptRSAWithJWK(privateJWK, encryptedBlob);
+  return encryptRSAWithJWK(publicJWK, decrypted);
+}
 
 /**
  * Encrypt data using symmetric key

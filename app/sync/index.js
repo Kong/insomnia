@@ -5,10 +5,11 @@ import * as session from './session';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
+import {trackEvent} from '../analytics/index';
 
-export const FULL_SYNC_INTERVAL = 30E3;
-export const PUSH_DEBOUNCE_TIME = 15E3;
 export const START_DELAY = 1E3;
+export const PULL_PERIOD = 15E3;
+export const PUSH_PERIOD = 10E3;
 
 const WHITE_LIST = {
   [models.workspace.type]: true,
@@ -25,7 +26,7 @@ const NO_VERSION = '__NO_VERSION__';
 const resourceGroupCache = {};
 const resourceGroupSymmetricKeysCache = {};
 let _pullChangesInterval = null;
-let _pushChangesTimeout = null;
+let _pushChangesInterval = null;
 let _isInitialized = false;
 
 export async function init () {
@@ -57,10 +58,11 @@ export async function init () {
   });
 
   await misc.delay(START_DELAY);
-  await pushActiveDirtyResources();
+  await push();
   await pull();
 
-  _pullChangesInterval = setInterval(pull, FULL_SYNC_INTERVAL);
+  _pullChangesInterval = setInterval(pull, PULL_PERIOD);
+  _pushChangesInterval = setInterval(push, PUSH_PERIOD);
 
   logger.debug('Initialized');
 }
@@ -69,7 +71,7 @@ export async function init () {
 export function _testReset () {
   _isInitialized = false;
   clearInterval(_pullChangesInterval);
-  clearTimeout(_pushChangesTimeout);
+  clearInterval(_pushChangesInterval);
 }
 
 /**
@@ -88,12 +90,47 @@ export function doInitialSync () {
   });
 }
 
-export async function pushActiveDirtyResources (resourceGroupId = null) {
-  // Just in case we called it directly...
-  clearTimeout(_pushChangesTimeout);
-
+/**
+ * This is a function to clean up Workspaces that might have had more than one
+ * ResourceGroup created for them. This function should be called on init (or maybe
+ * even periodically) and can be removed once the bug stops persisting.
+ */
+export async function fixDuplicateResourceGroups () {
   if (!session.isLoggedIn()) {
-    logger.warn('Not logged in');
+    return;
+  }
+
+  let duplicateCount = 0;
+  const workspaces = await models.workspace.all();
+  for (const workspace of workspaces) {
+    const resources = await store.findResourcesByDocId(workspace._id);
+
+    // No duplicates found
+    if (resources.length <= 1) {
+      continue;
+    }
+
+    // Fix duplicates
+    const ids = resources.map(r => r.resourceGroupId);
+    const {deleteResourceGroupIds} = await session.syncFixDupes(ids);
+
+    for (const idToDelete of deleteResourceGroupIds) {
+      await store.removeResourceGroup(idToDelete);
+    }
+
+    duplicateCount++;
+  }
+
+  if (duplicateCount) {
+    logger.debug(`Fixed ${duplicateCount}/${workspaces.length} duplicate synced Workspaces`);
+    trackEvent('Sync', 'Fixed Duplicate');
+  } else {
+    logger.debug('No dupes found to fix');
+  }
+}
+
+export async function push (resourceGroupId = null) {
+  if (!session.isLoggedIn()) {
     return;
   }
 
@@ -192,9 +229,12 @@ export async function pushActiveDirtyResources (resourceGroupId = null) {
 
 export async function pull (resourceGroupId = null, createMissingResources = true) {
   if (!session.isLoggedIn()) {
-    logger.warn('Not logged in');
     return;
   }
+
+  // Try to fix duplicates first. Don't worry if this is called a lot since if there
+  // are no duplicates found it doesn't contact the network.
+  await fixDuplicateResourceGroups();
 
   let allResources;
   if (createMissingResources) {
@@ -205,10 +245,9 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
 
   let blacklistedConfigs;
   if (resourceGroupId) {
-    // When doing a partial sync, blacklist all configs except the one we're
-    // trying to sync.
+    // When doing specific sync, blacklist all configs except the one we're trying to sync.
     const allConfigs = await store.allConfigs();
-    blacklistedConfigs = allConfigs.filter(c => c.resourceGroupId !== resourceGroupId)
+    blacklistedConfigs = allConfigs.filter(c => c.resourceGroupId !== resourceGroupId);
   } else {
     // When doing a full sync, blacklist the inactive configs
     blacklistedConfigs = await store.findInactiveConfigs(resourceGroupId);
@@ -222,7 +261,11 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   }));
 
   const blacklistedResourceGroupIds = blacklistedConfigs.map(c => c.resourceGroupId);
-  const body = {resources, blacklist: blacklistedResourceGroupIds};
+
+  const body = {
+    resources,
+    blacklist: blacklistedResourceGroupIds,
+  };
 
   logger.debug(`Pulling with ${resources.length} resources`);
 
@@ -291,7 +334,8 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
       const doc = await decryptDoc(resourceGroupId, encContent);
 
       // Update app database
-      await db.update(doc, true);
+      // Needs to be upsert because we could be "undeleting" something
+      await db.upsert(doc, true);
 
       // Update local resource
       const resource = await store.getResourceByDocId(
@@ -347,9 +391,6 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     await store.updateResource(resource, {dirty: true});
   }
 
-  // Push all the resources that may have been marked as dirty
-  await pushActiveDirtyResources();
-
   return updatedResources.length + createdResources.length;
 }
 
@@ -386,9 +427,9 @@ export async function logout () {
   await session.logout();
 }
 
-export async function cancelAccount () {
-  await session.cancelAccount();
-  await logout();
+export async function cancelTrial () {
+  await session.endTrial();
+  await resetLocalData();
 }
 
 export async function resetLocalData () {
@@ -426,8 +467,6 @@ async function _handleChangeAndPush (event, doc, timestamp) {
 
   // Debounce pushing of dirty resources
   logger.debug(`Queue ${event} ${updatedResource.id}`);
-  clearTimeout(_pushChangesTimeout);
-  _pushChangesTimeout = setTimeout(pushActiveDirtyResources, PUSH_DEBOUNCE_TIME);
 }
 
 /**
@@ -452,8 +491,22 @@ function _fetchResourceGroup (resourceGroupId) {
       try {
         resourceGroup = await session.syncGetResourceGroup(resourceGroupId);
       } catch (e) {
-        logger.error(`Failed to get ResourceGroup ${resourceGroupId}: ${e}`);
-        reject(e);
+        if (e.statusCode === 404) {
+          logger.debug('ResourceGroup not found');
+          reject(new Error('ResourceGroup was not found'));
+          return;
+        } else {
+          logger.error(`Failed to get ResourceGroup ${resourceGroupId}: ${e}`);
+          reject(e);
+          return;
+        }
+      }
+
+      if (resourceGroup.isDisabled) {
+        await store.removeResourceGroup(resourceGroup.id);
+        logger.debug('ResourceGroup was disabled. Deleting...');
+        reject(new Error('ResourceGroup was disabled'));
+        return;
       }
 
       // Also make sure a config exists when we first fetch it.
@@ -635,15 +688,18 @@ export async function getOrCreateAllActiveResources (resourceGroupId = null) {
   }
 
   // Make sure Workspace is first, because the loop below depends on it
-  const modelTypes = Object.keys(WHITE_LIST)
-    .sort((a, b) => a.type === models.workspace.type ? 1 : -1);
+  const modelTypes = Object.keys(WHITE_LIST).sort(
+    (a, b) => a.type === models.workspace.type ? 1 : -1
+  );
 
+  let created = 0;
   for (const type of modelTypes) {
     for (const doc of await db.all(type)) {
       const resource = await store.getResourceByDocId(doc._id);
       if (!resource) {
         try {
           activeResourceMap[doc._id] = await createResourceForDoc(doc);
+          created++;
         } catch (e) {
           logger.error(`Failed to create resource for ${doc._id}`, e, {doc});
         }
@@ -654,6 +710,6 @@ export async function getOrCreateAllActiveResources (resourceGroupId = null) {
   const resources = Object.keys(activeResourceMap).map(k => activeResourceMap[k]);
 
   const time = (Date.now() - startTime) / 1000;
-  logger.debug(`Created ${resources.length} Resources (${time.toFixed(2)}s)`);
+  logger.debug(`Created ${created}/${resources.length} Resources (${time.toFixed(2)}s)`);
   return resources;
 }
