@@ -65,7 +65,7 @@ class WorkspaceShareSettingsModal extends Component {
     const teams = await session.listTeams();
 
     try {
-      const resourceGroup = await sync.fetchResourceGroup(resource.resourceGroupId);
+      const resourceGroup = await sync.fetchResourceGroup(resource.resourceGroupId, true);
       this.setState({teams, resourceGroup, loading: false, error: ''});
     } catch (err) {
       console.warn('Failed to fetch ResourceGroup', err);

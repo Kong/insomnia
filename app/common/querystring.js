@@ -23,10 +23,15 @@ export function build (param, strict = true) {
     return '';
   }
 
+  // Cast number values to strings
+  if (typeof param.value === 'number') {
+    param.value += '';
+  }
+
   if (!strict || param.value) {
+    // Don't encode ',' in values
+    const value = util.flexibleEncodeComponent(param.value || '').replace(/%2C/gi, ',');
     const name = util.flexibleEncodeComponent(param.name || '');
-    const value = util.flexibleEncodeComponent(param.value || '')
-      .replace(/%2C/gi, ','); // Don't encode , in values
 
     return `${name}=${value}`
   } else {

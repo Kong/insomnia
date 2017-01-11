@@ -62,6 +62,14 @@ describe('build()', () => {
     const str = querystringUtils.build({value: 'bar'});
     expect(str).toBe('');
   });
+
+  it('builds with numbers', () => {
+    const str = querystringUtils.build({name: 'number', value: 10});
+    const str2 = querystringUtils.build({name: 'number', value: 0});
+
+    expect(str).toBe('number=10');
+    expect(str2).toBe('number=0');
+  });
 });
 
 describe('buildFromParams()', () => {

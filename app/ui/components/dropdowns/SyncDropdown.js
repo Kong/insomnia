@@ -148,13 +148,11 @@ class SyncDropdown extends Component {
                 <i className="fa fa-toggle-on"></i>}
               Automatic Sync
             </DropdownItem>
-            <DropdownItem onClick={this._handleSyncResourceGroupId}
-                          disabled={syncPercent === 100}
-                          stayOpenAfterClick={true}>
+            <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick={true}>
               {loading ?
                 <i className="fa fa-refresh fa-spin"></i> :
                 <i className="fa fa-cloud-upload"></i>}
-              Sync Now {syncPercent === 100 ? '(up to date)' : ''}
+              Sync Now
             </DropdownItem>
 
             <DropdownDivider>Other</DropdownDivider>

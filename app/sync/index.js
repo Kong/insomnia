@@ -23,7 +23,6 @@ export const logger = new Logger();
 
 // TODO: Move this stuff somewhere else
 const NO_VERSION = '__NO_VERSION__';
-const resourceGroupCache = {};
 const resourceGroupSymmetricKeysCache = {};
 let _pullChangesInterval = null;
 let _pushChangesInterval = null;
@@ -476,7 +475,13 @@ async function _handleChangeAndPush (event, doc, timestamp) {
  * @returns {*}
  */
 const _fetchResourceGroupPromises = {};
-export async function fetchResourceGroup (resourceGroupId) {
+const _resourceGroupCache = {};
+export async function fetchResourceGroup (resourceGroupId, invalidateCache = false) {
+  if (invalidateCache) {
+    delete _resourceGroupCache[resourceGroupId];
+    delete _fetchResourceGroupPromises[resourceGroupId];
+  }
+
   // PERF: If we're currently fetching, return stored promise
   // TODO: Maybe move parallel fetch caching into the fetch helper
   if (_fetchResourceGroupPromises[resourceGroupId]) {
@@ -484,7 +489,7 @@ export async function fetchResourceGroup (resourceGroupId) {
   }
 
   const promise = new Promise(async (resolve, reject) => {
-    let resourceGroup = resourceGroupCache[resourceGroupId];
+    let resourceGroup = _resourceGroupCache[resourceGroupId];
 
     if (!resourceGroup) {
       try {
@@ -521,7 +526,7 @@ export async function fetchResourceGroup (resourceGroupId) {
     _fetchResourceGroupPromises[resourceGroupId] = null;
 
     // Cache the ResourceGroup for next time (they never change)
-    resourceGroupCache[resourceGroupId] = resourceGroup;
+    _resourceGroupCache[resourceGroupId] = resourceGroup;
 
     // Return the ResourceGroup
     resolve(resourceGroup);
