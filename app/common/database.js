@@ -71,7 +71,7 @@ export function init (types, config = {}, forceReset = false) {
             message: 'Your combined responses have exceeded 256MB and have been flushed. ' +
             'NOTE: A better solution to this will be implemented in a future release.'
           });
-          trackEvent('Alert',  'DB Too Large');
+          trackEvent('Alert', 'DB Too Large');
         }, 1000);
       }
     } catch (err) {

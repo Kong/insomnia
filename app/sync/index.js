@@ -223,6 +223,7 @@ export async function push (resourceGroupId = null) {
       }
     }
   }
+
   db.flushChanges();
 }
 
