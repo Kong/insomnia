@@ -46,8 +46,6 @@ class Toast extends Component {
         {name: 'workspaces', value: (await db.count(models.workspace.type)) + ''},
       ];
 
-      console.log(queryParameters);
-
       const qs = querystring.buildFromParams(queryParameters);
       notification = await fetch.get(`/notification?${qs}`);
     } catch (e) {

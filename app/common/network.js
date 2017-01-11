@@ -110,7 +110,6 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   const qs = querystring.buildFromParams(renderedRequest.parameters);
   const url = querystring.joinUrl(renderedRequest.url, qs);
   config.url = util.prepareUrlForSending(url);
-  config.headers.host = urlParse(config.url).host;
 
   return Object.assign(config, patch);
 }
