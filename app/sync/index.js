@@ -9,7 +9,6 @@ import {trackEvent} from '../analytics/index';
 
 export const START_DELAY = 1E3;
 export const PULL_PERIOD = 15E3;
-export const PUSH_PERIOD = 15E3;
 export const WRITE_PERIOD = 1E3;
 
 const WHITE_LIST = {
@@ -26,7 +25,6 @@ export const logger = new Logger();
 const NO_VERSION = '__NO_VERSION__';
 const resourceGroupSymmetricKeysCache = {};
 let _pullChangesInterval = null;
-let _pushChangesInterval = null;
 let _writeChangesInterval = null;
 let _pendingDBChanges = {};
 let _isInitialized = false;
@@ -59,11 +57,15 @@ export async function init () {
   });
 
   await misc.delay(START_DELAY);
+
   await push();
   await pull();
 
-  _pullChangesInterval = setInterval(pull, PULL_PERIOD);
-  _pushChangesInterval = setInterval(push, PUSH_PERIOD);
+  _pullChangesInterval = setInterval(async () => {
+    await push();
+    await pull();
+  }, PULL_PERIOD);
+
   _writeChangesInterval = setInterval(writePendingChanges, WRITE_PERIOD);
 
   logger.debug('Initialized');
@@ -73,7 +75,6 @@ export async function init () {
 export function _testReset () {
   _isInitialized = false;
   clearInterval(_pullChangesInterval);
-  clearInterval(_pushChangesInterval);
   clearInterval(_writeChangesInterval);
 }
 
