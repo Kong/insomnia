@@ -60,33 +60,35 @@ export function render (template, context = {}) {
 }
 
 export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
-  const renderContext = {};
-
-  if (rootEnvironment) {
-    Object.assign(renderContext, rootEnvironment.data);
-  }
-
-  if (subEnvironment) {
-    Object.assign(renderContext, subEnvironment.data);
-  }
-
   if (!Array.isArray(ancestors)) {
     ancestors = [];
   }
 
+  const environments = [];
+
+  if (rootEnvironment) {
+    environments.push(rootEnvironment.data);
+  }
+
+  if (subEnvironment) {
+    environments.push(subEnvironment.data);
+  }
+
   // Merge all environments. Note that we're reversing ancestors because we want to merge
   // from top-down (closest ancestor should win)
-  for (let doc of ancestors.reverse()) {
+  for (const doc of ancestors.reverse()) {
     if (!doc.environment) {
       continue;
     }
-
-    Object.assign(renderContext, doc.environment);
+    environments.push(doc.environment);
   }
 
-  // Now we're going to render the renderContext with itself.
-  // This is to support templating inside environments
-  return recursiveRender(renderContext, renderContext);
+  const renderContext = {};
+  for (const environment of environments) {
+    Object.assign(renderContext, recursiveRender(environment, renderContext));
+  }
+
+  return renderContext;
 }
 
 export function recursiveRender (obj, context) {
