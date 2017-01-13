@@ -21,6 +21,10 @@ class WorkspaceShareSettingsModal extends Component {
   _setModalRef = m => this.modal = m;
 
   _handleUnshare = async () => {
+    if (!session.isLoggedIn()) {
+      return;
+    }
+
     const {resourceGroup} = this.state;
 
     this._resetState({loading: true});
@@ -56,7 +60,8 @@ class WorkspaceShareSettingsModal extends Component {
 
   async _load () {
     if (!session.isLoggedIn()) {
-      showModal(LoginModal);
+      this._resetState({});
+      return;
     }
 
     const {workspace} = this.props;
@@ -107,14 +112,14 @@ class WorkspaceShareSettingsModal extends Component {
           <ModalBody key="body" className="pad text-center" noScroll={true}>
             <p>
               Share <strong>{workspace.name}</strong> to automatically sync
-              all data with your team members.
+              your API workspace with your team members.
             </p>
             <div className="form-control pad">
               {error ? <div className="danger">Oops: {error}</div> : null}
               <Dropdown outline={true}>
                 <DropdownDivider>Teams</DropdownDivider>
-                {!loading && resourceGroup ? (
-                    resourceGroup.teamId ? (
+                {!loading ? (
+                    resourceGroup && resourceGroup.teamId ? (
                         <DropdownButton className="btn btn--clicky">
                           <i className="fa fa-users"/> Shared with
                           {" "}
@@ -139,6 +144,11 @@ class WorkspaceShareSettingsModal extends Component {
                     <i className="fa fa-users"/> Share with <strong>{team.name}</strong>
                   </DropdownItem>
                 ))}
+                {teams.length === 0 ? (
+                    <DropdownItem disabled={true} onClick={this._handleShareWithTeam}>
+                      <i className="fa fa-warning"/> You have no teams
+                    </DropdownItem>
+                  ) : null}
                 <DropdownDivider>Other</DropdownDivider>
                 <DropdownItem buttonClass={PromptButton}
                               addIcon={true}
@@ -151,7 +161,7 @@ class WorkspaceShareSettingsModal extends Component {
               <Link button={true}
                     className="btn btn--super-compact inline-block"
                     href="https://insomnia.rest/app/teams/">
-                Manage Team
+                Manage Teams
               </Link>
             </div>
           </ModalBody>
