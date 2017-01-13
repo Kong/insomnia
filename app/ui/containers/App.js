@@ -355,6 +355,7 @@ class App extends Component {
         }
 
         // Force refresh if environment changes
+        // TODO: Only do this for environments in this workspace (not easy because they're nested)
         if (doc.type === models.environment.type) {
           console.log('[App] Forcing update from environment change', change);
           this._wrapper.forceRequestPaneRefresh();

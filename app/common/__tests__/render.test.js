@@ -62,39 +62,56 @@ describe('buildRenderContext()', () => {
     });
   });
 
+  it('rendered recursive should not infinite loop', () => {
+    const ancestors = [{
+      // Sub Environment
+      type: models.requestGroup.type,
+      environment: {recursive: '{{ recursive }}/hello'}
+    }];
+
+    const context = renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({recursive: '/hello'});
+  });
+
   it('cascades properly and renders', () => {
     const ancestors = [
       {
         type: models.requestGroup.type,
-        environment: {bar: '{{ foo }} parent', recursive: '{{ recursive }}', ancestor: true}
+        environment: {
+          base_url: '{{ base_url }}/resource',
+          ancestor: true,
+          winner: 'folder parent'
+        }
       },
       {
         type: models.requestGroup.type,
-        environment: {bar: '{{ foo }} grandparent', ancestor: true}
+        environment: {
+          ancestor: true,
+          winner: 'folder grandparent'
+        }
       }
     ];
 
     const rootEnvironment = {
       type: models.environment.type,
-      data: {foo: 'root', root: true}
+      data: {winner: 'root', root: true}
     };
 
     const subEnvironment = {
       type: models.environment.type,
-      data: {foo: 'sub', sub: true}
+      data: {winner: 'sub', sub: true, base_url: 'https://insomnia.rest'}
     };
 
-    const context = renderUtils.buildRenderContext(
-      ancestors,
+    const context = renderUtils.buildRenderContext(ancestors,
       rootEnvironment,
       subEnvironment
     );
 
     expect(context).toEqual({
-      foo: 'sub',
-      bar: 'sub parent',
-      recursive: '{{ recursive }}',
+      base_url: 'https://insomnia.rest/resource',
       ancestor: true,
+      winner: 'folder parent',
       root: true,
       sub: true
     });
