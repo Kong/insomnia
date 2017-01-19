@@ -71,8 +71,6 @@ class Toast extends Component {
 
     // Fade the notification in
     setTimeout(() => this.setState({visible: true}), 1000);
-
-    trackEvent('Notification', 'Shown', notification.key, {nonInteraction: true});
   };
 
   _loadSeen () {
@@ -128,7 +126,9 @@ class Toast extends Component {
           </Link>
         </div>
         <div className="toast__action toast__action--close">
-          <button className="btn btn--super-duper-compact" onClick={this._handleCancelClick}>
+          <button className="btn btn--super-duper-compact"
+                  title="Dismiss notification"
+                  onClick={this._handleCancelClick}>
             <i className="fa fa-close"></i>
           </button>
         </div>

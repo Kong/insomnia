@@ -96,7 +96,7 @@ class WorkspaceDropdown extends Component {
         </DropdownItem>
 
         <DropdownItem onClick={this._handleShowShareSettings}>
-          <i className="fa fa-user"/> Share <strong>{activeWorkspace.name}</strong>
+          <i className="fa fa-globe"/> Share <strong>{activeWorkspace.name}</strong>
         </DropdownItem>
 
         <DropdownDivider>Switch Workspace</DropdownDivider>

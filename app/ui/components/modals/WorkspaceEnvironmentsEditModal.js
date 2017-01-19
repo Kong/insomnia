@@ -211,7 +211,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">
             * environment data can be used for&nbsp;
-            <Link href="https://mozilla.github.io/nunjucks/templating.html">
+            <Link href="https://insomnia.rest/documentation/templating/">
               Nunjucks Templating
             </Link> in your requests
           </div>
