@@ -28,7 +28,6 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    //justify-content: flex-end;
     border-top: 1px solid @hl-md;
     height: @line-height-xs;
 
@@ -100,7 +99,7 @@
     text-align: center;
 
     &::after {
-      color: darken(@danger, 10);
+      color: @danger;
       text-align: center;
       width: 100%;
       font-size: 0.7em; // because the circle is so large
@@ -169,8 +168,9 @@
   }
 
   .cm-s-default span.cm-comment,
+  .cm-s-default span.cm-meta,
   .cm-s-default span.cm-qualifier {
-    color: @hl;
+    color: @font-super-dark-bg;
   }
 
   .cm-s-default span.cm-atom {
@@ -186,7 +186,7 @@
   }
 
   .cm-s-default span.cm-builtin {
-    color: #66d9ef;
+    color: @info;
   }
 
   .cm-s-default span.cm-string {
@@ -231,7 +231,7 @@
 
   .cm-s-default span.cm-error {
     background: @danger;
-    color: @font-dark-bg;
+    color: #eee;
   }
 
   .cm-s-default .CodeMirror-activeline-background {

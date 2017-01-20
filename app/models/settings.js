@@ -16,6 +16,7 @@ export function init () {
     timeout: 0,
     validateSSL: true,
     forceVerticalLayout: false,
+    theme: 'default',
   };
 }
 

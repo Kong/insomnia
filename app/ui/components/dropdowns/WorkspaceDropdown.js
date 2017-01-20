@@ -26,10 +26,6 @@ class WorkspaceDropdown extends Component {
     }
   };
 
-  _handleSetTheme = theme => {
-    document.body.setAttribute('theme', theme);
-  };
-
   _handleShowLogin = () => {
     showModal(LoginModal);
   };
@@ -101,18 +97,6 @@ class WorkspaceDropdown extends Component {
 
         <DropdownItem onClick={this._handleShowShareSettings}>
           <i className="fa fa-globe"/> Share <strong>{activeWorkspace.name}</strong>
-        </DropdownItem>
-
-        <DropdownItem onClick={this._handleSetTheme} value="default">
-          <i className="fa fa-paint-brush"/> Default
-        </DropdownItem>
-
-        <DropdownItem onClick={this._handleSetTheme} value="light">
-          <i className="fa fa-paint-brush"/> Light
-        </DropdownItem>
-
-        <DropdownItem onClick={this._handleSetTheme} value="dark">
-          <i className="fa fa-paint-brush"/> Dark
         </DropdownItem>
 
         <DropdownDivider>Switch Workspace</DropdownDivider>
