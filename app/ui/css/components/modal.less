@@ -24,7 +24,7 @@
   }
 
   .modal__backdrop {
-    background: @bg-backdrop;
+    background-color: rgba(30, 30, 30, 0.7);
     position: fixed;
     top: 0;
     left: 0;
@@ -46,6 +46,8 @@
     max-width: 100%;
     max-height: 100%;
     margin: auto;
+    background-color: @bg-super-light;
+    border: 1px solid @hl-sm;
   }
 
   &.modal--wide .modal__content {
@@ -77,7 +79,6 @@
 
   .modal__body {
     overflow: auto;
-    background-color: @bg-super-light;
     min-height: 2rem;
     box-sizing: border-box;
     max-width: 100%;

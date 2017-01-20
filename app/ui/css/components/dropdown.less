@@ -8,8 +8,8 @@
   box-sizing: border-box;
   text-align: left;
 
-  &.dropdown--outlined ul {
-    border: 1px solid @hl-md;
+  ul {
+    border: 1px solid @hl-sm;
   }
 
   &:focus {
@@ -34,8 +34,9 @@
     left: 0;
     z-index: 1000;
     min-width: @dropdown-min-width;
-    box-shadow: 0 0 1rem 0 @hl-md;
+    box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+    background: @bg-super-light;
 
     // Separate it from the button a bit
     margin-top: @padding-xxs;
@@ -61,7 +62,7 @@
 
         &:hover:not(:disabled),
         &:focus:not(:disabled) {
-          background: @hl-sm;
+          background: @hl-xs;
         }
 
         &:active:not(:disabled) {
@@ -115,10 +116,9 @@
       position: relative;
       left: -@padding-sm / 2;
       top: -0.7rem;
-      // HACK: Fine adjustment
       color: @hl;
       padding-right: 1em;
-      background: #fff;
+      background: @bg-super-light;
       font-size: @font-size-xs;
       text-transform: uppercase;
     }

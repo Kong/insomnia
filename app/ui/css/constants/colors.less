@@ -1,43 +1,89 @@
-@color-brand: #7568be;
+body,
+body[theme="default"] {
+  --color-brand: #6858bf;
+  --bg-brand: var(--color-brand);
+  --bg-light: #eff0ed;
+  --bg-super-light: #fff;
+  --bg-dark: #2c2d29;
+  --bg-super-dark: #252622;
+
+  --font-light-bg: #444;
+  --font-super-light-bg: #666;
+  --font-dark-bg: #e0e0e0;
+  --font-brand: #eee;
+  --font-super-dark-bg: #ddd;
+  --font-link: var(--color-brand);
+}
+
+body[theme="dark"] {
+  --bg-brand: #2a2b27;
+  --bg-light: #2a2b27;
+  --bg-super-light: #2a2b27;
+  --bg-super-dark: #252622;
+  --bg-dark: #252622;
+
+  --font-light-bg: #ccc;
+  --font-super-light-bg: #ccc;
+  --font-dark-bg: #ccc;
+  --font-super-dark-bg: #ddd;
+  --font-brand: #bbb;
+}
+
+body[theme="light"] {
+  --bg-brand: #f9f9f9;
+  --bg-light: #fff;
+  --bg-super-light: #f9f9f9;
+  --bg-dark: #fff;
+  --bg-super-dark: #fff;
+
+  --font-light-bg: #555;
+  --font-super-light-bg: #666;
+  --font-dark-bg: #555;
+  --font-super-dark-bg: #666;
+  --font-brand: #777;
+}
+
+@color-brand: var(--color-brand);
 
 /* Background Colors */
 
-@bg-light: #eff0ed;
-@bg-super-light: #fff;
-@bg-dark: #2d2e2a;
-@bg-super-dark: #282925;
-@bg-brand: @color-brand;
-@bg-backdrop: rgba(30, 30, 30, 0.6);
+@bg-light: var(--bg-light);
+@bg-super-light: var(--bg-super-light);
+@bg-dark: var(--bg-dark);
+@bg-super-dark: var(--bg-super-dark);
+@bg-brand: var(--bg-brand);
+
+@opacity-subtle: 0.7;
 
 /* Font Colors */
-@font-light-bg: #444;
-@font-super-light-bg: #666;
-@font-dark-bg: #eee;
-@font-super-dark-bg: #ddd;
-@font-brand-bg: #eee;
-@font-light-bg-link: darken(@bg-brand, 3);
+@font-light-bg: var(--font-light-bg);
+@font-super-light-bg: var(--font-super-light-bg);
+@font-dark-bg: var(--font-dark-bg);
+@font-brand: var(--font-brand);
+@font-super-dark-bg: var(--font-super-dark-bg);
+@font-link: var(--font-link);
 
-@hl-xxxs: rgba(150, 150, 150, 0.04);
-@hl-xxs: rgba(150, 150, 150, 0.07);
-@hl-xs: rgba(150, 150, 150, 0.1);
-@hl-sm: rgba(150, 150, 150, 0.15);
-@hl-md: rgba(150, 150, 150, 0.25);
-@hl-lg: rgba(150, 150, 150, 0.35);
-@hl-xl: rgba(150, 150, 150, 0.5);
-@hl-xxl: rgba(150, 150, 150, 0.8);
-@hl: rgba(150, 150, 150, 1);
+@hl-xxxs: rgba(130, 130, 130, 0.04);
+@hl-xxs: rgba(130, 130, 130, 0.07);
+@hl-xs: rgba(130, 130, 130, 0.1);
+@hl-sm: rgba(130, 130, 130, 0.15);
+@hl-md: rgba(130, 130, 130, 0.25);
+@hl-lg: rgba(130, 130, 130, 0.35);
+@hl-xl: rgba(130, 130, 130, 0.5);
+@hl-xxl: rgba(130, 130, 130, 0.8);
+@hl: rgba(130, 130, 130, 1);
 
-@success: #84bd2c;
-@notice: #e2cb4b;
-@warning: #ffa500;
-@danger: #ff5a63;
+@success: #7ab12f;
+@notice: #c6b951;
+@warning: #f19342;
+@danger: #ff5d65;
 @surprise: #9b81ff;
 @info: #22c1ee;
 
 [class^="http-method-"],
 [class*=" http-method-"] {
   // Default method color
-  color: @hl;
+  color: @font-dark-bg;
 }
 
 .success,
@@ -79,46 +125,46 @@
 .bg-http-method-POST {
   background: @success !important;
   text-shadow: 0 0 0.05em darken(@success, 20);
-  color: #fff;
+  color: #fff !important;
 }
 
 .bg-notice,
 .bg-http-method-PATCH {
   background: @notice !important;
-  color: #fff;
   text-shadow: 0 0 0.05em darken(@notice, 20);
+  color: #fff !important;
 }
 
 .bg-warning,
 .bg-http-method-PUT {
   background: @warning !important;
-  color: #fff;
   text-shadow: 0 0 0.05em darken(@warning, 20);
+  color: #fff !important;
 }
 
 .bg-danger,
 .bg-http-method-DELETE {
   background: @danger !important;
-  color: #fff;
   text-shadow: 0 0 0.05em darken(@danger, 20);
+  color: #fff !important;
 }
 
 .bg-info,
 .bg-http-method-OPTIONS,
 .bg-http-method-HEAD {
   background: @info !important;
-  color: #fff;
   text-shadow: 0 0 0.05em darken(@info, 20);
+  color: #fff !important;
 }
 
 .bg-surprise,
 .bg-http-method-GET {
   background: @surprise !important;
-  color: #fff;
   text-shadow: 0 0 0.05em darken(@surprise, 20);
+  color: #fff !important;
 }
 
 .bg-brand {
   background-color: @color-brand;
-  color: #fff;
+  color: @font-brand;
 }
