@@ -71,7 +71,62 @@ describe('buildRenderContext()', () => {
 
     const context = renderUtils.buildRenderContext(ancestors);
 
-    expect(context).toEqual({recursive: '/hello'});
+    expect(context).toEqual({recursive: '{{ recursive }}/hello/hello'});
+  });
+
+  it('rendered sibling environment variables', () => {
+    const ancestors = [{
+      // Sub Environment
+      type: models.requestGroup.type,
+      environment: {
+        sibling: 'sibling',
+        test: '{{ sibling }}/hello'
+      }
+    }];
+
+    const context = renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({sibling: 'sibling', test: 'sibling/hello'});
+  });
+
+  it('rendered parent environment variables', () => {
+    const ancestors = [{
+      name: 'Parent',
+      type: models.requestGroup.type,
+      environment: {
+        test: '{{ grandparent }} parent'
+      }
+    }, {
+      name: 'Grandparent',
+      type: models.requestGroup.type,
+      environment: {
+        grandparent: 'grandparent'
+      }
+    }];
+
+    const context = renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({grandparent: 'grandparent', test: 'grandparent parent'});
+  });
+
+  it('does not render child environment variables', () => {
+    const ancestors = [{
+      name: 'Parent',
+      type: models.requestGroup.type,
+      environment: {
+        parent: 'parent',
+      }
+    }, {
+      name: 'Grandparent',
+      type: models.requestGroup.type,
+      environment: {
+        test: '{{ parent }} grandparent'
+      }
+    }];
+
+    const context = renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({parent: 'parent', test: ' grandparent'});
   });
 
   it('cascades properly and renders', () => {

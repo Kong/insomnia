@@ -113,7 +113,7 @@ class WorkspaceDropdown extends Component {
         <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
 
         <DropdownItem onClick={this._handleShowSettings}>
-          <i className="fa fa-cog"/> App Settings
+          <i className="fa fa-cog"/> App Preferences
           <DropdownHint char=","/>
         </DropdownItem>
         <DropdownItem onClick={this._handleShowExport}>
