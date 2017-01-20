@@ -9,15 +9,13 @@ import SettingsAbout from '../settings/SettingsAbout';
 import SettingsGeneral from '../settings/SettingsGeneral';
 import SettingsImportExport from '../settings/SettingsImportExport';
 import SettingsSync from '../settings/SettingsSync';
-import * as models from '../../../models';
+import * as models from '../../../models/index';
 import {getAppVersion, getAppName} from '../../../common/constants';
 import * as session from '../../../sync/session';
-import {showModal} from './index';
-import * as sync from '../../../sync';
+import * as sync from '../../../sync/index';
 import {trackEvent} from '../../../analytics/index';
 
 export const TAB_INDEX_EXPORT = 1;
-export const TAB_PLUS = 3;
 
 class SettingsModal extends Component {
   constructor (props) {
@@ -46,14 +44,6 @@ class SettingsModal extends Component {
 
   _handleTabSelect (currentTabIndex) {
     this.setState({currentTabIndex});
-  }
-
-  async _handleSyncReset () {
-    this.modal.hide();
-    trackEvent('Sync', 'Reset');
-    await sync.resetRemoteData();
-    await sync.resetLocalData();
-    await sync.logout();
   }
 
   render () {
