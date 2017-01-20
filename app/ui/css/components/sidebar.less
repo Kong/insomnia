@@ -34,14 +34,13 @@
   // ~~~~~~~~~~~~~~ //
 
   .sidebar__header {
+    border-top: 1px solid @hl-md;
+    border-bottom: 1px solid @hl-md;
+    box-sizing: border-box;
     background-color: @bg-brand;
-    color: @font-brand-bg;
+    color: @font-brand;
     width: 100%;
     height: 100%;
-
-    &:hover {
-      background-color: lighten(@bg-brand, 1);
-    }
 
     h1 {
       margin: 0;
@@ -66,11 +65,11 @@
       border-radius: @radius-md;
       margin-left: @padding-xxs;
       margin-bottom: @padding-xxs;
-      color: @hl;
+      opacity: @opacity-subtle;
 
       &:hover,
       &:focus {
-        color: @font-dark-bg;
+        opacity: 1;
       }
     }
 
@@ -133,10 +132,12 @@
       height: @line-height-xxs;
       padding-left: @padding-xxs;
       padding-right: @padding-xxs;
+      color: @font-dark-bg;
+      opacity: @opacity-subtle;
 
       &:hover,
       &:focus {
-        color: @font-dark-bg;
+        opacity: 1;
       }
     }
   }
@@ -175,7 +176,7 @@
     border-top: 1px solid @hl-sm;
     padding-top: @padding-xs;
     padding-bottom: @padding-md;
-    box-shadow: inset 0 2rem 3rem -2rem rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.03);
 
     overflow-y: auto;
 
@@ -202,7 +203,7 @@
     &.sidebar__row--dragging {
       // Set opacity on children so we can still see the separator
       & > * {
-        opacity: 0.2;
+        opacity: 0.3;
       }
     }
 
@@ -212,7 +213,7 @@
       height: 0;
       right: 0;
       left: 0;
-      border-bottom: 2px dotted lighten(@surprise, 5);
+      border-bottom: 2px dotted @surprise;
       content: " ";
       display: block
     }
@@ -226,7 +227,6 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: @line-height-xs;
-    color: @hl-xxl;
 
     & > * {
       height: 100%;
@@ -236,12 +236,12 @@
       grid-template-rows: @line-height-sm;
     }
 
-    &.sidebar__item--active > button {
-      color: @font-dark-bg;
+    & > button {
+      opacity: @opacity-subtle;
+    }
 
-      .tag {
-        opacity: 1;
-      }
+    &.sidebar__item--active > button {
+      opacity: 1;
 
       .editable {
         line-height: @line-height-xs;
@@ -254,17 +254,19 @@
       background-color: @hl-xxs;
     }
 
-    &:hover > .sidebar__actions,
+    &:hover > .sidebar__actions {
+      background-color: @hl-xxs;
+    }
+
+    &.sidebar__item--active:hover > .sidebar__actions,
     &:hover > button {
-      background-color: @hl-xxxs;
+      background-color: @hl-xs;
     }
 
     .tag {
-      opacity: 0.6;
       padding-left: 0;
       text-align: left;
       width: 3em;
-      text-shadow: 0 0 0.1em rgba(0, 0, 0, 0.9);
     }
   }
 

@@ -28,7 +28,6 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    //justify-content: flex-end;
     border-top: 1px solid @hl-md;
     height: @line-height-xs;
 
@@ -100,7 +99,7 @@
     text-align: center;
 
     &::after {
-      color: darken(@danger, 10);
+      color: @danger;
       text-align: center;
       width: 100%;
       font-size: 0.7em; // because the circle is so large
@@ -140,107 +139,99 @@
 /* Based on Sublime Text's Monokai theme */
 .editor:not(.editor--light-theme) {
   .cm-s-default.CodeMirror {
-    color: #f8f8f2;
+    color: @font-super-dark-bg;
   }
 
   .cm-s-default div.CodeMirror-selected {
-    //background: #49483E;
-    background: @hl-xl;
-  }
-
-  .cm-s-default .CodeMirror-line::selection, .cm-s-default .CodeMirror-line > span::selection, .cm-s-default .CodeMirror-line > span > span::selection {
-    //background: rgba(73, 72, 62, .99);
-  }
-
-  .cm-s-default .CodeMirror-line::-moz-selection, .cm-s-default .CodeMirror-line > span::-moz-selection, .cm-s-default .CodeMirror-line > span > span::-moz-selection {
-    //background: rgba(73, 72, 62, .99);
+    background: @hl-md;
+    border-radius: 2px;
   }
 
   .cm-s-default .CodeMirror-gutters {
-    //background: #272822;
     border-right: 0;
   }
 
   .cm-s-default .CodeMirror-guttermarker {
-    color: white;
+    color: @font-super-dark-bg;
   }
 
   .cm-s-default .CodeMirror-guttermarker-subtle {
-    color: #d0d0d0;
+    color: @hl-lg;
   }
 
   .cm-s-default .CodeMirror-linenumber {
-    color: #d0d0d0;
-  }
-
-  .cm-s-default .CodeMirror-cursor {
-    border-left: 1px solid #f8f8f0;
-  }
-
-  .cm-s-default span.cm-comment,
-  .cm-s-default span.cm-qualifier {
     color: @hl;
   }
 
+  .cm-s-default .CodeMirror-cursor {
+    border-left: 1px solid @font-super-dark-bg;
+  }
+
+  .cm-s-default span.cm-comment,
+  .cm-s-default span.cm-meta,
+  .cm-s-default span.cm-qualifier {
+    color: @font-super-dark-bg;
+  }
+
   .cm-s-default span.cm-atom {
-    color: lighten(@surprise, 5);
+    color: @surprise;
   }
 
   .cm-s-default span.cm-number {
-    color: lighten(@surprise, 5);
+    color: @surprise;
   }
 
   .cm-s-default span.cm-keyword {
-    color: #f92672;
+    color: @danger;
   }
 
   .cm-s-default span.cm-builtin {
-    color: #66d9ef;
+    color: @info;
   }
 
   .cm-s-default span.cm-string {
-    color: lighten(@notice, 5);
+    color: @notice;
   }
 
   .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: lighten(@success, 5);
+    color: @success;
   }
 
   .cm-s-default span.cm-variable {
-    color: #f8f8f2;
+    color: @font-dark-bg;
   }
 
   .cm-s-default span.cm-variable-2 {
-    color: #9effff;
+    color: @info;
   }
 
   .cm-s-default span.cm-variable-3 {
-    color: #66d9ef;
+    color: @info;
   }
 
   .cm-s-default span.cm-def {
-    color: #fd971f;
+    color: @warning;
   }
 
   .cm-s-default span.cm-bracket {
-    color: #f8f8f2;
+    color: @font-dark-bg;
   }
 
   .cm-s-default span.cm-tag {
-    color: darken(@danger, 3);
+    color: @danger;
   }
 
   .cm-s-default span.cm-header {
-    color: lighten(@surprise, 5);
+    color: @surprise;
   }
 
   .cm-s-default span.cm-link {
-    color: lighten(@surprise, 5);
+    color: @surprise;
   }
 
   .cm-s-default span.cm-error {
     background: @danger;
-    color: #f8f8f0;
+    color: #eee;
   }
 
   .cm-s-default .CodeMirror-activeline-background {
@@ -259,16 +250,16 @@
   }
 
   .cm-s-default span.cm-string {
-    color: saturate(darken(@notice, 30), 100);
+    color: @notice;
   }
 
   .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: saturate(darken(@success, 15), 100);
+    color: @success;
   }
 
   .cm-s-default span.cm-atom,
   .cm-s-default span.cm-number {
-    color: saturate(darken(@surprise, 30), 100);
+    color: @surprise;
   }
 
   .cm-s-default .CodeMirror-activeline-background {
@@ -278,5 +269,14 @@
   .cm-s-default .CodeMirror-matchingbracket {
     text-decoration: underline;
     color: inherit !important;
+  }
+
+  .cm-s-default .CodeMirror-cursor {
+    border-left: 1px solid @font-super-light-bg;
+  }
+
+  .cm-s-default div.CodeMirror-selected {
+    background: @hl-md;
+    border-radius: 2px;
   }
 }

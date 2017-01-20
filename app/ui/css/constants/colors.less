@@ -1,43 +1,109 @@
-@color-brand: #7568be;
+body,
+body[theme="default"] {
+  --success: #92d237;
+  --notice: #dfce50;
+  --warning: #ff9402;
+  --danger: #ff5b5a;
+  --surprise: #a590ff;
+  --info: #22c1ee;
+
+  --color-brand: #695eb8;
+  --bg-brand: var(--color-brand);
+  --bg-light: #eff0ed;
+  --bg-super-light: #fff;
+  --bg-dark: #2c2d29;
+  --bg-super-dark: #252622;
+
+  --font-light-bg: #444;
+  --font-super-light-bg: #666;
+  --font-dark-bg: #e0e0e0;
+  --font-brand: #fff;
+  --font-super-dark-bg: #ddd;
+}
+
+body[theme="dark"] {
+  --success: #8bc936;
+  --notice: #dfce50;
+  --warning: #ff9402;
+  --danger: #ff5b5a;
+  --surprise: #a590ff;
+  --info: #22c1ee;
+
+  --bg-brand: #2a2b27;
+  --bg-light: #2a2b27;
+  --bg-super-light: #2a2b27;
+  --bg-super-dark: #252622;
+  --bg-dark: #252622;
+
+  --font-light-bg: #ccc;
+  --font-super-light-bg: #ccc;
+  --font-dark-bg: #ccc;
+  --font-super-dark-bg: #ddd;
+  --font-brand: #bbb;
+}
+
+body[theme="light"] {
+  --success: #59a210;
+  --notice: #ae9602;
+  --warning: #d07502;
+  --danger: #d04444;
+  --surprise: #7d69cb;
+  --info: #1c90b4;
+
+  --bg-brand: #f9f9f9;
+  --bg-light: #fff;
+  --bg-super-light: #f9f9f9;
+  --bg-dark: #fff;
+  --bg-super-dark: #fff;
+
+  --font-light-bg: #333;
+  --font-super-light-bg: #333;
+  --font-dark-bg: #333;
+  --font-super-dark-bg: #333;
+  --font-brand: #555;
+}
+
+@color-brand: var(--color-brand);
 
 /* Background Colors */
 
-@bg-light: #eff0ed;
-@bg-super-light: #fff;
-@bg-dark: #2d2e2a;
-@bg-super-dark: #282925;
-@bg-brand: @color-brand;
-@bg-backdrop: rgba(30, 30, 30, 0.6);
+@bg-light: var(--bg-light);
+@bg-super-light: var(--bg-super-light);
+@bg-dark: var(--bg-dark);
+@bg-super-dark: var(--bg-super-dark);
+@bg-brand: var(--bg-brand);
+
+@opacity-subtle: 0.7;
 
 /* Font Colors */
-@font-light-bg: #444;
-@font-super-light-bg: #666;
-@font-dark-bg: #eee;
-@font-super-dark-bg: #ddd;
-@font-brand-bg: #eee;
-@font-light-bg-link: darken(@bg-brand, 3);
+@font-light-bg: var(--font-light-bg);
+@font-super-light-bg: var(--font-super-light-bg);
+@font-dark-bg: var(--font-dark-bg);
+@font-brand: var(--font-brand);
+@font-super-dark-bg: var(--font-super-dark-bg);
+@font-link: var(--surprise);
 
-@hl-xxxs: rgba(150, 150, 150, 0.04);
-@hl-xxs: rgba(150, 150, 150, 0.07);
-@hl-xs: rgba(150, 150, 150, 0.1);
-@hl-sm: rgba(150, 150, 150, 0.15);
-@hl-md: rgba(150, 150, 150, 0.25);
-@hl-lg: rgba(150, 150, 150, 0.35);
-@hl-xl: rgba(150, 150, 150, 0.5);
-@hl-xxl: rgba(150, 150, 150, 0.8);
-@hl: rgba(150, 150, 150, 1);
+@hl-xxxs: rgba(130, 130, 130, 0.04);
+@hl-xxs: rgba(130, 130, 130, 0.07);
+@hl-xs: rgba(130, 130, 130, 0.1);
+@hl-sm: rgba(130, 130, 130, 0.15);
+@hl-md: rgba(130, 130, 130, 0.25);
+@hl-lg: rgba(130, 130, 130, 0.35);
+@hl-xl: rgba(130, 130, 130, 0.5);
+@hl-xxl: rgba(130, 130, 130, 0.8);
+@hl: rgba(130, 130, 130, 1);
 
-@success: #84bd2c;
-@notice: #e2cb4b;
-@warning: #ffa500;
-@danger: #ff5a63;
-@surprise: #9b81ff;
-@info: #22c1ee;
+@success: var(--success);
+@notice: var(--notice);
+@warning: var(--warning);
+@danger: var(--danger);
+@surprise: var(--surprise);
+@info: var(--info);
 
 [class^="http-method-"],
 [class*=" http-method-"] {
   // Default method color
-  color: @hl;
+  color: @font-dark-bg;
 }
 
 .success,
@@ -78,47 +144,47 @@
 .bg-success,
 .bg-http-method-POST {
   background: @success !important;
-  text-shadow: 0 0 0.05em darken(@success, 20);
-  color: #fff;
+  text-shadow: 0 0 0.05em @success;
+  color: #fff !important;
 }
 
 .bg-notice,
 .bg-http-method-PATCH {
   background: @notice !important;
-  color: #fff;
-  text-shadow: 0 0 0.05em darken(@notice, 20);
+  text-shadow: 0 0 0.05em @notice;
+  color: #fff !important;
 }
 
 .bg-warning,
 .bg-http-method-PUT {
   background: @warning !important;
-  color: #fff;
-  text-shadow: 0 0 0.05em darken(@warning, 20);
+  text-shadow: 0 0 0.05em @warning;
+  color: #fff !important;
 }
 
 .bg-danger,
 .bg-http-method-DELETE {
   background: @danger !important;
-  color: #fff;
-  text-shadow: 0 0 0.05em darken(@danger, 20);
+  text-shadow: 0 0 0.05em @danger;
+  color: #fff !important;
 }
 
 .bg-info,
 .bg-http-method-OPTIONS,
 .bg-http-method-HEAD {
   background: @info !important;
-  color: #fff;
-  text-shadow: 0 0 0.05em darken(@info, 20);
+  text-shadow: 0 0 0.05em @info;
+  color: #fff !important;
 }
 
 .bg-surprise,
 .bg-http-method-GET {
   background: @surprise !important;
-  color: #fff;
-  text-shadow: 0 0 0.05em darken(@surprise, 20);
+  text-shadow: 0 0 0.05em @surprise;
+  color: #fff !important;
 }
 
 .bg-brand {
   background-color: @color-brand;
-  color: #fff;
+  color: @font-brand;
 }

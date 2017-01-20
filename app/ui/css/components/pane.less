@@ -14,20 +14,14 @@
     align-items: center;
     background: @bg-super-light;
     color: @font-super-light-bg;
-    border-left: 1px solid @hl-md;
     box-sizing: border-box;
 
-    &.pane__header--no-border {
-      //border-left-color: transparent;
-    }
-
-    &.pane__header--grey {
-      background: @bg-light;
-      border-left: 1px solid @hl-xs;
-    }
+    border-left: 1px solid @hl-md;
+    border-bottom: 1px solid @hl-md;
+    border-top: 1px solid @hl-md;
 
     .pane__header__right {
-      box-shadow: -@padding-md 0 @padding-md -@padding-sm fade(@bg-super-light, 85%);
+      box-shadow: -@padding-md 0 @padding-md -@padding-sm @bg-super-light;
       background: @bg-super-light;
     }
   }

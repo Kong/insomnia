@@ -34,6 +34,10 @@ export default {
         loader: "file?name=[name].[ext]"
       },
       {
+        test: /\.png$/,
+        loader: "file"
+      },
+      {
         test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
         loader: "file"
       },

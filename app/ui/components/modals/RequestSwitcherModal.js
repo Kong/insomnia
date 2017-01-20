@@ -6,7 +6,6 @@ import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
-import * as db from '../../../common/database';
 
 
 class RequestSwitcherModal extends Component {
@@ -188,7 +187,7 @@ class RequestSwitcherModal extends Component {
     return (
       <Modal ref={m => this.modal = m} top={true} dontFocus={true}>
         <ModalHeader hideCloseButton={true}>
-          <div className="pull-right txt-md">
+          <div className="pull-right txt-md pad-right">
             <span className="monospace">tab</span> or
             &nbsp;
             <span className="monospace">↑ ↓</span> &nbsp;to navigate
