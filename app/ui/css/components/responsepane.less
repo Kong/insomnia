@@ -9,7 +9,7 @@
     right: 0;
     left: 0;
     bottom: 0;
-    background: rgba(30, 30, 30, 0.8);
+    background-color: @bg-super-dark-overlay;
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -17,6 +17,7 @@
     justify-content: center;
     overflow: hidden;
     text-align: center;
+    color: @font-super-dark-bg;
 
     &.response-pane__overlay--under {
       background: none;
@@ -27,17 +28,16 @@
       max-width: 30rem;
     }
 
-    .btn--outlined {
-      background: @bg-super-dark;
+    .btn {
+      background: @bg-super-dark-overlay;
 
       &:hover {
-        background: @bg-dark;
+        background: @bg-super-dark;
       }
     }
 
     i.fa {
-      color: @font-dark-bg;
-      font-size: 6rem;
+      font-size: 4rem;
     }
   }
 }
