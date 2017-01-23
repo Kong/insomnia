@@ -71,11 +71,7 @@
   }
 
   .CodeMirror-gutter {
-    background-color: @bg-super-dark;
-  }
-
-  &.editor--light-theme .CodeMirror-gutter {
-    background-color: @bg-super-light;
+    background-color: var(--color-bg);
   }
 
   .CodeMirror-scroll {
@@ -88,7 +84,7 @@
   }
 
   .CodeMirror-placeholder {
-    color: @hl-xxl;
+    color: @hl-xl;
   }
 
   .CodeMirror-lint-marker-error {
@@ -99,7 +95,7 @@
     text-align: center;
 
     &::after {
-      color: @danger;
+      color: var(--color-danger);
       text-align: center;
       width: 100%;
       font-size: 0.7em; // because the circle is so large
@@ -115,13 +111,19 @@
 
 // Search dialog (and others)
 .CodeMirror-dialog {
-  background: @bg-super-dark;
+  background: var(--color-bg);
+  color: var(--color-font);
+  border-color: @hl-md;
+  box-sizing: border-box;
+  width: 100%;
+  padding: @padding-sm 0 @padding-sm @padding-sm;
 }
 
 // Tooltip for errors
 .CodeMirror-lint-tooltip {
-  background-color: @bg-light;
-  color: @font-light-bg;
+  background-color: var(--color-bg);
+  color: var(--color-font);
+  border-color: @hl-md;
   border-radius: 0;
   font-size: @font-size-md;
   padding: @padding-xs @padding-sm;
@@ -131,15 +133,16 @@
     background-image: none;
     padding-left: 0;
   }
+
   &::after {
     display: none;
   }
 }
 
 /* Based on Sublime Text's Monokai theme */
-.editor:not(.editor--light-theme) {
+.editor {
   .cm-s-default.CodeMirror {
-    color: @font-super-dark-bg;
+    color: var(--color-font);
   }
 
   .cm-s-default div.CodeMirror-selected {
@@ -152,7 +155,7 @@
   }
 
   .cm-s-default .CodeMirror-guttermarker {
-    color: @font-super-dark-bg;
+    color: var(--color-font);
   }
 
   .cm-s-default .CodeMirror-guttermarker-subtle {
@@ -164,74 +167,74 @@
   }
 
   .cm-s-default .CodeMirror-cursor {
-    border-left: 1px solid @font-super-dark-bg;
+    border-left: 1px solid var(--color-font);
   }
 
   .cm-s-default span.cm-comment,
   .cm-s-default span.cm-meta,
   .cm-s-default span.cm-qualifier {
-    color: @font-super-dark-bg;
+    color: var(--color-font);
   }
 
   .cm-s-default span.cm-atom {
-    color: @surprise;
+    color: var(--color-surprise);
   }
 
   .cm-s-default span.cm-number {
-    color: @surprise;
+    color: var(--color-surprise);
   }
 
   .cm-s-default span.cm-keyword {
-    color: @danger;
+    color: var(--color-danger);
   }
 
   .cm-s-default span.cm-builtin {
-    color: @info;
+    color: var(--color-info);
   }
 
   .cm-s-default span.cm-string {
-    color: @notice;
+    color: var(--color-notice);
   }
 
   .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: @success;
+    color: var(--color-success);
   }
 
   .cm-s-default span.cm-variable {
-    color: @font-dark-bg;
+    color: var(--color-font);
   }
 
   .cm-s-default span.cm-variable-2 {
-    color: @info;
+    color: var(--color-info);
   }
 
   .cm-s-default span.cm-variable-3 {
-    color: @info;
+    color: var(--color-info);
   }
 
   .cm-s-default span.cm-def {
-    color: @warning;
+    color: var(--color-warning);
   }
 
   .cm-s-default span.cm-bracket {
-    color: @font-dark-bg;
+    color: var(--color-font);
   }
 
   .cm-s-default span.cm-tag {
-    color: @danger;
+    color: var(--color-danger);
   }
 
   .cm-s-default span.cm-header {
-    color: @surprise;
+    color: var(--color-surprise);
   }
 
   .cm-s-default span.cm-link {
-    color: @surprise;
+    color: var(--color-surprise);
   }
 
   .cm-s-default span.cm-error {
-    background: @danger;
-    color: #eee;
+    background: var(--color-danger);
+    color: var(--color-font-danger);
   }
 
   .cm-s-default .CodeMirror-activeline-background {
@@ -241,42 +244,5 @@
   .cm-s-default .CodeMirror-matchingbracket {
     text-decoration: underline;
     color: inherit !important;
-  }
-}
-
-.editor--light-theme {
-  .cm-s-default span {
-    color: @font-light-bg;
-  }
-
-  .cm-s-default span.cm-string {
-    color: @notice;
-  }
-
-  .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: @success;
-  }
-
-  .cm-s-default span.cm-atom,
-  .cm-s-default span.cm-number {
-    color: @surprise;
-  }
-
-  .cm-s-default .CodeMirror-activeline-background {
-    background: @hl-md;
-  }
-
-  .cm-s-default .CodeMirror-matchingbracket {
-    text-decoration: underline;
-    color: inherit !important;
-  }
-
-  .cm-s-default .CodeMirror-cursor {
-    border-left: 1px solid @font-super-light-bg;
-  }
-
-  .cm-s-default div.CodeMirror-selected {
-    background: @hl-md;
-    border-radius: 2px;
   }
 }

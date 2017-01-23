@@ -35,7 +35,7 @@ export function getClientString () {
 }
 
 // Global Stuff
-export const DB_PERSIST_INTERVAL = 1000 * 60 * 10;
+export const DB_PERSIST_INTERVAL = 1000 * 30;
 export const DEBOUNCE_MILLIS = 100;
 export const MAX_RESPONSES = 20;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds

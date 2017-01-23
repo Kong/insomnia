@@ -78,7 +78,7 @@ table th {
 webview {
   height: 100%;
   width: 100%;
-  background-color: @bg-super-light;
+  background-color: var(--color-bg);
 }
 
 table {
@@ -94,7 +94,7 @@ table {
   }
 
   &.table--striped tbody tr:nth-child(odd) {
-    background: @hl-xxs;
+    background: @hl-xs;
   }
 }
 
@@ -103,7 +103,7 @@ code {
   background: @hl-xs;
   padding: @padding-xs @padding-sm;
   color: @hl;
-  border: 1px solid @hl-xxxs;
+  border: 1px solid @hl-sm;
   font-size: 0.9em;
 }
 
@@ -113,18 +113,18 @@ code, pre, .monospace {
 
 .notice {
   text-align: center;
-  color: @font-light-bg !important;
+  color: var(--color-font) !important;
   padding: @padding-sm * 1.5;
   border: 1px solid;
   border-radius: @radius-md;
 }
 
 .notice.warning {
-  border-color: @warning;
+  border-color: var(--color-warning);
 }
 
 .notice.info {
-  border-color: @info;
+  border-color: var(--color-info);
 }
 
 .text-center {
@@ -168,7 +168,7 @@ code, pre, .monospace {
 }
 
 .super-faint {
-  color: @hl-xxl;
+  color: @hl-xl;
 }
 
 .valign-bottom {
@@ -383,6 +383,10 @@ i.fa {
   cursor: text;
 }
 
+::selection {
+ background-color: var(--hl-lg);
+}
+
 .hide-scrollbars {
   &::-webkit-scrollbar {
     display: none;
@@ -423,10 +427,6 @@ i.fa {
 .section.section--bordered {
   .section__header {
     border-right: 1px solid #eee;
-
-    &.bg-brand {
-      border-right-color: @bg-brand;
-    }
   }
 
   .section__body {

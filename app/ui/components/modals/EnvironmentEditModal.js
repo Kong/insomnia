@@ -45,13 +45,15 @@ class EnvironmentEditModal extends Component {
   }
 
   render () {
+    const {editorFontSize, ...extraProps} = this.props;
     const {requestGroup, isValid} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} tall={true} top={true} {...this.props}>
+      <Modal ref={m => this.modal = m} tall={true} top={true} {...extraProps}>
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll={true}>
           <EnvironmentEditor
+            editorFontSize={editorFontSize}
             ref={node => this._envEditor = node}
             key={requestGroup ? requestGroup._id : 'n/a'}
             environment={requestGroup ? requestGroup.environment : {}}
@@ -73,7 +75,8 @@ class EnvironmentEditModal extends Component {
 }
 
 EnvironmentEditModal.propTypes = {
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
 };
 
 export default EnvironmentEditModal;

@@ -111,7 +111,7 @@ class ResponsePane extends Component {
       return (
         <section className="response-pane pane">
           <ResponseTimer
-            className="response-pane__overlay"
+            className="overlay"
             handleCancel={cancelCurrentRequest}
             loadStartTime={loadStartTime}
           />
@@ -158,7 +158,7 @@ class ResponsePane extends Component {
     return (
       <section className="response-pane pane">
         <ResponseTimer
-          className="response-pane__overlay"
+          className="overlay"
           handleCancel={cancelCurrentRequest}
           loadStartTime={loadStartTime}
         />

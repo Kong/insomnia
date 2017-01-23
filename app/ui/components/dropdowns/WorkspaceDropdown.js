@@ -82,7 +82,7 @@ class WorkspaceDropdown extends Component {
         <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
-              {isLoading ? <i className="fa fa-refresh fa-spin txt-lg"/> : null}
+              {isLoading ? <i className="fa fa-refresh fa-spin"/> : null}
               {" "}
               <i className="fa fa-caret-down"/>
             </div>
@@ -113,7 +113,7 @@ class WorkspaceDropdown extends Component {
         <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
 
         <DropdownItem onClick={this._handleShowSettings}>
-          <i className="fa fa-cog"/> App Preferences
+          <i className="fa fa-cog"/> Preferences
           <DropdownHint char=","/>
         </DropdownItem>
         <DropdownItem onClick={this._handleShowExport}>

@@ -1,6 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import {Cookie} from 'tough-cookie';
 
+import PromptButton from '../base/PromptButton';
 import CookieInput from '../CookieInput';
 import {cookieToString} from '../../../common/cookies';
 
@@ -60,11 +61,13 @@ class CookiesEditor extends Component {
                   </div>
                 </td>
                 <td className="text-right">
-                  <button className="btn btn--super-compact"
-                          onClick={e => this._handleDeleteCookie(cookie)}
-                          title="Delete cookie">
+                  <PromptButton className="btn btn--super-compact"
+                                addIcon={true}
+                                confirmMessage=" "
+                                onClick={e => this._handleDeleteCookie(cookie)}
+                                title="Delete cookie">
                     <i className="fa fa-trash-o"></i>
-                  </button>
+                  </PromptButton>
                 </td>
               </tr>
             )
@@ -72,18 +75,18 @@ class CookiesEditor extends Component {
           </tbody>
         </table>
         {cookies.length === 0 ? (
-          <div className="pad faint italic text-center">
-            <p>
-              I couldn't find any cookies for you.
-            </p>
-            <p>
-              <button className="btn btn--clicky"
-                      onClick={e => this._handleCookieAdd()}>
-                Add Cookie <i className="fa fa-plus-circle"></i>
-              </button>
-            </p>
-          </div>
-        ) : null}
+            <div className="pad faint italic text-center">
+              <p>
+                I couldn't find any cookies for you.
+              </p>
+              <p>
+                <button className="btn btn--clicky"
+                        onClick={e => this._handleCookieAdd()}>
+                  Add Cookie <i className="fa fa-plus-circle"></i>
+                </button>
+              </p>
+            </div>
+          ) : null}
       </div>
     );
   }

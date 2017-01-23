@@ -12,8 +12,8 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    background: @bg-super-light;
-    color: @font-super-light-bg;
+    background: var(--color-bg);
+    color: var(--color-font);
     box-sizing: border-box;
 
     border-left: 1px solid @hl-md;
@@ -21,8 +21,9 @@
     border-top: 1px solid @hl-md;
 
     .pane__header__right {
-      box-shadow: -@padding-md 0 @padding-md -@padding-sm @bg-super-light;
-      background: @bg-super-light;
+      box-shadow: -@padding-md 0 @padding-md -@padding-sm var(--color-bg);
+      background: var(--color-bg);
+      font-size: @font-size-sm;
     }
   }
 
@@ -30,6 +31,8 @@
     border-left: 1px solid @hl-md;
     box-sizing: border-box;
     height: 100%;
+    background: var(--color-bg);
+    color: var(--color-font);
   }
 
   .pane__body--placeholder {
@@ -39,7 +42,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: @hl-xxl;
+    color: @hl;
 
     & > * {
       min-width: 20em;

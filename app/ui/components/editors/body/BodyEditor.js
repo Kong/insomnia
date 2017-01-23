@@ -80,7 +80,7 @@ class BodyEditor extends PureComponent {
       return (
         <div className="pad valign-center text-center">
           <p className="pad super-faint text-sm text-center">
-            <i className="fa fa-hand-peace-o" style={{fontSize: '8rem', opacity: 0.2}}></i>
+            <i className="fa fa-hand-peace-o" style={{fontSize: '8rem', opacity: 0.3}}></i>
             <br/><br/>
             Select a body type from above
           </p>

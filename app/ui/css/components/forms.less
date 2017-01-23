@@ -36,7 +36,7 @@
   }
 
   input:invalid {
-    border: 1px solid @warning !important;
+    border: 1px solid var(--color-warning) !important;
   }
 
   label {
@@ -61,14 +61,19 @@
       border: 1px solid @hl-md;
       padding: @padding-sm;
       border-radius: @radius-md;
-      background-color: @hl-xxxs;
+      background-color: @hl-xs;
     }
 
     textarea:focus,
     input:focus {
       background-color: transparent;
-      border-color: @hl-xl;
+      border-color: @hl-lg;
     }
+  }
+
+  &.form-control--underlined input:focus,
+  &.form-control--underlined textarea:focus {
+    border-color: @hl;
   }
 
   &.form-control--padded {
@@ -189,12 +194,16 @@ textarea, input, button {
   color: inherit;
 
   &::-webkit-input-placeholder {
-    color: @hl-xl;
+    color: @hl-lg;
   }
 }
 
+input[type=number]::-webkit-inner-spin-button {
+  opacity: 0.8;
+}
+
 input.input--error {
-  border-color: @danger !important;
+  border-color: var(--color-danger) !important;
 }
 
 button {

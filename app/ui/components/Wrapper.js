@@ -286,11 +286,13 @@ class Wrapper extends Component {
           workspace={activeWorkspace}/>
         <EnvironmentEditModal
           ref={registerModal}
+          editorFontSize={settings.editorFontSize}
           onChange={models.requestGroup.update}
         />
         <GenerateCodeModal
           ref={registerModal}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+          editorFontSize={settings.editorFontSize}
         />
         <SettingsModal
           ref={registerModal}
@@ -309,7 +311,9 @@ class Wrapper extends Component {
         />
         <WorkspaceEnvironmentsEditModal
           ref={registerModal}
-          onChange={models.workspace.update}/>
+          onChange={models.workspace.update}
+          editorFontSize={settings.editorFontSize}
+        />
       </div>
     )
   }

@@ -27,6 +27,12 @@ class SettingsModal extends Component {
     models.settings.update(this.props.settings, {theme});
   };
 
+  componentDidMount () {
+    // Hacky way to set theme on launch
+    // TODO: move somewhere else
+    this._handleChangeTheme(this.props.settings.theme);
+  }
+
   show (currentTabIndex = 0) {
     this.setState({currentTabIndex});
     this.modal.show();
@@ -76,8 +82,8 @@ class SettingsModal extends Component {
                 </button>
               </Tab>
               <Tab selected={this._currentTabIndex === 2}>
-                <button onClick={e => trackEvent('Setting', 'Tab Theme')}>
-                  Theme
+                <button onClick={e => trackEvent('Setting', 'Tab Themes')}>
+                  Themes
                 </button>
               </Tab>
               <Tab selected={this._currentTabIndex === 3}>

@@ -32,12 +32,12 @@
       }
 
       button {
-        color: @hl-xxl;
+        color: @hl-xl;
         height: 100%;
         padding: @padding-sm;
 
         &:hover {
-          color: @font-light-bg;
+          color: var(--color-font);
         }
       }
     }
@@ -47,7 +47,7 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       grid-template-rows: @line-height-xs;
-      color: @hl-xxl;
+      color: @hl;
 
       & > button {
         padding: 0 @padding-md 0 @padding-md;
@@ -71,12 +71,12 @@
 
       &.env-modal__sidebar-item--active,
       & > button:focus {
-        color: @font-light-bg;
+        color: var(--color-font);
         background-color: @hl-xs;
       }
 
       &:hover > button {
-        background-color: @hl-xxs;
+        background-color: @hl-xs;
       }
     }
 

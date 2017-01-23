@@ -36,7 +36,7 @@
     min-width: @dropdown-min-width;
     box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
-    background: @bg-super-light;
+    background: var(--color-bg);
 
     // Separate it from the button a bit
     margin-top: @padding-xxs;
@@ -46,7 +46,6 @@
     padding-bottom: @radius-md;
 
     border-radius: @radius-md;
-    background: @bg-super-light;
     overflow: auto;
 
     li {
@@ -56,13 +55,13 @@
         padding: @padding-sm @padding-md @padding-sm @padding-sm;
         width: 100%;
         display: block;
-        color: @font-super-light-bg !important;
+        color: var(--color-font) !important;
         white-space: nowrap;
         margin: 0;
 
         &:hover:not(:disabled),
         &:focus:not(:disabled) {
-          background: @hl-xs;
+          background: @hl-sm;
         }
 
         &:active:not(:disabled) {
@@ -99,7 +98,7 @@
 
     .dropdown__hint,
     .dropdown__right {
-      color: @hl-xxl;
+      color: @hl-xl;
       margin-left: auto;
       padding-left: @padding-lg;
     }
@@ -118,7 +117,7 @@
       top: -0.7rem;
       color: @hl;
       padding-right: 1em;
-      background: @bg-super-light;
+      background: var(--color-bg);
       font-size: @font-size-xs;
       text-transform: uppercase;
     }

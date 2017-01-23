@@ -3,13 +3,12 @@
 .response-pane {
   position: relative;
 
-  .response-pane__overlay {
+  .overlay {
     position: absolute;
     top: 0;
     right: 0;
     left: 0;
     bottom: 0;
-    background-color: @bg-super-dark-overlay;
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -17,22 +16,17 @@
     justify-content: center;
     overflow: hidden;
     text-align: center;
-    color: @font-super-dark-bg;
-
-    &.response-pane__overlay--under {
-      background: none;
-      z-index: 9;
-    }
 
     & > * {
       max-width: 30rem;
     }
 
     .btn {
-      background: @bg-super-dark-overlay;
+      border-color: var(--hl-xl);
 
       &:hover {
-        background: @bg-super-dark;
+        background: var(--hl-sm);
+        border-color: var(--hl);
       }
     }
 

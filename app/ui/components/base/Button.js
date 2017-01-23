@@ -3,16 +3,13 @@ import {shell} from 'electron';
 
 class Button extends Component {
   _handleClick = e => {
-    const {onClick, disabled} = this.props;
-
-    if (!onClick || disabled) {
-      return;
-    }
+    const {onClick, onDisabledClick, disabled} = this.props;
+    const fn = disabled ? onDisabledClick : onClick;
 
     if (this.props.hasOwnProperty('value')) {
-      onClick(this.props.value, e);
+      fn && fn(this.props.value, e);
     } else {
-      onClick(e);
+      fn && fn(e);
     }
   };
 
@@ -26,6 +23,8 @@ class Button extends Component {
 
 Button.propTypes = {
   value: PropTypes.any,
+  onDisabledClick: PropTypes.func,
+  onClick: PropTypes.func,
 };
 
 export default Button;

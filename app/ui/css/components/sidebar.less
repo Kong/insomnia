@@ -8,8 +8,8 @@
   grid-template-columns: 100%;
   z-index: 10;
 
-  background-color: @bg-dark;
-  color: @font-dark-bg;
+  background-color: var(--color-bg);
+  color: var(--color-font);
 
   width: 100%;
   height: 100%;
@@ -37,13 +37,16 @@
     border-top: 1px solid @hl-md;
     border-bottom: 1px solid @hl-md;
     box-sizing: border-box;
-    background-color: @bg-brand;
-    color: @font-brand;
+    background-color: var(--color-bg);
+    color: var(--color-font);
     width: 100%;
     height: 100%;
 
     h1 {
       margin: 0;
+    }
+    h1, h1 * {
+      font-size: @font-size-xl;
     }
   }
 
@@ -65,12 +68,6 @@
       border-radius: @radius-md;
       margin-left: @padding-xxs;
       margin-bottom: @padding-xxs;
-      opacity: @opacity-subtle;
-
-      &:hover,
-      &:focus {
-        opacity: 1;
-      }
     }
 
     .form-control {
@@ -132,8 +129,7 @@
       height: @line-height-xxs;
       padding-left: @padding-xxs;
       padding-right: @padding-xxs;
-      color: @font-dark-bg;
-      opacity: @opacity-subtle;
+      color: var(--color-font);
 
       &:hover,
       &:focus {
@@ -173,7 +169,7 @@
 
   .sidebar__list-root {
     // Add some space above so it's not so squished
-    border-top: 1px solid @hl-sm;
+    border-top: 1px solid @hl-md;
     padding-top: @padding-xs;
     padding-bottom: @padding-md;
     box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.03);
@@ -213,7 +209,7 @@
       height: 0;
       right: 0;
       left: 0;
-      border-bottom: 2px dotted @surprise;
+      border-bottom: 2px dotted var(--color-surprise);
       content: " ";
       display: block
     }
@@ -228,6 +224,17 @@
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: @line-height-xs;
 
+    & > button {
+      color: @hl;
+
+      .tag {
+        opacity: 1;
+      }
+    }
+
+    & > .tag {
+    }
+
     & > * {
       height: 100%;
     }
@@ -236,31 +243,29 @@
       grid-template-rows: @line-height-sm;
     }
 
-    & > button {
-      opacity: @opacity-subtle;
-    }
-
     &.sidebar__item--active > button {
-      opacity: 1;
-
-      .editable {
-        line-height: @line-height-xs;
-        height: 100%;
+      color: var(--color-font);
+      .tag {
+        opacity: 1;
       }
     }
 
+
+    // Active sidebar request
+    &.sidebar__item--request > button {
+      border-left: @padding-xs solid transparent;
+    }
+
+    &.sidebar__item--active.sidebar__item--request > button,
     &.sidebar__item--active > .sidebar__actions,
+    &:hover > button,
+    &:hover > .sidebar__actions,
     & > button:focus {
-      background-color: @hl-xxs;
-    }
-
-    &:hover > .sidebar__actions {
-      background-color: @hl-xxs;
-    }
-
-    &.sidebar__item--active:hover > .sidebar__actions,
-    &:hover > button {
       background-color: @hl-xs;
+    }
+
+    &.sidebar__item--active.sidebar__item--request > button {
+      //border-left-color: @hl-xs;
     }
 
     .tag {
@@ -340,7 +345,7 @@
 
     & > button:hover,
     & > .dropdown:hover > button {
-      color: @font-dark-bg;
+      color: var(--color-font);
     }
   }
 
