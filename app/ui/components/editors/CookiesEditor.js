@@ -4,6 +4,7 @@ import {Cookie} from 'tough-cookie';
 import PromptButton from '../base/PromptButton';
 import CookieInput from '../CookieInput';
 import {cookieToString} from '../../../common/cookies';
+import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 
 class CookiesEditor extends Component {
@@ -19,12 +20,19 @@ class CookiesEditor extends Component {
   };
 
   _handleCookieUpdate (cookie, cookieStr) {
-    const newCookie = Cookie.parse(cookieStr);
-    this.props.onCookieUpdate(cookie, newCookie);
+    clearTimeout(this._cookieUpdateTimeout);
+    this._cookieUpdateTimeout = setTimeout(() => {
+      const newCookie = Cookie.parse(cookieStr);
+      this.props.onCookieUpdate(cookie, newCookie);
+    }, DEBOUNCE_MILLIS * 2);
   }
 
   _handleDeleteCookie (cookie) {
     this.props.onCookieDelete(cookie);
+  }
+
+  shouldComponentUpdate (nextProps, nextState) {
+    return nextProps.cookies !== this.props.cookies;
   }
 
   render () {

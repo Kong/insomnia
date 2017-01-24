@@ -15,6 +15,7 @@ body {
   --color-font-surprise: #fff;
   --color-font-info: #fff;
 
+  --hl-xxs: rgba(140, 140, 140, 0.05);
   --hl-xs: rgba(140, 140, 140, 0.1);
   --hl-sm: rgba(140, 140, 140, 0.2);
   --hl-md: rgba(140, 140, 140, 0.3);
@@ -32,7 +33,8 @@ body {
 }
 
 *[theme="default"] {
-  --hl-xs: rgba(120, 120, 120, 0.05);
+  --hl-xxs: rgba(120, 120, 120, 0.05);
+  --hl-xs: rgba(120, 120, 120, 0.1);
   --hl-sm: rgba(120, 120, 120, 0.2);
   --hl-md: rgba(120, 120, 120, 0.3);
   --hl-lg: rgba(120, 120, 120, 0.5);
@@ -45,6 +47,11 @@ body {
   --color-danger: #ee5655;
   --color-surprise: #a590ff;
   --color-info: #22c1ee;
+
+  .tag {
+    --hl: rgba(110, 110, 110, 1);
+    --hl-sm: rgba(110, 110, 110, 0.1);
+  }
 
   .sidebar__header {
     --color-bg: #695eb8;
@@ -75,6 +82,7 @@ body {
   .sidebar {
     --color-bg: #2e2f2b;
     --color-font: #e0e0e0;
+    --hl: #999;
   }
 
   .request-pane,
@@ -100,12 +108,18 @@ body {
   .response-pane,
   .dropdown__menu,
   .modal {
-    --hl-xs: rgba(130, 130, 130, 0.05);
+    --hl-xxs: rgba(130, 130, 130, 0.05);
+    --hl-xs: rgba(130, 130, 130, 0.1);
     --hl-sm: rgba(130, 130, 130, 0.2);
     --hl-md: rgba(130, 130, 130, 0.3);
     --hl-lg: rgba(130, 130, 130, 0.5);
     --hl-xl: rgba(130, 130, 130, 0.8);
     --hl: rgba(130, 130, 130, 1);
+  }
+
+  .request-pane .pane__body,
+  .request-pane .pane__header {
+    border-left: 0;
   }
 
   .sidebar {
@@ -119,6 +133,7 @@ body {
     --color-bg: #6d62c0;
     --color-font: #fff;
 
+    --hl-xxs: rgba(207, 190, 255, 0.05);
     --hl-xs: rgba(207, 190, 255, 0.1);
     --hl-sm: rgba(207, 190, 255, 0.2);
     --hl-md: rgba(207, 190, 255, 0.3);
@@ -129,7 +144,7 @@ body {
 
   .tag {
     --hl: rgb(102, 99, 112);
-    --hl-sm: rgba(232, 224, 255, 0.2);
+    --hl-sm: rgba(240, 235, 255, 0.3);
   }
 
   .sidebar__header {
@@ -152,22 +167,32 @@ body {
 }
 
 *[theme="dark"] {
-  --color-success: #72ad33;
+  --color-success: #83c438;
   --color-notice: #d8c84d;
-  --color-warning: #ec8702;
-  --color-danger: #ee5655;
-  --color-surprise: #a590ff;
+  --color-warning: #f48d02;
+  --color-danger: #ff5b5a;
+  --color-surprise: #9886ff;
   --color-info: #22c1ee;
 
   --color-bg: #232421;
   --color-font: #ddd;
 
+  --hl-xxs: rgba(120, 120, 120, 0.05);
   --hl-xs: rgba(120, 120, 120, 0.1);
   --hl-sm: rgba(120, 120, 120, 0.2);
   --hl-md: rgba(120, 120, 120, 0.3);
   --hl-lg: rgba(120, 120, 120, 0.5);
   --hl-xl: rgba(120, 120, 120, 0.8);
   --hl: rgba(120, 120, 120, 1);
+
+  .tag {
+    --color-success: #6ea932;
+    --color-notice: #d0c14a;
+    --color-warning: #d77802;
+    --color-danger: #dc5251;
+    --color-surprise: #8f7cdf;
+    --color-info: #329fbf;
+  }
 
   .overlay {
     --color-bg: rgba(20, 20, 20, 0.8);
@@ -201,6 +226,7 @@ body {
     --color-font: #666;
   }
 
+  --hl-xxs: rgba(160, 160, 160, 0.05);
   --hl-xs: rgba(160, 160, 160, 0.1);
   --hl-sm: rgba(160, 160, 160, 0.2);
   --hl-md: rgba(160, 160, 160, 0.3);
@@ -228,6 +254,7 @@ body {
   --color-bg: #fdf6e3;
   --color-font: #657b83;
 
+  --hl-xxs: rgba(159, 167, 164, 0.05);
   --hl-xs: rgba(159, 167, 164, 0.1);
   --hl-sm: rgba(159, 167, 164, 0.2);
   --hl-md: rgba(142, 149, 146, 0.3);
@@ -256,6 +283,7 @@ body {
   --color-bg: #002b36;
   --color-font: #8ea0a2;
 
+  --hl-xxs: rgba(91, 118, 133, 0.05);
   --hl-xs: rgba(91, 118, 133, 0.1);
   --hl-sm: rgba(91, 118, 133, 0.2);
   --hl-md: rgba(91, 118, 133, 0.3);
@@ -275,7 +303,7 @@ body {
 
 *[theme="material"] {
   --color-bg: #263238;
-  --color-font: #e9eded;
+  --color-font: #dde1e1;
 
   --color-success: #80CBC4;
   --color-notice: #FFCB6B;
@@ -284,6 +312,7 @@ body {
   --color-surprise: #c792ea;
   --color-info: #82B1FF;
 
+  --hl-xxs: rgba(114, 145, 143, 0.05);
   --hl-xs: rgba(114, 145, 143, 0.1);
   --hl-sm: rgba(114, 145, 143, 0.2);
   --hl-md: rgba(114, 145, 143, 0.3);
@@ -304,22 +333,27 @@ body {
     --color-info: #6c93d8;
   }
 
+  a {
+    --color-surprise: #68a9a2;
+  }
+
   .modal > *,
   .dropdown__menu {
     --color-bg: #303c43;
-    --color-font: #e9eded;
+    --color-font: #dde1e1;
   }
 
   .ReactTabs > *,
   .pane > *,
   .modal,
   .sidebar {
+    --hl-xxs: rgba(114, 145, 143, 0.0);
     --hl-xs: rgba(114, 145, 143, 0.0);
     --hl-sm: rgba(114, 145, 143, 0.0);
     --hl-md: rgba(114, 145, 143, 0.0);
     --hl-lg: rgba(114, 145, 143, 0.1);
     --hl-xl: rgba(114, 145, 143, 0.1);
-    --hl: rgb(108, 138, 136);
+    --hl: rgb(125, 153, 151);
   }
 
   .sidebar {
@@ -328,7 +362,9 @@ body {
 
   input,
   textarea,
-  button,
+  table,
+  .sidebar__item,
+  .btn,
   .tag,
   .dropdown__menu,
   .CodeMirror,
@@ -336,7 +372,8 @@ body {
   .modal__header,
   .sidebar__header,
   .form-control {
-    --hl-xs: rgba(114, 145, 143, 0.05);
+    --hl-xxs: rgba(114, 145, 143, 0.05);
+    --hl-xs: rgba(114, 145, 143, 0.08);
     --hl-sm: rgba(114, 145, 143, 0.1);
     --hl-md: rgba(114, 145, 143, 0.2);
     --hl-lg: rgba(114, 145, 143, 0.4);
@@ -347,7 +384,8 @@ body {
   .pane__header,
   ::-webkit-scrollbar-track,
   ::-webkit-scrollbar-thumb {
-    --hl-xs: rgba(114, 145, 143, 0.05);
+    --hl-xxs: rgba(114, 145, 143, 0.05);
+    --hl-xs: rgba(114, 145, 143, 0.08);
     --hl-sm: rgba(114, 145, 143, 0.1);
     --hl-md: rgba(114, 145, 143, 0.15);
     --hl-lg: rgba(114, 145, 143, 0.2);
@@ -366,6 +404,7 @@ body {
   --color-bg: #fdf6e3;
   --color-font: #657b83;
 
+  --hl-xxs: rgba(159, 167, 164, 0.05);
   --hl-xs: rgba(159, 167, 164, 0.1);
   --hl-sm: rgba(159, 167, 164, 0.2);
   --hl-md: rgba(142, 149, 146, 0.3);
@@ -395,6 +434,7 @@ body {
     --color-bg: #073642;
     --color-font: #8ea0a2;
 
+    --hl-xxs: rgba(91, 127, 143, 0.05);
     --hl-xs: rgba(91, 127, 143, 0.1);
     --hl-sm: rgba(91, 127, 143, 0.2);
     --hl-md: rgba(91, 127, 143, 0.3);
@@ -416,7 +456,8 @@ body {
   --color-bg: #2b2b2b;
   --color-font: #e1deda;
 
-  --hl-xs: rgba(120, 120, 120, 0.05);
+  --hl-xxs: rgba(120, 120, 120, 0.05);
+  --hl-xs: rgba(120, 120, 120, 0.09);
   --hl-sm: rgba(120, 120, 120, 0.15);
   --hl-md: rgba(120, 120, 120, 0.25);
   --hl-lg: rgba(120, 120, 120, 0.4);
@@ -435,6 +476,7 @@ body {
 
 @opacity-subtle: 0.7;
 
+@hl-xxs: var(--hl-xxs);
 @hl-xs: var(--hl-xs);
 @hl-sm: var(--hl-sm);
 @hl-md: var(--hl-md);

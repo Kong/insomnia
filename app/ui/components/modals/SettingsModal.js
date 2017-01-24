@@ -25,6 +25,7 @@ class SettingsModal extends Component {
   _handleChangeTheme = theme => {
     document.body.setAttribute('theme', theme);
     models.settings.update(this.props.settings, {theme});
+    trackEvent('Setting', 'Change Theme', theme)
   };
 
   componentDidMount () {

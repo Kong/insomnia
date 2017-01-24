@@ -250,7 +250,6 @@
       }
     }
 
-
     // Active sidebar request
     &.sidebar__item--request > button {
       border-left: @padding-xs solid transparent;
@@ -259,8 +258,8 @@
     &.sidebar__item--active.sidebar__item--request > button,
     &.sidebar__item--active > .sidebar__actions,
     &:hover > button,
-    &:hover > .sidebar__actions,
-    & > button:focus {
+    & > button:focus,
+    &:hover .sidebar__actions {
       background-color: @hl-xs;
     }
 

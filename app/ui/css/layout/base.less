@@ -152,7 +152,11 @@ code, pre, .monospace {
 }
 
 .faint {
-  color: @hl;
+  opacity: @opacity-subtle;
+}
+
+.super-faint {
+  opacity: @opacity-subtle * 0.8;
 }
 
 .faded {
@@ -165,10 +169,6 @@ code, pre, .monospace {
 
 .outlined {
   border: 1px solid @hl-md;
-}
-
-.super-faint {
-  color: @hl-xl;
 }
 
 .valign-bottom {
