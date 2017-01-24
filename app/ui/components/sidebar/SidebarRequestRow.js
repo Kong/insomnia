@@ -22,6 +22,7 @@ class SidebarRequestRow extends PureComponent {
 
   _handleRequestUpdateName = name => {
     models.request.update(this.props.request, {name})
+    this.setState({isEditing: false});
   };
 
   _handleRequestCreateFromEmpty = () => {

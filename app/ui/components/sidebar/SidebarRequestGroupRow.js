@@ -53,16 +53,22 @@ class SidebarRequestGroupRow extends PureComponent {
       'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0
     });
 
-    return connectDragSource(connectDropTarget(
+    // NOTE: We only want the button draggable, not the whole container (ie. no children)
+    const button = connectDragSource(connectDropTarget(
+      <button onClick={this._handleCollapse}>
+        <div className="sidebar__clickable">
+          <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
+          <span>{requestGroup.name}</span>
+        </div>
+      </button>
+    ));
+
+    return (
       <li key={requestGroup._id} className={classes}>
-        <div
-          className={classnames('sidebar__item sidebar__item--big', {'sidebar__item--active': isActive})}>
-          <button onClick={this._handleCollapse}>
-            <div className="sidebar__clickable">
-              <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
-              <span>{requestGroup.name}</span>
-            </div>
-          </button>
+        <div className={classnames(
+          'sidebar__item sidebar__item--big', {'sidebar__item--active': isActive}
+        )}>
+          {button}
 
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
@@ -78,21 +84,21 @@ class SidebarRequestGroupRow extends PureComponent {
 
         <ul className={classnames('sidebar__list', {'sidebar__list--collapsed': isCollapsed})}>
           {children.length > 0 ? children : (
-            <SidebarRequestRow
-              handleActivateRequest={this._nullFunction}
-              handleDuplicateRequest={this._nullFunction}
-              handleGenerateCode={this._nullFunction}
-              moveRequest={moveRequest}
-              isActive={false}
-              request={null}
-              requestGroup={requestGroup}
-              workspace={workspace}
-              requestCreate={handleCreateRequest}
-            />
-          )}
+              <SidebarRequestRow
+                handleActivateRequest={this._nullFunction}
+                handleDuplicateRequest={this._nullFunction}
+                handleGenerateCode={this._nullFunction}
+                moveRequest={moveRequest}
+                isActive={false}
+                request={null}
+                requestGroup={requestGroup}
+                workspace={workspace}
+                requestCreate={handleCreateRequest}
+              />
+            )}
         </ul>
       </li>
-    ));
+    );
   }
 }
 
