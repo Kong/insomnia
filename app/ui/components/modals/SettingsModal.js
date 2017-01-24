@@ -22,16 +22,19 @@ class SettingsModal extends Component {
     this.state = {}
   }
 
-  _handleChangeTheme = theme => {
+  _handleChangeTheme = (theme, track = true) => {
     document.body.setAttribute('theme', theme);
     models.settings.update(this.props.settings, {theme});
-    trackEvent('Setting', 'Change Theme', theme)
+
+    if (track) {
+      trackEvent('Setting', 'Change Theme', theme)
+    }
   };
 
   componentDidMount () {
     // Hacky way to set theme on launch
     // TODO: move somewhere else
-    this._handleChangeTheme(this.props.settings.theme);
+    this._handleChangeTheme(this.props.settings.theme, false);
   }
 
   show (currentTabIndex = 0) {
