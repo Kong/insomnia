@@ -85,11 +85,10 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
 
   const renderContext = {};
   for (const environment of environments) {
-    const env = Object.assign({}, environment, renderContext);
-    Object.assign(renderContext, recursiveRender(environment, env));
+    Object.assign(renderContext, environment);
   }
 
-  return renderContext;
+  return recursiveRender(renderContext, renderContext);
 }
 
 export function recursiveRender (obj, context) {

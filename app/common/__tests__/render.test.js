@@ -109,7 +109,37 @@ describe('buildRenderContext()', () => {
     expect(context).toEqual({grandparent: 'grandparent', test: 'grandparent parent'});
   });
 
-  it('does not render child environment variables', () => {
+  it('rendered parent, ignoring sibling environment variables', () => {
+    const ancestors = [{
+      name: 'Parent',
+      type: models.requestGroup.type,
+      environment: {
+        host: 'parent.com',
+      }
+    }, {
+      name: 'Grandparent',
+      type: models.requestGroup.type,
+      environment: {
+        host: 'grandparent.com',
+        node: {
+          admin: 'admin',
+          test: 'test',
+          port: 8080,
+        },
+        urls: {
+          admin: 'https://{{ host }}/{{ node.admin }}',
+          test: 'https://{{ host }}/{{ node.test }}',
+        }
+      }
+    }];
+
+    const context = renderUtils.buildRenderContext(ancestors);
+    const result = renderUtils.render('{{ urls.admin }}/foo', context);
+
+    expect(result).toEqual('https://parent.com/admin/foo');
+  });
+
+  it('renders child environment variables', () => {
     const ancestors = [{
       name: 'Parent',
       type: models.requestGroup.type,
@@ -126,7 +156,7 @@ describe('buildRenderContext()', () => {
 
     const context = renderUtils.buildRenderContext(ancestors);
 
-    expect(context).toEqual({parent: 'parent', test: ' grandparent'});
+    expect(context).toEqual({parent: 'parent', test: 'parent grandparent'});
   });
 
   it('cascades properly and renders', () => {
@@ -134,7 +164,7 @@ describe('buildRenderContext()', () => {
       {
         type: models.requestGroup.type,
         environment: {
-          base_url: '{{ base_url }}/resource',
+          url: '{{ base_url }}/resource',
           ancestor: true,
           winner: 'folder parent'
         }
@@ -148,14 +178,14 @@ describe('buildRenderContext()', () => {
       }
     ];
 
-    const rootEnvironment = {
-      type: models.environment.type,
-      data: {winner: 'root', root: true}
-    };
-
     const subEnvironment = {
       type: models.environment.type,
       data: {winner: 'sub', sub: true, base_url: 'https://insomnia.rest'}
+    };
+
+    const rootEnvironment = {
+      type: models.environment.type,
+      data: {winner: 'root', root: true, base_url: 'ignore this'}
     };
 
     const context = renderUtils.buildRenderContext(ancestors,
@@ -164,7 +194,8 @@ describe('buildRenderContext()', () => {
     );
 
     expect(context).toEqual({
-      base_url: 'https://insomnia.rest/resource',
+      base_url: 'https://insomnia.rest',
+      url: 'https://insomnia.rest/resource',
       ancestor: true,
       winner: 'folder parent',
       root: true,
