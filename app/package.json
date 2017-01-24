@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "4.0.13",
+  "version": "4.2.1",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "A simple and beautiful REST API client",
@@ -31,6 +31,7 @@
     "traverse": "^0.6.6",
     "uuid": "^3.0.0",
     "vkbeautify": "^0.99.1",
+    "whatwg-fetch": "^2.0.1",
     "xpath": "^0.0.23",
     "xmldom": "^0.1.22"
   }

@@ -60,32 +60,38 @@ export function render (template, context = {}) {
 }
 
 export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
-  const renderContext = {};
-
-  if (rootEnvironment) {
-    Object.assign(renderContext, rootEnvironment.data);
-  }
-
-  if (subEnvironment) {
-    Object.assign(renderContext, subEnvironment.data);
-  }
-
   if (!Array.isArray(ancestors)) {
     ancestors = [];
   }
 
-  // Merge all environments. Note that we're reversing ancestors because we want to merge
-  // from top-down (closest ancestor should win)
-  for (let doc of ancestors.reverse()) {
+  const environments = [];
+
+  if (rootEnvironment) {
+    environments.push(rootEnvironment.data);
+  }
+
+  if (subEnvironment) {
+    environments.push(subEnvironment.data);
+  }
+
+  for (const doc of ancestors.reverse()) {
     if (!doc.environment) {
       continue;
     }
-
-    Object.assign(renderContext, doc.environment);
+    environments.push(doc.environment);
   }
 
-  // Now we're going to render the renderContext with itself.
-  // This is to support templating inside environments
+  // At this point, environments is a list of environments ordered
+  // from top-most parent to bottom-most child
+
+  const renderContext = {};
+  for (const environment of environments) {
+    // Do an Object.assign, but render each property as it overwrites. This
+    // way we can keep same-name variables from the parent context.
+    _objectDeepAssignRender(renderContext, environment);
+  }
+
+  // Render the context with itself to fill in the rest.
   return recursiveRender(renderContext, renderContext);
 }
 
@@ -158,4 +164,25 @@ export async function getRenderedRequest (request, environmentId) {
   }
 
   return renderedRequest;
+}
+
+function _objectDeepAssignRender (base, obj) {
+  for (const key of Object.keys(obj)) {
+    /*
+     * If we're overwriting a string, try to render it first with the base as
+     * a context. This allows for the following scenario:
+     *
+     * base:  { base_url: 'google.com' }
+     * obj:   { base_url: '{{ base_url }}/foo' }
+     * final: { base_url: 'google.com/foo' }
+     *
+     * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
+     * original base_url of google.com would be lost.
+    */
+    if (typeof base[key] === 'string') {
+      base[key] = render(obj[key], base);
+    } else {
+      base[key] = obj[key];
+    }
+  }
 }

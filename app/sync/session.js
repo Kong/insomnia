@@ -3,8 +3,6 @@ import * as crypt from './crypt';
 import * as util from '../common/fetch';
 import {trackEvent, setAccountId} from '../analytics';
 
-const NO_SESSION = '__NO_SESSION__';
-
 /** Create a new Account for the user */
 export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
 
@@ -104,7 +102,7 @@ export async function login (rawEmail, rawPassphrase) {
     accountId,
     firstName,
     lastName,
-  } = await _whoami(sessionId);
+  } = await whoami(sessionId);
 
   const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
   const symmetricKeyStr = await crypt.decryptAES(derivedSymmetricKey, JSON.parse(encSymmetricKey));
@@ -136,6 +134,69 @@ export async function subscribe (tokenId, planId) {
   return response;
 }
 
+export function syncCreateResourceGroup (parentResourceId, name, encSymmetricKey) {
+  return util.post('/api/resource_groups', {parentResourceId, name, encSymmetricKey});
+}
+
+export function syncGetResourceGroup (id) {
+  return util.get(`/api/resource_groups/${id}`);
+}
+
+export function syncPull (body) {
+  return util.post('/sync/pull', body);
+}
+
+export function syncPush (body) {
+  return util.post('/sync/push', body);
+}
+
+export function syncResetData () {
+  return util.post('/auth/reset');
+}
+
+export function syncFixDupes (resourceGroupIds) {
+  return util.post('/sync/fix-dupes', {ids: resourceGroupIds});
+}
+
+export function unshareWithAllTeams (resourceGroupId) {
+  return util.put(`/api/resource_groups/${resourceGroupId}/unshare`);
+}
+
+export async function shareWithTeam (resourceGroupId, teamId, rawPassphrase) {
+  // Ask the server what we need to do to invite the member
+  const instructions = await util.post(`/api/resource_groups/${resourceGroupId}/share-a`, {teamId});
+
+  // Compute keys necessary to invite the member
+  const passPhrase = _sanitizePassphrase(rawPassphrase);
+  const {email, saltEnc, encPrivateKey, encSymmetricKey} = await whoami();
+  const secret = await crypt.deriveKey(passPhrase, email, saltEnc);
+  let symmetricKey;
+  try {
+    symmetricKey = crypt.decryptAES(secret, JSON.parse(encSymmetricKey));
+  } catch (err) {
+    throw new Error('Invalid password');
+  }
+  const privateKey = crypt.decryptAES(JSON.parse(symmetricKey), JSON.parse(encPrivateKey));
+  const privateKeyJWK = JSON.parse(privateKey);
+  const resourceGroupSymmetricKey = crypt.decryptRSAWithJWK(
+    privateKeyJWK,
+    instructions.encSymmetricKey
+  );
+
+  // Build the invite data request
+  const newKeys = {};
+  for (const accountId of Object.keys(instructions.keys)) {
+    const accountPublicKeyJWK = JSON.parse(instructions.keys[accountId]);
+    newKeys[accountId] = crypt.encryptRSAWithJWK(
+      accountPublicKeyJWK,
+      resourceGroupSymmetricKey,
+    );
+  }
+
+  // Actually share it with the team
+  await util.post(`/api/resource_groups/${resourceGroupId}/share-b`, {teamId, keys: newKeys});
+}
+
 export function getPublicKey () {
   return getSessionData().publicKey;
 }
@@ -147,7 +208,7 @@ export function getPrivateKey () {
 }
 
 export function getCurrentSessionId () {
-  return localStorage.getItem('currentSessionId') || NO_SESSION;
+  return localStorage.getItem('currentSessionId');
 }
 
 export function getAccountId () {
@@ -173,11 +234,11 @@ export function getFullName () {
  */
 export function getSessionData () {
   const sessionId = getCurrentSessionId();
-  if (sessionId == NO_SESSION) {
+  if (!sessionId) {
     return {};
   }
 
-  const dataStr = localStorage.getItem(_getSessionKey(sessionId));
+  const dataStr = localStorage.getItem(getSessionKey(sessionId));
   return JSON.parse(dataStr);
 }
 
@@ -201,7 +262,7 @@ export function setSessionData (sessionId,
     lastName: lastName,
   });
 
-  localStorage.setItem(_getSessionKey(sessionId), dataStr);
+  localStorage.setItem(getSessionKey(sessionId), dataStr);
 
   // NOTE: We're setting this last because the stuff above might fail
   localStorage.setItem('currentSessionId', sessionId);
@@ -210,13 +271,13 @@ export function setSessionData (sessionId,
 /** Unset the session data (log out) */
 export function unsetSessionData () {
   const sessionId = getCurrentSessionId();
-  localStorage.removeItem(_getSessionKey(sessionId));
+  localStorage.removeItem(getSessionKey(sessionId));
   localStorage.removeItem(`currentSessionId`);
 }
 
 /** Check if we (think) we have a session */
 export function isLoggedIn () {
-  return getCurrentSessionId() !== NO_SESSION;
+  return getCurrentSessionId();
 }
 
 /** Log out and delete session data */
@@ -237,25 +298,24 @@ export async function listTeams () {
   return util.get('/api/teams');
 }
 
-export async function cancelAccount () {
-  await util.del('/api/billing/subscriptions');
-  trackEvent('Session', 'Cancel Account');
+export async function endTrial () {
+  await util.put('/api/billing/end-trial');
+  trackEvent('Session', 'End Trial');
 }
 
+export function whoami (sessionId = null) {
+  return util.get('/auth/whoami', sessionId);
+}
+
+export function getSessionKey (sessionId) {
+  return `session__${(sessionId || '').slice(0, 10)}`
+}
 
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 
-function _whoami (sessionId = null) {
-  return util.get('/auth/whoami', sessionId);
-}
-
-function _getSessionKey (sessionId) {
-  return `session__${sessionId.slice(0, 10)}`
-}
-
-async function _initAccount (firstName, lastName, email) {
+export async function _initAccount (firstName, lastName, email) {
   return {
     email,
     firstName,

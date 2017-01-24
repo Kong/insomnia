@@ -131,8 +131,8 @@ describe('prepareUrlForSending()', () => {
 
   it('doesn\'t decode ignored characters', () => {
     // Encoded should skip raw versions of @ ; ,
-    const url = misc.prepareUrlForSending('https://google.com/@;,&^');
-    expect(url).toBe('https://google.com/@;,%26%5E');
+    const url = misc.prepareUrlForSending('https://google.com/@;,&^+');
+    expect(url).toBe('https://google.com/@;,%26%5E+');
 
     // Encoded should skip encoded versions of @ ; ,
     const url2 = misc.prepareUrlForSending('https://google.com/%40%3B%2C%26%5E');

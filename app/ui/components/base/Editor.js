@@ -39,6 +39,9 @@ import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
+import 'codemirror/keymap/vim';
+import 'codemirror/keymap/emacs';
+import 'codemirror/keymap/sublime';
 import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
@@ -60,6 +63,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   autoCloseBrackets: true,
   indentUnit: 4,
   indentWithTabs: true,
+  keyMap: 'default',
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',
@@ -222,7 +226,8 @@ class Editor extends Component {
       readOnly,
       placeholder: this.props.placeholder || '',
       mode: this.props.mode || 'text/plain',
-      lineWrapping: !!this.props.lineWrapping,
+      lineWrapping: this.props.lineWrapping,
+      keyMap: this.props.keyMap || 'default',
       matchBrackets: !readOnly,
       lint: !readOnly
     };
@@ -437,6 +442,7 @@ class Editor extends Component {
 Editor.propTypes = {
   onChange: PropTypes.func,
   onFocusChange: PropTypes.func,
+  keyMap: PropTypes.string,
   mode: PropTypes.string,
   placeholder: PropTypes.string,
   lineWrapping: PropTypes.bool,

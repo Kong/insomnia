@@ -64,6 +64,27 @@ export async function getResourceByDocId (id, resourceGroupId = null) {
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
+/**
+ * This function is temporary and should only be called when cleaning
+ * up duplicate ResourceGroups
+ * @param id
+ * @returns {*}
+ */
+export function findResourcesByDocId (id) {
+  return _execDB(TYPE_RESOURCE, 'find', {id});
+}
+
+/**
+ * This function is temporary and should only be called when cleaning
+ * up duplicate ResourceGroups
+ * @param resourceGroupId
+ * @returns {*}
+ */
+export async function removeResourceGroup (resourceGroupId) {
+  await _execDB(TYPE_RESOURCE, 'remove', {resourceGroupId}, {multi: true});
+  await _execDB(TYPE_CONFIG, 'remove', {resourceGroupId}, {multi: true});
+}
+
 export async function insertResource (resource) {
   const h = crypto.createHash('md5');
   h.update(resource.resourceGroupId);
@@ -74,7 +95,7 @@ export async function insertResource (resource) {
 }
 
 export async function updateResource (resource, ...patches) {
-  const newDoc = Object.assign(resource, ...patches);
+  const newDoc = Object.assign({}, resource, ...patches);
   await _execDB(TYPE_RESOURCE, 'update', {_id: resource._id}, newDoc);
   return newDoc
 }
@@ -143,13 +164,8 @@ function _initConfig (data) {
   }, data);
 }
 
-// ~~~~~~~ //
-// Helpers //
-// ~~~~~~~ //
-
-let _database = null;
-function _getDB (type) {
-  if (!_database) {
+export function initDB (config, forceReset) {
+  if (!_database || forceReset) {
     const basePath = electron.remote.app.getPath('userData');
     _database = {};
 
@@ -158,16 +174,26 @@ function _getDB (type) {
     const configPath = fsPath.join(basePath, 'sync/Config.db');
 
     // Fill in the defaults
-    _database['Resource'] = new NeDB({filename: resourcePath, autoload: true});
-    _database['Config'] = new NeDB({
-      filename: configPath,
-      autoload: true
-    });
+    _database['Resource'] = new NeDB(
+      Object.assign({filename: resourcePath, autoload: true}, config)
+    );
+
+    _database['Config'] = new NeDB(
+      Object.assign({filename: configPath, autoload: true}, config)
+    );
 
     // Done
     console.log(`-- Initialize Sync DB at ${basePath} --`);
   }
+}
 
+// ~~~~~~~ //
+// Helpers //
+// ~~~~~~~ //
+
+let _database = null;
+function _getDB (type, config = {}) {
+  initDB(config);
   return _database[type];
 }
 

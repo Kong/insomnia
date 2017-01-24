@@ -24,7 +24,6 @@
   }
 
   .modal__backdrop {
-    background: @bg-backdrop;
     position: fixed;
     top: 0;
     left: 0;
@@ -37,7 +36,6 @@
     display: grid;
     grid-template-columns: 100%;
     grid-template-rows: auto minmax(0, 1fr) auto;
-    color: @font-super-light-bg;
     border-radius: @radius-md;
     overflow: visible;
     box-sizing: border-box;
@@ -46,6 +44,9 @@
     max-width: 100%;
     max-height: 100%;
     margin: auto;
+    background-color: var(--color-bg);
+    color: var(--color-font);
+    border: 1px solid @hl-sm;
   }
 
   &.modal--wide .modal__content {
@@ -61,7 +62,8 @@
     height: @line-height-md;
     font-size: @font-size-lg;
     line-height: @line-height-md;
-    background-color: @bg-light;
+    background-color: var(--color-bg);
+    color: var(--color-font);
     display: flex;
     flex-direction: row;
 
@@ -77,10 +79,11 @@
 
   .modal__body {
     overflow: auto;
-    background-color: @bg-super-light;
     min-height: 2rem;
     box-sizing: border-box;
     max-width: 100%;
+    background-color: var(--color-bg);
+    color: var(--color-font);
 
     &.modal__body--no-scroll {
       overflow: visible;
@@ -90,7 +93,8 @@
 
   .modal__footer {
     border-top: 1px solid @hl-md;
-    background-color: @bg-super-light;
+    background-color: var(--color-bg);
+    color: var(--color-font);
     display: flex;
     flex-direction: row;
     align-items: center;

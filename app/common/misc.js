@@ -94,7 +94,7 @@ export function flexibleEncodeComponent (str, ignore = '') {
     str = str.replace(re, `__ENCODED_${code}_ENCODED__`);
 
     // Replace raw versions
-    const re2 = new RegExp(c, 'g');
+    const re2 = new RegExp(`[${c}]`, 'g');
     str = str.replace(re2, `__RAW_${code}_RAW__`);
   }
 
@@ -136,7 +136,7 @@ export function prepareUrlForSending (url) {
   if (parsedUrl.pathname) {
     const segments = parsedUrl.pathname.split('/');
     parsedUrl.pathname = segments.map(
-      s => flexibleEncodeComponent(s, ',;@')
+      s => flexibleEncodeComponent(s, '+,;@')
     ).join('/')
   }
 

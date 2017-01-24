@@ -8,6 +8,7 @@ import {getModel, initModel} from '../models';
 import * as models from '../models/index';
 import AlertModal from '../ui/components/modals/AlertModal';
 import {showModal} from '../ui/components/modals/index';
+import {trackEvent} from '../analytics/index';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -38,15 +39,16 @@ function getDBFilePath (modelType) {
  * @param forceReset
  * @returns {null}
  */
-export async function init (types, config = {}, forceReset = false) {
+export function init (types, config = {}, forceReset = false) {
   if (forceReset) {
+    changeListeners = [];
     db = {};
   }
 
   // Fill in the defaults
   for (const modelType of types) {
     if (db[modelType]) {
-      console.warn(`-- Already initialized DB.${modelType} --`);
+      console.warn(`[db] Already initialized DB.${modelType}`);
       continue;
     }
 
@@ -59,7 +61,7 @@ export async function init (types, config = {}, forceReset = false) {
       if (modelType === models.response.type && MBs > 256) {
         // NOTE: Node.js can't have a string longer than 256MB. Since the response DB can reach
         // sizes that big, let's not even load it if it's bigger than that. Just start over.
-        console.warn(`Response DB too big (${MBs}). Deleting...`);
+        console.warn(`[db] Response DB too big (${MBs}). Deleting...`);
         fs.unlinkSync(filePath);
 
         // Can't show alert until the app renders, so delay for a bit first
@@ -69,6 +71,7 @@ export async function init (types, config = {}, forceReset = false) {
             message: 'Your combined responses have exceeded 256MB and have been flushed. ' +
             'NOTE: A better solution to this will be implemented in a future release.'
           });
+          trackEvent('Alert', 'DB Too Large');
         }, 1000);
       }
     } catch (err) {
@@ -83,7 +86,7 @@ export async function init (types, config = {}, forceReset = false) {
     db[modelType].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
   }
 
-  console.log(`-- Initialized DB at ${getDBFilePath('$TYPE')} --`);
+  console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
 }
 
 
@@ -96,12 +99,10 @@ let changeBuffer = [];
 let changeListeners = [];
 
 export function onChange (callback) {
-  console.log(`-- Added DB Listener -- `);
   changeListeners.push(callback);
 }
 
 export function offChange (callback) {
-  console.log(`-- Removed DB Listener -- `);
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
@@ -110,7 +111,7 @@ export function bufferChanges (millis = 1000) {
   setTimeout(flushChanges, millis);
 }
 
-export function flushChanges () {
+export async function flushChanges () {
   bufferingChanges = false;
   const changes = [...changeBuffer];
   changeBuffer = [];
@@ -120,15 +121,17 @@ export function flushChanges () {
     return;
   }
 
-  changeListeners.map(fn => fn(changes));
+  for (const fn of changeListeners) {
+    await fn(changes);
+  }
 }
 
-function notifyOfChange (event, doc, fromSync) {
+async function notifyOfChange (event, doc, fromSync) {
   changeBuffer.push([event, doc, fromSync]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
-    flushChanges();
+    await flushChanges();
   }
 }
 

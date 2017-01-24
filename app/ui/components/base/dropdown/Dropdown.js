@@ -137,7 +137,7 @@ class Dropdown extends Component {
     } else {
       finalChildren = [
         dropdownButtons[0],
-        <ul key="items" ref={this._addDropdownListRef}>
+        <ul key="items" className="dropdown__menu" ref={this._addDropdownListRef}>
           {dropdownItems}
         </ul>
       ]

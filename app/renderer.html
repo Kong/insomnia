@@ -98,7 +98,7 @@
   (function () {
     const {productName, version} = require('./package.json');
     if (process.env.INSOMNIA_ENV === 'development') {
-      document.title = `${productName} v${version} (DEV)`;
+      document.title = `${productName}`;
     } else {
       document.title = `${productName} v${version}`;
     }

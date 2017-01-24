@@ -3,6 +3,7 @@ if (reboot) {
   process.exit(0);
 }
 
+import fs from 'fs';
 import raven from 'raven';
 import request from 'request';
 import path from 'path';
@@ -507,7 +508,7 @@ function createWindow () {
           accelerator: "CmdOrCtrl+?",
           click: () => {
             trackEvent('App Menu', 'Help');
-            shell.openExternal('https://insomnia.rest/documentation');
+            shell.openExternal('https://insomnia.rest/documentation/');
           }
         }
       ]
@@ -529,6 +530,20 @@ function createWindow () {
         accelerator: 'Alt+Command+I',
         click: function () {
           mainWindow.toggleDevTools();
+        }
+      }, {
+        label: 'Resize to Default',
+        click: function () {
+          mainWindow.setBounds({x: 100, y: 100, width: 1000, height: 480});
+        }
+      }, {
+        label: 'Take Screenshot',
+        click: function () {
+          mainWindow.capturePage(image => {
+            const buffer = image.toPNG();
+            const dir = app.getPath('desktop');
+            fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
+          });
         }
       }]
     });

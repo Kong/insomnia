@@ -3,6 +3,10 @@ import classnames from 'classnames';
 import Link from './base/Link';
 import * as fetch from '../../common/fetch';
 import {trackEvent} from '../../analytics/index';
+import * as models from '../../models/index';
+import * as querystring from '../../common/querystring';
+import * as constants from '../../common/constants';
+import * as db from '../../common/database';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -26,10 +30,24 @@ class Toast extends Component {
     }
 
     const seenNotifications = this._loadSeen();
+    const stats = await models.stats.get();
 
     let notification;
     try {
-      notification = await fetch.get('/notification');
+      const queryParameters = [
+        {name: 'lastLaunch', value: stats.lastLaunch},
+        {name: 'firstLaunch', value: stats.created},
+        {name: 'launches', value: stats.launches},
+        {name: 'platform', value: constants.getAppPlatform()},
+        {name: 'version', value: constants.getAppVersion()},
+        {name: 'requests', value: (await db.count(models.request.type)) + ''},
+        {name: 'requestGroups', value: (await db.count(models.requestGroup.type)) + ''},
+        {name: 'environments', value: (await db.count(models.environment.type)) + ''},
+        {name: 'workspaces', value: (await db.count(models.workspace.type)) + ''},
+      ];
+
+      const qs = querystring.buildFromParams(queryParameters);
+      notification = await fetch.get(`/notification?${qs}`);
     } catch (e) {
       console.warn('[toast] Failed to fetch notifications', e);
     }
@@ -53,8 +71,6 @@ class Toast extends Component {
 
     // Fade the notification in
     setTimeout(() => this.setState({visible: true}), 1000);
-
-    trackEvent('Notification', 'Shown', notification.key, {nonInteraction: true});
   };
 
   _loadSeen () {
@@ -110,7 +126,9 @@ class Toast extends Component {
           </Link>
         </div>
         <div className="toast__action toast__action--close">
-          <button className="btn btn--super-duper-compact" onClick={this._handleCancelClick}>
+          <button className="btn btn--super-duper-compact"
+                  title="Dismiss notification"
+                  onClick={this._handleCancelClick}>
             <i className="fa fa-close"></i>
           </button>
         </div>

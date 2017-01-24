@@ -22,11 +22,13 @@ class EnvironmentEditor extends Component {
   }
 
   render () {
-    const {environment, ...props} = this.props;
+    const {environment, editorFontSize, editorKeyMap, ...props} = this.props;
 
     return (
       <Editor
         ref={this._setEditorRef}
+        fontSize={editorFontSize}
+        keyMap={editorKeyMap}
         onChange={this._handleChange}
         value={JSON.stringify(environment)}
         autoPrettify={true}
@@ -39,7 +41,9 @@ class EnvironmentEditor extends Component {
 
 EnvironmentEditor.propTypes = {
   environment: PropTypes.object.isRequired,
-  didChange: PropTypes.func.isRequired
+  didChange: PropTypes.func.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
 };
 
 export default EnvironmentEditor;

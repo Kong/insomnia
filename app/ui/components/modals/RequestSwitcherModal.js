@@ -6,7 +6,6 @@ import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
-import * as db from '../../../common/database';
 
 
 class RequestSwitcherModal extends Component {
@@ -86,14 +85,11 @@ class RequestSwitcherModal extends Component {
   }
 
   async _handleChange (searchString) {
-    const {workspaceChildren} = this.props;
+    const {workspaceChildren, workspaces} = this.props;
     const {workspaceId, activeRequestParentId} = this.props;
 
-    const requests = workspaceChildren.filter(d => d.type === models.request.type);
-    const workspaces = workspaceChildren.filter(d => d.type === models.workspace.type);
-
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = requests;
+    let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
     if (searchString) {
       matchedRequests = matchedRequests.filter(r => {
         const name = r.name.toLowerCase();
@@ -188,7 +184,7 @@ class RequestSwitcherModal extends Component {
     return (
       <Modal ref={m => this.modal = m} top={true} dontFocus={true}>
         <ModalHeader hideCloseButton={true}>
-          <div className="pull-right txt-md">
+          <div className="pull-right txt-md pad-right">
             <span className="monospace">tab</span> or
             &nbsp;
             <span className="monospace">↑ ↓</span> &nbsp;to navigate
@@ -278,6 +274,7 @@ RequestSwitcherModal.propTypes = {
   workspaceId: PropTypes.string.isRequired,
   activeRequestParentId: PropTypes.string.isRequired,
   workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
+  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default RequestSwitcherModal;

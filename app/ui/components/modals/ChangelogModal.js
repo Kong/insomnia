@@ -76,7 +76,7 @@ class ChangelogModal extends Component {
         if (change.link) {
           html = [
             ...html,
-            <Link href={change.link} className="btn btn--clicky" button={true} key="link">
+            <Link href={change.link} className="btn btn--clicky" button={true} key={`link.${i}`}>
               Read More
             </Link>
           ]
