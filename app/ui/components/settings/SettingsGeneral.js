@@ -3,7 +3,7 @@ import React, {PropTypes} from 'react';
 const SettingsGeneral = ({settings, updateSetting}) => (
   <div>
     <div className="form-control form-control--thin">
-      <label>Follow redirects automatically
+      <label className="inline-block">Follow redirects automatically
         <input type="checkbox"
                checked={settings.followRedirects}
                onChange={e => updateSetting('followRedirects', e.target.checked)}/>
@@ -11,7 +11,7 @@ const SettingsGeneral = ({settings, updateSetting}) => (
     </div>
 
     <div className="form-control form-control--thin">
-      <label>Validate SSL Certificates
+      <label className="inline-block">Validate SSL Certificates
         <input type="checkbox"
                checked={settings.validateSSL}
                onChange={e => updateSetting('validateSSL', e.target.checked)}/>
@@ -19,7 +19,7 @@ const SettingsGeneral = ({settings, updateSetting}) => (
     </div>
 
     <div className="form-control form-control--thin">
-      <label>Show passwords in plain-text
+      <label className="inline-block">Show passwords in plain-text
         <input type="checkbox"
                checked={settings.showPasswords}
                onChange={e => updateSetting('showPasswords', e.target.checked)}/>
@@ -27,7 +27,7 @@ const SettingsGeneral = ({settings, updateSetting}) => (
     </div>
 
     <div className="form-control form-control--thin">
-      <label>Use bulk header editor by default
+      <label className="inline-block">Use bulk header editor by default
         <input type="checkbox"
                checked={settings.useBulkHeaderEditor}
                onChange={e => updateSetting('useBulkHeaderEditor', e.target.checked)}/>
@@ -35,7 +35,7 @@ const SettingsGeneral = ({settings, updateSetting}) => (
     </div>
 
     <div className="form-control form-control--thin">
-      <label>Always use vertical layout
+      <label className="inline-block">Always use vertical layout
         <input type="checkbox"
                checked={settings.forceVerticalLayout}
                onChange={e => updateSetting('forceVerticalLayout', e.target.checked)}/>
@@ -43,7 +43,7 @@ const SettingsGeneral = ({settings, updateSetting}) => (
     </div>
 
     <div className="form-control form-control--thin">
-      <label>Wrap Long Lines
+      <label className="inline-block">Wrap Long Lines
         <input type="checkbox"
                checked={settings.editorLineWrapping}
                onChange={e => updateSetting('editorLineWrapping', e.target.checked)}/>
