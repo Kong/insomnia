@@ -85,14 +85,11 @@ class RequestSwitcherModal extends Component {
   }
 
   async _handleChange (searchString) {
-    const {workspaceChildren} = this.props;
+    const {workspaceChildren, workspaces} = this.props;
     const {workspaceId, activeRequestParentId} = this.props;
 
-    const requests = workspaceChildren.filter(d => d.type === models.request.type);
-    const workspaces = workspaceChildren.filter(d => d.type === models.workspace.type);
-
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = requests;
+    let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
     if (searchString) {
       matchedRequests = matchedRequests.filter(r => {
         const name = r.name.toLowerCase();
@@ -277,6 +274,7 @@ RequestSwitcherModal.propTypes = {
   workspaceId: PropTypes.string.isRequired,
   activeRequestParentId: PropTypes.string.isRequired,
   workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
+  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default RequestSwitcherModal;

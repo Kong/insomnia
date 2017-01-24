@@ -303,6 +303,7 @@ class Wrapper extends Component {
         />
         <RequestSwitcherModal
           ref={registerModal}
+          workspaces={workspaces}
           workspaceChildren={workspaceChildren}
           workspaceId={activeWorkspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
