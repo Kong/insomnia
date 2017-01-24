@@ -50,26 +50,29 @@ const SettingsGeneral = ({settings, updateSetting}) => (
       </label>
     </div>
 
-    <div className="form-control form-control--outlined pad-top-sm">
-      <label>Text Editor Font Size (px)
-        <input type="number"
-               min={8}
-               max={20}
-               defaultValue={settings.editorFontSize}
-               onChange={e => updateSetting('editorFontSize', parseInt(e.target.value, 10))}/>
-      </label>
-    </div>
+    <div className="form-row">
+      <div className="form-control form-control--outlined pad-top-sm">
+        <label>Text Editor Font Size (px)
+          <input type="number"
+                 min={8}
+                 max={20}
+                 defaultValue={settings.editorFontSize}
+                 onChange={e => updateSetting('editorFontSize', parseInt(e.target.value, 10))}/>
+        </label>
+      </div>
 
-    <div className="form-control form-control--outlined pad-top-sm">
-      <label>Text Editor Key Map
-        <select defaultValue={settings.editorKeyMap}
-                onChange={e => updateSetting('editorKeyMap', e.target.value)}>
-          <option value="default">Default</option>
-          <option value="vim">Vim</option>
-          <option value="emacs">Emacs</option>
-          <option value="sublime">Sublime</option>
-        </select>
-      </label>
+      <div className="form-control form-control--outlined pad-top-sm">
+        <label>
+          Text Editor Key Map
+          <select defaultValue={settings.editorKeyMap}
+                  onChange={e => updateSetting('editorKeyMap', e.target.value)}>
+            <option value="default">Default</option>
+            <option value="vim">Vim</option>
+            <option value="emacs">Emacs</option>
+            <option value="sublime">Sublime</option>
+          </select>
+        </label>
+      </div>
     </div>
 
     <div className="form-control form-control--outlined">

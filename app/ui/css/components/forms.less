@@ -10,6 +10,7 @@
 
   input,
   textarea,
+  select,
   button {
     width: 100%;
     height: 100%;
@@ -57,14 +58,17 @@
   &.form-control--outlined,
   &.form-control--underlined {
     textarea,
-    input {
+    input,
+    select {
+      height: @line-height-xs;
       border: 1px solid @hl-md;
-      padding: @padding-sm;
+      padding: 0 @padding-sm;
       border-radius: @radius-md;
       background-color: @hl-xxs;
     }
 
     textarea:focus,
+    select:focus,
     input:focus {
       background-color: transparent;
       border-color: @hl-lg;
@@ -78,6 +82,7 @@
 
   &.form-control--padded {
     textarea,
+    select,
     input {
       border: 0;
     }
@@ -85,6 +90,7 @@
 
   &.form-control--underlined {
     textarea,
+    select,
     input {
       border-radius: 0;
       border-top: 0;
@@ -181,7 +187,7 @@
   }
 }
 
-textarea, input, button {
+textarea, input, button, select {
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;
