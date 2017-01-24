@@ -17,7 +17,7 @@ const THEMES_PER_ROW = 3;
 const THEMES = [
   {key: 'default', name: 'Insomnia', img: imgDefault},
   {key: 'light', name: 'Simple Light', img: imgLight},
-  {key: 'dark', name: 'Simple Dark', img: imgDark, paid: true},
+  {key: 'dark', name: 'Simple Dark', img: imgDark},
   {key: 'purple', name: 'Purple', img: imgPurple, paid: true},
   {key: 'material', name: 'Material', img: imgMaterial, paid: true},
   {key: 'solarized', name: 'Solarized', img: imgSolarized, paid: true},
