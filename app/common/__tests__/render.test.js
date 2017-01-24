@@ -109,6 +109,26 @@ describe('buildRenderContext()', () => {
     expect(context).toEqual({grandparent: 'grandparent', test: 'grandparent parent'});
   });
 
+  it('rendered parent same name environment variables', () => {
+    const ancestors = [{
+      name: 'Parent',
+      type: models.requestGroup.type,
+      environment: {
+        base_url: '{{ base_url }}/resource'
+      }
+    }, {
+      name: 'Grandparent',
+      type: models.requestGroup.type,
+      environment: {
+        base_url: 'https://insomnia.rest'
+      }
+    }];
+
+    const context = renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({base_url: 'https://insomnia.rest/resource'});
+  });
+
   it('rendered parent, ignoring sibling environment variables', () => {
     const ancestors = [{
       name: 'Parent',

@@ -74,8 +74,6 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
     environments.push(subEnvironment.data);
   }
 
-  // Merge all environments. Note that we're reversing ancestors because we want to merge
-  // from top-down (closest ancestor should win)
   for (const doc of ancestors.reverse()) {
     if (!doc.environment) {
       continue;
@@ -83,11 +81,17 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
     environments.push(doc.environment);
   }
 
+  // At this point, environments is a list of environments ordered
+  // from top-most parent to bottom-most child
+
   const renderContext = {};
   for (const environment of environments) {
-    Object.assign(renderContext, environment);
+    // Do an Object.assign, but render each property as it overwrites. This
+    // way we can keep same-name variables from the parent context.
+    _objectDeepAssignRender(renderContext, environment);
   }
 
+  // Render the context with itself to fill in the rest.
   return recursiveRender(renderContext, renderContext);
 }
 
@@ -160,4 +164,14 @@ export async function getRenderedRequest (request, environmentId) {
   }
 
   return renderedRequest;
+}
+
+function _objectDeepAssignRender (obj1, obj2) {
+  for (const key of Object.keys(obj2)) {
+    if (typeof obj1[key] === 'string') {
+      obj1[key] = render(obj2[key], obj1)
+    } else {
+      obj1[key] = obj2[key];
+    }
+  }
 }
