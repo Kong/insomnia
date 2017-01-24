@@ -65,6 +65,7 @@ class ResponseViewer extends Component {
       contentType,
       editorLineWrapping,
       editorFontSize,
+      editorKeyMap,
       updateFilter,
       statusCode,
       body: base64Body,
@@ -156,6 +157,7 @@ class ResponseViewer extends Component {
             readOnly={true}
             lineWrapping={editorLineWrapping}
             fontSize={editorFontSize}
+            keyMap={editorKeyMap}
             placeholder="..."
           />
         );
@@ -176,6 +178,7 @@ ResponseViewer.propTypes = {
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,
   bytes: PropTypes.number.isRequired,

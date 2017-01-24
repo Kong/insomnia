@@ -228,11 +228,9 @@
       color: @hl;
 
       .tag {
-        opacity: 1;
+        // This might be too faint...
+        //opacity: @opacity-subtle;
       }
-    }
-
-    & > .tag {
     }
 
     & > * {
@@ -245,6 +243,7 @@
 
     &.sidebar__item--active > button {
       color: var(--color-font);
+
       .tag {
         opacity: 1;
       }

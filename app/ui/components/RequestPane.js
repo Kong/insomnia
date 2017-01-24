@@ -68,6 +68,7 @@ class RequestPane extends PureComponent {
       environmentId,
       showPasswords,
       editorFontSize,
+      editorKeyMap,
       editorLineWrapping,
       handleSend,
       forceRefreshCounter,
@@ -189,6 +190,7 @@ class RequestPane extends PureComponent {
               request={request}
               onChange={updateRequestBody}
               fontSize={editorFontSize}
+              keyMap={editorKeyMap}
               lineWrapping={editorLineWrapping}
             />
           </TabPanel>
@@ -293,6 +295,7 @@ RequestPane.propTypes = {
   useBulkHeaderEditor: PropTypes.bool.isRequired,
   showPasswords: PropTypes.bool.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
   environmentId: PropTypes.string.isRequired,

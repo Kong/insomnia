@@ -91,6 +91,7 @@ class ResponsePane extends Component {
       loadStartTime,
       editorLineWrapping,
       editorFontSize,
+      editorKeyMap,
       filter,
       activeResponseId,
       showCookiesModal
@@ -230,6 +231,7 @@ class ResponsePane extends Component {
               responseId={response._id}
               editorLineWrapping={editorLineWrapping}
               editorFontSize={editorFontSize}
+              editorKeyMap={editorKeyMap}
               url={response.url}
             />
           </TabPanel>
@@ -268,6 +270,7 @@ ResponsePane.propTypes = {
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   loadStartTime: PropTypes.number.isRequired,
   activeResponseId: PropTypes.string.isRequired,

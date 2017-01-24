@@ -230,6 +230,7 @@ class Wrapper extends Component {
           showPasswords={settings.showPasswords}
           useBulkHeaderEditor={settings.useBulkHeaderEditor}
           editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           workspace={activeWorkspace}
@@ -257,6 +258,7 @@ class Wrapper extends Component {
           ref={handleSetResponsePaneRef}
           request={activeRequest}
           editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={responsePreviewMode}
           activeResponseId={activeResponseId}
@@ -287,12 +289,14 @@ class Wrapper extends Component {
         <EnvironmentEditModal
           ref={registerModal}
           editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
           onChange={models.requestGroup.update}
         />
         <GenerateCodeModal
           ref={registerModal}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
         />
         <SettingsModal
           ref={registerModal}
@@ -314,6 +318,7 @@ class Wrapper extends Component {
           ref={registerModal}
           onChange={models.workspace.update}
           editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
         />
       </div>
     )

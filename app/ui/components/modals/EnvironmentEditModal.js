@@ -45,7 +45,7 @@ class EnvironmentEditModal extends Component {
   }
 
   render () {
-    const {editorFontSize, ...extraProps} = this.props;
+    const {editorKeyMap, editorFontSize, ...extraProps} = this.props;
     const {requestGroup, isValid} = this.state;
 
     return (
@@ -54,6 +54,7 @@ class EnvironmentEditModal extends Component {
         <ModalBody noScroll={true}>
           <EnvironmentEditor
             editorFontSize={editorFontSize}
+            editorKeyMap={editorKeyMap}
             ref={node => this._envEditor = node}
             key={requestGroup ? requestGroup._id : 'n/a'}
             environment={requestGroup ? requestGroup.environment : {}}
@@ -77,6 +78,7 @@ class EnvironmentEditModal extends Component {
 EnvironmentEditModal.propTypes = {
   onChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
 };
 
 export default EnvironmentEditModal;

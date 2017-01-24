@@ -95,7 +95,7 @@ class GenerateCodeModal extends Component {
 
   render () {
     const {cmd, target, client} = this.state;
-    const {editorFontSize} = this.props;
+    const {editorFontSize, editorKeyMap} = this.props;
 
     const targets = availableTargets();
 
@@ -147,6 +147,7 @@ class GenerateCodeModal extends Component {
             mode={MODE_MAP[target.key] || target.key}
             ref={n => this._editor = n}
             fontSize={editorFontSize}
+            keyMap={editorKeyMap}
             lightTheme={true}
             lineWrapping={true}
             value={cmd}
@@ -168,6 +169,7 @@ class GenerateCodeModal extends Component {
 GenerateCodeModal.propTypes = {
   environmentId: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
 };
 
 export default GenerateCodeModal;

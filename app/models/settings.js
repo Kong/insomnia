@@ -11,6 +11,7 @@ export function init () {
     followRedirects: true,
     editorFontSize: 12,
     editorLineWrapping: true,
+    editorKeyMap: 'default',
     httpProxy: '',
     httpsProxy: '',
     timeout: 0,

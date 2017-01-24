@@ -35,7 +35,7 @@ class BodyEditor extends PureComponent {
   };
 
   render () {
-    const {fontSize, lineWrapping, request} = this.props;
+    const {keyMap, fontSize, lineWrapping, request} = this.props;
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
     const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
@@ -70,6 +70,7 @@ class BodyEditor extends PureComponent {
         <RawEditor
           key={`${request._id}::${contentType}`}
           fontSize={fontSize}
+          keyMap={keyMap}
           lineWrapping={lineWrapping}
           contentType={contentType || 'text/plain'}
           content={request.body.text || ''}
@@ -98,6 +99,7 @@ BodyEditor.propTypes = {
 
   // Optional
   fontSize: PropTypes.number,
+  keyMap: PropTypes.string,
   lineWrapping: PropTypes.bool
 };
 
