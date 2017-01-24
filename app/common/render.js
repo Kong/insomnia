@@ -166,12 +166,23 @@ export async function getRenderedRequest (request, environmentId) {
   return renderedRequest;
 }
 
-function _objectDeepAssignRender (obj1, obj2) {
-  for (const key of Object.keys(obj2)) {
-    if (typeof obj1[key] === 'string') {
-      obj1[key] = render(obj2[key], obj1)
+function _objectDeepAssignRender (base, obj) {
+  for (const key of Object.keys(obj)) {
+    /*
+     * If we're overwriting a string, try to render it first with the base as
+     * a context. This allows for the following scenario:
+     *
+     * base:  { base_url: 'google.com' }
+     * obj:   { base_url: '{{ base_url }}/foo' }
+     * final: { base_url: 'google.com/foo' }
+     *
+     * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
+     * original base_url of google.com would be lost.
+    */
+    if (typeof base[key] === 'string') {
+      base[key] = render(obj[key], base);
     } else {
-      obj1[key] = obj2[key];
+      base[key] = obj[key];
     }
   }
 }
