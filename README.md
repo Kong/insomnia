@@ -2,7 +2,7 @@
 
 A simple REST API client, build with [Electron](http://electron.atom.io/).
 
-![Insomnia REST Client](https://insomnia.rest/images/docs/promo.png)
+![Insomnia REST Client Screenshot](https://insomnia.rest/images/docs/promo.png?bust=1)
 
 ## Setup
 
