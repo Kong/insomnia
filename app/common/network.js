@@ -130,186 +130,241 @@ function _getProxy (renderedRequest, settings) {
 }
 
 function _getSession (requestId) {
-  // NOTE: Partition name without "Persist:" prefix will be in-memory
-  const session = remote.session.fromPartition(requestId);
-  session.setUserAgent(`insomnia/${getAppVersion()}`);
+  return new Promise(resolve => {
+    // NOTE: Partition name without "Persist:" prefix will be in-memory
+    const session = remote.session.fromPartition(requestId);
+    session.setUserAgent(`insomnia/${getAppVersion()}`);
 
-  // ~~~~~~~~~~~~ //
-  // Clear caches //
-  // ~~~~~~~~~~~~ //
+    // ~~~~~~~~~~~~ //
+    // Clear caches //
+    // ~~~~~~~~~~~~ //
 
-  session.clearCache(() => {
-    console.log('Cache cleared');
+    session.clearCache(() => {
+      console.log('Cache cleared');
+    });
+
+    session.clearHostResolverCache(() => {
+      console.log('Host cache cleared');
+    });
+
+    // session.clearAuthCache(); // Probably don't want to do this every time?
+
+    // Disable network emulation if set
+    session.disableNetworkEmulation();
+
+    // Clear appcache, cookies, filesystem, indexdb, local storage,
+    // shadercache, websql, serviceworkers
+    session.clearStorageData({storages: ['cookies']}, () => {
+      console.log('Cleared storage data');
+      resolve(session);
+    });
+
+    // TODO: Set the proxy
+    session.setProxy({
+      pacScript: null,
+      proxyRules: null,
+      proxyBypassRules: null,
+    }, () => {
+      // Done setting proxy
+    });
+
+    // Define method for verifying SSL certificates
+    session.setCertificateVerifyProc((hostname, certificate, callback) => {
+      // TODO: Always return true if SSL validation is off
+      callback(true);
+    });
   });
-
-  session.clearHostResolverCache(() => {
-    console.log('Host cache cleared');
-  });
-
-  // session.clearAuthCache(); // Probably don't want to do this every time?
-
-  // Disable network emulation if set
-  session.disableNetworkEmulation();
-
-  // Clear appcache, cookies, filesystem, indexdb, local storage,
-  // shadercache, websql, serviceworkers
-  session.clearStorageData({}, () => {
-    console.log('Cleared storage data')
-  });
-
-  // TODO: Set the proxy
-  session.setProxy({
-    pacScript: null,
-    proxyRules: null,
-    proxyBypassRules: null,
-  }, () => {
-    // Done setting proxy
-  });
-
-  // Define method for verifying SSL certificates
-  session.setCertificateVerifyProc((hostname, certificate, callback) => {
-    // TODO: Always return true if SSL validation is off
-    callback(true);
-  });
-
-  return session;
 }
 
 function _actuallySend2 (renderedRequest, workspace, settings) {
-  // const proxy = _getProxy(renderedRequest, settings);
-  const session = _getSession(renderedRequest._id);
+  return new Promise(async resolve => {
 
-  // THis doesn't work for some reason
-  // session.webRequest.onBeforeSendHeaders((details, callback) => {
-  //   console.log('REDIRECT', details);
-  //   callback({
-  //     cancel: false,
-  //   });
-  // });
+    // const proxy = _getProxy(renderedRequest, settings);
+    const session = await _getSession(renderedRequest._id);
 
-  // ~~~~~~~~~~~~ //
-  // Init request //
-  // ~~~~~~~~~~~~ //
+    // ~~~~~~~~~~~ //
+    // Set Cookies //
+    // ~~~~~~~~~~~ //
 
-  const startTime = performance.now();
-  const request = remote.net.request({
-    url: renderedRequest.url,
-    method: renderedRequest.method,
-    session: session,
-  });
+    for (const cookie of renderedRequest.cookieJar.cookies) {
+      for (const proto of ['http', 'https']) {
+        const data = {
+          url: `${proto}://${cookie.domain.replace(/^\./, '')}${cookie.path}`,
+          name: cookie.key,
+          value: cookie.value,
+          domain: cookie.domain,
+          hostOnly: cookie.hostOnly,
+          path: cookie.path,
+          // secure: null,
+          httpOnly: cookie.httpOnly,
+          // session: null,
+          expirationDate: parseInt((new Date(cookie.expires)).getTime() / 1000),
+        };
 
-  // Send body in chunks
-  request.chunkedEncoding = true;
+        console.log('ELECTRON COOKIE', data);
 
-  // ~~~~~~~~~~~~~~~~~~~ //
-  // Listen for response //
-  // ~~~~~~~~~~~~~~~~~~~ //
-
-  let data = '';
-  request.on('response', response => {
-    window.session = session;
-    window.request = request;
-    window.response = response;
-
-    console.log('++++++++ RESPONSE', response.statusCode);
-
-    response.on('end', () => {
-      window.response = response;
-      const duration = performance.now() - startTime;
-      console.log('++++++++ END', duration, data.length, response);
-    });
-
-    response.on('data', chunk => {
-      // console.log('++++++++ DATA', chunk.length);
-      data += chunk;
-    });
-  });
-
-  request.on('data', chunk => {
-    console.log('REQUEST CHUNK', chunk);
-  });
-
-  request.on('end', () => {
-    console.log('REQUEST DONE');
-  });
-
-  // ~~~~~~~~~~~~~ //
-  // Handle events //
-  // ~~~~~~~~~~~~~ //
-
-  request.on('login', (authInfo, callback) => {
-    // TODO: Handle login requests
-    console.log('++++++++ LOGIN', authInfo);
-    callback('myUsername', 'myPassword');
-  });
-
-  request.on('finish', () => {
-    // Request body wrote last byte
-    console.log('++++++++ FINISH');
-  });
-
-  request.on('abort', () => {
-    // Request was aborted (not fired if already closed)
-    console.log('++++++++ ABORT');
-  });
-
-  request.on('close', () => {
-    // Request and response are completely done emitting events
-    console.log('++++++++ CLOSE');
-  });
-
-  // ~~~~~~~~~~~~~~~ //
-  // Set the headers //
-  // ~~~~~~~~~~~~~~~ //
-
-  for (const header of renderedRequest.headers) {
-    request.setHeader(header.name, header.value);
-  }
-
-  // ~~~~~~~~~~~~~~ //
-  // Write the body //
-  // ~~~~~~~~~~~~~~ //
-
-  if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    request.end(buildFromParams(renderedRequest.body.params || [], true));
-  } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-    const form = new FormData();
-
-    for (const param of renderedRequest.body.params) {
-      if (param.type === 'file' && param.fileName) {
-        form.append(param.name, fs.createReadStream(param.fileName));
-      } else {
-        form.append(param.name, param.value || '');
+        session.cookies.set(data, err => {
+          if (err) {
+            console.log('FAILED TO SET COOKIE', err);
+          }
+        });
       }
     }
 
-    const headers = form.getHeaders();
-    for (const name of Object.keys(headers)) {
-      request.setHeader(name, headers[name]);
+    session.cookies.get({url: renderedRequest.url}, (err, cookies) => {
+      console.log('COOKIES BEFORE', cookies);
+    });
+
+    // THis doesn't work for some reason
+    // session.webRequest.onBeforeSendHeaders((details, callback) => {
+    //   console.log('REDIRECT', details);
+    //   callback({
+    //     cancel: false,
+    //   });
+    // });
+
+    // ~~~~~~~~~~~~ //
+    // Init request //
+    // ~~~~~~~~~~~~ //
+
+    const startTime = Date.now();
+    const request = remote.net.request({
+      url: renderedRequest.url,
+      method: renderedRequest.method,
+      session: session,
+    });
+
+    // Send body in chunks
+    request.chunkedEncoding = true;
+
+    // ~~~~~~~~~~~~~~~~~~~ //
+    // Listen for response //
+    // ~~~~~~~~~~~~~~~~~~~ //
+
+    let data = '';
+    request.on('response', response => {
+      window.session = session;
+      window.request = request;
+      window.response = response;
+
+      console.log('++++++++ RESPONSE', response.statusCode);
+
+      response.on('end', async () => {
+        window.response = response;
+        const duration = Date.now() - startTime;
+        console.log('++++++++ END', duration, data.length, response);
+
+        session.cookies.get({url: renderedRequest.url}, (err, cookies) => {
+          console.log('COOKIES', cookies);
+        });
+
+        const headers = [];
+        for (const name of Object.keys(response.headers)) {
+          for (const value of response.headers[name]) {
+            headers.push({name, value});
+          }
+        }
+
+        resolve(await models.response.create({
+          url: renderedRequest.url,
+          statusCode: response.statusCode,
+          statusMessage: response.statusMessage,
+          headers: headers,
+          parentId: renderedRequest._id,
+          elapsedTime: duration,
+          body: data,
+          encoding: 'base64',
+        }));
+      });
+
+      response.on('data', chunk => {
+        // console.log('++++++++ DATA', chunk.length);
+        data += chunk.toString('base64');
+      });
+    });
+
+    request.on('data', chunk => {
+      console.log('REQUEST CHUNK', chunk);
+    });
+
+    request.on('end', () => {
+      console.log('REQUEST DONE');
+    });
+
+    // ~~~~~~~~~~~~~ //
+    // Handle events //
+    // ~~~~~~~~~~~~~ //
+
+    request.on('login', (authInfo, callback) => {
+      // TODO: Handle login requests
+      console.log('++++++++ LOGIN', authInfo);
+      callback('myUsername', 'myPassword');
+    });
+
+    request.on('finish', () => {
+      // Request body wrote last byte
+      console.log('++++++++ FINISH');
+    });
+
+    request.on('abort', () => {
+      // Request was aborted (not fired if already closed)
+      console.log('++++++++ ABORT');
+    });
+
+    request.on('close', () => {
+      // Request and response are completely done emitting events
+      console.log('++++++++ CLOSE');
+    });
+
+    // ~~~~~~~~~~~~~~~ //
+    // Set the headers //
+    // ~~~~~~~~~~~~~~~ //
+
+    for (const header of renderedRequest.headers) {
+      request.setHeader(header.name, header.value);
     }
 
-    // form-data's combined-stream doesn't work well with Electron.net so
-    // this is a hack to drain the stream and send it to the request.
-    // (form.pipe(request) should work, but it doesn't)
-    // TODO: Do this a better way
-    const dummyStream = CombinedStream.create();
-    form.on('data', chunk => request.write(chunk));
-    form.on('end', () => request.end());
-    form.pipe(dummyStream);
-  } else if (renderedRequest.body.fileName) {
-    fs.createReadStream(renderedRequest.body.fileName).pipe(request);
-  } else if (renderedRequest.body.text) {
-    request.end(renderedRequest.body.text);
-  } else {
-    request.end();
-  }
+    // ~~~~~~~~~~~~~~ //
+    // Write the body //
+    // ~~~~~~~~~~~~~~ //
+
+    if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+      request.end(buildFromParams(renderedRequest.body.params || [], true));
+    } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
+      const form = new FormData();
+
+      for (const param of renderedRequest.body.params) {
+        if (param.type === 'file' && param.fileName) {
+          form.append(param.name, fs.createReadStream(param.fileName));
+        } else {
+          form.append(param.name, param.value || '');
+        }
+      }
+
+      const headers = form.getHeaders();
+      for (const name of Object.keys(headers)) {
+        request.setHeader(name, headers[name]);
+      }
+
+      // form-data's combined-stream doesn't work well with Electron.net so
+      // this is a hack to drain the stream and send it to the request.
+      // (form.pipe(request) should work, but it doesn't)
+      // TODO: Do this a better way
+      const dummyStream = CombinedStream.create();
+      form.on('data', chunk => request.write(chunk));
+      form.on('end', () => request.end());
+      form.pipe(dummyStream);
+    } else if (renderedRequest.body.fileName) {
+      fs.createReadStream(renderedRequest.body.fileName).pipe(request);
+    } else if (renderedRequest.body.text) {
+      request.end(renderedRequest.body.text);
+    } else {
+      request.end();
+    }
+  });
 }
 
 export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {
-  if (familyIndex === 0) {
-    return _actuallySend2(renderedRequest, workspace, settings);
-  }
-
   return new Promise(async (resolve, reject) => {
     async function handleError (err, prefix = '') {
       await models.response.create({
@@ -525,5 +580,6 @@ export async function send (requestId, environmentId) {
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!
-  return await _actuallySend(renderedRequest, workspace, settings);
+  // return await _actuallySend(renderedRequest, workspace, settings);
+  return await _actuallySend2(renderedRequest, workspace, settings);
 }
