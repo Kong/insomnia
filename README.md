@@ -1,14 +1,14 @@
 # Insomnia REST Client [![Build Status](https://travis-ci.com/getinsomnia/app.svg?branch=master)](https://travis-ci.com/getinsomnia/app)
 
-A simple REST API client, build with [Electron](http://electron.atom.io/).
+Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
-![Insomnia REST Client](https://insomnia.rest/images/docs/promo.png)
+![Insomnia REST Client Screenshot](https://insomnia.rest/images/docs/promo.png?bust=1)
 
 ## Setup
 
 ```bash
 # Install and use correct Node version
-nvm install 
+nvm install
 
 # Install dependencies
 npm install
@@ -25,18 +25,10 @@ refresh the app to see the change. It will inject the new component immediately.
 npm run dev
 ```
 
-## Build for Production
+## Build to Folder
 
 Build all assets into `./build/`
 
 ```bash
 npm run build
-```
-
-## Build and Package Installers
-
-Build binary files for each platform into `./dist/`
-
-```bash
-npm run package
 ```
