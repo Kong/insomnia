@@ -36,6 +36,8 @@ import 'codemirror/addon/search/matchesonscrollbar.css';
 import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/fold/foldgutter.css';
 import 'codemirror/addon/display/placeholder';
+import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
@@ -73,8 +75,9 @@ const BASE_CODEMIRROR_OPTIONS = {
   extraKeys: {
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
-    }
-  }
+    },
+    'Ctrl-Space': 'autocomplete',
+  },
 };
 
 class Editor extends Component {
@@ -126,7 +129,7 @@ class Editor extends Component {
       return;
     }
 
-    const {value} = this.props;
+    const {value, autocompleteHint} = this.props;
 
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged.bind(this)));
@@ -134,8 +137,21 @@ class Editor extends Component {
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
-          var spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
           cm.replaceSelection(spaces);
+        }
+      });
+    }
+
+    if (autocompleteHint) {
+      this.codeMirror.setOption('hintOptions', {
+        hint: (cm) => {
+          const cur = cm.getCursor();
+          return {
+            list: ['foo', 'bar', 'baz'],
+            from: CodeMirror.Pos(cur.line, cur.ch),
+            to: CodeMirror.Pos(cur.line, cur.ch)
+          }
         }
       });
     }
@@ -244,7 +260,6 @@ class Editor extends Component {
    * @param doc CodeMirror document
    */
   _codemirrorValueChanged (doc) {
-
     // Don't trigger change event if we're ignoring changes
     if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
@@ -299,14 +314,14 @@ class Editor extends Component {
   _showFilterHelp () {
     const json = this._isJSON(this.props.mode);
     const link = json ? (
-      <Link href="http://goessner.net/articles/JsonPath/">
-        JSONPath
-      </Link>
-    ) : (
-      <Link href="https://www.w3.org/TR/xpath/">
-        XPath
-      </Link>
-    );
+        <Link href="http://goessner.net/articles/JsonPath/">
+          JSONPath
+        </Link>
+      ) : (
+        <Link href="https://www.w3.org/TR/xpath/">
+          XPath
+        </Link>
+      );
 
     trackEvent('Response', `Filter ${json ? 'JSONPath' : 'XPath'}`, 'Help');
 
