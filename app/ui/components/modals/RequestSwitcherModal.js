@@ -98,36 +98,30 @@ class RequestSwitcherModal extends Component {
       });
     }
 
-    matchedRequests = matchedRequests.sort(
-      (a, b) => {
-        if (a.parentId === b.parentId) {
-          // Sort Requests by name inside of the same parent
-          // TODO: Sort by quality of match (eg. start vs mid string, etc)
-          return a.name > b.name ? 1 : -1;
+    matchedRequests = matchedRequests.sort((a, b) => {
+      if (a.parentId === b.parentId) {
+        // Sort Requests by name inside of the same parent
+        // TODO: Sort by quality of match (eg. start vs mid string, etc)
+        return a.name > b.name ? 1 : -1;
+      } else {
+        // Sort RequestGroups by relevance if Request isn't in same parent
+        if (a.parentId === activeRequestParentId) {
+          return -1;
+        } else if (b.parentId === activeRequestParentId) {
+          return 1;
         } else {
-          // Sort RequestGroups by relevance if Request isn't in same parent
-          if (a.parentId === activeRequestParentId) {
-            return -1;
-          } else if (b.parentId === activeRequestParentId) {
-            return 1;
-          } else {
-            return a.parentId > b.parentId ? -1 : 1;
-          }
+          return a.parentId > b.parentId ? -1 : 1;
         }
       }
-    );
+    }).slice(0, 20); // show 20 max
 
-    let matchedWorkspaces = [];
-    if (searchString) {
-      // Only match workspaces if there is a search
-      matchedWorkspaces = workspaces
-        .filter(w => w._id !== workspaceId)
-        .filter(w => {
-          const name = w.name.toLowerCase();
-          const toMatch = searchString.toLowerCase();
-          return name.indexOf(toMatch) !== -1
-        });
-    }
+    const matchedWorkspaces = workspaces
+      .filter(w => w._id !== workspaceId)
+      .filter(w => {
+        const name = w.name.toLowerCase();
+        const toMatch = searchString.toLowerCase();
+        return name.indexOf(toMatch) !== -1
+      });
 
     const activeIndex = searchString ? 0 : -1;
 
@@ -216,12 +210,12 @@ class RequestSwitcherModal extends Component {
                 <li key={r._id}>
                   <button onClick={e => this._activateRequest(r)} className={buttonClasses}>
                     {requestGroup ? (
-                      <div className="pull-right faint italic">
-                        {requestGroup.name}
-                        &nbsp;&nbsp;
-                        <i className="fa fa-folder-o"></i>
-                      </div>
-                    ) : null}
+                        <div className="pull-right faint italic">
+                          {requestGroup.name}
+                          &nbsp;&nbsp;
+                          <i className="fa fa-folder-o"></i>
+                        </div>
+                      ) : null}
                     <MethodTag method={r.method}/>
                     <strong>{r.name}</strong>
                   </button>
@@ -250,18 +244,18 @@ class RequestSwitcherModal extends Component {
           </ul>
 
           {!matchedRequests.length && !matchedWorkspaces.length ? (
-            <div className="text-center">
-              <p>
-                No matches found for <strong>{searchString}</strong>
-              </p>
+              <div className="text-center">
+                <p>
+                  No matches found for <strong>{searchString}</strong>
+                </p>
 
-              <button className="btn btn--outlined btn--compact"
-                      disabled={!searchString}
-                      onClick={e => this._activateCurrentIndex()}>
-                Create a request named {searchString}
-              </button>
-            </div>
-          ) : null}
+                <button className="btn btn--outlined btn--compact"
+                        disabled={!searchString}
+                        onClick={e => this._activateCurrentIndex()}>
+                  Create a request named {searchString}
+                </button>
+              </div>
+            ) : null}
         </ModalBody>
       </Modal>
     );
