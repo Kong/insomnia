@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import {getDOMNode} from 'react-dom';
+import {ReactDOM} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import JSONPath from 'jsonpath-plus';
@@ -73,9 +73,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   ],
   cursorScrollMargin: 12, // NOTE: This is px
   extraKeys: {
-    'Ctrl-Q': function (cm) {
-      cm.foldCode(cm.getCursor());
-    },
+    'Ctrl-Q': cm => cm.foldCode(cm.getCursor()),
     'Ctrl-Space': 'autocomplete',
   },
 };
@@ -118,6 +116,22 @@ class Editor extends Component {
     return this.codeMirror.getValue();
   }
 
+  _handleSetupAutocomplete = node => {
+    if (this.props.autocompleteHints) {
+      this.codeMirror.setOption('hintOptions', {
+        container: node,
+        hint: (cm) => {
+          const cur = cm.getCursor();
+          return {
+            list: this.props.autocompleteHints,
+            from: CodeMirror.Pos(cur.line, cur.ch),
+            to: CodeMirror.Pos(cur.line, cur.ch)
+          }
+        }
+      });
+    }
+  };
+
   _handleInitTextarea = textarea => {
     if (!textarea) {
       // Not mounted
@@ -129,7 +143,7 @@ class Editor extends Component {
       return;
     }
 
-    const {value, autocompleteHint} = this.props;
+    const {value} = this.props;
 
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged.bind(this)));
@@ -139,19 +153,6 @@ class Editor extends Component {
         Tab: cm => {
           const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
           cm.replaceSelection(spaces);
-        }
-      });
-    }
-
-    if (autocompleteHint) {
-      this.codeMirror.setOption('hintOptions', {
-        hint: (cm) => {
-          const cur = cm.getCursor();
-          return {
-            list: ['foo', 'bar', 'baz'],
-            from: CodeMirror.Pos(cur.line, cur.ch),
-            to: CodeMirror.Pos(cur.line, cur.ch)
-          }
         }
       });
     }
@@ -447,6 +448,7 @@ class Editor extends Component {
             readOnly={readOnly}
             autoComplete="off"
           />
+          <div ref={this._handleSetupAutocomplete}></div>
         </div>
         {toolbar}
       </div>
@@ -468,7 +470,8 @@ Editor.propTypes = {
   className: PropTypes.any,
   lightTheme: PropTypes.bool,
   updateFilter: PropTypes.func,
-  filter: PropTypes.string
+  filter: PropTypes.string,
+  autocompleteHints: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default Editor;

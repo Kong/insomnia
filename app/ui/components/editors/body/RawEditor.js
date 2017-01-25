@@ -15,6 +15,7 @@ class RawEditor extends Component {
 
     return (
       <Editor
+        autocompleteHints={['base_url', 'api_key', 'user_id', 'foo']}
         manualPrettify={true}
         fontSize={fontSize}
         keyMap={keyMap}
