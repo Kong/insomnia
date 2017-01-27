@@ -26,7 +26,6 @@ import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/comment-fold';
 import 'codemirror/addon/fold/indent-fold';
 import 'codemirror/addon/fold/xml-fold';
-import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/addon/edit/matchbrackets';
@@ -48,6 +47,9 @@ import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
+// Make jsonlint available to the jsonlint plugin
+import {parser as jsonlint} from 'jsonlint';
+global.jsonlint = jsonlint;
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -55,7 +57,6 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  autoRefresh: {delay: 250}, // Necessary to show up in the env modal first launch
   lineWrapping: true,
   lint: true,
   tabSize: 4,
@@ -299,14 +300,14 @@ class Editor extends Component {
   _showFilterHelp () {
     const json = this._isJSON(this.props.mode);
     const link = json ? (
-      <Link href="http://goessner.net/articles/JsonPath/">
-        JSONPath
-      </Link>
-    ) : (
-      <Link href="https://www.w3.org/TR/xpath/">
-        XPath
-      </Link>
-    );
+        <Link href="http://goessner.net/articles/JsonPath/">
+          JSONPath
+        </Link>
+      ) : (
+        <Link href="https://www.w3.org/TR/xpath/">
+          XPath
+        </Link>
+      );
 
     trackEvent('Response', `Filter ${json ? 'JSONPath' : 'XPath'}`, 'Help');
 

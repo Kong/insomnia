@@ -1,7 +1,7 @@
 import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
-import {deconstructToParams} from '../common/querystring';
+import {deconstructToParams, buildFromParams} from '../common/querystring';
 
 export const name = 'Request';
 export const type = 'Request';
@@ -51,7 +51,7 @@ export function newBodyFile (path) {
 export function newBodyForm (parameters) {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
-    params: parameters
+    params: parameters || []
   }
 }
 
@@ -85,7 +85,9 @@ export function updateMimeType (request, mimeType, doCreate = false) {
   let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);
 
-  // 1. Update Content-Type header
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+  // 1. Update Content-Type header //
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   if (!mimeType) {
     // Remove the contentType header if we are un-setting it
@@ -96,22 +98,41 @@ export function updateMimeType (request, mimeType, doCreate = false) {
     headers.push({name: 'Content-Type', value: mimeType})
   }
 
-  // 2. Make a new request body
-  // TODO: When switching mime-type, try to convert formats nicely
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+  // 2. Make a new request body //
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
   let body;
+
   if (mimeType === request.body.mimeType) {
+    // Unchanged
     body = request.body;
   } else if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    body = newBodyFormUrlEncoded(request.body.params);
+    // Urlencoded
+    body = request.body.params ?
+      newBodyFormUrlEncoded(request.body.params) :
+      newBodyFormUrlEncoded(deconstructToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    body = newBodyForm(request.body.params || []);
+    // Form Data
+    body = request.body.params ?
+      newBodyForm(request.body.params) :
+      newBodyForm(deconstructToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FILE) {
+    // File
     body = newBodyFile('');
   } else if (typeof mimeType !== 'string') {
+    // No body
     body = newBodyRaw('');
   } else {
-    body = newBodyRaw(request.body.text || '', mimeType);
+    // Raw Content-Type (ex: application/json)
+    body = request.body.params ?
+      newBodyRaw(buildFromParams(request.body.params, false), mimeType) :
+      newBodyRaw(request.body.text || '', mimeType);
   }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
+  // 2. create/update request //
+  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   if (doCreate) {
     return create(Object.assign({}, request, {headers, body}));
