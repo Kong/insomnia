@@ -103,6 +103,7 @@
     "codemirror": "^5.22.0",
     "electron-context-menu": "^0.4.0",
     "electron-squirrel-startup": "^1.0.0",
+    "form-data": "^2.1.2",
     "hkdf": "0.0.2",
     "httpsnippet": "git@github.com:getinsomnia/httpsnippet.git#a3a2c0a0167fa844bf92df52a1442fa1d68a9053",
     "insomnia-importers": "^1.3.0",
@@ -133,7 +134,8 @@
     "vkbeautify": "^0.99.1",
     "whatwg-fetch": "^2.0.1",
     "xmldom": "^0.1.22",
-    "xpath": "^0.0.23"
+    "xpath": "^0.0.23",
+    "combined-stream": "latest"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
