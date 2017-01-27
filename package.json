@@ -106,7 +106,7 @@
     "hkdf": "0.0.2",
     "httpsnippet": "git@github.com:getinsomnia/httpsnippet.git#a3a2c0a0167fa844bf92df52a1442fa1d68a9053",
     "insomnia-importers": "^1.3.0",
-    "json-lint": "^0.1.0",
+    "jsonlint": "^1.6.2",
     "jsonpath-plus": "^0.15.0",
     "mime-types": "^2.1.12",
     "mkdirp": "^0.5.1",
@@ -158,6 +158,7 @@
     "express": "^4.14.0",
     "file-loader": "^0.9.0",
     "jest": "^18.1.0",
+    "jsbn": "^0.1.0",
     "json-loader": "^0.5.4",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
@@ -172,7 +173,7 @@
     "webpack-dev-middleware": "1.7.0",
     "webpack-dev-server": "^1.14.1",
     "webpack-hot-middleware": "^2.10.0",
-    "webpack-target-electron-renderer": "^0.4.0", "jsbn": "latest"
+    "webpack-target-electron-renderer": "^0.4.0"
   },
   "devEngines": {
     "node": "6.x",

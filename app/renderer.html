@@ -6,7 +6,6 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="static/jsonlint.js"></script>
 <script src="static/raven.min.js"></script>
 <script>
   // UPDATE HANDLERS
@@ -26,12 +25,14 @@
     ipcRenderer.on('update-available', () => {
       // Give it a few seconds before showing this. Sometimes, when
       // you relaunch too soon it doesn't work the first time.
-      setTimeout(() => showUpdateNotification(), 1000 * 10)
+      setTimeout(showUpdateNotification, 1000 * 10)
     });
 
-    setInterval(() => {
+    function checkForUpdates () {
       ipcRenderer.send('check-for-updates');
-    }, CHECK_FOR_UPDATES_INTERVAL);
+    }
+
+    setInterval(checkForUpdates, CHECK_FOR_UPDATES_INTERVAL);
   })();
 </script>
 <script>
@@ -48,8 +49,12 @@
     // Variable to keep track of errors per interval
     let intervalErrorCount = 0;
 
+    function resetErrorCount () {
+        intervalErrorCount = 0
+    }
+
     // Reset error count after every interval
-    setInterval(() => intervalErrorCount = 0, MAX_ERRORS_INTERVAL);
+    setInterval(resetErrorCount, MAX_ERRORS_INTERVAL);
 
     Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
       logger: 'electron.renderer',

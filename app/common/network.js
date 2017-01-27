@@ -65,8 +65,10 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     const formData = {};
     for (const param of renderedRequest.body.params) {
       if (param.type === 'file' && param.fileName) {
+        // Check if file exists first (read stream won't right away)
+        fs.statSync(param.fileName);
         formData[param.name] = {
-          value: fs.readFileSync(param.fileName),
+          value: fs.createReadStream(param.fileName),
           options: {
             filename: pathBasename(param.fileName),
             contentType: mime.lookup(param.fileName) // Guess the mime-type
@@ -78,7 +80,9 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     }
     config.formData = formData;
   } else if (renderedRequest.body.fileName) {
-    config.body = fs.readFileSync(renderedRequest.body.fileName);
+    // Check if file exists first (read stream won't right away)
+    fs.statSync(renderedRequest.body.fileName);
+    config.body = fs.createReadStream(renderedRequest.body.fileName);
   } else {
     config.body = renderedRequest.body.text || '';
   }

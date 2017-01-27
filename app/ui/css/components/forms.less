@@ -60,11 +60,15 @@
     textarea,
     input,
     select {
-      height: @line-height-xs;
       border: 1px solid @hl-md;
-      padding: 0 @padding-sm;
+      padding: @padding-sm;
       border-radius: @radius-md;
       background-color: @hl-xxs;
+    }
+
+    input,
+    select {
+      height: @line-height-xs;
     }
 
     textarea:focus,

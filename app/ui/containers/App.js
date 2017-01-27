@@ -5,7 +5,6 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
-import Mousetrap from '../mousetrap';
 import {toggleModal, showModal} from '../components/modals';
 import Wrapper from '../components/Wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
@@ -15,7 +14,7 @@ import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import PromptModal from '../components/modals/PromptModal';
 import ChangelogModal from '../components/modals/ChangelogModal';
 import SettingsModal from '../components/modals/SettingsModal';
-import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion, PREVIEW_MODE_SOURCE} from '../../common/constants';
+import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion, PREVIEW_MODE_SOURCE, isMac} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
@@ -27,6 +26,14 @@ import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal'
 import * as network from '../../common/network';
 import {debounce} from '../../common/misc';
 
+const KEY_ENTER = 13;
+const KEY_COMMA = 188;
+const KEY_D = 68;
+const KEY_E = 69;
+const KEY_K = 75;
+const KEY_L = 76;
+const KEY_N = 78;
+const KEY_P = 80;
 
 class App extends Component {
   constructor (props) {
@@ -37,75 +44,85 @@ class App extends Component {
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
     };
+
+    this._globalKeyMap = [
+      { // Show Workspace Settings
+        meta: true,
+        shift: true,
+        key: KEY_COMMA,
+        callback: () => {
+          const {activeWorkspace} = this.props;
+          toggleModal(WorkspaceSettingsModal, activeWorkspace);
+          trackEvent('HotKey', 'Workspace Settings');
+        }
+      }, {
+        meta: true,
+        shift: false,
+        key: KEY_P,
+        callback: () => {
+          toggleModal(RequestSwitcherModal);
+          trackEvent('HotKey', 'Quick Switcher');
+        }
+      }, {
+        meta: true,
+        shift: false,
+        key: KEY_ENTER,
+        callback: () => {
+          const {activeRequest, activeEnvironment} = this.props;
+          this._handleSendRequestWithEnvironment(
+            activeRequest ? activeRequest._id : 'n/a',
+            activeEnvironment ? activeEnvironment._id : 'n/a',
+          );
+          trackEvent('HotKey', 'Send');
+        }
+      }, {
+        meta: true,
+        shift: false,
+        key: KEY_E,
+        callback: () => {
+          const {activeWorkspace} = this.props;
+          toggleModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
+          trackEvent('HotKey', 'Environments');
+        }
+      }, {
+        meta: true,
+        shift: false,
+        key: KEY_L,
+        callback: () => {
+          const node = document.body.querySelector('.urlbar input');
+          node && node.focus();
+          trackEvent('HotKey', 'Url');
+        }
+      }, {
+        meta: true,
+        shift: false,
+        key: KEY_K,
+        callback: () => {
+          const {activeWorkspace} = this.props;
+          toggleModal(CookiesModal, activeWorkspace);
+          trackEvent('HotKey', 'Cookies');
+        }
+      }, {
+        meta: true,
+        shift: false,
+        key: KEY_N,
+        callback: () => {
+          const {activeRequest, activeWorkspace} = this.props;
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          this._requestCreate(parentId);
+          trackEvent('HotKey', 'Request Create');
+        }
+      }, {
+        meta: true,
+        shift: false,
+        key: KEY_D,
+        callback: () => {
+          this._requestDuplicate(this.props.activeRequest);
+          trackEvent('HotKey', 'Request Duplicate');
+        }
+      }
+    ];
   }
-
-  _globalKeyMap = {
-
-    // Show Settings
-    'mod+,': () => {
-      // NOTE: This is controlled via a global menu shortcut in app.js
-    },
-
-    // Show Settings
-    'mod+shift+,': () => {
-      // NOTE: This is controlled via a global menu shortcut in app.js
-      const {activeWorkspace} = this.props;
-      toggleModal(WorkspaceSettingsModal, activeWorkspace);
-      trackEvent('HotKey', 'Workspace Settings');
-    },
-
-    // Show Request Switcher
-    'mod+p': () => {
-      toggleModal(RequestSwitcherModal);
-      trackEvent('HotKey', 'Quick Switcher');
-    },
-
-    // Request Send
-    'mod+enter': () => {
-      const {activeRequest, activeEnvironment} = this.props;
-      this._handleSendRequestWithEnvironment(
-        activeRequest ? activeRequest._id : 'n/a',
-        activeEnvironment ? activeEnvironment._id : 'n/a',
-      );
-      trackEvent('HotKey', 'Send');
-    },
-
-    // Edit Workspace Environments
-    'mod+e': () => {
-      const {activeWorkspace} = this.props;
-      toggleModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
-      trackEvent('HotKey', 'Environments');
-    },
-
-    // Focus URL Bar
-    'mod+l': () => {
-      const node = document.body.querySelector('.urlbar input');
-      node && node.focus();
-      trackEvent('HotKey', 'Url');
-    },
-
-    // Edit Cookies
-    'mod+k': () => {
-      const {activeWorkspace} = this.props;
-      toggleModal(CookiesModal, activeWorkspace);
-      trackEvent('HotKey', 'Cookies');
-    },
-
-    // Request Create
-    'mod+n': () => {
-      const {activeRequest, activeWorkspace} = this.props;
-
-      const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-      this._requestCreate(parentId);
-      trackEvent('HotKey', 'Request Create');
-    },
-
-    // Request Duplicate
-    'mod+d': async () => {
-      this._requestDuplicate(this.props.activeRequest);
-      trackEvent('HotKey', 'Request Duplicate');
-    }
-  };
 
   _setRequestPaneRef = n => this._requestPane = n;
   _setResponsePaneRef = n => this._responsePane = n;
@@ -307,6 +324,27 @@ class App extends Component {
     }
   };
 
+  _handleKeyDown = e => {
+    const isMetaPressed = isMac() ? e.metaKey : e.ctrlKey;
+    const isShiftPressed = e.shiftKey;
+
+    for (const {meta, shift, key, callback} of this._globalKeyMap) {
+      if (meta && !isMetaPressed) {
+        continue;
+      }
+
+      if (shift && !isShiftPressed) {
+        continue;
+      }
+
+      if (key !== e.keyCode) {
+        continue;
+      }
+
+      callback();
+    }
+  };
+
   _handleToggleSidebar = () => {
     const sidebarHidden = !this.props.sidebarHidden;
     this._handleSetSidebarHidden(sidebarHidden);
@@ -318,14 +356,10 @@ class App extends Component {
   };
 
   async componentDidMount () {
-    // Bind mouse handlers
+    // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
-
-    // Map global keyboard shortcuts
-    Object.keys(this._globalKeyMap).map(key => {
-      Mousetrap.bindGlobal(key.split('|'), this._globalKeyMap[key]);
-    });
+    document.addEventListener('keydown', this._handleKeyDown);
 
     // Do The Analytics
     trackLegacyEvent('App Launched');
@@ -387,12 +421,10 @@ class App extends Component {
   }
 
   componentWillUnmount () {
-    // Remove mouse handlers
+    // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
-
-    // Unbind global keyboard shortcuts
-    Mousetrap.unbind();
+    document.removeEventListener('keydown', this._handleKeyDown);
   }
 
   render () {

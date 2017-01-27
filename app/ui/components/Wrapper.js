@@ -286,12 +286,6 @@ class Wrapper extends Component {
         <WorkspaceShareSettingsModal
           ref={registerModal}
           workspace={activeWorkspace}/>
-        <EnvironmentEditModal
-          ref={registerModal}
-          editorFontSize={settings.editorFontSize}
-          editorKeyMap={settings.editorKeyMap}
-          onChange={models.requestGroup.update}
-        />
         <GenerateCodeModal
           ref={registerModal}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
@@ -313,6 +307,12 @@ class Wrapper extends Component {
           activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
           activateRequest={handleActivateRequest}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
+        />
+        <EnvironmentEditModal
+          ref={registerModal}
+          editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
+          onChange={models.requestGroup.update}
         />
         <WorkspaceEnvironmentsEditModal
           ref={registerModal}

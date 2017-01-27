@@ -11,7 +11,8 @@ export default {
     new webpack.DefinePlugin({
       __DEV__: false,
       'process.env.NODE_ENV': JSON.stringify('production'),
-      'process.env.INSOMNIA_ENV': JSON.stringify('production')
+      'process.env.INSOMNIA_ENV': JSON.stringify('production'),
+      'process.env.HOT': JSON.stringify(null),
     })
   ]
 }
