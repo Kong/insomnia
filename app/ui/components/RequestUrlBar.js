@@ -10,7 +10,6 @@ import {showModal} from './modals/index';
 
 class RequestUrlBar extends Component {
   state = {
-    showAdvanced: false,
     currentInterval: null,
     currentTimeout: null,
   };
@@ -35,6 +34,15 @@ class RequestUrlBar extends Component {
     }, DEBOUNCE_MILLIS);
   };
 
+  _handleUrlPaste = e => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    this.props.onUrlPaste(text);
+
+    // Set the input anyway in case nothing is able to import
+    e.target.value = text;
+  };
+
   _handleGenerateCode = () => {
     this.props.handleGenerateCode();
     trackEvent('Request', 'Generate Code', 'Send Action');
@@ -52,31 +60,11 @@ class RequestUrlBar extends Component {
       this._input.focus();
       this._input.select();
     }
-
-    if (!this.state.showAdvanced && metaPressed) {
-      clearTimeout(this._metaTimeout);
-      this._metaTimeout = setTimeout(() => {
-        this.setState({showAdvanced: true});
-      }, 400);
-    }
-  };
-
-  _handleKeyUp = e => {
-    const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
-
-    // First, clear the meta timeout if it hasn't triggered yet
-    if (!metaPressed) {
-      clearTimeout(this._metaTimeout);
-    }
-
-    if (!metaPressed && this.state.showAdvanced) {
-      this.setState({showAdvanced: false});
-    }
   };
 
   _handleSend = () => {
     // Don't stop interval because duh, it needs to keep going!
-    // this._handleStopInterval();
+    // XXX this._handleStopInterval(); XXX
 
     this._handleStopTimeout();
     this.props.handleSend();
@@ -222,6 +210,7 @@ class RequestUrlBar extends Component {
         <form onSubmit={this._handleFormSubmit}>
           <input
             ref={n => this._input = n}
+            onPaste={this._handleUrlPaste}
             type="text"
             placeholder="https://api.myproduct.com/v1/users"
             defaultValue={url}
@@ -236,6 +225,7 @@ class RequestUrlBar extends Component {
 RequestUrlBar.propTypes = {
   handleSend: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
+  onUrlPaste: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   url: PropTypes.string.isRequired,

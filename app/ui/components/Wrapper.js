@@ -41,16 +41,17 @@ class Wrapper extends Component {
   _handleUpdateRequestParameters = parameters => rUpdate(this.props.activeRequest, {parameters});
   _handleUpdateRequestAuthentication = authentication => rUpdate(this.props.activeRequest, {authentication});
   _handleUpdateRequestHeaders = headers => rUpdate(this.props.activeRequest, {headers});
+  _handleUpdateRequestUrl = url => rUpdate(this.props.activeRequest, {url});
 
   // Special request updaters
   _handleUpdateRequestMimeType = mimeType => updateMimeType(this.props.activeRequest, mimeType);
-  _handleUpdateRequestUrl = async url => {
+  _handleImportRequest = async text => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     const {activeRequest} = this.props;
 
     try {
-      const {data} = importers.convert(url);
+      const {data} = importers.convert(text);
       const {resources} = data;
       const r = resources[0];
 
@@ -76,6 +77,7 @@ class Wrapper extends Component {
 
     models.request.update(activeRequest, {url});
   };
+
 
   // Settings updaters
   _handleUpdateSettingsShowPasswords = showPasswords => sUpdate(this.props.settings, {showPasswords});
@@ -239,6 +241,7 @@ class Wrapper extends Component {
           updateRequest={this._handleUpdateRequest}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
+          importRequest={this._handleImportRequest}
           updateRequestMethod={this._handleUpdateRequestMethod}
           updateRequestParameters={this._handleUpdateRequestParameters}
           updateRequestAuthentication={this._handleUpdateRequestAuthentication}

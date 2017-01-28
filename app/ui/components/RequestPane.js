@@ -74,6 +74,7 @@ class RequestPane extends PureComponent {
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,
+      importRequest,
       updateRequestUrl,
       updateRequestMethod,
       updateRequestBody,
@@ -148,6 +149,7 @@ class RequestPane extends PureComponent {
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={debounce(updateRequestUrl)}
+            onUrlPaste={importRequest}
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
             url={request.url}
@@ -205,14 +207,14 @@ class RequestPane extends PureComponent {
               />
               <div className="pad pull-right">
                 {showPasswords ? (
-                  <button className="btn btn--clicky" onClick={this._handleHidePasswords}>
-                    Hide Password
-                  </button>
-                ) : (
-                  <button className="btn btn--clicky" onClick={this._handleShowPasswords}>
-                    Show Password
-                  </button>
-                )}
+                    <button className="btn btn--clicky" onClick={this._handleHidePasswords}>
+                      Hide Password
+                    </button>
+                  ) : (
+                    <button className="btn btn--clicky" onClick={this._handleShowPasswords}>
+                      Show Password
+                    </button>
+                  )}
               </div>
             </div>
           </TabPanel>
@@ -289,6 +291,7 @@ RequestPane.propTypes = {
   updateRequestMimeType: PropTypes.func.isRequired,
   updateSettingsShowPasswords: PropTypes.func.isRequired,
   updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
+  importRequest: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,
 
   // Other

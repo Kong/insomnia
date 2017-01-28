@@ -37,7 +37,7 @@ class ContentTypeDropdown extends Component {
         <DropdownDivider><span><i className="fa fa-bars"></i> Form Data</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_DATA)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_URLENCODED)}
-        <DropdownDivider><span><i className="fa fa-code"></i> Raw Text</span></DropdownDivider>
+        <DropdownDivider><span><i className="fa fa-code"></i> Text</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_JSON)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_XML)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_OTHER)}
