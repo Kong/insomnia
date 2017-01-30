@@ -75,7 +75,7 @@ class Wrapper extends Component {
       // Import failed, that's alright
     }
 
-    models.request.update(activeRequest, {url});
+    models.request.update(activeRequest, {url: text});
   };
 
 
