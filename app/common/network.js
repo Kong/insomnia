@@ -118,17 +118,15 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 }
 
 export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async resolve => {
     async function handleError (err, prefix = '') {
-      await models.response.create({
+      resolve({
         url: renderedRequest.url,
         parentId: renderedRequest._id,
         elapsedTime: 0,
         statusMessage: 'Error',
         error: prefix ? `${prefix}: ${err.message}` : err.message
       });
-
-      reject(err);
     }
 
     // Detect and set the proxy based on the request protocol
@@ -215,10 +213,10 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         if (isNetworkRelatedError && nextFamilyIndex < FAMILY_FALLBACKS.length) {
           const family = FAMILY_FALLBACKS[nextFamilyIndex];
           console.log(`-- Falling back to family ${family} --`);
-          _actuallySend(
+
+          return _actuallySend(
             renderedRequest, workspace, settings, nextFamilyIndex
           ).then(resolve, reject);
-          return;
         }
 
         let message = err.toString();
@@ -227,14 +225,12 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
           message += `Code: ${err.code}`;
         }
 
-        await models.response.create({
+        return resolve({
           url: config.url,
           parentId: renderedRequest._id,
           statusMessage: 'Error',
           error: message
         });
-
-        return reject(err);
       }
 
       // handle response headers
@@ -272,7 +268,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
       }
 
       const bodyEncoding = 'base64';
-      const responsePatch = {
+      return resolve({
         parentId: renderedRequest._id,
         statusCode: networkResponse.statusCode,
         statusMessage: networkResponse.statusMessage,
@@ -283,9 +279,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         body: networkResponse.body.toString(bodyEncoding),
         encoding: bodyEncoding,
         headers: headers
-      };
-
-      models.response.create(responsePatch).then(resolve, reject);
+      });
     };
 
     const requestStartTime = Date.now();
@@ -295,15 +289,13 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
     cancelRequestFunction = async () => {
       req.abort();
 
-      await models.response.create({
+      resolve({
         url: config.url,
         parentId: renderedRequest._id,
         elapsedTime: Date.now() - requestStartTime,
         statusMessage: 'Cancelled',
         error: 'The request was cancelled'
       });
-
-      return reject(new Error('Cancelled'));
     }
   })
 }
@@ -321,7 +313,7 @@ export async function send (requestId, environmentId) {
     renderedRequest = await getRenderedRequest(request, environmentId);
   } catch (e) {
     // Failed to render. Must be the user's fault
-    return await models.response.create({
+    return resolve({
       parentId: request._id,
       statusCode: STATUS_CODE_RENDER_FAILED,
       error: e.message
@@ -333,5 +325,5 @@ export async function send (requestId, environmentId) {
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!
-  return await _actuallySend(renderedRequest, workspace, settings);
+  return _actuallySend(renderedRequest, workspace, settings);
 }

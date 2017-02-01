@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import fs from 'fs';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
@@ -25,6 +26,8 @@ import GenerateCodeModal from '../components/modals/GenerateCodeModal';
 import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
 import * as network from '../../common/network';
 import {debounce} from '../../common/misc';
+import * as mime from 'mime-types';
+import * as path from 'path';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
@@ -158,8 +161,12 @@ class App extends Component {
     this._handleSetActiveRequest(newRequest._id)
   };
 
-  _handleGenerateCode = () => {
-    showModal(GenerateCodeModal, this.props.activeRequest);
+  _handleGenerateCodeForActiveRequest = () => {
+    this._handleGenerateCode(this.props.activeRequest);
+  };
+
+  _handleGenerateCode = request => {
+    showModal(GenerateCodeModal, request);
   };
 
   _updateRequestGroupMetaByParentId = async (requestGroupId, patch) => {
@@ -233,6 +240,51 @@ class App extends Component {
     this._updateRequestMetaByParentId(requestId, {responseFilter});
   };
 
+  _handleSendAndDownloadRequestWithEnvironment = async (requestId, environmentId, dir) => {
+    const request = await models.request.getById(requestId);
+    if (!request) {
+      return;
+    }
+
+    // NOTE: Since request is by far the most popular event, we will throttle
+    // it so that we only track it if the request has changed since the last one
+    const key = request._id;
+    if (this._sendRequestTrackingKey !== key) {
+      trackEvent('Request', 'Send and Download');
+      trackLegacyEvent('Request Send');
+      this._sendRequestTrackingKey = key;
+    }
+
+    // Start loading
+    this.props.handleStartLoading(requestId);
+
+    try {
+      const responsePatch = await network.send(requestId, environmentId);
+      if (responsePatch.statusCode >= 200 && responsePatch.statusCode < 300) {
+        const extension = mime.extension(responsePatch.contentType) || '';
+        const name = request.name.replace(/\s/g, '-').toLowerCase();
+        const filename = path.join(dir, `${name}.${extension}`);
+        const partialResponse = Object.assign({}, responsePatch, {
+          contentType: "text/plain",
+          body: `Saved to ${filename}`,
+          encoding: 'utf8',
+        });
+        await models.response.create(partialResponse);
+        fs.writeFile(filename, responsePatch.body, responsePatch.encoding)
+      } else {
+        await models.response.create(responsePatch);
+      }
+    } catch (e) {
+      // It's OK
+    }
+
+    // Unset active response because we just made a new one
+    await this._updateRequestMetaByParentId(requestId, {activeResponseId: null});
+
+    // Stop loading
+    this.props.handleStopLoading(requestId);
+  };
+
   _handleSendRequestWithEnvironment = async (requestId, environmentId) => {
     const request = await models.request.getById(requestId);
     if (!request) {
@@ -251,7 +303,8 @@ class App extends Component {
     this.props.handleStartLoading(requestId);
 
     try {
-      await network.send(requestId, environmentId);
+      const responsePatch = await network.send(requestId, environmentId);
+      await models.response.create(responsePatch);
     } catch (e) {
       // It's OK
     }
@@ -450,9 +503,11 @@ class App extends Component {
           handleDuplicateRequestGroup={this._requestGroupDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}
           handleGenerateCode={this._handleGenerateCode}
+          handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
           handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
           handleSetResponseFilter={this._handleSetResponseFilter}
           handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+          handleSendAndDownloadRequestWithEnvironment={this._handleSendAndDownloadRequestWithEnvironment}
           handleSetActiveResponse={this._handleSetActiveResponse}
           handleSetActiveRequest={this._handleSetActiveRequest}
           handleSetActiveEnvironment={this._handleSetActiveEnvironment}

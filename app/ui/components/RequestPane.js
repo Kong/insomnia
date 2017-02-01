@@ -71,6 +71,7 @@ class RequestPane extends PureComponent {
       editorKeyMap,
       editorLineWrapping,
       handleSend,
+      handleSendAndDownload,
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,
@@ -152,6 +153,7 @@ class RequestPane extends PureComponent {
             onUrlPaste={importRequest}
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
+            handleSendAndDownload={handleSendAndDownload}
             url={request.url}
           />
         </header>
@@ -279,6 +281,7 @@ class RequestPane extends PureComponent {
 RequestPane.propTypes = {
   // Functions
   handleSend: PropTypes.func.isRequired,
+  handleSendAndDownload: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   updateRequest: PropTypes.func.isRequired,

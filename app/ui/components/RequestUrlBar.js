@@ -1,23 +1,28 @@
 import React, {Component, PropTypes} from 'react';
-import classnames from 'classnames';
+import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
 import {trackEvent} from '../../analytics';
 import MethodDropdown from './dropdowns/MethodDropdown';
 import PromptModal from './modals/PromptModal';
 import {showModal} from './modals/index';
+import PromptButton from './base/PromptButton';
 
 
 class RequestUrlBar extends Component {
   state = {
     currentInterval: null,
     currentTimeout: null,
+    downloadPath: null
   };
+
+  _urlChangeDebounceTimeout = null;
 
   _handleFormSubmit = e => {
     e.preventDefault();
     e.stopPropagation();
-    this.props.handleSend();
+
+    this._handleSend();
   };
 
   _handleMethodChange = method => {
@@ -28,20 +33,54 @@ class RequestUrlBar extends Component {
   _handleUrlChange = e => {
     const url = e.target.value;
 
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
+    clearTimeout(this._urlChangeDebounceTimeout);
+    this._urlChangeDebounceTimeout = setTimeout(() => {
       this.props.onUrlChange(url);
     }, DEBOUNCE_MILLIS);
   };
 
   _handleUrlPaste = e => {
+    /*
+     * Prevent the change handler from being called. Note that this is in a timeout
+     * because we want it to happen after the onChange callback. If it happens before,
+     * then the change will overwrite anything that we do.
+     *
+     * Also, note that there is still a potential race condition here if, for some reason,
+     * the onChange callback is not called before DEBOUNCE_MILLIS is over. This is extremely
+     * unlikely since it should happen in the same tick.
+     */
     const text = e.clipboardData.getData('text/plain');
-    this.props.onUrlPaste(text);
+    setTimeout(() => {
+      // Clear any update timeouts that may have happened since we started waiting
+      clearTimeout(this._urlChangeDebounceTimeout);
+      this.props.onUrlPaste(text);
+    }, DEBOUNCE_MILLIS);
   };
 
   _handleGenerateCode = () => {
     this.props.handleGenerateCode();
     trackEvent('Request', 'Generate Code', 'Send Action');
+  };
+
+  _handleSetDownloadLocation = () => {
+    const options = {
+      title: 'Select Download Location',
+      buttonLabel: 'Select',
+      properties: ['openDirectory'],
+    };
+
+    remote.dialog.showOpenDialog(options, paths => {
+      if (!paths || paths.length === 0) {
+        trackEvent('Response', 'Download Select Cancel');
+        return;
+      }
+
+      this.setState({downloadPath: paths[0]});
+    });
+  };
+
+  _handleClearDownloadLocation = () => {
+    this.setState({downloadPath: null});
   };
 
   _handleKeyDown = e => {
@@ -63,7 +102,13 @@ class RequestUrlBar extends Component {
     // XXX this._handleStopInterval(); XXX
 
     this._handleStopTimeout();
-    this.props.handleSend();
+
+    const {downloadPath} = this.state;
+    if (downloadPath) {
+      this.props.handleSendAndDownload(downloadPath);
+    } else {
+      this.props.handleSend();
+    }
   };
 
   _handleSendAfterDelay = async () => {
@@ -130,16 +175,14 @@ class RequestUrlBar extends Component {
 
   componentDidMount () {
     document.body.addEventListener('keydown', this._handleKeyDown);
-    document.body.addEventListener('keyup', this._handleKeyUp);
   }
 
   componentWillUnmount () {
     document.body.removeEventListener('keydown', this._handleKeyDown);
-    document.body.removeEventListener('keyup', this._handleKeyUp);
   }
 
   renderSendButton () {
-    const {currentInterval, currentTimeout} = this.state;
+    const {currentInterval, currentTimeout, downloadPath} = this.state;
 
     let cancelButton = null;
     if (currentInterval) {
@@ -169,7 +212,7 @@ class RequestUrlBar extends Component {
           <DropdownButton className="urlbar__send-btn"
                           onClick={this._handleClickSend}
                           type="submit">
-            Send
+            {downloadPath ? "Download" : "Send"}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
@@ -186,6 +229,18 @@ class RequestUrlBar extends Component {
           <DropdownItem onClick={this._handleSendOnInterval}>
             <i className="fa fa-repeat"/> Repeat on Interval
           </DropdownItem>
+          {downloadPath ? (
+              <DropdownItem stayOpenAfterClick={true}
+                            buttonClass={PromptButton}
+                            addIcon={true}
+                            onClick={this._handleClearDownloadLocation}>
+                <i className="fa fa-stop-circle"/> Stop Auto-Download
+              </DropdownItem>
+            ) : (
+              <DropdownItem onClick={this._handleSetDownloadLocation}>
+                <i className="fa fa-download"/> Download After Send
+              </DropdownItem>
+            )}
         </Dropdown>
       )
     }
@@ -220,6 +275,7 @@ class RequestUrlBar extends Component {
 
 RequestUrlBar.propTypes = {
   handleSend: PropTypes.func.isRequired,
+  handleSendAndDownload: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
   onUrlPaste: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,

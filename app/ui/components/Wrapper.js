@@ -119,6 +119,13 @@ class Wrapper extends Component {
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   };
 
+  _handleSendAndDownloadRequestWithActiveEnvironment = filename => {
+    const {activeRequest, activeEnvironment, handleSendAndDownloadRequestWithEnvironment} = this.props;
+    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
+  };
+
   _handleSetPreviewMode = previewMode => {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -162,6 +169,7 @@ class Wrapper extends Component {
       handleStartDragPane,
       handleStartDragSidebar,
       handleSetSidebarFilter,
+      handleGenerateCodeForActiveRequest,
       handleGenerateCode,
       isLoading,
       loadStartTime,
@@ -234,7 +242,7 @@ class Wrapper extends Component {
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           workspace={activeWorkspace}
           handleCreateRequest={handleCreateRequestForWorkspace}
-          handleGenerateCode={handleGenerateCode}
+          handleGenerateCode={handleGenerateCodeForActiveRequest}
           updateRequest={this._handleUpdateRequest}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
@@ -248,6 +256,7 @@ class Wrapper extends Component {
           updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
           forceRefreshCounter={this.state.forceRefreshRequestPaneCounter}
           handleSend={this._handleSendRequestWithActiveEnvironment}
+          handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
         />
 
         <div className="drag drag--pane">
@@ -339,6 +348,7 @@ Wrapper.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
+  handleGenerateCodeForActiveRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   handleCreateRequestForWorkspace: PropTypes.func.isRequired,
   handleSetRequestPaneRef: PropTypes.func.isRequired,
@@ -353,6 +363,7 @@ Wrapper.propTypes = {
   handleResetDragPane: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleSendRequestWithEnvironment: PropTypes.func.isRequired,
+  handleSendAndDownloadRequestWithEnvironment: PropTypes.func.isRequired,
 
   // Properties
   loadStartTime: PropTypes.number.isRequired,
