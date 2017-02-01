@@ -40,15 +40,15 @@ class PaymentNotificationModal extends Component {
           <div className="text-center pad">
             <h1>Hi {session.getFirstName()},</h1>
             <p style={{maxWidth: '30rem', margin: 'auto'}}>
-              Your Insomnia Plus trial has come to an end. Please subscribe to a plan
+              Your Insomnia Plus trial has come to an end. Please enter your billing info
               to continue using Plus features like encrypted data synchronization and backup.
             </p>
             <br/>
             <p className="pad-top">
               <PromptButton onClick={this._handleCancel} className="btn btn--compact faint">
-                End Subscription
+                Cancel Subscription
               </PromptButton>
-              {" "}
+              &nbsp;&nbsp;
               <Link button={true}
                     href="https://insomnia.rest/app/subscribe/"
                     className="btn btn--compact btn--outlined">
