@@ -69,13 +69,10 @@ class Wrapper extends Component {
         });
 
         this.forceRequestPaneRefresh();
-        return;
       }
     } catch (e) {
       // Import failed, that's alright
     }
-
-    models.request.update(activeRequest, {url: text});
   };
 
 

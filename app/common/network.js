@@ -81,8 +81,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     config.formData = formData;
   } else if (renderedRequest.body.fileName) {
     // Check if file exists first (read stream won't right away)
-    fs.statSync(renderedRequest.body.fileName);
-    config.body = fs.createReadStream(renderedRequest.body.fileName);
+    config.body = fs.readFileSync(renderedRequest.body.fileName);
   } else {
     config.body = renderedRequest.body.text || '';
   }

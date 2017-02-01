@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
-import JSONPath from 'jsonpath-plus';
+import jq from 'jsonpath';
 import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
 import xpath from 'xpath';
@@ -185,7 +185,11 @@ class Editor extends Component {
       let obj = JSON.parse(code);
 
       if (this.props.updateFilter && this.state.filter) {
-        obj = JSONPath({json: obj, path: this.state.filter});
+        try {
+          obj = jq.query(obj, this.state.filter);
+        } catch (err) {
+          obj = '[]';
+        }
       }
 
       return vkBeautify.json(obj, '\t');

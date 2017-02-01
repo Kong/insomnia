@@ -35,12 +35,8 @@ class RequestUrlBar extends Component {
   };
 
   _handleUrlPaste = e => {
-    e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     this.props.onUrlPaste(text);
-
-    // Set the input anyway in case nothing is able to import
-    e.target.value = text;
   };
 
   _handleGenerateCode = () => {

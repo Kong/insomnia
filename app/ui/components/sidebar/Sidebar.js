@@ -100,7 +100,6 @@ class Sidebar extends PureComponent {
           handleGenerateCode={handleGenerateCode}
           moveRequest={moveRequest}
           moveRequestGroup={moveRequestGroup}
-          filter={filter}
           workspace={workspace}
           activeRequest={activeRequest}
         />

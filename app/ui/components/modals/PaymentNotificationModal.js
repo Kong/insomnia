@@ -35,12 +35,12 @@ class PaymentNotificationModal extends Component {
   render () {
     return (
       <Modal ref={m => this.modal = m}>
-        <ModalHeader>Upgrade Now to Insomnia Plus</ModalHeader>
+        <ModalHeader>Insomnia Plus Trial Ended</ModalHeader>
         <ModalBody className="pad changelog">
           <div className="text-center pad">
             <h1>Hi {session.getFirstName()},</h1>
             <p style={{maxWidth: '30rem', margin: 'auto'}}>
-              Your Insomnia Plus trial has come to an end. Subscribe to a plan
+              Your Insomnia Plus trial has come to an end. Please subscribe to a plan
               to continue using Plus features like encrypted data synchronization and backup.
             </p>
             <br/>

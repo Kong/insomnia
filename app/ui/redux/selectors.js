@@ -28,6 +28,15 @@ export const selectActiveWorkspace = createSelector(
   }
 );
 
+export const selectActiveWorkspaceMeta = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesLists,
+  (activeWorkspace, entities) => {
+    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
+    return entities.workspaceMetas.find(m => m.parentId === id);
+  }
+);
+
 export const selectRequestsAndRequestGroups = createSelector(
   selectEntitiesLists,
   entities => [...entities.requests, ...entities.requestGroups]
@@ -50,7 +59,10 @@ export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
   selectRequestsAndRequestGroups,
   selectActiveWorkspace,
-  (collapsed, requestsAndRequestGroups, activeWorkspace) => {
+  selectActiveWorkspaceMeta,
+  (collapsed, requestsAndRequestGroups, activeWorkspace, activeWorkspaceMeta) => {
+    const {sidebarFilter} = activeWorkspaceMeta;
+
     function next (parentId) {
       const children = requestsAndRequestGroups
         .filter(e => e.parentId === parentId)
@@ -70,7 +82,8 @@ export const selectSidebarChildren = createSelector(
       if (children.length > 0) {
         return children.map(c => ({
           doc: c,
-          children: next(c._id,),
+          children: next(c._id),
+          hidden: false,
           collapsed: !!collapsed[c._id],
         }));
       } else {
@@ -78,7 +91,43 @@ export const selectSidebarChildren = createSelector(
       }
     }
 
-    return next(activeWorkspace._id, false);
+    function matchChildren (children, parentNames = []) {
+      // Bail early if no filter defined
+      if (!sidebarFilter) {
+        return children;
+      }
+
+      for (const child of children) {
+        // Gather all parents so we can match them too
+        matchChildren(child.children, [...parentNames, child.doc.name]);
+
+        const hasMatchedChildren = child.children.find(c => c.hidden === false);
+
+        // Build the monster string to match on
+        const method = child.doc.method || '';
+        const name = child.doc.name;
+        const toMatch = `${method}❅${name}❅${parentNames.join('❅')}`.toLowerCase();
+
+        // Try to match name
+        let hasMatchedName = true;
+        for (const token of sidebarFilter.trim().toLowerCase().split(' ')) {
+          // Filter failed. Don't render children
+          if (toMatch.indexOf(token) === -1) {
+            hasMatchedName = false;
+            break;
+          }
+        }
+
+        // Update hidden state depending on whether it matched
+        const matched = hasMatchedChildren || hasMatchedName;
+        child.hidden = !matched;
+      }
+
+      return children;
+    }
+
+    const childrenTree = next(activeWorkspace._id, false);
+    return matchChildren(childrenTree);
   }
 );
 
@@ -101,15 +150,6 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
     }
 
     return getChildren(activeWorkspace);
-  }
-);
-
-export const selectActiveWorkspaceMeta = createSelector(
-  selectActiveWorkspace,
-  selectEntitiesLists,
-  (activeWorkspace, entities) => {
-    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    return entities.workspaceMetas.find(m => m.parentId === id);
   }
 );
 

@@ -4,36 +4,8 @@ import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 
 
 class SidebarChildren extends PureComponent {
-
-  _filterChildren (filter, children, extra = null) {
-    filter = filter || '';
-
-    return children.filter(child => {
-      if (child.doc.type !== 'Request') {
-        return true;
-      }
-
-      const request = child.doc;
-
-      const otherMatches = extra || '';
-      const toMatch = `${request.method}❅${request.name}❅${otherMatches}`.toLowerCase();
-      const matchTokens = filter.toLowerCase().split(' ');
-
-      for (let i = 0; i < matchTokens.length; i++) {
-        let token = `${matchTokens[i]}`;
-        if (toMatch.indexOf(token) === -1) {
-          // Filter failed. Don't render children
-          return false;
-        }
-      }
-
-      return true;
-    })
-  }
-
-  _renderChildren (children, requestGroup) {
+  _renderChildren (children) {
     const {
-      filter,
       handleCreateRequest,
       handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
@@ -47,15 +19,13 @@ class SidebarChildren extends PureComponent {
       workspace,
     } = this.props;
 
-    const filteredChildren = this._filterChildren(
-      filter,
-      children,
-      requestGroup && requestGroup.name
-    );
-
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
 
-    return filteredChildren.map(child => {
+    return children.map(child => {
+      if (child.hidden) {
+        return null;
+      }
+
       if (child.doc.type === 'Request') {
         return (
           <SidebarRequestRow
@@ -90,12 +60,7 @@ class SidebarChildren extends PureComponent {
       }
 
       const isActive = hasActiveChild(child.children);
-      const children = this._renderChildren(child.children, requestGroup);
-
-      // Don't render the row if there are no children while filtering
-      if (filter && !children.length) {
-        return null;
-      }
+      const children = this._renderChildren(child.children);
 
       return (
         <SidebarRequestGroupRow
@@ -141,7 +106,6 @@ SidebarChildren.propTypes = {
   moveRequest: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
   children: PropTypes.arrayOf(PropTypes.object).isRequired,
-  filter: PropTypes.string.isRequired,
   workspace: PropTypes.object.isRequired,
 
   // Optional
