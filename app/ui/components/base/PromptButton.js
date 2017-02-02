@@ -66,7 +66,7 @@ class PromptButton extends Component {
     if (state === STATE_ASK && addIcon) {
       innerMsg = (
         <span className="danger">
-          <i className="fa fa-exclamation-circle"></i> {CONFIRM_MESSAGE}
+          <i className="fa fa-exclamation-circle"/> {CONFIRM_MESSAGE}
         </span>
       )
     } else if (state === STATE_ASK) {

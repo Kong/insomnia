@@ -6,7 +6,7 @@ const PORT = 3333;
 export default {
   ...baseConfig,
   debug: true,
-  devtool: 'eval-source-map',
+  devtool: 'source-map',
   entry: [
     ...baseConfig.entry,
     `webpack-hot-middleware/client?path=http://localhost:${PORT}/__webpack_hmr`

@@ -8,16 +8,12 @@ import SettingsShortcuts from '../settings/SettingsShortcuts';
 import SettingsAbout from '../settings/SettingsAbout';
 import SettingsGeneral from '../settings/SettingsGeneral';
 import SettingsImportExport from '../settings/SettingsImportExport';
-import SettingsSync from '../settings/SettingsSync';
-import * as models from '../../../models';
+import SettingsTheme from '../settings/SettingsTheme';
+import * as models from '../../../models/index';
 import {getAppVersion, getAppName} from '../../../common/constants';
-import * as session from '../../../sync/session';
-import {showModal} from './index';
-import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics/index';
 
 export const TAB_INDEX_EXPORT = 1;
-export const TAB_PLUS = 3;
 
 class SettingsModal extends Component {
   constructor (props) {
@@ -26,9 +22,20 @@ class SettingsModal extends Component {
     this.state = {}
   }
 
-  _handleClose = () => {
-    this.hide();
+  _handleChangeTheme = (theme, track = true) => {
+    document.body.setAttribute('theme', theme);
+    models.settings.update(this.props.settings, {theme});
+
+    if (track) {
+      trackEvent('Setting', 'Change Theme', theme)
+    }
   };
+
+  componentDidMount () {
+    // Hacky way to set theme on launch
+    // TODO: move somewhere else
+    this._handleChangeTheme(this.props.settings.theme, false);
+  }
 
   show (currentTabIndex = 0) {
     this.setState({currentTabIndex});
@@ -46,14 +53,6 @@ class SettingsModal extends Component {
 
   _handleTabSelect (currentTabIndex) {
     this.setState({currentTabIndex});
-  }
-
-  async _handleSyncReset () {
-    this.modal.hide();
-    trackEvent('Sync', 'Reset');
-    await sync.resetRemoteData();
-    await sync.resetLocalData();
-    await sync.logout();
   }
 
   render () {
@@ -77,20 +76,29 @@ class SettingsModal extends Component {
           <Tabs onSelect={i => this._handleTabSelect(i)} selectedIndex={currentTabIndex}>
             <TabList>
               <Tab selected={this._currentTabIndex === 0}>
-                <button onClick={e => trackEvent('Setting', 'Tab General')}>General</button>
+                <button onClick={e => trackEvent('Setting', 'Tab General')}>
+                  General
+                </button>
               </Tab>
               <Tab selected={this._currentTabIndex === 1}>
-                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>Import/Export
+                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>
+                  Import/Export
+                </button>
+              </Tab>
+              <Tab selected={this._currentTabIndex === 2}>
+                <button onClick={e => trackEvent('Setting', 'Tab Themes')}>
+                  Themes
                 </button>
               </Tab>
               <Tab selected={this._currentTabIndex === 3}>
-                <button onClick={e => trackEvent('Setting', 'Tab Shortcuts')}>Shortcuts</button>
+                <button onClick={e => trackEvent('Setting', 'Tab Shortcuts')}>
+                  Shortcuts
+                </button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 2}>
-                <button onClick={e => trackEvent('Setting', 'Tab Plus')}>Insomnia Plus</button>
-              </Tab>
-              <Tab selected={this._currentTabIndex === 4}>
-                <button onClick={e => trackEvent('Setting', 'Tab About')}>About</button>
+              <Tab selected={this._currentTabIndex === 5}>
+                <button onClick={e => trackEvent('Setting', 'Tab About')}>
+                  About
+                </button>
               </Tab>
             </TabList>
             <TabPanel className="pad scrollable">
@@ -119,16 +127,13 @@ class SettingsModal extends Component {
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
-              <SettingsShortcuts />
+              <SettingsTheme
+                handleChangeTheme={this._handleChangeTheme}
+                activeTheme={settings.theme}
+              />
             </TabPanel>
             <TabPanel className="pad scrollable">
-              <SettingsSync
-                loggedIn={session.isLoggedIn()}
-                firstName={session.getFirstName() || ''}
-                email={session.getEmail() || ''}
-                handleExit={this._handleClose}
-                handleLogout={sync.logout}
-              />
+              <SettingsShortcuts />
             </TabPanel>
             <TabPanel className="pad scrollable">
               <SettingsAbout/>

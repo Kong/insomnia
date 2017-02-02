@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
-import JSONPath from 'jsonpath-plus';
+import jq from 'jsonpath';
 import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
 import xpath from 'xpath';
@@ -26,7 +26,6 @@ import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/comment-fold';
 import 'codemirror/addon/fold/indent-fold';
 import 'codemirror/addon/fold/xml-fold';
-import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/addon/edit/matchbrackets';
@@ -39,12 +38,18 @@ import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
+import 'codemirror/keymap/vim';
+import 'codemirror/keymap/emacs';
+import 'codemirror/keymap/sublime';
 import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
+// Make jsonlint available to the jsonlint plugin
+import {parser as jsonlint} from 'jsonlint';
+global.jsonlint = jsonlint;
 
 
 const BASE_CODEMIRROR_OPTIONS = {
@@ -52,7 +57,6 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  autoRefresh: {delay: 250}, // Necessary to show up in the env modal first launch
   lineWrapping: true,
   lint: true,
   tabSize: 4,
@@ -60,6 +64,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   autoCloseBrackets: true,
   indentUnit: 4,
   indentWithTabs: true,
+  keyMap: 'default',
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',
@@ -180,7 +185,11 @@ class Editor extends Component {
       let obj = JSON.parse(code);
 
       if (this.props.updateFilter && this.state.filter) {
-        obj = JSONPath({json: obj, path: this.state.filter});
+        try {
+          obj = jq.query(obj, this.state.filter);
+        } catch (err) {
+          obj = '[]';
+        }
       }
 
       return vkBeautify.json(obj, '\t');
@@ -222,7 +231,8 @@ class Editor extends Component {
       readOnly,
       placeholder: this.props.placeholder || '',
       mode: this.props.mode || 'text/plain',
-      lineWrapping: !!this.props.lineWrapping,
+      lineWrapping: this.props.lineWrapping,
+      keyMap: this.props.keyMap || 'default',
       matchBrackets: !readOnly,
       lint: !readOnly
     };
@@ -294,14 +304,14 @@ class Editor extends Component {
   _showFilterHelp () {
     const json = this._isJSON(this.props.mode);
     const link = json ? (
-      <Link href="http://goessner.net/articles/JsonPath/">
-        JSONPath
-      </Link>
-    ) : (
-      <Link href="https://www.w3.org/TR/xpath/">
-        XPath
-      </Link>
-    );
+        <Link href="http://goessner.net/articles/JsonPath/">
+          JSONPath
+        </Link>
+      ) : (
+        <Link href="https://www.w3.org/TR/xpath/">
+          XPath
+        </Link>
+      );
 
     trackEvent('Response', `Filter ${json ? 'JSONPath' : 'XPath'}`, 'Help');
 
@@ -437,6 +447,7 @@ class Editor extends Component {
 Editor.propTypes = {
   onChange: PropTypes.func,
   onFocusChange: PropTypes.func,
+  keyMap: PropTypes.string,
   mode: PropTypes.string,
   placeholder: PropTypes.string,
   lineWrapping: PropTypes.bool,

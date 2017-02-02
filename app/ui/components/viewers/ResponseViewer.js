@@ -65,6 +65,7 @@ class ResponseViewer extends Component {
       contentType,
       editorLineWrapping,
       editorFontSize,
+      editorKeyMap,
       updateFilter,
       statusCode,
       body: base64Body,
@@ -88,7 +89,7 @@ class ResponseViewer extends Component {
     const {blockingBecauseTooLarge} = this.state;
     if (blockingBecauseTooLarge) {
       return (
-        <div className="response-pane__overlay response-pane__overlay--under">
+        <div className="response-pane__notify">
           <p className="pad faint">
             Previewing responses over {LARGE_RESPONSE_MB}MB may cause
             slowdowns on some computers
@@ -156,6 +157,7 @@ class ResponseViewer extends Component {
             readOnly={true}
             lineWrapping={editorLineWrapping}
             fontSize={editorFontSize}
+            keyMap={editorKeyMap}
             placeholder="..."
           />
         );
@@ -176,6 +178,7 @@ ResponseViewer.propTypes = {
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,
   bytes: PropTypes.number.isRequired,

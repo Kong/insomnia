@@ -82,7 +82,7 @@ class WorkspaceDropdown extends Component {
         <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
-              {isLoading ? <i className="fa fa-refresh fa-spin txt-lg"/> : null}
+              {isLoading ? <i className="fa fa-refresh fa-spin"/> : null}
               {" "}
               <i className="fa fa-caret-down"/>
             </div>
@@ -96,7 +96,7 @@ class WorkspaceDropdown extends Component {
         </DropdownItem>
 
         <DropdownItem onClick={this._handleShowShareSettings}>
-          <i className="fa fa-user"/> Share <strong>{activeWorkspace.name}</strong>
+          <i className="fa fa-globe"/> Share <strong>{activeWorkspace.name}</strong>
         </DropdownItem>
 
         <DropdownDivider>Switch Workspace</DropdownDivider>
@@ -113,7 +113,7 @@ class WorkspaceDropdown extends Component {
         <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
 
         <DropdownItem onClick={this._handleShowSettings}>
-          <i className="fa fa-cog"/> App Settings
+          <i className="fa fa-cog"/> Preferences
           <DropdownHint char=","/>
         </DropdownItem>
         <DropdownItem onClick={this._handleShowExport}>

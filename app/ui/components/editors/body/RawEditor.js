@@ -7,6 +7,7 @@ class RawEditor extends Component {
       contentType,
       content,
       fontSize,
+      keyMap,
       lineWrapping,
       onChange,
       className
@@ -16,6 +17,7 @@ class RawEditor extends Component {
       <Editor
         manualPrettify={true}
         fontSize={fontSize}
+        keyMap={keyMap}
         value={content}
         className={className}
         onChange={onChange}
@@ -35,6 +37,7 @@ RawEditor.propTypes = {
 
   // Optional
   fontSize: PropTypes.number,
+  keyMap: PropTypes.string,
   lineWrapping: PropTypes.bool
 };
 

@@ -119,7 +119,7 @@ class Modal extends Component {
            style={{zIndex: zIndex}}
            onClick={this._handleClick}>
         <div className="modal__content" key={forceRefreshCounter}>
-          <div className="modal__backdrop" onClick={() => this.hide()}></div>
+          <div className="modal__backdrop overlay" onClick={() => this.hide()}></div>
           {this.props.children}
         </div>
       </div>

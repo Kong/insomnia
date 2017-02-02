@@ -10,6 +10,7 @@
 
   input,
   textarea,
+  select,
   button {
     width: 100%;
     height: 100%;
@@ -36,7 +37,7 @@
   }
 
   input:invalid {
-    border: 1px solid @warning !important;
+    border: 1px solid var(--color-warning) !important;
   }
 
   label {
@@ -57,22 +58,35 @@
   &.form-control--outlined,
   &.form-control--underlined {
     textarea,
-    input {
+    input,
+    select {
       border: 1px solid @hl-md;
       padding: @padding-sm;
       border-radius: @radius-md;
-      background-color: @hl-xxxs;
+      background-color: @hl-xxs;
+    }
+
+    input,
+    select {
+      height: @line-height-xs;
     }
 
     textarea:focus,
+    select:focus,
     input:focus {
       background-color: transparent;
-      border-color: @hl-xl;
+      border-color: @hl-lg;
     }
+  }
+
+  &.form-control--underlined input:focus,
+  &.form-control--underlined textarea:focus {
+    border-color: @hl;
   }
 
   &.form-control--padded {
     textarea,
+    select,
     input {
       border: 0;
     }
@@ -80,6 +94,7 @@
 
   &.form-control--underlined {
     textarea,
+    select,
     input {
       border-radius: 0;
       border-top: 0;
@@ -176,7 +191,7 @@
   }
 }
 
-textarea, input, button {
+textarea, input, button, select {
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;
@@ -189,12 +204,16 @@ textarea, input, button {
   color: inherit;
 
   &::-webkit-input-placeholder {
-    color: @hl-xl;
+    color: @hl-lg;
   }
 }
 
+input[type=number]::-webkit-inner-spin-button {
+  opacity: 0.8;
+}
+
 input.input--error {
-  border-color: @danger !important;
+  border-color: var(--color-danger) !important;
 }
 
 button {

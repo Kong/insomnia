@@ -22,6 +22,7 @@ class SidebarRequestRow extends PureComponent {
 
   _handleRequestUpdateName = name => {
     models.request.update(this.props.request, {name})
+    this.setState({isEditing: false});
   };
 
   _handleRequestCreateFromEmpty = () => {
@@ -75,7 +76,7 @@ class SidebarRequestRow extends PureComponent {
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
             <button className="sidebar__clickable" onClick={this._handleRequestCreateFromEmpty}>
-              <em>click to add first request...</em>
+              <em className="faded">click to add first request...</em>
             </button>
           </div>
         </li>
@@ -83,7 +84,7 @@ class SidebarRequestRow extends PureComponent {
     } else {
       node = (
         <li className={classes}>
-          <div className={classnames('sidebar__item', {'sidebar__item--active': isActive})}>
+          <div className={classnames('sidebar__item', 'sidebar__item--request', {'sidebar__item--active': isActive})}>
             <button className="wide" onClick={this._handleRequestActivate}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>

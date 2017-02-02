@@ -74,8 +74,6 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
     environments.push(subEnvironment.data);
   }
 
-  // Merge all environments. Note that we're reversing ancestors because we want to merge
-  // from top-down (closest ancestor should win)
   for (const doc of ancestors.reverse()) {
     if (!doc.environment) {
       continue;
@@ -83,12 +81,18 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
     environments.push(doc.environment);
   }
 
+  // At this point, environments is a list of environments ordered
+  // from top-most parent to bottom-most child
+
   const renderContext = {};
   for (const environment of environments) {
-    Object.assign(renderContext, recursiveRender(environment, renderContext));
+    // Do an Object.assign, but render each property as it overwrites. This
+    // way we can keep same-name variables from the parent context.
+    _objectDeepAssignRender(renderContext, environment);
   }
 
-  return renderContext;
+  // Render the context with itself to fill in the rest.
+  return recursiveRender(renderContext, renderContext);
 }
 
 export function recursiveRender (obj, context) {
@@ -160,4 +164,25 @@ export async function getRenderedRequest (request, environmentId) {
   }
 
   return renderedRequest;
+}
+
+function _objectDeepAssignRender (base, obj) {
+  for (const key of Object.keys(obj)) {
+    /*
+     * If we're overwriting a string, try to render it first with the base as
+     * a context. This allows for the following scenario:
+     *
+     * base:  { base_url: 'google.com' }
+     * obj:   { base_url: '{{ base_url }}/foo' }
+     * final: { base_url: 'google.com/foo' }
+     *
+     * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
+     * original base_url of google.com would be lost.
+    */
+    if (typeof base[key] === 'string') {
+      base[key] = render(obj[key], base);
+    } else {
+      base[key] = obj[key];
+    }
+  }
 }

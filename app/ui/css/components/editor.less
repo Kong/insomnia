@@ -28,7 +28,6 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    //justify-content: flex-end;
     border-top: 1px solid @hl-md;
     height: @line-height-xs;
 
@@ -72,11 +71,7 @@
   }
 
   .CodeMirror-gutter {
-    background-color: @bg-super-dark;
-  }
-
-  &.editor--light-theme .CodeMirror-gutter {
-    background-color: @bg-super-light;
+    background-color: var(--color-bg);
   }
 
   .CodeMirror-scroll {
@@ -89,7 +84,7 @@
   }
 
   .CodeMirror-placeholder {
-    color: @hl-xxl;
+    color: @hl-xl;
   }
 
   .CodeMirror-lint-marker-error {
@@ -100,7 +95,7 @@
     text-align: center;
 
     &::after {
-      color: darken(@danger, 10);
+      color: var(--color-danger);
       text-align: center;
       width: 100%;
       font-size: 0.7em; // because the circle is so large
@@ -116,13 +111,19 @@
 
 // Search dialog (and others)
 .CodeMirror-dialog {
-  background: @bg-super-dark;
+  background: var(--color-bg);
+  color: var(--color-font);
+  border-color: @hl-md;
+  box-sizing: border-box;
+  width: 100%;
+  padding: @padding-sm 0 @padding-sm @padding-sm;
 }
 
 // Tooltip for errors
 .CodeMirror-lint-tooltip {
-  background-color: @bg-light;
-  color: @font-light-bg;
+  background-color: var(--color-bg);
+  color: var(--color-font);
+  border-color: @hl-md;
   border-radius: 0;
   font-size: @font-size-md;
   padding: @padding-xs @padding-sm;
@@ -132,150 +133,121 @@
     background-image: none;
     padding-left: 0;
   }
+
   &::after {
     display: none;
   }
 }
 
 /* Based on Sublime Text's Monokai theme */
-.editor:not(.editor--light-theme) {
-  .cm-s-default.CodeMirror {
-    color: #f8f8f2;
+.CodeMirror {
+  color: var(--color-font);
+
+  div.CodeMirror-selected {
+    background: var(--color-font);
+    border-radius: 2px;
+    opacity: 0.2;
   }
 
-  .cm-s-default div.CodeMirror-selected {
-    //background: #49483E;
-    background: @hl-xl;
-  }
-
-  .cm-s-default .CodeMirror-line::selection, .cm-s-default .CodeMirror-line > span::selection, .cm-s-default .CodeMirror-line > span > span::selection {
-    //background: rgba(73, 72, 62, .99);
-  }
-
-  .cm-s-default .CodeMirror-line::-moz-selection, .cm-s-default .CodeMirror-line > span::-moz-selection, .cm-s-default .CodeMirror-line > span > span::-moz-selection {
-    //background: rgba(73, 72, 62, .99);
-  }
-
-  .cm-s-default .CodeMirror-gutters {
-    //background: #272822;
+  .CodeMirror-gutters {
     border-right: 0;
   }
 
-  .cm-s-default .CodeMirror-guttermarker {
-    color: white;
+  .CodeMirror-guttermarker {
+    color: var(--color-font);
   }
 
-  .cm-s-default .CodeMirror-guttermarker-subtle {
-    color: #d0d0d0;
+  .CodeMirror-guttermarker-subtle {
+    color: @hl-lg;
   }
 
-  .cm-s-default .CodeMirror-linenumber {
-    color: #d0d0d0;
-  }
-
-  .cm-s-default .CodeMirror-cursor {
-    border-left: 1px solid #f8f8f0;
-  }
-
-  .cm-s-default span.cm-comment,
-  .cm-s-default span.cm-qualifier {
+  .CodeMirror-linenumber {
     color: @hl;
   }
 
-  .cm-s-default span.cm-atom {
-    color: lighten(@surprise, 5);
+  .CodeMirror-cursor {
+    border-left: 1px solid var(--color-font);
   }
 
-  .cm-s-default span.cm-number {
-    color: lighten(@surprise, 5);
+  .cm-animate-fat-cursor,
+  &.cm-fat-cursor .CodeMirror-cursor {
+    background-color: rgba(255, 139, 147, 0.5) !important;
+    border-bottom: 2px solid #d60000 !important;
+    box-sizing: border-box;
   }
 
-  .cm-s-default span.cm-keyword {
-    color: #f92672;
+  span.cm-comment,
+  span.cm-meta,
+  span.cm-qualifier {
+    color: var(--color-font);
   }
 
-  .cm-s-default span.cm-builtin {
-    color: #66d9ef;
+  span.cm-atom {
+    color: var(--color-surprise);
   }
 
-  .cm-s-default span.cm-string {
-    color: lighten(@notice, 5);
+  span.cm-number {
+    color: var(--color-surprise);
   }
 
-  .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: lighten(@success, 5);
+  span.cm-keyword {
+    color: var(--color-danger);
   }
 
-  .cm-s-default span.cm-variable {
-    color: #f8f8f2;
+  span.cm-builtin {
+    color: var(--color-info);
   }
 
-  .cm-s-default span.cm-variable-2 {
-    color: #9effff;
+  span.cm-string {
+    color: var(--color-notice);
   }
 
-  .cm-s-default span.cm-variable-3 {
-    color: #66d9ef;
+  span.cm-property, span.cm-attribute {
+    color: var(--color-success);
   }
 
-  .cm-s-default span.cm-def {
-    color: #fd971f;
+  span.cm-variable {
+    color: var(--color-font);
   }
 
-  .cm-s-default span.cm-bracket {
-    color: #f8f8f2;
+  span.cm-variable-2 {
+    color: var(--color-info);
   }
 
-  .cm-s-default span.cm-tag {
-    color: darken(@danger, 3);
+  span.cm-variable-3 {
+    color: var(--color-info);
   }
 
-  .cm-s-default span.cm-header {
-    color: lighten(@surprise, 5);
+  span.cm-def {
+    color: var(--color-warning);
   }
 
-  .cm-s-default span.cm-link {
-    color: lighten(@surprise, 5);
+  span.cm-bracket {
+    color: var(--color-font);
   }
 
-  .cm-s-default span.cm-error {
-    background: @danger;
-    color: #f8f8f0;
+  span.cm-tag {
+    color: var(--color-danger);
   }
 
-  .cm-s-default .CodeMirror-activeline-background {
+  span.cm-header {
+    color: var(--color-surprise);
+  }
+
+  span.cm-link {
+    color: var(--color-surprise);
+  }
+
+  span.cm-error {
+    background: var(--color-danger);
+    color: var(--color-font-danger);
+  }
+
+  .CodeMirror-activeline-background {
     background: @hl-md;
   }
 
-  .cm-s-default .CodeMirror-matchingbracket {
-    text-decoration: underline;
-    color: inherit !important;
-  }
-}
-
-.editor--light-theme {
-  .cm-s-default span {
-    color: @font-light-bg;
-  }
-
-  .cm-s-default span.cm-string {
-    color: saturate(darken(@notice, 30), 100);
-  }
-
-  .cm-s-default span.cm-property, .cm-s-default span.cm-attribute {
-    color: saturate(darken(@success, 15), 100);
-  }
-
-  .cm-s-default span.cm-atom,
-  .cm-s-default span.cm-number {
-    color: saturate(darken(@surprise, 30), 100);
-  }
-
-  .cm-s-default .CodeMirror-activeline-background {
-    background: @hl-md;
-  }
-
-  .cm-s-default .CodeMirror-matchingbracket {
+  .CodeMirror-matchingbracket {
     text-decoration: underline;
     color: inherit !important;
   }

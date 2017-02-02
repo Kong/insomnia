@@ -34,6 +34,10 @@ export default {
         loader: "file?name=[name].[ext]"
       },
       {
+        test: /\.png$/,
+        loader: "file"
+      },
+      {
         test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
         loader: "file"
       },
@@ -61,7 +65,10 @@ export default {
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies)
+    ...Object.keys(pkg.dependencies),
+
+    // To get jsonlint working...
+    'file', 'system',
   ],
   plugins: [],
   target: 'electron-renderer'

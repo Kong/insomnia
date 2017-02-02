@@ -6,7 +6,6 @@ import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
-import * as db from '../../../common/database';
 
 
 class RequestSwitcherModal extends Component {
@@ -86,14 +85,11 @@ class RequestSwitcherModal extends Component {
   }
 
   async _handleChange (searchString) {
-    const {workspaceChildren} = this.props;
+    const {workspaceChildren, workspaces} = this.props;
     const {workspaceId, activeRequestParentId} = this.props;
 
-    const requests = workspaceChildren.filter(d => d.type === models.request.type);
-    const workspaces = workspaceChildren.filter(d => d.type === models.workspace.type);
-
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = requests;
+    let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
     if (searchString) {
       matchedRequests = matchedRequests.filter(r => {
         const name = r.name.toLowerCase();
@@ -102,36 +98,30 @@ class RequestSwitcherModal extends Component {
       });
     }
 
-    matchedRequests = matchedRequests.sort(
-      (a, b) => {
-        if (a.parentId === b.parentId) {
-          // Sort Requests by name inside of the same parent
-          // TODO: Sort by quality of match (eg. start vs mid string, etc)
-          return a.name > b.name ? 1 : -1;
+    matchedRequests = matchedRequests.sort((a, b) => {
+      if (a.parentId === b.parentId) {
+        // Sort Requests by name inside of the same parent
+        // TODO: Sort by quality of match (eg. start vs mid string, etc)
+        return a.name > b.name ? 1 : -1;
+      } else {
+        // Sort RequestGroups by relevance if Request isn't in same parent
+        if (a.parentId === activeRequestParentId) {
+          return -1;
+        } else if (b.parentId === activeRequestParentId) {
+          return 1;
         } else {
-          // Sort RequestGroups by relevance if Request isn't in same parent
-          if (a.parentId === activeRequestParentId) {
-            return -1;
-          } else if (b.parentId === activeRequestParentId) {
-            return 1;
-          } else {
-            return a.parentId > b.parentId ? -1 : 1;
-          }
+          return a.parentId > b.parentId ? -1 : 1;
         }
       }
-    );
+    }).slice(0, 20); // show 20 max
 
-    let matchedWorkspaces = [];
-    if (searchString) {
-      // Only match workspaces if there is a search
-      matchedWorkspaces = workspaces
-        .filter(w => w._id !== workspaceId)
-        .filter(w => {
-          const name = w.name.toLowerCase();
-          const toMatch = searchString.toLowerCase();
-          return name.indexOf(toMatch) !== -1
-        });
-    }
+    const matchedWorkspaces = workspaces
+      .filter(w => w._id !== workspaceId)
+      .filter(w => {
+        const name = w.name.toLowerCase();
+        const toMatch = searchString.toLowerCase();
+        return name.indexOf(toMatch) !== -1
+      });
 
     const activeIndex = searchString ? 0 : -1;
 
@@ -188,7 +178,7 @@ class RequestSwitcherModal extends Component {
     return (
       <Modal ref={m => this.modal = m} top={true} dontFocus={true}>
         <ModalHeader hideCloseButton={true}>
-          <div className="pull-right txt-md">
+          <div className="pull-right txt-md pad-right">
             <span className="monospace">tab</span> or
             &nbsp;
             <span className="monospace">↑ ↓</span> &nbsp;to navigate
@@ -220,12 +210,12 @@ class RequestSwitcherModal extends Component {
                 <li key={r._id}>
                   <button onClick={e => this._activateRequest(r)} className={buttonClasses}>
                     {requestGroup ? (
-                      <div className="pull-right faint italic">
-                        {requestGroup.name}
-                        &nbsp;&nbsp;
-                        <i className="fa fa-folder-o"></i>
-                      </div>
-                    ) : null}
+                        <div className="pull-right faint italic">
+                          {requestGroup.name}
+                          &nbsp;&nbsp;
+                          <i className="fa fa-folder-o"></i>
+                        </div>
+                      ) : null}
                     <MethodTag method={r.method}/>
                     <strong>{r.name}</strong>
                   </button>
@@ -254,18 +244,18 @@ class RequestSwitcherModal extends Component {
           </ul>
 
           {!matchedRequests.length && !matchedWorkspaces.length ? (
-            <div className="text-center">
-              <p>
-                No matches found for <strong>{searchString}</strong>
-              </p>
+              <div className="text-center">
+                <p>
+                  No matches found for <strong>{searchString}</strong>
+                </p>
 
-              <button className="btn btn--outlined btn--compact"
-                      disabled={!searchString}
-                      onClick={e => this._activateCurrentIndex()}>
-                Create a request named {searchString}
-              </button>
-            </div>
-          ) : null}
+                <button className="btn btn--outlined btn--compact"
+                        disabled={!searchString}
+                        onClick={e => this._activateCurrentIndex()}>
+                  Create a request named {searchString}
+                </button>
+              </div>
+            ) : null}
         </ModalBody>
       </Modal>
     );
@@ -278,6 +268,7 @@ RequestSwitcherModal.propTypes = {
   workspaceId: PropTypes.string.isRequired,
   activeRequestParentId: PropTypes.string.isRequired,
   workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
+  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default RequestSwitcherModal;

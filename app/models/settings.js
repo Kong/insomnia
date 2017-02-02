@@ -11,11 +11,13 @@ export function init () {
     followRedirects: true,
     editorFontSize: 12,
     editorLineWrapping: true,
+    editorKeyMap: 'default',
     httpProxy: '',
     httpsProxy: '',
     timeout: 0,
     validateSSL: true,
     forceVerticalLayout: false,
+    theme: 'default',
   };
 }
 

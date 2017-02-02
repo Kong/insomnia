@@ -1,0 +1,74 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.themes {
+  .themes__row {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: @padding-lg;
+  }
+
+  .themes__theme {
+    text-align: center;
+
+    h2 {
+      margin-top: 0;
+    }
+  }
+
+  button {
+    position: relative;
+    margin: 0 @padding-md;
+
+    img {
+      border: 1px solid @hl-md;
+      box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+      border-radius: @radius-md;
+    }
+
+    &.themes__theme--locked {
+      opacity: 1;
+    }
+
+    &::after {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      position: absolute;
+      font-size: @font-size-md;
+      text-transform: uppercase;
+      color: @hl-xl;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      visibility: hidden;
+    }
+
+    &.themes__theme--locked::after {
+      content: '\01f512';
+      font-size: 2rem;
+      opacity: 0.5;
+      visibility: visible;
+    }
+
+    &:not(.themes__theme--locked):hover::after {
+      content: 'Activate';
+      visibility: visible;
+      transform: rotate(-15deg);
+      mix-blend-mode: exclusion;
+      opacity: 1;
+    }
+
+    &.themes__theme--locked:hover::after {
+      content: 'Upgrade to Plus';
+      visibility: visible;
+      font-size: @font-size-md;
+      transform: rotate(-15deg);
+      mix-blend-mode: exclusion;
+      opacity: 1;
+    }
+  }
+}

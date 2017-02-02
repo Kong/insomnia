@@ -3,8 +3,6 @@ import * as crypt from './crypt';
 import * as util from '../common/fetch';
 import {trackEvent, setAccountId} from '../analytics';
 
-const NO_SESSION = '__NO_SESSION__';
-
 /** Create a new Account for the user */
 export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
 
@@ -210,7 +208,7 @@ export function getPrivateKey () {
 }
 
 export function getCurrentSessionId () {
-  return localStorage.getItem('currentSessionId') || NO_SESSION;
+  return localStorage.getItem('currentSessionId');
 }
 
 export function getAccountId () {
@@ -236,7 +234,7 @@ export function getFullName () {
  */
 export function getSessionData () {
   const sessionId = getCurrentSessionId();
-  if (sessionId == NO_SESSION) {
+  if (!sessionId) {
     return {};
   }
 
@@ -279,7 +277,7 @@ export function unsetSessionData () {
 
 /** Check if we (think) we have a session */
 export function isLoggedIn () {
-  return getCurrentSessionId() !== NO_SESSION;
+  return getCurrentSessionId();
 }
 
 /** Log out and delete session data */
@@ -305,12 +303,12 @@ export async function endTrial () {
   trackEvent('Session', 'End Trial');
 }
 
-function whoami (sessionId = null) {
+export function whoami (sessionId = null) {
   return util.get('/auth/whoami', sessionId);
 }
 
 export function getSessionKey (sessionId) {
-  return `session__${sessionId.slice(0, 10)}`
+  return `session__${(sessionId || '').slice(0, 10)}`
 }
 
 // ~~~~~~~~~~~~~~~~ //

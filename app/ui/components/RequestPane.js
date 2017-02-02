@@ -51,7 +51,7 @@ class RequestPane extends PureComponent {
       ...querystring.deconstructToParams(parsed.query),
     ];
 
-    this.props.updateRequest({url, parameters});
+    this.props.forceUpdateRequest({url, parameters});
   };
 
   _trackQueryToggle = pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
@@ -68,11 +68,14 @@ class RequestPane extends PureComponent {
       environmentId,
       showPasswords,
       editorFontSize,
+      editorKeyMap,
       editorLineWrapping,
       handleSend,
+      handleSendAndDownload,
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,
+      handleImport,
       updateRequestUrl,
       updateRequestMethod,
       updateRequestBody,
@@ -147,8 +150,10 @@ class RequestPane extends PureComponent {
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={debounce(updateRequestUrl)}
+            handleImport={handleImport}
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
+            handleSendAndDownload={handleSendAndDownload}
             url={request.url}
           />
         </header>
@@ -189,6 +194,7 @@ class RequestPane extends PureComponent {
               request={request}
               onChange={updateRequestBody}
               fontSize={editorFontSize}
+              keyMap={editorKeyMap}
               lineWrapping={editorLineWrapping}
             />
           </TabPanel>
@@ -203,14 +209,14 @@ class RequestPane extends PureComponent {
               />
               <div className="pad pull-right">
                 {showPasswords ? (
-                  <button className="btn btn--clicky" onClick={this._handleHidePasswords}>
-                    Hide Password
-                  </button>
-                ) : (
-                  <button className="btn btn--clicky" onClick={this._handleShowPasswords}>
-                    Show Password
-                  </button>
-                )}
+                    <button className="btn btn--clicky" onClick={this._handleHidePasswords}>
+                      Hide Password
+                    </button>
+                  ) : (
+                    <button className="btn btn--clicky" onClick={this._handleShowPasswords}>
+                      Show Password
+                    </button>
+                  )}
               </div>
             </div>
           </TabPanel>
@@ -274,10 +280,11 @@ class RequestPane extends PureComponent {
 
 RequestPane.propTypes = {
   // Functions
+  forceUpdateRequest: PropTypes.func.isRequired,
   handleSend: PropTypes.func.isRequired,
+  handleSendAndDownload: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
-  updateRequest: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,
@@ -287,12 +294,14 @@ RequestPane.propTypes = {
   updateRequestMimeType: PropTypes.func.isRequired,
   updateSettingsShowPasswords: PropTypes.func.isRequired,
   updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
+  handleImport: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,
 
   // Other
   useBulkHeaderEditor: PropTypes.bool.isRequired,
   showPasswords: PropTypes.bool.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
   environmentId: PropTypes.string.isRequired,

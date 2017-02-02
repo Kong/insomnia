@@ -451,6 +451,7 @@ export async function logout () {
 
 export async function cancelTrial () {
   await session.endTrial();
+  await session.logout();
   await resetLocalData();
 }
 

@@ -1,24 +1,29 @@
 import React, {Component, PropTypes} from 'react';
-import classnames from 'classnames';
+import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
 import {trackEvent} from '../../analytics';
 import MethodDropdown from './dropdowns/MethodDropdown';
 import PromptModal from './modals/PromptModal';
 import {showModal} from './modals/index';
+import PromptButton from './base/PromptButton';
 
 
 class RequestUrlBar extends Component {
   state = {
-    showAdvanced: false,
     currentInterval: null,
     currentTimeout: null,
+    downloadPath: null
   };
+
+  _urlChangeDebounceTimeout = null;
+  _lastPastedText = null;
 
   _handleFormSubmit = e => {
     e.preventDefault();
     e.stopPropagation();
-    this.props.handleSend();
+
+    this._handleSend();
   };
 
   _handleMethodChange = method => {
@@ -29,15 +34,60 @@ class RequestUrlBar extends Component {
   _handleUrlChange = e => {
     const url = e.target.value;
 
-    clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => {
-      this.props.onUrlChange(url);
+    clearTimeout(this._urlChangeDebounceTimeout);
+    this._urlChangeDebounceTimeout = setTimeout(async () => {
+
+      // If no pasted text in the queue, just fire the regular change handler
+      if (!pastedText) {
+        this.props.onUrlChange(url);
+      }
+
+      // Reset pasted text cache
+      const pastedText = this._lastPastedText;
+      this._lastPastedText = null;
+
+      // Attempt to import the pasted text
+      const importedRequest = await this.props.handleImport(pastedText);
+
+      // Update depending on whether something was imported
+      if (importedRequest) {
+        this.props.onUrlChange(importedRequest.url);
+      } else {
+        this.props.onUrlChange(url);
+      }
+
     }, DEBOUNCE_MILLIS);
+  };
+
+  _handleUrlPaste = e => {
+    // NOTE: We're not actually doing the import here to avoid races with onChange
+    this._lastPastedText = e.clipboardData.getData('text/plain');
   };
 
   _handleGenerateCode = () => {
     this.props.handleGenerateCode();
     trackEvent('Request', 'Generate Code', 'Send Action');
+  };
+
+  _handleSetDownloadLocation = () => {
+    const options = {
+      title: 'Select Download Location',
+      buttonLabel: 'Select',
+      properties: ['openDirectory'],
+    };
+
+    remote.dialog.showOpenDialog(options, paths => {
+      if (!paths || paths.length === 0) {
+        trackEvent('Response', 'Download Select Cancel');
+        return;
+      }
+
+      this.setState({downloadPath: paths[0]});
+    });
+  };
+
+  _handleClearDownloadLocation = () => {
+    this.setState({downloadPath: null});
   };
 
   _handleKeyDown = e => {
@@ -52,34 +102,20 @@ class RequestUrlBar extends Component {
       this._input.focus();
       this._input.select();
     }
-
-    if (!this.state.showAdvanced && metaPressed) {
-      clearTimeout(this._metaTimeout);
-      this._metaTimeout = setTimeout(() => {
-        this.setState({showAdvanced: true});
-      }, 400);
-    }
-  };
-
-  _handleKeyUp = e => {
-    const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
-
-    // First, clear the meta timeout if it hasn't triggered yet
-    if (!metaPressed) {
-      clearTimeout(this._metaTimeout);
-    }
-
-    if (!metaPressed && this.state.showAdvanced) {
-      this.setState({showAdvanced: false});
-    }
   };
 
   _handleSend = () => {
     // Don't stop interval because duh, it needs to keep going!
-    // this._handleStopInterval();
+    // XXX this._handleStopInterval(); XXX
 
     this._handleStopTimeout();
-    this.props.handleSend();
+
+    const {downloadPath} = this.state;
+    if (downloadPath) {
+      this.props.handleSendAndDownload(downloadPath);
+    } else {
+      this.props.handleSend();
+    }
   };
 
   _handleSendAfterDelay = async () => {
@@ -146,16 +182,14 @@ class RequestUrlBar extends Component {
 
   componentDidMount () {
     document.body.addEventListener('keydown', this._handleKeyDown);
-    document.body.addEventListener('keyup', this._handleKeyUp);
   }
 
   componentWillUnmount () {
     document.body.removeEventListener('keydown', this._handleKeyDown);
-    document.body.removeEventListener('keyup', this._handleKeyUp);
   }
 
   renderSendButton () {
-    const {currentInterval, currentTimeout} = this.state;
+    const {currentInterval, currentTimeout, downloadPath} = this.state;
 
     let cancelButton = null;
     if (currentInterval) {
@@ -185,7 +219,7 @@ class RequestUrlBar extends Component {
           <DropdownButton className="urlbar__send-btn"
                           onClick={this._handleClickSend}
                           type="submit">
-            Send
+            {downloadPath ? "Download" : "Send"}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
@@ -202,6 +236,18 @@ class RequestUrlBar extends Component {
           <DropdownItem onClick={this._handleSendOnInterval}>
             <i className="fa fa-repeat"/> Repeat on Interval
           </DropdownItem>
+          {downloadPath ? (
+              <DropdownItem stayOpenAfterClick={true}
+                            buttonClass={PromptButton}
+                            addIcon={true}
+                            onClick={this._handleClearDownloadLocation}>
+                <i className="fa fa-stop-circle"/> Stop Auto-Download
+              </DropdownItem>
+            ) : (
+              <DropdownItem onClick={this._handleSetDownloadLocation}>
+                <i className="fa fa-download"/> Download After Send
+              </DropdownItem>
+            )}
         </Dropdown>
       )
     }
@@ -222,6 +268,7 @@ class RequestUrlBar extends Component {
         <form onSubmit={this._handleFormSubmit}>
           <input
             ref={n => this._input = n}
+            onPaste={this._handleUrlPaste}
             type="text"
             placeholder="https://api.myproduct.com/v1/users"
             defaultValue={url}
@@ -235,6 +282,8 @@ class RequestUrlBar extends Component {
 
 RequestUrlBar.propTypes = {
   handleSend: PropTypes.func.isRequired,
+  handleSendAndDownload: PropTypes.func.isRequired,
+  handleImport: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,

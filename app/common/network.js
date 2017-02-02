@@ -8,7 +8,7 @@ import {buildFromParams} from './querystring';
 import * as util from './misc.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
-import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from './misc';
+import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, getSetCookieHeaders} from './misc';
 import {getRenderedRequest} from './render';
 import * as fs from 'fs';
 import * as db from './database';
@@ -65,8 +65,10 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     const formData = {};
     for (const param of renderedRequest.body.params) {
       if (param.type === 'file' && param.fileName) {
+        // Check if file exists first (read stream won't right away)
+        fs.statSync(param.fileName);
         formData[param.name] = {
-          value: fs.readFileSync(param.fileName),
+          value: fs.createReadStream(param.fileName),
           options: {
             filename: pathBasename(param.fileName),
             contentType: mime.lookup(param.fileName) // Guess the mime-type
@@ -78,6 +80,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     }
     config.formData = formData;
   } else if (renderedRequest.body.fileName) {
+    // Check if file exists first (read stream won't right away)
     config.body = fs.readFileSync(renderedRequest.body.fileName);
   } else {
     config.body = renderedRequest.body.text || '';
@@ -115,17 +118,15 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 }
 
 export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async resolve => {
     async function handleError (err, prefix = '') {
-      await models.response.create({
+      resolve({
         url: renderedRequest.url,
         parentId: renderedRequest._id,
         elapsedTime: 0,
         statusMessage: 'Error',
         error: prefix ? `${prefix}: ${err.message}` : err.message
       });
-
-      reject(err);
     }
 
     // Detect and set the proxy based on the request protocol
@@ -212,10 +213,10 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         if (isNetworkRelatedError && nextFamilyIndex < FAMILY_FALLBACKS.length) {
           const family = FAMILY_FALLBACKS[nextFamilyIndex];
           console.log(`-- Falling back to family ${family} --`);
-          _actuallySend(
+
+          return _actuallySend(
             renderedRequest, workspace, settings, nextFamilyIndex
-          ).then(resolve, reject);
-          return;
+          ).then(resolve);
         }
 
         let message = err.toString();
@@ -224,14 +225,12 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
           message += `Code: ${err.code}`;
         }
 
-        await models.response.create({
+        return resolve({
           url: config.url,
           parentId: renderedRequest._id,
           statusMessage: 'Error',
           error: message
         });
-
-        return reject(err);
       }
 
       // handle response headers
@@ -248,11 +247,14 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         return handleError(err, 'Failed to parse response headers');
       }
 
-      try {
-        const cookies = await cookiesFromJar(config.jar._jar);
-        await models.cookieJar.update(renderedRequest.cookieJar, {cookies});
-      } catch (err) {
-        return handleError(err, 'Failed to update cookie jar');
+      // NOTE: We only update jar if we get cookies
+      if (getSetCookieHeaders(headers).length) {
+        try {
+          const cookies = await cookiesFromJar(config.jar._jar);
+          await models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+        } catch (err) {
+          return handleError(err, 'Failed to update cookie jar');
+        }
       }
 
       let contentType = '';
@@ -266,7 +268,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
       }
 
       const bodyEncoding = 'base64';
-      const responsePatch = {
+      return resolve({
         parentId: renderedRequest._id,
         statusCode: networkResponse.statusCode,
         statusMessage: networkResponse.statusMessage,
@@ -277,9 +279,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         body: networkResponse.body.toString(bodyEncoding),
         encoding: bodyEncoding,
         headers: headers
-      };
-
-      models.response.create(responsePatch).then(resolve, reject);
+      });
     };
 
     const requestStartTime = Date.now();
@@ -289,15 +289,13 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
     cancelRequestFunction = async () => {
       req.abort();
 
-      await models.response.create({
+      resolve({
         url: config.url,
         parentId: renderedRequest._id,
         elapsedTime: Date.now() - requestStartTime,
         statusMessage: 'Cancelled',
         error: 'The request was cancelled'
       });
-
-      return reject(new Error('Cancelled'));
     }
   })
 }
@@ -315,7 +313,7 @@ export async function send (requestId, environmentId) {
     renderedRequest = await getRenderedRequest(request, environmentId);
   } catch (e) {
     // Failed to render. Must be the user's fault
-    return await models.response.create({
+    return resolve({
       parentId: request._id,
       statusCode: STATUS_CODE_RENDER_FAILED,
       error: e.message
@@ -327,5 +325,5 @@ export async function send (requestId, environmentId) {
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!
-  return await _actuallySend(renderedRequest, workspace, settings);
+  return _actuallySend(renderedRequest, workspace, settings);
 }

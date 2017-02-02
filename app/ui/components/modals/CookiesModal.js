@@ -99,7 +99,7 @@ class CookiesModal extends Component {
     return (
       <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
-        <ModalBody className="cookie-editor">
+        <ModalBody className="cookie-editor" noScroll={true}>
           <div className="pad">
             <div className="form-control form-control--outlined">
               <label>Filter Cookies

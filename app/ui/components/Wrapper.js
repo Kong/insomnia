@@ -31,9 +31,10 @@ class Wrapper extends Component {
   state = {forceRefreshRequestPaneCounter: Date.now()};
 
   // Request updaters
-  _handleUpdateRequest = async patch => {
-    await rUpdate(this.props.activeRequest, patch);
+  _handleForceUpdateRequest = async patch => {
+    const newRequest = await rUpdate(this.props.activeRequest, patch);
     this.forceRequestPaneRefresh();
+    return newRequest;
   };
 
   _handleUpdateRequestBody = body => rUpdate(this.props.activeRequest, {body});
@@ -41,16 +42,15 @@ class Wrapper extends Component {
   _handleUpdateRequestParameters = parameters => rUpdate(this.props.activeRequest, {parameters});
   _handleUpdateRequestAuthentication = authentication => rUpdate(this.props.activeRequest, {authentication});
   _handleUpdateRequestHeaders = headers => rUpdate(this.props.activeRequest, {headers});
+  _handleUpdateRequestUrl = url => rUpdate(this.props.activeRequest, {url});
 
   // Special request updaters
   _handleUpdateRequestMimeType = mimeType => updateMimeType(this.props.activeRequest, mimeType);
-  _handleUpdateRequestUrl = async url => {
+  _handleImport = async text => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
-    const {activeRequest} = this.props;
-
     try {
-      const {data} = importers.convert(url);
+      const {data} = importers.convert(text);
       const {resources} = data;
       const r = resources[0];
 
@@ -58,7 +58,7 @@ class Wrapper extends Component {
         trackEvent('Import', 'Url Bar');
 
         // Only pull fields that we want to update
-        await models.request.update(activeRequest, {
+        return this._handleForceUpdateRequest({
           url: r.url,
           method: r.method,
           headers: r.headers,
@@ -66,16 +66,14 @@ class Wrapper extends Component {
           authentication: r.authentication,
           parameters: r.parameters,
         });
-
-        this.forceRequestPaneRefresh();
-        return;
       }
     } catch (e) {
       // Import failed, that's alright
     }
 
-    models.request.update(activeRequest, {url});
+    return null;
   };
+
 
   // Settings updaters
   _handleUpdateSettingsShowPasswords = showPasswords => sUpdate(this.props.settings, {showPasswords});
@@ -118,6 +116,13 @@ class Wrapper extends Component {
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
+  };
+
+  _handleSendAndDownloadRequestWithActiveEnvironment = filename => {
+    const {activeRequest, activeEnvironment, handleSendAndDownloadRequestWithEnvironment} = this.props;
+    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
   };
 
   _handleSetPreviewMode = previewMode => {
@@ -163,6 +168,7 @@ class Wrapper extends Component {
       handleStartDragPane,
       handleStartDragSidebar,
       handleSetSidebarFilter,
+      handleGenerateCodeForActiveRequest,
       handleGenerateCode,
       isLoading,
       loadStartTime,
@@ -230,12 +236,14 @@ class Wrapper extends Component {
           showPasswords={settings.showPasswords}
           useBulkHeaderEditor={settings.useBulkHeaderEditor}
           editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           workspace={activeWorkspace}
+          forceUpdateRequest={this._handleForceUpdateRequest}
           handleCreateRequest={handleCreateRequestForWorkspace}
-          handleGenerateCode={handleGenerateCode}
-          updateRequest={this._handleUpdateRequest}
+          handleGenerateCode={handleGenerateCodeForActiveRequest}
+          handleImport={this._handleImport}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
           updateRequestMethod={this._handleUpdateRequestMethod}
@@ -247,6 +255,7 @@ class Wrapper extends Component {
           updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
           forceRefreshCounter={this.state.forceRefreshRequestPaneCounter}
           handleSend={this._handleSendRequestWithActiveEnvironment}
+          handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
         />
 
         <div className="drag drag--pane">
@@ -257,6 +266,7 @@ class Wrapper extends Component {
           ref={handleSetResponsePaneRef}
           request={activeRequest}
           editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={responsePreviewMode}
           activeResponseId={activeResponseId}
@@ -284,13 +294,11 @@ class Wrapper extends Component {
         <WorkspaceShareSettingsModal
           ref={registerModal}
           workspace={activeWorkspace}/>
-        <EnvironmentEditModal
-          ref={registerModal}
-          onChange={models.requestGroup.update}
-        />
         <GenerateCodeModal
           ref={registerModal}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+          editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
         />
         <SettingsModal
           ref={registerModal}
@@ -301,15 +309,25 @@ class Wrapper extends Component {
         />
         <RequestSwitcherModal
           ref={registerModal}
+          workspaces={workspaces}
           workspaceChildren={workspaceChildren}
           workspaceId={activeWorkspace._id}
           activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
           activateRequest={handleActivateRequest}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
         />
+        <EnvironmentEditModal
+          ref={registerModal}
+          editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
+          onChange={models.requestGroup.update}
+        />
         <WorkspaceEnvironmentsEditModal
           ref={registerModal}
-          onChange={models.workspace.update}/>
+          onChange={models.workspace.update}
+          editorFontSize={settings.editorFontSize}
+          editorKeyMap={settings.editorKeyMap}
+        />
       </div>
     )
   }
@@ -329,6 +347,7 @@ Wrapper.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
+  handleGenerateCodeForActiveRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   handleCreateRequestForWorkspace: PropTypes.func.isRequired,
   handleSetRequestPaneRef: PropTypes.func.isRequired,
@@ -343,6 +362,7 @@ Wrapper.propTypes = {
   handleResetDragPane: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleSendRequestWithEnvironment: PropTypes.func.isRequired,
+  handleSendAndDownloadRequestWithEnvironment: PropTypes.func.isRequired,
 
   // Properties
   loadStartTime: PropTypes.number.isRequired,

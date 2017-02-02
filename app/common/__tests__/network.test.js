@@ -167,7 +167,7 @@ describe('actuallySend()', () => {
     );
 
     expect(mock.basePath).toBe('http://localhost:80');
-    expect(response.error).toBe('');
+    expect(response.error).toBe(undefined);
     expect(response.url).toBe('http://localhost/?foo%20bar=hello%26world');
     expect(response.body).toBe(new Buffer('response body').toString('base64'));
     expect(response.statusCode).toBe(200);
@@ -208,7 +208,7 @@ describe('actuallySend()', () => {
     );
 
     expect(mock.basePath).toBe('http://localhost:80');
-    expect(response.error).toBe('');
+    expect(response.error).toBe(undefined);
     expect(response.url).toBe('http://localhost/');
     expect(response.body).toBe(new Buffer('response body').toString('base64'));
     expect(response.statusCode).toBe(200);
@@ -260,7 +260,7 @@ describe('actuallySend()', () => {
     );
 
     expect(mock.basePath).toBe('http://localhost:80');
-    expect(response.error).toBe('');
+    expect(response.error).toBe(undefined);
     expect(response.url).toBe('http://localhost/');
     expect(response.body).toBe(new Buffer('response body').toString('base64'));
     expect(response.statusCode).toBe(200);
