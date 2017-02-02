@@ -41,9 +41,8 @@ class RequestUrlBar extends Component {
 
   _handleUrlPaste = e => {
     /*
-     * Prevent the change handler from being called. Note that this is in a timeout
-     * because we want it to happen after the onChange callback. If it happens before,
-     * then the change will overwrite anything that we do.
+     * Note that this is in a timeout because we want it to happen after the onChange
+     * callback. If it happens before, then the change will overwrite anything that we do.
      *
      * Also, note that there is still a potential race condition here if, for some reason,
      * the onChange callback is not called before DEBOUNCE_MILLIS is over. This is extremely
@@ -51,10 +50,8 @@ class RequestUrlBar extends Component {
      */
     const text = e.clipboardData.getData('text/plain');
     setTimeout(() => {
-      // Clear any update timeouts that may have happened since we started waiting
-      clearTimeout(this._urlChangeDebounceTimeout);
       this.props.onUrlPaste(text);
-    }, DEBOUNCE_MILLIS);
+    }, DEBOUNCE_MILLIS * 2);
   };
 
   _handleGenerateCode = () => {

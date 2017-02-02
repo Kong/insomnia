@@ -216,7 +216,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
 
           return _actuallySend(
             renderedRequest, workspace, settings, nextFamilyIndex
-          ).then(resolve, reject);
+          ).then(resolve);
         }
 
         let message = err.toString();

@@ -61,7 +61,7 @@ export const selectSidebarChildren = createSelector(
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   (collapsed, requestsAndRequestGroups, activeWorkspace, activeWorkspaceMeta) => {
-    const {sidebarFilter} = activeWorkspaceMeta;
+    const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
 
     function next (parentId) {
       const children = requestsAndRequestGroups
