@@ -31,9 +31,10 @@ class Wrapper extends Component {
   state = {forceRefreshRequestPaneCounter: Date.now()};
 
   // Request updaters
-  _handleUpdateRequest = async patch => {
-    await rUpdate(this.props.activeRequest, patch);
+  _handleForceUpdateRequest = async patch => {
+    const newRequest = await rUpdate(this.props.activeRequest, patch);
     this.forceRequestPaneRefresh();
+    return newRequest;
   };
 
   _handleUpdateRequestBody = body => rUpdate(this.props.activeRequest, {body});
@@ -45,11 +46,9 @@ class Wrapper extends Component {
 
   // Special request updaters
   _handleUpdateRequestMimeType = mimeType => updateMimeType(this.props.activeRequest, mimeType);
-  _handleImportRequest = async text => {
+  _handleImport = async text => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
-    const {activeRequest} = this.props;
-
     try {
       const {data} = importers.convert(text);
       const {resources} = data;
@@ -59,7 +58,7 @@ class Wrapper extends Component {
         trackEvent('Import', 'Url Bar');
 
         // Only pull fields that we want to update
-        await models.request.update(activeRequest, {
+        return this._handleForceUpdateRequest({
           url: r.url,
           method: r.method,
           headers: r.headers,
@@ -67,12 +66,12 @@ class Wrapper extends Component {
           authentication: r.authentication,
           parameters: r.parameters,
         });
-
-        this.forceRequestPaneRefresh();
       }
     } catch (e) {
       // Import failed, that's alright
     }
+
+    return null;
   };
 
 
@@ -241,12 +240,12 @@ class Wrapper extends Component {
           editorLineWrapping={settings.editorLineWrapping}
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           workspace={activeWorkspace}
+          forceUpdateRequest={this._handleForceUpdateRequest}
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
-          updateRequest={this._handleUpdateRequest}
+          handleImport={this._handleImport}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
-          importRequest={this._handleImportRequest}
           updateRequestMethod={this._handleUpdateRequestMethod}
           updateRequestParameters={this._handleUpdateRequestParameters}
           updateRequestAuthentication={this._handleUpdateRequestAuthentication}

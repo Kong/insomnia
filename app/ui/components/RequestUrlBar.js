@@ -17,6 +17,7 @@ class RequestUrlBar extends Component {
   };
 
   _urlChangeDebounceTimeout = null;
+  _lastPastedText = null;
 
   _handleFormSubmit = e => {
     e.preventDefault();
@@ -34,24 +35,33 @@ class RequestUrlBar extends Component {
     const url = e.target.value;
 
     clearTimeout(this._urlChangeDebounceTimeout);
-    this._urlChangeDebounceTimeout = setTimeout(() => {
-      this.props.onUrlChange(url);
+    this._urlChangeDebounceTimeout = setTimeout(async () => {
+
+      // If no pasted text in the queue, just fire the regular change handler
+      if (!pastedText) {
+        this.props.onUrlChange(url);
+      }
+
+      // Reset pasted text cache
+      const pastedText = this._lastPastedText;
+      this._lastPastedText = null;
+
+      // Attempt to import the pasted text
+      const importedRequest = await this.props.handleImport(pastedText);
+
+      // Update depending on whether something was imported
+      if (importedRequest) {
+        this.props.onUrlChange(importedRequest.url);
+      } else {
+        this.props.onUrlChange(url);
+      }
+
     }, DEBOUNCE_MILLIS);
   };
 
   _handleUrlPaste = e => {
-    /*
-     * Note that this is in a timeout because we want it to happen after the onChange
-     * callback. If it happens before, then the change will overwrite anything that we do.
-     *
-     * Also, note that there is still a potential race condition here if, for some reason,
-     * the onChange callback is not called before DEBOUNCE_MILLIS is over. This is extremely
-     * unlikely since it should happen in the same tick.
-     */
-    const text = e.clipboardData.getData('text/plain');
-    setTimeout(() => {
-      this.props.onUrlPaste(text);
-    }, DEBOUNCE_MILLIS * 2);
+    // NOTE: We're not actually doing the import here to avoid races with onChange
+    this._lastPastedText = e.clipboardData.getData('text/plain');
   };
 
   _handleGenerateCode = () => {
@@ -273,8 +283,8 @@ class RequestUrlBar extends Component {
 RequestUrlBar.propTypes = {
   handleSend: PropTypes.func.isRequired,
   handleSendAndDownload: PropTypes.func.isRequired,
+  handleImport: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
-  onUrlPaste: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   url: PropTypes.string.isRequired,

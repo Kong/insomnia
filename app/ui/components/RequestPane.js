@@ -51,7 +51,7 @@ class RequestPane extends PureComponent {
       ...querystring.deconstructToParams(parsed.query),
     ];
 
-    this.props.updateRequest({url, parameters});
+    this.props.forceUpdateRequest({url, parameters});
   };
 
   _trackQueryToggle = pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
@@ -75,7 +75,7 @@ class RequestPane extends PureComponent {
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,
-      importRequest,
+      handleImport,
       updateRequestUrl,
       updateRequestMethod,
       updateRequestBody,
@@ -150,7 +150,7 @@ class RequestPane extends PureComponent {
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={debounce(updateRequestUrl)}
-            onUrlPaste={importRequest}
+            handleImport={handleImport}
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
             handleSendAndDownload={handleSendAndDownload}
@@ -280,11 +280,11 @@ class RequestPane extends PureComponent {
 
 RequestPane.propTypes = {
   // Functions
+  forceUpdateRequest: PropTypes.func.isRequired,
   handleSend: PropTypes.func.isRequired,
   handleSendAndDownload: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
-  updateRequest: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,
@@ -294,7 +294,7 @@ RequestPane.propTypes = {
   updateRequestMimeType: PropTypes.func.isRequired,
   updateSettingsShowPasswords: PropTypes.func.isRequired,
   updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
-  importRequest: PropTypes.func.isRequired,
+  handleImport: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,
 
   // Other
