@@ -27,9 +27,20 @@ const THEMES = [
 ];
 
 class SettingsTheme extends Component {
-  state = {
-    isPremium: localStorage.getItem('settings.theme.isPremium') || false,
-  };
+  constructor (props) {
+    super(props);
+
+    let isPremium = false;
+    try {
+      isPremium = JSON.parse(localStorage.getItem('settings.theme.isPremium'));
+    } catch (err) {
+      // That's OK
+    }
+
+    this.state = {
+      isPremium: isPremium,
+    };
+  }
 
   async componentDidMount () {
     // NOTE: This is kind of sketchy because we're relying on our parent (tab view)
@@ -42,9 +53,10 @@ class SettingsTheme extends Component {
     }
 
     const {isPremium} = await session.whoami();
+    localStorage.setItem('settings.theme.isPremium', JSON.stringify(isPremium));
+
     if (this.state.isPremium !== isPremium) {
       this.setState({isPremium});
-      localStorage.setItem('settings.theme.isPremium', isPremium);
     }
   }
 

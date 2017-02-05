@@ -2,13 +2,17 @@ import fs from 'fs';
 import path from 'path';
 import {addPlugin, getPlugins, runPluginHook} from './runner';
 
-export async function init () {
-  const pluginFiles = [
-    'basic-auth',
-    'set-env',
-  ];
+const CORE_PLUGINS = [
+  'basic-auth',
+];
 
-  for (const name of pluginFiles) {
+const DEFAULT_PLUGINS = [
+  'set-env',
+];
+
+export async function init () {
+
+  for (const name of [...CORE_PLUGINS, ...DEFAULT_PLUGINS]) {
     const fullPath = path.resolve(`./sample-scripts/${name}.js`);
     try {
       addPlugin(fs.readFileSync(fullPath));

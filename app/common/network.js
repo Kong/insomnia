@@ -12,6 +12,8 @@ import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, getSetCookieHea
 import {getRenderedRequest} from './render';
 import * as fs from 'fs';
 import * as db from './database';
+import NetworkRequestConfig from '../network/lib/request-config';
+import * as network from '../network';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
 // default dns.resolve which uses c-ares to do lookups. This doesn't work for
@@ -115,6 +117,27 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   config.url = util.prepareUrlForSending(url);
 
   return Object.assign(config, patch);
+}
+
+export async function _actuallySend2 (renderedRequest, workspace, settings, familyIndex = 0) {
+  console.log('Hello 1');
+  const nrc = new NetworkRequestConfig()
+    .setMethod(renderedRequest.method)
+    .setUrl(renderedRequest.url);
+
+  console.log('Hello 2');
+  // Set the headers
+  for (const {name, value} of renderedRequest.headers) {
+    nrc.setHeader(name, value, true);
+  }
+
+  console.log('Hello 3');
+  try {
+    const response = await network.send(nrc);
+    console.log('RESPONSE', response);
+  } catch (err) {
+    console.log('RESPONSE ERR', err.stack);
+  }
 }
 
 export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {
@@ -325,5 +348,6 @@ export async function send (requestId, environmentId) {
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!
-  return _actuallySend(renderedRequest, workspace, settings);
+  return _actuallySend2(renderedRequest, workspace, settings);
+  // return _actuallySend(renderedRequest, workspace, settings);
 }
