@@ -49,6 +49,7 @@ import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
 // Make jsonlint available to the jsonlint plugin
 import {parser as jsonlint} from 'jsonlint';
+import {prettifyJson} from '../../../common/prettify';
 global.jsonlint = jsonlint;
 
 
@@ -170,36 +171,37 @@ class Editor extends Component {
     this._prettify(this.codeMirror.getValue());
   }
 
-  async _prettify (code) {
+  _prettify (code) {
     if (this._isXML(this.props.mode)) {
-      code = this._formatXML(code);
+      code = this._prettifyXML(code);
     } else {
-      code = this._formatJSON(code);
+      code = this._prettifyJSON(code);
     }
 
     this.codeMirror.setValue(code);
   }
 
-  _formatJSON (code) {
+  _prettifyJSON (code) {
     try {
-      let obj = JSON.parse(code);
+      let jsonString = code;
 
       if (this.props.updateFilter && this.state.filter) {
+        let obj = JSON.parse(code);
         try {
-          obj = jq.query(obj, this.state.filter);
+          jsonString = JSON.stringify(jq.query(obj, this.state.filter));
         } catch (err) {
-          obj = '[]';
+          jsonString = '[]';
         }
       }
 
-      return vkBeautify.json(obj, '\t');
+      return prettifyJson(jsonString, '\t');
     } catch (e) {
       // That's Ok, just leave it
       return code;
     }
   }
 
-  _formatXML (code) {
+  _prettifyXML (code) {
     if (this.props.updateFilter && this.state.filter) {
       try {
         const dom = new DOMParser().parseFromString(code);
