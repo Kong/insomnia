@@ -92,7 +92,14 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
   }
 
   // Render the context with itself to fill in the rest.
-  return recursiveRender(renderContext, renderContext);
+  let finalRenderContext = renderContext;
+
+  // Render up to 5 levels of recursive references.
+  for (let i = 0; i < 3; i++) {
+    finalRenderContext = recursiveRender(finalRenderContext, finalRenderContext);
+  }
+
+  return finalRenderContext;
 }
 
 export function recursiveRender (obj, context) {
@@ -178,7 +185,7 @@ function _objectDeepAssignRender (base, obj) {
      *
      * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
      * original base_url of google.com would be lost.
-    */
+     */
     if (typeof base[key] === 'string') {
       base[key] = render(obj[key], base);
     } else {

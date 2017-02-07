@@ -71,7 +71,34 @@ describe('buildRenderContext()', () => {
 
     const context = renderUtils.buildRenderContext(ancestors);
 
-    expect(context).toEqual({recursive: '{{ recursive }}/hello/hello'});
+    // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
+    expect(context).toEqual({
+      recursive: '{{ recursive }}/hello/hello/hello/hello/hello/hello/hello/hello'
+    });
+  });
+
+  it('render up to 3 recursion levels', () => {
+    const ancestors = [{
+      // Sub Environment
+      type: models.requestGroup.type,
+      environment: {
+        d: '/d',
+        c: '/c{{ d }}',
+        b: '/b{{ c }}',
+        a: '/a{{ b }}',
+        test: 'http://insomnia.rest{{ a }}'
+      }
+    }];
+
+    const context = renderUtils.buildRenderContext(ancestors);
+
+    expect(context).toEqual({
+      d: '/d',
+      c: '/c/d',
+      b: '/b/c/d',
+      a: '/a/b/c/d',
+      test: 'http://insomnia.rest/a/b/c/d',
+    });
   });
 
   it('rendered sibling environment variables', () => {
