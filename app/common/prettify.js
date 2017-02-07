@@ -15,14 +15,25 @@ export function prettifyJson (json, indentChars) {
   let indentLevel = 0;
   let inString = false;
   let currentChar = null;
+  let previousChar = null;
+  let nextChar = null;
 
   for (;i < il; i += 1) {
     currentChar = json.charAt(i);
+    previousChar = json.charAt(i - 1);
+    nextChar = json.charAt(i + 1);
 
     switch (currentChar) {
       case '{':
+        if (!inString && nextChar !== '}') {
+          newJson += currentChar + '\n' + _repeatString(tab, indentLevel + 1);
+          indentLevel += 1;
+        } else {
+          newJson += currentChar;
+        }
+        break;
       case '[':
-        if (!inString) {
+        if (!inString && nextChar !== ']') {
           newJson += currentChar + '\n' + _repeatString(tab, indentLevel + 1);
           indentLevel += 1;
         } else {
@@ -30,8 +41,15 @@ export function prettifyJson (json, indentChars) {
         }
         break;
       case '}':
+        if (!inString && previousChar !== '{') {
+          indentLevel -= 1;
+          newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
+        } else {
+          newJson += currentChar;
+        }
+        break;
       case ']':
-        if (!inString) {
+        if (!inString && previousChar !== '[') {
           indentLevel -= 1;
           newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
         } else {
@@ -60,7 +78,7 @@ export function prettifyJson (json, indentChars) {
         }
         break;
       case '"':
-        if (i > 0 && json.charAt(i - 1) !== '\\') {
+        if (i > 0 && previousChar !== '\\') {
           inString = !inString;
         }
         newJson += currentChar;
