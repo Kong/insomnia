@@ -34,20 +34,19 @@ class Toast extends Component {
 
     let notification;
     try {
-      const queryParameters = [
-        {name: 'lastLaunch', value: stats.lastLaunch},
-        {name: 'firstLaunch', value: stats.created},
-        {name: 'launches', value: stats.launches},
-        {name: 'platform', value: constants.getAppPlatform()},
-        {name: 'version', value: constants.getAppVersion()},
-        {name: 'requests', value: (await db.count(models.request.type)) + ''},
-        {name: 'requestGroups', value: (await db.count(models.requestGroup.type)) + ''},
-        {name: 'environments', value: (await db.count(models.environment.type)) + ''},
-        {name: 'workspaces', value: (await db.count(models.workspace.type)) + ''},
-      ];
+      const data = {
+        lastLaunch: stats.lastLaunch,
+        firstLaunch: stats.created,
+        launches: stats.launches,
+        platform: constants.getAppPlatform(),
+        version: constants.getAppVersion(),
+        requests: await db.count(models.request.type),
+        requestGroups: await db.count(models.requestGroup.type),
+        environments: await db.count(models.environment.type),
+        workspaces: await db.count(models.workspace.type),
+      };
 
-      const qs = querystring.buildFromParams(queryParameters);
-      notification = await fetch.get(`/notification?${qs}`);
+      notification = await fetch.post(`/notification`, data);
     } catch (e) {
       console.warn('[toast] Failed to fetch notifications', e);
     }

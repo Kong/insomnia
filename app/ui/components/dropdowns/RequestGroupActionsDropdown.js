@@ -8,6 +8,8 @@ import {showModal} from '../modals';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestGroupActionsDropdown extends Component {
+  _setDropdownRef = n => this._dropdown = n;
+
   _handleRename = async () => {
     const {requestGroup} = this.props;
 
@@ -45,11 +47,15 @@ class RequestGroupActionsDropdown extends Component {
     showModal(EnvironmentEditModal, this.props.requestGroup);
   };
 
+  show () {
+    this._dropdown.show();
+  }
+
   render () {
     const {requestGroup, ...other} = this.props;
 
     return (
-      <Dropdown {...other}>
+      <Dropdown ref={this._setDropdownRef} {...other}>
         <DropdownButton>
           <i className="fa fa-caret-down"></i>
         </DropdownButton>

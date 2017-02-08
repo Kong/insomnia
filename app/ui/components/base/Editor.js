@@ -38,6 +38,7 @@ import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
+import 'codemirror/addon/mode/overlay';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
 import 'codemirror/keymap/sublime';
@@ -130,24 +131,59 @@ class Editor extends Component {
 
     const {value} = this.props;
 
+    // Add overlay to editor to make all links clickable
+    CodeMirror.defineMode('clickable', (config, parserConfig) => {
+      const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
+
+      // Only add the click mode if we have links to click
+      if (!this.props.onClickLink) {
+        return baseMode;
+      }
+
+      const overlay = {
+        token: function (stream, state) {
+          // console.log('state', state);
+          if (stream.match(/^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/, true)) {
+            return 'clickable';
+          }
+
+          while (stream.next() != null && !stream.match("http", false)) {
+            // Do nothing
+          }
+
+          return null;
+        }
+      };
+
+      return CodeMirror.overlayMode(baseMode, overlay, true);
+    });
+
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
     this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged.bind(this)));
     this.codeMirror.on('paste', misc.debounce(this._codemirrorValueChanged.bind(this)));
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
-          var spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
           cm.replaceSelection(spaces);
         }
       });
     }
 
     // Do this a bit later so we don't block the render process
-    setTimeout(() => {
-      this._codemirrorSetValue(value || '');
-    }, 50);
+    setTimeout(() => this._codemirrorSetValue(value || ''), 50);
 
     this._codemirrorSetOptions();
+  };
+
+  _handleEditorClick = e => {
+    if (!this.props.onClickLink) {
+      return;
+    }
+
+    if (e.target.className.indexOf('cm-clickable') >= 0) {
+      this.props.onClickLink(e.target.innerHTML);
+    }
   };
 
   _isJSON (mode) {
@@ -229,10 +265,15 @@ class Editor extends Component {
     // Clone first so we can modify it
     const readOnly = this.props.readOnly || false;
 
+    const normalizedMode = this.props.mode ? this.props.mode.split(';')[0] : 'text/plain';
+
     let options = {
       readOnly,
       placeholder: this.props.placeholder || '',
-      mode: this.props.mode || 'text/plain',
+      mode: {
+        name: 'clickable',
+        baseMode: normalizedMode,
+      },
       lineWrapping: this.props.lineWrapping,
       keyMap: this.props.keyMap || 'default',
       matchBrackets: !readOnly,
@@ -240,7 +281,6 @@ class Editor extends Component {
     };
 
     // Strip of charset if there is one
-    options.mode = options.mode ? options.mode.split(';')[0] : 'text/plain';
     Object.keys(options).map(key => {
       this.codeMirror.setOption(key, options[key]);
     });
@@ -432,7 +472,7 @@ class Editor extends Component {
 
     return (
       <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
-        <div className="editor__container">
+        <div className="editor__container" onClick={this._handleEditorClick}>
           <textarea
             ref={this._handleInitTextarea}
             defaultValue=" "
@@ -449,6 +489,7 @@ class Editor extends Component {
 Editor.propTypes = {
   onChange: PropTypes.func,
   onFocusChange: PropTypes.func,
+  onClickLink: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
   placeholder: PropTypes.string,
