@@ -10,6 +10,8 @@ import {MOD_SYM} from '../../../common/constants';
 
 
 class RequestActionsDropdown extends Component {
+  _setDropdownRef = n => this._dropdown = n;
+
   _handleDuplicate = () => {
     const {request, handleDuplicateRequest} = this.props;
     handleDuplicateRequest(request);
@@ -54,11 +56,15 @@ class RequestActionsDropdown extends Component {
     trackEvent('Request', 'Delete', 'Action');
   };
 
+  show () {
+    this._dropdown.show();
+  }
+
   render () {
     const {request, ...other} = this.props;
 
     return (
-      <Dropdown {...other}>
+      <Dropdown ref={this._setDropdownRef} {...other}>
         <DropdownButton>
           <i className="fa fa-caret-down"></i>
         </DropdownButton>

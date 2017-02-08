@@ -9,10 +9,17 @@ import {trackEvent} from '../../../analytics/index';
 class SidebarRequestGroupRow extends PureComponent {
   state = {dragDirection: 0};
 
+  _setRequestGroupActionsDropdownRef = n => this._requestGroupActionsDropdown = n;
+
   _handleCollapse = () => {
     const {requestGroup, handleSetRequestGroupCollapsed, isCollapsed} = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
     trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open')
+  };
+
+  _handleShowActions = e => {
+    e.preventDefault();
+    this._requestGroupActionsDropdown.show();
   };
 
   _nullFunction = () => null;
@@ -55,7 +62,7 @@ class SidebarRequestGroupRow extends PureComponent {
 
     // NOTE: We only want the button draggable, not the whole container (ie. no children)
     const button = connectDragSource(connectDropTarget(
-      <button onClick={this._handleCollapse}>
+      <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
         <div className="sidebar__clickable">
           <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
           <span>{requestGroup.name}</span>
@@ -72,6 +79,7 @@ class SidebarRequestGroupRow extends PureComponent {
 
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
+              ref={this._setRequestGroupActionsDropdownRef}
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}

@@ -15,6 +15,13 @@ class SidebarRequestRow extends PureComponent {
     isEditing: false,
   };
 
+  _setRequestActionsDropdownRef = n => this._requestActionsDropdown = n;
+
+  _handleShowRequestActions = e => {
+    e.preventDefault();
+    this._requestActionsDropdown.show();
+  };
+
   _handleEditStart = () => {
     trackEvent('Request', 'Rename', 'In Place');
     this.setState({isEditing: true});
@@ -84,8 +91,9 @@ class SidebarRequestRow extends PureComponent {
     } else {
       node = (
         <li className={classes}>
-          <div className={classnames('sidebar__item', 'sidebar__item--request', {'sidebar__item--active': isActive})}>
-            <button className="wide" onClick={this._handleRequestActivate}>
+          <div
+            className={classnames('sidebar__item', 'sidebar__item--request', {'sidebar__item--active': isActive})}>
+            <button className="wide" onClick={this._handleRequestActivate} onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
                 <Editable value={request.name}
@@ -95,6 +103,7 @@ class SidebarRequestRow extends PureComponent {
             </button>
             <div className="sidebar__actions">
               <RequestActionsDropdown
+                ref={this._setRequestActionsDropdownRef}
                 handleDuplicateRequest={handleDuplicateRequest}
                 handleGenerateCode={handleGenerateCode}
                 right={true}
