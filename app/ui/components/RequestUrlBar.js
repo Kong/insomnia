@@ -19,6 +19,13 @@ class RequestUrlBar extends Component {
   _urlChangeDebounceTimeout = null;
   _lastPastedText = null;
 
+  _setDropdownRef = n => this._dropdown = n;
+
+  _handleMetaClickSend = e => {
+    e.preventDefault();
+    this._dropdown.show();
+  };
+
   _handleFormSubmit = e => {
     e.preventDefault();
     e.stopPropagation();
@@ -215,8 +222,9 @@ class RequestUrlBar extends Component {
     let sendButton;
     if (!cancelButton) {
       sendButton = (
-        <Dropdown key="dropdown" className="tall" right={true}>
+        <Dropdown key="dropdown" className="tall" right={true} ref={this._setDropdownRef}>
           <DropdownButton className="urlbar__send-btn"
+                          onContextMenu={this._handleMetaClickSend}
                           onClick={this._handleClickSend}
                           type="submit">
             {downloadPath ? "Download" : "Send"}

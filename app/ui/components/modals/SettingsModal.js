@@ -12,6 +12,7 @@ import SettingsTheme from '../settings/SettingsTheme';
 import * as models from '../../../models/index';
 import {getAppVersion, getAppName} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
+import * as session from '../../../sync/session';
 
 export const TAB_INDEX_EXPORT = 1;
 
@@ -64,13 +65,17 @@ class SettingsModal extends Component {
     } = this.props;
 
     const {currentTabIndex} = this.state;
+    const email = session.isLoggedIn() ? session.getEmail() : null;
 
     return (
       <Modal ref={m => this.modal = m} tall={true} {...this.props}>
         <ModalHeader>
           {getAppName()} Preferences
-          &nbsp;&nbsp;
-          <span className="faint txt-sm">v{getAppVersion()}</span>
+          <span className="faint txt-sm">
+          &nbsp;&nbsp;–&nbsp;
+          v{getAppVersion()}
+          {email ? ` – ${email}` : null}
+          </span>
         </ModalHeader>
         <ModalBody noScroll={true}>
           <Tabs onSelect={i => this._handleTabSelect(i)} selectedIndex={currentTabIndex}>

@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import {shell} from 'electron';
 import Editor from '../base/Editor';
 import ResponseWebView from './ResponseWebview';
 import ResponseRaw from './ResponseRaw';
@@ -11,6 +12,10 @@ class ResponseViewer extends Component {
   state = {
     blockingBecauseTooLarge: false
   };
+
+  _handleOpenLink (link) {
+    shell.openExternal(link);
+  }
 
   _handleDismissBlocker () {
     this.setState({blockingBecauseTooLarge: false});
@@ -149,6 +154,7 @@ class ResponseViewer extends Component {
 
         return (
           <Editor
+            onClickLink={this._handleOpenLink}
             value={body}
             updateFilter={updateFilter}
             filter={filter}
