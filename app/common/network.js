@@ -313,11 +313,11 @@ export async function send (requestId, environmentId) {
     renderedRequest = await getRenderedRequest(request, environmentId);
   } catch (e) {
     // Failed to render. Must be the user's fault
-    return resolve({
+    return {
       parentId: request._id,
       statusCode: STATUS_CODE_RENDER_FAILED,
       error: e.message
-    });
+    };
   }
 
   // Get the workspace for the request
