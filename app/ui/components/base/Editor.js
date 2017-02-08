@@ -282,6 +282,16 @@ class Editor extends Component {
 
     // Strip of charset if there is one
     Object.keys(options).map(key => {
+      // Don't set the option if it hasn't changed
+      if (options[key] === this.codeMirror.options[key]) {
+        return;
+      }
+
+      // Since mode is an object, let's compare the inner baseMode instead
+      if (key === 'mode' && options.mode.baseMode === this.codeMirror.options.mode.baseMode) {
+        return;
+      }
+
       this.codeMirror.setOption(key, options[key]);
     });
   }
