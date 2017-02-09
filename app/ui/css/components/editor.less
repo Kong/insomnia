@@ -140,6 +140,7 @@
 }
 
 /* Based on Sublime Text's Monokai theme */
+.editor,
 .CodeMirror {
   color: var(--color-font);
 
@@ -260,4 +261,32 @@
     text-decoration: underline;
     color: inherit !important;
   }
+
+  ul.CodeMirror-hints {
+    background-color: var(--color-bg);
+    border-color: var(--hl-md);
+    position: fixed;
+    box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
+  }
+
+  li.CodeMirror-hint {
+    min-width: 10rem;
+    color: var(--color-font);
+    padding: @padding-xxs @padding-xs;
+  }
+
+  li.CodeMirror-hint-active {
+    background: var(--hl-md);
+    color: var(--color-font);
+  }
+}
+
+.editor__autocomplete-container {
+  z-index: -1;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(255, 23, 23, 0.2);
 }

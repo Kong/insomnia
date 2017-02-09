@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import {getDOMNode} from 'react-dom';
+import {ReactDOM} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import jq from 'jsonpath';
@@ -35,6 +35,8 @@ import 'codemirror/addon/search/matchesonscrollbar.css';
 import 'codemirror/addon/fold/foldgutter';
 import 'codemirror/addon/fold/foldgutter.css';
 import 'codemirror/addon/display/placeholder';
+import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
@@ -74,10 +76,9 @@ const BASE_CODEMIRROR_OPTIONS = {
   ],
   cursorScrollMargin: 12, // NOTE: This is px
   extraKeys: {
-    'Ctrl-Q': function (cm) {
-      cm.foldCode(cm.getCursor());
-    }
-  }
+    'Ctrl-Q': cm => cm.foldCode(cm.getCursor()),
+    'Ctrl-Space': 'autocomplete',
+  },
 };
 
 class Editor extends Component {
@@ -117,6 +118,22 @@ class Editor extends Component {
   getValue () {
     return this.codeMirror.getValue();
   }
+
+  _handleSetupAutocomplete = node => {
+    if (this.props.autocompleteHints) {
+      this.codeMirror.setOption('hintOptions', {
+        container: node,
+        hint: (cm) => {
+          const cur = cm.getCursor();
+          return {
+            list: this.props.autocompleteHints,
+            from: CodeMirror.Pos(cur.line, cur.ch),
+            to: CodeMirror.Pos(cur.line, cur.ch)
+          }
+        }
+      });
+    }
+  };
 
   _handleInitTextarea = textarea => {
     if (!textarea) {
@@ -301,7 +318,6 @@ class Editor extends Component {
    * @param doc CodeMirror document
    */
   _codemirrorValueChanged (doc) {
-
     // Don't trigger change event if we're ignoring changes
     if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
@@ -489,6 +505,7 @@ class Editor extends Component {
             readOnly={readOnly}
             autoComplete="off"
           />
+          <div ref={this._handleSetupAutocomplete}></div>
         </div>
         {toolbar}
       </div>
@@ -511,7 +528,8 @@ Editor.propTypes = {
   className: PropTypes.any,
   lightTheme: PropTypes.bool,
   updateFilter: PropTypes.func,
-  filter: PropTypes.string
+  filter: PropTypes.string,
+  autocompleteHints: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default Editor;
