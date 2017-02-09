@@ -86,6 +86,7 @@ class ResponseViewer extends Component {
         <ResponseError
           url={url}
           error={bodyBuffer.toString('utf8')}
+          fontSize={editorFontSize}
           statusCode={statusCode}
         />
       )
@@ -123,11 +124,7 @@ class ResponseViewer extends Component {
               <div className="scrollable">
                 <img src={`data:${justContentType};base64,${base64Body}`}
                      className="pad block"
-                     style={{
-                       maxWidth: '100%',
-                       maxHeight: '100%',
-                       margin: 'auto',
-                     }}/>
+                     style={{maxWidth: '100%', maxHeight: '100%', margin: 'auto'}}/>
               </div>
             </div>
           )

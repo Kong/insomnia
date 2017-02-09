@@ -32,6 +32,11 @@ class PaymentNotificationModal extends Component {
     this.modal.hide();
   }
 
+  // For Testing
+  // componentDidMount () {
+  //   this.modal.show();
+  // }
+
   render () {
     return (
       <Modal ref={m => this.modal = m}>
@@ -52,7 +57,7 @@ class PaymentNotificationModal extends Component {
               <Link button={true}
                     href="https://insomnia.rest/app/subscribe/"
                     className="btn btn--compact btn--outlined">
-                Subscribe Now
+                Update Billing
               </Link>
             </p>
           </div>

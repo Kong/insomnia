@@ -7,7 +7,7 @@ import {STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
 
 class ResponseError extends Component {
   render () {
-    const {error, statusCode} = this.props;
+    const {error, statusCode, fontSize} = this.props;
 
     let msg = null;
     if (statusCode === STATUS_CODE_RENDER_FAILED) {
@@ -42,7 +42,7 @@ class ResponseError extends Component {
 
     return (
       <div>
-        <pre className="selectable pad force-word-wrap">
+        <pre className="selectable pad force-word-wrap" style={{fontSize: `${fontSize}px`}}>
           {error}
         </pre>
         <hr/>
@@ -67,6 +67,7 @@ ResponseError.propTypes = {
   error: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
   statusCode: PropTypes.number.isRequired,
+  fontSize: PropTypes.number.isRequired,
 };
 
 export default ResponseError;
