@@ -3,7 +3,7 @@ import classnames from 'classnames';
 
 const TimeTag = ({milliseconds, small, className}) => {
   let unit = 'ms';
-  let number = milliseconds;
+  let number = Math.round(milliseconds);
 
   if (milliseconds > 1000 * 60) {
     unit = 'm';

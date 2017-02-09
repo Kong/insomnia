@@ -22,6 +22,7 @@
     "mkdirp": "^0.5.1",
     "nedb": "^1.8.0",
     "node-forge": "^0.6.46",
+    "node-libcurl": "^1.0.0",
     "nunjucks": "^3.0.0",
     "raven": "^0.12.1",
     "request": "^2.71.0",

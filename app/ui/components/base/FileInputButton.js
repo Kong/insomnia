@@ -14,10 +14,9 @@ class FileInputButton extends Component {
       if (!paths || paths.length === 0) {
         // Cancelling will clear the value
         this.props.onChange('');
+      } else {
+        this.props.onChange(paths[0]);
       }
-
-      const path = paths[0];
-      this.props.onChange(path);
     })
   };
 

@@ -1,5 +1,6 @@
 import networkRequest from 'request';
 import {parse as urlParse} from 'url';
+import {Curl} from 'node-libcurl';
 import mime from 'mime-types';
 import {basename as pathBasename} from 'path';
 import * as models from '../models';
@@ -115,6 +116,177 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   config.url = util.prepareUrlForSending(url);
 
   return Object.assign(config, patch);
+}
+
+export function _actuallySendCurl (renderedRequest, workspace, settings) {
+  return new Promise(resolve => {
+    function handleError (err, prefix = null) {
+      resolve({
+        url: renderedRequest.url,
+        parentId: renderedRequest._id,
+        error: prefix ? `${prefix}: ${err.message}` : err.message,
+        elapsedTime: 0,
+        statusMessage: 'Error',
+      });
+    }
+
+    try {
+      const curl = new Curl();
+      console.log('OPTIONS', {options: Curl.option});
+
+      // Set all the basic options
+      curl.setOpt(Curl.option.URL, renderedRequest.url);
+      curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects); // Follow redirects
+      curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0); // Follow POST redirects
+      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL); // Validate SSL
+      curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
+      curl.setOpt(Curl.option.HTTPHEADER, renderedRequest.headers.map(h => `${h.name}: ${h.value}`));
+
+      // Set proxy if needed
+      const {protocol} = urlParse(renderedRequest.url);
+      const {httpProxy, httpsProxy} = settings;
+      const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+      const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+      if (proxy) {
+        curl.setOpt(Curl.option.PROXY, proxy);
+      }
+
+      // Set cookies
+      // TODO
+
+      // Set client certs if needed
+      for (const certificate of workspace.certificates) {
+        const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
+        const {hostname: cHostname, port: cPort} = urlParse(cHostWithProtocol);
+        const {hostname, port} = urlParse(renderedRequest.url);
+
+        const assumedPort = parseInt(port) || 443;
+        const assumedCPort = parseInt(cPort) || 443;
+
+        // Exact host match (includes port)
+        if (cHostname === hostname && assumedCPort === assumedPort) {
+          const {passphrase, cert, key, pfx} = certificate;
+
+          // TODO: Save cert to temporary file and delete it after (somehow)
+          if (cert) {
+            curl.setOpt(curl.SSLCERT, 'cert.pem');
+            curl.setOpt(curl.SSLCERTTYPE, 'PEM');
+          }
+
+          if (pfx) {
+            curl.setOpt(curl.SSLCERT, 'cert.p12');
+            curl.setOpt(curl.SSLCERTTYPE, 'P12');
+          }
+
+          if (key) {
+            curl.setOpt(curl.SSLKEY, 'hello.key');
+          }
+
+          if (passphrase) {
+            curl.setOpt(curl.SSLKEYPASSWD, 'myPassword');
+          }
+        }
+      }
+
+      // Build the body
+      if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+        const d = buildFromParams(renderedRequest.body.params || [], true);
+        curl.setOpt(Curl.option.POSTFIELDS, d); // Send raw data
+      } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
+        const addParamFn = param => ((param.type === 'file' && param.fileName) ?
+            {name: param.name, file: param.fileName} :
+            {name: param.name, contents: param.value}
+        );
+        const data = renderedRequest.body.params.map(addParamFn);
+        curl.setOpt(Curl.option.HTTPPOST, data);
+      } else if (renderedRequest.body.fileName) {
+        const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
+        const mimeType = mime.lookup(renderedRequest.body.fileName);
+        curl.setOpt(Curl.option.UPLOAD, 1);
+        curl.setOpt(Curl.option.READDATA, fd);
+        curl.setOpt(Curl.option.HTTPHEADER, [`Content-Type: ${mimeType}`]);
+        const fn = () => fs.closeSync(fd);
+        curl.on('end', fn);
+        curl.on('error', fn);
+      } else if (typeof renderedRequest.body.text === 'string') {
+        curl.setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text);
+      } else {
+        // No body
+      }
+
+      let header = new Buffer(0);
+      curl.on('header', function (chunk) {
+        header = Buffer.concat([header, chunk], header.length + chunk.length);
+      });
+
+      let data = new Buffer(0);
+      curl.on('data', function (chunk) {
+        data = Buffer.concat([data, chunk], data.length + chunk.length);
+      });
+
+      curl.on('end', function (_1, _2, headers) {
+        // Headers are an array (one for each redirect)
+        headers = headers[headers.length - 1];
+
+        // Collect various things
+        const statusCode = headers.result.code || 0;
+        const statusMessage = headers.result.reason || 'Unknown';
+        const elapsedTime = this.getInfo('TOTAL_TIME') * 1000;
+        const bytesRead = this.getInfo('SIZE_DOWNLOAD');
+        const url = this.getInfo('EFFECTIVE_URL');
+
+        // Collect the headers
+        const responseHeaders = [];
+        for (const name of Object.keys(headers)) {
+          if (typeof headers[name] === 'string') {
+            responseHeaders.push({name, value: headers[name]});
+          } else if (Array.isArray(headers[name])) {
+            for (const value of headers[name]) {
+              responseHeaders.push({name, value});
+            }
+          }
+        }
+
+        // Calculate the content type
+        const contentTypeHeader = util.getContentTypeHeader(responseHeaders);
+        const contentType = contentTypeHeader ? contentTypeHeader.value : '';
+
+        // Close the request
+        this.close();
+
+        // Return the response data
+        const response = {
+          parentId: renderedRequest._id,
+          headers: responseHeaders,
+          encoding: 'base64',
+          body: data.toString('base64'),
+          url,
+          bytesRead,
+          elapsedTime,
+          contentType,
+          statusCode,
+          statusMessage,
+        };
+
+        resolve(response);
+      });
+
+      curl.on('error', function (err, code) {
+        console.log('ERROR', err, code);
+        resolve({
+          parentId: renderedRequest._id,
+          url: renderedRequest.url,
+          statusMessage: 'Error',
+          error: err + '',
+        });
+      });
+
+      curl.perform();
+    } catch (err) {
+      handleError(err);
+    }
+  })
 }
 
 export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {
@@ -325,5 +497,6 @@ export async function send (requestId, environmentId) {
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!
-  return _actuallySend(renderedRequest, workspace, settings);
+  return _actuallySendCurl(renderedRequest, workspace, settings);
+  // return _actuallySend(renderedRequest, workspace, settings);
 }
