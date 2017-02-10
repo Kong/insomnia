@@ -140,14 +140,14 @@ class Editor extends Component {
         return baseMode;
       }
 
+      const urlRegex = /^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/;
       const overlay = {
         token: function (stream, state) {
-          // console.log('state', state);
-          if (stream.match(/^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/, true)) {
+          if (stream.match(urlRegex, true)) {
             return 'clickable';
           }
 
-          while (stream.next() != null && !stream.match("http", false)) {
+          while (stream.next() != null && !stream.match('http', false)) {
             // Do nothing
           }
 
