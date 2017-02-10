@@ -131,8 +131,12 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
     }
 
     try {
+      // Setup the cancellation logic
+      let cancelCode = 0;
+      cancelRequestFunction = () => cancelCode = 1;
+
+      // Initialize the curl handle
       const curl = new Curl();
-      console.log('OPTIONS', {options: Curl.option});
 
       // Set all the basic options
       curl.setOpt(Curl.option.URL, renderedRequest.url);
@@ -142,6 +146,28 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL); // Validate SSL
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       curl.setOpt(Curl.option.HTTPHEADER, renderedRequest.headers.map(h => `${h.name}: ${h.value}`));
+      curl.setOpt(Curl.option.VERBOSE, true);
+      curl.setOpt(Curl.option.NOPROGRESS, false);
+      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+        // console.log('DEBUG:', name, content);
+        return 0; // Must be here
+      });
+
+      let lastPercent = 0;
+      curl.setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
+        if (dltotal === 0) {
+          return cancelCode;
+        }
+
+        const percent = Math.round(dlnow / dltotal * 100);
+        if (percent != lastPercent) {
+          console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
+          lastPercent = percent;
+        }
+
+        return cancelCode;
+      });
 
       // Set proxy if needed
       const {protocol} = urlParse(renderedRequest.url);
@@ -153,9 +179,21 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       }
 
       // Set cookies
-      // TODO
+      curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
+      for (const cookie of renderedRequest.cookieJar.cookies) {
+        curl.setOpt(Curl.option.COOKIELIST, [
+          cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
+          cookie.hostOnly ? 'TRUE' : 'FALSE',
+          cookie.path,
+          cookie.secure ? 'TRUE' : 'FALSE',
+          Math.round(cookie.expires.getTime() / 1000),
+          cookie.name,
+          cookie.value,
+        ].join('\t'));
+      }
 
       // Set client certs if needed
+      // TODO: Test all of this
       for (const certificate of workspace.certificates) {
         const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
         const {hostname: cHostname, port: cPort} = urlParse(cHostWithProtocol);
@@ -183,9 +221,10 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             curl.setOpt(curl.SSLKEY, 'hello.key');
           }
 
-          if (passphrase) {
-            curl.setOpt(curl.SSLKEYPASSWD, 'myPassword');
-          }
+          // THIS IS NOT CORRECT
+          // if (passphrase) {
+          //   curl.setOpt(curl.SSLKEYPASSWD, 'myPassword');
+          // }
         }
       }
 
@@ -215,71 +254,101 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         // No body
       }
 
-      let header = new Buffer(0);
-      curl.on('header', function (chunk) {
-        header = Buffer.concat([header, chunk], header.length + chunk.length);
+      // Build the body
+      const dataBuffers = [];
+      let dataBuffersLength = 0;
+      curl.on('data', chunk => {
+        dataBuffers.push(chunk);
+        dataBuffersLength += chunk.length;
       });
 
-      let data = new Buffer(0);
-      curl.on('data', function (chunk) {
-        data = Buffer.concat([data, chunk], data.length + chunk.length);
-      });
-
-      curl.on('end', function (_1, _2, headers) {
+      // Handle the response ending
+      curl.on('end', function (_1, _2, curlHeaders) {
         // Headers are an array (one for each redirect)
-        headers = headers[headers.length - 1];
+        curlHeaders = curlHeaders[curlHeaders.length - 1];
 
         // Collect various things
-        const statusCode = headers.result.code || 0;
-        const statusMessage = headers.result.reason || 'Unknown';
+        const statusCode = curlHeaders.result.code || 0;
+        const statusMessage = curlHeaders.result.reason || 'Unknown';
         const elapsedTime = this.getInfo('TOTAL_TIME') * 1000;
         const bytesRead = this.getInfo('SIZE_DOWNLOAD');
         const url = this.getInfo('EFFECTIVE_URL');
 
         // Collect the headers
-        const responseHeaders = [];
-        for (const name of Object.keys(headers)) {
-          if (typeof headers[name] === 'string') {
-            responseHeaders.push({name, value: headers[name]});
-          } else if (Array.isArray(headers[name])) {
-            for (const value of headers[name]) {
-              responseHeaders.push({name, value});
+        const headers = [];
+        for (const name of Object.keys(curlHeaders)) {
+          if (typeof curlHeaders[name] === 'string') {
+            headers.push({name, value: curlHeaders[name]});
+          } else if (Array.isArray(curlHeaders[name])) {
+            for (const value of curlHeaders[name]) {
+              headers.push({name, value});
             }
           }
         }
 
         // Calculate the content type
-        const contentTypeHeader = util.getContentTypeHeader(responseHeaders);
+        const contentTypeHeader = util.getContentTypeHeader(headers);
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
-        // Close the request
-        this.close();
+        // Update Cookie Jar
+        const cookies = [];
+        for (const str of curl.getInfo(Curl.info.COOKIELIST)) {
+          //  0                    1                  2     3       4       5     6
+          // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
+          const parts = str.split('\t');
+
+          const hostname = parts[0].replace(/^#HttpOnly_/, '');
+          const httpOnly = hostname.length !== parts[0].length;
+
+          cookies.push({
+            domain: hostname,
+            httpOnly: httpOnly,
+            hostOnly: parts[1] === 'TRUE',
+            path: parts[2],
+            secure: parts[3] === 'TRUE', // This doesn't exists?
+            expires: new Date(parts[4] * 1000),
+            name: parts[5],
+            value: parts[6],
+          });
+        }
+        models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+
+        // Handle the body
+        const encoding = 'base64';
+        const bodyBuffer = Buffer.concat(dataBuffers, dataBuffersLength);
+        const body = bodyBuffer.toString(encoding);
 
         // Return the response data
-        const response = {
+        resolve({
           parentId: renderedRequest._id,
-          headers: responseHeaders,
-          encoding: 'base64',
-          body: data.toString('base64'),
+          headers,
+          encoding,
+          body,
           url,
           bytesRead,
           elapsedTime,
           contentType,
           statusCode,
           statusMessage,
-        };
+        });
 
-        resolve(response);
+        // Close the request
+        this.close();
       });
 
       curl.on('error', function (err, code) {
-        console.log('ERROR', err, code);
-        resolve({
-          parentId: renderedRequest._id,
-          url: renderedRequest.url,
-          statusMessage: 'Error',
-          error: err + '',
-        });
+        const elapsedTime = this.getInfo('TOTAL_TIME') * 1000;
+        const parentId = renderedRequest._id;
+
+        let error = err + '';
+        let statusMessage = 'Error';
+
+        if (code === Curl.code.CURLE_ABORTED_BY_CALLBACK) {
+          error = 'Request aborted';
+          statusMessage = 'Abort'
+        }
+
+        resolve({parentId, elapsedTime, statusMessage, error});
       });
 
       curl.perform();

@@ -97,15 +97,14 @@ class ResponseViewer extends Component {
       return (
         <div className="response-pane__notify">
           <p className="pad faint">
-            Previewing responses over {LARGE_RESPONSE_MB}MB may cause
-            slowdowns on some computers
+            Response body over {LARGE_RESPONSE_MB}MB hidden to prevent unresponsiveness
           </p>
           <p>
             <button onClick={e => this._handleDismissBlocker()}
                     className="inline-block btn btn--clicky">
               Show Response
             </button>
-            {" "}
+            &nbsp;&nbsp;
             <button className="faint inline-block btn btn--super-compact"
                     onClick={e => this._handleDisableBlocker()}>
               Always Show
