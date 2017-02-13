@@ -28,6 +28,7 @@ import * as network from '../../common/network';
 import {debounce} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
+import * as render from '../../common/render';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
@@ -143,7 +144,7 @@ class App extends Component {
     models.requestGroup.create({parentId, name})
   };
 
-  _requestCreate = async (parentId) => {
+  _requestCreate = async parentId => {
     const request = await showModal(RequestCreateModal, {parentId});
     this._handleSetActiveRequest(request._id)
   };
@@ -158,7 +159,14 @@ class App extends Component {
     }
 
     const newRequest = await models.request.duplicate(request);
-    this._handleSetActiveRequest(newRequest._id)
+    await this._handleSetActiveRequest(newRequest._id)
+  };
+
+  _handleRenderText = async text => {
+    const {activeEnvironment, activeRequest} = this.props;
+    const environmentId = activeEnvironment ? activeEnvironment._id : null;
+    const context = await render.getRenderContext(activeRequest, environmentId);
+    return render.render(text, context);
   };
 
   _handleGenerateCodeForActiveRequest = () => {
@@ -206,12 +214,13 @@ class App extends Component {
     this._savePaneWidth(paneWidth);
   };
 
-  _handleSetActiveRequest = activeRequestId => {
-    this._updateActiveWorkspaceMeta({activeRequestId});
+  _handleSetActiveRequest = async activeRequestId => {
+    await this._updateActiveWorkspaceMeta({activeRequestId});
   };
 
-  _handleSetActiveEnvironment = activeEnvironmentId => {
-    this._updateActiveWorkspaceMeta({activeEnvironmentId});
+  _handleSetActiveEnvironment = async activeEnvironmentId => {
+    await this._updateActiveWorkspaceMeta({activeEnvironmentId});
+    this._wrapper.forceRequestPaneRefresh();
   };
 
   _saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
@@ -220,12 +229,12 @@ class App extends Component {
     this._saveSidebarWidth(sidebarWidth);
   };
 
-  _handleSetSidebarHidden = sidebarHidden => {
-    this._updateActiveWorkspaceMeta({sidebarHidden});
+  _handleSetSidebarHidden = async sidebarHidden => {
+    await this._updateActiveWorkspaceMeta({sidebarHidden});
   };
 
-  _handleSetSidebarFilter = sidebarFilter => {
-    this._updateActiveWorkspaceMeta({sidebarFilter});
+  _handleSetSidebarFilter = async sidebarFilter => {
+    await this._updateActiveWorkspaceMeta({sidebarFilter});
   };
 
   _handleSetRequestGroupCollapsed = (requestGroupId, collapsed) => {
@@ -431,7 +440,7 @@ class App extends Component {
       trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
     }
 
-    db.onChange(changes => {
+    db.onChange(async changes => {
       for (const change of changes) {
         const [event, doc, fromSync] = change;
         const {activeRequest} = this.props;
@@ -499,6 +508,7 @@ class App extends Component {
           handleStartDragPane={this._startDragPane}
           handleResetDragPane={this._resetDragPane}
           handleCreateRequest={this._requestCreate}
+          handleRender={this._handleRenderText}
           handleDuplicateRequest={this._requestDuplicate}
           handleDuplicateRequestGroup={this._requestGroupDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}

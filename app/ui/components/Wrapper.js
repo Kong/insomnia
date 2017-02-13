@@ -168,6 +168,7 @@ class Wrapper extends Component {
       handleStartDragPane,
       handleStartDragSidebar,
       handleSetSidebarFilter,
+      handleRender,
       handleGenerateCodeForActiveRequest,
       handleGenerateCode,
       isLoading,
@@ -244,6 +245,7 @@ class Wrapper extends Component {
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
           handleImport={this._handleImport}
+          handleRender={handleRender}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
           updateRequestMethod={this._handleUpdateRequestMethod}
@@ -353,6 +355,7 @@ Wrapper.propTypes = {
   handleSetRequestPaneRef: PropTypes.func.isRequired,
   handleSetResponsePaneRef: PropTypes.func.isRequired,
   handleSetResponsePreviewMode: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired,
   handleSetResponseFilter: PropTypes.func.isRequired,
   handleSetActiveResponse: PropTypes.func.isRequired,
   handleSetSidebarRef: PropTypes.func.isRequired,
