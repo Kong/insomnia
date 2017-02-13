@@ -132,23 +132,41 @@ class Editor extends Component {
     const {value} = this.props;
 
     // Add overlay to editor to make all links clickable
-    CodeMirror.defineMode('clickable', (config, parserConfig) => {
+    CodeMirror.defineMode('master', (config, parserConfig) => {
       const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
 
       // Only add the click mode if we have links to click
-      if (!this.props.onClickLink) {
-        return baseMode;
-      }
+      const highlightLinks = !!this.props.onClickLink;
+      const highlightNunjucks = !this.props.readOnly;
+
+      const regexUrl = /^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/;
+      const regexVariable = /^{{[ |a-zA-Z0-9_\-+,'"\\()\[\]]+}}/;
+      const regexTag = /^{%[ |a-zA-Z0-9_\-+,'"\\()\[\]]+%}/;
+      const regexComment = /^{#[^#]+#}/;
 
       const overlay = {
         token: function (stream, state) {
-          // console.log('state', state);
-          if (stream.match(/^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/, true)) {
+          if (highlightLinks && stream.match(regexUrl, true)) {
             return 'clickable';
           }
 
-          while (stream.next() != null && !stream.match("http", false)) {
-            // Do nothing
+          if (highlightNunjucks && stream.match(regexVariable, true)) {
+            return 'variable-3';
+          }
+
+          if (highlightNunjucks && stream.match(regexTag, true)) {
+            return 'variable-3';
+          }
+
+          if (highlightNunjucks && stream.match(regexComment, true)) {
+            return 'comment';
+          }
+
+          while (stream.next() != null) {
+            if (stream.match(regexUrl, false)) break;
+            if (stream.match(regexVariable, false)) break;
+            if (stream.match(regexTag, false)) break;
+            if (stream.match(regexComment, false)) break;
           }
 
           return null;
@@ -271,7 +289,7 @@ class Editor extends Component {
       readOnly,
       placeholder: this.props.placeholder || '',
       mode: {
-        name: 'clickable',
+        name: 'master',
         baseMode: normalizedMode,
       },
       lineWrapping: this.props.lineWrapping,
@@ -424,16 +442,12 @@ class Editor extends Component {
   }
 
   render () {
-    const {readOnly, fontSize, lightTheme, mode, filter} = this.props;
+    const {readOnly, fontSize, mode, filter} = this.props;
 
     const classes = classnames(
       'editor',
       this.props.className,
-      {
-        'editor--readonly': readOnly,
-        'editor--light-theme': !!lightTheme,
-        'editor--dark-theme': !lightTheme
-      }
+      {'editor--readonly': readOnly}
     );
 
     const toolbarChildren = [];
@@ -500,6 +514,7 @@ Editor.propTypes = {
   onChange: PropTypes.func,
   onFocusChange: PropTypes.func,
   onClickLink: PropTypes.func,
+  render: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
   placeholder: PropTypes.string,
@@ -509,8 +524,8 @@ Editor.propTypes = {
   autoPrettify: PropTypes.bool,
   manualPrettify: PropTypes.bool,
   className: PropTypes.any,
-  lightTheme: PropTypes.bool,
   updateFilter: PropTypes.func,
+  readOnly: PropTypes.bool,
   filter: PropTypes.string
 };
 
