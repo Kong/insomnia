@@ -31,5 +31,6 @@ test_script:
 #  - npm test
 
 on_success:
+  - npm install -g node-gyp@3.5.0
   - npm run build-n-package:win
   - ps: ls .\dist\win\*.exe | % { Push-AppveyorArtifact $_.FullName }
