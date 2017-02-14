@@ -2,23 +2,23 @@
 
 environment:
   nodejs_version: "6.5.0"
-  matrix:
-    - platform: x64
+platform:
+  - x64
 
-image: Visual Studio 2015
+image: Visual Studio 2013
 
 init:
-  - npm config set msvs_version 2015
+  - npm config set msvs_version 2013
 
 install:
-  - ps: Install-Product node $env:nodejs_version x64
+  - ps: Install-Product node $env:nodejs_version $env:Platform
   - set CI=true
   - npm -g install npm@latest
 
 build: off
 
-#shallow_clone: true
-clone_depth: 5
+shallow_clone: true
+#clone_depth: 5
 
 #cache:
 #  - '%APPDATA%\npm-cache'
