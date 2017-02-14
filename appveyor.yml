@@ -20,10 +20,11 @@ build: off
 shallow_clone: true
 
 test_script:
+  - node --version
+  - npm --version
   - SET NODE_ENV=development && npm install
   - npm test
-  - npm run build-n-package:win
 
 on_success:
-  - npm run dist
+  - npm run build-n-package:win
   - ps: ls .\dist\win\*.exe | % { Push-AppveyorArtifact $_.FullName }
