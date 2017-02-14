@@ -1,7 +1,7 @@
 # https://github.com/sindresorhus/appveyor-node/blob/master/appveyor.yml
 
 environment:
-  node_version: "6.4"
+  nodejs_version: "6.5.0"
   matrix:
     - platform: x64
 
@@ -26,4 +26,4 @@ test_script:
 
 on_success:
   - npm run dist
-  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
+  - ps: ls .\dist\win\*.exe | % { Push-AppveyorArtifact $_.FullName }
