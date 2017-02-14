@@ -19,7 +19,7 @@ build: off
 shallow_clone: true
 
 test_script:
-  - NODE_ENV=development npm install
+  - SET NODE_ENV=development && npm install
   - npm test
   - npm run build-n-package:win
 
