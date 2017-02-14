@@ -7,7 +7,7 @@ import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FO
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 
 class BodyEditor extends PureComponent {
-  _handleRawChange = (rawValue) => {
+  _handleRawChange = rawValue => {
     const {onChange, request} = this.props;
 
     const contentType = getContentTypeFromHeaders(request.headers);
@@ -16,26 +16,26 @@ class BodyEditor extends PureComponent {
     onChange(newBody);
   };
 
-  _handleFormUrlEncodedChange = (parameters) => {
+  _handleFormUrlEncodedChange = parameters => {
     const {onChange} = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(newBody);
   };
 
-  _handleFormChange = (parameters) => {
+  _handleFormChange = parameters => {
     const {onChange} = this.props;
     const newBody = newBodyForm(parameters);
     onChange(newBody);
   };
 
-  _handleFileChange = (path) => {
+  _handleFileChange = path => {
     const {onChange} = this.props;
     const newBody = newBodyFile(path);
     onChange(newBody);
   };
 
   render () {
-    const {keyMap, fontSize, lineWrapping, request} = this.props;
+    const {keyMap, fontSize, lineWrapping, request, handleRender} = this.props;
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
     const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
@@ -74,6 +74,7 @@ class BodyEditor extends PureComponent {
           lineWrapping={lineWrapping}
           contentType={contentType || 'text/plain'}
           content={request.body.text || ''}
+          render={handleRender}
           onChange={this._handleRawChange}
         />
       )
@@ -81,7 +82,7 @@ class BodyEditor extends PureComponent {
       return (
         <div className="editor pad valign-center text-center">
           <p className="pad super-faint text-sm text-center">
-            <i className="fa fa-hand-peace-o" style={{fontSize: '8rem', opacity: 0.3}}></i>
+            <i className="fa fa-hand-peace-o" style={{fontSize: '8rem', opacity: 0.3}}/>
             <br/><br/>
             Select a body type from above
           </p>
@@ -95,6 +96,7 @@ BodyEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   handleUpdateRequestMimeType: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
 
   // Optional

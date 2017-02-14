@@ -8,6 +8,7 @@ class RawEditor extends Component {
       content,
       fontSize,
       keyMap,
+      render,
       lineWrapping,
       onChange,
       className
@@ -20,6 +21,7 @@ class RawEditor extends Component {
         keyMap={keyMap}
         value={content}
         className={className}
+        render={render}
         onChange={onChange}
         mode={contentType}
         lineWrapping={lineWrapping}
@@ -34,11 +36,12 @@ RawEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   content: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
+  fontSize: PropTypes.number.isRequired,
+  keyMap: PropTypes.string.isRequired,
+  lineWrapping: PropTypes.bool.isRequired,
 
   // Optional
-  fontSize: PropTypes.number,
-  keyMap: PropTypes.string,
-  lineWrapping: PropTypes.bool
+  render: PropTypes.func,
 };
 
 export default RawEditor;

@@ -122,20 +122,29 @@ export function recursiveRender (obj, context) {
   return newObj;
 }
 
-export async function getRenderedRequest (request, environmentId) {
-  const ancestors = await db.withAncestors(request);
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+export async function getRenderContext (request, environmentId, ancestors = null) {
+  if (!ancestors) {
+    ancestors = await db.withAncestors(request);
+  }
 
+  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
   const rootEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
   const subEnvironment = await models.environment.getById(environmentId);
-  const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
 
   // Generate the context we need to render
-  const renderContext = buildRenderContext(
+  return buildRenderContext(
     ancestors,
     rootEnvironment,
     subEnvironment
   );
+}
+
+export async function getRenderedRequest (request, environmentId) {
+  const ancestors = await db.withAncestors(request);
+  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
+
+  const renderContext = await getRenderContext(request, environmentId, ancestors);
 
   // Render all request properties
   const renderedRequest = recursiveRender(request, renderContext);

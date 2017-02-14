@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import {shell} from 'electron';
 import Modal from '../base/Modal';
+import Button from '../base/Button';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import SettingsShortcuts from '../settings/SettingsShortcuts';
@@ -22,6 +23,29 @@ class SettingsModal extends Component {
     this._currentTabIndex = -1;
     this.state = {}
   }
+
+  _setModalRef = m => this.modal = m;
+  _trackTab = name => trackEvent('Setting', `Tab ${name}`);
+  _handleTabSelect = currentTabIndex => this.setState({currentTabIndex});
+  _handleUpdateSetting = (key, value) => {
+    models.settings.update(this.props.settings, {[key]: value});
+    trackEvent('Setting', 'Change', key)
+  };
+
+  _handleExportAllToFile = () => {
+    this.props.handleExportAllToFile();
+    this.modal.hide()
+  };
+
+  _handleExportWorkspace = () => {
+    this.props.handleExportWorkspaceToFile();
+    this.modal.hide()
+  };
+
+  _handleImport = () => {
+    this.props.handleImportFile();
+    this.modal.hide()
+  };
 
   _handleChangeTheme = (theme, track = true) => {
     document.body.setAttribute('theme', theme);
@@ -52,83 +76,61 @@ class SettingsModal extends Component {
     this.modal.toggle();
   }
 
-  _handleTabSelect (currentTabIndex) {
-    this.setState({currentTabIndex});
-  }
-
   render () {
-    const {
-      settings,
-      handleExportAllToFile,
-      handleExportWorkspaceToFile,
-      handleImportFile,
-    } = this.props;
-
+    const {settings} = this.props;
     const {currentTabIndex} = this.state;
     const email = session.isLoggedIn() ? session.getEmail() : null;
 
     return (
-      <Modal ref={m => this.modal = m} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} tall={true} {...this.props}>
         <ModalHeader>
           {getAppName()} Preferences
           <span className="faint txt-sm">
           &nbsp;&nbsp;–&nbsp;
-          v{getAppVersion()}
-          {email ? ` – ${email}` : null}
+            v{getAppVersion()}
+            {email ? ` – ${email}` : null}
           </span>
         </ModalHeader>
         <ModalBody noScroll={true}>
-          <Tabs onSelect={i => this._handleTabSelect(i)} selectedIndex={currentTabIndex}>
+          <Tabs onSelect={this._handleTabSelect} selectedIndex={currentTabIndex}>
             <TabList>
               <Tab selected={this._currentTabIndex === 0}>
-                <button onClick={e => trackEvent('Setting', 'Tab General')}>
+                <Button value="General" onClick={this._trackTab}>
                   General
-                </button>
+                </Button>
               </Tab>
               <Tab selected={this._currentTabIndex === 1}>
-                <button onClick={e => trackEvent('Setting', 'Tab Import/Export')}>
+                <Button value="Import/Export" onClick={this._trackTab}>
                   Import/Export
-                </button>
+                </Button>
               </Tab>
               <Tab selected={this._currentTabIndex === 2}>
-                <button onClick={e => trackEvent('Setting', 'Tab Themes')}>
+                <Button value="Themes" onClick={this._trackTab}>
                   Themes
-                </button>
+                </Button>
               </Tab>
               <Tab selected={this._currentTabIndex === 3}>
-                <button onClick={e => trackEvent('Setting', 'Tab Shortcuts')}>
+                <Button value="shortcuts" onClick={this._trackTab}>
                   Shortcuts
-                </button>
+                </Button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 5}>
-                <button onClick={e => trackEvent('Setting', 'Tab About')}>
+              <Tab selected={this._currentTabIndex === 4}>
+                <Button value="About" onClick={this._trackTab}>
                   About
-                </button>
+                </Button>
               </Tab>
             </TabList>
             <TabPanel className="pad scrollable">
               <SettingsGeneral
                 settings={settings}
-                updateSetting={(key, value) => {
-                  models.settings.update(settings, {[key]: value});
-                  trackEvent('Setting', 'Change', key)
-                }}
+                updateSetting={this._handleUpdateSetting}
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
               <SettingsImportExport
-                handleExportAll={() => {
-                  handleExportAllToFile();
-                  this.modal.hide()
-                }}
-                handleExportWorkspace={() => {
-                  handleExportWorkspaceToFile();
-                  this.modal.hide()
-                }}
-                handleImport={() => {
-                  handleImportFile();
-                  this.modal.hide()
-                }}
+                handleExportAll={this._handleExportAllToFile}
+                handleExportWorkspace={this._handleExportWorkspace}
+                handleImport={this._handleImport}
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
