@@ -7,9 +7,6 @@ environment:
 
 image: Visual Studio 2015
 
-init:
-  - npm config set msvs_version 2015 # we need this to build `pty.js`
-
 install:
   - ps: Install-Product node $env:nodejs_version x64
   - set CI=true
@@ -18,6 +15,11 @@ install:
 build: off
 
 shallow_clone: true
+
+cache:
+  - node_modules
+  - %APPDATA%\npm-cache
+  - %USERPROFILE%\.electron
 
 test_script:
   - node --version
