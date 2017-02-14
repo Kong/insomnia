@@ -7,6 +7,9 @@ environment:
 
 image: Visual Studio 2015
 
+init:
+  - npm config set msvs_version 2015
+
 install:
   - ps: Install-Product node $env:nodejs_version x64
   - set CI=true
