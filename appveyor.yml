@@ -18,8 +18,8 @@ shallow_clone: true
 
 cache:
   - node_modules
-  - %APPDATA%\npm-cache
-  - %USERPROFILE%\.electron
+  - '%APPDATA%\npm-cache'
+  - '%USERPROFILE%\.electron'
 
 test_script:
   - node --version
