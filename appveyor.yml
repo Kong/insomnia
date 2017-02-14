@@ -17,7 +17,8 @@ install:
 
 build: off
 
-shallow_clone: true
+#shallow_clone: true
+clone_depth: 5
 
 #cache:
 #  - '%APPDATA%\npm-cache'
