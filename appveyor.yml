@@ -26,8 +26,8 @@ cache:
 test_script:
   - node --version
   - npm --version
-  - SET NODE_ENV=development && npm install
-  - npm test
+#  - SET NODE_ENV=development && npm install
+#  - npm test
 
 on_success:
   - npm run build-n-package:win
