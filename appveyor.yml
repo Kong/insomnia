@@ -1,6 +1,7 @@
 # https://github.com/sindresorhus/appveyor-node/blob/master/appveyor.yml
 
 environment:
+  node_version: "6.4"
   matrix:
     - platform: x64
 
@@ -10,13 +11,13 @@ init:
   - npm config set msvs_version 2015 # we need this to build `pty.js`
 
 install:
-  - ps: Install-Product node 6 x64
+  - ps: Install-Product node $env:nodejs_version x64
   - set CI=true
   - npm -g install npm@latest
 
 build: off
 
-shallow_clone: true
+shallow_clone: tre
 
 test_script:
   - SET NODE_ENV=development && npm install

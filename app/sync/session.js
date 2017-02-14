@@ -1,4 +1,4 @@
-import srp from 'srp';
+import srp from 'srp-js';
 import * as crypt from './crypt';
 import * as util from '../common/fetch';
 import {trackEvent, setAccountId} from '../analytics';
