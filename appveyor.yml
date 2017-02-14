@@ -17,7 +17,7 @@ install:
 
 build: off
 
-shallow_clone: tre
+shallow_clone: true
 
 test_script:
   - SET NODE_ENV=development && npm install
