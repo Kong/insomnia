@@ -1,21 +1,25 @@
-# https://github.com/sindresorhus/appveyor-node/blob/master/appveyor.yml
+image: Visual Studio 2015
 
 environment:
   nodejs_version: "6.5.0"
-platform:
-  - x64
 
-image: Visual Studio 2015
-
-init:
-  - npm config set msvs_version 2015
+platform: x64
 
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - set CI=true
   - npm -g install npm@latest
-
-build: off
+  - node -e "console.log(process.arch)"
+  - node --version
+  - npm --version
+  - npm config set msvs_version 2015
+  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
+  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
+  - IF /I "%PLATFORM%" == "x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  - IF /I "%PLATFORM%" == "x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
+  - npm install
+#  - npm test
+  - npm run build-n-package:win
 
 shallow_clone: true
 
@@ -23,18 +27,6 @@ shallow_clone: true
 #  - '%APPDATA%\npm-cache'
 #  - '%USERPROFILE%\.electron'
 
-test_script:
-  - node -e "console.log(process.arch)"
-  - node --version
-  - npm --version
-  - SET NODE_ENV=development && npm install
-  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
-  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
-  - IF /I "%PLATFORM%" == "x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-  - IF /I "%PLATFORM%" == "x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
-#  - npm test
-
-on_success:
-  - npm install -g node-gyp@3.5.0
-  - npm run build-n-package:win
-  - ps: ls .\dist\win\*.exe | % { Push-AppveyorArtifact $_.FullName }
+build: off
+test: off
+deploy: off
