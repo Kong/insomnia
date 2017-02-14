@@ -8,18 +8,20 @@ platform: x64
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - set CI=true
-  - npm -g install npm@latest
+#  - npm -g install npm@latest
   - node -e "console.log(process.arch)"
   - node --version
   - npm --version
   - npm config set msvs_version 2015
-  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
-  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
-  - IF /I "%PLATFORM%" == "x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-  - IF /I "%PLATFORM%" == "x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
-  - npm install
+  - npm install --build-from-source node-libcurl
+
+#  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
+#  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
+#  - IF /I "%PLATFORM%" == "x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+#  - IF /I "%PLATFORM%" == "x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
+#  - npm install
 #  - npm test
-  - npm run build-n-package:win
+#  - npm run build-n-package:win
 
 shallow_clone: true
 
