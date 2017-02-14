@@ -24,10 +24,14 @@ shallow_clone: true
 #  - '%USERPROFILE%\.electron'
 
 test_script:
-  - node -e "console.log('Platform', process.arch, process.platform)"
+  - node -e "console.log(process.arch)"
   - node --version
   - npm --version
   - SET NODE_ENV=development && npm install
+  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
+  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
+  - IF /I "%PLATFORM%" == "x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+  - IF /I "%PLATFORM%" == "x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 #  - npm test
 
 on_success:
