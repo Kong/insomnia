@@ -5,10 +5,10 @@ environment:
 platform:
   - x64
 
-image: Visual Studio 2013
+image: Visual Studio 2015
 
 init:
-  - npm config set msvs_version 2013
+  - npm config set msvs_version 2015
 
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
@@ -24,6 +24,7 @@ shallow_clone: true
 #  - '%USERPROFILE%\.electron'
 
 test_script:
+  - node -e "console.log('Platform', process.arch, process.platform)"
   - node --version
   - npm --version
   - SET NODE_ENV=development && npm install
