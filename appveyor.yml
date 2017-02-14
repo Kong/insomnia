@@ -20,7 +20,6 @@ build: off
 shallow_clone: true
 
 cache:
-  - node_modules
   - '%APPDATA%\npm-cache'
   - '%USERPROFILE%\.electron'
 
