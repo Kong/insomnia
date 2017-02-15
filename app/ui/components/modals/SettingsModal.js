@@ -47,12 +47,12 @@ class SettingsModal extends Component {
     this.modal.hide()
   };
 
-  _handleChangeTheme = (theme, track = true) => {
+  _handleChangeTheme = (theme, persist = true) => {
     document.body.setAttribute('theme', theme);
-    models.settings.update(this.props.settings, {theme});
 
-    if (track) {
-      trackEvent('Setting', 'Change Theme', theme)
+    if (persist) {
+      trackEvent('Setting', 'Change Theme', theme);
+      models.settings.update(this.props.settings, {theme});
     }
   };
 

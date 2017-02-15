@@ -47,6 +47,11 @@ export async function init () {
       const notOnWhitelist = !WHITE_LIST[doc.type];
       const notLoggedIn = !session.isLoggedIn();
 
+      if (doc.isPrivate) {
+        logger.debug(`Skip private doc change ${doc._id}`);
+        continue;
+      }
+
       if (notLoggedIn || notOnWhitelist || fromSync) {
         continue;
       }
@@ -724,6 +729,11 @@ export async function getOrCreateAllActiveResources (resourceGroupId = null) {
   let created = 0;
   for (const type of modelTypes) {
     for (const doc of await db.all(type)) {
+      if (doc.isPrivate) {
+        logger.debug(`Skip private doc ${doc._id}`);
+        continue;
+      }
+
       const resource = await store.getResourceByDocId(doc._id);
       if (!resource) {
         try {

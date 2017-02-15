@@ -1,0 +1,30 @@
+image: Visual Studio 2015
+
+# Can't use this until we get rid of all git-based dependencies
+# shallow_clone: true
+
+environment:
+  nodejs_version: "6.5.0"
+
+platform: x64
+
+install:
+  - ps: Install-Product node $env:nodejs_version $env:Platform
+  - npm config set msvs_version 2015
+  - npm install --build-from-source
+
+cache:
+  - '%APPDATA%\npm-cache'
+  - '%USERPROFILE%\.electron'
+
+test_script:
+  - node --version
+  - npm --version
+  - npm run test
+
+#on_success:
+#  - npm run build-n-package:win
+#  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
+
+build: off
+deploy: off

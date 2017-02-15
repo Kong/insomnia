@@ -1,6 +1,6 @@
 import React, {PropTypes, Component} from 'react';
 import classnames from 'classnames';
-
+import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/PromptButton';
 import Link from '../base/Link';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
@@ -9,9 +9,8 @@ import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
-import * as models from '../../../models'
+import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
-
 
 class WorkspaceEnvironmentsEditModal extends Component {
   state = {
@@ -60,13 +59,17 @@ class WorkspaceEnvironmentsEditModal extends Component {
     });
   }
 
-  async _handleAddEnvironment () {
+  _handleAddEnvironment = async (isPrivate = false) => {
     const {rootEnvironment, workspace} = this.state;
     const parentId = rootEnvironment._id;
-    const environment = await models.environment.create({parentId});
-    this._load(workspace, environment);
-    trackEvent('Environment', 'Create');
-  }
+    const environment = await models.environment.create({parentId, isPrivate});
+    await this._load(workspace, environment);
+
+    trackEvent(
+      'Environment',
+      isPrivate ? 'Create' : 'Create Private'
+    );
+  };
 
   _handleShowEnvironment (environment) {
     // Don't allow switching if the current one has errors
@@ -157,9 +160,17 @@ class WorkspaceEnvironmentsEditModal extends Component {
             </li>
             <div className="pad env-modal__sidebar-heading">
               <h3 className="no-margin">Sub Environments</h3>
-              <button onClick={() => this._handleAddEnvironment()}>
-                <i className="fa fa-plus-circle"></i>
-              </button>
+              <Dropdown right={true}>
+                <DropdownButton>
+                  <i className="fa fa-plus-circle"/>
+                </DropdownButton>
+                <DropdownItem onClick={this._handleAddEnvironment} value={false}>
+                  <i className="fa fa-eye"/> Environment
+                </DropdownItem>
+                <DropdownItem onClick={this._handleAddEnvironment} value={true}>
+                  <i className="fa fa-eye-slash"/> Private Environment
+                </DropdownItem>
+              </Dropdown>
             </div>
             <ul>
               {subEnvironments.map(environment => {
@@ -171,7 +182,16 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 return (
                   <li key={environment._id} className={classes}>
                     <button onClick={() => this._handleShowEnvironment(environment)}>
+                      {environment.isPrivate ? (
+                          <i className="fa fa-eye-slash faint"
+                             title="Private Environment will not be exported or synced"
+                          />
+                        ) : (
+                          <i className="fa fa-blank faint"/>
+                        )}
+                      &nbsp;&nbsp;
                       <Editable
+                        className="inline-block"
                         onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
                         value={environment.name}
                       />
@@ -191,12 +211,12 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 />
               </h1>
               {rootEnvironment !== activeEnvironment ? (
-                <PromptButton className="btn btn--clicky"
-                              confirmMessage="Confirm"
-                              onClick={() => this._handleDeleteEnvironment(activeEnvironment)}>
-                  <i className="fa fa-trash-o"/> Delete
-                </PromptButton>
-              ) : null}
+                  <PromptButton className="btn btn--clicky"
+                                confirmMessage="Confirm"
+                                onClick={() => this._handleDeleteEnvironment(activeEnvironment)}>
+                    <i className="fa fa-trash-o"/> Delete
+                  </PromptButton>
+                ) : null}
             </div>
             <div className="env-modal__editor">
               <EnvironmentEditor

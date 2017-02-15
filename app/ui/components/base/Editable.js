@@ -52,27 +52,26 @@ class Editable extends Component {
   };
 
   render () {
-    const {value, singleClick, onEditStart, ...extra} = this.props;
+    const {value, singleClick, onEditStart, className, ...extra} = this.props;
     const {editing} = this.state;
 
     if (editing) {
       return (
-        <input
-          className="editable"
-          type="text"
-          ref={this._handleSetInputRef}
-          defaultValue={value}
-          onKeyDown={this._handleEditKeyDown}
-          onBlur={this._handleEditEnd}
-          {...extra}
+        <input {...extra}
+               className={`editable ${className}`}
+               type="text"
+               ref={this._handleSetInputRef}
+               defaultValue={value}
+               onKeyDown={this._handleEditKeyDown}
+               onBlur={this._handleEditEnd}
         />
       )
     } else {
       return (
-        <div className="editable"
+        <div {...extra}
+             className={`editable ${className}`}
              onClick={this._handleSingleClickEditStart}
-             onDoubleClick={this._handleEditStart}
-             {...extra}>
+             onDoubleClick={this._handleEditStart}>
           {value}
         </div>
       )
