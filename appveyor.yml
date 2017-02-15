@@ -8,12 +8,12 @@ platform: x64
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - ps: Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force
-#  - npm -g install npm@latest
+  - npm install -g npm@latest
+  - npm install -g node-gyp@latest
   - node -e "console.log(process.arch)"
   - node --version
   - npm --version
 #  - npm config set msvs_version 2015
-  - npm install -g node-gyp
   - npm install --build-from-source node-libcurl
 
 #  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
