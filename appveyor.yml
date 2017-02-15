@@ -1,5 +1,5 @@
 image: Visual Studio 2015
-shallow_clone: true
+#shallow_clone: true
 
 environment:
   nodejs_version: "6.5.0"
