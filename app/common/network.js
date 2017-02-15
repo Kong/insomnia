@@ -12,9 +12,8 @@ import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, getSetCookieHeaders} from './misc';
 import {getRenderedRequest} from './render';
 import fs from 'fs';
-import * as fetch from './fetch';
+import path from 'path';
 import * as db from './database';
-import caPath from '../static/cacert.pem';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
 // default dns.resolve which uses c-ares to do lookups. This doesn't work for
@@ -155,10 +154,12 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Initialize the curl handle
       const curl = new Curl();
 
-      if (process.platform !== 'darwin') {
-        console.log(`[net] Set CA to ${caPath}`, caPath);
-        curl.setOpt(Curl.option.CAINFO, caPath);
-      }
+      // TODO: Make this work
+      // if (process.platform !== 'darwin') {
+      //   const caPath = path.resolve('./app/static/cacert.pem');
+      //   console.log(`[net] Set CA to ${caPath}`);
+      //   curl.setOpt(Curl.option.CAINFO, caPath);
+      // }
 
       // Set all the basic options
       curl.setOpt(Curl.option.URL, renderedRequest.url);

@@ -35,11 +35,7 @@ export default {
       },
       {
         test: /\.png$/,
-        loader: "file"
-      },
-      {
-        test: /\.pem$/,
-        loader: "file"
+        loader: "file?name=[name].[ext]"
       },
       {
         test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
