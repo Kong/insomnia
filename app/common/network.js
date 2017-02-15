@@ -14,6 +14,7 @@ import {getRenderedRequest} from './render';
 import fs from 'fs';
 import * as fetch from './fetch';
 import * as db from './database';
+import caPath from '../static/cacert.pem';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
 // default dns.resolve which uses c-ares to do lookups. This doesn't work for
@@ -119,17 +120,17 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
-let cas = null;
-async function _getCAs () {
-  if (!cas) {
-    const res = await fetch.rawFetch('https://curl.haxx.se/ca/cacert.pem');
-    cas = await res.text();
-  } else {
-    console.log('CA HIT');
-  }
-
-  return cas;
-}
+// let cas = null;
+// async function _getCAs () {
+//   if (!cas) {
+//     const res = await fetch.rawFetch('https://curl.haxx.se/ca/cacert.pem');
+//     cas = await res.text();
+//   } else {
+//     console.log('CA HIT');
+//   }
+//
+//   return cas;
+// }
 
 export function _actuallySendCurl (renderedRequest, workspace, settings) {
   return new Promise(async resolve => {
@@ -148,11 +149,16 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       let cancelCode = 0;
       cancelRequestFunction = () => cancelCode = 1;
 
-      const cas = await _getCAs();
-      console.log('GOT EM', cas.length);
+      // const cas = await _getCAs();
+      // console.log('GOT EM', cas.length);
 
       // Initialize the curl handle
       const curl = new Curl();
+
+      if (process.platform !== 'darwin') {
+        console.log(`[net] Set CA to ${caPath}`, caPath);
+        curl.setOpt(Curl.option.CAINFO, caPath);
+      }
 
       // Set all the basic options
       curl.setOpt(Curl.option.URL, renderedRequest.url);

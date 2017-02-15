@@ -38,6 +38,10 @@ export default {
         loader: "file"
       },
       {
+        test: /\.pem$/,
+        loader: "file"
+      },
+      {
         test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
         loader: "file"
       },
