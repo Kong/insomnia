@@ -28,6 +28,10 @@ export function put (path, sessionId = null) {
   return _fetch('PUT', path, null, sessionId)
 }
 
+export function rawFetch (...args) {
+  return fetch(...args);
+}
+
 async function _fetch (method, path, json, sessionId = null) {
   const config = {
     method: method,

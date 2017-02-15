@@ -11,7 +11,8 @@ import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONT
 import {jarFromCookies, cookiesFromJar} from './cookies';
 import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, getSetCookieHeaders} from './misc';
 import {getRenderedRequest} from './render';
-import * as fs from 'fs';
+import fs from 'fs';
+import * as fetch from './fetch';
 import * as db from './database';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
@@ -118,8 +119,21 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
+let cas = null;
+async function _getCAs () {
+  if (!cas) {
+    console.log('CA MISS');
+    const res = await fetch.rawFetch('https://curl.haxx.se/ca/cacert.pem');
+    cas = await res.text();
+  } else {
+    console.log('CA HIT');
+  }
+
+  return cas;
+}
+
 export function _actuallySendCurl (renderedRequest, workspace, settings) {
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     function handleError (err, prefix = null) {
       resolve({
         url: renderedRequest.url,
@@ -134,6 +148,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup the cancellation logic
       let cancelCode = 0;
       cancelRequestFunction = () => cancelCode = 1;
+
+      const cas = await _getCAs();
+      console.log('GOT EM', cas.length);
 
       // Initialize the curl handle
       const curl = new Curl();
