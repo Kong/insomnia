@@ -17,7 +17,7 @@ environment:
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - npm config set msvs_version 2015
-  - npm install --build-from-source
+  - npm install > /dev/null
 
 cache:
   - '%APPDATA%\npm-cache'
@@ -30,7 +30,7 @@ cache:
 test_script:
   - node --version
   - npm --version
-  - npm run test
+  - npm test
 
 #on_success:
 #  - npm run build-n-package:win
