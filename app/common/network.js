@@ -122,7 +122,6 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 let cas = null;
 async function _getCAs () {
   if (!cas) {
-    console.log('CA MISS');
     const res = await fetch.rawFetch('https://curl.haxx.se/ca/cacert.pem');
     cas = await res.text();
   } else {

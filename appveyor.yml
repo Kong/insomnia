@@ -8,9 +8,8 @@ platform: x64
 
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - npm install -g npm@latest
   - npm config set msvs_version 2015
-  - npm install
+  - npm install --build-from-source
 
 #cache:
 #  - '%APPDATA%\npm-cache'
@@ -19,7 +18,6 @@ install:
 test_script:
   - node --version
   - npm --version
-  - npm rebuild node-libcurl
   - npm run test
 
 on_success:
