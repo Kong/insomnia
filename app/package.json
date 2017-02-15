@@ -22,7 +22,7 @@
     "mkdirp": "^0.5.1",
     "nedb": "^1.8.0",
     "node-forge": "^0.6.46",
-    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#55d4c9a11c17b5235204acf465bab4cfd602a514",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#dbd1376a66111557e2c3f9dd9d09d49d1b895cad",
     "nunjucks": "^3.0.0",
     "raven": "^0.12.1",
     "request": "^2.71.0",
