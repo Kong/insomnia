@@ -1,4 +1,5 @@
 image: Visual Studio 2015
+shallow_clone: true
 
 environment:
   nodejs_version: "6.5.0"
@@ -7,21 +8,20 @@ platform: x64
 
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - node -e "console.log(process.arch)"
+  - npm install
+
+cache:
+  - '%APPDATA%\npm-cache'
+  - '%USERPROFILE%\.electron'
+
+test_script:
   - node --version
   - npm --version
-  - npm install --build-from-source git://github.com/getinsomnia/node-libcurl.git#22cbeee8179dbb7a1465007dbd62aec2d4da6112 --msvs_version=2015
+  - npm run test
 
-#  - npm install
-#  - npm test
-#  - npm run build-n-package:win
-
-shallow_clone: true
-
-#cache:
-#  - '%APPDATA%\npm-cache'
-#  - '%USERPROFILE%\.electron'
+on_success:
+  - npm run build-n-package:win
+  - ps: ls .\dist\win\*.exe | % { Push-AppveyorArtifact $_.FullName }
 
 build: off
-test: off
 deploy: off
