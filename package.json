@@ -114,7 +114,7 @@
     "mousetrap": "^1.6.0",
     "nedb": "^1.8.0",
     "node-forge": "^0.6.46",
-    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#22cbeee8179dbb7a1465007dbd62aec2d4da6112",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#55d4c9a11c17b5235204acf465bab4cfd602a514",
     "nunjucks": "^3.0.0",
     "raven": "^0.12.1",
     "react": "^15.3.1",
