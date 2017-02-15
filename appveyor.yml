@@ -9,6 +9,7 @@ platform: x64
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - npm install -g npm@latest
+  - npm config set msvs_version 2015
   - npm install
 
 cache:
