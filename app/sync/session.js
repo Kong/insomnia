@@ -1,49 +1,7 @@
-import srp from 'srp';
+import srp from 'srp-js';
 import * as crypt from './crypt';
 import * as util from '../common/fetch';
 import {trackEvent, setAccountId} from '../analytics';
-
-/** Create a new Account for the user */
-export async function signup (firstName, lastName, rawEmail, rawPassphrase) {
-
-  const email = _sanitizeEmail(rawEmail);
-  const passphrase = _sanitizePassphrase(rawPassphrase);
-
-  // Get a fancy new Account object
-  const account = await _initAccount(firstName, lastName, email);
-
-  // Generate some secrets for the user base'd on password
-  const authSecret = await crypt.deriveKey(passphrase, account.email, account.saltKey);
-  const derivedSymmetricKey = await crypt.deriveKey(passphrase, account.email, account.saltEnc);
-
-  // Generate public/private keypair and symmetric key for Account
-  const {publicKey, privateKey} = await crypt.generateKeyPairJWK();
-  const symmetricKeyJWK = await crypt.generateAES256Key();
-
-  // Compute the verifier key and add it to the Account object
-  account.verifier = srp.computeVerifier(
-    _getSrpParams(),
-    Buffer.from(account.saltAuth, 'hex'),
-    Buffer.from(account.email, 'utf8'),
-    Buffer.from(authSecret, 'hex')
-  ).toString('hex');
-
-  // Encode keypair
-  const encSymmetricJWKMessage = crypt.encryptAES(derivedSymmetricKey, JSON.stringify(symmetricKeyJWK));
-  const encPrivateJWKMessage = crypt.encryptAES(symmetricKeyJWK, JSON.stringify(privateKey));
-
-  // Add keys to account
-  account.publicKey = JSON.stringify(publicKey);
-  account.encPrivateKey = JSON.stringify(encPrivateJWKMessage);
-  account.encSymmetricKey = JSON.stringify(encSymmetricJWKMessage);
-
-  const response = await util.post('/auth/signup', account);
-
-  trackEvent('Session', 'Signup');
-
-  return response;
-}
-
 
 /** Create a new session for the user */
 export async function login (rawEmail, rawPassphrase) {
@@ -122,16 +80,6 @@ export async function login (rawEmail, rawPassphrase) {
   // Set the ID for Google Analytics
   setAccountId(accountId);
   trackEvent('Session', 'Login');
-}
-
-export async function subscribe (tokenId, planId) {
-  const response = await util.post('/api/billing/subscriptions', {
-    token: tokenId,
-    quantity: 1,
-    plan: planId,
-  });
-  trackEvent('Session', 'Subscribe', planId, 1);
-  return response;
 }
 
 export function syncCreateResourceGroup (parentResourceId, name, encSymmetricKey) {
@@ -314,18 +262,6 @@ export function getSessionKey (sessionId) {
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
-
-export async function _initAccount (firstName, lastName, email) {
-  return {
-    email,
-    firstName,
-    lastName,
-    id: await crypt.generateAccountId(),
-    saltEnc: await crypt.getRandomHex(),
-    saltAuth: await crypt.getRandomHex(),
-    saltKey: await crypt.getRandomHex(),
-  };
-}
 
 function _getSrpParams () {
   return srp.params[2048];
