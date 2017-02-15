@@ -7,19 +7,11 @@ platform: x64
 
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - ps: Set-ExecutionPolicy Unrestricted -Scope CurrentUser -Force
-  - npm install -g npm@latest
-  - npm install -g node-gyp@latest
   - node -e "console.log(process.arch)"
   - node --version
   - npm --version
-#  - npm config set msvs_version 2015
   - npm install --build-from-source git://github.com/getinsomnia/node-libcurl.git#22cbeee8179dbb7a1465007dbd62aec2d4da6112 --msvs_version=2015
 
-#  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
-#  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
-#  - IF /I "%PLATFORM%" == "x64" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-#  - IF /I "%PLATFORM%" == "x86" CALL "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 #  - npm install
 #  - npm test
 #  - npm run build-n-package:win
