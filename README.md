@@ -1,4 +1,4 @@
-# Insomnia REST Client [![Build Status](https://travis-ci.com/getinsomnia/app.svg?branch=master)](https://travis-ci.com/getinsomnia/app)
+# Insomnia REST Client [![Build Status](https://travis-ci.com/getinsomnia/app.svg?branch=master)](https://travis-ci.com/getinsomnia/app) [![Build status](https://ci.appveyor.com/api/projects/status/7b5a82uxbidpnkoa/branch/master?svg=true)](https://ci.appveyor.com/project/gschier/insomnia/branch/master)
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
