@@ -13,8 +13,8 @@ install:
   - node --version
   - npm --version
 #  - npm config set msvs_version 2015
-  - npm install --build-from-source node-libcurl
   - npm install -g node-gyp
+  - npm install --build-from-source node-libcurl
 
 #  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
 #  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
