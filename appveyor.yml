@@ -14,7 +14,7 @@ install:
   - node --version
   - npm --version
 #  - npm config set msvs_version 2015
-  - npm install --build-from-source node-libcurl --msvs_version=2015
+  - npm install --build-from-source git://github.com/getinsomnia/node-libcurl.git#22cbeee8179dbb7a1465007dbd62aec2d4da6112 --msvs_version=2015
 
 #  - IF /I "%PLATFORM%" == "x64" set PATH=C:\Python27-x64;%PATH%
 #  - IF /I "%PLATFORM%" == "x86" SET PATH=C:\python27;%PATH%
