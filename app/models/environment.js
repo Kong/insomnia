@@ -7,6 +7,7 @@ export function init () {
   return {
     name: 'New Environment',
     data: {},
+    isPrivate: false,
   }
 }
 

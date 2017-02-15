@@ -155,7 +155,7 @@ export function findMostRecentlyModified (type, query = {}, limit = null) {
 
 export function find (type, query = {}) {
   return new Promise((resolve, reject) => {
-    db[type].find(query, (err, rawDocs) => {
+    db[type].find(query).sort({created: 1}).exec((err, rawDocs) => {
       if (err) {
         return reject(err);
       }

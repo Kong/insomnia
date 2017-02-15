@@ -247,6 +247,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     await models.request.create({_id: 'req_3', name: 'Request 3', parentId: 'wrk_1'});
     await models.cookieJar.create({_id: 'jar_1', name: 'Jar 1', parentId: 'wrk_1'});
     await models.environment.create({_id: 'env_1', name: 'Env 1', parentId: 'wrk_1'});
+    await models.environment.create({_id: 'env_2', name: 'Env Prv', parentId: 'wrk_1', isPrivate: true});
 
     // Flush changes just to be sure they won't affect our tests
     await db.flushChanges();
@@ -255,7 +256,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Assert that all our new models were created
     expect((await models.workspace.all()).length).toBe(2);
     expect((await models.request.all()).length).toBe(3);
-    expect((await models.environment.all()).length).toBe(1);
+    expect((await models.environment.all()).length).toBe(2);
     expect((await models.cookieJar.all()).length).toBe(1);
 
     // Assert that initializing sync will create the initial resources

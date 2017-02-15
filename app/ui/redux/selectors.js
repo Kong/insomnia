@@ -72,6 +72,11 @@ export const selectSidebarChildren = createSelector(
             return -1;
           }
 
+          // Always sort folders above
+          if (b.type === models.requestGroup.type && a.type !== models.requestGroup.type) {
+            return 1;
+          }
+
           if (a.metaSortKey === b.metaSortKey) {
             return a._id > b._id ? -1 : 1;
           } else {
