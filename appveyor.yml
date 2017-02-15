@@ -31,14 +31,10 @@ test_script:
   - npm --version
   - npm test
 
-#on_success:
-#  - npm run build-n-package:win
-#  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
-
 #---------------------------------#
 #     deployment configuration    #
 #---------------------------------#
-#
+
 #deploy:
 #  - provider: S3
 #    access_key_id:
@@ -49,3 +45,11 @@ test_script:
 #    folder:
 #    artifact:
 #    set_public: false
+
+#---------------------------------#
+#         global handlers         #
+#---------------------------------#
+
+#on_success:
+#  - npm run build-n-package:win
+#  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
