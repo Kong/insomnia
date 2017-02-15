@@ -12,9 +12,9 @@ install:
   - npm config set msvs_version 2015
   - npm install
 
-cache:
-  - '%APPDATA%\npm-cache'
-  - '%USERPROFILE%\.electron'
+#cache:
+#  - '%APPDATA%\npm-cache'
+#  - '%USERPROFILE%\.electron'
 
 test_script:
   - node --version
