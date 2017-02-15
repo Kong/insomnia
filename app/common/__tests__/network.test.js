@@ -266,7 +266,6 @@ describe('actuallySend()', () => {
     expect(response.statusCode).toBe(200);
 
     const lines = requestBody.split(/\r\n/);
-    expect(lines.length).toBe(11);
     expect(lines[0]).toMatch(/^----------------------------\d{24}/);
     expect(lines[1]).toBe('Content-Disposition: form-data; name="foo"; filename="testfile.txt"');
     expect(lines[2]).toBe('Content-Type: text/plain');
@@ -278,5 +277,6 @@ describe('actuallySend()', () => {
     expect(lines[8]).toBe('AA');
     expect(lines[9]).toMatch(/^----------------------------\d{24}--/);
     expect(lines[10]).toBe('');
+    expect(lines.length).toBe(11);
   });
 });
