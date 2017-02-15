@@ -47,8 +47,12 @@ export async function init () {
       const notOnWhitelist = !WHITE_LIST[doc.type];
       const notLoggedIn = !session.isLoggedIn();
 
-      if (doc.isPrivate || notLoggedIn || notOnWhitelist || fromSync) {
+      if (doc.isPrivate) {
         logger.debug(`Skip private doc change ${doc._id}`);
+        continue;
+      }
+
+      if (notLoggedIn || notOnWhitelist || fromSync) {
         continue;
       }
 

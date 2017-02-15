@@ -182,9 +182,13 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 return (
                   <li key={environment._id} className={classes}>
                     <button onClick={() => this._handleShowEnvironment(environment)}>
-                      {environment.isPrivate ?
-                        <i className="fa fa-eye-slash faint" title="Private Environment"/> :
-                        <i className="fa fa-blank faint"/>}
+                      {environment.isPrivate ? (
+                          <i className="fa fa-eye-slash faint"
+                             title="Private Environment will not be exported or synced"
+                          />
+                        ) : (
+                          <i className="fa fa-blank faint"/>
+                        )}
                       &nbsp;&nbsp;
                       <Editable
                         className="inline-block"
