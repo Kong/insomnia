@@ -10,14 +10,13 @@ deploy: off
 shallow_clone: true
 platform: x64
 environment:
-  NODE_ENV: development
   nodejs_version: "6.5.0"
 
 # Things to install after repo clone
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - npm config set msvs_version 2015
-  - npm install > /dev/null
+  - npm install > NUL
 
 cache:
   - '%APPDATA%\npm-cache'
