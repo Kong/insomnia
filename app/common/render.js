@@ -17,15 +17,6 @@ class NoArgsExtension {
   }
 }
 
-// class ArgsExtension {
-//   parse (parser, nodes, lexer) {
-//     const tok = parser.nextToken();
-//     const args = parser.parseSignature(null, true);
-//     parser.advanceAfterBlockEnd(tok.value);
-//     return new nodes.CallExtension(this, 'run', args);
-//   }
-// }
-
 class TimestampExtension extends NoArgsExtension {
   constructor () {
     super();
