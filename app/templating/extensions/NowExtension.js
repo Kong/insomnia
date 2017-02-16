@@ -6,7 +6,7 @@ export default class NowExtension extends BaseExtension {
     this.tags = ['now'];
   }
 
-  async run (context, format = 'iso') {
+  run (context, format = 'iso') {
     format = typeof format === 'string' ? format.toLowerCase() : 'unknown';
     const now = new Date();
 

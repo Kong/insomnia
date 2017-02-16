@@ -1,4 +1,6 @@
 import * as templating from '../index';
+import * as db from '../../common/database';
+import * as models from '../../models';
 
 function assertTemplate (txt, expected) {
   return async function () {
@@ -33,4 +35,27 @@ describe('UuidExtension', () => {
   it('renders 1 num', assertTemplate('{% uuid 1 %}', 'f7272f0a-f493-11e6-bc64-92361f002671'));
   it('renders v1', assertTemplate('{% uuid "v1" %}', 'f72733a6-f493-11e6-bc64-92361f002671'));
   it('renders default fallback', assertTemplate('{% uuid "foo" %}', 'e7d698c4-c7d2-409c-90c6-22bcc94ba4ab'));
+});
+
+describe('ResponseJsonPathExtension', async () => {
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
+
+  it('renders basic JSONPath query', async () => {
+    // Create request and response
+    const request = await models.request.create({parentId: 'foo'});
+    await models.response.create({
+        parentId: request._id,
+        body: '{"foo": "bar"}',
+        encoding: 'utf8',
+      }
+    );
+
+    // Render the template
+    const result = await templating.render(
+      `{% res_jsonpath "${request._id}", "$.foo" %}`
+    );
+
+    // Assert
+    expect(result).toBe('bar');
+  })
 });

@@ -86,9 +86,7 @@ describe('bufferChanges()', () => {
 });
 
 describe('requestCreate()', () => {
-  beforeEach(() => {
-    return db.init(models.types(), {inMemoryOnly: true}, true);
-  });
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
 
   it('creates a valid request', async () => {
     const now = Date.now();
