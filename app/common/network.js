@@ -247,14 +247,11 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         return handleError(err, 'Failed to parse response headers');
       }
 
-      // NOTE: We only update jar if we get cookies
-      if (getSetCookieHeaders(headers).length) {
-        try {
-          const cookies = await cookiesFromJar(config.jar._jar);
-          await models.cookieJar.update(renderedRequest.cookieJar, {cookies});
-        } catch (err) {
-          return handleError(err, 'Failed to update cookie jar');
-        }
+      try {
+        const cookies = await cookiesFromJar(config.jar._jar);
+        await models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+      } catch (err) {
+        return handleError(err, 'Failed to update cookie jar');
       }
 
       let contentType = '';
