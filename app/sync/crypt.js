@@ -1,5 +1,5 @@
 import HKDF from 'hkdf';
-import srp from 'srp';
+import srp from 'srp-js';
 import initForge from 'node-forge';
 
 // Initialize Forge
