@@ -1,6 +1,6 @@
 import * as models from '../../models';
 
-export default {
+export const data = {
   [models.workspace.type]: [{
     _id: 'wrk_1',
     name: 'Wrk 1'

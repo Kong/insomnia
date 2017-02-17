@@ -1,4 +1,4 @@
-import traverse from 'traverse';
+import clone from 'clone';
 import * as models from '../models';
 import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
@@ -58,7 +58,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
  * @return {Promise.<*>}
  */
 export async function recursiveRender (originalObj, context) {
-  const obj = traverse.clone(originalObj);
+  const obj = clone(originalObj);
   const toS = obj => Object.prototype.toString.call(obj);
 
   // Make a copy so no one gets mad :)

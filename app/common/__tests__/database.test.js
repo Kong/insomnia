@@ -2,13 +2,15 @@ import * as models from '../../models';
 import * as db from '../database';
 
 function loadFixture (name) {
-  const fixtures = require(`../__fixtures__/${name}`);
+  const fixtures = require(`../__fixtures__/${name}`).data;
   const promises = [];
   for (const type of Object.keys(fixtures)) {
     for (const doc of fixtures[type]) {
       promises.push(db.insert(Object.assign({}, doc, {type})));
     }
   }
+
+  return Promise.all(promises);
 }
 
 describe('init()', () => {

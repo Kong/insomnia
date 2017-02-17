@@ -15,12 +15,14 @@ environment:
 # Things to install after repo clone
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - npm config set msvs_version 2015
+  - npm install -g npm@latest > Nul
   - npm install > NUL
+  - npm config set msvs_version 2015
 
 cache:
   - '%APPDATA%\npm-cache'
   - '%USERPROFILE%\.electron'
+  - 'node_modules'
 
 #---------------------------------#
 #       tests configuration       #
