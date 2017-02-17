@@ -45,30 +45,59 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
 
   // Render up to 5 levels of recursive references.
   for (let i = 0; i < 3; i++) {
-    finalRenderContext = recursiveRender(finalRenderContext, finalRenderContext);
+    finalRenderContext = await recursiveRender(finalRenderContext, finalRenderContext);
   }
 
   return finalRenderContext;
 }
 
-export function recursiveRender (obj, context) {
+/**
+ * Recursively render any JS object and return a new one
+ * @param {*} originalObj - object to render
+ * @param {object} context - context to render against
+ * @return {Promise.<*>}
+ */
+export async function recursiveRender (originalObj, context) {
+  const obj = traverse.clone(originalObj);
+  const toS = obj => Object.prototype.toString.call(obj);
+
   // Make a copy so no one gets mad :)
-  const newObj = traverse.clone(obj);
-
-  traverse(newObj).forEach(async x => {
-    try {
-      if (typeof x === 'string') {
-        const str = await render(x, context);
-        this.update(str);
+  async function next (x) {
+    // Leave these types alone
+    if (
+      toS(x) === '[object Date]' ||
+      toS(x) === '[object RegExp]' ||
+      toS(x) === '[object Error]' ||
+      toS(x) === '[object Boolean]' ||
+      toS(x) === '[object Number]' ||
+      toS(x) === '[object Null]' ||
+      toS(x) === '[object Undefined]'
+    ) {
+      // Do nothing to these types
+    } else if (toS(x) === '[object String]') {
+      try {
+        x = render(x, context);
+      } catch (err) {
+        // Failed to render Request
+        // const path = this.path.join('.');
+        const path = 'TODO"';
+        throw new Error(`Failed to render Request.${path}: "${err.message}"`);
       }
-    } catch (e) {
-      // Failed to render Request
-      const path = this.path.join('.');
-      throw new Error(`Failed to render Request.${path}: "${e.message}"`);
+    } else if (Array.isArray(x)) {
+      for (let i = 0; i < x.length; i++) {
+        x[i] = await next(x[i]);
+      }
+    } else if (typeof x === 'object') {
+      const keys = Object.keys(x);
+      for (const key of keys) {
+        x[key] = await next(x[key]);
+      }
     }
-  });
 
-  return newObj;
+    return x;
+  }
+
+  return next(obj);
 }
 
 export async function getRenderContext (request, environmentId, ancestors = null) {
@@ -96,7 +125,7 @@ export async function getRenderedRequest (request, environmentId) {
   const renderContext = await getRenderContext(request, environmentId, ancestors);
 
   // Render all request properties
-  const renderedRequest = recursiveRender(request, renderContext);
+  const renderedRequest = await recursiveRender(request, renderContext);
 
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);

@@ -20,8 +20,12 @@ describe('render()', () => {
   });
 
   it('fails on invalid template', async () => {
-    const fn = async () => await renderUtils.render('Hello {{ msg }!', {msg: 'World'});
-    expect(fn).toThrowError('expected variable end');
+    try {
+      await renderUtils.render('Hello {{ msg }!', {msg: 'World'});
+      fail('Render should have failed');
+    } catch (err) {
+      expect(err.message).toContain('expected variable end');
+    }
   });
 });
 
@@ -266,8 +270,8 @@ describe('buildRenderContext()', () => {
 });
 
 describe('recursiveRender()', () => {
-  it('correctly renders simple Object', () => {
-    const newObj = renderUtils.recursiveRender({
+  it('correctly renders simple Object', async () => {
+    const newObj = await renderUtils.recursiveRender({
       foo: '{{ foo }}',
       bar: 'bar',
       baz: '{{ bad }}'
@@ -280,13 +284,14 @@ describe('recursiveRender()', () => {
     })
   });
 
-  it('correctly renders complex Object', () => {
+  it('correctly renders complex Object', async () => {
     const d = new Date();
     const obj = {
       foo: '{{ foo }}',
       null: null,
       bool: true,
       date: d,
+      undef: undefined,
       num: 1234,
       nested: {
         foo: '{{ foo }}',
@@ -294,13 +299,14 @@ describe('recursiveRender()', () => {
       }
     };
 
-    const newObj = renderUtils.recursiveRender(obj, {foo: 'bar'});
+    const newObj = await renderUtils.recursiveRender(obj, {foo: 'bar'});
 
     expect(newObj).toEqual({
       foo: 'bar',
       null: null,
       bool: true,
       date: d,
+      undef: undefined,
       num: 1234,
       nested: {
         foo: 'bar',
@@ -314,13 +320,16 @@ describe('recursiveRender()', () => {
     expect(obj.nested.arr[2]).toBe('{{ foo }}');
   });
 
-  it('fails on bad template', () => {
-    const fn = () => renderUtils.recursiveRender({
-      foo: '{{ foo }',
-      bar: 'bar',
-      baz: '{{ bad }}'
-    }, {foo: 'bar'});
-
-    expect(fn).toThrowError('expected variable end');
+  it('fails on bad template', async () => {
+    try {
+      await renderUtils.recursiveRender({
+        foo: '{{ foo }',
+        bar: 'bar',
+        baz: '{{ bad }}'
+      }, {foo: 'bar'});
+      fail('Render should have failed');
+    } catch (err) {
+      expect(err.message).toContain('expected variable end');
+    }
   })
 });
