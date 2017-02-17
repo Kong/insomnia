@@ -43,7 +43,8 @@
       "transform-object-rest-spread",
       "transform-class-properties",
       "transform-regenerator",
-      "transform-runtime"
+      "transform-runtime",
+      "add-module-exports"
     ],
     "env": {
       "development": {
@@ -139,6 +140,7 @@
     "babel-core": "^6.23.1",
     "babel-jest": "^18.0.0",
     "babel-loader": "^6.3.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-transform-class-properties": "^6.19.0",
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-plugin-transform-regenerator": "^6.22.0",
