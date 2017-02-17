@@ -13,7 +13,8 @@ export async function render (text, config = {}) {
   return new Promise((resolve, reject) => {
     _getEnv().renderString(text, context, (err, result) => {
       if (err) {
-        reject(err);
+        const sanitizedMsg = err.message.replace(/\(unknown path\)\s*/, '');
+        reject(new Error(sanitizedMsg));
       } else {
         resolve(result);
       }

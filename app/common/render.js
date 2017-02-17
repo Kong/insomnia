@@ -1,56 +1,14 @@
-import nunjucks from 'nunjucks';
 import traverse from 'traverse';
-import uuid from 'uuid';
 import * as models from '../models';
 import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
+import * as templating from '../templating';
 
-const nunjucksEnvironment = nunjucks.configure({
-  autoescape: false
-});
-
-class NoArgsExtension {
-  parse (parser, nodes, lexer) {
-    const args = parser.parseSignature(null, true);
-    parser.skip(lexer.TOKEN_BLOCK_END);
-    return new nodes.CallExtension(this, 'run', args);
-  }
+export async function render (template, context = {}) {
+  return templating.render(template, {context});
 }
 
-class TimestampExtension extends NoArgsExtension {
-  constructor () {
-    super();
-    this.tags = ['timestamp'];
-  }
-
-  run (context) {
-    return Date.now();
-  }
-}
-
-class UuidExtension extends NoArgsExtension {
-  constructor () {
-    super();
-    this.tags = ['uuid'];
-  }
-
-  run (context) {
-    return uuid.v4();
-  }
-}
-
-nunjucksEnvironment.addExtension('uuid', new UuidExtension());
-nunjucksEnvironment.addExtension('timestamp', new TimestampExtension());
-
-export function render (template, context = {}) {
-  try {
-    return nunjucksEnvironment.renderString(template, context);
-  } catch (e) {
-    throw new Error(e.message.replace(/\(unknown path\)\s*/, ''));
-  }
-}
-
-export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
+export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
   if (!Array.isArray(ancestors)) {
     ancestors = [];
   }
@@ -79,7 +37,7 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
   for (const environment of environments) {
     // Do an Object.assign, but render each property as it overwrites. This
     // way we can keep same-name variables from the parent context.
-    _objectDeepAssignRender(renderContext, environment);
+    await _objectDeepAssignRender(renderContext, environment);
   }
 
   // Render the context with itself to fill in the rest.
@@ -97,10 +55,10 @@ export function recursiveRender (obj, context) {
   // Make a copy so no one gets mad :)
   const newObj = traverse.clone(obj);
 
-  traverse(newObj).forEach(function (x) {
+  traverse(newObj).forEach(async x => {
     try {
       if (typeof x === 'string') {
-        const str = render(x, context);
+        const str = await render(x, context);
         this.update(str);
       }
     } catch (e) {
@@ -173,7 +131,7 @@ export async function getRenderedRequest (request, environmentId) {
   return renderedRequest;
 }
 
-function _objectDeepAssignRender (base, obj) {
+async function _objectDeepAssignRender (base, obj) {
   for (const key of Object.keys(obj)) {
     /*
      * If we're overwriting a string, try to render it first with the base as
@@ -187,7 +145,7 @@ function _objectDeepAssignRender (base, obj) {
      * original base_url of google.com would be lost.
      */
     if (typeof base[key] === 'string') {
-      base[key] = render(obj[key], base);
+      base[key] = await render(obj[key], base);
     } else {
       base[key] = obj[key];
     }

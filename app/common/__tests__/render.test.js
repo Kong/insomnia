@@ -4,29 +4,29 @@ import * as models from '../../models';
 jest.mock('electron');
 
 describe('render()', () => {
-  it('renders hello world', () => {
-    const rendered = renderUtils.render('Hello {{ msg }}!', {msg: 'World'});
+  it('renders hello world', async () => {
+    const rendered = await renderUtils.render('Hello {{ msg }}!', {msg: 'World'});
     expect(rendered).toBe('Hello World!');
   });
 
-  it('renders custom tag: uuid', () => {
-    const rendered = renderUtils.render('Hello {% uuid %}!');
+  it('renders custom tag: uuid', async () => {
+    const rendered = await renderUtils.render('Hello {% uuid %}!');
     expect(rendered).toMatch(/Hello [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}!/);
   });
 
-  it('renders custom tag: timestamp', () => {
-    const rendered = renderUtils.render('Hello {% timestamp %}!');
+  it('renders custom tag: timestamp', async () => {
+    const rendered = await renderUtils.render('Hello {% timestamp %}!');
     expect(rendered).toMatch(/Hello \d{13}!/);
   });
 
-  it('fails on invalid template', () => {
-    const fn = () => renderUtils.render('Hello {{ msg }!', {msg: 'World'});
+  it('fails on invalid template', async () => {
+    const fn = async () => await renderUtils.render('Hello {{ msg }!', {msg: 'World'});
     expect(fn).toThrowError('expected variable end');
   });
 });
 
 describe('buildRenderContext()', () => {
-  it('cascades properly', () => {
+  it('cascades properly', async () => {
     const ancestors = [
       {
         type: models.requestGroup.type,
@@ -48,7 +48,7 @@ describe('buildRenderContext()', () => {
       data: {foo: 'sub', sub: true}
     };
 
-    const context = renderUtils.buildRenderContext(
+    const context = await renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
       subEnvironment
@@ -62,14 +62,14 @@ describe('buildRenderContext()', () => {
     });
   });
 
-  it('rendered recursive should not infinite loop', () => {
+  it('rendered recursive should not infinite loop', async () => {
     const ancestors = [{
       // Sub Environment
       type: models.requestGroup.type,
       environment: {recursive: '{{ recursive }}/hello'}
     }];
 
-    const context = renderUtils.buildRenderContext(ancestors);
+    const context = await renderUtils.buildRenderContext(ancestors);
 
     // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
     expect(context).toEqual({
@@ -77,7 +77,7 @@ describe('buildRenderContext()', () => {
     });
   });
 
-  it('render up to 3 recursion levels', () => {
+  it('render up to 3 recursion levels', async () => {
     const ancestors = [{
       // Sub Environment
       type: models.requestGroup.type,
@@ -90,7 +90,7 @@ describe('buildRenderContext()', () => {
       }
     }];
 
-    const context = renderUtils.buildRenderContext(ancestors);
+    const context = await renderUtils.buildRenderContext(ancestors);
 
     expect(context).toEqual({
       d: '/d',
@@ -101,7 +101,7 @@ describe('buildRenderContext()', () => {
     });
   });
 
-  it('rendered sibling environment variables', () => {
+  it('rendered sibling environment variables', async () => {
     const ancestors = [{
       // Sub Environment
       type: models.requestGroup.type,
@@ -111,12 +111,12 @@ describe('buildRenderContext()', () => {
       }
     }];
 
-    const context = renderUtils.buildRenderContext(ancestors);
+    const context = await renderUtils.buildRenderContext(ancestors);
 
     expect(context).toEqual({sibling: 'sibling', test: 'sibling/hello'});
   });
 
-  it('rendered parent environment variables', () => {
+  it('rendered parent environment variables', async () => {
     const ancestors = [{
       name: 'Parent',
       type: models.requestGroup.type,
@@ -131,12 +131,12 @@ describe('buildRenderContext()', () => {
       }
     }];
 
-    const context = renderUtils.buildRenderContext(ancestors);
+    const context = await renderUtils.buildRenderContext(ancestors);
 
     expect(context).toEqual({grandparent: 'grandparent', test: 'grandparent parent'});
   });
 
-  it('rendered parent same name environment variables', () => {
+  it('rendered parent same name environment variables', async () => {
     const ancestors = [{
       name: 'Parent',
       type: models.requestGroup.type,
@@ -151,12 +151,12 @@ describe('buildRenderContext()', () => {
       }
     }];
 
-    const context = renderUtils.buildRenderContext(ancestors);
+    const context = await renderUtils.buildRenderContext(ancestors);
 
     expect(context).toEqual({base_url: 'https://insomnia.rest/resource'});
   });
 
-  it('rendered parent, ignoring sibling environment variables', () => {
+  it('rendered parent, ignoring sibling environment variables', async () => {
     const ancestors = [{
       name: 'Parent',
       type: models.requestGroup.type,
@@ -180,13 +180,13 @@ describe('buildRenderContext()', () => {
       }
     }];
 
-    const context = renderUtils.buildRenderContext(ancestors);
-    const result = renderUtils.render('{{ urls.admin }}/foo', context);
+    const context = await renderUtils.buildRenderContext(ancestors);
+    const result = await renderUtils.render('{{ urls.admin }}/foo', context);
 
     expect(result).toEqual('https://parent.com/admin/foo');
   });
 
-  it('renders child environment variables', () => {
+  it('renders child environment variables', async () => {
     const ancestors = [{
       name: 'Parent',
       type: models.requestGroup.type,
@@ -201,12 +201,12 @@ describe('buildRenderContext()', () => {
       }
     }];
 
-    const context = renderUtils.buildRenderContext(ancestors);
+    const context = await renderUtils.buildRenderContext(ancestors);
 
     expect(context).toEqual({parent: 'parent', test: 'parent grandparent'});
   });
 
-  it('cascades properly and renders', () => {
+  it('cascades properly and renders', async () => {
     const ancestors = [
       {
         type: models.requestGroup.type,
@@ -235,7 +235,7 @@ describe('buildRenderContext()', () => {
       data: {winner: 'root', root: true, base_url: 'ignore this'}
     };
 
-    const context = renderUtils.buildRenderContext(ancestors,
+    const context = await renderUtils.buildRenderContext(ancestors,
       rootEnvironment,
       subEnvironment
     );
@@ -250,12 +250,12 @@ describe('buildRenderContext()', () => {
     });
   });
 
-  it('works with minimal parameters', () => {
+  it('works with minimal parameters', async () => {
     const ancestors = null;
     const rootEnvironment = null;
     const subEnvironment = null;
 
-    const context = renderUtils.buildRenderContext(
+    const context = await renderUtils.buildRenderContext(
       ancestors,
       rootEnvironment,
       subEnvironment

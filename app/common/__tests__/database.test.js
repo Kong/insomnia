@@ -1,5 +1,5 @@
-import * as db from '../database';
 import * as models from '../../models';
+import * as db from '../database';
 
 function loadFixture (name) {
   const fixtures = require(`../__fixtures__/${name}`);

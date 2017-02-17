@@ -6,7 +6,7 @@
   "longName": "Insomnia REST Client",
   "description": "A simple and beautiful REST API client",
   "homepage": "http://insomnia.rest",
-  "author": "Gregory Schier <support@insomnia.rest>",
+  "author": "Insomnia <support@insomnia.rest>",
   "main": "main.js",
   "dependencies": {
     "analytics-node": "^2.1.0",
