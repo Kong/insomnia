@@ -142,7 +142,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
   }
 
   render () {
-    const {editorFontSize, editorKeyMap} = this.props;
+    const {editorFontSize, editorKeyMap, lineWrapping} = this.props;
     const {subEnvironments, rootEnvironment, isValid, forceRefreshKey} = this.state;
     const activeEnvironment = this._getActiveEnvironment();
 
@@ -224,6 +224,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
               <EnvironmentEditor
                 editorFontSize={editorFontSize}
                 editorKeyMap={editorKeyMap}
+                lineWrapping={lineWrapping}
                 ref={n => this._envEditor = n}
                 key={`${forceRefreshKey}::${(activeEnvironment ? activeEnvironment._id : 'n/a')}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
@@ -254,6 +255,7 @@ WorkspaceEnvironmentsEditModal.propTypes = {
   onChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
+  lineWrapping: PropTypes.bool.isRequired,
 };
 
 export default WorkspaceEnvironmentsEditModal;
