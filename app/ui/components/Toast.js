@@ -4,7 +4,6 @@ import Link from './base/Link';
 import * as fetch from '../../common/fetch';
 import {trackEvent} from '../../analytics/index';
 import * as models from '../../models/index';
-import * as querystring from '../../common/querystring';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';
 

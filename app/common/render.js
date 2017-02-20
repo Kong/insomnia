@@ -1,65 +1,14 @@
-import nunjucks from 'nunjucks';
-import traverse from 'traverse';
-import uuid from 'uuid';
+import clone from 'clone';
 import * as models from '../models';
 import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
+import * as templating from '../templating';
 
-const nunjucksEnvironment = nunjucks.configure({
-  autoescape: false
-});
-
-class NoArgsExtension {
-  parse (parser, nodes, lexer) {
-    const args = parser.parseSignature(null, true);
-    parser.skip(lexer.TOKEN_BLOCK_END);
-    return new nodes.CallExtension(this, 'run', args);
-  }
+export async function render (template, context = {}) {
+  return templating.render(template, {context});
 }
 
-// class ArgsExtension {
-//   parse (parser, nodes, lexer) {
-//     const tok = parser.nextToken();
-//     const args = parser.parseSignature(null, true);
-//     parser.advanceAfterBlockEnd(tok.value);
-//     return new nodes.CallExtension(this, 'run', args);
-//   }
-// }
-
-class TimestampExtension extends NoArgsExtension {
-  constructor () {
-    super();
-    this.tags = ['timestamp'];
-  }
-
-  run (context) {
-    return Date.now();
-  }
-}
-
-class UuidExtension extends NoArgsExtension {
-  constructor () {
-    super();
-    this.tags = ['uuid'];
-  }
-
-  run (context) {
-    return uuid.v4();
-  }
-}
-
-nunjucksEnvironment.addExtension('uuid', new UuidExtension());
-nunjucksEnvironment.addExtension('timestamp', new TimestampExtension());
-
-export function render (template, context = {}) {
-  try {
-    return nunjucksEnvironment.renderString(template, context);
-  } catch (e) {
-    throw new Error(e.message.replace(/\(unknown path\)\s*/, ''));
-  }
-}
-
-export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
+export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
   if (!Array.isArray(ancestors)) {
     ancestors = [];
   }
@@ -88,7 +37,7 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
   for (const environment of environments) {
     // Do an Object.assign, but render each property as it overwrites. This
     // way we can keep same-name variables from the parent context.
-    _objectDeepAssignRender(renderContext, environment);
+    await _objectDeepAssignRender(renderContext, environment);
   }
 
   // Render the context with itself to fill in the rest.
@@ -96,30 +45,59 @@ export function buildRenderContext (ancestors, rootEnvironment, subEnvironment) 
 
   // Render up to 5 levels of recursive references.
   for (let i = 0; i < 3; i++) {
-    finalRenderContext = recursiveRender(finalRenderContext, finalRenderContext);
+    finalRenderContext = await recursiveRender(finalRenderContext, finalRenderContext);
   }
 
   return finalRenderContext;
 }
 
-export function recursiveRender (obj, context) {
+/**
+ * Recursively render any JS object and return a new one
+ * @param {*} originalObj - object to render
+ * @param {object} context - context to render against
+ * @return {Promise.<*>}
+ */
+export async function recursiveRender (originalObj, context) {
+  const obj = clone(originalObj);
+  const toS = obj => Object.prototype.toString.call(obj);
+
   // Make a copy so no one gets mad :)
-  const newObj = traverse.clone(obj);
-
-  traverse(newObj).forEach(function (x) {
-    try {
-      if (typeof x === 'string') {
-        const str = render(x, context);
-        this.update(str);
+  async function next (x) {
+    // Leave these types alone
+    if (
+      toS(x) === '[object Date]' ||
+      toS(x) === '[object RegExp]' ||
+      toS(x) === '[object Error]' ||
+      toS(x) === '[object Boolean]' ||
+      toS(x) === '[object Number]' ||
+      toS(x) === '[object Null]' ||
+      toS(x) === '[object Undefined]'
+    ) {
+      // Do nothing to these types
+    } else if (toS(x) === '[object String]') {
+      try {
+        x = render(x, context);
+      } catch (err) {
+        // Failed to render Request
+        // const path = this.path.join('.');
+        const path = 'TODO"';
+        throw new Error(`Failed to render Request.${path}: "${err.message}"`);
       }
-    } catch (e) {
-      // Failed to render Request
-      const path = this.path.join('.');
-      throw new Error(`Failed to render Request.${path}: "${e.message}"`);
+    } else if (Array.isArray(x)) {
+      for (let i = 0; i < x.length; i++) {
+        x[i] = await next(x[i]);
+      }
+    } else if (typeof x === 'object') {
+      const keys = Object.keys(x);
+      for (const key of keys) {
+        x[key] = await next(x[key]);
+      }
     }
-  });
 
-  return newObj;
+    return x;
+  }
+
+  return next(obj);
 }
 
 export async function getRenderContext (request, environmentId, ancestors = null) {
@@ -147,7 +125,7 @@ export async function getRenderedRequest (request, environmentId) {
   const renderContext = await getRenderContext(request, environmentId, ancestors);
 
   // Render all request properties
-  const renderedRequest = recursiveRender(request, renderContext);
+  const renderedRequest = await recursiveRender(request, renderContext);
 
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
@@ -182,7 +160,7 @@ export async function getRenderedRequest (request, environmentId) {
   return renderedRequest;
 }
 
-function _objectDeepAssignRender (base, obj) {
+async function _objectDeepAssignRender (base, obj) {
   for (const key of Object.keys(obj)) {
     /*
      * If we're overwriting a string, try to render it first with the base as
@@ -196,7 +174,7 @@ function _objectDeepAssignRender (base, obj) {
      * original base_url of google.com would be lost.
      */
     if (typeof base[key] === 'string') {
-      base[key] = render(obj[key], base);
+      base[key] = await render(obj[key], base);
     } else {
       base[key] = obj[key];
     }
