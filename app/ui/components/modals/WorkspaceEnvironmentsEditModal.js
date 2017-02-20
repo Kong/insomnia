@@ -167,7 +167,9 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 <DropdownItem onClick={this._handleAddEnvironment} value={false}>
                   <i className="fa fa-eye"/> Environment
                 </DropdownItem>
-                <DropdownItem onClick={this._handleAddEnvironment} value={true}>
+                <DropdownItem onClick={this._handleAddEnvironment}
+                              value={true}
+                              title="Environment will not be exported or synced">
                   <i className="fa fa-eye-slash"/> Private Environment
                 </DropdownItem>
               </Dropdown>
@@ -184,7 +186,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
                     <button onClick={() => this._handleShowEnvironment(environment)}>
                       {environment.isPrivate ? (
                           <i className="fa fa-eye-slash faint"
-                             title="Private Environment will not be exported or synced"
+                             title="Environment will not be exported or synced"
                           />
                         ) : (
                           <i className="fa fa-blank faint"/>

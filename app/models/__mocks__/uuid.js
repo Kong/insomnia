@@ -1,6 +1,20 @@
-let counter = 0;
+let v1Counter = 0;
+let v4Counter = 0;
 
-const uuids = [
+const v1UUIDs = [
+  'f7272c80-f493-11e6-bc64-92361f002671',
+  'f7272f0a-f493-11e6-bc64-92361f002671',
+  'f72733a6-f493-11e6-bc64-92361f002671',
+  'f72735c2-f493-11e6-bc64-92361f002671',
+  'f7273798-f493-11e6-bc64-92361f002671',
+  'f7273c3e-f493-11e6-bc64-92361f002671',
+  'f7273dba-f493-11e6-bc64-92361f002671',
+  'f7273eaa-f493-11e6-bc64-92361f002671',
+  'f7273f7c-f493-11e6-bc64-92361f002671',
+  'f7274300-f493-11e6-bc64-92361f002671',
+];
+
+const v4UUIDs = [
   'dd2ccc1a-2745-477a-881a-9e8ef9d42403',
   'e3e96e5f-dd68-4229-8b66-dee1f0940f3d',
   'a262d22b-5fa8-491c-9bd9-58fba03e301e',
@@ -77,10 +91,19 @@ const uuids = [
   '185dc090-3fcc-44e3-8a17-4e2fa792f91a',
 ];
 
-function v4 () {
-  const uuid = uuids[counter++];
+function v1 () {
+  const uuid = v1UUIDs[v1Counter++];
   if (!uuid) {
-    throw new Error('Not enough mocked UUIDs to go around');
+    throw new Error('Not enough mocked v1 UUIDs to go around');
+  }
+
+  return uuid;
+}
+
+function v4 () {
+  const uuid = v4UUIDs[v4Counter++];
+  if (!uuid) {
+    throw new Error('Not enough mocked v4 UUIDs to go around');
   }
 
   return uuid;
@@ -88,3 +111,4 @@ function v4 () {
 
 module.exports = () => v4();
 module.exports.v4 = () => v4();
+module.exports.v1 = () => v1();

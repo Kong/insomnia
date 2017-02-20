@@ -41,6 +41,11 @@ export function findRecentForRequest (requestId, limit) {
   return db.findMostRecentlyModified(type, {parentId: requestId}, limit);
 }
 
+export async function getLatestForRequest (requestId) {
+  const responses = await findRecentForRequest(requestId, 1);
+  return responses[0] || null;
+}
+
 export async function create (patch = {}) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');

@@ -166,7 +166,7 @@ class App extends Component {
     const {activeEnvironment, activeRequest} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     const context = await render.getRenderContext(activeRequest, environmentId);
-    return render.render(text, context);
+    return await render.render(text, context);
   };
 
   _handleGenerateCodeForActiveRequest = () => {
