@@ -12,6 +12,9 @@ export default class UuidExtension extends BaseExtension {
       version += '';
     } else if (typeof version === 'string') {
       version = version.toLowerCase();
+    } else {
+      // Null or undefined
+      version = 'v4';
     }
 
     switch (version) {
@@ -20,8 +23,9 @@ export default class UuidExtension extends BaseExtension {
         return uuid.v1();
       case '4':
       case 'v4':
-      default:
         return uuid.v4();
+      default:
+        throw new Error(`Invalid UUID type ${version}`);
     }
   }
 }

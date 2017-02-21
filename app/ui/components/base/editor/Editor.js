@@ -401,13 +401,6 @@ class Editor extends Component {
       return;
     }
 
-    this._markers = this.markers || [];
-
-    // First, clear all markers
-    for (const marker of this._markers) {
-      marker.clear();
-    }
-
     const vp = this.codeMirror.getViewport();
     for (let lineNo = vp.from; lineNo <= vp.to; lineNo++) {
       const line = this.codeMirror.getLineTokens(lineNo);
@@ -446,6 +439,12 @@ class Editor extends Component {
           continue;
         }
 
+        // See if we already have a mark for this
+        const existingMarks = this.codeMirror.findMarks(start, end);
+        if (existingMarks.length) {
+          continue;
+        }
+
         const element = document.createElement('span');
         element.className = 'nunjucks-widget';
         element.setAttribute('data-active', 'off');
@@ -475,8 +474,12 @@ class Editor extends Component {
         const marker = this.codeMirror.markText(start, end, {
           handleMouseEvents: false,
           replacedWith: element,
-          __source: tok.string,
         });
+
+        // marker.on('beforeCursorEnter', () => {
+        //   // TODO: Do something cool here
+        //   console.log('BEFORE ENTER');
+        // });
 
         element.addEventListener('click', e => {
           element.setAttribute('data-active', 'on');
@@ -494,26 +497,27 @@ class Editor extends Component {
           };
 
           this.codeMirror.openDialog(html, onEnter, {
+            __dirty: false,
             value: tok.string,
             selectValueOnOpen: true,
             closeOnEnter: true,
-            onClose: async () => {
-              console.log('CLOSED');
+            async onClose () {
               element.removeAttribute('data-active');
               marker.changed();
 
-              // Revert string back to original
-              await setText(tok.string);
-              marker.changed();
+              // Revert string back to original if it's changed
+              if (this.dirty) {
+                await setText(tok.string);
+                marker.changed();
+              }
             },
-            onInput: async (e, text) => {
+            async onInput (e, text) {
+              this.dirty = true;
               await setText(text);
               marker.changed();
             }
           });
         });
-
-        this._markers.push(marker);
       }
     }
   };

@@ -6,8 +6,14 @@ export default class NowExtension extends BaseExtension {
     this.tags = ['now'];
   }
 
-  run (context, format = 'iso-8601') {
-    format = typeof format === 'string' ? format.toLowerCase() : 'unknown';
+  run (context, format) {
+    if (typeof format === 'string') {
+      format = format.toLowerCase();
+    } else if (!format) {
+      // Null or undefined
+      format = 'iso-8601';
+    }
+
     const now = new Date();
 
     switch (format) {
@@ -19,8 +25,9 @@ export default class NowExtension extends BaseExtension {
       case 's':
         return Math.round(now.getTime() / 1000);
       case 'iso-8601':
-      default:
         return now.toISOString();
+      default:
+        throw new Error(`Invalid date format ${format}`);
     }
   }
 }

@@ -13,7 +13,7 @@ export default class NowExtension {
     } else {
       // Not sure why this is needed, but it fails without it
       args = new nodes.NodeList(tok.lineno, tok.colno);
-      args.addChild(new nodes.Literal(0, 0, ""));
+      args.addChild(new nodes.Literal(0, 0, null));
     }
 
     parser.advanceAfterBlockEnd(tok.value);
