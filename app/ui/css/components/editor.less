@@ -52,7 +52,7 @@
     padding-top: @padding-sm;
   }
 
-  .CodeMirror * {
+  .CodeMirror *:not(.fa) {
     font-family: @font-monospace;
   }
 
@@ -142,7 +142,7 @@
 /* Based on Sublime Text's Monokai theme */
 .CodeMirror {
   color: var(--color-font);
-  line-height: 1.4em;
+  line-height: 1.5em;
 
   div.CodeMirror-selected {
     background: var(--color-font);
@@ -275,7 +275,7 @@
   }
 
   span.nunjucks-widget {
-    padding: 0.08em 0.4em;
+    padding: 0.2em 0.4em;
     margin: 0.1em;
     bottom: 0.1em;
     color: var(--color-font-surprise);
@@ -283,6 +283,7 @@
     cursor: pointer;
     font-size: 0.9em;
     border-radius: @radius-sm;
+    white-space: nowrap;
 
     &::after {
       position: absolute;
@@ -290,11 +291,19 @@
       left: 0;
       bottom: 0;
       right: 0;
-      opacity: 0.6;
+      opacity: 0.7;
       content: " ";
       z-index: -1;
       border-radius: @radius-sm;
       background: var(--color-surprise);
+    }
+
+    &.nunjucks-widget--error::after {
+      background: var(--color-danger);
+    }
+
+    .fa {
+      font-size: 0.9em;
     }
   }
 

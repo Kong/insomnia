@@ -39,6 +39,7 @@ import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
 import 'codemirror/addon/lint/lint.css';
 import 'codemirror/addon/mode/overlay';
+import 'codemirror/addon/mode/simple';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
 import 'codemirror/keymap/sublime';
@@ -131,7 +132,6 @@ class Editor extends Component {
 
     const {value} = this.props;
 
-    // Add overlay to editor to make all links clickable
     CodeMirror.defineMode('master', this._masterMode());
 
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
@@ -213,7 +213,8 @@ class Editor extends Component {
     // Add overlay to editor to make all links clickable
     return (config, parserConfig) => {
       const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
-      return CodeMirror.overlayMode(baseMode, this._nunjucksMode(), true);
+      const nunjucksMode = this._nunjucksMode();
+      return CodeMirror.overlayMode(baseMode, nunjucksMode, false);
     };
   };
 
@@ -249,13 +250,7 @@ class Editor extends Component {
   }
 
   _prettify (code) {
-    if (this._isXML(this.props.mode)) {
-      code = this._prettifyXML(code);
-    } else {
-      code = this._prettifyJSON(code);
-    }
-
-    this.codeMirror.setValue(code);
+    this._codemirrorSetValue(code, true);
   }
 
   _prettifyJSON (code) {
@@ -358,16 +353,23 @@ class Editor extends Component {
   /**
    * Sets the CodeMirror value without triggering the onChange event
    * @param code the code to set in the editor
+   * @param forcePrettify
    */
-  _codemirrorSetValue (code) {
+  _codemirrorSetValue (code, forcePrettify = false) {
     this._originalCode = code;
     this._ignoreNextChange = true;
 
-    if (this.props.autoPrettify && this._canPrettify()) {
-      this._prettify(code);
-    } else {
-      this.codeMirror.setValue(code || '');
+    const shouldPrettify = forcePrettify || this.props.autoPrettify;
+
+    if (shouldPrettify && this._canPrettify()) {
+      if (this._isXML(this.props.mode)) {
+        code = this._prettifyXML(code);
+      } else {
+        code = this._prettifyJSON(code);
+      }
     }
+
+    this.codeMirror.setValue(code || '');
 
     this._highlightNunjucksTags();
   }
@@ -379,7 +381,8 @@ class Editor extends Component {
         continue;
       }
 
-      setTimeout(() => {
+      clearTimeout(marker._t);
+      marker._t = setTimeout(() => {
         const cursor = e.doc.getCursor();
         const isSameLine = cursor.line === marker.start.line;
         const isCursorInToken = cursor.ch >= marker.start.ch && cursor.ch <= marker.end.ch;
@@ -394,16 +397,16 @@ class Editor extends Component {
     }
   };
 
-  _highlightNunjucksTags = () => {
+  _highlightNunjucksTags = async () => {
     if (!this.props.render) {
       return;
     }
 
     this._markers = this.markers || [];
 
-    // Hide 'em all first
+    // First, clear all markers
     for (const marker of this._markers) {
-      marker.hide();
+      marker.clear();
     }
 
     const vp = this.codeMirror.getViewport();
@@ -411,47 +414,56 @@ class Editor extends Component {
       const line = this.codeMirror.getLineTokens(lineNo);
       const tokens = line.filter(({type}) => type && type.indexOf('nunjucks') >= 0);
 
-      for (const tok of tokens) {
-        const marker = {
-          start: {line: lineNo, ch: tok.start},
-          end: {line: lineNo, ch: tok.end},
-          cm: this.codeMirror,
-          hidden: true,
-          render: this.props.render,
-          _m: null,
-          hide () {
-            if (this.hidden) {
-              return;
-            }
+      // Aggregate same tokens
+      const newTokens = [];
+      let t = null;
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (!t) {
+          t = Object.assign({}, token);
+        } else if (t.type === token.type) {
+          t.end = token.end;
+          t.string += token.string;
+        } else {
+          newTokens.push(t);
+          t = null;
+        }
 
-            this.cm.focus();
-            this.cm.getDoc().setCursor(this.start);
+        // Push the last one if we're done
+        if (t && i === tokens.length - 1) {
+          newTokens.push(t);
+        }
+      }
 
-            this.hidden = true;
-            this._m.clear();
-          },
-          async show () {
-            if (!this.hidden) {
-              return;
-            }
+      for (const tok of newTokens) {
+        const element = document.createElement('span');
+        element.className = 'nunjucks-widget nunjucks-widget--active';
+        element.title = tok.string;
 
-            const v = await this.render(tok.string.replace(/\\"/g, '"'));
+        try {
+          element.innerHTML = await this.props.render(tok.string.replace(/\\"/g, '"'));
+        } catch (err) {
+          element.innerHTML = '<i class="fa fa-exclamation-triangle"/>';
+          element.className += ' nunjucks-widget--error';
+        }
 
-            const n = document.createElement('span');
-            n.innerHTML = v;
-            n.className = 'nunjucks-widget nunjucks-widget--active';
-            n.title = tok.string;
+        const start = {line: lineNo, ch: tok.start};
+        const end = {line: lineNo, ch: tok.end};
+        const cursor = this.codeMirror.getDoc().getCursor();
+        const isSameLine = cursor.line === lineNo;
+        const isCursorInToken = cursor.ch >= tok.start && cursor.ch <= tok.end;
 
-            n.addEventListener('click', e => this.hide());
-            this._m = this.cm.markText(this.start, this.end, {replacedWith: n});
-            this._m.on('clear', () => this.hidden = true);
-            this._m.on('beforeCursorEnter', () => this.hide());
+        // Show the token again if we're not inside of it.
+        if (isSameLine && isCursorInToken) {
+          continue;
+        }
 
-            this.hidden = false;
-          }
-        };
+        const marker = this.codeMirror.markText(start, end, {
+          handleMouseEvents: false,
+          replacedWith: element,
+          __source: tok.string,
+        });
 
-        marker.show();
         this._markers.push(marker);
       }
     }
@@ -623,8 +635,7 @@ class Editor extends Component {
   }
 }
 
-Editor
-  .propTypes = {
+Editor.propTypes = {
   onChange: PropTypes.func,
   onFocusChange: PropTypes.func,
   onClickLink: PropTypes.func,
@@ -643,6 +654,4 @@ Editor
   filter: PropTypes.string
 };
 
-export
-default
-Editor;
+export default Editor;
