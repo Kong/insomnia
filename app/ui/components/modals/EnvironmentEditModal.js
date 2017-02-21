@@ -13,6 +13,8 @@ class EnvironmentEditModal extends Component {
     isValid: true
   };
 
+  _hide = () => this.modal.hide();
+
   _saveChanges () {
     if (!this._envEditor.isValid()) {
       return;
@@ -24,7 +26,7 @@ class EnvironmentEditModal extends Component {
     this.props.onChange(Object.assign({}, requestGroup, {environment}));
   }
 
-  _didChange () {
+  _didChange = () => {
     this._saveChanges();
 
     const isValid = this._envEditor.isValid();
@@ -45,7 +47,7 @@ class EnvironmentEditModal extends Component {
   }
 
   render () {
-    const {editorKeyMap, editorFontSize, ...extraProps} = this.props;
+    const {editorKeyMap, editorFontSize, render, ...extraProps} = this.props;
     const {requestGroup, isValid} = this.state;
 
     return (
@@ -58,7 +60,8 @@ class EnvironmentEditModal extends Component {
             ref={node => this._envEditor = node}
             key={requestGroup ? requestGroup._id : 'n/a'}
             environment={requestGroup ? requestGroup.environment : {}}
-            didChange={this._didChange.bind(this)}
+            didChange={this._didChange}
+            render={render}
             lightTheme={true}
           />
         </ModalBody>
@@ -66,7 +69,7 @@ class EnvironmentEditModal extends Component {
           <div className="margin-left faint italic txt-sm">
             * this can be used to override data in the global environment
           </div>
-          <button className="btn" disabled={!isValid} onClick={e => this.modal.hide()}>
+          <button className="btn" disabled={!isValid} onClick={this._hide}>
             Done
           </button>
         </ModalFooter>
@@ -79,6 +82,7 @@ EnvironmentEditModal.propTypes = {
   onChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
+  render: PropTypes.func.isRequired,
 };
 
 export default EnvironmentEditModal;

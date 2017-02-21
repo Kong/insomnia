@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 
 import KeyValueEditor from '../base/KeyValueEditor';
-import Editor from '../base/Editor';
+import Editor from '../base/editor/Editor';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestHeadersEditor extends Component {

@@ -142,6 +142,7 @@
 /* Based on Sublime Text's Monokai theme */
 .CodeMirror {
   color: var(--color-font);
+  line-height: 1.4em;
 
   div.CodeMirror-selected {
     background: var(--color-font);
@@ -262,5 +263,45 @@
   .CodeMirror-matchingbracket {
     text-decoration: underline;
     color: inherit !important;
+  }
+
+  span.cm-nunjucks-variable,
+  span.cm-nunjucks-tag {
+    color: var(--color-surprise);
+  }
+
+  span.cm-nunjucks-comment {
+    color: var(--hl);
+  }
+
+  span.nunjucks-widget {
+    padding: 0.08em 0.4em;
+    margin: 0.1em;
+    bottom: 0.1em;
+    color: var(--color-font-surprise);
+    position: relative;
+    cursor: pointer;
+    font-size: 0.9em;
+    border-radius: @radius-sm;
+
+    &::after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      opacity: 0.6;
+      content: " ";
+      z-index: -1;
+      border-radius: @radius-sm;
+      background: var(--color-surprise);
+    }
+  }
+
+  .popup {
+    z-index: 100;
+    padding: @padding-sm;
+    background: var(--color-bg);
+    border: 1px solid var(--hl-md);
   }
 }

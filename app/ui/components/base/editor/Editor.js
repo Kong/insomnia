@@ -42,15 +42,15 @@ import 'codemirror/addon/mode/overlay';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
 import 'codemirror/keymap/sublime';
-import '../../css/components/editor.less';
-import {showModal} from '../modals/index';
-import AlertModal from '../modals/AlertModal';
-import Link from '../base/Link';
-import * as misc from '../../../common/misc';
-import {trackEvent} from '../../../analytics/index';
+import '../../../css/components/editor.less';
+import {showModal} from '../../modals/index';
+import AlertModal from '../../modals/AlertModal';
+import Link from '../../base/Link';
+import * as misc from '../../../../common/misc';
+import {trackEvent} from '../../../../analytics/index';
 // Make jsonlint available to the jsonlint plugin
 import {parser as jsonlint} from 'jsonlint';
-import {prettifyJson} from '../../../common/prettify';
+import {prettifyJson} from '../../../../common/prettify';
 global.jsonlint = jsonlint;
 
 
@@ -66,6 +66,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   autoCloseBrackets: true,
   indentUnit: 4,
   indentWithTabs: true,
+  showCursorWhenSelecting: true,
   keyMap: 'default',
   gutters: [
     'CodeMirror-linenumbers',
@@ -90,7 +91,6 @@ class Editor extends Component {
   }
 
   componentWillUnmount () {
-    // todo: is there a lighter-weight way to remove the cm instance?
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
     }
@@ -132,53 +132,14 @@ class Editor extends Component {
     const {value} = this.props;
 
     // Add overlay to editor to make all links clickable
-    CodeMirror.defineMode('master', (config, parserConfig) => {
-      const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
-
-      // Only add the click mode if we have links to click
-      const highlightLinks = !!this.props.onClickLink;
-      const highlightNunjucks = !this.props.readOnly;
-
-      const regexUrl = /^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/;
-      const regexVariable = /^{{[ |a-zA-Z0-9_\-+,'"\\()\[\]]+}}/;
-      const regexTag = /^{%[ |a-zA-Z0-9_\-+,'"\\()\[\]]+%}/;
-      const regexComment = /^{#[^#]+#}/;
-
-      const overlay = {
-        token: function (stream, state) {
-          if (highlightLinks && stream.match(regexUrl, true)) {
-            return 'clickable';
-          }
-
-          if (highlightNunjucks && stream.match(regexVariable, true)) {
-            return 'variable-3';
-          }
-
-          if (highlightNunjucks && stream.match(regexTag, true)) {
-            return 'variable-3';
-          }
-
-          if (highlightNunjucks && stream.match(regexComment, true)) {
-            return 'comment';
-          }
-
-          while (stream.next() != null) {
-            if (stream.match(regexUrl, false)) break;
-            if (stream.match(regexVariable, false)) break;
-            if (stream.match(regexTag, false)) break;
-            if (stream.match(regexComment, false)) break;
-          }
-
-          return null;
-        }
-      };
-
-      return CodeMirror.overlayMode(baseMode, overlay, true);
-    });
+    CodeMirror.defineMode('master', this._masterMode());
 
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
-    this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged.bind(this)));
-    this.codeMirror.on('paste', misc.debounce(this._codemirrorValueChanged.bind(this)));
+    this.codeMirror.on('change', this._highlightNunjucksTags);
+    this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged));
+    this.codeMirror.on('paste', this._codemirrorValueChanged);
+    this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
+
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
@@ -192,6 +153,68 @@ class Editor extends Component {
     setTimeout(() => this._codemirrorSetValue(value || ''), 50);
 
     this._codemirrorSetOptions();
+  };
+
+  _clickableOverlay = () => {
+    // Only add the click mode if we have links to click
+    const highlightLinks = !!this.props.onClickLink;
+
+    const regexUrl = /^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/;
+
+    return {
+      token: function (stream, state) {
+        if (highlightLinks && stream.match(regexUrl, true)) {
+          return 'clickable';
+        }
+
+        while (stream.next() != null) {
+          if (stream.match(regexUrl, false)) break;
+        }
+
+        return null;
+      }
+    }
+  };
+
+  _nunjucksMode = () => {
+    const highlightNunjucks = !this.props.readOnly;
+
+    const regexVariable = /^{{[ |a-zA-Z0-9_\-+,'"\\()\[\]$]+}}/;
+    const regexTag = /^{%[^%]+%}/;
+    const regexComment = /^{#[^#]+#}/;
+
+    return {
+      token: function (stream, state) {
+        if (highlightNunjucks && stream.match(regexVariable, true)) {
+          return 'nunjucks nunjucks-variable';
+        }
+
+        if (highlightNunjucks && stream.match(regexTag, true)) {
+          return 'nunjucks nunjucks-tag';
+        }
+
+        if (highlightNunjucks && stream.match(regexComment, true)) {
+          return 'nunjucks nunjucks-comment';
+        }
+
+        while (stream.next() != null) {
+          if (stream.match(regexVariable, false)) break;
+          if (stream.match(regexTag, false)) break;
+          if (stream.match(regexComment, false)) break;
+        }
+
+        return null;
+      }
+    };
+  };
+
+  // Add overlay to editor to make all links clickable
+  _masterMode = () => {
+    // Add overlay to editor to make all links clickable
+    return (config, parserConfig) => {
+      const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
+      return CodeMirror.overlayMode(baseMode, this._nunjucksMode(), true);
+    };
   };
 
   _handleEditorClick = e => {
@@ -312,14 +335,17 @@ class Editor extends Component {
 
       this.codeMirror.setOption(key, options[key]);
     });
+
+    // Add overlays;
+    // this.codeMirror.addOverlay(this._nunjucksOverlay());
+    this.codeMirror.addOverlay(this._clickableOverlay());
   }
 
   /**
    * Wrapper function to add extra behaviour to our onChange event
    * @param doc CodeMirror document
    */
-  _codemirrorValueChanged (doc) {
-
+  _codemirrorValueChanged = doc => {
     // Don't trigger change event if we're ignoring changes
     if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
@@ -327,7 +353,7 @@ class Editor extends Component {
     }
 
     this.props.onChange(doc.getValue());
-  }
+  };
 
   /**
    * Sets the CodeMirror value without triggering the onChange event
@@ -342,9 +368,98 @@ class Editor extends Component {
     } else {
       this.codeMirror.setValue(code || '');
     }
+
+    this._highlightNunjucksTags();
   }
 
-  _handleFilterChange (filter) {
+  _codemirrorCursorActivity = e => {
+    // Re-show any Nunjucks markers that were hidden by clicking
+    for (const marker of this._markers || []) {
+      if (!marker.hidden) {
+        continue;
+      }
+
+      setTimeout(() => {
+        const cursor = e.doc.getCursor();
+        const isSameLine = cursor.line === marker.start.line;
+        const isCursorInToken = cursor.ch >= marker.start.ch && cursor.ch <= marker.end.ch;
+
+        // Show the token again if we're not inside of it.
+        if (isSameLine && isCursorInToken) {
+          return;
+        }
+
+        marker.show();
+      }, 1000);
+    }
+  };
+
+  _highlightNunjucksTags = () => {
+    if (!this.props.render) {
+      return;
+    }
+
+    this._markers = this.markers || [];
+
+    // Hide 'em all first
+    for (const marker of this._markers) {
+      marker.hide();
+    }
+
+    const vp = this.codeMirror.getViewport();
+    for (let lineNo = vp.from; lineNo <= vp.to; lineNo++) {
+      const line = this.codeMirror.getLineTokens(lineNo);
+      const tokens = line.filter(({type}) => type && type.indexOf('nunjucks') >= 0);
+
+      for (const tok of tokens) {
+        const marker = {
+          start: {line: lineNo, ch: tok.start},
+          end: {line: lineNo, ch: tok.end},
+          cm: this.codeMirror,
+          hidden: true,
+          render: this.props.render,
+          _m: null,
+          hide () {
+            if (this.hidden) {
+              return;
+            }
+
+            this.cm.focus();
+            this.cm.getDoc().setCursor(this.start);
+
+            this.hidden = true;
+            this._m.clear();
+          },
+          async show () {
+            if (!this.hidden) {
+              return;
+            }
+
+            const v = await this.render(tok.string.replace(/\\"/g, '"'));
+
+            const n = document.createElement('span');
+            n.innerHTML = v;
+            n.className = 'nunjucks-widget nunjucks-widget--active';
+            n.title = tok.string;
+
+            n.addEventListener('click', e => this.hide());
+            this._m = this.cm.markText(this.start, this.end, {replacedWith: n});
+            this._m.on('clear', () => this.hidden = true);
+            this._m.on('beforeCursorEnter', () => this.hide());
+
+            this.hidden = false;
+          }
+        };
+
+        marker.show();
+        this._markers.push(marker);
+      }
+    }
+  };
+
+  _handleFilterChange = e => {
+    const filter = e.target.value;
+
     clearTimeout(this._filterTimeout);
     this._filterTimeout = setTimeout(() => {
       this.setState({filter});
@@ -364,7 +479,7 @@ class Editor extends Component {
         `${filter ? 'Change' : 'Clear'}`
       );
     }, 2000);
-  }
+  };
 
   _canPrettify () {
     const {mode} = this.props;
@@ -436,9 +551,7 @@ class Editor extends Component {
 
   componentDidUpdate () {
     // Don't don it sync because it might block the UI
-    setTimeout(() => {
-      this._codemirrorSetOptions();
-    }, 50);
+    setTimeout(() => this._codemirrorSetOptions(), 50);
   }
 
   render () {
@@ -459,7 +572,7 @@ class Editor extends Component {
           title="Filter response body"
           defaultValue={filter || ''}
           placeholder={this._isJSON(mode) ? '$.store.books[*].author' : '/store/books/author'}
-          onChange={e => this._handleFilterChange(e.target.value)}
+          onChange={this._handleFilterChange}
         />
       );
       toolbarChildren.push(
@@ -510,7 +623,8 @@ class Editor extends Component {
   }
 }
 
-Editor.propTypes = {
+Editor
+  .propTypes = {
   onChange: PropTypes.func,
   onFocusChange: PropTypes.func,
   onClickLink: PropTypes.func,
@@ -529,4 +643,6 @@ Editor.propTypes = {
   filter: PropTypes.string
 };
 
-export default Editor;
+export
+default
+Editor;

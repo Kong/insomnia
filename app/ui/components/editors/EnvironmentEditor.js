@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import Editor from '../base/Editor';
+import Editor from '../base/editor/Editor';
 
 class EnvironmentEditor extends Component {
   _handleChange = () => {
@@ -22,7 +22,13 @@ class EnvironmentEditor extends Component {
   }
 
   render () {
-    const {environment, editorFontSize, editorKeyMap, ...props} = this.props;
+    const {
+      environment,
+      editorFontSize,
+      editorKeyMap,
+      render,
+      ...props
+    } = this.props;
 
     return (
       <Editor
@@ -32,6 +38,7 @@ class EnvironmentEditor extends Component {
         onChange={this._handleChange}
         value={JSON.stringify(environment)}
         autoPrettify={true}
+        render={render}
         mode="application/json"
         {...props}
       />
@@ -44,6 +51,7 @@ EnvironmentEditor.propTypes = {
   didChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
+  render: PropTypes.func.isRequired,
 };
 
 export default EnvironmentEditor;

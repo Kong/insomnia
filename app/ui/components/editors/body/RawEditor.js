@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import Editor from '../../base/Editor';
+import Editor from '../../base/editor/Editor';
 
 class RawEditor extends Component {
   render () {

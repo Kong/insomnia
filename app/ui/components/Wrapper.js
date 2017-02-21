@@ -323,12 +323,14 @@ class Wrapper extends Component {
           editorFontSize={settings.editorFontSize}
           editorKeyMap={settings.editorKeyMap}
           onChange={models.requestGroup.update}
+          render={handleRender}
         />
         <WorkspaceEnvironmentsEditModal
           ref={registerModal}
           onChange={models.workspace.update}
           editorFontSize={settings.editorFontSize}
           editorKeyMap={settings.editorKeyMap}
+          render={handleRender}
         />
       </div>
     )
