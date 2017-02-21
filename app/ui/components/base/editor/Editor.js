@@ -158,8 +158,7 @@ class Editor extends Component {
   _clickableOverlay = () => {
     // Only add the click mode if we have links to click
     const highlightLinks = !!this.props.onClickLink;
-
-    const regexUrl = /^(https?:\/\/)?([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-]*)*\/?/;
+    const regexUrl = /^https?:\/\/([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-+=;]*)*\/?/;
 
     return {
       token: function (stream, state) {
@@ -452,18 +451,26 @@ class Editor extends Component {
         element.setAttribute('data-active', 'off');
         element.setAttribute('data-error', 'off');
 
-        try {
-          const str = tok.string.replace(/\\"/g, '"');
-          element.innerHTML = (await this.props.render(str, true)) || ' ';
-          element.setAttribute('data-error', 'off');
-          element.title = tok.string;
-        } catch (err) {
-          const message = err.message.replace(/\[.+,.+]\s*/, '');
-          element.innerHTML = '<i class="fa fa-exclamation-triangle"></i>';
-          element.title = message;
-          element.className += ' nunjucks-widget--error';
-          element.setAttribute('data-error', 'on');
-        }
+        const setText = async text => {
+          try {
+            const str = text.replace(/\\"/g, '"');
+            element.innerHTML = (await this.props.render(str, true)) || ' ';
+            element.setAttribute('data-error', 'off');
+            element.title = tok.string;
+          } catch (err) {
+            const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
+            let message = fullMessage;
+            if (message.length > 19) {
+              message = `${message.slice(0, 19)}&hellip;`
+            }
+            element.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${message}`;
+            element.className += ' nunjucks-widget--error';
+            element.setAttribute('data-error', 'on');
+            element.title = fullMessage;
+          }
+        };
+
+        await setText(tok.string);
 
         const marker = this.codeMirror.markText(start, end, {
           handleMouseEvents: false,
@@ -474,33 +481,33 @@ class Editor extends Component {
         element.addEventListener('click', e => {
           element.setAttribute('data-active', 'on');
           marker.changed();
-          const html = '<div class="nunjucks-dialog"><label for="template">Edit Value:</label><input type="text" name="template"/></div>';
+          const html = [
+            '<div class="nunjucks-dialog">',
+            '<label for="template">Edit Value:</label>',
+            '<input type="text" name="template"/>',
+            '</div>'
+          ].join('');
+
           const onEnter = text => {
-            console.log('ON ENTER', text);
+            // Replace the text with the newly edited stuff
+            this.codeMirror.replaceRange(text, start, end);
           };
 
           this.codeMirror.openDialog(html, onEnter, {
             value: tok.string,
             selectValueOnOpen: true,
             closeOnEnter: true,
-            onClose: () => {
+            onClose: async () => {
               console.log('CLOSED');
               element.removeAttribute('data-active');
               marker.changed();
-              // TODO: Actually update the doc
+
+              // Revert string back to original
+              await setText(tok.string);
+              marker.changed();
             },
             onInput: async (e, text) => {
-              try {
-                const str = text.replace(/\\"/g, '"');
-                element.innerHTML = (await this.props.render(str, true)) || ' ';
-                element.setAttribute('data-error', 'off');
-                element.title = text;
-              } catch (err) {
-                const message = err.message.replace(/\[.+,.+]\s*/, '');
-                element.innerHTML = `<i class="fa fa-exclamation-triangle"></i> ${message}`;
-                element.setAttribute('data-error', 'on');
-                element.title = message;
-              }
+              await setText(text);
               marker.changed();
             }
           });

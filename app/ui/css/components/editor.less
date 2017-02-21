@@ -112,12 +112,12 @@
 // Search dialog (and others)
 .CodeMirror-dialog {
   background: var(--color-bg);
-  opacity: 0.9;
+  opacity: 0.95;
   color: var(--hl);
   border-color: var(--hl-md);
   box-sizing: border-box;
   width: 100%;
-  padding: @padding-sm 0 @padding-sm @padding-sm;
+  padding: @padding-sm 0 @padding-xs @padding-sm;
 
   input {
     color: var(--color-font);
@@ -280,31 +280,33 @@
   }
 
   span.nunjucks-widget {
-    padding: 0.2em 0.4em;
+    display: inline-block;
+    padding: 0 0.4em;
+    box-sizing: border-box;
     margin: 0.1em;
-    bottom: 0.1em;
     color: var(--color-font-surprise);
     position: relative;
     cursor: pointer;
     font-size: 0.9em;
     border-radius: @radius-sm;
-    white-space: nowrap;
 
     &::after {
       position: absolute;
       top: 0;
       left: 0;
-      bottom: 0;
       right: 0;
       opacity: 0.7;
+      height: 1.4em;
       content: " ";
       z-index: -1;
       border-radius: @radius-sm;
       background: var(--color-surprise);
     }
 
-    &[data-error="on"]::after {
-      background: var(--color-danger);
+    &[data-error="on"] {
+      &::after {
+        background: var(--color-danger);
+      }
     }
 
     &[data-active="on"]::after {
