@@ -436,17 +436,6 @@ class Editor extends Component {
       }
 
       for (const tok of newTokens) {
-        const element = document.createElement('span');
-        element.className = 'nunjucks-widget nunjucks-widget--active';
-        element.title = tok.string;
-
-        try {
-          element.innerHTML = await this.props.render(tok.string.replace(/\\"/g, '"'));
-        } catch (err) {
-          element.innerHTML = '<i class="fa fa-exclamation-triangle"/>';
-          element.className += ' nunjucks-widget--error';
-        }
-
         const start = {line: lineNo, ch: tok.start};
         const end = {line: lineNo, ch: tok.end};
         const cursor = this.codeMirror.getDoc().getCursor();
@@ -458,10 +447,63 @@ class Editor extends Component {
           continue;
         }
 
+        const element = document.createElement('span');
+        element.className = 'nunjucks-widget';
+        element.setAttribute('data-active', 'off');
+        element.setAttribute('data-error', 'off');
+
+        try {
+          const str = tok.string.replace(/\\"/g, '"');
+          element.innerHTML = (await this.props.render(str, true)) || ' ';
+          element.setAttribute('data-error', 'off');
+          element.title = tok.string;
+        } catch (err) {
+          const message = err.message.replace(/\[.+,.+]\s*/, '');
+          element.innerHTML = '<i class="fa fa-exclamation-triangle"></i>';
+          element.title = message;
+          element.className += ' nunjucks-widget--error';
+          element.setAttribute('data-error', 'on');
+        }
+
         const marker = this.codeMirror.markText(start, end, {
           handleMouseEvents: false,
           replacedWith: element,
           __source: tok.string,
+        });
+
+        element.addEventListener('click', e => {
+          element.setAttribute('data-active', 'on');
+          marker.changed();
+          const html = '<div class="nunjucks-dialog"><label for="template">Edit Value:</label><input type="text" name="template"/></div>';
+          const onEnter = text => {
+            console.log('ON ENTER', text);
+          };
+
+          this.codeMirror.openDialog(html, onEnter, {
+            value: tok.string,
+            selectValueOnOpen: true,
+            closeOnEnter: true,
+            onClose: () => {
+              console.log('CLOSED');
+              element.removeAttribute('data-active');
+              marker.changed();
+              // TODO: Actually update the doc
+            },
+            onInput: async (e, text) => {
+              try {
+                const str = text.replace(/\\"/g, '"');
+                element.innerHTML = (await this.props.render(str, true)) || ' ';
+                element.setAttribute('data-error', 'off');
+                element.title = text;
+              } catch (err) {
+                const message = err.message.replace(/\[.+,.+]\s*/, '');
+                element.innerHTML = `<i class="fa fa-exclamation-triangle"></i> ${message}`;
+                element.setAttribute('data-error', 'on');
+                element.title = message;
+              }
+              marker.changed();
+            }
+          });
         });
 
         this._markers.push(marker);

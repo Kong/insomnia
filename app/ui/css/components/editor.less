@@ -112,11 +112,16 @@
 // Search dialog (and others)
 .CodeMirror-dialog {
   background: var(--color-bg);
-  color: var(--color-font);
-  border-color: @hl-md;
+  opacity: 0.9;
+  color: var(--hl);
+  border-color: var(--hl-md);
   box-sizing: border-box;
   width: 100%;
   padding: @padding-sm 0 @padding-sm @padding-sm;
+
+  input {
+    color: var(--color-font);
+  }
 }
 
 // Tooltip for errors
@@ -298,8 +303,12 @@
       background: var(--color-surprise);
     }
 
-    &.nunjucks-widget--error::after {
+    &[data-error="on"]::after {
       background: var(--color-danger);
+    }
+
+    &[data-active="on"]::after {
+      opacity: 1;
     }
 
     .fa {
@@ -307,10 +316,23 @@
     }
   }
 
-  .popup {
-    z-index: 100;
-    padding: @padding-sm;
-    background: var(--color-bg);
-    border: 1px solid var(--hl-md);
+  .nunjucks-dialog {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    width: 100%;
+    height: 1.8em;
+
+    label {
+      white-space: nowrap;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      height: 100%;
+      margin-left: 0.5em;
+      margin-right: 0.5em;
+    }
   }
 }

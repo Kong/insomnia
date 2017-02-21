@@ -162,11 +162,11 @@ class App extends Component {
     await this._handleSetActiveRequest(newRequest._id)
   };
 
-  _handleRenderText = async text => {
+  _handleRenderText = async (text, strict = false) => {
     const {activeEnvironment, activeRequest} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     const context = await render.getRenderContext(activeRequest, environmentId);
-    return await render.render(text, context);
+    return await render.render(text, context, strict);
   };
 
   _handleGenerateCodeForActiveRequest = () => {
