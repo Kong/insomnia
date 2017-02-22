@@ -283,24 +283,19 @@
     display: inline-block;
     padding: 0 0.4em;
     box-sizing: border-box;
-    margin: 0.1em;
+    bottom: 0;
+    margin: 0 0.2em;
     position: relative;
-    cursor: pointer;
     font-size: 0.9em;
     border-radius: @radius-sm;
+    color: var(--color-font-surprise);
+    cursor: default;
 
-    &.nunjucks-widget.nunjucks-tag {
-      color: var(--color-font-surprise);
-      &::after {
-        background: var(--color-surprise);
-      }
-    }
-
-    &.nunjucks-widget.nunjucks-variable {
-      color: var(--color-font-info);
-      &::after {
-        background: var(--color-info);
-      }
+    label {
+      padding: 0;
+      opacity: 0.9;
+      font-style: italic;
+      font-size: 0.9em;
     }
 
     &::after {
@@ -308,21 +303,35 @@
       top: 0;
       left: 0;
       right: 0;
-      opacity: 0.7;
+      opacity: 0.75;
       height: 1.5em;
       content: " ";
       z-index: -1;
       border-radius: @radius-sm;
+      background: var(--color-surprise);
+    }
+
+    &.nunjucks-tag {
+      color: var(--color-font-info);
+      &::after {
+        background: var(--color-info);
+      }
     }
 
     &[data-error="on"] {
+      color: var(--color-font-danger);
       &::after {
-        background: var(--color-danger) !important;
+        background: var(--color-danger);
       }
     }
 
     &[data-active="on"]::after {
       opacity: 0.9;
+    }
+
+    &[data-ignore="on"]::after {
+      background: var(--hl-xl);
+      color: bar(--color-font);
     }
 
     .fa {

@@ -439,16 +439,9 @@ class Editor extends Component {
           continue;
         }
 
-        // Don't mark up "double tags"
-        if (tok.string.match(/^{% *(end)?for /)) {
-          continue;
-        } else if (tok.string.match(/^{% *(end)?if /)) {
-          continue
-        }
-
         (async () => {
           const element = document.createElement('span');
-          element.className = 'nunjucks-widget ' + tok.type;
+          element.className = 'nunjucks-widget';
           element.setAttribute('data-active', 'off');
           element.setAttribute('data-error', 'off');
 
@@ -460,9 +453,35 @@ class Editor extends Component {
           const updateElementText = async text => {
             try {
               const str = text.replace(/\\/g, '');
-              element.innerHTML = (await this.props.render(str, true, renderCacheKey)) || ' ';
+              const tagMatch = str.match(/{% *(\w+).*%}/);
+              const cleanedStr = str
+                .replace(/^{%/, '')
+                .replace(/%}$/, '')
+                .replace(/^{{/, '')
+                .replace(/}}$/, '')
+                .trim();
+
+              if (tagMatch) {
+                const tag = tagMatch[1];
+
+                if (['uuid', 'timestamp', 'now'].includes(tag)) {
+                  // Try rendering these so we can show errors if needed
+                  element.title = await this.props.render(str, true, renderCacheKey);
+                } else {
+                  element.setAttribute('data-ignore', 'on');
+                }
+
+                // Don't render other tags because they may be two-parters
+                // eg. {% for %}...{% endfor %}
+                const v = cleanedStr.replace(tag, '').trim();
+                element.innerHTML = `<label>${tag}</label> ${v}`.trim();
+              } else {
+                // Render if it's a variable
+                element.title = await this.props.render(str, true, renderCacheKey);
+                element.innerHTML = `<label>var</label> ${cleanedStr}`.trim();
+              }
+
               element.setAttribute('data-error', 'off');
-              element.title = tok.string;
             } catch (err) {
               const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
               let message = fullMessage;
