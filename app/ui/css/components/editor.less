@@ -284,11 +284,24 @@
     padding: 0 0.4em;
     box-sizing: border-box;
     margin: 0.1em;
-    color: var(--color-font-surprise);
     position: relative;
     cursor: pointer;
     font-size: 0.9em;
     border-radius: @radius-sm;
+
+    &.nunjucks-widget.nunjucks-tag {
+      color: var(--color-font-surprise);
+      &::after {
+        background: var(--color-surprise);
+      }
+    }
+
+    &.nunjucks-widget.nunjucks-variable {
+      color: var(--color-font-info);
+      &::after {
+        background: var(--color-info);
+      }
+    }
 
     &::after {
       position: absolute;
@@ -300,7 +313,6 @@
       content: " ";
       z-index: -1;
       border-radius: @radius-sm;
-      background: var(--color-surprise);
     }
 
     &[data-error="on"] {

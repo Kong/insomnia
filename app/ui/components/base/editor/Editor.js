@@ -408,23 +408,26 @@ class Editor extends Component {
 
       // Aggregate same tokens
       const newTokens = [];
-      let t = null;
+      let currTok = null;
       for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
-        if (!t) {
-          t = Object.assign({}, token);
-        } else if (t.type === token.type) {
-          t.end = token.end;
-          t.string += token.string;
-        } else {
-          newTokens.push(t);
-          t = null;
+        const nextTok = tokens[i];
+
+        if (currTok && currTok.type === nextTok.type && currTok.end === nextTok.start) {
+          currTok.end = nextTok.end;
+          currTok.string += nextTok.string;
+        } else if (currTok) {
+          newTokens.push(currTok);
+          currTok = null;
         }
 
-        // Push the last one if we're done
-        if (t && i === tokens.length - 1) {
-          newTokens.push(t);
+        if (!currTok) {
+          currTok = Object.assign({}, nextTok);
         }
+      }
+
+      // Push the last one if we're done
+      if (currTok) {
+        newTokens.push(currTok);
       }
 
       for (const tok of newTokens) {
@@ -445,8 +448,15 @@ class Editor extends Component {
           continue;
         }
 
+        // Don't mark up "double tags"
+        if (tok.string.match(/^{% *(end)?for /)) {
+          continue;
+        } else if (tok.string.match(/^{% *(end)?if /)) {
+          continue
+        }
+
         const element = document.createElement('span');
-        element.className = 'nunjucks-widget';
+        element.className = 'nunjucks-widget ' + tok.type;
         element.setAttribute('data-active', 'off');
         element.setAttribute('data-error', 'off');
 
@@ -494,6 +504,9 @@ class Editor extends Component {
           const onEnter = text => {
             // Replace the text with the newly edited stuff
             this.codeMirror.replaceRange(text, start, end);
+
+            // Clear the marker so it doesn't mess us up later on.
+            marker.clear();
           };
 
           this.codeMirror.openDialog(html, onEnter, {
