@@ -1,4 +1,6 @@
 image: Visual Studio 2015
+
+# Can't use this until we have no git dependencies
 #shallow_clone: true
 
 environment:
