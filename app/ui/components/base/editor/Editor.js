@@ -452,7 +452,12 @@ class Editor extends Component {
           element.setAttribute('data-active', 'off');
           element.setAttribute('data-error', 'off');
 
-          const setText = async text => {
+          const marker = this.codeMirror.markText(start, end, {
+            handleMouseEvents: false,
+            replacedWith: element,
+          });
+
+          const updateElementText = async text => {
             try {
               const str = text.replace(/\\/g, '');
               element.innerHTML = (await this.props.render(str, true, renderCacheKey)) || ' ';
@@ -469,19 +474,15 @@ class Editor extends Component {
               element.setAttribute('data-error', 'on');
               element.title = fullMessage;
             }
+            marker.changed();
           };
 
-          const marker = this.codeMirror.markText(start, end, {
-            handleMouseEvents: false,
-            replacedWith: element,
-          });
-
-          await setText(tok.string);
-          marker.changed();
+          await updateElementText(tok.string);
 
           element.addEventListener('click', e => {
             element.setAttribute('data-active', 'on');
-            marker.changed();
+
+            // Define the dialog HTML
             const html = [
               '<div class="nunjucks-dialog">',
               '<label for="template">Template:</label>',
@@ -489,35 +490,32 @@ class Editor extends Component {
               '</div>'
             ].join('');
 
-            const saveModifications = text => {
-              // Replace the text with the newly edited stuff
-              this.codeMirror.replaceRange(text, start, end);
-
-              // Clear the marker so it doesn't mess us up later on.
-              marker.clear();
-            };
-
-            this.codeMirror.openDialog(html, saveModifications, {
+            const dialogOptions = {
               __dirty: false,
               value: tok.string,
               selectValueOnOpen: true,
               closeOnEnter: true,
               async onClose () {
                 element.removeAttribute('data-active');
-                marker.changed();
 
                 // Revert string back to original if it's changed
                 if (this.dirty) {
-                  await setText(tok.string);
-                  marker.changed();
+                  await updateElementText(tok.string);
                 }
               },
               async onInput (e, text) {
                 this.dirty = true;
-                await setText(text);
-                marker.changed();
+                await updateElementText(text);
               }
-            });
+            };
+
+            this.codeMirror.openDialog(html, text => {
+              // Replace the text with the newly edited stuff
+              this.codeMirror.replaceRange(text, start, end);
+
+              // Clear the marker so it doesn't mess us up later on.
+              marker.clear();
+            }, dialogOptions);
           });
         })();
       }
