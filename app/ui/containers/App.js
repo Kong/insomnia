@@ -49,6 +49,8 @@ class App extends Component {
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
     };
 
+    this._getRenderContextCache = {};
+
     this._globalKeyMap = [
       { // Show Workspace Settings
         meta: true,
@@ -162,11 +164,29 @@ class App extends Component {
     await this._handleSetActiveRequest(newRequest._id)
   };
 
-  _handleRenderText = async (text, strict = false) => {
-    const {activeEnvironment, activeRequest} = this.props;
-    const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    const context = await render.getRenderContext(activeRequest, environmentId);
-    return await render.render(text, context, strict);
+  /**
+   * Heavily optimized render function
+   *
+   * @param text - template to render
+   * @param strict - whether to fail on undefined context values
+   * @param contextCacheKey - if rendering multiple times in parallel, set this
+   * @returns {Promise}
+   * @private
+   */
+  _handleRenderText = async (text, strict = false, contextCacheKey = null) => {
+    if (!contextCacheKey || !this._getRenderContextCache[contextCacheKey]) {
+      const {activeEnvironment, activeRequest} = this.props;
+      const environmentId = activeEnvironment ? activeEnvironment._id : null;
+
+      // NOTE: We're caching promises here to avoid race conditions
+      this._getRenderContextCache[contextCacheKey] = render.getRenderContext(activeRequest, environmentId);
+    }
+
+    // Set timeout to delete the key eventually
+    setTimeout(() => delete this._getRenderContextCache[contextCacheKey], 5000);
+
+    const context = await this._getRenderContextCache[contextCacheKey];
+    return render.render(text, context, strict);
   };
 
   _handleGenerateCodeForActiveRequest = () => {

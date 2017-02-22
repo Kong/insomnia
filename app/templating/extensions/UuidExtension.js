@@ -7,14 +7,11 @@ export default class UuidExtension extends BaseExtension {
     this.tags = ['uuid'];
   }
 
-  run (context, version) {
+  run (context, version = 'v4') {
     if (typeof version === 'number') {
       version += '';
     } else if (typeof version === 'string') {
       version = version.toLowerCase();
-    } else {
-      // Null or undefined
-      version = 'v4';
     }
 
     switch (version) {

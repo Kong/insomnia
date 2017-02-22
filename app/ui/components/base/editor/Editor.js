@@ -66,6 +66,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,
+  viewportMargin: 30, // default 10
   indentWithTabs: true,
   showCursorWhenSelecting: true,
   keyMap: 'default',
@@ -135,10 +136,13 @@ class Editor extends Component {
     CodeMirror.defineMode('master', this._masterMode());
 
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
-    this.codeMirror.on('change', this._highlightNunjucksTags);
     this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged));
     this.codeMirror.on('paste', this._codemirrorValueChanged);
-    this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
+
+    // Setup nunjucks
+    this.codeMirror.on('change', misc.debounce(this._highlightNunjucksTags));
+    this.codeMirror.on('cursorActivity', misc.debounce(this._highlightNunjucksTags));
+    this.codeMirror.on('viewportChange', misc.debounce(this._highlightNunjucksTags));
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
@@ -178,7 +182,7 @@ class Editor extends Component {
   _nunjucksMode = () => {
     const highlightNunjucks = !this.props.readOnly;
 
-    const regexVariable = /^{{[ |a-zA-Z0-9_\-+,'"\\()\[\]$]+}}/;
+    const regexVariable = /^{{[^}]+}}/;
     const regexTag = /^{%[^%]+%}/;
     const regexComment = /^{#[^#]+#}/;
 
@@ -356,7 +360,11 @@ class Editor extends Component {
    */
   _codemirrorSetValue (code, forcePrettify = false) {
     this._originalCode = code;
-    this._ignoreNextChange = true;
+
+    // Don't ignore changes from prettify
+    if (!forcePrettify) {
+      this._ignoreNextChange = true;
+    }
 
     const shouldPrettify = forcePrettify || this.props.autoPrettify;
 
@@ -373,34 +381,17 @@ class Editor extends Component {
     this._highlightNunjucksTags();
   }
 
-  _codemirrorCursorActivity = e => {
-    // Re-show any Nunjucks markers that were hidden by clicking
-    for (const marker of this._markers || []) {
-      if (!marker.hidden) {
-        continue;
-      }
-
-      clearTimeout(marker._t);
-      marker._t = setTimeout(() => {
-        const cursor = e.doc.getCursor();
-        const isSameLine = cursor.line === marker.start.line;
-        const isCursorInToken = cursor.ch >= marker.start.ch && cursor.ch <= marker.end.ch;
-
-        // Show the token again if we're not inside of it.
-        if (isSameLine && isCursorInToken) {
-          return;
-        }
-
-        marker.show();
-      }, 1000);
-    }
-  };
-
-  _highlightNunjucksTags = async () => {
+  _highlightNunjucksTags = () => {
+    // Bail early if we can't even render
     if (!this.props.render) {
       return;
     }
 
+    // Define a cache key that we can use for rendering
+    // const renderCacheKey = Math.random() + '';
+    const renderCacheKey = Math.random() + '';
+
+    // Only mark up Nunjucks tokens that are in the viewport
     const vp = this.codeMirror.getViewport();
     for (let lineNo = vp.from; lineNo <= vp.to; lineNo++) {
       const line = this.codeMirror.getLineTokens(lineNo);
@@ -455,82 +446,80 @@ class Editor extends Component {
           continue
         }
 
-        const element = document.createElement('span');
-        element.className = 'nunjucks-widget ' + tok.type;
-        element.setAttribute('data-active', 'off');
-        element.setAttribute('data-error', 'off');
+        (async () => {
+          const element = document.createElement('span');
+          element.className = 'nunjucks-widget ' + tok.type;
+          element.setAttribute('data-active', 'off');
+          element.setAttribute('data-error', 'off');
 
-        const setText = async text => {
-          try {
-            const str = text.replace(/\\"/g, '"');
-            element.innerHTML = (await this.props.render(str, true)) || ' ';
-            element.setAttribute('data-error', 'off');
-            element.title = tok.string;
-          } catch (err) {
-            const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
-            let message = fullMessage;
-            if (message.length > 19) {
-              message = `${message.slice(0, 19)}&hellip;`
+          const setText = async text => {
+            try {
+              const str = text.replace(/\\/g, '');
+              element.innerHTML = (await this.props.render(str, true, renderCacheKey)) || ' ';
+              element.setAttribute('data-error', 'off');
+              element.title = tok.string;
+            } catch (err) {
+              const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
+              let message = fullMessage;
+              if (message.length > 19) {
+                message = `${message.slice(0, 19)}&hellip;`
+              }
+              element.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${message}`;
+              element.className += ' nunjucks-widget--error';
+              element.setAttribute('data-error', 'on');
+              element.title = fullMessage;
             }
-            element.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${message}`;
-            element.className += ' nunjucks-widget--error';
-            element.setAttribute('data-error', 'on');
-            element.title = fullMessage;
-          }
-        };
-
-        await setText(tok.string);
-
-        const marker = this.codeMirror.markText(start, end, {
-          handleMouseEvents: false,
-          replacedWith: element,
-        });
-
-        // marker.on('beforeCursorEnter', () => {
-        //   // TODO: Do something cool here
-        //   console.log('BEFORE ENTER');
-        // });
-
-        element.addEventListener('click', e => {
-          element.setAttribute('data-active', 'on');
-          marker.changed();
-          const html = [
-            '<div class="nunjucks-dialog">',
-            '<label for="template">Edit Value:</label>',
-            '<input type="text" name="template"/>',
-            '</div>'
-          ].join('');
-
-          const onEnter = text => {
-            // Replace the text with the newly edited stuff
-            this.codeMirror.replaceRange(text, start, end);
-
-            // Clear the marker so it doesn't mess us up later on.
-            marker.clear();
           };
 
-          this.codeMirror.openDialog(html, onEnter, {
-            __dirty: false,
-            value: tok.string,
-            selectValueOnOpen: true,
-            closeOnEnter: true,
-            async onClose () {
-              element.removeAttribute('data-active');
-              marker.changed();
+          const marker = this.codeMirror.markText(start, end, {
+            handleMouseEvents: false,
+            replacedWith: element,
+          });
 
-              // Revert string back to original if it's changed
-              if (this.dirty) {
-                await setText(tok.string);
+          await setText(tok.string);
+          marker.changed();
+
+          element.addEventListener('click', e => {
+            element.setAttribute('data-active', 'on');
+            marker.changed();
+            const html = [
+              '<div class="nunjucks-dialog">',
+              '<label for="template">Template:</label>',
+              '<input type="text" name="template"/>',
+              '</div>'
+            ].join('');
+
+            const saveModifications = text => {
+              // Replace the text with the newly edited stuff
+              this.codeMirror.replaceRange(text, start, end);
+
+              // Clear the marker so it doesn't mess us up later on.
+              marker.clear();
+            };
+
+            this.codeMirror.openDialog(html, saveModifications, {
+              __dirty: false,
+              value: tok.string,
+              selectValueOnOpen: true,
+              closeOnEnter: true,
+              async onClose () {
+                element.removeAttribute('data-active');
+                marker.changed();
+
+                // Revert string back to original if it's changed
+                if (this.dirty) {
+                  await setText(tok.string);
+                  marker.changed();
+                }
+              },
+              async onInput (e, text) {
+                this.dirty = true;
+                await setText(text);
                 marker.changed();
               }
-            },
-            async onInput (e, text) {
-              this.dirty = true;
-              await setText(text);
-              marker.changed();
-            }
+            });
           });
-        });
+        })();
       }
     }
   };

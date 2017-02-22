@@ -6,12 +6,9 @@ export default class NowExtension extends BaseExtension {
     this.tags = ['now'];
   }
 
-  run (context, format) {
+  run (context, format = 'iso-8601') {
     if (typeof format === 'string') {
       format = format.toLowerCase();
-    } else if (!format) {
-      // Null or undefined
-      format = 'iso-8601';
     }
 
     const now = new Date();
