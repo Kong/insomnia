@@ -9,11 +9,12 @@ platform: x64
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - npm config set msvs_version 2015
-  - npm install --build-from-source
+  - npm install
 
 cache:
   - '%APPDATA%\npm-cache'
   - '%USERPROFILE%\.electron'
+  - 'node_modules'
 
 test_script:
   - node --version
@@ -22,7 +23,7 @@ test_script:
 
 on_success:
   - npm run build-n-package:win
-  - ps: ls .\dist\win\*.exe | % { Push-AppveyorArtifact $_.FullName }
+  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
 
 build: off
 deploy: off
