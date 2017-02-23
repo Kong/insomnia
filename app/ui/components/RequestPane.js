@@ -155,6 +155,7 @@ class RequestPane extends PureComponent {
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
             handleSendAndDownload={handleSendAndDownload}
+            handleRender={handleRender}
             url={request.url}
           />
         </header>

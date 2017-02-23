@@ -10,6 +10,37 @@
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
 
+  &.editor--single-line {
+    &, * {
+      font-family: @font-default !important;
+      font-size: @font-size-md;
+    }
+
+    .CodeMirror,
+    .CodeMirror-lines,
+    .CodeMirror-sizer {
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+    }
+
+    .CodeMirror-gutters {
+      display: none !important;
+    }
+
+    .CodeMirror-scroll {
+      padding-top: 1.3em;
+    }
+
+    .CodeMirror-dialog {
+      border: 0;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
   .editor__container {
     height: 100%;
     width: 100%;
@@ -52,7 +83,7 @@
     padding-top: @padding-sm;
   }
 
-  .CodeMirror *:not(.fa) {
+  .CodeMirror {
     font-family: @font-monospace;
   }
 
@@ -81,6 +112,10 @@
   .CodeMirror-lines {
     // Scroll past the end
     padding-bottom: 30px;
+  }
+
+  .CodeMirror-line {
+    padding-left: 0;
   }
 
   .CodeMirror-placeholder {
@@ -280,10 +315,11 @@
   }
 
   .nunjucks-widget {
+    font-family: @font-monospace !important;
     display: inline-block;
     padding: 0 0.4em;
     box-sizing: border-box;
-    bottom: 0;
+    bottom: 0.1em; // Ugh
     margin: 0 0.2em;
     position: relative;
     font-size: 0.9em;
@@ -336,26 +372,6 @@
 
     .fa {
       font-size: 0.9em;
-    }
-  }
-
-  .nunjucks-dialog {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    width: 100%;
-    height: 1.8em;
-
-    label {
-      white-space: nowrap;
-    }
-
-    input {
-      display: block;
-      width: 100%;
-      height: 100%;
-      margin-left: 0.5em;
-      margin-right: 0.5em;
     }
   }
 }

@@ -22,6 +22,8 @@ import 'codemirror/lib/codemirror.css';
 import 'codemirror/addon/dialog/dialog';
 import 'codemirror/addon/dialog/dialog.css';
 import 'codemirror/addon/fold/foldcode';
+import 'codemirror/addon/fold/foldgutter';
+import 'codemirror/addon/fold/foldgutter.css';
 import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/comment-fold';
 import 'codemirror/addon/fold/indent-fold';
@@ -32,8 +34,6 @@ import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/search/matchesonscrollbar';
 import 'codemirror/addon/search/matchesonscrollbar.css';
-import 'codemirror/addon/fold/foldgutter';
-import 'codemirror/addon/fold/foldgutter.css';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
@@ -61,6 +61,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   foldGutter: true,
   height: 'auto',
   lineWrapping: true,
+  scrollbarStyle: 'native',
   lint: true,
   tabSize: 4,
   matchBrackets: true,
@@ -132,14 +133,15 @@ class Editor extends Component {
     }
 
     const {value} = this.props;
-
+    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
     CodeMirror.defineMode('master', this._masterMode());
 
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+    // Set default listeners
+    this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged));
     this.codeMirror.on('paste', this._codemirrorValueChanged);
 
-    // Setup nunjucks
+    // Setup nunjucks listeners
     this.codeMirror.on('change', misc.debounce(this._highlightNunjucksTags));
     this.codeMirror.on('cursorActivity', misc.debounce(this._highlightNunjucksTags));
     this.codeMirror.on('viewportChange', misc.debounce(this._highlightNunjucksTags));
@@ -153,10 +155,10 @@ class Editor extends Component {
       });
     }
 
+    this._codemirrorSetOptions();
+
     // Do this a bit later so we don't block the render process
     setTimeout(() => this._codemirrorSetValue(value || ''), 50);
-
-    this._codemirrorSetOptions();
   };
 
   _clickableOverlay = () => {
@@ -301,43 +303,65 @@ class Editor extends Component {
    * Sets options on the CodeMirror editor while also sanitizing them
    */
   _codemirrorSetOptions () {
-    // Clone first so we can modify it
-    const readOnly = this.props.readOnly || false;
+    const {
+      readOnly,
+      mode,
+      hideLineNumbers,
+      keyMap,
+      lineWrapping,
+      placeholder,
+      noMatchBrackets,
+      hideScrollbars,
+    } = this.props;
 
-    const normalizedMode = this.props.mode ? this.props.mode.split(';')[0] : 'text/plain';
+    const normalizedMode = mode ? mode.split(';')[0] : 'text/plain';
 
     let options = {
       readOnly,
-      placeholder: this.props.placeholder || '',
+      placeholder: placeholder || '',
       mode: {
         name: 'master',
         baseMode: normalizedMode,
       },
-      lineWrapping: this.props.lineWrapping,
-      keyMap: this.props.keyMap || 'default',
-      matchBrackets: !readOnly,
+      scrollbarStyle: hideScrollbars ? 'null' : 'native',
+      lineNumbers: !hideLineNumbers,
+      lineWrapping: lineWrapping,
+      keyMap: keyMap || 'default',
+      matchBrackets: !noMatchBrackets,
       lint: !readOnly
     };
+
+    const cm = this.codeMirror;
 
     // Strip of charset if there is one
     Object.keys(options).map(key => {
       // Don't set the option if it hasn't changed
-      if (options[key] === this.codeMirror.options[key]) {
+      if (options[key] === cm.options[key]) {
         return;
       }
 
       // Since mode is an object, let's compare the inner baseMode instead
-      if (key === 'mode' && options.mode.baseMode === this.codeMirror.options.mode.baseMode) {
+      if (key === 'mode' && options.mode.baseMode === cm.options.mode.baseMode) {
         return;
       }
 
-      this.codeMirror.setOption(key, options[key]);
+      cm.setOption(key, options[key]);
     });
 
     // Add overlays;
     // this.codeMirror.addOverlay(this._nunjucksOverlay());
     this.codeMirror.addOverlay(this._clickableOverlay());
   }
+
+  _codemirrorValueBeforeChange = (doc, change) => {
+    // If we're in single-line mode, merge all changed lines into one
+    if (this.props.singleLine && change.text.length > 1) {
+      const text = change.text.join('');
+      const from = {ch: change.from.ch, line: 0};
+      const to = {ch: from.ch + text.length, line: 0};
+      change.update(from, to, [text]);
+    }
+  };
 
   /**
    * Wrapper function to add extra behaviour to our onChange event
@@ -393,7 +417,7 @@ class Editor extends Component {
 
     // Only mark up Nunjucks tokens that are in the viewport
     const vp = this.codeMirror.getViewport();
-    for (let lineNo = vp.from; lineNo <= vp.to; lineNo++) {
+    for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
       const line = this.codeMirror.getLineTokens(lineNo);
       const tokens = line.filter(({type}) => type && type.indexOf('nunjucks') >= 0);
 
@@ -426,10 +450,11 @@ class Editor extends Component {
         const end = {line: lineNo, ch: tok.end};
         const cursor = this.codeMirror.getDoc().getCursor();
         const isSameLine = cursor.line === lineNo;
-        const isCursorInToken = cursor.ch >= tok.start && cursor.ch <= tok.end;
+        const isCursorInToken = cursor.ch > tok.start && cursor.ch < tok.end;
+        const isFocused = this.codeMirror.hasFocus();
 
         // Show the token again if we're not inside of it.
-        if (isSameLine && isCursorInToken) {
+        if (isFocused && isSameLine && isCursorInToken) {
           continue;
         }
 
@@ -441,7 +466,7 @@ class Editor extends Component {
 
         (async () => {
           const element = document.createElement('span');
-          element.className = 'nunjucks-widget';
+          element.className = `nunjucks-widget ${tok.type}`;
           element.setAttribute('data-active', 'off');
           element.setAttribute('data-error', 'off');
 
@@ -503,10 +528,8 @@ class Editor extends Component {
 
             // Define the dialog HTML
             const html = [
-              '<div class="nunjucks-dialog">',
-              '<label for="template">Template:</label>',
+              'Template:&nbsp;',
               '<input type="text" name="template"/>',
-              '</div>'
             ].join('');
 
             const dialogOptions = {
@@ -716,6 +739,9 @@ Editor.propTypes = {
   mode: PropTypes.string,
   placeholder: PropTypes.string,
   lineWrapping: PropTypes.bool,
+  hideLineNumbers: PropTypes.bool,
+  noMatchBrackets: PropTypes.bool,
+  hideScrollbars: PropTypes.bool,
   fontSize: PropTypes.number,
   value: PropTypes.string,
   autoPrettify: PropTypes.bool,
@@ -723,7 +749,8 @@ Editor.propTypes = {
   className: PropTypes.any,
   updateFilter: PropTypes.func,
   readOnly: PropTypes.bool,
-  filter: PropTypes.string
+  filter: PropTypes.string,
+  singleLine: PropTypes.bool,
 };
 
 export default Editor;

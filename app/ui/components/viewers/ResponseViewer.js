@@ -156,6 +156,7 @@ class ResponseViewer extends Component {
             updateFilter={updateFilter}
             filter={filter}
             autoPrettify={true}
+            noMatchBrackets={true}
             mode={mode}
             readOnly={true}
             lineWrapping={editorLineWrapping}
