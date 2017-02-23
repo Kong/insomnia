@@ -14,7 +14,6 @@
   &.editor--single-line {
     &, * {
       font-family: @font-default !important;
-      font-size: @font-size-md;
     }
 
     .CodeMirror,
@@ -39,12 +38,11 @@
       opacity: 1;
       border: 0;
       height: 100%;
-      animation: fadeIn 300ms;
-
-      input {
-        border-bottom: 1px solid var(--hl-lg);
-        height: 1.8em;
-      }
+      animation: fadeIn 500ms;
+      flex-wrap: nowrap;
+      padding: 0;
+      margin: 0;
+      font-size: 0.9em;
     }
 
     .nunjucks-widget {
@@ -165,25 +163,29 @@
   border-color: var(--hl-md);
   box-sizing: border-box;
   width: 100%;
-  padding: @padding-sm 0 @padding-xs @padding-sm;
+  padding: @padding-sm @padding-xs @padding-xs @padding-xs;
   box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: row;
   align-items: center;
   white-space: nowrap;
-  font-size: 0.95em;
-
-  .CodeMirror-search-hint {
-    margin-right: 0.5em;
-  }
 
   input {
     display: block;
     width: 100% !important;
     color: var(--color-font);
-    margin-left: 0.5em;
-    margin-right: 0.5em;
-    min-width: 10em;
+  }
+
+  * {
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+  }
+
+  button {
+    color: var(--hl);
+    &:hover {
+      color: var(--color-font);
+    }
   }
 }
 

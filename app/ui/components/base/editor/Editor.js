@@ -414,6 +414,7 @@ class Editor extends Component {
     // Define a cache key that we can use for rendering
     // const renderCacheKey = Math.random() + '';
     const renderCacheKey = Math.random() + '';
+    const renderString = text => this.props.render(text, true, renderCacheKey);
 
     // Only mark up Nunjucks tokens that are in the viewport
     const vp = this.codeMirror.getViewport();
@@ -470,64 +471,25 @@ class Editor extends Component {
           element.setAttribute('data-active', 'off');
           element.setAttribute('data-error', 'off');
 
+          await Editor._updateElementText(renderString, element, tok.string);
+
           const marker = this.codeMirror.markText(start, end, {
             handleMouseEvents: false,
             replacedWith: element,
           });
 
-          const updateElementText = async text => {
-            try {
-              const str = text.replace(/\\/g, '');
-              const tagMatch = str.match(/{% *(\w+).*%}/);
-              const cleanedStr = str
-                .replace(/^{%/, '')
-                .replace(/%}$/, '')
-                .replace(/^{{/, '')
-                .replace(/}}$/, '')
-                .trim();
-
-              if (tagMatch) {
-                const tag = tagMatch[1];
-
-                if (['uuid', 'timestamp', 'now'].includes(tag)) {
-                  // Try rendering these so we can show errors if needed
-                  element.title = await this.props.render(str, true, renderCacheKey);
-                } else {
-                  element.setAttribute('data-ignore', 'on');
-                }
-
-                // Don't render other tags because they may be two-parters
-                // eg. {% for %}...{% endfor %}
-                const v = cleanedStr.replace(tag, '').trim();
-                element.innerHTML = `<label>${tag}</label> ${v}`.trim();
-              } else {
-                // Render if it's a variable
-                element.title = await this.props.render(str, true, renderCacheKey);
-                element.innerHTML = `${cleanedStr}`.trim();
-              }
-
-              element.setAttribute('data-error', 'off');
-            } catch (err) {
-              const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
-              let message = fullMessage;
-              if (message.length > 30) {
-                message = `${message.slice(0, 27)}&hellip;`
-              }
-              element.innerHTML = `&#x203c; ${message}`;
-              element.className += ' nunjucks-widget--error';
-              element.setAttribute('data-error', 'on');
-              element.title = fullMessage;
-            }
-            marker.changed();
-          };
-
-          await updateElementText(tok.string);
-
           element.addEventListener('click', e => {
             element.setAttribute('data-active', 'on');
 
             // Define the dialog HTML
-            const html = 'Nunjucks: <input type="text"/>';
+            const html = [
+              '<div class="nunjucks-dialog" style="width:100%">',
+              '<input type="text"/>',
+              `<span class="result">${element.title}</span>`,
+              '</div>',
+              '<button style="font-size:1.5em;padding:0 0.5em;">&times;</button>',
+            ].join(' ');
+
             const dialogOptions = {
               __dirty: false,
               value: tok.string,
@@ -538,12 +500,18 @@ class Editor extends Component {
 
                 // Revert string back to original if it's changed
                 if (this.dirty) {
-                  await updateElementText(tok.string);
+                  await Editor._updateElementText(renderString, element, tok.string);
+                  marker.changed();
                 }
               },
               async onInput (e, text) {
                 this.dirty = true;
-                await updateElementText(text);
+
+                clearTimeout(this.__timeout);
+                this.__timeout = setTimeout(async () => {
+                  const el = e.target.parentNode.querySelector('.result');
+                  await Editor._updateElementText(renderString, el, text, true);
+                }, 600);
               }
             };
 
@@ -560,6 +528,57 @@ class Editor extends Component {
       }
     }
   };
+
+  static async _updateElementText (render, el, text, preview = false) {
+    try {
+      const str = text.replace(/\\/g, '');
+      const tagMatch = str.match(/{% *(\w+).*%}/);
+      const cleanedStr = str
+        .replace(/^{%/, '')
+        .replace(/%}$/, '')
+        .replace(/^{{/, '')
+        .replace(/}}$/, '')
+        .trim();
+
+      let innerHTML = '';
+
+      if (tagMatch) {
+        const tag = tagMatch[1];
+
+        // Don't render other tags because they may be two-parters
+        // eg. {% for %}...{% endfor %}
+        const cleaned = cleanedStr.replace(tag, '').trim();
+        innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
+
+        if (['uuid', 'timestamp', 'now'].includes(tag)) {
+          // Try rendering these so we can show errors if needed
+          const v = await render(str);
+          el.title = v;
+          innerHTML = preview ? v : innerHTML;
+        } else {
+          el.setAttribute('data-ignore', 'on');
+        }
+      } else {
+        // Render if it's a variable
+        const v = await render(str);
+        el.title = v;
+        innerHTML = preview ? v : `${cleanedStr}`.trim();
+      }
+
+      el.innerHTML = innerHTML;
+      el.setAttribute('data-error', 'off');
+    } catch (err) {
+      const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
+      let message = fullMessage;
+      if (message.length > 30) {
+        message = `${message.slice(0, 27)}&hellip;`
+      }
+      el.innerHTML = `&#x203c; ${message}`;
+      el.className += ' nunjucks-widget--error';
+      el.setAttribute('data-error', 'on');
+      el.title = fullMessage;
+    }
+  }
 
   _handleFilterChange = e => {
     const filter = e.target.value;
