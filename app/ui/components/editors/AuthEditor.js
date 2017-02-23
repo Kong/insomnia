@@ -22,7 +22,7 @@ class AuthEditor extends PureComponent {
   };
 
   render () {
-    const {authentication, showPasswords} = this.props;
+    const {authentication, showPasswords, handleRender} = this.props;
     const pairs = [{
       name: authentication.username || '',
       value: authentication.password || '',
@@ -33,6 +33,7 @@ class AuthEditor extends PureComponent {
       <KeyValueEditor
         pairs={pairs}
         maxPairs={1}
+        handleRender={handleRender}
         namePlaceholder="Username"
         valuePlaceholder="•••••••••••"
         valueInputType={showPasswords ? 'text' : 'password'}
@@ -46,6 +47,7 @@ class AuthEditor extends PureComponent {
 }
 
 AuthEditor.propTypes = {
+  handleRender: PropTypes.func.isRequired,
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   authentication: PropTypes.object.isRequired,

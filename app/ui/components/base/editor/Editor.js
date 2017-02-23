@@ -71,6 +71,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,
+  tabIndex: 0,
   dragDrop: true,
   viewportMargin: 30, // default 10
   selectionPointer: 'default',
@@ -146,6 +147,9 @@ class Editor extends Component {
     // Set default listeners
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged));
+    this.codeMirror.on('keydown', this._codemirrorKeyDown);
+    this.codeMirror.on('focus', this._codemirrorFocus);
+    this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorValueChanged);
 
     // Setup nunjucks listeners
@@ -316,6 +320,7 @@ class Editor extends Component {
     const {
       readOnly,
       mode,
+      tabIndex,
       hideLineNumbers,
       keyMap,
       lineWrapping,
@@ -333,6 +338,7 @@ class Editor extends Component {
         name: 'master',
         baseMode: normalizedMode,
       },
+      tabIndex: typeof tabIndex === 'number' ? tabIndex : 0,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       lineNumbers: !hideLineNumbers,
       lineWrapping: lineWrapping,
@@ -363,10 +369,31 @@ class Editor extends Component {
     this.codeMirror.addOverlay(this._clickableOverlay());
   }
 
+  _codemirrorKeyDown = (doc, e) => {
+    // Use default tab behaviour if we're told
+    if (this.props.defaultTabBehavior && e.code === 'Tab') {
+      e.codemirrorIgnore = true;
+    }
+  };
+
+  _codemirrorFocus = (e) => {
+    if (this.props.onFocus) {
+      this.props.onFocus();
+    }
+  };
+
+  _codemirrorBlur = () => {
+    if (this.props.onBlur) {
+      this.props.onBlur();
+    }
+  };
+
   _codemirrorValueBeforeChange = (doc, change) => {
     // If we're in single-line mode, merge all changed lines into one
     if (this.props.singleLine && change.text.length > 1) {
-      const text = change.text.join('');
+      const text = change.text
+        .join('') // join all changed lines into one
+        .replace(/\n/g, ' '); // Convert all whitespace to spaces
       const from = {ch: change.from.ch, line: 0};
       const to = {ch: from.ch + text.length, line: 0};
       change.update(from, to, [text]);
@@ -461,11 +488,11 @@ class Editor extends Component {
         const end = {line: lineNo, ch: tok.end};
         const cursor = this.codeMirror.getDoc().getCursor();
         const isSameLine = cursor.line === lineNo;
-        const isCursorInToken = cursor.ch >= tok.start && cursor.ch <= tok.end;
+        const isCursorInToken = isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
         const isFocused = this.codeMirror.hasFocus();
 
         // Show the token again if we're not inside of it.
-        if (isFocused && isSameLine && isCursorInToken) {
+        if (isFocused && isCursorInToken) {
           continue;
         }
 
@@ -493,11 +520,10 @@ class Editor extends Component {
 
             // Define the dialog HTML
             const html = [
-              '<div class="nunjucks-dialog" style="width:100%">',
+              '<div class="wide hide-scrollbars scrollable">',
               '<input type="text" name="template"/>',
-              `<span style="margin-top:0.2em">${element.title}</spans>`,
+              `<div>${element.title}</div>`,
               '</div>',
-              '<button style="font-size:1.5em;padding:0 0.5em;">&times;</button>',
             ].join(' ');
 
             const dialogOptions = {
@@ -560,7 +586,7 @@ class Editor extends Component {
         const cleaned = cleanedStr.replace(tag, '').trim();
         innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
 
-        if (['uuid', 'timestamp', 'now'].includes(tag)) {
+        if (['JSONPath', 'uuid', 'timestamp', 'now'].includes(tag)) {
           // Try rendering these so we can show errors if needed
           const v = await render(str);
           el.title = v;
@@ -741,8 +767,10 @@ class Editor extends Component {
     }
 
     return (
-      <div className={classes} style={{fontSize: `${fontSize || 12}px`}}>
-        <div className="editor__container" onClick={this._handleEditorClick}>
+      <div className={classes}>
+        <div className="editor__container input"
+             onClick={this._handleEditorClick}
+             style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
             ref={this._handleInitTextarea}
             defaultValue=" "
@@ -758,7 +786,8 @@ class Editor extends Component {
 
 Editor.propTypes = {
   onChange: PropTypes.func,
-  onFocusChange: PropTypes.func,
+  onFocus: PropTypes.func,
+  onBlur: PropTypes.func,
   onClickLink: PropTypes.func,
   render: PropTypes.func,
   keyMap: PropTypes.string,
@@ -774,6 +803,7 @@ Editor.propTypes = {
   manualPrettify: PropTypes.bool,
   className: PropTypes.any,
   updateFilter: PropTypes.func,
+  defaultTabBehavior: PropTypes.bool,
   readOnly: PropTypes.bool,
   filter: PropTypes.string,
   singleLine: PropTypes.bool,

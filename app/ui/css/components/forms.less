@@ -8,6 +8,7 @@
   width: 100%;
   box-sizing: border-box;
 
+  .input,
   input,
   textarea,
   select,
@@ -58,6 +59,7 @@
   &.form-control--outlined,
   &.form-control--underlined {
     textarea,
+    .input,
     input,
     select {
       border: 1px solid @hl-md;
@@ -66,11 +68,13 @@
       background-color: @hl-xxs;
     }
 
+    .input,
     input,
     select {
       height: @line-height-xs;
     }
 
+    .input:focus,
     textarea:focus,
     select:focus,
     input:focus {
@@ -79,12 +83,14 @@
     }
   }
 
+  &.form-control--underlined .input:focus,
   &.form-control--underlined input:focus,
   &.form-control--underlined textarea:focus {
     border-color: @hl;
   }
 
   &.form-control--padded {
+    .input,
     textarea,
     select,
     input {
@@ -95,6 +101,7 @@
   &.form-control--underlined {
     textarea,
     select,
+    .input,
     input {
       border-radius: 0;
       border-top: 0;
@@ -191,7 +198,7 @@
   }
 }
 
-textarea, input, button, select {
+textarea, input, .input,button, select {
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;
@@ -212,6 +219,7 @@ input[type=number]::-webkit-inner-spin-button {
   opacity: 0.8;
 }
 
+.input.input--error,
 input.input--error {
   border-color: var(--color-danger) !important;
 }

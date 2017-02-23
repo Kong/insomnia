@@ -18,7 +18,8 @@ export async function render (text, config = {}) {
       if (err) {
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s*/, '')
-          .replace(/^Error: */, '');
+          .replace(/^Error: */, '')
+          .replace('attempted to output null or undefined value', 'variable not defined');
 
         reject(new Error(sanitizedMsg));
       } else {

@@ -10,6 +10,7 @@
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
+  font-size: 1rem;
 
   &.editor--single-line {
     &, * {
@@ -91,10 +92,6 @@
     height: 100% !important;
     width: 100%;
     box-sizing: border-box;
-    padding-top: @padding-sm;
-  }
-
-  .CodeMirror * {
     font-family: @font-monospace;
   }
 
@@ -176,6 +173,9 @@
   white-space: nowrap;
 
   input {
+    border: 0 !important;
+    height: 1em !important;
+    padding: 0 !important;
     display: block;
     width: 100% !important;
     color: var(--color-font);
