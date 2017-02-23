@@ -33,7 +33,6 @@ export default class NowExtension {
     try {
       result = this.run(...args);
     } catch (err) {
-      // In case a synchronous render fails
       callback(err);
       return;
     }

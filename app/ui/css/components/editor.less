@@ -35,9 +35,6 @@
     .CodeMirror-dialog {
       border: 0;
       height: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
     }
   }
 
@@ -83,7 +80,7 @@
     padding-top: @padding-sm;
   }
 
-  .CodeMirror {
+  .CodeMirror * {
     font-family: @font-monospace;
   }
 
@@ -153,9 +150,24 @@
   box-sizing: border-box;
   width: 100%;
   padding: @padding-sm 0 @padding-xs @padding-sm;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+
+  .CodeMirror-search-hint {
+    font-size: 0.85em;
+    margin-right: 0.5em;
+  }
 
   input {
+    display: block;
+    width: 100% !important;
     color: var(--color-font);
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    min-width: 10em;
   }
 }
 
@@ -301,8 +313,10 @@
   }
 
   .CodeMirror-matchingbracket {
-    text-decoration: underline;
     color: inherit !important;
+    text-decoration: underline;
+    text-decoration-color: var(--color-notice);
+    box-sizing: border-box;
   }
 
   span.cm-nunjucks-variable,
@@ -316,35 +330,38 @@
 
   .nunjucks-widget {
     font-family: @font-monospace !important;
-    display: inline-block;
-    padding: 0 0.4em;
+    padding: 0.2em 0.5em;
     box-sizing: border-box;
     bottom: 0.1em; // Ugh
     margin: 0 0.2em;
     position: relative;
     font-size: 0.9em;
-    border-radius: @radius-sm;
     color: var(--color-font-surprise);
     cursor: default;
+    white-space: nowrap;
+
+    &::after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      opacity: 0.7;
+      content: " ";
+      z-index: -1;
+      border-radius: 0.2em;
+      background: var(--color-surprise);
+    }
+
+    &:hover::after {
+      opacity: 0.8;
+    }
 
     label {
       padding: 0;
       opacity: 0.9;
       font-style: italic;
       font-size: 0.9em;
-    }
-
-    &::after {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      opacity: 0.75;
-      height: 1.5em;
-      content: " ";
-      z-index: -1;
-      border-radius: @radius-sm;
-      background: var(--color-surprise);
     }
 
     &.nunjucks-tag {
@@ -368,10 +385,6 @@
     &[data-ignore="on"]::after {
       background: var(--hl-xl);
       color: bar(--color-font);
-    }
-
-    .fa {
-      font-size: 0.9em;
     }
   }
 }

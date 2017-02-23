@@ -16,7 +16,10 @@ export async function render (text, config = {}) {
     const env = getNunjucksEnvironment(strict);
     env.renderString(text, context, (err, result) => {
       if (err) {
-        const sanitizedMsg = err.message.replace(/\(unknown path\)\s*/, '');
+        const sanitizedMsg = err.message
+          .replace(/\(unknown path\)\s*/, '')
+          .replace(/^Error: */, '');
+
         reject(new Error(sanitizedMsg));
       } else {
         resolve(result);

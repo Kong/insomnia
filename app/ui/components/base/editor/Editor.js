@@ -450,7 +450,7 @@ class Editor extends Component {
         const end = {line: lineNo, ch: tok.end};
         const cursor = this.codeMirror.getDoc().getCursor();
         const isSameLine = cursor.line === lineNo;
-        const isCursorInToken = cursor.ch > tok.start && cursor.ch < tok.end;
+        const isCursorInToken = cursor.ch >= tok.start && cursor.ch <= tok.end;
         const isFocused = this.codeMirror.hasFocus();
 
         // Show the token again if we're not inside of it.
@@ -503,17 +503,17 @@ class Editor extends Component {
               } else {
                 // Render if it's a variable
                 element.title = await this.props.render(str, true, renderCacheKey);
-                element.innerHTML = `<label>var</label> ${cleanedStr}`.trim();
+                element.innerHTML = `${cleanedStr}`.trim();
               }
 
               element.setAttribute('data-error', 'off');
             } catch (err) {
               const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
               let message = fullMessage;
-              if (message.length > 19) {
-                message = `${message.slice(0, 19)}&hellip;`
+              if (message.length > 30) {
+                message = `${message.slice(0, 27)}&hellip;`
               }
-              element.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${message}`;
+              element.innerHTML = `&#x203c; ${message}`;
               element.className += ' nunjucks-widget--error';
               element.setAttribute('data-error', 'on');
               element.title = fullMessage;
@@ -527,11 +527,7 @@ class Editor extends Component {
             element.setAttribute('data-active', 'on');
 
             // Define the dialog HTML
-            const html = [
-              'Template:&nbsp;',
-              '<input type="text" name="template"/>',
-            ].join('');
-
+            const html = 'Edit Nunjucks: <input type="text"/>';
             const dialogOptions = {
               __dirty: false,
               value: tok.string,
@@ -553,7 +549,8 @@ class Editor extends Component {
 
             this.codeMirror.openDialog(html, text => {
               // Replace the text with the newly edited stuff
-              this.codeMirror.replaceRange(text, start, end);
+              const {from, to} = marker.find();
+              this.codeMirror.replaceRange(text, from, to);
 
               // Clear the marker so it doesn't mess us up later on.
               marker.clear();
