@@ -30,5 +30,5 @@ describe('NowExtension', () => {
   it('renders unix', assertTemplate('{% now "unix" %}', secondsRe));
   it('renders millis', assertTemplate('{% now "millis" %}', millisRe));
   it('renders ms', assertTemplate('{% now "ms" %}', millisRe));
-  it('fails on other', assertTemplateFails('{% now "foo" %}', 'Error: Invalid date format foo'));
+  it('fails on other', assertTemplateFails('{% now "foo" %}', 'Invalid date type "foo"'));
 });

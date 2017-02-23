@@ -1,4 +1,5 @@
 @import '../constants/colors';
+@import '../constants/animations';
 @import '../constants/dimensions';
 @import '../constants/fonts';
 
@@ -35,8 +36,15 @@
     }
 
     .CodeMirror-dialog {
+      opacity: 1;
       border: 0;
       height: 100%;
+      animation: fadeIn 300ms;
+
+      input {
+        border-bottom: 1px solid var(--hl-lg);
+        height: 1.8em;
+      }
     }
 
     .nunjucks-widget {
@@ -341,9 +349,8 @@
 
   .nunjucks-widget {
     font-family: @font-monospace !important;
-    padding: 0.15em 0.5em;
+    padding: 0.2em 0.5em 0.15em 0.5em;
     box-sizing: border-box;
-    bottom: 0.1em; // Ugh
     margin: 0 0.1em;
     position: relative;
     font-size: 0.9em;

@@ -26,5 +26,5 @@ describe('UuidExtension', () => {
   it('renders 1', assertTemplate('{% uuid "1" %}', 'f7272c80-f493-11e6-bc64-92361f002671'));
   it('renders 1 num', assertTemplate('{% uuid 1 %}', 'f7272f0a-f493-11e6-bc64-92361f002671'));
   it('renders v1', assertTemplate('{% uuid "v1" %}', 'f72733a6-f493-11e6-bc64-92361f002671'));
-  it('fails on other', assertTemplateFails('{% uuid "foo" %}', 'Error: Invalid UUID type foo'));
+  it('fails on other', assertTemplateFails('{% uuid "foo" %}', 'Invalid UUID type "foo"'));
 });
