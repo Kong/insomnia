@@ -101,7 +101,7 @@
     "analytics-node": "~2.1.0",
     "classnames": "~2.2.3",
     "clone": "~2.1.0",
-    "codemirror": "~5.23.0",
+    "codemirror": "~5.24.2",
     "electron-context-menu": "~0.4.0",
     "electron-squirrel-startup": "~1.0.0",
     "hkdf": "0.0.2",

@@ -34,6 +34,8 @@ import 'codemirror/addon/edit/matchbrackets';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/search/matchesonscrollbar';
 import 'codemirror/addon/search/matchesonscrollbar.css';
+import 'codemirror/addon/selection/active-line';
+import 'codemirror/addon/selection/selection-pointer';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
@@ -59,24 +61,29 @@ const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
   placeholder: 'Start Typing...',
   foldGutter: true,
+  maxHighlightLength: 1000, // Default 10,000
   height: 'auto',
   lineWrapping: true,
   scrollbarStyle: 'native',
   lint: true,
   tabSize: 4,
+  cursorHeight: 1,
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,
+  dragDrop: true,
   viewportMargin: 30, // default 10
+  selectionPointer: 'default',
+  styleActiveLine: true,
   indentWithTabs: true,
   showCursorWhenSelecting: true,
+  cursorScrollMargin: 12, // NOTE: This is px
   keyMap: 'default',
   gutters: [
     'CodeMirror-linenumbers',
     'CodeMirror-foldgutter',
     'CodeMirror-lint-markers'
   ],
-  cursorScrollMargin: 12, // NOTE: This is px
   extraKeys: {
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
@@ -138,11 +145,11 @@ class Editor extends Component {
 
     // Set default listeners
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
-    this.codeMirror.on('change', misc.debounce(this._codemirrorValueChanged));
+    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged));
     this.codeMirror.on('paste', this._codemirrorValueChanged);
 
     // Setup nunjucks listeners
-    this.codeMirror.on('change', misc.debounce(this._highlightNunjucksTags));
+    this.codeMirror.on('changes', misc.debounce(this._highlightNunjucksTags));
     this.codeMirror.on('cursorActivity', misc.debounce(this._highlightNunjucksTags));
     this.codeMirror.on('viewportChange', misc.debounce(this._highlightNunjucksTags));
 
@@ -158,7 +165,10 @@ class Editor extends Component {
     this._codemirrorSetOptions();
 
     // Do this a bit later so we don't block the render process
-    setTimeout(() => this._codemirrorSetValue(value || ''), 50);
+    requestAnimationFrame(() => {
+      this._codemirrorSetValue(value || '');
+      this.codeMirror.setCursor({line: -1, ch: -1});
+    });
   };
 
   _clickableOverlay = () => {
@@ -484,8 +494,8 @@ class Editor extends Component {
             // Define the dialog HTML
             const html = [
               '<div class="nunjucks-dialog" style="width:100%">',
-              '<input type="text"/>',
-              `<span class="result">${element.title}</span>`,
+              '<input type="text" name="template"/>',
+              `<span style="margin-top:0.2em">${element.title}</spans>`,
               '</div>',
               '<button style="font-size:1.5em;padding:0 0.5em;">&times;</button>',
             ].join(' ');

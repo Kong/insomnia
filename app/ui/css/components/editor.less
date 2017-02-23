@@ -23,6 +23,7 @@
       border: 0 !important;
     }
 
+    .CodeMirror-activeline-background,
     .CodeMirror-gutters {
       display: none !important;
     }
@@ -124,11 +125,6 @@
     padding-bottom: 30px;
   }
 
-  .CodeMirror-line {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
   .CodeMirror-placeholder {
     color: @hl-xl;
   }
@@ -149,9 +145,18 @@
     }
   }
 
-  &.editor--readonly .CodeMirror-cursors,
-  &.editor--readonly .CodeMirror-activeline-background {
-    opacity: 0;
+  .CodeMirror-activeline-gutter,
+  .CodeMirror-activeline-background {
+    background-color: transparent;
+  }
+
+  &:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-gutter,
+  &:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-background {
+    background-color: var(--hl-xs);
+  }
+
+  &.editor--readonly .CodeMirror-cursors {
+    visibility: hidden;
   }
 }
 
@@ -214,9 +219,8 @@
   color: var(--color-font);
   line-height: 1.4em;
 
-  div.CodeMirror-selected {
+  .CodeMirror-selected {
     background: var(--color-font);
-    border-radius: 2px;
     opacity: 0.2;
   }
 
@@ -326,10 +330,6 @@
     text-decoration: underline;
   }
 
-  .CodeMirror-activeline-background {
-    background: @hl-md;
-  }
-
   .CodeMirror-matchingbracket {
     color: inherit !important;
     text-decoration: underline;
@@ -351,7 +351,7 @@
 
   .nunjucks-widget {
     font-family: @font-monospace !important;
-    padding: 0.2em 0.5em 0.15em 0.5em;
+    padding: 0.15em 0.5em;
     box-sizing: border-box;
     margin: 0 0.1em;
     position: relative;
