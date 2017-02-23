@@ -527,7 +527,7 @@ class Editor extends Component {
             element.setAttribute('data-active', 'on');
 
             // Define the dialog HTML
-            const html = 'Edit Nunjucks: <input type="text"/>';
+            const html = 'Nunjucks: <input type="text"/>';
             const dialogOptions = {
               __dirty: false,
               value: tok.string,

@@ -17,8 +17,7 @@
     }
 
     .CodeMirror,
-    .CodeMirror-lines,
-    .CodeMirror-sizer {
+    .CodeMirror-lines {
       padding: 0 !important;
       margin: 0 !important;
       border: 0 !important;
@@ -29,12 +28,20 @@
     }
 
     .CodeMirror-scroll {
-      padding-top: 1.3em;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
     }
 
     .CodeMirror-dialog {
       border: 0;
       height: 100%;
+    }
+
+    .nunjucks-widget {
+      padding-top: 0.2em;
+      padding-bottom: 0.2em;
     }
   }
 
@@ -113,6 +120,7 @@
 
   .CodeMirror-line {
     padding-left: 0;
+    padding-right: 0;
   }
 
   .CodeMirror-placeholder {
@@ -155,9 +163,9 @@
   flex-direction: row;
   align-items: center;
   white-space: nowrap;
+  font-size: 0.95em;
 
   .CodeMirror-search-hint {
-    font-size: 0.85em;
     margin-right: 0.5em;
   }
 
@@ -194,7 +202,7 @@
 /* Based on Sublime Text's Monokai theme */
 .CodeMirror {
   color: var(--color-font);
-  line-height: 1.5em;
+  line-height: 1.4em;
 
   div.CodeMirror-selected {
     background: var(--color-font);
@@ -319,9 +327,12 @@
     box-sizing: border-box;
   }
 
-  span.cm-nunjucks-variable,
-  span.cm-nunjucks-tag {
+  span.cm-nunjucks-variable {
     color: var(--color-surprise);
+  }
+
+  span.cm-nunjucks-tag {
+    color: var(--color-info);
   }
 
   span.cm-nunjucks-comment {
@@ -330,13 +341,12 @@
 
   .nunjucks-widget {
     font-family: @font-monospace !important;
-    padding: 0.2em 0.5em;
+    padding: 0.15em 0.5em;
     box-sizing: border-box;
     bottom: 0.1em; // Ugh
-    margin: 0 0.2em;
+    margin: 0 0.1em;
     position: relative;
     font-size: 0.9em;
-    color: var(--color-font-surprise);
     cursor: default;
     white-space: nowrap;
 
@@ -346,20 +356,18 @@
       left: 0;
       height: 100%;
       width: 100%;
-      opacity: 0.7;
+      opacity: 0.7; // not so bright!
       content: " ";
       z-index: -1;
       border-radius: 0.2em;
-      background: var(--color-surprise);
-    }
-
-    &:hover::after {
-      opacity: 0.8;
+      border-bottom: 1px dotted transparent;
+      box-sizing: border-box;
     }
 
     label {
       padding: 0;
-      opacity: 0.9;
+      margin: 0;
+      display: inline;
       font-style: italic;
       font-size: 0.9em;
     }
@@ -371,15 +379,27 @@
       }
     }
 
+    &.nunjucks-variable {
+      color: var(--color-font-surprise);
+      &::after {
+        background: var(--color-surprise);
+      }
+    }
+
+    &[data-active="on"],
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &[data-active="on"]::after {
+      border-color: inherit;
+    }
+
     &[data-error="on"] {
       color: var(--color-font-danger);
       &::after {
         background: var(--color-danger);
       }
-    }
-
-    &[data-active="on"]::after {
-      opacity: 0.9;
     }
 
     &[data-ignore="on"]::after {
