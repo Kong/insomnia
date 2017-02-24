@@ -4,6 +4,7 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import FileInputButton from '../base/FileInputButton';
 import {Dropdown, DropdownItem, DropdownButton} from './dropdown/index';
 import PromptButton from '../base/PromptButton';
+import Button from '../base/Button';
 import OneLineEditor from '../base/editor/OneLineEditor';
 
 const NAME = 'name';
@@ -40,11 +41,6 @@ class KeyValueEditor extends Component {
     this._addPair();
   };
 
-  _handleAddFromMultipart = type => {
-    this._focusedField = null;
-    this._addPair(this.state.pairs.length, {type});
-  };
-
   _onChange (pairs, updateState = true) {
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
@@ -73,7 +69,7 @@ class KeyValueEditor extends Component {
     this._onChange(pairs);
   }
 
-  _deletePair (position) {
+  _deletePair = position => {
     if (this._focusedPair >= position) {
       this._focusedPair = this._focusedPair - 1;
     }
@@ -84,17 +80,17 @@ class KeyValueEditor extends Component {
     const pairs = this.state.pairs.filter((_, i) => i !== position);
 
     this._onChange(pairs);
-  }
+  };
 
-  _updatePair (position, pairPatch) {
+  _updatePair = (position, pairPatch) => {
     const pairs = this.state.pairs.map((p, i) => (
       i == position ? Object.assign({}, p, pairPatch) : p
     ));
 
     this._onChange(pairs);
-  }
+  };
 
-  _togglePair (position) {
+  _togglePair = position => {
     const pairs = this.state.pairs.map(
       (p, i) => i == position ? Object.assign({}, p, {disabled: !p.disabled}) : p
     );
@@ -103,7 +99,7 @@ class KeyValueEditor extends Component {
     this.props.onToggleDisable && this.props.onToggleDisable(pair);
 
     this._onChange(pairs, true);
-  }
+  };
 
   _focusNext (addIfValue = false) {
     if (this._focusedField === NAME) {
@@ -206,14 +202,12 @@ class KeyValueEditor extends Component {
     return (
       <ul key={pairs.length} className={classnames('key-value-editor', 'wide', className)}>
         {pairs.map((pair, i) => (
-          <li key={`${i}.pair`}
-              className={classnames(
-                'key-value-editor__row',
-                {'key-value-editor__row--disabled': pair.disabled}
-              )}>
+          <li key={`${i}.pair`} className={classnames(
+            'key-value-editor__row',
+            {'key-value-editor__row--disabled': pair.disabled}
+          )}>
             <div className="form-control form-control--underlined form-control--wide">
               <OneLineEditor
-                key="name"
                 ref={n => this._nameInputs[i] = n}
                 placeholder={this.props.namePlaceholder || 'Name'}
                 defaultValue={pair.name}
@@ -280,19 +274,20 @@ class KeyValueEditor extends Component {
                 </Dropdown>
               ) : null}
 
-            <button onClick={e => this._togglePair(i)}
+            <Button onClick={this._togglePair} value={i}
                     title={pair.disabled ? 'Enable item' : 'Disable item'}>
               {pair.disabled ?
                 <i className="fa fa-square-o"/> :
                 <i className="fa fa-check-square-o"/>
               }
-            </button>
+            </Button>
 
             <PromptButton key={Math.random()}
                           tabIndex="-1"
                           confirmMessage=" "
                           addIcon={true}
-                          onClick={e => this._deletePair(i)}
+                          onClick={this._deletePair}
+                          value={i}
                           title="Delete item">
               <i className="fa fa-trash-o"></i>
             </PromptButton>

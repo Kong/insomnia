@@ -1,10 +1,9 @@
 import React, {PropTypes, Component} from 'react';
 import Editor from '../base/editor/Editor';
+import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 class EnvironmentEditor extends Component {
-  _handleChange = () => {
-    this.props.didChange();
-  };
+  _handleChange = () => this.props.didChange();
 
   _setEditorRef = n => this._editor = n;
 
@@ -36,6 +35,7 @@ class EnvironmentEditor extends Component {
         fontSize={editorFontSize}
         keyMap={editorKeyMap}
         onChange={this._handleChange}
+        debounceMillis={DEBOUNCE_MILLIS * 6}
         value={JSON.stringify(environment)}
         autoPrettify={true}
         render={render}

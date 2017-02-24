@@ -54,6 +54,7 @@ import {trackEvent} from '../../../../analytics/index';
 // Make jsonlint available to the jsonlint plugin
 import {parser as jsonlint} from 'jsonlint';
 import {prettifyJson} from '../../../../common/prettify';
+import {DEBOUNCE_MILLIS} from '../../../../common/constants';
 global.jsonlint = jsonlint;
 
 
@@ -146,7 +147,7 @@ class Editor extends Component {
 
     // Set default listeners
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged));
+    this.codeMirror.on('changes', this._debounce(this._codemirrorValueChanged));
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
@@ -247,6 +248,12 @@ class Editor extends Component {
     }
   };
 
+  _debounce (fn) {
+    const {debounceMillis} = this.props;
+    const ms = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
+    return misc.debounce(fn, ms);
+  }
+
   _isJSON (mode) {
     if (!mode) {
       return false;
@@ -329,14 +336,12 @@ class Editor extends Component {
       hideScrollbars,
     } = this.props;
 
-    const normalizedMode = mode ? mode.split(';')[0] : 'text/plain';
-
     let options = {
       readOnly,
       placeholder: placeholder || '',
       mode: {
         name: 'master',
-        baseMode: normalizedMode,
+        baseMode: this._normalizeMode(mode),
       },
       tabIndex: typeof tabIndex === 'number' ? tabIndex : 0,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
@@ -368,6 +373,18 @@ class Editor extends Component {
     // this.codeMirror.addOverlay(this._nunjucksOverlay());
     this.codeMirror.addOverlay(this._clickableOverlay());
   }
+
+  _normalizeMode (mode) {
+    const mimeType = mode ? mode.split(';')[0] : 'text/plain';
+
+    if (this._isJSON(mimeType)) {
+      return 'application/json';
+    } else if (this._isXML(mimeType)) {
+      return 'application/xml';
+    } else {
+      return mimeType;
+    }
+  };
 
   _codemirrorKeyDown = (doc, e) => {
     // Use default tab behaviour if we're told
@@ -522,7 +539,9 @@ class Editor extends Component {
             const html = [
               '<div class="wide hide-scrollbars scrollable">',
               '<input type="text" name="template"/>',
-              `<div>${element.title}</div>`,
+              element.title ?
+                `<span class="result">${element.title}</span>` :
+                '<span class="result super-faint italic">n/a</span>',
               '</div>',
             ].join(' ');
 
@@ -807,6 +826,7 @@ Editor.propTypes = {
   readOnly: PropTypes.bool,
   filter: PropTypes.string,
   singleLine: PropTypes.bool,
+  debounceMillis: PropTypes.number,
 };
 
 export default Editor;

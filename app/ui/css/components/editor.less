@@ -44,7 +44,10 @@
       flex-wrap: nowrap;
       padding: 0;
       margin: 0;
-      font-size: 0.9em;
+
+      & {
+        font-size: 0.95em;
+      }
     }
 
     .nunjucks-widget {
@@ -123,7 +126,7 @@
   }
 
   .CodeMirror-placeholder {
-    color: @hl-xl;
+    color: @hl-lg;
   }
 
   .CodeMirror-lint-marker-error {
@@ -173,12 +176,14 @@
   white-space: nowrap;
 
   input {
+    font-family: @font-monospace !important;
     border: 0 !important;
     height: 1em !important;
     padding: 0 !important;
     display: block;
     width: 100% !important;
     color: var(--color-font);
+    min-height: 1.5em;
   }
 
   * {
@@ -351,7 +356,7 @@
 
   .nunjucks-widget {
     font-family: @font-monospace !important;
-    padding: 0.15em 0.5em;
+    padding: 0.13em 0.5em;
     box-sizing: border-box;
     margin: 0 0.1em;
     position: relative;
