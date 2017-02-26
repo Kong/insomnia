@@ -93,8 +93,16 @@ class RequestSwitcherModal extends Component {
     if (searchString) {
       matchedRequests = matchedRequests.filter(r => {
         const name = r.name.toLowerCase();
+        const id = r._id.toLowerCase();
         const toMatch = searchString.toLowerCase();
-        return name.indexOf(toMatch) !== -1
+
+        // Match substring of name
+        const matchesName = name.indexOf(toMatch) >= 0;
+
+        // Match exact Id
+        const matchesId = id === toMatch;
+
+        return matchesName || matchesId;
       });
     }
 
@@ -120,7 +128,7 @@ class RequestSwitcherModal extends Component {
       .filter(w => {
         const name = w.name.toLowerCase();
         const toMatch = searchString.toLowerCase();
-        return name.indexOf(toMatch) !== -1
+        return name.indexOf(toMatch) !== -1;
       });
 
     const activeIndex = searchString ? 0 : -1;
