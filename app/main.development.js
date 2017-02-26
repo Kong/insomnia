@@ -23,9 +23,9 @@ const ravenClient = Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentr
   logger: 'electron.main'
 });
 
-// if (!IS_DEV) {
+if (!IS_DEV) {
   ravenClient.install();
-// }
+}
 
 const {app, dialog, shell, ipcMain, autoUpdater, Menu, BrowserWindow, webContents} = electron;
 const {version: appVersion, productName: appName} = packageJSON;
