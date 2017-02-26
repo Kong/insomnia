@@ -1,5 +1,5 @@
 import React from 'react';
-import {render} from 'react-dom';
+import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import {Tabs} from 'react-tabs';
 import App from './containers/App';
@@ -23,7 +23,7 @@ Tabs.setUseDefaultStyles(false);
   const store = await initStore();
 
   // Actually render the app
-  render(
+  ReactDOM.render(
     <Provider store={store}><App /></Provider>,
     document.getElementById('root')
   );

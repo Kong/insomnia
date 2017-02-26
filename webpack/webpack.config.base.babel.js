@@ -25,7 +25,7 @@ export default {
         use: [
           'style-loader',
           {loader: 'css-loader', options: {importLoaders: 1}},
-          {loader: 'less-loader', options: {strictMath: true, noIeCompat: true}},
+          {loader: 'less-loader', options: {noIeCompat: true}},
         ],
       },
       {
