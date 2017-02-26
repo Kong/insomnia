@@ -6,34 +6,24 @@
 
 const jsbn = require('jsbn');
 
-module.exports = function (options) {
-  const forge = require('../../node_modules/node-forge/js/forge')(options);
+const forge = require('../../node_modules/node-forge/lib/index');
 
-  forge.jsbn = jsbn;
-
-  forge.util = {
-    hexToBytes: forge.hexToBytes,
-    bytesToHex: forge.bytesToHex,
-    createBuffer (text) {
-      return new Buffer(text);
-    }
-  };
-
-  forge.pkcs5 = {
+module.exports = {
+  jsbn: forge.jsbn,
+  util: forge.util,
+  pkcs5: {
     pbkdf2 () {
 
     }
-  };
-
-  forge.md = {
+  },
+  md: {
     sha256: {
       create () {
         return 'TODO'
       }
     }
-  };
-
-  forge.rsa = {
+  },
+  rsa: {
     setPublicKey() {
       return {
         encrypt (str) {
@@ -48,9 +38,8 @@ module.exports = function (options) {
         }
       }
     }
-  };
-
-  forge.random = {
+  },
+  random: {
     getBytesSync(n) {
       let s = '';
       for (let i = 0; i < n; i++) {
@@ -58,9 +47,8 @@ module.exports = function (options) {
       }
       return s;
     }
-  };
-
-  forge.pki = {
+  },
+  pki: {
     rsa: {
       generateKeyPair() {
         return {
@@ -81,9 +69,8 @@ module.exports = function (options) {
         }
       }
     }
-  };
-
-  forge.cipher = {
+  },
+  cipher: {
     createCipher(alg, key) {
       return {
         start(config) {
@@ -111,8 +98,5 @@ module.exports = function (options) {
         }
       };
     }
-  };
-
-  return forge;
-}
-;
+  }
+};

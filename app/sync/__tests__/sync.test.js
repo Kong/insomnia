@@ -400,7 +400,7 @@ describe('Integration tests for creating Resources and pushing', () => {
 
 function _decryptResource (resource) {
   const message = JSON.parse(resource.encContent);
-  const fakeKey = 'aaaaa';
+  const fakeKey = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
   const docJSON = crypt.decryptAES(fakeKey, message);
   return JSON.parse(docJSON);
 }
