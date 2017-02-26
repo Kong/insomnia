@@ -2,6 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptModal from '../modals/PromptModal';
+import CopyButton from '../base/CopyButton';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
@@ -69,20 +70,23 @@ class RequestActionsDropdown extends Component {
           <i className="fa fa-caret-down"></i>
         </DropdownButton>
         <DropdownItem onClick={this._handleDuplicate}>
-          <i className="fa fa-copy"></i> Duplicate
-          <DropdownHint char="D"></DropdownHint>
+          <i className="fa fa-copy"/> Duplicate
+          <DropdownHint char="D"/>
         </DropdownItem>
         <DropdownItem onClick={this._handlePromptUpdateName}>
-          <i className="fa fa-edit"></i> Rename
+          <i className="fa fa-edit"/> Rename
         </DropdownItem>
         <DropdownItem onClick={this._handleGenerateCode}>
-          <i className="fa fa-code"></i> Generate Code
+          <i className="fa fa-code"/> Generate Code
+        </DropdownItem>
+        <DropdownItem buttonClass={CopyButton} content={request._id} stayOpenAfterClick={true}>
+          <i className="fa fa-copy"/> Copy Id
         </DropdownItem>
         <DropdownItem onClick={this._handleAdvancedSend}>
-          <i className="fa fa-refresh"></i> Advanced Sending
+          <i className="fa fa-refresh"/> Advanced Sending
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon={true}>
-          <i className="fa fa-trash-o"></i> Delete
+          <i className="fa fa-trash-o"/> Delete
         </DropdownItem>
       </Dropdown>
     )

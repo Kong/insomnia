@@ -72,7 +72,6 @@ const BASE_CODEMIRROR_OPTIONS = {
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,
-  tabIndex: 0,
   dragDrop: true,
   viewportMargin: 30, // default 10
   selectionPointer: 'default',
@@ -327,7 +326,6 @@ class Editor extends Component {
     const {
       readOnly,
       mode,
-      tabIndex,
       hideLineNumbers,
       keyMap,
       lineWrapping,
@@ -343,7 +341,6 @@ class Editor extends Component {
         name: 'master',
         baseMode: this._normalizeMode(mode),
       },
-      tabIndex: typeof tabIndex === 'number' ? tabIndex : 0,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       lineNumbers: !hideLineNumbers,
       lineWrapping: lineWrapping,
@@ -587,7 +584,7 @@ class Editor extends Component {
   static async _updateElementText (render, el, text, preview = false) {
     try {
       const str = text.replace(/\\/g, '');
-      const tagMatch = str.match(/{% *(\w+).*%}/);
+      const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
       const cleanedStr = str
         .replace(/^{%/, '')
         .replace(/%}$/, '')
@@ -605,7 +602,7 @@ class Editor extends Component {
         const cleaned = cleanedStr.replace(tag, '').trim();
         innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
 
-        if (['JSONPath', 'uuid', 'timestamp', 'now'].includes(tag)) {
+        if (['response', 'res', 'uuid', 'timestamp', 'now'].includes(tag)) {
           // Try rendering these so we can show errors if needed
           const v = await render(str);
           el.title = v;

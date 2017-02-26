@@ -73,9 +73,9 @@ class App extends Component {
         meta: true,
         shift: false,
         key: KEY_ENTER,
-        callback: () => {
+        callback: async e => {
           const {activeRequest, activeEnvironment} = this.props;
-          this._handleSendRequestWithEnvironment(
+          await this._handleSendRequestWithEnvironment(
             activeRequest ? activeRequest._id : 'n/a',
             activeEnvironment ? activeEnvironment._id : 'n/a',
           );
@@ -427,9 +427,9 @@ class App extends Component {
     }
   };
 
-  _handleToggleSidebar = () => {
+  _handleToggleSidebar = async () => {
     const sidebarHidden = !this.props.sidebarHidden;
-    this._handleSetSidebarHidden(sidebarHidden);
+    await this._handleSetSidebarHidden(sidebarHidden);
     trackEvent('Sidebar', 'Toggle Visibility', sidebarHidden ? 'Hide' : 'Show');
   };
 

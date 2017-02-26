@@ -6,6 +6,7 @@ class CopyButton extends Component {
 
   _handleClick = e => {
     e.preventDefault();
+    e.stopPropagation();
 
     clipboard.writeText(this.props.content);
 
@@ -21,14 +22,14 @@ class CopyButton extends Component {
   }
 
   render () {
-    const {content, ...other} = this.props;
+    const {content, children, ...other} = this.props;
     const {showConfirmation} = this.state;
 
     return (
-      <button onClick={this._handleClick} {...other}>
+      <button {...other} onClick={this._handleClick}>
         {showConfirmation ?
-          <span>Copied <i className="fa fa-check-circle-o"></i></span> :
-          'Copy to Clipboard'
+          <span>Copied <i className="fa fa-check-circle-o"/></span> :
+          (children || 'Copy to Clipboard')
         }
       </button>
     )

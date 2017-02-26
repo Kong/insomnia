@@ -374,8 +374,8 @@
       content: " ";
       z-index: -1;
       border-radius: 0.2em;
-      border-bottom: 1px dotted transparent;
       box-sizing: border-box;
+      box-shadow: inset 0 0 0.2em rgba(0, 0, 0, 0.3);
     }
 
     label {
@@ -403,10 +403,6 @@
     &[data-active="on"],
     &:hover {
       background: rgba(255, 255, 255, 0.1);
-    }
-
-    &[data-active="on"]::after {
-      border-color: inherit;
     }
 
     &[data-error="on"] {
