@@ -22,7 +22,6 @@ cache:
   - '%APPDATA%\npm-cache'
   - '%USERPROFILE%\.electron'
   - '%LOCALAPPDATA%\Yarn'
-  - 'node_modules'
 
 #---------------------------------#
 #       tests configuration       #
