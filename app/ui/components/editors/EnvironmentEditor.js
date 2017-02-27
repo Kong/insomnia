@@ -1,10 +1,9 @@
 import React, {PropTypes, Component} from 'react';
-import Editor from '../base/Editor';
+import Editor from '../codemirror/Editor';
+import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 class EnvironmentEditor extends Component {
-  _handleChange = () => {
-    this.props.didChange();
-  };
+  _handleChange = () => this.props.didChange();
 
   _setEditorRef = n => this._editor = n;
 
@@ -26,6 +25,7 @@ class EnvironmentEditor extends Component {
       environment,
       editorFontSize,
       editorKeyMap,
+      render,
       lineWrapping,
       ...props
     } = this.props;
@@ -37,8 +37,10 @@ class EnvironmentEditor extends Component {
         lineWrapping={lineWrapping}
         keyMap={editorKeyMap}
         onChange={this._handleChange}
+        debounceMillis={DEBOUNCE_MILLIS * 6}
         value={JSON.stringify(environment)}
         autoPrettify={true}
+        render={render}
         mode="application/json"
         {...props}
       />
@@ -51,6 +53,7 @@ EnvironmentEditor.propTypes = {
   didChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
+  render: PropTypes.func.isRequired,
   lineWrapping: PropTypes.bool.isRequired,
 };
 

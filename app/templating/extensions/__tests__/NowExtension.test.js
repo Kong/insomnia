@@ -7,6 +7,17 @@ function assertTemplate (txt, expected) {
   }
 }
 
+function assertTemplateFails (txt, expected) {
+  return async function () {
+    try {
+      await templating.render(txt);
+      fail(`Render should have thrown ${expected}`);
+    } catch (err) {
+      expect(err.message).toBe(expected);
+    }
+  }
+}
+
 const isoRe = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
 const secondsRe = /^\d{10}$/;
 const millisRe = /^\d{13}$/;
@@ -19,5 +30,5 @@ describe('NowExtension', () => {
   it('renders unix', assertTemplate('{% now "unix" %}', secondsRe));
   it('renders millis', assertTemplate('{% now "millis" %}', millisRe));
   it('renders ms', assertTemplate('{% now "ms" %}', millisRe));
-  it('renders default fallback', assertTemplate('{% now "foo" %}', isoRe));
+  it('fails on other', assertTemplateFails('{% now "foo" %}', 'Invalid date type "foo"'));
 });

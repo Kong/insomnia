@@ -1,7 +1,12 @@
 import React, {PureComponent, PropTypes} from 'react';
+import contextMenu from 'electron-context-menu';
 
 class ResponseWebview extends PureComponent {
-  _handleSetWebviewRef = n => this._webview = n;
+  _handleSetWebviewRef = n => {
+    this._webview = n;
+    contextMenu({window: this._webview});
+  };
+
   _handleDOMReady = () => {
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
     this._setBody();

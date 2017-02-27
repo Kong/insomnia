@@ -2,6 +2,7 @@ import React, {PropTypes, Component} from 'react';
 import classnames from 'classnames';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/PromptButton';
+import Button from '../base/Button';
 import Link from '../base/Link';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Editable from '../base/Editable';
@@ -22,15 +23,17 @@ class WorkspaceEnvironmentsEditModal extends Component {
     forceRefreshKey: 0,
   };
 
-  show (workspace) {
+  _hide = () => this.modal.hide();
+
+  async show (workspace) {
     this.modal.show();
-    this._load(workspace);
+    await this._load(workspace);
     trackEvent('Environment Editor', 'Show');
   }
 
-  toggle (workspace) {
+  async toggle (workspace) {
     this.modal.toggle();
-    this._load(workspace);
+    await this._load(workspace);
   }
 
   async _load (workspace, environmentToActivate = null) {
@@ -71,19 +74,24 @@ class WorkspaceEnvironmentsEditModal extends Component {
     );
   };
 
-  _handleShowEnvironment (environment) {
+  _handleShowEnvironment = async environment => {
     // Don't allow switching if the current one has errors
     if (!this._envEditor.isValid()) {
       return;
     }
 
-    const {workspace} = this.state;
-    this._load(workspace, environment);
-    trackEvent('Environment Editor', 'Show Environment');
-  }
+    if (environment === this._getActiveEnvironment()) {
+      return;
+    }
 
-  async _handleDeleteEnvironment (environment) {
+    const {workspace} = this.state;
+    await this._load(workspace, environment);
+    trackEvent('Environment Editor', 'Show Environment');
+  };
+
+  _handleDeleteEnvironment = async () => {
     const {rootEnvironment, workspace} = this.state;
+    const environment = this._getActiveEnvironment();
 
     // Don't delete the root environment
     if (environment === rootEnvironment) {
@@ -93,23 +101,23 @@ class WorkspaceEnvironmentsEditModal extends Component {
     // Delete the current one, then activate the root environment
     await models.environment.remove(environment);
 
-    this._load(workspace, rootEnvironment);
+    await this._load(workspace, rootEnvironment);
     trackEvent('Environment', 'Delete');
-  }
+  };
 
-  async _handleChangeEnvironmentName (environment, name) {
+  _handleChangeEnvironmentName = async (environment, name) => {
     const {workspace} = this.state;
 
     // NOTE: Fetch the environment first because it might not be up to date.
     // For example, editing the body updates silently.
     const realEnvironment = await models.environment.getById(environment._id);
     await models.environment.update(realEnvironment, {name});
-    this._load(workspace);
+    await this._load(workspace);
 
     trackEvent('Environment', 'Rename');
-  }
+  };
 
-  _didChange () {
+  _didChange = () => {
     const isValid = this._envEditor.isValid();
 
     if (this.state.isValid === isValid) {
@@ -117,7 +125,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     }
 
     this._saveChanges();
-  }
+  };
 
   _getActiveEnvironment () {
     const {activeEnvironmentId, subEnvironments, rootEnvironment} = this.state;
@@ -142,7 +150,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
   }
 
   render () {
-    const {editorFontSize, editorKeyMap, lineWrapping} = this.props;
+    const {editorFontSize, editorKeyMap, lineWrapping, render} = this.props;
     const {subEnvironments, rootEnvironment, isValid, forceRefreshKey} = this.state;
     const activeEnvironment = this._getActiveEnvironment();
 
@@ -151,12 +159,13 @@ class WorkspaceEnvironmentsEditModal extends Component {
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll={true} className="env-modal">
           <div className="env-modal__sidebar">
-            <li onClick={() => this._handleShowEnvironment(rootEnvironment)}
-                className={classnames(
-                  'env-modal__sidebar-root-item',
-                  {'env-modal__sidebar-item--active': activeEnvironment === rootEnvironment}
-                )}>
-              <button>{rootEnvironment ? rootEnvironment.name : ''}</button>
+            <li className={classnames(
+              'env-modal__sidebar-root-item',
+              {'env-modal__sidebar-item--active': activeEnvironment === rootEnvironment}
+            )}>
+              <Button onClick={this._handleShowEnvironment} value={rootEnvironment}>
+                {rootEnvironment ? rootEnvironment.name : ''}
+              </Button>
             </li>
             <div className="pad env-modal__sidebar-heading">
               <h3 className="no-margin">Sub Environments</h3>
@@ -183,7 +192,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
 
                 return (
                   <li key={environment._id} className={classes}>
-                    <button onClick={() => this._handleShowEnvironment(environment)}>
+                    <Button onClick={this._handleShowEnvironment} value={environment}>
                       {environment.isPrivate ? (
                           <i className="fa fa-eye-slash faint"
                              title="Environment will not be exported or synced"
@@ -197,7 +206,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
                         onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
                         value={environment.name}
                       />
-                    </button>
+                    </Button>
                   </li>
                 )
               })}
@@ -215,7 +224,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
               {rootEnvironment !== activeEnvironment ? (
                   <PromptButton className="btn btn--clicky"
                                 confirmMessage="Confirm"
-                                onClick={() => this._handleDeleteEnvironment(activeEnvironment)}>
+                                onClick={this._handleDeleteEnvironment}>
                     <i className="fa fa-trash-o"/> Delete
                   </PromptButton>
                 ) : null}
@@ -228,8 +237,9 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 ref={n => this._envEditor = n}
                 key={`${forceRefreshKey}::${(activeEnvironment ? activeEnvironment._id : 'n/a')}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
-                didChange={this._didChange.bind(this)}
+                didChange={this._didChange}
                 lightTheme={true}
+                render={render}
               />
             </div>
           </div>
@@ -241,8 +251,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
               Nunjucks Templating
             </Link> in your requests
           </div>
-          <button className="btn" disabled={!isValid}
-                  onClick={e => this.modal.hide()}>
+          <button className="btn" disabled={!isValid} onClick={this._hide}>
             Done
           </button>
         </ModalFooter>
@@ -255,6 +264,7 @@ WorkspaceEnvironmentsEditModal.propTypes = {
   onChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
+  render: PropTypes.func.isRequired,
   lineWrapping: PropTypes.bool.isRequired,
 };
 

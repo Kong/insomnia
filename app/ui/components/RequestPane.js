@@ -155,6 +155,7 @@ class RequestPane extends PureComponent {
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
             handleSendAndDownload={handleSendAndDownload}
+            handleRender={handleRender}
             url={request.url}
           />
         </header>
@@ -207,6 +208,7 @@ class RequestPane extends PureComponent {
                 showPasswords={showPasswords}
                 authentication={request.authentication}
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
+                handleRender={handleRender}
                 onChange={updateRequestAuthentication}
               />
               <div className="pad pull-right">
@@ -245,6 +247,7 @@ class RequestPane extends PureComponent {
                   onCreate={this._trackQueryCreate}
                   onDelete={this._trackQueryDelete}
                   pairs={request.parameters}
+                  handleRender={handleRender}
                   onChange={updateRequestParameters}
                 />
               </div>
@@ -263,6 +266,7 @@ class RequestPane extends PureComponent {
             <RequestHeadersEditor
               key={uniqueKey}
               headers={request.headers}
+              handleRender={handleRender}
               onChange={updateRequestHeaders}
               bulk={useBulkHeaderEditor}
             />

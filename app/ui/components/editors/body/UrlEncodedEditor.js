@@ -10,7 +10,7 @@ class UrlEncodedEditor extends Component {
   _handleTrackDelete = () => trackEvent('Url Encoded Editor', 'Delete');
 
   render () {
-    const {parameters, onChange} = this.props;
+    const {parameters, onChange, handleRender} = this.props;
 
     return (
       <div className="scrollable-container tall wide">
@@ -19,6 +19,7 @@ class UrlEncodedEditor extends Component {
             namePlaceholder="name"
             valuePlaceholder="value"
             onChange={onChange}
+            handleRender={handleRender}
             onToggleDisable={this._handleTrackToggle}
             onCreate={this._handleTrackCreate}
             onDelete={this._handleTrackDelete}
@@ -33,7 +34,8 @@ class UrlEncodedEditor extends Component {
 UrlEncodedEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
-  parameters: PropTypes.arrayOf(PropTypes.object).isRequired
+  parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
+  handleRender: PropTypes.func.isRequired,
 };
 
 export default UrlEncodedEditor;

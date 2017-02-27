@@ -45,6 +45,7 @@ class BodyEditor extends PureComponent {
         <UrlEncodedEditor
           key={request._id}
           onChange={this._handleFormUrlEncodedChange}
+          handleRender={handleRender}
           parameters={request.body.params || []}
         />
       )
@@ -53,6 +54,7 @@ class BodyEditor extends PureComponent {
         <FormEditor
           key={request._id}
           onChange={this._handleFormChange}
+          handleRender={handleRender}
           parameters={request.body.params || []}
         />
       )

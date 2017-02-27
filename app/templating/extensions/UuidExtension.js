@@ -7,21 +7,22 @@ export default class UuidExtension extends BaseExtension {
     this.tags = ['uuid'];
   }
 
-  run (context, version) {
-    if (typeof version === 'number') {
-      version += '';
-    } else if (typeof version === 'string') {
-      version = version.toLowerCase();
+  run (context, uuidType = 'v4') {
+    if (typeof uuidType === 'number') {
+      uuidType += '';
+    } else if (typeof uuidType === 'string') {
+      uuidType = uuidType.toLowerCase();
     }
 
-    switch (version) {
+    switch (uuidType) {
       case '1':
       case 'v1':
         return uuid.v1();
       case '4':
       case 'v4':
-      default:
         return uuid.v4();
+      default:
+        throw new Error(`Invalid UUID type "${uuidType}"`);
     }
   }
 }

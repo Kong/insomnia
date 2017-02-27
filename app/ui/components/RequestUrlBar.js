@@ -3,11 +3,11 @@ import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
 import {trackEvent} from '../../analytics';
+import {showModal} from './modals/index';
 import MethodDropdown from './dropdowns/MethodDropdown';
 import PromptModal from './modals/PromptModal';
-import {showModal} from './modals/index';
 import PromptButton from './base/PromptButton';
-
+import OneLineEditor from './codemirror/OneLineEditor';
 
 class RequestUrlBar extends Component {
   state = {
@@ -38,9 +38,7 @@ class RequestUrlBar extends Component {
     trackEvent('Request', 'Method Change', method);
   };
 
-  _handleUrlChange = e => {
-    const url = e.target.value;
-
+  _handleUrlChange = url => {
     clearTimeout(this._urlChangeDebounceTimeout);
     this._urlChangeDebounceTimeout = setTimeout(async () => {
 
@@ -267,17 +265,18 @@ class RequestUrlBar extends Component {
   }
 
   render () {
-    const {url, method} = this.props;
+    const {url, method, handleRender} = this.props;
     return (
       <div className="urlbar">
         <MethodDropdown onChange={this._handleMethodChange} method={method}>
           {method} <i className="fa fa-caret-down"/>
         </MethodDropdown>
         <form onSubmit={this._handleFormSubmit}>
-          <input
+          <OneLineEditor
             ref={n => this._input = n}
             onPaste={this._handleUrlPaste}
             type="text"
+            render={handleRender}
             placeholder="https://api.myproduct.com/v1/users"
             defaultValue={url}
             onChange={this._handleUrlChange}/>
@@ -291,6 +290,7 @@ class RequestUrlBar extends Component {
 RequestUrlBar.propTypes = {
   handleSend: PropTypes.func.isRequired,
   handleSendAndDownload: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired,
   handleImport: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,

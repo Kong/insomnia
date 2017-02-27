@@ -6,14 +6,21 @@ import * as extensions from './extensions';
  * @param {String} text - Nunjucks template in text form
  * @param {Object} [config] - Config options for rendering
  * @param {Object} [config.context] - Context to render with
+ * @param {Object} [config.strict] - Fail on undefined values
  */
 export async function render (text, config = {}) {
   const context = config.context || {};
+  const strict = config.strict;
 
   return new Promise((resolve, reject) => {
-    _getEnv().renderString(text, context, (err, result) => {
+    const env = getNunjucksEnvironment(strict);
+    env.renderString(text, context, (err, result) => {
       if (err) {
-        const sanitizedMsg = err.message.replace(/\(unknown path\)\s*/, '');
+        const sanitizedMsg = err.message
+          .replace(/\(unknown path\)\s*/, '')
+          .replace(/^Error: */, '')
+          .replace('attempted to output null or undefined value', 'variable not defined');
+
         reject(new Error(sanitizedMsg));
       } else {
         resolve(result);
@@ -22,12 +29,16 @@ export async function render (text, config = {}) {
   });
 }
 
+function getNunjucksEnvironment (strict = false) {
+  return strict ? _getStrictEnv() : _getNormalEnv();
+}
+
 // ~~~~~~~~~~~~~ //
 // Private Stuff //
 // ~~~~~~~~~~~~~ //
 
 let _nunjucksEnvironment = null;
-function _getEnv () {
+function _getNormalEnv () {
   if (!_nunjucksEnvironment) {
     _nunjucksEnvironment = nunjucks.configure({
       autoescape: false,
@@ -39,4 +50,20 @@ function _getEnv () {
   }
 
   return _nunjucksEnvironment;
+}
+
+let _nunjucksStrictEnvironment = null;
+function _getStrictEnv () {
+  if (!_nunjucksStrictEnvironment) {
+    _nunjucksStrictEnvironment = nunjucks.configure({
+      autoescape: false,
+      throwOnUndefined: true,
+    });
+
+    for (const Cls of extensions.all()) {
+      _nunjucksStrictEnvironment.addExtension(Cls.name, new Cls());
+    }
+  }
+
+  return _nunjucksStrictEnvironment;
 }

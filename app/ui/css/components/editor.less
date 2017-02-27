@@ -1,4 +1,5 @@
 @import '../constants/colors';
+@import '../constants/animations';
 @import '../constants/dimensions';
 @import '../constants/fonts';
 
@@ -9,6 +10,51 @@
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
+  font-size: 1rem;
+
+  &.editor--single-line {
+    &, * {
+      font-family: @font-default !important;
+    }
+
+    .CodeMirror,
+    .CodeMirror-lines {
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+    }
+
+    .CodeMirror-activeline-background,
+    .CodeMirror-gutters {
+      display: none !important;
+    }
+
+    .CodeMirror-scroll {
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .CodeMirror-dialog {
+      opacity: 1;
+      border: 0;
+      height: 100%;
+      animation: fadeIn 500ms;
+      flex-wrap: nowrap;
+      padding: 0;
+      margin: 0;
+
+      & {
+        font-size: 0.95em;
+      }
+    }
+
+    .nunjucks-widget {
+      padding-top: 0.2em;
+      padding-bottom: 0.2em;
+    }
+  }
 
   .editor__container {
     height: 100%;
@@ -30,6 +76,7 @@
     align-items: center;
     border-top: 1px solid @hl-md;
     height: @line-height-xs;
+    font-size: @font-size-sm;
 
     input {
       font-family: @font-monospace;
@@ -49,10 +96,6 @@
     height: 100% !important;
     width: 100%;
     box-sizing: border-box;
-    padding-top: @padding-sm;
-  }
-
-  .CodeMirror * {
     font-family: @font-monospace;
   }
 
@@ -84,7 +127,7 @@
   }
 
   .CodeMirror-placeholder {
-    color: @hl-xl;
+    color: @hl-lg;
   }
 
   .CodeMirror-lint-marker-error {
@@ -103,20 +146,58 @@
     }
   }
 
-  &.editor--readonly .CodeMirror-cursors,
-  &.editor--readonly .CodeMirror-activeline-background {
-    opacity: 0;
+  .CodeMirror-activeline-gutter,
+  .CodeMirror-activeline-background {
+    background-color: transparent;
+  }
+
+  &:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-gutter,
+  &:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-background {
+    background-color: var(--hl-xs);
+  }
+
+  &.editor--readonly .CodeMirror-cursors {
+    visibility: hidden;
   }
 }
 
 // Search dialog (and others)
 .CodeMirror-dialog {
   background: var(--color-bg);
-  color: var(--color-font);
-  border-color: @hl-md;
+  opacity: 0.95;
+  color: var(--hl);
+  border-color: var(--hl-md);
   box-sizing: border-box;
   width: 100%;
-  padding: @padding-sm 0 @padding-sm @padding-sm;
+  padding: @padding-sm @padding-xs @padding-xs @padding-xs;
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+
+  input {
+    font-family: @font-monospace !important;
+    border: 0 !important;
+    height: 1em !important;
+    padding: 0 !important;
+    display: block;
+    width: 100% !important;
+    color: var(--color-font);
+    min-height: 1.5em;
+  }
+
+  * {
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+  }
+
+  button {
+    color: var(--hl);
+    &:hover {
+      color: var(--color-font);
+    }
+  }
 }
 
 // Tooltip for errors
@@ -142,10 +223,10 @@
 /* Based on Sublime Text's Monokai theme */
 .CodeMirror {
   color: var(--color-font);
+  line-height: 1.4em;
 
-  div.CodeMirror-selected {
+  .CodeMirror-selected {
     background: var(--color-font);
-    border-radius: 2px;
     opacity: 0.2;
   }
 
@@ -255,12 +336,87 @@
     text-decoration: underline;
   }
 
-  .CodeMirror-activeline-background {
-    background: @hl-md;
+  .CodeMirror-matchingbracket {
+    color: inherit !important;
+    text-decoration: underline;
+    text-decoration-color: var(--color-notice);
+    box-sizing: border-box;
   }
 
-  .CodeMirror-matchingbracket {
-    text-decoration: underline;
-    color: inherit !important;
+  span.cm-nunjucks-variable {
+    color: var(--color-surprise);
+  }
+
+  span.cm-nunjucks-tag {
+    color: var(--color-info);
+  }
+
+  span.cm-nunjucks-comment {
+    color: var(--hl);
+  }
+
+  .nunjucks-widget {
+    font-family: @font-monospace !important;
+    padding: 0.13em 0.5em;
+    box-sizing: border-box;
+    margin: 0 0.1em;
+    position: relative;
+    font-size: 0.9em;
+    cursor: default;
+    white-space: nowrap;
+    text-shadow: 0 0 0.1em rgba(0, 0, 0, 0.4);
+
+    &::after {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      opacity: 0.7; // not so bright!
+      content: " ";
+      z-index: -1;
+      border-radius: 0.2em;
+      box-sizing: border-box;
+      box-shadow: inset 0 0 0.1em rgba(0, 0, 0, 0.4);
+    }
+
+    label {
+      padding: 0;
+      margin: 0;
+      display: inline;
+      font-style: italic;
+      font-size: 0.9em;
+    }
+
+    &.nunjucks-tag {
+      color: var(--color-font-info);
+      &::after {
+        background: var(--color-info);
+      }
+    }
+
+    &.nunjucks-variable {
+      color: var(--color-font-surprise);
+      &::after {
+        background: var(--color-surprise);
+      }
+    }
+
+    &[data-active="on"],
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &[data-error="on"] {
+      color: var(--color-font-danger);
+      &::after {
+        background: var(--color-danger);
+      }
+    }
+
+    &[data-ignore="on"]::after {
+      background: var(--hl-xl);
+      color: bar(--color-font);
+    }
   }
 }

@@ -15,15 +15,13 @@ environment:
 # Things to install after repo clone
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - npm install -g npm@latest > NUL
+  - npm install -g npm@latest > Nul
   - npm install > NUL
-#  - npm install -g yarn@latest > Nul
 
 cache:
-  - '%APPDATA%\npm-cache -> .cache.txt'
-  - '%USERPROFILE%\.electron -> .cache.txt'
-  - 'node_modules -> .cache.txt'
-#  - '%LOCALAPPDATA%\Yarn -> .cache.txt'
+  - '%APPDATA%\npm-cache'
+  - '%USERPROFILE%\.electron'
+  - 'node_modules'
 
 #---------------------------------#
 #       tests configuration       #

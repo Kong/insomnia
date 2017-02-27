@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 
 import KeyValueEditor from '../base/KeyValueEditor';
-import Editor from '../base/Editor';
+import Editor from '../codemirror/Editor';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestHeadersEditor extends Component {
@@ -62,7 +62,7 @@ class RequestHeadersEditor extends Component {
   }
 
   render () {
-    const {bulk, headers, onChange} = this.props;
+    const {bulk, headers, onChange, handleRender} = this.props;
 
     return bulk ? (
       <div className="tall">
@@ -78,6 +78,7 @@ class RequestHeadersEditor extends Component {
             namePlaceholder="My-Header"
             valuePlaceholder="Value"
             pairs={headers}
+            handleRender={handleRender}
             onToggleDisable={this._handleTrackToggle}
             onCreate={this._handleTrackCreate}
             onDelete={this._handleTrackDelete}
@@ -92,6 +93,7 @@ class RequestHeadersEditor extends Component {
 RequestHeadersEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   bulk: PropTypes.bool.isRequired,
+  handleRender: PropTypes.func.isRequired,
   headers: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired

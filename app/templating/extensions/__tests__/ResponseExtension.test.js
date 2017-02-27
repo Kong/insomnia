@@ -2,14 +2,14 @@ import * as templating from '../../index';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 
-describe('ResponseJsonPathExtension', async () => {
+describe('ResponseExtension', async () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
 
-  it('renders basic JSONPath query', async () => {
+  it('renders basic response "body", query', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({parentId: request._id, body: '{"foo": "bar"}'});
 
-    const result = await templating.render(`{% JSONPath "${request._id}", "$.foo" %}`);
+    const result = await templating.render(`{% response "body", "${request._id}", "$.foo" %}`);
 
     expect(result).toBe('bar');
   });
@@ -19,7 +19,7 @@ describe('ResponseJsonPathExtension', async () => {
     await models.response.create({parentId: request._id, body: '{"foo": "bar"'});
 
     try {
-      await templating.render(`{% JSONPath "${request._id}", "$.foo" %}`);
+      await templating.render(`{% response "body", "${request._id}", "$.foo" %}`);
       fail('JSON should have failed to parse');
     } catch (err) {
       expect(err.message).toContain('Invalid JSON: Unexpected end of JSON input');
@@ -30,7 +30,7 @@ describe('ResponseJsonPathExtension', async () => {
     const request = await models.request.create({parentId: 'foo'});
 
     try {
-      await templating.render(`{% JSONPath "${request._id}", "$.foo" %}`);
+      await templating.render(`{% response "body", "${request._id}", "$.foo" %}`);
       fail('JSON should have failed to parse');
     } catch (err) {
       expect(err.message).toContain('No responses for request');
@@ -41,7 +41,7 @@ describe('ResponseJsonPathExtension', async () => {
     await models.response.create({parentId: 'req_test', body: '{"foo": "bar"}'});
 
     try {
-      await templating.render(`{% JSONPath "req_test", "$.foo" %}`);
+      await templating.render(`{% response "body", "req_test", "$.foo" %}`);
       fail('JSON should have failed to parse')
     } catch (err) {
       expect(err.message).toContain('Could not find request req_test');
@@ -53,7 +53,7 @@ describe('ResponseJsonPathExtension', async () => {
     await models.response.create({parentId: request._id, body: '{"foo": "bar"}'});
 
     try {
-      await templating.render(`{% JSONPath "${request._id}", "$$" %}`);
+      await templating.render(`{% response "body", "${request._id}", "$$" %}`);
       fail('JSON should have failed to parse')
     } catch (err) {
       expect(err.message).toContain('Invalid JSONPath query: $$');
@@ -65,7 +65,7 @@ describe('ResponseJsonPathExtension', async () => {
     await models.response.create({parentId: request._id, body: '{"foo": "bar"}'});
 
     try {
-      await templating.render(`{% JSONPath "${request._id}", "$.missing" %}`);
+      await templating.render(`{% response "body", "${request._id}", "$.missing" %}`);
       fail('JSON should have failed to parse')
     } catch (err) {
       expect(err.message).toContain('Returned no results: $.missing');
@@ -77,7 +77,7 @@ describe('ResponseJsonPathExtension', async () => {
     await models.response.create({parentId: request._id, body: '{"array": [1,2,3]}'});
 
     try {
-      await templating.render(`{% JSONPath "${request._id}", "$.array.*" %}`);
+      await templating.render(`{% response "body", "${request._id}", "$.array.*" %}`);
       fail('JSON should have failed to parse')
     } catch (err) {
       expect(err.message).toContain('Returned more than one result: $.array.*');
