@@ -116,11 +116,13 @@ export async function exportJSON (parentDoc = null) {
   const docs = await db.withDescendants(parentDoc);
 
   data.resources = docs.filter(d => (
-    d.type === models.request.type ||
-    d.type === models.requestGroup.type ||
-    d.type === models.workspace.type ||
-    d.type === models.cookieJar.type ||
-    d.type === models.environment.type
+    !d.isPrivate && (
+      d.type === models.request.type ||
+      d.type === models.requestGroup.type ||
+      d.type === models.workspace.type ||
+      d.type === models.cookieJar.type ||
+      d.type === models.environment.type
+    )
   )).map(d => {
     if (d.type === models.workspace.type) {
       d._type = EXPORT_TYPE_WORKSPACE;
@@ -136,6 +138,7 @@ export async function exportJSON (parentDoc = null) {
 
     // Delete the things we don't want to export
     delete d.type;
+    delete d.isPrivate;
     return d;
   });
 

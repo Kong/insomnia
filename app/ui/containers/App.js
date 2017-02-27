@@ -4,9 +4,9 @@ import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import HTML5Backend from 'react-dnd-html5-backend';
 import {DragDropContext} from 'react-dnd';
 import {toggleModal, showModal} from '../components/modals';
+import HTML5Backend from 'react-dnd-html5-backend';
 import Wrapper from '../components/Wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import Toast from '../components/Toast';
@@ -166,7 +166,7 @@ class App extends Component {
     const {activeEnvironment, activeRequest} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
     const context = await render.getRenderContext(activeRequest, environmentId);
-    return render.render(text, context);
+    return await render.render(text, context);
   };
 
   _handleGenerateCodeForActiveRequest = () => {

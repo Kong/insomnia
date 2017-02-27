@@ -1,31 +1,57 @@
 image: Visual Studio 2015
 
-# Can't use this until we have no git dependencies
-#shallow_clone: true
+build: off
+deploy: off
 
+#---------------------------------#
+#    environment configuration    #
+#---------------------------------#
+
+shallow_clone: true
+platform: x64
 environment:
   nodejs_version: "6.5.0"
 
-platform: x64
-
+# Things to install after repo clone
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - npm config set msvs_version 2015
-  - npm install
+  - npm install -g yarn@latest > Nul
+  - yarn install > NUL
 
 cache:
   - '%APPDATA%\npm-cache'
   - '%USERPROFILE%\.electron'
+  - '%LOCALAPPDATA%\Yarn'
   - 'node_modules'
+
+#---------------------------------#
+#       tests configuration       #
+#---------------------------------#
 
 test_script:
   - node --version
-  - npm --version
-  - npm run test
+  - yarn --version
+  - yarn test
+
+#---------------------------------#
+#     deployment configuration    #
+#---------------------------------#
+
+#deploy:
+#  - provider: S3
+#    access_key_id:
+#      secure: ABcd==
+#    secret_access_key:
+#      secure: ABcd==
+#    bucket: my_bucket
+#    folder:
+#    artifact:
+#    set_public: false
+
+#---------------------------------#
+#         global handlers         #
+#---------------------------------#
 
 on_success:
-  - npm run build-n-package:win
+  - yarn run build-n-package:win
   - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
-
-build: off
-deploy: off

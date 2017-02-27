@@ -5,14 +5,12 @@ import mime from 'mime-types';
 import {basename as pathBasename} from 'path';
 import * as models from '../models';
 import * as querystring from './querystring';
-import {buildFromParams} from './querystring';
 import * as util from './misc.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
-import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, getSetCookieHeaders} from './misc';
+import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from './misc';
 import {getRenderedRequest} from './render';
 import fs from 'fs';
-import path from 'path';
 import * as db from './database';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
@@ -62,7 +60,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
   // Set the body
   if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    config.body = buildFromParams(renderedRequest.body.params || [], true);
+    config.body = querystring.buildFromParams(renderedRequest.body.params || [], true);
   } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
     const formData = {};
     for (const param of renderedRequest.body.params) {
@@ -253,7 +251,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
       // Build the body
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        const d = buildFromParams(renderedRequest.body.params || [], true);
+        const d = querystring.buildFromParams(renderedRequest.body.params || [], true);
         curl.setOpt(Curl.option.POSTFIELDS, d); // Send raw data
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const addParamFn = param => ((param.type === 'file' && param.fileName) ?
@@ -511,14 +509,11 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         return handleError(err, 'Failed to parse response headers');
       }
 
-      // NOTE: We only update jar if we get cookies
-      if (getSetCookieHeaders(headers).length) {
-        try {
-          const cookies = await cookiesFromJar(config.jar._jar);
-          await models.cookieJar.update(renderedRequest.cookieJar, {cookies});
-        } catch (err) {
-          return handleError(err, 'Failed to update cookie jar');
-        }
+      try {
+        const cookies = await cookiesFromJar(config.jar._jar);
+        await models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+      } catch (err) {
+        return handleError(err, 'Failed to update cookie jar');
       }
 
       let contentType = '';

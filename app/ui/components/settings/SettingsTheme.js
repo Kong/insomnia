@@ -2,15 +2,15 @@ import React, {Component, PropTypes} from 'react';
 import Button from '../base/Button';
 import Link from '../base/Link';
 
-import imgLight from '../../../static/themes/light.png';
-import imgDark from '../../../static/themes/dark.png';
-import imgDefault from '../../../static/themes/default.png';
-import imgSolarizedLight from '../../../static/themes/solarized-light.png';
-import imgSolarizedDark from '../../../static/themes/solarized-dark.png';
-import imgSolarized from '../../../static/themes/solarized.png';
-import imgRailscasts from '../../../static/themes/railscasts.png';
-import imgPurple from '../../../static/themes/purple.png';
-import imgMaterial from '../../../static/themes/material.png';
+import imgLight from '../../images/light.png';
+import imgDark from '../../images/dark.png';
+import imgDefault from '../../images/default.png';
+import imgSolarizedLight from '../../images/solarized-light.png';
+import imgSolarizedDark from '../../images/solarized-dark.png';
+import imgSolarized from '../../images/solarized.png';
+import imgRailscasts from '../../images/railscasts.png';
+import imgPurple from '../../images/purple.png';
+import imgMaterial from '../../images/material.png';
 import * as session from '../../../sync/session';
 
 const THEMES_PER_ROW = 3;
