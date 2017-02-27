@@ -26,6 +26,7 @@ class EnvironmentEditor extends Component {
       editorFontSize,
       editorKeyMap,
       render,
+      lineWrapping,
       ...props
     } = this.props;
 
@@ -33,6 +34,7 @@ class EnvironmentEditor extends Component {
       <Editor
         ref={this._setEditorRef}
         fontSize={editorFontSize}
+        lineWrapping={lineWrapping}
         keyMap={editorKeyMap}
         onChange={this._handleChange}
         debounceMillis={DEBOUNCE_MILLIS * 6}
@@ -52,6 +54,7 @@ EnvironmentEditor.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
+  lineWrapping: PropTypes.bool.isRequired,
 };
 
 export default EnvironmentEditor;
