@@ -207,7 +207,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           cookie.hostOnly ? 'TRUE' : 'FALSE',
           cookie.path,
           cookie.secure ? 'TRUE' : 'FALSE',
-          Math.round(cookie.expires.getTime() / 1000),
+          cookie.expires ? Math.round(cookie.expires.getTime() / 1000) : 0,
           cookie.name,
           cookie.value,
         ].join('\t'));

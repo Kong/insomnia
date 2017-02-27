@@ -15,7 +15,7 @@ environment:
 # Things to install after repo clone
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - npm install -g npm@latest
+  - npm install -g npm@latest > NUL
   - npm install > NUL
 #  - npm install -g yarn@latest > Nul
 
@@ -53,6 +53,6 @@ test_script:
 #         global handlers         #
 #---------------------------------#
 
-on_success:
-  - npm run build-n-package:win
-  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
+#on_success:
+#  - npm run build-n-package:win
+#  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
