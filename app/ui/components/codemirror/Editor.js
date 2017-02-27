@@ -165,7 +165,7 @@ class Editor extends Component {
     this.codeMirror.on('paste', this._codemirrorValueChanged);
 
     // Setup nunjucks listeners
-    if (!this.props.readOnly) {
+    if (this.props.render) {
       this.codeMirror.enableNunjucksTags(this.props.render);
     }
 

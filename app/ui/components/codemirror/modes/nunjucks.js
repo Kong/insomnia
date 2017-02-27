@@ -7,22 +7,48 @@ CodeMirror.defineMode('nunjucks', (config, parserConfig) => {
 });
 
 function _nunjucksMode () {
-  const regexVariable = /^{{[^}]+}}/;
-  const regexTag = /^{%[^%]+%}/;
-  const regexComment = /^{#[^#]+#}/;
+  const regexVariable = /^{{ ?([^ ]+) +[^}]* ?}}/;
+  const regexTag = /^{% ?([^ ]+) +[^%]* ?%}/;
+  const regexComment = /^{# ?[^#]+ ?#}/;
+  let ticker = 1;
 
   return {
-    token: function (stream, state) {
-      if (stream.match(regexVariable, true)) {
-        return 'nunjucks nunjucks-variable';
+    startState() {
+      return {inRaw: false};
+    },
+    token (stream, state) {
+      let m;
+
+      // This makes sure that adjacent tags still have unique types
+      ticker *= -1;
+
+      m = stream.match(regexTag, true);
+      if (m) {
+        const name = m[1];
+        if (state.inRaw && name === 'endraw') {
+          state.inRaw = false;
+        } else if (!state.inRaw && name === 'raw') {
+          state.inRaw = true;
+        } else if (state.inRaw) {
+          // Inside raw tag so do nothing
+          return null;
+        }
+
+        return 'nunjucks-tag ' + ticker;
       }
 
-      if (stream.match(regexTag, true)) {
-        return 'nunjucks nunjucks-tag';
+      if (!state.inRaw) {
+        m = stream.match(regexVariable, true);
+        if (m) {
+          return 'nunjucks-variable';
+        }
       }
 
-      if (stream.match(regexComment, true)) {
-        return 'nunjucks nunjucks-comment';
+      if (!state.inRaw) {
+        m = stream.match(regexComment, true);
+        if (m) {
+          return 'nunjucks-comment';
+        }
       }
 
       while (stream.next() != null) {

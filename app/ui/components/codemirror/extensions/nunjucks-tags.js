@@ -1,18 +1,30 @@
 import CodeMirror from 'codemirror';
-import * as misc from '../../../../common/misc';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
-  const render = _highlightNunjucksTags.bind(this, handleRender);
-  const renderCacheKey = Math.random() + '';
-  const renderString = text => render(text, true, renderCacheKey);
-  const debouncedRender = misc.debounce(renderString);
+  if (!handleRender) {
+    return;
+  }
 
-  this.on('changes', debouncedRender);
-  this.on('cursorActivity', debouncedRender);
-  this.on('viewportChange', debouncedRender);
+  const refreshFn = _highlightNunjucksTags.bind(this, handleRender);
+
+  let _renderTimeout = null;
+  const tryRefresh = async () => {
+    clearTimeout(_renderTimeout);
+    _renderTimeout = setTimeout(refreshFn, 200);
+  };
+
+  this.on('changes', tryRefresh);
+  this.on('cursorActivity', tryRefresh);
+  this.on('viewportChange', tryRefresh);
 });
 
-function _highlightNunjucksTags (renderString) {
+async function _highlightNunjucksTags (render) {
+  const renderCacheKey = Math.random() + '';
+  const renderString = text => render(text, true, renderCacheKey);
+
+  const activeMarks = [];
+  const doc = this.getDoc();
+
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
@@ -46,7 +58,7 @@ function _highlightNunjucksTags (renderString) {
     for (const tok of newTokens) {
       const start = {line: lineNo, ch: tok.start};
       const end = {line: lineNo, ch: tok.end};
-      const cursor = this.getDoc().getCursor();
+      const cursor = doc.getCursor();
       const isSameLine = cursor.line === lineNo;
       const isCursorInToken = isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
       const isFocused = this.hasFocus();
@@ -57,73 +69,86 @@ function _highlightNunjucksTags (renderString) {
       }
 
       // See if we already have a mark for this
-      const existingMarks = this.findMarks(start, end);
+      const existingMarks = doc.findMarks(start, end);
       if (existingMarks.length) {
+        existingMarks.map(m => activeMarks.push(m));
         continue;
       }
 
-      (async () => {
-        const element = document.createElement('span');
+      const element = document.createElement('span');
 
-        element.className = `nunjucks-widget ${tok.type}`;
-        element.setAttribute('data-active', 'off');
-        element.setAttribute('data-error', 'off');
+      element.className = `nunjucks-widget ${tok.type}`;
+      element.setAttribute('data-active', 'off');
+      element.setAttribute('data-error', 'off');
 
-        await _updateElementText(renderString, element, tok.string);
+      await _updateElementText(renderString, element, tok.string);
 
-        const marker = this.markText(start, end, {
-          handleMouseEvents: false,
-          replacedWith: element,
-        });
+      const mark = this.markText(start, end, {
+        handleMouseEvents: false,
+        replacedWith: element,
+      });
 
-        element.addEventListener('click', () => {
-          element.setAttribute('data-active', 'on');
+      activeMarks.push(mark);
 
-          // Define the dialog HTML
-          const html = [
-            '<div class="wide hide-scrollbars scrollable">',
-            '<input type="text" name="template"/>',
-            element.title ?
-              `<span class="result">${element.title}</span>` :
-              '<span class="result super-faint italic">n/a</span>',
-            '</div>',
-          ].join(' ');
+      element.addEventListener('click', () => {
+        element.setAttribute('data-active', 'on');
 
-          const dialogOptions = {
-            __dirty: false,
-            value: tok.string,
-            selectValueOnOpen: true,
-            closeOnEnter: true,
-            async onClose () {
-              element.removeAttribute('data-active');
+        // Define the dialog HTML
+        const html = [
+          '<div class="wide hide-scrollbars scrollable">',
+          '<input type="text" name="template"/>',
+          element.title ?
+            `<span class="result">${element.title}</span>` :
+            '<span class="result super-faint italic">n/a</span>',
+          '</div>',
+        ].join(' ');
 
-              // Revert string back to original if it's changed
-              if (this.dirty) {
-                await _updateElementText(renderString, element, tok.string);
-                marker.changed();
-              }
-            },
-            async onInput (e, text) {
-              this.dirty = true;
+        const dialogOptions = {
+          __dirty: false,
+          value: tok.string,
+          selectValueOnOpen: true,
+          closeOnEnter: true,
+          async onClose () {
+            element.removeAttribute('data-active');
 
-              clearTimeout(this.__timeout);
-              this.__timeout = setTimeout(async () => {
-                const el = e.target.parentNode.querySelector('.result');
-                await _updateElementText(renderString, el, text, true);
-              }, 600);
+            // Revert string back to original if it's changed
+            if (this.__dirty) {
+              await _updateElementText(renderString, element, tok.string);
+              mark.changed();
             }
-          };
+          },
+          async onInput (e, text) {
+            this.__dirty = true;
 
-          this.openDialog(html, text => {
-            // Replace the text with the newly edited stuff
-            const {from, to} = marker.find();
-            this.replaceRange(text, from, to);
+            clearTimeout(this.__timeout);
+            this.__timeout = setTimeout(async () => {
+              const el = e.target.parentNode.querySelector('.result');
+              await _updateElementText(renderString, el, text, true);
+            }, 600);
+          }
+        };
 
-            // Clear the marker so it doesn't mess us up later on.
-            marker.clear();
-          }, dialogOptions);
-        });
-      })();
+        this.openDialog(html, text => {
+          // Replace the text with the newly edited stuff
+          const {from, to} = mark.find();
+          this.replaceRange(text, from, to);
+
+          // Clear the marker so it doesn't mess us up later on.
+          mark.clear();
+        }, dialogOptions);
+      });
+    }
+  }
+
+  // Clear all the marks that we didn't just modify/add
+  // For example, adding a {% raw %} tag would need to clear everything it wrapped
+  const marksInViewport = doc.findMarks(
+    {ch: 0, line: vp.from},
+    {ch: 0, line: vp.to},
+  );
+  for (const mark of marksInViewport) {
+    if (!activeMarks.find(m => m.id === mark.id)) {
+      mark.clear();
     }
   }
 }
