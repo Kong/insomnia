@@ -53,7 +53,6 @@ import {parser as jsonlint} from 'jsonlint';
 import {prettifyJson} from '../../../common/prettify';
 global.jsonlint = jsonlint;
 
-
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
   placeholder: 'Start Typing...',

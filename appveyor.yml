@@ -15,14 +15,15 @@ environment:
 # Things to install after repo clone
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
-  - npm install -g yarn@latest > Nul
-  - yarn install > NUL
+  - npm install -g npm@latest
+  - npm install > NUL
+#  - npm install -g yarn@latest > Nul
 
 cache:
   - '%APPDATA%\npm-cache -> .cache.txt'
   - '%USERPROFILE%\.electron -> .cache.txt'
-  - '%LOCALAPPDATA%\Yarn -> .cache.txt'
   - 'node_modules -> .cache.txt'
+#  - '%LOCALAPPDATA%\Yarn -> .cache.txt'
 
 #---------------------------------#
 #       tests configuration       #
@@ -30,8 +31,8 @@ cache:
 
 test_script:
   - node --version
-  - yarn --version
-  - yarn test
+  - npm --version
+  - npm test
 
 #---------------------------------#
 #     deployment configuration    #
@@ -53,5 +54,5 @@ test_script:
 #---------------------------------#
 
 on_success:
-  - yarn run build-n-package:win
+  - npm run build-n-package:win
   - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }

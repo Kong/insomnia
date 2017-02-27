@@ -19,7 +19,7 @@
     "mkdirp": "~0.5.1",
     "nedb": "~1.8.0",
     "node-forge": "~0.7.0",
-    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#4e0877613c44ddd373a6304329d2a8618ea5bdf5",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#3fc2afea435f3548eedbef9c68d3fee642dfcddb",
     "raven": "~1.1.2",
     "request": "~2.71.0",
     "srp-js": "0.2.0",
