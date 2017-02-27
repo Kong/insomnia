@@ -6,11 +6,14 @@ export default class NowExtension extends BaseExtension {
     this.tags = ['now'];
   }
 
-  run (context, format = 'iso-8601') {
-    format = typeof format === 'string' ? format.toLowerCase() : 'unknown';
+  run (context, dateType = 'iso-8601') {
+    if (typeof dateType === 'string') {
+      dateType = dateType.toLowerCase();
+    }
+
     const now = new Date();
 
-    switch (format) {
+    switch (dateType) {
       case 'millis':
       case 'ms':
         return now.getTime();
@@ -19,8 +22,9 @@ export default class NowExtension extends BaseExtension {
       case 's':
         return Math.round(now.getTime() / 1000);
       case 'iso-8601':
-      default:
         return now.toISOString();
+      default:
+        throw new Error(`Invalid date type "${dateType}"`);
     }
   }
 }

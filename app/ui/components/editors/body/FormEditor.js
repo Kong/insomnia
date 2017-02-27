@@ -17,7 +17,7 @@ class FormEditor extends Component {
   _handleTrackDelete = () => trackEvent('Form Editor', 'Delete');
 
   render () {
-    const {parameters, onChange} = this.props;
+    const {parameters, onChange, handleRender} = this.props;
 
     return (
       <div className="scrollable-container tall wide">
@@ -25,6 +25,7 @@ class FormEditor extends Component {
           <KeyValueEditor
             namePlaceholder="name"
             valuePlaceholder="value"
+            handleRender={handleRender}
             onToggleDisable={this._handleTrackToggle}
             onChangeType={this._handleTrackChangeType}
             onChooseFile={this._handleTrackChooseFile}
@@ -43,7 +44,8 @@ class FormEditor extends Component {
 FormEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
-  parameters: PropTypes.arrayOf(PropTypes.object).isRequired
+  parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
+  handleRender: PropTypes.func.isRequired,
 };
 
 export default FormEditor;

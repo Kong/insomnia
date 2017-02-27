@@ -90,7 +90,6 @@ class SettingsGeneral extends Component {
                 <option value="default">Default</option>
                 <option value="vim">Vim</option>
                 <option value="emacs">Emacs</option>
-                <option value="sublime">Sublime</option>
               </select>
             </label>
           </div>

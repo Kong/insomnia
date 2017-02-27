@@ -3,7 +3,7 @@ import React, {Component, PropTypes} from 'react';
 class ResponseRaw extends Component {
   _update (value) {
     // Use a timeout so it doesn't block the UI
-    setTimeout(() => this._setTextAreaValue(value), 50)
+    window.requestAnimationFrame(() => this._setTextAreaValue(value))
   }
 
   _setTextAreaValue (value) {

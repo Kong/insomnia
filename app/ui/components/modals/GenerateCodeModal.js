@@ -3,7 +3,7 @@ import HTTPSnippet, {availableTargets} from 'httpsnippet';
 
 import CopyButton from '../base/CopyButton';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
-import Editor from '../base/Editor';
+import Editor from '../codemirror/Editor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';

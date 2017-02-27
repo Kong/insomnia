@@ -324,6 +324,7 @@ class Wrapper extends Component {
           editorKeyMap={settings.editorKeyMap}
           lineWrapping={settings.editorLineWrapping}
           onChange={models.requestGroup.update}
+          render={handleRender}
         />
         <WorkspaceEnvironmentsEditModal
           ref={registerModal}
@@ -331,6 +332,7 @@ class Wrapper extends Component {
           lineWrapping={settings.editorLineWrapping}
           editorFontSize={settings.editorFontSize}
           editorKeyMap={settings.editorKeyMap}
+          render={handleRender}
         />
       </div>
     )

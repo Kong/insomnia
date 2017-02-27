@@ -15,6 +15,29 @@ class Modal extends Component {
 
   _handleSetNodeRef = n => this._node = n;
 
+  _handleKeyDown = e => {
+    if (!this.state.open) {
+      return;
+    }
+
+    // Don't bubble up meta events up past the modal no matter what
+    // Example: ctrl+Enter to send requests
+    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
+    if (isMeta) {
+      e.stopPropagation();
+    }
+
+    const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
+    const pressedEscape = e.keyCode === 27;
+    const pressedElse = closeOnKeyCodes.find(c => c === e.keyCode);
+
+    if (pressedEscape || pressedElse) {
+      e.preventDefault();
+      // Pressed escape
+      this.hide();
+    }
+  };
+
   _handleClick = e => {
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
@@ -50,9 +73,7 @@ class Modal extends Component {
       return;
     }
 
-    setTimeout(() => {
-      this._node && this._node.focus();
-    });
+    setTimeout(() => this._node && this._node.focus());
   }
 
   toggle () {
@@ -68,35 +89,11 @@ class Modal extends Component {
   }
 
   componentDidMount () {
-    // In order for this to work, there needs to be tabIndex of -1 on the modal container
-    this._keydownCallback = e => {
-      if (!this.state.open) {
-        return;
-      }
-
-      // Don't bubble up meta events up past the modal no matter what
-      // Example: ctrl+Enter to send requests
-      const isMeta = isMac() ? e.metaKey : e.ctrlKey;
-      if (isMeta) {
-        e.stopPropagation();
-      }
-
-      const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-      const pressedEscape = e.keyCode === 27;
-      const pressedElse = closeOnKeyCodes.find(c => c === e.keyCode);
-
-      if (pressedEscape || pressedElse) {
-        e.preventDefault();
-        // Pressed escape
-        this.hide();
-      }
-    };
-
-    this._node.addEventListener('keydown', this._keydownCallback);
+    this._node.addEventListener('keydown', this._handleKeyDown);
   }
 
   componentWillUnmount () {
-    this._node.removeEventListener('keydown', this._keydownCallback);
+    this._node.removeEventListener('keydown', this._handleKeyDown);
   }
 
   render () {

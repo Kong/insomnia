@@ -4,6 +4,8 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import FileInputButton from '../base/FileInputButton';
 import {Dropdown, DropdownItem, DropdownButton} from './dropdown/index';
 import PromptButton from '../base/PromptButton';
+import Button from '../base/Button';
+import OneLineEditor from '../codemirror/OneLineEditor';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -20,8 +22,8 @@ class KeyValueEditor extends Component {
 
     this._focusedPair = -1;
     this._focusedField = NAME;
-    this._nameInputs = {};
-    this._valueInputs = {};
+    this._nameInputs = [];
+    this._valueInputs = [];
     this._focusedInput = null;
 
     this.state = {
@@ -37,11 +39,6 @@ class KeyValueEditor extends Component {
   _handleAddFromValue = () => {
     this._focusedField = VALUE;
     this._addPair();
-  };
-
-  _handleAddFromMultipart = type => {
-    this._focusedField = null;
-    this._addPair(this.state.pairs.length, {type});
   };
 
   _onChange (pairs, updateState = true) {
@@ -72,8 +69,10 @@ class KeyValueEditor extends Component {
     this._onChange(pairs);
   }
 
-  _deletePair (position) {
-    if (this._focusedPair >= position) {
+  _deletePair = position => {
+    if (this._focusedPair === position) {
+      this._focusedPair = -1;
+    } else if (this._focusedPair >= position) {
       this._focusedPair = this._focusedPair - 1;
     }
 
@@ -83,17 +82,17 @@ class KeyValueEditor extends Component {
     const pairs = this.state.pairs.filter((_, i) => i !== position);
 
     this._onChange(pairs);
-  }
+  };
 
-  _updatePair (position, pairPatch) {
+  _updatePair = (position, pairPatch) => {
     const pairs = this.state.pairs.map((p, i) => (
       i == position ? Object.assign({}, p, pairPatch) : p
     ));
 
     this._onChange(pairs);
-  }
+  };
 
-  _togglePair (position) {
+  _togglePair = position => {
     const pairs = this.state.pairs.map(
       (p, i) => i == position ? Object.assign({}, p, {disabled: !p.disabled}) : p
     );
@@ -102,7 +101,7 @@ class KeyValueEditor extends Component {
     this.props.onToggleDisable && this.props.onToggleDisable(pair);
 
     this._onChange(pairs, true);
-  }
+  };
 
   _focusNext (addIfValue = false) {
     if (this._focusedField === NAME) {
@@ -150,7 +149,19 @@ class KeyValueEditor extends Component {
     }
   }
 
-  _keyDown (e) {
+  _focusValue = i => {
+    this._focusedPair = i;
+    this._focusedField = VALUE;
+    this._focusedInput = this._valueInputs[i];
+  };
+
+  _focusName = i => {
+    this._focusedPair = i;
+    this._focusedField = NAME;
+    this._focusedInput = this._nameInputs[i];
+  };
+
+  _keyDown = (e, value) => {
     if (e.metaKey || e.ctrlKey) {
       return;
     }
@@ -159,7 +170,7 @@ class KeyValueEditor extends Component {
       e.preventDefault();
       this._focusNext(true);
     } else if (e.keyCode === BACKSPACE) {
-      if (!e.target.value) {
+      if (!value) {
         e.preventDefault();
         this._focusPrevious(true);
       }
@@ -174,7 +185,7 @@ class KeyValueEditor extends Component {
     } else if (e.keyCode === RIGHT) {
       // TODO: Implement this
     }
-  }
+  };
 
   _updateFocus () {
     let ref;
@@ -191,7 +202,6 @@ class KeyValueEditor extends Component {
 
     // Focus at the end of the text
     ref.focus();
-    ref.selectionStart = ref.selectionEnd = ref.value.length;
   }
 
   componentDidUpdate () {
@@ -205,129 +215,118 @@ class KeyValueEditor extends Component {
     return (
       <ul key={pairs.length} className={classnames('key-value-editor', 'wide', className)}>
         {pairs.map((pair, i) => (
-          <li key={`${i}.pair`}
-              className={classnames(
-                'key-value-editor__row',
-                {'key-value-editor__row--disabled': pair.disabled}
-              )}>
+          <li key={`${i}.pair`} className={classnames(
+            'key-value-editor__row',
+            {'key-value-editor__row--disabled': pair.disabled}
+          )}>
             <div className="form-control form-control--underlined form-control--wide">
-              <input
-                type="text"
-                key="name"
+              <OneLineEditor
                 ref={n => this._nameInputs[i] = n}
                 placeholder={this.props.namePlaceholder || 'Name'}
                 defaultValue={pair.name}
-                onChange={e => this._updatePair(i, {name: e.target.value})}
-                onFocus={e => {
-                  this._focusedPair = i;
-                  this._focusedField = NAME;
-                  this._focusedInput = e.target;
-                }}
-                onBlur={() => {
-                  this._focusedPair = -1
-                }}
-                onKeyDown={this._keyDown.bind(this)}
+                render={this.props.handleRender}
+                onChange={name => this._updatePair(i, {name})}
+                onFocus={() => this._focusName(i)}
+                onKeyDown={this._keyDown}
               />
             </div>
             <div className="form-control form-control--wide wide form-control--underlined">
               {pair.type === 'file' ? (
-                <FileInputButton
-                  showFileName={true}
-                  className="btn btn--clicky wide ellipsis txt-sm"
-                  path={pair.fileName || ''}
-                  onChange={fileName => {
-                    this._updatePair(i, {fileName});
-                    this.props.onChooseFile && this.props.onChooseFile();
-                  }}
-                />
-              ) : (
-                <input
-                  type={valueInputType || 'text'}
-                  placeholder={this.props.valuePlaceholder || 'Value'}
-                  ref={n => this._valueInputs[i] = n}
-                  defaultValue={pair.value}
-                  onChange={e => this._updatePair(i, {value: e.target.value})}
-                  onBlur={() => this._focusedPair = -1}
-                  onKeyDown={this._keyDown.bind(this)}
-                  onFocus={e => {
-                    this._focusedPair = i;
-                    this._focusedField = VALUE;
-                    this._focusedInput = e.target;
-                  }}
-                />
-              )}
+                  <FileInputButton
+                    showFileName={true}
+                    className="btn btn--clicky wide ellipsis txt-sm"
+                    path={pair.fileName || ''}
+                    onChange={fileName => {
+                      this._updatePair(i, {fileName});
+                      this.props.onChooseFile && this.props.onChooseFile();
+                    }}
+                  />
+                ) : (
+                  <OneLineEditor
+                    type={valueInputType || 'text'}
+                    placeholder={this.props.valuePlaceholder || 'Value'}
+                    ref={n => this._valueInputs[i] = n}
+                    defaultValue={pair.value}
+                    onChange={value => this._updatePair(i, {value})}
+                    render={this.props.handleRender}
+                    onKeyDown={this._keyDown}
+                    onFocus={() => this._focusValue(i)}
+                  />
+                )}
             </div>
 
             {multipart ? (
-              <Dropdown right={true}>
-                <DropdownButton className="tall">
-                  <i className="fa fa-caret-down"></i>
-                </DropdownButton>
-                <DropdownItem onClick={e => {
-                  this._updatePair(i, {type: 'text', value: '', fileName: ''});
-                  this.props.onChangeType && this.props.onChangeType('text');
-                }}>
-                  Text
-                </DropdownItem>
-                <DropdownItem onClick={e => {
-                  this._updatePair(i, {type: 'file', value: '', fileName: ''});
-                  this.props.onChangeType && this.props.onChangeType('file');
-                }}>
-                  File
-                </DropdownItem>
-              </Dropdown>
-            ) : null}
+                <Dropdown right={true}>
+                  <DropdownButton className="tall">
+                    <i className="fa fa-caret-down"></i>
+                  </DropdownButton>
+                  <DropdownItem onClick={e => {
+                    this._updatePair(i, {type: 'text', value: '', fileName: ''});
+                    this.props.onChangeType && this.props.onChangeType('text');
+                  }}>
+                    Text
+                  </DropdownItem>
+                  <DropdownItem onClick={e => {
+                    this._updatePair(i, {type: 'file', value: '', fileName: ''});
+                    this.props.onChangeType && this.props.onChangeType('file');
+                  }}>
+                    File
+                  </DropdownItem>
+                </Dropdown>
+              ) : null}
 
-            <button onClick={e => this._togglePair(i)}
+            <Button onClick={this._togglePair}
+                    value={i}
                     title={pair.disabled ? 'Enable item' : 'Disable item'}>
               {pair.disabled ?
                 <i className="fa fa-square-o"/> :
                 <i className="fa fa-check-square-o"/>
               }
-            </button>
+            </Button>
 
             <PromptButton key={Math.random()}
                           tabIndex="-1"
                           confirmMessage=" "
                           addIcon={true}
-                          onClick={e => this._deletePair(i)}
+                          onClick={this._deletePair}
+                          value={i}
                           title="Delete item">
               <i className="fa fa-trash-o"></i>
             </PromptButton>
           </li>
         ))}
         {!maxPairs || pairs.length < maxPairs ? (
-          <li className="key-value-editor__row">
-            <div className="form-control form-control--underlined form-control--wide faded">
-              <input
-                type="text"
-                placeholder={this.props.namePlaceholder || 'Name'}
-                onFocus={this._handleAddFromName}
-              />
-            </div>
-            <div className="form-control form-control--underlined form-control--wide faded">
-              <input
-                type="text"
-                placeholder={this.props.valuePlaceholder || 'Value'}
-                onFocus={this._handleAddFromValue}
-              />
-            </div>
+            <li className="key-value-editor__row">
+              <div className="form-control form-control--underlined form-control--wide faded">
+                <OneLineEditor
+                  defaultValue=""
+                  placeholder={this.props.namePlaceholder || 'Name'}
+                  onFocus={this._handleAddFromName}
+                />
+              </div>
+              <div className="form-control form-control--underlined form-control--wide faded">
+                <OneLineEditor
+                  defaultValue=""
+                  placeholder={this.props.valuePlaceholder || 'Value'}
+                  onFocus={this._handleAddFromValue}
+                />
+              </div>
 
-            {multipart ? (
+              {multipart ? (
+                  <button disabled={true} tabIndex="-1">
+                    <i className="fa fa-blank"></i>
+                  </button>
+                ) : null}
+
               <button disabled={true} tabIndex="-1">
                 <i className="fa fa-blank"></i>
               </button>
-            ) : null}
 
-            <button disabled={true} tabIndex="-1">
-              <i className="fa fa-blank"></i>
-            </button>
-
-            <button disabled={true} tabIndex="-1">
-              <i className="fa fa-blank"></i>
-            </button>
-          </li>
-        ) : null}
+              <button disabled={true} tabIndex="-1">
+                <i className="fa fa-blank"></i>
+              </button>
+            </li>
+          ) : null}
       </ul>
     )
   }
@@ -338,6 +337,7 @@ KeyValueEditor.propTypes = {
   pairs: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
+  handleRender: PropTypes.func,
   multipart: PropTypes.bool,
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,

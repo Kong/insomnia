@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import Button from '../base/Button';
 
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
@@ -7,12 +8,12 @@ const STATE_DONE = 'done';
 class PromptButton extends Component {
   state = {state: STATE_DEFAULT};
 
-  _confirm (e) {
+  _confirm (...args) {
     // Clear existing timeouts
     clearTimeout(this._triggerTimeout);
 
     // Fire the click handler
-    this.props.onClick(e);
+    this.props.onClick(...args);
 
     // Set the state to done (but delay a bit to not alarm user)
     this._doneTimeout = setTimeout(() => {
@@ -25,7 +26,9 @@ class PromptButton extends Component {
     }, 2000);
   }
 
-  _ask (e) {
+  _ask (...args) {
+    const e = args[args.length - 1];
+
     // Prevent events (ex. won't close dropdown if it's in one)
     e.preventDefault();
     e.stopPropagation();
@@ -39,12 +42,12 @@ class PromptButton extends Component {
     }, 2000);
   }
 
-  _handleClick = e => {
+  _handleClick = (...args) => {
     const {state} = this.state;
     if (state === STATE_ASK) {
-      this._confirm(e)
+      this._confirm(...args)
     } else if (state === STATE_DEFAULT) {
-      this._ask(e)
+      this._ask(...args)
     } else {
       // Do nothing
     }
@@ -78,15 +81,16 @@ class PromptButton extends Component {
     }
 
     return (
-      <button onClick={this._handleClick} {...other}>
+      <Button onClick={this._handleClick} {...other}>
         {innerMsg}
-      </button>
+      </Button>
     )
   }
 }
 
 PromptButton.propTypes = {
   addIcon: PropTypes.bool,
+  value: PropTypes.any,
   confirmMessage: PropTypes.any,
 };
 

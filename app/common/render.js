@@ -4,8 +4,8 @@ import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 
-export async function render (template, context = {}) {
-  return templating.render(template, {context});
+export async function render (template, context = {}, strict = false) {
+  return templating.render(template, {context, strict});
 }
 
 export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {

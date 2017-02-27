@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import {shell} from 'electron';
-import Editor from '../base/Editor';
+import Editor from '../codemirror/Editor';
 import ResponseWebView from './ResponseWebview';
 import ResponseRaw from './ResponseRaw';
 import ResponseError from './ResponseError';
@@ -156,6 +156,7 @@ class ResponseViewer extends Component {
             updateFilter={updateFilter}
             filter={filter}
             autoPrettify={true}
+            noMatchBrackets={true}
             mode={mode}
             readOnly={true}
             lineWrapping={editorLineWrapping}

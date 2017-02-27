@@ -1,3 +1,5 @@
+const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
+
 export default class NowExtension {
   constructor () {
     // TODO: Subclass should set this
@@ -13,7 +15,7 @@ export default class NowExtension {
     } else {
       // Not sure why this is needed, but it fails without it
       args = new nodes.NodeList(tok.lineno, tok.colno);
-      args.addChild(new nodes.Literal(0, 0, ""));
+      args.addChild(new nodes.Literal(0, 0, EMPTY_ARG));
     }
 
     parser.advanceAfterBlockEnd(tok.value);
@@ -23,13 +25,14 @@ export default class NowExtension {
   asyncRun (...runArgs) {
     // Pull the callback off the end
     const callback = runArgs[runArgs.length - 1];
-    const args = runArgs.slice(0, runArgs.length - 1);
+    const args = runArgs
+      .slice(0, runArgs.length - 1)
+      .filter(a => a !== EMPTY_ARG);
 
     let result;
     try {
       result = this.run(...args);
     } catch (err) {
-      // In case a synchronous render fails
       callback(err);
       return;
     }

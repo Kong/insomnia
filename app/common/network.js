@@ -8,7 +8,7 @@ import {buildFromParams} from './querystring';
 import * as util from './misc.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from './constants';
 import {jarFromCookies, cookiesFromJar} from './cookies';
-import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, getSetCookieHeaders} from './misc';
+import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from './misc';
 import {getRenderedRequest} from './render';
 import * as fs from 'fs';
 import * as db from './database';
