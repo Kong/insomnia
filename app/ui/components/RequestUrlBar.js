@@ -7,7 +7,7 @@ import {showModal} from './modals/index';
 import MethodDropdown from './dropdowns/MethodDropdown';
 import PromptModal from './modals/PromptModal';
 import PromptButton from './base/PromptButton';
-import OneLineEditor from './base/editor/OneLineEditor';
+import OneLineEditor from './codemirror/OneLineEditor';
 
 class RequestUrlBar extends Component {
   state = {

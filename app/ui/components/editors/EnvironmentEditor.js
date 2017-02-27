@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import Editor from '../base/editor/Editor';
+import Editor from '../codemirror/Editor';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 class EnvironmentEditor extends Component {

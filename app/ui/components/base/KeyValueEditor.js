@@ -5,7 +5,7 @@ import FileInputButton from '../base/FileInputButton';
 import {Dropdown, DropdownItem, DropdownButton} from './dropdown/index';
 import PromptButton from '../base/PromptButton';
 import Button from '../base/Button';
-import OneLineEditor from '../base/editor/OneLineEditor';
+import OneLineEditor from '../codemirror/OneLineEditor';
 
 const NAME = 'name';
 const VALUE = 'value';

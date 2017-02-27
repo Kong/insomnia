@@ -45,16 +45,17 @@ import 'codemirror/addon/mode/simple';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
 import 'codemirror/keymap/sublime';
-import '../../../css/components/editor.less';
-import {showModal} from '../../modals/index';
-import AlertModal from '../../modals/AlertModal';
-import Link from '../../base/Link';
-import * as misc from '../../../../common/misc';
-import {trackEvent} from '../../../../analytics/index';
+import '../../css/components/editor.less';
+import './modes/nunjucks';
+import {showModal} from '../modals/index';
+import AlertModal from '../modals/AlertModal';
+import Link from '../base/Link';
+import * as misc from '../../../common/misc';
+import {trackEvent} from '../../../analytics/index';
 // Make jsonlint available to the jsonlint plugin
 import {parser as jsonlint} from 'jsonlint';
-import {prettifyJson} from '../../../../common/prettify';
-import {DEBOUNCE_MILLIS} from '../../../../common/constants';
+import {prettifyJson} from '../../../common/prettify';
+import {DEBOUNCE_MILLIS} from '../../../common/constants';
 global.jsonlint = jsonlint;
 
 
@@ -142,7 +143,6 @@ class Editor extends Component {
 
     const {value} = this.props;
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
-    CodeMirror.defineMode('master', this._masterMode());
 
     // Set default listeners
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
@@ -193,48 +193,6 @@ class Editor extends Component {
         return null;
       }
     }
-  };
-
-  _nunjucksMode = () => {
-    const highlightNunjucks = !this.props.readOnly;
-
-    const regexVariable = /^{{[^}]+}}/;
-    const regexTag = /^{%[^%]+%}/;
-    const regexComment = /^{#[^#]+#}/;
-
-    return {
-      token: function (stream, state) {
-        if (highlightNunjucks && stream.match(regexVariable, true)) {
-          return 'nunjucks nunjucks-variable';
-        }
-
-        if (highlightNunjucks && stream.match(regexTag, true)) {
-          return 'nunjucks nunjucks-tag';
-        }
-
-        if (highlightNunjucks && stream.match(regexComment, true)) {
-          return 'nunjucks nunjucks-comment';
-        }
-
-        while (stream.next() != null) {
-          if (stream.match(regexVariable, false)) break;
-          if (stream.match(regexTag, false)) break;
-          if (stream.match(regexComment, false)) break;
-        }
-
-        return null;
-      }
-    };
-  };
-
-  // Add overlay to editor to make all links clickable
-  _masterMode = () => {
-    // Add overlay to editor to make all links clickable
-    return (config, parserConfig) => {
-      const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
-      const nunjucksMode = this._nunjucksMode();
-      return CodeMirror.overlayMode(baseMode, nunjucksMode, false);
-    };
   };
 
   _handleEditorClick = e => {
@@ -324,8 +282,8 @@ class Editor extends Component {
    */
   _codemirrorSetOptions () {
     const {
+      mode: rawMode,
       readOnly,
-      mode,
       hideLineNumbers,
       keyMap,
       lineWrapping,
@@ -334,13 +292,19 @@ class Editor extends Component {
       hideScrollbars,
     } = this.props;
 
+    let mode;
+    if (this.props.readOnly) {
+      // Should probably have an actual prop for this, but let's not
+      // enable nunjucks on editors that the user can modify
+      mode = {name: this._normalizeMode(rawMode)};
+    } else {
+      mode = {name: 'nunjucks', baseMode: this._normalizeMode(rawMode)};
+    }
+
     let options = {
       readOnly,
       placeholder: placeholder || '',
-      mode: {
-        name: 'master',
-        baseMode: this._normalizeMode(mode),
-      },
+      mode: mode,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       lineNumbers: !hideLineNumbers,
       lineWrapping: lineWrapping,

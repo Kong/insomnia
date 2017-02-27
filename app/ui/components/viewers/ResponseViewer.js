@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import {shell} from 'electron';
-import Editor from '../base/editor/Editor';
+import Editor from '../codemirror/Editor';
 import ResponseWebView from './ResponseWebview';
 import ResponseRaw from './ResponseRaw';
 import ResponseError from './ResponseError';
