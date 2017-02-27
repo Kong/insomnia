@@ -8,7 +8,7 @@ class OneLineEditor extends Component {
   }
 
   focus () {
-    this.editor.focus();
+    this.editor.focusEnd();
   }
 
   _handleChange = value => {

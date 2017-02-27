@@ -22,8 +22,8 @@ class KeyValueEditor extends Component {
 
     this._focusedPair = -1;
     this._focusedField = NAME;
-    this._nameInputs = {};
-    this._valueInputs = {};
+    this._nameInputs = [];
+    this._valueInputs = [];
     this._focusedInput = null;
 
     this.state = {
@@ -70,7 +70,9 @@ class KeyValueEditor extends Component {
   }
 
   _deletePair = position => {
-    if (this._focusedPair >= position) {
+    if (this._focusedPair === position) {
+      this._focusedPair = -1;
+    } else if (this._focusedPair >= position) {
       this._focusedPair = this._focusedPair - 1;
     }
 
@@ -147,7 +149,19 @@ class KeyValueEditor extends Component {
     }
   }
 
-  _keyDown (e) {
+  _focusValue = i => {
+    this._focusedPair = i;
+    this._focusedField = VALUE;
+    this._focusedInput = this._valueInputs[i];
+  };
+
+  _focusName = i => {
+    this._focusedPair = i;
+    this._focusedField = NAME;
+    this._focusedInput = this._nameInputs[i];
+  };
+
+  _keyDown = (e, value) => {
     if (e.metaKey || e.ctrlKey) {
       return;
     }
@@ -156,7 +170,7 @@ class KeyValueEditor extends Component {
       e.preventDefault();
       this._focusNext(true);
     } else if (e.keyCode === BACKSPACE) {
-      if (!e.target.value) {
+      if (!value) {
         e.preventDefault();
         this._focusPrevious(true);
       }
@@ -171,7 +185,7 @@ class KeyValueEditor extends Component {
     } else if (e.keyCode === RIGHT) {
       // TODO: Implement this
     }
-  }
+  };
 
   _updateFocus () {
     let ref;
@@ -188,7 +202,6 @@ class KeyValueEditor extends Component {
 
     // Focus at the end of the text
     ref.focus();
-    ref.selectionStart = ref.selectionEnd = ref.value.length;
   }
 
   componentDidUpdate () {
@@ -213,15 +226,8 @@ class KeyValueEditor extends Component {
                 defaultValue={pair.name}
                 render={this.props.handleRender}
                 onChange={name => this._updatePair(i, {name})}
-                onFocus={e => {
-                  this._focusedPair = i;
-                  this._focusedField = NAME;
-                  this._focusedInput = this._nameInputs[i];
-                }}
-                onBlur={() => {
-                  this._focusedPair = -1
-                }}
-                onKeyDown={this._keyDown.bind(this)}
+                onFocus={() => this._focusName(i)}
+                onKeyDown={this._keyDown}
               />
             </div>
             <div className="form-control form-control--wide wide form-control--underlined">
@@ -243,13 +249,8 @@ class KeyValueEditor extends Component {
                     defaultValue={pair.value}
                     onChange={value => this._updatePair(i, {value})}
                     render={this.props.handleRender}
-                    onBlur={() => this._focusedPair = -1}
-                    onKeyDown={this._keyDown.bind(this)}
-                    onFocus={e => {
-                      this._focusedPair = i;
-                      this._focusedField = VALUE;
-                      this._focusedInput = this._valueInputs[i];
-                    }}
+                    onKeyDown={this._keyDown}
+                    onFocus={() => this._focusValue(i)}
                   />
                 )}
             </div>
@@ -274,7 +275,8 @@ class KeyValueEditor extends Component {
                 </Dropdown>
               ) : null}
 
-            <Button onClick={this._togglePair} value={i}
+            <Button onClick={this._togglePair}
+                    value={i}
                     title={pair.disabled ? 'Enable item' : 'Disable item'}>
               {pair.disabled ?
                 <i className="fa fa-square-o"/> :

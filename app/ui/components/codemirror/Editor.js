@@ -59,6 +59,7 @@ import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 global.jsonlint = jsonlint;
 
+const TAB_KEY = 9;
 
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
@@ -108,12 +109,32 @@ class Editor extends Component {
     }
   }
 
+  selectAll () {
+    if (this.codeMirror) {
+      this.codeMirror.setSelection(
+        {line: 0, ch: 0},
+        {line: this.codeMirror.lineCount(), ch: 0}
+      );
+    }
+  }
+
   /**
    * Focus the cursor to the editor
    */
   focus () {
     if (this.codeMirror) {
       this.codeMirror.focus();
+    }
+  }
+
+  /**
+   * Focus the editor on the end
+   */
+  focusEnd () {
+    if (this.codeMirror) {
+      this.codeMirror.focus();
+      const doc = this.codeMirror.getDoc();
+      doc.setCursor(doc.lineCount(), 0);
     }
   }
 
@@ -304,20 +325,24 @@ class Editor extends Component {
 
   _codemirrorKeyDown = (doc, e) => {
     // Use default tab behaviour if we're told
-    if (this.props.defaultTabBehavior && e.code === 'Tab') {
+    if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
     }
-  };
 
-  _codemirrorFocus = (e) => {
-    if (this.props.onFocus) {
-      this.props.onFocus();
+    if (this.props.onKeyDown) {
+      this.props.onKeyDown(e, doc.getValue());
     }
   };
 
-  _codemirrorBlur = () => {
+  _codemirrorFocus = (doc, e) => {
+    if (this.props.onFocus) {
+      this.props.onFocus(e);
+    }
+  };
+
+  _codemirrorBlur = (doc, e) => {
     if (this.props.onBlur) {
-      this.props.onBlur();
+      this.props.onBlur(e);
     }
   };
 
