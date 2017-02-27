@@ -109,6 +109,17 @@ describe('deconstructToParams()', () => {
       {name: 'hi there', value: 'bar??'}
     ]);
   });
+  it('builds from params with =', () => {
+    const str = querystringUtils.deconstructToParams(
+      'foo=bar&1=2=3=4&hi'
+    );
+
+    expect(str).toEqual([
+      {name: 'foo', value: 'bar'},
+      {name: '1', value: '2=3=4'},
+      {name: 'hi', value: ''}
+    ]);
+  });
 });
 
 describe('deconstructToParams()', () => {
