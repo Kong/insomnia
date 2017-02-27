@@ -141,9 +141,18 @@ export function updateMimeType (request, mimeType, doCreate = false) {
   }
 }
 
-export function duplicate (request) {
+export async function duplicate (request) {
   const name = `${request.name} (Copy)`;
-  const metaSortKey = request.metaSortKey + 1;
+
+  // Get sort key of next request
+  const q = {metaSortKey: {$gt: request.metaSortKey}};
+  const [nextRequest] = await db.find(type, q, {metaSortKey: 1});
+  const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
+
+  // Calculate new sort key
+  const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
+  const metaSortKey = request.metaSortKey + sortKeyIncrement;
+
   return db.duplicate(request, {name, metaSortKey})
 }
 

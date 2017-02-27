@@ -167,8 +167,8 @@ class RequestUrlBar extends Component {
     clearTimeout(this._sendTimeout);
     if (this.state.currentTimeout) {
       this.setState({currentTimeout: null});
+      trackEvent('Request', 'Stop Send Timeout');
     }
-    trackEvent('Request', 'Stop Send Timeout');
   };
 
   _handleClickSend = e => {

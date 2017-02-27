@@ -74,7 +74,9 @@ export function deconstructToParams (qs, strict = true) {
   const pairs = [];
 
   for (let stringPair of stringPairs) {
-    const [encodedName, encodedValue] = stringPair.split('=');
+    // NOTE: This only splits on first equals sign. '1=2=3' --> ['1', '2=3']
+    const [encodedName, ...encodedValues] = stringPair.split('=');
+    const encodedValue = encodedValues.join('=');
 
     let name = '';
     try {

@@ -433,9 +433,7 @@ class App extends Component {
     trackEvent('Sidebar', 'Toggle Visibility', sidebarHidden ? 'Hide' : 'Show');
   };
 
-  _setWrapperRef = n => {
-    this._wrapper = n;
-  };
+  _setWrapperRef = n => this._wrapper = n;
 
   async componentDidMount () {
     // Bind mouse and key handlers

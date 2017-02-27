@@ -44,7 +44,19 @@ export function all () {
   return db.all(type);
 }
 
-export function duplicate (requestGroup) {
+export async function duplicate (requestGroup) {
   const name = `${requestGroup.name} (Copy)`;
-  return db.duplicate(requestGroup, {name});
+
+  // Get sort key of next request
+  const q = {metaSortKey: {$gt: requestGroup.metaSortKey}};
+  const [nextRequestGroup] = await db.find(type, q, {metaSortKey: 1});
+  const nextSortKey = nextRequestGroup ?
+    nextRequestGroup.metaSortKey :
+    requestGroup.metaSortKey + 100;
+
+  // Calculate new sort key
+  const sortKeyIncrement = (nextSortKey - requestGroup.metaSortKey) / 2;
+  const metaSortKey = requestGroup.metaSortKey + sortKeyIncrement;
+
+  return db.duplicate(requestGroup, {name, metaSortKey});
 }
