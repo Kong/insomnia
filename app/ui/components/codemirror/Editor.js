@@ -128,6 +128,14 @@ class Editor extends Component {
   }
 
   /**
+   * Ask if the editor has focus
+   * @returns {boolean}
+   */
+  hasFocus () {
+    return this.codeMirror.hasFocus();
+  }
+
+  /**
    * Focus the editor on the end
    */
   focusEnd () {

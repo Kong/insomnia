@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import KeyValueEditor from '../base/KeyValueEditor';
+import KeyValueEditor from '../keyvalueeditor/Editor';
 import {trackEvent} from '../../../analytics/index';
 
 class AuthEditor extends PureComponent {

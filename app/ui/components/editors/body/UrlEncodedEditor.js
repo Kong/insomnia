@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import KeyValueEditor from '../../base/KeyValueEditor';
+import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
 class UrlEncodedEditor extends Component {

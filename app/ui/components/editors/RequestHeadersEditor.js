@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 
-import KeyValueEditor from '../base/KeyValueEditor';
+import KeyValueEditor from '../keyvalueeditor/Editor';
 import Editor from '../codemirror/Editor';
 import {trackEvent} from '../../../analytics/index';
 
@@ -78,6 +78,7 @@ class RequestHeadersEditor extends Component {
             namePlaceholder="My-Header"
             valuePlaceholder="Value"
             pairs={headers}
+            sortable={true}
             handleRender={handleRender}
             onToggleDisable={this._handleTrackToggle}
             onCreate={this._handleTrackCreate}
