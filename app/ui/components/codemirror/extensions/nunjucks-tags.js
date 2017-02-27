@@ -1,4 +1,5 @@
 import CodeMirror from 'codemirror';
+import * as misc from '../../../../common/misc';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
@@ -6,16 +7,11 @@ CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   }
 
   const refreshFn = _highlightNunjucksTags.bind(this, handleRender);
+  const debouncedRefreshFn = misc.debounce(refreshFn);
 
-  let _renderTimeout = null;
-  const tryRefresh = async () => {
-    clearTimeout(_renderTimeout);
-    _renderTimeout = setTimeout(refreshFn, 200);
-  };
-
-  this.on('changes', tryRefresh);
-  this.on('cursorActivity', tryRefresh);
-  this.on('viewportChange', tryRefresh);
+  this.on('changes', debouncedRefreshFn);
+  this.on('cursorActivity', debouncedRefreshFn);
+  this.on('viewportChange', debouncedRefreshFn);
 });
 
 async function _highlightNunjucksTags (render) {

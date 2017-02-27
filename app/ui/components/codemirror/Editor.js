@@ -209,10 +209,10 @@ class Editor extends Component {
     return mode.indexOf('xml') !== -1
   }
 
-  _handleBeautify () {
+  _handleBeautify = () => {
     trackEvent('Request', 'Beautify');
     this._prettify(this.codeMirror.getValue());
-  }
+  };
 
   _prettify (code) {
     this._codemirrorSetValue(code, true);
@@ -408,7 +408,7 @@ class Editor extends Component {
       if (this.props.updateFilter) {
         this.props.updateFilter(filter);
       }
-    }, 400);
+    }, 200);
 
     // So we don't track on every keystroke, give analytics a longer timeout
     clearTimeout(this._analyticsTimeout);
@@ -537,7 +537,7 @@ class Editor extends Component {
         <button key="prettify"
                 className="btn btn--compact"
                 title="Auto-format request body whitespace"
-                onClick={() => this._handleBeautify()}>
+                onClick={this._handleBeautify}>
           Beautify {contentTypeName}
         </button>
       )
