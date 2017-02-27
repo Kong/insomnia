@@ -19,10 +19,10 @@ install:
   - yarn install > NUL
 
 cache:
-  - '%APPDATA%\npm-cache'
-  - '%USERPROFILE%\.electron'
-  - '%LOCALAPPDATA%\Yarn'
-  - 'node_modules'
+  - '%APPDATA%\npm-cache -> .cache.txt'
+  - '%USERPROFILE%\.electron -> .cache.txt'
+  - '%LOCALAPPDATA%\Yarn -> .cache.txt'
+  - 'node_modules -> .cache.txt'
 
 #---------------------------------#
 #       tests configuration       #
