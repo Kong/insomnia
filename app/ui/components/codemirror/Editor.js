@@ -45,8 +45,9 @@ import 'codemirror/addon/mode/simple';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
 import 'codemirror/keymap/sublime';
-import '../../css/components/editor.less';
 import './modes/nunjucks';
+import './overlays/clickable';
+import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/AlertModal';
 import Link from '../base/Link';
@@ -63,7 +64,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
   placeholder: 'Start Typing...',
   foldGutter: true,
-  maxHighlightLength: 1000, // Default 10,000
+  maxHighlightLength: 10000, // Default 10,000
   height: 'auto',
   lineWrapping: true,
   scrollbarStyle: 'native',
@@ -117,15 +118,6 @@ class Editor extends Component {
     }
   }
 
-  selectAll () {
-    if (this.codeMirror) {
-      this.codeMirror.setSelection(
-        {line: 0, ch: 0},
-        {line: this.codeMirror.lineCount(), ch: 0}
-      );
-    }
-  }
-
   getValue () {
     return this.codeMirror.getValue();
   }
@@ -173,36 +165,6 @@ class Editor extends Component {
       this._codemirrorSetValue(value || '');
       this.codeMirror.setCursor({line: -1, ch: -1});
     });
-  };
-
-  _clickableOverlay = () => {
-    // Only add the click mode if we have links to click
-    const highlightLinks = !!this.props.onClickLink;
-    const regexUrl = /^https?:\/\/([\da-z.\-]+)\.([a-z.]{2,6})([\/\w .\-+=;]*)*\/?/;
-
-    return {
-      token: function (stream, state) {
-        if (highlightLinks && stream.match(regexUrl, true)) {
-          return 'clickable';
-        }
-
-        while (stream.next() != null) {
-          if (stream.match(regexUrl, false)) break;
-        }
-
-        return null;
-      }
-    }
-  };
-
-  _handleEditorClick = e => {
-    if (!this.props.onClickLink) {
-      return;
-    }
-
-    if (e.target.className.indexOf('cm-clickable') >= 0) {
-      this.props.onClickLink(e.target.innerHTML);
-    }
   };
 
   _debounce (fn) {
@@ -296,7 +258,7 @@ class Editor extends Component {
     if (this.props.readOnly) {
       // Should probably have an actual prop for this, but let's not
       // enable nunjucks on editors that the user can modify
-      mode = {name: this._normalizeMode(rawMode)};
+      mode = this._normalizeMode(rawMode);
     } else {
       mode = {name: 'nunjucks', baseMode: this._normalizeMode(rawMode)};
     }
@@ -322,17 +284,11 @@ class Editor extends Component {
         return;
       }
 
-      // Since mode is an object, let's compare the inner baseMode instead
-      if (key === 'mode' && options.mode.baseMode === cm.options.mode.baseMode) {
-        return;
-      }
-
       cm.setOption(key, options[key]);
     });
 
     // Add overlays;
-    // this.codeMirror.addOverlay(this._nunjucksOverlay());
-    this.codeMirror.addOverlay(this._clickableOverlay());
+    this.codeMirror.makeLinksClickable(this.props.onClickLink);
   }
 
   _normalizeMode (mode) {
@@ -748,9 +704,7 @@ class Editor extends Component {
 
     return (
       <div className={classes}>
-        <div className="editor__container input"
-             onClick={this._handleEditorClick}
-             style={{fontSize: `${fontSize || 12}px`}}>
+        <div className="editor__container input" style={{fontSize: `${fontSize || 12}px`}}>
           <textarea
             ref={this._handleInitTextarea}
             defaultValue=" "
