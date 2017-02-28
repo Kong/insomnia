@@ -9,6 +9,8 @@ import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/cons
 class ChangelogModal extends PureComponent {
   state = {changelog: null};
 
+  _setModalRef = m => this.modal = m;
+
   show () {
     this.modal.show();
   }
@@ -120,7 +122,7 @@ class ChangelogModal extends PureComponent {
     }
 
     return (
-      <Modal ref={m => this.modal = m} {...this.props}>
+      <Modal ref={this._setModalRef} {...this.props}>
         <ModalHeader>Insomnia Changelog</ModalHeader>
         <ModalBody className="pad changelog">
           {html}

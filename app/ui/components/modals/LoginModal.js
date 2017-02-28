@@ -16,7 +16,8 @@ class LoginModal extends PureComponent {
     message: '',
   };
 
-  _setModalRef = m => this.modal = m;
+  _setModalRef = n => this.modal = n;
+  _setEmailInputRef = n => this._emailInput = n;
   _hide = () => this.hide();
 
   _handleLogin = async e => {
@@ -68,7 +69,7 @@ class LoginModal extends PureComponent {
                 type="email"
                 required="required"
                 placeholder="me@mydomain.com"
-                ref={n => this._emailInput = n}
+                ref={this._setEmailInputRef}
               />
             </label>
           </div>

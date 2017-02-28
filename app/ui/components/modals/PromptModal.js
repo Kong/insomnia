@@ -14,6 +14,8 @@ class PromptModal extends PureComponent {
     inputType: 'text'
   };
 
+  _setModalRef = n => this.modal = n;
+
   _handleSubmit = e => {
     e.preventDefault();
 
@@ -63,7 +65,7 @@ class PromptModal extends PureComponent {
     );
 
     return (
-      <Modal ref={m => this.modal = m} {...extraProps}>
+      <Modal ref={this._setModalRef} {...extraProps}>
         <ModalHeader>{headerName}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">

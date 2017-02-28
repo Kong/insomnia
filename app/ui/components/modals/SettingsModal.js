@@ -24,7 +24,7 @@ class SettingsModal extends PureComponent {
     this.state = {}
   }
 
-  _setModalRef = m => this.modal = m;
+  _setModalRef = n => this.modal = n;
   _trackTab = name => trackEvent('Setting', `Tab ${name}`);
   _handleTabSelect = currentTabIndex => this.setState({currentTabIndex});
   _handleUpdateSetting = (key, value) => {

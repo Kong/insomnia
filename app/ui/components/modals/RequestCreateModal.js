@@ -16,6 +16,9 @@ class RequestCreateModal extends PureComponent {
     parentId: null,
   };
 
+  _setModalRef = n => this.modal = n;
+  _setInputRef = n => this._input = n;
+
   _handleSubmit = async e => {
     e.preventDefault();
 
@@ -84,14 +87,14 @@ class RequestCreateModal extends PureComponent {
     const {selectedContentType, selectedMethod} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m}>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>New Request</ModalHeader>
         <ModalBody noScroll={true}>
           <form onSubmit={this._handleSubmit} className="pad">
             <div className="row-fill">
               <div className="form-control form-control--outlined">
                 <label>Name
-                  <input ref={n => this._input = n} type="text"/>
+                  <input ref={this._setInputRef} type="text"/>
                 </label>
               </div>
               <div className="form-control" style={{width: 'auto'}}>

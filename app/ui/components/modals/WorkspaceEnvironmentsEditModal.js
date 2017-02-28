@@ -25,6 +25,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
 
   _hide = () => this.modal.hide();
   _setEditorRef = n => this._envEditor = n;
+  _setModalRef = n => this.modal = n;
 
   async show (workspace) {
     this.modal.show();
@@ -156,7 +157,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll={true} className="env-modal">
           <div className="env-modal__sidebar">

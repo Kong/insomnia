@@ -12,6 +12,8 @@ class SyncLogsModal extends PureComponent {
     logs: []
   };
 
+  _setModalRef = n => this.modal = n;
+
   show () {
     clearInterval(this._interval);
     this._interval = setInterval(() => this._updateModal(), 2000);
@@ -85,7 +87,7 @@ class SyncLogsModal extends PureComponent {
   render () {
     const rows = this._formatLogs();
     return (
-      <Modal ref={m => this.modal = m} tall={true}>
+      <Modal ref={this._setModalRef} tall={true}>
         <ModalHeader>Sync Debug Logs</ModalHeader>
         <ModalBody className="pad selectable txt-sm monospace">
           {rows.map(row => row.jsx)}

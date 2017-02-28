@@ -17,7 +17,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
 
   _handleSubmit = e => e.preventDefault();
   _handleClose = () => this.hide();
-  _setModalRef = m => this.modal = m;
+  _setModalRef = n => this.modal = n;
 
   _handleUnshare = async () => {
     if (!session.isLoggedIn()) {

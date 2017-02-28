@@ -65,11 +65,20 @@ async function _highlightNunjucksTags (render) {
       }
 
       // See if we already have a mark for this
+      let hasOwnMark = false;
       for (const m of doc.findMarks(start, end)) {
-        if (!m.__nunjucks) {
-          continue;
+
+        // Only check marks we created
+        if (m.__nunjucks) {
+          hasOwnMark = true;
         }
+
         activeMarks.push(m);
+      }
+
+      // Already have a mark for this, so leave it alone
+      if (hasOwnMark) {
+        continue;
       }
 
       const element = document.createElement('span');
@@ -81,6 +90,7 @@ async function _highlightNunjucksTags (render) {
       await _updateElementText(renderString, element, tok.string);
 
       const mark = this.markText(start, end, {
+        __nunjucks: true, // Mark that we created it
         handleMouseEvents: false,
         replacedWith: element,
       });
@@ -102,7 +112,6 @@ async function _highlightNunjucksTags (render) {
 
         const dialogOptions = {
           __dirty: false,
-          __nunjucks: true,
           value: tok.string,
           selectValueOnOpen: true,
           closeOnEnter: true,
@@ -144,12 +153,21 @@ async function _highlightNunjucksTags (render) {
     {ch: 0, line: vp.from},
     {ch: 0, line: vp.to},
   );
+
   for (const mark of marksInViewport) {
+    // Only check marks we created
     if (!mark.__nunjucks) {
       continue;
     }
 
-    if (!activeMarks.find(m => m.id === mark.id)) {
+    let inActiveMarks = false;
+    for (const activeMark of activeMarks) {
+      if (activeMark.id === mark.id) {
+        inActiveMarks = true;
+      }
+    }
+
+    if (!inActiveMarks) {
       mark.clear();
     }
   }

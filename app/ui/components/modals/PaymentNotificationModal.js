@@ -17,6 +17,8 @@ class PaymentNotificationModal extends PureComponent {
     this.hide();
   };
 
+  _setModalRef = n => this.modal = n;
+
   show () {
     // Don't trigger automatically if user has dismissed it already
     if (hidePaymentNotificationUntilNextLaunch) {
@@ -32,14 +34,9 @@ class PaymentNotificationModal extends PureComponent {
     this.modal.hide();
   }
 
-  // For Testing
-  // componentDidMount () {
-  //   this.modal.show();
-  // }
-
   render () {
     return (
-      <Modal ref={m => this.modal = m}>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>Insomnia Plus Trial Ended</ModalHeader>
         <ModalBody className="pad changelog">
           <div className="text-center pad">

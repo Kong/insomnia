@@ -64,9 +64,9 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code"/> Generate Code
         </DropdownItem>
-        <DropdownItem buttonClass={CopyButton} content={request._id} stayOpenAfterClick={true}>
-          <i className="fa fa-copy"/> Copy Id
-        </DropdownItem>
+        {/*<DropdownItem buttonClass={CopyButton} content={request._id} stayOpenAfterClick={true}>*/}
+        {/*<i className="fa fa-copy"/> Copy Id*/}
+        {/*</DropdownItem>*/}
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon={true}>
           <i className="fa fa-trash-o"/> Delete
         </DropdownItem>

@@ -10,6 +10,8 @@ class AlertModal extends PureComponent {
     message: '',
   };
 
+  _setModalRef = m => this.modal = m;
+
   _handleOk = () => {
     this.hide();
     this._okCallback();
@@ -33,7 +35,7 @@ class AlertModal extends PureComponent {
     const {message, title} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} closeOnKeyCodes={[13]} {...extraProps}>
+      <Modal ref={this._setModalRef} closeOnKeyCodes={[13]} {...extraProps}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
           {message}
