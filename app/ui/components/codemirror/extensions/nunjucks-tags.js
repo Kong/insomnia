@@ -65,10 +65,11 @@ async function _highlightNunjucksTags (render) {
       }
 
       // See if we already have a mark for this
-      const existingMarks = doc.findMarks(start, end);
-      if (existingMarks.length) {
-        existingMarks.map(m => activeMarks.push(m));
-        continue;
+      for (const m of doc.findMarks(start, end)) {
+        if (!m.__nunjucks) {
+          continue;
+        }
+        activeMarks.push(m);
       }
 
       const element = document.createElement('span');
@@ -101,6 +102,7 @@ async function _highlightNunjucksTags (render) {
 
         const dialogOptions = {
           __dirty: false,
+          __nunjucks: true,
           value: tok.string,
           selectValueOnOpen: true,
           closeOnEnter: true,
@@ -143,6 +145,10 @@ async function _highlightNunjucksTags (render) {
     {ch: 0, line: vp.to},
   );
   for (const mark of marksInViewport) {
+    if (!mark.__nunjucks) {
+      continue;
+    }
+
     if (!activeMarks.find(m => m.id === mark.id)) {
       mark.clear();
     }
