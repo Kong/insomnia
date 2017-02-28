@@ -1,4 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
+import ReactDOM from 'react-dom';
+import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/FileInputButton';
 import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown/index';
@@ -9,6 +11,9 @@ import OneLineEditor from '../codemirror/OneLineEditor';
 class KeyValueEditorRow extends PureComponent {
   _nameInput = null;
   _valueInput = null;
+  state = {
+    dragDirection: 0
+  };
 
   focusName () {
     this._nameInput.focus();
@@ -18,12 +23,18 @@ class KeyValueEditorRow extends PureComponent {
     this._valueInput.focus();
   }
 
+  setDragDirection (dragDirection) {
+    if (dragDirection !== this.state.dragDirection) {
+      this.setState({dragDirection})
+    }
+  }
+
   _setNameInputRef = n => this._nameInput = n;
   _setValueInputRef = n => this._valueInput = n;
 
   _sendChange = patch => {
     const pair = Object.assign({}, this.props.pair, patch);
-    this.props.onChange(this.props.id, pair);
+    this.props.onChange && this.props.onChange(pair);
   };
 
   _handleNameChange = name => this._sendChange({name});
@@ -32,12 +43,20 @@ class KeyValueEditorRow extends PureComponent {
   _handleTypeChange = type => this._sendChange({type});
   _handleDisableChange = disabled => this._sendChange({disabled});
 
-  _handleDelete = () => this.props.onDelete(this.props.id);
+  _handleFocusName = () => this.props.onFocusName(this.props.pair);
+  _handleFocusValue = () => this.props.onFocusValue(this.props.pair);
 
-  _handleFocusName = () => this.props.onFocusName(this.props.id);
-  _handleFocusValue = () => this.props.onFocusValue(this.props.id);
+  _handleDelete = () => {
+    if (this.props.onDelete) {
+      this.props.onDelete(this.props.pair);
+    }
+  };
 
-  _handleKeyDown = (e, value) => this.props.onKeyDown(this.props.id, e, value);
+  _handleKeyDown = (e, value) => {
+    if (this.props.onKeyDown) {
+      this.props.onKeyDown(this.props.pair, e, value);
+    }
+  };
 
   render () {
     const {
@@ -49,21 +68,30 @@ class KeyValueEditorRow extends PureComponent {
       multipart,
       sortable,
       hideButtons,
+      readOnly,
       className,
+      isDragging,
+      isDraggingOver,
+      connectDragSource,
+      connectDropTarget,
     } = this.props;
 
-    const classes = classnames(
-      className,
-      'key-value-editor__row',
-      {'key-value-editor__row--disabled': pair.disabled},
-    );
+    const {dragDirection} = this.state;
 
-    return (
+    const classes = classnames(className, {
+      'key-value-editor__row': true,
+      'key-value-editor__row--disabled': pair.disabled,
+      'key-value-editor__row--dragging': isDragging,
+      'key-value-editor__row--dragging-above': isDraggingOver && dragDirection > 0,
+      'key-value-editor__row--dragging-below': isDraggingOver && dragDirection < 0
+    });
+
+    const row = (
       <li className={classes}>
         {sortable ?
-          <div className="key-value-editor__row__drag">
+          <button className="key-value-editor__row__drag">
             <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
-          </div> : null
+          </button> : null
         }
 
         <div className="form-control form-control--underlined form-control--wide">
@@ -72,6 +100,7 @@ class KeyValueEditorRow extends PureComponent {
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
             render={handleRender}
+            readOnly={readOnly}
             onChange={this._handleNameChange}
             onFocus={this._handleFocusName}
             onKeyDown={this._handleKeyDown}
@@ -89,6 +118,7 @@ class KeyValueEditorRow extends PureComponent {
             ) : (
               <OneLineEditor
                 ref={this._setValueInputRef}
+                readOnly={readOnly}
                 type={valueInputType || 'text'}
                 placeholder={valuePlaceholder || 'Value'}
                 defaultValue={pair.value}
@@ -101,18 +131,25 @@ class KeyValueEditorRow extends PureComponent {
         </div>
 
         {multipart ? (
-            <Dropdown right={true}>
-              <DropdownButton className="tall">
-                <i className="fa fa-caret-down"></i>
-              </DropdownButton>
-              <DropdownItem onClick={this._handleTypeChange} value="text">
-                Text
-              </DropdownItem>
-              <DropdownItem onClick={this._handleTypeChange} value="file">
-                File
-              </DropdownItem>
-            </Dropdown>
-          ) : null}
+            !hideButtons ? (
+                <Dropdown right={true}>
+                  <DropdownButton className="tall">
+                    <i className="fa fa-caret-down"></i>
+                  </DropdownButton>
+                  <DropdownItem onClick={this._handleTypeChange} value="text">
+                    Text
+                  </DropdownItem>
+                  <DropdownItem onClick={this._handleTypeChange} value="file">
+                    File
+                  </DropdownItem>
+                </Dropdown>
+              ) : (
+                <button>
+                  <i className="fa fa-empty"/>
+                </button>
+              )
+          ) : null
+        }
 
         {!hideButtons ? (
             <Button onClick={this._handleDisableChange}
@@ -124,9 +161,7 @@ class KeyValueEditorRow extends PureComponent {
               }
             </Button>
           ) : (
-            <button>
-              <i className="fa fa-empty"/>
-            </button>
+            <button><i className="fa fa-empty"/></button>
           )}
 
         {!hideButtons ? (
@@ -144,18 +179,19 @@ class KeyValueEditorRow extends PureComponent {
             </button>
           )}
       </li>
-    )
+    );
+
+    return connectDragSource(connectDropTarget(row));
   }
 }
 
 KeyValueEditorRow.propTypes = {
   // Required
-  id: PropTypes.any.isRequired,
   onChange: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   onFocusName: PropTypes.func.isRequired,
   onFocusValue: PropTypes.func.isRequired,
-  onKeyDown: PropTypes.func,
+  index: PropTypes.number.isRequired,
   pair: PropTypes.shape({
     name: PropTypes.string.isRequired,
     value: PropTypes.string,
@@ -165,6 +201,9 @@ KeyValueEditorRow.propTypes = {
   }).isRequired,
 
   // Optional
+  readOnly: PropTypes.bool,
+  onMove: PropTypes.func,
+  onKeyDown: PropTypes.func,
   handleRender: PropTypes.func,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
@@ -172,6 +211,70 @@ KeyValueEditorRow.propTypes = {
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
   hideButtons: PropTypes.bool,
+
+  // For drag-n-drop
+  connectDragSource: PropTypes.func,
+  connectDropTarget: PropTypes.func,
+  isDragging: PropTypes.bool,
+  isDraggingOver: PropTypes.bool,
 };
 
-export default KeyValueEditorRow;
+const dragSource = {
+  beginDrag(props) {
+    return {index: props.index};
+  }
+};
+
+
+function isAbove (monitor, component) {
+  const hoveredNode = ReactDOM.findDOMNode(component);
+
+  const hoveredTop = hoveredNode.getBoundingClientRect().top;
+  const draggedTop = monitor.getSourceClientOffset().y;
+
+  return hoveredTop > draggedTop;
+}
+
+const dragTarget = {
+  drop (props, monitor, component) {
+    if (isAbove(monitor, component)) {
+      props.onMove(monitor.getItem().index, props.index - 1);
+    } else {
+      props.onMove(monitor.getItem().index, props.index);
+    }
+  },
+  hover (props, monitor, component) {
+    if (isAbove(monitor, component)) {
+      component.decoratedComponentInstance.setDragDirection(1);
+    } else {
+      component.decoratedComponentInstance.setDragDirection(-1);
+    }
+  }
+};
+
+function sourceCollect (connect, monitor) {
+  return {
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging(),
+  };
+}
+
+function targetCollect (connect, monitor) {
+  return {
+    connectDropTarget: connect.dropTarget(),
+    isDraggingOver: monitor.isOver(),
+  };
+}
+
+const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValueEditorRow);
+const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
+
+target.prototype.focusName = function () {
+  this.handler.component.decoratedComponentInstance.focusName();
+};
+
+target.prototype.focusValue = function () {
+  this.handler.component.decoratedComponentInstance.focusValue();
+};
+
+export default target;

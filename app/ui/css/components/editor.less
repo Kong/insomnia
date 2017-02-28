@@ -15,6 +15,17 @@
   &.editor--single-line {
     &, * {
       font-family: @font-default !important;
+      text-decoration: inherit;
+      color: inherit;
+    }
+
+    .CodeMirror > div > textarea {
+      // This is the hidden div CodeMirror uses for stuff. By, default it's
+      // a 1000px absolutely positioned thing for doing work inside of. However, this
+      // means that the drag-n-drop shadow image is wider than it should be. So, we're
+      // constraining it here, which may break CM in weird ways, but doesn't seem to
+      // at first glance.
+      max-width: 5em !important;
     }
 
     .CodeMirror,
@@ -30,6 +41,7 @@
     }
 
     .CodeMirror-scroll {
+      padding-bottom: 1em;
       height: 100%;
       display: flex;
       flex-direction: row;

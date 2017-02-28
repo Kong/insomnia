@@ -279,6 +279,7 @@ class Editor extends Component {
       lineWrapping,
       placeholder,
       noMatchBrackets,
+      noDragDrop,
       hideScrollbars,
     } = this.props;
 
@@ -295,6 +296,7 @@ class Editor extends Component {
       readOnly,
       placeholder: placeholder || '',
       mode: mode,
+      dragDrop: !noDragDrop,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       lineNumbers: !hideLineNumbers,
       lineWrapping: lineWrapping,
@@ -559,12 +561,10 @@ class Editor extends Component {
     return (
       <div className={classes}>
         <div className="editor__container input" style={{fontSize: `${fontSize || 12}px`}}>
-          <textarea
-            ref={this._handleInitTextarea}
-            defaultValue=" "
-            readOnly={readOnly}
-            autoComplete="off"
-          />
+          <textarea ref={this._handleInitTextarea}
+                    defaultValue=" "
+                    readOnly={readOnly}
+                    autoComplete="off"/>
         </div>
         {toolbar}
       </div>
@@ -589,6 +589,7 @@ Editor.propTypes = {
   value: PropTypes.string,
   autoPrettify: PropTypes.bool,
   manualPrettify: PropTypes.bool,
+  noDragDrop: PropTypes.bool,
   className: PropTypes.any,
   updateFilter: PropTypes.func,
   defaultTabBehavior: PropTypes.bool,

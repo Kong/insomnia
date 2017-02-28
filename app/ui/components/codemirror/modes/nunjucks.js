@@ -7,7 +7,7 @@ CodeMirror.defineMode('nunjucks', (config, parserConfig) => {
 });
 
 function _nunjucksMode () {
-  const regexVariable = /^{{ ?([^ ]+) +[^}]* ?}}/;
+  const regexVariable = /^{{ ?([^ ]+) ?[^}]* ?}}/;
   const regexTag = /^{% ?([^ ]+) +[^%]* ?%}/;
   const regexComment = /^{# ?[^#]+ ?#}/;
   let ticker = 1;

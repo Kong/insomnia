@@ -26,15 +26,16 @@ class OneLineEditor extends PureComponent {
       <Editor
         ref={this._setRef}
         {...props}
+        defaultTabBehavior
+        hideLineNumbers
+        hideScrollbars
+        noDragDrop
+        noMatchBrackets
+        singleLine
         onChange={this._handleChange}
         className="editor--single-line"
         value={defaultValue}
-        defaultTabBehavior={true}
-        hideLineNumbers={true}
-        hideScrollbars={true}
-        noMatchBrackets={true}
         lineWrapping={false}
-        singleLine={true}
       />
     )
   }

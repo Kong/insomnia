@@ -13,23 +13,45 @@
   .key-value-editor__row {
     display: flex;
     flex-direction: row;
-    align-items: center;
-
-    &.key-value-editor__row--disabled .input,
-    &.key-value-editor__row--disabled button {
-      text-decoration: line-through;
-      color: @hl-xl;
-    }
-
-    .key-value-editor__row__drag {
-      color: var(--hl-lg);
-    }
+    align-items: stretch;
 
     .input {
       background-color: transparent;
       height: @line-height-sm;
       box-sizing: border-box;
       margin: @padding-xs 0 0;
+    }
+
+    .key-value-editor__row__drag {
+      font-size: @font-size-sm;
+      color: var(--hl-lg) !important;
+      &:hover {
+        color: var(--hl-lg) !important;
+      }
+    }
+
+    &.key-value-editor__row--disabled .input,
+    &.key-value-editor__row--disabled button {
+      text-decoration: line-through;
+      opacity: 0.4;
+    }
+
+    &.key-value-editor__row--dragging {
+      // Set opacity on children so we can still see the separator
+      & > * {
+        opacity: 0.3;
+      }
+    }
+
+    &.key-value-editor__row--dragging-below::after,
+    &.key-value-editor__row--dragging-above::before {
+      position: absolute;
+      height: 0;
+      right: 0;
+      left: 0;
+      border-bottom: 2px dotted var(--color-surprise);
+      content: " ";
+      display: block
     }
 
     & > * {

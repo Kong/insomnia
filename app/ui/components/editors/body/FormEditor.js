@@ -23,6 +23,7 @@ class FormEditor extends Component {
       <div className="scrollable-container tall wide">
         <div className="scrollable">
           <KeyValueEditor
+            sortable
             namePlaceholder="name"
             valuePlaceholder="value"
             handleRender={handleRender}
