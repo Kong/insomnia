@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import KeyValueEditor from '../../base/KeyValueEditor';
+import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
 class FormEditor extends Component {
@@ -23,6 +23,7 @@ class FormEditor extends Component {
       <div className="scrollable-container tall wide">
         <div className="scrollable">
           <KeyValueEditor
+            sortable
             namePlaceholder="name"
             valuePlaceholder="value"
             handleRender={handleRender}

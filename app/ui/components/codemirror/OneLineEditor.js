@@ -1,14 +1,16 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import Editor from './Editor';
 
-class OneLineEditor extends Component {
+class OneLineEditor extends PureComponent {
   constructor (props) {
     super(props);
     this.value = props.defaultValue;
   }
 
   focus () {
-    this.editor.focusEnd();
+    if (!this.editor.hasFocus()) {
+      this.editor.focusEnd();
+    }
   }
 
   _handleChange = value => {
@@ -24,15 +26,16 @@ class OneLineEditor extends Component {
       <Editor
         ref={this._setRef}
         {...props}
+        defaultTabBehavior
+        hideLineNumbers
+        hideScrollbars
+        noDragDrop
+        noMatchBrackets
+        singleLine
         onChange={this._handleChange}
         className="editor--single-line"
         value={defaultValue}
-        defaultTabBehavior={true}
-        hideLineNumbers={true}
-        hideScrollbars={true}
-        noMatchBrackets={true}
         lineWrapping={false}
-        singleLine={true}
       />
     )
   }

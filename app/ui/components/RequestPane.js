@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {parse as urlParse} from 'url';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import KeyValueEditor from './base/KeyValueEditor';
+import KeyValueEditor from './keyvalueeditor/Editor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
 import RenderedQueryString from './RenderedQueryString';
@@ -243,6 +243,7 @@ class RequestPane extends PureComponent {
                   key={uniqueKey}
                   namePlaceholder="name"
                   valuePlaceholder="value"
+                  sortable={true}
                   onToggleDisable={this._trackQueryToggle}
                   onCreate={this._trackQueryCreate}
                   onDelete={this._trackQueryDelete}

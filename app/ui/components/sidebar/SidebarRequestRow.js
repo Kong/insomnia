@@ -82,7 +82,8 @@ class SidebarRequestRow extends PureComponent {
       node = (
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
-            <button className="sidebar__clickable" onClick={this._handleRequestCreateFromEmpty}>
+            <button className="sidebar__clickable"
+                    onClick={this._handleRequestCreateFromEmpty}>
               <em className="faded">click to add first request...</em>
             </button>
           </div>
@@ -91,9 +92,12 @@ class SidebarRequestRow extends PureComponent {
     } else {
       node = (
         <li className={classes}>
-          <div
-            className={classnames('sidebar__item', 'sidebar__item--request', {'sidebar__item--active': isActive})}>
-            <button className="wide" onClick={this._handleRequestActivate} onContextMenu={this._handleShowRequestActions}>
+          <div className={classnames('sidebar__item', 'sidebar__item--request', {
+            'sidebar__item--active': isActive
+          })}>
+            <button className="wide"
+                    onClick={this._handleRequestActivate}
+                    onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
                 <Editable value={request.name}
@@ -146,15 +150,10 @@ SidebarRequestRow.propTypes = {
   request: PropTypes.object
 };
 
-/**
- * Implements the drag source contract.
- */
 const dragSource = {
   beginDrag(props) {
     trackEvent('Request', 'Drag', 'Begin');
-    return {
-      request: props.request
-    };
+    return {request: props.request};
   }
 };
 
@@ -209,4 +208,5 @@ function targetCollect (connect, monitor) {
 
 const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
 const target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+
 export default target;
