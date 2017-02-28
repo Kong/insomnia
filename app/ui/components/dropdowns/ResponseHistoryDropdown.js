@@ -6,6 +6,7 @@ import TimeTag from '../tags/TimeTag';
 import * as models from '../../../models/index';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
+import * as misc from '../../../common/misc';
 
 class ResponseHistoryDropdown extends PureComponent {
   state = {
@@ -22,16 +23,20 @@ class ResponseHistoryDropdown extends PureComponent {
     this.props.handleSetActiveResponse(responseId);
   };
 
-  async _load (requestId) {
+  _load = misc.debounce(async requestId => {
     const responses = await models.response.findRecentForRequest(requestId);
 
     // NOTE: this is bad practice, but I can't figure out a better way.
     // This component may not be mounted if the user switches to a request that
     // doesn't have a response
-    if (!this._unmounted) {
+    if (this._unmounted) {
+      return;
+    }
+
+    if (this.state.responses.length !== responses.length) {
       this.setState({responses});
     }
-  }
+  });
 
   componentWillUnmount () {
     this._unmounted = true;

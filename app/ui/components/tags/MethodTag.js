@@ -1,24 +1,27 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import * as constants from '../../../common/constants';
 import * as util from '../../../common/misc';
 
-const MethodTag = ({method, fullNames}) => {
-  let methodName = method;
+class MethodTag extends PureComponent {
+  render () {
+    const {method, fullNames} = this.props;
+    let methodName = method;
 
-  if (!fullNames) {
-    if (method === constants.METHOD_DELETE || method === constants.METHOD_OPTIONS) {
-      methodName = method.slice(0, 3);
-    } else if (method.length > 4) {
-      methodName = util.removeVowels(method).slice(0, 4);
+    if (!fullNames) {
+      if (method === constants.METHOD_DELETE || method === constants.METHOD_OPTIONS) {
+        methodName = method.slice(0, 3);
+      } else if (method.length > 4) {
+        methodName = util.removeVowels(method).slice(0, 4);
+      }
     }
-  }
 
-  return (
-    <div className={'tag tag--no-bg tag--small http-method-' + method}>
-      <span className='tag__inner'>{methodName}</span>
-    </div>
-  )
-};
+    return (
+      <div className={'tag tag--no-bg tag--small http-method-' + method}>
+        <span className='tag__inner'>{methodName}</span>
+      </div>
+    )
+  }
+}
 
 MethodTag.propTypes = {
   method: PropTypes.string.isRequired,

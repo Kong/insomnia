@@ -1,26 +1,29 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 
-const ModalHeader = ({hideCloseButton, className, children}) => {
-  let closeButton = null;
+class ModalHeader extends PureComponent {
+  render () {
+    const {hideCloseButton, className, children} = this.props;
+    let closeButton = null;
 
-  if (!hideCloseButton) {
-    closeButton = (
-      <button type="button" className="btn btn--compact modal__close-btn" data-close-modal="true">
-        <i className="fa fa-times"></i>
-      </button>
-    )
-  }
+    if (!hideCloseButton) {
+      closeButton = (
+        <button type="button" className="btn btn--compact modal__close-btn" data-close-modal="true">
+          <i className="fa fa-times"></i>
+        </button>
+      )
+    }
 
-  return (
-    <div className={classnames('modal__header', className)}>
-      <div className="modal__header__children">
-        {children}
+    return (
+      <div className={classnames('modal__header', className)}>
+        <div className="modal__header__children">
+          {children}
+        </div>
+        {closeButton}
       </div>
-      {closeButton}
-    </div>
-  );
-};
+    );
+  }
+}
 
 ModalHeader.propTypes = {
   hideCloseButton: PropTypes.bool
