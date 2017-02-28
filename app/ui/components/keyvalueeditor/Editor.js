@@ -44,18 +44,24 @@ class KeyValueEditor extends PureComponent {
     this._onChange(pairs);
   };
 
-  _handleMove = (i, iTo) => {
-    console.log('MOVE', i, iTo);
+  _handleMove = (pairToMove, pairToTarget, targetOffset) => {
+    if (pairToMove.id === pairToTarget.id) {
+      // Nothing to do
+      return;
+    }
 
-    const withoutPair = [
-      ...this.props.pairs.slice(0, i),
-      ...this.props.pairs.slice(i + 1),
-    ];
+    const withoutPair = this.state.pairs.filter(p => p.id !== pairToMove.id);
+    let toIndex = withoutPair.findIndex(p => p.id === pairToTarget.id);
+
+    // If we're moving below, add 1 to the index
+    if (targetOffset < 0) {
+      toIndex += 1;
+    }
 
     const pairs = [
-      ...withoutPair.slice(0, iTo),
-      Object.assign({}, this.props.pairs[i]),
-      ...withoutPair.slice(iTo),
+      ...withoutPair.slice(0, toIndex),
+      Object.assign({}, pairToMove),
+      ...withoutPair.slice(toIndex),
     ];
 
     this._onChange(pairs);
@@ -273,8 +279,9 @@ class KeyValueEditor extends PureComponent {
 
         {!maxPairs || pairs.length < maxPairs ?
           <KeyValueEditorRow
-            sortable
             hideButtons
+            sortable
+            noDropZone
             readOnly
             className="faded"
             index={-1}

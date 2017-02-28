@@ -67,6 +67,7 @@ class KeyValueEditorRow extends PureComponent {
       valueInputType,
       multipart,
       sortable,
+      noDropZone,
       hideButtons,
       readOnly,
       className,
@@ -181,7 +182,11 @@ class KeyValueEditorRow extends PureComponent {
       </li>
     );
 
-    return connectDragSource(connectDropTarget(row));
+    if (noDropZone || !sortable) {
+      return row;
+    } else {
+      return connectDragSource(connectDropTarget(row));
+    }
   }
 }
 
@@ -210,6 +215,7 @@ KeyValueEditorRow.propTypes = {
   valueInputType: PropTypes.string,
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
+  noDropZone: PropTypes.bool,
   hideButtons: PropTypes.bool,
 
   // For drag-n-drop
@@ -221,7 +227,7 @@ KeyValueEditorRow.propTypes = {
 
 const dragSource = {
   beginDrag(props) {
-    return {index: props.index};
+    return {pair: props.pair};
   }
 };
 
@@ -238,9 +244,9 @@ function isAbove (monitor, component) {
 const dragTarget = {
   drop (props, monitor, component) {
     if (isAbove(monitor, component)) {
-      props.onMove(monitor.getItem().index, props.index - 1);
+      props.onMove(monitor.getItem().pair, props.pair, 1);
     } else {
-      props.onMove(monitor.getItem().index, props.index);
+      props.onMove(monitor.getItem().pair, props.pair, -1);
     }
   },
   hover (props, monitor, component) {

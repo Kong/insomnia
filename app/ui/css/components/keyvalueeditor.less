@@ -11,6 +11,7 @@
   }
 
   .key-value-editor__row {
+    position: relative;
     display: flex;
     flex-direction: row;
     align-items: stretch;
@@ -52,6 +53,10 @@
       border-bottom: 2px dotted var(--color-surprise);
       content: " ";
       display: block
+    }
+
+    &.key-value-editor__row--dragging-below::after {
+      top: 100%;
     }
 
     & > * {
