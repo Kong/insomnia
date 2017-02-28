@@ -1,14 +1,16 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
-class AlertModal extends Component {
+class AlertModal extends PureComponent {
   state = {
     title: '',
     message: '',
   };
+
+  _setModalRef = m => this.modal = m;
 
   _handleOk = () => {
     this.hide();
@@ -33,7 +35,7 @@ class AlertModal extends Component {
     const {message, title} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} closeOnKeyCodes={[13]} {...extraProps}>
+      <Modal ref={this._setModalRef} closeOnKeyCodes={[13]} {...extraProps}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
           {message}

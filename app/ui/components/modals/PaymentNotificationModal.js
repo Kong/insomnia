@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import PromptButton from '../base/PromptButton';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
@@ -11,11 +11,13 @@ import * as sync from '../../../sync/index';
 
 let hidePaymentNotificationUntilNextLaunch = false;
 
-class PaymentNotificationModal extends Component {
+class PaymentNotificationModal extends PureComponent {
   _handleCancel = async () => {
     await sync.cancelTrial();
     this.hide();
   };
+
+  _setModalRef = n => this.modal = n;
 
   show () {
     // Don't trigger automatically if user has dismissed it already
@@ -32,14 +34,9 @@ class PaymentNotificationModal extends Component {
     this.modal.hide();
   }
 
-  // For Testing
-  // componentDidMount () {
-  //   this.modal.show();
-  // }
-
   render () {
     return (
-      <Modal ref={m => this.modal = m}>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>Insomnia Plus Trial Ended</ModalHeader>
         <ModalBody className="pad changelog">
           <div className="text-center pad">

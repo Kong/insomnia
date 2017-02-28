@@ -33,7 +33,9 @@ class RequestPane extends PureComponent {
     trackEvent('Request Pane', 'CTA', 'New Request');
   };
 
-  _handleImportQueryFromUrl = e => {
+  _handleUpdateRequestUrl = debounce(url => this.props.updateRequestUrl(url));
+
+  _handleImportQueryFromUrl = () => {
     const {request} = this.props;
 
     let parsed;
@@ -77,7 +79,6 @@ class RequestPane extends PureComponent {
       useBulkHeaderEditor,
       handleGenerateCode,
       handleImport,
-      updateRequestUrl,
       updateRequestMethod,
       updateRequestBody,
       updateRequestParameters,
@@ -150,7 +151,7 @@ class RequestPane extends PureComponent {
             key={uniqueKey}
             method={request.method}
             onMethodChange={updateRequestMethod}
-            onUrlChange={debounce(updateRequestUrl)}
+            onUrlChange={this._handleUpdateRequestUrl}
             handleImport={handleImport}
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
@@ -256,7 +257,6 @@ class RequestPane extends PureComponent {
 
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
-                      disabled={!urlHasQueryParameters}
                       title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
                       onClick={this._handleImportQueryFromUrl}>
                 Import from Url

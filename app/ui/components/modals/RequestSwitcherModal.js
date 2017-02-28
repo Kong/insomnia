@@ -1,6 +1,7 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
+import Button from '../base/Button';
 import Modal from '../base/Modal';
 import ModalHeader from '../base/ModalHeader';
 import ModalBody from '../base/ModalBody';
@@ -8,7 +9,7 @@ import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
 
 
-class RequestSwitcherModal extends Component {
+class RequestSwitcherModal extends PureComponent {
   state = {
     searchString: '',
     requestGroups: [],
@@ -18,6 +19,9 @@ class RequestSwitcherModal extends Component {
     matchedWorkspaces: [],
     activeIndex: -1
   };
+
+  _setModalRef = n => this.modal = n;
+  _focusRef = n => n && n.focus();
 
   _setActiveIndex (activeIndex) {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
@@ -30,7 +34,7 @@ class RequestSwitcherModal extends Component {
     this.setState({activeIndex});
   }
 
-  _activateCurrentIndex () {
+  _activateCurrentIndex = () => {
     const {
       activeIndex,
       matchedRequests,
@@ -50,7 +54,7 @@ class RequestSwitcherModal extends Component {
       // Create request if no match
       this._createRequestFromSearch();
     }
-  }
+  };
 
   async _createRequestFromSearch () {
     const {activeRequestParentId} = this.props;
@@ -66,25 +70,27 @@ class RequestSwitcherModal extends Component {
     this._activateRequest(request);
   }
 
-  _activateWorkspace (workspace) {
+  _activateWorkspace = workspace => {
     if (!workspace) {
       return;
     }
 
     this.props.handleSetActiveWorkspace(workspace._id);
     this.modal.hide();
-  }
+  };
 
-  _activateRequest (request) {
+  _activateRequest = request => {
     if (!request) {
       return;
     }
 
     this.props.activateRequest(request._id);
     this.modal.hide();
-  }
+  };
 
-  async _handleChange (searchString) {
+  _handleChange = e => this._handleChangeValue(e.target.value);
+
+  _handleChangeValue = async searchString => {
     const {workspaceChildren, workspaces} = this.props;
     const {workspaceId, activeRequestParentId} = this.props;
 
@@ -139,16 +145,16 @@ class RequestSwitcherModal extends Component {
       matchedRequests,
       matchedWorkspaces,
     });
-  }
+  };
 
   async show () {
     this.modal.show();
-    this._handleChange('');
+    this._handleChangeValue('');
   }
 
   async toggle () {
     this.modal.toggle();
-    this._handleChange('');
+    this._handleChangeValue('');
   }
 
   componentDidMount () {
@@ -184,7 +190,7 @@ class RequestSwitcherModal extends Component {
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
 
     return (
-      <Modal ref={m => this.modal = m} top={true} dontFocus={true}>
+      <Modal ref={this._setModalRef} top={true} dontFocus={true}>
         <ModalHeader hideCloseButton={true}>
           <div className="pull-right txt-md pad-right">
             <span className="monospace">tab</span> or
@@ -201,9 +207,9 @@ class RequestSwitcherModal extends Component {
           <div className="form-control form-control--outlined no-margin">
             <input
               type="text"
-              ref={n => n && n.focus()}
+              ref={this._focusRef}
               value={searchString}
-              onChange={e => this._handleChange(e.target.value)}
+              onChange={this._handleChange}
             />
           </div>
           <ul className="pad-top">
@@ -216,7 +222,7 @@ class RequestSwitcherModal extends Component {
 
               return (
                 <li key={r._id}>
-                  <button onClick={e => this._activateRequest(r)} className={buttonClasses}>
+                  <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
                     {requestGroup ? (
                         <div className="pull-right faint italic">
                           {requestGroup.name}
@@ -226,7 +232,7 @@ class RequestSwitcherModal extends Component {
                       ) : null}
                     <MethodTag method={r.method}/>
                     <strong>{r.name}</strong>
-                  </button>
+                  </Button>
                 </li>
               )
             })}
@@ -241,11 +247,11 @@ class RequestSwitcherModal extends Component {
 
               return (
                 <li key={w._id}>
-                  <button onClick={e => this._activateRequest(w)} className={buttonClasses}>
+                  <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
                     <i className="fa fa-random"></i>
                     &nbsp;&nbsp;&nbsp;
                     Switch to <strong>{w.name}</strong>
-                  </button>
+                  </Button>
                 </li>
               )
             })}
@@ -259,7 +265,7 @@ class RequestSwitcherModal extends Component {
 
                 <button className="btn btn--outlined btn--compact"
                         disabled={!searchString}
-                        onClick={e => this._activateCurrentIndex()}>
+                        onClick={this._activateCurrentIndex}>
                   Create a request named {searchString}
                 </button>
               </div>

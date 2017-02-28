@@ -1,6 +1,6 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 
-class ResponseRaw extends Component {
+class ResponseRaw extends PureComponent {
   _update (value) {
     // Use a timeout so it doesn't block the UI
     window.requestAnimationFrame(() => this._setTextAreaValue(value))

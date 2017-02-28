@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 
 import CopyButton from '../base/CopyButton';
@@ -27,7 +27,7 @@ const TO_ADD_CONTENT_LENGTH = {
 };
 
 
-class GenerateCodeModal extends Component {
+class GenerateCodeModal extends PureComponent {
   constructor (props) {
     super(props);
 
@@ -53,13 +53,18 @@ class GenerateCodeModal extends Component {
     };
   }
 
-  _handleClientChange (client) {
+  _setModalRef = n => this.modal = n;
+  _setEditorRef = n => this._editor = n;
+
+  _hide = () => this.modal.hide();
+
+  _handleClientChange = client => {
     const {target, request} = this.state;
     this._generateCode(request, target, client);
     trackEvent('Generate Code', 'Client Change', `${target.title}/${client.title}`);
-  }
+  };
 
-  _handleTargetChange (target) {
+  _handleTargetChange = target => {
     const {target: currentTarget} = this.state;
     if (currentTarget.key === target.key) {
       // No change
@@ -69,7 +74,7 @@ class GenerateCodeModal extends Component {
     const client = target.clients.find(c => c.key === target.default);
     this._generateCode(this.state.request, target, client);
     trackEvent('Generate Code', 'Target Change', target.title);
-  }
+  };
 
   async _generateCode (request, target, client) {
     // Some clients need a content-length for the request to succeed
@@ -106,7 +111,7 @@ class GenerateCodeModal extends Component {
     }
 
     return (
-      <Modal ref={m => this.modal = m} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} tall={true} {...this.props}>
         <ModalHeader>Generate Client Code</ModalHeader>
         <ModalBody noScroll={true} style={{
           display: 'grid',
@@ -120,7 +125,7 @@ class GenerateCodeModal extends Component {
                 <i className="fa fa-caret-down"></i>
               </DropdownButton>
               {targets.map(target => (
-                <DropdownItem key={target.key} onClick={() => this._handleTargetChange(target)}>
+                <DropdownItem key={target.key} onClick={this._handleTargetChange} value={target}>
                   {target.title}
                 </DropdownItem>
               ))}
@@ -132,20 +137,19 @@ class GenerateCodeModal extends Component {
                 <i className="fa fa-caret-down"></i>
               </DropdownButton>
               {clients.map(client => (
-                <DropdownItem key={client.key} onClick={() => this._handleClientChange(client)}>
+                <DropdownItem key={client.key} onClick={this._handleClientChange} value={client}>
                   {client.title}
                 </DropdownItem>
               ))}
             </Dropdown>
             &nbsp;&nbsp;
-            <CopyButton content={cmd}
-                        className="pull-right btn btn--clicky"/>
+            <CopyButton content={cmd} className="pull-right btn btn--clicky"/>
           </div>
           <Editor
             className="border-top"
             key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}
-            ref={n => this._editor = n}
+            ref={this._setEditorRef}
             fontSize={editorFontSize}
             keyMap={editorKeyMap}
             lightTheme={true}
@@ -157,7 +161,7 @@ class GenerateCodeModal extends Component {
           <div className="margin-left faint italic txt-sm tall">
             * copy/paste this command into a Unix terminal
           </div>
-          <button className="btn" onClick={e => this.modal.hide()}>
+          <button className="btn" onClick={this._hide}>
             Done
           </button>
         </ModalFooter>

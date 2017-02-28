@@ -7,6 +7,7 @@ import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown/index';
 import PromptButton from '../base/PromptButton';
 import Button from '../base/Button';
 import OneLineEditor from '../codemirror/OneLineEditor';
+import {preventDefault} from '../../../common/misc';
 
 class KeyValueEditorRow extends PureComponent {
   _nameInput = null;
@@ -43,8 +44,8 @@ class KeyValueEditorRow extends PureComponent {
   _handleTypeChange = type => this._sendChange({type});
   _handleDisableChange = disabled => this._sendChange({disabled});
 
-  _handleFocusName = () => this.props.onFocusName(this.props.pair);
-  _handleFocusValue = () => this.props.onFocusValue(this.props.pair);
+  _handleFocusName = e => this.props.onFocusName(this.props.pair, e);
+  _handleFocusValue = e => this.props.onFocusValue(this.props.pair, e);
 
   _handleDelete = () => {
     if (this.props.onDelete) {
@@ -80,105 +81,108 @@ class KeyValueEditorRow extends PureComponent {
     const {dragDirection} = this.state;
 
     const classes = classnames(className, {
-      'key-value-editor__row': true,
-      'key-value-editor__row--disabled': pair.disabled,
-      'key-value-editor__row--dragging': isDragging,
-      'key-value-editor__row--dragging-above': isDraggingOver && dragDirection > 0,
-      'key-value-editor__row--dragging-below': isDraggingOver && dragDirection < 0
+      'key-value-editor__row-wrapper': true,
+      'key-value-editor__row-wrapper--dragging': isDragging,
+      'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
+      'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
+      'key-value-editor__row-wrapper--disabled': pair.disabled,
     });
 
     const row = (
       <li className={classes}>
-        {sortable ?
-          <button className="key-value-editor__row__drag">
-            <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
-          </button> : null
-        }
-
-        <div className="form-control form-control--underlined form-control--wide">
-          <OneLineEditor
-            ref={this._setNameInputRef}
-            placeholder={namePlaceholder || 'Name'}
-            defaultValue={pair.name}
-            render={handleRender}
-            readOnly={readOnly}
-            onChange={this._handleNameChange}
-            onFocus={this._handleFocusName}
-            onKeyDown={this._handleKeyDown}
-          />
-        </div>
-        <div className="form-control form-control--wide wide form-control--underlined">
-          {pair.type === 'file' ? (
-              <FileInputButton
-                ref={this._setValueInputRef}
-                showFileName={true}
-                className="btn btn--clicky wide ellipsis txt-sm"
-                path={pair.fileName || ''}
-                onChange={this._handleFileNameChange}
-              />
-            ) : (
-              <OneLineEditor
-                ref={this._setValueInputRef}
-                readOnly={readOnly}
-                type={valueInputType || 'text'}
-                placeholder={valuePlaceholder || 'Value'}
-                defaultValue={pair.value}
-                onChange={this._handleValueChange}
-                render={handleRender}
-                onKeyDown={this._handleKeyDown}
-                onFocus={this._handleFocusValue}
-              />
-            )}
-        </div>
-
-        {multipart ? (
-            !hideButtons ? (
-                <Dropdown right={true}>
-                  <DropdownButton className="tall">
-                    <i className="fa fa-caret-down"></i>
-                  </DropdownButton>
-                  <DropdownItem onClick={this._handleTypeChange} value="text">
-                    Text
-                  </DropdownItem>
-                  <DropdownItem onClick={this._handleTypeChange} value="file">
-                    File
-                  </DropdownItem>
-                </Dropdown>
-              ) : (
-                <button>
-                  <i className="fa fa-empty"/>
-                </button>
-              )
+        {sortable ? (
+            <div className="key-value-editor__drag">
+              <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
+            </div>
           ) : null
         }
 
-        {!hideButtons ? (
-            <Button onClick={this._handleDisableChange}
-                    value={!pair.disabled}
-                    title={pair.disabled ? 'Enable item' : 'Disable item'}>
-              {pair.disabled ?
-                <i className="fa fa-square-o"/> :
-                <i className="fa fa-check-square-o"/>
-              }
-            </Button>
-          ) : (
-            <button><i className="fa fa-empty"/></button>
-          )}
+        <div className="key-value-editor__row" onMouseDown={preventDefault/* Don't trigger drag*/}>
+          <div className="form-control form-control--underlined form-control--wide">
+            <OneLineEditor
+              ref={this._setNameInputRef}
+              placeholder={namePlaceholder || 'Name'}
+              defaultValue={pair.name}
+              render={handleRender}
+              readOnly={readOnly}
+              onChange={this._handleNameChange}
+              onFocus={this._handleFocusName}
+              onKeyDown={this._handleKeyDown}
+            />
+          </div>
+          <div className="form-control form-control--wide wide form-control--underlined">
+            {pair.type === 'file' ? (
+                <FileInputButton
+                  ref={this._setValueInputRef}
+                  showFileName={true}
+                  className="btn btn--clicky wide ellipsis txt-sm"
+                  path={pair.fileName || ''}
+                  onChange={this._handleFileNameChange}
+                />
+              ) : (
+                <OneLineEditor
+                  ref={this._setValueInputRef}
+                  readOnly={readOnly}
+                  type={valueInputType || 'text'}
+                  placeholder={valuePlaceholder || 'Value'}
+                  defaultValue={pair.value}
+                  onChange={this._handleValueChange}
+                  render={handleRender}
+                  onKeyDown={this._handleKeyDown}
+                  onFocus={this._handleFocusValue}
+                />
+              )}
+          </div>
 
-        {!hideButtons ? (
-            <PromptButton key={Math.random()}
-                          tabIndex="-1"
-                          confirmMessage=" "
-                          addIcon={true}
-                          onClick={this._handleDelete}
-                          title="Delete item">
-              <i className="fa fa-trash-o"/>
-            </PromptButton>
-          ) : (
-            <button>
-              <i className="fa fa-empty"/>
-            </button>
-          )}
+          {multipart ? (
+              !hideButtons ? (
+                  <Dropdown right={true}>
+                    <DropdownButton className="tall">
+                      <i className="fa fa-caret-down"></i>
+                    </DropdownButton>
+                    <DropdownItem onClick={this._handleTypeChange} value="text">
+                      Text
+                    </DropdownItem>
+                    <DropdownItem onClick={this._handleTypeChange} value="file">
+                      File
+                    </DropdownItem>
+                  </Dropdown>
+                ) : (
+                  <button>
+                    <i className="fa fa-empty"/>
+                  </button>
+                )
+            ) : null
+          }
+
+          {!hideButtons ? (
+              <Button onClick={this._handleDisableChange}
+                      value={!pair.disabled}
+                      title={pair.disabled ? 'Enable item' : 'Disable item'}>
+                {pair.disabled ?
+                  <i className="fa fa-square-o"/> :
+                  <i className="fa fa-check-square-o"/>
+                }
+              </Button>
+            ) : (
+              <button><i className="fa fa-empty"/></button>
+            )}
+
+          {!hideButtons ? (
+              <PromptButton key={Math.random()}
+                            tabIndex="-1"
+                            confirmMessage=" "
+                            addIcon={true}
+                            onClick={this._handleDelete}
+                            title="Delete item">
+                <i className="fa fa-trash-o"/>
+              </PromptButton>
+            ) : (
+              <button>
+                <i className="fa fa-empty"/>
+              </button>
+            )}
+        </div>
       </li>
     );
 

@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {shell} from 'electron';
 import Editor from '../codemirror/Editor';
 import ResponseWebView from './ResponseWebview';
@@ -8,7 +8,7 @@ import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../
 
 let alwaysShowLargeResponses = false;
 
-class ResponseViewer extends Component {
+class ResponseViewer extends PureComponent {
   state = {
     blockingBecauseTooLarge: false
   };

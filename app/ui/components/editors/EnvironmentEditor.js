@@ -1,8 +1,8 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import Editor from '../codemirror/Editor';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
-class EnvironmentEditor extends Component {
+class EnvironmentEditor extends PureComponent {
   _handleChange = () => this.props.didChange();
 
   _setEditorRef = n => this._editor = n;

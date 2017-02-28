@@ -4,48 +4,31 @@
 .key-value-editor {
   padding: @padding-md 0;
 
-  .key-value-editor__label {
-    padding: 0 @padding-md;
-    opacity: 0.5;
-    font-size: @font-size-sm;
-  }
-
-  .key-value-editor__row {
+  // This is the actual row
+  .key-value-editor__row-wrapper {
     position: relative;
     display: flex;
+    align-items: center;
     flex-direction: row;
-    align-items: stretch;
+    width: 100%;
+    padding-left: @padding-md;
+    box-sizing: border-box;
 
-    .input {
-      background-color: transparent;
-      height: @line-height-sm;
-      box-sizing: border-box;
-      margin: @padding-xs 0 0;
-    }
-
-    .key-value-editor__row__drag {
-      font-size: @font-size-sm;
-      color: var(--hl-lg) !important;
-      &:hover {
-        color: var(--hl-lg) !important;
-      }
-    }
-
-    &.key-value-editor__row--disabled .input,
-    &.key-value-editor__row--disabled button {
+    &.key-value-editor__row-wrapper--disabled .input,
+    &.key-value-editor__row-wrapper--disabled button {
       text-decoration: line-through;
       opacity: 0.4;
     }
 
-    &.key-value-editor__row--dragging {
+    &.key-value-editor__row-wrapper--dragging {
       // Set opacity on children so we can still see the separator
       & > * {
-        opacity: 0.3;
+        opacity: 0.2;
       }
     }
 
-    &.key-value-editor__row--dragging-below::after,
-    &.key-value-editor__row--dragging-above::before {
+    &.key-value-editor__row-wrapper--dragging-below::after,
+    &.key-value-editor__row-wrapper--dragging-above::before {
       position: absolute;
       height: 0;
       right: 0;
@@ -55,20 +38,46 @@
       display: block
     }
 
-    &.key-value-editor__row--dragging-below::after {
+    &.key-value-editor__row-wrapper--dragging-below::after {
+      // So the line appears on the next row
       top: 100%;
+    }
+
+    // Style last row the same no matter if focused or not.
+    &.key-value-editor__row-wrapper--clicker .CodeMirror {
+      border-color: var(--hl-sm) !important;
+    }
+  }
+
+  .key-value-editor__drag {
+    color: var(--hl-lg) !important;
+    &:hover {
+      color: var(--hl-lg) !important;
+    }
+  }
+
+  .key-value-editor__row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0 @padding-sm;
+    box-sizing: border-box;
+
+    // Don't pad the first form if there's nothing before it
+    // eg. When no drag handles present
+    &:first-child, &:first-child .form-control {
+      padding-left: 0;
+    }
+
+    .input {
+      background-color: transparent;
+      height: @line-height-sm;
+      box-sizing: border-box;
     }
 
     & > * {
       padding: 0 @padding-sm;
-
-      &:first-child {
-        padding-left: @padding-md;
-      }
-
-      &:last-child {
-        padding-right: @padding-md;
-      }
     }
 
     & > button,

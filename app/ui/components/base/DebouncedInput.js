@@ -1,7 +1,7 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {debounce} from '../../../common/misc';
 
-class DebouncedInput extends Component {
+class DebouncedInput extends PureComponent {
   _handleValueChange = debounce(this.props.onChange, 500);
   _handleChange = e => this._handleValueChange(e.target.value);
 

@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
@@ -9,7 +9,7 @@ import PromptModal from './modals/PromptModal';
 import PromptButton from './base/PromptButton';
 import OneLineEditor from './codemirror/OneLineEditor';
 
-class RequestUrlBar extends Component {
+class RequestUrlBar extends PureComponent {
   state = {
     currentInterval: null,
     currentTimeout: null,
@@ -20,6 +20,7 @@ class RequestUrlBar extends Component {
   _lastPastedText = null;
 
   _setDropdownRef = n => this._dropdown = n;
+  _setInputRef = n => this._input = n;
 
   _handleMetaClickSend = e => {
     e.preventDefault();
@@ -273,7 +274,7 @@ class RequestUrlBar extends Component {
         </MethodDropdown>
         <form onSubmit={this._handleFormSubmit}>
           <OneLineEditor
-            ref={n => this._input = n}
+            ref={this._setInputRef}
             onPaste={this._handleUrlPaste}
             type="text"
             render={handleRender}

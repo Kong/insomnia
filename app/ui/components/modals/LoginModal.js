@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -7,7 +7,7 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 
-class LoginModal extends Component {
+class LoginModal extends PureComponent {
   state = {
     step: 1,
     loading: false,
@@ -16,7 +16,8 @@ class LoginModal extends Component {
     message: '',
   };
 
-  _setModalRef = m => this.modal = m;
+  _setModalRef = n => this.modal = n;
+  _setEmailInputRef = n => this._emailInput = n;
   _hide = () => this.hide();
 
   _handleLogin = async e => {
@@ -68,7 +69,7 @@ class LoginModal extends Component {
                 type="email"
                 required="required"
                 placeholder="me@mydomain.com"
-                ref={n => this._emailInput = n}
+                ref={this._setEmailInputRef}
               />
             </label>
           </div>

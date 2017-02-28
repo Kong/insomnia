@@ -1,8 +1,8 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {basename as pathBasename} from 'path';
 import {remote} from 'electron';
 
-class FileInputButton extends Component {
+class FileInputButton extends PureComponent {
   focus () {
     this._button.focus();
   }

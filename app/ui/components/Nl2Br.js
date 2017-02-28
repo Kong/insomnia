@@ -1,6 +1,6 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 
-class Nl2Br extends Component {
+class Nl2Br extends PureComponent {
   render () {
     const {children, ...props} = this.props;
     const text = children || '';

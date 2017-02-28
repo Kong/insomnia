@@ -1,8 +1,8 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
-class FormEditor extends Component {
+class FormEditor extends PureComponent {
   _handleTrackToggle = pair => {
     trackEvent(
       'Form Editor',

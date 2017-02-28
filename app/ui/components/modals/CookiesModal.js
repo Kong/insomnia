@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -7,20 +7,23 @@ import CookiesEditor from '../editors/CookiesEditor';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
-class CookiesModal extends Component {
+class CookiesModal extends PureComponent {
   state = {
     cookieJar: null,
     workspace: null,
     filter: ''
   };
 
+  _setModalRef = n => this.modal = n;
+  _setFilterInputRef = n => this.filterInput = n;
+  _hide = () => this.modal.hide();
+
   async _saveChanges () {
     const {cookieJar} = this.state;
     await models.cookieJar.update(cookieJar);
     this._load(this.state.workspace);
   }
-
-  _handleCookieUpdate (oldCookie, cookie) {
+  _handleCookieUpdate = (oldCookie, cookie) => {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
     const index = cookies.findIndex(c => c.domain === oldCookie.domain && c.key === oldCookie.key);
@@ -33,17 +36,17 @@ class CookiesModal extends Component {
 
     this._saveChanges(cookieJar);
     trackEvent('Cookie', 'Update');
-  }
+  };
 
-  _handleCookieAdd (cookie) {
+  _handleCookieAdd = cookie => {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
     cookieJar.cookies = [cookie, ...cookies];
     this._saveChanges(cookieJar);
     trackEvent('Cookie', 'Create');
-  }
+  };
 
-  _handleCookieDelete (cookie) {
+  _handleCookieDelete = cookie => {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
 
@@ -52,12 +55,13 @@ class CookiesModal extends Component {
 
     this._saveChanges(cookieJar);
     trackEvent('Cookie', 'Delete');
-  }
+  };
 
-  _onFilterChange (filter) {
+  _handleFilterChange = e => {
+    const filter = e.target.value;
     this.setState({filter});
     trackEvent('Cookie Editor', 'Filter Change');
-  }
+  };
 
   _getFilteredSortedCookies () {
     const {cookieJar, filter} = this.state;
@@ -97,14 +101,14 @@ class CookiesModal extends Component {
     const {filter} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody className="cookie-editor" noScroll={true}>
           <div className="pad">
             <div className="form-control form-control--outlined">
               <label>Filter Cookies
-                <input ref={n => this.filterInput = n}
-                       onChange={e => this._onFilterChange(e.target.value)}
+                <input ref={this._setFilterInputRef}
+                       onChange={this._handleFilterChange}
                        type="text"
                        placeholder="twitter.com"
                        defaultValue=""/>
@@ -115,9 +119,9 @@ class CookiesModal extends Component {
             <div className="pad-top">
               <CookiesEditor
                 cookies={filteredCookies}
-                onCookieUpdate={(oldCookie, cookie) => this._handleCookieUpdate(oldCookie, cookie)}
-                onCookieAdd={cookie => this._handleCookieAdd(cookie)}
-                onCookieDelete={cookie => this._handleCookieDelete(cookie)}
+                onCookieUpdate={this._handleCookieUpdate}
+                onCookieAdd={this._handleCookieAdd}
+                onCookieDelete={this._handleCookieDelete}
                 // Set the domain to the filter so that it shows up if we're filtering
                 newCookieDomainName={filter || 'domain.com'}
               />
@@ -128,7 +132,7 @@ class CookiesModal extends Component {
           <div className="margin-left faint italic txt-sm tall">
             * cookies are automatically sent with relevant requests
           </div>
-          <button className="btn" onClick={e => this.modal.hide()}>
+          <button className="btn" onClick={this._hide}>
             Done
           </button>
         </ModalFooter>

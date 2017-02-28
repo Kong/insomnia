@@ -1,10 +1,10 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 
 import KeyValueEditor from '../keyvalueeditor/Editor';
 import Editor from '../codemirror/Editor';
 import {trackEvent} from '../../../analytics/index';
 
-class RequestHeadersEditor extends Component {
+class RequestHeadersEditor extends PureComponent {
   _handleBulkUpdate = headersString => {
     this.props.onChange(this._getHeadersFromString(headersString));
   };

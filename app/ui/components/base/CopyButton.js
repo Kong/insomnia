@@ -1,7 +1,7 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 const {clipboard} = require('electron');
 
-class CopyButton extends Component {
+class CopyButton extends PureComponent {
   state = {showConfirmation: false};
 
   _handleClick = e => {

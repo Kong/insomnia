@@ -2,8 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
-import {generateId} from '../../../common/misc';
-import * as misc from '../../../common/misc';
+import {generateId, nullFn} from '../../../common/misc';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -13,8 +12,6 @@ const UP = 38;
 const DOWN = 40;
 const LEFT = 37;
 const RIGHT = 39;
-
-const nullFn = () => null;
 
 class KeyValueEditor extends PureComponent {
   constructor (props) {
@@ -283,10 +280,12 @@ class KeyValueEditor extends PureComponent {
             sortable
             noDropZone
             readOnly
-            className="faded"
             index={-1}
             onChange={nullFn}
             onDelete={nullFn}
+            className="key-value-editor__row-wrapper--clicker"
+            namePlaceholder={`New ${namePlaceholder}`}
+            valuePlaceholder={`New ${valuePlaceholder}`}
             onFocusName={this._handleAddFromName}
             onFocusValue={this._handleAddFromValue}
             multipart={multipart}

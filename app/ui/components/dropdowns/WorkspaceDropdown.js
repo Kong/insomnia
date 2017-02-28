@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
 import {ipcRenderer, shell} from 'electron';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint, DropdownRight} from '../base/dropdown';
@@ -15,7 +15,7 @@ import * as session from '../../../sync/session';
 import PromptButton from '../base/PromptButton';
 import LoginModal from '../modals/LoginModal';
 
-class WorkspaceDropdown extends Component {
+class WorkspaceDropdown extends PureComponent {
   state = {
     loggedIn: false
   };

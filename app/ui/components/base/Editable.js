@@ -1,6 +1,6 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 
-class Editable extends Component {
+class Editable extends PureComponent {
   state = {editing: false};
 
   _handleSetInputRef = n => this._input = n;

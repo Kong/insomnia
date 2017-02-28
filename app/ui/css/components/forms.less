@@ -8,7 +8,7 @@
   width: 100%;
   box-sizing: border-box;
 
-  .input,
+  .CodeMirror,
   input,
   textarea,
   select,
@@ -59,7 +59,7 @@
   &.form-control--outlined,
   &.form-control--underlined {
     textarea,
-    .input,
+    .CodeMirror,
     input,
     select {
       border: 1px solid @hl-md;
@@ -68,13 +68,13 @@
       background-color: @hl-xxs;
     }
 
-    .input,
+    .CodeMirror,
     input,
     select {
       height: @line-height-xs;
     }
 
-    .input:focus,
+    .CodeMirror-focused,
     textarea:focus,
     select:focus,
     input:focus {
@@ -83,14 +83,14 @@
     }
   }
 
-  &.form-control--underlined .input:focus,
+  &.form-control--underlined .CodeMirror-focused,
   &.form-control--underlined input:focus,
   &.form-control--underlined textarea:focus {
     border-color: @hl;
   }
 
   &.form-control--padded {
-    .input,
+    .CodeMirror,
     textarea,
     select,
     input {
@@ -101,7 +101,7 @@
   &.form-control--underlined {
     textarea,
     select,
-    .input,
+    .CodeMirror,
     input {
       border-radius: 0;
       border-top: 0;
@@ -198,7 +198,7 @@
   }
 }
 
-textarea, input, .input,button, select {
+textarea, input, .CodeMirror ,button, select {
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;
@@ -219,7 +219,6 @@ input[type=number]::-webkit-inner-spin-button {
   opacity: 0.8;
 }
 
-.input.input--error,
 input.input--error {
   border-color: var(--color-danger) !important;
 }

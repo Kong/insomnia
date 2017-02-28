@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
 import {isMac} from '../../../common/constants';
 
@@ -6,7 +6,7 @@ import {isMac} from '../../../common/constants';
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
-class Modal extends Component {
+class Modal extends PureComponent {
   state = {
     open: false,
     forceRefreshCounter: 0,

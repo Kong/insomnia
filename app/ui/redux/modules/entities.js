@@ -54,5 +54,13 @@ export default function (state = initialState, action) {
 // ~~~~~~~ //
 
 export function addChanges (changes) {
+  return dispatch => {
+    window.requestAnimationFrame(() => {
+      dispatch(addChangesSync(changes));
+    });
+  };
+}
+
+export function addChangesSync (changes) {
   return {type: ENTITY_CHANGES, changes};
 }

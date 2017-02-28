@@ -1,11 +1,11 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 
 import Link from '../../components/base/Link';
 import {showModal} from '../modals/index';
 import SettingsModal from '../modals/SettingsModal';
 import {STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
 
-class ResponseError extends Component {
+class ResponseError extends PureComponent {
   render () {
     const {error, statusCode, fontSize} = this.props;
 

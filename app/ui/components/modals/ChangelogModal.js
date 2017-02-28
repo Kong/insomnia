@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -6,8 +6,10 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/constants';
 
-class ChangelogModal extends Component {
+class ChangelogModal extends PureComponent {
   state = {changelog: null};
+
+  _setModalRef = m => this.modal = m;
 
   show () {
     this.modal.show();
@@ -120,7 +122,7 @@ class ChangelogModal extends Component {
     }
 
     return (
-      <Modal ref={m => this.modal = m} {...this.props}>
+      <Modal ref={this._setModalRef} {...this.props}>
         <ModalHeader>Insomnia Changelog</ModalHeader>
         <ModalBody className="pad changelog">
           {html}

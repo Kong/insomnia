@@ -3,6 +3,7 @@ import * as misc from '../../../../common/misc';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
+    console.warn('enableNunjucksTags wasn\'t passed a render function');
     return;
   }
 
@@ -12,6 +13,9 @@ CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   this.on('changes', debouncedRefreshFn);
   this.on('cursorActivity', debouncedRefreshFn);
   this.on('viewportChange', debouncedRefreshFn);
+
+  // Trigger once right away to snappy perf
+  refreshFn();
 });
 
 async function _highlightNunjucksTags (render) {
@@ -65,9 +69,19 @@ async function _highlightNunjucksTags (render) {
       }
 
       // See if we already have a mark for this
-      const existingMarks = doc.findMarks(start, end);
-      if (existingMarks.length) {
-        existingMarks.map(m => activeMarks.push(m));
+      let hasOwnMark = false;
+      for (const m of doc.findMarks(start, end)) {
+
+        // Only check marks we created
+        if (m.__nunjucks) {
+          hasOwnMark = true;
+        }
+
+        activeMarks.push(m);
+      }
+
+      // Already have a mark for this, so leave it alone
+      if (hasOwnMark) {
         continue;
       }
 
@@ -80,6 +94,7 @@ async function _highlightNunjucksTags (render) {
       await _updateElementText(renderString, element, tok.string);
 
       const mark = this.markText(start, end, {
+        __nunjucks: true, // Mark that we created it
         handleMouseEvents: false,
         replacedWith: element,
       });
@@ -94,7 +109,7 @@ async function _highlightNunjucksTags (render) {
           '<div class="wide hide-scrollbars scrollable">',
           '<input type="text" name="template"/>',
           element.title ?
-            `<span class="result">${element.title}</span>` :
+            `<span class="result faint">${element.title}</span>` :
             '<span class="result super-faint italic">n/a</span>',
           '</div>',
         ].join(' ');
@@ -142,8 +157,21 @@ async function _highlightNunjucksTags (render) {
     {ch: 0, line: vp.from},
     {ch: 0, line: vp.to},
   );
+
   for (const mark of marksInViewport) {
-    if (!activeMarks.find(m => m.id === mark.id)) {
+    // Only check marks we created
+    if (!mark.__nunjucks) {
+      continue;
+    }
+
+    let inActiveMarks = false;
+    for (const activeMark of activeMarks) {
+      if (activeMark.id === mark.id) {
+        inActiveMarks = true;
+      }
+    }
+
+    if (!inActiveMarks) {
       mark.clear();
     }
   }

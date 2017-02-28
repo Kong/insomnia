@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import fs from 'fs';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
@@ -39,7 +39,7 @@ const KEY_L = 76;
 const KEY_N = 78;
 const KEY_P = 80;
 
-class App extends Component {
+class App extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
@@ -240,7 +240,7 @@ class App extends Component {
 
   _handleSetActiveEnvironment = async activeEnvironmentId => {
     await this._updateActiveWorkspaceMeta({activeEnvironmentId});
-    this._wrapper.forceRequestPaneRefresh();
+    this._wrapper._forceRequestPaneRefresh();
   };
 
   _saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
@@ -472,12 +472,12 @@ class App extends Component {
         // TODO: Only do this for environments in this workspace (not easy because they're nested)
         if (doc.type === models.environment.type) {
           console.log('[App] Forcing update from environment change', change);
-          this._wrapper.forceRequestPaneRefresh();
+          this._wrapper._forceRequestPaneRefresh();
         }
 
         // Force refresh if sync changes the active request
         if (fromSync && doc._id === activeRequest._id) {
-          this._wrapper.forceRequestPaneRefresh();
+          this._wrapper._forceRequestPaneRefresh();
           console.log('[App] Forcing update from request change', change);
         }
       }

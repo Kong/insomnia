@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 import {showModal, registerModal} from './modals/index';
 import AlertModal from '../components/modals/AlertModal';
@@ -27,13 +27,17 @@ import * as importers from 'insomnia-importers';
 const rUpdate = models.request.update;
 const sUpdate = models.settings.update;
 
-class Wrapper extends Component {
+class Wrapper extends PureComponent {
   state = {forceRefreshRequestPaneCounter: Date.now()};
 
   // Request updaters
   _handleForceUpdateRequest = async patch => {
     const newRequest = await rUpdate(this.props.activeRequest, patch);
-    this.forceRequestPaneRefresh();
+
+    // Give it a second for the app to render first. If we don't wait, it will refresh
+    // on the old request and won't catch the newest one.
+    window.setTimeout(this._forceRequestPaneRefresh, 100);
+
     return newRequest;
   };
 
@@ -137,9 +141,9 @@ class Wrapper extends Component {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   };
 
-  forceRequestPaneRefresh () {
+  _forceRequestPaneRefresh = () => {
     this.setState({forceRefreshRequestPaneCounter: Date.now()});
-  }
+  };
 
   render () {
     const {

@@ -1,11 +1,11 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import Button from '../base/Button';
 
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
-class PromptButton extends Component {
+class PromptButton extends PureComponent {
   state = {state: STATE_DEFAULT};
 
   _confirm (...args) {

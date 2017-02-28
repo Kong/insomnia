@@ -1,12 +1,12 @@
 import fs from 'fs';
 import electron from 'electron';
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import FileInputButton from '../../base/FileInputButton';
 import PromptButton from '../../base/PromptButton';
 import * as misc from '../../../../common/misc';
 import {trackEvent} from '../../../../analytics/index';
 
-class FileEditor extends Component {
+class FileEditor extends PureComponent {
   _handleResetFile = () => {
     this.props.onChange('');
     trackEvent('File Editor', 'Reset');

@@ -1,10 +1,10 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 
 
-class SidebarFilter extends Component {
+class SidebarFilter extends PureComponent {
   _handleOnChange = (e) => {
     const value = e.target.value;
 

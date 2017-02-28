@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import classnames from 'classnames';
 import CopyButton from '../base/CopyButton';
 import Modal from '../base/Modal';
@@ -7,10 +7,12 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as sync from '../../../sync';
 
-class SyncLogsModal extends Component {
+class SyncLogsModal extends PureComponent {
   state = {
     logs: []
   };
+
+  _setModalRef = n => this.modal = n;
 
   show () {
     clearInterval(this._interval);
@@ -85,7 +87,7 @@ class SyncLogsModal extends Component {
   render () {
     const rows = this._formatLogs();
     return (
-      <Modal ref={m => this.modal = m} tall={true}>
+      <Modal ref={this._setModalRef} tall={true}>
         <ModalHeader>Sync Debug Logs</ModalHeader>
         <ModalBody className="pad selectable txt-sm monospace">
           {rows.map(row => row.jsx)}

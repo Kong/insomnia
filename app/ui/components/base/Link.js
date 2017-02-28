@@ -1,11 +1,11 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {shell} from 'electron';
 import {trackEvent} from '../../../analytics/index';
 import * as querystring from '../../../common/querystring';
 import {getAppVersion} from '../../../common/constants';
 import {isDevelopment} from '../../../common/constants';
 
-class Link extends Component {
+class Link extends PureComponent {
   _handleClick = e => {
     e && e.preventDefault();
     const {href, onClick} = this.props;

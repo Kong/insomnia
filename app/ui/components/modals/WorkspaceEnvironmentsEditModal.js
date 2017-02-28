@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/PromptButton';
@@ -13,7 +13,7 @@ import ModalFooter from '../base/ModalFooter';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
-class WorkspaceEnvironmentsEditModal extends Component {
+class WorkspaceEnvironmentsEditModal extends PureComponent {
   state = {
     workspace: null,
     isValid: true,
@@ -24,6 +24,8 @@ class WorkspaceEnvironmentsEditModal extends Component {
   };
 
   _hide = () => this.modal.hide();
+  _setEditorRef = n => this._envEditor = n;
+  _setModalRef = n => this.modal = n;
 
   async show (workspace) {
     this.modal.show();
@@ -155,7 +157,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
-      <Modal ref={m => this.modal = m} wide={true} top={true} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} wide={true} top={true} tall={true} {...this.props}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll={true} className="env-modal">
           <div className="env-modal__sidebar">
@@ -234,7 +236,7 @@ class WorkspaceEnvironmentsEditModal extends Component {
                 editorFontSize={editorFontSize}
                 editorKeyMap={editorKeyMap}
                 lineWrapping={lineWrapping}
-                ref={n => this._envEditor = n}
+                ref={this._setEditorRef}
                 key={`${forceRefreshKey}::${(activeEnvironment ? activeEnvironment._id : 'n/a')}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange}

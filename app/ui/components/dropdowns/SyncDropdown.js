@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
 import {showModal} from '../modals';
 import SyncLogsModal from '../modals/SyncLogsModal';
@@ -8,7 +8,7 @@ import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics';
 import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
 
-class SyncDropdown extends Component {
+class SyncDropdown extends PureComponent {
   state = {
     loggedIn: null,
     syncData: null,

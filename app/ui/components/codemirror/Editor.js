@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
@@ -94,7 +94,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   }
 };
 
-class Editor extends Component {
+class Editor extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
@@ -161,21 +161,18 @@ class Editor extends Component {
       return;
     }
 
-    const {value} = this.props;
+    const {value, debounceMillis: ms} = this.props;
+
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
 
     // Set default listeners
+    const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
+    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
-    this.codeMirror.on('changes', this._debounce(this._codemirrorValueChanged));
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorValueChanged);
-
-    // Setup nunjucks listeners
-    if (this.props.render) {
-      this.codeMirror.enableNunjucksTags(this.props.render);
-    }
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
@@ -186,11 +183,20 @@ class Editor extends Component {
       });
     }
 
-    this._codemirrorSetOptions();
-
     // Do this a bit later so we don't block the render process
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      // Set editor options
+      this._codemirrorSetOptions();
+
+      // Actually set the value
       this._codemirrorSetValue(value || '');
+
+      // Setup nunjucks listeners
+      if (this.props.render) {
+        this.codeMirror.enableNunjucksTags(this.props.render);
+      }
+
+      // Unset default cursor of [0, 0];
       this.codeMirror.setCursor({line: -1, ch: -1});
     });
   };
@@ -270,13 +276,14 @@ class Editor extends Component {
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
-  _codemirrorSetOptions () {
+  _codemirrorSetOptions = () => {
     const {
       mode: rawMode,
       readOnly,
       hideLineNumbers,
       keyMap,
       lineWrapping,
+      tabIndex,
       placeholder,
       noMatchBrackets,
       noDragDrop,
@@ -296,6 +303,7 @@ class Editor extends Component {
       readOnly,
       placeholder: placeholder || '',
       mode: mode,
+      tabIndex: typeof tabIndex === 'number' ? tabIndex : null,
       dragDrop: !noDragDrop,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       lineNumbers: !hideLineNumbers,
@@ -319,7 +327,7 @@ class Editor extends Component {
 
     // Add overlays;
     this.codeMirror.makeLinksClickable(this.props.onClickLink);
-  }
+  };
 
   _normalizeMode (mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
@@ -370,16 +378,15 @@ class Editor extends Component {
 
   /**
    * Wrapper function to add extra behaviour to our onChange event
-   * @param doc CodeMirror document
    */
-  _codemirrorValueChanged = doc => {
+  _codemirrorValueChanged = () => {
     // Don't trigger change event if we're ignoring changes
     if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
       return;
     }
 
-    this.props.onChange(doc.getValue());
+    this.props.onChange(this.codeMirror.getDoc().getValue());
   };
 
   /**
@@ -502,7 +509,7 @@ class Editor extends Component {
 
   componentDidUpdate () {
     // Don't don it sync because it might block the UI
-    setTimeout(() => this._codemirrorSetOptions(), 50);
+    window.requestAnimationFrame(this._codemirrorSetOptions);
   }
 
   render () {
@@ -587,6 +594,7 @@ Editor.propTypes = {
   hideScrollbars: PropTypes.bool,
   fontSize: PropTypes.number,
   value: PropTypes.string,
+  tabIndex: PropTypes.number,
   autoPrettify: PropTypes.bool,
   manualPrettify: PropTypes.bool,
   noDragDrop: PropTypes.bool,

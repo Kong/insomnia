@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import ContentTypeDropdown from '../dropdowns/ContentTypeDropdown';
 import MethodDropdown from '../dropdowns/MethodDropdown';
 import Modal from '../base/Modal';
@@ -9,12 +9,15 @@ import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_DELE
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
 
-class RequestCreateModal extends Component {
+class RequestCreateModal extends PureComponent {
   state = {
     selectedContentType: null,
     selectedMethod: METHOD_GET,
     parentId: null,
   };
+
+  _setModalRef = n => this.modal = n;
+  _setInputRef = n => this._input = n;
 
   _handleSubmit = async e => {
     e.preventDefault();
@@ -84,14 +87,14 @@ class RequestCreateModal extends Component {
     const {selectedContentType, selectedMethod} = this.state;
 
     return (
-      <Modal ref={m => this.modal = m}>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>New Request</ModalHeader>
         <ModalBody noScroll={true}>
           <form onSubmit={this._handleSubmit} className="pad">
             <div className="row-fill">
               <div className="form-control form-control--outlined">
                 <label>Name
-                  <input ref={n => this._input = n} type="text"/>
+                  <input ref={this._setInputRef} type="text"/>
                 </label>
               </div>
               <div className="form-control" style={{width: 'auto'}}>

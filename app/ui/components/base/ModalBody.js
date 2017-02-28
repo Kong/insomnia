@@ -1,11 +1,18 @@
-import React, {PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
 
-const ModalBody = ({className, children, noScroll, ...props}) => (
-  <div className={classnames('modal__body', {'modal__body--no-scroll': noScroll}, className)} {...props}>
-    {children}
-  </div>
-);
+class ModalBody extends PureComponent {
+  render () {
+    const {className, children, noScroll, ...props} = this.props;
+    return (
+      <div className={classnames('modal__body', {
+        'modal__body--no-scroll': noScroll
+      }, className)} {...props}>
+        {children}
+      </div>
+    );
+  }
+}
 
 ModalBody.propTypes = {
   noScroll: PropTypes.bool
