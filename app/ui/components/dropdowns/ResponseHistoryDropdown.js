@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import SizeTag from '../tags/SizeTag';
 import StatusTag from '../tags/StatusTag';
@@ -7,7 +7,7 @@ import * as models from '../../../models/index';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
 
-class ResponseHistoryDropdown extends Component {
+class ResponseHistoryDropdown extends PureComponent {
   state = {
     responses: [],
   };

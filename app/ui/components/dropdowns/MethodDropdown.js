@@ -1,8 +1,8 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import * as constants from '../../../common/constants';
 
-class MethodDropdown extends Component {
+class MethodDropdown extends PureComponent {
   render () {
     const {method, onChange, right, ...extraProps} = this.props;
     return (

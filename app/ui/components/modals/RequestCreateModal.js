@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import ContentTypeDropdown from '../dropdowns/ContentTypeDropdown';
 import MethodDropdown from '../dropdowns/MethodDropdown';
 import Modal from '../base/Modal';
@@ -9,7 +9,7 @@ import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_DELE
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
 
-class RequestCreateModal extends Component {
+class RequestCreateModal extends PureComponent {
   state = {
     selectedContentType: null,
     selectedMethod: METHOD_GET,

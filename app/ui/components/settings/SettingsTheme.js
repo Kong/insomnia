@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import Button from '../base/Button';
 import Link from '../base/Link';
 
@@ -26,7 +26,7 @@ const THEMES = [
   {key: 'railscasts', name: 'Railscasts', img: imgRailscasts, paid: true},
 ];
 
-class SettingsTheme extends Component {
+class SettingsTheme extends PureComponent {
   state = {
     isPremium: localStorage.getItem('settings.theme.isPremium') || false,
   };

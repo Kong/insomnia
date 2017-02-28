@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import {shell} from 'electron';
 import Modal from '../base/Modal';
@@ -17,7 +17,7 @@ import * as session from '../../../sync/session';
 
 export const TAB_INDEX_EXPORT = 1;
 
-class SettingsModal extends Component {
+class SettingsModal extends PureComponent {
   constructor (props) {
     super(props);
     this._currentTabIndex = -1;

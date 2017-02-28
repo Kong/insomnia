@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -7,7 +7,7 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 
-class LoginModal extends Component {
+class LoginModal extends PureComponent {
   state = {
     step: 1,
     loading: false,

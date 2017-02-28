@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptModal from '../modals/PromptModal';
@@ -6,11 +6,9 @@ import CopyButton from '../base/CopyButton';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
-import AlertModal from '../modals/AlertModal';
-import {MOD_SYM} from '../../../common/constants';
 
 
-class RequestActionsDropdown extends Component {
+class RequestActionsDropdown extends PureComponent {
   _setDropdownRef = n => this._dropdown = n;
 
   _handleDuplicate = () => {

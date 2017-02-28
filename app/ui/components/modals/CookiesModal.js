@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -7,7 +7,7 @@ import CookiesEditor from '../editors/CookiesEditor';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
-class CookiesModal extends Component {
+class CookiesModal extends PureComponent {
   state = {
     cookieJar: null,
     workspace: null,

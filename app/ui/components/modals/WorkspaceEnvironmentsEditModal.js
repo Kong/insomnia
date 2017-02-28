@@ -24,6 +24,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
   };
 
   _hide = () => this.modal.hide();
+  _setEditorRef = n => this._envEditor = n;
 
   async show (workspace) {
     this.modal.show();
@@ -234,7 +235,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                 editorFontSize={editorFontSize}
                 editorKeyMap={editorKeyMap}
                 lineWrapping={lineWrapping}
-                ref={n => this._envEditor = n}
+                ref={this._setEditorRef}
                 key={`${forceRefreshKey}::${(activeEnvironment ? activeEnvironment._id : 'n/a')}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange}

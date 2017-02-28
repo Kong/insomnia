@@ -1,7 +1,7 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import crypto from 'crypto';
 
-class GravatarImg extends Component {
+class GravatarImg extends PureComponent {
   render () {
     const {email, size, className} = this.props;
     const sanitizedEmail = email.trim().toLowerCase();

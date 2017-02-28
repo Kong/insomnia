@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import {Cookie} from 'tough-cookie';
 
 import PromptButton from '../base/PromptButton';
@@ -7,7 +7,7 @@ import {cookieToString} from '../../../common/cookies';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 
-class CookiesEditor extends Component {
+class CookiesEditor extends PureComponent {
   _handleCookieAdd = () => {
     const newCookie = new Cookie({
       key: 'foo',

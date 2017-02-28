@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import Modal from '../base/Modal';
@@ -8,7 +8,7 @@ import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
 
 
-class RequestSwitcherModal extends Component {
+class RequestSwitcherModal extends PureComponent {
   state = {
     searchString: '',
     requestGroups: [],

@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from '../base/dropdown';
 import EnvironmentEditModal from '../modals/EnvironmentEditModal';
@@ -7,7 +7,7 @@ import * as models from '../../../models';
 import {showModal} from '../modals';
 import {trackEvent} from '../../../analytics/index';
 
-class RequestGroupActionsDropdown extends Component {
+class RequestGroupActionsDropdown extends PureComponent {
   _setDropdownRef = n => this._dropdown = n;
 
   _handleRename = async () => {

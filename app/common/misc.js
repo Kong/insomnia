@@ -221,3 +221,5 @@ export function describeByteSize (bytes) {
 
   return Math.round(size * 10) / 10 + ' ' + unit;
 }
+
+export function nullFn () {}

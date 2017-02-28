@@ -1,7 +1,7 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import Editor from '../../codemirror/Editor';
 
-class RawEditor extends Component {
+class RawEditor extends PureComponent {
   render () {
     const {
       contentType,

@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import PromptButton from '../base/PromptButton';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
@@ -11,7 +11,7 @@ import * as sync from '../../../sync/index';
 
 let hidePaymentNotificationUntilNextLaunch = false;
 
-class PaymentNotificationModal extends Component {
+class PaymentNotificationModal extends PureComponent {
   _handleCancel = async () => {
     await sync.cancelTrial();
     this.hide();

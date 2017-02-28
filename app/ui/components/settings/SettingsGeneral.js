@@ -1,6 +1,6 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 
-class SettingsGeneral extends Component {
+class SettingsGeneral extends PureComponent {
   _handleUpdateSetting = e => {
     let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 

@@ -1,10 +1,10 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
-class PromptModal extends Component {
+class PromptModal extends PureComponent {
   state = {
     headerName: 'Not Set',
     defaultValue: '',

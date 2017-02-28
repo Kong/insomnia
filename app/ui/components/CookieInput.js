@@ -1,8 +1,8 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {Cookie} from 'tough-cookie';
 
 
-class CookieInput extends Component {
+class CookieInput extends PureComponent {
   state = {isValid: true};
 
   _handleChange () {

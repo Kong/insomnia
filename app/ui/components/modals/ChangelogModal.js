@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -6,7 +6,7 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/constants';
 
-class ChangelogModal extends Component {
+class ChangelogModal extends PureComponent {
   state = {changelog: null};
 
   show () {

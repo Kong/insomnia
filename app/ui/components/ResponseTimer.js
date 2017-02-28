@@ -1,7 +1,7 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../../common/constants';
 
-class ResponseTimer extends Component {
+class ResponseTimer extends PureComponent {
   render () {
     const {loadStartTime, className, handleCancel} = this.props;
 

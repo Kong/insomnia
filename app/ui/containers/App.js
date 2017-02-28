@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import fs from 'fs';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
@@ -39,7 +39,7 @@ const KEY_L = 76;
 const KEY_N = 78;
 const KEY_P = 80;
 
-class App extends Component {
+class App extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {

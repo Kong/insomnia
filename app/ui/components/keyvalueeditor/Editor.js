@@ -2,8 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
-import {generateId} from '../../../common/misc';
-import * as misc from '../../../common/misc';
+import {generateId, nullFn} from '../../../common/misc';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -13,8 +12,6 @@ const UP = 38;
 const DOWN = 40;
 const LEFT = 37;
 const RIGHT = 39;
-
-const nullFn = () => null;
 
 class KeyValueEditor extends PureComponent {
   constructor (props) {

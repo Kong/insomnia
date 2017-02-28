@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
@@ -7,13 +7,12 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync/index';
-import LoginModal from './LoginModal';
 import {showModal} from './index';
 import PromptModal from './PromptModal';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
 
-class WorkspaceShareSettingsModal extends Component {
+class WorkspaceShareSettingsModal extends PureComponent {
   state = {};
 
   _handleSubmit = e => e.preventDefault();

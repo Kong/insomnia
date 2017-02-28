@@ -1,11 +1,11 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import DropdownButton from './DropdownButton';
 import DropdownItem from './DropdownItem';
 import DropdownDivider from './DropdownDivider';
 
-class Dropdown extends Component {
+class Dropdown extends PureComponent {
   state = {
     open: false,
     dropUp: false,

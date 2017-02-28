@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import DebouncedInput from '../base/DebouncedInput';
 import FileInputButton from '../base/FileInputButton';
@@ -11,7 +11,7 @@ import * as fs from 'fs';
 import {trackEvent} from '../../../analytics/index';
 
 
-class WorkspaceSettingsModal extends Component {
+class WorkspaceSettingsModal extends PureComponent {
   state = {
     showAddCertificateForm: false,
     crtPath: '',

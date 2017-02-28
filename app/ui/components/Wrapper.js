@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 import {showModal, registerModal} from './modals/index';
 import AlertModal from '../components/modals/AlertModal';
@@ -27,7 +27,7 @@ import * as importers from 'insomnia-importers';
 const rUpdate = models.request.update;
 const sUpdate = models.settings.update;
 
-class Wrapper extends Component {
+class Wrapper extends PureComponent {
   state = {forceRefreshRequestPaneCounter: Date.now()};
 
   // Request updaters

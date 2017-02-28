@@ -1,7 +1,7 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {shell} from 'electron';
 
-class Button extends Component {
+class Button extends PureComponent {
   _handleClick = e => {
     const {onClick, onDisabledClick, disabled} = this.props;
     const fn = disabled ? onDisabledClick : onClick;

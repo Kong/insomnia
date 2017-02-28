@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Modal from '../base/Modal';
@@ -7,13 +7,15 @@ import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
 
-class EnvironmentEditModal extends Component {
+class EnvironmentEditModal extends PureComponent {
   state = {
     requestGroup: null,
     isValid: true
   };
 
   _hide = () => this.modal.hide();
+  _setModalRef = n => this.modal = n;
+  _setEditorRef = n => this._envEditor = n;
 
   _saveChanges () {
     if (!this._envEditor.isValid()) {
@@ -61,13 +63,13 @@ class EnvironmentEditModal extends Component {
     } = this.state;
 
     return (
-      <Modal ref={m => this.modal = m} tall={true} top={true} {...extraProps}>
+      <Modal ref={this._setModalRef} tall={true} top={true} {...extraProps}>
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll={true}>
           <EnvironmentEditor
             editorFontSize={editorFontSize}
             editorKeyMap={editorKeyMap}
-            ref={node => this._envEditor = node}
+            ref={this._setEditorRef}
             key={requestGroup ? requestGroup._id : 'n/a'}
             lineWrapping={lineWrapping}
             environment={requestGroup ? requestGroup.environment : {}}

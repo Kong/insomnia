@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 import Link from './base/Link';
 import * as fetch from '../../common/fetch';
@@ -9,7 +9,7 @@ import * as db from '../../common/database';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
-class Toast extends Component {
+class Toast extends PureComponent {
   state = {notification: null, visible: false};
 
   _handlePostCTACleanup = () => {

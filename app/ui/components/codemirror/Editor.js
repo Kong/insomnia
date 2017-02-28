@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
@@ -94,7 +94,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   }
 };
 
-class Editor extends Component {
+class Editor extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
@@ -160,8 +160,6 @@ class Editor extends Component {
       // Already initialized
       return;
     }
-
-    console.log('RENDER', textarea.parentNode.parentNode.parentNode);
 
     const {value} = this.props;
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
