@@ -91,9 +91,9 @@ class KeyValueEditorRow extends PureComponent {
     const row = (
       <li className={classes}>
         {sortable ? (
-            <button className="key-value-editor__drag">
+            <div className="key-value-editor__drag">
               <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
-            </button>
+            </div>
           ) : null
         }
 

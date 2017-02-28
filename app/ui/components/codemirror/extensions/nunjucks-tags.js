@@ -3,6 +3,7 @@ import * as misc from '../../../../common/misc';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
+    console.warn('enableNunjucksTags wasn\'t passed a render function');
     return;
   }
 
@@ -12,6 +13,9 @@ CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   this.on('changes', debouncedRefreshFn);
   this.on('cursorActivity', debouncedRefreshFn);
   this.on('viewportChange', debouncedRefreshFn);
+
+  // Trigger once right away to snappy perf
+  refreshFn();
 });
 
 async function _highlightNunjucksTags (render) {
