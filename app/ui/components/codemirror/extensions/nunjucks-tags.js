@@ -105,7 +105,7 @@ async function _highlightNunjucksTags (render) {
           '<div class="wide hide-scrollbars scrollable">',
           '<input type="text" name="template"/>',
           element.title ?
-            `<span class="result">${element.title}</span>` :
+            `<span class="result faint">${element.title}</span>` :
             '<span class="result super-faint italic">n/a</span>',
           '</div>',
         ].join(' ');

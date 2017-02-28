@@ -33,7 +33,11 @@ class Wrapper extends PureComponent {
   // Request updaters
   _handleForceUpdateRequest = async patch => {
     const newRequest = await rUpdate(this.props.activeRequest, patch);
-    this.forceRequestPaneRefresh();
+
+    // Give it a second for the app to render first. If we don't wait, it will refresh
+    // on the old request and won't catch the newest one.
+    window.setTimeout(this._forceRequestPaneRefresh, 100);
+
     return newRequest;
   };
 
@@ -137,9 +141,9 @@ class Wrapper extends PureComponent {
     this.props.handleSetResponseFilter(activeRequestId, filter);
   };
 
-  forceRequestPaneRefresh () {
+  _forceRequestPaneRefresh = () => {
     this.setState({forceRefreshRequestPaneCounter: Date.now()});
-  }
+  };
 
   render () {
     const {

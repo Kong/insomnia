@@ -32,6 +32,7 @@ class OneLineEditor extends PureComponent {
         noDragDrop
         noMatchBrackets
         singleLine
+        tabIndex={0}
         onChange={this._handleChange}
         className="editor--single-line"
         value={defaultValue}

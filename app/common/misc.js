@@ -222,4 +222,10 @@ export function describeByteSize (bytes) {
   return Math.round(size * 10) / 10 + ' ' + unit;
 }
 
-export function nullFn () {}
+export function nullFn () {
+  // Do nothing
+}
+
+export function preventDefault (e) {
+  e.preventDefault();
+}

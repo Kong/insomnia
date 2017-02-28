@@ -240,7 +240,7 @@ class App extends PureComponent {
 
   _handleSetActiveEnvironment = async activeEnvironmentId => {
     await this._updateActiveWorkspaceMeta({activeEnvironmentId});
-    this._wrapper.forceRequestPaneRefresh();
+    this._wrapper._forceRequestPaneRefresh();
   };
 
   _saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
@@ -472,12 +472,12 @@ class App extends PureComponent {
         // TODO: Only do this for environments in this workspace (not easy because they're nested)
         if (doc.type === models.environment.type) {
           console.log('[App] Forcing update from environment change', change);
-          this._wrapper.forceRequestPaneRefresh();
+          this._wrapper._forceRequestPaneRefresh();
         }
 
         // Force refresh if sync changes the active request
         if (fromSync && doc._id === activeRequest._id) {
-          this._wrapper.forceRequestPaneRefresh();
+          this._wrapper._forceRequestPaneRefresh();
           console.log('[App] Forcing update from request change', change);
         }
       }

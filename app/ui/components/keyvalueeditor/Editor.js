@@ -280,10 +280,12 @@ class KeyValueEditor extends PureComponent {
             sortable
             noDropZone
             readOnly
-            className="faded"
             index={-1}
             onChange={nullFn}
             onDelete={nullFn}
+            className="key-value-editor__row-wrapper--clicker"
+            namePlaceholder={`New ${namePlaceholder}`}
+            valuePlaceholder={`New ${valuePlaceholder}`}
             onFocusName={this._handleAddFromName}
             onFocusValue={this._handleAddFromValue}
             multipart={multipart}

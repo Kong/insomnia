@@ -35,7 +35,7 @@ class RequestPane extends PureComponent {
 
   _handleUpdateRequestUrl = debounce(url => this.props.updateRequestUrl(url));
 
-  _handleImportQueryFromUrl = e => {
+  _handleImportQueryFromUrl = () => {
     const {request} = this.props;
 
     let parsed;
@@ -257,7 +257,6 @@ class RequestPane extends PureComponent {
 
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
-                      disabled={!urlHasQueryParameters}
                       title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
                       onClick={this._handleImportQueryFromUrl}>
                 Import from Url
