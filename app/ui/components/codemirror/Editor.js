@@ -132,7 +132,11 @@ class Editor extends PureComponent {
    * @returns {boolean}
    */
   hasFocus () {
-    return this.codeMirror.hasFocus();
+    if (this.codeMirror) {
+      return this.codeMirror.hasFocus();
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -161,31 +165,32 @@ class Editor extends PureComponent {
       return;
     }
 
+    const {value, debounceMillis: ms} = this.props;
+    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+
+    // Set default listeners
+    const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
+    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
+    this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
+    this.codeMirror.on('keydown', this._codemirrorKeyDown);
+    this.codeMirror.on('focus', this._codemirrorFocus);
+    this.codeMirror.on('blur', this._codemirrorBlur);
+    this.codeMirror.on('paste', this._codemirrorValueChanged);
+
+    if (!this.codeMirror.getOption('indentWithTabs')) {
+      this.codeMirror.setOption('extraKeys', {
+        Tab: cm => {
+          const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          cm.replaceSelection(spaces);
+        }
+      });
+    }
+
+    // Set editor options
+    this._codemirrorSetOptions();
+
     // Do this a bit later so we don't block the render process
     setTimeout(() => {
-      const {value, debounceMillis: ms} = this.props;
-      this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
-
-      // Set default listeners
-      const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-      this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
-      this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
-      this.codeMirror.on('keydown', this._codemirrorKeyDown);
-      this.codeMirror.on('focus', this._codemirrorFocus);
-      this.codeMirror.on('blur', this._codemirrorBlur);
-      this.codeMirror.on('paste', this._codemirrorValueChanged);
-
-      if (!this.codeMirror.getOption('indentWithTabs')) {
-        this.codeMirror.setOption('extraKeys', {
-          Tab: cm => {
-            const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
-            cm.replaceSelection(spaces);
-          }
-        });
-      }
-      // Set editor options
-      this._codemirrorSetOptions();
-
       // Actually set the value
       this._codemirrorSetValue(value || '');
 

@@ -2,6 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 
 import KeyValueEditor from '../keyvalueeditor/Editor';
 import Editor from '../codemirror/Editor';
+import Lazy from '../base/Lazy';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestHeadersEditor extends PureComponent {
@@ -65,29 +66,31 @@ class RequestHeadersEditor extends PureComponent {
     const {bulk, headers, onChange, handleRender} = this.props;
 
     return bulk ? (
-      <div className="tall">
-        <Editor
-          onChange={this._handleBulkUpdate}
-          value={this._getHeadersString()}
-        />
-      </div>
-    ) : (
-      <div className="pad-bottom scrollable-container">
-        <div className="scrollable">
-          <KeyValueEditor
-            namePlaceholder="My-Header"
-            valuePlaceholder="Value"
-            pairs={headers}
-            sortable={true}
-            handleRender={handleRender}
-            onToggleDisable={this._handleTrackToggle}
-            onCreate={this._handleTrackCreate}
-            onDelete={this._handleTrackDelete}
-            onChange={onChange}
+        <div className="tall">
+          <Editor
+            onChange={this._handleBulkUpdate}
+            value={this._getHeadersString()}
           />
         </div>
-      </div>
-    );
+      ) : (
+        <div className="pad-bottom scrollable-container">
+          <div className="scrollable">
+            <Lazy>
+              <KeyValueEditor
+                namePlaceholder="My-Header"
+                valuePlaceholder="Value"
+                pairs={headers}
+                sortable={true}
+                handleRender={handleRender}
+                onToggleDisable={this._handleTrackToggle}
+                onCreate={this._handleTrackCreate}
+                onDelete={this._handleTrackDelete}
+                onChange={onChange}
+              />
+            </Lazy>
+          </div>
+        </div>
+      );
   }
 }
 
