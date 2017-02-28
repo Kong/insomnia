@@ -161,30 +161,28 @@ class Editor extends PureComponent {
       return;
     }
 
-    const {value, debounceMillis: ms} = this.props;
-
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
-
-    // Set default listeners
-    const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
-    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
-    this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
-    this.codeMirror.on('keydown', this._codemirrorKeyDown);
-    this.codeMirror.on('focus', this._codemirrorFocus);
-    this.codeMirror.on('blur', this._codemirrorBlur);
-    this.codeMirror.on('paste', this._codemirrorValueChanged);
-
-    if (!this.codeMirror.getOption('indentWithTabs')) {
-      this.codeMirror.setOption('extraKeys', {
-        Tab: cm => {
-          const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
-          cm.replaceSelection(spaces);
-        }
-      });
-    }
-
     // Do this a bit later so we don't block the render process
-    window.requestAnimationFrame(() => {
+    setTimeout(() => {
+      const {value, debounceMillis: ms} = this.props;
+      this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+
+      // Set default listeners
+      const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
+      this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
+      this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
+      this.codeMirror.on('keydown', this._codemirrorKeyDown);
+      this.codeMirror.on('focus', this._codemirrorFocus);
+      this.codeMirror.on('blur', this._codemirrorBlur);
+      this.codeMirror.on('paste', this._codemirrorValueChanged);
+
+      if (!this.codeMirror.getOption('indentWithTabs')) {
+        this.codeMirror.setOption('extraKeys', {
+          Tab: cm => {
+            const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+            cm.replaceSelection(spaces);
+          }
+        });
+      }
       // Set editor options
       this._codemirrorSetOptions();
 
@@ -198,14 +196,8 @@ class Editor extends PureComponent {
 
       // Unset default cursor of [0, 0];
       this.codeMirror.setCursor({line: -1, ch: -1});
-    });
+    }, 10);
   };
-
-  _debounce (fn) {
-    const {debounceMillis} = this.props;
-    const ms = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
-    return misc.debounce(fn, ms);
-  }
 
   _isJSON (mode) {
     if (!mode) {
@@ -568,10 +560,12 @@ class Editor extends PureComponent {
     return (
       <div className={classes}>
         <div className="editor__container input" style={{fontSize: `${fontSize || 12}px`}}>
-          <textarea ref={this._handleInitTextarea}
-                    defaultValue=" "
-                    readOnly={readOnly}
-                    autoComplete="off"/>
+          <textarea
+            ref={this._handleInitTextarea}
+            style={{display: 'none'}}
+            defaultValue=" "
+            readOnly={readOnly}
+            autoComplete="off"/>
         </div>
         {toolbar}
       </div>

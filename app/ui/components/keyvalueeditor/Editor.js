@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
 import {generateId, nullFn} from '../../../common/misc';
+import * as misc from '../../../common/misc';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -275,22 +276,23 @@ class KeyValueEditor extends PureComponent {
         ))}
 
         {!maxPairs || pairs.length < maxPairs ?
-          <KeyValueEditorRow
-            hideButtons
-            sortable
-            noDropZone
-            readOnly
-            index={-1}
-            onChange={nullFn}
-            onDelete={nullFn}
-            className="key-value-editor__row-wrapper--clicker"
-            namePlaceholder={`New ${namePlaceholder}`}
-            valuePlaceholder={`New ${valuePlaceholder}`}
-            onFocusName={this._handleAddFromName}
-            onFocusValue={this._handleAddFromValue}
-            multipart={multipart}
-            pair={{name: '', value: ''}}
-          /> : null
+          <div onClick={misc.preventDefault}>
+            <KeyValueEditorRow
+              hideButtons
+              sortable
+              noDropZone
+              readOnly
+              index={-1}
+              onChange={nullFn}
+              onDelete={nullFn}
+              className="key-value-editor__row-wrapper--clicker"
+              namePlaceholder={`New ${namePlaceholder}`}
+              valuePlaceholder={`New ${valuePlaceholder}`}
+              onFocusName={this._handleAddFromName}
+              onFocusValue={this._handleAddFromValue}
+              multipart={multipart}
+              pair={{name: '', value: ''}}/>
+          </div> : null
         }
       </ul>
     )

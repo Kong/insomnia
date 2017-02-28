@@ -97,7 +97,7 @@ class KeyValueEditorRow extends PureComponent {
           ) : null
         }
 
-        <div className="key-value-editor__row" onMouseDown={preventDefault/* Don't trigger drag*/}>
+        <div className="key-value-editor__row">
           <div className="form-control form-control--underlined form-control--wide">
             <OneLineEditor
               ref={this._setNameInputRef}
