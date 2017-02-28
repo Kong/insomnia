@@ -161,21 +161,18 @@ class Editor extends PureComponent {
       return;
     }
 
-    const {value} = this.props;
+    const {value, debounceMillis: ms} = this.props;
+
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
 
     // Set default listeners
+    const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
+    this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
-    this.codeMirror.on('changes', this._debounce(this._codemirrorValueChanged));
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorValueChanged);
-
-    // Setup nunjucks listeners
-    if (this.props.render) {
-      this.codeMirror.enableNunjucksTags(this.props.render);
-    }
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
@@ -186,11 +183,20 @@ class Editor extends PureComponent {
       });
     }
 
-    this._codemirrorSetOptions();
-
     // Do this a bit later so we don't block the render process
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      // Set editor options
+      this._codemirrorSetOptions();
+
+      // Actually set the value
       this._codemirrorSetValue(value || '');
+
+      // Setup nunjucks listeners
+      if (this.props.render) {
+        this.codeMirror.enableNunjucksTags(this.props.render);
+      }
+
+      // Unset default cursor of [0, 0];
       this.codeMirror.setCursor({line: -1, ch: -1});
     });
   };
@@ -270,7 +276,7 @@ class Editor extends PureComponent {
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
-  _codemirrorSetOptions () {
+  _codemirrorSetOptions = () => {
     const {
       mode: rawMode,
       readOnly,
@@ -321,7 +327,7 @@ class Editor extends PureComponent {
 
     // Add overlays;
     this.codeMirror.makeLinksClickable(this.props.onClickLink);
-  }
+  };
 
   _normalizeMode (mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
@@ -372,16 +378,15 @@ class Editor extends PureComponent {
 
   /**
    * Wrapper function to add extra behaviour to our onChange event
-   * @param doc CodeMirror document
    */
-  _codemirrorValueChanged = doc => {
+  _codemirrorValueChanged = () => {
     // Don't trigger change event if we're ignoring changes
     if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
       return;
     }
 
-    this.props.onChange(doc.getValue());
+    this.props.onChange(this.codeMirror.getDoc().getValue());
   };
 
   /**
@@ -504,7 +509,7 @@ class Editor extends PureComponent {
 
   componentDidUpdate () {
     // Don't don it sync because it might block the UI
-    setTimeout(() => this._codemirrorSetOptions(), 50);
+    window.requestAnimationFrame(this._codemirrorSetOptions);
   }
 
   render () {
