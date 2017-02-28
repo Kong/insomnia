@@ -1,4 +1,4 @@
-import React, {PropTypes, Component} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/PromptButton';
@@ -13,7 +13,7 @@ import ModalFooter from '../base/ModalFooter';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
-class WorkspaceEnvironmentsEditModal extends Component {
+class WorkspaceEnvironmentsEditModal extends PureComponent {
   state = {
     workspace: null,
     isValid: true,

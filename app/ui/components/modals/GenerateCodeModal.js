@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 
 import CopyButton from '../base/CopyButton';
@@ -27,7 +27,7 @@ const TO_ADD_CONTENT_LENGTH = {
 };
 
 
-class GenerateCodeModal extends Component {
+class GenerateCodeModal extends PureComponent {
   constructor (props) {
     super(props);
 

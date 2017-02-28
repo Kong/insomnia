@@ -161,6 +161,8 @@ class Editor extends Component {
       return;
     }
 
+    console.log('RENDER', textarea.parentNode.parentNode.parentNode);
+
     const {value} = this.props;
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
 
