@@ -6,9 +6,24 @@ export function joinUrl (url, qs) {
     return url;
   }
 
+  const [base, ...hashes] = url.split('#');
+
   // TODO: Make this work with URLs that have a #hash component
-  url = url || '';
-  return url + getJoiner(url) + qs;
+  const baseUrl = base || '';
+  const joiner = getJoiner(base);
+  const hash = hashes.length ? `#${hashes.join('#')}` : '';
+  return `${baseUrl}${joiner}${qs}${hash}`;
+}
+
+export function extractFromUrl (url) {
+  // NOTE: This only splits on first ? sign. '1=2=3' --> ['1', '2=3']
+  const things = url.split('?');
+  if (things.length === 1) {
+    return '';
+  } else {
+    const qsWithHash = things.slice(1).join('?');
+    return qsWithHash.replace(/#.*/, '');
+  }
 }
 
 export function getJoiner (url) {

@@ -218,8 +218,8 @@ async function _updateElementText (render, el, text, preview = false) {
   } catch (err) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
-    if (message.length > 30) {
-      message = `${message.slice(0, 27)}&hellip;`
+    if (message.length > 16) {
+      message = `${message.slice(0, 15)}&hellip;`
     }
     el.innerHTML = `&#x203c; ${message}`;
     el.className += ' nunjucks-widget--error';

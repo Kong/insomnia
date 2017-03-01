@@ -1,10 +1,9 @@
 import React, {PureComponent, PropTypes} from 'react';
+import {debounce} from '../../../common/misc';
 
 class ResponseRaw extends PureComponent {
-  _update (value) {
-    // Use a timeout so it doesn't block the UI
-    window.requestAnimationFrame(() => this._setTextAreaValue(value))
-  }
+  // Use a timeout so it doesn't block the UI
+  _update = debounce(value => this._setTextAreaValue(value));
 
   _setTextAreaValue (value) {
     // Bail if we're not mounted
@@ -42,7 +41,7 @@ class ResponseRaw extends PureComponent {
         ref={n => this._textarea = n}
         placeholder="..."
         className="force-wrap scrollable wide tall selectable monospace pad no-resize"
-        readOnly={true}
+        readOnly
         defaultValue=""
         style={{fontSize}}>
       </textarea>

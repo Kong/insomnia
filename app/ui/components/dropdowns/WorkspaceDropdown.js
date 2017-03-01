@@ -126,20 +126,20 @@ class WorkspaceDropdown extends PureComponent {
             <DropdownItem key="invite"
                           buttonClass={Link}
                           href="https://insomnia.rest/pricing/"
-                          button={true}>
+                          button>
               <i className="fa fa-users"/> Upgrade to Plus
             </DropdownItem>,
           ] : [
             <DropdownItem key="manage"
                           buttonClass={Link}
                           href="https://insomnia.rest/app/"
-                          button={true}>
+                          button>
               <i className="fa fa-user"/> Manage Account
             </DropdownItem>,
             <DropdownItem key="logout"
                           buttonClass={PromptButton}
                           onClick={session.logout}
-                          addIcon={true}>
+                          addIcon>
               <i className="fa fa-sign-out"/> Log Out
             </DropdownItem>,
           ]}

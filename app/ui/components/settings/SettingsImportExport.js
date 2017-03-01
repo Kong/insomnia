@@ -18,7 +18,7 @@ const SettingsImportExport = ({
       <Link href="https://insomnia.rest/documentation/import-export">Add Your Own</Link>.
     </p>
     <div className="pad-top">
-      <Dropdown outline={true}>
+      <Dropdown outline>
         <DropdownButton className="btn btn--clicky">
           Export Data <i className="fa fa-caret-down"></i>
         </DropdownButton>

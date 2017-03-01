@@ -190,8 +190,8 @@ class RequestSwitcherModal extends PureComponent {
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
 
     return (
-      <Modal ref={this._setModalRef} top={true} dontFocus={true}>
-        <ModalHeader hideCloseButton={true}>
+      <Modal ref={this._setModalRef} top dontFocus>
+        <ModalHeader hideCloseButton>
           <div className="pull-right txt-md pad-right">
             <span className="monospace">tab</span> or
             &nbsp;

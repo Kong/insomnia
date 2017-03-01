@@ -16,10 +16,10 @@ class RawEditor extends PureComponent {
 
     return (
       <Editor
-        manualPrettify={true}
+        manualPrettify
         fontSize={fontSize}
         keyMap={keyMap}
-        value={content}
+        defaultValue={content}
         className={className}
         render={render}
         onChange={onChange}

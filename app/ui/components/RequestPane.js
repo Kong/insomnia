@@ -1,6 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {parse as urlParse} from 'url';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import Lazy from './base/Lazy';
 import KeyValueEditor from './keyvalueeditor/Editor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
@@ -38,22 +39,25 @@ class RequestPane extends PureComponent {
   _handleImportQueryFromUrl = () => {
     const {request} = this.props;
 
-    let parsed;
+    let query;
     try {
-      parsed = urlParse(request.url);
+      query = querystring.extractFromUrl(request.url);
     } catch (e) {
       console.warn('Failed to parse url to import querystring');
       return;
     }
 
     // Remove the search string (?foo=bar&...) from the Url
-    const url = request.url.replace(parsed.search, '');
+    const url = request.url.replace(query, '');
     const parameters = [
       ...request.parameters,
-      ...querystring.deconstructToParams(parsed.query),
+      ...querystring.deconstructToParams(query),
     ];
 
-    this.props.forceUpdateRequest({url, parameters});
+    // Only update if url changed
+    if (url !== request.url) {
+      this.props.forceUpdateRequest({url, parameters});
+    }
   };
 
   _trackQueryToggle = pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
@@ -160,7 +164,7 @@ class RequestPane extends PureComponent {
             url={request.url}
           />
         </header>
-        <Tabs className="pane__body">
+        <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab onClick={this._trackTabBody}>
               <button>
@@ -232,26 +236,27 @@ class RequestPane extends PureComponent {
               </label>
               <code className="txt-sm block">
                 <RenderedQueryString
+                  handleRender={handleRender}
                   request={request}
-                  environmentId={environmentId}
-                  placeholder="http://awesome-api.com?name=Gregory"
                 />
               </code>
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <KeyValueEditor
-                  key={uniqueKey}
-                  namePlaceholder="name"
-                  valuePlaceholder="value"
-                  sortable={true}
-                  onToggleDisable={this._trackQueryToggle}
-                  onCreate={this._trackQueryCreate}
-                  onDelete={this._trackQueryDelete}
-                  pairs={request.parameters}
-                  handleRender={handleRender}
-                  onChange={updateRequestParameters}
-                />
+                <Lazy>
+                  <KeyValueEditor
+                    sortable
+                    key={uniqueKey}
+                    namePlaceholder="name"
+                    valuePlaceholder="value"
+                    onToggleDisable={this._trackQueryToggle}
+                    onCreate={this._trackQueryCreate}
+                    onDelete={this._trackQueryDelete}
+                    pairs={request.parameters}
+                    handleRender={handleRender}
+                    onChange={updateRequestParameters}
+                  />
+                </Lazy>
               </div>
             </div>
 
