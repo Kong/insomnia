@@ -110,7 +110,7 @@ class SidebarRequestRow extends PureComponent {
                 ref={this._setRequestActionsDropdownRef}
                 handleDuplicateRequest={handleDuplicateRequest}
                 handleGenerateCode={handleGenerateCode}
-                right={true}
+                right
                 request={request}
                 requestGroup={requestGroup}
               />

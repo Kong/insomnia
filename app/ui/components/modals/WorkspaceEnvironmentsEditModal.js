@@ -157,9 +157,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
-      <Modal ref={this._setModalRef} wide={true} top={true} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} wide top tall {...this.props}>
         <ModalHeader>Manage Environments</ModalHeader>
-        <ModalBody noScroll={true} className="env-modal">
+        <ModalBody noScroll className="env-modal">
           <div className="env-modal__sidebar">
             <li className={classnames(
               'env-modal__sidebar-root-item',
@@ -171,7 +171,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
             </li>
             <div className="pad env-modal__sidebar-heading">
               <h3 className="no-margin">Sub Environments</h3>
-              <Dropdown right={true}>
+              <Dropdown right>
                 <DropdownButton>
                   <i className="fa fa-plus-circle"/>
                 </DropdownButton>
@@ -179,7 +179,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                   <i className="fa fa-eye"/> Environment
                 </DropdownItem>
                 <DropdownItem onClick={this._handleAddEnvironment}
-                              value={true}
+                              value
                               title="Environment will not be exported or synced">
                   <i className="fa fa-eye-slash"/> Private Environment
                 </DropdownItem>
@@ -217,11 +217,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
           <div className="env-modal__main">
             <div className="env-modal__main__header">
               <h1>
-                <Editable
-                  singleClick={true}
-                  onSubmit={name => this._handleChangeEnvironmentName(activeEnvironment, name)}
-                  value={activeEnvironment ? activeEnvironment.name : ''}
-                />
+                <Editable singleClick
+                          onSubmit={name => this._handleChangeEnvironmentName(activeEnvironment, name)}
+                          value={activeEnvironment ? activeEnvironment.name : ''}/>
               </h1>
               {rootEnvironment !== activeEnvironment ? (
                   <PromptButton className="btn btn--clicky"
@@ -240,7 +238,6 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                 key={`${forceRefreshKey}::${(activeEnvironment ? activeEnvironment._id : 'n/a')}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange}
-                lightTheme={true}
                 render={render}
               />
             </div>

@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
 import {generateId, nullFn} from '../../../common/misc';
-import * as misc from '../../../common/misc';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -25,7 +24,9 @@ class KeyValueEditor extends PureComponent {
     // Migrate and add IDs to all pairs (pairs didn't used to have IDs)
     const pairs = [...props.pairs];
     for (const pair of pairs) {
-      pair.id = pair.id || generateId('pair');
+      if (props.maxPairs !== 1 && !pair.id) {
+        pair.id = generateId('pair');
+      }
     }
 
     this.state = {pairs};
@@ -80,17 +81,24 @@ class KeyValueEditor extends PureComponent {
     this._focusedField = VALUE;
   };
 
-  // Sometimes multiple focus events come in, so lets debounce it
-  _handleAddFromName = misc.debounce(() => {
+  _handleBlurName = () => {
+    this._setFocusedPair(null);
+  };
+
+  _handleBlurValue = () => {
+    this._setFocusedPair(null);
+  };
+
+  _handleAddFromName = () => {
     this._focusedField = NAME;
     this._addPair();
-  });
+  };
 
   // Sometimes multiple focus events come in, so lets debounce it
-  _handleAddFromValue = misc.debounce(() => {
+  _handleAddFromValue = () => {
     this._focusedField = VALUE;
     this._addPair();
-  });
+  };
 
   _handleKeyDown = (pair, e, value) => {
     if (e.metaKey || e.ctrlKey) {
@@ -98,11 +106,9 @@ class KeyValueEditor extends PureComponent {
     }
 
     if (e.keyCode === ENTER) {
-      e.preventDefault();
       this._focusNext(true);
     } else if (e.keyCode === BACKSPACE) {
       if (!value) {
-        e.preventDefault();
         this._focusPrevious(true);
       }
     } else if (e.keyCode === DOWN) {
@@ -138,8 +144,12 @@ class KeyValueEditor extends PureComponent {
     const pair = {
       name: '',
       value: '',
-      id: generateId('pair')
     };
+
+    // Only add ids if we need 'em
+    if (this.props.maxPairs !== 1) {
+      pair.id = generateId('pair');
+    }
 
     const pairs = [
       ...this.state.pairs.slice(0, position),
@@ -154,12 +164,11 @@ class KeyValueEditor extends PureComponent {
   }
 
   _deletePair (position, breakFocus = false) {
-    const focusedPosition = this._getFocusedPairIndex();
-
-    if (focusedPosition >= position) {
-      const newPosition = breakFocus ? -1 : focusedPosition - 1;
-      this._setFocusedPair(this.state.pairs[newPosition]);
+    if (this.props.disableDelete) {
+      return;
     }
+
+    const focusedPosition = this._getFocusedPairIndex();
 
     const pair = this.state.pairs[position];
     this.props.onDelete && this.props.onDelete(pair);
@@ -169,10 +178,19 @@ class KeyValueEditor extends PureComponent {
       ...this.state.pairs.slice(position + 1),
     ];
 
+    if (focusedPosition >= position) {
+      const newPosition = breakFocus ? -1 : focusedPosition - 1;
+      this._setFocusedPair(pairs[newPosition]);
+    }
+
     this._onChange(pairs);
   };
 
   _focusNext (addIfValue = false) {
+    if (this.props.maxPairs === 1) {
+      return;
+    }
+
     if (this._focusedField === NAME) {
       this._focusedField = VALUE;
       this._updateFocus();
@@ -192,7 +210,9 @@ class KeyValueEditor extends PureComponent {
       this._updateFocus();
     } else if (this._focusedField === NAME) {
       const p = this._getFocusedPair();
-      if (!p.name && !p.value && !p.fileName && deleteIfEmpty) {
+      const notEmpty = !p.name && !p.value && !p.fileName;
+
+      if (!this.props.disableDelete && notEmpty && deleteIfEmpty) {
         this._focusedField = VALUE;
         this._deletePair(this._getFocusedPairIndex());
       } else if (!p.name) {
@@ -203,6 +223,10 @@ class KeyValueEditor extends PureComponent {
   }
 
   _focusNextPair () {
+    if (this.props.maxPairs === 1) {
+      return;
+    }
+
     const i = this._getFocusedPairIndex();
 
     if (i === -1) {
@@ -220,6 +244,10 @@ class KeyValueEditor extends PureComponent {
   }
 
   _focusPreviousPair () {
+    if (this.props.maxPairs === 1) {
+      return;
+    }
+
     const i = this._getFocusedPairIndex();
     if (i > 0) {
       this._setFocusedPair(this.state.pairs[i - 1]);
@@ -279,18 +307,18 @@ class KeyValueEditor extends PureComponent {
       handleRender,
       multipart,
       sortable,
+      disableDelete,
     } = this.props;
 
-    const {
-      pairs
-    } = this.state;
+    const {pairs} = this.state;
 
     const classes = classnames('key-value-editor', 'wide', className);
     return (
       <ul className={classes}>
         {pairs.map((pair, i) => (
           <KeyValueEditorRow
-            key={pair.id}
+            noDelete={disableDelete}
+            key={pair.id || 'no-id'}
             index={i} // For dragging
             ref={n => this._rows[pair.id] = n}
             sortable={sortable}
@@ -301,6 +329,8 @@ class KeyValueEditor extends PureComponent {
             onDelete={this._handlePairDelete}
             onFocusName={this._handleFocusName}
             onFocusValue={this._handleFocusValue}
+            onBlurName={this._handleBlurName}
+            onBlurValue={this._handleBlurValue}
             onKeyDown={this._handleKeyDown}
             onMove={this._handleMove}
             handleRender={handleRender}
@@ -311,6 +341,7 @@ class KeyValueEditor extends PureComponent {
 
         {!maxPairs || pairs.length < maxPairs ?
           <KeyValueEditorRow
+            key="empty-row"
             hideButtons
             sortable
             noDropZone
@@ -318,6 +349,7 @@ class KeyValueEditor extends PureComponent {
             index={-1}
             onChange={nullFn}
             onDelete={nullFn}
+            blurOnFocus
             className="key-value-editor__row-wrapper--clicker"
             namePlaceholder={`New ${namePlaceholder}`}
             valuePlaceholder={`New ${valuePlaceholder}`}
@@ -344,6 +376,7 @@ KeyValueEditor.propTypes = {
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,
+  disableDelete: PropTypes.bool,
   onToggleDisable: PropTypes.func,
   onChangeType: PropTypes.func,
   onChooseFile: PropTypes.func,

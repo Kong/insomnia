@@ -221,7 +221,7 @@ class RequestUrlBar extends PureComponent {
     let sendButton;
     if (!cancelButton) {
       sendButton = (
-        <Dropdown key="dropdown" className="tall" right={true} ref={this._setDropdownRef}>
+        <Dropdown key="dropdown" className="tall" right ref={this._setDropdownRef}>
           <DropdownButton className="urlbar__send-btn"
                           onContextMenu={this._handleMetaClickSend}
                           onClick={this._handleClickSend}
@@ -244,9 +244,9 @@ class RequestUrlBar extends PureComponent {
             <i className="fa fa-repeat"/> Repeat on Interval
           </DropdownItem>
           {downloadPath ? (
-              <DropdownItem stayOpenAfterClick={true}
+              <DropdownItem stayOpenAfterClick
+                            addIcon
                             buttonClass={PromptButton}
-                            addIcon={true}
                             onClick={this._handleClearDownloadLocation}>
                 <i className="fa fa-stop-circle"/> Stop Auto-Download
               </DropdownItem>
@@ -276,6 +276,7 @@ class RequestUrlBar extends PureComponent {
           <OneLineEditor
             ref={this._setInputRef}
             onPaste={this._handleUrlPaste}
+            forceEditor
             type="text"
             render={handleRender}
             placeholder="https://api.myproduct.com/v1/users"

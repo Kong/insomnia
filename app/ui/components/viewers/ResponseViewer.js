@@ -152,13 +152,13 @@ class ResponseViewer extends PureComponent {
         return (
           <Editor
             onClickLink={this._handleOpenLink}
-            value={body}
+            defaultValue={body}
             updateFilter={updateFilter}
             filter={filter}
-            autoPrettify={true}
-            noMatchBrackets={true}
+            autoPrettify
+            noMatchBrackets
+            readOnly
             mode={mode}
-            readOnly={true}
             lineWrapping={editorLineWrapping}
             fontSize={editorFontSize}
             keyMap={editorKeyMap}

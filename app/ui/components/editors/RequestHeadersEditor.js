@@ -69,7 +69,7 @@ class RequestHeadersEditor extends PureComponent {
         <div className="tall">
           <Editor
             onChange={this._handleBulkUpdate}
-            value={this._getHeadersString()}
+            defaultValue={this._getHeadersString()}
           />
         </div>
       ) : (
@@ -77,10 +77,10 @@ class RequestHeadersEditor extends PureComponent {
           <div className="scrollable">
             <Lazy>
               <KeyValueEditor
+                sortable
                 namePlaceholder="My-Header"
                 valuePlaceholder="Value"
                 pairs={headers}
-                sortable={true}
                 handleRender={handleRender}
                 onToggleDisable={this._handleTrackToggle}
                 onCreate={this._handleTrackCreate}

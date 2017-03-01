@@ -19,6 +19,7 @@ import 'codemirror/mode/python/python';
 import 'codemirror/mode/ruby/ruby';
 import 'codemirror/mode/swift/swift';
 import 'codemirror/lib/codemirror.css';
+import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/dialog/dialog';
 import 'codemirror/addon/dialog/dialog.css';
 import 'codemirror/addon/fold/foldcode';
@@ -66,11 +67,11 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
+  autoRefresh: 1000,
   lineWrapping: true,
   scrollbarStyle: 'native',
   lint: true,
   tabSize: 4,
-  cursorHeight: 1,
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,
@@ -82,11 +83,6 @@ const BASE_CODEMIRROR_OPTIONS = {
   showCursorWhenSelecting: true,
   cursorScrollMargin: 12, // NOTE: This is px
   keyMap: 'default',
-  gutters: [
-    'CodeMirror-linenumbers',
-    'CodeMirror-foldgutter',
-    'CodeMirror-lint-markers'
-  ],
   extraKeys: {
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
@@ -109,6 +105,26 @@ class Editor extends PureComponent {
     }
   }
 
+  componentDidUpdate () {
+    this._codemirrorSetOptions();
+  }
+
+  shouldComponentUpdate (nextProps) {
+    // Update if any properties changed, except value. We ignore value.
+
+    for (const key of Object.keys(nextProps)) {
+      if (key === 'defaultValue') {
+        continue;
+      }
+
+      if (this.props[key] !== nextProps[key]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   selectAll () {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
@@ -124,9 +140,32 @@ class Editor extends PureComponent {
     }
   }
 
+  setCursor (ch, line = 0) {
+    if (this.codeMirror) {
+      if (!this.hasFocus()) {
+        this.focus();
+      }
+      this.codeMirror.setCursor({line, ch});
+    }
+  }
+
+  setSelection (chStart, chEnd, line = 0) {
+    if (this.codeMirror) {
+      if (!this.hasFocus()) {
+        this.focus();
+      }
+      this.codeMirror.setSelection(
+        {line, ch: chStart},
+        {line, ch: chEnd}
+      );
+    }
+  }
+
   focusEnd () {
     if (this.codeMirror) {
-      this.codeMirror.focus();
+      if (!this.hasFocus()) {
+        this.focus();
+      }
       const doc = this.codeMirror.getDoc();
       doc.setCursor(doc.lineCount(), 0);
     }
@@ -141,7 +180,11 @@ class Editor extends PureComponent {
   }
 
   getValue () {
-    return this.codeMirror.getValue();
+    if (this.codeMirror) {
+      return this.codeMirror.getValue();
+    } else {
+      return '';
+    }
   }
 
   _handleInitTextarea = textarea => {
@@ -155,7 +198,7 @@ class Editor extends PureComponent {
       return;
     }
 
-    const {value, debounceMillis: ms} = this.props;
+    const {defaultValue, debounceMillis: ms} = this.props;
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
 
     // Set default listeners
@@ -166,6 +209,8 @@ class Editor extends PureComponent {
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorValueChanged);
+
+    // this.codeMirror.setCursor({line: -1, ch: -1});
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
@@ -179,19 +224,22 @@ class Editor extends PureComponent {
     // Set editor options
     this._codemirrorSetOptions();
 
-    // Do this a bit later so we don't block the render process
-    setTimeout(() => {
+    const setup = () => {
       // Actually set the value
-      this._codemirrorSetValue(value || '');
+      this._codemirrorSetValue(defaultValue || '');
 
       // Setup nunjucks listeners
       if (this.props.render) {
         this.codeMirror.enableNunjucksTags(this.props.render);
       }
+    };
 
-      // Unset default cursor of [0, 0];
-      this.codeMirror.setCursor({line: -1, ch: -1});
-    }, 10);
+    // Do this a bit later for big values so we don't block the render process
+    if (defaultValue && defaultValue.length > 10000) {
+      setTimeout(setup, 100);
+    } else {
+      setup();
+    }
   };
 
   _isJSON (mode) {
@@ -275,6 +323,8 @@ class Editor extends PureComponent {
       noMatchBrackets,
       noDragDrop,
       hideScrollbars,
+      noStyleActiveLine,
+      noLint,
     } = this.props;
 
     let mode;
@@ -293,12 +343,27 @@ class Editor extends PureComponent {
       tabIndex: typeof tabIndex === 'number' ? tabIndex : null,
       dragDrop: !noDragDrop,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
+      styleActiveLine: !noStyleActiveLine,
       lineNumbers: !hideLineNumbers,
+      foldGutter: !hideLineNumbers,
       lineWrapping: lineWrapping,
       keyMap: keyMap || 'default',
       matchBrackets: !noMatchBrackets,
-      lint: !readOnly
+      lint: !noLint && !readOnly,
+      gutters: [],
     };
+
+    if (options.lineNumbers) {
+      options.gutters.push('CodeMirror-linenumbers');
+    }
+
+    if (options.foldGutter) {
+      options.gutters.push('CodeMirror-foldgutter');
+    }
+
+    if (options.lint) {
+      options.gutters.push('CodeMirror-lint-markers');
+    }
 
     const cm = this.codeMirror;
 
@@ -373,7 +438,8 @@ class Editor extends PureComponent {
       return;
     }
 
-    this.props.onChange(this.codeMirror.getDoc().getValue());
+    const value = this.codeMirror.getDoc().getValue();
+    this.props.onChange(value);
   };
 
   /**
@@ -494,11 +560,6 @@ class Editor extends PureComponent {
     })
   }
 
-  componentDidUpdate () {
-    // Don't don it sync because it might block the UI
-    window.requestAnimationFrame(this._codemirrorSetOptions);
-  }
-
   render () {
     const {readOnly, fontSize, mode, filter} = this.props;
 
@@ -552,15 +613,21 @@ class Editor extends PureComponent {
       toolbar = <div className="editor__toolbar">{toolbarChildren}</div>;
     }
 
+    const styles = {};
+    if (fontSize) {
+      styles.fontSize = `${fontSize}px`
+    }
+
     return (
       <div className={classes}>
-        <div className="editor__container input" style={{fontSize: `${fontSize || 12}px`}}>
+        <div className="editor__container input" style={styles}>
           <textarea
             ref={this._handleInitTextarea}
             style={{display: 'none'}}
             defaultValue=" "
             readOnly={readOnly}
-            autoComplete="off"/>
+            autoComplete="off"
+          />
         </div>
         {toolbar}
       </div>
@@ -582,11 +649,13 @@ Editor.propTypes = {
   noMatchBrackets: PropTypes.bool,
   hideScrollbars: PropTypes.bool,
   fontSize: PropTypes.number,
-  value: PropTypes.string,
+  defaultValue: PropTypes.string,
   tabIndex: PropTypes.number,
   autoPrettify: PropTypes.bool,
   manualPrettify: PropTypes.bool,
+  noLint: PropTypes.bool,
   noDragDrop: PropTypes.bool,
+  noStyleActiveLine: PropTypes.bool,
   className: PropTypes.any,
   updateFilter: PropTypes.func,
   defaultTabBehavior: PropTypes.bool,

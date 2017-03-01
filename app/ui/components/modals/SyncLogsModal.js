@@ -87,7 +87,7 @@ class SyncLogsModal extends PureComponent {
   render () {
     const rows = this._formatLogs();
     return (
-      <Modal ref={this._setModalRef} tall={true}>
+      <Modal ref={this._setModalRef} tall>
         <ModalHeader>Sync Debug Logs</ModalHeader>
         <ModalBody className="pad selectable txt-sm monospace">
           {rows.map(row => row.jsx)}

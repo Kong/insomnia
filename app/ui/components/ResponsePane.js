@@ -184,11 +184,11 @@ class ResponsePane extends PureComponent {
               handleDeleteResponses={handleDeleteResponses}
               onChange={nullFn}
               className="tall pane__header__right"
-              right={true}
+              right
             />
           </header>
         )}
-        <Tabs className="pane__body">
+        <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
               <Button onClick={this._trackTab} value="Response">

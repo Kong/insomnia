@@ -51,7 +51,7 @@ class PaymentNotificationModal extends PureComponent {
                 Cancel Subscription
               </PromptButton>
               &nbsp;&nbsp;
-              <Link button={true}
+              <Link button
                     href="https://insomnia.rest/app/subscribe/"
                     className="btn btn--compact btn--outlined">
                 Update Billing

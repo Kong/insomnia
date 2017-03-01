@@ -51,7 +51,7 @@
     }
 
     // Style last row the same no matter if focused or not.
-    &.key-value-editor__row-wrapper--clicker .CodeMirror {
+    &.key-value-editor__row-wrapper--clicker input {
       border-color: var(--hl-sm) !important;
     }
   }
@@ -85,6 +85,7 @@
       background-color: transparent;
       height: @line-height-sm;
       box-sizing: border-box;
+      margin: 0;
     }
 
     & > * {

@@ -41,7 +41,7 @@ class ResponseRaw extends PureComponent {
         ref={n => this._textarea = n}
         placeholder="..."
         className="force-wrap scrollable wide tall selectable monospace pad no-resize"
-        readOnly={true}
+        readOnly
         defaultValue=""
         style={{fontSize}}>
       </textarea>

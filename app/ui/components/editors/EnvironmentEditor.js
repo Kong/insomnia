@@ -33,13 +33,13 @@ class EnvironmentEditor extends PureComponent {
     return (
       <Editor
         ref={this._setEditorRef}
+        autoPrettify
         fontSize={editorFontSize}
         lineWrapping={lineWrapping}
         keyMap={editorKeyMap}
         onChange={this._handleChange}
         debounceMillis={DEBOUNCE_MILLIS * 6}
-        value={JSON.stringify(environment)}
-        autoPrettify={true}
+        defaultValue={JSON.stringify(environment)}
         render={render}
         mode="application/json"
         {...props}

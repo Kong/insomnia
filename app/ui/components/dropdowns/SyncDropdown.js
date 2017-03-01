@@ -123,7 +123,7 @@ class SyncDropdown extends PureComponent {
     if (!syncData) {
       return (
         <div className={className}>
-          <button className="btn btn--compact wide" disabled={true}>
+          <button className="btn btn--compact wide" disabled>
             Initializing Sync...
           </button>
         </div>
@@ -135,20 +135,19 @@ class SyncDropdown extends PureComponent {
 
       return (
         <div className={className}>
-          <Dropdown wide={true} className="wide tall">
+          <Dropdown wide className="wide tall">
             <DropdownButton className="btn btn--compact wide" onClick={this._trackShowMenu}>
               {isPaused ? <span><i className="fa fa-pause-circle"/>&nbsp;</span> : null}
               {description}
             </DropdownButton>
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
-            <DropdownItem onClick={this._handleToggleSyncMode}
-                          stayOpenAfterClick={true}>
+            <DropdownItem onClick={this._handleToggleSyncMode} stayOpenAfterClick>
               {syncMode === syncStorage.SYNC_MODE_OFF ?
                 <i className="fa fa-toggle-off"></i> :
                 <i className="fa fa-toggle-on"></i>}
               Automatic Sync
             </DropdownItem>
-            <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick={true}>
+            <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
               {loading ?
                 <i className="fa fa-refresh fa-spin"></i> :
                 <i className="fa fa-cloud-upload"></i>}

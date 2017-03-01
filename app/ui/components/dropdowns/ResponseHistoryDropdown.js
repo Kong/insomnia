@@ -61,11 +61,11 @@ class ResponseHistoryDropdown extends PureComponent {
                     onClick={this._handleSetActiveResponse}>
         {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
         {" "}
-        <StatusTag statusCode={response.statusCode}
-                   statusMessage={response.statusMessage || 'Error'}
-                   small={true}/>
-        <TimeTag milliseconds={response.elapsedTime} small={true}/>
-        <SizeTag bytes={response.bytesRead} small={true}/>
+        <StatusTag small
+                   statusCode={response.statusCode}
+                   statusMessage={response.statusMessage || 'Error'}/>
+        <TimeTag milliseconds={response.elapsedTime} small/>
+        <SizeTag bytes={response.bytesRead} small/>
       </DropdownItem>
     )
   };
@@ -89,7 +89,7 @@ class ResponseHistoryDropdown extends PureComponent {
         </DropdownButton>
         <DropdownDivider>Response History</DropdownDivider>
         <DropdownItem buttonClass={PromptButton}
-                      addIcon={true}
+                      addIcon
                       onClick={this._handleDeleteResponses}>
           <i className="fa fa-trash-o"/>
           Clear History
