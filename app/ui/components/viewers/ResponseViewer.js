@@ -13,18 +13,18 @@ class ResponseViewer extends PureComponent {
     blockingBecauseTooLarge: false
   };
 
-  _handleOpenLink (link) {
+  _handleOpenLink = link => {
     shell.openExternal(link);
-  }
+  };
 
-  _handleDismissBlocker () {
+  _handleDismissBlocker = () => {
     this.setState({blockingBecauseTooLarge: false});
-  }
+  };
 
-  _handleDisableBlocker () {
+  _handleDisableBlocker = () => {
     alwaysShowLargeResponses = true;
     this._handleDismissBlocker();
-  }
+  };
 
   _checkResponseBlocker (props) {
     if (alwaysShowLargeResponses) {
@@ -101,13 +101,13 @@ class ResponseViewer extends PureComponent {
             slowdowns on some computers
           </p>
           <p>
-            <button onClick={e => this._handleDismissBlocker()}
+            <button onClick={this._handleDismissBlocker}
                     className="inline-block btn btn--clicky">
               Show Response
             </button>
             {" "}
             <button className="faint inline-block btn btn--super-compact"
-                    onClick={e => this._handleDisableBlocker()}>
+                    onClick={this._handleDisableBlocker}>
               Always Show
             </button>
           </p>

@@ -132,7 +132,11 @@ class Editor extends PureComponent {
    * @returns {boolean}
    */
   hasFocus () {
-    return this.codeMirror.hasFocus();
+    if (this.codeMirror) {
+      return this.codeMirror.hasFocus();
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -162,7 +166,6 @@ class Editor extends PureComponent {
     }
 
     const {value, debounceMillis: ms} = this.props;
-
     this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
 
     // Set default listeners
@@ -183,11 +186,11 @@ class Editor extends PureComponent {
       });
     }
 
-    // Do this a bit later so we don't block the render process
-    window.requestAnimationFrame(() => {
-      // Set editor options
-      this._codemirrorSetOptions();
+    // Set editor options
+    this._codemirrorSetOptions();
 
+    // Do this a bit later so we don't block the render process
+    setTimeout(() => {
       // Actually set the value
       this._codemirrorSetValue(value || '');
 
@@ -198,14 +201,8 @@ class Editor extends PureComponent {
 
       // Unset default cursor of [0, 0];
       this.codeMirror.setCursor({line: -1, ch: -1});
-    });
+    }, 10);
   };
-
-  _debounce (fn) {
-    const {debounceMillis} = this.props;
-    const ms = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
-    return misc.debounce(fn, ms);
-  }
 
   _isJSON (mode) {
     if (!mode) {
@@ -568,10 +565,12 @@ class Editor extends PureComponent {
     return (
       <div className={classes}>
         <div className="editor__container input" style={{fontSize: `${fontSize || 12}px`}}>
-          <textarea ref={this._handleInitTextarea}
-                    defaultValue=" "
-                    readOnly={readOnly}
-                    autoComplete="off"/>
+          <textarea
+            ref={this._handleInitTextarea}
+            style={{display: 'none'}}
+            defaultValue=" "
+            readOnly={readOnly}
+            autoComplete="off"/>
         </div>
         {toolbar}
       </div>

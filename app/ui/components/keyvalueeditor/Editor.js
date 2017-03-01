@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
 import {generateId, nullFn} from '../../../common/misc';
+import * as misc from '../../../common/misc';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -17,7 +18,7 @@ class KeyValueEditor extends PureComponent {
   constructor (props) {
     super(props);
 
-    this._focusedPair = null;
+    this._focusedPairId = null;
     this._focusedField = NAME;
     this._rows = [];
 
@@ -70,12 +71,12 @@ class KeyValueEditor extends PureComponent {
   };
 
   _handleFocusName = pair => {
-    this._focusedPair = pair;
+    this._setFocusedPair(pair);
     this._focusedField = NAME;
   };
 
   _handleFocusValue = pair => {
-    this._focusedPair = pair;
+    this._setFocusedPair(pair);
     this._focusedField = VALUE;
   };
 
@@ -144,21 +145,27 @@ class KeyValueEditor extends PureComponent {
       ...this.state.pairs.slice(position)
     ];
 
-    this._focusedPair = pair;
+    this._setFocusedPair(pair);
     this._onChange(pairs);
 
     this.props.onCreate && this.props.onCreate();
   }
 
   _deletePair (position, breakFocus = false) {
-    if (this._focusedPair >= position) {
-      this._focusedPair = breakFocus ? -1 : this._focusedPair - 1;
+    const focusedPosition = this._getFocusedPairIndex();
+
+    if (focusedPosition >= position) {
+      const newPosition = breakFocus ? -1 : focusedPosition - 1;
+      this._setFocusedPair(this.state.pairs[newPosition]);
     }
 
     const pair = this.state.pairs[position];
     this.props.onDelete && this.props.onDelete(pair);
 
-    const pairs = this.state.pairs.filter((_, i) => i !== position);
+    const pairs = [
+      ...this.state.pairs.slice(0, position),
+      ...this.state.pairs.slice(position + 1),
+    ];
 
     this._onChange(pairs);
   };
@@ -170,8 +177,7 @@ class KeyValueEditor extends PureComponent {
     } else if (this._focusedField === VALUE) {
       this._focusedField = NAME;
       if (addIfValue) {
-        const i = this._getPairIndex(this._focusedPair);
-        this._addPair(i + 1);
+        this._addPair(this._getFocusedPairIndex() + 1);
       } else {
         this._focusNextPair();
       }
@@ -183,10 +189,10 @@ class KeyValueEditor extends PureComponent {
       this._focusedField = NAME;
       this._updateFocus();
     } else if (this._focusedField === NAME) {
-      const p = this._focusedPair;
+      const p = this._getFocusedPair();
       if (!p.name && !p.value && !p.fileName && deleteIfEmpty) {
         this._focusedField = VALUE;
-        this._deletePair(this._focusedPair);
+        this._deletePair(this._getFocusedPairIndex());
       } else if (!p.name) {
         this._focusedField = VALUE;
         this._focusPreviousPair();
@@ -195,25 +201,32 @@ class KeyValueEditor extends PureComponent {
   }
 
   _focusNextPair () {
-    const i = this._getPairIndex(this._focusedPair);
+    const i = this._getFocusedPairIndex();
+
+    if (i === -1) {
+      // No focused pair currently
+      return;
+    }
+
     if (i >= this.state.pairs.length - 1) {
+      // Focused on last one, so add another
       this._addPair();
     } else {
-      this._focusedPair = this.state.pairs[i + 1];
+      this._setFocusedPair(this.state.pairs[i + 1]);
       this._updateFocus();
     }
   }
 
   _focusPreviousPair () {
-    const i = this._getPairIndex(this._focusedPair);
+    const i = this._getFocusedPairIndex();
     if (i > 0) {
-      this._focusedPair = this.state.pairs[i - 1];
+      this._setFocusedPair(this.state.pairs[i - 1]);
       this._updateFocus();
     }
   }
 
   _updateFocus () {
-    const row = this._focusedPair && this._rows[this._focusedPair.id];
+    const row = this._getFocusedPair() && this._rows[this._focusedPairId];
 
     if (!row) {
       return;
@@ -227,7 +240,27 @@ class KeyValueEditor extends PureComponent {
   }
 
   _getPairIndex (pair) {
-    return this.props.pairs.findIndex(p => p.id === pair.id);
+    if (pair) {
+      return this.props.pairs.findIndex(p => p.id === pair.id);
+    } else {
+      return -1;
+    }
+  }
+
+  _getFocusedPairIndex () {
+    return this._getPairIndex(this._getFocusedPair());
+  }
+
+  _getFocusedPair () {
+    return this.props.pairs.find(p => p.id === this._focusedPairId) || null;
+  }
+
+  _setFocusedPair (pair) {
+    if (pair) {
+      this._focusedPairId = pair.id;
+    } else {
+      this._focusedPairId = null;
+    }
   }
 
   componentDidUpdate () {

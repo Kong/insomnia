@@ -12,6 +12,8 @@
     flex-direction: row;
     width: 100%;
     padding-left: @padding-md;
+    margin-top: @padding-xs;
+    margin-bottom: @padding-xs;
     box-sizing: border-box;
 
     &.key-value-editor__row-wrapper--disabled .input,
@@ -43,6 +45,11 @@
       top: 100%;
     }
 
+    &.key-value-editor__row-wrapper--dragging-above::before {
+      // So the line appears on the next row
+      bottom: 100%;
+    }
+
     // Style last row the same no matter if focused or not.
     &.key-value-editor__row-wrapper--clicker .CodeMirror {
       border-color: var(--hl-sm) !important;
@@ -68,6 +75,10 @@
     // eg. When no drag handles present
     &:first-child, &:first-child .form-control {
       padding-left: 0;
+    }
+
+    .form-control {
+      margin-bottom: 0;
     }
 
     .input {
