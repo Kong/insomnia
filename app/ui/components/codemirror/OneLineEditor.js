@@ -108,7 +108,7 @@ class OneLineEditor extends PureComponent {
           ref={this._setInputRef}
           type="text"
           className={'editor--single-line input ' + className || ''}
-          style={{padding: '0 4px'}} // To match CodeMirror
+          style={{padding: '0 4px', width: '100%'}} // To match CodeMirror
           placeholder={placeholder}
           defaultValue={defaultValue}
           onChange={this._handleChange}
