@@ -27,7 +27,7 @@ export function allResources () {
   return findResources({});
 }
 
-export async function findResources (query) {
+export async function findResources (query = {}) {
   return _execDB(TYPE_RESOURCE, 'find', query);
 }
 
@@ -119,12 +119,7 @@ export function allConfigs () {
 
 export function findInactiveConfigs (excludedResourceGroupId = null) {
   if (excludedResourceGroupId) {
-    return findConfigs({
-      $and: [
-        {$not: {syncMode: SYNC_MODE_ON}},
-        {$not: {excludedResourceGroupId}},
-      ]
-    })
+    return findConfigs({$not: {syncMode: SYNC_MODE_ON, excludedResourceGroupId}})
   } else {
     return findConfigs({$not: {syncMode: SYNC_MODE_ON}})
   }
@@ -162,7 +157,7 @@ export async function insertConfig (config) {
 function _initConfig (data) {
   return Object.assign({
     _id: util.generateId('scf'),
-    syncMode: SYNC_MODE_ON,
+    syncMode: SYNC_MODE_UNSET,
     resourceGroupId: null
   }, data);
 }
