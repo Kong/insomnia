@@ -683,7 +683,6 @@ export async function createResourceForDoc (doc) {
   let workspaceResource = await store.getResourceByDocId(workspace._id);
 
   if (!workspaceResource) {
-    // TODO: Prompt user to ask if they want to sync this
     const workspaceResourceGroup = await createResourceGroup(workspace._id, workspace.name);
     await ensureConfigExists(workspaceResourceGroup.id, store.SYNC_MODE_OFF);
     workspaceResource = await createResource(workspace, workspaceResourceGroup.id);
