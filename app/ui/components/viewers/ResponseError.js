@@ -12,7 +12,7 @@ class ResponseError extends PureComponent {
     let msg = null;
     if (statusCode === STATUS_CODE_RENDER_FAILED) {
       msg = (
-        <Link button={true}
+        <Link button
               className="btn btn--clicky"
               href="https://insomnia.rest/documentation/templating/">
           Template Documentation
@@ -32,7 +32,7 @@ class ResponseError extends PureComponent {
       )
     } else {
       msg = (
-        <Link button={true}
+        <Link button
               className="btn btn--clicky"
               href="https://insomnia.rest/documentation/">
           Documentation
@@ -52,7 +52,7 @@ class ResponseError extends PureComponent {
           </p>
           {msg}
           &nbsp;&nbsp;
-          <Link button={true} className="btn btn--clicky margin-top-sm"
+          <Link button className="btn btn--clicky margin-top-sm"
                 href="https://insomnia.rest/documentation/support-and-feedback/">
             Contact Support
           </Link>

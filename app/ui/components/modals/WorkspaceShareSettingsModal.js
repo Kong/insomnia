@@ -108,14 +108,14 @@ class WorkspaceShareSettingsModal extends PureComponent {
       <form onSubmit={this._handleSubmit}>
         <Modal ref={this._setModalRef}>
           <ModalHeader key="header">Share Workspace</ModalHeader>
-          <ModalBody key="body" className="pad text-center" noScroll={true}>
+          <ModalBody key="body" className="pad text-center" noScroll>
             <p>
               Share <strong>{workspace.name}</strong> to automatically sync
               your API workspace with your team members.
             </p>
             <div className="form-control pad">
               {error ? <div className="danger">Oops: {error}</div> : null}
-              <Dropdown outline={true}>
+              <Dropdown outline>
                 <DropdownDivider>Teams</DropdownDivider>
                 {!loading ? (
                     resourceGroup && resourceGroup.teamId ? (
@@ -144,21 +144,19 @@ class WorkspaceShareSettingsModal extends PureComponent {
                   </DropdownItem>
                 ))}
                 {teams.length === 0 ? (
-                    <DropdownItem disabled={true} onClick={this._handleShareWithTeam}>
+                    <DropdownItem disabled onClick={this._handleShareWithTeam}>
                       <i className="fa fa-warning"/> You have no teams
                     </DropdownItem>
                   ) : null}
                 <DropdownDivider>Other</DropdownDivider>
-                <DropdownItem buttonClass={PromptButton}
-                              addIcon={true}
+                <DropdownItem addIcon buttonClass={PromptButton}
                               confirmMessage="Really make private?"
                               onClick={this._handleUnshare}>
                   <i className="fa fa-lock"/> Private
                 </DropdownItem>
               </Dropdown>
               &nbsp;&nbsp;
-              <Link button={true}
-                    className="btn btn--super-compact inline-block"
+              <Link button className="btn btn--super-compact inline-block"
                     href="https://insomnia.rest/app/teams/">
                 Manage Teams
               </Link>

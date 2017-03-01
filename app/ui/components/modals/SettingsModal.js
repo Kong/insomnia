@@ -82,7 +82,7 @@ class SettingsModal extends PureComponent {
     const email = session.isLoggedIn() ? session.getEmail() : null;
 
     return (
-      <Modal ref={this._setModalRef} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} tall {...this.props}>
         <ModalHeader>
           {getAppName()} Preferences
           <span className="faint txt-sm">
@@ -91,7 +91,7 @@ class SettingsModal extends PureComponent {
             {email ? ` – ${email}` : null}
           </span>
         </ModalHeader>
-        <ModalBody noScroll={true}>
+        <ModalBody noScroll>
           <Tabs onSelect={this._handleTabSelect} selectedIndex={currentTabIndex} forceRenderTabPanel>
             <TabList>
               <Tab selected={this._currentTabIndex === 0}>

@@ -184,7 +184,7 @@ class ResponsePane extends PureComponent {
               handleDeleteResponses={handleDeleteResponses}
               onChange={nullFn}
               className="tall pane__header__right"
-              right={true}
+              right
             />
           </header>
         )}

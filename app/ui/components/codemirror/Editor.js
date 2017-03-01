@@ -143,13 +143,18 @@ class Editor extends PureComponent {
 
   setCursor (ch, line = 0) {
     if (this.codeMirror) {
+      if (!this.hasFocus()) {
+        this.focus();
+      }
       this.codeMirror.setCursor({line, ch});
     }
   }
 
   focusEnd () {
     if (this.codeMirror) {
-      this.codeMirror.focus();
+      if (!this.hasFocus()) {
+        this.focus();
+      }
       const doc = this.codeMirror.getDoc();
       doc.setCursor(doc.lineCount(), 0);
     }

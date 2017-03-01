@@ -16,7 +16,7 @@ class RawEditor extends PureComponent {
 
     return (
       <Editor
-        manualPrettify={true}
+        manualPrettify
         fontSize={fontSize}
         keyMap={keyMap}
         defaultValue={content}

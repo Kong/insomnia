@@ -243,10 +243,10 @@ class RequestPane extends PureComponent {
               <div className="scrollable">
                 <Lazy>
                   <KeyValueEditor
+                    sortable
                     key={uniqueKey}
                     namePlaceholder="name"
                     valuePlaceholder="value"
-                    sortable={true}
                     onToggleDisable={this._trackQueryToggle}
                     onCreate={this._trackQueryCreate}
                     onDelete={this._trackQueryDelete}

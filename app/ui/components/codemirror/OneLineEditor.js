@@ -25,24 +25,28 @@ class OneLineEditor extends PureComponent {
     }
   };
 
+  _switchToEditor = () => {
+    // Get the cursor position
+    const cursorPosition = this._input.selectionStart();
+
+    // Wait for the editor to swap and restore cursor position
+    const check = () => this._editor ?
+      this._editor.setCursor(cursorPosition) :
+      setTimeout(check, 40);
+    check();
+
+    // Tell the component to show the editor
+    this.setState({forceEditor: true});
+  };
+
   _handleFocus = e => {
     // Force the editor view when it's focused
     if (!this.props.forceInput && !this.state.forceEditor) {
-      setTimeout(() => {
-        const cursorPosition = this._input.selectionStart();
-        this.setState({forceEditor: true});
-        const check = () => {
-          if (!this._editor) {
-            setTimeout(check, 40);
-          } else {
-            this._editor.focus();
-            this._editor.setCursor(cursorPosition);
-          }
-        };
-        check();
-      });
+      // Need a setTimeout here to give time for the cursor to set it's position
+      setTimeout(this._switchToEditor);
     }
 
+    // Also call the regular callback
     this.props.onFocus && this.props.onFocus(e);
   };
 

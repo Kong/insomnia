@@ -85,7 +85,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
-              right={true}
+              right
             />
           </div>
         </div>

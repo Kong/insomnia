@@ -34,7 +34,7 @@ class FormEditor extends PureComponent {
             onDelete={this._handleTrackDelete}
             onChange={onChange}
             pairs={parameters}
-            multipart={true}
+            multipart
           />
         </div>
       </div>

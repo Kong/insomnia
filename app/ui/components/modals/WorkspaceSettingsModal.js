@@ -119,7 +119,7 @@ class WorkspaceSettingsModal extends PureComponent {
     const {workspace} = this.props;
     const {pfxPath, crtPath, keyPath, showAddCertificateForm} = this.state;
     return (
-      <ModalBody key={`body::${workspace._id}`} noScroll={true}>
+      <ModalBody key={`body::${workspace._id}`} noScroll>
         <Tabs forceRenderTabPanel>
           <TabList>
             <Tab>
@@ -146,7 +146,7 @@ class WorkspaceSettingsModal extends PureComponent {
             <div className="form-control form-control--outlined">
               <label>Description
                 <DebouncedInput
-                  textarea={true}
+                  textarea
                   delay={500}
                   rows="4"
                   placeholder="This workspace is for testing the Awesome API!"
@@ -158,7 +158,7 @@ class WorkspaceSettingsModal extends PureComponent {
             <div className="form-control form-control--padded">
               <label htmlFor="nothing">Danger Zone
                 <PromptButton onClick={this._handleRemoveWorkspace}
-                              addIcon={true}
+                              addIcon
                               className="width-auto btn btn--clicky">
                   <i className="fa fa-trash-o"/> Delete Workspace
                 </PromptButton>
@@ -224,7 +224,7 @@ class WorkspaceSettingsModal extends PureComponent {
                       </button>
                       <PromptButton className="btn btn--super-compact width-auto"
                                     confirmMessage=" "
-                                    addIcon={true}
+                                    addIcon
                                     onClick={() => this._handleDeleteCertificate(certificate)}>
                         <i className="fa fa-trash-o"></i>
                       </PromptButton>
@@ -259,7 +259,7 @@ class WorkspaceSettingsModal extends PureComponent {
                         className="btn btn--clicky"
                         onChange={this._handleCreatePfxChange}
                         path={pfxPath}
-                        showFileName={true}
+                        showFileName
                       />
                     </label>
                   </div>
@@ -275,7 +275,7 @@ class WorkspaceSettingsModal extends PureComponent {
                           name="Cert"
                           onChange={this._handleCreateCrtChange}
                           path={crtPath}
-                          showFileName={true}
+                          showFileName
                         />
                       </label>
                     </div>
@@ -286,7 +286,7 @@ class WorkspaceSettingsModal extends PureComponent {
                           name="Key"
                           onChange={this._handleCreateKeyChange}
                           path={keyPath}
-                          showFileName={true}/>
+                          showFileName/>
                       </label>
                     </div>
                   </div>
@@ -323,7 +323,7 @@ class WorkspaceSettingsModal extends PureComponent {
   render () {
     const {workspace} = this.props;
     return (
-      <Modal ref={this._handleSetModalRef} tall={true} freshState={true}>
+      <Modal ref={this._handleSetModalRef} tall freshState>
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
       </Modal>

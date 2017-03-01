@@ -118,7 +118,7 @@ class Toast extends PureComponent {
         <div className="toast__action">
           <Link className="btn btn--super-duper-compact btn--outlined no-wrap"
                 onClick={this._handlePostCTACleanup}
-                button={true}
+                button
                 href={notification.url}>
             {notification.cta}
           </Link>

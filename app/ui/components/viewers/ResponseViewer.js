@@ -155,10 +155,10 @@ class ResponseViewer extends PureComponent {
             defaultValue={body}
             updateFilter={updateFilter}
             filter={filter}
-            autoPrettify={true}
-            noMatchBrackets={true}
+            autoPrettify
+            noMatchBrackets
+            readOnly
             mode={mode}
-            readOnly={true}
             lineWrapping={editorLineWrapping}
             fontSize={editorFontSize}
             keyMap={editorKeyMap}

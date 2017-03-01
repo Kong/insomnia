@@ -89,7 +89,7 @@ class RequestCreateModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>New Request</ModalHeader>
-        <ModalBody noScroll={true}>
+        <ModalBody noScroll>
           <form onSubmit={this._handleSubmit} className="pad">
             <div className="row-fill">
               <div className="form-control form-control--outlined">
@@ -100,8 +100,8 @@ class RequestCreateModal extends PureComponent {
               <div className="form-control" style={{width: 'auto'}}>
                 <label>&nbsp;</label>
                 <MethodDropdown
+                  right
                   className="btn btn--clicky no-wrap"
-                  right={true}
                   method={selectedMethod}
                   onChange={this._handleChangeSelectedMethod}
                 />
@@ -110,7 +110,7 @@ class RequestCreateModal extends PureComponent {
                 <div className="form-control" style={{width: 'auto'}}>
                   <label htmlFor="nothing">&nbsp;
                     <ContentTypeDropdown className="btn btn--clicky no-wrap"
-                                         right={true}
+                                         right
                                          contentType={selectedContentType}
                                          onChange={this._handleChangeSelectedContentType}>
                       {getContentTypeName(selectedContentType)}

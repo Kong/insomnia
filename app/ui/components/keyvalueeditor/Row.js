@@ -129,7 +129,7 @@ class KeyValueEditorRow extends PureComponent {
             {pair.type === 'file' ? (
                 <FileInputButton
                   ref={this._setValueInputRef}
-                  showFileName={true}
+                  showFileName
                   className="btn btn--clicky wide ellipsis txt-sm"
                   path={pair.fileName || ''}
                   onChange={this._handleFileNameChange}
@@ -153,7 +153,7 @@ class KeyValueEditorRow extends PureComponent {
 
           {multipart ? (
               !hideButtons ? (
-                  <Dropdown right={true}>
+                  <Dropdown right>
                     <DropdownButton className="tall">
                       <i className="fa fa-caret-down"></i>
                     </DropdownButton>
@@ -189,7 +189,7 @@ class KeyValueEditorRow extends PureComponent {
               <PromptButton key={Math.random()}
                             tabIndex="-1"
                             confirmMessage=" "
-                            addIcon={true}
+                            addIcon
                             onClick={this._handleDelete}
                             title="Delete item">
                 <i className="fa fa-trash-o"/>
