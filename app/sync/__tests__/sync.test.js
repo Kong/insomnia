@@ -39,7 +39,7 @@ describe('Test push/pull behaviour', () => {
 
     // Set up sync modes
     await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
-    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_OFF);
+    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_UNSET);
 
     await sync.push(); // Push only active configs
     await sync.push(resourceRequest.resourceGroupId); // Force push rg_1

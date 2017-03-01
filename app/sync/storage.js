@@ -9,6 +9,7 @@ const TYPE_CONFIG = 'Config';
 
 export const SYNC_MODE_OFF = 'paused';
 export const SYNC_MODE_ON = 'active';
+export const SYNC_MODE_UNSET = 'unset';
 
 export function allActiveResources (resourceGroupId = null) {
   if (resourceGroupId) {
@@ -119,11 +120,13 @@ export function allConfigs () {
 export function findInactiveConfigs (excludedResourceGroupId = null) {
   if (excludedResourceGroupId) {
     return findConfigs({
-      syncMode: SYNC_MODE_OFF,
-      $not: {excludedResourceGroupId}
+      $and: [
+        {$not: {syncMode: SYNC_MODE_ON}},
+        {$not: {excludedResourceGroupId}},
+      ]
     })
   } else {
-    return findConfigs({syncMode: SYNC_MODE_OFF})
+    return findConfigs({$not: {syncMode: SYNC_MODE_ON}})
   }
 }
 

@@ -28,8 +28,9 @@ class SyncDropdown extends PureComponent {
 
     const config = await sync.getOrCreateConfig(resourceGroupId);
 
-    let syncMode = config.syncMode === syncStorage.SYNC_MODE_OFF ?
-      syncStorage.SYNC_MODE_ON : syncStorage.SYNC_MODE_OFF;
+    let syncMode = config.syncMode !== syncStorage.SYNC_MODE_ON ?
+      syncStorage.SYNC_MODE_ON :
+      syncStorage.SYNC_MODE_OFF;
 
     await sync.createOrUpdateConfig(resourceGroupId, syncMode);
 
@@ -131,7 +132,7 @@ class SyncDropdown extends PureComponent {
     } else {
       const {syncMode, syncPercent} = syncData;
       const description = this._getSyncDescription(syncMode, syncPercent);
-      const isPaused = syncMode === syncStorage.SYNC_MODE_OFF;
+      const isPaused = syncMode !== syncStorage.SYNC_MODE_ON;
 
       return (
         <div className={className}>
@@ -143,9 +144,10 @@ class SyncDropdown extends PureComponent {
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
             <DropdownItem onClick={this._handleToggleSyncMode}
                           stayOpenAfterClick={true}>
-              {syncMode === syncStorage.SYNC_MODE_OFF ?
-                <i className="fa fa-toggle-off"></i> :
-                <i className="fa fa-toggle-on"></i>}
+              {syncMode === syncStorage.SYNC_MODE_ON ?
+                <i className="fa fa-toggle-on"/> :
+                <i className="fa fa-toggle-off"/>
+              }
               Automatic Sync
             </DropdownItem>
             <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick={true}>
