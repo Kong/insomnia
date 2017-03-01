@@ -80,15 +80,17 @@ class KeyValueEditor extends PureComponent {
     this._focusedField = VALUE;
   };
 
-  _handleAddFromName = () => {
+  // Sometimes multiple focus events come in, so lets debounce it
+  _handleAddFromName = misc.debounce(() => {
     this._focusedField = NAME;
     this._addPair();
-  };
+  });
 
-  _handleAddFromValue = () => {
+  // Sometimes multiple focus events come in, so lets debounce it
+  _handleAddFromValue = misc.debounce(() => {
     this._focusedField = VALUE;
     this._addPair();
-  };
+  });
 
   _handleKeyDown = (pair, e, value) => {
     if (e.metaKey || e.ctrlKey) {
@@ -122,7 +124,7 @@ class KeyValueEditor extends PureComponent {
     this.setState({pairs});
   }
 
-  _addPair (position, patch) {
+  _addPair (position) {
     const numPairs = this.state.pairs.length;
     const {maxPairs} = this.props;
 
@@ -133,11 +135,11 @@ class KeyValueEditor extends PureComponent {
 
     position = position === undefined ? numPairs : position;
 
-    const pair = Object.assign({
+    const pair = {
       name: '',
       value: '',
       id: generateId('pair')
-    }, patch);
+    };
 
     const pairs = [
       ...this.state.pairs.slice(0, position),
