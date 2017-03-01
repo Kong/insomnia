@@ -47,6 +47,18 @@ class KeyValueEditorRow extends PureComponent {
   _handleFocusName = e => this.props.onFocusName(this.props.pair, e);
   _handleFocusValue = e => this.props.onFocusValue(this.props.pair, e);
 
+  _handleBlurName = e => {
+    if (this.props.onBlurName) {
+      this.props.onBlurName(this.props.pair, e);
+    }
+  };
+
+  _handleBlurValue = e => {
+    if (this.props.onBlurName) {
+      this.props.onBlurValue(this.props.pair, e);
+    }
+  };
+
   _handleDelete = () => {
     if (this.props.onDelete) {
       this.props.onDelete(this.props.pair);
@@ -69,12 +81,15 @@ class KeyValueEditorRow extends PureComponent {
       multipart,
       sortable,
       noDropZone,
+      blurOnFocus,
       hideButtons,
       readOnly,
       className,
       isDragging,
       isDraggingOver,
+      noDelete,
       connectDragSource,
+      connectDragPreview,
       connectDropTarget,
     } = this.props;
 
@@ -88,15 +103,18 @@ class KeyValueEditorRow extends PureComponent {
       'key-value-editor__row-wrapper--disabled': pair.disabled,
     });
 
+    let handle = null;
+    if (sortable) {
+      handle = connectDragSource(
+        <div className="key-value-editor__drag">
+          <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
+        </div>
+      );
+    }
+
     const row = (
       <li className={classes}>
-        {sortable ? (
-            <div className="key-value-editor__drag">
-              <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
-            </div>
-          ) : null
-        }
-
+        {handle}
         <div className="key-value-editor__row">
           <div className="form-control form-control--underlined form-control--wide">
             <OneLineEditor
@@ -104,7 +122,9 @@ class KeyValueEditorRow extends PureComponent {
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
               render={handleRender}
+              blurOnFocus={blurOnFocus}
               readOnly={readOnly}
+              onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
               onFocus={this._handleFocusName}
               onKeyDown={this._handleKeyDown}
@@ -114,19 +134,21 @@ class KeyValueEditorRow extends PureComponent {
             {pair.type === 'file' ? (
                 <FileInputButton
                   ref={this._setValueInputRef}
-                  showFileName={true}
+                  showFileName
                   className="btn btn--clicky wide ellipsis txt-sm"
                   path={pair.fileName || ''}
                   onChange={this._handleFileNameChange}
                 />
               ) : (
                 <OneLineEditor
+                  blurOnFocus={blurOnFocus}
                   ref={this._setValueInputRef}
                   readOnly={readOnly}
                   type={valueInputType || 'text'}
                   placeholder={valuePlaceholder || 'Value'}
                   defaultValue={pair.value}
                   onChange={this._handleValueChange}
+                  onBlur={this._handleBlurValue}
                   render={handleRender}
                   onKeyDown={this._handleKeyDown}
                   onFocus={this._handleFocusValue}
@@ -136,7 +158,7 @@ class KeyValueEditorRow extends PureComponent {
 
           {multipart ? (
               !hideButtons ? (
-                  <Dropdown right={true}>
+                  <Dropdown right>
                     <DropdownButton className="tall">
                       <i className="fa fa-caret-down"></i>
                     </DropdownButton>
@@ -168,28 +190,30 @@ class KeyValueEditorRow extends PureComponent {
               <button><i className="fa fa-empty"/></button>
             )}
 
-          {!hideButtons ? (
-              <PromptButton key={Math.random()}
-                            tabIndex="-1"
-                            confirmMessage=" "
-                            addIcon={true}
-                            onClick={this._handleDelete}
-                            title="Delete item">
-                <i className="fa fa-trash-o"/>
-              </PromptButton>
-            ) : (
-              <button>
-                <i className="fa fa-empty"/>
-              </button>
-            )}
+          {!noDelete ? (
+              !hideButtons ? (
+                  <PromptButton key={Math.random()}
+                                tabIndex="-1"
+                                confirmMessage=" "
+                                addIcon
+                                onClick={this._handleDelete}
+                                title="Delete item">
+                    <i className="fa fa-trash-o"/>
+                  </PromptButton>
+                ) : (
+                  <button>
+                    <i className="fa fa-empty"/>
+                  </button>
+                )
+            ) : null}
         </div>
       </li>
     );
 
-    if (noDropZone || !sortable) {
+    if (noDropZone) {
       return row;
     } else {
-      return connectDragSource(connectDropTarget(row));
+      return connectDragPreview(connectDropTarget(row));
     }
   }
 }
@@ -213,17 +237,22 @@ KeyValueEditorRow.propTypes = {
   readOnly: PropTypes.bool,
   onMove: PropTypes.func,
   onKeyDown: PropTypes.func,
+  onBlurName: PropTypes.func,
+  onBlurValue: PropTypes.func,
   handleRender: PropTypes.func,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
+  noDelete: PropTypes.bool,
   noDropZone: PropTypes.bool,
   hideButtons: PropTypes.bool,
+  blurOnFocus: PropTypes.bool,
 
   // For drag-n-drop
   connectDragSource: PropTypes.func,
+  connectDragPreview: PropTypes.func,
   connectDropTarget: PropTypes.func,
   isDragging: PropTypes.bool,
   isDraggingOver: PropTypes.bool,
@@ -265,6 +294,7 @@ const dragTarget = {
 function sourceCollect (connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
+    connectDragPreview: connect.dragPreview(),
     isDragging: monitor.isDragging(),
   };
 }

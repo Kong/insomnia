@@ -78,7 +78,7 @@ class ChangelogModal extends PureComponent {
         if (change.link) {
           html = [
             ...html,
-            <Link href={change.link} className="btn btn--clicky" button={true} key={`link.${i}`}>
+            <Link href={change.link} className="btn btn--clicky" button key={`link.${i}`}>
               Read More
             </Link>
           ]
@@ -128,7 +128,7 @@ class ChangelogModal extends PureComponent {
           {html}
         </ModalBody>
         <ModalFooter>
-          <Link className="btn" href={CHANGELOG_PAGE} button={true}>
+          <Link className="btn" href={CHANGELOG_PAGE} button>
             Visit Full Changelog
           </Link>
         </ModalFooter>

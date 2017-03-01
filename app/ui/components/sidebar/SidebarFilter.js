@@ -41,7 +41,7 @@ class SidebarFilter extends PureComponent {
             onChange={this._handleOnChange}
           />
         </div>
-        <Dropdown right={true}>
+        <Dropdown right>
           <DropdownButton className="btn btn--compact">
             <i className="fa fa-plus-circle"></i>
           </DropdownButton>

@@ -2,7 +2,6 @@ import React, {PureComponent, PropTypes} from 'react';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptModal from '../modals/PromptModal';
-import CopyButton from '../base/CopyButton';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
@@ -64,10 +63,7 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code"/> Generate Code
         </DropdownItem>
-        {/*<DropdownItem buttonClass={CopyButton} content={request._id} stayOpenAfterClick={true}>*/}
-        {/*<i className="fa fa-copy"/> Copy Id*/}
-        {/*</DropdownItem>*/}
-        <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon={true}>
+        <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o"/> Delete
         </DropdownItem>
       </Dropdown>

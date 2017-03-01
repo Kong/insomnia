@@ -76,7 +76,7 @@ class RequestGroupActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleEditEnvironment}>
           <i className="fa fa-code"></i> Environment
         </DropdownItem>
-        <DropdownItem buttonClass={PromptButton} addIcon={true} onClick={this._handleDeleteFolder}>
+        <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
           <i className="fa fa-trash-o"></i> Delete
         </DropdownItem>
       </Dropdown>

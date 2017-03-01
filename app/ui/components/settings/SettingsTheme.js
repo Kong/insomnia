@@ -62,7 +62,7 @@ class SettingsTheme extends PureComponent {
           {isActive ? <span className="no-margin-top faint italic txt-md">(Active)</span> : null}
         </h2>
         {disabled ? (
-            <Link button={true} href="https://insomnia.rest/pricing/" className="themes__theme--locked">
+            <Link button href="https://insomnia.rest/pricing/" className="themes__theme--locked">
               <img src={theme.img} alt={theme.name} style={{maxWidth: '100%'}}/>
             </Link>
           ) : (

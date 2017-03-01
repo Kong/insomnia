@@ -70,7 +70,7 @@ class CookiesEditor extends PureComponent {
                 </td>
                 <td className="text-right">
                   <PromptButton className="btn btn--super-compact"
-                                addIcon={true}
+                                addIcon
                                 confirmMessage=" "
                                 onClick={e => this._handleDeleteCookie(cookie)}
                                 title="Delete cookie">

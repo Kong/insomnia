@@ -111,15 +111,15 @@ class GenerateCodeModal extends PureComponent {
     }
 
     return (
-      <Modal ref={this._setModalRef} tall={true} {...this.props}>
+      <Modal ref={this._setModalRef} tall {...this.props}>
         <ModalHeader>Generate Client Code</ModalHeader>
-        <ModalBody noScroll={true} style={{
+        <ModalBody noScroll style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr)',
           gridTemplateRows: 'auto minmax(0, 1fr)'
         }}>
           <div className="pad">
-            <Dropdown outline={true}>
+            <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
                 {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down"></i>
@@ -131,7 +131,7 @@ class GenerateCodeModal extends PureComponent {
               ))}
             </Dropdown>
             &nbsp;&nbsp;
-            <Dropdown outline={true}>
+            <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
                 {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down"></i>
@@ -146,15 +146,14 @@ class GenerateCodeModal extends PureComponent {
             <CopyButton content={cmd} className="pull-right btn btn--clicky"/>
           </div>
           <Editor
+            lineWrapping
             className="border-top"
             key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}
             ref={this._setEditorRef}
             fontSize={editorFontSize}
             keyMap={editorKeyMap}
-            lightTheme={true}
-            lineWrapping={true}
-            value={cmd}
+            defaultValue={cmd}
           />
         </ModalBody>
         <ModalFooter>

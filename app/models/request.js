@@ -31,9 +31,24 @@ export function newBodyRaw (rawBody, contentType) {
 
 export function newBodyFormUrlEncoded (parameters) {
   // Remove any properties (eg. fileName) that might not fit
-  parameters = (parameters || []).map(
-    p => ({name: p.name, value: p.value, disabled: !!p.disabled})
-  );
+  parameters = (parameters || []).map(parameter => {
+    const newParameter = {
+      name: parameter.name,
+      value: parameter.value
+    };
+
+    if (parameter.hasOwnProperty('id')) {
+      newParameter.id = parameter.id;
+    }
+
+    if (parameter.hasOwnProperty('disabled')) {
+      newParameter.disabled = parameter.disabled;
+    } else {
+      newParameter.disabled = false;
+    }
+
+    return newParameter;
+  });
 
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,

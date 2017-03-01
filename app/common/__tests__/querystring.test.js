@@ -21,6 +21,11 @@ describe('getBasicAuthHeader()', () => {
     expect(joiner).toBe('&');
   });
 
+  it('gets joiner for URL with hash', () => {
+    const joiner = querystringUtils.getJoiner('http://google.com?foo=bar#hi');
+    expect(joiner).toBe('&');
+  });
+
   it('gets joiner for URL with ampersand', () => {
     const joiner = querystringUtils.getJoiner(
       'http://google.com?foo=bar&baz=qux'
@@ -30,7 +35,7 @@ describe('getBasicAuthHeader()', () => {
 });
 
 describe('joinUrl()', () => {
-  it('gets joiner for bare URL', () => {
+  it('joins bare URL', () => {
     const url = querystringUtils.joinUrl(
       'http://google.com',
       'foo=bar'
@@ -38,7 +43,31 @@ describe('joinUrl()', () => {
     expect(url).toBe('http://google.com?foo=bar');
   });
 
-  it('gets joiner for URL with querystring', () => {
+  it('joins with hash', () => {
+    const url = querystringUtils.joinUrl(
+      'http://google.com#hash',
+      'foo=bar'
+    );
+    expect(url).toBe('http://google.com?foo=bar#hash');
+  });
+
+  it('joins hash and querystring', () => {
+    const url = querystringUtils.joinUrl(
+      'http://google.com?baz=qux#hash',
+      'foo=bar'
+    );
+    expect(url).toBe('http://google.com?baz=qux&foo=bar#hash');
+  });
+
+  it('joins multi-hash and querystring', () => {
+    const url = querystringUtils.joinUrl(
+      'http://google.com?hi=there&baz=qux#hash#hi#hi',
+      'foo=bar'
+    );
+    expect(url).toBe('http://google.com?hi=there&baz=qux&foo=bar#hash#hi#hi');
+  });
+
+  it('joins URL with querystring', () => {
     const url = querystringUtils.joinUrl(
       'http://google.com?hi=there',
       'foo=bar%20baz'
