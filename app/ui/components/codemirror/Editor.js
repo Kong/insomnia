@@ -150,6 +150,18 @@ class Editor extends PureComponent {
     }
   }
 
+  setSelection (chStart, chEnd, line = 0) {
+    if (this.codeMirror) {
+      if (!this.hasFocus()) {
+        this.focus();
+      }
+      this.codeMirror.setSelection(
+        {line, ch: chStart},
+        {line, ch: chEnd}
+      );
+    }
+  }
+
   focusEnd () {
     if (this.codeMirror) {
       if (!this.hasFocus()) {
@@ -169,7 +181,11 @@ class Editor extends PureComponent {
   }
 
   getValue () {
-    return this.codeMirror.getValue();
+    if (this.codeMirror) {
+      return this.codeMirror.getValue();
+    } else {
+      return '';
+    }
   }
 
   _handleInitTextarea = textarea => {

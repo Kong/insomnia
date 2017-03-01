@@ -80,7 +80,6 @@ class KeyValueEditorRow extends PureComponent {
       valueInputType,
       multipart,
       sortable,
-      forceInput,
       noDropZone,
       hideButtons,
       readOnly,
@@ -88,6 +87,7 @@ class KeyValueEditorRow extends PureComponent {
       isDragging,
       isDraggingOver,
       connectDragSource,
+      connectDragPreview,
       connectDropTarget,
     } = this.props;
 
@@ -101,15 +101,18 @@ class KeyValueEditorRow extends PureComponent {
       'key-value-editor__row-wrapper--disabled': pair.disabled,
     });
 
+    let handle = null;
+    if (sortable) {
+      handle = connectDragSource(
+        <div className="key-value-editor__drag">
+          <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
+        </div>
+      );
+    }
+
     const row = (
       <li className={classes}>
-        {sortable ? (
-            <div className="key-value-editor__drag">
-              <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
-            </div>
-          ) : null
-        }
-
+        {handle}
         <div className="key-value-editor__row">
           <div className="form-control form-control--underlined form-control--wide">
             <OneLineEditor
@@ -118,7 +121,6 @@ class KeyValueEditorRow extends PureComponent {
               defaultValue={pair.name}
               render={handleRender}
               readOnly={readOnly}
-              forceInput={forceInput}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
               onFocus={this._handleFocusName}
@@ -140,7 +142,6 @@ class KeyValueEditorRow extends PureComponent {
                   readOnly={readOnly}
                   type={valueInputType || 'text'}
                   placeholder={valuePlaceholder || 'Value'}
-                  forceInput={forceInput}
                   defaultValue={pair.value}
                   onChange={this._handleValueChange}
                   onBlur={this._handleBlurValue}
@@ -203,10 +204,10 @@ class KeyValueEditorRow extends PureComponent {
       </li>
     );
 
-    if (noDropZone || !sortable) {
+    if (noDropZone) {
       return row;
     } else {
-      return connectDragSource(connectDropTarget(row));
+      return connectDragPreview(connectDropTarget(row));
     }
   }
 }
@@ -239,11 +240,11 @@ KeyValueEditorRow.propTypes = {
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
   noDropZone: PropTypes.bool,
-  forceInput: PropTypes.bool,
   hideButtons: PropTypes.bool,
 
   // For drag-n-drop
   connectDragSource: PropTypes.func,
+  connectDragPreview: PropTypes.func,
   connectDropTarget: PropTypes.func,
   isDragging: PropTypes.bool,
   isDraggingOver: PropTypes.bool,
@@ -285,6 +286,7 @@ const dragTarget = {
 function sourceCollect (connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
+    connectDragPreview: connect.dragPreview(),
     isDragging: monitor.isDragging(),
   };
 }

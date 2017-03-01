@@ -15,12 +15,47 @@ class DebouncedInput extends PureComponent {
   _handleChange = e => this._handleValueChange(e.target.value);
   _setRef = n => this._input = n;
 
-  selectionStart () {
-    return this._input ? this._input.selectionStart : -1;
+  getSelectionStart () {
+    if (this._input) {
+      return this._input.selectionStart;
+    } else {
+      return -1;
+    }
+  }
+
+  getSelectionEnd () {
+    if (this._input) {
+      return this._input.selectionEnd;
+    } else {
+      return -1;
+    }
   }
 
   focus () {
-    this._input && this._input.focus();
+    if (this._input) {
+      this._input.focus();
+    }
+  }
+
+  focusEnd () {
+    if (this._input) {
+      // Hack to focus the end (set value to current value);
+      this._input.value = this.getValue();
+    }
+  }
+
+  blur () {
+    if (this._input) {
+      this._input.blur();
+    }
+  }
+
+  getValue () {
+    if (this._input) {
+      return this._input.value;
+    } else {
+      return '';
+    }
   }
 
   render () {

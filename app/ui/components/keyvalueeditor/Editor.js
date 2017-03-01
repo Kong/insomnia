@@ -328,7 +328,6 @@ class KeyValueEditor extends PureComponent {
             hideButtons
             sortable
             noDropZone
-            forceInput
             readOnly
             index={-1}
             onChange={nullFn}

@@ -276,6 +276,7 @@ class RequestUrlBar extends PureComponent {
           <OneLineEditor
             ref={this._setInputRef}
             onPaste={this._handleUrlPaste}
+            forceEditor
             type="text"
             render={handleRender}
             placeholder="https://api.myproduct.com/v1/users"
