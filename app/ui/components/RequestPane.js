@@ -233,9 +233,8 @@ class RequestPane extends PureComponent {
               </label>
               <code className="txt-sm block">
                 <RenderedQueryString
+                  handleRender={handleRender}
                   request={request}
-                  environmentId={environmentId}
-                  placeholder="http://awesome-api.com?name=Gregory"
                 />
               </code>
             </div>

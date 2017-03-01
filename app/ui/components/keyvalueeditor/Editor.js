@@ -3,7 +3,6 @@ import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
 import {generateId, nullFn} from '../../../common/misc';
-import * as misc from '../../../common/misc';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -276,11 +275,6 @@ class KeyValueEditor extends PureComponent {
     this._updateFocus();
   }
 
-  shouldComponentUpdate (nextProps, nextState) {
-    // return false;
-    return true;
-  }
-
   render () {
     const {
       maxPairs,
@@ -332,6 +326,7 @@ class KeyValueEditor extends PureComponent {
             index={-1}
             onChange={nullFn}
             onDelete={nullFn}
+            blurOnFocus
             className="key-value-editor__row-wrapper--clicker"
             namePlaceholder={`New ${namePlaceholder}`}
             valuePlaceholder={`New ${valuePlaceholder}`}

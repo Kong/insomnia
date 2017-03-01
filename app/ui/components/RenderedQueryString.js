@@ -1,8 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {getRenderedRequest} from '../../common/render';
 import * as querystring from '../../common/querystring';
 import * as util from '../../common/misc';
-
 
 class RenderedQueryString extends PureComponent {
   state = {string: ''};
@@ -10,8 +8,11 @@ class RenderedQueryString extends PureComponent {
   _update (props, delay = false) {
     clearTimeout(this._triggerTimeout);
     this._triggerTimeout = setTimeout(async () => {
-      const {request, environmentId} = props;
-      const {url, parameters} = await getRenderedRequest(request, environmentId);
+      const {request} = props;
+      const {url, parameters} = await props.handleRender({
+        url: request.url,
+        parameters: request.parameters
+      });
       const qs = querystring.buildFromParams(parameters);
       const fullUrl = querystring.joinUrl(url, qs);
       this.setState({string: util.prepareUrlForSending(fullUrl)});
@@ -49,10 +50,7 @@ class RenderedQueryString extends PureComponent {
 
 RenderedQueryString.propTypes = {
   request: PropTypes.object.isRequired,
-  environmentId: PropTypes.string.isRequired,
-
-  // Optional
-  placeholder: PropTypes.string
+  handleRender: PropTypes.func.isRequired,
 };
 
 export default RenderedQueryString;

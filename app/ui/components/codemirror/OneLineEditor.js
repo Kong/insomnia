@@ -12,7 +12,9 @@ class OneLineEditor extends PureComponent {
 
     let mode = MODE_INPUT;
 
-    if (props.forceEditor) {
+    if (props.forceInput) {
+      mode = MODE_INPUT;
+    } else if (props.forceEditor) {
       mode = MODE_EDITOR;
     } else if (this._mayContainNunjucks(props.defaultValue)) {
       mode = MODE_EDITOR;
@@ -40,18 +42,31 @@ class OneLineEditor extends PureComponent {
     }
   }
 
-  _handleInputFocus = e => {
-    // If we're focusing the whole thing, blur the input. This happens when
-    // the user tabs to the field.
-    const start = this._input.getSelectionStart();
-    const end = this._input.getSelectionEnd();
-    const focusedFromTabEvent = start === 0 && end !== 0 && end === e.target.value.length;
+  _handleEditorFocus = e => {
+    this._editor.focusEnd();
+  };
 
-    if (focusedFromTabEvent) {
-      this._input.focusEnd();
+  _handleInputFocus = e => {
+    if (this.props.blurOnFocus) {
+      e.target.blur();
+    } else {
+      // If we're focusing the whole thing, blur the input. This happens when
+      // the user tabs to the field.
+      const start = this._input.getSelectionStart();
+      const end = this._input.getSelectionEnd();
+      const focusedFromTabEvent = start === 0 && end > 0 && end === e.target.value.length;
+
+      if (focusedFromTabEvent) {
+        this._input.focusEnd();
+      }
     }
 
-    this._changeToEditorTimeout = setTimeout(() => {
+    // Also call the regular callback
+    this.props.onFocus && this.props.onFocus(e);
+  };
+
+  _handleInputChange = value => {
+    if (!this.props.forceInput && this._mayContainNunjucks(value)) {
       const start = this._input.getSelectionStart();
       const end = this._input.getSelectionEnd();
 
@@ -67,18 +82,13 @@ class OneLineEditor extends PureComponent {
       // Tell the component to show the editor
       this.setState({mode: MODE_EDITOR});
       check();
-    }, 500);
+    }
 
-    // Also call the regular callback
-    this.props.onFocus && this.props.onFocus(e);
+    this.props.onChange && this.props.onChange(value);
   };
 
-  _handleInputBlur = e => {
-    // If we're currently changing to an editor, stop it!
-    clearTimeout(this._changeToEditorTimeout);
-
-    // Also call the regular callback
-    this.props.onBlur && this.props.onBlur(e);
+  _handleInputKeyDown = e => {
+    this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
   };
 
   _handleEditorBlur = () => {
@@ -91,10 +101,6 @@ class OneLineEditor extends PureComponent {
     }
 
     this.setState({mode: MODE_INPUT});
-  };
-
-  _handleInputKeyDown = e => {
-    this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
   };
 
   _handleEditorKeyDown = e => {
@@ -116,7 +122,6 @@ class OneLineEditor extends PureComponent {
 
   _setEditorRef = n => this._editor = n;
   _setInputRef = n => this._input = n;
-
   _mayContainNunjucks = text => !!text.match(NUNJUCKS_REGEX);
 
   render () {
@@ -125,7 +130,7 @@ class OneLineEditor extends PureComponent {
       className,
       onChange,
       placeholder,
-      onFocus,
+      onBlur,
       render
     } = this.props;
 
@@ -145,7 +150,7 @@ class OneLineEditor extends PureComponent {
           onBlur={this._handleEditorBlur}
           onKeyDown={this._handleEditorKeyDown}
           onChange={onChange}
-          onFocus={onFocus}
+          onFocus={this._handleEditorFocus}
           render={render}
           className="editor--single-line"
           defaultValue={defaultValue}
@@ -163,10 +168,10 @@ class OneLineEditor extends PureComponent {
           }} // To match CodeMirror
           placeholder={placeholder}
           defaultValue={defaultValue}
-          onChange={onChange}
-          onKeyDown={this._handleInputKeyDown}
+          onChange={this._handleInputChange}
+          onBlur={onBlur}
           onFocus={this._handleInputFocus}
-          onBlur={this._handleInputBlur}
+          onKeyDown={this._handleInputKeyDown}
         />
       )
   }
@@ -176,7 +181,9 @@ OneLineEditor.propTypes = Object.assign({}, Editor.propTypes, {
   defaultValue: PropTypes.string.isRequired,
 
   // Optional
+  blurOnFocus: PropTypes.bool,
   forceEditor: PropTypes.bool,
+  forceInput: PropTypes.bool,
 });
 
 export default OneLineEditor;
