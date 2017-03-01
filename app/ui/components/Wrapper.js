@@ -15,7 +15,6 @@ import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
 import ResponsePane from './ResponsePane';
 import SettingsModal from '../components/modals/SettingsModal';
 import Sidebar from './sidebar/Sidebar';
-import SyncLogsModal from '../components/modals/SyncLogsModal';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
 import WorkspaceShareSettingsModal from '../components/modals/WorkspaceShareSettingsModal';
@@ -288,7 +287,6 @@ class Wrapper extends PureComponent {
         <AlertModal ref={registerModal}/>
         <CookiesModal ref={registerModal}/>
         <ChangelogModal ref={registerModal}/>
-        <SyncLogsModal ref={registerModal}/>
         <LoginModal ref={registerModal}/>
         <PromptModal ref={registerModal}/>
         <RequestCreateModal ref={registerModal}/>

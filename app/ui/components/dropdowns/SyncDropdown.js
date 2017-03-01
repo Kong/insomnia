@@ -1,7 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
 import {showModal} from '../modals';
-import SyncLogsModal from '../modals/SyncLogsModal';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
@@ -16,7 +15,6 @@ class SyncDropdown extends PureComponent {
   };
 
   _trackShowMenu = () => trackEvent('Sync', 'Show Menu', 'Authenticated');
-  _handleShowLogs = () => showModal(SyncLogsModal);
 
   _handleShowShareSettings = () => {
     showModal(WorkspaceShareSettingsModal, {workspace: this.props.workspace});
@@ -105,15 +103,22 @@ class SyncDropdown extends PureComponent {
   }
 
   _getSyncDescription (syncMode, syncPercentage) {
+    let el = null;
     if (syncPercentage === 100) {
-      return 'Up To Date'
-    } else {
-      return syncMode === syncStorage.SYNC_MODE_ON ? 'Sync Pending' : 'Sync Required'
+      el = <span>Sync Up To Date</span>
+    } else if (syncMode === syncStorage.SYNC_MODE_OFF) {
+      el = <span><i className="fa fa-pause-circle-o"/> Sync Required</span>
+    } else if (syncMode === syncStorage.SYNC_MODE_ON) {
+      el = <span>Sync Pending</span>
+    } else if (syncMode === syncStorage.SYNC_MODE_UNSET) {
+      el = <span><i className="fa fa-exclamation-circle"/> Configure Sync</span>
     }
+
+    return el;
   }
 
   render () {
-    const {className, workspace} = this.props;
+    const {className} = this.props;
     const {syncData, loading, loggedIn} = this.state;
 
     // Don't show the sync menu unless we're logged in
@@ -131,15 +136,11 @@ class SyncDropdown extends PureComponent {
       )
     } else {
       const {syncMode, syncPercent} = syncData;
-      const description = this._getSyncDescription(syncMode, syncPercent);
-      const isPaused = syncMode !== syncStorage.SYNC_MODE_ON;
-
       return (
         <div className={className}>
           <Dropdown wide={true} className="wide tall">
             <DropdownButton className="btn btn--compact wide" onClick={this._trackShowMenu}>
-              {isPaused ? <span><i className="fa fa-pause-circle"/>&nbsp;</span> : null}
-              {description}
+              {this._getSyncDescription(syncMode, syncPercent)}
             </DropdownButton>
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
             <DropdownItem onClick={this._handleToggleSyncMode}
@@ -156,15 +157,9 @@ class SyncDropdown extends PureComponent {
                 <i className="fa fa-cloud-upload"></i>}
               Sync Now
             </DropdownItem>
-
-            <DropdownDivider>Other</DropdownDivider>
             <DropdownItem onClick={this._handleShowShareSettings}>
               <i className="fa fa-users"></i>
-              Configure Sharing
-            </DropdownItem>
-            <DropdownItem onClick={this._handleShowLogs}>
-              <i className="fa fa-bug"></i>
-              Show Debug Logs
+              Share With Others
             </DropdownItem>
           </Dropdown>
         </div>
