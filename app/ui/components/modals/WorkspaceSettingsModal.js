@@ -120,7 +120,7 @@ class WorkspaceSettingsModal extends PureComponent {
     const {pfxPath, crtPath, keyPath, showAddCertificateForm} = this.state;
     return (
       <ModalBody key={`body::${workspace._id}`} noScroll={true}>
-        <Tabs>
+        <Tabs forceRenderTabPanel>
           <TabList>
             <Tab>
               <button>Overview</button>
@@ -135,6 +135,7 @@ class WorkspaceSettingsModal extends PureComponent {
                 <label>Name
                   <DebouncedInput
                     type="text"
+                    delay={500}
                     placeholder="Awesome API"
                     defaultValue={workspace.name}
                     onChange={this._handleRename}
@@ -146,6 +147,7 @@ class WorkspaceSettingsModal extends PureComponent {
               <label>Description
                 <DebouncedInput
                   textarea={true}
+                  delay={500}
                   rows="4"
                   placeholder="This workspace is for testing the Awesome API!"
                   defaultValue={workspace.description}

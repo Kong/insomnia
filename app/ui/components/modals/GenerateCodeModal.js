@@ -154,7 +154,7 @@ class GenerateCodeModal extends PureComponent {
             keyMap={editorKeyMap}
             lightTheme={true}
             lineWrapping={true}
-            value={cmd}
+            defaultValue={cmd}
           />
         </ModalBody>
         <ModalFooter>

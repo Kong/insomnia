@@ -69,7 +69,7 @@ class RequestHeadersEditor extends PureComponent {
         <div className="tall">
           <Editor
             onChange={this._handleBulkUpdate}
-            value={this._getHeadersString()}
+            defaultValue={this._getHeadersString()}
           />
         </div>
       ) : (

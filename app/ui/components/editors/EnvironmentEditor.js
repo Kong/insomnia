@@ -38,7 +38,7 @@ class EnvironmentEditor extends PureComponent {
         keyMap={editorKeyMap}
         onChange={this._handleChange}
         debounceMillis={DEBOUNCE_MILLIS * 6}
-        value={JSON.stringify(environment)}
+        defaultValue={JSON.stringify(environment)}
         autoPrettify={true}
         render={render}
         mode="application/json"

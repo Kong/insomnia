@@ -152,7 +152,7 @@ class ResponseViewer extends PureComponent {
         return (
           <Editor
             onClickLink={this._handleOpenLink}
-            value={body}
+            defaultValue={body}
             updateFilter={updateFilter}
             filter={filter}
             autoPrettify={true}

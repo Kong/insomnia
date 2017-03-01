@@ -1,6 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {parse as urlParse} from 'url';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import Lazy from './base/Lazy';
 import KeyValueEditor from './keyvalueeditor/Editor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
@@ -160,7 +161,7 @@ class RequestPane extends PureComponent {
             url={request.url}
           />
         </header>
-        <Tabs className="pane__body">
+        <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab onClick={this._trackTabBody}>
               <button>
@@ -240,18 +241,20 @@ class RequestPane extends PureComponent {
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <KeyValueEditor
-                  key={uniqueKey}
-                  namePlaceholder="name"
-                  valuePlaceholder="value"
-                  sortable={true}
-                  onToggleDisable={this._trackQueryToggle}
-                  onCreate={this._trackQueryCreate}
-                  onDelete={this._trackQueryDelete}
-                  pairs={request.parameters}
-                  handleRender={handleRender}
-                  onChange={updateRequestParameters}
-                />
+                <Lazy>
+                  <KeyValueEditor
+                    key={uniqueKey}
+                    namePlaceholder="name"
+                    valuePlaceholder="value"
+                    sortable={true}
+                    onToggleDisable={this._trackQueryToggle}
+                    onCreate={this._trackQueryCreate}
+                    onDelete={this._trackQueryDelete}
+                    pairs={request.parameters}
+                    handleRender={handleRender}
+                    onChange={updateRequestParameters}
+                  />
+                </Lazy>
               </div>
             </div>
 

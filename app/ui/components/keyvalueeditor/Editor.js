@@ -80,17 +80,24 @@ class KeyValueEditor extends PureComponent {
     this._focusedField = VALUE;
   };
 
-  // Sometimes multiple focus events come in, so lets debounce it
-  _handleAddFromName = misc.debounce(() => {
+  _handleBlurName = () => {
+    this._setFocusedPair(null);
+  };
+
+  _handleBlurValue = () => {
+    this._setFocusedPair(null);
+  };
+
+  _handleAddFromName = () => {
     this._focusedField = NAME;
     this._addPair();
-  });
+  };
 
   // Sometimes multiple focus events come in, so lets debounce it
-  _handleAddFromValue = misc.debounce(() => {
+  _handleAddFromValue = () => {
     this._focusedField = VALUE;
     this._addPair();
-  });
+  };
 
   _handleKeyDown = (pair, e, value) => {
     if (e.metaKey || e.ctrlKey) {
@@ -269,6 +276,11 @@ class KeyValueEditor extends PureComponent {
     this._updateFocus();
   }
 
+  shouldComponentUpdate (nextProps, nextState) {
+    // return false;
+    return true;
+  }
+
   render () {
     const {
       maxPairs,
@@ -301,6 +313,8 @@ class KeyValueEditor extends PureComponent {
             onDelete={this._handlePairDelete}
             onFocusName={this._handleFocusName}
             onFocusValue={this._handleFocusValue}
+            onBlurName={this._handleBlurName}
+            onBlurValue={this._handleBlurValue}
             onKeyDown={this._handleKeyDown}
             onMove={this._handleMove}
             handleRender={handleRender}
@@ -314,6 +328,7 @@ class KeyValueEditor extends PureComponent {
             hideButtons
             sortable
             noDropZone
+            forceInput
             readOnly
             index={-1}
             onChange={nullFn}

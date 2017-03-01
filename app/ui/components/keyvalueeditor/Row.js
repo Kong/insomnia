@@ -47,6 +47,18 @@ class KeyValueEditorRow extends PureComponent {
   _handleFocusName = e => this.props.onFocusName(this.props.pair, e);
   _handleFocusValue = e => this.props.onFocusValue(this.props.pair, e);
 
+  _handleBlurName = e => {
+    if (this.props.onBlurName) {
+      this.props.onBlurName(this.props.pair, e);
+    }
+  };
+
+  _handleBlurValue = e => {
+    if (this.props.onBlurName) {
+      this.props.onBlurValue(this.props.pair, e);
+    }
+  };
+
   _handleDelete = () => {
     if (this.props.onDelete) {
       this.props.onDelete(this.props.pair);
@@ -68,6 +80,7 @@ class KeyValueEditorRow extends PureComponent {
       valueInputType,
       multipart,
       sortable,
+      forceInput,
       noDropZone,
       hideButtons,
       readOnly,
@@ -105,6 +118,8 @@ class KeyValueEditorRow extends PureComponent {
               defaultValue={pair.name}
               render={handleRender}
               readOnly={readOnly}
+              forceInput={forceInput}
+              onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
               onFocus={this._handleFocusName}
               onKeyDown={this._handleKeyDown}
@@ -125,8 +140,10 @@ class KeyValueEditorRow extends PureComponent {
                   readOnly={readOnly}
                   type={valueInputType || 'text'}
                   placeholder={valuePlaceholder || 'Value'}
+                  forceInput={forceInput}
                   defaultValue={pair.value}
                   onChange={this._handleValueChange}
+                  onBlur={this._handleBlurValue}
                   render={handleRender}
                   onKeyDown={this._handleKeyDown}
                   onFocus={this._handleFocusValue}
@@ -213,6 +230,8 @@ KeyValueEditorRow.propTypes = {
   readOnly: PropTypes.bool,
   onMove: PropTypes.func,
   onKeyDown: PropTypes.func,
+  onBlurName: PropTypes.func,
+  onBlurValue: PropTypes.func,
   handleRender: PropTypes.func,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
@@ -220,6 +239,7 @@ KeyValueEditorRow.propTypes = {
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
   noDropZone: PropTypes.bool,
+  forceInput: PropTypes.bool,
   hideButtons: PropTypes.bool,
 
   // For drag-n-drop

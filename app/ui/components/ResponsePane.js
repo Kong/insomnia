@@ -188,7 +188,7 @@ class ResponsePane extends PureComponent {
             />
           </header>
         )}
-        <Tabs className="pane__body">
+        <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
               <Button onClick={this._trackTab} value="Response">

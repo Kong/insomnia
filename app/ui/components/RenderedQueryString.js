@@ -41,7 +41,7 @@ class RenderedQueryString extends PureComponent {
     if (this.state.string) {
       return <span className="selectable force-wrap">{this.state.string}</span>
     } else {
-      return <span className="super-faint">{this.props.placeholder || ''}</span>
+      return <span className="super-duper-faint italic">...</span>
     }
   }
 }
