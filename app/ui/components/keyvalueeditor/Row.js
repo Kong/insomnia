@@ -87,6 +87,7 @@ class KeyValueEditorRow extends PureComponent {
       className,
       isDragging,
       isDraggingOver,
+      noDelete,
       connectDragSource,
       connectDragPreview,
       connectDropTarget,
@@ -189,20 +190,22 @@ class KeyValueEditorRow extends PureComponent {
               <button><i className="fa fa-empty"/></button>
             )}
 
-          {!hideButtons ? (
-              <PromptButton key={Math.random()}
-                            tabIndex="-1"
-                            confirmMessage=" "
-                            addIcon
-                            onClick={this._handleDelete}
-                            title="Delete item">
-                <i className="fa fa-trash-o"/>
-              </PromptButton>
-            ) : (
-              <button>
-                <i className="fa fa-empty"/>
-              </button>
-            )}
+          {!noDelete ? (
+              !hideButtons ? (
+                  <PromptButton key={Math.random()}
+                                tabIndex="-1"
+                                confirmMessage=" "
+                                addIcon
+                                onClick={this._handleDelete}
+                                title="Delete item">
+                    <i className="fa fa-trash-o"/>
+                  </PromptButton>
+                ) : (
+                  <button>
+                    <i className="fa fa-empty"/>
+                  </button>
+                )
+            ) : null}
         </div>
       </li>
     );
@@ -242,6 +245,7 @@ KeyValueEditorRow.propTypes = {
   valueInputType: PropTypes.string,
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
+  noDelete: PropTypes.bool,
   noDropZone: PropTypes.bool,
   hideButtons: PropTypes.bool,
   blurOnFocus: PropTypes.bool,

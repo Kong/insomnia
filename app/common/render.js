@@ -79,10 +79,8 @@ export async function recursiveRender (originalObj, context = {}, strict = false
       try {
         x = await templating.render(x, {context, strict});
       } catch (err) {
-        // Failed to render Request
-        // const path = this.path.join('.');
-        const path = 'TODO"';
-        throw new Error(`Failed to render Request.${path}: "${err.message}"`);
+        // TODO: Show paths here in errors
+        throw err;
       }
     } else if (Array.isArray(x)) {
       for (let i = 0; i < x.length; i++) {

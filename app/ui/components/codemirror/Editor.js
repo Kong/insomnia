@@ -72,7 +72,6 @@ const BASE_CODEMIRROR_OPTIONS = {
   scrollbarStyle: 'native',
   lint: true,
   tabSize: 4,
-  cursorHeight: 1,
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,

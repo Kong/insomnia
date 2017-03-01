@@ -4,6 +4,7 @@ import Input from '../base/DebouncedInput';
 
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
+const TYPE_TEXT = 'text';
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
 class OneLineEditor extends PureComponent {
@@ -44,6 +45,7 @@ class OneLineEditor extends PureComponent {
 
   _handleEditorFocus = e => {
     this._editor.focusEnd();
+    this.props.onFocus && this.props.onFocus(e);
   };
 
   _handleInputFocus = e => {
@@ -88,10 +90,12 @@ class OneLineEditor extends PureComponent {
   };
 
   _handleInputKeyDown = e => {
-    this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
+    if (this.props.onKeyDown) {
+      this.props.onKeyDown(e, e.target.value);
+    }
   };
 
-  _handleEditorBlur = () => {
+  _handleEditorBlur = e => {
     if (this.props.forceEditor) {
       return;
     }
@@ -101,6 +105,8 @@ class OneLineEditor extends PureComponent {
     }
 
     this.setState({mode: MODE_INPUT});
+
+    this.props.onBlur && this.props.onBlur();
   };
 
   _handleEditorKeyDown = e => {
@@ -131,10 +137,17 @@ class OneLineEditor extends PureComponent {
       onChange,
       placeholder,
       onBlur,
-      render
+      render,
+      type: originalType,
     } = this.props;
 
-    return this.state.mode === MODE_EDITOR ? (
+    const {mode} = this.state;
+
+    const type = originalType || TYPE_TEXT;
+    const showEditor = type === TYPE_TEXT && mode === MODE_EDITOR;
+
+    if (showEditor) {
+      return (
         <Editor
           ref={this._setEditorRef}
           defaultTabBehavior
@@ -156,16 +169,14 @@ class OneLineEditor extends PureComponent {
           defaultValue={defaultValue}
           lineWrapping={false}
         />
-      ) : (
+      );
+    } else {
+      return (
         <Input
           ref={this._setInputRef}
-          type="text"
+          type={type}
           className={'editor--single-line input ' + className || ''}
-          style={{
-            padding: '0 4px',
-            width: '100%',
-            background: 'rgba(255, 0, 0, 0.1)'
-          }} // To match CodeMirror
+          style={{padding: '0 4px', width: '100%'}} // To match CodeMirror
           placeholder={placeholder}
           defaultValue={defaultValue}
           onChange={this._handleInputChange}
@@ -174,6 +185,7 @@ class OneLineEditor extends PureComponent {
           onKeyDown={this._handleInputKeyDown}
         />
       )
+    }
   }
 }
 
@@ -181,6 +193,13 @@ OneLineEditor.propTypes = Object.assign({}, Editor.propTypes, {
   defaultValue: PropTypes.string.isRequired,
 
   // Optional
+  type: PropTypes.string,
+  onBlur: PropTypes.func,
+  onKeyDown: PropTypes.func,
+  onFocus: PropTypes.func,
+  onChange: PropTypes.func,
+  render: PropTypes.func,
+  placeholder: PropTypes.string,
   blurOnFocus: PropTypes.bool,
   forceEditor: PropTypes.bool,
   forceInput: PropTypes.bool,

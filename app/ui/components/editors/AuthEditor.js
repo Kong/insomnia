@@ -33,6 +33,7 @@ class AuthEditor extends PureComponent {
       <KeyValueEditor
         pairs={pairs}
         maxPairs={1}
+        disableDelete
         handleRender={handleRender}
         namePlaceholder="Username"
         valuePlaceholder="•••••••••••"
