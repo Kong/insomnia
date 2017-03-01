@@ -118,35 +118,25 @@ class Editor extends PureComponent {
     }
   }
 
-  /**
-   * Focus the cursor to the editor
-   */
   focus () {
     if (this.codeMirror) {
       this.codeMirror.focus();
     }
   }
 
-  /**
-   * Ask if the editor has focus
-   * @returns {boolean}
-   */
-  hasFocus () {
-    if (this.codeMirror) {
-      return this.codeMirror.hasFocus();
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Focus the editor on the end
-   */
   focusEnd () {
     if (this.codeMirror) {
       this.codeMirror.focus();
       const doc = this.codeMirror.getDoc();
       doc.setCursor(doc.lineCount(), 0);
+    }
+  }
+
+  hasFocus () {
+    if (this.codeMirror) {
+      return this.codeMirror.hasFocus();
+    } else {
+      return false;
     }
   }
 
