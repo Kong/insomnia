@@ -39,22 +39,25 @@ class RequestPane extends PureComponent {
   _handleImportQueryFromUrl = () => {
     const {request} = this.props;
 
-    let parsed;
+    let query;
     try {
-      parsed = urlParse(request.url);
+      query = querystring.extractFromUrl(request.url);
     } catch (e) {
       console.warn('Failed to parse url to import querystring');
       return;
     }
 
     // Remove the search string (?foo=bar&...) from the Url
-    const url = request.url.replace(parsed.search, '');
+    const url = request.url.replace(query, '');
     const parameters = [
       ...request.parameters,
-      ...querystring.deconstructToParams(parsed.query),
+      ...querystring.deconstructToParams(query),
     ];
 
-    this.props.forceUpdateRequest({url, parameters});
+    // Only update if url changed
+    if (url !== request.url) {
+      this.props.forceUpdateRequest({url, parameters});
+    }
   };
 
   _trackQueryToggle = pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');

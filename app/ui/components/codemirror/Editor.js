@@ -236,7 +236,7 @@ class Editor extends PureComponent {
 
     // Do this a bit later for big values so we don't block the render process
     if (defaultValue && defaultValue.length > 10000) {
-      setTimeout(() => setup, 100);
+      setTimeout(setup, 100);
     } else {
       setup();
     }
