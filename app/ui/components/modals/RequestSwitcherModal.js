@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import Button from '../base/Button';
@@ -10,18 +11,29 @@ import * as models from '../../../models';
 
 
 class RequestSwitcherModal extends PureComponent {
-  state = {
-    searchString: '',
-    requestGroups: [],
-    requests: [],
-    workspaces: [],
-    matchedRequests: [],
-    matchedWorkspaces: [],
-    activeIndex: -1
-  };
+  constructor (props) {
+    super(props);
 
-  _setModalRef = n => this.modal = n;
-  _focusRef = n => n && n.focus();
+    this.state = {
+      searchString: '',
+      requestGroups: [],
+      requests: [],
+      workspaces: [],
+      matchedRequests: [],
+      matchedWorkspaces: [],
+      activeIndex: -1
+    };
+
+    autoBind(this);
+  }
+
+  _setModalRef (n) {
+    this.modal = n;
+  }
+
+  _focusRef (n) {
+    n && n.focus();
+  }
 
   _setActiveIndex (activeIndex) {
     const maxIndex = this.state.matchedRequests.length + this.state.matchedWorkspaces.length;
@@ -34,7 +46,7 @@ class RequestSwitcherModal extends PureComponent {
     this.setState({activeIndex});
   }
 
-  _activateCurrentIndex = () => {
+  _activateCurrentIndex () {
     const {
       activeIndex,
       matchedRequests,
@@ -54,7 +66,7 @@ class RequestSwitcherModal extends PureComponent {
       // Create request if no match
       this._createRequestFromSearch();
     }
-  };
+  }
 
   async _createRequestFromSearch () {
     const {activeRequestParentId} = this.props;
@@ -70,27 +82,29 @@ class RequestSwitcherModal extends PureComponent {
     this._activateRequest(request);
   }
 
-  _activateWorkspace = workspace => {
+  _activateWorkspace (workspace) {
     if (!workspace) {
       return;
     }
 
     this.props.handleSetActiveWorkspace(workspace._id);
     this.modal.hide();
-  };
+  }
 
-  _activateRequest = request => {
+  _activateRequest (request) {
     if (!request) {
       return;
     }
 
     this.props.activateRequest(request._id);
     this.modal.hide();
-  };
+  }
 
-  _handleChange = e => this._handleChangeValue(e.target.value);
+  _handleChange (e) {
+    this._handleChangeValue(e.target.value);
+  }
 
-  _handleChangeValue = async searchString => {
+  async _handleChangeValue (searchString) {
     const {workspaceChildren, workspaces} = this.props;
     const {workspaceId, activeRequestParentId} = this.props;
 

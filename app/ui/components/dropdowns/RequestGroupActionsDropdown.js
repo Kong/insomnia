@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from '../base/dropdown';
 import EnvironmentEditModal from '../modals/EnvironmentEditModal';
@@ -8,9 +9,15 @@ import {showModal} from '../modals';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestGroupActionsDropdown extends PureComponent {
-  _setDropdownRef = n => this._dropdown = n;
+  constructor (props) {
+    super(props);
+    autoBind(this);
+  }
+  _setDropdownRef (n) {
+    this._dropdown = n;
+  }
 
-  _handleRename = async () => {
+  async _handleRename () {
     const {requestGroup} = this.props;
 
     const name = await showModal(PromptModal, {
@@ -21,31 +28,31 @@ class RequestGroupActionsDropdown extends PureComponent {
     models.requestGroup.update(requestGroup, {name});
 
     trackEvent('Folder', 'Rename', 'Folder Action');
-  };
+  }
 
-  _handleRequestCreate = async () => {
+  async _handleRequestCreate () {
     this.props.handleCreateRequest(this.props.requestGroup._id);
     trackEvent('Request', 'Create', 'Folder Action');
-  };
+  }
 
-  _handleRequestGroupDuplicate = () => {
+  _handleRequestGroupDuplicate () {
     this.props.handleDuplicateRequestGroup(this.props.requestGroup);
     trackEvent('Folder', 'Duplicate', 'Folder Action');
-  };
+  }
 
-  _handleRequestGroupCreate = async () => {
+  async _handleRequestGroupCreate () {
     this.props.handleCreateRequestGroup(this.props.requestGroup._id);
     trackEvent('Folder', 'Create', 'Folder Action');
-  };
+  }
 
-  _handleDeleteFolder = () => {
+  _handleDeleteFolder () {
     models.requestGroup.remove(this.props.requestGroup);
     trackEvent('Folder', 'Delete', 'Folder Action');
-  };
+  }
 
-  _handleEditEnvironment = () => {
+  _handleEditEnvironment () {
     showModal(EnvironmentEditModal, this.props.requestGroup);
-  };
+  }
 
   show () {
     this._dropdown.show();

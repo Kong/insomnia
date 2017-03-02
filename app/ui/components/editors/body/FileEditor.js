@@ -1,18 +1,24 @@
+import React, {PropTypes, PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import fs from 'fs';
 import electron from 'electron';
-import React, {PropTypes, PureComponent} from 'react';
 import FileInputButton from '../../base/FileInputButton';
 import PromptButton from '../../base/PromptButton';
 import * as misc from '../../../../common/misc';
 import {trackEvent} from '../../../../analytics/index';
 
 class FileEditor extends PureComponent {
-  _handleResetFile = () => {
+  constructor (props) {
+    super(props);
+    autoBind(this);
+  }
+
+  _handleResetFile () {
     this.props.onChange('');
     trackEvent('File Editor', 'Reset');
-  };
+  }
 
-  _handleChooseFile = path => {
+  _handleChooseFile (path) {
     this.props.onChange(path);
     trackEvent('File Editor', 'Choose');
   };

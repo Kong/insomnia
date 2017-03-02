@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import classnames from 'classnames';
 import {showModal, registerModal} from './modals/index';
 import AlertModal from '../components/modals/AlertModal';
@@ -28,10 +29,16 @@ const rUpdate = models.request.update;
 const sUpdate = models.settings.update;
 
 class Wrapper extends PureComponent {
-  state = {forceRefreshRequestPaneCounter: Date.now()};
+  constructor (props) {
+    super(props);
+    this.state = {
+      forceRefreshRequestPaneCounter: Date.now()
+    };
+    autoBind(this);
+  }
 
   // Request updaters
-  _handleForceUpdateRequest = async patch => {
+  async _handleForceUpdateRequest (patch) {
     const newRequest = await rUpdate(this.props.activeRequest, patch);
 
     // Give it a second for the app to render first. If we don't wait, it will refresh
@@ -39,18 +46,38 @@ class Wrapper extends PureComponent {
     window.setTimeout(this._forceRequestPaneRefresh, 100);
 
     return newRequest;
-  };
+  }
 
-  _handleUpdateRequestBody = body => rUpdate(this.props.activeRequest, {body});
-  _handleUpdateRequestMethod = method => rUpdate(this.props.activeRequest, {method});
-  _handleUpdateRequestParameters = parameters => rUpdate(this.props.activeRequest, {parameters});
-  _handleUpdateRequestAuthentication = authentication => rUpdate(this.props.activeRequest, {authentication});
-  _handleUpdateRequestHeaders = headers => rUpdate(this.props.activeRequest, {headers});
-  _handleUpdateRequestUrl = url => rUpdate(this.props.activeRequest, {url});
+  _handleUpdateRequestBody (body) {
+    rUpdate(this.props.activeRequest, {body});
+  }
+
+  _handleUpdateRequestMethod (method) {
+    rUpdate(this.props.activeRequest, {method});
+  }
+
+  _handleUpdateRequestParameters (parameters) {
+    rUpdate(this.props.activeRequest, {parameters});
+  }
+
+  _handleUpdateRequestAuthentication (authentication) {
+    rUpdate(this.props.activeRequest, {authentication});
+  }
+
+  _handleUpdateRequestHeaders (headers) {
+    rUpdate(this.props.activeRequest, {headers});
+  }
+
+  _handleUpdateRequestUrl (url) {
+    rUpdate(this.props.activeRequest, {url});
+  }
 
   // Special request updaters
-  _handleUpdateRequestMimeType = mimeType => updateMimeType(this.props.activeRequest, mimeType);
-  _handleImport = async text => {
+  _handleUpdateRequestMimeType (mimeType) {
+    updateMimeType(this.props.activeRequest, mimeType);
+  }
+
+  async _handleImport (text) {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -76,29 +103,44 @@ class Wrapper extends PureComponent {
     }
 
     return null;
-  };
-
+  }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords = showPasswords => sUpdate(this.props.settings, {showPasswords});
-  _handleUpdateSettingsUseBulkHeaderEditor = useBulkHeaderEditor => sUpdate(this.props.settings, {useBulkHeaderEditor});
+  _handleUpdateSettingsShowPasswords (showPasswords) {
+    sUpdate(this.props.settings, {showPasswords});
+  }
+
+  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor) {
+    sUpdate(this.props.settings, {useBulkHeaderEditor});
+  }
 
   // Other Helpers
-  _handleImportFile = () => {
+  _handleImportFile () {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
-  };
+  }
 
-  _handleExportWorkspaceToFile = () => this.props.handleExportFile(this.props.activeWorkspace._id);
-  _handleSetActiveResponse = responseId => this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
-  _handleShowEnvironmentsModal = () => showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
-  _handleShowCookiesModal = () => showModal(CookiesModal, this.props.activeWorkspace);
+  _handleExportWorkspaceToFile () {
+    this.props.handleExportFile(this.props.activeWorkspace._id);
+  }
 
-  _handleDeleteResponses = () => {
+  _handleSetActiveResponse (responseId) {
+    this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
+  }
+
+  _handleShowEnvironmentsModal () {
+    showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
+  }
+
+  _handleShowCookiesModal () {
+    showModal(CookiesModal, this.props.activeWorkspace);
+  }
+
+  _handleDeleteResponses () {
     models.response.removeForRequest(this.props.activeRequest._id);
     this._handleSetActiveResponse(null);
-  };
+  }
 
-  _handleRemoveActiveWorkspace = async () => {
+  async _handleRemoveActiveWorkspace () {
     const {workspaces, activeWorkspace} = this.props;
     if (workspaces.length <= 1) {
       showModal(AlertModal, {
@@ -113,37 +155,37 @@ class Wrapper extends PureComponent {
     }
 
     models.workspace.remove(activeWorkspace);
-  };
+  }
 
-  _handleSendRequestWithActiveEnvironment = () => {
+  _handleSendRequestWithActiveEnvironment ()  {
     const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
-  };
+  }
 
-  _handleSendAndDownloadRequestWithActiveEnvironment = filename => {
+  _handleSendAndDownloadRequestWithActiveEnvironment (filename) {
     const {activeRequest, activeEnvironment, handleSendAndDownloadRequestWithEnvironment} = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
-  };
+  }
 
-  _handleSetPreviewMode = previewMode => {
+  _handleSetPreviewMode (previewMode) {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
-  };
+  }
 
-  _handleSetResponseFilter = filter => {
+  _handleSetResponseFilter (filter) {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponseFilter(activeRequestId, filter);
-  };
+  }
 
-  _forceRequestPaneRefresh = () => {
+  _forceRequestPaneRefresh () {
     this.setState({forceRefreshRequestPaneCounter: Date.now()});
-  };
+  }
 
   render () {
     const {
@@ -243,7 +285,6 @@ class Wrapper extends PureComponent {
           editorFontSize={settings.editorFontSize}
           editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
-          environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
           workspace={activeWorkspace}
           forceUpdateRequest={this._handleForceUpdateRequest}
           handleCreateRequest={handleCreateRequestForWorkspace}

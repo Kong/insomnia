@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import Editor from './Editor';
 import Input from '../base/DebouncedInput';
 
@@ -21,7 +22,11 @@ class OneLineEditor extends PureComponent {
       mode = MODE_EDITOR;
     }
 
-    this.state = {mode};
+    this.state = {
+      mode
+    };
+
+    autoBind(this);
   }
 
   focus () {
@@ -43,12 +48,12 @@ class OneLineEditor extends PureComponent {
     }
   }
 
-  _handleEditorFocus = e => {
+  _handleEditorFocus (e) {
     this._editor.focusEnd();
     this.props.onFocus && this.props.onFocus(e);
-  };
+  }
 
-  _handleInputFocus = e => {
+  _handleInputFocus (e) {
     if (this.props.blurOnFocus) {
       e.target.blur();
     } else {
@@ -65,9 +70,9 @@ class OneLineEditor extends PureComponent {
 
     // Also call the regular callback
     this.props.onFocus && this.props.onFocus(e);
-  };
+  }
 
-  _handleInputChange = value => {
+  _handleInputChange (value) {
     if (!this.props.forceInput && this._mayContainNunjucks(value)) {
       const start = this._input.getSelectionStart();
       const end = this._input.getSelectionEnd();
@@ -87,15 +92,15 @@ class OneLineEditor extends PureComponent {
     }
 
     this.props.onChange && this.props.onChange(value);
-  };
+  }
 
-  _handleInputKeyDown = e => {
+  _handleInputKeyDown (e) {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(e, e.target.value);
     }
-  };
+  }
 
-  _handleEditorBlur = e => {
+  _handleEditorBlur () {
     if (this.props.forceEditor) {
       return;
     }
@@ -107,9 +112,9 @@ class OneLineEditor extends PureComponent {
     this.setState({mode: MODE_INPUT});
 
     this.props.onBlur && this.props.onBlur();
-  };
+  }
 
-  _handleEditorKeyDown = e => {
+  _handleEditorKeyDown (e) {
     // submit form if needed
     if (e.keyCode === 13) {
       let node = e.target;
@@ -124,11 +129,19 @@ class OneLineEditor extends PureComponent {
 
     // Also call the original if there was one
     this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
-  };
+  }
 
-  _setEditorRef = n => this._editor = n;
-  _setInputRef = n => this._input = n;
-  _mayContainNunjucks = text => !!text.match(NUNJUCKS_REGEX);
+  _setEditorRef (n) {
+    this._editor = n;
+  }
+
+  _setInputRef (n) {
+    this._input = n;
+  }
+
+  _mayContainNunjucks (text) {
+    !!text.match(NUNJUCKS_REGEX);
+  }
 
   render () {
     const {

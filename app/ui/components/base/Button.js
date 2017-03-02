@@ -1,8 +1,9 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import {shell} from 'electron';
 
 class Button extends PureComponent {
-  _handleClick = e => {
+  _handleClick (e) {
     const {onClick, onDisabledClick, disabled} = this.props;
     const fn = disabled ? onDisabledClick : onClick;
 
@@ -11,7 +12,7 @@ class Button extends PureComponent {
     } else {
       fn && fn(e);
     }
-  };
+  }
 
   render () {
     const {children, value, ...props} = this.props;

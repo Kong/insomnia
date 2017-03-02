@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import classnames from 'classnames';
 import {isMac} from '../../../common/constants';
 
@@ -7,16 +8,24 @@ import {isMac} from '../../../common/constants';
 let globalZIndex = 1000;
 
 class Modal extends PureComponent {
-  state = {
-    open: false,
-    forceRefreshCounter: 0,
-    zIndex: globalZIndex
-  };
+  constructor (props) {
+    super(props);
 
-  _setModalRef = n => this._node = n;
-  _handleHide = () => this.hide();
+    this.state = {
+      open: false,
+      forceRefreshCounter: 0,
+      zIndex: globalZIndex
+    };
 
-  _handleKeyDown = e => {
+    autoBind(this);
+  }
+
+  _setModalRef (n) {
+    this._node = n;
+    this._node.addEventListener('keydown', this._handleKeyDown);
+  }
+
+  _handleKeyDown (e) {
     if (!this.state.open) {
       return;
     }
@@ -42,9 +51,9 @@ class Modal extends PureComponent {
       // Pressed escape
       this.hide();
     }
-  };
+  }
 
-  _handleClick = e => {
+  _handleClick (e) {
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
       return;
@@ -68,7 +77,7 @@ class Modal extends PureComponent {
     if (shouldHide) {
       this.hide();
     }
-  };
+  }
 
   show () {
     const {freshState} = this.props;
@@ -97,10 +106,6 @@ class Modal extends PureComponent {
 
   hide () {
     this.setState({open: false});
-  }
-
-  componentDidMount () {
-    this._node.addEventListener('keydown', this._handleKeyDown);
   }
 
   componentWillUnmount () {

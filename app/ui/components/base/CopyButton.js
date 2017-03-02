@@ -1,10 +1,17 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 const {clipboard} = require('electron');
 
 class CopyButton extends PureComponent {
-  state = {showConfirmation: false};
+  constructor (props) {
+    super(props);
+    this.state = {
+      showConfirmation: false,
+    }
+    autoBind(this);
+  }
 
-  _handleClick = e => {
+  _handleClick (e) {
     e.preventDefault();
     e.stopPropagation();
 

@@ -1,11 +1,20 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import Editor from '../codemirror/Editor';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 class EnvironmentEditor extends PureComponent {
-  _handleChange = () => this.props.didChange();
+  constructor (props) {
+    super(props);
+    autoBind(this);
+  }
+  _handleChange () {
+    this.props.didChange();
+  }
 
-  _setEditorRef = n => this._editor = n;
+  _setEditorRef (n) {
+    this._editor = n;
+  }
 
   getValue () {
     return JSON.parse(this._editor.getValue());

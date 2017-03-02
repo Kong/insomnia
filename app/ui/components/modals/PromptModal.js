@@ -1,27 +1,36 @@
 import React, {PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
 class PromptModal extends PureComponent {
-  state = {
-    headerName: 'Not Set',
-    defaultValue: '',
-    submitName: 'Not Set',
-    selectText: false,
-    hint: null,
-    inputType: 'text'
-  };
+  constructor (props) {
+    super(props);
 
-  _setModalRef = n => this.modal = n;
+    this.state = {
+      headerName: 'Not Set',
+      defaultValue: '',
+      submitName: 'Not Set',
+      selectText: false,
+      hint: null,
+      inputType: 'text'
+    };
 
-  _handleSubmit = e => {
+    autoBind(this);
+  }
+
+  _setModalRef (n) {
+    this.modal = n;
+  }
+
+  _handleSubmit (e) {
     e.preventDefault();
 
     this._onSubmitCallback && this._onSubmitCallback(this._input.value);
     this.modal.hide();
-  };
+  }
 
   show ({headerName, defaultValue, submitName, selectText, hint, inputType, placeholder, label}) {
     this.modal.show();

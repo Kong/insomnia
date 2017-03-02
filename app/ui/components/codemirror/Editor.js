@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
@@ -97,6 +98,7 @@ class Editor extends PureComponent {
       filter: props.filter || ''
     };
     this._originalCode = '';
+    autoBind(this);
   }
 
   componentWillUnmount () {
@@ -187,7 +189,7 @@ class Editor extends PureComponent {
     }
   }
 
-  _handleInitTextarea = textarea => {
+  _handleInitTextarea (textarea) {
     if (!textarea) {
       // Not mounted
       return;
@@ -263,10 +265,10 @@ class Editor extends PureComponent {
     return mode.indexOf('xml') !== -1
   }
 
-  _handleBeautify = () => {
+  _handleBeautify () {
     trackEvent('Request', 'Beautify');
     this._prettify(this.codeMirror.getValue());
-  };
+  }
 
   _prettify (code) {
     this._codemirrorSetValue(code, true);
@@ -316,7 +318,7 @@ class Editor extends PureComponent {
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
-  _codemirrorSetOptions = () => {
+  _codemirrorSetOptions () {
     const {
       mode: rawMode,
       readOnly,
@@ -393,9 +395,9 @@ class Editor extends PureComponent {
     } else {
       return mimeType;
     }
-  };
+  }
 
-  _codemirrorKeyDown = (doc, e) => {
+  _codemirrorKeyDown (doc, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
@@ -404,21 +406,21 @@ class Editor extends PureComponent {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(e, doc.getValue());
     }
-  };
+  }
 
-  _codemirrorFocus = (doc, e) => {
+  _codemirrorFocus (doc, e) {
     if (this.props.onFocus) {
       this.props.onFocus(e);
     }
-  };
+  }
 
-  _codemirrorBlur = (doc, e) => {
+  _codemirrorBlur (doc, e)  {
     if (this.props.onBlur) {
       this.props.onBlur(e);
     }
-  };
+  }
 
-  _codemirrorValueBeforeChange = (doc, change) => {
+  _codemirrorValueBeforeChange (doc, change) {
     // If we're in single-line mode, merge all changed lines into one
     if (this.props.singleLine && change.text.length > 1) {
       const text = change.text
@@ -428,12 +430,12 @@ class Editor extends PureComponent {
       const to = {ch: from.ch + text.length, line: 0};
       change.update(from, to, [text]);
     }
-  };
+  }
 
   /**
    * Wrapper function to add extra behaviour to our onChange event
    */
-  _codemirrorValueChanged = () => {
+  _codemirrorValueChanged () {
     // Don't trigger change event if we're ignoring changes
     if (this._ignoreNextChange || !this.props.onChange) {
       this._ignoreNextChange = false;
@@ -442,7 +444,7 @@ class Editor extends PureComponent {
 
     const value = this.codeMirror.getDoc().getValue();
     this.props.onChange(value);
-  };
+  }
 
   /**
    * Sets the CodeMirror value without triggering the onChange event
@@ -470,7 +472,7 @@ class Editor extends PureComponent {
     this.codeMirror.setValue(code || '');
   }
 
-  _handleFilterChange = e => {
+  _handleFilterChange (e) {
     const filter = e.target.value;
 
     clearTimeout(this._filterTimeout);
@@ -492,7 +494,7 @@ class Editor extends PureComponent {
         `${filter ? 'Change' : 'Clear'}`
       );
     }, 2000);
-  };
+  }
 
   _canPrettify () {
     const {mode} = this.props;

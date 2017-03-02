@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
 import {showModal} from '../modals';
 import * as syncStorage from '../../../sync/storage';
@@ -9,21 +10,29 @@ import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
 import SetupSyncModal from '../modals/SetupSyncModal';
 
 class SyncDropdown extends PureComponent {
-  _hasPrompted = false;
+  constructor (props) {
+    super(props);
 
-  state = {
-    loggedIn: null,
-    syncData: null,
-    loading: false,
-  };
+    this._hasPrompted = false;
 
-  _trackShowMenu = () => trackEvent('Sync', 'Show Menu', 'Authenticated');
+    this.state = {
+      loggedIn: null,
+      syncData: null,
+      loading: false,
+    };
 
-  _handleShowShareSettings = () => {
+    autoBind(this);
+  }
+
+  _trackShowMenu () {
+    trackEvent('Sync', 'Show Menu', 'Authenticated');
+  }
+
+  _handleShowShareSettings () {
     showModal(WorkspaceShareSettingsModal, {workspace: this.props.workspace});
-  };
+  }
 
-  _handleToggleSyncMode = async () => {
+  async _handleToggleSyncMode () {
     const {syncData} = this.state;
     const resourceGroupId = syncData.resourceGroupId;
 
@@ -43,9 +52,9 @@ class SyncDropdown extends PureComponent {
     }
 
     trackEvent('Sync', 'Change Mode', syncMode);
-  };
+  }
 
-  _handleSyncResourceGroupId = async () => {
+  async _handleSyncResourceGroupId () {
     const {syncData} = this.state;
     const resourceGroupId = syncData.resourceGroupId;
 
@@ -62,7 +71,7 @@ class SyncDropdown extends PureComponent {
     this.setState({loading: false});
 
     trackEvent('Sync', 'Manual Sync');
-  };
+  }
 
   async _reloadData () {
     const loggedIn = session.isLoggedIn();
@@ -96,7 +105,7 @@ class SyncDropdown extends PureComponent {
     this.setState({syncData});
   }
 
-  _handleShowSyncModePrompt = async () => {
+  async _handleShowSyncModePrompt () {
     await showModal(SetupSyncModal);
     await this._reloadData();
   };
@@ -194,7 +203,8 @@ class SyncDropdown extends PureComponent {
               <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
                 {loading ?
                   <i className="fa fa-refresh fa-spin"/> :
-                  <i className="fa fa-cloud-upload"/>}
+                  <i className="fa fa-cloud-upload"/>
+                }
                 Sync Now
               </DropdownItem> : null
             }

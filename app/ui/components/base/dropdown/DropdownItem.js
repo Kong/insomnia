@@ -1,8 +1,14 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import classnames from 'classnames';
 
 class DropdownItem extends PureComponent {
-  _handleClick = e => {
+  constructor (props) {
+    super(props);
+    autoBind(this);
+  }
+
+  _handleClick (e) {
     const {stayOpenAfterClick, onClick, disabled} = this.props;
 
     if (stayOpenAfterClick) {
@@ -18,7 +24,7 @@ class DropdownItem extends PureComponent {
     } else {
       onClick(e);
     }
-  };
+  }
 
   render () {
     const {

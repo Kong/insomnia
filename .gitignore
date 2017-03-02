@@ -5,6 +5,10 @@ build/*
 .DS_Store
 coverage
 
+# Generated
+*.tmp.js
+*.map
+
 # Logs
 logs
 *.log

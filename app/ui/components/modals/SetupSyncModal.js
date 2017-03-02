@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -7,13 +8,19 @@ import * as sync from '../../../sync';
 import {SYNC_MODE_OFF, SYNC_MODE_ON, SYNC_MODE_NEVER, SYNC_MODE_UNSET} from '../../../sync/storage';
 
 class SetupSyncModal extends PureComponent {
-  state = {
-    syncMode: SYNC_MODE_ON,
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      syncMode: SYNC_MODE_ON,
+    };
+    autoBind(this);
+  }
 
-  _setModalRef = n => this.modal = n;
+  _setModalRef (n) {
+    this.modal = n;
+  }
 
-  _handleDone = async () => {
+  async _handleDone () {
     const {workspace} = this.props;
     const {syncMode} = this.state;
 
@@ -23,9 +30,9 @@ class SetupSyncModal extends PureComponent {
     this.hide();
 
     this._resolvePromise && this._resolvePromise(syncMode);
-  };
+  }
 
-  _handleSyncModeChange = e => {
+  _handleSyncModeChange (e) {
     this.setState({syncMode: e.target.value});
   };
 

@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import {debounce} from '../../../common/misc';
 
 class DebouncedInput extends PureComponent {
@@ -10,10 +11,17 @@ class DebouncedInput extends PureComponent {
     } else {
       this._handleValueChange = debounce(props.onChange, props.delay || 500);
     }
+
+    autoBind(this);
   }
 
-  _handleChange = e => this._handleValueChange(e.target.value);
-  _setRef = n => this._input = n;
+  _handleChange (e) {
+    this._handleValueChange(e.target.value);
+  }
+
+  _setRef (n) {
+    this._input = n;
+  }
 
   getSelectionStart () {
     if (this._input) {

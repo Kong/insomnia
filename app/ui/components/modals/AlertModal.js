@@ -1,18 +1,27 @@
 import React, {PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
 class AlertModal extends PureComponent {
-  state = {
-    title: '',
-    message: '',
-  };
+  constructor (props) {
+    super(props);
 
-  _setModalRef = m => this.modal = m;
+    this.state = {
+      title: '',
+      message: '',
+    };
 
-  _handleOk = () => {
+    autoBind(this);
+  }
+
+  _setModalRef (m) {
+    this.modal = m;
+  }
+
+  _handleOk () {
     this.hide();
     this._okCallback();
   };

@@ -1,15 +1,23 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import {basename as pathBasename} from 'path';
 import {remote} from 'electron';
 
 class FileInputButton extends PureComponent {
+  constructor (props) {
+    super(props);
+    autoBind(this);
+  }
+
   focus () {
     this._button.focus();
   }
 
-  _setRef = n => this._button = n;
+  _setRef (n) {
+    this._button = n;
+  }
 
-  _handleChooseFile = () => {
+  _handleChooseFile () {
     const options = {
       title: 'Import File',
       buttonLabel: 'Import',
@@ -25,7 +33,7 @@ class FileInputButton extends PureComponent {
       const path = paths[0];
       this.props.onChange(path);
     })
-  };
+  }
 
   render () {
     const {showFileName, path, name, ...extraProps} = this.props;

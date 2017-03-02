@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import Button from '../base/Button';
 import Link from '../base/Link';
 
@@ -27,9 +28,12 @@ const THEMES = [
 ];
 
 class SettingsTheme extends PureComponent {
-  state = {
-    isPremium: localStorage.getItem('settings.theme.isPremium') || false,
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      isPremium: localStorage.getItem('settings.theme.isPremium') || false,
+    };
+  }
 
   async componentDidMount () {
     // NOTE: This is kind of sketchy because we're relying on our parent (tab view)
@@ -48,7 +52,7 @@ class SettingsTheme extends PureComponent {
     }
   }
 
-  renderTheme = theme => {
+  renderTheme (theme) {
     const {handleChangeTheme, activeTheme} = this.props;
     const {isPremium} = this.state;
     const isActive = activeTheme === theme.key;
@@ -72,7 +76,7 @@ class SettingsTheme extends PureComponent {
           )}
       </div>
     )
-  };
+  }
 
   renderThemeRows (themes) {
     const rows = [];

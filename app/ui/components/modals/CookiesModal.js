@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -8,22 +9,36 @@ import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
 class CookiesModal extends PureComponent {
-  state = {
-    cookieJar: null,
-    workspace: null,
-    filter: ''
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      cookieJar: null,
+      workspace: null,
+      filter: ''
+    };
 
-  _setModalRef = n => this.modal = n;
-  _setFilterInputRef = n => this.filterInput = n;
-  _hide = () => this.modal.hide();
+    autoBind(this);
+  }
+
+  _setModalRef (n) {
+    this.modal = n;
+  }
+
+  _setFilterInputRef (n) {
+    this.filterInput = n;
+  }
+
+  _hide () {
+    this.modal.hide();
+  }
 
   async _saveChanges () {
     const {cookieJar} = this.state;
     await models.cookieJar.update(cookieJar);
     this._load(this.state.workspace);
   }
-  _handleCookieUpdate = (oldCookie, cookie) => {
+
+  _handleCookieUpdate (oldCookie, cookie) {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
     const index = cookies.findIndex(c => c.domain === oldCookie.domain && c.key === oldCookie.key);
@@ -36,17 +51,17 @@ class CookiesModal extends PureComponent {
 
     this._saveChanges(cookieJar);
     trackEvent('Cookie', 'Update');
-  };
+  }
 
-  _handleCookieAdd = cookie => {
+  _handleCookieAdd (cookie) {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
     cookieJar.cookies = [cookie, ...cookies];
     this._saveChanges(cookieJar);
     trackEvent('Cookie', 'Create');
-  };
+  }
 
-  _handleCookieDelete = cookie => {
+  _handleCookieDelete (cookie) {
     const {cookieJar} = this.state;
     const {cookies} = cookieJar;
 
@@ -55,9 +70,9 @@ class CookiesModal extends PureComponent {
 
     this._saveChanges(cookieJar);
     trackEvent('Cookie', 'Delete');
-  };
+  }
 
-  _handleFilterChange = e => {
+  _handleFilterChange (e) {
     const filter = e.target.value;
     this.setState({filter});
     trackEvent('Cookie Editor', 'Filter Change');

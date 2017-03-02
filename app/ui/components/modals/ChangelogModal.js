@@ -1,4 +1,5 @@
 import React, {PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -7,9 +8,19 @@ import ModalFooter from '../base/ModalFooter';
 import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/constants';
 
 class ChangelogModal extends PureComponent {
-  state = {changelog: null};
+  constructor (props) {
+    super(props);
+    this.state = {
+      changelog: null,
+    };
 
-  _setModalRef = m => this.modal = m;
+    autoBind(this);
+  }
+
+
+  _setModalRef (m) {
+    this.modal = m;
+  }
 
   show () {
     this.modal.show();

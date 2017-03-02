@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autoBind from 'react-autobind';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 
 import CopyButton from '../base/CopyButton';
@@ -51,20 +52,28 @@ class GenerateCodeModal extends PureComponent {
       target: target || DEFAULT_TARGET,
       client: client || DEFAULT_CLIENT,
     };
+
+    autoBind(this);
   }
 
-  _setModalRef = n => this.modal = n;
-  _setEditorRef = n => this._editor = n;
+  _setModalRef (n) {
+    this.modal = n;
+  }
+  _setEditorRef (n) {
+    this._editor = n;
+  }
 
-  _hide = () => this.modal.hide();
+  _hide () {
+    this.modal.hide();
+  }
 
-  _handleClientChange = client => {
+  _handleClientChange (client) {
     const {target, request} = this.state;
     this._generateCode(request, target, client);
     trackEvent('Generate Code', 'Client Change', `${target.title}/${client.title}`);
-  };
+  }
 
-  _handleTargetChange = target => {
+  _handleTargetChange (target) {
     const {target: currentTarget} = this.state;
     if (currentTarget.key === target.key) {
       // No change
@@ -74,7 +83,7 @@ class GenerateCodeModal extends PureComponent {
     const client = target.clients.find(c => c.key === target.default);
     this._generateCode(this.state.request, target, client);
     trackEvent('Generate Code', 'Target Change', target.title);
-  };
+  }
 
   async _generateCode (request, target, client) {
     // Some clients need a content-length for the request to succeed

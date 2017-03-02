@@ -1,4 +1,5 @@
 import React, {PureComponent} from 'react';
+import autoBind from 'react-autobind';
 import ContentTypeDropdown from '../dropdowns/ContentTypeDropdown';
 import MethodDropdown from '../dropdowns/MethodDropdown';
 import Modal from '../base/Modal';
@@ -10,16 +11,27 @@ import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
 
 class RequestCreateModal extends PureComponent {
-  state = {
-    selectedContentType: null,
-    selectedMethod: METHOD_GET,
-    parentId: null,
-  };
+  constructor (props) {
+    super(props);
 
-  _setModalRef = n => this.modal = n;
-  _setInputRef = n => this._input = n;
+    this.state = {
+      selectedContentType: null,
+      selectedMethod: METHOD_GET,
+      parentId: null,
+    };
 
-  _handleSubmit = async e => {
+    autoBind(this);
+  }
+
+  _setModalRef (n) {
+    this.modal = n;
+  }
+
+  _setInputRef (n) {
+    this._input = n;
+  }
+
+  async _handleSubmit (e) {
     e.preventDefault();
 
     const {parentId, selectedContentType, selectedMethod} = this.state;
@@ -38,17 +50,17 @@ class RequestCreateModal extends PureComponent {
     this._onSubmitCallback(finalRequest);
 
     this.hide();
-  };
+  }
 
-  _handleChangeSelectedContentType = selectedContentType => {
+  _handleChangeSelectedContentType (selectedContentType) {
     this.setState({selectedContentType});
     trackEvent('Request Create', 'Content Type Change', selectedContentType);
-  };
+  }
 
-  _handleChangeSelectedMethod = selectedMethod => {
+  _handleChangeSelectedMethod (selectedMethod) {
     this.setState({selectedMethod});
     trackEvent('Request Create', 'Method Change', selectedMethod);
-  };
+  }
 
   _shouldNotHaveBody () {
     const {selectedMethod} = this.state;
@@ -107,19 +119,19 @@ class RequestCreateModal extends PureComponent {
                 />
               </div>
               {!this._shouldNotHaveBody() ? (
-                <div className="form-control" style={{width: 'auto'}}>
-                  <label htmlFor="nothing">&nbsp;
-                    <ContentTypeDropdown className="btn btn--clicky no-wrap"
-                                         right
-                                         contentType={selectedContentType}
-                                         onChange={this._handleChangeSelectedContentType}>
-                      {getContentTypeName(selectedContentType)}
-                      {" "}
-                      <i className="fa fa-caret-down"></i>
-                    </ContentTypeDropdown>
-                  </label>
-                </div>
-              ) : null}
+                  <div className="form-control" style={{width: 'auto'}}>
+                    <label htmlFor="nothing">&nbsp;
+                      <ContentTypeDropdown className="btn btn--clicky no-wrap"
+                                           right
+                                           contentType={selectedContentType}
+                                           onChange={this._handleChangeSelectedContentType}>
+                        {getContentTypeName(selectedContentType)}
+                        {" "}
+                        <i className="fa fa-caret-down"></i>
+                      </ContentTypeDropdown>
+                    </label>
+                  </div>
+                ) : null}
             </div>
           </form>
         </ModalBody>
