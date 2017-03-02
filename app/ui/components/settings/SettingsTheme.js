@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Button from '../base/Button';
 import Link from '../base/Link';
 
@@ -27,6 +27,7 @@ const THEMES = [
   {key: 'railscasts', name: 'Railscasts', img: imgRailscasts, paid: true},
 ];
 
+@autobind
 class SettingsTheme extends PureComponent {
   constructor (props) {
     super(props);

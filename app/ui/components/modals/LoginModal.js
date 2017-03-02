@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -8,6 +8,7 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 
+@autobind
 class LoginModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -19,8 +20,6 @@ class LoginModal extends PureComponent {
       title: '',
       message: '',
     };
-
-    autoBind(this);
   }
 
   _setModalRef (n) {

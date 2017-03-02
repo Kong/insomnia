@@ -1,13 +1,13 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 
+@autobind
 class Editable extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       editing: false
     };
-    autoBind(this);
   }
 
   _handleSetInputRef (n) {

@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import * as classnames from 'classnames';
 import {ipcRenderer, shell} from 'electron';
 import Dropdown from '../base/dropdown/Dropdown';
@@ -20,13 +20,13 @@ import * as session from '../../../sync/session';
 import PromptButton from '../base/PromptButton';
 import LoginModal from '../modals/LoginModal';
 
+@autobind
 class WorkspaceDropdown extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       loggedIn: false
     };
-    autoBind(this);
   }
 
   _handleDropdownOpen () {

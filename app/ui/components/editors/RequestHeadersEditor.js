@@ -1,14 +1,14 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import KeyValueEditor from '../keyvalueeditor/Editor';
 import Editor from '../codemirror/Editor';
 import Lazy from '../base/Lazy';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class RequestHeadersEditor extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleBulkUpdate (headersString) {

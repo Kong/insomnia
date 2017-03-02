@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
 import PromptButton from '../base/PromptButton';
@@ -7,11 +7,10 @@ import CookieInput from '../CookieInput';
 import {cookieToString} from '../../../common/cookies';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
-
+@autobind
 class CookiesEditor extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleCookieAdd () {

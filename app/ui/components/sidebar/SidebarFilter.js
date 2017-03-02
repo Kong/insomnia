@@ -1,14 +1,13 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 
-
+@autobind
 class SidebarFilter extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleOnChange (e) {

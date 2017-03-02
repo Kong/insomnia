@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/FileInputButton';
@@ -9,6 +9,7 @@ import PromptButton from '../base/PromptButton';
 import Button from '../base/Button';
 import OneLineEditor from '../codemirror/OneLineEditor';
 
+@autobind
 class KeyValueEditorRow extends PureComponent {
   constructor (props) {
     super(props);
@@ -18,8 +19,6 @@ class KeyValueEditorRow extends PureComponent {
     this.state = {
       dragDirection: 0
     };
-
-    autoBind(this);
   }
 
   focusName () {

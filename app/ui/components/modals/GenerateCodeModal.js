@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 
 import CopyButton from '../base/CopyButton';
@@ -27,7 +27,7 @@ const TO_ADD_CONTENT_LENGTH = {
   node: ['native']
 };
 
-
+@autobind
 class GenerateCodeModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -52,8 +52,6 @@ class GenerateCodeModal extends PureComponent {
       target: target || DEFAULT_TARGET,
       client: client || DEFAULT_CLIENT,
     };
-
-    autoBind(this);
   }
 
   _setModalRef (n) {

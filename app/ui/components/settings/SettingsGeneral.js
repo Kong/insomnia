@@ -1,10 +1,10 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 
+@autobind
 class SettingsGeneral extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleUpdateSetting (e) {

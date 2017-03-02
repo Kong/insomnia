@@ -1,11 +1,12 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Button from '../base/Button';
 
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
+@autobind
 class PromptButton extends PureComponent {
   constructor (props) {
     super(props);
@@ -13,8 +14,6 @@ class PromptButton extends PureComponent {
     this.state = {
       state: STATE_DEFAULT
     };
-
-    autoBind(this);
   }
 
   _confirm (...args) {

@@ -1,11 +1,11 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 
+@autobind
 class DropdownItem extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleClick (e) {

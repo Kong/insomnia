@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import Button from '../base/Button';
@@ -9,7 +9,7 @@ import ModalBody from '../base/ModalBody';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
 
-
+@autobind
 class RequestSwitcherModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -23,8 +23,6 @@ class RequestSwitcherModal extends PureComponent {
       matchedWorkspaces: [],
       activeIndex: -1
     };
-
-    autoBind(this);
   }
 
   _setModalRef (n) {

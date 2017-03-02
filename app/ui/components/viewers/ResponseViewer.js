@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import Editor from '../codemirror/Editor';
 import ResponseWebView from './ResponseWebview';
@@ -9,13 +9,13 @@ import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../
 
 let alwaysShowLargeResponses = false;
 
+@autobind
 class ResponseViewer extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       blockingBecauseTooLarge: false
     };
-    autoBind(this);
   }
 
   _handleOpenLink (link) {

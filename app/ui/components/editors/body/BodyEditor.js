@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import RawEditor from './RawEditor';
 import UrlEncodedEditor from './UrlEncodedEditor';
 import FormEditor from './FormEditor';
@@ -7,10 +7,10 @@ import FileEditor from './FileEditor';
 import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../../../../common/constants';
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 
+@autobind
 class BodyEditor extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleRawChange (rawValue) {

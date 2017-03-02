@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import Link from './base/Link';
 import * as fetch from '../../common/fetch';
@@ -10,11 +10,11 @@ import * as db from '../../common/database';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
+@autobind
 class Toast extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {notification: null, visible: false};
-    autoBind(this);
   }
 
   _handlePostCTACleanup () {

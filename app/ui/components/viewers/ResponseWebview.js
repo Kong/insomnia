@@ -1,11 +1,11 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import contextMenu from 'electron-context-menu';
 
+@autobind
 class ResponseWebview extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
   _handleSetWebviewRef (n) {
     this._webview = n;

@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Editor from './Editor';
 import Input from '../base/DebouncedInput';
 
@@ -8,6 +8,7 @@ const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
+@autobind
 class OneLineEditor extends PureComponent {
   constructor (props) {
     super(props);
@@ -25,8 +26,6 @@ class OneLineEditor extends PureComponent {
     this.state = {
       mode
     };
-
-    autoBind(this);
   }
 
   focus () {

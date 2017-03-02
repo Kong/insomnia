@@ -1,12 +1,12 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {basename as pathBasename} from 'path';
 import {remote} from 'electron';
 
+@autobind
 class FileInputButton extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   focus () {

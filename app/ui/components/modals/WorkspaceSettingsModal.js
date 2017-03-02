@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import DebouncedInput from '../base/DebouncedInput';
 import FileInputButton from '../base/FileInputButton';
@@ -11,7 +11,7 @@ import * as models from '../../../models/index';
 import * as fs from 'fs';
 import {trackEvent} from '../../../analytics/index';
 
-
+@autobind
 class WorkspaceSettingsModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -24,8 +24,6 @@ class WorkspaceSettingsModal extends PureComponent {
       host: '',
       passphrase: '',
     };
-
-    autoBind(this);
   }
 
   _workspaceUpdate (patch) {

@@ -1,12 +1,12 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Editor from '../codemirror/Editor';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
+@autobind
 class EnvironmentEditor extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
   _handleChange () {
     this.props.didChange();

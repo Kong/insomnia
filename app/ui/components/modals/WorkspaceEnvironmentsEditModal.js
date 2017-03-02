@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/PromptButton';
@@ -14,6 +14,7 @@ import ModalFooter from '../base/ModalFooter';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class WorkspaceEnvironmentsEditModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -25,7 +26,6 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
       activeEnvironmentId: null,
       forceRefreshKey: 0,
     };
-    autoBind(this);
   }
 
   _hide () {

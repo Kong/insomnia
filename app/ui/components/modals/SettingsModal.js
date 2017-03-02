@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import Modal from '../base/Modal';
 import Button from '../base/Button';
@@ -18,19 +18,15 @@ import * as session from '../../../sync/session';
 
 export const TAB_INDEX_EXPORT = 1;
 
+@autobind
 class SettingsModal extends PureComponent {
   constructor (props) {
     super(props);
-
-    this._currentTabIndex = -1;
-
     this.state = {};
-
-    autoBind(this);
+    this._currentTabIndex = -1;
   }
 
   _setModalRef (n) {
-    console.log('SET MODAL REF', this, n);
     this.modal = n;
   }
 

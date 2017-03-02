@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
@@ -10,6 +10,7 @@ import PromptModal from './modals/PromptModal';
 import PromptButton from './base/PromptButton';
 import OneLineEditor from './codemirror/OneLineEditor';
 
+@autobind
 class RequestUrlBar extends PureComponent {
   constructor (props) {
     super(props);
@@ -21,7 +22,6 @@ class RequestUrlBar extends PureComponent {
 
     this._urlChangeDebounceTimeout = null;
     this._lastPastedText = null;
-    autoBind(this);
   }
 
   _setDropdownRef (n) {

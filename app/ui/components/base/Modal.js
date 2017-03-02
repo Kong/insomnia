@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {isMac} from '../../../common/constants';
 
@@ -7,6 +7,7 @@ import {isMac} from '../../../common/constants';
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
+@autobind
 class Modal extends PureComponent {
   constructor (props) {
     super(props);
@@ -16,13 +17,19 @@ class Modal extends PureComponent {
       forceRefreshCounter: 0,
       zIndex: globalZIndex
     };
-
-    autoBind(this);
   }
 
   _setModalRef (n) {
     this._node = n;
+    this._addListener();
+  }
+
+  _addListener () {
     this._node.addEventListener('keydown', this._handleKeyDown);
+  }
+
+  _removeListener () {
+    this._node.removeEventListener('keydown', this._handleKeyDown);
   }
 
   _handleKeyDown (e) {
@@ -109,7 +116,7 @@ class Modal extends PureComponent {
   }
 
   componentWillUnmount () {
-    this._node.removeEventListener('keydown', this._handleKeyDown);
+    this._removeListener();
   }
 
   render () {

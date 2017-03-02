@@ -1,12 +1,12 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import KeyValueEditor from '../keyvalueeditor/Editor';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class AuthEditor extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleOnCreate () {

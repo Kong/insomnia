@@ -1,7 +1,8 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
+@autobind
 class CookieInput extends PureComponent {
   constructor (props) {
     super(props);
@@ -9,8 +10,6 @@ class CookieInput extends PureComponent {
     this.state = {
       isValid: true,
     };
-
-    autoBind(this);
   }
 
   _setInputRef (n) {

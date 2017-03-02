@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import ContentTypeDropdown from '../dropdowns/ContentTypeDropdown';
 import MethodDropdown from '../dropdowns/MethodDropdown';
 import Modal from '../base/Modal';
@@ -10,6 +10,7 @@ import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_DELE
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class RequestCreateModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -19,8 +20,6 @@ class RequestCreateModal extends PureComponent {
       selectedMethod: METHOD_GET,
       parentId: null,
     };
-
-    autoBind(this);
   }
 
   _setModalRef (n) {

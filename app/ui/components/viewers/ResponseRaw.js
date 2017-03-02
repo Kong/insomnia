@@ -1,15 +1,14 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {debounce} from '../../../common/misc';
 
+@autobind
 class ResponseRaw extends PureComponent {
   constructor (props) {
     super(props);
 
     // Use a timeout so it doesn't block the UI
     this._update = debounce(this._setTextAreaValue);
-
-    autoBind(this);
   }
 
   _setTextAreaValue (value) {

@@ -1,11 +1,12 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
+@autobind
 class EnvironmentEditModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -13,7 +14,6 @@ class EnvironmentEditModal extends PureComponent {
       requestGroup: null,
       isValid: true
     };
-    autoBind(this);
   }
 
   _hide () {

@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
@@ -91,6 +91,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   }
 };
 
+@autobind
 class Editor extends PureComponent {
   constructor (props) {
     super(props);
@@ -98,7 +99,6 @@ class Editor extends PureComponent {
       filter: props.filter || ''
     };
     this._originalCode = '';
-    autoBind(this);
   }
 
   componentWillUnmount () {

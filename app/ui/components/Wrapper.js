@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {showModal, registerModal} from './modals/index';
 import AlertModal from '../components/modals/AlertModal';
@@ -28,13 +28,13 @@ import * as importers from 'insomnia-importers';
 const rUpdate = models.request.update;
 const sUpdate = models.settings.update;
 
+@autobind
 class Wrapper extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       forceRefreshRequestPaneCounter: Date.now()
     };
-    autoBind(this);
   }
 
   // Request updaters

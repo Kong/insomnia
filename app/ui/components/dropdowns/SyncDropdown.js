@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
 import {showModal} from '../modals';
 import * as syncStorage from '../../../sync/storage';
@@ -9,6 +9,7 @@ import {trackEvent} from '../../../analytics';
 import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
 import SetupSyncModal from '../modals/SetupSyncModal';
 
+@autobind
 class SyncDropdown extends PureComponent {
   constructor (props) {
     super(props);
@@ -20,8 +21,6 @@ class SyncDropdown extends PureComponent {
       syncData: null,
       loading: false,
     };
-
-    autoBind(this);
   }
 
   _trackShowMenu () {

@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
@@ -14,6 +14,7 @@ const DOWN = 40;
 const LEFT = 37;
 const RIGHT = 39;
 
+@autobind
 class KeyValueEditor extends PureComponent {
   constructor (props) {
     super(props);
@@ -33,8 +34,6 @@ class KeyValueEditor extends PureComponent {
     this.state = {
       pairs: pairs,
     };
-
-    autoBind(this);
   }
 
   _handlePairChange (pair) {

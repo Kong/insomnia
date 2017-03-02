@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptModal from '../modals/PromptModal';
@@ -7,11 +7,10 @@ import * as models from '../../../models';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 
-
+@autobind
 class RequestActionsDropdown extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
   _setDropdownRef (n) {
     this._dropdown = n;

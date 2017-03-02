@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import fs from 'fs';
 import electron from 'electron';
 import FileInputButton from '../../base/FileInputButton';
@@ -7,10 +7,10 @@ import PromptButton from '../../base/PromptButton';
 import * as misc from '../../../../common/misc';
 import {trackEvent} from '../../../../analytics/index';
 
+@autobind
 class FileEditor extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleResetFile () {

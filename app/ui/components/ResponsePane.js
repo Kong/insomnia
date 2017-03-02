@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
 import {remote} from 'electron';
@@ -20,13 +20,13 @@ import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../common/network';
 import {trackEvent} from '../../analytics';
 
+@autobind
 class ResponsePane extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       response: null
     };
-    autoBind(this);
   }
 
   _trackTab (name) {

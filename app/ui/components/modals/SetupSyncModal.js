@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -7,13 +7,13 @@ import ModalFooter from '../base/ModalFooter';
 import * as sync from '../../../sync';
 import {SYNC_MODE_OFF, SYNC_MODE_ON, SYNC_MODE_NEVER, SYNC_MODE_UNSET} from '../../../sync/storage';
 
+@autobind
 class SetupSyncModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       syncMode: SYNC_MODE_ON,
     };
-    autoBind(this);
   }
 
   _setModalRef (n) {

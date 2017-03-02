@@ -1,11 +1,12 @@
 import React, {PureComponent, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import DropdownButton from './DropdownButton';
 import DropdownItem from './DropdownItem';
 import DropdownDivider from './DropdownDivider';
 
+@autobind
 class Dropdown extends PureComponent {
   constructor (props) {
     super(props);
@@ -15,14 +16,9 @@ class Dropdown extends PureComponent {
       dropUp: false,
       focused: false,
     };
-
-    autoBind(this);
-
-    console.log("DONE BINDING", this);
   }
 
   _setRef (n) {
-    console.log('SET REF', this, n);
     this._node = n;
   };
 
@@ -61,7 +57,6 @@ class Dropdown extends PureComponent {
   };
 
   _addDropdownListRef (n) {
-    console.log('HELLO', this);
     this._dropdownList = n;
   };
 

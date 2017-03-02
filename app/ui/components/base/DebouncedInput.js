@@ -1,7 +1,8 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {debounce} from '../../../common/misc';
 
+@autobind
 class DebouncedInput extends PureComponent {
   constructor (props) {
     super(props);
@@ -11,8 +12,6 @@ class DebouncedInput extends PureComponent {
     } else {
       this._handleValueChange = debounce(props.onChange, props.delay || 500);
     }
-
-    autoBind(this);
   }
 
   _handleChange (e) {

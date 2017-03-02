@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -8,6 +8,7 @@ import CookiesEditor from '../editors/CookiesEditor';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class CookiesModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -16,8 +17,6 @@ class CookiesModal extends PureComponent {
       workspace: null,
       filter: ''
     };
-
-    autoBind(this);
   }
 
   _setModalRef (n) {

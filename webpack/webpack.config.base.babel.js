@@ -32,13 +32,12 @@ module.exports = {
         test: /\.(html|woff2)$/,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]'
-        }
+          name: '[name].[ext]',
+        },
       },
       {
         test: /\.(png)$/,
         loader: 'url-loader',
-        options: {}
       }
     ]
   },

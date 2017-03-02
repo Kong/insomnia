@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import {contentTypesMap} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
@@ -8,11 +8,10 @@ import {getContentTypeName} from '../../../common/constants';
 
 const EMPTY_MIME_TYPE = null;
 
+@autobind
 class ContentTypeDropdown extends PureComponent {
   constructor (props) {
     super(props);
-
-    autoBind(this);
   }
 
   _handleChangeMimeType (mimeType) {

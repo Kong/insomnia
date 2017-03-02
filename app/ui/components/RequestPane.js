@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import Lazy from './base/Lazy';
 import KeyValueEditor from './keyvalueeditor/Editor';
@@ -14,13 +14,12 @@ import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
 
+@autobind
 class RequestPane extends PureComponent {
   constructor (props) {
     super(props);
 
     this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
-
-    autoBind(this);
   }
 
   _handleHidePasswords () {

@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
@@ -8,13 +8,13 @@ import SidebarRequestRow from './SidebarRequestRow';
 import {trackEvent} from '../../../analytics/index';
 import * as misc from '../../../common/misc';
 
+@autobind
 class SidebarRequestGroupRow extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       dragDirection: 0
     };
-    autoBind(this);
   }
 
   _setRequestGroupActionsDropdownRef (n) {

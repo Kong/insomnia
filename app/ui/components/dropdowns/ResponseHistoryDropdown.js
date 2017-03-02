@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import SizeTag from '../tags/SizeTag';
 import StatusTag from '../tags/StatusTag';
@@ -9,6 +9,7 @@ import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
 import * as misc from '../../../common/misc';
 
+@autobind
 class ResponseHistoryDropdown extends PureComponent {
   constructor (props) {
     super(props);
@@ -17,8 +18,6 @@ class ResponseHistoryDropdown extends PureComponent {
     };
 
     this._load = misc.debounce(this._load);
-
-    autoBind(this);
   }
 
   _handleDeleteResponses () {

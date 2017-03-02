@@ -1,13 +1,13 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem} from '../base/dropdown';
 import {PREVIEW_MODES, getPreviewModeName} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class PreviewModeDropdown extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleClick (previewMode) {

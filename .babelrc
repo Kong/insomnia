@@ -3,8 +3,14 @@
     "react"
   ],
   "plugins": [
-    "react-hot-loader/babel",
-//    "transform-class-properties",
-    "transform-object-rest-spread"
-  ]
+    "transform-object-rest-spread",
+    "transform-decorators-legacy"
+  ],
+  "env": {
+    "development": {
+      "plugins": [
+        "react-hot-loader/babel"
+      ]
+    }
+  }
 }

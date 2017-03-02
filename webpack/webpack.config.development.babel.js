@@ -19,6 +19,7 @@ module.exports = {
   },
   devServer: {
     hot: true,
+    noInfo: true,
     port: PORT,
     contentBase: path.join(__dirname, '../build'),
   },

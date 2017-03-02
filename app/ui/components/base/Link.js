@@ -1,15 +1,15 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import {trackEvent} from '../../../analytics/index';
 import * as querystring from '../../../common/querystring';
 import {getAppVersion} from '../../../common/constants';
 import {isDevelopment} from '../../../common/constants';
 
+@autobind
 class Link extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleClick (e) {

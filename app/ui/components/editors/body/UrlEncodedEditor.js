@@ -1,13 +1,13 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import Lazy from '../../base/Lazy';
 import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
+@autobind
 class UrlEncodedEditor extends PureComponent {
   constructor (props) {
     super(props);
-    autoBind(this);
   }
 
   _handleTrackToggle (pair) {

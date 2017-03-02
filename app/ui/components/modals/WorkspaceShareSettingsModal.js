@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
@@ -13,11 +13,11 @@ import PromptModal from './PromptModal';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class WorkspaceShareSettingsModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {};
-    autoBind(this);
   }
 
   _handleSubmit (e) {

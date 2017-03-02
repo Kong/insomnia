@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import autoBind from 'react-autobind';
+import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
@@ -10,6 +10,7 @@ import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
 
+@autobind
 class SidebarRequestRow extends PureComponent {
   constructor (props) {
     super(props);
@@ -17,7 +18,6 @@ class SidebarRequestRow extends PureComponent {
       dragDirection: 0,
       isEditing: false,
     };
-    autoBind(this);
   }
 
   _setRequestActionsDropdownRef (n) {
