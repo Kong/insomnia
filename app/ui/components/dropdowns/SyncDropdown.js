@@ -6,8 +6,11 @@ import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics';
 import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
+import SetupSyncModal from '../modals/SetupSyncModal';
 
 class SyncDropdown extends PureComponent {
+  _hasPrompted = false;
+
   state = {
     loggedIn: null,
     syncData: null,
@@ -93,6 +96,11 @@ class SyncDropdown extends PureComponent {
     this.setState({syncData});
   }
 
+  _handleShowSyncModePrompt = async () => {
+    await showModal(SetupSyncModal);
+    await this._reloadData();
+  };
+
   componentWillMount () {
     this._interval = setInterval(() => this._reloadData(), 2000);
     this._reloadData();
@@ -102,9 +110,26 @@ class SyncDropdown extends PureComponent {
     clearInterval(this._interval);
   }
 
+  async componentDidUpdate () {
+    const {syncData} = this.state;
+
+    if (!syncData) {
+      return;
+    }
+
+    // Sync has not yet been configured for this workspace, so prompt the user to do so
+    const isModeUnset = syncData.syncMode === syncStorage.SYNC_MODE_UNSET;
+    if (isModeUnset && !this._hasPrompted) {
+      this._hasPrompted = true;
+      await this._handleShowSyncModePrompt();
+    }
+  }
+
   _getSyncDescription (syncMode, syncPercentage) {
     let el = null;
-    if (syncPercentage === 100) {
+    if (syncMode === syncStorage.SYNC_MODE_NEVER) {
+      el = <span>Sync Disabled</span>
+    } else if (syncPercentage === 100) {
       el = <span>Sync Up To Date</span>
     } else if (syncMode === syncStorage.SYNC_MODE_OFF) {
       el = <span><i className="fa fa-pause-circle-o"/> Sync Required</span>
@@ -143,24 +168,43 @@ class SyncDropdown extends PureComponent {
               {this._getSyncDescription(syncMode, syncPercent)}
             </DropdownButton>
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
-            <DropdownItem onClick={this._handleToggleSyncMode}
-                          stayOpenAfterClick={true}>
-              {syncMode === syncStorage.SYNC_MODE_ON ?
-                <i className="fa fa-toggle-on"/> :
-                <i className="fa fa-toggle-off"/>
-              }
-              Automatic Sync
-            </DropdownItem>
-            <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
-              {loading ?
-                <i className="fa fa-refresh fa-spin"></i> :
-                <i className="fa fa-cloud-upload"></i>}
-              Sync Now
-            </DropdownItem>
-            <DropdownItem onClick={this._handleShowShareSettings}>
-              <i className="fa fa-users"></i>
-              Share With Others
-            </DropdownItem>
+
+            {/* SYNC DISABLED */}
+
+            {syncMode === syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleShowSyncModePrompt}>
+                <i className="fa fa-wrench"/>
+                Change Sync Mode
+              </DropdownItem> : null
+            }
+
+            {/* SYNCED */}
+
+            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleToggleSyncMode} stayOpenAfterClick={true}>
+                {syncMode === syncStorage.SYNC_MODE_ON ?
+                  <i className="fa fa-toggle-on"/> :
+                  <i className="fa fa-toggle-off"/>
+                }
+                Automatic Sync
+              </DropdownItem> : null
+            }
+
+            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
+                {loading ?
+                  <i className="fa fa-refresh fa-spin"/> :
+                  <i className="fa fa-cloud-upload"/>}
+                Sync Now
+              </DropdownItem> : null
+            }
+
+            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleShowShareSettings}>
+                <i className="fa fa-users"></i>
+                Share With Others
+              </DropdownItem> : null
+            }
           </Dropdown>
         </div>
       );

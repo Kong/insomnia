@@ -13,7 +13,8 @@ class Modal extends PureComponent {
     zIndex: globalZIndex
   };
 
-  _handleSetNodeRef = n => this._node = n;
+  _setModalRef = n => this._node = n;
+  _handleHide = () => this.hide();
 
   _handleKeyDown = e => {
     if (!this.state.open) {
@@ -25,6 +26,11 @@ class Modal extends PureComponent {
     const isMeta = isMac() ? e.metaKey : e.ctrlKey;
     if (isMeta) {
       e.stopPropagation();
+    }
+
+    // Don't check for close keys if we don't want them
+    if (this.props.noEscape) {
+      return;
     }
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
@@ -39,6 +45,11 @@ class Modal extends PureComponent {
   };
 
   _handleClick = e => {
+    // Don't check for close keys if we don't want them
+    if (this.props.noEscape) {
+      return;
+    }
+
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
@@ -97,7 +108,7 @@ class Modal extends PureComponent {
   }
 
   render () {
-    const {tall, top, wide, className} = this.props;
+    const {tall, top, wide, noEscape, className} = this.props;
     const {open, zIndex, forceRefreshCounter} = this.state;
 
     const classes = classnames(
@@ -106,17 +117,18 @@ class Modal extends PureComponent {
       {'modal--open': open},
       {'modal--fixed-height': tall},
       {'modal--fixed-top': top},
+      {'modal--noescape': noEscape},
       {'modal--wide': wide},
     );
 
     return (
-      <div ref={this._handleSetNodeRef}
+      <div ref={this._setModalRef}
            tabIndex="-1"
            className={classes}
            style={{zIndex: zIndex}}
            onClick={this._handleClick}>
         <div className="modal__content" key={forceRefreshCounter}>
-          <div className="modal__backdrop overlay" onClick={() => this.hide()}></div>
+          <div className="modal__backdrop overlay" data-close-modal></div>
           {this.props.children}
         </div>
       </div>
@@ -128,6 +140,7 @@ Modal.propTypes = {
   tall: PropTypes.bool,
   top: PropTypes.bool,
   wide: PropTypes.bool,
+  noEscape: PropTypes.bool,
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,
   freshState: PropTypes.bool,

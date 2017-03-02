@@ -232,6 +232,11 @@ class Editor extends PureComponent {
       if (this.props.render) {
         this.codeMirror.enableNunjucksTags(this.props.render);
       }
+
+      // Make URLs clickable
+      if (this.props.onClickLink) {
+        this.codeMirror.makeLinksClickable(this.props.onClickLink);
+      }
     };
 
     // Do this a bit later for big values so we don't block the render process
@@ -376,9 +381,6 @@ class Editor extends PureComponent {
 
       cm.setOption(key, options[key]);
     });
-
-    // Add overlays;
-    this.codeMirror.makeLinksClickable(this.props.onClickLink);
   };
 
   _normalizeMode (mode) {

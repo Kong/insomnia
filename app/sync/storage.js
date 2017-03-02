@@ -9,6 +9,7 @@ const TYPE_CONFIG = 'Config';
 
 export const SYNC_MODE_OFF = 'paused';
 export const SYNC_MODE_ON = 'active';
+export const SYNC_MODE_NEVER = 'never';
 export const SYNC_MODE_UNSET = 'unset';
 
 export function allActiveResources (resourceGroupId = null) {

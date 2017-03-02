@@ -12,8 +12,9 @@ import PromptModal from '../components/modals/PromptModal';
 import RequestCreateModal from '../components/modals/RequestCreateModal';
 import RequestPane from './RequestPane';
 import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
-import ResponsePane from './ResponsePane';
+import SetupSyncModal from '../components/modals/SetupSyncModal';
 import SettingsModal from '../components/modals/SettingsModal';
+import ResponsePane from './ResponsePane';
 import Sidebar from './sidebar/Sidebar';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
@@ -327,6 +328,10 @@ class Wrapper extends PureComponent {
           lineWrapping={settings.editorLineWrapping}
           onChange={models.requestGroup.update}
           render={handleRender}
+        />
+        <SetupSyncModal
+          ref={registerModal}
+          workspace={activeWorkspace}
         />
         <WorkspaceEnvironmentsEditModal
           ref={registerModal}
