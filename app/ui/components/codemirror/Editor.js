@@ -1,6 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import {getDOMNode} from 'react-dom';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import jq from 'jsonpath';
@@ -249,14 +248,14 @@ class Editor extends PureComponent {
     } else {
       setup();
     }
-  };
+  }
 
   _isJSON (mode) {
     if (!mode) {
       return false;
     }
 
-    return mode.indexOf('json') !== -1
+    return mode.indexOf('json') !== -1;
   }
 
   _isXML (mode) {
@@ -264,7 +263,7 @@ class Editor extends PureComponent {
       return false;
     }
 
-    return mode.indexOf('xml') !== -1
+    return mode.indexOf('xml') !== -1;
   }
 
   _handleBeautify () {
@@ -302,10 +301,10 @@ class Editor extends PureComponent {
         const dom = new DOMParser().parseFromString(code);
         const nodes = xpath.select(this.state.filter, dom);
         const inner = nodes.map(n => n.toString()).join('\n');
-        code = `<result>${inner}</result>`
+        code = `<result>${inner}</result>`;
       } catch (e) {
         // Failed to parse filter (that's ok)
-        code = `<result></result>`
+        code = `<result></result>`;
       }
     }
 
@@ -333,7 +332,7 @@ class Editor extends PureComponent {
       noDragDrop,
       hideScrollbars,
       noStyleActiveLine,
-      noLint,
+      noLint
     } = this.props;
 
     let mode;
@@ -358,7 +357,7 @@ class Editor extends PureComponent {
       keyMap: keyMap || 'default',
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
-      gutters: [],
+      gutters: []
     };
 
     if (options.lineNumbers) {
@@ -384,7 +383,7 @@ class Editor extends PureComponent {
 
       cm.setOption(key, options[key]);
     });
-  };
+  }
 
   _normalizeMode (mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
@@ -415,7 +414,7 @@ class Editor extends PureComponent {
     }
   }
 
-  _codemirrorBlur (doc, e)  {
+  _codemirrorBlur (doc, e) {
     if (this.props.onBlur) {
       this.props.onBlur(e);
     }
@@ -562,7 +561,7 @@ class Editor extends PureComponent {
           </table>
         </div>
       )
-    })
+    });
   }
 
   render () {
@@ -592,15 +591,15 @@ class Editor extends PureComponent {
                 onClick={() => this._showFilterHelp()}>
           <i className="fa fa-question-circle"></i>
         </button>
-      )
+      );
     }
 
     if (this.props.manualPrettify && this._canPrettify()) {
       let contentTypeName = '';
       if (this._isJSON(mode)) {
-        contentTypeName = 'JSON'
+        contentTypeName = 'JSON';
       } else if (this._isXML(mode)) {
-        contentTypeName = 'XML'
+        contentTypeName = 'XML';
       }
 
       toolbarChildren.push(
@@ -610,7 +609,7 @@ class Editor extends PureComponent {
                 onClick={this._handleBeautify}>
           Beautify {contentTypeName}
         </button>
-      )
+      );
     }
 
     let toolbar = null;
@@ -620,7 +619,7 @@ class Editor extends PureComponent {
 
     const styles = {};
     if (fontSize) {
-      styles.fontSize = `${fontSize}px`
+      styles.fontSize = `${fontSize}px`;
     }
 
     return (
@@ -667,7 +666,7 @@ Editor.propTypes = {
   readOnly: PropTypes.bool,
   filter: PropTypes.string,
   singleLine: PropTypes.bool,
-  debounceMillis: PropTypes.number,
+  debounceMillis: PropTypes.number
 };
 
 export default Editor;

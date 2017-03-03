@@ -11,6 +11,10 @@ class ResponseRaw extends PureComponent {
     this._update = debounce(this._setTextAreaValue);
   }
 
+  _setTextAreaRef (n) {
+    this._textarea = n;
+  }
+
   _setTextAreaValue (value) {
     // Bail if we're not mounted
     if (!this._textarea) {
@@ -21,11 +25,11 @@ class ResponseRaw extends PureComponent {
   }
 
   componentDidUpdate () {
-    this._update(this.props.value)
+    this._update(this.props.value);
   }
 
   componentDidMount () {
-    this._update(this.props.value)
+    this._update(this.props.value);
   }
 
   shouldComponentUpdate (nextProps) {
@@ -44,7 +48,7 @@ class ResponseRaw extends PureComponent {
     const {fontSize} = this.props;
     return (
       <textarea
-        ref={n => this._textarea = n}
+        ref={this._setTextAreaRef}
         placeholder="..."
         className="force-wrap scrollable wide tall selectable monospace pad no-resize"
         readOnly

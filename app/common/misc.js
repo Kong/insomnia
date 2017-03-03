@@ -1,6 +1,6 @@
 import uuid from 'uuid';
 import {parse as urlParse, format as urlFormat} from 'url';
-import {DEBOUNCE_MILLIS} from "./constants";
+import {DEBOUNCE_MILLIS} from './constants';
 import * as querystring from './querystring';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
@@ -22,7 +22,7 @@ export function filterHeaders (headers, name) {
     if (!h || !h.name) {
       return false;
     } else {
-      return h.name.toLowerCase() === name.toLowerCase()
+      return h.name.toLowerCase() === name.toLowerCase();
     }
   });
 }
@@ -139,7 +139,7 @@ export function prepareUrlForSending (url) {
     const segments = parsedUrl.pathname.split('/');
     parsedUrl.pathname = segments.map(
       s => flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST)
-    ).join('/')
+    ).join('/');
   }
 
   // ~~~~~~~~~~~~~~ //
@@ -164,7 +164,7 @@ export function prepareUrlForSending (url) {
 }
 
 export function delay (milliseconds = DEBOUNCE_MILLIS) {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
 export function removeVowels (str) {
@@ -187,13 +187,13 @@ export function keyedDebounce (callback, millis = DEBOUNCE_MILLIS) {
       callback(results);
       results = {};
     }, millis);
-  }
+  };
 }
 
 export function debounce (callback, millis = DEBOUNCE_MILLIS) {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
-    callback.apply(null, results['__key__'])
+    callback.apply(null, results['__key__']);
   }, millis).bind(null, '__key__');
 }
 
@@ -219,7 +219,8 @@ export function describeByteSize (bytes) {
     unit = 'GB';
   }
 
-  return Math.round(size * 10) / 10 + ' ' + unit;
+  const rounded = Math.round(size * 10) / 10;
+  return `${rounded} ${unit}`;
 }
 
 export function nullFn () {

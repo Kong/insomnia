@@ -8,7 +8,7 @@ class CookieInput extends PureComponent {
     super(props);
 
     this.state = {
-      isValid: true,
+      isValid: true
     };
   }
 
@@ -24,7 +24,7 @@ class CookieInput extends PureComponent {
       this.props.onChange(value);
     }
 
-    this.setState({isValid})
+    this.setState({isValid});
   }
 
   _isValid () {

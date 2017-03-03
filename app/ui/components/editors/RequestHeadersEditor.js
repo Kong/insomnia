@@ -2,15 +2,10 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../keyvalueeditor/Editor';
 import Editor from '../codemirror/Editor';
-import Lazy from '../base/Lazy';
 import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class RequestHeadersEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleBulkUpdate (headersString) {
     this.props.onChange(this._getHeadersFromString(headersString));
   }
@@ -34,7 +29,7 @@ class RequestHeadersEditor extends PureComponent {
     for (const row of rows) {
       const items = row.split(':');
 
-      if (items.length != 2) {
+      if (items.length !== 2) {
         // Need a colon to be valid
         continue;
       }
@@ -88,19 +83,17 @@ class RequestHeadersEditor extends PureComponent {
       ) : (
         <div className="pad-bottom scrollable-container">
           <div className="scrollable">
-            <Lazy>
-              <KeyValueEditor
-                sortable
-                namePlaceholder="My-Header"
-                valuePlaceholder="Value"
-                pairs={headers}
-                handleRender={handleRender}
-                onToggleDisable={this._handleTrackToggle}
-                onCreate={this._handleTrackCreate}
-                onDelete={this._handleTrackDelete}
-                onChange={onChange}
-              />
-            </Lazy>
+            <KeyValueEditor
+              sortable
+              namePlaceholder="My-Header"
+              valuePlaceholder="Value"
+              pairs={headers}
+              handleRender={handleRender}
+              onToggleDisable={this._handleTrackToggle}
+              onCreate={this._handleTrackCreate}
+              onDelete={this._handleTrackDelete}
+              onChange={onChange}
+            />
           </div>
         </div>
       );

@@ -10,8 +10,8 @@ export function init () {
     parentId: null,
     previewMode: PREVIEW_MODE_SOURCE,
     responseFilter: '',
-    activeResponseId: null,
-  }
+    activeResponseId: null
+  };
 }
 
 export function migrate (doc) {
@@ -31,7 +31,7 @@ export function update (requestMeta, patch) {
 }
 
 export function getByParentId (parentId) {
-  return db.getWhere(type, {parentId})
+  return db.getWhere(type, {parentId});
 }
 
 export function all () {

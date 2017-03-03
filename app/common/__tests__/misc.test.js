@@ -51,7 +51,7 @@ describe('hasAuthHeader()', () => {
     ]);
 
     expect(yes).toEqual(true);
-  })
+  });
 });
 
 describe('generateId()', () => {
@@ -150,7 +150,7 @@ describe('filterHeaders()', () => {
     expect(misc.filterHeaders([{name: 'good', value: 'valid'}], null)).toEqual([]);
     expect(misc.filterHeaders([{name: 'good', value: 'valid'}], 'good'))
       .toEqual([{name: 'good', value: 'valid'}]);
-  })
+  });
 });
 
 describe('keyedDebounce()', () => {
@@ -185,7 +185,7 @@ describe('keyedDebounce()', () => {
       baz: ['bar'],
       multi: ['foo', 'bar', 'baz']
     }]);
-  })
+  });
 });
 
 describe('debounce()', () => {
@@ -216,5 +216,5 @@ describe('debounce()', () => {
     jest.runAllTimers();
 
     expect(resultList).toEqual([['foo', 'bar3']]);
-  })
+  });
 });

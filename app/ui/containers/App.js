@@ -1,4 +1,4 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {ipcRenderer} from 'electron';
@@ -47,7 +47,7 @@ class App extends PureComponent {
       draggingSidebar: false,
       draggingPane: false,
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
-      paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
+      paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH
     };
 
     this._getRenderContextCache = {};
@@ -155,12 +155,12 @@ class App extends PureComponent {
       selectText: true
     });
 
-    models.requestGroup.create({parentId, name})
+    models.requestGroup.create({parentId, name});
   }
 
   async _requestCreate (parentId) {
     const request = await showModal(RequestCreateModal, {parentId});
-    this._handleSetActiveRequest(request._id)
+    this._handleSetActiveRequest(request._id);
   }
 
   async _requestGroupDuplicate (requestGroup) {
@@ -173,7 +173,7 @@ class App extends PureComponent {
     }
 
     const newRequest = await models.request.duplicate(request);
-    await this._handleSetActiveRequest(newRequest._id)
+    await this._handleSetActiveRequest(newRequest._id);
   }
 
   /**
@@ -247,7 +247,7 @@ class App extends PureComponent {
 
   async _handleSetActiveRequest (activeRequestId) {
     await this._updateActiveWorkspaceMeta({activeRequestId});
-  };
+  }
 
   async _handleSetActiveEnvironment (activeEnvironmentId) {
     await this._updateActiveWorkspaceMeta({activeEnvironmentId});
@@ -261,7 +261,7 @@ class App extends PureComponent {
 
   async _handleSetSidebarHidden (sidebarHidden) {
     await this._updateActiveWorkspaceMeta({sidebarHidden});
-  };
+  }
 
   async _handleSetSidebarFilter (sidebarFilter) {
     await this._updateActiveWorkspaceMeta({sidebarFilter});
@@ -304,12 +304,12 @@ class App extends PureComponent {
         const name = request.name.replace(/\s/g, '-').toLowerCase();
         const filename = path.join(dir, `${name}.${extension}`);
         const partialResponse = Object.assign({}, responsePatch, {
-          contentType: "text/plain",
+          contentType: 'text/plain',
           body: `Saved to ${filename}`,
-          encoding: 'utf8',
+          encoding: 'utf8'
         });
         await models.response.create(partialResponse);
-        fs.writeFile(filename, responsePatch.body, responsePatch.encoding)
+        fs.writeFile(filename, responsePatch.body, responsePatch.encoding);
       } else {
         await models.response.create(responsePatch);
       }
@@ -365,7 +365,7 @@ class App extends PureComponent {
 
   _startDragSidebar () {
     trackEvent('Sidebar', 'Drag');
-    this.setState({draggingSidebar: true})
+    this.setState({draggingSidebar: true});
   }
 
   _resetDragSidebar () {
@@ -376,7 +376,7 @@ class App extends PureComponent {
 
   _startDragPane () {
     trackEvent('App Pane', 'Drag Start');
-    this.setState({draggingPane: true})
+    this.setState({draggingPane: true});
   }
 
   _resetDragPane () {
@@ -396,7 +396,6 @@ class App extends PureComponent {
       let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
       paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
       this._handleSetPaneWidth(paneWidth);
-
     } else if (this.state.draggingSidebar) {
       const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
@@ -472,7 +471,11 @@ class App extends PureComponent {
 
     db.onChange(async changes => {
       for (const change of changes) {
-        const [event, doc, fromSync] = change;
+        const [
+          _, // eslint-disable-line no-unused-vars
+          doc,
+          fromSync
+        ] = change;
         const {activeRequest} = this.props;
 
         // No active request, so we don't need to force refresh anything
@@ -555,7 +558,7 @@ class App extends PureComponent {
         />
         <Toast/>
       </div>
-    )
+    );
   }
 }
 
@@ -567,7 +570,7 @@ function mapStateToProps (state, props) {
 
   const {
     isLoading,
-    loadingRequestIds,
+    loadingRequestIds
   } = global;
 
   // Entities
@@ -607,26 +610,26 @@ function mapStateToProps (state, props) {
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
 
   return Object.assign({}, state, {
-      settings,
-      workspaces,
-      requestGroups,
-      requests,
-      isLoading,
-      loadStartTime,
-      activeWorkspace,
-      activeRequest,
-      activeResponseId,
-      sidebarHidden,
-      sidebarFilter,
-      sidebarWidth,
-      paneWidth,
-      responsePreviewMode,
-      responseFilter,
-      sidebarChildren,
-      environments,
-      activeEnvironment,
-      workspaceChildren,
-    }
+    settings,
+    workspaces,
+    requestGroups,
+    requests,
+    isLoading,
+    loadStartTime,
+    activeWorkspace,
+    activeRequest,
+    activeResponseId,
+    sidebarHidden,
+    sidebarFilter,
+    sidebarWidth,
+    paneWidth,
+    responsePreviewMode,
+    responseFilter,
+    sidebarChildren,
+    environments,
+    activeEnvironment,
+    workspaceChildren
+  }
   );
 }
 
@@ -641,7 +644,7 @@ function mapDispatchToProps (dispatch) {
     handleImportFileToWorkspace: global.importFile,
     handleExportFile: global.exportFile,
     handleMoveRequest: _moveRequest,
-    handleMoveRequestGroup: _moveRequestGroup,
+    handleMoveRequestGroup: _moveRequestGroup
   };
 }
 
@@ -690,7 +693,7 @@ async function _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targ
           });
         });
       } else {
-        const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+        const metaSortKey = afterKey - ((afterKey - beforeKey) / 2);
         models.requestGroup.update(requestGroupToMove, {
           metaSortKey,
           parentId: requestGroupToTarget.parentId
@@ -750,7 +753,7 @@ async function _moveRequest (requestToMove, parentId, targetId, targetOffset) {
           models.request.update(r, {metaSortKey: i * 100, parentId});
         });
       } else {
-        const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+        const metaSortKey = afterKey - ((afterKey - beforeKey) / 2);
         models.request.update(requestToMove, {metaSortKey, parentId});
       }
 
@@ -760,4 +763,3 @@ async function _moveRequest (requestToMove, parentId, targetId, targetOffset) {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);
-

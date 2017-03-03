@@ -1,15 +1,10 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Lazy from '../../base/Lazy';
 import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
 @autobind
 class UrlEncodedEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleTrackToggle (pair) {
     trackEvent(
       'Url Encoded Editor',
@@ -32,22 +27,20 @@ class UrlEncodedEditor extends PureComponent {
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
-          <Lazy>
-            <KeyValueEditor
-              sortable
-              namePlaceholder="name"
-              valuePlaceholder="value"
-              onChange={onChange}
-              handleRender={handleRender}
-              onToggleDisable={this._handleTrackToggle}
-              onCreate={this._handleTrackCreate}
-              onDelete={this._handleTrackDelete}
-              pairs={parameters}
-            />
-          </Lazy>
+          <KeyValueEditor
+            sortable
+            namePlaceholder="name"
+            valuePlaceholder="value"
+            onChange={onChange}
+            handleRender={handleRender}
+            onToggleDisable={this._handleTrackToggle}
+            onCreate={this._handleTrackCreate}
+            onDelete={this._handleTrackDelete}
+            pairs={parameters}
+          />
         </div>
       </div>
-    )
+    );
   }
 }
 
@@ -55,7 +48,7 @@ UrlEncodedEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  handleRender: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired
 };
 
 export default UrlEncodedEditor;

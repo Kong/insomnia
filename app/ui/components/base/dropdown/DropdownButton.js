@@ -7,7 +7,7 @@ class DropdownButton extends PureComponent {
       <button type="button" {...props}>
         {children}
       </button>
-    )
+    );
   }
 }
 

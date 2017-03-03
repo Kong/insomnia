@@ -18,7 +18,7 @@ class RequestCreateModal extends PureComponent {
     this.state = {
       selectedContentType: null,
       selectedMethod: METHOD_GET,
-      parentId: null,
+      parentId: null
     };
   }
 
@@ -37,7 +37,7 @@ class RequestCreateModal extends PureComponent {
     const request = models.initModel(models.request.type, {
       parentId,
       name: this._input.value,
-      method: selectedMethod,
+      method: selectedMethod
     });
 
     const finalRequest = await models.request.updateMimeType(
@@ -91,7 +91,9 @@ class RequestCreateModal extends PureComponent {
       this._input.select();
     }, 100);
 
-    return new Promise(resolve => this._onSubmitCallback = resolve);
+    return new Promise(resolve => {
+      this._onSubmitCallback = resolve;
+    });
   }
 
   render () {
@@ -125,7 +127,7 @@ class RequestCreateModal extends PureComponent {
                                            contentType={selectedContentType}
                                            onChange={this._handleChangeSelectedContentType}>
                         {getContentTypeName(selectedContentType)}
-                        {" "}
+                        {' '}
                         <i className="fa fa-caret-down"></i>
                       </ContentTypeDropdown>
                     </label>
@@ -140,7 +142,7 @@ class RequestCreateModal extends PureComponent {
           </button>
         </ModalFooter>
       </Modal>
-    )
+    );
   }
 }
 

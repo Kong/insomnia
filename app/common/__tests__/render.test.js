@@ -39,7 +39,7 @@ describe('buildRenderContext()', () => {
       {
         type: models.requestGroup.type,
         environment: {foo: 'grandparent', ancestor: true}
-      },
+      }
     ];
 
     const rootEnvironment = {
@@ -101,7 +101,7 @@ describe('buildRenderContext()', () => {
       c: '/c/d',
       b: '/b/c/d',
       a: '/a/b/c/d',
-      test: 'http://insomnia.rest/a/b/c/d',
+      test: 'http://insomnia.rest/a/b/c/d'
     });
   });
 
@@ -165,7 +165,7 @@ describe('buildRenderContext()', () => {
       name: 'Parent',
       type: models.requestGroup.type,
       environment: {
-        host: 'parent.com',
+        host: 'parent.com'
       }
     }, {
       name: 'Grandparent',
@@ -175,11 +175,11 @@ describe('buildRenderContext()', () => {
         node: {
           admin: 'admin',
           test: 'test',
-          port: 8080,
+          port: 8080
         },
         urls: {
           admin: 'https://{{ host }}/{{ node.admin }}',
-          test: 'https://{{ host }}/{{ node.test }}',
+          test: 'https://{{ host }}/{{ node.test }}'
         }
       }
     }];
@@ -195,7 +195,7 @@ describe('buildRenderContext()', () => {
       name: 'Parent',
       type: models.requestGroup.type,
       environment: {
-        parent: 'parent',
+        parent: 'parent'
       }
     }, {
       name: 'Grandparent',
@@ -281,7 +281,7 @@ describe('recursiveRender()', () => {
       foo: 'bar',
       bar: 'bar',
       baz: ''
-    })
+    });
   });
 
   it('correctly renders complex Object', async () => {
@@ -331,5 +331,5 @@ describe('recursiveRender()', () => {
     } catch (err) {
       expect(err.message).toContain('expected variable end');
     }
-  })
+  });
 });

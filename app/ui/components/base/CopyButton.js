@@ -7,7 +7,7 @@ class CopyButton extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      showConfirmation: false,
+      showConfirmation: false
     };
   }
 
@@ -22,24 +22,28 @@ class CopyButton extends PureComponent {
     this._triggerTimeout = setTimeout(() => {
       this.setState({showConfirmation: false});
     }, 2000);
-  };
+  }
 
   componentWillUnmount () {
     clearTimeout(this._triggerTimeout);
   }
 
   render () {
-    const {content, children, ...other} = this.props;
+    const {
+      content, // eslint-disable-line no-unused-vars
+      children,
+      ...other
+    } = this.props;
     const {showConfirmation} = this.state;
 
     return (
       <button {...other} onClick={this._handleClick}>
-        {showConfirmation ?
-          <span>Copied <i className="fa fa-check-circle-o"/></span> :
-          (children || 'Copy to Clipboard')
+        {showConfirmation
+          ? <span>Copied <i className="fa fa-check-circle-o"/></span>
+          : (children || 'Copy to Clipboard')
         }
       </button>
-    )
+    );
   }
 }
 

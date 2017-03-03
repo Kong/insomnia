@@ -3,10 +3,6 @@ import autobind from 'autobind-decorator';
 
 @autobind
 class SettingsGeneral extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleUpdateSetting (e) {
     let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
@@ -132,7 +128,7 @@ class SettingsGeneral extends PureComponent {
         </div>
         <br/>
       </div>
-    )
+    );
   }
 }
 

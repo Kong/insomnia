@@ -99,7 +99,7 @@ export async function insertResource (resource) {
 export async function updateResource (resource, ...patches) {
   const newDoc = Object.assign({}, resource, ...patches);
   await _execDB(TYPE_RESOURCE, 'update', {_id: resource._id}, newDoc);
-  return newDoc
+  return newDoc;
 }
 
 export function removeResource (resource) {
@@ -111,26 +111,26 @@ export function removeResource (resource) {
 // ~~~~~~ //
 
 export function findConfigs (query) {
-  return _execDB(TYPE_CONFIG, 'find', query)
+  return _execDB(TYPE_CONFIG, 'find', query);
 }
 
 export function allConfigs () {
-  return findConfigs({})
+  return findConfigs({});
 }
 
 export function findInactiveConfigs (excludedResourceGroupId = null) {
   if (excludedResourceGroupId) {
-    return findConfigs({$not: {syncMode: SYNC_MODE_ON, excludedResourceGroupId}})
+    return findConfigs({$not: {syncMode: SYNC_MODE_ON, excludedResourceGroupId}});
   } else {
-    return findConfigs({$not: {syncMode: SYNC_MODE_ON}})
+    return findConfigs({$not: {syncMode: SYNC_MODE_ON}});
   }
 }
 
 export function findActiveConfigs (resourceGroupId = null) {
   if (resourceGroupId) {
-    return findConfigs({syncMode: SYNC_MODE_ON, resourceGroupId})
+    return findConfigs({syncMode: SYNC_MODE_ON, resourceGroupId});
   } else {
-    return findConfigs({syncMode: SYNC_MODE_ON})
+    return findConfigs({syncMode: SYNC_MODE_ON});
   }
 }
 

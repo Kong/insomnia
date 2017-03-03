@@ -20,7 +20,7 @@ const MODELS = {
   [EXPORT_TYPE_REQUEST_GROUP]: models.requestGroup,
   [EXPORT_TYPE_WORKSPACE]: models.workspace,
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
-  [EXPORT_TYPE_ENVIRONMENT]: models.environment,
+  [EXPORT_TYPE_ENVIRONMENT]: models.environment
 };
 
 export async function importRaw (workspace, rawContent, generateNewIds = false) {
@@ -88,9 +88,7 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
     }
 
     const doc = await model.getById(resource._id);
-    const newDoc = doc ?
-      await model.update(doc, resource) :
-      await model.create(resource);
+    const newDoc = doc ? await model.update(doc, resource) : await model.create(resource);
 
     importedDocs[newDoc.type].push(newDoc);
   }

@@ -41,7 +41,7 @@ let _nunjucksEnvironment = null;
 function _getNormalEnv () {
   if (!_nunjucksEnvironment) {
     _nunjucksEnvironment = nunjucks.configure({
-      autoescape: false,
+      autoescape: false
     });
 
     for (const Cls of extensions.all()) {
@@ -57,7 +57,7 @@ function _getStrictEnv () {
   if (!_nunjucksStrictEnvironment) {
     _nunjucksStrictEnvironment = nunjucks.configure({
       autoescape: false,
-      throwOnUndefined: true,
+      throwOnUndefined: true
     });
 
     for (const Cls of extensions.all()) {

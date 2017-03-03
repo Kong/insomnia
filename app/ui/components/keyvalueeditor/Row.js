@@ -31,7 +31,7 @@ class KeyValueEditorRow extends PureComponent {
 
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
-      this.setState({dragDirection})
+      this.setState({dragDirection});
     }
   }
 
@@ -56,7 +56,7 @@ class KeyValueEditorRow extends PureComponent {
   _handleFileNameChange (fileName) {
     this._sendChange({fileName});
   }
-  _handleTypeChange (type)  {
+  _handleTypeChange (type) {
     this._sendChange({type});
   }
   _handleDisableChange (disabled) {
@@ -113,7 +113,7 @@ class KeyValueEditorRow extends PureComponent {
       noDelete,
       connectDragSource,
       connectDragPreview,
-      connectDropTarget,
+      connectDropTarget
     } = this.props;
 
     const {dragDirection} = this.state;
@@ -123,7 +123,7 @@ class KeyValueEditorRow extends PureComponent {
       'key-value-editor__row-wrapper--dragging': isDragging,
       'key-value-editor__row-wrapper--dragging-above': isDraggingOver && dragDirection > 0,
       'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
-      'key-value-editor__row-wrapper--disabled': pair.disabled,
+      'key-value-editor__row-wrapper--disabled': pair.disabled
     });
 
     let handle = null;
@@ -204,9 +204,9 @@ class KeyValueEditorRow extends PureComponent {
               <Button onClick={this._handleDisableChange}
                       value={!pair.disabled}
                       title={pair.disabled ? 'Enable item' : 'Disable item'}>
-                {pair.disabled ?
-                  <i className="fa fa-square-o"/> :
-                  <i className="fa fa-check-square-o"/>
+                {pair.disabled
+                  ? <i className="fa fa-square-o"/>
+                  : <i className="fa fa-check-square-o"/>
                 }
               </Button>
             ) : (
@@ -253,7 +253,7 @@ KeyValueEditorRow.propTypes = {
     value: PropTypes.string,
     fileName: PropTypes.string,
     type: PropTypes.string,
-    disabled: PropTypes.bool,
+    disabled: PropTypes.bool
   }).isRequired,
 
   // Optional
@@ -278,15 +278,14 @@ KeyValueEditorRow.propTypes = {
   connectDragPreview: PropTypes.func,
   connectDropTarget: PropTypes.func,
   isDragging: PropTypes.bool,
-  isDraggingOver: PropTypes.bool,
+  isDraggingOver: PropTypes.bool
 };
 
 const dragSource = {
-  beginDrag(props) {
+  beginDrag (props) {
     return {pair: props.pair};
   }
 };
-
 
 function isAbove (monitor, component) {
   const hoveredNode = ReactDOM.findDOMNode(component);
@@ -318,14 +317,14 @@ function sourceCollect (connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
     connectDragPreview: connect.dragPreview(),
-    isDragging: monitor.isDragging(),
+    isDragging: monitor.isDragging()
   };
 }
 
 function targetCollect (connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver(),
+    isDraggingOver: monitor.isOver()
   };
 }
 

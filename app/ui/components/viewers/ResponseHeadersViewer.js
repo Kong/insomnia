@@ -31,7 +31,7 @@ const ResponseHeadersViewer = ({headers}) => {
         />
       </p>
     </div>
-  )
+  );
 };
 
 ResponseHeadersViewer.propTypes = {

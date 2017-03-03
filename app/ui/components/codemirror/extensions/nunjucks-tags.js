@@ -71,7 +71,6 @@ async function _highlightNunjucksTags (render) {
       // See if we already have a mark for this
       let hasOwnMark = false;
       for (const m of doc.findMarks(start, end)) {
-
         // Only check marks we created
         if (m.__nunjucks) {
           hasOwnMark = true;
@@ -96,7 +95,7 @@ async function _highlightNunjucksTags (render) {
       const mark = this.markText(start, end, {
         __nunjucks: true, // Mark that we created it
         handleMouseEvents: false,
-        replacedWith: element,
+        replacedWith: element
       });
 
       activeMarks.push(mark);
@@ -108,10 +107,10 @@ async function _highlightNunjucksTags (render) {
         const html = [
           '<div class="wide hide-scrollbars scrollable">',
           '<input type="text" name="template"/>',
-          element.title ?
-            `<span class="result faint">${element.title}</span>` :
-            '<span class="result super-faint italic">n/a</span>',
-          '</div>',
+          element.title
+            ? `<span class="result faint">${element.title}</span>`
+            : '<span class="result super-faint italic">n/a</span>',
+          '</div>'
         ].join(' ');
 
         const dialogOptions = {
@@ -219,7 +218,7 @@ async function _updateElementText (render, el, text, preview = false) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
     if (message.length > 16) {
-      message = `${message.slice(0, 15)}&hellip;`
+      message = `${message.slice(0, 15)}&hellip;`;
     }
     el.innerHTML = `&#x203c; ${message}`;
     el.className += ' nunjucks-widget--error';
@@ -227,4 +226,3 @@ async function _updateElementText (render, el, text, preview = false) {
     el.title = fullMessage;
   }
 }
-

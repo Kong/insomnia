@@ -1,4 +1,4 @@
-import React, {PropTypes, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import Link from './base/Link';
@@ -47,7 +47,7 @@ class Toast extends PureComponent {
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type),
+        workspaces: await db.count(models.workspace.type)
       };
 
       notification = await fetch.post(`/notification`, data);
@@ -67,7 +67,8 @@ class Toast extends PureComponent {
 
     // Remember that we've seen it
     seenNotifications[notification.key] = true;
-    localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(seenNotifications, null, 2));
+    const obj = JSON.stringify(seenNotifications, null, 2);
+    window.localStorage.setItem(LOCALSTORAGE_KEY, obj);
 
     // Show the notification
     this.setState({notification, visible: false});
@@ -78,7 +79,7 @@ class Toast extends PureComponent {
 
   _loadSeen () {
     try {
-      return JSON.parse(localStorage.getItem(LOCALSTORAGE_KEY)) || {};
+      return JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY)) || {};
     } catch (e) {
       return {};
     }
@@ -136,7 +137,7 @@ class Toast extends PureComponent {
           </button>
         </div>
       </div>
-    )
+    );
   }
 }
 

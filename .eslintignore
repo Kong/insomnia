@@ -1,0 +1,6 @@
+**/*.min.js
+build/**/*
+dist/**/*
+coverage/**/*
+node_modules/**/*
+webpack/**/*

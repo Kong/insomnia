@@ -5,10 +5,6 @@ import {remote} from 'electron';
 
 @autobind
 class FileInputButton extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   focus () {
     this._button.focus();
   }
@@ -32,7 +28,7 @@ class FileInputButton extends PureComponent {
 
       const path = paths[0];
       this.props.onChange(path);
-    })
+    });
   }
 
   render () {
@@ -42,7 +38,7 @@ class FileInputButton extends PureComponent {
       <button type="button" ref={this._setRef} onClick={this._handleChooseFile} {...extraProps}>
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>
-    )
+    );
   }
 }
 
@@ -53,7 +49,7 @@ FileInputButton.propTypes = {
 
   // Optional
   showFileName: PropTypes.bool,
-  name: PropTypes.string,
+  name: PropTypes.string
 };
 
 export default FileInputButton;

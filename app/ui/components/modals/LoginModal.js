@@ -18,7 +18,7 @@ class LoginModal extends PureComponent {
       loading: false,
       error: '',
       title: '',
-      message: '',
+      message: ''
     };
   }
 
@@ -31,8 +31,8 @@ class LoginModal extends PureComponent {
   }
 
   _setEmailInputRef (n) {
-    return this._emailInput = n;
-  };
+    this._emailInput = n;
+  }
 
   async _handleLogin (e) {
     e.preventDefault();
@@ -54,7 +54,7 @@ class LoginModal extends PureComponent {
     } catch (e) {
       this.setState({error: e.message, loading: false});
     }
-  };
+  }
 
   show (options = {}) {
     const {title, message} = options;
@@ -72,7 +72,7 @@ class LoginModal extends PureComponent {
     let inner;
     if (step === 1) {
       inner = [
-        <ModalHeader key="header">{title || "Login to Your Account"}</ModalHeader>,
+        <ModalHeader key="header">{title || 'Login to Your Account'}</ModalHeader>,
         <ModalBody key="body" className="pad">
           {message ? <p className="notice info">{message}</p> : null}
           <div className="form-control form-control--outlined no-pad-top">
@@ -98,7 +98,7 @@ class LoginModal extends PureComponent {
         <ModalFooter key="footer">
           <div className="margin-left">
             Don't have an account yet?
-            {" "}
+            {' '}
             <Link href="https://insomnia.rest/app/">Signup</Link>
           </div>
           <button type="submit" className="btn">
@@ -106,7 +106,7 @@ class LoginModal extends PureComponent {
             Login
           </button>
         </ModalFooter>
-      ]
+      ];
     } else {
       inner = [
         <ModalHeader key="header">Login Success</ModalHeader>,
@@ -114,7 +114,7 @@ class LoginModal extends PureComponent {
           <h1>Enjoy your stay!</h1>
           <p>
             If you have any questions or concerns, send you email to
-            {" "}
+            {' '}
             <Link href="https://insomnia.rest/documentation/support-and-feedback/">
               support@insomnia.rest
             </Link>
@@ -125,7 +125,7 @@ class LoginModal extends PureComponent {
             Close
           </button>
         </ModalFooter>
-      ]
+      ];
     }
 
     return (
@@ -134,7 +134,7 @@ class LoginModal extends PureComponent {
           {inner}
         </Modal>
       </form>
-    )
+    );
   }
 }
 

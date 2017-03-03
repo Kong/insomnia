@@ -24,7 +24,7 @@ class SidebarRequestGroupRow extends PureComponent {
   _handleCollapse () {
     const {requestGroup, handleSetRequestGroupCollapsed, isCollapsed} = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
-    trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open')
+    trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open');
   }
 
   _handleShowActions (e) {
@@ -34,7 +34,7 @@ class SidebarRequestGroupRow extends PureComponent {
 
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
-      this.setState({dragDirection})
+      this.setState({dragDirection});
     }
   }
 
@@ -52,7 +52,7 @@ class SidebarRequestGroupRow extends PureComponent {
       handleDuplicateRequestGroup,
       isDragging,
       isDraggingOver,
-      workspace,
+      workspace
     } = this.props;
 
     const {dragDirection} = this.state;
@@ -144,14 +144,13 @@ SidebarRequestGroupRow.propTypes = {
  * Implements the drag source contract.
  */
 const dragSource = {
-  beginDrag(props) {
+  beginDrag (props) {
     trackEvent('Folder', 'Drag', 'Begin');
     return {
       requestGroup: props.requestGroup
     };
   }
 };
-
 
 function isAbove (monitor, component) {
   const hoveredNode = ReactDOM.findDOMNode(component);

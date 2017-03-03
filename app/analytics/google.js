@@ -19,7 +19,7 @@ export function init (userId, platform, version) {
     window.localStorage['gaClientId'] = require('uuid').v4();
   }
 
-  const _sessionId = window.localStorage['gaClientId'];
+  _sessionId = window.localStorage['gaClientId'];
 
   window.ga('create', constants.GA_ID, {
     'storage': 'none',
@@ -47,7 +47,7 @@ export function setPlatform (platform) {
     return;
   }
 
-  ga('set', DIMENSION_PLATFORM, platform);
+  window.ga('set', DIMENSION_PLATFORM, platform);
   console.log(`[ga] Set platform ${platform}`);
 }
 
@@ -56,7 +56,7 @@ export function setVersion (version) {
     return;
   }
 
-  ga('set', DIMENSION_VERSION, version);
+  window.ga('set', DIMENSION_VERSION, version);
   console.log(`[ga] Set version ${version}`);
 }
 
@@ -76,6 +76,7 @@ export function sendEvent (...googleAnalyticsArgs) {
 
 function _injectGoogleAnalyticsScript () {
   try {
+    /* eslint-disable */
     (function (i, s, o, g, r, a, m) {
       i['GoogleAnalyticsObject'] = r;
       i[r] = i[r] || function () {
@@ -87,7 +88,8 @@ function _injectGoogleAnalyticsScript () {
       a.src = g;
       m.parentNode.insertBefore(a, m)
     })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+    /* eslint-enable */
   } catch (e) {
-    console.warn('[ga] Failed to inject Google Analytics')
+    console.warn('[ga] Failed to inject Google Analytics');
   }
 }

@@ -1,7 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import * as classnames from 'classnames';
-import {ipcRenderer, shell} from 'electron';
 import Dropdown from '../base/dropdown/Dropdown';
 import DropdownDivider from '../base/dropdown/DropdownDivider';
 import DropdownButton from '../base/dropdown/DropdownButton';
@@ -42,18 +41,20 @@ class WorkspaceDropdown extends PureComponent {
   _handleShowExport () {
     showModal(SettingsModal, TAB_INDEX_EXPORT);
   }
+
   _handleShowSettings () {
     showModal(SettingsModal);
   }
+
   _handleShowWorkspaceSettings () {
     showModal(WorkspaceSettingsModal, {
-      workspace: this.props.activeWorkspace,
+      workspace: this.props.activeWorkspace
     });
   }
 
   _handleShowShareSettings () {
     showModal(WorkspaceShareSettingsModal, {
-      workspace: this.props.activeWorkspace,
+      workspace: this.props.activeWorkspace
     });
   }
 
@@ -96,7 +97,7 @@ class WorkspaceDropdown extends PureComponent {
           <h1 className="no-pad text-left">
             <div className="pull-right">
               {isLoading ? <i className="fa fa-refresh fa-spin"/> : null}
-              {" "}
+              {' '}
               <i className="fa fa-caret-down"/>
             </div>
             {activeWorkspace.name}
@@ -119,6 +120,7 @@ class WorkspaceDropdown extends PureComponent {
             <i className="fa fa-random"/> To <strong>{w.name}</strong>
           </DropdownItem>
         ))}
+
         <DropdownItem onClick={this._handleWorkspaceCreate}>
           <i className="fa fa-empty"/> New Workspace
         </DropdownItem>
@@ -132,32 +134,49 @@ class WorkspaceDropdown extends PureComponent {
         <DropdownItem onClick={this._handleShowExport}>
           <i className="fa fa-share"/> Import/Export
         </DropdownItem>
-        {!this.state.loggedIn ? [
+
+        {/* Not Logged In */}
+
+        {!this.state.loggedIn ? (
             <DropdownItem key="login" onClick={this._handleShowLogin}>
               <i className="fa fa-sign-in"/> Log In
-            </DropdownItem>,
+            </DropdownItem>
+          ) : null
+        }
+
+        {!this.state.loggedIn ? (
             <DropdownItem key="invite"
                           buttonClass={Link}
                           href="https://insomnia.rest/pricing/"
                           button>
               <i className="fa fa-users"/> Upgrade to Plus
-            </DropdownItem>,
-          ] : [
+            </DropdownItem>
+          ) : null
+        }
+
+        {/* Is Logged In */}
+
+        {this.state.loggedIn ? (
             <DropdownItem key="manage"
                           buttonClass={Link}
                           href="https://insomnia.rest/app/"
                           button>
               <i className="fa fa-user"/> Manage Account
-            </DropdownItem>,
+            </DropdownItem>
+          ) : null
+        }
+
+        {this.state.loggedIn ? (
             <DropdownItem key="logout"
                           buttonClass={PromptButton}
                           onClick={session.logout}
                           addIcon>
               <i className="fa fa-sign-out"/> Log Out
-            </DropdownItem>,
-          ]}
+            </DropdownItem>
+          ) : null
+        }
       </Dropdown>
-    )
+    );
   }
 }
 
@@ -167,7 +186,7 @@ WorkspaceDropdown.propTypes = {
   handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeWorkspace: PropTypes.object.isRequired,
+  activeWorkspace: PropTypes.object.isRequired
 };
 
 export default WorkspaceDropdown;

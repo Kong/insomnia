@@ -93,7 +93,7 @@ class Modal extends PureComponent {
     this.setState({
       open: true,
       zIndex: globalZIndex++,
-      forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
+      forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0)
     });
 
     if (this.props.dontFocus) {
@@ -144,7 +144,7 @@ class Modal extends PureComponent {
           {this.props.children}
         </div>
       </div>
-    )
+    );
   }
 }
 
@@ -155,8 +155,7 @@ Modal.propTypes = {
   noEscape: PropTypes.bool,
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,
-  freshState: PropTypes.bool,
+  freshState: PropTypes.bool
 };
 
 export default Modal;
-

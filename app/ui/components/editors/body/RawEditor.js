@@ -27,7 +27,7 @@ class RawEditor extends PureComponent {
         lineWrapping={lineWrapping}
         placeholder="..."
       />
-    )
+    );
   }
 }
 
@@ -41,7 +41,7 @@ RawEditor.propTypes = {
   lineWrapping: PropTypes.bool.isRequired,
 
   // Optional
-  render: PropTypes.func,
+  render: PropTypes.func
 };
 
 export default RawEditor;

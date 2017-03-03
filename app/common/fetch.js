@@ -13,25 +13,25 @@ export function offCommand (callback) {
 }
 
 export function post (path, obj) {
-  return _fetch('POST', path, obj)
+  return _fetch('POST', path, obj);
 }
 
 export function get (path, sessionId = null) {
-  return _fetch('GET', path, null, sessionId)
+  return _fetch('GET', path, null, sessionId);
 }
 
 export function del (path, sessionId = null) {
-  return _fetch('DELETE', path, null, sessionId)
+  return _fetch('DELETE', path, null, sessionId);
 }
 
 export function put (path, sessionId = null) {
-  return _fetch('PUT', path, null, sessionId)
+  return _fetch('PUT', path, null, sessionId);
 }
 
 async function _fetch (method, path, json, sessionId = null) {
   const config = {
     method: method,
-    headers: new Headers()
+    headers: new window.Headers()
   };
 
   // Set some client information
@@ -44,10 +44,10 @@ async function _fetch (method, path, json, sessionId = null) {
 
   sessionId = sessionId || session.getCurrentSessionId();
   if (sessionId) {
-    config.headers.set('X-Session-Id', sessionId)
+    config.headers.set('X-Session-Id', sessionId);
   }
 
-  const response = await fetch(_getUrl(path), config);
+  const response = await window.fetch(_getUrl(path), config);
   const uri = response.headers.get('x-insomnia-command');
   uri && _notifyCommandListeners(uri);
 
@@ -55,13 +55,13 @@ async function _fetch (method, path, json, sessionId = null) {
     const err = new Error(`Response ${response.status} for ${path}`);
     err.message = await response.text();
     err.statusCode = response.status;
-    throw err
+    throw err;
   }
 
   if (response.headers.get('content-type') === 'application/json') {
-    return response.json()
+    return response.json();
   } else {
-    return response.text()
+    return response.text();
   }
 }
 
@@ -81,4 +81,3 @@ function _notifyCommandListeners (uri) {
 
   commandListeners.map(fn => fn(command, args));
 }
-

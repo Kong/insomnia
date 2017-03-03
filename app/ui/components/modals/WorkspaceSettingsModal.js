@@ -22,7 +22,7 @@ class WorkspaceSettingsModal extends PureComponent {
       keyPath: '',
       pfxPath: '',
       host: '',
-      passphrase: '',
+      passphrase: ''
     };
   }
 
@@ -38,14 +38,14 @@ class WorkspaceSettingsModal extends PureComponent {
     this.hide();
   }
 
-  _handleToggleCertificateForm ()  {
-    this.setState({showAddCertificateForm: !this.state.showAddCertificateForm})
+  _handleToggleCertificateForm () {
+    this.setState({showAddCertificateForm: !this.state.showAddCertificateForm});
   }
 
   _handleRename (name) {
     this._workspaceUpdate({name});
   }
-  _handleDescriptionChange (description){
+  _handleDescriptionChange (description) {
     this._workspaceUpdate({description});
   }
 
@@ -55,7 +55,7 @@ class WorkspaceSettingsModal extends PureComponent {
   _handleCreatePfxChange (pfxPath) {
     this.setState({pfxPath});
   }
-  _handleCreateCrtChange (crtPath){
+  _handleCreateCrtChange (crtPath) {
     this.setState({crtPath});
   }
   _handleCreateKeyChange (keyPath) {
@@ -64,7 +64,7 @@ class WorkspaceSettingsModal extends PureComponent {
   _handleCreatePassphraseChange (e) {
     this.setState({passphrase: e.target.value});
   }
-  async _handleSubmitCertificate (e)  {
+  async _handleSubmitCertificate (e) {
     e.preventDefault();
 
     const {workspace} = this.props;
@@ -76,7 +76,7 @@ class WorkspaceSettingsModal extends PureComponent {
     const certificate = {host, passphrase, cert, key, pfx, disabled: false};
     const certificates = [
       ...workspace.certificates.filter(c => c.host !== certificate.host),
-      certificate,
+      certificate
     ];
 
     await models.workspace.update(workspace, {certificates});
@@ -109,7 +109,7 @@ class WorkspaceSettingsModal extends PureComponent {
       keyPath: '',
       pfxPath: '',
       host: '',
-      passphrase: '',
+      passphrase: ''
     });
   }
 
@@ -121,7 +121,7 @@ class WorkspaceSettingsModal extends PureComponent {
       keyPath: '',
       pfxPath: '',
       host: '',
-      passphrase: '',
+      passphrase: ''
     });
   }
 
@@ -135,7 +135,7 @@ class WorkspaceSettingsModal extends PureComponent {
       <ModalHeader key={`header::${workspace._id}`}>
         Workspace Settings
       </ModalHeader>
-    )
+    );
   }
 
   renderModalBody () {
@@ -200,39 +200,39 @@ class WorkspaceSettingsModal extends PureComponent {
                     <div>
                       <span className="pad-right no-wrap">
                         <strong>PFX:</strong>
-                        {" "}
-                        {certificate.pfx ?
-                          <i className="fa fa-check"/> :
-                          <i className="fa fa-remove"/>
+                        {' '}
+                        {certificate.pfx
+                          ? <i className="fa fa-check"/>
+                          : <i className="fa fa-remove"/>
                         }
                       </span>
                       <span className="pad-right no-wrap">
                         <strong>CRT:</strong>
-                        {" "}
-                        {certificate.cert ?
-                          <i className="fa fa-check"/> :
-                          <i className="fa fa-remove"/>
+                        {' '}
+                        {certificate.cert
+                          ? <i className="fa fa-check"/>
+                          : <i className="fa fa-remove"/>
                         }
                       </span>
                       <span className="pad-right no-wrap">
                         <strong>Key:</strong>
-                        {" "}
-                        {certificate.key ?
-                          <i className="fa fa-check"/> :
-                          <i className="fa fa-remove"/>
+                        {' '}
+                        {certificate.key
+                          ? <i className="fa fa-check"/>
+                          : <i className="fa fa-remove"/>
                         }
                       </span>
                       <span className="pad-right no-wrap" title={certificate.passphrase || null}>
                         <strong>Passphrase:</strong>
-                        {" "}
-                        {certificate.passphrase ?
-                          <i className="fa fa-check"/> :
-                          <i className="fa fa-remove"/>
+                        {' '}
+                        {certificate.passphrase
+                          ? <i className="fa fa-check"/>
+                          : <i className="fa fa-remove"/>
                         }
                       </span>
                       <span className="pad-right">
                         <strong>Host:</strong>
-                        {" "}
+                        {' '}
                         <span className="monospace selectable">{certificate.host}</span>
                       </span>
                     </div>
@@ -240,9 +240,9 @@ class WorkspaceSettingsModal extends PureComponent {
                       <button className="btn btn--super-compact width-auto"
                               title="Enable or disable certificate"
                               onClick={() => this._handleToggleCertificate(certificate)}>
-                        {certificate.disabled ?
-                          <i className="fa fa-square-o"/> :
-                          <i className="fa fa-check-square-o"/>
+                        {certificate.disabled
+                          ? <i className="fa fa-square-o"/>
+                          : <i className="fa fa-check-square-o"/>
                         }
                       </button>
                       <PromptButton className="btn btn--super-compact width-auto"
@@ -330,7 +330,7 @@ class WorkspaceSettingsModal extends PureComponent {
                           onClick={this._handleToggleCertificateForm}>
                     Cancel
                   </button>
-                  {" "}
+                  {' '}
                   <button className="btn btn--clicky" type="submit">
                     Add Certificate
                   </button>
@@ -340,7 +340,7 @@ class WorkspaceSettingsModal extends PureComponent {
           </TabPanel>
         </Tabs>
       </ModalBody>
-    )
+    );
   }
 
   render () {
@@ -350,13 +350,13 @@ class WorkspaceSettingsModal extends PureComponent {
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
       </Modal>
-    )
+    );
   }
 }
 
 WorkspaceSettingsModal.propTypes = {
   handleRemoveWorkspace: PropTypes.func.isRequired,
-  workspace: PropTypes.object.isRequired,
+  workspace: PropTypes.object.isRequired
 };
 
 export default WorkspaceSettingsModal;

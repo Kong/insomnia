@@ -95,7 +95,7 @@ class Wrapper extends PureComponent {
           headers: r.headers,
           body: r.body,
           authentication: r.authentication,
-          parameters: r.parameters,
+          parameters: r.parameters
         });
       }
     } catch (e) {
@@ -157,7 +157,7 @@ class Wrapper extends PureComponent {
     models.workspace.remove(activeWorkspace);
   }
 
-  _handleSendRequestWithActiveEnvironment ()  {
+  _handleSendRequestWithActiveEnvironment () {
     const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
@@ -228,7 +228,7 @@ class Wrapper extends PureComponent {
       sidebarHidden,
       sidebarWidth,
       workspaceChildren,
-      workspaces,
+      workspaces
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -383,7 +383,7 @@ class Wrapper extends PureComponent {
           render={handleRender}
         />
       </div>
-    )
+    );
   }
 }
 
@@ -436,7 +436,7 @@ Wrapper.propTypes = {
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
-  activeEnvironment: PropTypes.object,
+  activeEnvironment: PropTypes.object
 };
 
 export default Wrapper;

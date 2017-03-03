@@ -22,7 +22,6 @@ const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
 
-
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
@@ -58,12 +57,11 @@ function loadingRequestsReducer (state = {}, action) {
   }
 }
 
-export default combineReducers({
+export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
-  activeWorkspaceId: activeWorkspaceReducer,
+  activeWorkspaceId: activeWorkspaceReducer
 });
-
 
 // ~~~~~~~ //
 // ACTIONS //
@@ -101,7 +99,7 @@ export function loadRequestStop (requestId) {
 }
 
 export function setActiveWorkspace (workspaceId) {
-  localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`, JSON.stringify(workspaceId));
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`, JSON.stringify(workspaceId));
   return {type: SET_ACTIVE_WORKSPACE, workspaceId};
 }
 
@@ -123,7 +121,8 @@ export function importFile (workspaceId) {
       properties: ['openFile'],
       filters: [{
         // Allow empty extension and JSON
-        name: 'Insomnia Import', extensions: [
+        name: 'Insomnia Import',
+        extensions: [
           '', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell'
         ]
       }]
@@ -171,7 +170,7 @@ export function importFile (workspaceId) {
         }
       }
     });
-  }
+  };
 }
 
 export function exportFile (workspaceId = null) {
@@ -206,14 +205,16 @@ export function exportFile (workspaceId = null) {
         dispatch(loadStop());
       });
     });
-  }
+  };
 }
 
 export function init () {
   let workspaceId = null;
 
   try {
-    workspaceId = JSON.parse(localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`));
+    const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
+    const item = window.localStorage.getItem(key);
+    workspaceId = JSON.parse(item);
   } catch (e) {
     // Nothing here...
   }

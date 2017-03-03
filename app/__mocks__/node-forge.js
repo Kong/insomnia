@@ -3,9 +3,6 @@
  * The reason it is needed is because the Forge module loader doesn't
  * play along with Jest.
  */
-
-const jsbn = require('jsbn');
-
 const forge = require('../../node_modules/node-forge/lib/index');
 
 module.exports = {
@@ -19,28 +16,28 @@ module.exports = {
   md: {
     sha256: {
       create () {
-        return 'TODO'
+        return 'TODO';
       }
     }
   },
   rsa: {
-    setPublicKey() {
+    setPublicKey () {
       return {
         encrypt (str) {
-          return str
+          return str;
         }
-      }
+      };
     },
-    setPrivateKey() {
+    setPrivateKey () {
       return {
         decrypt (str) {
-          return str
+          return str;
         }
-      }
+      };
     }
   },
   random: {
-    getBytesSync(n) {
+    getBytesSync (n) {
       let s = '';
       for (let i = 0; i < n; i++) {
         s += 'a';
@@ -50,7 +47,7 @@ module.exports = {
   },
   pki: {
     rsa: {
-      generateKeyPair() {
+      generateKeyPair () {
         return {
           privateKey: {
             d: 'a',
@@ -60,32 +57,32 @@ module.exports = {
             n: 'a',
             p: 'a',
             q: 'a',
-            qInv: 'a',
+            qInv: 'a'
           },
           publicKey: {
             e: 'a',
-            n: 'a',
+            n: 'a'
           }
-        }
+        };
       }
     }
   },
   cipher: {
-    createCipher(alg, key) {
+    createCipher (alg, key) {
       return {
-        start(config) {
+        start (config) {
           this._config = config;
         },
-        update(buffer) {
+        update (buffer) {
           this._data = buffer;
         },
-        finish() {
+        finish () {
           this.mode = {tag: 'tag'};
           this.output = this._data;
         }
       };
     },
-    createDecipher(alg, key) {
+    createDecipher (alg, key) {
       return {
         start (config) {
           this._config = config;

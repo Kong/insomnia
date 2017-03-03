@@ -27,7 +27,7 @@ if (!IS_DEV) {
   ravenClient.install();
 }
 
-const {app, dialog, shell, ipcMain, autoUpdater, Menu, BrowserWindow, webContents} = electron;
+const {app, dialog, shell, ipcMain, autoUpdater, Menu, BrowserWindow} = electron;
 const {version: appVersion, productName: appName} = packageJSON;
 
 const UPDATE_URLS = {
@@ -64,7 +64,7 @@ autoUpdater.on('error', e => {
 });
 
 autoUpdater.on('update-not-available', () => {
-  console.log('-- Update Not Available --')
+  console.log('-- Update Not Available --');
 });
 
 autoUpdater.on('update-available', () => {
@@ -236,7 +236,7 @@ app.on('activate', (e, hasVisibleWindows) => {
   // Create a new window when clicking the doc icon if there isn't one open
   if (!hasVisibleWindows) {
     try {
-      createWindow()
+      createWindow();
     } catch (e) {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
@@ -332,7 +332,7 @@ function createWindow () {
 
   let template = [
     {
-      label: "Application",
+      label: 'Application',
       submenu: [
         {
           label: `About ${appName}`,
@@ -340,15 +340,15 @@ function createWindow () {
           visible: IS_MAC
         },
         {
-          type: "separator",
+          type: 'separator',
           visible: IS_MAC
         },
         {
-          label: "Preferences",
-          accelerator: "CmdOrCtrl+,",
+          label: 'Preferences',
+          accelerator: 'CmdOrCtrl+,',
           click: function (menuItem, window, e) {
             if (!window || !window.webContents) {
-              return
+              return;
             }
 
             window.webContents.send('toggle-preferences');
@@ -356,10 +356,10 @@ function createWindow () {
           }
         },
         {
-          label: "Changelog",
+          label: 'Changelog',
           click: function (menuItem, window, e) {
             if (!window || !window.webContents) {
-              return
+              return;
             }
 
             window.webContents.send('toggle-changelog');
@@ -367,21 +367,21 @@ function createWindow () {
           }
         },
         {
-          type: "separator",
+          type: 'separator',
           visible: IS_MAC
         },
         {
-          role: "hide",
+          role: 'hide',
           visible: IS_MAC
         },
         {
-          role: "hideothers",
+          role: 'hideothers',
           visible: IS_MAC
         },
-        {type: "separator"},
+        {type: 'separator'},
         {
-          label: "Quit",
-          accelerator: "Command+Q",
+          label: 'Quit',
+          accelerator: 'Command+Q',
           click: function () {
             app.quit();
           }
@@ -389,44 +389,44 @@ function createWindow () {
       ]
     },
     {
-      label: "Edit",
+      label: 'Edit',
       submenu: [{
-        label: "Undo",
-        accelerator: "CmdOrCtrl+Z",
-        selector: "undo:"
+        label: 'Undo',
+        accelerator: 'CmdOrCtrl+Z',
+        selector: 'undo:'
       }, {
-        label: "Redo",
-        accelerator: "Shift+CmdOrCtrl+Z",
-        selector: "redo:"
+        label: 'Redo',
+        accelerator: 'Shift+CmdOrCtrl+Z',
+        selector: 'redo:'
       }, {
-        type: "separator"
+        type: 'separator'
       }, {
-        label: "Cut",
-        accelerator: "CmdOrCtrl+X",
-        selector: "cut:"
+        label: 'Cut',
+        accelerator: 'CmdOrCtrl+X',
+        selector: 'cut:'
       }, {
-        label: "Copy",
-        accelerator: "CmdOrCtrl+C",
-        selector: "copy:"
+        label: 'Copy',
+        accelerator: 'CmdOrCtrl+C',
+        selector: 'copy:'
       }, {
-        label: "Paste",
-        accelerator: "CmdOrCtrl+V",
-        selector: "paste:"
+        label: 'Paste',
+        accelerator: 'CmdOrCtrl+V',
+        selector: 'paste:'
       }, {
-        label: "Select All",
-        accelerator: "CmdOrCtrl+A",
-        selector: "selectAll:"
+        label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
+        selector: 'selectAll:'
       }]
     },
     {
-      label: "View",
+      label: 'View',
       submenu: [
         {
           role: 'togglefullscreen'
         },
         {
-          label: "Actual Size",
-          accelerator: "CmdOrCtrl+0",
+          label: 'Actual Size',
+          accelerator: 'CmdOrCtrl+0',
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
             if (!window || !window.webContents) {
@@ -440,8 +440,8 @@ function createWindow () {
           }
         },
         {
-          label: "Zoom In",
-          accelerator: IS_MAC ? "CmdOrCtrl+Plus" : "CmdOrCtrl+=",
+          label: 'Zoom In',
+          accelerator: IS_MAC ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
             if (!window || !window.webContents) {
@@ -456,8 +456,8 @@ function createWindow () {
           }
         },
         {
-          label: "Zoom Out",
-          accelerator: "CmdOrCtrl+-",
+          label: 'Zoom Out',
+          accelerator: 'CmdOrCtrl+-',
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
             if (!window || !window.webContents) {
@@ -471,8 +471,8 @@ function createWindow () {
           }
         },
         {
-          label: "Toggle Sidebar",
-          accelerator: "CmdOrCtrl+\\",
+          label: 'Toggle Sidebar',
+          accelerator: 'CmdOrCtrl+\\',
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
             if (!window || !window.webContents) {
@@ -485,27 +485,27 @@ function createWindow () {
         }
       ]
     }, {
-      label: "Window",
-      role: "window",
+      label: 'Window',
+      role: 'window',
       submenu: [
         {role: 'minimize'},
         ...(IS_MAC ? [{role: 'close'}] : [])
       ]
     }, {
-      label: "Help",
-      role: "help",
-      id: "help",
+      label: 'Help',
+      role: 'help',
+      id: 'help',
       submenu: [
         {
-          label: "Contact Support",
+          label: 'Contact Support',
           click: () => {
             trackEvent('App Menu', 'Contact');
             shell.openExternal('https://insomnia.rest/documentation/support-and-feedback/');
           }
         },
         {
-          label: "Insomnia Help",
-          accelerator: "CmdOrCtrl+?",
+          label: 'Insomnia Help',
+          accelerator: 'CmdOrCtrl+?',
           click: () => {
             trackEvent('App Menu', 'Help');
             shell.openExternal('https://insomnia.rest/documentation/');

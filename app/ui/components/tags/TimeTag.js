@@ -21,7 +21,7 @@ const TimeTag = ({milliseconds, small, className}) => {
     <div className={classnames('tag', {'tag--small': small}, className)} title={description}>
       <strong>TIME</strong> {number} {unit}
     </div>
-  )
+  );
 };
 
 TimeTag.propTypes = {
@@ -29,7 +29,7 @@ TimeTag.propTypes = {
   milliseconds: PropTypes.number.isRequired,
 
   // Optional
-  small: PropTypes.bool,
+  small: PropTypes.bool
 };
 
 export default TimeTag;

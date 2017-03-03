@@ -5,10 +5,6 @@ import {trackEvent} from '../../../../analytics/index';
 
 @autobind
 class FormEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleTrackToggle (pair) {
     trackEvent(
       'Form Editor',
@@ -55,7 +51,7 @@ class FormEditor extends PureComponent {
           />
         </div>
       </div>
-    )
+    );
   }
 }
 
@@ -63,7 +59,7 @@ FormEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  handleRender: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired
 };
 
 export default FormEditor;

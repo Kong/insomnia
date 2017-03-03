@@ -34,7 +34,6 @@ class OneLineEditor extends PureComponent {
     } else {
       this._input.focus();
     }
-
   }
 
   getValue () {
@@ -117,7 +116,7 @@ class OneLineEditor extends PureComponent {
       let node = e.target;
       for (let i = 0; i < 20 && node; i++) {
         if (node.tagName === 'FORM') {
-          node.dispatchEvent(new Event('submit'));
+          node.dispatchEvent(new window.Event('submit'));
           break;
         }
         node = node.parentNode;
@@ -148,7 +147,7 @@ class OneLineEditor extends PureComponent {
       placeholder,
       onBlur,
       render,
-      type: originalType,
+      type: originalType
     } = this.props;
 
     const {mode} = this.state;
@@ -194,7 +193,7 @@ class OneLineEditor extends PureComponent {
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />
-      )
+      );
     }
   }
 }
@@ -212,7 +211,7 @@ OneLineEditor.propTypes = Object.assign({}, Editor.propTypes, {
   placeholder: PropTypes.string,
   blurOnFocus: PropTypes.bool,
   forceEditor: PropTypes.bool,
-  forceInput: PropTypes.bool,
+  forceInput: PropTypes.bool
 });
 
 export default OneLineEditor;

@@ -7,8 +7,8 @@ export const prefix = 'fldm';
 export function init () {
   return {
     parentId: null,
-    collapsed: true,
-  }
+    collapsed: true
+  };
 }
 
 export function migrate (doc) {
@@ -28,7 +28,7 @@ export function update (requestGroupMeta, patch) {
 }
 
 export function getByParentId (parentId) {
-  return db.getWhere(type, {parentId})
+  return db.getWhere(type, {parentId});
 }
 
 export function all () {

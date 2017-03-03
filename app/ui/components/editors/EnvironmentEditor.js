@@ -5,9 +5,6 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 @autobind
 class EnvironmentEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
   _handleChange () {
     this.props.didChange();
   }
@@ -53,7 +50,7 @@ class EnvironmentEditor extends PureComponent {
         mode="application/json"
         {...props}
       />
-    )
+    );
   }
 }
 
@@ -63,7 +60,7 @@ EnvironmentEditor.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
-  lineWrapping: PropTypes.bool.isRequired,
+  lineWrapping: PropTypes.bool.isRequired
 };
 
 export default EnvironmentEditor;

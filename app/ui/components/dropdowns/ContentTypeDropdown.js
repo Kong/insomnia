@@ -1,36 +1,30 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
-import {contentTypesMap} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 import * as constants from '../../../common/constants';
-import {getContentTypeName} from '../../../common/constants';
 
 const EMPTY_MIME_TYPE = null;
 
 @autobind
 class ContentTypeDropdown extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleChangeMimeType (mimeType) {
     this.props.onChange(mimeType);
-    trackEvent('Request', 'Content-Type Change', contentTypesMap[mimeType]);
+    trackEvent('Request', 'Content-Type Change', constants.contentTypesMap[mimeType]);
   }
 
   _renderDropdownItem (mimeType, forcedName = null) {
-    const contentType = typeof this.props.contentType !== 'string' ?
-      EMPTY_MIME_TYPE : this.props.contentType;
+    const contentType = typeof this.props.contentType !== 'string'
+      ? EMPTY_MIME_TYPE : this.props.contentType;
 
     const iconClass = mimeType === contentType ? 'fa-check' : 'fa-empty';
 
     return (
       <DropdownItem onClick={this._handleChangeMimeType} value={mimeType}>
         <i className={`fa ${iconClass}`}/>
-        {forcedName || getContentTypeName(mimeType)}
+        {forcedName || constants.getContentTypeName(mimeType)}
       </DropdownItem>
-    )
+    );
   }
 
   render () {
@@ -51,7 +45,7 @@ class ContentTypeDropdown extends PureComponent {
         {this._renderDropdownItem(constants.CONTENT_TYPE_FILE)}
         {this._renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
       </Dropdown>
-    )
+    );
   }
 }
 
@@ -59,7 +53,7 @@ ContentTypeDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
 
   // Optional
-  contentType: PropTypes.string, // Can be null
+  contentType: PropTypes.string // Can be null
 };
 
 export default ContentTypeDropdown;

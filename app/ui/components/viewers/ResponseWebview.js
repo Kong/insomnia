@@ -4,9 +4,6 @@ import contextMenu from 'electron-context-menu';
 
 @autobind
 class ResponseWebview extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
   _handleSetWebviewRef (n) {
     this._webview = n;
     contextMenu({window: this._webview});

@@ -24,7 +24,7 @@ const THEMES = [
   {key: 'solarized', name: 'Solarized', img: imgSolarized, paid: true},
   {key: 'solarized-light', name: 'Solarized Light', img: imgSolarizedLight, paid: true},
   {key: 'solarized-dark', name: 'Solarized Dark', img: imgSolarizedDark, paid: true},
-  {key: 'railscasts', name: 'Railscasts', img: imgRailscasts, paid: true},
+  {key: 'railscasts', name: 'Railscasts', img: imgRailscasts, paid: true}
 ];
 
 @autobind
@@ -32,7 +32,7 @@ class SettingsTheme extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      isPremium: localStorage.getItem('settings.theme.isPremium') || false,
+      isPremium: window.localStorage.getItem('settings.theme.isPremium') || false
     };
   }
 
@@ -49,7 +49,7 @@ class SettingsTheme extends PureComponent {
     const {isPremium} = await session.whoami();
     if (this.state.isPremium !== isPremium) {
       this.setState({isPremium});
-      localStorage.setItem('settings.theme.isPremium', isPremium);
+      window.localStorage.setItem('settings.theme.isPremium', isPremium);
     }
   }
 
@@ -63,7 +63,7 @@ class SettingsTheme extends PureComponent {
       <div key={theme.key} className="themes__theme" style={{maxWidth: `${100 / THEMES_PER_ROW}%`}}>
         <h2 className="txt-lg">
           {theme.name}
-          {" "}
+          {' '}
           {isActive ? <span className="no-margin-top faint italic txt-md">(Active)</span> : null}
         </h2>
         {disabled ? (
@@ -76,7 +76,7 @@ class SettingsTheme extends PureComponent {
             </Button>
           )}
       </div>
-    )
+    );
   }
 
   renderThemeRows (themes) {
@@ -101,20 +101,20 @@ class SettingsTheme extends PureComponent {
         {row.map(this.renderTheme)}
       </div>
     ));
-  };
+  }
 
   render () {
     return (
       <div className="pad themes">
         {this.renderThemeRows(THEMES)}
       </div>
-    )
+    );
   }
 }
 
 SettingsTheme.propTypes = {
   handleChangeTheme: PropTypes.func.isRequired,
-  activeTheme: PropTypes.string.isRequired,
+  activeTheme: PropTypes.string.isRequired
 };
 
 export default SettingsTheme;

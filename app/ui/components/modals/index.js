@@ -3,7 +3,7 @@ const modals = {};
 export function registerModal (instance) {
   if (instance === null) {
     // Modal was unmounted
-    return
+    return;
   }
   modals[instance.constructor.name] = instance;
 }

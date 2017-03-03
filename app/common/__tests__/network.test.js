@@ -4,9 +4,7 @@ import nock from 'nock';
 import {resolve as pathResolve, join as pathJoin} from 'path';
 import {getRenderedRequest} from '../render';
 import * as models from '../../models';
-import {CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../constants';
-import {CONTENT_TYPE_FILE} from '../constants';
-import {CONTENT_TYPE_FORM_DATA} from '../constants';
+import {CONTENT_TYPE_FORM_URLENCODED, getAppVersion, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA} from '../constants';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
@@ -47,12 +45,12 @@ describe('buildRequestConfig()', () => {
       headers: [
         {name: 'Content-Type', value: 'application/json', disabled: false},
         {name: 'hi', value: 'there', disabled: true},
-        {name: 'x-hello', value: 'world'},
+        {name: 'x-hello', value: 'world'}
       ],
       parameters: [
         {name: 'foo bar', value: 'hello&world', disabled: false},
         {name: 'b', value: 'bb&world', disabled: true},
-        {name: 'a', value: 'aa'},
+        {name: 'a', value: 'aa'}
       ],
       method: 'POST',
       body: {
@@ -60,7 +58,7 @@ describe('buildRequestConfig()', () => {
         params: [
           {name: 'X', value: 'XX', disabled: false},
           {name: 'Y', value: 'YY', disabled: true},
-          {name: 'Z', value: 'ZZ'},
+          {name: 'Z', value: 'ZZ'}
         ]
       },
       url: 'http://foo.com:3332/★/hi@gmail.com/foo%20bar?bar=baz',
@@ -94,8 +92,8 @@ describe('buildRequestConfig()', () => {
       time: true,
       timeout: 0,
       url: 'http://foo.com:3332/%E2%98%85/hi@gmail.com/foo%20bar?bar=baz&foo%20bar=hello%26world&a=aa'
-    })
-  })
+    });
+  });
 });
 
 describe('actuallySend()', () => {
@@ -247,9 +245,9 @@ describe('actuallySend()', () => {
 
           // Some extra params
           {name: 'a', value: 'AA'},
-          {name: 'baz', value: 'qux', disabled: true},
+          {name: 'baz', value: 'qux', disabled: true}
         ]
-      },
+      }
     });
 
     const renderedRequest = await getRenderedRequest(request);

@@ -8,7 +8,6 @@
  * @returns {string}
  */
 export function prettifyJson (json, indentChars) {
-
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
   try {
@@ -123,7 +122,7 @@ function _convertUnicode (originalStr) {
   const unicodeRegex = /\\u([0-9a-fA-F]{4})/g;
 
   let convertedStr = '';
-  while (m = unicodeRegex.exec(originalStr)) {
+  while ((m = unicodeRegex.exec(originalStr))) {
     try {
       c = String.fromCharCode(parseInt(m[1], 16));
       convertedStr += originalStr.slice(lastI, m.index) + c;

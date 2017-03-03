@@ -17,9 +17,7 @@ import {DragDropContext} from 'react-dnd';
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
 
-
 (async function () {
-
   await initDB(modelTypes());
   await initAnalytics(getAccountId());
 
@@ -51,4 +49,3 @@ Tabs.setUseDefaultStyles(false);
   // Do things that can wait
   process.nextTick(initSync);
 })();
-

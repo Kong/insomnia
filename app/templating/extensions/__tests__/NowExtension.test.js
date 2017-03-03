@@ -4,7 +4,7 @@ function assertTemplate (txt, expected) {
   return async function () {
     const result = await templating.render(txt);
     expect(result).toMatch(expected);
-  }
+  };
 }
 
 function assertTemplateFails (txt, expected) {
@@ -15,7 +15,7 @@ function assertTemplateFails (txt, expected) {
     } catch (err) {
       expect(err.message).toBe(expected);
     }
-  }
+  };
 }
 
 const isoRe = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;

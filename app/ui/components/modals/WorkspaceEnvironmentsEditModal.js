@@ -24,7 +24,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
       subEnvironments: [],
       rootEnvironment: null,
       activeEnvironmentId: null,
-      forceRefreshKey: 0,
+      forceRefreshKey: 0
     };
   }
 
@@ -58,7 +58,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     let activeEnvironmentId;
 
     if (environmentToActivate) {
-      activeEnvironmentId = environmentToActivate._id
+      activeEnvironmentId = environmentToActivate._id;
     } else if (this.state.workspace && workspace._id !== this.state.workspace._id) {
       // We've changed workspaces, so load the root one
       activeEnvironmentId = rootEnvironment._id;
@@ -73,7 +73,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
       rootEnvironment,
       subEnvironments,
       activeEnvironmentId,
-      forceRefreshKey: Date.now(),
+      forceRefreshKey: Date.now()
     });
   }
 
@@ -130,7 +130,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     await this._load(workspace);
 
     trackEvent('Environment', 'Rename');
-  };
+  }
 
   _didChange () {
     const isValid = this._envEditor.isValid();
@@ -222,7 +222,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                       />
                     </Button>
                   </li>
-                )
+                );
               })}
             </ul>
           </div>
@@ -276,7 +276,7 @@ WorkspaceEnvironmentsEditModal.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
-  lineWrapping: PropTypes.bool.isRequired,
+  lineWrapping: PropTypes.bool.isRequired
 };
 
 export default WorkspaceEnvironmentsEditModal;

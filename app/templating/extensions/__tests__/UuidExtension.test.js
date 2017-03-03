@@ -4,7 +4,7 @@ function assertTemplate (txt, expected) {
   return async function () {
     const result = await templating.render(txt);
     expect(result).toMatch(expected);
-  }
+  };
 }
 
 function assertTemplateFails (txt, expected) {
@@ -15,7 +15,7 @@ function assertTemplateFails (txt, expected) {
     } catch (err) {
       expect(err.message).toBe(expected);
     }
-  }
+  };
 }
 
 describe('UuidExtension', () => {

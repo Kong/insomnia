@@ -6,10 +6,6 @@ import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class PreviewModeDropdown extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleClick (previewMode) {
     this.props.updatePreviewMode(previewMode);
     trackEvent('Response', 'Preview Mode Change', previewMode);
@@ -35,7 +31,7 @@ class PreviewModeDropdown extends PureComponent {
           Save to File
         </DropdownItem>
       </Dropdown>
-    )
+    );
   }
 }
 

@@ -12,7 +12,7 @@ class SetupSyncModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      syncMode: SYNC_MODE_ON,
+      syncMode: SYNC_MODE_ON
     };
   }
 
@@ -34,7 +34,7 @@ class SetupSyncModal extends PureComponent {
 
   _handleSyncModeChange (e) {
     this.setState({syncMode: e.target.value});
-  };
+  }
 
   show () {
     (async () => {
@@ -49,7 +49,9 @@ class SetupSyncModal extends PureComponent {
 
     this.modal.show();
 
-    this._promise = new Promise(resolve => this._resolvePromise = resolve);
+    this._promise = new Promise(resolve => {
+      this._resolvePromise = resolve;
+    });
     return this._promise;
   }
 
@@ -66,8 +68,8 @@ class SetupSyncModal extends PureComponent {
         <ModalHeader>Workspace Sync Setup</ModalHeader>
         <ModalBody className="wide pad">
 
-          {syncMode === SYNC_MODE_UNSET ?
-            <p className="notice info">
+          {syncMode === SYNC_MODE_UNSET
+            ? <p className="notice info">
               You have not yet configured sync for your <strong>{workspace.name}</strong> workspace.
             </p> : null
           }
@@ -99,12 +101,12 @@ class SetupSyncModal extends PureComponent {
           </button>
         </ModalFooter>
       </Modal>
-    )
+    );
   }
 }
 
 SetupSyncModal.propTypes = {
-  workspace: PropTypes.object.isRequired,
+  workspace: PropTypes.object.isRequired
 };
 
 export default SetupSyncModal;

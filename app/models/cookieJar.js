@@ -7,7 +7,7 @@ export function init () {
   return {
     name: 'Default Jar',
     cookies: []
-  }
+  };
 }
 
 export function migrate (doc) {
@@ -22,7 +22,7 @@ export async function getOrCreateForWorkspace (workspace) {
   const parentId = workspace._id;
   const cookieJars = await db.find(type, {parentId});
   if (cookieJars.length === 0) {
-    return await create({parentId})
+    return await create({parentId});
   } else {
     return cookieJars[0];
   }
@@ -38,4 +38,4 @@ export function getById (id) {
 
 export function update (cookieJar, patch) {
   return db.docUpdate(cookieJar, patch);
-};
+}
