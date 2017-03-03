@@ -2,6 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import Lazy from '../base/Lazy';
 import KeyValueEditorRow from './Row';
 import {generateId, nullFn} from '../../../common/misc';
 
@@ -318,52 +319,54 @@ class KeyValueEditor extends PureComponent {
 
     const classes = classnames('key-value-editor', 'wide', className);
     return (
-      <ul className={classes}>
-        {pairs.map((pair, i) => (
-          <KeyValueEditorRow
-            noDelete={disableDelete}
-            key={pair.id || 'no-id'}
-            index={i} // For dragging
-            ref={n => this._rows[pair.id] = n}
-            sortable={sortable}
-            namePlaceholder={namePlaceholder}
-            valuePlaceholder={valuePlaceholder}
-            valueInputType={valueInputType}
-            onChange={this._handlePairChange}
-            onDelete={this._handlePairDelete}
-            onFocusName={this._handleFocusName}
-            onFocusValue={this._handleFocusValue}
-            onBlurName={this._handleBlurName}
-            onBlurValue={this._handleBlurValue}
-            onKeyDown={this._handleKeyDown}
-            onMove={this._handleMove}
-            handleRender={handleRender}
-            multipart={multipart}
-            pair={pair}
-          />
-        ))}
+      <Lazy delay={pairs.length > 20 ? 50 : -1}>
+        <ul className={classes}>
+          {pairs.map((pair, i) => (
+            <KeyValueEditorRow
+              noDelete={disableDelete}
+              key={pair.id || 'no-id'}
+              index={i} // For dragging
+              ref={n => this._rows[pair.id] = n}
+              sortable={sortable}
+              namePlaceholder={namePlaceholder}
+              valuePlaceholder={valuePlaceholder}
+              valueInputType={valueInputType}
+              onChange={this._handlePairChange}
+              onDelete={this._handlePairDelete}
+              onFocusName={this._handleFocusName}
+              onFocusValue={this._handleFocusValue}
+              onBlurName={this._handleBlurName}
+              onBlurValue={this._handleBlurValue}
+              onKeyDown={this._handleKeyDown}
+              onMove={this._handleMove}
+              handleRender={handleRender}
+              multipart={multipart}
+              pair={pair}
+            />
+          ))}
 
-        {!maxPairs || pairs.length < maxPairs ?
-          <KeyValueEditorRow
-            key="empty-row"
-            hideButtons
-            sortable
-            noDropZone
-            readOnly
-            index={-1}
-            onChange={nullFn}
-            onDelete={nullFn}
-            blurOnFocus
-            className="key-value-editor__row-wrapper--clicker"
-            namePlaceholder={`New ${namePlaceholder}`}
-            valuePlaceholder={`New ${valuePlaceholder}`}
-            onFocusName={this._handleAddFromName}
-            onFocusValue={this._handleAddFromValue}
-            multipart={multipart}
-            pair={{name: '', value: ''}}
-          /> : null
-        }
-      </ul>
+          {!maxPairs || pairs.length < maxPairs ?
+            <KeyValueEditorRow
+              key="empty-row"
+              hideButtons
+              sortable
+              noDropZone
+              readOnly
+              index={-1}
+              onChange={nullFn}
+              onDelete={nullFn}
+              blurOnFocus
+              className="key-value-editor__row-wrapper--clicker"
+              namePlaceholder={`New ${namePlaceholder}`}
+              valuePlaceholder={`New ${valuePlaceholder}`}
+              onFocusName={this._handleAddFromName}
+              onFocusValue={this._handleAddFromValue}
+              multipart={multipart}
+              pair={{name: '', value: ''}}
+            /> : null
+          }
+        </ul>
+      </Lazy>
     )
   }
 }

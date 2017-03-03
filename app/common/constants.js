@@ -31,7 +31,7 @@ export function isDevelopment () {
 }
 
 export function getClientString () {
-  return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`
+  return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
 }
 
 // Global Stuff
@@ -41,16 +41,16 @@ export const MAX_RESPONSES = 20;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
 export const GA_HOST = 'desktop.insomnia.rest';
-export const CHANGELOG_URL = isDevelopment() ?
-  'http://localhost:1313/changelog-json/' :
-  'https://changelog.insomnia.rest/changelog.json';
+export const CHANGELOG_URL = isDevelopment()
+  ? 'http://localhost:1313/changelog-json/'
+  : 'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_RENDER_FAILED = -333;
 export const LARGE_RESPONSE_MB = 5;
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
-export const SEGMENT_WRITE_KEY = isDevelopment() ?
-  'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy' :
-  'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
+export const SEGMENT_WRITE_KEY = isDevelopment()
+  ? 'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy'
+  : 'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
 
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
@@ -87,7 +87,7 @@ export const HTTP_METHODS = [
   METHOD_PURGE,
   METHOD_LINK,
   METHOD_UNLINK,
-  METHOD_DELETE_HARD,
+  METHOD_DELETE_HARD
 ];
 
 // Preview Modes
@@ -221,5 +221,5 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   505: 'The HTTP version used in the request is not supported by the server.',
   506: 'The server has an internal configuration error: transparent content negotiation for the request results in a circular reference.',
   507: 'The server has an internal configuration error: the chosen variant resource is configured to engage in transparent content negotiation itself, and is therefore not a proper end point in the negotiation process.',
-  511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
+  511: 'The 511 status code indicates that the client needs to authenticate to gain network access.'
 };

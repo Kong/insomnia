@@ -1,6 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Lazy from '../../base/Lazy';
 import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
@@ -32,19 +31,17 @@ class UrlEncodedEditor extends PureComponent {
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
-          <Lazy>
-            <KeyValueEditor
-              sortable
-              namePlaceholder="name"
-              valuePlaceholder="value"
-              onChange={onChange}
-              handleRender={handleRender}
-              onToggleDisable={this._handleTrackToggle}
-              onCreate={this._handleTrackCreate}
-              onDelete={this._handleTrackDelete}
-              pairs={parameters}
-            />
-          </Lazy>
+          <KeyValueEditor
+            sortable
+            namePlaceholder="name"
+            valuePlaceholder="value"
+            onChange={onChange}
+            handleRender={handleRender}
+            onToggleDisable={this._handleTrackToggle}
+            onCreate={this._handleTrackCreate}
+            onDelete={this._handleTrackDelete}
+            pairs={parameters}
+          />
         </div>
       </div>
     )

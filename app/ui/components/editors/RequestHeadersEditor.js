@@ -2,7 +2,6 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../keyvalueeditor/Editor';
 import Editor from '../codemirror/Editor';
-import Lazy from '../base/Lazy';
 import {trackEvent} from '../../../analytics/index';
 
 @autobind
@@ -88,19 +87,17 @@ class RequestHeadersEditor extends PureComponent {
       ) : (
         <div className="pad-bottom scrollable-container">
           <div className="scrollable">
-            <Lazy>
-              <KeyValueEditor
-                sortable
-                namePlaceholder="My-Header"
-                valuePlaceholder="Value"
-                pairs={headers}
-                handleRender={handleRender}
-                onToggleDisable={this._handleTrackToggle}
-                onCreate={this._handleTrackCreate}
-                onDelete={this._handleTrackDelete}
-                onChange={onChange}
-              />
-            </Lazy>
+            <KeyValueEditor
+              sortable
+              namePlaceholder="My-Header"
+              valuePlaceholder="Value"
+              pairs={headers}
+              handleRender={handleRender}
+              onToggleDisable={this._handleTrackToggle}
+              onCreate={this._handleTrackCreate}
+              onDelete={this._handleTrackDelete}
+              onChange={onChange}
+            />
           </div>
         </div>
       );

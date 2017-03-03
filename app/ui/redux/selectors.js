@@ -89,7 +89,7 @@ export const selectSidebarChildren = createSelector(
           doc: c,
           children: next(c._id),
           hidden: false,
-          collapsed: !!collapsed[c._id],
+          collapsed: !!collapsed[c._id]
         }));
       } else {
         return children;

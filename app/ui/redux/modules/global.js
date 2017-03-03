@@ -58,12 +58,11 @@ function loadingRequestsReducer (state = {}, action) {
   }
 }
 
-export default combineReducers({
+export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
-  activeWorkspaceId: activeWorkspaceReducer,
+  activeWorkspaceId: activeWorkspaceReducer
 });
-
 
 // ~~~~~~~ //
 // ACTIONS //
@@ -123,7 +122,8 @@ export function importFile (workspaceId) {
       properties: ['openFile'],
       filters: [{
         // Allow empty extension and JSON
-        name: 'Insomnia Import', extensions: [
+        name: 'Insomnia Import',
+        extensions: [
           '', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell'
         ]
       }]
@@ -171,7 +171,7 @@ export function importFile (workspaceId) {
         }
       }
     });
-  }
+  };
 }
 
 export function exportFile (workspaceId = null) {
@@ -206,14 +206,16 @@ export function exportFile (workspaceId = null) {
         dispatch(loadStop());
       });
     });
-  }
+  };
 }
 
 export function init () {
   let workspaceId = null;
 
   try {
-    workspaceId = JSON.parse(localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`));
+    const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
+    const item = window.localStorage.getItem(key);
+    workspaceId = JSON.parse(item);
   } catch (e) {
     // Nothing here...
   }

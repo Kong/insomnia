@@ -36,9 +36,9 @@ class LocalStorage {
     }
 
     try {
-      return JSON.parse(contents)
+      return JSON.parse(contents);
     } catch (e) {
-      console.error(`[localstorage] Failed to parse item from LocalStorage: ${e}`)
+      console.error(`[localstorage] Failed to parse item from LocalStorage: ${e}`);
       return defaultObj;
     }
   }
@@ -59,13 +59,13 @@ class LocalStorage {
       try {
         fs.writeFileSync(path, contents);
       } catch (e) {
-        console.error(`[localstorage] Failed to save to LocalStorage: ${e}`)
+        console.error(`[localstorage] Failed to save to LocalStorage: ${e}`);
       }
     }
   }
 
   _getKeyPath (key) {
-    return path.join(this._basePath, key)
+    return path.join(this._basePath, key);
   }
 }
 

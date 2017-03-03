@@ -13,8 +13,8 @@ export function init () {
     sidebarFilter: '',
     sidebarHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    paneWidth: DEFAULT_PANE_WIDTH,
-  }
+    paneWidth: DEFAULT_PANE_WIDTH
+  };
 }
 
 export function migrate (doc) {
@@ -34,7 +34,7 @@ export function update (workspaceMeta, patch) {
 }
 
 export function getByParentId (parentId) {
-  return db.getWhere(type, {parentId})
+  return db.getWhere(type, {parentId});
 }
 
 export function all () {

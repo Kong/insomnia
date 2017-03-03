@@ -80,7 +80,7 @@ export function init (types, config = {}, forceReset = false) {
 
     db[modelType] = new NeDB(Object.assign({
       autoload: true,
-      filename: filePath,
+      filename: filePath
     }, config));
 
     db[modelType].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
@@ -88,7 +88,6 @@ export function init (types, config = {}, forceReset = false) {
 
   console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
 }
-
 
 // ~~~~~~~~~~~~~~~~ //
 // Change Listeners //
@@ -135,7 +134,6 @@ async function notifyOfChange (event, doc, fromSync) {
   }
 }
 
-
 // ~~~~~~~ //
 // Helpers //
 // ~~~~~~~ //
@@ -148,9 +146,14 @@ export async function getMostRecentlyModified (type, query = {}) {
 export function findMostRecentlyModified (type, query = {}, limit = null) {
   return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(limit).exec((err, docs) => {
-      resolve(docs);
-    })
-  })
+      if (err) {
+        console.warn('[db] Failed to find docs', err);
+        resolve([]);
+      } else {
+        resolve(docs);
+      }
+    });
+  });
 }
 
 export function find (type, query = {}, sort = {created: 1}) {
@@ -186,8 +189,8 @@ export function getWhere (type, query) {
       }
 
       resolve(initModel(type, rawDocs[0]));
-    })
-  })
+    });
+  });
 }
 
 export function get (type, id) {
@@ -268,10 +271,16 @@ export async function remove (doc, fromSync = false) {
  */
 export function removeBulkSilently (type, query) {
   return new Promise(resolve => {
-    db[type].remove(query, {multi: true}, err => resolve());
+    db[type].remove(query, {multi: true}, err => {
+      if (err) {
+        console.warn('[db] Failed to remove', err);
+        resolve();
+      } else {
+        resolve();
+      }
+    });
   });
 }
-
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
@@ -292,7 +301,7 @@ export function docCreate (type, patch = {}) {
   const idPrefix = getModel(type).prefix;
 
   if (!idPrefix) {
-    throw new Error(`No ID prefix for ${type}`)
+    throw new Error(`No ID prefix for ${type}`);
   }
 
   const doc = initModel(
@@ -302,7 +311,7 @@ export function docCreate (type, patch = {}) {
     // Fields that the user can't touch
     {
       type: type,
-      modified: Date.now(),
+      modified: Date.now()
     }
   );
 
@@ -330,7 +339,7 @@ export async function withDescendants (doc = null) {
         // If the doc is null, we want to search for parentId === null
         const parentId = d ? d._id : null;
         const more = await find(type, {parentId});
-        foundDocs = [...foundDocs, ...more]
+        foundDocs = [...foundDocs, ...more];
       }
     }
 
@@ -357,7 +366,7 @@ export async function withAncestors (doc) {
       for (const type of allTypes()) {
         // If the doc is null, we want to search for parentId === null
         const more = await find(type, {_id: d.parentId});
-        foundDocs = [...foundDocs, ...more]
+        foundDocs = [...foundDocs, ...more];
       }
     }
 
@@ -395,7 +404,7 @@ export async function duplicate (originalDoc, patch = {}, first = true) {
     const parentId = originalDoc._id;
     const children = await find(type, {parentId});
     for (const doc of children) {
-      await duplicate(doc, {parentId: createdDoc._id}, false)
+      await duplicate(doc, {parentId: createdDoc._id}, false);
     }
   }
 

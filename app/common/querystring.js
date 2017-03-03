@@ -48,7 +48,7 @@ export function build (param, strict = true) {
     const value = util.flexibleEncodeComponent(param.value || '').replace(/%2C/gi, ',');
     const name = util.flexibleEncodeComponent(param.name || '');
 
-    return `${name}=${value}`
+    return `${name}=${value}`;
   } else {
     return util.flexibleEncodeComponent(param.name);
   }

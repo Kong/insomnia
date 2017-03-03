@@ -1,8 +1,6 @@
 import {bindActionCreators, combineReducers} from 'redux';
-import entitiesReducer from './entities';
 import * as entities from './entities';
 import configureStore from '../create';
-import globalReducer from './global';
 import * as global from './global';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
@@ -42,6 +40,6 @@ export async function init () {
 }
 
 export const reducer = combineReducers({
-  entities: entitiesReducer,
-  global: globalReducer,
+  entities: entities.reducer,
+  global: global.reducer
 });

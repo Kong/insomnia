@@ -1,6 +1,5 @@
 const webpack = require('webpack');
 const baseConfig = require('./webpack.config.base.babel');
-const path = require('path');
 
 const PORT = 3333;
 
@@ -9,18 +8,18 @@ module.exports = {
   devtool: 'eval-source-map',
   entry: [
     'react-hot-loader/patch',
-    ...baseConfig.entry,
+    ...baseConfig.entry
   ],
   output: {
     ...baseConfig.output,
-    publicPath: `http://localhost:${PORT}/`,
+    publicPath: `http://localhost:${PORT}/`
   },
   devServer: {
     hot: true,
     hotOnly: true,
     noInfo: true,
     port: PORT,
-    publicPath: `http://localhost:${PORT}/`,
+    publicPath: `http://localhost:${PORT}/`
   },
   plugins: [
     ...baseConfig.plugins,

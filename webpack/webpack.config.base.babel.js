@@ -18,26 +18,26 @@ module.exports = {
       {
         test: /\.js$/,
         use: ['babel-loader'],
-        exclude: [/node_modules/, /__fixtures__/, /__tests__/],
+        exclude: [/node_modules/, /__fixtures__/, /__tests__/]
       },
       {
         test: /\.(less|css)$/,
         use: [
           'style-loader',
           {loader: 'css-loader', options: {importLoaders: 1}},
-          {loader: 'less-loader', options: {noIeCompat: true}},
-        ],
+          {loader: 'less-loader', options: {noIeCompat: true}}
+        ]
       },
       {
         test: /\.(html|woff2)$/,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]',
-        },
+          name: '[name].[ext]'
+        }
       },
       {
         test: /\.(png)$/,
-        loader: 'url-loader',
+        loader: 'url-loader'
       }
     ]
   },
@@ -50,7 +50,7 @@ module.exports = {
     ...Object.keys(pkg.dependencies),
 
     // To get jsonlint working...
-    'file', 'system',
+    'file', 'system'
   ],
   plugins: [],
   target: 'electron-renderer'

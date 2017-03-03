@@ -100,7 +100,6 @@ export function encryptAES (jwkOrKey, plaintext, additionalData = '') {
   };
 }
 
-
 /**
  * Decrypt AES using a key
  *
@@ -128,9 +127,9 @@ export function decryptAES (jwkOrKey, message) {
   decipher.update(forge.util.createBuffer(forge.util.hexToBytes(message.d)));
 
   if (decipher.finish()) {
-    return decodeURIComponent(decipher.output.toString())
+    return decodeURIComponent(decipher.output.toString());
   } else {
-    throw new Error('Failed to decrypt data')
+    throw new Error('Failed to decrypt data');
   }
 }
 
@@ -163,10 +162,10 @@ export function srpGenKey () {
       if (err) {
         reject(err);
       } else {
-        resolve(secret1Buffer.toString('hex'))
+        resolve(secret1Buffer.toString('hex'));
       }
     });
-  })
+  });
 }
 
 /**
@@ -192,7 +191,7 @@ export async function generateAES256Key () {
       alg: 'A256GCM',
       ext: true,
       key_ops: ['encrypt', 'decrypt'],
-      k: _hexToB64Url(key),
+      k: _hexToB64Url(key)
     };
   }
 }
@@ -210,11 +209,11 @@ export async function generateKeyPairJWK () {
     // console.log('-- Using Native RSA Generation --');
 
     const pair = await subtle.generateKey({
-        name: 'RSA-OAEP',
-        publicExponent: new Uint8Array([1, 0, 1]),
-        modulusLength: 2048,
-        hash: 'SHA-256'
-      },
+      name: 'RSA-OAEP',
+      publicExponent: new Uint8Array([1, 0, 1]),
+      modulusLength: 2048,
+      hash: 'SHA-256'
+    },
       true,
       ['encrypt', 'decrypt']
     );
@@ -247,13 +246,12 @@ export async function generateKeyPairJWK () {
       kty: 'RSA',
       key_ops: ['encrypt'],
       e: _bigIntToB64Url(pair.publicKey.e),
-      n: _bigIntToB64Url(pair.publicKey.n),
+      n: _bigIntToB64Url(pair.publicKey.n)
     };
 
     return {privateKey, publicKey};
   }
 }
-
 
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
@@ -270,7 +268,7 @@ function _hkdfSalt (rawSalt, rawEmail) {
   return new Promise(resolve => {
     const hkdf = new HKDF('sha256', rawSalt, rawEmail);
     hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));
-  })
+  });
 }
 
 /**
@@ -286,7 +284,7 @@ function _bigIntToB64Url (n) {
 
 function _hexToB64Url (h) {
   const bytes = forge.util.hexToBytes(h);
-  return btoa(bytes)
+  return window.btoa(bytes)
     .replace(/=/g, '')
     .replace(/\+/g, '-')
     .replace(/\//g, '_');
@@ -298,7 +296,7 @@ function _b64UrlToBigInt (s) {
 
 function _b64UrlToHex (s) {
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
-  return forge.util.bytesToHex(atob(b64));
+  return forge.util.bytesToHex(window.atob(b64));
 }
 
 /**
