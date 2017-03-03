@@ -1,2 +1,6 @@
 **/*.min.js
-**/*.map.js
+build/**/*
+dist/**/*
+coverage/**/*
+node_modules/**/*
+webpack/**/*
