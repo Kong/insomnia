@@ -305,9 +305,11 @@ function isAbove (monitor, component) {
   const hoveredNode = ReactDOM.findDOMNode(component);
 
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
+  const height = hoveredNode.clientHeight;
   const draggedTop = monitor.getSourceClientOffset().y;
 
-  return hoveredTop > draggedTop;
+  // NOTE: Not quite sure why it's height / 3 (seems to work)
+  return hoveredTop > draggedTop - (height / 3);
 }
 
 const dragTarget = {
