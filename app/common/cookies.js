@@ -29,8 +29,8 @@ export function cookieHeaderValueForUri (jar, uri) {
     jar.getCookies(uri, (err, cookies) => {
       cookies = err ? [] : cookies;
       resolve(cookies.map(c => c.cookieString()).join('; '));
-    })
-  })
+    });
+  });
 }
 
 /**
@@ -54,7 +54,7 @@ export function jarFromCookies (cookies) {
   jar.rejectPublicSuffixes = false;
   jar.looseMode = true;
 
-  return jar
+  return jar;
 }
 
 export function cookieToString (cookie) {

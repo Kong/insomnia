@@ -6,8 +6,7 @@ build/*
 coverage
 
 # Generated
-*.tmp.js
-*.map
+app/main.min.js
 
 # Logs
 logs

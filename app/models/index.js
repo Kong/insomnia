@@ -34,7 +34,7 @@ const _models = {
   [requestGroupMeta.type]: requestGroupMeta,
   [request.type]: request,
   [requestMeta.type]: requestMeta,
-  [response.type]: response,
+  [response.type]: response
 };
 
 export function all () {
@@ -59,7 +59,7 @@ export function getModelName (type, count = 1) {
     // Add an 's' if it doesn't already end in one
     return `${model.name}s`;
   } else {
-    return model.name
+    return model.name;
   }
 }
 
@@ -72,7 +72,7 @@ export function initModel (type, ...sources) {
     _id: null,
     parentId: null,
     modified: Date.now(),
-    created: Date.now(),
+    created: Date.now()
   }, model.init());
 
   // Make a new object

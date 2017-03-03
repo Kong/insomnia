@@ -19,7 +19,7 @@ class MethodTag extends PureComponent {
       <div className={'tag tag--no-bg tag--small http-method-' + method}>
         <span className='tag__inner'>{methodName}</span>
       </div>
-    )
+    );
   }
 }
 

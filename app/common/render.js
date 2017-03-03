@@ -139,7 +139,7 @@ export async function getRenderedRequest (request, environmentId) {
 
   // Remove disabled authentication
   if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
-    renderedRequest.authentication = {}
+    renderedRequest.authentication = {};
   }
 
   // Default the proto if it doesn't exist

@@ -17,7 +17,7 @@ class GravatarImg extends PureComponent {
            className={className}
            title={sanitizedEmail}
            style={{width: cssSize, height: cssSize}}/>
-    )
+    );
   }
 }
 

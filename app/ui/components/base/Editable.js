@@ -61,7 +61,13 @@ class Editable extends PureComponent {
   }
 
   render () {
-    const {value, singleClick, onEditStart, className, ...extra} = this.props;
+    const {
+      value,
+      singleClick, // eslint-disable-line no-unused-vars
+      onEditStart, // eslint-disable-line no-unused-vars
+      className,
+      ...extra
+    } = this.props;
     const {editing} = this.state;
 
     if (editing) {
@@ -74,7 +80,7 @@ class Editable extends PureComponent {
                onKeyDown={this._handleEditKeyDown}
                onBlur={this._handleEditEnd}
         />
-      )
+      );
     } else {
       return (
         <div {...extra}
@@ -83,7 +89,7 @@ class Editable extends PureComponent {
              onDoubleClick={this._handleEditStart}>
           {value}
         </div>
-      )
+      );
     }
   }
 }
@@ -94,7 +100,7 @@ Editable.propTypes = {
 
   // Optional
   singleClick: PropTypes.bool,
-  onEditStart: PropTypes.func,
+  onEditStart: PropTypes.func
 };
 
 export default Editable;

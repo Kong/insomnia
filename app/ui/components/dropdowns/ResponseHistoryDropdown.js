@@ -14,7 +14,7 @@ class ResponseHistoryDropdown extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      responses: [],
+      responses: []
     };
 
     this._load = misc.debounce(this._load);
@@ -67,21 +67,21 @@ class ResponseHistoryDropdown extends PureComponent {
                     value={i === 0 ? null : response._id}
                     onClick={this._handleSetActiveResponse}>
         {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
-        {" "}
+        {' '}
         <StatusTag small
                    statusCode={response.statusCode}
                    statusMessage={response.statusMessage || 'Error'}/>
         <TimeTag milliseconds={response.elapsedTime} small/>
         <SizeTag bytes={response.bytesRead} small/>
       </DropdownItem>
-    )
+    );
   }
 
   render () {
     const {
-      activeResponseId, // Don't want this in ...extraProps
-      handleSetActiveResponse, // Don't want this in ...extraProps
-      handleDeleteResponses, // Don't want this in ...extraProps
+      activeResponseId, // eslint-disable-line no-unused-vars
+      handleSetActiveResponse, // eslint-disable-line no-unused-vars
+      handleDeleteResponses, // eslint-disable-line no-unused-vars
       isLatestResponseActive,
       ...extraProps
     } = this.props;
@@ -90,9 +90,9 @@ class ResponseHistoryDropdown extends PureComponent {
     return (
       <Dropdown {...extraProps}>
         <DropdownButton className="btn btn--super-compact tall">
-          {isLatestResponseActive ?
-            <i className="fa fa-history"/> :
-            <i className="fa fa-thumb-tack"/>}
+          {isLatestResponseActive
+            ? <i className="fa fa-history"/>
+            : <i className="fa fa-thumb-tack"/>}
         </DropdownButton>
         <DropdownDivider>Response History</DropdownDivider>
         <DropdownItem buttonClass={PromptButton}
@@ -104,7 +104,7 @@ class ResponseHistoryDropdown extends PureComponent {
         <DropdownDivider>Past Responses</DropdownDivider>
         {responses.map(this.renderDropdownItem)}
       </Dropdown>
-    )
+    );
   }
 }
 
@@ -114,7 +114,7 @@ ResponseHistoryDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
   requestId: PropTypes.string.isRequired,
   activeResponseId: PropTypes.string.isRequired,
-  isLatestResponseActive: PropTypes.bool.isRequired,
+  isLatestResponseActive: PropTypes.bool.isRequired
 };
 
 export default ResponseHistoryDropdown;

@@ -42,7 +42,7 @@ describe('ResponseExtension', async () => {
 
     try {
       await templating.render(`{% response "body", "req_test", "$.foo" %}`);
-      fail('JSON should have failed to parse')
+      fail('JSON should have failed to parse');
     } catch (err) {
       expect(err.message).toContain('Could not find request req_test');
     }
@@ -54,7 +54,7 @@ describe('ResponseExtension', async () => {
 
     try {
       await templating.render(`{% response "body", "${request._id}", "$$" %}`);
-      fail('JSON should have failed to parse')
+      fail('JSON should have failed to parse');
     } catch (err) {
       expect(err.message).toContain('Invalid JSONPath query: $$');
     }
@@ -66,7 +66,7 @@ describe('ResponseExtension', async () => {
 
     try {
       await templating.render(`{% response "body", "${request._id}", "$.missing" %}`);
-      fail('JSON should have failed to parse')
+      fail('JSON should have failed to parse');
     } catch (err) {
       expect(err.message).toContain('Returned no results: $.missing');
     }
@@ -78,7 +78,7 @@ describe('ResponseExtension', async () => {
 
     try {
       await templating.render(`{% response "body", "${request._id}", "$.array.*" %}`);
-      fail('JSON should have failed to parse')
+      fail('JSON should have failed to parse');
     } catch (err) {
       expect(err.message).toContain('Returned more than one result: $.array.*');
     }

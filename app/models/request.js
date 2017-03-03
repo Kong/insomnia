@@ -16,7 +16,7 @@ export function init () {
     parameters: [],
     headers: [],
     authentication: {},
-    metaSortKey: -1 * Date.now(),
+    metaSortKey: -1 * Date.now()
   };
 }
 
@@ -53,21 +53,21 @@ export function newBodyFormUrlEncoded (parameters) {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
     params: parameters
-  }
+  };
 }
 
 export function newBodyFile (path) {
   return {
     mimeType: CONTENT_TYPE_FILE,
     fileName: path
-  }
+  };
 }
 
 export function newBodyForm (parameters) {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
     params: parameters || []
-  }
+  };
 }
 
 export function migrate (doc) {
@@ -110,7 +110,7 @@ export function updateMimeType (request, mimeType, doCreate = false) {
   } else if (contentTypeHeader) {
     contentTypeHeader.value = mimeType;
   } else {
-    headers.push({name: 'Content-Type', value: mimeType})
+    headers.push({name: 'Content-Type', value: mimeType});
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -124,14 +124,14 @@ export function updateMimeType (request, mimeType, doCreate = false) {
     body = request.body;
   } else if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     // Urlencoded
-    body = request.body.params ?
-      newBodyFormUrlEncoded(request.body.params) :
-      newBodyFormUrlEncoded(deconstructToParams(request.body.text));
+    body = request.body.params
+      ? newBodyFormUrlEncoded(request.body.params)
+      : newBodyFormUrlEncoded(deconstructToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
     // Form Data
-    body = request.body.params ?
-      newBodyForm(request.body.params) :
-      newBodyForm(deconstructToParams(request.body.text));
+    body = request.body.params
+      ? newBodyForm(request.body.params)
+      : newBodyForm(deconstructToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FILE) {
     // File
     body = newBodyFile('');
@@ -140,9 +140,9 @@ export function updateMimeType (request, mimeType, doCreate = false) {
     body = newBodyRaw('');
   } else {
     // Raw Content-Type (ex: application/json)
-    body = request.body.params ?
-      newBodyRaw(buildFromParams(request.body.params, false), mimeType) :
-      newBodyRaw(request.body.text || '', mimeType);
+    body = request.body.params
+      ? newBodyRaw(buildFromParams(request.body.params, false), mimeType)
+      : newBodyRaw(request.body.text || '', mimeType);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -168,7 +168,7 @@ export async function duplicate (request) {
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
 
-  return db.duplicate(request, {name, metaSortKey})
+  return db.duplicate(request, {name, metaSortKey});
 }
 
 export function remove (request) {

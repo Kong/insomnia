@@ -9,10 +9,6 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 @autobind
 class CookiesEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleCookieAdd () {
     const newCookie = new Cookie({
       key: 'foo',
@@ -83,7 +79,7 @@ class CookiesEditor extends PureComponent {
                   </PromptButton>
                 </td>
               </tr>
-            )
+            );
           })}
           </tbody>
         </table>

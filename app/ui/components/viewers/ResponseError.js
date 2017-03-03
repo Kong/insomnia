@@ -17,19 +17,19 @@ class ResponseError extends PureComponent {
               href="https://insomnia.rest/documentation/templating/">
           Template Documentation
         </Link>
-      )
+      );
     } else if (error && error.toLowerCase().indexOf('certificate') !== -1) {
       msg = (
         <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Disable SSL Validation
         </button>
-      )
+      );
     } else if (error && error.toLowerCase().indexOf('getaddrinfo') !== -1) {
       msg = (
         <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Setup Network Proxy
         </button>
-      )
+      );
     } else {
       msg = (
         <Link button
@@ -37,7 +37,7 @@ class ResponseError extends PureComponent {
               href="https://insomnia.rest/documentation/">
           Documentation
         </Link>
-      )
+      );
     }
 
     return (
@@ -67,8 +67,7 @@ ResponseError.propTypes = {
   error: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
   statusCode: PropTypes.number.isRequired,
-  fontSize: PropTypes.number.isRequired,
+  fontSize: PropTypes.number.isRequired
 };
 
 export default ResponseError;
-

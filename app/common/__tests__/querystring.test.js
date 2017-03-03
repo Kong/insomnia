@@ -108,7 +108,7 @@ describe('buildFromParams()', () => {
       {name: 'hello'},
       {name: 'hi there', value: 'bar??'},
       {name: '', value: 'bar??'},
-      {name: '', value: ''},
+      {name: '', value: ''}
     ]);
 
     expect(str).toBe('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F');
@@ -119,7 +119,7 @@ describe('buildFromParams()', () => {
       {name: 'hello'},
       {name: 'hi there', value: 'bar??'},
       {name: '', value: 'bar??'},
-      {name: '', value: ''},
+      {name: '', value: ''}
     ], false);
 
     expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');

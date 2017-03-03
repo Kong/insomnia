@@ -40,7 +40,7 @@ const ResponseCookiesViewer = ({headers, showCookiesModal}) => {
         </button>
       </p>
     </div>
-  )
+  );
 };
 
 ResponseCookiesViewer.propTypes = {

@@ -6,10 +6,6 @@ import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class SidebarFilter extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleOnChange (e) {
     const value = e.target.value;
 
@@ -60,7 +56,7 @@ class SidebarFilter extends PureComponent {
         </Dropdown>
       </div>
 
-    )
+    );
   }
 }
 

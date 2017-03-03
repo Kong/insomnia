@@ -8,6 +8,6 @@ export function all () {
     TimestampExtension,
     UuidExtension,
     NowExtension,
-    ResponseJsonPathExtension,
-  ]
+    ResponseJsonPathExtension
+  ];
 }

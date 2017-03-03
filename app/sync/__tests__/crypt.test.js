@@ -7,7 +7,7 @@ describe('deriveKey()', () => {
     const expected = '';
 
     expect(result).toBe(expected);
-  })
+  });
 });
 
 describe('encryptRSA', () => {
@@ -26,5 +26,5 @@ describe('encryptRSA', () => {
 
     expect(resultEncrypted).toEqual(expectedEncrypted);
     expect(resultDecrypted).toEqual(expectedDecrypted);
-  })
+  });
 });

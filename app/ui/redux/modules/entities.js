@@ -18,7 +18,7 @@ for (const type of models.types()) {
   initialState[getReducerName(type)] = {};
 }
 
-export default function (state = initialState, action) {
+export function reducer (state = initialState, action) {
   switch (action.type) {
     case ENTITY_CHANGES:
       const newState = Object.assign({}, state);
@@ -47,7 +47,6 @@ export default function (state = initialState, action) {
       return state;
   }
 }
-
 
 // ~~~~~~~ //
 // Actions //

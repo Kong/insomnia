@@ -9,7 +9,7 @@ export function init () {
     name: 'New Folder',
     environment: {},
     metaSortKey: -1 * Date.now()
-  }
+  };
 }
 
 export function migrate (doc) {
@@ -33,7 +33,7 @@ export function getById (id) {
 }
 
 export function findByParentId (parentId) {
-  return db.find(type, {parentId})
+  return db.find(type, {parentId});
 }
 
 export function remove (requestGroup) {
@@ -50,9 +50,9 @@ export async function duplicate (requestGroup) {
   // Get sort key of next request
   const q = {metaSortKey: {$gt: requestGroup.metaSortKey}};
   const [nextRequestGroup] = await db.find(type, q, {metaSortKey: 1});
-  const nextSortKey = nextRequestGroup ?
-    nextRequestGroup.metaSortKey :
-    requestGroup.metaSortKey + 100;
+  const nextSortKey = nextRequestGroup
+    ? nextRequestGroup.metaSortKey
+    : requestGroup.metaSortKey + 100;
 
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - requestGroup.metaSortKey) / 2;

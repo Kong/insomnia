@@ -45,7 +45,7 @@ export async function all () {
 }
 
 export function count () {
-  return db.count(type)
+  return db.count(type);
 }
 
 export function update (workspace, patch) {

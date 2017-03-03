@@ -2,6 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import Lazy from '../base/Lazy';
 import KeyValueEditorRow from './Row';
 import {generateId, nullFn} from '../../../common/misc';
 
@@ -32,7 +33,7 @@ class KeyValueEditor extends PureComponent {
     }
 
     this.state = {
-      pairs: pairs,
+      pairs: pairs
     };
   }
 
@@ -41,7 +42,7 @@ class KeyValueEditor extends PureComponent {
     const pairs = [
       ...this.state.pairs.slice(0, i),
       Object.assign({}, pair),
-      ...this.state.pairs.slice(i + 1),
+      ...this.state.pairs.slice(i + 1)
     ];
 
     this._onChange(pairs);
@@ -64,11 +65,11 @@ class KeyValueEditor extends PureComponent {
     const pairs = [
       ...withoutPair.slice(0, toIndex),
       Object.assign({}, pairToMove),
-      ...withoutPair.slice(toIndex),
+      ...withoutPair.slice(toIndex)
     ];
 
     this._onChange(pairs);
-  };
+  }
 
   _handlePairDelete (pair) {
     const i = this.state.pairs.findIndex(p => p.id === pair.id);
@@ -91,7 +92,7 @@ class KeyValueEditor extends PureComponent {
 
   _handleBlurValue () {
     this._setFocusedPair(null);
-  };
+  }
 
   _handleAddFromName () {
     this._focusedField = NAME;
@@ -126,7 +127,7 @@ class KeyValueEditor extends PureComponent {
     } else if (e.keyCode === RIGHT) {
       // TODO: Implement this
     }
-  };
+  }
 
   _onChange (pairs) {
     clearTimeout(this._triggerTimeout);
@@ -147,7 +148,7 @@ class KeyValueEditor extends PureComponent {
 
     const pair = {
       name: '',
-      value: '',
+      value: ''
     };
 
     // Only add ids if we need 'em
@@ -179,7 +180,7 @@ class KeyValueEditor extends PureComponent {
 
     const pairs = [
       ...this.state.pairs.slice(0, position),
-      ...this.state.pairs.slice(position + 1),
+      ...this.state.pairs.slice(position + 1)
     ];
 
     if (focusedPosition >= position) {
@@ -188,7 +189,7 @@ class KeyValueEditor extends PureComponent {
     }
 
     this._onChange(pairs);
-  };
+  }
 
   _focusNext (addIfValue = false) {
     if (this.props.maxPairs === 1) {
@@ -311,60 +312,64 @@ class KeyValueEditor extends PureComponent {
       handleRender,
       multipart,
       sortable,
-      disableDelete,
+      disableDelete
     } = this.props;
 
     const {pairs} = this.state;
 
     const classes = classnames('key-value-editor', 'wide', className);
     return (
-      <ul className={classes}>
-        {pairs.map((pair, i) => (
-          <KeyValueEditorRow
-            noDelete={disableDelete}
-            key={pair.id || 'no-id'}
-            index={i} // For dragging
-            ref={n => this._rows[pair.id] = n}
-            sortable={sortable}
-            namePlaceholder={namePlaceholder}
-            valuePlaceholder={valuePlaceholder}
-            valueInputType={valueInputType}
-            onChange={this._handlePairChange}
-            onDelete={this._handlePairDelete}
-            onFocusName={this._handleFocusName}
-            onFocusValue={this._handleFocusValue}
-            onBlurName={this._handleBlurName}
-            onBlurValue={this._handleBlurValue}
-            onKeyDown={this._handleKeyDown}
-            onMove={this._handleMove}
-            handleRender={handleRender}
-            multipart={multipart}
-            pair={pair}
-          />
-        ))}
+      <Lazy delay={pairs.length > 20 ? 50 : -1}>
+        <ul className={classes}>
+          {pairs.map((pair, i) => (
+            <KeyValueEditorRow
+              noDelete={disableDelete}
+              key={pair.id || 'no-id'}
+              index={i} // For dragging
+              ref={n => {
+                this._rows[pair.id] = n;
+              }}
+              sortable={sortable}
+              namePlaceholder={namePlaceholder}
+              valuePlaceholder={valuePlaceholder}
+              valueInputType={valueInputType}
+              onChange={this._handlePairChange}
+              onDelete={this._handlePairDelete}
+              onFocusName={this._handleFocusName}
+              onFocusValue={this._handleFocusValue}
+              onBlurName={this._handleBlurName}
+              onBlurValue={this._handleBlurValue}
+              onKeyDown={this._handleKeyDown}
+              onMove={this._handleMove}
+              handleRender={handleRender}
+              multipart={multipart}
+              pair={pair}
+            />
+          ))}
 
-        {!maxPairs || pairs.length < maxPairs ?
-          <KeyValueEditorRow
-            key="empty-row"
-            hideButtons
-            sortable
-            noDropZone
-            readOnly
-            index={-1}
-            onChange={nullFn}
-            onDelete={nullFn}
-            blurOnFocus
-            className="key-value-editor__row-wrapper--clicker"
-            namePlaceholder={`New ${namePlaceholder}`}
-            valuePlaceholder={`New ${valuePlaceholder}`}
-            onFocusName={this._handleAddFromName}
-            onFocusValue={this._handleAddFromValue}
-            multipart={multipart}
-            pair={{name: '', value: ''}}
-          /> : null
-        }
-      </ul>
-    )
+          {!maxPairs || pairs.length < maxPairs
+            ? <KeyValueEditorRow
+              key="empty-row"
+              hideButtons
+              sortable
+              noDropZone
+              readOnly
+              index={-1}
+              onChange={nullFn}
+              onDelete={nullFn}
+              blurOnFocus
+              className="key-value-editor__row-wrapper--clicker"
+              namePlaceholder={`New ${namePlaceholder}`}
+              valuePlaceholder={`New ${valuePlaceholder}`}
+              onFocusName={this._handleAddFromName}
+              onFocusValue={this._handleAddFromValue}
+              multipart={multipart}
+              pair={{name: '', value: ''}}
+            /> : null
+          }
+        </ul>
+      </Lazy>
+    );
   }
 }
 
@@ -385,7 +390,7 @@ KeyValueEditor.propTypes = {
   onChangeType: PropTypes.func,
   onChooseFile: PropTypes.func,
   onDelete: PropTypes.func,
-  onCreate: PropTypes.func,
+  onCreate: PropTypes.func
 };
 
 export default KeyValueEditor;

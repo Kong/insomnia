@@ -22,7 +22,9 @@
 
     function showUpdateNotification () {
       console.log('-- Update Available --');
-      new Notification('Insomnia Update Ready', {
+
+      // eslint-disable-next-line no-new
+      new window.Notification('Insomnia Update Ready', {
         body: 'Relaunch the app for it to take effect',
         silent: true,
         sticky: true
@@ -33,7 +35,7 @@
     ipcRenderer.on('update-available', () => {
       // Give it a few seconds before showing this. Sometimes, when
       // you relaunch too soon it doesn't work the first time.
-      setTimeout(showUpdateNotification, 1000 * 10)
+      setTimeout(showUpdateNotification, 1000 * 10);
     });
 
     function checkForUpdates () {
@@ -58,13 +60,13 @@
     let intervalErrorCount = 0;
 
     function resetErrorCount () {
-      intervalErrorCount = 0
+      intervalErrorCount = 0;
     }
 
     // Reset error count after every interval
     setInterval(resetErrorCount, MAX_ERRORS_INTERVAL);
 
-    Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
+    window.Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
       logger: 'electron.renderer',
       environment: process.env.INSOMNIA_ENV || 'production',
       level: 'warning',
@@ -102,7 +104,7 @@
           frame.filename = normalize(frame.filename);
         });
 
-        return data
+        return data;
       }
     }).install();
   })();
@@ -115,7 +117,7 @@
     } else {
       document.title = `${productName} v${version}`;
     }
-  })()
+  })();
 </script>
 
 <script>

@@ -1,7 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import Lazy from './base/Lazy';
 import KeyValueEditor from './keyvalueeditor/Editor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
@@ -47,8 +46,8 @@ class RequestPane extends PureComponent {
   }
 
   _handleUpdateRequestUrl (url) {
-    this.props.updateRequestUrl(url)
-  };
+    this.props.updateRequestUrl(url);
+  }
 
   _handleImportQueryFromUrl () {
     const {request} = this.props;
@@ -65,7 +64,7 @@ class RequestPane extends PureComponent {
     const url = request.url.replace(query, '');
     const parameters = [
       ...request.parameters,
-      ...querystring.deconstructToParams(query),
+      ...querystring.deconstructToParams(query)
     ];
 
     // Only update if url changed
@@ -122,7 +121,7 @@ class RequestPane extends PureComponent {
       updateRequestAuthentication,
       updateRequestHeaders,
       updateRequestMimeType,
-      updateSettingsShowPasswords,
+      updateSettingsShowPasswords
     } = this.props;
 
     if (!request) {
@@ -166,7 +165,7 @@ class RequestPane extends PureComponent {
             </div>
           </div>
         </section>
-      )
+      );
     }
 
     let numBodyParams = 0;
@@ -202,7 +201,7 @@ class RequestPane extends PureComponent {
             <Tab onClick={this._trackTabBody}>
               <button>
                 {getContentTypeName(request.body.mimeType)}
-                {" "}
+                {' '}
                 {numBodyParams ? <span className="txt-sm">({numBodyParams})</span> : null}
               </button>
               <ContentTypeDropdown onChange={updateRequestMimeType}
@@ -269,6 +268,7 @@ class RequestPane extends PureComponent {
               </label>
               <code className="txt-sm block">
                 <RenderedQueryString
+                  key={uniqueKey}
                   handleRender={handleRender}
                   request={request}
                 />
@@ -276,20 +276,18 @@ class RequestPane extends PureComponent {
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <Lazy>
-                  <KeyValueEditor
-                    sortable
-                    key={uniqueKey}
-                    namePlaceholder="name"
-                    valuePlaceholder="value"
-                    onToggleDisable={this._trackQueryToggle}
-                    onCreate={this._trackQueryCreate}
-                    onDelete={this._trackQueryDelete}
-                    pairs={request.parameters}
-                    handleRender={handleRender}
-                    onChange={updateRequestParameters}
-                  />
-                </Lazy>
+                <KeyValueEditor
+                  sortable
+                  key={uniqueKey}
+                  namePlaceholder="name"
+                  valuePlaceholder="value"
+                  onToggleDisable={this._trackQueryToggle}
+                  onCreate={this._trackQueryCreate}
+                  onDelete={this._trackQueryDelete}
+                  pairs={request.parameters}
+                  handleRender={handleRender}
+                  onChange={updateRequestParameters}
+                />
               </div>
             </div>
 
@@ -319,7 +317,7 @@ class RequestPane extends PureComponent {
           </TabPanel>
         </Tabs>
       </section>
-    )
+    );
   }
 }
 
@@ -353,7 +351,7 @@ RequestPane.propTypes = {
   forceRefreshCounter: PropTypes.number.isRequired,
 
   // Optional
-  request: PropTypes.object,
+  request: PropTypes.object
 };
 
 export default RequestPane;

@@ -12,10 +12,9 @@ class ChangelogModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      changelog: null,
+      changelog: null
     };
   }
-
 
   _setModalRef (m) {
     this.modal = m;
@@ -32,7 +31,7 @@ class ChangelogModal extends PureComponent {
   async componentDidMount () {
     let changelog;
     try {
-      const response = await fetch(`${CHANGELOG_URL}?bust=${Date.now()}`);
+      const response = await window.fetch(`${CHANGELOG_URL}?bust=${Date.now()}`);
       changelog = await response.json();
     } catch (e) {
       console.warn('Failed to fetch changelog', e);
@@ -73,7 +72,7 @@ class ChangelogModal extends PureComponent {
             html = [
               ...html,
               <p key={`summary.${i}`}>{change.summary}</p>
-            ]
+            ];
           } else {
             html = [
               ...html,
@@ -81,7 +80,7 @@ class ChangelogModal extends PureComponent {
               ...change.summary.slice(1).map(
                 (text, j) => <p key={`summary.${i}[${j}]`}>{text}</p>
               )
-            ]
+            ];
           }
         }
 
@@ -91,7 +90,7 @@ class ChangelogModal extends PureComponent {
             <Link href={change.link} className="btn btn--clicky" button key={`link.${i}`}>
               Read More
             </Link>
-          ]
+          ];
         }
 
         if (change.major && change.major.length) {
@@ -127,7 +126,7 @@ class ChangelogModal extends PureComponent {
         html = [
           ...html,
           <hr key={`hr.${i}`}/>
-        ]
+        ];
       });
     }
 

@@ -155,9 +155,9 @@ class RequestSwitcherModal extends PureComponent {
       activeIndex,
       searchString,
       matchedRequests,
-      matchedWorkspaces,
+      matchedWorkspaces
     });
-  };
+  }
 
   async show () {
     this.modal.show();
@@ -187,7 +187,7 @@ class RequestSwitcherModal extends PureComponent {
       }
 
       e.preventDefault();
-    })
+    });
   }
 
   render () {
@@ -246,7 +246,7 @@ class RequestSwitcherModal extends PureComponent {
                     <strong>{r.name}</strong>
                   </Button>
                 </li>
-              )
+              );
             })}
 
             {matchedRequests.length && matchedWorkspaces.length ? <hr/> : null}
@@ -265,7 +265,7 @@ class RequestSwitcherModal extends PureComponent {
                     Switch to <strong>{w.name}</strong>
                   </Button>
                 </li>
-              )
+              );
             })}
           </ul>
 
@@ -294,7 +294,7 @@ RequestSwitcherModal.propTypes = {
   workspaceId: PropTypes.string.isRequired,
   activeRequestParentId: PropTypes.string.isRequired,
   workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
-  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
+  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 export default RequestSwitcherModal;

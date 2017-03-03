@@ -1,7 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import autobind from 'autobind-decorator';
-import {shell} from 'electron';
 import Modal from '../base/Modal';
 import Button from '../base/Button';
 import ModalBody from '../base/ModalBody';
@@ -30,7 +29,7 @@ class SettingsModal extends PureComponent {
     this.modal = n;
   }
 
-  _trackTab (name){
+  _trackTab (name) {
     trackEvent('Setting', `Tab ${name}`);
   }
 
@@ -39,22 +38,22 @@ class SettingsModal extends PureComponent {
   }
   _handleUpdateSetting (key, value) {
     models.settings.update(this.props.settings, {[key]: value});
-    trackEvent('Setting', 'Change', key)
+    trackEvent('Setting', 'Change', key);
   }
 
   _handleExportAllToFile () {
     this.props.handleExportAllToFile();
-    this.modal.hide()
+    this.modal.hide();
   }
 
   _handleExportWorkspace () {
     this.props.handleExportWorkspaceToFile();
-    this.modal.hide()
+    this.modal.hide();
   }
 
   _handleImport () {
     this.props.handleImportFile();
-    this.modal.hide()
+    this.modal.hide();
   }
 
   _handleChangeTheme (theme, persist = true) {
@@ -170,7 +169,7 @@ SettingsModal.propTypes = {
   handleImportFile: PropTypes.func.isRequired,
 
   // Properties
-  settings: PropTypes.object.isRequired,
+  settings: PropTypes.object.isRequired
 };
 
 export default SettingsModal;

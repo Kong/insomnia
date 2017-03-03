@@ -19,7 +19,7 @@ class SyncDropdown extends PureComponent {
     this.state = {
       loggedIn: null,
       syncData: null,
-      loading: false,
+      loading: false
     };
   }
 
@@ -37,9 +37,9 @@ class SyncDropdown extends PureComponent {
 
     const config = await sync.getOrCreateConfig(resourceGroupId);
 
-    let syncMode = config.syncMode !== syncStorage.SYNC_MODE_ON ?
-      syncStorage.SYNC_MODE_ON :
-      syncStorage.SYNC_MODE_OFF;
+    let syncMode = config.syncMode !== syncStorage.SYNC_MODE_ON
+      ? syncStorage.SYNC_MODE_ON
+      : syncStorage.SYNC_MODE_OFF;
 
     await sync.createOrUpdateConfig(resourceGroupId, syncMode);
 
@@ -98,7 +98,7 @@ class SyncDropdown extends PureComponent {
       resourceGroupId,
       syncPercent,
       syncMode: config.syncMode,
-      name: workspace.name,
+      name: workspace.name
     };
 
     this.setState({syncData});
@@ -107,10 +107,10 @@ class SyncDropdown extends PureComponent {
   async _handleShowSyncModePrompt () {
     await showModal(SetupSyncModal);
     await this._reloadData();
-  };
+  }
 
   componentWillMount () {
-    this._interval = setInterval(() => this._reloadData(), 2000);
+    this._interval = setInterval(this._reloadData, 2000);
     this._reloadData();
   }
 
@@ -136,15 +136,15 @@ class SyncDropdown extends PureComponent {
   _getSyncDescription (syncMode, syncPercentage) {
     let el = null;
     if (syncMode === syncStorage.SYNC_MODE_NEVER) {
-      el = <span>Sync Disabled</span>
+      el = <span>Sync Disabled</span>;
     } else if (syncPercentage === 100) {
-      el = <span>Sync Up To Date</span>
+      el = <span>Sync Up To Date</span>;
     } else if (syncMode === syncStorage.SYNC_MODE_OFF) {
-      el = <span><i className="fa fa-pause-circle-o"/> Sync Required</span>
+      el = <span><i className="fa fa-pause-circle-o"/> Sync Required</span>;
     } else if (syncMode === syncStorage.SYNC_MODE_ON) {
-      el = <span>Sync Pending</span>
+      el = <span>Sync Pending</span>;
     } else if (syncMode === syncStorage.SYNC_MODE_UNSET) {
-      el = <span><i className="fa fa-exclamation-circle"/> Configure Sync</span>
+      el = <span><i className="fa fa-exclamation-circle"/> Configure Sync</span>;
     }
 
     return el;
@@ -166,7 +166,7 @@ class SyncDropdown extends PureComponent {
             Initializing Sync...
           </button>
         </div>
-      )
+      );
     } else {
       const {syncMode, syncPercent} = syncData;
       return (
@@ -179,8 +179,8 @@ class SyncDropdown extends PureComponent {
 
             {/* SYNC DISABLED */}
 
-            {syncMode === syncStorage.SYNC_MODE_NEVER ?
-              <DropdownItem onClick={this._handleShowSyncModePrompt}>
+            {syncMode === syncStorage.SYNC_MODE_NEVER
+              ? <DropdownItem onClick={this._handleShowSyncModePrompt}>
                 <i className="fa fa-wrench"/>
                 Change Sync Mode
               </DropdownItem> : null
@@ -188,28 +188,28 @@ class SyncDropdown extends PureComponent {
 
             {/* SYNCED */}
 
-            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
-              <DropdownItem onClick={this._handleToggleSyncMode} stayOpenAfterClick={true}>
-                {syncMode === syncStorage.SYNC_MODE_ON ?
-                  <i className="fa fa-toggle-on"/> :
-                  <i className="fa fa-toggle-off"/>
+            {syncMode !== syncStorage.SYNC_MODE_NEVER
+              ? <DropdownItem onClick={this._handleToggleSyncMode} stayOpenAfterClick={true}>
+                {syncMode === syncStorage.SYNC_MODE_ON
+                  ? <i className="fa fa-toggle-on"/>
+                  : <i className="fa fa-toggle-off"/>
                 }
                 Automatic Sync
               </DropdownItem> : null
             }
 
-            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
-              <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
-                {loading ?
-                  <i className="fa fa-refresh fa-spin"/> :
-                  <i className="fa fa-cloud-upload"/>
+            {syncMode !== syncStorage.SYNC_MODE_NEVER
+              ? <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
+                {loading
+                  ? <i className="fa fa-refresh fa-spin"/>
+                  : <i className="fa fa-cloud-upload"/>
                 }
                 Sync Now
               </DropdownItem> : null
             }
 
-            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
-              <DropdownItem onClick={this._handleShowShareSettings}>
+            {syncMode !== syncStorage.SYNC_MODE_NEVER
+              ? <DropdownItem onClick={this._handleShowShareSettings}>
                 <i className="fa fa-users"></i>
                 Share With Others
               </DropdownItem> : null

@@ -37,11 +37,11 @@ class GenerateCodeModal extends PureComponent {
     // Load preferences from localStorage
 
     try {
-      target = JSON.parse(localStorage.getItem('insomnia::generateCode::target'));
+      target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target'));
     } catch (e) {
     }
     try {
-      client = JSON.parse(localStorage.getItem('insomnia::generateCode::client'));
+      client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client'));
     } catch (e) {
     }
 
@@ -49,7 +49,7 @@ class GenerateCodeModal extends PureComponent {
       cmd: '',
       request: null,
       target: target || DEFAULT_TARGET,
-      client: client || DEFAULT_CLIENT,
+      client: client || DEFAULT_CLIENT
     };
   }
 
@@ -94,8 +94,8 @@ class GenerateCodeModal extends PureComponent {
     this.setState({request, cmd, client, target});
 
     // Save client/target for next time
-    localStorage.setItem('insomnia::generateCode::client', JSON.stringify(client));
-    localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
+    window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(client));
+    window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
   }
 
   show (request) {
@@ -178,7 +178,7 @@ class GenerateCodeModal extends PureComponent {
 GenerateCodeModal.propTypes = {
   environmentId: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
+  editorKeyMap: PropTypes.string.isRequired
 };
 
 export default GenerateCodeModal;

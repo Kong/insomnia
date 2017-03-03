@@ -41,7 +41,7 @@ describe('onChange()', () => {
 
     expect(changesSeen).toEqual([
       [[db.CHANGE_INSERT, newDoc, false]],
-      [[db.CHANGE_UPDATE, updatedDoc, false]],
+      [[db.CHANGE_UPDATE, updatedDoc, false]]
     ]);
 
     db.offChange(callback);
@@ -152,5 +152,5 @@ describe('requestGroupDuplicate()', () => {
 
     expect(newChildRequests.length).toBe(2);
     expect(newChildRequestGroups.length).toBe(1);
-  })
+  });
 });

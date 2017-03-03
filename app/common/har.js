@@ -2,12 +2,10 @@ import fs from 'fs';
 import * as models from '../models';
 import {getRenderedRequest} from './render';
 import {jarFromCookies} from './cookies';
-import * as util from './misc';
 import * as misc from './misc';
 import {newBodyRaw} from '../models/request';
 
 export function exportHarWithRequest (renderedRequest, addContentLength = false) {
-
   let postData = '';
   if (renderedRequest.body.fileName) {
     try {
@@ -29,13 +27,13 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
     if (!hasContentLengthHeader) {
       const name = 'content-length';
       const value = Buffer.byteLength((renderedRequest.body || {}).text || '').toString();
-      renderedRequest.headers.push({name, value})
+      renderedRequest.headers.push({name, value});
     }
   }
 
   return {
     method: renderedRequest.method,
-    url: util.prepareUrlForSending(renderedRequest.url),
+    url: misc.prepareUrlForSending(renderedRequest.url),
     httpVersion: 'HTTP/1.1',
     cookies: getCookies(renderedRequest),
     headers: renderedRequest.headers,

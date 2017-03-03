@@ -14,13 +14,13 @@ class Dropdown extends PureComponent {
     this.state = {
       open: false,
       dropUp: false,
-      focused: false,
+      focused: false
     };
   }
 
   _setRef (n) {
     this._node = n;
-  };
+  }
 
   _handleKeyDown (e) {
     // Catch all key presses if we're open
@@ -54,11 +54,11 @@ class Dropdown extends PureComponent {
     // Intercept mouse down so that clicks don't trigger things like
     // drag and drop.
     e.preventDefault();
-  };
+  }
 
   _addDropdownListRef (n) {
     this._dropdownList = n;
-  };
+  }
 
   _getFlattenedChildren (children) {
     let newChildren = [];
@@ -76,7 +76,7 @@ class Dropdown extends PureComponent {
       }
     }
 
-    return newChildren
+    return newChildren;
   }
 
   componentDidUpdate () {
@@ -156,7 +156,7 @@ class Dropdown extends PureComponent {
         <ul key="items" className="dropdown__menu" ref={this._addDropdownListRef}>
           {dropdownItems}
         </ul>
-      ]
+      ];
     }
 
     return (
@@ -168,7 +168,7 @@ class Dropdown extends PureComponent {
         {finalChildren}
         <div className="dropdown__backdrop"></div>
       </div>
-    )
+    );
   }
 }
 
@@ -177,7 +177,7 @@ Dropdown.propTypes = {
   outline: PropTypes.bool,
   wide: PropTypes.bool,
   onOpen: PropTypes.func,
-  onHide: PropTypes.func,
+  onHide: PropTypes.func
 };
 
 export default Dropdown;

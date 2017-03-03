@@ -18,7 +18,7 @@ export function init () {
     body: '',
     encoding: 'utf8', // Legacy format
     error: ''
-  }
+  };
 }
 
 export function migrate (doc) {

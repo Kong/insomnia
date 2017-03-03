@@ -7,8 +7,8 @@ export function init () {
   return {
     name: 'New Environment',
     data: {},
-    isPrivate: false,
-  }
+    isPrivate: false
+  };
 }
 
 export function migrate (doc) {
@@ -39,7 +39,7 @@ export async function getOrCreateForWorkspace (workspace) {
     return await create({
       parentId,
       name: 'Base Environment'
-    })
+    });
   } else {
     return environments[0];
   }

@@ -53,9 +53,9 @@ class PromptButton extends PureComponent {
   _handleClick (...args) {
     const {state} = this.state;
     if (state === STATE_ASK) {
-      this._confirm(...args)
+      this._confirm(...args);
     } else if (state === STATE_DEFAULT) {
-      this._ask(...args)
+      this._ask(...args);
     } else {
       // Do nothing
     }
@@ -67,7 +67,14 @@ class PromptButton extends PureComponent {
   }
 
   render () {
-    const {children, onClick, addIcon, confirmMessage, doneMessage, ...other} = this.props;
+    const {
+      children,
+      onClick, // eslint-disable-line no-unused-vars
+      addIcon,
+      confirmMessage,
+      doneMessage,
+      ...other
+    } = this.props;
     const {state} = this.state;
 
     const CONFIRM_MESSAGE = confirmMessage || 'Click to confirm';
@@ -79,27 +86,27 @@ class PromptButton extends PureComponent {
         <span className="danger">
           <i className="fa fa-exclamation-circle"/> {CONFIRM_MESSAGE}
         </span>
-      )
+      );
     } else if (state === STATE_ASK) {
-      innerMsg = <span className="danger">{CONFIRM_MESSAGE}</span>
+      innerMsg = <span className="danger">{CONFIRM_MESSAGE}</span>;
     } else if (state === STATE_DONE) {
-      innerMsg = DONE_MESSAGE
+      innerMsg = DONE_MESSAGE;
     } else {
-      innerMsg = children
+      innerMsg = children;
     }
 
     return (
       <Button onClick={this._handleClick} {...other}>
         {innerMsg}
       </Button>
-    )
+    );
   }
 }
 
 PromptButton.propTypes = {
   addIcon: PropTypes.bool,
   value: PropTypes.any,
-  confirmMessage: PropTypes.any,
+  confirmMessage: PropTypes.any
 };
 
 export default PromptButton;
