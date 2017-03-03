@@ -1,10 +1,10 @@
-import express from 'express';
-import webpack from 'webpack';
-import webpackDevMiddleware from 'webpack-dev-middleware';
-import webpackHotMiddleware from 'webpack-hot-middleware';
-import {parse as urlParse} from 'url';
+const express = require('express');
+const webpack = require('webpack');
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const webpackHotMiddleware = require('webpack-hot-middleware');
+const {parse: urlParse} = require('url');
 
-import config from './webpack.config.development.babel';
+const config = require('./webpack.config.development.babel');
 
 const app = express();
 const compiler = webpack(config);

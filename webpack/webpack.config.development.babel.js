@@ -9,8 +9,6 @@ module.exports = {
   devtool: 'eval-source-map',
   entry: [
     'react-hot-loader/patch',
-    `webpack-dev-server/client?http://localhost:${PORT}`,
-    'webpack/hot/only-dev-server',
     ...baseConfig.entry,
   ],
   output: {
@@ -19,9 +17,10 @@ module.exports = {
   },
   devServer: {
     hot: true,
+    hotOnly: true,
     noInfo: true,
     port: PORT,
-    contentBase: path.join(__dirname, '../build'),
+    publicPath: `http://localhost:${PORT}/`,
   },
   plugins: [
     ...baseConfig.plugins,
@@ -35,4 +34,4 @@ module.exports = {
       'process.env.INSOMNIA_ENV': JSON.stringify('development')
     })
   ]
-}
+};

@@ -37,9 +37,9 @@ Tabs.setUseDefaultStyles(false);
   render(App);
 
   // Hot Module Replacement API
-  // if (module.hot) {
-  //   module.hot.accept('./containers/App', () => render(App));
-  // }
+  if (module.hot) {
+    module.hot.accept('./containers/App', () => render(App));
+  }
 
   // Do things that can wait
   process.nextTick(initSync);
