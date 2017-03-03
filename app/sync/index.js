@@ -161,12 +161,6 @@ export async function push (resourceGroupId = null) {
     return;
   }
 
-  const config = await getOrCreateConfig(resourceGroupId);
-  if (configShouldNotSync(config)) {
-    // NEVER SYNC THESE MODES
-    return;
-  }
-
   let dirtyResources = [];
   if (resourceGroupId) {
     dirtyResources = await store.findActiveDirtyResourcesForResourceGroup(resourceGroupId)
@@ -260,21 +254,8 @@ export async function push (resourceGroupId = null) {
   db.flushChanges();
 }
 
-export function configShouldNotSync (config) {
-  return (
-    config.syncMode === store.SYNC_MODE_NEVER ||
-    config.syncMode === store.SYNC_MODE_UNSET
-  );
-}
-
 export async function pull (resourceGroupId = null, createMissingResources = true) {
   if (!session.isLoggedIn()) {
-    return;
-  }
-
-  const config = await getOrCreateConfig(resourceGroupId);
-  if (configShouldNotSync(config)) {
-    // NEVER SYNC THESE MODES
     return;
   }
 

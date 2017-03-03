@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   remote: {
     app: {
       getPath (name) {
@@ -11,4 +11,4 @@ export default {
 
     }
   }
-}
+};

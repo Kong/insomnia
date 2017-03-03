@@ -11,6 +11,15 @@
       "plugins": [
         "react-hot-loader/babel"
       ]
+    },
+    "test": {
+      "presets": [
+        "es2015"
+      ],
+      "plugins": [
+        "transform-regenerator",
+        "transform-runtime"
+      ]
     }
   }
 }

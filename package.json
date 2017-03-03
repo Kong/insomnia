@@ -11,10 +11,10 @@
     "url": "https://github.com/gschier/insomnia"
   },
   "scripts": {
-    "test:noisy": "jest",
-    "test:coverage": "jest --coverage --silent && open ./coverage/lcov-report/index.html",
-    "test:watch": "jest --silent --watch",
-    "test": "jest --silent",
+    "test:noisy": "cross-env NODE_ENV=test jest",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage --silent && open ./coverage/lcov-report/index.html",
+    "test:watch": "cross-env NODE_ENV=test jest --silent --watch",
+    "test": "cross-env NODE_ENV=test jest --silent",
     "start-hot": "npm run build-main && cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.tmp.js",
     "build-main": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js",
     "hot-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
@@ -117,13 +117,16 @@
     "xpath": "~0.0.23"
   },
   "devDependencies": {
-    "babel-cli": "~6.23.0",
+    "babel-cli": "^6.23.0",
     "babel-core": "~6.23.1",
     "babel-jest": "~19.0.0",
     "babel-loader": "~6.3.2",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-plugin-transform-object-rest-spread": "~6.23.0",
+    "babel-plugin-transform-regenerator": "~6.22.0",
+    "babel-plugin-transform-runtime": "~6.15.0",
     "babel-polyfill": "~6.23.0",
+    "babel-preset-es2015": "^6.22.0",
     "babel-preset-react": "~6.23.0",
     "babel-preset-react-hmre": "~1.1.1",
     "concurrently": "~2.0.0",
