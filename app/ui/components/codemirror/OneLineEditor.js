@@ -23,9 +23,7 @@ class OneLineEditor extends PureComponent {
       mode = MODE_EDITOR;
     }
 
-    this.state = {
-      mode
-    };
+    this.state = {mode};
   }
 
   focus () {
@@ -72,6 +70,7 @@ class OneLineEditor extends PureComponent {
   }
 
   _handleInputChange (value) {
+    console.log("VALUE", value, this._mayContainNunjucks(value));
     if (!this.props.forceInput && this._mayContainNunjucks(value)) {
       const start = this._input.getSelectionStart();
       const end = this._input.getSelectionEnd();
@@ -139,7 +138,7 @@ class OneLineEditor extends PureComponent {
   }
 
   _mayContainNunjucks (text) {
-    !!text.match(NUNJUCKS_REGEX);
+    return !!text.match(NUNJUCKS_REGEX);
   }
 
   render () {

@@ -52,6 +52,7 @@ class RequestUrlBar extends PureComponent {
   _handleUrlChange (url) {
     clearTimeout(this._urlChangeDebounceTimeout);
     this._urlChangeDebounceTimeout = setTimeout(async () => {
+      const pastedText = this._lastPastedText;
 
       // If no pasted text in the queue, just fire the regular change handler
       if (!pastedText) {
@@ -59,7 +60,6 @@ class RequestUrlBar extends PureComponent {
       }
 
       // Reset pasted text cache
-      const pastedText = this._lastPastedText;
       this._lastPastedText = null;
 
       // Attempt to import the pasted text

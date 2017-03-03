@@ -335,16 +335,14 @@ class Editor extends PureComponent {
     } = this.props;
 
     let mode;
-    if (this.props.readOnly) {
-      // Should probably have an actual prop for this, but let's not
-      // enable nunjucks on editors that the user can modify
+    if (this.props.render) {
       mode = this._normalizeMode(rawMode);
     } else {
       mode = {name: 'nunjucks', baseMode: this._normalizeMode(rawMode)};
     }
 
     let options = {
-      readOnly,
+      readOnly: !!readOnly,
       placeholder: placeholder || '',
       mode: mode,
       tabIndex: typeof tabIndex === 'number' ? tabIndex : null,

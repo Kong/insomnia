@@ -2,6 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 
+@autobind
 class Button extends PureComponent {
   _handleClick (e) {
     const {onClick, onDisabledClick, disabled} = this.props;
