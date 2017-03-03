@@ -11,12 +11,12 @@
     "url": "https://github.com/gschier/insomnia"
   },
   "scripts": {
-    "test:lint": "eslint --ext .json --ext .js --ext .html ./app/** ./webpack/**",
+    "test:lint": "eslint --quiet --ext .json --ext .js --ext .html ./app/** ./webpack/**",
     "test:noisy": "cross-env NODE_ENV=test jest",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage --silent && open ./coverage/lcov-report/index.html",
     "test:watch": "cross-env NODE_ENV=test jest --silent --watch",
     "test": "npm run test:lint && cross-env NODE_ENV=test jest --silent",
-    "start-hot": "npm run build-main && cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.tmp.js",
+    "start-hot": "npm run build-main && cross-env HOT=1 INSOMNIA_ENV=development electron -r babel-register ./app/main.min.js",
     "build-main": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js",
     "hot-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
