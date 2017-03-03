@@ -47,17 +47,16 @@ class RenderedQueryString extends PureComponent {
 
   render () {
     if (this.state.string) {
-      return <span className="selectable force-wrap">{this.state.string}</span>
+      return <span className="selectable force-wrap">{this.state.string}</span>;
     } else {
-      return <span className="super-duper-faint italic">...</span>
+      return <span className="super-duper-faint italic">...</span>;
     }
   }
 }
 
-
 RenderedQueryString.propTypes = {
   request: PropTypes.object.isRequired,
-  handleRender: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired
 };
 
 export default RenderedQueryString;

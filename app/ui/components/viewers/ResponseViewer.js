@@ -24,7 +24,7 @@ class ResponseViewer extends PureComponent {
 
   _handleDismissBlocker () {
     this.setState({blockingBecauseTooLarge: false});
-  };
+  }
 
   _handleDisableBlocker () {
     alwaysShowLargeResponses = true;
@@ -94,7 +94,7 @@ class ResponseViewer extends PureComponent {
           fontSize={editorFontSize}
           statusCode={statusCode}
         />
-      )
+      );
     }
 
     const {blockingBecauseTooLarge} = this.state;
@@ -110,14 +110,14 @@ class ResponseViewer extends PureComponent {
                     className="inline-block btn btn--clicky">
               Show Response
             </button>
-            {" "}
+            {' '}
             <button className="faint inline-block btn btn--super-compact"
                     onClick={this._handleDisableBlocker}>
               Always Show
             </button>
           </p>
         </div>
-      )
+      );
     }
 
     switch (previewMode) {
@@ -132,7 +132,7 @@ class ResponseViewer extends PureComponent {
                      style={{maxWidth: '100%', maxHeight: '100%', margin: 'auto'}}/>
               </div>
             </div>
-          )
+          );
         } else {
           return (
             <ResponseWebView
@@ -176,7 +176,7 @@ class ResponseViewer extends PureComponent {
             value={bodyBuffer.toString('utf8')}
             fontSize={editorFontSize}
           />
-        )
+        );
     }
   }
 }

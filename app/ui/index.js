@@ -49,4 +49,3 @@ Tabs.setUseDefaultStyles(false);
   // Do things that can wait
   process.nextTick(initSync);
 })();
-

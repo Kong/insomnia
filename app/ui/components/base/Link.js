@@ -2,16 +2,11 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import {trackEvent} from '../../../analytics/index';
+import {getAppVersion, isDevelopment} from '../../../common/constants';
 import * as querystring from '../../../common/querystring';
-import {getAppVersion} from '../../../common/constants';
-import {isDevelopment} from '../../../common/constants';
 
 @autobind
 class Link extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleClick (e) {
     e && e.preventDefault();
     const {href, onClick} = this.props;
@@ -30,13 +25,19 @@ class Link extends PureComponent {
     }
 
     trackEvent('Link', 'Click', href);
-  };
+  }
 
   render () {
-    const {onClick, button, href, children, ...other} = this.props;
-    return button ?
-      <button onClick={this._handleClick} {...other}>{children}</button> :
-      <a href={href} onClick={this._handleClick} {...other}>{children}</a>
+    const {
+      onClick, // eslint-disable-line no-unused-vars
+      button,
+      href,
+      children,
+      ...other
+    } = this.props;
+    return button
+      ? <button onClick={this._handleClick} {...other}>{children}</button>
+      : <a href={href} onClick={this._handleClick} {...other}>{children}</a>;
   }
 }
 

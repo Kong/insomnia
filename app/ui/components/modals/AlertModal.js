@@ -12,7 +12,7 @@ class AlertModal extends PureComponent {
 
     this.state = {
       title: '',
-      message: '',
+      message: ''
     };
   }
 
@@ -23,7 +23,7 @@ class AlertModal extends PureComponent {
   _handleOk () {
     this.hide();
     this._okCallback();
-  };
+  }
 
   hide () {
     this.modal.hide();
@@ -35,7 +35,9 @@ class AlertModal extends PureComponent {
     const {title, message} = options;
     this.setState({title, message});
 
-    return new Promise(resolve => this._okCallback = resolve);
+    return new Promise(resolve => {
+      this._okCallback = resolve;
+    });
   }
 
   render () {
@@ -54,7 +56,7 @@ class AlertModal extends PureComponent {
           </button>
         </ModalFooter>
       </Modal>
-    )
+    );
   }
 }
 

@@ -1,4 +1,4 @@
-import React, {PureComponent, PropTypes} from 'react';
+import {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 
 @autobind
@@ -27,7 +27,7 @@ class Lazy extends PureComponent {
 }
 
 Lazy.propTypes = {
-  delay: PropTypes.number,
+  delay: PropTypes.number
 };
 
 export default Lazy;

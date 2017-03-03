@@ -5,10 +5,6 @@ import {trackEvent} from '../../../../analytics/index';
 
 @autobind
 class UrlEncodedEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleTrackToggle (pair) {
     trackEvent(
       'Url Encoded Editor',
@@ -44,7 +40,7 @@ class UrlEncodedEditor extends PureComponent {
           />
         </div>
       </div>
-    )
+    );
   }
 }
 
@@ -52,7 +48,7 @@ UrlEncodedEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  handleRender: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired
 };
 
 export default UrlEncodedEditor;

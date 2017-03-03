@@ -58,7 +58,7 @@ class ResponsePane extends PureComponent {
       title: 'Save Response',
       buttonLabel: 'Save',
       filters: [{
-        name: 'Download', extensions: [extension],
+        name: 'Download', extensions: [extension]
       }]
     };
 
@@ -74,7 +74,6 @@ class ResponsePane extends PureComponent {
           trackEvent('Response', 'Save Failure');
         } else {
           trackEvent('Response', 'Save Success');
-
         }
       });
     });
@@ -117,7 +116,7 @@ class ResponsePane extends PureComponent {
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder"></div>
         </section>
-      )
+      );
     }
 
     if (!response) {
@@ -163,7 +162,7 @@ class ResponsePane extends PureComponent {
             </div>
           </div>
         </section>
-      )
+      );
     }
 
     const cookieHeaders = getSetCookieHeaders(response.headers);
@@ -266,7 +265,7 @@ class ResponsePane extends PureComponent {
           </TabPanel>
         </Tabs>
       </section>
-    )
+    );
   }
 }
 
@@ -288,7 +287,7 @@ ResponsePane.propTypes = {
   activeResponseId: PropTypes.string.isRequired,
 
   // Other
-  request: PropTypes.object,
+  request: PropTypes.object
 };
 
 export default ResponsePane;

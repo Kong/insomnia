@@ -13,10 +13,6 @@ let hidePaymentNotificationUntilNextLaunch = false;
 
 @autobind
 class PaymentNotificationModal extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   async _handleCancel () {
     await sync.cancelTrial();
     this.hide();
@@ -67,7 +63,7 @@ class PaymentNotificationModal extends PureComponent {
           </div>
         </ModalBody>
       </Modal>
-    )
+    );
   }
 }
 

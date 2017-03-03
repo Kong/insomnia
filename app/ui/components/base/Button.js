@@ -1,6 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import {shell} from 'electron';
 
 @autobind
 class Button extends PureComponent {
@@ -16,17 +15,21 @@ class Button extends PureComponent {
   }
 
   render () {
-    const {children, value, ...props} = this.props;
+    const {
+      children,
+      value, // eslint-disable-line no-unused-vars
+      ...props
+    } = this.props;
     return (
       <button {...props} onClick={this._handleClick}>{children}</button>
-    )
+    );
   }
 }
 
 Button.propTypes = {
   value: PropTypes.any,
   onDisabledClick: PropTypes.func,
-  onClick: PropTypes.func,
+  onClick: PropTypes.func
 };
 
 export default Button;

@@ -33,7 +33,7 @@ class KeyValueEditor extends PureComponent {
     }
 
     this.state = {
-      pairs: pairs,
+      pairs: pairs
     };
   }
 
@@ -42,7 +42,7 @@ class KeyValueEditor extends PureComponent {
     const pairs = [
       ...this.state.pairs.slice(0, i),
       Object.assign({}, pair),
-      ...this.state.pairs.slice(i + 1),
+      ...this.state.pairs.slice(i + 1)
     ];
 
     this._onChange(pairs);
@@ -65,11 +65,11 @@ class KeyValueEditor extends PureComponent {
     const pairs = [
       ...withoutPair.slice(0, toIndex),
       Object.assign({}, pairToMove),
-      ...withoutPair.slice(toIndex),
+      ...withoutPair.slice(toIndex)
     ];
 
     this._onChange(pairs);
-  };
+  }
 
   _handlePairDelete (pair) {
     const i = this.state.pairs.findIndex(p => p.id === pair.id);
@@ -92,7 +92,7 @@ class KeyValueEditor extends PureComponent {
 
   _handleBlurValue () {
     this._setFocusedPair(null);
-  };
+  }
 
   _handleAddFromName () {
     this._focusedField = NAME;
@@ -127,7 +127,7 @@ class KeyValueEditor extends PureComponent {
     } else if (e.keyCode === RIGHT) {
       // TODO: Implement this
     }
-  };
+  }
 
   _onChange (pairs) {
     clearTimeout(this._triggerTimeout);
@@ -148,7 +148,7 @@ class KeyValueEditor extends PureComponent {
 
     const pair = {
       name: '',
-      value: '',
+      value: ''
     };
 
     // Only add ids if we need 'em
@@ -180,7 +180,7 @@ class KeyValueEditor extends PureComponent {
 
     const pairs = [
       ...this.state.pairs.slice(0, position),
-      ...this.state.pairs.slice(position + 1),
+      ...this.state.pairs.slice(position + 1)
     ];
 
     if (focusedPosition >= position) {
@@ -189,7 +189,7 @@ class KeyValueEditor extends PureComponent {
     }
 
     this._onChange(pairs);
-  };
+  }
 
   _focusNext (addIfValue = false) {
     if (this.props.maxPairs === 1) {
@@ -312,7 +312,7 @@ class KeyValueEditor extends PureComponent {
       handleRender,
       multipart,
       sortable,
-      disableDelete,
+      disableDelete
     } = this.props;
 
     const {pairs} = this.state;
@@ -326,7 +326,9 @@ class KeyValueEditor extends PureComponent {
               noDelete={disableDelete}
               key={pair.id || 'no-id'}
               index={i} // For dragging
-              ref={n => this._rows[pair.id] = n}
+              ref={n => {
+                this._rows[pair.id] = n;
+              }}
               sortable={sortable}
               namePlaceholder={namePlaceholder}
               valuePlaceholder={valuePlaceholder}
@@ -345,8 +347,8 @@ class KeyValueEditor extends PureComponent {
             />
           ))}
 
-          {!maxPairs || pairs.length < maxPairs ?
-            <KeyValueEditorRow
+          {!maxPairs || pairs.length < maxPairs
+            ? <KeyValueEditorRow
               key="empty-row"
               hideButtons
               sortable
@@ -367,7 +369,7 @@ class KeyValueEditor extends PureComponent {
           }
         </ul>
       </Lazy>
-    )
+    );
   }
 }
 
@@ -388,7 +390,7 @@ KeyValueEditor.propTypes = {
   onChangeType: PropTypes.func,
   onChooseFile: PropTypes.func,
   onDelete: PropTypes.func,
-  onCreate: PropTypes.func,
+  onCreate: PropTypes.func
 };
 
 export default KeyValueEditor;

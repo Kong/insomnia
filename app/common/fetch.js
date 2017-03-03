@@ -81,4 +81,3 @@ function _notifyCommandListeners (uri) {
 
   commandListeners.map(fn => fn(command, args));
 }
-

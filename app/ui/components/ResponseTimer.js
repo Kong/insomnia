@@ -35,13 +35,13 @@ class ResponseTimer extends PureComponent {
           </button>
         </div>
       </div>
-    )
+    );
   }
 }
 
 ResponseTimer.propTypes = {
   handleCancel: PropTypes.func.isRequired,
-  loadStartTime: PropTypes.number.isRequired,
+  loadStartTime: PropTypes.number.isRequired
 };
 
 export default ResponseTimer;

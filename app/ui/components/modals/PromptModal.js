@@ -20,6 +20,10 @@ class PromptModal extends PureComponent {
     };
   }
 
+  _setInputRef (n) {
+    this._input = n;
+  }
+
   _setModalRef (n) {
     this.modal = n;
   }
@@ -52,8 +56,8 @@ class PromptModal extends PureComponent {
         placeholder,
         hint,
         inputType,
-        label,
-      })
+        label
+      });
     });
   }
 
@@ -63,7 +67,7 @@ class PromptModal extends PureComponent {
 
     const input = (
       <input
-        ref={n => this._input = n}
+        ref={this._setInputRef}
         id="prompt-input"
         type={inputType === 'decimal' ? 'number' : (inputType || 'text')}
         step={inputType === 'decimal' ? '0.1' : null}
@@ -89,7 +93,7 @@ class PromptModal extends PureComponent {
           </button>
         </ModalFooter>
       </Modal>
-    )
+    );
   }
 }
 

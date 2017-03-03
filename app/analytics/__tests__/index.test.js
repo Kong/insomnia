@@ -7,11 +7,11 @@ global.document = {
   getElementsByTagName () {
     return {
       parentNode: {
-        insertBefore() {
+        insertBefore () {
 
         }
       }
-    }
+    };
   }
 };
 

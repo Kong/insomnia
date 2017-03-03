@@ -1,4 +1,4 @@
-import React, {PropTypes, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -75,7 +75,7 @@ class CookiesModal extends PureComponent {
     const filter = e.target.value;
     this.setState({filter});
     trackEvent('Cookie Editor', 'Filter Change');
-  };
+  }
 
   _getFilteredSortedCookies () {
     const {cookieJar, filter} = this.state;

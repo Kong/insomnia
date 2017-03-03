@@ -71,7 +71,6 @@ class RequestUrlBar extends PureComponent {
       } else {
         this.props.onUrlChange(url);
       }
-
     }, DEBOUNCE_MILLIS);
   }
 
@@ -89,7 +88,7 @@ class RequestUrlBar extends PureComponent {
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
-      properties: ['openDirectory'],
+      properties: ['openDirectory']
     };
 
     remote.dialog.showOpenDialog(options, paths => {
@@ -140,7 +139,7 @@ class RequestUrlBar extends PureComponent {
       headerName: 'Send After Delay',
       label: 'Delay in seconds',
       defaultValue: 3,
-      submitName: 'Start',
+      submitName: 'Start'
     });
 
     this._handleStopTimeout();
@@ -148,7 +147,7 @@ class RequestUrlBar extends PureComponent {
     this.setState({currentTimeout: seconds});
 
     trackEvent('Request', 'Send on Delay', 'Send Action', seconds);
-  };
+  }
 
   async _handleSendOnInterval () {
     const seconds = await showModal(PromptModal, {
@@ -156,7 +155,7 @@ class RequestUrlBar extends PureComponent {
       headerName: 'Send on Interval',
       label: 'Interval in seconds',
       defaultValue: 3,
-      submitName: 'Start',
+      submitName: 'Start'
     });
 
     this._handleStopInterval();
@@ -180,7 +179,7 @@ class RequestUrlBar extends PureComponent {
       this.setState({currentTimeout: null});
       trackEvent('Request', 'Stop Send Timeout');
     }
-  };
+  }
 
   _handleClickSend (e) {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
@@ -216,7 +215,7 @@ class RequestUrlBar extends PureComponent {
                 onClick={this._handleStopInterval}>
           Stop
         </button>
-      )
+      );
     } else if (currentTimeout) {
       cancelButton = (
         <button type="button"
@@ -225,7 +224,7 @@ class RequestUrlBar extends PureComponent {
                 onClick={this._handleStopTimeout}>
           Cancel
         </button>
-      )
+      );
     }
 
     let sendButton;
@@ -236,7 +235,7 @@ class RequestUrlBar extends PureComponent {
                           onContextMenu={this._handleMetaClickSend}
                           onClick={this._handleClickSend}
                           type="submit">
-            {downloadPath ? "Download" : "Send"}
+            {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
@@ -266,13 +265,13 @@ class RequestUrlBar extends PureComponent {
               </DropdownItem>
             )}
         </Dropdown>
-      )
+      );
     }
 
     return [
       cancelButton,
-      sendButton,
-    ]
+      sendButton
+    ];
   }
 
   render () {

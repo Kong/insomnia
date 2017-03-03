@@ -11,7 +11,7 @@ class SizeTag extends PureComponent {
            title={`${bytes} bytes`}>
         <strong>SIZE</strong>&nbsp;{responseSizeString}
       </div>
-    )
+    );
   }
 }
 
@@ -20,7 +20,7 @@ SizeTag.propTypes = {
   bytes: PropTypes.number.isRequired,
 
   // Optional
-  small: PropTypes.bool,
+  small: PropTypes.bool
 };
 
 export default SizeTag;

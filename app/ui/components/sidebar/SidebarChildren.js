@@ -2,7 +2,6 @@ import React, {PureComponent, PropTypes} from 'react';
 import SidebarRequestRow from './SidebarRequestRow';
 import SidebarRequestGroupRow from './SidebarRequestGroupRow';
 
-
 class SidebarChildren extends PureComponent {
   _renderChildren (children) {
     const {
@@ -16,7 +15,7 @@ class SidebarChildren extends PureComponent {
       moveRequestGroup,
       handleActivateRequest,
       activeRequest,
-      workspace,
+      workspace
     } = this.props;
 
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -39,7 +38,7 @@ class SidebarChildren extends PureComponent {
             request={child.doc}
             workspace={workspace}
           />
-        )
+        );
       }
 
       // We have a RequestGroup!
@@ -79,8 +78,8 @@ class SidebarChildren extends PureComponent {
           requestGroup={requestGroup}
           children={children}
         />
-      )
-    })
+      );
+    });
   }
 
   render () {
@@ -90,7 +89,7 @@ class SidebarChildren extends PureComponent {
       <ul className="sidebar__list sidebar__list-root">
         {this._renderChildren(children)}
       </ul>
-    )
+    );
   }
 }
 
@@ -109,7 +108,7 @@ SidebarChildren.propTypes = {
   workspace: PropTypes.object.isRequired,
 
   // Optional
-  activeRequest: PropTypes.object,
+  activeRequest: PropTypes.object
 };
 
 export default SidebarChildren;

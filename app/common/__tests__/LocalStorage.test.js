@@ -16,7 +16,8 @@ describe('LocalStorage()', () => {
 
   it('create directory', () => {
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
-    new LocalStorage(basePath);
+    const ls = new LocalStorage(basePath);
+    expect(ls).toBeInstanceOf(LocalStorage);
     const dir = fs.readdirSync(basePath);
     expect(dir.length).toEqual(0);
   });

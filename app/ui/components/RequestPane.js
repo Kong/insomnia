@@ -46,8 +46,8 @@ class RequestPane extends PureComponent {
   }
 
   _handleUpdateRequestUrl (url) {
-    this.props.updateRequestUrl(url)
-  };
+    this.props.updateRequestUrl(url);
+  }
 
   _handleImportQueryFromUrl () {
     const {request} = this.props;
@@ -64,7 +64,7 @@ class RequestPane extends PureComponent {
     const url = request.url.replace(query, '');
     const parameters = [
       ...request.parameters,
-      ...querystring.deconstructToParams(query),
+      ...querystring.deconstructToParams(query)
     ];
 
     // Only update if url changed
@@ -121,7 +121,7 @@ class RequestPane extends PureComponent {
       updateRequestAuthentication,
       updateRequestHeaders,
       updateRequestMimeType,
-      updateSettingsShowPasswords,
+      updateSettingsShowPasswords
     } = this.props;
 
     if (!request) {
@@ -165,7 +165,7 @@ class RequestPane extends PureComponent {
             </div>
           </div>
         </section>
-      )
+      );
     }
 
     let numBodyParams = 0;
@@ -201,7 +201,7 @@ class RequestPane extends PureComponent {
             <Tab onClick={this._trackTabBody}>
               <button>
                 {getContentTypeName(request.body.mimeType)}
-                {" "}
+                {' '}
                 {numBodyParams ? <span className="txt-sm">({numBodyParams})</span> : null}
               </button>
               <ContentTypeDropdown onChange={updateRequestMimeType}
@@ -317,7 +317,7 @@ class RequestPane extends PureComponent {
           </TabPanel>
         </Tabs>
       </section>
-    )
+    );
   }
 }
 
@@ -351,7 +351,7 @@ RequestPane.propTypes = {
   forceRefreshCounter: PropTypes.number.isRequired,
 
   // Optional
-  request: PropTypes.object,
+  request: PropTypes.object
 };
 
 export default RequestPane;

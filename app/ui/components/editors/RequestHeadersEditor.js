@@ -6,10 +6,6 @@ import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class RequestHeadersEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleBulkUpdate (headersString) {
     this.props.onChange(this._getHeadersFromString(headersString));
   }
@@ -33,7 +29,7 @@ class RequestHeadersEditor extends PureComponent {
     for (const row of rows) {
       const items = row.split(':');
 
-      if (items.length != 2) {
+      if (items.length !== 2) {
         // Need a colon to be valid
         continue;
       }

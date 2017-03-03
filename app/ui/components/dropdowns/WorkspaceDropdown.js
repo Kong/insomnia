@@ -19,6 +19,7 @@ import * as session from '../../../sync/session';
 import PromptButton from '../base/PromptButton';
 import LoginModal from '../modals/LoginModal';
 
+@autobind
 class WorkspaceDropdown extends PureComponent {
   constructor (props) {
     super(props);
@@ -47,13 +48,13 @@ class WorkspaceDropdown extends PureComponent {
 
   _handleShowWorkspaceSettings () {
     showModal(WorkspaceSettingsModal, {
-      workspace: this.props.activeWorkspace,
+      workspace: this.props.activeWorkspace
     });
   }
 
   _handleShowShareSettings () {
     showModal(WorkspaceShareSettingsModal, {
-      workspace: this.props.activeWorkspace,
+      workspace: this.props.activeWorkspace
     });
   }
 
@@ -188,4 +189,4 @@ WorkspaceDropdown.propTypes = {
   activeWorkspace: PropTypes.object.isRequired
 };
 
-export default autobind(WorkspaceDropdown);
+export default WorkspaceDropdown;

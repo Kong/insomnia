@@ -10,10 +10,6 @@ import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class RequestGroupActionsDropdown extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _setDropdownRef (n) {
     this._dropdown = n;
   }
@@ -60,7 +56,10 @@ class RequestGroupActionsDropdown extends PureComponent {
   }
 
   render () {
-    const {requestGroup, ...other} = this.props;
+    const {
+      requestGroup, // eslint-disable-line no-unused-vars
+      ...other
+    } = this.props;
 
     return (
       <Dropdown ref={this._setDropdownRef} {...other}>
@@ -88,7 +87,7 @@ class RequestGroupActionsDropdown extends PureComponent {
           <i className="fa fa-trash-o"></i> Delete
         </DropdownItem>
       </Dropdown>
-    )
+    );
   }
 }
 

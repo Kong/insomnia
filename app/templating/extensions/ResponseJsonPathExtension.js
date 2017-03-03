@@ -44,13 +44,13 @@ export default class ResponseExtension extends BaseExtension {
     try {
       results = jq.query(body, query);
     } catch (err) {
-      throw new Error(`Invalid JSONPath query: ${query}`)
+      throw new Error(`Invalid JSONPath query: ${query}`);
     }
 
     if (results.length === 0) {
-      throw new Error(`Returned no results: ${query}`)
+      throw new Error(`Returned no results: ${query}`);
     } else if (results.length > 1) {
-      throw new Error(`Returned more than one result: ${query}`)
+      throw new Error(`Returned more than one result: ${query}`);
     }
 
     return `${results[0] || ''}`;

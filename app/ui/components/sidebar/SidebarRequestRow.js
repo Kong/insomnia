@@ -9,14 +9,13 @@ import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
-
 @autobind
 class SidebarRequestRow extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
       dragDirection: 0,
-      isEditing: false,
+      isEditing: false
     };
   }
 
@@ -35,7 +34,7 @@ class SidebarRequestRow extends PureComponent {
   }
 
   _handleRequestUpdateName (name) {
-    models.request.update(this.props.request, {name})
+    models.request.update(this.props.request, {name});
     this.setState({isEditing: false});
   }
 
@@ -58,7 +57,7 @@ class SidebarRequestRow extends PureComponent {
 
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
-      this.setState({dragDirection})
+      this.setState({dragDirection});
     }
   }
 
@@ -72,7 +71,7 @@ class SidebarRequestRow extends PureComponent {
       isDraggingOver,
       request,
       requestGroup,
-      isActive,
+      isActive
     } = this.props;
 
     const {dragDirection} = this.state;
@@ -95,7 +94,7 @@ class SidebarRequestRow extends PureComponent {
             </button>
           </div>
         </li>
-      )
+      );
     } else {
       node = (
         <li className={classes}>
@@ -124,7 +123,7 @@ class SidebarRequestRow extends PureComponent {
             </div>
           </div>
         </li>
-      )
+      );
     }
 
     if (!this.state.isEditing) {
@@ -158,12 +157,11 @@ SidebarRequestRow.propTypes = {
 };
 
 const dragSource = {
-  beginDrag(props) {
+  beginDrag (props) {
     trackEvent('Request', 'Drag', 'Begin');
     return {request: props.request};
   }
 };
-
 
 function isAbove (monitor, component) {
   const hoveredNode = ReactDOM.findDOMNode(component);

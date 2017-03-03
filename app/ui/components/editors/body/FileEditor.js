@@ -9,10 +9,6 @@ import {trackEvent} from '../../../../analytics/index';
 
 @autobind
 class FileEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleResetFile () {
     this.props.onChange('');
     trackEvent('File Editor', 'Reset');
@@ -21,7 +17,7 @@ class FileEditor extends PureComponent {
   _handleChooseFile (path) {
     this.props.onChange(path);
     trackEvent('File Editor', 'Choose');
-  };
+  }
 
   render () {
     const {path} = this.props;
@@ -47,7 +43,7 @@ class FileEditor extends PureComponent {
               <span className="force-wrap selectable" title={path}>
                 {pathDescription}
               </span>
-              {" "}
+              {' '}
               <span className="no-wrap">({sizeDescription})</span>
             </code>
           ) : (
@@ -70,13 +66,13 @@ class FileEditor extends PureComponent {
           />
         </div>
       </div>
-    )
+    );
   }
 }
 
 FileEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
-  path: PropTypes.string.isRequired,
+  path: PropTypes.string.isRequired
 };
 
 export default FileEditor;

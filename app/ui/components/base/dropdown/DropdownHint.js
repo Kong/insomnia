@@ -6,7 +6,7 @@ class DropdownHint extends PureComponent {
     const {char} = this.props;
     return (
       <span className="dropdown__hint">{MOD_SYM}{char}</span>
-    )
+    );
   }
 }
 

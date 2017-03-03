@@ -107,7 +107,7 @@ EnvironmentEditModal.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
-  lineWrapping: PropTypes.bool.isRequired,
+  lineWrapping: PropTypes.bool.isRequired
 };
 
 export default EnvironmentEditModal;

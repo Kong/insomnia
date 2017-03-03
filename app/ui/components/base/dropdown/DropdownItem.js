@@ -4,10 +4,6 @@ import classnames from 'classnames';
 
 @autobind
 class DropdownItem extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleClick (e) {
     const {stayOpenAfterClick, onClick, disabled} = this.props;
 
@@ -31,8 +27,8 @@ class DropdownItem extends PureComponent {
       buttonClass,
       children,
       className,
-      onClick, // Don't want this in ...props
-      stayOpenAfterClick, // Don't want this in ...props
+      onClick, // eslint-disable-line no-unused-vars
+      stayOpenAfterClick, // eslint-disable-line no-unused-vars
       ...props
     } = this.props;
 
@@ -51,14 +47,14 @@ class DropdownItem extends PureComponent {
     const button = React.createElement(buttonClass || 'button', buttonProps, inner);
     return (
       <li>{button}</li>
-    )
+    );
   }
 }
 
 DropdownItem.propTypes = {
   buttonClass: PropTypes.any,
   stayOpenAfterClick: PropTypes.bool,
-  value: PropTypes.any,
+  value: PropTypes.any
 };
 
 export default DropdownItem;

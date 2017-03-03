@@ -1,5 +1,4 @@
 import React, {PureComponent, PropTypes} from 'react';
-import {ipcRenderer} from 'electron';
 import classnames from 'classnames';
 import EnvironmentsModal from '../modals/WorkspaceEnvironmentsEditModal';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../base/dropdown';
@@ -35,7 +34,7 @@ class EnvironmentsDropdown extends PureComponent {
         <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
             <span>{description}</span>
-            {" "}
+            {' '}
             <i className="fa fa-caret-down"></i>
           </div>
         </DropdownButton>
@@ -61,7 +60,7 @@ class EnvironmentsDropdown extends PureComponent {
           <DropdownHint char="E"/>
         </DropdownItem>
       </Dropdown>
-    )
+    );
   }
 }
 
@@ -74,7 +73,7 @@ EnvironmentsDropdown.propTypes = {
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
-  activeEnvironment: PropTypes.object,
+  activeEnvironment: PropTypes.object
 };
 
 export default EnvironmentsDropdown;

@@ -1,10 +1,18 @@
 {
+  "parser": "babel-eslint",
   "extends": ["semistandard"],
-  "plugins": ["react"],
+  "plugins": ["react", "jest", "html", "json"],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
     }
+  },
+  "globals": {
+    "__DEV__": true,
+    "fail": true
+  },
+  "env": {
+    "jest/globals": true
   },
   "rules": {
     "react/jsx-uses-react": "error",

@@ -66,16 +66,20 @@ class DebouncedInput extends PureComponent {
   }
 
   render () {
-    // NOTE: Strip out onChange because we're overriding it
-    const {onChange, delay, textarea, ...props} = this.props;
+    const {
+      onChange, // eslint-disable-line no-unused-vars
+      delay, // eslint-disable-line no-unused-vars
+      textarea,
+      ...props
+    } = this.props;
     if (textarea) {
       return (
         <textarea ref={this._setRef} {...props} onChange={this._handleChange}/>
-      )
+      );
     } else {
       return (
         <input ref={this._setRef} {...props} onChange={this._handleChange}/>
-      )
+      );
     }
   }
 }
@@ -86,7 +90,7 @@ DebouncedInput.propTypes = {
 
   // Optional
   textarea: PropTypes.bool,
-  delay: PropTypes.number,
+  delay: PropTypes.number
 };
 
 export default DebouncedInput;

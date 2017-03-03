@@ -1,11 +1,16 @@
-import React, {PropTypes} from 'react';
+import React, {PureComponent} from 'react';
 import classnames from 'classnames';
 
-const DropdownRight = ({className, children, ...extraProps}) => (
-  <span className={classnames('dropdown__right', className)} {...extraProps}>
-    {children}
-  </span>
-);
+class DropdownRight extends PureComponent {
+  render () {
+    const {className, children, ...extraProps} = this.props;
+    return (
+      <span className={classnames('dropdown__right', className)} {...extraProps}>
+        {children}
+      </span>
+    );
+  }
+}
 
 DropdownRight.propTypes = {};
 

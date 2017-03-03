@@ -11,7 +11,7 @@
     "url": "https://github.com/gschier/insomnia"
   },
   "scripts": {
-    "test:lint": "eslint app/**/*.js webpack/**/*.js",
+    "test:lint": "eslint --ext .json --ext .js --ext .html ./app/** ./webpack/**",
     "test:noisy": "cross-env NODE_ENV=test jest",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage --silent && open ./coverage/lcov-report/index.html",
     "test:watch": "cross-env NODE_ENV=test jest --silent --watch",
@@ -139,6 +139,9 @@
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",
     "eslint-config-standard": "^7.0.0",
+    "eslint-plugin-html": "^2.0.1",
+    "eslint-plugin-jest": "^19.0.1",
+    "eslint-plugin-json": "^1.2.0",
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-react": "^6.10.0",
     "eslint-plugin-standard": "^2.1.1",

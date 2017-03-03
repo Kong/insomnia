@@ -22,7 +22,6 @@ const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
 
-
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
@@ -100,7 +99,7 @@ export function loadRequestStop (requestId) {
 }
 
 export function setActiveWorkspace (workspaceId) {
-  localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`, JSON.stringify(workspaceId));
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activeWorkspaceId`, JSON.stringify(workspaceId));
   return {type: SET_ACTIVE_WORKSPACE, workspaceId};
 }
 

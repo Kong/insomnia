@@ -219,7 +219,8 @@ export function describeByteSize (bytes) {
     unit = 'GB';
   }
 
-  return Math.round(size * 10) / 10 + ' ' + unit;
+  const rounded = Math.round(size * 10) / 10;
+  return `${rounded} ${unit}`;
 }
 
 export function nullFn () {

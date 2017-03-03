@@ -13,7 +13,7 @@ function _nunjucksMode () {
   let ticker = 1;
 
   return {
-    startState() {
+    startState () {
       return {inRaw: false};
     },
     token (stream, state) {
@@ -59,5 +59,5 @@ function _nunjucksMode () {
 
       return null;
     }
-  }
+  };
 }

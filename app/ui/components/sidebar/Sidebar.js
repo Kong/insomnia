@@ -10,9 +10,6 @@ import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/consta
 
 @autobind
 class Sidebar extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
   _handleChangeEnvironment (id) {
     const {handleSetActiveEnvironment} = this.props;
     handleSetActiveEnvironment(id);
@@ -53,7 +50,7 @@ class Sidebar extends PureComponent {
       moveRequest,
       moveRequestGroup,
       handleActivateRequest,
-      activeRequest,
+      activeRequest
     } = this.props;
 
     // Don't even render if it's hidden
@@ -119,7 +116,7 @@ class Sidebar extends PureComponent {
           workspace={workspace}
         />
       </aside>
-    )
+    );
   }
 }
 
@@ -154,7 +151,7 @@ Sidebar.propTypes = {
   // Optional
   filter: PropTypes.string,
   activeRequest: PropTypes.object,
-  activeEnvironment: PropTypes.object,
+  activeEnvironment: PropTypes.object
 };
 
 export default Sidebar;

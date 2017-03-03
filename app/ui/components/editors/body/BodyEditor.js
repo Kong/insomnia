@@ -9,10 +9,6 @@ import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../..
 
 @autobind
 class BodyEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleRawChange (rawValue) {
     const {onChange, request} = this.props;
 
@@ -54,7 +50,7 @@ class BodyEditor extends PureComponent {
           handleRender={handleRender}
           parameters={request.body.params || []}
         />
-      )
+      );
     } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
       return (
         <FormEditor
@@ -63,7 +59,7 @@ class BodyEditor extends PureComponent {
           handleRender={handleRender}
           parameters={request.body.params || []}
         />
-      )
+      );
     } else if (mimeType === CONTENT_TYPE_FILE) {
       return (
         <FileEditor
@@ -71,7 +67,7 @@ class BodyEditor extends PureComponent {
           onChange={this._handleFileChange}
           path={fileName || ''}
         />
-      )
+      );
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
@@ -85,7 +81,7 @@ class BodyEditor extends PureComponent {
           render={handleRender}
           onChange={this._handleRawChange}
         />
-      )
+      );
     } else {
       return (
         <div className="editor valign-center text-center">
@@ -95,7 +91,7 @@ class BodyEditor extends PureComponent {
             Select a body type from above
           </p>
         </div>
-      )
+      );
     }
   }
 }

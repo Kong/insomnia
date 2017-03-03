@@ -5,10 +5,6 @@ import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class AuthEditor extends PureComponent {
-  constructor (props) {
-    super(props);
-  }
-
   _handleOnCreate () {
     trackEvent('Auth Editor', 'Create');
   }
@@ -26,7 +22,7 @@ class AuthEditor extends PureComponent {
     const pair = {
       username: pairs.length ? pairs[0].name : '',
       password: pairs.length ? pairs[0].value : '',
-      disabled: pairs.length ? pairs[0].disabled : false,
+      disabled: pairs.length ? pairs[0].disabled : false
     };
 
     this.props.onChange(pair);
@@ -37,7 +33,7 @@ class AuthEditor extends PureComponent {
     const pairs = [{
       name: authentication.username || '',
       value: authentication.password || '',
-      disabled: authentication.disabled || false,
+      disabled: authentication.disabled || false
     }];
 
     return (
@@ -63,7 +59,7 @@ AuthEditor.propTypes = {
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   authentication: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired,
+  showPasswords: PropTypes.bool.isRequired
 };
 
 export default AuthEditor;

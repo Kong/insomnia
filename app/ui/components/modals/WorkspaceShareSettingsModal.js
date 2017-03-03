@@ -30,7 +30,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     this.modal = n;
   }
 
-  async _handleUnshare  () {
+  async _handleUnshare () {
     if (!session.isLoggedIn()) {
       return;
     }
@@ -54,7 +54,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
       label: 'Confirm password to share workspace',
       placeholder: '•••••••••••••••••',
       submitName: 'Share with Team',
-      inputType: 'password',
+      inputType: 'password'
     });
 
     const {resourceGroup} = this.state;
@@ -66,7 +66,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     } catch (err) {
       this._resetState({error: err.message, loading: false});
     }
-  };
+  }
 
   async _load () {
     if (!session.isLoggedIn()) {
@@ -94,7 +94,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
       teams: [],
       resourceGroup: null,
       error: '',
-      loading: false,
+      loading: false
     }, patch));
   }
 
@@ -132,9 +132,9 @@ class WorkspaceShareSettingsModal extends PureComponent {
                     resourceGroup && resourceGroup.teamId ? (
                         <DropdownButton className="btn btn--clicky">
                           <i className="fa fa-users"/> Shared with
-                          {" "}
+                          {' '}
                           <strong>{resourceGroup.teamName}</strong>
-                          {" "}
+                          {' '}
                           <i className="fa fa-caret-down"/>
                         </DropdownButton>
                       ) : (
@@ -145,7 +145,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
                   ) : (
                     <DropdownButton className="btn btn--clicky">
                       <i className="fa fa-spin fa-refresh"/> Loading...
-                      {" "}
+                      {' '}
                       <i className="fa fa-caret-down"/>
                     </DropdownButton>
                   )}
@@ -185,7 +185,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
 }
 
 WorkspaceShareSettingsModal.propTypes = {
-  workspace: PropTypes.object.isRequired,
+  workspace: PropTypes.object.isRequired
 };
 
 export default WorkspaceShareSettingsModal;
