@@ -57,6 +57,12 @@ class DebouncedInput extends PureComponent {
     }
   }
 
+  select () {
+    if (this._input) {
+      this._input.select();
+    }
+  }
+
   getValue () {
     if (this._input) {
       return this._input.value;

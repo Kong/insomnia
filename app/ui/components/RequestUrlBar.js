@@ -115,7 +115,7 @@ class RequestUrlBar extends PureComponent {
     if (metaPressed && e.keyCode === 76) {
       e.preventDefault();
       this._input.focus();
-      this._input.select();
+      this._input.selectAll();
     }
   }
 
@@ -253,8 +253,7 @@ class RequestUrlBar extends PureComponent {
             <i className="fa fa-repeat"/> Repeat on Interval
           </DropdownItem>
           {downloadPath ? (
-              <DropdownItem stayOpenAfterClick
-                            addIcon
+              <DropdownItem stayOpenAfterClick addIcon
                             buttonClass={PromptButton}
                             onClick={this._handleClearDownloadLocation}>
                 <i className="fa fa-stop-circle"/> Stop Auto-Download
