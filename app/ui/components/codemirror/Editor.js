@@ -80,7 +80,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   selectionPointer: 'default',
   styleActiveLine: true,
   indentWithTabs: true,
-  showCursorWhenSelecting: true,
+  showCursorWhenSelecting: false,
   cursorScrollMargin: 12, // NOTE: This is px
   keyMap: 'default',
   extraKeys: {
@@ -157,6 +157,7 @@ class Editor extends PureComponent {
       if (!this.hasFocus()) {
         this.focus();
       }
+
       this.codeMirror.setSelection(
         {line, ch: chStart},
         {line, ch: chEnd}
@@ -179,6 +180,15 @@ class Editor extends PureComponent {
       return this.codeMirror.hasFocus();
     } else {
       return false;
+    }
+  }
+
+  clearSelection () {
+    if (this.codeMirror) {
+      this.codeMirror.setSelection(
+        {line: -1, ch: -1},
+        {line: -1, ch: -1}
+      );
     }
   }
 

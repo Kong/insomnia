@@ -79,11 +79,13 @@ class KeyValueEditor extends PureComponent {
   _handleFocusName (pair) {
     this._setFocusedPair(pair);
     this._focusedField = NAME;
+    this._rows[pair.id].focusNameEnd();
   }
 
   _handleFocusValue (pair) {
     this._setFocusedPair(pair);
     this._focusedField = VALUE;
+    this._rows[pair.id].focusValueEnd();
   }
 
   _handleBlurName () {
@@ -268,9 +270,9 @@ class KeyValueEditor extends PureComponent {
     }
 
     if (this._focusedField === NAME) {
-      row.focusName();
+      row.focusNameEnd();
     } else {
-      row.focusValue();
+      row.focusValueEnd();
     }
   }
 
