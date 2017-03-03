@@ -1,17 +1,30 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import Lazy from '../../base/Lazy';
 import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
+@autobind
 class UrlEncodedEditor extends PureComponent {
-  _handleTrackToggle = pair => trackEvent(
-    'Url Encoded Editor',
-    'Toggle',
-    pair.disabled ? 'Disable' : 'Enable'
-  );
+  constructor (props) {
+    super(props);
+  }
 
-  _handleTrackCreate = () => trackEvent('Url Encoded Editor', 'Create');
-  _handleTrackDelete = () => trackEvent('Url Encoded Editor', 'Delete');
+  _handleTrackToggle (pair) {
+    trackEvent(
+      'Url Encoded Editor',
+      'Toggle',
+      pair.disabled ? 'Disable' : 'Enable'
+    );
+  }
+
+  _handleTrackCreate () {
+    trackEvent('Url Encoded Editor', 'Create');
+  }
+
+  _handleTrackDelete () {
+    trackEvent('Url Encoded Editor', 'Delete');
+  }
 
   render () {
     const {parameters, onChange, handleRender} = this.props;

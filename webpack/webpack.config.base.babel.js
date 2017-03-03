@@ -1,7 +1,7 @@
-import path from 'path';
-import * as pkg from '../app/package.json';
+const path = require('path');
+const pkg = require('../app/package.json');
 
-export default {
+module.exports = {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
   entry: [
@@ -17,7 +17,7 @@ export default {
     rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
+        use: ['babel-loader'],
         exclude: [/node_modules/, /__fixtures__/, /__tests__/],
       },
       {
@@ -29,11 +29,15 @@ export default {
         ],
       },
       {
-        test: /\.(html|png|woff2)$/,
+        test: /\.(html|woff2)$/,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]'
-        }
+          name: '[name].[ext]',
+        },
+      },
+      {
+        test: /\.(png)$/,
+        loader: 'url-loader',
       }
     ]
   },

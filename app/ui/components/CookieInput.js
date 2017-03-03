@@ -1,15 +1,27 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
-
+@autobind
 class CookieInput extends PureComponent {
-  state = {isValid: true};
+  constructor (props) {
+    super(props);
 
-  _handleChange () {
+    this.state = {
+      isValid: true,
+    };
+  }
+
+  _setInputRef (n) {
+    this._input = n;
+  }
+
+  _handleChange (e) {
     const isValid = this._isValid();
 
     if (isValid) {
-      this.props.onChange(this._input.value);
+      const value = e.target.value;
+      this.props.onChange(value);
     }
 
     this.setState({isValid})
@@ -31,10 +43,10 @@ class CookieInput extends PureComponent {
     return (
       <input
         className={isValid ? '' : 'input--error'}
-        ref={n => this._input = n}
+        ref={this._setInputRef}
         type="text"
         defaultValue={defaultValue}
-        onChange={e => this._handleChange(e.target.value)}
+        onChange={this._handleChange}
       />
     );
   }

@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import EnvironmentsDropdown from '../dropdowns/EnvironmentsDropdown';
 import SidebarFilter from './SidebarFilter';
@@ -7,22 +8,25 @@ import SyncButton from '../dropdowns/SyncDropdown';
 import WorkspaceDropdown from '../dropdowns/WorkspaceDropdown';
 import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/constants';
 
-
+@autobind
 class Sidebar extends PureComponent {
-  _handleChangeEnvironment = id => {
+  constructor (props) {
+    super(props);
+  }
+  _handleChangeEnvironment (id) {
     const {handleSetActiveEnvironment} = this.props;
     handleSetActiveEnvironment(id);
-  };
+  }
 
-  _handleCreateRequestInWorkspace = () => {
+  _handleCreateRequestInWorkspace () {
     const {workspace, handleCreateRequest} = this.props;
     handleCreateRequest(workspace._id);
-  };
+  }
 
-  _handleCreateRequestGroupInWorkspace = () => {
+  _handleCreateRequestGroupInWorkspace () {
     const {workspace, handleCreateRequestGroup} = this.props;
     handleCreateRequestGroup(workspace._id);
-  };
+  }
 
   render () {
     const {

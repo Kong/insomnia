@@ -1,20 +1,37 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../keyvalueeditor/Editor';
 import {trackEvent} from '../../../../analytics/index';
 
+@autobind
 class FormEditor extends PureComponent {
-  _handleTrackToggle = pair => {
+  constructor (props) {
+    super(props);
+  }
+
+  _handleTrackToggle (pair) {
     trackEvent(
       'Form Editor',
       `Toggle ${pair.type || 'text'}`,
       pair.disabled ? 'Disable' : 'Enable'
     );
-  };
+  }
 
-  _handleTrackChangeType = type => trackEvent('Form Editor', 'Change Type', type);
-  _handleTrackChooseFile = () => trackEvent('Form Editor', 'Choose File');
-  _handleTrackCreate = () => trackEvent('Form Editor', 'Create');
-  _handleTrackDelete = () => trackEvent('Form Editor', 'Delete');
+  _handleTrackChangeType (type) {
+    trackEvent('Form Editor', 'Change Type', type);
+  }
+
+  _handleTrackChooseFile () {
+    trackEvent('Form Editor', 'Choose File');
+  }
+
+  _handleTrackCreate () {
+    trackEvent('Form Editor', 'Create');
+  }
+
+  _handleTrackDelete () {
+    trackEvent('Form Editor', 'Delete');
+  }
 
   render () {
     const {parameters, onChange, handleRender} = this.props;

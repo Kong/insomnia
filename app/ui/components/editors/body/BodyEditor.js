@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import RawEditor from './RawEditor';
 import UrlEncodedEditor from './UrlEncodedEditor';
 import FormEditor from './FormEditor';
@@ -6,33 +7,38 @@ import FileEditor from './FileEditor';
 import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../../../../common/constants';
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 
+@autobind
 class BodyEditor extends PureComponent {
-  _handleRawChange = rawValue => {
+  constructor (props) {
+    super(props);
+  }
+
+  _handleRawChange (rawValue) {
     const {onChange, request} = this.props;
 
     const contentType = getContentTypeFromHeaders(request.headers);
     const newBody = newBodyRaw(rawValue, contentType || '');
 
     onChange(newBody);
-  };
+  }
 
-  _handleFormUrlEncodedChange = parameters => {
+  _handleFormUrlEncodedChange (parameters) {
     const {onChange} = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(newBody);
-  };
+  }
 
-  _handleFormChange = parameters => {
+  _handleFormChange (parameters) {
     const {onChange} = this.props;
     const newBody = newBodyForm(parameters);
     onChange(newBody);
-  };
+  }
 
-  _handleFileChange = path => {
+  _handleFileChange (path) {
     const {onChange} = this.props;
     const newBody = newBodyFile(path);
     onChange(newBody);
-  };
+  }
 
   render () {
     const {keyMap, fontSize, lineWrapping, request, handleRender} = this.props;

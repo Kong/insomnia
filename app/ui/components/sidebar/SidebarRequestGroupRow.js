@@ -1,28 +1,36 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import RequestGroupActionsDropdown from '../dropdowns/RequestGroupActionsDropdown';
 import SidebarRequestRow from './SidebarRequestRow';
 import {trackEvent} from '../../../analytics/index';
+import * as misc from '../../../common/misc';
 
+@autobind
 class SidebarRequestGroupRow extends PureComponent {
-  state = {dragDirection: 0};
+  constructor (props) {
+    super(props);
+    this.state = {
+      dragDirection: 0
+    };
+  }
 
-  _setRequestGroupActionsDropdownRef = n => this._requestGroupActionsDropdown = n;
+  _setRequestGroupActionsDropdownRef (n) {
+    this._requestGroupActionsDropdown = n;
+  }
 
-  _handleCollapse = () => {
+  _handleCollapse () {
     const {requestGroup, handleSetRequestGroupCollapsed, isCollapsed} = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
     trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open')
-  };
+  }
 
-  _handleShowActions = e => {
+  _handleShowActions (e) {
     e.preventDefault();
     this._requestGroupActionsDropdown.show();
-  };
-
-  _nullFunction = () => null;
+  }
 
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
@@ -93,9 +101,9 @@ class SidebarRequestGroupRow extends PureComponent {
         <ul className={classnames('sidebar__list', {'sidebar__list--collapsed': isCollapsed})}>
           {children.length > 0 ? children : (
               <SidebarRequestRow
-                handleActivateRequest={this._nullFunction}
-                handleDuplicateRequest={this._nullFunction}
-                handleGenerateCode={this._nullFunction}
+                handleActivateRequest={misc.nullFn}
+                handleDuplicateRequest={misc.nullFn}
+                handleGenerateCode={misc.nullFn}
                 moveRequest={moveRequest}
                 isActive={false}
                 request={null}

@@ -1,17 +1,26 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 
+@autobind
 class Editable extends PureComponent {
-  state = {editing: false};
+  constructor (props) {
+    super(props);
+    this.state = {
+      editing: false
+    };
+  }
 
-  _handleSetInputRef = n => this._input = n;
+  _handleSetInputRef (n) {
+    this._input = n;
+  }
 
-  _handleSingleClickEditStart = () => {
+  _handleSingleClickEditStart () {
     if (this.props.singleClick) {
       this._handleEditStart();
     }
-  };
+  }
 
-  _handleEditStart = () => {
+  _handleEditStart () {
     this.setState({editing: true});
 
     setTimeout(() => {
@@ -22,9 +31,9 @@ class Editable extends PureComponent {
     if (this.props.onEditStart) {
       this.props.onEditStart();
     }
-  };
+  }
 
-  _handleEditEnd = () => {
+  _handleEditEnd () {
     const value = this._input.value.trim();
 
     if (!value) {
@@ -37,9 +46,9 @@ class Editable extends PureComponent {
     // This timeout prevents the UI from showing the old value after submit.
     // It should give the UI enough time to redraw the new value.
     setTimeout(async () => this.setState({editing: false}), 100);
-  };
+  }
 
-  _handleEditKeyDown = e => {
+  _handleEditKeyDown (e) {
     if (e.keyCode === 13) {
       // Pressed Enter
       this._handleEditEnd();
@@ -49,7 +58,7 @@ class Editable extends PureComponent {
       // TODO: Make escape blur without saving
       this._input && this._input.blur();
     }
-  };
+  }
 
   render () {
     const {value, singleClick, onEditStart, className, ...extra} = this.props;

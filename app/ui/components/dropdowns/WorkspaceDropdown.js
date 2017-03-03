@@ -1,7 +1,12 @@
 import React, {PureComponent, PropTypes} from 'react';
-import classnames from 'classnames';
+import autobind from 'autobind-decorator';
+import * as classnames from 'classnames';
 import {ipcRenderer, shell} from 'electron';
-import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint, DropdownRight} from '../base/dropdown';
+import Dropdown from '../base/dropdown/Dropdown';
+import DropdownDivider from '../base/dropdown/DropdownDivider';
+import DropdownButton from '../base/dropdown/DropdownButton';
+import DropdownItem from '../base/dropdown/DropdownItem';
+import DropdownHint from '../base/dropdown/DropdownHint';
 import PromptModal from '../modals/PromptModal';
 import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/SettingsModal';
 import * as models from '../../../models';
@@ -15,41 +20,49 @@ import * as session from '../../../sync/session';
 import PromptButton from '../base/PromptButton';
 import LoginModal from '../modals/LoginModal';
 
+@autobind
 class WorkspaceDropdown extends PureComponent {
-  state = {
-    loggedIn: false
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      loggedIn: false
+    };
+  }
 
-  _handleDropdownOpen = () => {
+  _handleDropdownOpen () {
     if (this.state.loggedIn !== session.isLoggedIn()) {
       this.setState({loggedIn: session.isLoggedIn()});
     }
-  };
+  }
 
-  _handleShowLogin = () => {
+  _handleShowLogin () {
     showModal(LoginModal);
-  };
+  }
 
-  _handleShowExport = () => showModal(SettingsModal, TAB_INDEX_EXPORT);
-  _handleShowSettings = () => showModal(SettingsModal);
-  _handleShowWorkspaceSettings = () => {
+  _handleShowExport () {
+    showModal(SettingsModal, TAB_INDEX_EXPORT);
+  }
+  _handleShowSettings () {
+    showModal(SettingsModal);
+  }
+  _handleShowWorkspaceSettings () {
     showModal(WorkspaceSettingsModal, {
       workspace: this.props.activeWorkspace,
     });
-  };
+  }
 
-  _handleShowShareSettings = () => {
+  _handleShowShareSettings () {
     showModal(WorkspaceShareSettingsModal, {
       workspace: this.props.activeWorkspace,
     });
-  };
+  }
 
-  _handleSwitchWorkspace = workspaceId => {
+  _handleSwitchWorkspace (workspaceId) {
     this.props.handleSetActiveWorkspace(workspaceId);
     trackEvent('Workspace', 'Switch');
-  };
+  }
 
-  _handleWorkspaceCreate = async noTrack => {
+  async _handleWorkspaceCreate (noTrack) {
     const name = await showModal(PromptModal, {
       headerName: 'Create New Workspace',
       defaultValue: 'My Workspace',
@@ -63,7 +76,7 @@ class WorkspaceDropdown extends PureComponent {
     if (!noTrack) {
       trackEvent('Workspace', 'Create');
     }
-  };
+  }
 
   render () {
     const {

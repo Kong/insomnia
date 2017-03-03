@@ -1,12 +1,11 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {DragDropContext} from 'react-dnd';
 import {toggleModal, showModal} from '../components/modals';
-import HTML5Backend from 'react-dnd-html5-backend';
 import Wrapper from '../components/Wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import Toast from '../components/Toast';
@@ -39,9 +38,11 @@ const KEY_L = 76;
 const KEY_N = 78;
 const KEY_P = 80;
 
+@autobind
 class App extends PureComponent {
   constructor (props) {
     super(props);
+
     this.state = {
       draggingSidebar: false,
       draggingPane: false,
@@ -50,6 +51,9 @@ class App extends PureComponent {
     };
 
     this._getRenderContextCache = {};
+
+    this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
+    this._saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
 
     this._globalKeyMap = [
       { // Show Workspace Settings
@@ -130,11 +134,19 @@ class App extends PureComponent {
     ];
   }
 
-  _setRequestPaneRef = n => this._requestPane = n;
-  _setResponsePaneRef = n => this._responsePane = n;
-  _setSidebarRef = n => this._sidebar = n;
+  _setRequestPaneRef (n) {
+    this._requestPane = n;
+  }
 
-  _requestGroupCreate = async (parentId) => {
+  _setResponsePaneRef (n) {
+    this._responsePane = n;
+  }
+
+  _setSidebarRef (n) {
+    this._sidebar = n;
+  }
+
+  async _requestGroupCreate (parentId) {
     const name = await showModal(PromptModal, {
       headerName: 'New Folder',
       defaultValue: 'My Folder',
@@ -144,25 +156,25 @@ class App extends PureComponent {
     });
 
     models.requestGroup.create({parentId, name})
-  };
+  }
 
-  _requestCreate = async parentId => {
+  async _requestCreate (parentId) {
     const request = await showModal(RequestCreateModal, {parentId});
     this._handleSetActiveRequest(request._id)
-  };
+  }
 
-  _requestGroupDuplicate = async requestGroup => {
+  async _requestGroupDuplicate (requestGroup) {
     models.requestGroup.duplicate(requestGroup);
-  };
+  }
 
-  _requestDuplicate = async request => {
+  async _requestDuplicate (request) {
     if (!request) {
       return;
     }
 
     const newRequest = await models.request.duplicate(request);
     await this._handleSetActiveRequest(newRequest._id)
-  };
+  }
 
   /**
    * Heavily optimized render function
@@ -173,7 +185,7 @@ class App extends PureComponent {
    * @returns {Promise}
    * @private
    */
-  _handleRenderText = async (text, strict = false, contextCacheKey = null) => {
+  async _handleRenderText (text, strict = false, contextCacheKey = null) {
     if (!contextCacheKey || !this._getRenderContextCache[contextCacheKey]) {
       const {activeEnvironment, activeRequest} = this.props;
       const environmentId = activeEnvironment ? activeEnvironment._id : null;
@@ -187,17 +199,17 @@ class App extends PureComponent {
 
     const context = await this._getRenderContextCache[contextCacheKey];
     return render.render(text, context, strict);
-  };
+  }
 
-  _handleGenerateCodeForActiveRequest = () => {
+  _handleGenerateCodeForActiveRequest () {
     this._handleGenerateCode(this.props.activeRequest);
-  };
+  }
 
-  _handleGenerateCode = request => {
+  _handleGenerateCode (request) {
     showModal(GenerateCodeModal, request);
-  };
+  }
 
-  _updateRequestGroupMetaByParentId = async (requestGroupId, patch) => {
+  async _updateRequestGroupMetaByParentId (requestGroupId, patch) {
     const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
     if (requestGroupMeta) {
       await models.requestGroupMeta.update(requestGroupMeta, patch);
@@ -205,9 +217,9 @@ class App extends PureComponent {
       const newPatch = Object.assign({parentId: requestGroupId}, patch);
       await models.requestGroupMeta.create(newPatch);
     }
-  };
+  }
 
-  _updateActiveWorkspaceMeta = async (patch) => {
+  async _updateActiveWorkspaceMeta (patch) {
     const workspaceId = this.props.activeWorkspace._id;
     const requestMeta = await models.workspaceMeta.getByParentId(workspaceId);
     if (requestMeta) {
@@ -216,9 +228,9 @@ class App extends PureComponent {
       const newPatch = Object.assign({parentId: workspaceId}, patch);
       await models.workspaceMeta.create(newPatch);
     }
-  };
+  }
 
-  _updateRequestMetaByParentId = async (requestId, patch) => {
+  async _updateRequestMetaByParentId (requestId, patch) {
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     if (requestMeta) {
       await models.requestMeta.update(requestMeta, patch);
@@ -226,50 +238,48 @@ class App extends PureComponent {
       const newPatch = Object.assign({parentId: requestId}, patch);
       await models.requestMeta.create(newPatch);
     }
-  };
+  }
 
-  _savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
-  _handleSetPaneWidth = paneWidth => {
+  _handleSetPaneWidth (paneWidth) {
     this.setState({paneWidth});
     this._savePaneWidth(paneWidth);
-  };
+  }
 
-  _handleSetActiveRequest = async activeRequestId => {
+  async _handleSetActiveRequest (activeRequestId) {
     await this._updateActiveWorkspaceMeta({activeRequestId});
   };
 
-  _handleSetActiveEnvironment = async activeEnvironmentId => {
+  async _handleSetActiveEnvironment (activeEnvironmentId) {
     await this._updateActiveWorkspaceMeta({activeEnvironmentId});
     this._wrapper._forceRequestPaneRefresh();
-  };
+  }
 
-  _saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
-  _handleSetSidebarWidth = sidebarWidth => {
+  _handleSetSidebarWidth (sidebarWidth) {
     this.setState({sidebarWidth});
     this._saveSidebarWidth(sidebarWidth);
-  };
+  }
 
-  _handleSetSidebarHidden = async sidebarHidden => {
+  async _handleSetSidebarHidden (sidebarHidden) {
     await this._updateActiveWorkspaceMeta({sidebarHidden});
   };
 
-  _handleSetSidebarFilter = async sidebarFilter => {
+  async _handleSetSidebarFilter (sidebarFilter) {
     await this._updateActiveWorkspaceMeta({sidebarFilter});
-  };
+  }
 
-  _handleSetRequestGroupCollapsed = (requestGroupId, collapsed) => {
+  _handleSetRequestGroupCollapsed (requestGroupId, collapsed) {
     this._updateRequestGroupMetaByParentId(requestGroupId, {collapsed});
-  };
+  }
 
-  _handleSetResponsePreviewMode = (requestId, previewMode) => {
+  _handleSetResponsePreviewMode (requestId, previewMode) {
     this._updateRequestMetaByParentId(requestId, {previewMode});
-  };
+  }
 
-  _handleSetResponseFilter = (requestId, responseFilter) => {
+  _handleSetResponseFilter (requestId, responseFilter) {
     this._updateRequestMetaByParentId(requestId, {responseFilter});
-  };
+  }
 
-  _handleSendAndDownloadRequestWithEnvironment = async (requestId, environmentId, dir) => {
+  async _handleSendAndDownloadRequestWithEnvironment (requestId, environmentId, dir) {
     const request = await models.request.getById(requestId);
     if (!request) {
       return;
@@ -312,9 +322,9 @@ class App extends PureComponent {
 
     // Stop loading
     this.props.handleStopLoading(requestId);
-  };
+  }
 
-  _handleSendRequestWithEnvironment = async (requestId, environmentId) => {
+  async _handleSendRequestWithEnvironment (requestId, environmentId) {
     const request = await models.request.getById(requestId);
     if (!request) {
       return;
@@ -343,39 +353,39 @@ class App extends PureComponent {
 
     // Stop loading
     this.props.handleStopLoading(requestId);
-  };
+  }
 
-  _handleSetActiveResponse = (requestId, activeResponseId) => {
+  _handleSetActiveResponse (requestId, activeResponseId) {
     this._updateRequestMetaByParentId(requestId, {activeResponseId});
-  };
+  }
 
-  _requestCreateForWorkspace = () => {
+  _requestCreateForWorkspace () {
     this._requestCreate(this.props.activeWorkspace._id);
-  };
+  }
 
-  _startDragSidebar = () => {
+  _startDragSidebar () {
     trackEvent('Sidebar', 'Drag');
     this.setState({draggingSidebar: true})
-  };
+  }
 
-  _resetDragSidebar = () => {
+  _resetDragSidebar () {
     trackEvent('Sidebar', 'Drag');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetSidebarWidth(DEFAULT_SIDEBAR_WIDTH), 50);
-  };
+  }
 
-  _startDragPane = () => {
+  _startDragPane () {
     trackEvent('App Pane', 'Drag Start');
     this.setState({draggingPane: true})
-  };
+  }
 
-  _resetDragPane = () => {
+  _resetDragPane () {
     trackEvent('App Pane', 'Drag Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetPaneWidth(DEFAULT_PANE_WIDTH), 50);
-  };
+  }
 
-  _handleMouseMove = (e) => {
+  _handleMouseMove (e) {
     if (this.state.draggingPane) {
       const requestPane = ReactDOM.findDOMNode(this._requestPane);
       const responsePane = ReactDOM.findDOMNode(this._responsePane);
@@ -394,9 +404,9 @@ class App extends PureComponent {
       let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
       this._handleSetSidebarWidth(sidebarWidth);
     }
-  };
+  }
 
-  _handleMouseUp = () => {
+  _handleMouseUp () {
     if (this.state.draggingSidebar) {
       this.setState({draggingSidebar: false});
     }
@@ -404,9 +414,9 @@ class App extends PureComponent {
     if (this.state.draggingPane) {
       this.setState({draggingPane: false});
     }
-  };
+  }
 
-  _handleKeyDown = e => {
+  _handleKeyDown (e) {
     const isMetaPressed = isMac() ? e.metaKey : e.ctrlKey;
     const isShiftPressed = e.shiftKey;
 
@@ -425,15 +435,17 @@ class App extends PureComponent {
 
       callback();
     }
-  };
+  }
 
-  _handleToggleSidebar = async () => {
+  async _handleToggleSidebar () {
     const sidebarHidden = !this.props.sidebarHidden;
     await this._handleSetSidebarHidden(sidebarHidden);
     trackEvent('Sidebar', 'Toggle Visibility', sidebarHidden ? 'Hide' : 'Show');
-  };
+  }
 
-  _setWrapperRef = n => this._wrapper = n;
+  _setWrapperRef (n) {
+    this._wrapper = n;
+  }
 
   async componentDidMount () {
     // Bind mouse and key handlers
@@ -747,6 +759,5 @@ async function _moveRequest (requestToMove, parentId, targetId, targetOffset) {
   }
 }
 
-const reduxApp = connect(mapStateToProps, mapDispatchToProps)(App);
-export default DragDropContext(HTML5Backend)(reduxApp);
+export default connect(mapStateToProps, mapDispatchToProps)(App);
 

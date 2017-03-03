@@ -1,9 +1,16 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import * as querystring from '../../common/querystring';
 import * as util from '../../common/misc';
 
+@autobind
 class RenderedQueryString extends PureComponent {
-  state = {string: ''};
+  constructor (props) {
+    super(props);
+    this.state = {
+      string: ''
+    };
+  }
 
   _update (props, delay = false) {
     clearTimeout(this._triggerTimeout);

@@ -39,7 +39,7 @@ describe('Test push/pull behaviour', () => {
 
     // Set up sync modes
     await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
-    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_OFF);
+    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_UNSET);
 
     await sync.push(); // Push only active configs
     await sync.push(resourceRequest.resourceGroupId); // Force push rg_1
@@ -268,8 +268,19 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect((await syncStorage.allConfigs()).length).toBe(2);
     expect((await syncStorage.allResources()).length).toBe(7);
 
+    // Mark all configs as auto sync
+    const configs = await syncStorage.allConfigs();
+    for (const config of configs) {
+      await syncStorage.updateConfig(config, {
+        syncMode: syncStorage.SYNC_MODE_ON
+      });
+    }
+
     // Do initial push
     await sync.push();
+
+    // Reset mocks once again before tests
+    await _setupSessionMocks();
   });
 
   it('Resources created on DB change', async () => {
@@ -294,15 +305,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(_decryptResource(resource).url).toBe('https://google.com');
     expect(resource.removed).toBe(false);
 
-    expect(session.syncPush.mock.calls.length).toBe(2);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(7);
-    // NOTE: This would be 1 if we were mocking the "push" response properly
-    // and telling the client to set the created docs to dirty=false
-    expect(session.syncPush.mock.calls[1][0].length).toBe(8);
+    expect(session.syncPush.mock.calls.length).toBe(1);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(8);
 
-    expect(session.syncPull.mock.calls.length).toBe(1);
-    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
-    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
+    expect(session.syncPull.mock.calls).toEqual([]);
   });
 
   it('Resources revived on DB change', async () => {
@@ -358,13 +364,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(_decryptResource(updatedResource).name).toBe('New Name');
     expect(resource.removed).toBe(false);
 
-    expect(session.syncPush.mock.calls.length).toBe(2);
+    expect(session.syncPush.mock.calls.length).toBe(1);
     expect(session.syncPush.mock.calls[0][0].length).toBe(7);
-    expect(session.syncPush.mock.calls[1][0].length).toBe(7);
 
-    expect(session.syncPull.mock.calls.length).toBe(1);
-    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
-    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
+    expect(session.syncPull.mock.calls).toEqual([]);
   });
 
   it('Resources removed on DB change', async () => {
@@ -384,13 +387,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(resource.removed).toBe(false);
     expect(updatedResource.removed).toBe(true);
 
-    expect(session.syncPush.mock.calls.length).toBe(2);
+    expect(session.syncPush.mock.calls.length).toBe(1);
     expect(session.syncPush.mock.calls[0][0].length).toBe(7);
-    expect(session.syncPush.mock.calls[1][0].length).toBe(7);
 
-    expect(session.syncPull.mock.calls.length).toBe(1);
-    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
-    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
+    expect(session.syncPull.mock.calls).toEqual([]);
   });
 });
 

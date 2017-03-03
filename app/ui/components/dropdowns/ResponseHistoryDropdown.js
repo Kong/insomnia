@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import SizeTag from '../tags/SizeTag';
 import StatusTag from '../tags/StatusTag';
@@ -8,22 +9,28 @@ import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
 import * as misc from '../../../common/misc';
 
+@autobind
 class ResponseHistoryDropdown extends PureComponent {
-  state = {
-    responses: [],
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      responses: [],
+    };
 
-  _handleDeleteResponses = () => {
+    this._load = misc.debounce(this._load);
+  }
+
+  _handleDeleteResponses () {
     trackEvent('History', 'Delete Responses');
     this.props.handleDeleteResponses(this.props.requestId);
-  };
+  }
 
-  _handleSetActiveResponse = responseId => {
+  _handleSetActiveResponse (responseId) {
     trackEvent('History', 'Activate Response');
     this.props.handleSetActiveResponse(responseId);
-  };
+  }
 
-  _load = misc.debounce(async requestId => {
+  async _load (requestId) {
     const responses = await models.response.findRecentForRequest(requestId);
 
     // NOTE: this is bad practice, but I can't figure out a better way.
@@ -36,7 +43,7 @@ class ResponseHistoryDropdown extends PureComponent {
     if (this.state.responses.length !== responses.length) {
       this.setState({responses});
     }
-  });
+  }
 
   componentWillUnmount () {
     this._unmounted = true;
@@ -51,7 +58,7 @@ class ResponseHistoryDropdown extends PureComponent {
     this._load(this.props.requestId);
   }
 
-  renderDropdownItem = (response, i) => {
+  renderDropdownItem (response, i) {
     const {activeResponseId} = this.props;
     const active = response._id === activeResponseId;
     return (
@@ -68,7 +75,7 @@ class ResponseHistoryDropdown extends PureComponent {
         <SizeTag bytes={response.bytesRead} small/>
       </DropdownItem>
     )
-  };
+  }
 
   render () {
     const {

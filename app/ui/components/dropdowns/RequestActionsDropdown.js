@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import PromptButton from '../base/PromptButton';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptModal from '../modals/PromptModal';
@@ -6,22 +7,27 @@ import * as models from '../../../models';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 
-
+@autobind
 class RequestActionsDropdown extends PureComponent {
-  _setDropdownRef = n => this._dropdown = n;
+  constructor (props) {
+    super(props);
+  }
+  _setDropdownRef (n) {
+    this._dropdown = n;
+  }
 
-  _handleDuplicate = () => {
+  _handleDuplicate () {
     const {request, handleDuplicateRequest} = this.props;
     handleDuplicateRequest(request);
     trackEvent('Request', 'Duplicate', 'Request Action');
-  };
+  }
 
-  _handleGenerateCode = () => {
+  _handleGenerateCode () {
     this.props.handleGenerateCode(this.props.request);
     trackEvent('Request', 'Generate Code', 'Request Action');
-  };
+  }
 
-  _handlePromptUpdateName = async () => {
+  async _handlePromptUpdateName () {
     const {request} = this.props;
 
     const name = await showModal(PromptModal, {
@@ -33,13 +39,13 @@ class RequestActionsDropdown extends PureComponent {
     models.request.update(request, {name});
 
     trackEvent('Request', 'Rename', 'Request Action');
-  };
+  }
 
-  _handleRemove = () => {
+  _handleRemove () {
     const {request} = this.props;
     models.request.remove(request);
     trackEvent('Request', 'Delete', 'Action');
-  };
+  }
 
   show () {
     this._dropdown.show();

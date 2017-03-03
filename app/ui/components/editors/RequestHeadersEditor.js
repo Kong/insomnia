@@ -1,18 +1,31 @@
 import React, {PureComponent, PropTypes} from 'react';
-
+import autobind from 'autobind-decorator';
 import KeyValueEditor from '../keyvalueeditor/Editor';
 import Editor from '../codemirror/Editor';
 import Lazy from '../base/Lazy';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class RequestHeadersEditor extends PureComponent {
-  _handleBulkUpdate = headersString => {
-    this.props.onChange(this._getHeadersFromString(headersString));
-  };
+  constructor (props) {
+    super(props);
+  }
 
-  _handleTrackToggle = pair => trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
-  _handleTrackCreate = () => trackEvent('Headers Editor', 'Create');
-  _handleTrackDelete = () => trackEvent('Headers Editor', 'Delete');
+  _handleBulkUpdate (headersString) {
+    this.props.onChange(this._getHeadersFromString(headersString));
+  }
+
+  _handleTrackToggle (pair) {
+    trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
+  }
+
+  _handleTrackCreate () {
+    trackEvent('Headers Editor', 'Create');
+  }
+
+  _handleTrackDelete () {
+    trackEvent('Headers Editor', 'Delete');
+  }
 
   _getHeadersFromString (headersString) {
     const headers = [];

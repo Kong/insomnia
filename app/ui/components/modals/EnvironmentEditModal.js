@@ -1,21 +1,32 @@
 import React, {PropTypes, PureComponent} from 'react';
-
+import autobind from 'autobind-decorator';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
 import ModalFooter from '../base/ModalFooter';
 
-
+@autobind
 class EnvironmentEditModal extends PureComponent {
-  state = {
-    requestGroup: null,
-    isValid: true
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      requestGroup: null,
+      isValid: true
+    };
+  }
 
-  _hide = () => this.modal.hide();
-  _setModalRef = n => this.modal = n;
-  _setEditorRef = n => this._envEditor = n;
+  _hide () {
+    this.modal.hide();
+  }
+
+  _setModalRef (n) {
+    this.modal = n;
+  }
+
+  _setEditorRef (n) {
+    this._envEditor = n;
+  }
 
   _saveChanges () {
     if (!this._envEditor.isValid()) {
@@ -28,7 +39,7 @@ class EnvironmentEditModal extends PureComponent {
     this.props.onChange(Object.assign({}, requestGroup, {environment}));
   }
 
-  _didChange = () => {
+  _didChange () {
     this._saveChanges();
 
     const isValid = this._envEditor.isValid();

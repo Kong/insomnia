@@ -9,7 +9,7 @@ class ModalHeader extends PureComponent {
     if (!hideCloseButton) {
       closeButton = (
         <button type="button" className="btn btn--compact modal__close-btn" data-close-modal="true">
-          <i className="fa fa-times"></i>
+          <i className="fa fa-times"/>
         </button>
       )
     }

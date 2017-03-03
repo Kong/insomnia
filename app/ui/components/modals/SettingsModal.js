@@ -1,5 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import Modal from '../base/Modal';
 import Button from '../base/Button';
@@ -17,44 +18,53 @@ import * as session from '../../../sync/session';
 
 export const TAB_INDEX_EXPORT = 1;
 
+@autobind
 class SettingsModal extends PureComponent {
   constructor (props) {
     super(props);
+    this.state = {};
     this._currentTabIndex = -1;
-    this.state = {}
   }
 
-  _setModalRef = n => this.modal = n;
-  _trackTab = name => trackEvent('Setting', `Tab ${name}`);
-  _handleTabSelect = currentTabIndex => this.setState({currentTabIndex});
-  _handleUpdateSetting = (key, value) => {
+  _setModalRef (n) {
+    this.modal = n;
+  }
+
+  _trackTab (name){
+    trackEvent('Setting', `Tab ${name}`);
+  }
+
+  _handleTabSelect (currentTabIndex) {
+    this.setState({currentTabIndex});
+  }
+  _handleUpdateSetting (key, value) {
     models.settings.update(this.props.settings, {[key]: value});
     trackEvent('Setting', 'Change', key)
-  };
+  }
 
-  _handleExportAllToFile = () => {
+  _handleExportAllToFile () {
     this.props.handleExportAllToFile();
     this.modal.hide()
-  };
+  }
 
-  _handleExportWorkspace = () => {
+  _handleExportWorkspace () {
     this.props.handleExportWorkspaceToFile();
     this.modal.hide()
-  };
+  }
 
-  _handleImport = () => {
+  _handleImport () {
     this.props.handleImportFile();
     this.modal.hide()
-  };
+  }
 
-  _handleChangeTheme = (theme, persist = true) => {
+  _handleChangeTheme (theme, persist = true) {
     document.body.setAttribute('theme', theme);
 
     if (persist) {
       trackEvent('Setting', 'Change Theme', theme);
       models.settings.update(this.props.settings, {theme});
     }
-  };
+  }
 
   componentDidMount () {
     // Hacky way to set theme on launch
@@ -72,6 +82,7 @@ class SettingsModal extends PureComponent {
   }
 
   toggle (currentTabIndex = 0) {
+    console.log('THIS', this);
     this.setState({currentTabIndex});
     this.modal.toggle();
   }

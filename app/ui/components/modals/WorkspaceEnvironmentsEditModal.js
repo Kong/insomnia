@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/PromptButton';
@@ -13,19 +14,31 @@ import ModalFooter from '../base/ModalFooter';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
+@autobind
 class WorkspaceEnvironmentsEditModal extends PureComponent {
-  state = {
-    workspace: null,
-    isValid: true,
-    subEnvironments: [],
-    rootEnvironment: null,
-    activeEnvironmentId: null,
-    forceRefreshKey: 0,
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      workspace: null,
+      isValid: true,
+      subEnvironments: [],
+      rootEnvironment: null,
+      activeEnvironmentId: null,
+      forceRefreshKey: 0,
+    };
+  }
 
-  _hide = () => this.modal.hide();
-  _setEditorRef = n => this._envEditor = n;
-  _setModalRef = n => this.modal = n;
+  _hide () {
+    this.modal.hide();
+  }
+
+  _setEditorRef (n) {
+    this._envEditor = n;
+  }
+
+  _setModalRef (n) {
+    this.modal = n;
+  }
 
   async show (workspace) {
     this.modal.show();
@@ -64,7 +77,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     });
   }
 
-  _handleAddEnvironment = async (isPrivate = false) => {
+  async _handleAddEnvironment (isPrivate = false) {
     const {rootEnvironment, workspace} = this.state;
     const parentId = rootEnvironment._id;
     const environment = await models.environment.create({parentId, isPrivate});
@@ -74,9 +87,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
       'Environment',
       isPrivate ? 'Create' : 'Create Private'
     );
-  };
+  }
 
-  _handleShowEnvironment = async environment => {
+  async _handleShowEnvironment (environment) {
     // Don't allow switching if the current one has errors
     if (!this._envEditor.isValid()) {
       return;
@@ -89,9 +102,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     const {workspace} = this.state;
     await this._load(workspace, environment);
     trackEvent('Environment Editor', 'Show Environment');
-  };
+  }
 
-  _handleDeleteEnvironment = async () => {
+  async _handleDeleteEnvironment () {
     const {rootEnvironment, workspace} = this.state;
     const environment = this._getActiveEnvironment();
 
@@ -105,9 +118,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
 
     await this._load(workspace, rootEnvironment);
     trackEvent('Environment', 'Delete');
-  };
+  }
 
-  _handleChangeEnvironmentName = async (environment, name) => {
+  async _handleChangeEnvironmentName (environment, name) {
     const {workspace} = this.state;
 
     // NOTE: Fetch the environment first because it might not be up to date.
@@ -119,7 +132,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     trackEvent('Environment', 'Rename');
   };
 
-  _didChange = () => {
+  _didChange () {
     const isValid = this._envEditor.isValid();
 
     if (this.state.isValid === isValid) {
@@ -127,7 +140,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     }
 
     this._saveChanges();
-  };
+  }
 
   _getActiveEnvironment () {
     const {activeEnvironmentId, subEnvironments, rootEnvironment} = this.state;
@@ -178,8 +191,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                 <DropdownItem onClick={this._handleAddEnvironment} value={false}>
                   <i className="fa fa-eye"/> Environment
                 </DropdownItem>
-                <DropdownItem onClick={this._handleAddEnvironment}
-                              value
+                <DropdownItem onClick={this._handleAddEnvironment} value={true}
                               title="Environment will not be exported or synced">
                   <i className="fa fa-eye-slash"/> Private Environment
                 </DropdownItem>

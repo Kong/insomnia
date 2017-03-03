@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
-
 import CopyButton from '../base/CopyButton';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import Editor from '../codemirror/Editor';
@@ -26,7 +26,7 @@ const TO_ADD_CONTENT_LENGTH = {
   node: ['native']
 };
 
-
+@autobind
 class GenerateCodeModal extends PureComponent {
   constructor (props) {
     super(props);
@@ -53,18 +53,24 @@ class GenerateCodeModal extends PureComponent {
     };
   }
 
-  _setModalRef = n => this.modal = n;
-  _setEditorRef = n => this._editor = n;
+  _setModalRef (n) {
+    this.modal = n;
+  }
+  _setEditorRef (n) {
+    this._editor = n;
+  }
 
-  _hide = () => this.modal.hide();
+  _hide () {
+    this.modal.hide();
+  }
 
-  _handleClientChange = client => {
+  _handleClientChange (client) {
     const {target, request} = this.state;
     this._generateCode(request, target, client);
     trackEvent('Generate Code', 'Client Change', `${target.title}/${client.title}`);
-  };
+  }
 
-  _handleTargetChange = target => {
+  _handleTargetChange (target) {
     const {target: currentTarget} = this.state;
     if (currentTarget.key === target.key) {
       // No change
@@ -74,7 +80,7 @@ class GenerateCodeModal extends PureComponent {
     const client = target.clients.find(c => c.key === target.default);
     this._generateCode(this.state.request, target, client);
     trackEvent('Generate Code', 'Target Change', target.title);
-  };
+  }
 
   async _generateCode (request, target, client) {
     // Some clients need a content-length for the request to succeed
