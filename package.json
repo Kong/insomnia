@@ -131,7 +131,6 @@
     "css-loader": "~0.26.2",
     "electron": "~1.6.1",
     "electron-builder": "~10.17.3",
-    "express": "~4.14.0",
     "file-loader": "~0.10.1",
     "jest": "~18.1.0",
     "jsbn": "~0.1.0",
