@@ -53,7 +53,7 @@ class KeyValueEditorRow extends PureComponent {
   _handleValueChange (value) {
     this._sendChange({value});
   }
-  _handleFileNameChange (filename) {
+  _handleFileNameChange (fileName) {
     this._sendChange({fileName});
   }
   _handleTypeChange (type)  {

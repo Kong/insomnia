@@ -70,7 +70,6 @@ class OneLineEditor extends PureComponent {
   }
 
   _handleInputChange (value) {
-    console.log("VALUE", value, this._mayContainNunjucks(value));
     if (!this.props.forceInput && this._mayContainNunjucks(value)) {
       const start = this._input.getSelectionStart();
       const end = this._input.getSelectionEnd();
@@ -173,8 +172,8 @@ class OneLineEditor extends PureComponent {
           placeholder={placeholder}
           onBlur={this._handleEditorBlur}
           onKeyDown={this._handleEditorKeyDown}
-          onChange={onChange}
           onFocus={this._handleEditorFocus}
+          onChange={onChange}
           render={render}
           className="editor--single-line"
           defaultValue={defaultValue}

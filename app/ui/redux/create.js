@@ -13,7 +13,7 @@ export default function configureStore () {
   const store = createStore(reducer, applyMiddleware(...middleware));
   if (__DEV__ && module.hot) {
     module.hot.accept('./modules/index', () => {
-      store.replaceReducer(require('./modules').reducer);
+      store.replaceReducer(reducer);
     });
   }
 

@@ -95,9 +95,11 @@ const BASE_CODEMIRROR_OPTIONS = {
 class Editor extends PureComponent {
   constructor (props) {
     super(props);
+
     this.state = {
       filter: props.filter || ''
     };
+
     this._originalCode = '';
   }
 
@@ -336,9 +338,10 @@ class Editor extends PureComponent {
 
     let mode;
     if (this.props.render) {
-      mode = this._normalizeMode(rawMode);
-    } else {
       mode = {name: 'nunjucks', baseMode: this._normalizeMode(rawMode)};
+    } else {
+      // foo bar baz
+      mode = this._normalizeMode(rawMode);
     }
 
     let options = {

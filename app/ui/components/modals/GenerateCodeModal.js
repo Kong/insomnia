@@ -1,7 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
-
 import CopyButton from '../base/CopyButton';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import Editor from '../codemirror/Editor';

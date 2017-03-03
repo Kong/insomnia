@@ -5,9 +5,7 @@ import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {DragDropContext} from 'react-dnd';
 import {toggleModal, showModal} from '../components/modals';
-import HTML5Backend from 'react-dnd-html5-backend';
 import Wrapper from '../components/Wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
 import Toast from '../components/Toast';
@@ -761,6 +759,5 @@ async function _moveRequest (requestToMove, parentId, targetId, targetOffset) {
   }
 }
 
-const reduxApp = connect(mapStateToProps, mapDispatchToProps)(App);
-export default DragDropContext(HTML5Backend)(reduxApp);
+export default connect(mapStateToProps, mapDispatchToProps)(App);
 

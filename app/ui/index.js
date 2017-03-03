@@ -11,9 +11,12 @@ import {init as initSync} from '../sync';
 import {init as initAnalytics} from '../analytics';
 import {types as modelTypes} from '../models';
 import {getAccountId} from '../sync/session';
+import HTML5Backend from 'react-dnd-html5-backend';
+import {DragDropContext} from 'react-dnd';
 
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
+
 
 (async function () {
 
@@ -23,6 +26,8 @@ Tabs.setUseDefaultStyles(false);
   // Create Redux store
   const store = await initStore();
 
+  const context = DragDropContext(HTML5Backend);
+  const DndComponent = context(App);
   const render = Component => {
     ReactDOM.render(
       <AppContainer>
@@ -34,11 +39,13 @@ Tabs.setUseDefaultStyles(false);
     );
   };
 
-  render(App);
+  render(DndComponent);
 
   // Hot Module Replacement API
   if (module.hot) {
-    module.hot.accept('./containers/App', () => render(App));
+    module.hot.accept('./containers/App', () => {
+      render(DndComponent);
+    });
   }
 
   // Do things that can wait
