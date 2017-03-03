@@ -29,6 +29,14 @@ class KeyValueEditorRow extends PureComponent {
     this._valueInput.focus();
   }
 
+  focusNameEnd () {
+    this._nameInput.focusEnd();
+  }
+
+  focusValueEnd () {
+    this._valueInput.focusEnd();
+  }
+
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({dragDirection});
@@ -38,6 +46,7 @@ class KeyValueEditorRow extends PureComponent {
   _setNameInputRef (n) {
     this._nameInput = n;
   }
+
   _setValueInputRef (n) {
     this._valueInput = n;
   }
@@ -50,15 +59,19 @@ class KeyValueEditorRow extends PureComponent {
   _handleNameChange (name) {
     this._sendChange({name});
   }
+
   _handleValueChange (value) {
     this._sendChange({value});
   }
+
   _handleFileNameChange (fileName) {
     this._sendChange({fileName});
   }
+
   _handleTypeChange (type) {
     this._sendChange({type});
   }
+
   _handleDisableChange (disabled) {
     this._sendChange({disabled});
   }
@@ -66,6 +79,7 @@ class KeyValueEditorRow extends PureComponent {
   _handleFocusName (e) {
     this.props.onFocusName(this.props.pair, e);
   }
+
   _handleFocusValue (e) {
     this.props.onFocusValue(this.props.pair, e);
   }
@@ -337,6 +351,14 @@ target.prototype.focusName = function () {
 
 target.prototype.focusValue = function () {
   this.handler.component.decoratedComponentInstance.focusValue();
+};
+
+target.prototype.focusNameEnd = function () {
+  this.handler.component.decoratedComponentInstance.focusNameEnd();
+};
+
+target.prototype.focusValueEnd = function () {
+  this.handler.component.decoratedComponentInstance.focusValueEnd();
 };
 
 export default target;

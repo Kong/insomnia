@@ -55,6 +55,10 @@ class App extends PureComponent {
     this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
     this._saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
 
+    this._globalKeyMap = null;
+  }
+
+  _setGlobalKeyMap () {
     this._globalKeyMap = [
       { // Show Workspace Settings
         meta: true,
@@ -116,18 +120,18 @@ class App extends PureComponent {
         meta: true,
         shift: false,
         key: KEY_N,
-        callback: () => {
+        callback: async () => {
           const {activeRequest, activeWorkspace} = this.props;
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId);
+          await this._requestCreate(parentId);
           trackEvent('HotKey', 'Request Create');
         }
       }, {
         meta: true,
         shift: false,
         key: KEY_D,
-        callback: () => {
-          this._requestDuplicate(this.props.activeRequest);
+        callback: async () => {
+          await this._requestDuplicate(this.props.activeRequest);
           trackEvent('HotKey', 'Request Duplicate');
         }
       }
@@ -160,7 +164,7 @@ class App extends PureComponent {
 
   async _requestCreate (parentId) {
     const request = await showModal(RequestCreateModal, {parentId});
-    this._handleSetActiveRequest(request._id);
+    await this._handleSetActiveRequest(request._id);
   }
 
   async _requestGroupDuplicate (requestGroup) {
@@ -451,6 +455,7 @@ class App extends PureComponent {
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
     document.addEventListener('keydown', this._handleKeyDown);
+    this._setGlobalKeyMap();
 
     // Do The Analytics
     trackLegacyEvent('App Launched');
@@ -629,8 +634,7 @@ function mapStateToProps (state, props) {
     environments,
     activeEnvironment,
     workspaceChildren
-  }
-  );
+  });
 }
 
 function mapDispatchToProps (dispatch) {

@@ -29,10 +29,27 @@ class OneLineEditor extends PureComponent {
   focus () {
     if (this.state.mode === MODE_EDITOR) {
       if (!this._editor.hasFocus()) {
-        this._editor.focusEnd();
+        this._editor.focus();
       }
     } else {
       this._input.focus();
+    }
+  }
+
+  focusEnd () {
+    if (this.state.mode === MODE_EDITOR) {
+      this._editor.focusEnd();
+    } else {
+      this._input.focus();
+      this._input.value = this._input.value + '';
+    }
+  }
+
+  selectAll () {
+    if (this.state.mode === MODE_EDITOR) {
+      this._editor.selectAll();
+    } else {
+      this._input.select();
     }
   }
 
@@ -45,7 +62,6 @@ class OneLineEditor extends PureComponent {
   }
 
   _handleEditorFocus (e) {
-    this._editor.focusEnd();
     this.props.onFocus && this.props.onFocus(e);
   }
 
@@ -97,6 +113,10 @@ class OneLineEditor extends PureComponent {
   }
 
   _handleEditorBlur () {
+    // Clear selection on blur to match default <input> behavior
+    this._editor.clearSelection();
+    this.props.onBlur && this.props.onBlur();
+
     if (this.props.forceEditor) {
       return;
     }
@@ -106,8 +126,6 @@ class OneLineEditor extends PureComponent {
     }
 
     this.setState({mode: MODE_INPUT});
-
-    this.props.onBlur && this.props.onBlur();
   }
 
   _handleEditorKeyDown (e) {
