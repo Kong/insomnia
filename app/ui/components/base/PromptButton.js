@@ -1,12 +1,20 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import Button from '../base/Button';
 
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
+@autobind
 class PromptButton extends PureComponent {
-  state = {state: STATE_DEFAULT};
+  constructor (props) {
+    super(props);
+
+    this.state = {
+      state: STATE_DEFAULT
+    };
+  }
 
   _confirm (...args) {
     // Clear existing timeouts
@@ -42,7 +50,7 @@ class PromptButton extends PureComponent {
     }, 2000);
   }
 
-  _handleClick = (...args) => {
+  _handleClick (...args) {
     const {state} = this.state;
     if (state === STATE_ASK) {
       this._confirm(...args)
@@ -51,7 +59,7 @@ class PromptButton extends PureComponent {
     } else {
       // Do nothing
     }
-  };
+  }
 
   componentWillUnmount () {
     clearTimeout(this._triggerTimeout);

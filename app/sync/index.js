@@ -544,11 +544,8 @@ export async function fetchResourceGroup (resourceGroupId, invalidateCache = fal
       }
 
       // Also make sure a config exists when we first fetch it.
-      // TODO: This exists in multiple places, so move it to one place.
-      const config = await getOrCreateConfig(resourceGroupId);
-      const syncMode = config ? config.syncMode : store.SYNC_MODE_OFF;
-
-      await createOrUpdateConfig(resourceGroupId, syncMode);
+      // (This may not be needed but we'll do it just in case)
+      await ensureConfigExists(resourceGroupId);
     }
 
     // Bust cached promise because we're done with it.
@@ -648,7 +645,7 @@ export async function createResourceGroup (parentId, name) {
   }
 
   // Create a config for it
-  await ensureConfigExists(resourceGroup.id, store.SYNC_MODE_ON);
+  await ensureConfigExists(resourceGroup.id, store.SYNC_MODE_UNSET);
 
   logger.debug(`Created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;
@@ -684,7 +681,6 @@ export async function createResourceForDoc (doc) {
 
   if (!workspaceResource) {
     const workspaceResourceGroup = await createResourceGroup(workspace._id, workspace.name);
-    await ensureConfigExists(workspaceResourceGroup.id, store.SYNC_MODE_OFF);
     workspaceResource = await createResource(workspace, workspaceResourceGroup.id);
   }
 

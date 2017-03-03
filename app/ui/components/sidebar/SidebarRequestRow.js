@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
@@ -9,36 +10,42 @@ import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
 
+@autobind
 class SidebarRequestRow extends PureComponent {
-  state = {
-    dragDirection: 0,
-    isEditing: false,
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      dragDirection: 0,
+      isEditing: false,
+    };
+  }
 
-  _setRequestActionsDropdownRef = n => this._requestActionsDropdown = n;
+  _setRequestActionsDropdownRef (n) {
+    this._requestActionsDropdown = n;
+  }
 
-  _handleShowRequestActions = e => {
+  _handleShowRequestActions (e) {
     e.preventDefault();
     this._requestActionsDropdown.show();
-  };
+  }
 
-  _handleEditStart = () => {
+  _handleEditStart () {
     trackEvent('Request', 'Rename', 'In Place');
     this.setState({isEditing: true});
-  };
+  }
 
-  _handleRequestUpdateName = name => {
+  _handleRequestUpdateName (name) {
     models.request.update(this.props.request, {name})
     this.setState({isEditing: false});
-  };
+  }
 
-  _handleRequestCreateFromEmpty = () => {
+  _handleRequestCreateFromEmpty () {
     const parentId = this.props.requestGroup._id;
     this.props.requestCreate(parentId);
     trackEvent('Request', 'Create', 'Empty Folder');
-  };
+  }
 
-  _handleRequestActivate = () => {
+  _handleRequestActivate () {
     const {isActive, request, handleActivateRequest} = this.props;
 
     if (isActive) {
@@ -47,7 +54,7 @@ class SidebarRequestRow extends PureComponent {
 
     handleActivateRequest(request._id);
     trackEvent('Request', 'Activate', 'Sidebar');
-  };
+  }
 
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {

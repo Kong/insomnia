@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
 import {remote} from 'electron';
@@ -19,10 +20,18 @@ import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../common/network';
 import {trackEvent} from '../../analytics';
 
+@autobind
 class ResponsePane extends PureComponent {
-  state = {response: null};
+  constructor (props) {
+    super(props);
+    this.state = {
+      response: null
+    };
+  }
 
-  _trackTab = name => trackEvent('Response Pane', 'View', name);
+  _trackTab (name) {
+    trackEvent('Response Pane', 'View', name);
+  }
 
   async _getResponse (requestId, responseId) {
     let response = await models.response.getById(responseId);
@@ -34,7 +43,7 @@ class ResponsePane extends PureComponent {
     this.setState({response});
   }
 
-  _handleDownloadResponseBody = async () => {
+  async _handleDownloadResponseBody () {
     if (!this.state.response) {
       // Should never happen
       console.warn('No response to download');
@@ -69,7 +78,7 @@ class ResponsePane extends PureComponent {
         }
       });
     });
-  };
+  }
 
   componentWillReceiveProps (nextProps) {
     const activeRequestId = nextProps.request ? nextProps.request._id : null;
@@ -167,27 +176,27 @@ class ResponsePane extends PureComponent {
           loadStartTime={loadStartTime}
         />
         {!response ? null : (
-          <header className="pane__header row-spaced">
-            <div className="no-wrap scrollable scrollable--no-bars pad-left">
-              <StatusTag
-                statusCode={response.statusCode}
-                statusMessage={response.statusMessage || null}
+            <header className="pane__header row-spaced">
+              <div className="no-wrap scrollable scrollable--no-bars pad-left">
+                <StatusTag
+                  statusCode={response.statusCode}
+                  statusMessage={response.statusMessage || null}
+                />
+                <TimeTag milliseconds={response.elapsedTime}/>
+                <SizeTag bytes={response.bytesRead}/>
+              </div>
+              <ResponseHistoryDropdown
+                requestId={request._id}
+                isLatestResponseActive={!activeResponseId}
+                activeResponseId={response._id}
+                handleSetActiveResponse={handleSetActiveResponse}
+                handleDeleteResponses={handleDeleteResponses}
+                onChange={nullFn}
+                className="tall pane__header__right"
+                right
               />
-              <TimeTag milliseconds={response.elapsedTime}/>
-              <SizeTag bytes={response.bytesRead}/>
-            </div>
-            <ResponseHistoryDropdown
-              requestId={request._id}
-              isLatestResponseActive={!activeResponseId}
-              activeResponseId={response._id}
-              handleSetActiveResponse={handleSetActiveResponse}
-              handleDeleteResponses={handleDeleteResponses}
-              onChange={nullFn}
-              className="tall pane__header__right"
-              right
-            />
-          </header>
-        )}
+            </header>
+          )}
         <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
@@ -203,19 +212,19 @@ class ResponsePane extends PureComponent {
             <Tab>
               <Button onClick={this._trackTab} value="Cookies">
                 Cookies {cookieHeaders.length ? (
-                <span className="txt-sm">
+                  <span className="txt-sm">
                     ({cookieHeaders.length})
                   </span>
-              ) : null}
+                ) : null}
               </Button>
             </Tab>
             <Tab>
               <Button onClick={this._trackTab} value="Headers">
                 Headers {response.headers.length ? (
-                <span className="txt-sm">
+                  <span className="txt-sm">
                   ({response.headers.length})
                 </span>
-              ) : null}
+                ) : null}
               </Button>
             </Tab>
           </TabList>

@@ -1,5 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
-import {parse as urlParse} from 'url';
+import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import Lazy from './base/Lazy';
 import KeyValueEditor from './keyvalueeditor/Editor';
@@ -14,29 +14,43 @@ import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
 
+@autobind
 class RequestPane extends PureComponent {
-  _handleHidePasswords = () => this.props.updateSettingsShowPasswords(false);
-  _handleShowPasswords = () => this.props.updateSettingsShowPasswords(true);
+  constructor (props) {
+    super(props);
 
-  _handleUpdateSettingsUseBulkHeaderEditor = () => {
+    this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
+  }
+
+  _handleHidePasswords () {
+    this.props.updateSettingsShowPasswords(false);
+  }
+
+  _handleShowPasswords () {
+    this.props.updateSettingsShowPasswords(true);
+  }
+
+  _handleUpdateSettingsUseBulkHeaderEditor () {
     const {useBulkHeaderEditor, updateSettingsUseBulkHeaderEditor} = this.props;
     updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor);
     trackEvent('Headers', 'Toggle Bulk', !useBulkHeaderEditor ? 'On' : 'Off');
-  };
+  }
 
-  _handleImportFile = () => {
+  _handleImportFile () {
     this.props.handleImportFile();
     trackEvent('Request Pane', 'CTA', 'Import');
-  };
+  }
 
-  _handleCreateRequest = () => {
+  _handleCreateRequest () {
     this.props.handleCreateRequest(this.props.request);
     trackEvent('Request Pane', 'CTA', 'New Request');
+  }
+
+  _handleUpdateRequestUrl (url) {
+    this.props.updateRequestUrl(url)
   };
 
-  _handleUpdateRequestUrl = debounce(url => this.props.updateRequestUrl(url));
-
-  _handleImportQueryFromUrl = () => {
+  _handleImportQueryFromUrl () {
     const {request} = this.props;
 
     let query;
@@ -58,20 +72,39 @@ class RequestPane extends PureComponent {
     if (url !== request.url) {
       this.props.forceUpdateRequest({url, parameters});
     }
-  };
+  }
 
-  _trackQueryToggle = pair => trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
-  _trackQueryCreate = () => trackEvent('Query', 'Create');
-  _trackQueryDelete = () => trackEvent('Query', 'Delete');
-  _trackTabBody = () => trackEvent('Request Pane', 'View', 'Body');
-  _trackTabHeaders = () => trackEvent('Request Pane', 'View', 'Headers');
-  _trackTabAuthentication = () => trackEvent('Request Pane', 'View', 'Authentication');
-  _trackTabQuery = () => trackEvent('Request Pane', 'View', 'Query');
+  _trackQueryToggle (pair) {
+    trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
+  }
+
+  _trackQueryCreate () {
+    trackEvent('Query', 'Create');
+  }
+
+  _trackQueryDelete () {
+    trackEvent('Query', 'Delete');
+  }
+
+  _trackTabBody () {
+    trackEvent('Request Pane', 'View', 'Body');
+  }
+
+  _trackTabHeaders () {
+    trackEvent('Request Pane', 'View', 'Headers');
+  }
+
+  _trackTabAuthentication () {
+    trackEvent('Request Pane', 'View', 'Authentication');
+  }
+
+  _trackTabQuery () {
+    trackEvent('Request Pane', 'View', 'Query');
+  }
 
   render () {
     const {
       request,
-      environmentId,
       showPasswords,
       editorFontSize,
       editorKeyMap,
@@ -317,7 +350,6 @@ RequestPane.propTypes = {
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
-  environmentId: PropTypes.string.isRequired,
   forceRefreshCounter: PropTypes.number.isRequired,
 
   // Optional

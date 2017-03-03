@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import Link from './base/Link';
 import * as fetch from '../../common/fetch';
@@ -9,20 +10,24 @@ import * as db from '../../common/database';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
+@autobind
 class Toast extends PureComponent {
-  state = {notification: null, visible: false};
+  constructor (props) {
+    super(props);
+    this.state = {notification: null, visible: false};
+  }
 
-  _handlePostCTACleanup = () => {
+  _handlePostCTACleanup () {
     trackEvent('Notification', 'Click', this.state.notification.key);
     this._dismissNotification();
-  };
+  }
 
-  _handleCancelClick = () => {
+  _handleCancelClick () {
     trackEvent('Notification', 'Dismiss', this.state.notification.key);
     this._dismissNotification();
-  };
+  }
 
-  _handleCheckNotifications = async () => {
+  async _handleCheckNotifications () {
     // If there is a notification open, skip check
     if (this.state.notification) {
       return;
@@ -69,7 +74,7 @@ class Toast extends PureComponent {
 
     // Fade the notification in
     setTimeout(() => this.setState({visible: true}), 1000);
-  };
+  }
 
   _loadSeen () {
     try {

@@ -6,6 +6,14 @@
 </head>
 <body>
 <div id="root"></div>
+<script>
+  // HOT RELOADING IN DEV
+  (function () {
+    const script = document.createElement('script');
+    script.src = (process.env.HOT) ? 'http://localhost:3333/bundle.js' : './bundle.js';
+    document.write(script.outerHTML);
+  }());
+</script>
 <script src="static/raven.min.js"></script>
 <script>
   // UPDATE HANDLERS
@@ -108,14 +116,6 @@
       document.title = `${productName} v${version}`;
     }
   })()
-</script>
-<script>
-  // HOT RELOADING IN DEV
-  (function () {
-    const script = document.createElement('script');
-    script.src = (process.env.HOT) ? 'http://localhost:3333/build/bundle.js' : './bundle.js';
-    document.write(script.outerHTML);
-  }());
 </script>
 
 <script>

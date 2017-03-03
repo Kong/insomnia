@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
@@ -9,39 +10,49 @@ import PromptModal from './modals/PromptModal';
 import PromptButton from './base/PromptButton';
 import OneLineEditor from './codemirror/OneLineEditor';
 
+@autobind
 class RequestUrlBar extends PureComponent {
-  state = {
-    currentInterval: null,
-    currentTimeout: null,
-    downloadPath: null
-  };
+  constructor (props) {
+    super(props);
+    this.state = {
+      currentInterval: null,
+      currentTimeout: null,
+      downloadPath: null
+    };
 
-  _urlChangeDebounceTimeout = null;
-  _lastPastedText = null;
+    this._urlChangeDebounceTimeout = null;
+    this._lastPastedText = null;
+  }
 
-  _setDropdownRef = n => this._dropdown = n;
-  _setInputRef = n => this._input = n;
+  _setDropdownRef (n) {
+    this._dropdown = n;
+  }
 
-  _handleMetaClickSend = e => {
+  _setInputRef (n) {
+    this._input = n;
+  }
+
+  _handleMetaClickSend (e) {
     e.preventDefault();
     this._dropdown.show();
-  };
+  }
 
-  _handleFormSubmit = e => {
+  _handleFormSubmit (e) {
     e.preventDefault();
     e.stopPropagation();
 
     this._handleSend();
-  };
+  }
 
-  _handleMethodChange = method => {
+  _handleMethodChange (method) {
     this.props.onMethodChange(method);
     trackEvent('Request', 'Method Change', method);
-  };
+  }
 
-  _handleUrlChange = url => {
+  _handleUrlChange (url) {
     clearTimeout(this._urlChangeDebounceTimeout);
     this._urlChangeDebounceTimeout = setTimeout(async () => {
+      const pastedText = this._lastPastedText;
 
       // If no pasted text in the queue, just fire the regular change handler
       if (!pastedText) {
@@ -49,7 +60,6 @@ class RequestUrlBar extends PureComponent {
       }
 
       // Reset pasted text cache
-      const pastedText = this._lastPastedText;
       this._lastPastedText = null;
 
       // Attempt to import the pasted text
@@ -63,19 +73,19 @@ class RequestUrlBar extends PureComponent {
       }
 
     }, DEBOUNCE_MILLIS);
-  };
+  }
 
-  _handleUrlPaste = e => {
+  _handleUrlPaste (e) {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     this._lastPastedText = e.clipboardData.getData('text/plain');
-  };
+  }
 
-  _handleGenerateCode = () => {
+  _handleGenerateCode () {
     this.props.handleGenerateCode();
     trackEvent('Request', 'Generate Code', 'Send Action');
-  };
+  }
 
-  _handleSetDownloadLocation = () => {
+  _handleSetDownloadLocation () {
     const options = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
@@ -90,13 +100,13 @@ class RequestUrlBar extends PureComponent {
 
       this.setState({downloadPath: paths[0]});
     });
-  };
+  }
 
-  _handleClearDownloadLocation = () => {
+  _handleClearDownloadLocation () {
     this.setState({downloadPath: null});
-  };
+  }
 
-  _handleKeyDown = e => {
+  _handleKeyDown (e) {
     if (!this._input) {
       return;
     }
@@ -108,9 +118,9 @@ class RequestUrlBar extends PureComponent {
       this._input.focus();
       this._input.select();
     }
-  };
+  }
 
-  _handleSend = () => {
+  _handleSend () {
     // Don't stop interval because duh, it needs to keep going!
     // XXX this._handleStopInterval(); XXX
 
@@ -122,9 +132,9 @@ class RequestUrlBar extends PureComponent {
     } else {
       this.props.handleSend();
     }
-  };
+  }
 
-  _handleSendAfterDelay = async () => {
+  async _handleSendAfterDelay () {
     const seconds = await showModal(PromptModal, {
       inputType: 'decimal',
       headerName: 'Send After Delay',
@@ -140,7 +150,7 @@ class RequestUrlBar extends PureComponent {
     trackEvent('Request', 'Send on Delay', 'Send Action', seconds);
   };
 
-  _handleSendOnInterval = async () => {
+  async _handleSendOnInterval () {
     const seconds = await showModal(PromptModal, {
       inputType: 'decimal',
       headerName: 'Send on Interval',
@@ -154,17 +164,17 @@ class RequestUrlBar extends PureComponent {
     this.setState({currentInterval: seconds});
 
     trackEvent('Request', 'Send on Interval', 'Send Action', seconds);
-  };
+  }
 
-  _handleStopInterval = () => {
+  _handleStopInterval () {
     clearTimeout(this._sendInterval);
     if (this.state.currentInterval) {
       this.setState({currentInterval: null});
       trackEvent('Request', 'Stop Send Interval');
     }
-  };
+  }
 
-  _handleStopTimeout = () => {
+  _handleStopTimeout () {
     clearTimeout(this._sendTimeout);
     if (this.state.currentTimeout) {
       this.setState({currentTimeout: null});
@@ -172,7 +182,7 @@ class RequestUrlBar extends PureComponent {
     }
   };
 
-  _handleClickSend = e => {
+  _handleClickSend (e) {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
 
     // If we're pressing a meta key, let the dropdown open
@@ -184,7 +194,7 @@ class RequestUrlBar extends PureComponent {
     // If we're not pressing a meta key, cancel dropdown and send the request
     e.stopPropagation(); // Don't trigger the dropdown
     this._handleFormSubmit(e);
-  };
+  }
 
   componentDidMount () {
     document.body.addEventListener('keydown', this._handleKeyDown);

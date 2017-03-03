@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import {contentTypesMap} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
@@ -7,11 +8,16 @@ import {getContentTypeName} from '../../../common/constants';
 
 const EMPTY_MIME_TYPE = null;
 
+@autobind
 class ContentTypeDropdown extends PureComponent {
-  _handleChangeMimeType = mimeType => {
+  constructor (props) {
+    super(props);
+  }
+
+  _handleChangeMimeType (mimeType) {
     this.props.onChange(mimeType);
     trackEvent('Request', 'Content-Type Change', contentTypesMap[mimeType]);
-  };
+  }
 
   _renderDropdownItem (mimeType, forcedName = null) {
     const contentType = typeof this.props.contentType !== 'string' ?

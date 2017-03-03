@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import KeyValueEditorRow from './Row';
@@ -13,6 +14,7 @@ const DOWN = 40;
 const LEFT = 37;
 const RIGHT = 39;
 
+@autobind
 class KeyValueEditor extends PureComponent {
   constructor (props) {
     super(props);
@@ -29,10 +31,12 @@ class KeyValueEditor extends PureComponent {
       }
     }
 
-    this.state = {pairs};
+    this.state = {
+      pairs: pairs,
+    };
   }
 
-  _handlePairChange = pair => {
+  _handlePairChange (pair) {
     const i = this._getPairIndex(pair);
     const pairs = [
       ...this.state.pairs.slice(0, i),
@@ -41,9 +45,9 @@ class KeyValueEditor extends PureComponent {
     ];
 
     this._onChange(pairs);
-  };
+  }
 
-  _handleMove = (pairToMove, pairToTarget, targetOffset) => {
+  _handleMove (pairToMove, pairToTarget, targetOffset) {
     if (pairToMove.id === pairToTarget.id) {
       // Nothing to do
       return;
@@ -66,41 +70,41 @@ class KeyValueEditor extends PureComponent {
     this._onChange(pairs);
   };
 
-  _handlePairDelete = pair => {
+  _handlePairDelete (pair) {
     const i = this.state.pairs.findIndex(p => p.id === pair.id);
     this._deletePair(i, true);
-  };
+  }
 
-  _handleFocusName = pair => {
+  _handleFocusName (pair) {
     this._setFocusedPair(pair);
     this._focusedField = NAME;
-  };
+  }
 
-  _handleFocusValue = pair => {
+  _handleFocusValue (pair) {
     this._setFocusedPair(pair);
     this._focusedField = VALUE;
-  };
+  }
 
-  _handleBlurName = () => {
+  _handleBlurName () {
+    this._setFocusedPair(null);
+  }
+
+  _handleBlurValue () {
     this._setFocusedPair(null);
   };
 
-  _handleBlurValue = () => {
-    this._setFocusedPair(null);
-  };
-
-  _handleAddFromName = () => {
+  _handleAddFromName () {
     this._focusedField = NAME;
     this._addPair();
-  };
+  }
 
   // Sometimes multiple focus events come in, so lets debounce it
-  _handleAddFromValue = () => {
+  _handleAddFromValue () {
     this._focusedField = VALUE;
     this._addPair();
-  };
+  }
 
-  _handleKeyDown = (pair, e, value) => {
+  _handleKeyDown (pair, e, value) {
     if (e.metaKey || e.ctrlKey) {
       return;
     }

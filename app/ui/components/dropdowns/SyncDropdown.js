@@ -1,35 +1,45 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
 import {showModal} from '../modals';
-import SyncLogsModal from '../modals/SyncLogsModal';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics';
 import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
+import SetupSyncModal from '../modals/SetupSyncModal';
 
+@autobind
 class SyncDropdown extends PureComponent {
-  state = {
-    loggedIn: null,
-    syncData: null,
-    loading: false,
-  };
+  constructor (props) {
+    super(props);
 
-  _trackShowMenu = () => trackEvent('Sync', 'Show Menu', 'Authenticated');
-  _handleShowLogs = () => showModal(SyncLogsModal);
+    this._hasPrompted = false;
 
-  _handleShowShareSettings = () => {
+    this.state = {
+      loggedIn: null,
+      syncData: null,
+      loading: false,
+    };
+  }
+
+  _trackShowMenu () {
+    trackEvent('Sync', 'Show Menu', 'Authenticated');
+  }
+
+  _handleShowShareSettings () {
     showModal(WorkspaceShareSettingsModal, {workspace: this.props.workspace});
-  };
+  }
 
-  _handleToggleSyncMode = async () => {
+  async _handleToggleSyncMode () {
     const {syncData} = this.state;
     const resourceGroupId = syncData.resourceGroupId;
 
     const config = await sync.getOrCreateConfig(resourceGroupId);
 
-    let syncMode = config.syncMode === syncStorage.SYNC_MODE_OFF ?
-      syncStorage.SYNC_MODE_ON : syncStorage.SYNC_MODE_OFF;
+    let syncMode = config.syncMode !== syncStorage.SYNC_MODE_ON ?
+      syncStorage.SYNC_MODE_ON :
+      syncStorage.SYNC_MODE_OFF;
 
     await sync.createOrUpdateConfig(resourceGroupId, syncMode);
 
@@ -41,9 +51,9 @@ class SyncDropdown extends PureComponent {
     }
 
     trackEvent('Sync', 'Change Mode', syncMode);
-  };
+  }
 
-  _handleSyncResourceGroupId = async () => {
+  async _handleSyncResourceGroupId () {
     const {syncData} = this.state;
     const resourceGroupId = syncData.resourceGroupId;
 
@@ -60,7 +70,7 @@ class SyncDropdown extends PureComponent {
     this.setState({loading: false});
 
     trackEvent('Sync', 'Manual Sync');
-  };
+  }
 
   async _reloadData () {
     const loggedIn = session.isLoggedIn();
@@ -94,6 +104,11 @@ class SyncDropdown extends PureComponent {
     this.setState({syncData});
   }
 
+  async _handleShowSyncModePrompt () {
+    await showModal(SetupSyncModal);
+    await this._reloadData();
+  };
+
   componentWillMount () {
     this._interval = setInterval(() => this._reloadData(), 2000);
     this._reloadData();
@@ -103,16 +118,40 @@ class SyncDropdown extends PureComponent {
     clearInterval(this._interval);
   }
 
-  _getSyncDescription (syncMode, syncPercentage) {
-    if (syncPercentage === 100) {
-      return 'Up To Date'
-    } else {
-      return syncMode === syncStorage.SYNC_MODE_ON ? 'Sync Pending' : 'Sync Required'
+  async componentDidUpdate () {
+    const {syncData} = this.state;
+
+    if (!syncData) {
+      return;
+    }
+
+    // Sync has not yet been configured for this workspace, so prompt the user to do so
+    const isModeUnset = syncData.syncMode === syncStorage.SYNC_MODE_UNSET;
+    if (isModeUnset && !this._hasPrompted) {
+      this._hasPrompted = true;
+      await this._handleShowSyncModePrompt();
     }
   }
 
+  _getSyncDescription (syncMode, syncPercentage) {
+    let el = null;
+    if (syncMode === syncStorage.SYNC_MODE_NEVER) {
+      el = <span>Sync Disabled</span>
+    } else if (syncPercentage === 100) {
+      el = <span>Sync Up To Date</span>
+    } else if (syncMode === syncStorage.SYNC_MODE_OFF) {
+      el = <span><i className="fa fa-pause-circle-o"/> Sync Required</span>
+    } else if (syncMode === syncStorage.SYNC_MODE_ON) {
+      el = <span>Sync Pending</span>
+    } else if (syncMode === syncStorage.SYNC_MODE_UNSET) {
+      el = <span><i className="fa fa-exclamation-circle"/> Configure Sync</span>
+    }
+
+    return el;
+  }
+
   render () {
-    const {className, workspace} = this.props;
+    const {className} = this.props;
     const {syncData, loading, loggedIn} = this.state;
 
     // Don't show the sync menu unless we're logged in
@@ -130,39 +169,51 @@ class SyncDropdown extends PureComponent {
       )
     } else {
       const {syncMode, syncPercent} = syncData;
-      const description = this._getSyncDescription(syncMode, syncPercent);
-      const isPaused = syncMode === syncStorage.SYNC_MODE_OFF;
-
       return (
         <div className={className}>
           <Dropdown wide className="wide tall">
             <DropdownButton className="btn btn--compact wide" onClick={this._trackShowMenu}>
-              {isPaused ? <span><i className="fa fa-pause-circle"/>&nbsp;</span> : null}
-              {description}
+              {this._getSyncDescription(syncMode, syncPercent)}
             </DropdownButton>
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
-            <DropdownItem onClick={this._handleToggleSyncMode} stayOpenAfterClick>
-              {syncMode === syncStorage.SYNC_MODE_OFF ?
-                <i className="fa fa-toggle-off"></i> :
-                <i className="fa fa-toggle-on"></i>}
-              Automatic Sync
-            </DropdownItem>
-            <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
-              {loading ?
-                <i className="fa fa-refresh fa-spin"></i> :
-                <i className="fa fa-cloud-upload"></i>}
-              Sync Now
-            </DropdownItem>
 
-            <DropdownDivider>Other</DropdownDivider>
-            <DropdownItem onClick={this._handleShowShareSettings}>
-              <i className="fa fa-users"></i>
-              Configure Sharing
-            </DropdownItem>
-            <DropdownItem onClick={this._handleShowLogs}>
-              <i className="fa fa-bug"></i>
-              Show Debug Logs
-            </DropdownItem>
+            {/* SYNC DISABLED */}
+
+            {syncMode === syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleShowSyncModePrompt}>
+                <i className="fa fa-wrench"/>
+                Change Sync Mode
+              </DropdownItem> : null
+            }
+
+            {/* SYNCED */}
+
+            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleToggleSyncMode} stayOpenAfterClick={true}>
+                {syncMode === syncStorage.SYNC_MODE_ON ?
+                  <i className="fa fa-toggle-on"/> :
+                  <i className="fa fa-toggle-off"/>
+                }
+                Automatic Sync
+              </DropdownItem> : null
+            }
+
+            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
+                {loading ?
+                  <i className="fa fa-refresh fa-spin"/> :
+                  <i className="fa fa-cloud-upload"/>
+                }
+                Sync Now
+              </DropdownItem> : null
+            }
+
+            {syncMode !== syncStorage.SYNC_MODE_NEVER ?
+              <DropdownItem onClick={this._handleShowShareSettings}>
+                <i className="fa fa-users"></i>
+                Share With Others
+              </DropdownItem> : null
+            }
           </Dropdown>
         </div>
       );

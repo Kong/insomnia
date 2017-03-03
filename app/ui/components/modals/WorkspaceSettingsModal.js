@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import DebouncedInput from '../base/DebouncedInput';
 import FileInputButton from '../base/FileInputButton';
@@ -10,38 +11,60 @@ import * as models from '../../../models/index';
 import * as fs from 'fs';
 import {trackEvent} from '../../../analytics/index';
 
-
+@autobind
 class WorkspaceSettingsModal extends PureComponent {
-  state = {
-    showAddCertificateForm: false,
-    crtPath: '',
-    keyPath: '',
-    pfxPath: '',
-    host: '',
-    passphrase: '',
-  };
+  constructor (props) {
+    super(props);
 
-  _workspaceUpdate = patch => models.workspace.update(this.props.workspace, patch);
+    this.state = {
+      showAddCertificateForm: false,
+      crtPath: '',
+      keyPath: '',
+      pfxPath: '',
+      host: '',
+      passphrase: '',
+    };
+  }
 
-  _handleSetModalRef = n => this.modal = n;
-  _handleRemoveWorkspace = () => {
+  _workspaceUpdate (patch) {
+    models.workspace.update(this.props.workspace, patch);
+  }
+
+  _handleSetModalRef (n) {
+    this.modal = n;
+  }
+  _handleRemoveWorkspace () {
     this.props.handleRemoveWorkspace();
     this.hide();
-  };
+  }
 
-  _handleToggleCertificateForm = () => {
+  _handleToggleCertificateForm ()  {
     this.setState({showAddCertificateForm: !this.state.showAddCertificateForm})
-  };
+  }
 
-  _handleRename = name => this._workspaceUpdate({name});
-  _handleDescriptionChange = description => this._workspaceUpdate({description});
+  _handleRename (name) {
+    this._workspaceUpdate({name});
+  }
+  _handleDescriptionChange (description){
+    this._workspaceUpdate({description});
+  }
 
-  _handleCreateHostChange = e => this.setState({host: e.target.value});
-  _handleCreatePfxChange = pfxPath => this.setState({pfxPath});
-  _handleCreateCrtChange = crtPath => this.setState({crtPath});
-  _handleCreateKeyChange = keyPath => this.setState({keyPath});
-  _handleCreatePassphraseChange = e => this.setState({passphrase: e.target.value});
-  _handleSubmitCertificate = async e => {
+  _handleCreateHostChange (e) {
+    this.setState({host: e.target.value});
+  }
+  _handleCreatePfxChange (pfxPath) {
+    this.setState({pfxPath});
+  }
+  _handleCreateCrtChange (crtPath){
+    this.setState({crtPath});
+  }
+  _handleCreateKeyChange (keyPath) {
+    this.setState({keyPath});
+  }
+  _handleCreatePassphraseChange (e) {
+    this.setState({passphrase: e.target.value});
+  }
+  async _handleSubmitCertificate (e)  {
     e.preventDefault();
 
     const {workspace} = this.props;
@@ -59,23 +82,23 @@ class WorkspaceSettingsModal extends PureComponent {
     await models.workspace.update(workspace, {certificates});
     this._handleToggleCertificateForm();
     trackEvent('Certificates', 'Create');
-  };
+  }
 
-  _handleDeleteCertificate = certificate => {
+  _handleDeleteCertificate (certificate) {
     const {workspace} = this.props;
     const certificates = workspace.certificates.filter(c => c.host !== certificate.host);
     models.workspace.update(workspace, {certificates});
     trackEvent('Certificates', 'Delete');
-  };
+  }
 
-  _handleToggleCertificate = certificate => {
+  _handleToggleCertificate (certificate) {
     const {workspace} = this.props;
     const certificates = workspace.certificates.map(
       c => c === certificate ? Object.assign({}, c, {disabled: !c.disabled}) : c
     );
     models.workspace.update(workspace, {certificates});
     trackEvent('Certificates', 'Toggle');
-  };
+  }
 
   toggle (workspace) {
     this.modal.toggle();

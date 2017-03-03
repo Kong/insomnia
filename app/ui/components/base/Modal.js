@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {isMac} from '../../../common/constants';
 
@@ -6,16 +7,32 @@ import {isMac} from '../../../common/constants';
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
+@autobind
 class Modal extends PureComponent {
-  state = {
-    open: false,
-    forceRefreshCounter: 0,
-    zIndex: globalZIndex
-  };
+  constructor (props) {
+    super(props);
 
-  _handleSetNodeRef = n => this._node = n;
+    this.state = {
+      open: false,
+      forceRefreshCounter: 0,
+      zIndex: globalZIndex
+    };
+  }
 
-  _handleKeyDown = e => {
+  _setModalRef (n) {
+    this._node = n;
+    this._addListener();
+  }
+
+  _addListener () {
+    this._node.addEventListener('keydown', this._handleKeyDown);
+  }
+
+  _removeListener () {
+    this._node.removeEventListener('keydown', this._handleKeyDown);
+  }
+
+  _handleKeyDown (e) {
     if (!this.state.open) {
       return;
     }
@@ -27,6 +44,11 @@ class Modal extends PureComponent {
       e.stopPropagation();
     }
 
+    // Don't check for close keys if we don't want them
+    if (this.props.noEscape) {
+      return;
+    }
+
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
     const pressedEscape = e.keyCode === 27;
     const pressedElse = closeOnKeyCodes.find(c => c === e.keyCode);
@@ -36,9 +58,14 @@ class Modal extends PureComponent {
       // Pressed escape
       this.hide();
     }
-  };
+  }
 
-  _handleClick = e => {
+  _handleClick (e) {
+    // Don't check for close keys if we don't want them
+    if (this.props.noEscape) {
+      return;
+    }
+
     // Did we click a close button. Let's check a few parent nodes up as well
     // because some buttons might have nested elements. Maybe there is a better
     // way to check this?
@@ -57,7 +84,7 @@ class Modal extends PureComponent {
     if (shouldHide) {
       this.hide();
     }
-  };
+  }
 
   show () {
     const {freshState} = this.props;
@@ -88,16 +115,12 @@ class Modal extends PureComponent {
     this.setState({open: false});
   }
 
-  componentDidMount () {
-    this._node.addEventListener('keydown', this._handleKeyDown);
-  }
-
   componentWillUnmount () {
-    this._node.removeEventListener('keydown', this._handleKeyDown);
+    this._removeListener();
   }
 
   render () {
-    const {tall, top, wide, className} = this.props;
+    const {tall, top, wide, noEscape, className} = this.props;
     const {open, zIndex, forceRefreshCounter} = this.state;
 
     const classes = classnames(
@@ -106,17 +129,18 @@ class Modal extends PureComponent {
       {'modal--open': open},
       {'modal--fixed-height': tall},
       {'modal--fixed-top': top},
+      {'modal--noescape': noEscape},
       {'modal--wide': wide},
     );
 
     return (
-      <div ref={this._handleSetNodeRef}
+      <div ref={this._setModalRef}
            tabIndex="-1"
            className={classes}
            style={{zIndex: zIndex}}
            onClick={this._handleClick}>
         <div className="modal__content" key={forceRefreshCounter}>
-          <div className="modal__backdrop overlay" onClick={() => this.hide()}></div>
+          <div className="modal__backdrop overlay" data-close-modal></div>
           {this.props.children}
         </div>
       </div>
@@ -128,6 +152,7 @@ Modal.propTypes = {
   tall: PropTypes.bool,
   top: PropTypes.bool,
   wide: PropTypes.bool,
+  noEscape: PropTypes.bool,
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,
   freshState: PropTypes.bool,

@@ -1,4 +1,5 @@
 import React, {PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import Link from '../base/Link';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
@@ -7,20 +8,33 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 
+@autobind
 class LoginModal extends PureComponent {
-  state = {
-    step: 1,
-    loading: false,
-    error: '',
-    title: '',
-    message: '',
+  constructor (props) {
+    super(props);
+
+    this.state = {
+      step: 1,
+      loading: false,
+      error: '',
+      title: '',
+      message: '',
+    };
+  }
+
+  _setModalRef (n) {
+    this.modal = n;
+  }
+
+  _setPasswordInputRef (n) {
+    this._passwordInput = n;
+  }
+
+  _setEmailInputRef (n) {
+    return this._emailInput = n;
   };
 
-  _setModalRef = n => this.modal = n;
-  _setEmailInputRef = n => this._emailInput = n;
-  _hide = () => this.hide();
-
-  _handleLogin = async e => {
+  async _handleLogin (e) {
     e.preventDefault();
     this.setState({error: '', loading: true});
 
@@ -60,9 +74,7 @@ class LoginModal extends PureComponent {
       inner = [
         <ModalHeader key="header">{title || "Login to Your Account"}</ModalHeader>,
         <ModalBody key="body" className="pad">
-          {message ? (
-            <p className="notice info">{message}</p>
-          ) : null}
+          {message ? <p className="notice info">{message}</p> : null}
           <div className="form-control form-control--outlined no-pad-top">
             <label>Email
               <input
@@ -78,7 +90,7 @@ class LoginModal extends PureComponent {
               <input type="password"
                      required="required"
                      placeholder="•••••••••••••••••"
-                     ref={n => this._passwordInput = n}/>
+                     ref={this._setPasswordInputRef}/>
             </label>
           </div>
           {error ? <div className="danger pad-top">** {error}</div> : null}
@@ -109,7 +121,7 @@ class LoginModal extends PureComponent {
           </p>
         </ModalBody>,
         <ModalFooter key="footer">
-          <button type="button" className="btn" onClick={this._hide}>
+          <button type="button" className="btn" onClick={this.hide}>
             Close
           </button>
         </ModalFooter>

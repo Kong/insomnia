@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
 import PromptButton from '../base/PromptButton';
@@ -6,9 +7,13 @@ import CookieInput from '../CookieInput';
 import {cookieToString} from '../../../common/cookies';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
-
+@autobind
 class CookiesEditor extends PureComponent {
-  _handleCookieAdd = () => {
+  constructor (props) {
+    super(props);
+  }
+
+  _handleCookieAdd () {
     const newCookie = new Cookie({
       key: 'foo',
       value: 'bar',
@@ -17,7 +22,7 @@ class CookiesEditor extends PureComponent {
     });
 
     this.props.onCookieAdd(newCookie);
-  };
+  }
 
   _handleCookieUpdate (cookie, cookieStr) {
     clearTimeout(this._cookieUpdateTimeout);

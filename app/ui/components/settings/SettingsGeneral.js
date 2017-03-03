@@ -1,7 +1,13 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 
+@autobind
 class SettingsGeneral extends PureComponent {
-  _handleUpdateSetting = e => {
+  constructor (props) {
+    super(props);
+  }
+
+  _handleUpdateSetting (e) {
     let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
     if (e.target.type === 'number') {
@@ -9,7 +15,7 @@ class SettingsGeneral extends PureComponent {
     }
 
     this.props.updateSetting(e.target.name, value);
-  };
+  }
 
   render () {
     const {settings} = this.props;

@@ -1,5 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
+import autobind from 'autobind-decorator';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/FileInputButton';
@@ -7,14 +8,18 @@ import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown/index';
 import PromptButton from '../base/PromptButton';
 import Button from '../base/Button';
 import OneLineEditor from '../codemirror/OneLineEditor';
-import {preventDefault} from '../../../common/misc';
 
+@autobind
 class KeyValueEditorRow extends PureComponent {
-  _nameInput = null;
-  _valueInput = null;
-  state = {
-    dragDirection: 0
-  };
+  constructor (props) {
+    super(props);
+
+    this._nameInput = null;
+    this._valueInput = null;
+    this.state = {
+      dragDirection: 0
+    };
+  }
 
   focusName () {
     this._nameInput.focus();
@@ -30,46 +35,64 @@ class KeyValueEditorRow extends PureComponent {
     }
   }
 
-  _setNameInputRef = n => this._nameInput = n;
-  _setValueInputRef = n => this._valueInput = n;
+  _setNameInputRef (n) {
+    this._nameInput = n;
+  }
+  _setValueInputRef (n) {
+    this._valueInput = n;
+  }
 
-  _sendChange = patch => {
+  _sendChange (patch) {
     const pair = Object.assign({}, this.props.pair, patch);
     this.props.onChange && this.props.onChange(pair);
-  };
+  }
 
-  _handleNameChange = name => this._sendChange({name});
-  _handleValueChange = value => this._sendChange({value});
-  _handleFileNameChange = filename => this._sendChange({fileName});
-  _handleTypeChange = type => this._sendChange({type});
-  _handleDisableChange = disabled => this._sendChange({disabled});
+  _handleNameChange (name) {
+    this._sendChange({name});
+  }
+  _handleValueChange (value) {
+    this._sendChange({value});
+  }
+  _handleFileNameChange (fileName) {
+    this._sendChange({fileName});
+  }
+  _handleTypeChange (type)  {
+    this._sendChange({type});
+  }
+  _handleDisableChange (disabled) {
+    this._sendChange({disabled});
+  }
 
-  _handleFocusName = e => this.props.onFocusName(this.props.pair, e);
-  _handleFocusValue = e => this.props.onFocusValue(this.props.pair, e);
+  _handleFocusName (e) {
+    this.props.onFocusName(this.props.pair, e);
+  }
+  _handleFocusValue (e) {
+    this.props.onFocusValue(this.props.pair, e);
+  }
 
-  _handleBlurName = e => {
+  _handleBlurName (e) {
     if (this.props.onBlurName) {
       this.props.onBlurName(this.props.pair, e);
     }
-  };
+  }
 
-  _handleBlurValue = e => {
+  _handleBlurValue (e) {
     if (this.props.onBlurName) {
       this.props.onBlurValue(this.props.pair, e);
     }
-  };
+  }
 
-  _handleDelete = () => {
+  _handleDelete () {
     if (this.props.onDelete) {
       this.props.onDelete(this.props.pair);
     }
-  };
+  }
 
-  _handleKeyDown = (e, value) => {
+  _handleKeyDown (e, value) {
     if (this.props.onKeyDown) {
       this.props.onKeyDown(this.props.pair, e, value);
     }
-  };
+  }
 
   render () {
     const {

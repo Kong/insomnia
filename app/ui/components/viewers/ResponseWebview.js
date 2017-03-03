@@ -1,16 +1,21 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import contextMenu from 'electron-context-menu';
 
+@autobind
 class ResponseWebview extends PureComponent {
-  _handleSetWebviewRef = n => {
+  constructor (props) {
+    super(props);
+  }
+  _handleSetWebviewRef (n) {
     this._webview = n;
     contextMenu({window: this._webview});
-  };
+  }
 
-  _handleDOMReady = () => {
+  _handleDOMReady () {
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
     this._setBody();
-  };
+  }
 
   _setBody () {
     const {body, contentType, url} = this.props;
