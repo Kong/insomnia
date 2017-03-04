@@ -40,14 +40,18 @@
     "setupFiles": [
       "./__jest__/setup.js"
     ],
+    "moduleNameMapper": {
+      "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js"
+    },
     "rootDir": "app",
     "verbose": false,
     "collectCoverage": false,
     "collectCoverageFrom": [
       "**/*.js",
+      "!**/*.min.js",
       "!**/main.development.js",
       "!**/static/**",
-      "!**/ui/**",
+      "!**/ui/components/**",
       "!**/__fixtures__/**",
       "!**/__tests__/**",
       "!**/__jest__/**",
