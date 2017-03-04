@@ -1,5 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
+import debounce from 'debounce-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import SizeTag from '../tags/SizeTag';
 import StatusTag from '../tags/StatusTag';
@@ -7,7 +8,6 @@ import TimeTag from '../tags/TimeTag';
 import * as models from '../../../models/index';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
-import * as misc from '../../../common/misc';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
@@ -16,8 +16,6 @@ class ResponseHistoryDropdown extends PureComponent {
     this.state = {
       responses: []
     };
-
-    this._load = misc.debounce(this._load);
   }
 
   _handleDeleteResponses () {
@@ -30,6 +28,7 @@ class ResponseHistoryDropdown extends PureComponent {
     this.props.handleSetActiveResponse(responseId);
   }
 
+  @debounce(200)
   async _load (requestId) {
     const responses = await models.response.findRecentForRequest(requestId);
 

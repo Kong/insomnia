@@ -1,48 +1,53 @@
 import React, {PropTypes, PureComponent} from 'react';
+import debounce from 'debounce-decorator';
 import autobind from 'autobind-decorator';
 import * as querystring from '../../common/querystring';
-import * as util from '../../common/misc';
+import * as misc from '../../common/misc';
 
 @autobind
 class RenderedQueryString extends PureComponent {
   constructor (props) {
     super(props);
-    this.state = {
-      string: ''
-    };
+    this.state = {string: ''};
+    this._mounted = false;
   }
 
-  _update (props, delay = false) {
-    clearTimeout(this._triggerTimeout);
-    this._triggerTimeout = setTimeout(async () => {
-      const {request} = props;
-      const {url, parameters} = await props.handleRender({
-        url: request.url,
-        parameters: request.parameters
-      });
-      const qs = querystring.buildFromParams(parameters);
-      const fullUrl = querystring.joinUrl(url, qs);
-      this.setState({string: util.prepareUrlForSending(fullUrl)});
-    }, delay ? 200 : 0);
+  @debounce(400)
+  _debouncedUpdate (props) {
+    return this._update(props);
+  }
+
+  async _update (props) {
+    if (!this._mounted) {
+      return;
+    }
+
+    const {request} = props;
+    const enabledParameters = request.parameters.filter(p => !p.disabled);
+    const {url, parameters} = await props.handleRender({
+      url: request.url,
+      parameters: enabledParameters
+    });
+    const qs = querystring.buildFromParams(parameters);
+    const fullUrl = querystring.joinUrl(url, qs);
+    this.setState({string: misc.prepareUrlForSending(fullUrl)});
   }
 
   componentDidMount () {
+    this._mounted = true;
     this._update(this.props);
   }
 
   componentWillUnmount () {
-    clearTimeout(this._triggerTimeout);
+    this._mounted = false;
   }
 
   componentWillReceiveProps (nextProps) {
-    let delay = true;
-
-    // Update right away if we're switching requests
     if (nextProps.request._id !== this.props.request._id) {
-      delay = false;
+      this._update(nextProps);
+    } else {
+      this._debouncedUpdate(nextProps);
     }
-
-    this._update(nextProps, delay);
   }
 
   render () {

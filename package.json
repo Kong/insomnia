@@ -89,6 +89,7 @@
     "classnames": "~2.2.5",
     "clone": "~2.1.0",
     "codemirror": "~5.24.2",
+    "debounce-decorator": "^1.0.4",
     "electron-context-menu": "~0.8.0",
     "electron-squirrel-startup": "~1.0.0",
     "hkdf": "0.0.2",
