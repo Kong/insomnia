@@ -109,9 +109,9 @@ class SyncDropdown extends PureComponent {
     await this._reloadData();
   }
 
-  componentWillMount () {
-    this._interval = setInterval(this._reloadData, 2000);
-    this._reloadData();
+  async componentWillMount () {
+    this._interval = setInterval(this._reloadData, 200);
+    await this._reloadData();
   }
 
   componentWillUnmount () {
@@ -202,8 +202,7 @@ class SyncDropdown extends PureComponent {
               ? <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>
                 {loading
                   ? <i className="fa fa-refresh fa-spin"/>
-                  : <i className="fa fa-cloud-upload"/>
-                }
+                  : <i className="fa fa-cloud-upload"/>}
                 Sync Now
               </DropdownItem> : null
             }
@@ -211,7 +210,7 @@ class SyncDropdown extends PureComponent {
             {syncMode !== syncStorage.SYNC_MODE_NEVER
               ? <DropdownItem onClick={this._handleShowShareSettings}>
                 <i className="fa fa-users"></i>
-                Share With Others
+                Share Settings
               </DropdownItem> : null
             }
           </Dropdown>

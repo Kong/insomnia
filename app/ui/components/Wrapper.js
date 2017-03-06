@@ -33,7 +33,7 @@ class Wrapper extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      forceRefreshRequestPaneCounter: Date.now()
+      forceRefreshKey: Date.now()
     };
   }
 
@@ -75,6 +75,11 @@ class Wrapper extends PureComponent {
   // Special request updaters
   _handleUpdateRequestMimeType (mimeType) {
     updateMimeType(this.props.activeRequest, mimeType);
+  }
+
+  _handleStartDragSidebar (e) {
+    e.preventDefault();
+    this.props.handleStartDragSidebar();
   }
 
   async _handleImport (text) {
@@ -184,7 +189,7 @@ class Wrapper extends PureComponent {
   }
 
   _forceRequestPaneRefresh () {
-    this.setState({forceRefreshRequestPaneCounter: Date.now()});
+    this.setState({forceRefreshKey: Date.now()});
   }
 
   render () {
@@ -212,7 +217,6 @@ class Wrapper extends PureComponent {
       handleSetResponsePaneRef,
       handleSetSidebarRef,
       handleStartDragPane,
-      handleStartDragSidebar,
       handleSetSidebarFilter,
       handleRender,
       handleGenerateCodeForActiveRequest,
@@ -232,7 +236,7 @@ class Wrapper extends PureComponent {
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
-    const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
+    const gridTemplateColumns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
 
     return (
       <div id="wrapper"
@@ -270,10 +274,8 @@ class Wrapper extends PureComponent {
         />
 
         <div className="drag drag--sidebar">
-          <div onDoubleClick={handleResetDragSidebar} onMouseDown={e => {
-            e.preventDefault();
-            handleStartDragSidebar();
-          }}></div>
+          <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar}>
+          </div>
         </div>
 
         <RequestPane
@@ -300,13 +302,14 @@ class Wrapper extends PureComponent {
           updateRequestMimeType={this._handleUpdateRequestMimeType}
           updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
           updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-          forceRefreshCounter={this.state.forceRefreshRequestPaneCounter}
+          forceRefreshCounter={this.state.forceRefreshKey}
           handleSend={this._handleSendRequestWithActiveEnvironment}
           handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
         />
 
         <div className="drag drag--pane">
-          <div onMouseDown={handleStartDragPane} onDoubleClick={handleResetDragPane}></div>
+          <div onMouseDown={handleStartDragPane} onDoubleClick={handleResetDragPane}>
+          </div>
         </div>
 
         <ResponsePane

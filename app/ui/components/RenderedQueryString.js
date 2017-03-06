@@ -1,29 +1,35 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import * as querystring from '../../common/querystring';
-import * as util from '../../common/misc';
+import * as misc from '../../common/misc';
 
 @autobind
 class RenderedQueryString extends PureComponent {
   constructor (props) {
     super(props);
+    this._interval = null;
     this.state = {
       string: ''
     };
   }
 
-  _update (props, delay = false) {
-    clearTimeout(this._triggerTimeout);
-    this._triggerTimeout = setTimeout(async () => {
-      const {request} = props;
-      const {url, parameters} = await props.handleRender({
-        url: request.url,
-        parameters: request.parameters
-      });
-      const qs = querystring.buildFromParams(parameters);
-      const fullUrl = querystring.joinUrl(url, qs);
-      this.setState({string: util.prepareUrlForSending(fullUrl)});
-    }, delay ? 200 : 0);
+  async _debouncedUpdate (props) {
+    clearTimeout(this._interval);
+    this._interval = setTimeout(() => {
+      this._update(props);
+    }, 300);
+  }
+
+  async _update (props) {
+    const {request} = props;
+    const enabledParameters = request.parameters.filter(p => !p.disabled);
+    const {url, parameters} = await props.handleRender({
+      url: request.url,
+      parameters: enabledParameters
+    });
+    const qs = querystring.buildFromParams(parameters);
+    const fullUrl = querystring.joinUrl(url, qs);
+    this.setState({string: misc.prepareUrlForSending(fullUrl)});
   }
 
   componentDidMount () {
@@ -31,18 +37,15 @@ class RenderedQueryString extends PureComponent {
   }
 
   componentWillUnmount () {
-    clearTimeout(this._triggerTimeout);
+    clearTimeout(this._interval);
   }
 
   componentWillReceiveProps (nextProps) {
-    let delay = true;
-
-    // Update right away if we're switching requests
     if (nextProps.request._id !== this.props.request._id) {
-      delay = false;
+      this._update(nextProps);
+    } else {
+      this._debouncedUpdate(nextProps);
     }
-
-    this._update(nextProps, delay);
   }
 
   render () {
