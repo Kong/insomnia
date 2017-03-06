@@ -7,17 +7,15 @@ import TimeTag from '../tags/TimeTag';
 import * as models from '../../../models/index';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
-import * as misc from '../../../common/misc';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
   constructor (props) {
     super(props);
+    this._interval = null;
     this.state = {
       responses: []
     };
-
-    this._load = misc.debounce(this._load);
   }
 
   _handleDeleteResponses () {
@@ -30,23 +28,26 @@ class ResponseHistoryDropdown extends PureComponent {
     this.props.handleSetActiveResponse(responseId);
   }
 
-  async _load (requestId) {
-    const responses = await models.response.findRecentForRequest(requestId);
+  _load (requestId) {
+    clearTimeout(this._interval);
+    this._interval = setTimeout(async () => {
+      const responses = await models.response.findRecentForRequest(requestId);
 
-    // NOTE: this is bad practice, but I can't figure out a better way.
-    // This component may not be mounted if the user switches to a request that
-    // doesn't have a response
-    if (this._unmounted) {
-      return;
-    }
+      // NOTE: this is bad practice, but I can't figure out a better way.
+      // This component may not be mounted if the user switches to a request that
+      // doesn't have a response
+      if (this._unmounted) {
+        return;
+      }
 
-    if (this.state.responses.length !== responses.length) {
-      this.setState({responses});
-    }
+      if (this.state.responses.length !== responses.length) {
+        this.setState({responses});
+      }
+    }, 500);
   }
 
   componentWillUnmount () {
-    this._unmounted = true;
+    clearTimeout(this._interval);
   }
 
   componentWillReceiveProps (nextProps) {
@@ -54,7 +55,6 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   componentDidMount () {
-    this._unmounted = false;
     this._load(this.props.requestId);
   }
 

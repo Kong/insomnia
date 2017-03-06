@@ -34,7 +34,7 @@ describe('buildRequestConfig()', () => {
       rejectUnauthorized: true,
       time: true,
       timeout: 0,
-      url: 'http://'
+      url: ''
     });
   });
 
