@@ -122,12 +122,6 @@ class ResponsePane extends PureComponent {
     if (!response) {
       return (
         <section className="response-pane pane">
-          <ResponseTimer
-            className="overlay"
-            handleCancel={cancelCurrentRequest}
-            loadStartTime={loadStartTime}
-          />
-
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
             <div>
@@ -161,6 +155,11 @@ class ResponsePane extends PureComponent {
               </table>
             </div>
           </div>
+
+          <ResponseTimer
+            handleCancel={cancelCurrentRequest}
+            loadStartTime={loadStartTime}
+          />
         </section>
       );
     }
@@ -169,11 +168,6 @@ class ResponsePane extends PureComponent {
 
     return (
       <section className="response-pane pane">
-        <ResponseTimer
-          className="overlay"
-          handleCancel={cancelCurrentRequest}
-          loadStartTime={loadStartTime}
-        />
         {!response ? null : (
             <header className="pane__header row-spaced">
               <div className="no-wrap scrollable scrollable--no-bars pad-left">
@@ -264,6 +258,10 @@ class ResponsePane extends PureComponent {
             </div>
           </TabPanel>
         </Tabs>
+        <ResponseTimer
+          handleCancel={cancelCurrentRequest}
+          loadStartTime={loadStartTime}
+        />
       </section>
     );
   }

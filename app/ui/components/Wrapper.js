@@ -236,7 +236,7 @@ class Wrapper extends PureComponent {
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
-    const gridTemplateColumns = `${realSidebarWidth}rem 0 ${paneWidth}fr 0 ${1 - paneWidth}fr`;
+    const gridTemplateColumns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
 
     return (
       <div id="wrapper"
@@ -308,7 +308,8 @@ class Wrapper extends PureComponent {
         />
 
         <div className="drag drag--pane">
-          <div onMouseDown={handleStartDragPane} onDoubleClick={handleResetDragPane}></div>
+          <div onMouseDown={handleStartDragPane} onDoubleClick={handleResetDragPane}>
+          </div>
         </div>
 
         <ResponsePane

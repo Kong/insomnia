@@ -1,6 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import debounce from 'debounce-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import SizeTag from '../tags/SizeTag';
 import StatusTag from '../tags/StatusTag';
@@ -13,6 +12,7 @@ import {trackEvent} from '../../../analytics/index';
 class ResponseHistoryDropdown extends PureComponent {
   constructor (props) {
     super(props);
+    this._interval = null;
     this.state = {
       responses: []
     };
@@ -28,24 +28,26 @@ class ResponseHistoryDropdown extends PureComponent {
     this.props.handleSetActiveResponse(responseId);
   }
 
-  @debounce(200)
-  async _load (requestId) {
-    const responses = await models.response.findRecentForRequest(requestId);
+  _load (requestId) {
+    clearTimeout(this._interval);
+    this._interval = setTimeout(async () => {
+      const responses = await models.response.findRecentForRequest(requestId);
 
-    // NOTE: this is bad practice, but I can't figure out a better way.
-    // This component may not be mounted if the user switches to a request that
-    // doesn't have a response
-    if (this._unmounted) {
-      return;
-    }
+      // NOTE: this is bad practice, but I can't figure out a better way.
+      // This component may not be mounted if the user switches to a request that
+      // doesn't have a response
+      if (this._unmounted) {
+        return;
+      }
 
-    if (this.state.responses.length !== responses.length) {
-      this.setState({responses});
-    }
+      if (this.state.responses.length !== responses.length) {
+        this.setState({responses});
+      }
+    }, 500);
   }
 
   componentWillUnmount () {
-    this._unmounted = true;
+    clearTimeout(this._interval);
   }
 
   componentWillReceiveProps (nextProps) {
@@ -53,7 +55,6 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   componentDidMount () {
-    this._unmounted = false;
     this._load(this.props.requestId);
   }
 

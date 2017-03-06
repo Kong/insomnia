@@ -1,5 +1,4 @@
 import React, {PropTypes, PureComponent} from 'react';
-import debounce from 'debounce-decorator';
 import autobind from 'autobind-decorator';
 import * as querystring from '../../common/querystring';
 import * as misc from '../../common/misc';
@@ -8,20 +7,20 @@ import * as misc from '../../common/misc';
 class RenderedQueryString extends PureComponent {
   constructor (props) {
     super(props);
-    this.state = {string: ''};
-    this._mounted = false;
+    this._interval = null;
+    this.state = {
+      string: ''
+    };
   }
 
-  @debounce(400)
-  _debouncedUpdate (props) {
-    return this._update(props);
+  async _debouncedUpdate (props) {
+    clearTimeout(this._interval);
+    this._interval = setTimeout(() => {
+      this._update(props);
+    }, 300);
   }
 
   async _update (props) {
-    if (!this._mounted) {
-      return;
-    }
-
     const {request} = props;
     const enabledParameters = request.parameters.filter(p => !p.disabled);
     const {url, parameters} = await props.handleRender({
@@ -34,12 +33,11 @@ class RenderedQueryString extends PureComponent {
   }
 
   componentDidMount () {
-    this._mounted = true;
     this._update(this.props);
   }
 
   componentWillUnmount () {
-    this._mounted = false;
+    clearTimeout(this._interval);
   }
 
   componentWillReceiveProps (nextProps) {

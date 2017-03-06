@@ -128,7 +128,7 @@ class GenerateCodeModal extends PureComponent {
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
                 {target ? target.title : 'n/a'}
-                <i className="fa fa-caret-down"></i>
+                <i className="fa fa-caret-down"/>
               </DropdownButton>
               {targets.map(target => (
                 <DropdownItem key={target.key} onClick={this._handleTargetChange} value={target}>
@@ -140,7 +140,7 @@ class GenerateCodeModal extends PureComponent {
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
                 {client ? client.title : 'n/a'}
-                <i className="fa fa-caret-down"></i>
+                <i className="fa fa-caret-down"/>
               </DropdownButton>
               {clients.map(client => (
                 <DropdownItem key={client.key} onClick={this._handleClientChange} value={client}>
