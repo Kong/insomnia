@@ -54,6 +54,11 @@ export function getContentLengthHeader (headers) {
 }
 
 export function setDefaultProtocol (url, defaultProto = 'http:') {
+  // If no url, don't bother returning anything
+  if (!url) {
+    return '';
+  }
+
   // Default the proto if it doesn't exist
   if (url.indexOf('://') === -1) {
     url = `${defaultProto}//${url}`;

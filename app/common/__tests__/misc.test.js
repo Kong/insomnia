@@ -67,6 +67,11 @@ describe('generateId()', () => {
 });
 
 describe('setDefaultProtocol()', () => {
+  it('no-ops on empty url', () => {
+    const url = misc.setDefaultProtocol('');
+    expect(url).toBe('');
+  });
+
   it('correctly sets protocol for empty', () => {
     const url = misc.setDefaultProtocol('google.com');
     expect(url).toBe('http://google.com');
