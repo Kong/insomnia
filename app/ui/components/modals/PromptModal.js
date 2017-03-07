@@ -1,5 +1,6 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
+import Button from '../base/Button';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -9,15 +10,20 @@ import ModalFooter from '../base/ModalFooter';
 class PromptModal extends PureComponent {
   constructor (props) {
     super(props);
-
     this.state = {
       headerName: 'Not Set',
       defaultValue: '',
       submitName: 'Not Set',
       selectText: false,
       hint: null,
-      inputType: 'text'
+      inputType: 'text',
+      hints: []
     };
+  }
+
+  _done (hint) {
+    this._onSubmitCallback && this._onSubmitCallback(hint);
+    this.modal.hide();
   }
 
   _setInputRef (n) {
@@ -28,14 +34,29 @@ class PromptModal extends PureComponent {
     this.modal = n;
   }
 
+  _handleSelectHint (hint) {
+    this._done(hint);
+  }
+
   _handleSubmit (e) {
     e.preventDefault();
 
-    this._onSubmitCallback && this._onSubmitCallback(this._input.value);
-    this.modal.hide();
+    this._done(this._input.value);
   }
 
-  show ({headerName, defaultValue, submitName, selectText, hint, inputType, placeholder, label}) {
+  show (options) {
+    const {
+      headerName,
+      defaultValue,
+      submitName,
+      selectText,
+      hint,
+      inputType,
+      placeholder,
+      label,
+      hints
+    } = options;
+
     this.modal.show();
 
     // Need to do this after render because modal focuses itself too
@@ -56,14 +77,35 @@ class PromptModal extends PureComponent {
         placeholder,
         hint,
         inputType,
-        label
+        label,
+        hints
       });
     });
   }
 
+  _renderHintButton (hint) {
+    return (
+      <Button type="button"
+              value={hint}
+              key={hint}
+              className="btn btn--outlined btn--super-duper-compact margin-right-sm"
+              onClick={this._handleSelectHint}>
+        {hint}
+      </Button>
+    );
+  }
+
   render () {
     const {extraProps} = this.props;
-    const {submitName, headerName, hint, inputType, placeholder, label} = this.state;
+    const {
+      submitName,
+      headerName,
+      hint,
+      inputType,
+      placeholder,
+      label,
+      hints
+    } = this.state;
 
     const input = (
       <input
@@ -84,6 +126,7 @@ class PromptModal extends PureComponent {
             <div className="form-control form-control--outlined form-control--wide">
               {label ? <label>{label}{input}</label> : input}
             </div>
+            {hints.map(this._renderHintButton)}
           </form>
         </ModalBody>
         <ModalFooter>

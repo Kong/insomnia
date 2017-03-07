@@ -70,11 +70,6 @@ export const METHOD_PATCH = 'PATCH';
 export const METHOD_DELETE = 'DELETE';
 export const METHOD_OPTIONS = 'OPTIONS';
 export const METHOD_HEAD = 'HEAD';
-export const METHOD_FIND = 'FIND';
-export const METHOD_PURGE = 'PURGE';
-export const METHOD_DELETE_HARD = 'DELETEHARD';
-export const METHOD_LINK = 'LINK';
-export const METHOD_UNLINK = 'UNLINK';
 export const HTTP_METHODS = [
   METHOD_GET,
   METHOD_POST,
@@ -82,12 +77,7 @@ export const HTTP_METHODS = [
   METHOD_PATCH,
   METHOD_DELETE,
   METHOD_OPTIONS,
-  METHOD_HEAD,
-  METHOD_FIND,
-  METHOD_PURGE,
-  METHOD_LINK,
-  METHOD_UNLINK,
-  METHOD_DELETE_HARD
+  METHOD_HEAD
 ];
 
 // Preview Modes
