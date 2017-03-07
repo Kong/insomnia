@@ -17,7 +17,6 @@
   // Don't collapse direct children, but their children
   &.sidebar--collapsed > * > * {
     opacity: 0;
-    transition: opacity 0.5s;
   }
 
   &.sidebar--hidden {
@@ -227,11 +226,6 @@
 
     & > button {
       color: @hl;
-
-      .tag {
-        // This might be too faint...
-        //opacity: @opacity-subtle;
-      }
     }
 
     & > * {
