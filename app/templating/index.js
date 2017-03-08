@@ -8,7 +8,7 @@ import * as extensions from './extensions';
  * @param {Object} [config.context] - Context to render with
  * @param {Object} [config.strict] - Fail on undefined values
  */
-export async function render (text, config = {}) {
+export function render (text, config = {}) {
   const context = config.context || {};
   const strict = config.strict;
 

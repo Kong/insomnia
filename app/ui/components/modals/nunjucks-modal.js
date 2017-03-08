@@ -13,10 +13,11 @@ class NunjucksModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      template: ''
+      defaultTemplate: ''
     };
 
     this._onDone = null;
+    this._currentTemplate = null;
   }
 
   _setModalRef (n) {
@@ -24,13 +25,13 @@ class NunjucksModal extends PureComponent {
   }
 
   _handleTemplateChange (template) {
-    this.setState({template});
+    this._currentTemplate = template;
   }
 
   show ({template, onDone}) {
     this._onDone = onDone;
 
-    this.setState({template});
+    this.setState({defaultTemplate: template});
 
     this.modal.show();
     trackEvent('Nunjucks', 'Editor', 'Show');
@@ -43,28 +44,31 @@ class NunjucksModal extends PureComponent {
 
   _handleSubmit (e) {
     e.preventDefault();
-    this._onDone && this._onDone(this.state.template);
+    this._onDone && this._onDone(this._currentTemplate);
     this.hide();
   }
 
   render () {
     const {handleRender} = this.props;
-    const {template} = this.state;
+    const {defaultTemplate} = this.state;
 
     let editor = null;
-    if (template.indexOf('{{') === 0) {
+    let title = '';
+    if (defaultTemplate.indexOf('{{') === 0) {
+      title = 'Variable Reference';
       editor = (
         <VariableEditor
           onChange={this._handleTemplateChange}
-          defaultValue={template}
+          defaultValue={defaultTemplate}
           handleRender={handleRender}
         />
       );
-    } else if (template.indexOf('{%') === 0) {
+    } else if (defaultTemplate.indexOf('{%') === 0) {
+      title = 'Tag';
       editor = (
         <TagEditor
           onChange={this._handleTemplateChange}
-          defaultValue={template}
+          defaultValue={defaultTemplate}
           handleRender={handleRender}
         />
       );
@@ -73,8 +77,8 @@ class NunjucksModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef}>
         <form onSubmit={this._handleSubmit}>
-          <ModalHeader>Edit Variable</ModalHeader>
-          <ModalBody className="pad" key={template}>
+          <ModalHeader>Edit {title}</ModalHeader>
+          <ModalBody className="pad" key={defaultTemplate}>
             {editor}
           </ModalBody>
           <ModalFooter>

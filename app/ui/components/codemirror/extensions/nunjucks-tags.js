@@ -89,7 +89,6 @@ async function _highlightNunjucksTags (render) {
       const element = document.createElement('span');
 
       element.className = `nunjucks-widget ${tok.type}`;
-      element.setAttribute('data-active', 'off');
       element.setAttribute('data-error', 'off');
 
       await _updateElementText(renderString, element, tok.string);
@@ -104,8 +103,6 @@ async function _highlightNunjucksTags (render) {
       activeMarks.push(mark);
 
       element.addEventListener('click', async () => {
-        element.setAttribute('data-active', 'on');
-
         // Define the dialog HTML
         showModal(NunjucksVariableModal, {
           template: mark.__template,

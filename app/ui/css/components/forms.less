@@ -67,7 +67,7 @@
     .CodeMirror,
     input,
     select {
-      border: 1px solid @hl-md;
+      border: 1px solid var(--hl-md);
       padding: @padding-sm;
       border-radius: @radius-md;
       background-color: @hl-xxs;
@@ -85,14 +85,14 @@
     select:focus,
     input:focus {
       background-color: transparent;
-      border-color: @hl-lg;
+      border-color: var(--hl-lg);
     }
   }
 
   &.form-control--underlined .CodeMirror-focused,
   &.form-control--underlined input:focus,
   &.form-control--underlined textarea:focus {
-    border-color: @hl;
+    border-color: var(--hl);
   }
 
   &.form-control--padded {

@@ -356,6 +356,7 @@ class Editor extends PureComponent {
               sortable
               noDropZone
               readOnly
+              forceInput
               index={-1}
               onChange={nullFn}
               onDelete={nullFn}

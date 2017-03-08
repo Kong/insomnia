@@ -121,6 +121,7 @@ class KeyValueEditorRow extends PureComponent {
       noDropZone,
       blurOnFocus,
       hideButtons,
+      forceInput,
       readOnly,
       className,
       isDragging,
@@ -161,6 +162,7 @@ class KeyValueEditorRow extends PureComponent {
               defaultValue={pair.name}
               render={handleRender}
               blurOnFocus={blurOnFocus}
+              forceInput={forceInput}
               readOnly={readOnly}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
@@ -182,6 +184,7 @@ class KeyValueEditorRow extends PureComponent {
                   blurOnFocus={blurOnFocus}
                   ref={this._setValueInputRef}
                   readOnly={readOnly}
+                  forceInput={forceInput}
                   type={valueInputType || 'text'}
                   placeholder={valuePlaceholder || 'Value'}
                   defaultValue={pair.value}
@@ -281,6 +284,7 @@ KeyValueEditorRow.propTypes = {
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,
+  forceInput: PropTypes.bool,
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
   noDelete: PropTypes.bool,

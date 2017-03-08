@@ -67,8 +67,8 @@ class VariableEditor extends PureComponent {
     }
 
     setTimeout(() => {
-      this._input && this._input.focusEnd();
-    });
+      this._input.focusEnd();
+    }, 100);
   }
 
   async _update (variableName, noCallback = false) {

@@ -14,7 +14,9 @@ class OneLineEditor extends PureComponent {
     super(props);
 
     let mode;
-    if (props.forceEditor) {
+    if (props.forceInput) {
+      mode = MODE_INPUT;
+    } else if (props.forceEditor) {
       mode = MODE_EDITOR;
     } else if (this._mayContainNunjucks(props.defaultValue)) {
       mode = MODE_EDITOR;
@@ -66,6 +68,10 @@ class OneLineEditor extends PureComponent {
     this.props.onFocus && this.props.onFocus(e);
   }
 
+  _handleInputMouseEnter () {
+    this._convertToEditorPreserveFocus();
+  }
+
   _handleInputFocus (e) {
     if (this.props.blurOnFocus) {
       e.target.blur();
@@ -86,7 +92,7 @@ class OneLineEditor extends PureComponent {
   }
 
   _handleInputChange (value) {
-    this._convertToEditorAndFocus();
+    this._convertToEditorPreserveFocus();
     this.props.onChange && this.props.onChange(value);
   }
 
@@ -96,7 +102,12 @@ class OneLineEditor extends PureComponent {
     }
   }
 
+  _handleInputBlur () {
+    this.props.onBlur && this.props.onBlur();
+  }
+
   _handleEditorBlur () {
+
     // Clear selection on blur to match default <input> behavior
     this._editor && this._editor.clearSelection();
     this.props.onBlur && this.props.onBlur();
@@ -125,30 +136,33 @@ class OneLineEditor extends PureComponent {
     this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
   }
 
-  _convertToEditorAndFocus () {
-    if (this.state.mode !== MODE_INPUT) {
+  _convertToEditorPreserveFocus () {
+    if (this.state.mode !== MODE_INPUT || this.props.forceInput) {
       return;
     }
 
-    const start = this._input.getSelectionStart();
-    const end = this._input.getSelectionEnd();
+    if (this._input.hasFocus()) {
+      const start = this._input.getSelectionStart();
+      const end = this._input.getSelectionEnd();
 
-    // Wait for the editor to swap and restore cursor position
-    const check = () => {
-      if (this._editor) {
-        this._editor.setSelection(start, end);
-      } else {
-        setTimeout(check, 40);
-      }
-    };
+      // Wait for the editor to swap and restore cursor position
+      const check = () => {
+        if (this._editor) {
+          this._editor.setSelection(start, end);
+        } else {
+          setTimeout(check, 40);
+        }
+      };
 
-    // Tell the component to show the editor
-    check();
+      // Tell the component to show the editor
+      check();
+    }
+
     this._convertToEditor();
   }
 
   _convertToEditor () {
-    if (this.state.mode === MODE_EDITOR) {
+    if (this.state.mode === MODE_EDITOR || this.props.forceInput) {
       return;
     }
 
@@ -237,9 +251,9 @@ class OneLineEditor extends PureComponent {
           }}
           placeholder={placeholder}
           defaultValue={defaultValue}
-          onBlur={onBlur}
+          onBlur={this._handleInputBlur}
           onChange={this._handleInputChange}
-          onMouseEnter={this._convertToEditor}
+          onMouseEnter={this._handleInputMouseEnter}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />
@@ -262,6 +276,7 @@ OneLineEditor.propTypes = {
   className: PropTypes.string,
   blurOnFocus: PropTypes.bool,
   forceEditor: PropTypes.bool,
+  forceInput: PropTypes.bool,
   handleRender: PropTypes.func
 };
 
