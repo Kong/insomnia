@@ -1,7 +1,7 @@
 {
   "parser": "babel-eslint",
   "extends": ["semistandard"],
-  "plugins": ["react", "jest", "html", "json"],
+  "plugins": ["react", "jest", "html", "json", "filenames"],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -16,6 +16,8 @@
   },
   "rules": {
     "react/jsx-uses-react": "error",
-    "react/jsx-uses-vars": "error"
+    "react/jsx-uses-vars": "error",
+    "react/prop-types": "error",
+    "filenames/match-exported": ["error", "kebab"]
   }
 }
