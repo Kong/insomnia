@@ -2,9 +2,7 @@
 @import '../constants/colors';
 
 .modal {
-  display: none;
   position: absolute;
-  z-index: 1000;
   top: 0;
   left: 0;
   right: 0;
@@ -17,10 +15,6 @@
 
   &.modal--fixed-height .modal__content {
     height: 100%;
-  }
-
-  &.modal--open {
-    display: block;
   }
 
   .modal__backdrop {

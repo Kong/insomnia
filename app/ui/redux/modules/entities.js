@@ -54,7 +54,7 @@ export function reducer (state = initialState, action) {
 
 export function addChanges (changes) {
   return dispatch => {
-    window.requestAnimationFrame(() => {
+    setTimeout(() => {
       dispatch(addChangesSync(changes));
     });
   };

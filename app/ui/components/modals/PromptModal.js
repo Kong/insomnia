@@ -1,5 +1,6 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
+import Button from '../base/Button';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';
@@ -9,15 +10,22 @@ import ModalFooter from '../base/ModalFooter';
 class PromptModal extends PureComponent {
   constructor (props) {
     super(props);
-
     this.state = {
       headerName: 'Not Set',
       defaultValue: '',
       submitName: 'Not Set',
       selectText: false,
+      upperCase: false,
       hint: null,
-      inputType: 'text'
+      inputType: 'text',
+      hints: []
     };
+  }
+
+  _done (rawValue) {
+    const value = this.state.upperCase ? rawValue.toUpperCase() : rawValue;
+    this._onSubmitCallback && this._onSubmitCallback(value);
+    this.modal.hide();
   }
 
   _setInputRef (n) {
@@ -28,14 +36,30 @@ class PromptModal extends PureComponent {
     this.modal = n;
   }
 
+  _handleSelectHint (hint) {
+    this._done(hint);
+  }
+
   _handleSubmit (e) {
     e.preventDefault();
 
-    this._onSubmitCallback && this._onSubmitCallback(this._input.value);
-    this.modal.hide();
+    this._done(this._input.value);
   }
 
-  show ({headerName, defaultValue, submitName, selectText, hint, inputType, placeholder, label}) {
+  show (options) {
+    const {
+      headerName,
+      defaultValue,
+      submitName,
+      selectText,
+      upperCase,
+      hint,
+      inputType,
+      placeholder,
+      label,
+      hints
+    } = options;
+
     this.modal.show();
 
     // Need to do this after render because modal focuses itself too
@@ -54,16 +78,39 @@ class PromptModal extends PureComponent {
         submitName,
         selectText,
         placeholder,
+        upperCase,
         hint,
         inputType,
-        label
+        label,
+        hints
       });
     });
   }
 
+  _renderHintButton (hint) {
+    return (
+      <Button type="button"
+              value={hint}
+              key={hint}
+              className="btn btn--outlined btn--super-duper-compact margin-right-sm margin-top-sm"
+              onClick={this._handleSelectHint}>
+        {hint}
+      </Button>
+    );
+  }
+
   render () {
     const {extraProps} = this.props;
-    const {submitName, headerName, hint, inputType, placeholder, label} = this.state;
+    const {
+      submitName,
+      headerName,
+      hint,
+      inputType,
+      placeholder,
+      label,
+      upperCase,
+      hints
+    } = this.state;
 
     const input = (
       <input
@@ -72,6 +119,7 @@ class PromptModal extends PureComponent {
         type={inputType === 'decimal' ? 'number' : (inputType || 'text')}
         step={inputType === 'decimal' ? '0.1' : null}
         min={inputType === 'decimal' ? '0.5' : null}
+        style={{textTransform: upperCase ? 'uppercase' : 'none'}}
         placeholder={placeholder || ''}
       />
     );
@@ -84,6 +132,7 @@ class PromptModal extends PureComponent {
             <div className="form-control form-control--outlined form-control--wide">
               {label ? <label>{label}{input}</label> : input}
             </div>
+            {hints.slice(0, 15).map(this._renderHintButton)}
           </form>
         </ModalBody>
         <ModalFooter>

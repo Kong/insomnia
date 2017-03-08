@@ -36,6 +36,7 @@ class SettingsModal extends PureComponent {
   _handleTabSelect (currentTabIndex) {
     this.setState({currentTabIndex});
   }
+
   _handleUpdateSetting (key, value) {
     models.settings.update(this.props.settings, {[key]: value});
     trackEvent('Setting', 'Change', key);
@@ -81,7 +82,6 @@ class SettingsModal extends PureComponent {
   }
 
   toggle (currentTabIndex = 0) {
-    console.log('THIS', this);
     this.setState({currentTabIndex});
     this.modal.toggle();
   }
@@ -102,7 +102,9 @@ class SettingsModal extends PureComponent {
           </span>
         </ModalHeader>
         <ModalBody noScroll>
-          <Tabs onSelect={this._handleTabSelect} selectedIndex={currentTabIndex} forceRenderTabPanel>
+          <Tabs onSelect={this._handleTabSelect}
+                selectedIndex={currentTabIndex}
+                forceRenderTabPanel>
             <TabList>
               <Tab selected={this._currentTabIndex === 0}>
                 <Button value="General" onClick={this._trackTab}>
