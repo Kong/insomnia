@@ -1,11 +1,14 @@
 .overlay {
   background-color: var(--color-bg);
   color: var(--color-font);
+  transition: opacity 300ms;
+  opacity: 1;
 
   // NOTE: Hiding with `return null` or `display: none` seems to cause
   // the pane to go white for some reason. So, we're hiding it behind
   // instead.
   &.overlay--hidden {
+    opacity: 0;
     z-index: -9999;
   }
 }

@@ -6,7 +6,7 @@ import {DB_PERSIST_INTERVAL} from './constants';
 import {generateId} from './misc';
 import {getModel, initModel} from '../models';
 import * as models from '../models/index';
-import AlertModal from '../ui/components/modals/AlertModal';
+import AlertModal from '../ui/components/modals/alert-modal';
 import {showModal} from '../ui/components/modals/index';
 import {trackEvent} from '../analytics/index';
 

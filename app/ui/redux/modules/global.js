@@ -4,10 +4,10 @@ import fs from 'fs';
 
 import {importRaw, exportJSON} from '../../../common/import';
 import {trackEvent} from '../../../analytics';
-import AlertModal from '../../components/modals/AlertModal';
+import AlertModal from '../../components/modals/alert-modal';
 import {showModal} from '../../components/modals';
-import PaymentNotificationModal from '../../components/modals/PaymentNotificationModal';
-import LoginModal from '../../components/modals/LoginModal';
+import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
+import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
