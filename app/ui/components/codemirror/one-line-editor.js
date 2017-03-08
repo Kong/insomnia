@@ -248,7 +248,7 @@ class OneLineEditor extends PureComponent {
   }
 }
 
-OneLineEditor.propTypes = Object.assign({}, CodeEditor.propTypes, {
+OneLineEditor.propTypes = {
   defaultValue: PropTypes.string.isRequired,
 
   // Optional
@@ -259,8 +259,10 @@ OneLineEditor.propTypes = Object.assign({}, CodeEditor.propTypes, {
   onChange: PropTypes.func,
   render: PropTypes.func,
   placeholder: PropTypes.string,
+  className: PropTypes.string,
   blurOnFocus: PropTypes.bool,
-  forceEditor: PropTypes.bool
-});
+  forceEditor: PropTypes.bool,
+  handleRender: PropTypes.func
+};
 
 export default OneLineEditor;

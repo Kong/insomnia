@@ -1,5 +1,7 @@
 import CodeMirror from 'codemirror';
 import * as misc from '../../../../common/misc';
+import NunjucksVariableModal from '../../modals/nunjucks-variable-modal';
+import {showModal} from '../../modals/index';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
@@ -94,6 +96,7 @@ async function _highlightNunjucksTags (render) {
 
       const mark = this.markText(start, end, {
         __nunjucks: true, // Mark that we created it
+        __template: tok.string,
         handleMouseEvents: false,
         replacedWith: element
       });
@@ -104,6 +107,10 @@ async function _highlightNunjucksTags (render) {
         element.setAttribute('data-active', 'on');
 
         // Define the dialog HTML
+        showModal(NunjucksVariableModal, {
+          template: mark.__template
+        });
+
         const html = [
           '<div class="wide hide-scrollbars scrollable">',
           '<input type="text" name="template"/>',
