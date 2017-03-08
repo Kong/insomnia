@@ -3,9 +3,9 @@ import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
-import RequestActionsDropdown from '../dropdowns/RequestActionsDropdown';
+import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
 import Editable from '../base/editable';
-import MethodTag from '../tags/MethodTag';
+import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
@@ -212,6 +212,4 @@ function targetCollect (connect, monitor) {
 }
 
 const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
-const target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
-
-export default target;
+export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);

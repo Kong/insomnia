@@ -1,9 +1,9 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import EnvironmentsDropdown from '../dropdowns/EnvironmentsDropdown';
-import SidebarFilter from './SidebarFilter';
-import SidebarChildren from './SidebarChildren';
+import EnvironmentsDropdown from '../dropdowns/environments-dropdown';
+import SidebarFilter from './sidebar-filter';
+import SidebarChildren from './sidebar-children';
 import SyncButton from '../dropdowns/sync-dropdown';
 import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
 import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/constants';

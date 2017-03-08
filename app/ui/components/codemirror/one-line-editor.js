@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import Editor from './editor';
-import Input from '../base/DebouncedInput';
+import Input from '../base/debounced-input';
 
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';

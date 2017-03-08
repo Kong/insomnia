@@ -5,11 +5,11 @@ import Modal from '../base/modal';
 import Button from '../base/button';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import SettingsShortcuts from '../settings/SettingsShortcuts';
-import SettingsAbout from '../settings/SettingsAbout';
-import SettingsGeneral from '../settings/SettingsGeneral';
-import SettingsImportExport from '../settings/SettingsImportExport';
-import SettingsTheme from '../settings/SettingsTheme';
+import SettingsShortcuts from '../settings/shortcuts';
+import About from '../settings/about';
+import General from '../settings/general';
+import ImportExport from '../settings/import-export';
+import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import {getAppVersion, getAppName} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
@@ -133,20 +133,20 @@ class SettingsModal extends PureComponent {
               </Tab>
             </TabList>
             <TabPanel className="pad scrollable">
-              <SettingsGeneral
+              <General
                 settings={settings}
                 updateSetting={this._handleUpdateSetting}
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
-              <SettingsImportExport
+              <ImportExport
                 handleExportAll={this._handleExportAllToFile}
                 handleExportWorkspace={this._handleExportWorkspace}
                 handleImport={this._handleImport}
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
-              <SettingsTheme
+              <Theme
                 handleChangeTheme={this._handleChangeTheme}
                 activeTheme={settings.theme}
               />
@@ -155,7 +155,7 @@ class SettingsModal extends PureComponent {
               <SettingsShortcuts />
             </TabPanel>
             <TabPanel className="pad scrollable">
-              <SettingsAbout/>
+              <About/>
             </TabPanel>
           </Tabs>
         </ModalBody>

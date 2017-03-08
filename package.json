@@ -143,6 +143,7 @@
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",
     "eslint-config-standard": "^7.0.0",
+    "eslint-plugin-filenames": "^1.1.0",
     "eslint-plugin-html": "^2.0.1",
     "eslint-plugin-jest": "^19.0.1",
     "eslint-plugin-json": "^1.2.0",

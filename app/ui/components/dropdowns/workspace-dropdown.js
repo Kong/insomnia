@@ -5,7 +5,7 @@ import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
-import DropdownHint from '../base/dropdown/DropdownHint';
+import DropdownHint from '../base/dropdown/dropdown-hint';
 import PromptModal from '../modals/prompt-modal';
 import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/settings-modal';
 import * as models from '../../../models';

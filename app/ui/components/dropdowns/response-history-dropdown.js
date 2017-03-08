@@ -1,9 +1,9 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
-import SizeTag from '../tags/SizeTag';
-import StatusTag from '../tags/StatusTag';
-import TimeTag from '../tags/TimeTag';
+import SizeTag from '../tags/size-tag';
+import StatusTag from '../tags/status-tag';
+import TimeTag from '../tags/time-tag';
 import * as models from '../../../models/index';
 import PromptButton from '../base/prompt-button';
 import {trackEvent} from '../../../analytics/index';

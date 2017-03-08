@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import {AppContainer} from 'react-hot-loader';
 import {Provider} from 'react-redux';
 import {Tabs} from 'react-tabs';
-import App from './containers/App';
+import App from './containers/app';
 import './css/index.less';
 import {init as initStore} from './redux/modules';
 import {init as initDB} from '../common/database';

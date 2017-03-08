@@ -1,5 +1,5 @@
 import uuid from 'uuid';
-import BaseExtension from './base/BaseExtension';
+import BaseExtension from './base/base-extension';
 
 export default class UuidExtension extends BaseExtension {
   constructor () {

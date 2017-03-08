@@ -4,7 +4,7 @@ import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/d
 import Link from '../base/link';
 
 @autobind
-class SettingsImportExport extends PureComponent {
+class ImportExport extends PureComponent {
   render () {
     const {
       handleImport,
@@ -51,10 +51,10 @@ class SettingsImportExport extends PureComponent {
   }
 }
 
-SettingsImportExport.propTypes = {
+ImportExport.propTypes = {
   handleImport: PropTypes.func.isRequired,
   handleExportAll: PropTypes.func.isRequired,
   handleExportWorkspace: PropTypes.func.isRequired
 };
 
-export default SettingsImportExport;
+export default ImportExport;

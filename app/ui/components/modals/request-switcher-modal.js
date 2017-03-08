@@ -6,7 +6,7 @@ import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
-import MethodTag from '../tags/MethodTag';
+import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 
 @autobind

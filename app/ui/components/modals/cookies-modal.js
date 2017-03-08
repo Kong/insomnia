@@ -4,7 +4,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import CookiesEditor from '../editors/CookiesEditor';
+import CookiesEditor from '../editors/cookies-editor';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 

@@ -3,8 +3,8 @@ import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
-import RequestGroupActionsDropdown from '../dropdowns/RequestGroupActionsDropdown';
-import SidebarRequestRow from './SidebarRequestRow';
+import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
+import SidebarRequestRow from './sidebar-request-row';
 import {trackEvent} from '../../../analytics/index';
 import * as misc from '../../../common/misc';
 
@@ -197,5 +197,4 @@ function targetCollect (connect, monitor) {
 }
 
 const source = DragSource('SIDEBAR_REQUEST_GROUP_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
-const target = DropTarget('SIDEBAR_REQUEST_GROUP_ROW', dragTarget, targetCollect)(source);
-export default target;
+export default DropTarget('SIDEBAR_REQUEST_GROUP_ROW', dragTarget, targetCollect)(source);

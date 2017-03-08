@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import Lazy from '../base/lazy';
-import KeyValueEditorRow from './Row';
+import KeyValueEditorRow from './row';
 import {generateId, nullFn} from '../../../common/misc';
 
 const NAME = 'name';
@@ -16,7 +16,7 @@ const LEFT = 37;
 const RIGHT = 39;
 
 @autobind
-class KeyValueEditor extends PureComponent {
+class Editor extends PureComponent {
   constructor (props) {
     super(props);
 
@@ -375,7 +375,7 @@ class KeyValueEditor extends PureComponent {
   }
 }
 
-KeyValueEditor.propTypes = {
+Editor.propTypes = {
   onChange: PropTypes.func.isRequired,
   pairs: PropTypes.arrayOf(PropTypes.object).isRequired,
 
@@ -396,4 +396,4 @@ KeyValueEditor.propTypes = {
   className: PropTypes.string
 };
 
-export default KeyValueEditor;
+export default Editor;

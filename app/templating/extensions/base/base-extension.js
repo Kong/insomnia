@@ -1,6 +1,6 @@
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
-export default class NowExtension {
+export default class BaseExtension {
   constructor () {
     // TODO: Subclass should set this
     this.tags = [];

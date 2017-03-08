@@ -1,6 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import EnvironmentEditor from '../editors/EnvironmentEditor';
+import EnvironmentEditor from '../editors/environment-editor';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';

@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import Link from '../base/link';
 
-class SettingsAbout extends PureComponent {
+class About extends PureComponent {
   render () {
     return (
       <div>
@@ -29,6 +29,6 @@ class SettingsAbout extends PureComponent {
   }
 }
 
-SettingsAbout.propTypes = {};
+About.propTypes = {};
 
-export default SettingsAbout;
+export default About;

@@ -1,9 +1,9 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import RawEditor from './RawEditor';
-import UrlEncodedEditor from './UrlEncodedEditor';
-import FormEditor from './FormEditor';
-import FileEditor from './FileEditor';
+import RawEditor from './raw-editor';
+import UrlEncodedEditor from './url-encoded-editor';
+import FormEditor from './form-editor';
+import FileEditor from './file-editor';
 import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../../../../common/constants';
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
 

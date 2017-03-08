@@ -1,4 +1,4 @@
-import BaseExtension from './base/BaseExtension';
+import BaseExtension from './base/base-extension';
 
 export default class TimestampExtension extends BaseExtension {
   constructor () {

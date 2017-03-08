@@ -17,7 +17,7 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SettingsModal from './modals/settings-modal';
 import ResponsePane from './response-pane';
-import Sidebar from './sidebar/Sidebar';
+import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';

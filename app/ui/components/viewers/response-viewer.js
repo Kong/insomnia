@@ -2,9 +2,9 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import Editor from '../codemirror/editor';
-import ResponseWebView from './ResponseWebview';
-import ResponseRaw from './ResponseRaw';
-import ResponseError from './ResponseError';
+import ResponseWebView from './response-webview';
+import ResponseRaw from './response-raw';
+import ResponseError from './response-error';
 import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../../../common/constants';
 
 let alwaysShowLargeResponses = false;

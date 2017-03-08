@@ -1,8 +1,8 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import DebouncedInput from '../base/DebouncedInput';
-import FileInputButton from '../base/FileInputButton';
+import DebouncedInput from '../base/debounced-input';
+import FileInputButton from '../base/file-input-button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';

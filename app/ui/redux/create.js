@@ -2,7 +2,7 @@ import {createStore, applyMiddleware} from 'redux';
 import thunkMiddleware from 'redux-thunk';
 import {reducer} from './modules';
 
-export default function configureStore () {
+export default function () {
   const middleware = [thunkMiddleware];
 
   if (__DEV__) {

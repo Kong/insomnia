@@ -8,7 +8,7 @@ import {showModal} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptModal from './modals/prompt-modal';
 import PromptButton from './base/prompt-button';
-import OneLineEditor from './codemirror/OneLineEditor';
+import OneLineEditor from './codemirror/one-line-editor';
 
 @autobind
 class RequestUrlBar extends PureComponent {

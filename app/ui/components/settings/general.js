@@ -2,7 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 
 @autobind
-class SettingsGeneral extends PureComponent {
+class General extends PureComponent {
   _handleUpdateSetting (e) {
     let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
@@ -132,9 +132,9 @@ class SettingsGeneral extends PureComponent {
   }
 }
 
-SettingsGeneral.propTypes = {
+General.propTypes = {
   settings: PropTypes.object.isRequired,
   updateSetting: PropTypes.func.isRequired
 };
 
-export default SettingsGeneral;
+export default General;

@@ -1,13 +1,14 @@
+// eslint-disable-next-line filenames/match-exported
 import React, {PureComponent, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
-import FileInputButton from '../base/FileInputButton';
+import FileInputButton from '../base/file-input-button';
 import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown/index';
 import PromptButton from '../base/prompt-button';
 import Button from '../base/button';
-import OneLineEditor from '../codemirror/OneLineEditor';
+import OneLineEditor from '../codemirror/one-line-editor';
 
 @autobind
 class KeyValueEditorRow extends PureComponent {

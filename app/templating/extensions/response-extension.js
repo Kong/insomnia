@@ -1,7 +1,7 @@
 import jq from 'jsonpath';
 import * as models from '../../models';
 
-import BaseExtension from './base/BaseExtension';
+import BaseExtension from './base/base-extension';
 
 const TAG_NAME = 'response';
 const TAG_NAME_SHORT = 'res';

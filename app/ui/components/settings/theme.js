@@ -28,7 +28,7 @@ const THEMES = [
 ];
 
 @autobind
-class SettingsTheme extends PureComponent {
+class Theme extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
@@ -112,9 +112,9 @@ class SettingsTheme extends PureComponent {
   }
 }
 
-SettingsTheme.propTypes = {
+Theme.propTypes = {
   handleChangeTheme: PropTypes.func.isRequired,
   activeTheme: PropTypes.string.isRequired
 };
 
-export default SettingsTheme;
+export default Theme;

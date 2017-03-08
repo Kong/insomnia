@@ -2,7 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import electron from 'electron';
-import FileInputButton from '../../base/FileInputButton';
+import FileInputButton from '../../base/file-input-button';
 import PromptButton from '../../base/prompt-button';
 import * as misc from '../../../../common/misc';
 import {trackEvent} from '../../../../analytics/index';

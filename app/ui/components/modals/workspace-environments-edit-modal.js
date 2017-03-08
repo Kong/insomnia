@@ -5,7 +5,7 @@ import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
 import Button from '../base/button';
 import Link from '../base/link';
-import EnvironmentEditor from '../editors/EnvironmentEditor';
+import EnvironmentEditor from '../editors/environment-editor';
 import Editable from '../base/editable';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
