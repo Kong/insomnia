@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import Editor from './editor';
+import CodeEditor from './code-editor';
 import Input from '../base/debounced-input';
 
 const MODE_INPUT = 'input';
@@ -203,7 +203,7 @@ class OneLineEditor extends PureComponent {
 
     if (showEditor) {
       return (
-        <Editor
+        <CodeEditor
           ref={this._setEditorRef}
           defaultTabBehavior
           hideLineNumbers
@@ -221,9 +221,8 @@ class OneLineEditor extends PureComponent {
           onMouseLeave={this._convertToInputIfNotFocused}
           onChange={onChange}
           render={render}
-          className="editor--single-line"
+          className="editor--single-line input"
           defaultValue={defaultValue}
-          lineWrapping={false}
         />
       );
     } else {
@@ -238,9 +237,9 @@ class OneLineEditor extends PureComponent {
           }}
           placeholder={placeholder}
           defaultValue={defaultValue}
+          onBlur={onBlur}
           onChange={this._handleInputChange}
           onMouseEnter={this._convertToEditor}
-          onBlur={onBlur}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />
@@ -249,7 +248,7 @@ class OneLineEditor extends PureComponent {
   }
 }
 
-OneLineEditor.propTypes = Object.assign({}, Editor.propTypes, {
+OneLineEditor.propTypes = Object.assign({}, CodeEditor.propTypes, {
   defaultValue: PropTypes.string.isRequired,
 
   // Optional

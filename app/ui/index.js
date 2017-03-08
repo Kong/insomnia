@@ -41,7 +41,7 @@ Tabs.setUseDefaultStyles(false);
 
   // Hot Module Replacement API
   if (module.hot) {
-    module.hot.accept('./containers/App', () => {
+    module.hot.accept('./containers/app', () => {
       render(DndComponent);
     });
   }

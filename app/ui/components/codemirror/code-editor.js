@@ -91,7 +91,7 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 @autobind
-class Editor extends PureComponent {
+class CodeEditor extends PureComponent {
   constructor (props) {
     super(props);
 
@@ -634,7 +634,7 @@ class Editor extends PureComponent {
 
     return (
       <div className={classes}>
-        <div className="editor__container input" style={styles} onMouseLeave={onMouseLeave}>
+        <div className="editor__container" style={styles} onMouseLeave={onMouseLeave}>
           <textarea
             ref={this._handleInitTextarea}
             style={{display: 'none'}}
@@ -649,7 +649,7 @@ class Editor extends PureComponent {
   }
 }
 
-Editor.propTypes = {
+CodeEditor.propTypes = {
   onChange: PropTypes.func,
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
@@ -681,4 +681,4 @@ Editor.propTypes = {
   debounceMillis: PropTypes.number
 };
 
-export default Editor;
+export default CodeEditor;
