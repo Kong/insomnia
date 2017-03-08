@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import ContentTypeDropdown from '../dropdowns/ContentTypeDropdown';
-import MethodDropdown from '../dropdowns/MethodDropdown';
+import MethodDropdown from '../dropdowns/method-dropdown';
 import Modal from '../base/Modal';
 import ModalBody from '../base/ModalBody';
 import ModalHeader from '../base/ModalHeader';

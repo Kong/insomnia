@@ -5,8 +5,8 @@ import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
 import {trackEvent} from '../../analytics';
 import {showModal} from './modals/index';
-import MethodDropdown from './dropdowns/MethodDropdown';
-import PromptModal from './modals/PromptModal';
+import MethodDropdown from './dropdowns/method-dropdown';
+import PromptModal from './modals/prompt-modal';
 import PromptButton from './base/PromptButton';
 import OneLineEditor from './codemirror/OneLineEditor';
 

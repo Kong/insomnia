@@ -2,12 +2,21 @@
 @import '../constants/colors';
 
 .modal {
+  // Hidden state
+  opacity: 0;
+  z-index: -999999; // Component updates this manually
+
+  transition: opacity 300ms;
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   padding: @padding-lg;
+
+  &.modal--open {
+    opacity: 1;
+  }
 
   &:focus {
     outline: 0;
@@ -115,4 +124,9 @@
     border-top-left-radius: @radius-md;
     border-top-right-radius: @radius-md;
   }
+}
+
+.modals {
+  width: 0;
+  height: 0;
 }

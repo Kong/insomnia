@@ -1,13 +1,13 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import KeyValueEditor from './keyvalueeditor/Editor';
+import KeyValueEditor from './key-value-editor/Editor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
 import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
-import RenderedQueryString from './RenderedQueryString';
+import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/BodyEditor';
 import AuthEditor from './editors/AuthEditor';
-import RequestUrlBar from './RequestUrlBar.js';
+import RequestUrlBar from './request-url-bar.js';
 import {MOD_SYM, getContentTypeName} from '../../common/constants';
 import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';

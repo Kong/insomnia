@@ -11,7 +11,7 @@ import Button from './base/Button';
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHistoryDropdown from './dropdowns/ResponseHistoryDropdown';
-import ResponseTimer from './ResponseTimer';
+import ResponseTimer from './response-timer';
 import ResponseHeadersViewer from './viewers/ResponseHeadersViewer';
 import ResponseCookiesViewer from './viewers/ResponseCookiesViewer';
 import * as models from '../../models';

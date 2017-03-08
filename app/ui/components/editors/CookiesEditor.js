@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
 import PromptButton from '../base/PromptButton';
-import CookieInput from '../CookieInput';
+import CookieInput from '../cookie-input';
 import {cookieToString} from '../../../common/cookies';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 

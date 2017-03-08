@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import classnames from 'classnames';
-import EnvironmentsModal from '../modals/WorkspaceEnvironmentsEditModal';
+import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../base/dropdown';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';

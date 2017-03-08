@@ -9,7 +9,7 @@ import ModalFooter from '../base/ModalFooter';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync/index';
 import {showModal} from './index';
-import PromptModal from './PromptModal';
+import PromptModal from './prompt-modal';
 import PromptButton from '../base/PromptButton';
 import {trackEvent} from '../../../analytics/index';
 

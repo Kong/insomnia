@@ -1,11 +1,11 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
 import * as constants from '../../../common/constants';
 import {showModal} from '../modals/index';
-import PromptModal from '../modals/PromptModal';
+import PromptModal from '../modals/prompt-modal';
 
-const LOCALSTORAGE_KEY = 'insomnia.methods';
+const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 
 @autobind
 class MethodDropdown extends PureComponent {
@@ -13,7 +13,7 @@ class MethodDropdown extends PureComponent {
     let recentMethods;
     try {
       const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
-      recentMethods = JSON.parse(v);
+      recentMethods = JSON.parse(v) || [];
     } catch (err) {
       recentMethods = [];
     }
@@ -21,12 +21,12 @@ class MethodDropdown extends PureComponent {
     // Prompt user for the method
     const method = await showModal(PromptModal, {
       defaultValue: this.props.method,
-      headerName: 'Custom HTTP Method',
+      headerName: 'HTTP Method',
       submitName: 'Done',
       upperCase: true,
       selectText: true,
       hint: 'Common examples are LINK, UNLINK, FIND, PURGE',
-      label: 'Method Name',
+      label: 'Name',
       placeholder: 'CUSTOM',
       hints: recentMethods
     });
@@ -59,10 +59,11 @@ class MethodDropdown extends PureComponent {
             {method}
           </DropdownItem>
         ))}
-        <DropdownItem className={`http-method-custom`}
+        <DropdownDivider/>
+        <DropdownItem className="http-method-custom"
                       onClick={this._handleSetCustomMethod}
                       value={method}>
-          Custom Method
+          Use Custom Method
         </DropdownItem>
       </Dropdown>
     );

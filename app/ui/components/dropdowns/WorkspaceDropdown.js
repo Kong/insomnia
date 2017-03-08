@@ -6,18 +6,18 @@ import DropdownDivider from '../base/dropdown/DropdownDivider';
 import DropdownButton from '../base/dropdown/DropdownButton';
 import DropdownItem from '../base/dropdown/DropdownItem';
 import DropdownHint from '../base/dropdown/DropdownHint';
-import PromptModal from '../modals/PromptModal';
-import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/SettingsModal';
+import PromptModal from '../modals/prompt-modal';
+import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/settings-modal';
 import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import Link from '../base/Link';
-import WorkspaceSettingsModal from '../modals/WorkspaceSettingsModal';
-import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
+import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
+import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import * as session from '../../../sync/session';
 import PromptButton from '../base/PromptButton';
-import LoginModal from '../modals/LoginModal';
+import LoginModal from '../modals/login-modal';
 
 @autobind
 class WorkspaceDropdown extends PureComponent {

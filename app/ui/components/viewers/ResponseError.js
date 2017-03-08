@@ -2,7 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 
 import Link from '../../components/base/Link';
 import {showModal} from '../modals/index';
-import SettingsModal from '../modals/SettingsModal';
+import SettingsModal from '../modals/settings-modal';
 import {STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
 
 class ResponseError extends PureComponent {

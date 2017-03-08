@@ -49,7 +49,7 @@ import './extensions/clickable';
 import './extensions/nunjucks-tags';
 import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
-import AlertModal from '../modals/AlertModal';
+import AlertModal from '../modals/alert-modal';
 import Link from '../base/Link';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';

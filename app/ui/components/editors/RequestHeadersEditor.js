@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import KeyValueEditor from '../keyvalueeditor/Editor';
+import KeyValueEditor from '../key-value-editor/Editor';
 import Editor from '../codemirror/Editor';
 import {trackEvent} from '../../../analytics/index';
 

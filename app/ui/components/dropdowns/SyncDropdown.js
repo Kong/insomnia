@@ -6,8 +6,8 @@ import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics';
-import WorkspaceShareSettingsModal from '../modals/WorkspaceShareSettingsModal';
-import SetupSyncModal from '../modals/SetupSyncModal';
+import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
+import SetupSyncModal from '../modals/setup-sync-modal';
 
 @autobind
 class SyncDropdown extends PureComponent {

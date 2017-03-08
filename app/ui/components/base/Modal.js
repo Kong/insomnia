@@ -126,17 +126,23 @@ class Modal extends PureComponent {
     const classes = classnames(
       'modal',
       className,
+      {'modal--open': open},
       {'modal--fixed-height': tall},
       {'modal--fixed-top': top},
       {'modal--noescape': noEscape},
       {'modal--wide': wide},
     );
 
+    const styles = {};
+    if (open) {
+      styles.zIndex = zIndex;
+    }
+
     return (
       <div ref={this._setModalRef}
            tabIndex="-1"
            className={classes}
-           style={{zIndex: open ? zIndex : -99999}}
+           style={styles}
            onClick={this._handleClick}>
         <div className="modal__content" key={forceRefreshCounter}>
           <div className="modal__backdrop overlay" data-close-modal></div>

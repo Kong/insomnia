@@ -2,24 +2,25 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {showModal, registerModal} from './modals/index';
-import AlertModal from '../components/modals/AlertModal';
-import ChangelogModal from '../components/modals/ChangelogModal';
-import CookiesModal from '../components/modals/CookiesModal';
-import EnvironmentEditModal from '../components/modals/EnvironmentEditModal';
-import GenerateCodeModal from '../components/modals/GenerateCodeModal';
-import LoginModal from '../components/modals/LoginModal';
-import PaymentNotificationModal from '../components/modals/PaymentNotificationModal';
-import PromptModal from '../components/modals/PromptModal';
-import RequestCreateModal from '../components/modals/RequestCreateModal';
-import RequestPane from './RequestPane';
-import RequestSwitcherModal from '../components/modals/RequestSwitcherModal';
-import SetupSyncModal from '../components/modals/SetupSyncModal';
-import SettingsModal from '../components/modals/SettingsModal';
-import ResponsePane from './ResponsePane';
+import AlertModal from './modals/alert-modal';
+import ChangelogModal from './modals/changelog-modal';
+import CookiesModal from './modals/cookies-modal';
+import EnvironmentEditModal from './modals/environment-edit-modal';
+import GenerateCodeModal from './modals/generate-code-modal';
+import LoginModal from './modals/login-modal';
+import PaymentNotificationModal from './modals/payment-notification-modal';
+import NunjucksVariableModal from '../components/modals/nunjucks-variable-modal';
+import PromptModal from './modals/prompt-modal';
+import RequestCreateModal from './modals/request-create-modal';
+import RequestPane from './request-pane';
+import RequestSwitcherModal from './modals/request-switcher-modal';
+import SetupSyncModal from './modals/setup-sync-modal';
+import SettingsModal from './modals/settings-modal';
+import ResponsePane from './response-pane';
 import Sidebar from './sidebar/Sidebar';
-import WorkspaceEnvironmentsEditModal from '../components/modals/WorkspaceEnvironmentsEditModal';
-import WorkspaceSettingsModal from '../components/modals/WorkspaceSettingsModal';
-import WorkspaceShareSettingsModal from '../components/modals/WorkspaceShareSettingsModal';
+import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
+import WorkspaceSettingsModal from './modals/workspace-settings-modal';
+import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import * as models from '../../models/index';
 import {updateMimeType} from '../../models/request';
 import {trackEvent} from '../../analytics/index';
@@ -329,62 +330,68 @@ class Wrapper extends PureComponent {
           handleSetFilter={this._handleSetResponseFilter}
         />
 
-        <AlertModal ref={registerModal}/>
-        <CookiesModal ref={registerModal}/>
-        <ChangelogModal ref={registerModal}/>
-        <LoginModal ref={registerModal}/>
-        <PromptModal ref={registerModal}/>
-        <RequestCreateModal ref={registerModal}/>
-        <PaymentNotificationModal ref={registerModal}/>
-        <WorkspaceSettingsModal
-          ref={registerModal}
-          workspace={activeWorkspace}
-          handleRemoveWorkspace={this._handleRemoveActiveWorkspace}/>
-        <WorkspaceShareSettingsModal
-          ref={registerModal}
-          workspace={activeWorkspace}/>
-        <GenerateCodeModal
-          ref={registerModal}
-          environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
-          editorFontSize={settings.editorFontSize}
-          editorKeyMap={settings.editorKeyMap}
-        />
-        <SettingsModal
-          ref={registerModal}
-          handleExportWorkspaceToFile={this._handleExportWorkspaceToFile}
-          handleExportAllToFile={handleExportFile}
-          handleImportFile={this._handleImportFile}
-          settings={settings}
-        />
-        <RequestSwitcherModal
-          ref={registerModal}
-          workspaces={workspaces}
-          workspaceChildren={workspaceChildren}
-          workspaceId={activeWorkspace._id}
-          activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
-          activateRequest={handleActivateRequest}
-          handleSetActiveWorkspace={handleSetActiveWorkspace}
-        />
-        <EnvironmentEditModal
-          ref={registerModal}
-          editorFontSize={settings.editorFontSize}
-          editorKeyMap={settings.editorKeyMap}
-          lineWrapping={settings.editorLineWrapping}
-          onChange={models.requestGroup.update}
-          render={handleRender}
-        />
-        <SetupSyncModal
-          ref={registerModal}
-          workspace={activeWorkspace}
-        />
-        <WorkspaceEnvironmentsEditModal
-          ref={registerModal}
-          onChange={models.workspace.update}
-          lineWrapping={settings.editorLineWrapping}
-          editorFontSize={settings.editorFontSize}
-          editorKeyMap={settings.editorKeyMap}
-          render={handleRender}
-        />
+        <div className="modals">
+          <AlertModal ref={registerModal}/>
+          <CookiesModal ref={registerModal}/>
+          <ChangelogModal ref={registerModal}/>
+          <LoginModal ref={registerModal}/>
+          <PromptModal ref={registerModal}/>
+          <RequestCreateModal ref={registerModal}/>
+          <PaymentNotificationModal ref={registerModal}/>
+          <NunjucksVariableModal
+            ref={registerModal}
+            handleRender={handleRender}
+          />
+          <WorkspaceSettingsModal
+            ref={registerModal}
+            workspace={activeWorkspace}
+            handleRemoveWorkspace={this._handleRemoveActiveWorkspace}/>
+          <WorkspaceShareSettingsModal
+            ref={registerModal}
+            workspace={activeWorkspace}/>
+          <GenerateCodeModal
+            ref={registerModal}
+            environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
+            editorFontSize={settings.editorFontSize}
+            editorKeyMap={settings.editorKeyMap}
+          />
+          <SettingsModal
+            ref={registerModal}
+            handleExportWorkspaceToFile={this._handleExportWorkspaceToFile}
+            handleExportAllToFile={handleExportFile}
+            handleImportFile={this._handleImportFile}
+            settings={settings}
+          />
+          <RequestSwitcherModal
+            ref={registerModal}
+            workspaces={workspaces}
+            workspaceChildren={workspaceChildren}
+            workspaceId={activeWorkspace._id}
+            activeRequestParentId={activeRequest ? activeRequest.parentId : activeWorkspace._id}
+            activateRequest={handleActivateRequest}
+            handleSetActiveWorkspace={handleSetActiveWorkspace}
+          />
+          <EnvironmentEditModal
+            ref={registerModal}
+            editorFontSize={settings.editorFontSize}
+            editorKeyMap={settings.editorKeyMap}
+            lineWrapping={settings.editorLineWrapping}
+            onChange={models.requestGroup.update}
+            render={handleRender}
+          />
+          <SetupSyncModal
+            ref={registerModal}
+            workspace={activeWorkspace}
+          />
+          <WorkspaceEnvironmentsEditModal
+            ref={registerModal}
+            onChange={models.workspace.update}
+            lineWrapping={settings.editorLineWrapping}
+            editorFontSize={settings.editorFontSize}
+            editorKeyMap={settings.editorKeyMap}
+            render={handleRender}
+          />
+        </div>
       </div>
     );
   }
