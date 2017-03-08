@@ -13,24 +13,46 @@ class NunjucksVariableModal extends PureComponent {
     this.state = {
       template: '',
       value: '',
+      error: '',
       key: 0
     };
+    this._timeout = null;
   }
 
   _setModalRef (n) {
     this.modal = n;
   }
 
-  async show ({template}) {
+  async _debouncedUpdate (...args) {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      this._update(...args)
+    }, 500);
+  }
+
+  async _update (template, newKey = false) {
     const {handleRender} = this.props;
-    const value = await handleRender(template);
+
+    let value = '';
+    let error = '';
+
+    try {
+      value = await handleRender(template, true);
+    } catch (err) {
+      error = err.message;
+    }
+
     this.setState({
       template,
       value,
-      key: Date.now()
+      error,
+      key: newKey ? this.state.key + 1 : this.state.key
     });
+  }
 
+  async show ({template}) {
     this.modal.show();
+    await this._update(template, true);
   }
 
   hide () {
@@ -39,7 +61,7 @@ class NunjucksVariableModal extends PureComponent {
   }
 
   render () {
-    const {template, value, key} = this.state;
+    const {template, value, error, key} = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
@@ -49,13 +71,17 @@ class NunjucksVariableModal extends PureComponent {
             <label>Variable
               <OneLineEditor
                 forceEditor
+                onChange={this._debouncedUpdate}
                 defaultValue={template}
               />
             </label>
           </div>
           <div className="form-control form-control--outlined">
             <label>Result
-              <input type="text" disabled value={value}/>
+              {error
+                ? <code className="block danger">{error}</code>
+                : <code className="block">{value}</code>
+              }
             </label>
           </div>
         </ModalBody>

@@ -98,7 +98,7 @@ class OneLineEditor extends PureComponent {
 
   _handleEditorBlur () {
     // Clear selection on blur to match default <input> behavior
-    this._editor.clearSelection();
+    this._editor && this._editor.clearSelection();
     this.props.onBlur && this.props.onBlur();
 
     if (this.props.forceEditor) {
