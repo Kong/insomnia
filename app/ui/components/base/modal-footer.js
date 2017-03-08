@@ -14,7 +14,7 @@ class ModalFooter extends PureComponent {
 
 ModalFooter.propTypes = {
   // Required
-  children: PropTypes.array.isRequired,
+  children: PropTypes.node.isRequired,
 
   // Optional
   className: PropTypes.string

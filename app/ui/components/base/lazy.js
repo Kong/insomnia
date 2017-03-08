@@ -28,7 +28,7 @@ class Lazy extends PureComponent {
 
 Lazy.propTypes = {
   delay: PropTypes.number,
-  children: PropTypes.array
+  children: PropTypes.node
 };
 
 export default Lazy;

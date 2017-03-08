@@ -267,7 +267,7 @@ class Wrapper extends PureComponent {
           filter={sidebarFilter || ''}
           hidden={sidebarHidden || false}
           workspace={activeWorkspace}
-          children={sidebarChildren}
+          childObjects={sidebarChildren}
           width={sidebarWidth}
           isLoading={isLoading}
           workspaces={workspaces}

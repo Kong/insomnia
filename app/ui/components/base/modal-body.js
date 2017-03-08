@@ -17,7 +17,7 @@ class ModalBody extends PureComponent {
 ModalBody.propTypes = {
   noScroll: PropTypes.bool,
   className: PropTypes.string,
-  children: PropTypes.array
+  children: PropTypes.node
 };
 
 export default ModalBody;

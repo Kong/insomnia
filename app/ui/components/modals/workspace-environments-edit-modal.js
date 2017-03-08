@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
-import Button from '../base/Button';
+import Button from '../base/button';
 import Link from '../base/link';
 import EnvironmentEditor from '../editors/EnvironmentEditor';
 import Editable from '../base/editable';

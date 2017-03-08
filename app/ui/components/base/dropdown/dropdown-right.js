@@ -13,7 +13,7 @@ class DropdownRight extends PureComponent {
 }
 
 DropdownRight.propTypes = {
-  children: PropTypes.array,
+  children: PropTypes.node,
   className: PropTypes.string
 };
 

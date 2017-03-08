@@ -83,11 +83,11 @@ class SidebarChildren extends PureComponent {
   }
 
   render () {
-    const {children} = this.props;
+    const {childObjects} = this.props;
 
     return (
       <ul className="sidebar__list sidebar__list-root">
-        {this._renderChildren(children)}
+        {this._renderChildren(childObjects)}
       </ul>
     );
   }
@@ -104,7 +104,7 @@ SidebarChildren.propTypes = {
   handleGenerateCode: PropTypes.func.isRequired,
   moveRequest: PropTypes.func.isRequired,
   moveRequestGroup: PropTypes.func.isRequired,
-  children: PropTypes.arrayOf(PropTypes.object).isRequired,
+  childObjects: PropTypes.arrayOf(PropTypes.object).isRequired,
   workspace: PropTypes.object.isRequired,
 
   // Optional

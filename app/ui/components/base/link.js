@@ -46,8 +46,8 @@ Link.propTypes = {
 
   // Optional
   button: PropTypes.bool,
-  onClick: PropTypes.string,
-  children: PropTypes.array
+  onClick: PropTypes.func,
+  children: PropTypes.node
 };
 
 export default Link;

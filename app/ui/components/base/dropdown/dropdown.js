@@ -174,7 +174,7 @@ class Dropdown extends PureComponent {
 
 Dropdown.propTypes = {
   // Required
-  children: PropTypes.array.isRequired,
+  children: PropTypes.node.isRequired,
 
   // Optional
   right: PropTypes.bool,

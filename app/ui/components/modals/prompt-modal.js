@@ -1,6 +1,6 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Button from '../base/Button';
+import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -123,6 +123,11 @@ class PromptModal extends PureComponent {
       />
     );
 
+    let sanitizedHints = [];
+    if (Array.isArray(hints)) {
+      sanitizedHints = hints.slice(0, 15).map(this._renderHintButton);
+    }
+
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>{headerName}</ModalHeader>
@@ -131,7 +136,7 @@ class PromptModal extends PureComponent {
             <div className="form-control form-control--outlined form-control--wide">
               {label ? <label>{label}{input}</label> : input}
             </div>
-            {hints.slice(0, 15).map(this._renderHintButton)}
+            {sanitizedHints}
           </form>
         </ModalBody>
         <ModalFooter>

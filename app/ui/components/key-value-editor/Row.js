@@ -6,7 +6,7 @@ import classnames from 'classnames';
 import FileInputButton from '../base/FileInputButton';
 import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown/index';
 import PromptButton from '../base/prompt-button';
-import Button from '../base/Button';
+import Button from '../base/button';
 import OneLineEditor from '../codemirror/OneLineEditor';
 
 @autobind

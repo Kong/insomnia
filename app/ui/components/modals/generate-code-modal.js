@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
-import CopyButton from '../base/CopyButton';
+import CopyButton from '../base/copy-button';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import Editor from '../codemirror/editor';
 import Modal from '../base/modal';

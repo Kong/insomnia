@@ -7,7 +7,7 @@ import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import SizeTag from './tags/SizeTag';
 import StatusTag from './tags/StatusTag';
 import TimeTag from './tags/TimeTag';
-import Button from './base/Button';
+import Button from './base/button';
 import PreviewModeDropdown from './dropdowns/PreviewModeDropdown';
 import ResponseViewer from './viewers/ResponseViewer';
 import ResponseHistoryDropdown from './dropdowns/ResponseHistoryDropdown';

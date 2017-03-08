@@ -21,7 +21,7 @@ class DropdownDivider extends PureComponent {
 }
 
 DropdownDivider.propTypes = {
-  children: PropTypes.array
+  children: PropTypes.node
 };
 
 export default DropdownDivider;

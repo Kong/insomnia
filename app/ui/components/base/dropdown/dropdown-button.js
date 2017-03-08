@@ -12,7 +12,7 @@ class DropdownButton extends PureComponent {
 }
 
 DropdownButton.propTypes = {
-  children: PropTypes.array.isRequired
+  children: PropTypes.node
 };
 
 export default DropdownButton;

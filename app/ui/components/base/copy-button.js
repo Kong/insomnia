@@ -52,7 +52,7 @@ CopyButton.propTypes = {
   content: PropTypes.string.isRequired,
 
   // Optional
-  children: PropTypes.string
+  children: PropTypes.node
 };
 
 export default CopyButton;

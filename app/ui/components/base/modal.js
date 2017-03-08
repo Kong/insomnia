@@ -161,7 +161,7 @@ Modal.propTypes = {
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,
   freshState: PropTypes.bool,
-  children: PropTypes.array,
+  children: PropTypes.node,
   className: PropTypes.string
 };
 

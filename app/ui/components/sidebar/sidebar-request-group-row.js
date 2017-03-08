@@ -141,7 +141,7 @@ SidebarRequestGroupRow.propTypes = {
   connectDropTarget: PropTypes.func,
 
   // Optional
-  children: PropTypes.array
+  children: PropTypes.node
 };
 
 /**

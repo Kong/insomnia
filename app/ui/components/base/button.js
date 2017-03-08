@@ -19,6 +19,7 @@ class Button extends PureComponent {
       children,
       disabled
     } = this.props;
+
     return (
       <button disabled={disabled} onClick={this._handleClick}>{children}</button>
     );
@@ -26,11 +27,14 @@ class Button extends PureComponent {
 }
 
 Button.propTypes = {
+  // Required
+  children: PropTypes.node.isRequired,
+
+  // Optional
   value: PropTypes.any,
   onDisabledClick: PropTypes.func,
   onClick: PropTypes.func,
-  disabled: PropTypes.boolean,
-  children: PropTypes.arrayOf(PropTypes.object).isRequired
+  disabled: PropTypes.bool
 };
 
 export default Button;

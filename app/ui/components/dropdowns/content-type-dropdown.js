@@ -55,7 +55,7 @@ ContentTypeDropdown.propTypes = {
   // Optional
   contentType: PropTypes.string, // Can be null
   className: PropTypes.string,
-  children: PropTypes.array
+  children: PropTypes.node
 };
 
 export default ContentTypeDropdown;

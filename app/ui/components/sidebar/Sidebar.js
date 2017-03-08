@@ -29,7 +29,7 @@ class Sidebar extends PureComponent {
     const {
       showCookiesModal,
       filter,
-      children,
+      childObjects,
       hidden,
       width,
       workspace,
@@ -96,7 +96,7 @@ class Sidebar extends PureComponent {
         />
 
         <SidebarChildren
-          children={children}
+          childObjects={childObjects}
           handleActivateRequest={handleActivateRequest}
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
@@ -144,7 +144,7 @@ Sidebar.propTypes = {
   width: PropTypes.number.isRequired,
   isLoading: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,
-  children: PropTypes.arrayOf(PropTypes.object).isRequired,
+  childObjects: PropTypes.arrayOf(PropTypes.object).isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 

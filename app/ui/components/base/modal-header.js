@@ -27,7 +27,7 @@ class ModalHeader extends PureComponent {
 
 ModalHeader.propTypes = {
   // Required
-  children: PropTypes.array.isRequired,
+  children: PropTypes.node.isRequired,
 
   // Optional
   hideCloseButton: PropTypes.bool,

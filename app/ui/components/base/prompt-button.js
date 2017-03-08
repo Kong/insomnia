@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import Button from '../base/Button';
+import Button from './button';
 
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
@@ -68,9 +68,10 @@ class PromptButton extends PureComponent {
 
   render () {
     const {
-      children,
       onClick, // eslint-disable-line no-unused-vars
+      children,
       addIcon,
+      disabled,
       confirmMessage,
       doneMessage,
       ...other
@@ -96,7 +97,7 @@ class PromptButton extends PureComponent {
     }
 
     return (
-      <Button onClick={this._handleClick} {...other}>
+      <Button onClick={this._handleClick} disabled={disabled} {...other}>
         {innerMsg}
       </Button>
     );
@@ -106,7 +107,8 @@ class PromptButton extends PureComponent {
 PromptButton.propTypes = {
   onClick: PropTypes.func,
   addIcon: PropTypes.bool,
-  children: PropTypes.array,
+  children: PropTypes.node,
+  disabled: PropTypes.bool,
   confirmMessage: PropTypes.string,
   doneMessage: PropTypes.string,
   value: PropTypes.any
