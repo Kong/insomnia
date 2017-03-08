@@ -176,7 +176,7 @@ async function _highlightNunjucksTags (render) {
   }
 }
 
-async function _updateElementText (render, el, text, preview = false) {
+async function _updateElementText (render, el, text) {
   try {
     const str = text.replace(/\\/g, '');
     const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
@@ -187,42 +187,34 @@ async function _updateElementText (render, el, text, preview = false) {
       .replace(/}}$/, '')
       .trim();
 
-    let innerHTML = '';
-
     if (tagMatch) {
       const tag = tagMatch[1];
 
       // Don't render other tags because they may be two-parters
       // eg. {% for %}...{% endfor %}
       const cleaned = cleanedStr.replace(tag, '').trim();
-      innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
+      el.innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
 
       if (['response', 'res', 'uuid', 'timestamp', 'now'].includes(tag)) {
         // Try rendering these so we can show errors if needed
         const v = await render(str);
         el.title = v;
-        innerHTML = preview ? v : innerHTML;
       } else {
         el.setAttribute('data-ignore', 'on');
       }
     } else {
       // Render if it's a variable
+      el.innerHTML = `<label>var</label> ${cleanedStr}`.trim();
       const v = await render(str);
       el.title = v;
-      innerHTML = preview ? v : `${cleanedStr}`.trim();
     }
 
-    el.innerHTML = innerHTML;
     el.setAttribute('data-error', 'off');
   } catch (err) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
-    if (message.length > 16) {
-      message = `${message.slice(0, 15)}&hellip;`;
-    }
-    el.innerHTML = `&#x203c; ${message}`;
+    el.title = message;
     el.className += ' nunjucks-widget--error';
     el.setAttribute('data-error', 'on');
-    el.title = fullMessage;
   }
 }

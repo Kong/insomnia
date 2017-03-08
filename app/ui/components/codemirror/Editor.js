@@ -575,7 +575,7 @@ class Editor extends PureComponent {
   }
 
   render () {
-    const {readOnly, fontSize, mode, filter} = this.props;
+    const {readOnly, fontSize, mode, filter, onMouseLeave} = this.props;
 
     const classes = classnames(
       'editor',
@@ -634,7 +634,7 @@ class Editor extends PureComponent {
 
     return (
       <div className={classes}>
-        <div className="editor__container input" style={styles}>
+        <div className="editor__container input" style={styles} onMouseLeave={onMouseLeave}>
           <textarea
             ref={this._handleInitTextarea}
             style={{display: 'none'}}
@@ -654,6 +654,7 @@ Editor.propTypes = {
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   onClickLink: PropTypes.func,
+  onMouseLeave: PropTypes.func,
   render: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
