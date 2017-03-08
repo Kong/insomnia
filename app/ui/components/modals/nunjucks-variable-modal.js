@@ -12,7 +12,8 @@ class NunjucksVariableModal extends PureComponent {
     super(props);
     this.state = {
       template: '',
-      value: ''
+      value: '',
+      key: 0
     };
   }
 
@@ -25,7 +26,8 @@ class NunjucksVariableModal extends PureComponent {
     const value = await handleRender(template);
     this.setState({
       template,
-      value
+      value,
+      key: Date.now()
     });
 
     this.modal.show();
@@ -37,18 +39,16 @@ class NunjucksVariableModal extends PureComponent {
   }
 
   render () {
-    const {template, value} = this.state;
+    const {template, value, key} = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>Edit Variable</ModalHeader>
-        <ModalBody className="pad">
+        <ModalBody className="pad" key={key}>
           <div className="form-control form-control--outlined">
-            <label>
-              Variable Name
-              <input
-                type="text"
-                placeholder="{{ my_var }}"
+            <label>Variable
+              <OneLineEditor
+                forceEditor
                 defaultValue={template}
               />
             </label>

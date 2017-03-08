@@ -74,7 +74,6 @@ class Modal extends PureComponent {
   }
 
   _setModalRef (n) {
-    console.log('SET REF');
     this._node = n;
   }
 
