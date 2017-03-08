@@ -100,7 +100,8 @@ Editable.propTypes = {
 
   // Optional
   singleClick: PropTypes.bool,
-  onEditStart: PropTypes.func
+  onEditStart: PropTypes.func,
+  className: PropTypes.string
 };
 
 export default Editable;

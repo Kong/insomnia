@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 
 class DropdownRight extends PureComponent {
@@ -12,6 +12,9 @@ class DropdownRight extends PureComponent {
   }
 }
 
-DropdownRight.propTypes = {};
+DropdownRight.propTypes = {
+  children: PropTypes.array,
+  className: PropTypes.string
+};
 
 export default DropdownRight;

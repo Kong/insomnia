@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import Button from '../base/Button';
-import Link from '../base/Link';
+import Link from '../base/link';
 
 import imgLight from '../../images/light.png';
 import imgDark from '../../images/dark.png';

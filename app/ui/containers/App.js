@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {ipcRenderer} from 'electron';
@@ -566,6 +566,18 @@ class App extends PureComponent {
     );
   }
 }
+
+App.propTypes = {
+  // Required
+  sidebarWidth: PropTypes.number.isRequired,
+  paneWidth: PropTypes.number.isRequired,
+  activeWorkspace: PropTypes.shape({
+    _id: PropTypes.string.isRequired
+  }).isRequired,
+
+  // Optional
+  activeRequest: PropTypes.object
+};
 
 function mapStateToProps (state, props) {
   const {

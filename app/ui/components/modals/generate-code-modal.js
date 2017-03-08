@@ -3,11 +3,11 @@ import autobind from 'autobind-decorator';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 import CopyButton from '../base/CopyButton';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
-import Editor from '../codemirror/Editor';
-import Modal from '../base/Modal';
-import ModalBody from '../base/ModalBody';
-import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
+import Editor from '../codemirror/editor';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
+import ModalFooter from '../base/modal-footer';
 import {exportHar} from '../../../common/har';
 import {trackEvent} from '../../../analytics/index';
 

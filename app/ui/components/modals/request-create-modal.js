@@ -1,11 +1,11 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import ContentTypeDropdown from '../dropdowns/ContentTypeDropdown';
+import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import MethodDropdown from '../dropdowns/method-dropdown';
-import Modal from '../base/Modal';
-import ModalBody from '../base/ModalBody';
-import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
+import ModalFooter from '../base/modal-footer';
 import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_DELETE} from '../../../common/constants';
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';

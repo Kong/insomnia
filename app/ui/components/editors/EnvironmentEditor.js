@@ -1,6 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Editor from '../codemirror/Editor';
+import Editor from '../codemirror/editor';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 @autobind

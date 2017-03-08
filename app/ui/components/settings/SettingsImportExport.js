@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
-import Link from '../base/Link';
+import Link from '../base/link';
 
 @autobind
 class SettingsImportExport extends PureComponent {

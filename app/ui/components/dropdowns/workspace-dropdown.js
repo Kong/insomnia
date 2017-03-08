@@ -1,10 +1,10 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import * as classnames from 'classnames';
-import Dropdown from '../base/dropdown/Dropdown';
-import DropdownDivider from '../base/dropdown/DropdownDivider';
-import DropdownButton from '../base/dropdown/DropdownButton';
-import DropdownItem from '../base/dropdown/DropdownItem';
+import Dropdown from '../base/dropdown/dropdown';
+import DropdownDivider from '../base/dropdown/dropdown-divider';
+import DropdownButton from '../base/dropdown/dropdown-button';
+import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/DropdownHint';
 import PromptModal from '../modals/prompt-modal';
 import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/settings-modal';
@@ -12,11 +12,11 @@ import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
-import Link from '../base/Link';
+import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import * as session from '../../../sync/session';
-import PromptButton from '../base/PromptButton';
+import PromptButton from '../base/prompt-button';
 import LoginModal from '../modals/login-modal';
 
 @autobind
@@ -181,12 +181,16 @@ class WorkspaceDropdown extends PureComponent {
 }
 
 WorkspaceDropdown.propTypes = {
+  // Required
   isLoading: PropTypes.bool.isRequired,
   handleImportFile: PropTypes.func.isRequired,
   handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeWorkspace: PropTypes.object.isRequired
+  activeWorkspace: PropTypes.object.isRequired,
+
+  // Optional
+  className: PropTypes.string
 };
 
 export default WorkspaceDropdown;

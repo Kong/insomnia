@@ -221,7 +221,11 @@ class SyncDropdown extends PureComponent {
 }
 
 SyncDropdown.propTypes = {
-  workspace: PropTypes.object.isRequired
+  // Required
+  workspace: PropTypes.object.isRequired,
+
+  // Optional
+  className: PropTypes.string
 };
 
 export default SyncDropdown;

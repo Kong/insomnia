@@ -53,7 +53,8 @@ class CookieInput extends PureComponent {
 }
 
 CookieInput.propTypes = {
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
+  defaultValue: PropTypes.string.isRequired
 };
 
 export default CookieInput;

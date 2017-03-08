@@ -1,10 +1,10 @@
 import React, {PureComponent, PropTypes} from 'react';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import autobind from 'autobind-decorator';
-import Modal from '../base/Modal';
+import Modal from '../base/modal';
 import Button from '../base/Button';
-import ModalBody from '../base/ModalBody';
-import ModalHeader from '../base/ModalHeader';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
 import SettingsShortcuts from '../settings/SettingsShortcuts';
 import SettingsAbout from '../settings/SettingsAbout';
 import SettingsGeneral from '../settings/SettingsGeneral';

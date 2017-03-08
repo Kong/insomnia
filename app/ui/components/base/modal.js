@@ -120,7 +120,7 @@ class Modal extends PureComponent {
   }
 
   render () {
-    const {tall, top, wide, noEscape, className} = this.props;
+    const {tall, top, wide, noEscape, className, children} = this.props;
     const {open, zIndex, forceRefreshCounter} = this.state;
 
     const classes = classnames(
@@ -146,7 +146,7 @@ class Modal extends PureComponent {
            onClick={this._handleClick}>
         <div className="modal__content" key={forceRefreshCounter}>
           <div className="modal__backdrop overlay" data-close-modal></div>
-          {this.props.children}
+          {children}
         </div>
       </div>
     );
@@ -160,7 +160,9 @@ Modal.propTypes = {
   noEscape: PropTypes.bool,
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,
-  freshState: PropTypes.bool
+  freshState: PropTypes.bool,
+  children: PropTypes.array,
+  className: PropTypes.string
 };
 
 export default Modal;

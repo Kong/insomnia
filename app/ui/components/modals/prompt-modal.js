@@ -1,10 +1,10 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import Button from '../base/Button';
-import Modal from '../base/Modal';
-import ModalBody from '../base/ModalBody';
-import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
+import ModalFooter from '../base/modal-footer';
 
 @autobind
 class PromptModal extends PureComponent {
@@ -100,7 +100,6 @@ class PromptModal extends PureComponent {
   }
 
   render () {
-    const {extraProps} = this.props;
     const {
       submitName,
       headerName,
@@ -125,7 +124,7 @@ class PromptModal extends PureComponent {
     );
 
     return (
-      <Modal ref={this._setModalRef} {...extraProps}>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>{headerName}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">

@@ -1,9 +1,9 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import Modal from '../base/Modal';
-import ModalBody from '../base/ModalBody';
-import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
+import ModalFooter from '../base/modal-footer';
 import * as sync from '../../../sync';
 import {SYNC_MODE_OFF, SYNC_MODE_ON, SYNC_MODE_NEVER, SYNC_MODE_UNSET} from '../../../sync/storage';
 

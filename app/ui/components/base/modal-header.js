@@ -26,7 +26,12 @@ class ModalHeader extends PureComponent {
 }
 
 ModalHeader.propTypes = {
-  hideCloseButton: PropTypes.bool
+  // Required
+  children: PropTypes.array.isRequired,
+
+  // Optional
+  hideCloseButton: PropTypes.bool,
+  className: PropTypes.string
 };
 
 export default ModalHeader;

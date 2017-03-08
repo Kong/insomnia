@@ -2,7 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-import Lazy from '../base/Lazy';
+import Lazy from '../base/lazy';
 import KeyValueEditorRow from './Row';
 import {generateId, nullFn} from '../../../common/misc';
 
@@ -392,7 +392,8 @@ KeyValueEditor.propTypes = {
   onChangeType: PropTypes.func,
   onChooseFile: PropTypes.func,
   onDelete: PropTypes.func,
-  onCreate: PropTypes.func
+  onCreate: PropTypes.func,
+  className: PropTypes.string
 };
 
 export default KeyValueEditor;

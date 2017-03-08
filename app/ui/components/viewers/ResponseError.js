@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 
-import Link from '../../components/base/Link';
+import Link from '../base/link';
 import {showModal} from '../modals/index';
 import SettingsModal from '../modals/settings-modal';
 import {STATUS_CODE_RENDER_FAILED} from '../../../common/constants';

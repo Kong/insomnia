@@ -48,7 +48,11 @@ class CopyButton extends PureComponent {
 }
 
 CopyButton.propTypes = {
-  content: PropTypes.string.isRequired
+  // Required
+  content: PropTypes.string.isRequired,
+
+  // Optional
+  children: PropTypes.string
 };
 
 export default CopyButton;

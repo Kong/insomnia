@@ -2,7 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
-import PromptButton from '../base/PromptButton';
+import PromptButton from '../base/prompt-button';
 import CookieInput from '../cookie-input';
 import {cookieToString} from '../../../common/cookies';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';

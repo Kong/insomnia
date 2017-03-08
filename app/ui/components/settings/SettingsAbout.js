@@ -1,5 +1,5 @@
 import React, {PureComponent} from 'react';
-import Link from '../base/Link';
+import Link from '../base/link';
 
 class SettingsAbout extends PureComponent {
   render () {

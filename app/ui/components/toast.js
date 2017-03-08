@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import Link from './base/Link';
+import Link from './base/link';
 import * as fetch from '../../common/fetch';
 import {trackEvent} from '../../analytics/index';
 import * as models from '../../models/index';

@@ -5,7 +5,7 @@ import SizeTag from '../tags/SizeTag';
 import StatusTag from '../tags/StatusTag';
 import TimeTag from '../tags/TimeTag';
 import * as models from '../../../models/index';
-import PromptButton from '../base/PromptButton';
+import PromptButton from '../base/prompt-button';
 import {trackEvent} from '../../../analytics/index';
 
 @autobind

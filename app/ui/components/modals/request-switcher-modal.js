@@ -3,9 +3,9 @@ import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import Button from '../base/Button';
-import Modal from '../base/Modal';
-import ModalHeader from '../base/ModalHeader';
-import ModalBody from '../base/ModalBody';
+import Modal from '../base/modal';
+import ModalHeader from '../base/modal-header';
+import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
 

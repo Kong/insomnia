@@ -4,8 +4,8 @@ import classnames from 'classnames';
 import EnvironmentsDropdown from '../dropdowns/EnvironmentsDropdown';
 import SidebarFilter from './SidebarFilter';
 import SidebarChildren from './SidebarChildren';
-import SyncButton from '../dropdowns/SyncDropdown';
-import WorkspaceDropdown from '../dropdowns/WorkspaceDropdown';
+import SyncButton from '../dropdowns/sync-dropdown';
+import WorkspaceDropdown from '../dropdowns/workspace-dropdown';
 import {SIDEBAR_SKINNY_REMS, COLLAPSE_SIDEBAR_REMS} from '../../../common/constants';
 
 @autobind

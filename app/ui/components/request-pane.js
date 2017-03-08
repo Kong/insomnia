@@ -1,9 +1,9 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
-import KeyValueEditor from './key-value-editor/Editor';
+import KeyValueEditor from './key-value-editor/editor';
 import RequestHeadersEditor from './editors/RequestHeadersEditor';
-import ContentTypeDropdown from './dropdowns/ContentTypeDropdown';
+import ContentTypeDropdown from './dropdowns/content-type-dropdown';
 import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/BodyEditor';
 import AuthEditor from './editors/AuthEditor';

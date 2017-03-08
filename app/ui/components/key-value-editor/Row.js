@@ -5,7 +5,7 @@ import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/FileInputButton';
 import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown/index';
-import PromptButton from '../base/PromptButton';
+import PromptButton from '../base/prompt-button';
 import Button from '../base/Button';
 import OneLineEditor from '../codemirror/OneLineEditor';
 
@@ -286,6 +286,7 @@ KeyValueEditorRow.propTypes = {
   noDropZone: PropTypes.bool,
   hideButtons: PropTypes.bool,
   blurOnFocus: PropTypes.bool,
+  className: PropTypes.string,
 
   // For drag-n-drop
   connectDragSource: PropTypes.func,

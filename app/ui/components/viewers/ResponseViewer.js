@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
-import Editor from '../codemirror/Editor';
+import Editor from '../codemirror/editor';
 import ResponseWebView from './ResponseWebview';
 import ResponseRaw from './ResponseRaw';
 import ResponseError from './ResponseError';

@@ -7,7 +7,7 @@ import {trackEvent} from '../../analytics';
 import {showModal} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptModal from './modals/prompt-modal';
-import PromptButton from './base/PromptButton';
+import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/OneLineEditor';
 
 @autobind

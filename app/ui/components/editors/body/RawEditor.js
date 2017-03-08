@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import Editor from '../../codemirror/Editor';
+import Editor from '../../codemirror/editor';
 
 class RawEditor extends PureComponent {
   render () {
@@ -41,7 +41,8 @@ RawEditor.propTypes = {
   lineWrapping: PropTypes.bool.isRequired,
 
   // Optional
-  render: PropTypes.func
+  render: PropTypes.func,
+  className: PropTypes.string
 };
 
 export default RawEditor;

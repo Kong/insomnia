@@ -2,9 +2,9 @@ import React, {PureComponent, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import DropdownButton from './DropdownButton';
-import DropdownItem from './DropdownItem';
-import DropdownDivider from './DropdownDivider';
+import DropdownButton from './dropdown-button';
+import DropdownItem from './dropdown-item';
+import DropdownDivider from './dropdown-divider';
 
 @autobind
 class Dropdown extends PureComponent {
@@ -173,11 +173,17 @@ class Dropdown extends PureComponent {
 }
 
 Dropdown.propTypes = {
+  // Required
+  children: PropTypes.array.isRequired,
+
+  // Optional
   right: PropTypes.bool,
   outline: PropTypes.bool,
   wide: PropTypes.bool,
   onOpen: PropTypes.func,
-  onHide: PropTypes.func
+  onHide: PropTypes.func,
+  className: PropTypes.string,
+  style: PropTypes.string
 };
 
 export default Dropdown;

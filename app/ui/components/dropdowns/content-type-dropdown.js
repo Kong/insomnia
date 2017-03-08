@@ -34,14 +34,14 @@ class ContentTypeDropdown extends PureComponent {
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
-        <DropdownDivider><span><i className="fa fa-bars"></i> Form Data</span></DropdownDivider>
+        <DropdownDivider><span><i className="fa fa-bars"/> Form Data</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_DATA)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_URLENCODED)}
-        <DropdownDivider><span><i className="fa fa-code"></i> Text</span></DropdownDivider>
+        <DropdownDivider><span><i className="fa fa-code"/> Text</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_JSON)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_XML)}
         {this._renderDropdownItem(constants.CONTENT_TYPE_OTHER)}
-        <DropdownDivider><span><i className="fa fa-ellipsis-h"></i> Other</span></DropdownDivider>
+        <DropdownDivider><span><i className="fa fa-ellipsis-h"/> Other</span></DropdownDivider>
         {this._renderDropdownItem(constants.CONTENT_TYPE_FILE)}
         {this._renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
       </Dropdown>
@@ -53,7 +53,9 @@ ContentTypeDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
 
   // Optional
-  contentType: PropTypes.string // Can be null
+  contentType: PropTypes.string, // Can be null
+  className: PropTypes.string,
+  children: PropTypes.array
 };
 
 export default ContentTypeDropdown;

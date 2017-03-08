@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import RequestActionsDropdown from '../dropdowns/RequestActionsDropdown';
-import Editable from '../base/Editable';
+import Editable from '../base/editable';
 import MethodTag from '../tags/MethodTag';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';

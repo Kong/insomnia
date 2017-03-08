@@ -54,7 +54,11 @@ class DropdownItem extends PureComponent {
 DropdownItem.propTypes = {
   buttonClass: PropTypes.any,
   stayOpenAfterClick: PropTypes.bool,
-  value: PropTypes.any
+  value: PropTypes.any,
+  disabled: PropTypes.bool,
+  onClick: PropTypes.func,
+  children: PropTypes.array,
+  className: PropTypes.string
 };
 
 export default DropdownItem;

@@ -22,8 +22,12 @@ class GravatarImg extends PureComponent {
 }
 
 GravatarImg.propTypes = {
+  // Required
   email: PropTypes.string.isRequired,
-  size: PropTypes.number
+
+  // Optional
+  size: PropTypes.number,
+  className: PropTypes.string
 };
 
 export default GravatarImg;

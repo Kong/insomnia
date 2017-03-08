@@ -20,7 +20,8 @@ SizeTag.propTypes = {
   bytes: PropTypes.number.isRequired,
 
   // Optional
-  small: PropTypes.bool
+  small: PropTypes.bool,
+  className: PropTypes.string
 };
 
 export default SizeTag;

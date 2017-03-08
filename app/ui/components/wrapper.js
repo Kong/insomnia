@@ -444,8 +444,12 @@ Wrapper.propTypes = {
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  activeWorkspace: PropTypes.shape({
+    _id: PropTypes.string.isRequired
+  }).isRequired,
 
   // Optional
+  activeRequest: PropTypes.object,
   activeEnvironment: PropTypes.object
 };
 

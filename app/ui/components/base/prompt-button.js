@@ -104,9 +104,12 @@ class PromptButton extends PureComponent {
 }
 
 PromptButton.propTypes = {
+  onClick: PropTypes.func,
   addIcon: PropTypes.bool,
-  value: PropTypes.any,
-  confirmMessage: PropTypes.any
+  children: PropTypes.array,
+  confirmMessage: PropTypes.string,
+  doneMessage: PropTypes.string,
+  value: PropTypes.any
 };
 
 export default PromptButton;

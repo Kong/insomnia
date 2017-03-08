@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import fs from 'fs';
 import electron from 'electron';
 import FileInputButton from '../../base/FileInputButton';
-import PromptButton from '../../base/PromptButton';
+import PromptButton from '../../base/prompt-button';
 import * as misc from '../../../../common/misc';
 import {trackEvent} from '../../../../analytics/index';
 

@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 
 class DropdownButton extends PureComponent {
   render () {
@@ -11,6 +11,8 @@ class DropdownButton extends PureComponent {
   }
 }
 
-DropdownButton.propTypes = {};
+DropdownButton.propTypes = {
+  children: PropTypes.array.isRequired
+};
 
 export default DropdownButton;

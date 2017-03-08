@@ -126,6 +126,7 @@ SidebarRequestGroupRow.propTypes = {
   moveRequest: PropTypes.func.isRequired,
   handleActivateRequest: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
+  handleCreateRequestGroup: PropTypes.func.isRequired,
 
   // Other
   isActive: PropTypes.bool.isRequired,
@@ -137,7 +138,10 @@ SidebarRequestGroupRow.propTypes = {
   isDragging: PropTypes.bool,
   isDraggingOver: PropTypes.bool,
   connectDragSource: PropTypes.func,
-  connectDropTarget: PropTypes.func
+  connectDropTarget: PropTypes.func,
+
+  // Optional
+  children: PropTypes.array
 };
 
 /**

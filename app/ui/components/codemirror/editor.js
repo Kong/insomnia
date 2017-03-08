@@ -50,7 +50,7 @@ import './extensions/nunjucks-tags';
 import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/alert-modal';
-import Link from '../base/Link';
+import Link from '../base/link';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
 
@@ -654,6 +654,7 @@ Editor.propTypes = {
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   onClickLink: PropTypes.func,
+  onKeyDown: PropTypes.func,
   onMouseLeave: PropTypes.func,
   render: PropTypes.func,
   keyMap: PropTypes.string,

@@ -1,10 +1,10 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Link from '../base/Link';
-import Modal from '../base/Modal';
-import ModalBody from '../base/ModalBody';
-import ModalHeader from '../base/ModalHeader';
-import ModalFooter from '../base/ModalFooter';
+import Link from '../base/link';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
+import ModalFooter from '../base/modal-footer';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
 

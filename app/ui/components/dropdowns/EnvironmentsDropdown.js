@@ -35,7 +35,7 @@ class EnvironmentsDropdown extends PureComponent {
           <div className="sidebar__menu__thing">
             <span>{description}</span>
             {' '}
-            <i className="fa fa-caret-down"></i>
+            <i className="fa fa-caret-down"/>
           </div>
         </DropdownButton>
         <DropdownDivider>Switch Environment</DropdownDivider>
@@ -45,14 +45,14 @@ class EnvironmentsDropdown extends PureComponent {
                           handleChangeEnvironment(environment._id);
                           trackEvent('Environment', 'Activate');
                         }}>
-            <i className="fa fa-random"></i> Use <strong>{environment.name}</strong>
+            <i className="fa fa-random"/> Use <strong>{environment.name}</strong>
           </DropdownItem>
         ))}
         <DropdownItem onClick={() => {
           baseEnvironment && handleChangeEnvironment(null);
           trackEvent('Environment', 'Deactivate');
         }}>
-          <i className="fa fa-empty"></i> No Environment
+          <i className="fa fa-empty"/> No Environment
         </DropdownItem>
         <DropdownDivider>General</DropdownDivider>
         <DropdownItem onClick={e => showModal(EnvironmentsModal, workspace)}>
@@ -73,7 +73,8 @@ EnvironmentsDropdown.propTypes = {
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
-  activeEnvironment: PropTypes.object
+  activeEnvironment: PropTypes.object,
+  className: PropTypes.string
 };
 
 export default EnvironmentsDropdown;

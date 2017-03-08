@@ -17,11 +17,10 @@ class Button extends PureComponent {
   render () {
     const {
       children,
-      value, // eslint-disable-line no-unused-vars
-      ...props
+      disabled
     } = this.props;
     return (
-      <button {...props} onClick={this._handleClick}>{children}</button>
+      <button disabled={disabled} onClick={this._handleClick}>{children}</button>
     );
   }
 }
@@ -29,7 +28,9 @@ class Button extends PureComponent {
 Button.propTypes = {
   value: PropTypes.any,
   onDisabledClick: PropTypes.func,
-  onClick: PropTypes.func
+  onClick: PropTypes.func,
+  disabled: PropTypes.boolean,
+  children: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 export default Button;

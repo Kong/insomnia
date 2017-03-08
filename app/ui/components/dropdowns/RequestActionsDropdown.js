@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import PromptButton from '../base/PromptButton';
+import PromptButton from '../base/prompt-button';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptModal from '../modals/prompt-modal';
 import * as models from '../../../models';

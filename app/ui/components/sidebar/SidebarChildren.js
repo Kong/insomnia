@@ -1,6 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import SidebarRequestRow from './SidebarRequestRow';
-import SidebarRequestGroupRow from './SidebarRequestGroupRow';
+import SidebarRequestGroupRow from './sidebar-request-group-row';
 
 class SidebarChildren extends PureComponent {
   _renderChildren (children) {

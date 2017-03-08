@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
 
 class DropdownDivider extends PureComponent {
@@ -20,6 +20,8 @@ class DropdownDivider extends PureComponent {
   }
 }
 
-DropdownDivider.propTypes = {};
+DropdownDivider.propTypes = {
+  children: PropTypes.array
+};
 
 export default DropdownDivider;
