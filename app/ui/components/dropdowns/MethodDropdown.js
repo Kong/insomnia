@@ -5,28 +5,43 @@ import * as constants from '../../../common/constants';
 import {showModal} from '../modals/index';
 import PromptModal from '../modals/PromptModal';
 
+const LOCALSTORAGE_KEY = 'insomnia.methods';
+
 @autobind
 class MethodDropdown extends PureComponent {
   async _handleSetCustomMethod () {
+    let recentMethods;
+    try {
+      const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
+      recentMethods = JSON.parse(v);
+    } catch (err) {
+      recentMethods = [];
+    }
+
+    // Prompt user for the method
     const method = await showModal(PromptModal, {
       defaultValue: this.props.method,
       headerName: 'Custom HTTP Method',
       submitName: 'Done',
-      hint: 'Common examples are LINK, UNLINK, FIND, PURGE  ',
+      upperCase: true,
+      selectText: true,
+      hint: 'Common examples are LINK, UNLINK, FIND, PURGE',
       label: 'Method Name',
       placeholder: 'CUSTOM',
-      hints: [
-        'FIND',
-        'PURGE',
-        'DELETEHARD',
-        'LINK',
-        'UNLINK'
-      ]
+      hints: recentMethods
     });
 
-    if (method) {
-      this.props.onChange(method.toUpperCase());
+    if (!method) {
+      return;
     }
+
+    // Save method as recent
+    recentMethods = recentMethods.filter(m => m !== method);
+    recentMethods.unshift(method);
+    window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
+
+    // Invoke callback
+    this.props.onChange(method);
   }
 
   render () {

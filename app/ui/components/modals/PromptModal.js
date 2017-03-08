@@ -15,14 +15,16 @@ class PromptModal extends PureComponent {
       defaultValue: '',
       submitName: 'Not Set',
       selectText: false,
+      upperCase: false,
       hint: null,
       inputType: 'text',
       hints: []
     };
   }
 
-  _done (hint) {
-    this._onSubmitCallback && this._onSubmitCallback(hint);
+  _done (rawValue) {
+    const value = this.state.upperCase ? rawValue.toUpperCase() : rawValue;
+    this._onSubmitCallback && this._onSubmitCallback(value);
     this.modal.hide();
   }
 
@@ -50,6 +52,7 @@ class PromptModal extends PureComponent {
       defaultValue,
       submitName,
       selectText,
+      upperCase,
       hint,
       inputType,
       placeholder,
@@ -75,6 +78,7 @@ class PromptModal extends PureComponent {
         submitName,
         selectText,
         placeholder,
+        upperCase,
         hint,
         inputType,
         label,
@@ -88,7 +92,7 @@ class PromptModal extends PureComponent {
       <Button type="button"
               value={hint}
               key={hint}
-              className="btn btn--outlined btn--super-duper-compact margin-right-sm"
+              className="btn btn--outlined btn--super-duper-compact margin-right-sm margin-top-sm"
               onClick={this._handleSelectHint}>
         {hint}
       </Button>
@@ -104,6 +108,7 @@ class PromptModal extends PureComponent {
       inputType,
       placeholder,
       label,
+      upperCase,
       hints
     } = this.state;
 
@@ -114,6 +119,7 @@ class PromptModal extends PureComponent {
         type={inputType === 'decimal' ? 'number' : (inputType || 'text')}
         step={inputType === 'decimal' ? '0.1' : null}
         min={inputType === 'decimal' ? '0.5' : null}
+        style={{textTransform: upperCase ? 'uppercase' : 'none'}}
         placeholder={placeholder || ''}
       />
     );
@@ -126,7 +132,7 @@ class PromptModal extends PureComponent {
             <div className="form-control form-control--outlined form-control--wide">
               {label ? <label>{label}{input}</label> : input}
             </div>
-            {hints.map(this._renderHintButton)}
+            {hints.slice(0, 15).map(this._renderHintButton)}
           </form>
         </ModalBody>
         <ModalFooter>
