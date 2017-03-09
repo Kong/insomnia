@@ -74,6 +74,9 @@ class OneLineEditor extends PureComponent {
       this._editor.focusEnd();
     }
 
+    // Set focused state
+    this._editor.setAttribute('data-focused', 'on');
+
     this.props.onFocus && this.props.onFocus(e);
   }
 
@@ -92,6 +95,9 @@ class OneLineEditor extends PureComponent {
       this._convertToEditorPreserveFocus();
     }
 
+    // Set focused state
+    this._input.setAttribute('data-focused', 'on');
+
     // Also call the regular callback
     this.props.onFocus && this.props.onFocus(e);
   }
@@ -108,6 +114,9 @@ class OneLineEditor extends PureComponent {
   }
 
   _handleInputBlur () {
+    // Set focused state
+    this._input.removeAttribute('data-focused');
+
     this.props.onBlur && this.props.onBlur();
   }
 
@@ -116,6 +125,9 @@ class OneLineEditor extends PureComponent {
     if (!this._editor) {
       return;
     }
+
+    // Set focused state
+    this._editor.removeAttribute('data-focused');
 
     this._editor.clearSelection();
 
@@ -232,7 +244,7 @@ class OneLineEditor extends PureComponent {
           onMouseLeave={this._handleEditorMouseLeave}
           onChange={onChange}
           render={render}
-          className="editor--single-line input"
+          className="editor--single-line"
           defaultValue={defaultValue}
         />
       );
@@ -241,9 +253,8 @@ class OneLineEditor extends PureComponent {
         <Input
           ref={this._setInputRef}
           type={type}
-          className={`editor--single-line input ${className || ''}`}
+          className={className}
           style={{
-            padding: '0 4px', // To match CodeMirror
             // background: 'rgba(255, 0, 0, 0.05)', // For debugging
             width: '100%'
           }}
