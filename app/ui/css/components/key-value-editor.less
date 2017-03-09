@@ -2,6 +2,7 @@
 @import '../constants/colors';
 
 .key-value-editor {
+  margin-top: 2px;
   padding: @padding-md 0;
 
   // This is the actual row
@@ -40,14 +41,14 @@
       display: block
     }
 
+    // So the line appears on the next row
     &.key-value-editor__row-wrapper--dragging-below::after {
-      // So the line appears on the next row
-      top: 100%;
+      bottom: -1px; // half border thickness
     }
 
+    // So the line appears on the next row
     &.key-value-editor__row-wrapper--dragging-above::before {
-      // So the line appears on the next row
-      bottom: 100%;
+      top: -1px; // half border thickness
     }
 
     // Style last row the same no matter if focused or not.
@@ -86,6 +87,7 @@
       height: @line-height-sm;
       box-sizing: border-box;
       margin: 0;
+      padding: 0;
     }
 
     & > * {

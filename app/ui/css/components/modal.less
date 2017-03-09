@@ -6,7 +6,7 @@
   opacity: 0;
   z-index: -999999; // Component updates this manually
 
-  transition: opacity 300ms;
+  transition: opacity 250ms;
   position: absolute;
   top: 0;
   left: 0;
@@ -36,6 +36,10 @@
   }
 
   .modal__content {
+    position: relative;
+    top: 1rem;
+    transform: scale(0.95);
+    transition: transform 150ms ease-out, top 200ms ease-out;
     display: grid;
     grid-template-columns: 100%;
     grid-template-rows: auto minmax(0, 1fr) auto;
@@ -50,6 +54,11 @@
     background-color: var(--color-bg);
     color: var(--color-font);
     border: 1px solid @hl-sm;
+  }
+
+  &.modal--open .modal__content {
+    transform: scale(1.0);
+    top: 0;
   }
 
   &.modal--wide .modal__content {
@@ -114,13 +123,12 @@
     margin-left: auto;
   }
 
-  .modal__content > *:not(.modal__backdrop):last-child {
+  .modal__content > *:last-child {
     border-bottom-left-radius: @radius-md;
     border-bottom-right-radius: @radius-md;
   }
 
-  // 2nd child because the backdrop is the first
-  .modal__content > *:nth-child(2) {
+  .modal__content > *:first-child {
     border-top-left-radius: @radius-md;
     border-top-right-radius: @radius-md;
   }

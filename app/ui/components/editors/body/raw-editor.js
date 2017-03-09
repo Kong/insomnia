@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import Editor from '../../codemirror/editor';
+import Editor from '../../codemirror/code-editor';
 
 class RawEditor extends PureComponent {
   render () {

@@ -23,13 +23,23 @@ class RenderedQueryString extends PureComponent {
   async _update (props) {
     const {request} = props;
     const enabledParameters = request.parameters.filter(p => !p.disabled);
-    const {url, parameters} = await props.handleRender({
-      url: request.url,
-      parameters: enabledParameters
-    });
-    const qs = querystring.buildFromParams(parameters);
-    const fullUrl = querystring.joinUrl(url, qs);
-    this.setState({string: misc.prepareUrlForSending(fullUrl)});
+
+    let result;
+    try {
+      result = await props.handleRender({
+        url: request.url,
+        parameters: enabledParameters
+      });
+    } catch (err) {
+      // Just ignore failures
+    }
+
+    if (result) {
+      const {url, parameters} = result;
+      const qs = querystring.buildFromParams(parameters);
+      const fullUrl = querystring.joinUrl(url, qs);
+      this.setState({string: misc.prepareUrlForSending(fullUrl)});
+    }
   }
 
   componentDidMount () {

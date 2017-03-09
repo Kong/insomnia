@@ -76,6 +76,14 @@ class Editor extends PureComponent {
     this._deletePair(i, true);
   }
 
+  _handleBlurName () {
+    this._focusedField = null;
+  }
+
+  _handleBlurValue () {
+    this._focusedField = null;
+  }
+
   _handleFocusName (pair) {
     this._setFocusedPair(pair);
     this._focusedField = NAME;
@@ -86,14 +94,6 @@ class Editor extends PureComponent {
     this._setFocusedPair(pair);
     this._focusedField = VALUE;
     this._rows[pair.id].focusValueEnd();
-  }
-
-  _handleBlurName () {
-    this._setFocusedPair(null);
-  }
-
-  _handleBlurValue () {
-    this._setFocusedPair(null);
   }
 
   _handleAddFromName () {
@@ -263,7 +263,9 @@ class Editor extends PureComponent {
   }
 
   _updateFocus () {
-    const row = this._getFocusedPair() && this._rows[this._focusedPairId];
+    const pair = this._getFocusedPair();
+    const id = pair ? pair.id : 'n/a';
+    const row = this._rows[id];
 
     if (!row) {
       return;
@@ -271,14 +273,14 @@ class Editor extends PureComponent {
 
     if (this._focusedField === NAME) {
       row.focusNameEnd();
-    } else {
+    } else if (this._focusedField === VALUE) {
       row.focusValueEnd();
     }
   }
 
   _getPairIndex (pair) {
     if (pair) {
-      return this.props.pairs.findIndex(p => p.id === pair.id);
+      return this.state.pairs.findIndex(p => p.id === pair.id);
     } else {
       return -1;
     }
@@ -289,7 +291,7 @@ class Editor extends PureComponent {
   }
 
   _getFocusedPair () {
-    return this.props.pairs.find(p => p.id === this._focusedPairId) || null;
+    return this.state.pairs.find(p => p.id === this._focusedPairId) || null;
   }
 
   _setFocusedPair (pair) {
@@ -339,9 +341,9 @@ class Editor extends PureComponent {
               onDelete={this._handlePairDelete}
               onFocusName={this._handleFocusName}
               onFocusValue={this._handleFocusValue}
+              onKeyDown={this._handleKeyDown}
               onBlurName={this._handleBlurName}
               onBlurValue={this._handleBlurValue}
-              onKeyDown={this._handleKeyDown}
               onMove={this._handleMove}
               handleRender={handleRender}
               multipart={multipart}
@@ -356,10 +358,10 @@ class Editor extends PureComponent {
               sortable
               noDropZone
               readOnly
+              forceInput
               index={-1}
               onChange={nullFn}
               onDelete={nullFn}
-              blurOnFocus
               className="key-value-editor__row-wrapper--clicker"
               namePlaceholder={`New ${namePlaceholder}`}
               valuePlaceholder={`New ${valuePlaceholder}`}

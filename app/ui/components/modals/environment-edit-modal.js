@@ -16,10 +16,6 @@ class EnvironmentEditModal extends PureComponent {
     };
   }
 
-  _hide () {
-    this.modal.hide();
-  }
-
   _setModalRef (n) {
     this.modal = n;
   }
@@ -52,6 +48,10 @@ class EnvironmentEditModal extends PureComponent {
   show (requestGroup) {
     this.modal.show();
     this.setState({requestGroup});
+  }
+
+  hide () {
+    this.modal.hide();
   }
 
   toggle (requestGroup) {
@@ -93,7 +93,7 @@ class EnvironmentEditModal extends PureComponent {
           <div className="margin-left faint italic txt-sm">
             * this can be used to override data in the global environment
           </div>
-          <button className="btn" disabled={!isValid} onClick={this._hide}>
+          <button className="btn" disabled={!isValid} onClick={this.hide}>
             Done
           </button>
         </ModalFooter>

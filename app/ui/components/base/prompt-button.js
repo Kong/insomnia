@@ -74,8 +74,10 @@ class PromptButton extends PureComponent {
       disabled,
       confirmMessage,
       doneMessage,
+      tabIndex,
       ...other
     } = this.props;
+
     const {state} = this.state;
 
     const CONFIRM_MESSAGE = confirmMessage || 'Click to confirm';
@@ -97,7 +99,10 @@ class PromptButton extends PureComponent {
     }
 
     return (
-      <Button onClick={this._handleClick} disabled={disabled} {...other}>
+      <Button onClick={this._handleClick}
+              disabled={disabled}
+              tabIndex={tabIndex}
+              {...other}>
         {innerMsg}
       </Button>
     );
@@ -111,7 +116,8 @@ PromptButton.propTypes = {
   disabled: PropTypes.bool,
   confirmMessage: PropTypes.string,
   doneMessage: PropTypes.string,
-  value: PropTypes.any
+  value: PropTypes.any,
+  tabIndex: PropTypes.number
 };
 
 export default PromptButton;

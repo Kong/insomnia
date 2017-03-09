@@ -22,14 +22,6 @@ class KeyValueEditorRow extends PureComponent {
     };
   }
 
-  focusName () {
-    this._nameInput.focus();
-  }
-
-  focusValue () {
-    this._valueInput.focus();
-  }
-
   focusNameEnd () {
     this._nameInput.focusEnd();
   }
@@ -119,8 +111,8 @@ class KeyValueEditorRow extends PureComponent {
       multipart,
       sortable,
       noDropZone,
-      blurOnFocus,
       hideButtons,
+      forceInput,
       readOnly,
       className,
       isDragging,
@@ -160,7 +152,7 @@ class KeyValueEditorRow extends PureComponent {
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
               render={handleRender}
-              blurOnFocus={blurOnFocus}
+              forceInput={forceInput}
               readOnly={readOnly}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
@@ -179,9 +171,9 @@ class KeyValueEditorRow extends PureComponent {
                 />
               ) : (
                 <OneLineEditor
-                  blurOnFocus={blurOnFocus}
                   ref={this._setValueInputRef}
                   readOnly={readOnly}
+                  forceInput={forceInput}
                   type={valueInputType || 'text'}
                   placeholder={valuePlaceholder || 'Value'}
                   defaultValue={pair.value}
@@ -231,7 +223,7 @@ class KeyValueEditorRow extends PureComponent {
           {!noDelete ? (
               !hideButtons ? (
                   <PromptButton key={Math.random()}
-                                tabIndex="-1"
+                                tabIndex={-1}
                                 confirmMessage=" "
                                 addIcon
                                 onClick={this._handleDelete}
@@ -281,12 +273,12 @@ KeyValueEditorRow.propTypes = {
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,
+  forceInput: PropTypes.bool,
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
   noDelete: PropTypes.bool,
   noDropZone: PropTypes.bool,
   hideButtons: PropTypes.bool,
-  blurOnFocus: PropTypes.bool,
   className: PropTypes.string,
 
   // For drag-n-drop
@@ -348,14 +340,6 @@ function targetCollect (connect, monitor) {
 
 const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValueEditorRow);
 const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
-
-target.prototype.focusName = function () {
-  this.handler.component.decoratedComponentInstance.focusName();
-};
-
-target.prototype.focusValue = function () {
-  this.handler.component.decoratedComponentInstance.focusValue();
-};
 
 target.prototype.focusNameEnd = function () {
   this.handler.component.decoratedComponentInstance.focusNameEnd();
