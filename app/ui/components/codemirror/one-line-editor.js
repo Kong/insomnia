@@ -29,11 +29,11 @@ class OneLineEditor extends PureComponent {
 
   focus (setToEnd = false) {
     if (this.state.mode === MODE_EDITOR) {
-      if (!this._editor.hasFocus()) {
+      if (this._editor && !this._editor.hasFocus()) {
         setToEnd ? this._editor.focusEnd() : this._editor.focus();
       }
     } else {
-      if (!this._input.hasFocus()) {
+      if (this._input && !this._input.hasFocus()) {
         setToEnd ? this._input.focusEnd() : this._input.focus();
       }
     }
