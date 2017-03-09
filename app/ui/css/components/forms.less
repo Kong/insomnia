@@ -8,7 +8,7 @@
   width: 100%;
   box-sizing: border-box;
 
-  .CodeMirror,
+  .input,
   input,
   textarea,
   select,
@@ -64,7 +64,7 @@
   &.form-control--outlined,
   &.form-control--underlined {
     textarea,
-    .CodeMirror,
+    .input,
     input,
     select {
       border: 1px solid var(--hl-md);
@@ -73,14 +73,13 @@
       background-color: @hl-xxs;
     }
 
-    .CodeMirror,
     .input,
     input,
     select {
       height: @line-height-xs;
     }
 
-    .CodeMirror-focused,
+    .input[data-focused="on"],
     textarea:focus,
     select:focus,
     input:focus {
@@ -89,14 +88,14 @@
     }
   }
 
-  &.form-control--underlined .CodeMirror-focused,
+  &.form-control--underlined .input[data-focused="on"],
   &.form-control--underlined input:focus,
   &.form-control--underlined textarea:focus {
     border-color: var(--hl);
   }
 
   &.form-control--padded {
-    .CodeMirror,
+    .input,
     textarea,
     select,
     input {
@@ -107,7 +106,7 @@
   &.form-control--underlined {
     textarea,
     select,
-    .CodeMirror,
+    .input,
     input {
       border-radius: 0;
       border-top: 0;
@@ -204,8 +203,8 @@
   }
 }
 
-textarea, input, .CodeMirror, button, select {
-  transition: all 200ms ease;
+textarea, input, .input, button, select {
+  transition: background-color 130ms ease-out;
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;
@@ -220,6 +219,10 @@ textarea, input, .CodeMirror, button, select {
   &::-webkit-input-placeholder {
     color: @hl-lg;
   }
+}
+
+.input {
+  cursor: text;
 }
 
 input[type=number]::-webkit-inner-spin-button {
