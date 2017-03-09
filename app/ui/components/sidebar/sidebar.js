@@ -53,10 +53,15 @@ class Sidebar extends PureComponent {
       activeRequest
     } = this.props;
 
-    // Don't even render if it's hidden
-    if (hidden) {
-      return null;
-    }
+    // It proved too difficult to hide the sidebar with pure CSS because of weird
+    // absolutely positioned items inside it, so we're just brute forcing an empty
+    // sidebar here with JS. Note, we need to return something, or else the CSS
+    // grid breaks.
+    // if (hidden) {
+    //   return (
+    //     <aside className="sidebar sidebar--hidden"/>
+    //   );
+    // }
 
     return (
       <aside className={classnames('sidebar', {

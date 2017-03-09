@@ -71,7 +71,6 @@
       padding: @padding-sm;
       border-radius: @radius-md;
       background-color: @hl-xxs;
-      transition: background-color 200ms;
     }
 
     .CodeMirror,
@@ -188,24 +187,25 @@
 .btn:focus:not(:disabled),
 .btn.focus:not(:disabled),
 .btn:hover:not(:disabled) {
-  background: @hl-xs;
+  background-color: @hl-xs;
 }
 
 .btn:active:not(:disabled) {
-  background: @hl-md;
+  background-color: @hl-md;
 }
 
 .btn.btn--no-background {
   opacity: 0.5;
-  background: transparent;
+  background-color: transparent;
 
   &:hover {
     opacity: 1;
-    background: transparent;
+    background-color: transparent;
   }
 }
 
-textarea, input, .CodeMirror ,button, select {
+textarea, input, .CodeMirror, button, select {
+  transition: all 200ms ease;
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;

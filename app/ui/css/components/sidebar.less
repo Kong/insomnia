@@ -17,11 +17,13 @@
   // Don't collapse direct children, but their children
   &.sidebar--collapsed > * > * {
     opacity: 0;
+    transition: opacity 300ms;
   }
 
   &.sidebar--hidden {
-    // Can't be display: none because it screws up the grid
-    opacity: 0;
+    // It proved difficult to keep the invisible children from overflowing when
+    // hidden, so we're just going to bump it way to the left to be sure.
+    left: -9999px;
   }
 
   &:focus {

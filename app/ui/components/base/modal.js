@@ -141,8 +141,8 @@ class Modal extends PureComponent {
            className={classes}
            style={styles}
            onClick={this._handleClick}>
+        <div className="modal__backdrop overlay" data-close-modal></div>
         <div className="modal__content" key={forceRefreshCounter}>
-          <div className="modal__backdrop overlay" data-close-modal></div>
           {children}
         </div>
       </div>
