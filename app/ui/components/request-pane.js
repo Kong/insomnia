@@ -111,6 +111,7 @@ class RequestPane extends PureComponent {
       handleSend,
       handleSendAndDownload,
       handleRender,
+      handleGetRenderContext,
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,
@@ -230,6 +231,7 @@ class RequestPane extends PureComponent {
             <BodyEditor
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
               key={uniqueKey}
               request={request}
               onChange={updateRequestBody}
@@ -326,6 +328,7 @@ RequestPane.propTypes = {
   handleCreateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,

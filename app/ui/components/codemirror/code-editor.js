@@ -29,6 +29,8 @@ import 'codemirror/addon/fold/brace-fold';
 import 'codemirror/addon/fold/comment-fold';
 import 'codemirror/addon/fold/indent-fold';
 import 'codemirror/addon/fold/xml-fold';
+import 'codemirror/addon/hint/show-hint';
+import 'codemirror/addon/hint/show-hint.css';
 import 'codemirror/addon/search/search';
 import 'codemirror/addon/search/searchcursor';
 import 'codemirror/addon/edit/matchbrackets';
@@ -45,6 +47,7 @@ import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
 import 'codemirror/keymap/sublime';
 import './modes/nunjucks';
+import './extensions/environments-autocomplete';
 import './extensions/clickable';
 import './extensions/nunjucks-tags';
 import '../../css/components/editor.less';
@@ -75,6 +78,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,
+  hintOptions: null,
   dragDrop: true,
   viewportMargin: 30, // default 10
   selectionPointer: 'default',
@@ -362,6 +366,7 @@ class CodeEditor extends PureComponent {
       hideLineNumbers,
       keyMap,
       lineWrapping,
+      getRenderContext,
       tabIndex,
       placeholder,
       noMatchBrackets,
@@ -408,9 +413,15 @@ class CodeEditor extends PureComponent {
       options.gutters.push('CodeMirror-lint-markers');
     }
 
-    const cm = this.codeMirror;
+    // Setup the hint options
+    if (getRenderContext) {
+      options.environmentAutocomplete = {
+        getContext: getRenderContext
+      };
+    }
 
-    // Strip of charset if there is one
+// Strip of charset if there is one
+    const cm = this.codeMirror;
     Object.keys(options).map(key => {
       // Don't set the option if it hasn't changed
       if (options[key] === cm.options[key]) {
@@ -433,6 +444,7 @@ class CodeEditor extends PureComponent {
     }
   }
 
+  async
   _codemirrorKeyDown (doc, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
@@ -687,6 +699,7 @@ CodeEditor.propTypes = {
   onMouseLeave: PropTypes.func,
   onClick: PropTypes.func,
   render: PropTypes.func,
+  getRenderContext: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
   placeholder: PropTypes.string,

@@ -220,6 +220,7 @@ class Wrapper extends PureComponent {
       handleStartDragPane,
       handleSetSidebarFilter,
       handleRender,
+      handleGetRenderContext,
       handleGenerateCodeForActiveRequest,
       handleGenerateCode,
       isLoading,
@@ -294,6 +295,7 @@ class Wrapper extends PureComponent {
           handleGenerateCode={handleGenerateCodeForActiveRequest}
           handleImport={this._handleImport}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
           updateRequestMethod={this._handleUpdateRequestMethod}
@@ -418,6 +420,7 @@ Wrapper.propTypes = {
   handleSetResponsePaneRef: PropTypes.func.isRequired,
   handleSetResponsePreviewMode: PropTypes.func.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   handleSetResponseFilter: PropTypes.func.isRequired,
   handleSetActiveResponse: PropTypes.func.isRequired,
   handleSetSidebarRef: PropTypes.func.isRequired,
