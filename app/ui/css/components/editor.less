@@ -5,7 +5,7 @@
 
 .editor {
   box-sizing: border-box;
-  height: 100% !important;
+  height: 100%;
   width: 100%;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
@@ -27,14 +27,18 @@
       max-width: 5em !important;
     }
 
-    .CodeMirror,
+    .CodeMirror {
+      vertical-align: middle !important;
+      margin: inherit !important;
+      padding: inherit !important;
+      height: inherit !important;
+    }
+
     .CodeMirror-lines {
-      padding: 0 !important;
-      margin: 0 !important;
+      padding: 0;
     }
 
     .CodeMirror-scroll {
-      padding-bottom: 1em;
       height: 100%;
       display: flex;
       flex-direction: row;
@@ -58,6 +62,9 @@
     .nunjucks-widget {
       padding-top: 0.2em;
       padding-bottom: 0.2em;
+      & {
+        font-size: 0.85em;
+      }
     }
   }
 
@@ -407,7 +414,6 @@
       }
     }
 
-    &[data-active="on"],
     &:hover {
       background: rgba(255, 255, 255, 0.1);
     }

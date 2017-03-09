@@ -19,19 +19,6 @@ class Modal extends PureComponent {
     };
   }
 
-  _setModalRef (n) {
-    this._node = n;
-    this._addListener();
-  }
-
-  _addListener () {
-    this._node.addEventListener('keydown', this._handleKeyDown);
-  }
-
-  _removeListener () {
-    this._node.removeEventListener('keydown', this._handleKeyDown);
-  }
-
   _handleKeyDown (e) {
     if (!this.state.open) {
       return;
@@ -86,6 +73,10 @@ class Modal extends PureComponent {
     }
   }
 
+  _setModalRef (n) {
+    this._node = n;
+  }
+
   show () {
     const {freshState} = this.props;
     const {forceRefreshCounter} = this.state;
@@ -115,8 +106,14 @@ class Modal extends PureComponent {
     this.setState({open: false});
   }
 
+  componentDidMount () {
+    this._node.addEventListener('keydown', this._handleKeyDown);
+  }
+
   componentWillUnmount () {
-    this._removeListener();
+    if (this._node) {
+      this._node.removeEventListener('keydown', this._handleKeyDown);
+    }
   }
 
   render () {
@@ -144,8 +141,8 @@ class Modal extends PureComponent {
            className={classes}
            style={styles}
            onClick={this._handleClick}>
+        <div className="modal__backdrop overlay" data-close-modal></div>
         <div className="modal__content" key={forceRefreshCounter}>
-          <div className="modal__backdrop overlay" data-close-modal></div>
           {children}
         </div>
       </div>

@@ -17,6 +17,7 @@
     height: 100%;
     display: block;
     margin-top: @padding-xs;
+    box-sizing: border-box;
   }
 
   button,
@@ -45,6 +46,10 @@
     font-size: @font-size-md;
     font-weight: 600;
     display: block;
+
+    * {
+      font-weight: normal;
+    }
   }
 
   &.form-control--thin {
@@ -62,13 +67,14 @@
     .CodeMirror,
     input,
     select {
-      border: 1px solid @hl-md;
+      border: 1px solid var(--hl-md);
       padding: @padding-sm;
       border-radius: @radius-md;
       background-color: @hl-xxs;
     }
 
     .CodeMirror,
+    .input,
     input,
     select {
       height: @line-height-xs;
@@ -79,14 +85,14 @@
     select:focus,
     input:focus {
       background-color: transparent;
-      border-color: @hl-lg;
+      border-color: var(--hl-lg);
     }
   }
 
   &.form-control--underlined .CodeMirror-focused,
   &.form-control--underlined input:focus,
   &.form-control--underlined textarea:focus {
-    border-color: @hl;
+    border-color: var(--hl);
   }
 
   &.form-control--padded {
@@ -181,24 +187,25 @@
 .btn:focus:not(:disabled),
 .btn.focus:not(:disabled),
 .btn:hover:not(:disabled) {
-  background: @hl-xs;
+  background-color: @hl-xs;
 }
 
 .btn:active:not(:disabled) {
-  background: @hl-md;
+  background-color: @hl-md;
 }
 
 .btn.btn--no-background {
   opacity: 0.5;
-  background: transparent;
+  background-color: transparent;
 
   &:hover {
     opacity: 1;
-    background: transparent;
+    background-color: transparent;
   }
 }
 
-textarea, input, .CodeMirror ,button, select {
+textarea, input, .CodeMirror, button, select {
+  transition: all 200ms ease;
   box-sizing: border-box;
   text-align: left;
   font-size: inherit;

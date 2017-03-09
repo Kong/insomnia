@@ -9,7 +9,7 @@ import EnvironmentEditModal from './modals/environment-edit-modal';
 import GenerateCodeModal from './modals/generate-code-modal';
 import LoginModal from './modals/login-modal';
 import PaymentNotificationModal from './modals/payment-notification-modal';
-import NunjucksVariableModal from '../components/modals/nunjucks-variable-modal';
+import NunjucksModal from './modals/nunjucks-modal';
 import PromptModal from './modals/prompt-modal';
 import RequestCreateModal from './modals/request-create-modal';
 import RequestPane from './request-pane';
@@ -338,7 +338,7 @@ class Wrapper extends PureComponent {
           <PromptModal ref={registerModal}/>
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
-          <NunjucksVariableModal
+          <NunjucksModal
             ref={registerModal}
             handleRender={handleRender}
           />

@@ -53,11 +53,6 @@ class Sidebar extends PureComponent {
       activeRequest
     } = this.props;
 
-    // Don't even render if it's hidden
-    if (hidden) {
-      return null;
-    }
-
     return (
       <aside className={classnames('sidebar', {
         'sidebar--hidden': hidden,

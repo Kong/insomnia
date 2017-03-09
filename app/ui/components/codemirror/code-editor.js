@@ -67,7 +67,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  autoRefresh: 1000,
+  autoRefresh: 500,
   lineWrapping: true,
   scrollbarStyle: 'native',
   lint: true,
@@ -91,7 +91,7 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 @autobind
-class Editor extends PureComponent {
+class CodeEditor extends PureComponent {
   constructor (props) {
     super(props);
 
@@ -154,14 +154,28 @@ class Editor extends PureComponent {
 
   setSelection (chStart, chEnd, line = 0) {
     if (this.codeMirror) {
-      if (!this.hasFocus()) {
-        this.focus();
-      }
-
       this.codeMirror.setSelection(
         {line, ch: chStart},
         {line, ch: chEnd}
       );
+    }
+  }
+
+  getSelectionStart () {
+    const selections = this.codeMirror.listSelections();
+    if (selections.length) {
+      return selections[0].anchor.ch;
+    } else {
+      return 0;
+    }
+  }
+
+  getSelectionEnd () {
+    const selections = this.codeMirror.listSelections();
+    if (selections.length) {
+      return selections[0].head.ch;
+    } else {
+      return 0;
     }
   }
 
@@ -223,7 +237,7 @@ class Editor extends PureComponent {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorValueChanged);
 
-    // this.codeMirror.setCursor({line: -1, ch: -1});
+    this.codeMirror.setCursor({line: -1, ch: -1});
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
@@ -575,7 +589,7 @@ class Editor extends PureComponent {
   }
 
   render () {
-    const {readOnly, fontSize, mode, filter, onMouseLeave} = this.props;
+    const {readOnly, fontSize, mode, filter, onMouseLeave, onClick} = this.props;
 
     const classes = classnames(
       'editor',
@@ -598,7 +612,7 @@ class Editor extends PureComponent {
       toolbarChildren.push(
         <button key="help"
                 className="btn btn--compact"
-                onClick={() => this._showFilterHelp()}>
+                onClick={this._showFilterHelp}>
           <i className="fa fa-question-circle"></i>
         </button>
       );
@@ -634,7 +648,10 @@ class Editor extends PureComponent {
 
     return (
       <div className={classes}>
-        <div className="editor__container input" style={styles} onMouseLeave={onMouseLeave}>
+        <div className="editor__container"
+             style={styles}
+             onClick={onClick}
+             onMouseLeave={onMouseLeave}>
           <textarea
             ref={this._handleInitTextarea}
             style={{display: 'none'}}
@@ -649,13 +666,14 @@ class Editor extends PureComponent {
   }
 }
 
-Editor.propTypes = {
+CodeEditor.propTypes = {
   onChange: PropTypes.func,
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   onClickLink: PropTypes.func,
   onKeyDown: PropTypes.func,
   onMouseLeave: PropTypes.func,
+  onClick: PropTypes.func,
   render: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
@@ -681,4 +699,4 @@ Editor.propTypes = {
   debounceMillis: PropTypes.number
 };
 
-export default Editor;
+export default CodeEditor;

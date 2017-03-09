@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 import CopyButton from '../base/copy-button';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
-import Editor from '../codemirror/editor';
+import Editor from '../codemirror/code-editor';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';

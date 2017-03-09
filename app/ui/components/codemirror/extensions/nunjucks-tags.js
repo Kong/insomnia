@@ -1,5 +1,7 @@
 import CodeMirror from 'codemirror';
 import * as misc from '../../../../common/misc';
+import NunjucksVariableModal from '../../modals/nunjucks-modal';
+import {showModal} from '../../modals/index';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
@@ -87,65 +89,28 @@ async function _highlightNunjucksTags (render) {
       const element = document.createElement('span');
 
       element.className = `nunjucks-widget ${tok.type}`;
-      element.setAttribute('data-active', 'off');
       element.setAttribute('data-error', 'off');
 
       await _updateElementText(renderString, element, tok.string);
 
       const mark = this.markText(start, end, {
         __nunjucks: true, // Mark that we created it
+        __template: tok.string,
         handleMouseEvents: false,
         replacedWith: element
       });
 
       activeMarks.push(mark);
 
-      element.addEventListener('click', () => {
-        element.setAttribute('data-active', 'on');
-
+      element.addEventListener('click', async () => {
         // Define the dialog HTML
-        const html = [
-          '<div class="wide hide-scrollbars scrollable">',
-          '<input type="text" name="template"/>',
-          element.title
-            ? `<span class="result faint">${element.title}</span>`
-            : '<span class="result super-faint italic">n/a</span>',
-          '</div>'
-        ].join(' ');
-
-        const dialogOptions = {
-          __dirty: false,
-          value: tok.string,
-          selectValueOnOpen: true,
-          closeOnEnter: true,
-          async onClose () {
-            element.removeAttribute('data-active');
-
-            // Revert string back to original if it's changed
-            if (this.__dirty) {
-              await _updateElementText(renderString, element, tok.string);
-              mark.changed();
-            }
-          },
-          async onInput (e, text) {
-            this.__dirty = true;
-
-            clearTimeout(this.__timeout);
-            this.__timeout = setTimeout(async () => {
-              const el = e.target.parentNode.querySelector('.result');
-              await _updateElementText(renderString, el, text, true);
-            }, 600);
+        showModal(NunjucksVariableModal, {
+          template: mark.__template,
+          onDone: template => {
+            const {from, to} = mark.find();
+            this.replaceRange(template, from, to);
           }
-        };
-
-        this.openDialog(html, text => {
-          // Replace the text with the newly edited stuff
-          const {from, to} = mark.find();
-          this.replaceRange(text, from, to);
-
-          // Clear the marker so it doesn't mess us up later on.
-          mark.clear();
-        }, dialogOptions);
+        });
       });
     }
   }
