@@ -264,7 +264,7 @@ class RequestPane extends PureComponent {
           <TabPanel className="query-editor">
             <div className="pad pad-bottom-sm">
               <label className="label--small no-pad-top">Url Preview</label>
-              <code className="txt-sm block">
+              <code className="txt-sm block faint">
                 <RenderedQueryString
                   key={uniqueKey}
                   handleRender={handleRender}

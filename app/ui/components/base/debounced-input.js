@@ -26,7 +26,7 @@ class DebouncedInput extends PureComponent {
   }
 
   _handleBlur (e) {
-    this._hasFocus = true;
+    this._hasFocus = false;
     this.props.onBlur && this.props.onBlur(e);
   }
 
@@ -64,6 +64,7 @@ class DebouncedInput extends PureComponent {
     if (this._input) {
       // Hack to focus the end (set value to current value);
       this._input.value = this.getValue();
+      this._input.focus();
     }
   }
 

@@ -17,11 +17,16 @@ class Button extends PureComponent {
   render () {
     const {
       children,
-      disabled
+      disabled,
+      tabIndex
     } = this.props;
 
     return (
-      <button disabled={disabled} onClick={this._handleClick}>{children}</button>
+      <button disabled={disabled}
+              tabIndex={tabIndex}
+              onClick={this._handleClick}>
+        {children}
+        </button>
     );
   }
 }
@@ -34,7 +39,8 @@ Button.propTypes = {
   value: PropTypes.any,
   onDisabledClick: PropTypes.func,
   onClick: PropTypes.func,
-  disabled: PropTypes.bool
+  disabled: PropTypes.bool,
+  tabIndex: PropTypes.number
 };
 
 export default Button;

@@ -40,14 +40,14 @@
       display: block
     }
 
+    // So the line appears on the next row
     &.key-value-editor__row-wrapper--dragging-below::after {
-      // So the line appears on the next row
-      top: 100%;
+      bottom: 0;
     }
 
+    // So the line appears on the next row
     &.key-value-editor__row-wrapper--dragging-above::before {
-      // So the line appears on the next row
-      bottom: 100%;
+      top: 0;
     }
 
     // Style last row the same no matter if focused or not.

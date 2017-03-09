@@ -13,7 +13,8 @@ class NunjucksModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      defaultTemplate: ''
+      defaultTemplate: '',
+      key: 0
     };
 
     this._onDone = null;
@@ -31,7 +32,10 @@ class NunjucksModal extends PureComponent {
   show ({template, onDone}) {
     this._onDone = onDone;
 
-    this.setState({defaultTemplate: template});
+    this.setState({
+      defaultTemplate: template,
+      key: this.state.key + 1
+    });
 
     this.modal.show();
     trackEvent('Nunjucks', 'Editor', 'Show');
@@ -50,7 +54,7 @@ class NunjucksModal extends PureComponent {
 
   render () {
     const {handleRender} = this.props;
-    const {defaultTemplate} = this.state;
+    const {defaultTemplate, key} = this.state;
 
     let editor = null;
     let title = '';
@@ -78,7 +82,7 @@ class NunjucksModal extends PureComponent {
       <Modal ref={this._setModalRef}>
         <form onSubmit={this._handleSubmit}>
           <ModalHeader>Edit {title}</ModalHeader>
-          <ModalBody className="pad" key={defaultTemplate}>
+          <ModalBody className="pad" key={key}>
             {editor}
           </ModalBody>
           <ModalFooter>

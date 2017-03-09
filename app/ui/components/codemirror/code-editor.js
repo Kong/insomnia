@@ -154,14 +154,28 @@ class CodeEditor extends PureComponent {
 
   setSelection (chStart, chEnd, line = 0) {
     if (this.codeMirror) {
-      if (!this.hasFocus()) {
-        this.focus();
-      }
-
       this.codeMirror.setSelection(
         {line, ch: chStart},
         {line, ch: chEnd}
       );
+    }
+  }
+
+  getSelectionStart () {
+    const selections = this.codeMirror.listSelections();
+    if (selections.length) {
+      return selections[0].anchor.ch;
+    } else {
+      return 0;
+    }
+  }
+
+  getSelectionEnd () {
+    const selections = this.codeMirror.listSelections();
+    if (selections.length) {
+      return selections[0].head.ch;
+    } else {
+      return 0;
     }
   }
 
@@ -223,7 +237,7 @@ class CodeEditor extends PureComponent {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorValueChanged);
 
-    // this.codeMirror.setCursor({line: -1, ch: -1});
+    this.codeMirror.setCursor({line: -1, ch: -1});
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
@@ -575,7 +589,7 @@ class CodeEditor extends PureComponent {
   }
 
   render () {
-    const {readOnly, fontSize, mode, filter, onMouseLeave} = this.props;
+    const {readOnly, fontSize, mode, filter, onMouseLeave, onClick} = this.props;
 
     const classes = classnames(
       'editor',
@@ -598,7 +612,7 @@ class CodeEditor extends PureComponent {
       toolbarChildren.push(
         <button key="help"
                 className="btn btn--compact"
-                onClick={() => this._showFilterHelp()}>
+                onClick={this._showFilterHelp}>
           <i className="fa fa-question-circle"></i>
         </button>
       );
@@ -634,7 +648,10 @@ class CodeEditor extends PureComponent {
 
     return (
       <div className={classes}>
-        <div className="editor__container" style={styles} onMouseLeave={onMouseLeave}>
+        <div className="editor__container"
+             style={styles}
+             onClick={onClick}
+             onMouseLeave={onMouseLeave}>
           <textarea
             ref={this._handleInitTextarea}
             style={{display: 'none'}}
@@ -656,6 +673,7 @@ CodeEditor.propTypes = {
   onClickLink: PropTypes.func,
   onKeyDown: PropTypes.func,
   onMouseLeave: PropTypes.func,
+  onClick: PropTypes.func,
   render: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
