@@ -23,10 +23,8 @@
   }
 
   ul {
-    opacity: 0;
     z-index: 1000;
-    visibility: hidden;
-    transition: opacity 200ms ease-out;
+    display: none;
     position: absolute;
     top: 100%;
     left: 0;
@@ -136,8 +134,8 @@
 
   &.dropdown--open {
     ul {
-      visibility: visible;
-      opacity: 1;
+      display: block;
+      animation: fadeIn 200ms ease-out;
     }
 
     .dropdown__backdrop {

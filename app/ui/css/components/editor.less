@@ -29,12 +29,13 @@
 
     .CodeMirror {
       vertical-align: middle !important;
-      margin: inherit !important;
+      margin: 0;
       padding: inherit !important;
       height: inherit !important;
     }
 
     .CodeMirror-lines {
+      margin-left: -4px;
       padding: 0;
     }
 
@@ -62,9 +63,6 @@
     .nunjucks-widget {
       padding-top: 0.2em;
       padding-bottom: 0.2em;
-      & {
-        font-size: 0.85em;
-      }
     }
   }
 
@@ -269,82 +267,82 @@
     box-sizing: border-box;
   }
 
-  span.cm-meta,
-  span.cm-qualifier {
+  .cm-meta,
+  .cm-qualifier {
     color: var(--color-font);
   }
 
-  span.cm-atom {
+  .cm-atom {
     color: var(--color-surprise);
   }
 
-  span.cm-number {
+  .cm-number {
     color: var(--color-surprise);
   }
 
-  span.cm-keyword {
+  .cm-keyword {
     color: var(--color-danger);
   }
 
-  span.cm-builtin {
+  .cm-builtin {
     color: var(--color-info);
   }
 
-  span.cm-string {
+  .cm-string {
     color: var(--color-notice);
   }
 
-  span.cm-property, span.cm-attribute {
+  .cm-property, .cm-attribute {
     color: var(--color-success);
   }
 
-  span.cm-variable {
+  .cm-variable {
     color: var(--color-font);
   }
 
-  span.cm-variable-2 {
+  .cm-variable-2 {
     color: var(--color-info);
   }
 
-  span.cm-variable-3 {
+  .cm-variable-3 {
     color: var(--color-surprise);
   }
 
-  span.cm-def {
+  .cm-def {
     color: var(--color-warning);
   }
 
-  span.cm-bracket {
+  .cm-bracket {
     color: var(--color-font);
   }
 
-  span.cm-tag {
+  .cm-tag {
     color: var(--color-danger);
   }
 
-  span.cm-header {
+  .cm-header {
     color: var(--color-surprise);
   }
 
-  span.cm-link {
+  .cm-link {
     color: var(--color-surprise);
   }
 
-  span.cm-comment {
+  .cm-comment {
     color: var(--hl);
   }
 
-  span.cm-error {
+  .cm-error {
     background: var(--color-danger);
     color: var(--color-font-danger);
   }
 
-  span.cm-clickable {
+  .cm-clickable {
     text-decoration: underline;
     cursor: pointer;
   }
 
-  span.cm-clickable:hover {
+  .cm-clickable:hover {
     text-decoration: underline;
   }
 
@@ -355,15 +353,15 @@
     box-sizing: border-box;
   }
 
-  span.cm-nunjucks-variable {
+  .cm-nunjucks-variable {
     color: var(--color-surprise);
   }
 
-  span.cm-nunjucks-tag {
+  .cm-nunjucks-tag {
     color: var(--color-info);
   }
 
-  span.cm-nunjucks-comment {
+  .cm-nunjucks-comment {
     color: var(--hl);
   }
 
