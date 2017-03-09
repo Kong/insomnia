@@ -288,7 +288,6 @@ class RequestPane extends PureComponent {
                 />
               </div>
             </div>
-
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
                       title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}

@@ -34,6 +34,18 @@ class DebouncedInput extends PureComponent {
     this._input = n;
   }
 
+  setAttribute (name, value) {
+    this._input.setAttribute(name, value);
+  }
+
+  removeAttribute (name) {
+    this._input.removeAttribute(name);
+  }
+
+  getAttribute (name) {
+    this._input.getAttribute(name);
+  }
+
   hasFocus () {
     return this._hasFocus;
   }

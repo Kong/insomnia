@@ -197,6 +197,18 @@ class CodeEditor extends PureComponent {
     }
   }
 
+  setAttribute (name, value) {
+    this.codeMirror.getTextArea().parentNode.setAttribute(name, value);
+  }
+
+  removeAttribute (name) {
+    this.codeMirror.getTextArea().parentNode.removeAttribute(name);
+  }
+
+  getAttribute (name) {
+    this.codeMirror.getTextArea().parentNode.getAttribute(name);
+  }
+
   clearSelection () {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
@@ -648,7 +660,7 @@ class CodeEditor extends PureComponent {
 
     return (
       <div className={classes}>
-        <div className="editor__container"
+        <div className="editor__container input"
              style={styles}
              onClick={onClick}
              onMouseLeave={onMouseLeave}>
