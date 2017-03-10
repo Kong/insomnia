@@ -138,9 +138,10 @@ class OneLineEditor extends PureComponent {
     this.props.onBlur && this.props.onBlur();
   }
 
-  _handleEditorKeyDown (e) {
+  _handleKeyDown (e) {
     // submit form if needed
     if (e.keyCode === 13) {
+      console.log('ONE_LINE SUBMIT', e);
       let node = e.target;
       for (let i = 0; i < 20 && node; i++) {
         if (node.tagName === 'FORM') {
@@ -151,7 +152,6 @@ class OneLineEditor extends PureComponent {
       }
     }
 
-    // Also call the original if there was one
     this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
   }
 
@@ -240,7 +240,7 @@ class OneLineEditor extends PureComponent {
           tabIndex={0}
           placeholder={placeholder}
           onBlur={this._handleEditorBlur}
-          onKeyDown={this._handleEditorKeyDown}
+          onKeyDown={this._handleKeyDown}
           onFocus={this._handleEditorFocus}
           onMouseLeave={this._handleEditorMouseLeave}
           onChange={onChange}

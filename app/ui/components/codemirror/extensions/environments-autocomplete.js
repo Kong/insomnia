@@ -27,6 +27,15 @@ const TAGS = {
   response: ''
 };
 
+CodeMirror.defineExtension('isHintDropdownActive', function () {
+  return (
+    this.state.completionActive &&
+    this.state.completionActive.data &&
+    this.state.completionActive.data.list &&
+    this.state.completionActive.data.list.length
+  );
+});
+
 CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;
@@ -39,7 +48,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     }
 
     // Bail early if completions are showing already
-    if (isHintDropdownOpen(cm)) {
+    if (cm.isHintDropdownActive()) {
       return CodeMirror.Pass;
     }
 
@@ -78,15 +87,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return completeAfter(cm, null, true);
   }
 
-  // Add hot key triggers
-  cm.addKeyMap({
-    'Ctrl-Space': completeForce, // Force autocomplete on hotkey
-    "' '": completeIfAfterTagOrVarOpen
-  });
-
   cm.on('keydown', (cm, e) => {
-    // TODO: Disable enter key (submit form) when autocomplete open
-
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
     if (e.key.length > 1) {
@@ -95,6 +96,12 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
 
     // In a timeout so it gives the editor chance to update first
     setTimeout(() => completeIfInVariableName(cm), HINT_DELAY_MILLIS);
+  });
+
+  // Add hot key triggers
+  cm.addKeyMap({
+    'Ctrl-Space': completeForce, // Force autocomplete on hotkey
+    "' '": completeIfAfterTagOrVarOpen
   });
 });
 
@@ -230,11 +237,3 @@ function renderHintMatch (li, self, data) {
   li.className += ` type--${data.type}`;
 }
 
-function isHintDropdownOpen (cm) {
-  return (
-    cm.state.completionActive &&
-    cm.state.completionActive.data &&
-    cm.state.completionActive.data.list &&
-    cm.state.completionActive.data.list.length
-  );
-}
