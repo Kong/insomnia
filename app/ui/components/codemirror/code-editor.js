@@ -444,8 +444,7 @@ class CodeEditor extends PureComponent {
     }
   }
 
-  async
-  _codemirrorKeyDown (doc, e) {
+  async _codemirrorKeyDown (doc, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;

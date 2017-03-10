@@ -200,109 +200,99 @@
   }
 }
 
-.CodeMirror-hints-container {
-  z-index: 9999;
-  position: fixed;
-  top: 0;
-  left: 0;
+.CodeMirror-hints {
+  border: 0;
+  padding: 0;
+  margin: 0.2em 0 0;
+  background: var(--color-bg);
+  box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
+  min-width: 20rem;
+  max-height: 20rem;
 
-  // No size or else it blocks the app
-  width: 0;
-  height: 0;
-  background: red; // So we know it's a mistake if we can see it
+  li.CodeMirror-hint {
+    position: relative;
+    color: var(--color-font);
+    padding: 0 !important; // ugh
+    border-radius: 0;
+    display: flex;
+    flex-direction: row;
+    background: rgba(255, 255, 255, 0.3);
+    font-size: @font-size-xs;
 
-  .CodeMirror-hints {
-    font-family: @font-monospace;
-    border: 0;
-    padding: 0;
-    margin: 0.2em 0 0;
-    background: var(--color-bg);
-    box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
-    min-width: 20rem;
-    max-height: 20rem;
-
-    li.CodeMirror-hint {
-      position: relative;
-      color: var(--color-font);
-      padding: 0 !important; // ugh
-      border-radius: 0;
-      display: flex;
-      flex-direction: row;
-      background: rgba(255, 255, 255, 0.3);
-
-      &.type--variable {
-        &::before {
-          background: var(--color-surprise);
-        }
-
-        .label {
-          color: var(--color-font-surprise);
-        }
-      }
-
-      &.type--tag {
-        &::before {
-          background: var(--color-info);
-        }
-
-        .label {
-          color: var(--color-font-info);
-        }
-      }
-
+    &.type--variable {
       &::before {
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        content: '  ';
-        z-index: -1;
-      }
-
-      .name,
-      .value,
-      .label {
-        line-height: @line-height-xxs;
-        padding: 0 @padding-sm;
-        margin: 0;
-        box-sizing: border-box;
-      }
-
-      .name,
-      .value {
-        background: var(--color-bg);
-        width: 100%;
-      }
-
-      .value {
-        text-align: right;
-        padding-left: @padding-lg;
-        font-style: italic;
-        font-size: 0.9em;
-        max-width: 100%;
-
-        // Ellipsis when too long
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        background: var(--color-surprise);
       }
 
       .label {
-        font-family: @font-default;
-        text-align: center;
-        min-width: @line-height-xxs;
+        color: var(--color-font-surprise);
       }
     }
 
-    li.CodeMirror-hint:hover,
-    li.CodeMirror-hint-active {
-      background: rgba(255, 255, 255, 0.1);
-
-      .name,
-      .value {
-        background: rgba(255, 255, 255, 0.8);
+    &.type--tag {
+      &::before {
+        background: var(--color-info);
       }
+
+      .label {
+        color: var(--color-font-info);
+      }
+    }
+
+    &::before {
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      content: '  ';
+      z-index: -1;
+    }
+
+    .name,
+    .value,
+    .label {
+      line-height: @line-height-xxs;
+      padding: 0 @padding-sm;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .name,
+    .value {
+      background: var(--color-bg);
+      width: 100%;
+      font-family: @font-monospace !important;
+    }
+
+    .value {
+      text-align: right;
+      padding-left: @padding-lg;
+      font-style: italic;
+      font-size: 0.9em;
+      max-width: 100%;
+
+      // Ellipsis when too long
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .label {
+      font-size: @font-size-sm;
+      font-family: @font-default;
+      text-align: center;
+      min-width: @line-height-xxs;
+    }
+  }
+
+  li.CodeMirror-hint:hover,
+  li.CodeMirror-hint-active {
+    background: rgba(255, 255, 255, 0.1);
+
+    .name,
+    .value {
+      background: rgba(255, 255, 255, 0.8);
     }
   }
 }

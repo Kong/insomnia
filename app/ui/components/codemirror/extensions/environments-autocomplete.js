@@ -32,10 +32,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return;
   }
 
-  const el = document.createElement('div');
-  el.className = 'dropdown__menu CodeMirror-hints-container';
-  cm.getWrapperElement().append(el);
-
   function completeAfter (cm, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
@@ -43,9 +39,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     }
 
     // Bail early if completions are showing already
-    const {completionActive} = cm.state;
-    const hasCompletion = completionActive && completionActive.data.list.length;
-    if (hasCompletion) {
+    if (isHintDropdownOpen(cm)) {
       return CodeMirror.Pass;
     }
 
@@ -54,7 +48,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       hint,
       getContext: options.getContext,
       showAllOnNoMatch,
-      container: el,
       closeCharacters: COMPLETION_CLOSE_KEYS,
       completeSingle: false
       // closeOnUnfocus: false // Good for debugging (inspector)
@@ -92,7 +85,8 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   });
 
   cm.on('keydown', (cm, e) => {
-    // e.stopImmediatePropagation();
+    // TODO: Disable enter key (submit form) when autocomplete open
+
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
     if (e.key.length > 1) {
@@ -156,15 +150,19 @@ function replaceHintMatch (cm, self, data) {
   let prefix = '';
   let suffix = '';
 
-  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{\s*/)) {
+  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{\s*$/)) {
     prefix = '{{ ';
-  } else if (data.type === TYPE_TAG && !prevChars.match(/{%\s*/)) {
+  } else if (data.type === TYPE_TAG && !prevChars.match(/{%\s*$/)) {
     prefix = '{% ';
   }
 
-  if (data.type === TYPE_VARIABLE && !nextChars.match(/\s*}}/)) {
+  if (data.type === TYPE_VARIABLE && !nextChars.match(/^\s*}}/)) {
     suffix = ' }}';
-  } else if (data.type === TYPE_TAG && !nextChars.match(/\s*%}/)) {
+  } else if (data.type === TYPE_TAG && nextChars.match(/^\s*}/)) {
+    // Edge case because "%" doesn't auto-close tags so sometimes you end
+    // up in the scenario of {% foo}
+    suffix = ' %';
+  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
     suffix = ' %}';
   }
 
@@ -230,4 +228,13 @@ function renderHintMatch (li, self, data) {
   `;
 
   li.className += ` type--${data.type}`;
+}
+
+function isHintDropdownOpen (cm) {
+  return (
+    cm.state.completionActive &&
+    cm.state.completionActive.data &&
+    cm.state.completionActive.data.list &&
+    cm.state.completionActive.data.list.length
+  );
 }
