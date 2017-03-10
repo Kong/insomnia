@@ -216,6 +216,7 @@ class OneLineEditor extends PureComponent {
       onChange,
       placeholder,
       render,
+      getRenderContext,
       type: originalType
     } = this.props;
 
@@ -244,6 +245,7 @@ class OneLineEditor extends PureComponent {
           onMouseLeave={this._handleEditorMouseLeave}
           onChange={onChange}
           render={render}
+          getRenderContext={getRenderContext}
           className="editor--single-line"
           defaultValue={defaultValue}
         />
@@ -281,6 +283,7 @@ OneLineEditor.propTypes = {
   onFocus: PropTypes.func,
   onChange: PropTypes.func,
   render: PropTypes.func,
+  getRenderContext: PropTypes.func,
   placeholder: PropTypes.string,
   className: PropTypes.string,
   forceEditor: PropTypes.bool,

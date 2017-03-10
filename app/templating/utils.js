@@ -1,19 +1,19 @@
 export function getKeys (obj, prefix = '') {
-  let allKeys = [];
+  let allKeys = {};
 
   if (Array.isArray(obj)) {
     for (let i = 0; i < obj.length; i++) {
-      getKeys(obj[i], `${prefix}[${i}]`).map(k => allKeys.push(k));
+      Object.assign(allKeys, getKeys(obj[i], `${prefix}[${i}]`));
     }
   } else if (typeof obj === 'object') {
     for (const key of Object.keys(obj)) {
       const newPrefix = prefix ? `${prefix}.${key}` : key;
-      allKeys = allKeys.concat(getKeys(obj[key], newPrefix));
+      Object.assign(allKeys, getKeys(obj[key], newPrefix));
     }
-  }
-
-  if (prefix) {
-    allKeys.push(prefix);
+  } else if (typeof obj === 'function') {
+    // Skip functions
+  } else if (prefix) {
+    allKeys[prefix] = obj;
   }
 
   return allKeys;
