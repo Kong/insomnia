@@ -107,6 +107,7 @@ class KeyValueEditorRow extends PureComponent {
       namePlaceholder,
       valuePlaceholder,
       handleRender,
+      handleGetRenderContext,
       valueInputType,
       multipart,
       sortable,
@@ -152,6 +153,7 @@ class KeyValueEditorRow extends PureComponent {
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
               render={handleRender}
+              getRenderContext={handleGetRenderContext}
               forceInput={forceInput}
               readOnly={readOnly}
               onBlur={this._handleBlurName}
@@ -180,6 +182,7 @@ class KeyValueEditorRow extends PureComponent {
                   onChange={this._handleValueChange}
                   onBlur={this._handleBlurValue}
                   render={handleRender}
+                  getRenderContext={handleGetRenderContext}
                   onKeyDown={this._handleKeyDown}
                   onFocus={this._handleFocusValue}
                 />
@@ -270,6 +273,7 @@ KeyValueEditorRow.propTypes = {
   onBlurName: PropTypes.func,
   onBlurValue: PropTypes.func,
   handleRender: PropTypes.func,
+  handleGetRenderContext: PropTypes.func,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,

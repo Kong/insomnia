@@ -314,6 +314,7 @@ class Editor extends PureComponent {
       valuePlaceholder,
       namePlaceholder,
       handleRender,
+      handleGetRenderContext,
       multipart,
       sortable,
       disableDelete
@@ -346,6 +347,7 @@ class Editor extends PureComponent {
               onBlurValue={this._handleBlurValue}
               onMove={this._handleMove}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
               multipart={multipart}
               pair={pair}
             />
@@ -383,6 +385,7 @@ Editor.propTypes = {
 
   // Optional
   handleRender: PropTypes.func,
+  handleGetRenderContext: PropTypes.func,
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
   maxPairs: PropTypes.number,

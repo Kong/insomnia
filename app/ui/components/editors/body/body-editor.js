@@ -56,6 +56,7 @@ class BodyEditor extends PureComponent {
           key={request._id}
           onChange={this._handleFormUrlEncodedChange}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
           parameters={request.body.params || []}
         />
       );
@@ -65,6 +66,7 @@ class BodyEditor extends PureComponent {
           key={request._id}
           onChange={this._handleFormChange}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
           parameters={request.body.params || []}
         />
       );

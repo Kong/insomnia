@@ -71,7 +71,13 @@ class RequestHeadersEditor extends PureComponent {
   }
 
   render () {
-    const {bulk, headers, onChange, handleRender} = this.props;
+    const {
+      bulk,
+      headers,
+      onChange,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
 
     return bulk ? (
         <div className="tall">
@@ -89,6 +95,7 @@ class RequestHeadersEditor extends PureComponent {
               valuePlaceholder="Value"
               pairs={headers}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
               onToggleDisable={this._handleTrackToggle}
               onCreate={this._handleTrackCreate}
               onDelete={this._handleTrackDelete}
@@ -104,6 +111,7 @@ RequestHeadersEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   bulk: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   headers: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired

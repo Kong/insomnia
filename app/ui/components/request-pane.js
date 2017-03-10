@@ -249,6 +249,7 @@ class RequestPane extends PureComponent {
                 authentication={request.authentication}
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                 handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
                 onChange={updateRequestAuthentication}
               />
               <div className="pad pull-right">
@@ -287,6 +288,7 @@ class RequestPane extends PureComponent {
                   onDelete={this._trackQueryDelete}
                   pairs={request.parameters}
                   handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
                   onChange={updateRequestParameters}
                 />
               </div>
@@ -304,6 +306,7 @@ class RequestPane extends PureComponent {
               key={uniqueKey}
               headers={request.headers}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
               onChange={updateRequestHeaders}
               bulk={useBulkHeaderEditor}
             />

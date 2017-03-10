@@ -343,6 +343,7 @@ class Wrapper extends PureComponent {
           <NunjucksModal
             ref={registerModal}
             handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
           />
           <WorkspaceSettingsModal
             ref={registerModal}
@@ -380,6 +381,7 @@ class Wrapper extends PureComponent {
             lineWrapping={settings.editorLineWrapping}
             onChange={models.requestGroup.update}
             render={handleRender}
+            getRenderContext={handleGetRenderContext}
           />
           <SetupSyncModal
             ref={registerModal}
@@ -392,6 +394,7 @@ class Wrapper extends PureComponent {
             editorFontSize={settings.editorFontSize}
             editorKeyMap={settings.editorKeyMap}
             render={handleRender}
+            getRenderContext={handleGetRenderContext}
           />
         </div>
       </div>
