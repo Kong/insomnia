@@ -14,7 +14,12 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       setTimeout(() => {
         if (!cm.state.completionActive) {
           const {getContext} = options;
-          cm.showHint({hint, completeSingle: false, getContext});
+          cm.showHint({
+            hint,
+            getContext,
+            completeSingle: false,
+            closeOnUnfocus: false
+          });
         }
       }, HINT_DELAY_MILLIS);
     }
@@ -75,15 +80,16 @@ async function hint (cm, options) {
   // Actually try to match the list of things
   const list = stringsToMatch
     .filter(k => k.indexOf(matchedSegment) >= 0)
+    .sort((a, b) => a.length > b.length ? 1 : -1)
     .map(k => ({
       text: k,
       displayText: k,
+      render: renderHintMatch,
       hint: replaceHintMatch
     }));
 
   const from = CodeMirror.Pos(cur.line, cur.ch - matchedSegment.length);
   const to = CodeMirror.Pos(cur.line, cur.ch);
-
   return {list, from, to};
 }
 
@@ -102,4 +108,8 @@ function replaceHintMatch (cm, self, data) {
   let suffix = nextChar === ' ' ? '' : ' ';
 
   cm.replaceRange(`${prefix}${data.text}${suffix}`, self.from, self.to);
+}
+
+function renderHintMatch (parent, self, data) {
+  parent.innerHTML = `<label>v</label><div>${data.displayText}</div>`;
 }

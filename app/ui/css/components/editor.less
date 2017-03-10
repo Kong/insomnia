@@ -200,6 +200,52 @@
   }
 }
 
+.CodeMirror-hints {
+  border-radius: @radius-sm;
+  border: 0;
+  padding: 0;
+  margin: 0.2em 0 0;
+
+  li.CodeMirror-hint {
+    background: var(--color-bg);
+    color: var(--color-font);
+    padding: 0;
+    min-width: 13em;
+    border-radius: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    div,
+    label {
+      display: block;
+      height: @line-height-xxs;
+      line-height: @line-height-xxs;
+      padding: 0 @padding-xs;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    div {
+      width: 100%;
+    }
+
+    label {
+      text-align: center;
+      background: var(--hl-sm);
+      width: @line-height-xxs;
+    }
+  }
+
+  li.CodeMirror-hint-active {
+    div,
+    label {
+      background: var(--color-surprise);
+      color: var(--color-font-surprise);
+    }
+  }
+}
+
 // Tooltip for errors
 .CodeMirror-lint-tooltip {
   background-color: var(--color-bg);
