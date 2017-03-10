@@ -9,26 +9,23 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return;
   }
 
-  function completeAfter (cm, fn) {
-    if (!fn || fn()) {
-      setTimeout(() => {
-        if (!cm.state.completionActive) {
-          const {getContext} = options;
-          cm.showHint({
-            hint,
-            getContext,
-            completeSingle: false,
-            closeOnUnfocus: false
-          });
-        }
-      }, HINT_DELAY_MILLIS);
+  function completeAfter (fn) {
+    const shouldDoIt = !fn || fn();
+    if (shouldDoIt && !cm.state.completionActive) {
+      const {getContext} = options;
+      cm.showHint({
+        hint,
+        getContext,
+        completeSingle: false,
+        closeOnUnfocus: false
+      });
     }
 
     return CodeMirror.Pass;
   }
 
-  function completeIfInsideDoubleBrackets (cm) {
-    return completeAfter(cm, () => {
+  function completeIfInsideDoubleBrackets () {
+    return completeAfter(() => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
       const range = cm.getRange(pos, cur);
@@ -45,7 +42,8 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    completeIfInsideDoubleBrackets(cm);
+    // In a timeout so it gives the editor chance to update first
+    setTimeout(completeIfInsideDoubleBrackets, HINT_DELAY_MILLIS);
   });
 });
 
