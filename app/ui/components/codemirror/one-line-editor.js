@@ -141,7 +141,6 @@ class OneLineEditor extends PureComponent {
   _handleKeyDown (e) {
     // submit form if needed
     if (e.keyCode === 13) {
-      console.log('ONE_LINE SUBMIT', e);
       let node = e.target;
       for (let i = 0; i < 20 && node; i++) {
         if (node.tagName === 'FORM') {

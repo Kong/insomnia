@@ -334,12 +334,15 @@ class Wrapper extends PureComponent {
 
         <div className="modals">
           <AlertModal ref={registerModal}/>
-          <CookiesModal ref={registerModal}/>
           <ChangelogModal ref={registerModal}/>
           <LoginModal ref={registerModal}/>
           <PromptModal ref={registerModal}/>
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
+          <CookiesModal
+            ref={registerModal}
+            workspace={activeWorkspace}
+          />
           <NunjucksModal
             ref={registerModal}
             handleRender={handleRender}
