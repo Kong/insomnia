@@ -50,7 +50,7 @@ import './modes/nunjucks';
 import './extensions/environments-autocomplete';
 import './extensions/clickable';
 import './extensions/nunjucks-tags';
-import '../../css/components/editor/index.less';
+import '../../css/editor/index.less';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/alert-modal';
 import Link from '../base/link';

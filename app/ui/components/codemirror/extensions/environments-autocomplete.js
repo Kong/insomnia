@@ -12,7 +12,7 @@ const COMPLETE_AFTER_VARIABLE_NAME = /[\w.\][]+/;
 const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|]/;
 const MAX_HINT_LOOK_BACK = 100;
-const HINT_DELAY_MILLIS = 100;
+const HINT_DELAY_MILLIS = 300;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 
