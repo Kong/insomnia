@@ -231,7 +231,6 @@ class OneLineEditor extends PureComponent {
           defaultTabBehavior
           hideLineNumbers
           hideScrollbars
-          noDragDrop
           noMatchBrackets
           noStyleActiveLine
           noLint

@@ -1,10 +1,6 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
 
-// const VARIABLE_MATCH = /{{\s*([\w.\][]*)$/;
-// const FILTER_MATCH = /{{\s*[\w.\][]*\s*\|\s*(\w*)$/;
-// const COMPLETE_AFTER = /^[^{]*\{\{[^}]*/; // We're inside {{ ... }}
-
 const NAME_MATCH = /[\w.\][]+$/;
 const AFTER_VARIABLE_MATCH = /{{\s*[\w.\][]*$/;
 const AFTER_TAG_MATCH = /{%\s*[\w.\][]*$/;
@@ -12,7 +8,7 @@ const COMPLETE_AFTER_VARIABLE_NAME = /[\w.\][]+/;
 const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|]/;
 const MAX_HINT_LOOK_BACK = 100;
-const HINT_DELAY_MILLIS = 300;
+const HINT_DELAY_MILLIS = 100;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 

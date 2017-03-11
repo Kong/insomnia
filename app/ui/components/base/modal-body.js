@@ -4,10 +4,14 @@ import classnames from 'classnames';
 class ModalBody extends PureComponent {
   render () {
     const {className, children, noScroll, ...props} = this.props;
+    const classes = classnames(
+      className,
+      'modal__body',
+      {'modal__body--no-scroll': noScroll}
+    );
+
     return (
-      <div className={classnames('modal__body', {
-        'modal__body--no-scroll': noScroll
-      }, className)} {...props}>
+      <div className={classes} {...props}>
         {children}
       </div>
     );

@@ -16,6 +16,7 @@ import RequestPane from './request-pane';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SettingsModal from './modals/settings-modal';
+import FilterHelpModal from './modals/filter-help-modal';
 import ResponsePane from './response-pane';
 import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
@@ -339,6 +340,7 @@ class Wrapper extends PureComponent {
           <PromptModal ref={registerModal}/>
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
+          <FilterHelpModal ref={registerModal}/>
           <CookiesModal
             ref={registerModal}
             workspace={activeWorkspace}
