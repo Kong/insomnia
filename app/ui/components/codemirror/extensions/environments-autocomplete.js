@@ -1,7 +1,7 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
 
-const NAME_MATCH = /[\w.\][]+$/;
+const NAME_MATCH = /[\w.\][-]+$/;
 const AFTER_VARIABLE_MATCH = /{{\s*[\w.\][]*$/;
 const AFTER_TAG_MATCH = /{%\s*[\w.\][]*$/;
 const COMPLETE_AFTER_VARIABLE_NAME = /[\w.\][]+/;
@@ -11,10 +11,12 @@ const MAX_HINT_LOOK_BACK = 100;
 const HINT_DELAY_MILLIS = 100;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
+const TYPE_CONSTANT = 'constant';
 
 const ICONS = {
-  variable: '&nu;',
-  tag: '&fnof;'
+  [TYPE_VARIABLE]: '&nu;',
+  [TYPE_TAG]: '&fnof;',
+  [TYPE_CONSTANT]: '&#x1d436;'
 };
 
 const TAGS = {
@@ -36,6 +38,8 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;
   }
+
+  const extraConstants = options.extraConstants || [];
 
   function completeAfter (cm, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
@@ -61,6 +65,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     // Actually show the hint
     cm.showHint({
       hint,
+      extraConstants,
       getContext: options.getContext,
       showAllOnNoMatch,
       container: hintsContainer,
@@ -137,6 +142,7 @@ async function hint (cm, options) {
   const isInNothing = !isInVariable && !isInTag;
   const allowMatchingVariables = isInNothing || isInVariable;
   const allowMatchingTags = isInNothing || isInTag;
+  const allowMatchingConstants = isInNothing;
 
   // Define fallback segment to match everything or nothing
   const fallbackSegment = options.showAllOnNoMatch ? '' : '__will_not_match_anything__';
@@ -148,6 +154,12 @@ async function hint (cm, options) {
   // Actually try to match the list of things
   const context = await options.getContext();
   const allMatches = [];
+
+  if (allowMatchingConstants) {
+    const constants = options.extraConstants || [];
+    const constantMatches = matchStrings(constants, nameSegment, TYPE_CONSTANT);
+    allMatches.push(constantMatches);
+  }
 
   if (allowMatchingVariables) {
     const variableMatches = matchStrings(context.keys, nameSegment, TYPE_VARIABLE);
@@ -209,7 +221,7 @@ function replaceHintMatch (cm, self, data) {
 
 function matchStrings (stringsObj, segment, type) {
   return Object.keys(stringsObj)
-    .filter(k => k.indexOf(segment) >= 0)
+    .filter(k => k.toLowerCase().includes(segment.toLowerCase()))
     .slice(0, 20) // 20 max
     .map(k => {
       const value = stringsObj[k];
@@ -235,12 +247,14 @@ function matchStrings (stringsObj, segment, type) {
  * Replace all occurrences of string
  * @param text
  * @param find
- * @param replace
+ * @param prefix
+ * @param suffix
  * @returns string
  */
-function replaceAll (text, find, replace) {
+function replaceWithSurround (text, find, prefix, suffix) {
   const escapedString = find.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
-  return text.replace(new RegExp(escapedString, 'g'), replace);
+  const re = new RegExp(escapedString, 'gi');
+  return text.replace(re, matched => prefix + matched + suffix);
 }
 
 /**
@@ -251,11 +265,8 @@ function replaceAll (text, find, replace) {
  */
 function renderHintMatch (li, self, data) {
   // Bold the matched text
-  const markedName = replaceAll(
-    data.displayText,
-    data.segment,
-    `<strong>${data.segment}</strong>`
-  );
+  const {displayText, segment} = data;
+  const markedName = replaceWithSurround(displayText, segment, '<strong>', '</strong>');
 
   li.innerHTML = `
     <label class="label">${ICONS[data.type]}</label>
@@ -267,4 +278,3 @@ function renderHintMatch (li, self, data) {
 
   li.className += ` type--${data.type}`;
 }
-
