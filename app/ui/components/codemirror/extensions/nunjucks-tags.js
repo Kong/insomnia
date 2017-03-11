@@ -118,6 +118,8 @@ async function _highlightNunjucksTags (render) {
       // Setup Drag-n-Drop stuff //
       // ~~~~~~~~~~~~~~~~~~~~~~~ //
 
+      let droppedInSameEditor = false;
+
       // Modify paste events so we can merge into them
       const beforeChangeCb = (cm, change) => {
         if (change.origin === 'paste') {
@@ -125,32 +127,40 @@ async function _highlightNunjucksTags (render) {
         }
       };
 
+      const dropCb = (cm, e) => {
+        droppedInSameEditor = true;
+      };
+
+      // Set up the drag
       el.addEventListener('dragstart', e => {
         // Setup the drag contents
         const template = e.target.getAttribute('data-template');
         e.dataTransfer.setData('text/plain', template);
-        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.effectAllowed = 'copyMove';
         e.dataTransfer.dropEffect = 'move';
 
         // Add some listeners
         this.on('beforeChange', beforeChangeCb);
+        this.on('drop', dropCb);
       });
 
       el.addEventListener('dragend', e => {
-        if (e.dropEffect !== 'none') {
+        // If dragged within same editor, delete the old reference
+        // TODO: Actually only use dropEffect for this logic. For some reason
+        // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
+        if (droppedInSameEditor) {
           const {from, to} = mark.find();
           this.replaceRange('', from, to, '+dnd');
         }
 
         // Remove listeners we added
         this.off('beforeChange', beforeChangeCb);
+        this.off('drop', dropCb);
       });
 
       // Don't allow dropping on itself
       el.addEventListener('drop', e => {
-        e.dropEffect = 'none';
         e.stopPropagation();
-        // TODO: This doesn't really work like it should.
       });
     }
   }
