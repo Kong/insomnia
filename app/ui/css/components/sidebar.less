@@ -252,15 +252,12 @@
     }
 
     &.sidebar__item--active.sidebar__item--request > button,
-    &.sidebar__item--active > .sidebar__actions,
+    &.sidebar__item--active.sidebar__item--request > .sidebar__actions,
     &:hover > button,
     & > button:focus,
     &:hover .sidebar__actions {
+      transition: background-color 130ms ease-out;
       background-color: @hl-xs;
-    }
-
-    &.sidebar__item--active.sidebar__item--request > button {
-      //border-left-color: @hl-xs;
     }
 
     .tag {

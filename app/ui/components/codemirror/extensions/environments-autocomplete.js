@@ -133,13 +133,22 @@ async function hint (cm, options) {
 
   // Actually try to match the list of things
   const context = await options.getContext();
-  const list = [
-    ...(allowMatchingVariables ? matchStrings(context.keys, nameSegment, TYPE_VARIABLE, 10) : []),
-    ...(allowMatchingTags ? matchStrings(TAGS, nameSegment, TYPE_TAG) : [])
-  ];
+  const allMatches = [];
 
+  if (allowMatchingVariables) {
+    const variableMatches = matchStrings(context.keys, nameSegment, TYPE_VARIABLE);
+    allMatches.push(variableMatches);
+  }
+
+  if (allowMatchingTags) {
+    const tagMatches = matchStrings(TAGS, nameSegment, TYPE_TAG);
+    allMatches.push(tagMatches);
+  }
+
+  const list = [].concat(...allMatches);
   const from = CodeMirror.Pos(cur.line, cur.ch - nameSegment.length);
   const to = CodeMirror.Pos(cur.line, cur.ch);
+
   return {list, from, to};
 }
 
@@ -176,10 +185,10 @@ function replaceHintMatch (cm, self, data) {
   cm.replaceRange(`${prefix}${data.text}${suffix}`, self.from, self.to);
 }
 
-function matchStrings (stringsObj, segment, type, maxResults = 100) {
+function matchStrings (stringsObj, segment, type) {
   return Object.keys(stringsObj)
     .filter(k => k.indexOf(segment) >= 0)
-    .slice(0, maxResults)
+    .slice(0, 20) // 20 max
     .map(k => {
       const value = stringsObj[k];
       return {
