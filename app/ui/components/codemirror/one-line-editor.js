@@ -24,7 +24,9 @@ class OneLineEditor extends PureComponent {
       mode = MODE_INPUT;
     }
 
-    this.state = {mode};
+    this.state = {
+      mode
+    };
   }
 
   focus (setToEnd = false) {
@@ -61,6 +63,10 @@ class OneLineEditor extends PureComponent {
 
   _handleEditorMouseLeave () {
     this._convertToInputIfNotFocused();
+  }
+
+  _handleInputDragEnter () {
+    this._convertToEditorPreserveFocus();
   }
 
   _handleInputMouseEnter () {
@@ -263,6 +269,7 @@ class OneLineEditor extends PureComponent {
           onBlur={this._handleInputBlur}
           onChange={this._handleInputChange}
           onMouseEnter={this._handleInputMouseEnter}
+          onDragEnter={this._handleInputDragEnter}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />

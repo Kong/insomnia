@@ -46,6 +46,7 @@
     .name,
     .value,
     .label {
+      min-height: 100%;
       line-height: @line-height-xxs;
       padding: 0 @padding-sm;
       margin: 0;
@@ -79,19 +80,19 @@
       text-align: center;
       min-width: @line-height-xxs;
     }
-  }
 
-  li.CodeMirror-hint:hover,
-  li.CodeMirror-hint-active {
-    background: var(--hl-xs);
+    &:hover,
+    &.CodeMirror-hint-active {
+      background: var(--hl-xs);
 
-    .label {
-      opacity: 1;
-    }
+      .label {
+        opacity: 1;
+      }
 
-    .name,
-    .value {
-      background: var(--hl-sm);
+      .name,
+      .value {
+        background: var(--hl-xs);
+      }
     }
   }
 }

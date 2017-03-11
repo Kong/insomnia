@@ -174,19 +174,27 @@ function replaceHintMatch (cm, self, data) {
   let suffix = '';
 
   if (data.type === TYPE_VARIABLE && !prevChars.match(/{{\s*$/)) {
-    prefix = '{{ ';
+    prefix = '{{ '; // If no closer before
+  } else if (data.type === TYPE_VARIABLE && prevChars.match(/{{$/)) {
+    prefix = ' '; // If no space after opener
   } else if (data.type === TYPE_TAG && !prevChars.match(/{%\s*$/)) {
-    prefix = '{% ';
+    prefix = '{% '; // If no closer before
+  } else if (data.type === TYPE_TAG && prevChars.match(/{%$/)) {
+    prefix = ' '; // If no space after opener
   }
 
   if (data.type === TYPE_VARIABLE && !nextChars.match(/^\s*}}/)) {
-    suffix = ' }}';
+    suffix = ' }}'; // If no closer after
+  } else if (data.type === TYPE_VARIABLE && nextChars.match(/^}}/)) {
+    suffix = ' '; // If no space before closer
+  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
+    suffix = ' %}'; // If no closer after
+  } else if (data.type === TYPE_TAG && nextChars.match(/^%}/)) {
+    suffix = ' '; // If no space before closer
   } else if (data.type === TYPE_TAG && nextChars.match(/^\s*}/)) {
     // Edge case because "%" doesn't auto-close tags so sometimes you end
     // up in the scenario of {% foo}
     suffix = ' %';
-  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
-    suffix = ' %}';
   }
 
   cm.replaceRange(`${prefix}${data.text}${suffix}`, self.from, self.to);
