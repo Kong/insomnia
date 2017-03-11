@@ -12,8 +12,12 @@
   box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
   min-width: 20rem;
   max-width: 35rem;
-  max-height: 20rem;
+  max-height: 19rem;
   z-index: 999999; // So it shows up anywhere (modals)
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   li.CodeMirror-hint {
     position: relative;
@@ -22,37 +26,21 @@
     border-radius: 0;
     display: flex;
     flex-direction: row;
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--color-bg);
     font-size: @font-size-xs;
 
     &.type--variable {
-      &::before {
-        background: var(--color-surprise);
-      }
-
       .label {
+        background: var(--color-surprise);
         color: var(--color-font-surprise);
       }
     }
 
     &.type--tag {
-      &::before {
-        background: var(--color-info);
-      }
-
       .label {
+        background: var(--color-info);
         color: var(--color-font-info);
       }
-    }
-
-    &::before {
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
-      position: absolute;
-      content: '  ';
-      z-index: -1;
     }
 
     .name,
@@ -85,6 +73,7 @@
     }
 
     .label {
+      opacity: 0.8;
       font-size: @font-size-sm;
       font-family: @font-default;
       text-align: center;
@@ -94,11 +83,15 @@
 
   li.CodeMirror-hint:hover,
   li.CodeMirror-hint-active {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--hl-xs);
+
+    .label {
+      opacity: 1;
+    }
 
     .name,
     .value {
-      background: rgba(255, 255, 255, 0.8);
+      background: var(--hl-sm);
     }
   }
 }

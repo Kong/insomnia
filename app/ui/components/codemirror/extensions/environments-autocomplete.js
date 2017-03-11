@@ -48,14 +48,25 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return CodeMirror.Pass;
     }
 
+    // Put the hints in a container with class "dropdown__menu" (for themes)
+    let hintsContainer = document.querySelector('#hints-container');
+    if (!hintsContainer) {
+      const el = document.createElement('div');
+      el.id = 'hints-container';
+      el.className = 'dropdown__menu';
+      document.body.appendChild(el);
+      hintsContainer = el;
+    }
+
     // Actually show the hint
     cm.showHint({
       hint,
       getContext: options.getContext,
       showAllOnNoMatch,
+      container: hintsContainer,
       closeCharacters: COMPLETION_CLOSE_KEYS,
-      completeSingle: false
-      // closeOnUnfocus: false // Good for debugging (inspector)
+      completeSingle: false,
+      closeOnUnfocus: false // Good for debugging (inspector)
     });
 
     return CodeMirror.Pass;
