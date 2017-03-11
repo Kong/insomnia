@@ -165,6 +165,11 @@ class CodeEditor extends PureComponent {
   }
 
   clearSelection () {
+    // Never do this if dropdown is open
+    if (this.codeMirror.isHintDropdownActive()) {
+      return;
+    }
+
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         {line: -1, ch: -1},
