@@ -137,9 +137,10 @@ async function _highlightNunjucksTags (render) {
       });
 
       el.addEventListener('dragend', e => {
-        // Remove from editor if it was dragged away
-        const {from, to} = mark.find();
-        this.replaceRange('', from, to, '+dnd');
+        if (e.dropEffect !== 'none') {
+          const {from, to} = mark.find();
+          this.replaceRange('', from, to, '+dnd');
+        }
 
         // Remove listeners we added
         this.off('beforeChange', beforeChangeCb);
@@ -147,7 +148,9 @@ async function _highlightNunjucksTags (render) {
 
       // Don't allow dropping on itself
       el.addEventListener('drop', e => {
+        e.dropEffect = 'none';
         e.stopPropagation();
+        // TODO: This doesn't really work like it should.
       });
     }
   }

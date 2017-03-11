@@ -66,7 +66,14 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       container: hintsContainer,
       closeCharacters: COMPLETION_CLOSE_KEYS,
       completeSingle: false,
-      closeOnUnfocus: false // Good for debugging (inspector)
+      extraKeys: {
+        'Tab': (cm, widget) => {
+          // Override default behavior and don't select hint on Tab
+          widget.close();
+          return CodeMirror.Pass;
+        }
+      }
+      // closeOnUnfocus: false // Good for debugging (inspector)
     });
 
     return CodeMirror.Pass;

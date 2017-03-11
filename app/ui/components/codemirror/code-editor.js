@@ -401,16 +401,12 @@ class CodeEditor extends PureComponent {
   }
 
   async _codemirrorKeyDown (doc, e) {
-    if (doc.isHintDropdownActive()) {
-      return;
-    }
-
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
     }
 
-    if (this.props.onKeyDown) {
+    if (this.props.onKeyDown && !doc.isHintDropdownActive()) {
       this.props.onKeyDown(e, doc.getValue());
     }
   }
