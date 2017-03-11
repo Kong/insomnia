@@ -1,13 +1,14 @@
 @import '../constants/fonts';
 
 .editor {
-  .nunjucks-widget {
+  .nunjucks-tag {
     font-family: @font-monospace !important;
     padding: 0.13em 0.5em;
     box-sizing: border-box;
     margin: 0 0.1em;
     position: relative;
     font-size: 0.9em;
+    line-height: 1em; // Need this for CodeMirror line-height math
     cursor: default;
     white-space: nowrap;
     text-shadow: 0 0 0.1em rgba(0, 0, 0, 0.4);

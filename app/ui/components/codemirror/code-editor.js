@@ -6,14 +6,13 @@ import jq from 'jsonpath';
 import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
 import xpath from 'xpath';
-import './base-imports';
 import {showModal} from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
-import Link from '../base/link';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
 import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import './base-imports';
 
 const TAB_KEY = 9;
 
@@ -372,7 +371,7 @@ class CodeEditor extends PureComponent {
       };
     }
 
-// Strip of charset if there is one
+    // Strip of charset if there is one
     const cm = this.codeMirror;
     Object.keys(options).map(key => {
       // Don't set the option if it hasn't changed
