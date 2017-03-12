@@ -1,7 +1,8 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
 
-const NAME_MATCH = /[\w.\][\-/]+$/;
+const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
+const NAME_MATCH = /[\w.\][]+$/;
 const AFTER_VARIABLE_MATCH = /{{\s*[\w.\][]*$/;
 const AFTER_TAG_MATCH = /{%\s*[\w.\][]*$/;
 const COMPLETE_AFTER_VARIABLE_NAME = /[\w.\][]+/;
@@ -158,47 +159,46 @@ async function hint (cm, options) {
 
   // See if we're completing a variable name
   const nameMatch = previousText.match(NAME_MATCH);
+  const nameMatchLong = previousText.match(NAME_MATCH_FLEXIBLE);
   const nameSegment = nameMatch ? nameMatch[0] : fallbackSegment;
+  const nameSegmentLong = nameMatchLong ? nameMatchLong[0] : fallbackSegment;
 
   // Actually try to match the list of things
   const context = await options.getContext();
   const allMatches = [];
 
   if (allowMatchingConstants) {
-    const constantMatches = matchStrings(
+    matchSegments(
       options.extraConstants,
-      nameSegment,
+      [nameSegmentLong, nameSegment],
       TYPE_CONSTANT,
       MAX_CONSTANTS
-    );
-    allMatches.push(constantMatches);
+    ).map(m => allMatches.push(m));
   }
 
   if (allowMatchingVariables) {
-    const variableMatches = matchStrings(
+    matchSegments(
       context.keys,
-      nameSegment,
+      [nameSegmentLong, nameSegment],
       TYPE_VARIABLE,
       MAX_VARIABLES
-    );
-    allMatches.push(variableMatches);
+    ).map(m => allMatches.push(m));
   }
 
   if (allowMatchingTags) {
-    const tagMatches = matchStrings(
+    matchSegments(
       TAGS,
-      nameSegment,
+      [nameSegmentLong, nameSegment],
       TYPE_TAG,
       MAX_TAGS
-    );
-    allMatches.push(tagMatches);
+    ).map(m => allMatches.push(m));
   }
 
-  const list = [].concat(...allMatches);
-  const from = CodeMirror.Pos(cur.line, cur.ch - nameSegment.length);
-  const to = CodeMirror.Pos(cur.line, cur.ch);
-
-  return {list, from, to};
+  return {
+    list: allMatches,
+    from: CodeMirror.Pos(cur.line, cur.ch - nameSegment.length),
+    to: CodeMirror.Pos(cur.line, cur.ch)
+  };
 }
 
 /**
@@ -209,8 +209,15 @@ async function hint (cm, options) {
  * @param data
  */
 function replaceHintMatch (cm, self, data) {
-  const prevChars = cm.getRange(CodeMirror.Pos(self.from.line, self.from.ch - 10), self.from);
-  const nextChars = cm.getRange(self.to, CodeMirror.Pos(self.to.line, self.to.ch + 10));
+  const cur = cm.getCursor();
+  const from = CodeMirror.Pos(cur.line, cur.ch - data.segment.length);
+  const to = CodeMirror.Pos(cur.line, cur.ch);
+
+  const prevStart = CodeMirror.Pos(from.line, from.ch - 10);
+  const prevChars = cm.getRange(prevStart, from);
+
+  const nextEnd = CodeMirror.Pos(to.line, to.ch + 10);
+  const nextChars = cm.getRange(to, nextEnd);
 
   let prefix = '';
   let suffix = '';
@@ -239,36 +246,63 @@ function replaceHintMatch (cm, self, data) {
     suffix = ' %';
   }
 
-  cm.replaceRange(`${prefix}${data.text}${suffix}`, self.from, self.to);
+  cm.replaceRange(`${prefix}${data.text}${suffix}`, from, to);
 }
 
 /**
  * Match against a list of things
  * @param listOfThings - Can be list of strings or list of {name, value}
- * @param segment
+ * @param segments - List of segments to match against
  * @param type
  * @param limit
  * @returns {Array}
  */
-function matchStrings (listOfThings, segment, type, limit = -1) {
-  return listOfThings
-    .map(t => typeof t === 'string' ? {name: t, value: ''} : t) // Convert to obj
-    .filter(t => t.name.toLowerCase().includes(segment.toLowerCase())) // Filter
-    .slice(0, limit >= 0 ? limit : listOfThings.length) // Cap it
-    .map(({name, value}) => ({
-      // Custom Insomnia keys
-      type,
-      segment,
-      comment: value,
-      displayValue: value ? JSON.stringify(value) : '',
-      score: name.length, // In case we want to sort by this
+function matchSegments (listOfThings, segments, type, limit = -1) {
+  const matches = [];
 
-      // CodeMirror
-      text: name,
-      displayText: name,
-      render: renderHintMatch,
-      hint: replaceHintMatch
-    }));
+  for (const t of listOfThings) {
+    const name = typeof t === 'string' ? t : t.name;
+    const value = typeof t === 'string' ? '' : t.value;
+
+    for (const segment of segments) {
+      const matchSegment = segment.toLowerCase();
+      const matchName = name.toLowerCase();
+
+      // Throw away exact matches (why would we want to complete those?)
+      if (matchName === matchSegment) {
+        continue;
+      }
+
+      // Throw away things that don't match
+      if (!matchName.includes(matchSegment)) {
+        continue;
+      }
+
+      matches.push({
+        // Custom Insomnia keys
+        type,
+        segment,
+        comment: value,
+        displayValue: value ? JSON.stringify(value) : '',
+        score: name.length, // In case we want to sort by this
+
+        // CodeMirror
+        text: name,
+        displayText: name,
+        render: renderHintMatch,
+        hint: replaceHintMatch
+      });
+
+      // Only return the first match (2nd would be a duplicate)
+      break;
+    }
+  }
+
+  if (limit >= 0) {
+    return matches.slice(0, limit);
+  } else {
+    return matches;
+  }
 }
 
 /**
