@@ -466,15 +466,46 @@ class App extends PureComponent {
     this._wrapper = n;
   }
 
+  /**
+   * Update document.title to be "Workspace (Environment) – Request"
+   * @private
+   */
+  _updateDocumentTitle () {
+    const {
+      activeWorkspace,
+      activeEnvironment,
+      activeRequest
+    } = this.props;
+
+    let title = activeWorkspace.name;
+
+    if (activeEnvironment) {
+      title += ` (${activeEnvironment.name})`;
+    }
+
+    if (activeRequest) {
+      title += ` – ${activeRequest.name}`;
+    }
+
+    document.title = title;
+  }
+
+  componentDidUpdate () {
+    this._updateDocumentTitle();
+  }
+
   async componentDidMount () {
+    // Do The Analytics
+    trackLegacyEvent('App Launched');
+
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
     document.addEventListener('keydown', this._handleKeyDown);
     this._setGlobalKeyMap();
 
-    // Do The Analytics
-    trackLegacyEvent('App Launched');
+    // Update title
+    this._updateDocumentTitle();
 
     // Update Stats Object
     const {lastVersion, launches} = await models.stats.get();
@@ -497,6 +528,7 @@ class App extends PureComponent {
           doc,
           fromSync
         ] = change;
+
         const {activeRequest} = this.props;
 
         // No active request, so we don't need to force refresh anything

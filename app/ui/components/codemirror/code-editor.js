@@ -69,7 +69,6 @@ class CodeEditor extends PureComponent {
 
   shouldComponentUpdate (nextProps) {
     // Update if any properties changed, except value. We ignore value.
-
     for (const key of Object.keys(nextProps)) {
       if (key === 'defaultValue') {
         continue;

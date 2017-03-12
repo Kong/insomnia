@@ -7,6 +7,7 @@ const AFTER_TAG_MATCH = /{%\s*[\w.\][]*$/;
 const COMPLETE_AFTER_VARIABLE_NAME = /[\w.\][]+/;
 const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|]/;
+const ESCAPE_FORE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 const MAX_HINT_LOOK_BACK = 100;
 const HINT_DELAY_MILLIS = 100;
 const TYPE_VARIABLE = 'variable';
@@ -120,7 +121,9 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     }
 
     // In a timeout so it gives the editor chance to update first
-    setTimeout(() => completeIfInVariableName(cm), HINT_DELAY_MILLIS);
+    setTimeout(() => {
+      completeIfInVariableName(cm);
+    }, HINT_DELAY_MILLIS);
   });
 
   // Add hot key triggers
@@ -252,22 +255,20 @@ function matchStrings (listOfThings, segment, type, limit = -1) {
     .map(t => typeof t === 'string' ? {name: t, value: ''} : t) // Convert to obj
     .filter(t => t.name.toLowerCase().includes(segment.toLowerCase())) // Filter
     .slice(0, limit >= 0 ? limit : listOfThings.length) // Cap it
-    .map(({name, value}) => {
-      return {
-        // Custom Insomnia keys
-        type,
-        segment,
-        comment: value,
-        displayValue: value ? JSON.stringify(value) : '',
-        score: name.length, // In case we want to sort by this
+    .map(({name, value}) => ({
+      // Custom Insomnia keys
+      type,
+      segment,
+      comment: value,
+      displayValue: value ? JSON.stringify(value) : '',
+      score: name.length, // In case we want to sort by this
 
-        // CodeMirror
-        text: name,
-        displayText: name,
-        render: renderHintMatch,
-        hint: replaceHintMatch
-      };
-    });
+      // CodeMirror
+      text: name,
+      displayText: name,
+      render: renderHintMatch,
+      hint: replaceHintMatch
+    }));
 }
 
 /**
@@ -279,7 +280,7 @@ function matchStrings (listOfThings, segment, type, limit = -1) {
  * @returns string
  */
 function replaceWithSurround (text, find, prefix, suffix) {
-  const escapedString = find.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
+  const escapedString = find.replace(ESCAPE_FORE_REGEX_MATCH, '\\$&');
   const re = new RegExp(escapedString, 'gi');
   return text.replace(re, matched => prefix + matched + suffix);
 }
