@@ -86,23 +86,24 @@ async function _highlightNunjucksTags (render) {
         continue;
       }
 
-      const element = document.createElement('span');
+      const el = document.createElement('span');
+      el.className = `nunjucks-tag ${tok.type}`;
+      el.setAttribute('draggable', 'true');
+      el.setAttribute('data-error', 'off');
+      el.setAttribute('data-template', tok.string);
 
-      element.className = `nunjucks-widget ${tok.type}`;
-      element.setAttribute('data-error', 'off');
-
-      await _updateElementText(renderString, element, tok.string);
+      await _updateElementText(renderString, el, tok.string);
 
       const mark = this.markText(start, end, {
         __nunjucks: true, // Mark that we created it
         __template: tok.string,
         handleMouseEvents: false,
-        replacedWith: element
+        replacedWith: el
       });
 
       activeMarks.push(mark);
 
-      element.addEventListener('click', async () => {
+      el.addEventListener('click', async () => {
         // Define the dialog HTML
         showModal(NunjucksVariableModal, {
           template: mark.__template,
@@ -111,6 +112,55 @@ async function _highlightNunjucksTags (render) {
             this.replaceRange(template, from, to);
           }
         });
+      });
+
+      // ~~~~~~~~~~~~~~~~~~~~~~~ //
+      // Setup Drag-n-Drop stuff //
+      // ~~~~~~~~~~~~~~~~~~~~~~~ //
+
+      let droppedInSameEditor = false;
+
+      // Modify paste events so we can merge into them
+      const beforeChangeCb = (cm, change) => {
+        if (change.origin === 'paste') {
+          change.origin = '+dnd';
+        }
+      };
+
+      const dropCb = (cm, e) => {
+        droppedInSameEditor = true;
+      };
+
+      // Set up the drag
+      el.addEventListener('dragstart', e => {
+        // Setup the drag contents
+        const template = e.target.getAttribute('data-template');
+        e.dataTransfer.setData('text/plain', template);
+        e.dataTransfer.effectAllowed = 'copyMove';
+        e.dataTransfer.dropEffect = 'move';
+
+        // Add some listeners
+        this.on('beforeChange', beforeChangeCb);
+        this.on('drop', dropCb);
+      });
+
+      el.addEventListener('dragend', e => {
+        // If dragged within same editor, delete the old reference
+        // TODO: Actually only use dropEffect for this logic. For some reason
+        // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
+        if (droppedInSameEditor) {
+          const {from, to} = mark.find();
+          this.replaceRange('', from, to, '+dnd');
+        }
+
+        // Remove listeners we added
+        this.off('beforeChange', beforeChangeCb);
+        this.off('drop', dropCb);
+      });
+
+      // Don't allow dropping on itself
+      el.addEventListener('drop', e => {
+        e.stopPropagation();
       });
     }
   }
@@ -173,13 +223,11 @@ async function _updateElementText (render, el, text) {
       const v = await render(str);
       el.title = v;
     }
-
     el.setAttribute('data-error', 'off');
   } catch (err) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
     el.title = message;
-    el.className += ' nunjucks-widget--error';
     el.setAttribute('data-error', 'on');
   }
 }

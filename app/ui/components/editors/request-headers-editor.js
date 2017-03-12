@@ -1,8 +1,15 @@
 import React, {PureComponent, PropTypes} from 'react';
+import mime from 'mime-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import Editor from '../codemirror/code-editor';
 import {trackEvent} from '../../../analytics/index';
+
+let mimesSet = {};
+for (const t of Object.keys(mime.types)) {
+  mimesSet[mime.types[t]] = 1;
+}
+const allMimeTypes = Object.keys(mimesSet);
 
 @autobind
 class RequestHeadersEditor extends PureComponent {
@@ -70,8 +77,58 @@ class RequestHeadersEditor extends PureComponent {
     return headersString;
   }
 
+  _getCommonHeaderValues (pair) {
+    if (pair.name.toLowerCase() === 'content-type') {
+      return allMimeTypes;
+    }
+  }
+
+  _getCommonHeaderNames (pair) {
+    return [
+      'Accept',
+      'Accept-Charset',
+      'Accept-Encoding',
+      'Accept-Language',
+      'Accept-Datetime',
+      'Authorization',
+      'Cache-Control',
+      'Connection',
+      'Cookie',
+      'Content-Length',
+      'Content-MD5',
+      'Content-Type',
+      'Date',
+      'Expect',
+      'Forwarded',
+      'From',
+      'Host',
+      'If-Match',
+      'If-Modified-Since',
+      'If-None-Match',
+      'If-Range',
+      'If-Unmodified-Since',
+      'Max-Forwards',
+      'Origin',
+      'Pragma',
+      'Proxy-Authorization',
+      'Range',
+      'Referer',
+      'TE',
+      'User-Agent',
+      'Upgrade',
+      'Via',
+      'Warning'
+    ];
+  }
+
   render () {
-    const {bulk, headers, onChange, handleRender} = this.props;
+    const {
+      bulk,
+      headers,
+      onChange,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
 
     return bulk ? (
         <div className="tall">
@@ -89,6 +146,9 @@ class RequestHeadersEditor extends PureComponent {
               valuePlaceholder="Value"
               pairs={headers}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              handleGetAutocompleteNameConstants={this._getCommonHeaderNames}
+              handleGetAutocompleteValueConstants={this._getCommonHeaderValues}
               onToggleDisable={this._handleTrackToggle}
               onCreate={this._handleTrackCreate}
               onDelete={this._handleTrackDelete}
@@ -104,6 +164,7 @@ RequestHeadersEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   bulk: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   headers: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired

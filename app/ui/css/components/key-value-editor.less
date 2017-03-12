@@ -12,7 +12,6 @@
     align-items: center;
     flex-direction: row;
     width: 100%;
-    padding-left: @padding-md;
     padding-top: @padding-xs;
     padding-bottom: @padding-xs;
     box-sizing: border-box;
@@ -58,7 +57,12 @@
   }
 
   .key-value-editor__drag {
+    padding-left: @padding-md;
+    padding-right: @padding-md;
+    box-sizing: border-box;
+    overflow: hidden;
     color: var(--hl-lg) !important;
+
     &:hover {
       color: var(--hl-lg) !important;
     }
@@ -69,25 +73,28 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    padding: 0 @padding-sm;
+    padding: 0 @padding-sm 0 0;
     box-sizing: border-box;
 
-    // Don't pad the first form if there's nothing before it
-    // eg. When no drag handles present
+    // Pad the first form if there's no drag handle before it
     &:first-child, &:first-child .form-control {
-      padding-left: 0;
+      padding-left: @padding-md;
     }
 
     .form-control {
       margin-bottom: 0;
+
+      &:first-child {
+        padding-left: 0;
+      }
     }
 
     input,
     .input {
+      margin: 0;
       background-color: transparent;
       height: @line-height-sm;
       box-sizing: border-box;
-      margin: 0;
       padding-left: @padding-xs;
       padding-right: @padding-xs;
     }

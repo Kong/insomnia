@@ -274,7 +274,7 @@ class RequestUrlBar extends PureComponent {
   }
 
   render () {
-    const {url, method, handleRender} = this.props;
+    const {url, method, handleRender, handleGetRenderContext} = this.props;
     return (
       <div className="urlbar">
         <MethodDropdown onChange={this._handleMethodChange} method={method}>
@@ -287,6 +287,7 @@ class RequestUrlBar extends PureComponent {
             forceEditor
             type="text"
             render={handleRender}
+            getRenderContext={handleGetRenderContext}
             placeholder="https://api.myproduct.com/v1/users"
             defaultValue={url}
             onChange={this._handleUrlChange}/>
@@ -301,6 +302,7 @@ RequestUrlBar.propTypes = {
   handleSend: PropTypes.func.isRequired,
   handleSendAndDownload: PropTypes.func.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   handleImport: PropTypes.func.isRequired,
   onUrlChange: PropTypes.func.isRequired,
   onMethodChange: PropTypes.func.isRequired,

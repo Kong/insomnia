@@ -32,6 +32,7 @@ class EnvironmentEditor extends PureComponent {
       editorFontSize,
       editorKeyMap,
       render,
+      getRenderContext,
       lineWrapping,
       ...props
     } = this.props;
@@ -47,6 +48,7 @@ class EnvironmentEditor extends PureComponent {
         debounceMillis={DEBOUNCE_MILLIS * 6}
         defaultValue={JSON.stringify(environment)}
         render={render}
+        getRenderContext={getRenderContext}
         mode="application/json"
         {...props}
       />
@@ -60,6 +62,7 @@ EnvironmentEditor.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
+  getRenderContext: PropTypes.func.isRequired,
   lineWrapping: PropTypes.bool.isRequired
 };
 

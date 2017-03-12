@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -27,14 +27,10 @@ class CookiesModal extends PureComponent {
     this.filterInput = n;
   }
 
-  _hide () {
-    this.modal.hide();
-  }
-
   async _saveChanges () {
     const {cookieJar} = this.state;
     await models.cookieJar.update(cookieJar);
-    this._load(this.state.workspace);
+    this._load();
   }
 
   _handleCookieUpdate (oldCookie, cookie) {
@@ -92,22 +88,31 @@ class CookiesModal extends PureComponent {
     });
   }
 
-  async _load (workspace) {
+  async _load () {
+    const {workspace} = this.props;
     const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
-    this.setState({cookieJar, workspace});
+    this.setState({cookieJar});
   }
 
-  async show (workspace) {
-    await this._load(workspace);
+  async show () {
     this.modal.show();
-    this.filterInput.focus();
+    await this._load();
+    setTimeout(() => {
+      this.filterInput.focus();
+    }, 100);
     trackEvent('Cookie Editor', 'Show');
   }
 
-  toggle (workspace) {
-    this.modal.toggle();
-    this.filterInput.focus();
-    this._load(workspace);
+  hide () {
+    this.modal.hide();
+  }
+
+  toggle () {
+    if (this.modal.isOpen()) {
+      this.hide();
+    } else {
+      this.show();
+    }
   }
 
   render () {
@@ -146,7 +151,7 @@ class CookiesModal extends PureComponent {
           <div className="margin-left faint italic txt-sm tall">
             * cookies are automatically sent with relevant requests
           </div>
-          <button className="btn" onClick={this._hide}>
+          <button className="btn" onClick={this.hide}>
             Done
           </button>
         </ModalFooter>
@@ -155,7 +160,9 @@ class CookiesModal extends PureComponent {
   }
 }
 
-CookiesModal.propTypes = {};
+CookiesModal.propTypes = {
+  workspace: PropTypes.object.isRequired
+};
 
 // export CookiesModal;
 export default CookiesModal;

@@ -16,6 +16,7 @@ import RequestPane from './request-pane';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import SetupSyncModal from './modals/setup-sync-modal';
 import SettingsModal from './modals/settings-modal';
+import FilterHelpModal from './modals/filter-help-modal';
 import ResponsePane from './response-pane';
 import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
@@ -220,6 +221,7 @@ class Wrapper extends PureComponent {
       handleStartDragPane,
       handleSetSidebarFilter,
       handleRender,
+      handleGetRenderContext,
       handleGenerateCodeForActiveRequest,
       handleGenerateCode,
       isLoading,
@@ -294,6 +296,7 @@ class Wrapper extends PureComponent {
           handleGenerateCode={handleGenerateCodeForActiveRequest}
           handleImport={this._handleImport}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
           updateRequestMethod={this._handleUpdateRequestMethod}
@@ -332,15 +335,20 @@ class Wrapper extends PureComponent {
 
         <div className="modals">
           <AlertModal ref={registerModal}/>
-          <CookiesModal ref={registerModal}/>
           <ChangelogModal ref={registerModal}/>
           <LoginModal ref={registerModal}/>
           <PromptModal ref={registerModal}/>
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
+          <FilterHelpModal ref={registerModal}/>
+          <CookiesModal
+            ref={registerModal}
+            workspace={activeWorkspace}
+          />
           <NunjucksModal
             ref={registerModal}
             handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
           />
           <WorkspaceSettingsModal
             ref={registerModal}
@@ -378,6 +386,7 @@ class Wrapper extends PureComponent {
             lineWrapping={settings.editorLineWrapping}
             onChange={models.requestGroup.update}
             render={handleRender}
+            getRenderContext={handleGetRenderContext}
           />
           <SetupSyncModal
             ref={registerModal}
@@ -390,6 +399,7 @@ class Wrapper extends PureComponent {
             editorFontSize={settings.editorFontSize}
             editorKeyMap={settings.editorKeyMap}
             render={handleRender}
+            getRenderContext={handleGetRenderContext}
           />
         </div>
       </div>
@@ -418,6 +428,7 @@ Wrapper.propTypes = {
   handleSetResponsePaneRef: PropTypes.func.isRequired,
   handleSetResponsePreviewMode: PropTypes.func.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   handleSetResponseFilter: PropTypes.func.isRequired,
   handleSetActiveResponse: PropTypes.func.isRequired,
   handleSetSidebarRef: PropTypes.func.isRequired,

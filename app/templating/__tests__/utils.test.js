@@ -13,21 +13,29 @@ describe('getKeys()', () => {
       ]
     };
 
-    const sortedKeys = utils.getKeys(obj).sort();
-    expect(sortedKeys).toEqual([
-      'array',
-      'array[0]',
-      'array[1]',
-      'array[1].hi',
-      'array[2]',
-      'array[3]',
-      'array[3][0]',
-      'array[3][1]',
-      'array[3][2]',
-      'foo',
-      'nested',
-      'nested.a',
-      'nested.a.b'
-    ]);
+    const keys = utils.getKeys(obj);
+    expect(keys).toEqual({
+      'array[0]': obj.array[0],
+      'array[1].hi': obj.array[1].hi,
+      'array[2]': obj.array[2],
+      'array[3][0]': obj.array[3][0],
+      'array[3][1]': obj.array[3][1],
+      'array[3][2]': obj.array[3][2],
+      'foo': obj.foo
+    });
+  });
+
+  it('ignores functions', () => {
+    const obj = {
+      foo: 'bar',
+      toString: function () {
+        // Nothing
+      }
+    };
+
+    const keys = utils.getKeys(obj);
+    expect(keys).toEqual({
+      foo: 'bar'
+    });
   });
 });

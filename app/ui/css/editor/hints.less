@@ -1,0 +1,105 @@
+@import '../constants/colors';
+@import '../constants/animations';
+@import '../constants/dimensions';
+@import '../constants/fonts';
+
+// NOTE: This is NOT a child of .editor
+.CodeMirror-hints {
+  border: 0;
+  padding: 0;
+  margin: 0.2em 0 0;
+  background: var(--color-bg);
+  box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
+  min-width: 20rem;
+  max-width: 35rem;
+  max-height: 19rem;
+  z-index: 999999; // So it shows up anywhere (modals)
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  li.CodeMirror-hint {
+    position: relative;
+    color: var(--color-font);
+    padding: 0 !important; // ugh
+    border-radius: 0;
+    display: flex;
+    flex-direction: row;
+    background: var(--color-bg);
+    font-size: @font-size-xs;
+
+    &.type--variable {
+      .label {
+        background: var(--color-surprise);
+        color: var(--color-font-surprise);
+      }
+    }
+
+    &.type--tag {
+      .label {
+        background: var(--color-info);
+        color: var(--color-font-info);
+      }
+    }
+
+    &.type--constant {
+      .label {
+        background: var(--color-success);
+        color: var(--color-font-success);
+      }
+    }
+
+    .name,
+    .value,
+    .label {
+      min-height: 100%;
+      line-height: @line-height-xxs;
+      padding: 0 @padding-sm;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .name,
+    .value {
+      background: var(--color-bg);
+      width: 100%;
+      font-family: @font-monospace !important;
+    }
+
+    .value {
+      text-align: right;
+      padding-left: @padding-lg;
+      font-style: italic;
+      font-size: 0.9em;
+      max-width: 100%;
+
+      // Ellipsis when too long
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .label {
+      opacity: 0.8;
+      font-size: @font-size-sm;
+      font-family: @font-default;
+      text-align: center;
+      min-width: @line-height-xxs;
+    }
+
+    &:hover,
+    &.CodeMirror-hint-active {
+      background: var(--hl-xs);
+
+      .label {
+        opacity: 1;
+      }
+
+      .name,
+      .value {
+        background: var(--hl-xs);
+      }
+    }
+  }
+}

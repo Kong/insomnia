@@ -29,8 +29,8 @@ class RequestSwitcherModal extends PureComponent {
     this.modal = n;
   }
 
-  _focusRef (n) {
-    n && n.focus();
+  _setInputRef (n) {
+    this._input = n;
   }
 
   _setActiveIndex (activeIndex) {
@@ -161,12 +161,20 @@ class RequestSwitcherModal extends PureComponent {
 
   async show () {
     this.modal.show();
-    this._handleChangeValue('');
+    await this._handleChangeValue('');
+    this._input.focus();
   }
 
-  async toggle () {
-    this.modal.toggle();
-    this._handleChangeValue('');
+  hide () {
+    this.modal.hide();
+  }
+
+  toggle () {
+    if (this.modal.isOpen()) {
+      this.hide();
+    } else {
+      this.show();
+    }
   }
 
   componentDidMount () {
@@ -215,16 +223,18 @@ class RequestSwitcherModal extends PureComponent {
           </div>
           <div>Quick Switch</div>
         </ModalHeader>
-        <ModalBody className="pad request-switcher">
-          <div className="form-control form-control--outlined no-margin">
-            <input
-              type="text"
-              ref={this._focusRef}
-              value={searchString}
-              onChange={this._handleChange}
-            />
+        <ModalBody className="request-switcher">
+          <div className="pad">
+            <div className="form-control form-control--outlined no-margin">
+              <input
+                type="text"
+                ref={this._setInputRef}
+                value={searchString}
+                onChange={this._handleChange}
+              />
+            </div>
           </div>
-          <ul className="pad-top">
+          <ul>
             {matchedRequests.map((r, i) => {
               const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
@@ -249,7 +259,10 @@ class RequestSwitcherModal extends PureComponent {
               );
             })}
 
-            {matchedRequests.length && matchedWorkspaces.length ? <hr/> : null}
+            {matchedRequests.length && matchedWorkspaces.length
+              ? <div className="pad-left pad-right"><hr/></div>
+              : null
+            }
 
             {matchedWorkspaces.map((w, i) => {
               const buttonClasses = classnames(

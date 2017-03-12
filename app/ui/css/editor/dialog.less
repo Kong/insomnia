@@ -1,0 +1,43 @@
+@import '../constants/dimensions';
+@import '../constants/fonts';
+
+// Search dialog (and others)
+.editor {
+  .CodeMirror-dialog {
+    background: var(--color-bg);
+    opacity: 0.95;
+    color: var(--hl);
+    border-color: var(--hl-md);
+    box-sizing: border-box;
+    width: 100%;
+    padding: @padding-sm @padding-xs @padding-xs @padding-xs;
+    box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    white-space: nowrap;
+
+    input {
+      font-family: @font-monospace !important;
+      border: 0 !important;
+      height: 1em !important;
+      padding: 0 !important;
+      display: block;
+      width: 100% !important;
+      color: var(--color-font);
+      min-height: 1.5em;
+    }
+
+    * {
+      margin-left: 0.25em;
+      margin-right: 0.25em;
+    }
+
+    button {
+      color: var(--hl);
+      &:hover {
+        color: var(--color-font);
+      }
+    }
+  }
+}

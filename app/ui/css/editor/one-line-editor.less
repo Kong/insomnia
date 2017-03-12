@@ -1,0 +1,47 @@
+@import '../constants/colors';
+@import '../constants/animations';
+@import '../constants/dimensions';
+@import '../constants/fonts';
+
+.editor.editor--single-line {
+  &, * {
+    font-family: @font-default;
+  }
+
+  .CodeMirror > div > textarea {
+    /*
+     * This is the hidden div CodeMirror uses for stuff. By, default it's
+     * a 1000px absolutely positioned thing for doing work inside of. However, this
+     * means that the drag-n-drop shadow image is wider than it should be. So, we're
+     * constraining it here, which may break CM in weird ways, but doesn't seem to
+     * at first glance.
+     */
+    max-width: 5em !important;
+  }
+
+  .CodeMirror {
+    /*
+     * NOTE: This screws up CodeMirror's scroll height calculations, but that's okay
+     * for now since we can only have one line here
+    */
+    padding: inherit !important;
+    margin: 0 0 0 -4px; // to undo CodeMirror's .CodeMirror-line offset
+  }
+
+  .CodeMirror-lines {
+    padding: 0;
+  }
+
+  .CodeMirror-scroll {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .nunjucks-tag {
+    font-size: 0.8em !important;
+    padding-top: 0.3em;
+    padding-bottom: 0.3em;
+  }
+}
