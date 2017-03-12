@@ -12,7 +12,17 @@ CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   const refreshFn = _highlightNunjucksTags.bind(this, handleRender);
   const debouncedRefreshFn = misc.debounce(refreshFn);
 
-  this.on('changes', debouncedRefreshFn);
+  this.on('change', (cm, change) => {
+    const origin = change.origin || 'unknown';
+    if (!origin.match(/^[+*]/)) {
+      // Refresh immediately on non-joinable events
+      // (cut, paste, autocomplete; as opposed to +input, +delete)
+      refreshFn();
+    } else {
+      // Debounce all joinable events
+      debouncedRefreshFn();
+    }
+  });
   this.on('cursorActivity', debouncedRefreshFn);
   this.on('viewportChange', debouncedRefreshFn);
 
