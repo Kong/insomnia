@@ -1,15 +1,12 @@
 import React, {PureComponent, PropTypes} from 'react';
-import mime from 'mime-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import Editor from '../codemirror/code-editor';
 import {trackEvent} from '../../../analytics/index';
-
-let mimesSet = {};
-for (const t of Object.keys(mime.types)) {
-  mimesSet[mime.types[t]] = 1;
-}
-const allMimeTypes = Object.keys(mimesSet);
+import * as allHeaderNames from '../../../datasets/header-names.json';
+import * as allCharsets from '../../../datasets/charsets.json';
+import * as allMimeTypes from '../../../datasets/mimetypes.json';
+import * as allEncodings from '../../../datasets/encodings.json';
 
 @autobind
 class RequestHeadersEditor extends PureComponent {
@@ -78,47 +75,20 @@ class RequestHeadersEditor extends PureComponent {
   }
 
   _getCommonHeaderValues (pair) {
-    if (pair.name.toLowerCase() === 'content-type') {
-      return allMimeTypes;
+    switch (pair.name.toLowerCase()) {
+      case 'content-type':
+        return allMimeTypes;
+      case 'accept-charset':
+        return allCharsets;
+      case 'accept-encoding':
+        return allEncodings;
+      default:
+        return [];
     }
   }
 
   _getCommonHeaderNames (pair) {
-    return [
-      'Accept',
-      'Accept-Charset',
-      'Accept-Encoding',
-      'Accept-Language',
-      'Accept-Datetime',
-      'Authorization',
-      'Cache-Control',
-      'Connection',
-      'Cookie',
-      'Content-Length',
-      'Content-MD5',
-      'Content-Type',
-      'Date',
-      'Expect',
-      'Forwarded',
-      'From',
-      'Host',
-      'If-Match',
-      'If-Modified-Since',
-      'If-None-Match',
-      'If-Range',
-      'If-Unmodified-Since',
-      'Max-Forwards',
-      'Origin',
-      'Pragma',
-      'Proxy-Authorization',
-      'Range',
-      'Referer',
-      'TE',
-      'User-Agent',
-      'Upgrade',
-      'Via',
-      'Warning'
-    ];
+    return allHeaderNames;
   }
 
   render () {

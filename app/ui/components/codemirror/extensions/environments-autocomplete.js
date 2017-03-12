@@ -12,21 +12,21 @@ const HINT_DELAY_MILLIS = 100;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
-const MAX_VARIABLES = 15;
-const MAX_TAGS = 10;
-const MAX_CONSTANTS = 5;
+const MAX_CONSTANTS = -1;
+const MAX_VARIABLES = -1;
+const MAX_TAGS = -1;
 
 const ICONS = {
-  [TYPE_VARIABLE]: '&nu;',
-  [TYPE_TAG]: '&fnof;',
-  [TYPE_CONSTANT]: '&#x1d436;'
+  [TYPE_CONSTANT]: '&#x1d484;',
+  [TYPE_VARIABLE]: '&#x1d465;',
+  [TYPE_TAG]: '&fnof;'
 };
 
-const TAGS = {
-  uuid: '',
-  now: '',
-  response: ''
-};
+const TAGS = [
+  'uuid',
+  'now',
+  'response'
+];
 
 CodeMirror.defineExtension('isHintDropdownActive', function () {
   return (
@@ -239,37 +239,35 @@ function replaceHintMatch (cm, self, data) {
   cm.replaceRange(`${prefix}${data.text}${suffix}`, self.from, self.to);
 }
 
-function matchStrings (stringsArrayOrObj, segment, type, limit = 20) {
-  // If it's an array, convert it to an object with no values
-  if (Array.isArray(stringsArrayOrObj)) {
-    const map = {};
-    for (const c of stringsArrayOrObj) {
-      map[c] = '';
-    }
-    stringsArrayOrObj = map;
-  }
-
-  return Object.keys(stringsArrayOrObj)
-    .filter(k => k.toLowerCase().includes(segment.toLowerCase()))
-    .slice(0, limit)
-    .map(k => {
-      const value = stringsArrayOrObj[k];
+/**
+ * Match against a list of things
+ * @param listOfThings - Can be list of strings or list of {name, value}
+ * @param segment
+ * @param type
+ * @param limit
+ * @returns {Array}
+ */
+function matchStrings (listOfThings, segment, type, limit = -1) {
+  return listOfThings
+    .map(t => typeof t === 'string' ? {name: t, value: ''} : t) // Convert to obj
+    .filter(t => t.name.toLowerCase().includes(segment.toLowerCase())) // Filter
+    .slice(0, limit >= 0 ? limit : listOfThings.length) // Cap it
+    .map(({name, value}) => {
       return {
         // Custom Insomnia keys
         type,
         segment,
-        comment: stringsArrayOrObj[k],
+        comment: value,
         displayValue: value ? JSON.stringify(value) : '',
-        score: k.length,
+        score: name.length, // In case we want to sort by this
 
         // CodeMirror
-        text: k,
-        displayText: k,
+        text: name,
+        displayText: name,
         render: renderHintMatch,
         hint: replaceHintMatch
       };
-    })
-    .sort((a, b) => a.score > b.score ? 1 : -1);
+    });
 }
 
 /**

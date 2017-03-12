@@ -13,16 +13,19 @@ describe('getKeys()', () => {
       ]
     };
 
-    const keys = utils.getKeys(obj);
-    expect(keys).toEqual({
-      'array[0]': obj.array[0],
-      'array[1].hi': obj.array[1].hi,
-      'array[2]': obj.array[2],
-      'array[3][0]': obj.array[3][0],
-      'array[3][1]': obj.array[3][1],
-      'array[3][2]': obj.array[3][2],
-      'foo': obj.foo
-    });
+    const keys = utils
+      .getKeys(obj)
+      .sort((a, b) => a.name > b.name ? 1 : -1);
+
+    expect(keys).toEqual([
+      {name: 'array[0]', value: obj.array[0]},
+      {name: 'array[1].hi', value: obj.array[1].hi},
+      {name: 'array[2]', value: obj.array[2]},
+      {name: 'array[3][0]', value: obj.array[3][0]},
+      {name: 'array[3][1]', value: obj.array[3][1]},
+      {name: 'array[3][2]', value: obj.array[3][2]},
+      {name: 'foo', value: obj.foo}
+    ]);
   });
 
   it('ignores functions', () => {
@@ -34,8 +37,8 @@ describe('getKeys()', () => {
     };
 
     const keys = utils.getKeys(obj);
-    expect(keys).toEqual({
-      foo: 'bar'
-    });
+    expect(keys).toEqual([
+      {name: 'foo', value: 'bar'}
+    ]);
   });
 });
