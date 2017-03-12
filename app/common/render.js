@@ -83,10 +83,16 @@ export async function recursiveRender (originalObj, context = {}, strict = false
         throw err;
       }
     } else if (Array.isArray(x)) {
+      // x.toString = function () {
+      //   throw new Error('Tried to render an array');
+      // };
       for (let i = 0; i < x.length; i++) {
         x[i] = await next(x[i]);
       }
     } else if (typeof x === 'object') {
+      // x.toString = function () {
+      //   throw new Error('Tried to render an object');
+      // };
       const keys = Object.keys(x);
       for (const key of keys) {
         x[key] = await next(x[key]);

@@ -102,6 +102,10 @@ class Modal extends PureComponent {
     }
   }
 
+  isOpen () {
+    return this.state.open;
+  }
+
   hide () {
     this.setState({open: false});
   }

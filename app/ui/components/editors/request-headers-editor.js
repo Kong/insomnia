@@ -3,6 +3,10 @@ import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import Editor from '../codemirror/code-editor';
 import {trackEvent} from '../../../analytics/index';
+import * as allHeaderNames from '../../../datasets/header-names.json';
+import * as allCharsets from '../../../datasets/charsets.json';
+import * as allMimeTypes from '../../../datasets/mimetypes.json';
+import * as allEncodings from '../../../datasets/encodings.json';
 
 @autobind
 class RequestHeadersEditor extends PureComponent {
@@ -70,8 +74,31 @@ class RequestHeadersEditor extends PureComponent {
     return headersString;
   }
 
+  _getCommonHeaderValues (pair) {
+    switch (pair.name.toLowerCase()) {
+      case 'content-type':
+        return allMimeTypes;
+      case 'accept-charset':
+        return allCharsets;
+      case 'accept-encoding':
+        return allEncodings;
+      default:
+        return [];
+    }
+  }
+
+  _getCommonHeaderNames (pair) {
+    return allHeaderNames;
+  }
+
   render () {
-    const {bulk, headers, onChange, handleRender} = this.props;
+    const {
+      bulk,
+      headers,
+      onChange,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
 
     return bulk ? (
         <div className="tall">
@@ -89,6 +116,9 @@ class RequestHeadersEditor extends PureComponent {
               valuePlaceholder="Value"
               pairs={headers}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              handleGetAutocompleteNameConstants={this._getCommonHeaderNames}
+              handleGetAutocompleteValueConstants={this._getCommonHeaderValues}
               onToggleDisable={this._handleTrackToggle}
               onCreate={this._handleTrackCreate}
               onDelete={this._handleTrackDelete}
@@ -104,6 +134,7 @@ RequestHeadersEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   bulk: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   headers: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired

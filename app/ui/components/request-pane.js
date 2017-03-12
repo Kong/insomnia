@@ -111,6 +111,7 @@ class RequestPane extends PureComponent {
       handleSend,
       handleSendAndDownload,
       handleRender,
+      handleGetRenderContext,
       forceRefreshCounter,
       useBulkHeaderEditor,
       handleGenerateCode,
@@ -193,6 +194,7 @@ class RequestPane extends PureComponent {
             handleSend={handleSend}
             handleSendAndDownload={handleSendAndDownload}
             handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
             url={request.url}
           />
         </header>
@@ -230,6 +232,7 @@ class RequestPane extends PureComponent {
             <BodyEditor
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
               key={uniqueKey}
               request={request}
               onChange={updateRequestBody}
@@ -246,6 +249,7 @@ class RequestPane extends PureComponent {
                 authentication={request.authentication}
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                 handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
                 onChange={updateRequestAuthentication}
               />
               <div className="pad pull-right">
@@ -284,11 +288,11 @@ class RequestPane extends PureComponent {
                   onDelete={this._trackQueryDelete}
                   pairs={request.parameters}
                   handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
                   onChange={updateRequestParameters}
                 />
               </div>
             </div>
-
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
                       title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
@@ -302,6 +306,7 @@ class RequestPane extends PureComponent {
               key={uniqueKey}
               headers={request.headers}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
               onChange={updateRequestHeaders}
               bulk={useBulkHeaderEditor}
             />
@@ -327,6 +332,7 @@ RequestPane.propTypes = {
   handleCreateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   updateRequestUrl: PropTypes.func.isRequired,
   updateRequestMethod: PropTypes.func.isRequired,
   updateRequestBody: PropTypes.func.isRequired,

@@ -37,7 +37,15 @@ class BodyEditor extends PureComponent {
   }
 
   render () {
-    const {keyMap, fontSize, lineWrapping, request, handleRender} = this.props;
+    const {
+      keyMap,
+      fontSize,
+      lineWrapping,
+      request,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
+
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
     const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
@@ -48,6 +56,7 @@ class BodyEditor extends PureComponent {
           key={request._id}
           onChange={this._handleFormUrlEncodedChange}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
           parameters={request.body.params || []}
         />
       );
@@ -57,6 +66,7 @@ class BodyEditor extends PureComponent {
           key={request._id}
           onChange={this._handleFormChange}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
           parameters={request.body.params || []}
         />
       );
@@ -79,6 +89,7 @@ class BodyEditor extends PureComponent {
           contentType={contentType || 'text/plain'}
           content={request.body.text || ''}
           render={handleRender}
+          getRenderContext={handleGetRenderContext}
           onChange={this._handleRawChange}
         />
       );
@@ -101,6 +112,7 @@ BodyEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   handleUpdateRequestMimeType: PropTypes.func.isRequired,
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
 
   // Optional

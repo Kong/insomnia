@@ -6,59 +6,13 @@ import jq from 'jsonpath';
 import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
 import xpath from 'xpath';
-import 'codemirror/mode/css/css';
-import 'codemirror/mode/htmlmixed/htmlmixed';
-import 'codemirror/mode/javascript/javascript';
-import 'codemirror/mode/go/go';
-import 'codemirror/mode/shell/shell';
-import 'codemirror/mode/clike/clike';
-import 'codemirror/mode/mllike/mllike';
-import 'codemirror/mode/php/php';
-import 'codemirror/mode/markdown/markdown';
-import 'codemirror/mode/python/python';
-import 'codemirror/mode/ruby/ruby';
-import 'codemirror/mode/swift/swift';
-import 'codemirror/lib/codemirror.css';
-import 'codemirror/addon/display/autorefresh';
-import 'codemirror/addon/dialog/dialog';
-import 'codemirror/addon/dialog/dialog.css';
-import 'codemirror/addon/fold/foldcode';
-import 'codemirror/addon/fold/foldgutter';
-import 'codemirror/addon/fold/foldgutter.css';
-import 'codemirror/addon/fold/brace-fold';
-import 'codemirror/addon/fold/comment-fold';
-import 'codemirror/addon/fold/indent-fold';
-import 'codemirror/addon/fold/xml-fold';
-import 'codemirror/addon/search/search';
-import 'codemirror/addon/search/searchcursor';
-import 'codemirror/addon/edit/matchbrackets';
-import 'codemirror/addon/edit/closebrackets';
-import 'codemirror/addon/search/matchesonscrollbar';
-import 'codemirror/addon/search/matchesonscrollbar.css';
-import 'codemirror/addon/selection/active-line';
-import 'codemirror/addon/selection/selection-pointer';
-import 'codemirror/addon/display/placeholder';
-import 'codemirror/addon/lint/lint';
-import 'codemirror/addon/lint/json-lint';
-import 'codemirror/addon/lint/lint.css';
-import 'codemirror/keymap/vim';
-import 'codemirror/keymap/emacs';
-import 'codemirror/keymap/sublime';
-import './modes/nunjucks';
-import './extensions/clickable';
-import './extensions/nunjucks-tags';
-import '../../css/components/editor.less';
 import {showModal} from '../modals/index';
-import AlertModal from '../modals/alert-modal';
-import Link from '../base/link';
+import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
-
-// Make jsonlint available to the jsonlint plugin
-import {parser as jsonlint} from 'jsonlint';
 import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-global.jsonlint = jsonlint;
+import './base-imports';
 
 const TAB_KEY = 9;
 
@@ -75,6 +29,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   matchBrackets: true,
   autoCloseBrackets: true,
   indentUnit: 4,
+  hintOptions: null,
   dragDrop: true,
   viewportMargin: 30, // default 10
   selectionPointer: 'default',
@@ -210,6 +165,11 @@ class CodeEditor extends PureComponent {
   }
 
   clearSelection () {
+    // Never do this if dropdown is open
+    if (this.codeMirror.isHintDropdownActive()) {
+      return;
+    }
+
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         {line: -1, ch: -1},
@@ -362,6 +322,8 @@ class CodeEditor extends PureComponent {
       hideLineNumbers,
       keyMap,
       lineWrapping,
+      getRenderContext,
+      getAutocompleteConstants,
       tabIndex,
       placeholder,
       noMatchBrackets,
@@ -408,9 +370,16 @@ class CodeEditor extends PureComponent {
       options.gutters.push('CodeMirror-lint-markers');
     }
 
-    const cm = this.codeMirror;
+    // Setup the hint options
+    if (getRenderContext) {
+      options.environmentAutocomplete = {
+        getContext: getRenderContext,
+        getConstants: getAutocompleteConstants
+      };
+    }
 
     // Strip of charset if there is one
+    const cm = this.codeMirror;
     Object.keys(options).map(key => {
       // Don't set the option if it hasn't changed
       if (options[key] === cm.options[key]) {
@@ -433,13 +402,13 @@ class CodeEditor extends PureComponent {
     }
   }
 
-  _codemirrorKeyDown (doc, e) {
+  async _codemirrorKeyDown (doc, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
     }
 
-    if (this.props.onKeyDown) {
+    if (this.props.onKeyDown && !doc.isHintDropdownActive()) {
       this.props.onKeyDown(e, doc.getValue());
     }
   }
@@ -538,74 +507,17 @@ class CodeEditor extends PureComponent {
   }
 
   _showFilterHelp () {
-    const json = this._isJSON(this.props.mode);
-    const link = json ? (
-        <Link href="http://goessner.net/articles/JsonPath/">
-          JSONPath
-        </Link>
-      ) : (
-        <Link href="https://www.w3.org/TR/xpath/">
-          XPath
-        </Link>
-      );
-
-    trackEvent('Response', `Filter ${json ? 'JSONPath' : 'XPath'}`, 'Help');
-
-    showModal(AlertModal, {
-      title: 'Response Filtering Help',
-      message: (
-        <div>
-          <p>
-            Use {link} to filter the response body. Here are some examples that
-            you might use on a book store API.
-          </p>
-          <table className="pad-top-sm">
-            <tbody>
-            <tr>
-              <td>
-                <code className="selectable">
-                  {json ? '$.store.books[*].title' : '/store/books/title'}
-                </code>
-              </td>
-              <td>Get titles of all books in the store</td>
-            </tr>
-            <tr>
-              <td>
-                <code className="selectable">
-                  {json ? '$.store.books[?(@.price < 10)].title' : '/store/books[price < 10]'}
-                </code>
-              </td>
-              <td>Get books costing less than $10</td>
-            </tr>
-            <tr>
-              <td>
-                <code className="selectable">
-                  {json ? '$.store.books[-1:]' : '/store/books[last()]'}
-                </code>
-              </td>
-              <td>Get the last book in the store</td>
-            </tr>
-            <tr>
-              <td>
-                <code className="selectable">
-                  {json ? '$.store.books.length' : 'count(/store/books)'}
-                </code>
-              </td>
-              <td>Get the number of books in the store</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-      )
-    });
+    const isJson = this._isJSON(this.props.mode);
+    showModal(FilterHelpModal, isJson);
+    trackEvent('Response', `Filter ${isJson ? 'JSONPath' : 'XPath'}`, 'Help');
   }
 
   render () {
     const {readOnly, fontSize, mode, filter, onMouseLeave, onClick} = this.props;
 
     const classes = classnames(
-      'editor',
       this.props.className,
+      'editor',
       {'editor--readonly': readOnly}
     );
 
@@ -687,6 +599,8 @@ CodeEditor.propTypes = {
   onMouseLeave: PropTypes.func,
   onClick: PropTypes.func,
   render: PropTypes.func,
+  getRenderContext: PropTypes.func,
+  getAutocompleteConstants: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
   placeholder: PropTypes.string,

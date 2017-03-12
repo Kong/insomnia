@@ -65,6 +65,7 @@ class EnvironmentEditModal extends PureComponent {
       editorFontSize,
       lineWrapping,
       render,
+      getRenderContext,
       ...extraProps
     } = this.props;
 
@@ -87,6 +88,7 @@ class EnvironmentEditModal extends PureComponent {
             environment={requestGroup ? requestGroup.environment : {}}
             didChange={this._didChange}
             render={render}
+            getRenderContext={getRenderContext}
           />
         </ModalBody>
         <ModalFooter>
@@ -107,6 +109,7 @@ EnvironmentEditModal.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
+  getRenderContext: PropTypes.func.isRequired,
   lineWrapping: PropTypes.bool.isRequired
 };
 
