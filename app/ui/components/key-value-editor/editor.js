@@ -314,6 +314,9 @@ class Editor extends PureComponent {
       valuePlaceholder,
       namePlaceholder,
       handleRender,
+      handleGetRenderContext,
+      handleGetAutocompleteNameConstants,
+      handleGetAutocompleteValueConstants,
       multipart,
       sortable,
       disableDelete
@@ -346,6 +349,9 @@ class Editor extends PureComponent {
               onBlurValue={this._handleBlurValue}
               onMove={this._handleMove}
               handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
+              handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
               multipart={multipart}
               pair={pair}
             />
@@ -383,6 +389,9 @@ Editor.propTypes = {
 
   // Optional
   handleRender: PropTypes.func,
+  handleGetRenderContext: PropTypes.func,
+  handleGetAutocompleteNameConstants: PropTypes.func,
+  handleGetAutocompleteValueConstants: PropTypes.func,
   multipart: PropTypes.bool,
   sortable: PropTypes.bool,
   maxPairs: PropTypes.number,

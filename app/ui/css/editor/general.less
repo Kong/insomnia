@@ -1,0 +1,117 @@
+@import '../constants/animations';
+@import '../constants/dimensions';
+@import '../constants/fonts';
+
+.editor {
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: 100%;
+
+  .editor__container {
+    height: 100%;
+    width: 100%;
+    position: relative;
+  }
+
+  .CodeMirror {
+    line-height: 1.4em;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+  }
+
+  .editor__toolbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    border-top: 1px solid var(--hl-md);
+    height: @line-height-xs;
+    font-size: @font-size-sm;
+
+    input {
+      font-family: @font-monospace;
+      margin-right: 0;
+      width: 100%;
+      margin-left: @padding-md;
+    }
+
+    button {
+      color: var(--hl);
+      padding: @padding-xs @padding-md;
+      height: 100%;
+    }
+  }
+
+  .CodeMirror {
+    height: 100% !important;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: @font-monospace;
+  }
+
+  .CodeMirror,
+  .cm-s-seti.CodeMirror, // Hack because seti theme is dumb
+  .CodeMirror-gutters,
+  .CodeMirror-scrollbar-filler,
+  .CodeMirror-gutter-filler {
+    // Let the background behind show through
+    background-color: transparent !important;
+    border: 0;
+  }
+
+  .CodeMirror-linenumber, .CodeMirror-guttermarker-subtle {
+    color: var(--hl-xl) !important;
+  }
+
+  .CodeMirror-gutter {
+    background-color: var(--color-bg);
+  }
+
+  .CodeMirror-scroll {
+    cursor: text; // Show text cursor everywhere (not just in .Codemirror-lines)
+  }
+
+  .CodeMirror-lines {
+    // Scroll past the end
+    padding-bottom: 30px;
+  }
+
+  .CodeMirror-placeholder {
+    color: var(--hl-lg);
+  }
+
+  .CodeMirror-lint-marker-error {
+    width: 100%;
+    height: 1em;
+    display: flex;
+    background: none;
+    text-align: center;
+
+    &::after {
+      color: var(--color-danger);
+      text-align: center;
+      width: 100%;
+      font-size: 0.7em; // because the circle is so large
+      content: '⬤';
+    }
+  }
+
+  .CodeMirror-activeline-gutter,
+  .CodeMirror-activeline-background {
+    background-color: transparent;
+  }
+
+  &:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-gutter,
+  &:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-background {
+    background-color: var(--hl-xs);
+  }
+
+  &.editor--readonly .CodeMirror-cursors {
+    visibility: hidden;
+  }
+}

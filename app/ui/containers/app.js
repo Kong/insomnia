@@ -28,6 +28,7 @@ import {debounce} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
+import {getKeys} from '../../templating/utils';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
@@ -50,7 +51,7 @@ class App extends PureComponent {
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH
     };
 
-    this._getRenderContextCache = {};
+    this._getRenderContextPromiseCache = {};
 
     this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
     this._saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
@@ -180,6 +181,18 @@ class App extends PureComponent {
     await this._handleSetActiveRequest(newRequest._id);
   }
 
+  _fetchRenderContext () {
+    const {activeEnvironment, activeRequest} = this.props;
+    const environmentId = activeEnvironment ? activeEnvironment._id : null;
+    return render.getRenderContext(activeRequest, environmentId);
+  }
+
+  async _handleGetRenderContext () {
+    const context = await this._fetchRenderContext();
+    const keys = getKeys(context);
+    return {context, keys};
+  }
+
   /**
    * Heavily optimized render function
    *
@@ -190,18 +203,17 @@ class App extends PureComponent {
    * @private
    */
   async _handleRenderText (text, strict = false, contextCacheKey = null) {
-    if (!contextCacheKey || !this._getRenderContextCache[contextCacheKey]) {
-      const {activeEnvironment, activeRequest} = this.props;
-      const environmentId = activeEnvironment ? activeEnvironment._id : null;
+    if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
+      const context = this._fetchRenderContext();
 
       // NOTE: We're caching promises here to avoid race conditions
-      this._getRenderContextCache[contextCacheKey] = render.getRenderContext(activeRequest, environmentId);
+      this._getRenderContextPromiseCache[contextCacheKey] = context;
     }
 
     // Set timeout to delete the key eventually
-    setTimeout(() => delete this._getRenderContextCache[contextCacheKey], 5000);
+    setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
 
-    const context = await this._getRenderContextCache[contextCacheKey];
+    const context = await this._getRenderContextPromiseCache[contextCacheKey];
     return render.render(text, context, strict);
   }
 
@@ -396,15 +408,19 @@ class App extends PureComponent {
 
       const requestPaneWidth = requestPane.offsetWidth;
       const responsePaneWidth = responsePane.offsetWidth;
+
       const pixelOffset = e.clientX - requestPane.offsetLeft;
       let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
       paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
+
       this._handleSetPaneWidth(paneWidth);
     } else if (this.state.draggingSidebar) {
       const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
+
       let sidebarWidth = Math.max(Math.min(width, MAX_SIDEBAR_REMS), MIN_SIDEBAR_REMS);
+
       this._handleSetSidebarWidth(sidebarWidth);
     }
   }
@@ -547,6 +563,7 @@ class App extends PureComponent {
           handleResetDragPane={this._resetDragPane}
           handleCreateRequest={this._requestCreate}
           handleRender={this._handleRenderText}
+          handleGetRenderContext={this._handleGetRenderContext}
           handleDuplicateRequest={this._requestDuplicate}
           handleDuplicateRequestGroup={this._requestGroupDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}
@@ -576,7 +593,10 @@ App.propTypes = {
   }).isRequired,
 
   // Optional
-  activeRequest: PropTypes.object
+  activeRequest: PropTypes.object,
+  activeEnvironment: PropTypes.shape({
+    _id: PropTypes.string.isRequired
+  })
 };
 
 function mapStateToProps (state, props) {

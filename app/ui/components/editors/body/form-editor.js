@@ -30,7 +30,12 @@ class FormEditor extends PureComponent {
   }
 
   render () {
-    const {parameters, onChange, handleRender} = this.props;
+    const {
+      parameters,
+      onChange,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
 
     return (
       <div className="scrollable-container tall wide">
@@ -40,6 +45,7 @@ class FormEditor extends PureComponent {
             namePlaceholder="name"
             valuePlaceholder="value"
             handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
             onToggleDisable={this._handleTrackToggle}
             onChangeType={this._handleTrackChangeType}
             onChooseFile={this._handleTrackChooseFile}
@@ -59,7 +65,8 @@ FormEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  handleRender: PropTypes.func.isRequired
+  handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired
 };
 
 export default FormEditor;

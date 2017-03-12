@@ -165,8 +165,21 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
   }
 
   render () {
-    const {editorFontSize, editorKeyMap, lineWrapping, render} = this.props;
-    const {subEnvironments, rootEnvironment, isValid, forceRefreshKey} = this.state;
+    const {
+      editorFontSize,
+      editorKeyMap,
+      lineWrapping,
+      render,
+      getRenderContext
+    } = this.props;
+
+    const {
+      subEnvironments,
+      rootEnvironment,
+      isValid,
+      forceRefreshKey
+    } = this.state;
+
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
@@ -251,6 +264,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange}
                 render={render}
+                getRenderContext={getRenderContext}
               />
             </div>
           </div>
@@ -276,6 +290,7 @@ WorkspaceEnvironmentsEditModal.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
+  getRenderContext: PropTypes.func.isRequired,
   lineWrapping: PropTypes.bool.isRequired
 };
 

@@ -24,7 +24,9 @@ class OneLineEditor extends PureComponent {
       mode = MODE_INPUT;
     }
 
-    this.state = {mode};
+    this.state = {
+      mode
+    };
   }
 
   focus (setToEnd = false) {
@@ -61,6 +63,10 @@ class OneLineEditor extends PureComponent {
 
   _handleEditorMouseLeave () {
     this._convertToInputIfNotFocused();
+  }
+
+  _handleInputDragEnter () {
+    this._convertToEditorPreserveFocus();
   }
 
   _handleInputMouseEnter () {
@@ -138,7 +144,7 @@ class OneLineEditor extends PureComponent {
     this.props.onBlur && this.props.onBlur();
   }
 
-  _handleEditorKeyDown (e) {
+  _handleKeyDown (e) {
     // submit form if needed
     if (e.keyCode === 13) {
       let node = e.target;
@@ -151,7 +157,6 @@ class OneLineEditor extends PureComponent {
       }
     }
 
-    // Also call the original if there was one
     this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
   }
 
@@ -216,6 +221,8 @@ class OneLineEditor extends PureComponent {
       onChange,
       placeholder,
       render,
+      getRenderContext,
+      getAutocompleteConstants,
       type: originalType
     } = this.props;
 
@@ -231,7 +238,6 @@ class OneLineEditor extends PureComponent {
           defaultTabBehavior
           hideLineNumbers
           hideScrollbars
-          noDragDrop
           noMatchBrackets
           noStyleActiveLine
           noLint
@@ -239,11 +245,13 @@ class OneLineEditor extends PureComponent {
           tabIndex={0}
           placeholder={placeholder}
           onBlur={this._handleEditorBlur}
-          onKeyDown={this._handleEditorKeyDown}
+          onKeyDown={this._handleKeyDown}
           onFocus={this._handleEditorFocus}
           onMouseLeave={this._handleEditorMouseLeave}
           onChange={onChange}
           render={render}
+          getRenderContext={getRenderContext}
+          getAutocompleteConstants={getAutocompleteConstants}
           className="editor--single-line"
           defaultValue={defaultValue}
         />
@@ -263,6 +271,7 @@ class OneLineEditor extends PureComponent {
           onBlur={this._handleInputBlur}
           onChange={this._handleInputChange}
           onMouseEnter={this._handleInputMouseEnter}
+          onDragEnter={this._handleInputDragEnter}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />
@@ -281,6 +290,8 @@ OneLineEditor.propTypes = {
   onFocus: PropTypes.func,
   onChange: PropTypes.func,
   render: PropTypes.func,
+  getRenderContext: PropTypes.func,
+  getAutocompleteConstants: PropTypes.func,
   placeholder: PropTypes.string,
   className: PropTypes.string,
   forceEditor: PropTypes.bool,

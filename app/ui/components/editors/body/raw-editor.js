@@ -9,6 +9,7 @@ class RawEditor extends PureComponent {
       fontSize,
       keyMap,
       render,
+      getRenderContext,
       lineWrapping,
       onChange,
       className
@@ -22,6 +23,7 @@ class RawEditor extends PureComponent {
         defaultValue={content}
         className={className}
         render={render}
+        getRenderContext={getRenderContext}
         onChange={onChange}
         mode={contentType}
         lineWrapping={lineWrapping}
@@ -39,9 +41,10 @@ RawEditor.propTypes = {
   fontSize: PropTypes.number.isRequired,
   keyMap: PropTypes.string.isRequired,
   lineWrapping: PropTypes.bool.isRequired,
+  render: PropTypes.func.isRequired,
+  getRenderContext: PropTypes.func.isRequired,
 
   // Optional
-  render: PropTypes.func,
   className: PropTypes.string
 };
 
