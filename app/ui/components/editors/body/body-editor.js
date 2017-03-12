@@ -82,7 +82,7 @@ class BodyEditor extends PureComponent {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
-          key={`${request._id}::${contentType}`}
+          key={request._id}
           fontSize={fontSize}
           keyMap={keyMap}
           lineWrapping={lineWrapping}

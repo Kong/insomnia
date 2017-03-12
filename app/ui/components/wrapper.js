@@ -75,8 +75,12 @@ class Wrapper extends PureComponent {
   }
 
   // Special request updaters
-  _handleUpdateRequestMimeType (mimeType) {
-    updateMimeType(this.props.activeRequest, mimeType);
+  async _handleUpdateRequestMimeType (mimeType) {
+    await updateMimeType(this.props.activeRequest, mimeType);
+
+    // Force it to update, because other editor components (header editor)
+    // needs to change
+    this._forceRequestPaneRefresh();
   }
 
   _handleStartDragSidebar (e) {
