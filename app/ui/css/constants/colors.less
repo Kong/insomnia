@@ -42,12 +42,33 @@ body {
   --hl-xl: rgba(130, 130, 130, 0.8);
   --hl: rgba(130, 130, 130, 1);
 
-  --color-success: #8ccf3b;
-  --color-notice: #ead950;
-  --color-warning: #ff9a1f;
-  --color-danger: #ff5d4b;
-  --color-surprise: #a896ff;
-  --color-info: #46c1e6;
+  --color-success: #59a210;
+  --color-notice: #ae9602;
+  --color-warning: #d07502;
+  --color-danger: #d04444;
+  --color-surprise: #7461bd;
+  --color-info: #1c90b4;
+
+  .sidebar,
+  .pane__body {
+    --color-success: #8ccf3b;
+    --color-notice: #ead950;
+    --color-warning: #ff9a1f;
+    --color-danger: #ff5d4b;
+    --color-surprise: #a896ff;
+    --color-info: #46c1e6;
+  }
+
+  // Make the tags a little lighter
+  .pane__header .tag {
+    --color-font: #666;
+    --color-success: #75ba24;
+    --color-notice: #d8c84d;
+    --color-warning: #ec8702;
+    --color-danger: #ee5655;
+    --color-surprise: #a590ff;
+    --color-info: #22c1ee;
+  }
 
   .sidebar__header {
     --color-bg: #695eb8;
@@ -59,26 +80,6 @@ body {
   .modal {
     --color-bg: #fff;
     --color-font: #555;
-  }
-
-  .pane__header .tag {
-    --color-font: #666;
-    --color-success: #75ba24;
-    --color-notice: #d8c84d;
-    --color-warning: #ec8702;
-    --color-danger: #ee5655;
-    --color-surprise: #a590ff;
-    --color-info: #22c1ee;
-  }
-
-  .pane__header,
-  .modal {
-    --color-success: #59a210;
-    --color-notice: #ae9602;
-    --color-warning: #d07502;
-    --color-danger: #d04444;
-    --color-surprise: #7461bd;
-    --color-info: #1c90b4;
   }
 
   .modal__header {
