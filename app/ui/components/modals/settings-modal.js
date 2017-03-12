@@ -92,7 +92,7 @@ class SettingsModal extends PureComponent {
     const email = session.isLoggedIn() ? session.getEmail() : null;
 
     return (
-      <Modal ref={this._setModalRef} tall {...this.props}>
+      <Modal ref={this._setModalRef} tall freshState {...this.props}>
         <ModalHeader>
           {getAppName()} Preferences
           <span className="faint txt-sm">

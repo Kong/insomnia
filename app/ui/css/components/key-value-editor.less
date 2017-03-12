@@ -16,10 +16,9 @@
     padding-bottom: @padding-xs;
     box-sizing: border-box;
 
-    &.key-value-editor__row-wrapper--disabled .input,
-    &.key-value-editor__row-wrapper--disabled button {
-      text-decoration: line-through;
-      opacity: 0.4;
+    &.key-value-editor__row-wrapper--disabled > * {
+      opacity: @opacity-subtle;
+      color: var(--hl) !important;
     }
 
     &.key-value-editor__row-wrapper--dragging {
@@ -61,10 +60,10 @@
     padding-right: @padding-md;
     box-sizing: border-box;
     overflow: hidden;
-    color: var(--hl-lg) !important;
+    color: var(--hl);
 
     &:hover {
-      color: var(--hl-lg) !important;
+      color: var(--hl);
     }
   }
 
@@ -100,7 +99,7 @@
     }
 
     & > * {
-      padding: 0 @padding-sm;
+      padding: 0 @padding-xs;
     }
 
     & > button,
