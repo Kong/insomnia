@@ -209,11 +209,11 @@ export async function generateKeyPairJWK () {
     // console.log('-- Using Native RSA Generation --');
 
     const pair = await subtle.generateKey({
-      name: 'RSA-OAEP',
-      publicExponent: new Uint8Array([1, 0, 1]),
-      modulusLength: 2048,
-      hash: 'SHA-256'
-    },
+        name: 'RSA-OAEP',
+        publicExponent: new Uint8Array([1, 0, 1]),
+        modulusLength: 2048,
+        hash: 'SHA-256'
+      },
       true,
       ['encrypt', 'decrypt']
     );
@@ -313,7 +313,7 @@ async function _pbkdf2Passphrase (passphrase, salt) {
       'raw',
       Buffer.from(passphrase, 'utf8'),
       {name: 'PBKDF2'},
-      true,
+      false,
       ['deriveBits']
     );
 
