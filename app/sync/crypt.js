@@ -208,7 +208,8 @@ export async function generateKeyPairJWK () {
   if (subtle) {
     // console.log('-- Using Native RSA Generation --');
 
-    const pair = await subtle.generateKey({
+    const pair = await subtle.generateKey(
+      {
         name: 'RSA-OAEP',
         publicExponent: new Uint8Array([1, 0, 1]),
         modulusLength: 2048,
