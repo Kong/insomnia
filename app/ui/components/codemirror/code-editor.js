@@ -323,6 +323,7 @@ class CodeEditor extends PureComponent {
       keyMap,
       lineWrapping,
       getRenderContext,
+      getAutocompleteConstants,
       tabIndex,
       placeholder,
       noMatchBrackets,
@@ -372,7 +373,8 @@ class CodeEditor extends PureComponent {
     // Setup the hint options
     if (getRenderContext) {
       options.environmentAutocomplete = {
-        getContext: getRenderContext
+        getContext: getRenderContext,
+        getConstants: getAutocompleteConstants
       };
     }
 
@@ -598,6 +600,7 @@ CodeEditor.propTypes = {
   onClick: PropTypes.func,
   render: PropTypes.func,
   getRenderContext: PropTypes.func,
+  getAutocompleteConstants: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
   placeholder: PropTypes.string,

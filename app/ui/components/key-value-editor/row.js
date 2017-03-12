@@ -101,6 +101,20 @@ class KeyValueEditorRow extends PureComponent {
     }
   }
 
+  _handleAutocompleteNames () {
+    const {handleGetAutocompleteNameConstants} = this.props;
+    if (handleGetAutocompleteNameConstants) {
+      return handleGetAutocompleteNameConstants(this.props.pair);
+    }
+  }
+
+  _handleAutocompleteValues () {
+    const {handleGetAutocompleteValueConstants} = this.props;
+    if (handleGetAutocompleteValueConstants) {
+      return handleGetAutocompleteValueConstants(this.props.pair);
+    }
+  }
+
   render () {
     const {
       pair,
@@ -154,6 +168,7 @@ class KeyValueEditorRow extends PureComponent {
               defaultValue={pair.name}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
+              getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
               readOnly={readOnly}
               onBlur={this._handleBlurName}
@@ -181,10 +196,11 @@ class KeyValueEditorRow extends PureComponent {
                   defaultValue={pair.value}
                   onChange={this._handleValueChange}
                   onBlur={this._handleBlurValue}
-                  render={handleRender}
-                  getRenderContext={handleGetRenderContext}
                   onKeyDown={this._handleKeyDown}
                   onFocus={this._handleFocusValue}
+                  render={handleRender}
+                  getRenderContext={handleGetRenderContext}
+                  getAutocompleteConstants={this._handleAutocompleteValues}
                 />
               )}
           </div>
@@ -274,6 +290,8 @@ KeyValueEditorRow.propTypes = {
   onBlurValue: PropTypes.func,
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
+  handleGetAutocompleteNameConstants: PropTypes.func,
+  handleGetAutocompleteValueConstants: PropTypes.func,
   namePlaceholder: PropTypes.string,
   valuePlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,

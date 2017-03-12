@@ -222,6 +222,7 @@ class OneLineEditor extends PureComponent {
       placeholder,
       render,
       getRenderContext,
+      getAutocompleteConstants,
       type: originalType
     } = this.props;
 
@@ -250,6 +251,7 @@ class OneLineEditor extends PureComponent {
           onChange={onChange}
           render={render}
           getRenderContext={getRenderContext}
+          getAutocompleteConstants={getAutocompleteConstants}
           className="editor--single-line"
           defaultValue={defaultValue}
         />
@@ -289,6 +291,7 @@ OneLineEditor.propTypes = {
   onChange: PropTypes.func,
   render: PropTypes.func,
   getRenderContext: PropTypes.func,
+  getAutocompleteConstants: PropTypes.func,
   placeholder: PropTypes.string,
   className: PropTypes.string,
   forceEditor: PropTypes.bool,

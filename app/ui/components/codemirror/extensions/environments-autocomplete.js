@@ -1,7 +1,7 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
 
-const NAME_MATCH = /[\w.\][-]+$/;
+const NAME_MATCH = /[\w.\][\-/]+$/;
 const AFTER_VARIABLE_MATCH = /{{\s*[\w.\][]*$/;
 const AFTER_TAG_MATCH = /{%\s*[\w.\][]*$/;
 const COMPLETE_AFTER_VARIABLE_NAME = /[\w.\][]+/;
@@ -12,6 +12,9 @@ const HINT_DELAY_MILLIS = 100;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
+const MAX_VARIABLES = 15;
+const MAX_TAGS = 10;
+const MAX_CONSTANTS = 5;
 
 const ICONS = {
   [TYPE_VARIABLE]: '&nu;',
@@ -39,8 +42,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return;
   }
 
-  const extraConstants = options.extraConstants || [];
-
   function completeAfter (cm, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
@@ -62,15 +63,21 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       hintsContainer = el;
     }
 
+    const constants = options.getConstants && options.getConstants();
+
     // Actually show the hint
     cm.showHint({
+      // Insomnia-specific options
+      extraConstants: constants || [],
+
+      // Codemirror native options
       hint,
-      extraConstants,
       getContext: options.getContext,
       showAllOnNoMatch,
       container: hintsContainer,
       closeCharacters: COMPLETION_CLOSE_KEYS,
       completeSingle: false,
+      // closeOnUnfocus: false, // Good for debugging (inspector)
       extraKeys: {
         'Tab': (cm, widget) => {
           // Override default behavior and don't select hint on Tab
@@ -78,7 +85,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
           return CodeMirror.Pass;
         }
       }
-      // closeOnUnfocus: false // Good for debugging (inspector)
     });
 
     return CodeMirror.Pass;
@@ -156,18 +162,32 @@ async function hint (cm, options) {
   const allMatches = [];
 
   if (allowMatchingConstants) {
-    const constants = options.extraConstants || [];
-    const constantMatches = matchStrings(constants, nameSegment, TYPE_CONSTANT);
+    const constantMatches = matchStrings(
+      options.extraConstants,
+      nameSegment,
+      TYPE_CONSTANT,
+      MAX_CONSTANTS
+    );
     allMatches.push(constantMatches);
   }
 
   if (allowMatchingVariables) {
-    const variableMatches = matchStrings(context.keys, nameSegment, TYPE_VARIABLE);
+    const variableMatches = matchStrings(
+      context.keys,
+      nameSegment,
+      TYPE_VARIABLE,
+      MAX_VARIABLES
+    );
     allMatches.push(variableMatches);
   }
 
   if (allowMatchingTags) {
-    const tagMatches = matchStrings(TAGS, nameSegment, TYPE_TAG);
+    const tagMatches = matchStrings(
+      TAGS,
+      nameSegment,
+      TYPE_TAG,
+      MAX_TAGS
+    );
     allMatches.push(tagMatches);
   }
 
@@ -219,17 +239,26 @@ function replaceHintMatch (cm, self, data) {
   cm.replaceRange(`${prefix}${data.text}${suffix}`, self.from, self.to);
 }
 
-function matchStrings (stringsObj, segment, type) {
-  return Object.keys(stringsObj)
+function matchStrings (stringsArrayOrObj, segment, type, limit = 20) {
+  // If it's an array, convert it to an object with no values
+  if (Array.isArray(stringsArrayOrObj)) {
+    const map = {};
+    for (const c of stringsArrayOrObj) {
+      map[c] = '';
+    }
+    stringsArrayOrObj = map;
+  }
+
+  return Object.keys(stringsArrayOrObj)
     .filter(k => k.toLowerCase().includes(segment.toLowerCase()))
-    .slice(0, 20) // 20 max
+    .slice(0, limit)
     .map(k => {
-      const value = stringsObj[k];
+      const value = stringsArrayOrObj[k];
       return {
         // Custom Insomnia keys
         type,
         segment,
-        comment: stringsObj[k],
+        comment: stringsArrayOrObj[k],
         displayValue: value ? JSON.stringify(value) : '',
         score: k.length,
 
