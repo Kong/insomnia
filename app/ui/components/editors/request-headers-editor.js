@@ -3,6 +3,10 @@ import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import Editor from '../codemirror/code-editor';
 import {trackEvent} from '../../../analytics/index';
+import * as allHeaderNames from '../../../datasets/header-names.json';
+import * as allCharsets from '../../../datasets/charsets.json';
+import * as allMimeTypes from '../../../datasets/mimetypes.json';
+import * as allEncodings from '../../../datasets/encodings.json';
 
 @autobind
 class RequestHeadersEditor extends PureComponent {
@@ -68,6 +72,23 @@ class RequestHeadersEditor extends PureComponent {
     }
 
     return headersString;
+  }
+
+  _getCommonHeaderValues (pair) {
+    switch (pair.name.toLowerCase()) {
+      case 'content-type':
+        return allMimeTypes;
+      case 'accept-charset':
+        return allCharsets;
+      case 'accept-encoding':
+        return allEncodings;
+      default:
+        return [];
+    }
+  }
+
+  _getCommonHeaderNames (pair) {
+    return allHeaderNames;
   }
 
   render () {

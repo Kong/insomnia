@@ -1,0 +1,8 @@
+[
+  "gzip",
+  "compress",
+  "deflate",
+  "br",
+  "identity",
+  "*"
+]
