@@ -278,11 +278,6 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
     const matchSegment = segment.toLowerCase();
     const matchName = name.toLowerCase();
 
-    // Throw away exact matches (why would we want to complete those?)
-    if (matchName === matchSegment) {
-      continue;
-    }
-
     // Throw away things that don't match
     if (!matchName.includes(matchSegment)) {
       continue;
