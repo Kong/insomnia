@@ -50,11 +50,8 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return CodeMirror.Pass;
     }
 
-    console.log('ATTEMPT TO SHOW');
-
     // Bail early if completions are showing already
     if (cm.isHintDropdownActive()) {
-      console.log('IS OPEN PASS', cm.state.completionActive);
       return CodeMirror.Pass;
     }
 
@@ -69,7 +66,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     }
 
     const constants = options.getConstants && options.getConstants();
-    console.log('SHOW HINT');
 
     // Actually show the hint
     cm.showHint({
@@ -145,7 +141,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
  * @returns {Promise.<{list: Array, from, to}>}
  */
 async function hint (cm, options) {
-  console.log('HINT');
   // Get the text from the cursor back
   const cur = cm.getCursor();
   const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
