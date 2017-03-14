@@ -20,7 +20,7 @@ import * as db from './database';
 const FAMILY_FALLBACKS = [
   null, // Use the request library default lookup
   6, // IPv6
-  4, // IPv4
+  4 // IPv4
 ];
 
 let cancelRequestFunction = null;
@@ -55,7 +55,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     forever: true,
 
     // Force request to return response body as a Buffer instead of string
-    encoding: null,
+    encoding: null
   };
 
   // Set the body
@@ -73,7 +73,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
             filename: pathBasename(param.fileName),
             contentType: mime.lookup(param.fileName) // Guess the mime-type
           }
-        }
+        };
       } else {
         formData[param.name] = param.value || '';
       }
@@ -106,7 +106,7 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
 
   // Set UserAgent if it doesn't exist
   if (!hasUserAgentHeader(renderedRequest.headers)) {
-    config.headers['User-Agent'] = `insomnia/${getAppVersion()}`
+    config.headers['User-Agent'] = `insomnia/${getAppVersion()}`;
   }
 
   // Set the URL, including the query parameters
@@ -518,7 +518,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
 
       let contentType = '';
       if (networkResponse.headers) {
-        contentType = networkResponse.headers['content-type'] || ''
+        contentType = networkResponse.headers['content-type'] || '';
       }
 
       let bytesRead = 0;
@@ -555,8 +555,8 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
         statusMessage: 'Cancelled',
         error: 'The request was cancelled'
       });
-    }
-  })
+    };
+  });
 }
 
 export async function send (requestId, environmentId) {

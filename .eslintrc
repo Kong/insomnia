@@ -1,0 +1,23 @@
+{
+  "parser": "babel-eslint",
+  "extends": ["semistandard"],
+  "plugins": ["react", "jest", "html", "json", "filenames"],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "globals": {
+    "__DEV__": true,
+    "fail": true
+  },
+  "env": {
+    "jest/globals": true
+  },
+  "rules": {
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error",
+    "react/prop-types": "error",
+    "filenames/match-exported": ["error", "kebab"]
+  }
+}

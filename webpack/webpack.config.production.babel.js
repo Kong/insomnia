@@ -1,7 +1,7 @@
-import webpack from 'webpack';
-import baseConfig from './webpack.config.base.babel';
+const webpack = require('webpack');
+const baseConfig = require('./webpack.config.base.babel');
 
-export default {
+module.exports = {
   ...baseConfig,
   devtool: 'source-map',
   plugins: [
@@ -12,7 +12,7 @@ export default {
       __DEV__: false,
       'process.env.NODE_ENV': JSON.stringify('production'),
       'process.env.INSOMNIA_ENV': JSON.stringify('production'),
-      'process.env.HOT': JSON.stringify(null),
+      'process.env.HOT': JSON.stringify(null)
     })
   ]
-}
+};

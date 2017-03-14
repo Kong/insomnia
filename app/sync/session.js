@@ -5,7 +5,6 @@ import {trackEvent, setAccountId} from '../analytics';
 
 /** Create a new session for the user */
 export async function login (rawEmail, rawPassphrase) {
-
   // ~~~~~~~~~~~~~~~ //
   // Sanitize Inputs //
   // ~~~~~~~~~~~~~~~ //
@@ -36,7 +35,7 @@ export async function login (rawEmail, rawPassphrase) {
 
   c.setB(new Buffer(srpB, 'hex'));
   const srpM1 = c.computeM1().toString('hex');
-  const {srpM2} = await util.post('/auth/login-m1', {srpM1, sessionStarterId,});
+  const {srpM2} = await util.post('/auth/login-m1', {srpM1, sessionStarterId});
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Verify Server Identity M2 //
@@ -59,7 +58,7 @@ export async function login (rawEmail, rawPassphrase) {
     saltEnc,
     accountId,
     firstName,
-    lastName,
+    lastName
   } = await whoami(sessionId);
 
   const derivedSymmetricKey = await crypt.deriveKey(passphrase, email, saltEnc);
@@ -156,7 +155,7 @@ export function getPrivateKey () {
 }
 
 export function getCurrentSessionId () {
-  return localStorage.getItem('currentSessionId');
+  return window.localStorage.getItem('currentSessionId');
 }
 
 export function getAccountId () {
@@ -186,7 +185,7 @@ export function getSessionData () {
     return {};
   }
 
-  const dataStr = localStorage.getItem(getSessionKey(sessionId));
+  const dataStr = window.localStorage.getItem(getSessionKey(sessionId));
   return JSON.parse(dataStr);
 }
 
@@ -207,20 +206,20 @@ export function setSessionData (sessionId,
     encPrivateKey: encPrivateKey,
     email: email,
     firstName: firstName,
-    lastName: lastName,
+    lastName: lastName
   });
 
-  localStorage.setItem(getSessionKey(sessionId), dataStr);
+  window.localStorage.setItem(getSessionKey(sessionId), dataStr);
 
   // NOTE: We're setting this last because the stuff above might fail
-  localStorage.setItem('currentSessionId', sessionId);
+  window.localStorage.setItem('currentSessionId', sessionId);
 }
 
 /** Unset the session data (log out) */
 export function unsetSessionData () {
   const sessionId = getCurrentSessionId();
-  localStorage.removeItem(getSessionKey(sessionId));
-  localStorage.removeItem(`currentSessionId`);
+  window.localStorage.removeItem(getSessionKey(sessionId));
+  window.localStorage.removeItem(`currentSessionId`);
 }
 
 /** Check if we (think) we have a session */
@@ -256,7 +255,7 @@ export function whoami (sessionId = null) {
 }
 
 export function getSessionKey (sessionId) {
-  return `session__${(sessionId || '').slice(0, 10)}`
+  return `session__${(sessionId || '').slice(0, 10)}`;
 }
 
 // ~~~~~~~~~~~~~~~~ //

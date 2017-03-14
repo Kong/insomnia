@@ -35,6 +35,6 @@ export function setAccountId (accountId) {
 
 export function trackLegacyEvent (event, properties) {
   process.nextTick(() => {
-    segment.trackLegacyEvent(event, properties)
+    segment.trackLegacyEvent(event, properties);
   });
 }

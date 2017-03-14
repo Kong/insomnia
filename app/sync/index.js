@@ -163,7 +163,7 @@ export async function push (resourceGroupId = null) {
 
   let dirtyResources = [];
   if (resourceGroupId) {
-    dirtyResources = await store.findActiveDirtyResourcesForResourceGroup(resourceGroupId)
+    dirtyResources = await store.findActiveDirtyResourcesForResourceGroup(resourceGroupId);
   } else {
     dirtyResources = await store.findActiveDirtyResources();
   }
@@ -185,7 +185,7 @@ export async function push (resourceGroupId = null) {
     updated,
     created,
     removed,
-    conflicts,
+    conflicts
   } = responseBody;
 
   // Update all resource versions with the ones that were returned
@@ -291,7 +291,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
 
   const body = {
     resources,
-    blacklist: blacklistedResourceGroupIds,
+    blacklist: blacklistedResourceGroupIds
   };
 
   logger.debug(`Pulling with ${resources.length} resources`);
@@ -308,7 +308,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     updatedResources,
     createdResources,
     idsToPush,
-    idsToRemove,
+    idsToRemove
   } = responseBody;
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -388,12 +388,12 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   for (const id of idsToRemove) {
     const resource = await store.getResourceByDocId(id);
     if (!resource) {
-      throw new Error(`Could not find Resource to remove for ${id}`)
+      throw new Error(`Could not find Resource to remove for ${id}`);
     }
 
     const doc = await decryptDoc(resource.resourceGroupId, resource.encContent);
     if (!doc) {
-      throw new Error(`Could not find doc to remove ${id}`)
+      throw new Error(`Could not find doc to remove ${id}`);
     }
 
     // Mark resource as deleted
@@ -411,7 +411,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   for (const id of idsToPush) {
     const resource = await store.getResourceByDocId(id);
     if (!resource) {
-      throw new Error(`Could not find Resource to push for id ${id}`)
+      throw new Error(`Could not find Resource to push for id ${id}`);
     }
 
     // Mark all resources to push as dirty for the next push
@@ -544,11 +544,8 @@ export async function fetchResourceGroup (resourceGroupId, invalidateCache = fal
       }
 
       // Also make sure a config exists when we first fetch it.
-      // TODO: This exists in multiple places, so move it to one place.
-      const config = await getOrCreateConfig(resourceGroupId);
-      const syncMode = config ? config.syncMode : store.SYNC_MODE_OFF;
-
-      await createOrUpdateConfig(resourceGroupId, syncMode);
+      // (This may not be needed but we'll do it just in case)
+      await ensureConfigExists(resourceGroupId);
     }
 
     // Bust cached promise because we're done with it.
@@ -644,11 +641,11 @@ export async function createResourceGroup (parentId, name) {
     resourceGroup = await session.syncCreateResourceGroup(parentId, name, encRGSymmetricJWK);
   } catch (e) {
     logger.error(`Failed to create ResourceGroup: ${e}`);
-    throw e
+    throw e;
   }
 
   // Create a config for it
-  await ensureConfigExists(resourceGroup.id, store.SYNC_MODE_ON);
+  await ensureConfigExists(resourceGroup.id, store.SYNC_MODE_UNSET);
 
   logger.debug(`Created ResourceGroup ${resourceGroup.id}`);
   return resourceGroup;
@@ -684,7 +681,6 @@ export async function createResourceForDoc (doc) {
 
   if (!workspaceResource) {
     const workspaceResourceGroup = await createResourceGroup(workspace._id, workspace.name);
-    await ensureConfigExists(workspaceResourceGroup.id, store.SYNC_MODE_OFF);
     workspaceResource = await createResource(workspace, workspaceResourceGroup.id);
   }
 

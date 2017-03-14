@@ -1,13 +1,13 @@
 import * as _stats from './stats';
 import * as _settings from './settings';
 import * as _workspace from './workspace';
-import * as _workspaceMeta from './workspaceMeta';
+import * as _workspaceMeta from './workspace-meta';
 import * as _environment from './environment';
-import * as _cookieJar from './cookieJar';
-import * as _requestGroup from './requestGroup';
-import * as _requestGroupMeta from './requestGroupMeta';
+import * as _cookieJar from './cookie-jar';
+import * as _requestGroup from './request-group';
+import * as _requestGroupMeta from './request-group-meta';
 import * as _request from './request';
-import * as _requestMeta from './requestMeta';
+import * as _requestMeta from './request-meta';
 import * as _response from './response';
 
 // Reference to each model
@@ -34,7 +34,7 @@ const _models = {
   [requestGroupMeta.type]: requestGroupMeta,
   [request.type]: request,
   [requestMeta.type]: requestMeta,
-  [response.type]: response,
+  [response.type]: response
 };
 
 export function all () {
@@ -59,7 +59,7 @@ export function getModelName (type, count = 1) {
     // Add an 's' if it doesn't already end in one
     return `${model.name}s`;
   } else {
-    return model.name
+    return model.name;
   }
 }
 
@@ -72,7 +72,7 @@ export function initModel (type, ...sources) {
     _id: null,
     parentId: null,
     modified: Date.now(),
-    created: Date.now(),
+    created: Date.now()
   }, model.init());
 
   // Make a new object

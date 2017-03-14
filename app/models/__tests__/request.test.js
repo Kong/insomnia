@@ -1,12 +1,10 @@
 import * as db from '../../common/database';
 import * as requestModel from '../../models/request';
-import {types as allModelTypes} from '../../models';
-import {initModel} from '../index';
 import * as models from '../index';
 
 describe('init()', () => {
   beforeEach(() => {
-    return db.init(allModelTypes(), {inMemoryOnly: true}, true);
+    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
 
   it('contains all required fields', async () => {
@@ -26,7 +24,7 @@ describe('init()', () => {
 
 describe('create()', async () => {
   beforeEach(() => {
-    return db.init(allModelTypes(), {inMemoryOnly: true}, true);
+    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
 
   it('creates a valid request', async () => {
@@ -55,13 +53,13 @@ describe('create()', async () => {
 
   it('fails when missing parentId', async () => {
     Date.now = jest.genMockFunction().mockReturnValue(1478795580200);
-    expect(() => requestModel.create({name: 'Test Request'})).toThrow('New Requests missing `parentId`')
+    expect(() => requestModel.create({name: 'Test Request'})).toThrow('New Requests missing `parentId`');
   });
 });
 
 describe('updateMimeType()', async () => {
   beforeEach(() => {
-    return db.init(allModelTypes(), {inMemoryOnly: true}, true);
+    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
 
   it('adds header when does not exist', async () => {
@@ -128,7 +126,7 @@ describe('migrate()', () => {
 
     const expected = {
       headers: [],
-      body: {mimeType: "", text: 'hello world!'},
+      body: {mimeType: '', text: 'hello world!'},
       url: ''
     };
 
@@ -189,7 +187,7 @@ describe('migrate()', () => {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
           {name: '{"foo": "bar"}', value: '', disabled: false}
-        ],
+        ]
       },
       url: ''
     };
@@ -213,7 +211,7 @@ describe('migrate()', () => {
       const expected = {
         headers: [{name: 'content-type', value: contentType}],
         body: {mimeType: contentToMimeMap[contentType], text: ''},
-        url: '',
+        url: ''
       };
 
       expect(requestModel.migrate(original)).toEqual(expected);
@@ -239,7 +237,7 @@ describe('migrate()', () => {
         mimeType: '',
         text: 'foo bar!'
       },
-      url: '',
+      url: ''
     };
 
     const expected2 = {
@@ -276,8 +274,7 @@ describe('migrate()', () => {
       body: {mimeType: '', text: 'hello world!'}
     };
 
-    const migrated = initModel(models.request.type, original);
+    const migrated = models.initModel(models.request.type, original);
     expect(migrated).toEqual(expected);
   });
 });
-

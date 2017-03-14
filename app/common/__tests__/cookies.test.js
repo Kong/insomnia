@@ -10,6 +10,7 @@ describe('jarFromCookies()', () => {
     }]);
 
     jar.store.getAllCookies((err, cookies) => {
+      expect(err).toBeNull();
       expect(cookies[0].domain).toEqual('google.com');
       expect(cookies[0].key).toEqual('foo');
       expect(cookies[0].value).toEqual('bar');
@@ -20,9 +21,9 @@ describe('jarFromCookies()', () => {
   });
 
   it('handles malformed JSON', () => {
-    const jar = cookieUtils.jarFromCookies("not a jar");
+    const jar = cookieUtils.jarFromCookies('not a jar');
     expect(jar.constructor.name).toBe('CookieJar');
-  })
+  });
 });
 
 describe('cookiesFromJar()', () => {
@@ -59,7 +60,7 @@ describe('cookiesFromJar()', () => {
 
     // Cookies failed to p
     expect(cookies.length).toBe(0);
-  })
+  });
 });
 
 describe('cookieHeaderValueForUri()', () => {
@@ -135,6 +136,6 @@ describe('cookieHeaderValueForUri()', () => {
 
       expect(cookieUtils.cookieToString(cookies[3]))
         .toBe('foo3=bar; Path=/somepath');
-    })
-  })
+    });
+  });
 });

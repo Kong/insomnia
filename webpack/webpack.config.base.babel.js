@@ -1,7 +1,7 @@
-import path from 'path';
-import * as pkg from '../app/package.json';
+const path = require('path');
+const pkg = require('../app/package.json');
 
-export default {
+module.exports = {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
   entry: [
@@ -16,24 +16,28 @@ export default {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        loader: 'babel-loader',
-        exclude: [/node_modules/, /__fixtures__/, /__tests__/],
+        test: /\.(js)$/,
+        use: ['babel-loader'],
+        exclude: [/node_modules/, /__fixtures__/, /__tests__/]
       },
       {
         test: /\.(less|css)$/,
         use: [
           'style-loader',
           {loader: 'css-loader', options: {importLoaders: 1}},
-          {loader: 'less-loader', options: {noIeCompat: true}},
-        ],
+          {loader: 'less-loader', options: {noIeCompat: true}}
+        ]
       },
       {
-        test: /\.(html|png|woff2)$/,
+        test: /\.(html|woff2)$/,
         loader: 'file-loader',
         options: {
           name: '[name].[ext]'
         }
+      },
+      {
+        test: /\.(png)$/,
+        loader: 'url-loader'
       }
     ]
   },
@@ -46,7 +50,7 @@ export default {
     ...Object.keys(pkg.dependencies),
 
     // To get jsonlint working...
-    'file', 'system',
+    'file', 'system'
   ],
   plugins: [],
   target: 'electron-renderer'

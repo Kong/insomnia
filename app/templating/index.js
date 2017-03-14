@@ -8,7 +8,7 @@ import * as extensions from './extensions';
  * @param {Object} [config.context] - Context to render with
  * @param {Object} [config.strict] - Fail on undefined values
  */
-export async function render (text, config = {}) {
+export function render (text, config = {}) {
   const context = config.context || {};
   const strict = config.strict;
 
@@ -19,7 +19,7 @@ export async function render (text, config = {}) {
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s*/, '')
           .replace(/^Error: */, '')
-          .replace('attempted to output null or undefined value', 'variable not defined');
+          .replace('attempted to output null or undefined value', 'undefined variable');
 
         reject(new Error(sanitizedMsg));
       } else {
@@ -41,7 +41,7 @@ let _nunjucksEnvironment = null;
 function _getNormalEnv () {
   if (!_nunjucksEnvironment) {
     _nunjucksEnvironment = nunjucks.configure({
-      autoescape: false,
+      autoescape: false
     });
 
     for (const Cls of extensions.all()) {
@@ -57,7 +57,7 @@ function _getStrictEnv () {
   if (!_nunjucksStrictEnvironment) {
     _nunjucksStrictEnvironment = nunjucks.configure({
       autoescape: false,
-      throwOnUndefined: true,
+      throwOnUndefined: true
     });
 
     for (const Cls of extensions.all()) {

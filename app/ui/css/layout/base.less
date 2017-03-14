@@ -11,7 +11,7 @@ html, body, #root {
   height: 100%;
 }
 
-html, h1, h2, h3, h4, h5, h6 {
+html, h1, h2, h3, h4, h5, h6, input {
   font-weight: 400;
   font-family: @font-default;
 }
@@ -102,7 +102,7 @@ code {
   display: inline-block;
   background: @hl-xs;
   padding: @padding-xs @padding-sm;
-  color: @hl;
+  color: var(--color-font);
   border: 1px solid @hl-sm;
   font-size: 0.9em;
 }
@@ -161,6 +161,10 @@ code, pre, .monospace {
 
 .faded {
   opacity: 0.7;
+}
+
+.muted {
+  color: var(--hl);
 }
 
 .auto-margin {
@@ -315,9 +319,22 @@ i.fa {
   margin-right: @padding-sm;
 }
 
+.margin-bottom-sm {
+  margin-bottom: @padding-sm;
+}
+
+.margin-top-sm {
+  margin-top: @padding-sm;
+}
+
 .pad-bottom {
   box-sizing: border-box;
   padding-bottom: @padding-md;
+}
+
+.pad-bottom-sm {
+  box-sizing: border-box;
+  padding-bottom: @padding-sm;
 }
 
 .no-pad-bottom {
@@ -434,6 +451,7 @@ i.fa {
   }
 }
 
+.bold,
 strong {
   font-weight: 600;
 }

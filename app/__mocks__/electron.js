@@ -1,8 +1,8 @@
-export default {
+module.exports = {
   remote: {
     app: {
       getPath (name) {
-        return `/tmp/insomnia-tests/${name}`
+        return `/tmp/insomnia-tests/${name}`;
       }
     }
   },
@@ -11,4 +11,4 @@ export default {
 
     }
   }
-}
+};

@@ -1,0 +1,136 @@
+/* Based on Sublime Text's Monokai theme */
+.editor {
+  .CodeMirror {
+    color: var(--color-font);
+  }
+
+  .CodeMirror-selected {
+    background: var(--color-font);
+    opacity: 0.2;
+  }
+
+  .CodeMirror-gutters {
+    border-right: 0;
+  }
+
+  .CodeMirror-guttermarker {
+    color: var(--color-font);
+  }
+
+  .CodeMirror-guttermarker-subtle {
+    color: var(--hl-lg);
+  }
+
+  .CodeMirror-linenumber {
+    color: var(--hl);
+  }
+
+  .CodeMirror-cursor {
+    border-left: 1px solid var(--color-font);
+  }
+
+  .cm-animate-fat-cursor,
+  &.cm-fat-cursor .CodeMirror-cursor {
+    background-color: rgba(255, 139, 147, 0.5) !important;
+    border-bottom: 2px solid #d60000 !important;
+    box-sizing: border-box;
+  }
+
+  .cm-meta,
+  .cm-qualifier {
+    color: var(--color-font);
+  }
+
+  .cm-atom {
+    color: var(--color-surprise);
+  }
+
+  .cm-number {
+    color: var(--color-surprise);
+  }
+
+  .cm-keyword {
+    color: var(--color-danger);
+  }
+
+  .cm-builtin {
+    color: var(--color-info);
+  }
+
+  .cm-string {
+    color: var(--color-notice);
+  }
+
+  .cm-property, .cm-attribute {
+    color: var(--color-success);
+  }
+
+  .cm-variable {
+    color: var(--color-font);
+  }
+
+  .cm-variable-2 {
+    color: var(--color-info);
+  }
+
+  .cm-variable-3 {
+    color: var(--color-surprise);
+  }
+
+  .cm-def {
+    color: var(--color-warning);
+  }
+
+  .cm-bracket {
+    color: var(--color-font);
+  }
+
+  .cm-tag {
+    color: var(--color-danger);
+  }
+
+  .cm-header {
+    color: var(--color-surprise);
+  }
+
+  .cm-link {
+    color: var(--color-surprise);
+  }
+
+  .cm-comment {
+    color: var(--hl);
+  }
+
+  .cm-error {
+    background: var(--color-danger);
+    color: var(--color-font-danger);
+  }
+
+  .cm-clickable {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .cm-clickable:hover {
+    text-decoration: underline;
+  }
+
+  .CodeMirror-matchingbracket {
+    color: inherit !important;
+    text-decoration: underline;
+    text-decoration-color: var(--color-notice);
+    box-sizing: border-box;
+  }
+
+  .cm-nunjucks-variable {
+    color: var(--color-surprise);
+  }
+
+  .cm-nunjucks-tag {
+    color: var(--color-info);
+  }
+
+  .cm-nunjucks-comment {
+    color: var(--hl);
+  }
+}

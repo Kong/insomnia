@@ -51,7 +51,7 @@ describe('hasAuthHeader()', () => {
     ]);
 
     expect(yes).toEqual(true);
-  })
+  });
 });
 
 describe('generateId()', () => {
@@ -67,6 +67,11 @@ describe('generateId()', () => {
 });
 
 describe('setDefaultProtocol()', () => {
+  it('no-ops on empty url', () => {
+    const url = misc.setDefaultProtocol('');
+    expect(url).toBe('');
+  });
+
   it('correctly sets protocol for empty', () => {
     const url = misc.setDefaultProtocol('google.com');
     expect(url).toBe('http://google.com');
@@ -150,7 +155,7 @@ describe('filterHeaders()', () => {
     expect(misc.filterHeaders([{name: 'good', value: 'valid'}], null)).toEqual([]);
     expect(misc.filterHeaders([{name: 'good', value: 'valid'}], 'good'))
       .toEqual([{name: 'good', value: 'valid'}]);
-  })
+  });
 });
 
 describe('keyedDebounce()', () => {
@@ -185,7 +190,7 @@ describe('keyedDebounce()', () => {
       baz: ['bar'],
       multi: ['foo', 'bar', 'baz']
     }]);
-  })
+  });
 });
 
 describe('debounce()', () => {
@@ -216,5 +221,5 @@ describe('debounce()', () => {
     jest.runAllTimers();
 
     expect(resultList).toEqual([['foo', 'bar3']]);
-  })
+  });
 });

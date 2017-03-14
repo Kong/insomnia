@@ -5,6 +5,9 @@ build/*
 .DS_Store
 coverage
 
+# Generated
+app/main.min.js
+
 # Logs
 logs
 *.log

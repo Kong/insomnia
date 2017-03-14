@@ -35,4 +35,3 @@ export default class Logger {
     this._logs.push({type, date, message});
   }
 }
-

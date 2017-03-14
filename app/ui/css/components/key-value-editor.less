@@ -1,0 +1,120 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.key-value-editor {
+  margin-top: 2px;
+  padding: @padding-md 0;
+
+  // This is the actual row
+  .key-value-editor__row-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+    padding-top: @padding-xs;
+    padding-bottom: @padding-xs;
+    box-sizing: border-box;
+
+    &.key-value-editor__row-wrapper--disabled > * {
+      opacity: @opacity-subtle;
+      color: var(--hl) !important;
+    }
+
+    &.key-value-editor__row-wrapper--dragging {
+      // Set opacity on children so we can still see the separator
+      & > * {
+        opacity: 0.2;
+      }
+    }
+
+    &.key-value-editor__row-wrapper--dragging-below::after,
+    &.key-value-editor__row-wrapper--dragging-above::before {
+      position: absolute;
+      height: 0;
+      right: 0;
+      left: 0;
+      border-bottom: 2px dotted var(--color-surprise);
+      content: " ";
+      display: block
+    }
+
+    // So the line appears on the next row
+    &.key-value-editor__row-wrapper--dragging-below::after {
+      bottom: -1px; // half border thickness
+    }
+
+    // So the line appears on the next row
+    &.key-value-editor__row-wrapper--dragging-above::before {
+      top: -1px; // half border thickness
+    }
+
+    // Style last row the same no matter if focused or not.
+    &.key-value-editor__row-wrapper--clicker input {
+      border-color: var(--hl-sm) !important;
+    }
+  }
+
+  .key-value-editor__drag {
+    padding-left: @padding-md;
+    padding-right: @padding-md;
+    box-sizing: border-box;
+    overflow: hidden;
+    color: var(--hl);
+
+    &:hover {
+      color: var(--hl);
+    }
+  }
+
+  .key-value-editor__row {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0 @padding-sm 0 0;
+    box-sizing: border-box;
+
+    // Pad the first form if there's no drag handle before it
+    &:first-child, &:first-child .form-control {
+      padding-left: @padding-md;
+    }
+
+    .form-control {
+      margin-bottom: 0;
+
+      &:first-child {
+        padding-left: 0;
+      }
+    }
+
+    input,
+    .input {
+      margin: 0;
+      background-color: transparent;
+      height: @line-height-sm;
+      box-sizing: border-box;
+      padding-left: @padding-xs;
+      padding-right: @padding-xs;
+    }
+
+    & > * {
+      padding: 0 @padding-xs;
+    }
+
+    & > button,
+    .dropdown > button {
+      color: @hl;
+
+      &:hover,
+      &:focus {
+        background: transparent;
+      }
+
+      &:hover,
+      &:focus {
+        color: inherit;
+      }
+    }
+  }
+}

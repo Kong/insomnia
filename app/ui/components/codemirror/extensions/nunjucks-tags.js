@@ -1,17 +1,33 @@
 import CodeMirror from 'codemirror';
 import * as misc from '../../../../common/misc';
+import NunjucksVariableModal from '../../modals/nunjucks-modal';
+import {showModal} from '../../modals/index';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
+    console.warn('enableNunjucksTags wasn\'t passed a render function');
     return;
   }
 
   const refreshFn = _highlightNunjucksTags.bind(this, handleRender);
   const debouncedRefreshFn = misc.debounce(refreshFn);
 
-  this.on('changes', debouncedRefreshFn);
+  this.on('change', (cm, change) => {
+    const origin = change.origin || 'unknown';
+    if (!origin.match(/^[+*]/)) {
+      // Refresh immediately on non-joinable events
+      // (cut, paste, autocomplete; as opposed to +input, +delete)
+      refreshFn();
+    } else {
+      // Debounce all joinable events
+      debouncedRefreshFn();
+    }
+  });
   this.on('cursorActivity', debouncedRefreshFn);
   this.on('viewportChange', debouncedRefreshFn);
+
+  // Trigger once right away to snappy perf
+  refreshFn();
 });
 
 async function _highlightNunjucksTags (render) {
@@ -65,73 +81,96 @@ async function _highlightNunjucksTags (render) {
       }
 
       // See if we already have a mark for this
-      const existingMarks = doc.findMarks(start, end);
-      if (existingMarks.length) {
-        existingMarks.map(m => activeMarks.push(m));
+      let hasOwnMark = false;
+      for (const m of doc.findMarks(start, end)) {
+        // Only check marks we created
+        if (m.__nunjucks) {
+          hasOwnMark = true;
+        }
+
+        activeMarks.push(m);
+      }
+
+      // Already have a mark for this, so leave it alone
+      if (hasOwnMark) {
         continue;
       }
 
-      const element = document.createElement('span');
+      const el = document.createElement('span');
+      el.className = `nunjucks-tag ${tok.type}`;
+      el.setAttribute('draggable', 'true');
+      el.setAttribute('data-error', 'off');
+      el.setAttribute('data-template', tok.string);
 
-      element.className = `nunjucks-widget ${tok.type}`;
-      element.setAttribute('data-active', 'off');
-      element.setAttribute('data-error', 'off');
-
-      await _updateElementText(renderString, element, tok.string);
+      await _updateElementText(renderString, el, tok.string);
 
       const mark = this.markText(start, end, {
+        __nunjucks: true, // Mark that we created it
+        __template: tok.string,
         handleMouseEvents: false,
-        replacedWith: element,
+        replacedWith: el
       });
 
       activeMarks.push(mark);
 
-      element.addEventListener('click', () => {
-        element.setAttribute('data-active', 'on');
-
+      el.addEventListener('click', async () => {
         // Define the dialog HTML
-        const html = [
-          '<div class="wide hide-scrollbars scrollable">',
-          '<input type="text" name="template"/>',
-          element.title ?
-            `<span class="result">${element.title}</span>` :
-            '<span class="result super-faint italic">n/a</span>',
-          '</div>',
-        ].join(' ');
-
-        const dialogOptions = {
-          __dirty: false,
-          value: tok.string,
-          selectValueOnOpen: true,
-          closeOnEnter: true,
-          async onClose () {
-            element.removeAttribute('data-active');
-
-            // Revert string back to original if it's changed
-            if (this.__dirty) {
-              await _updateElementText(renderString, element, tok.string);
-              mark.changed();
-            }
-          },
-          async onInput (e, text) {
-            this.__dirty = true;
-
-            clearTimeout(this.__timeout);
-            this.__timeout = setTimeout(async () => {
-              const el = e.target.parentNode.querySelector('.result');
-              await _updateElementText(renderString, el, text, true);
-            }, 600);
+        showModal(NunjucksVariableModal, {
+          template: mark.__template,
+          onDone: template => {
+            const {from, to} = mark.find();
+            this.replaceRange(template, from, to);
           }
-        };
+        });
+      });
 
-        this.openDialog(html, text => {
-          // Replace the text with the newly edited stuff
+      // ~~~~~~~~~~~~~~~~~~~~~~~ //
+      // Setup Drag-n-Drop stuff //
+      // ~~~~~~~~~~~~~~~~~~~~~~~ //
+
+      let droppedInSameEditor = false;
+
+      // Modify paste events so we can merge into them
+      const beforeChangeCb = (cm, change) => {
+        if (change.origin === 'paste') {
+          change.origin = '+dnd';
+        }
+      };
+
+      const dropCb = (cm, e) => {
+        droppedInSameEditor = true;
+      };
+
+      // Set up the drag
+      el.addEventListener('dragstart', e => {
+        // Setup the drag contents
+        const template = e.target.getAttribute('data-template');
+        e.dataTransfer.setData('text/plain', template);
+        e.dataTransfer.effectAllowed = 'copyMove';
+        e.dataTransfer.dropEffect = 'move';
+
+        // Add some listeners
+        this.on('beforeChange', beforeChangeCb);
+        this.on('drop', dropCb);
+      });
+
+      el.addEventListener('dragend', e => {
+        // If dragged within same editor, delete the old reference
+        // TODO: Actually only use dropEffect for this logic. For some reason
+        // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
+        if (droppedInSameEditor) {
           const {from, to} = mark.find();
-          this.replaceRange(text, from, to);
+          this.replaceRange('', from, to, '+dnd');
+        }
 
-          // Clear the marker so it doesn't mess us up later on.
-          mark.clear();
-        }, dialogOptions);
+        // Remove listeners we added
+        this.off('beforeChange', beforeChangeCb);
+        this.off('drop', dropCb);
+      });
+
+      // Don't allow dropping on itself
+      el.addEventListener('drop', e => {
+        e.stopPropagation();
       });
     }
   }
@@ -142,14 +181,27 @@ async function _highlightNunjucksTags (render) {
     {ch: 0, line: vp.from},
     {ch: 0, line: vp.to},
   );
+
   for (const mark of marksInViewport) {
-    if (!activeMarks.find(m => m.id === mark.id)) {
+    // Only check marks we created
+    if (!mark.__nunjucks) {
+      continue;
+    }
+
+    let inActiveMarks = false;
+    for (const activeMark of activeMarks) {
+      if (activeMark.id === mark.id) {
+        inActiveMarks = true;
+      }
+    }
+
+    if (!inActiveMarks) {
       mark.clear();
     }
   }
 }
 
-async function _updateElementText (render, el, text, preview = false) {
+async function _updateElementText (render, el, text) {
   try {
     const str = text.replace(/\\/g, '');
     const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
@@ -160,43 +212,32 @@ async function _updateElementText (render, el, text, preview = false) {
       .replace(/}}$/, '')
       .trim();
 
-    let innerHTML = '';
-
     if (tagMatch) {
       const tag = tagMatch[1];
 
       // Don't render other tags because they may be two-parters
       // eg. {% for %}...{% endfor %}
       const cleaned = cleanedStr.replace(tag, '').trim();
-      innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
+      el.innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
 
       if (['response', 'res', 'uuid', 'timestamp', 'now'].includes(tag)) {
         // Try rendering these so we can show errors if needed
         const v = await render(str);
         el.title = v;
-        innerHTML = preview ? v : innerHTML;
       } else {
         el.setAttribute('data-ignore', 'on');
       }
     } else {
       // Render if it's a variable
+      el.innerHTML = `<label>var</label> ${cleanedStr}`.trim();
       const v = await render(str);
       el.title = v;
-      innerHTML = preview ? v : `${cleanedStr}`.trim();
     }
-
-    el.innerHTML = innerHTML;
     el.setAttribute('data-error', 'off');
   } catch (err) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
-    if (message.length > 30) {
-      message = `${message.slice(0, 27)}&hellip;`
-    }
-    el.innerHTML = `&#x203c; ${message}`;
-    el.className += ' nunjucks-widget--error';
+    el.title = message;
     el.setAttribute('data-error', 'on');
-    el.title = fullMessage;
   }
 }
-

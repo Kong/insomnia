@@ -4,8 +4,8 @@ import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 
-export async function render (template, context = {}, strict = false) {
-  return templating.render(template, {context, strict});
+export function render (obj, context = {}, strict = false) {
+  return recursiveRender(obj, context, strict);
 }
 
 export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
@@ -55,9 +55,10 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
  * Recursively render any JS object and return a new one
  * @param {*} originalObj - object to render
  * @param {object} context - context to render against
+ * @param strict - whether to fail on undefined
  * @return {Promise.<*>}
  */
-export async function recursiveRender (originalObj, context) {
+export async function recursiveRender (originalObj, context = {}, strict = false) {
   const obj = clone(originalObj);
   const toS = obj => Object.prototype.toString.call(obj);
 
@@ -76,18 +77,22 @@ export async function recursiveRender (originalObj, context) {
       // Do nothing to these types
     } else if (toS(x) === '[object String]') {
       try {
-        x = render(x, context);
+        x = await templating.render(x, {context, strict});
       } catch (err) {
-        // Failed to render Request
-        // const path = this.path.join('.');
-        const path = 'TODO"';
-        throw new Error(`Failed to render Request.${path}: "${err.message}"`);
+        // TODO: Show paths here in errors
+        throw err;
       }
     } else if (Array.isArray(x)) {
+      // x.toString = function () {
+      //   throw new Error('Tried to render an array');
+      // };
       for (let i = 0; i < x.length; i++) {
         x[i] = await next(x[i]);
       }
     } else if (typeof x === 'object') {
+      // x.toString = function () {
+      //   throw new Error('Tried to render an object');
+      // };
       const keys = Object.keys(x);
       for (const key of keys) {
         x[key] = await next(x[key]);
@@ -140,7 +145,7 @@ export async function getRenderedRequest (request, environmentId) {
 
   // Remove disabled authentication
   if (renderedRequest.authentication && renderedRequest.authentication.disabled) {
-    renderedRequest.authentication = {}
+    renderedRequest.authentication = {};
   }
 
   // Default the proto if it doesn't exist

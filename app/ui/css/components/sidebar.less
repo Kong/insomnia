@@ -17,12 +17,13 @@
   // Don't collapse direct children, but their children
   &.sidebar--collapsed > * > * {
     opacity: 0;
-    transition: opacity 0.5s;
+    transition: opacity 300ms;
   }
 
   &.sidebar--hidden {
-    // Can't be display: none because it screws up the grid
-    opacity: 0;
+    // It proved difficult to keep the invisible children from overflowing when
+    // hidden, so we're just going to bump it way to the left to be sure.
+    left: -9999px;
   }
 
   &:focus {
@@ -227,11 +228,6 @@
 
     & > button {
       color: @hl;
-
-      .tag {
-        // This might be too faint...
-        //opacity: @opacity-subtle;
-      }
     }
 
     & > * {
@@ -256,15 +252,12 @@
     }
 
     &.sidebar__item--active.sidebar__item--request > button,
-    &.sidebar__item--active > .sidebar__actions,
+    &.sidebar__item--active.sidebar__item--request > .sidebar__actions,
     &:hover > button,
     & > button:focus,
     &:hover .sidebar__actions {
+      transition: background-color 130ms ease-out;
       background-color: @hl-xs;
-    }
-
-    &.sidebar__item--active.sidebar__item--request > button {
-      //border-left-color: @hl-xs;
     }
 
     .tag {

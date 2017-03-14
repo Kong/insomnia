@@ -1,0 +1,23 @@
+@import '../constants/dimensions';
+
+// Tooltip for errors
+.editor {
+  .CodeMirror-lint-tooltip {
+    background-color: var(--color-bg);
+    color: var(--color-font);
+    border-color: var(--hl-md);
+    border-radius: 0;
+    font-size: @font-size-md;
+    padding: @padding-xs @padding-sm;
+    z-index: 99999;
+
+    .CodeMirror-lint-message-error {
+      background-image: none;
+      padding-left: 0;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
+}

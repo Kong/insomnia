@@ -39,7 +39,7 @@ describe('Test push/pull behaviour', () => {
 
     // Set up sync modes
     await sync.createOrUpdateConfig(resourceRequest.resourceGroupId, syncStorage.SYNC_MODE_ON);
-    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_OFF);
+    await sync.createOrUpdateConfig(resourceRequest2.resourceGroupId, syncStorage.SYNC_MODE_UNSET);
 
     await sync.push(); // Push only active configs
     await sync.push(resourceRequest.resourceGroupId); // Force push rg_1
@@ -66,7 +66,7 @@ describe('Test push/pull behaviour', () => {
       updated: [],
       created: [{id: request._id, version: 'new-version'}],
       removed: [],
-      conflicts: [],
+      conflicts: []
     });
 
     const resourceBefore = await syncStorage.getResourceByDocId(request._id);
@@ -103,7 +103,7 @@ describe('Test push/pull behaviour', () => {
       updatedResources: [updatedResource],
       createdResources: [createdResourceNew],
       idsToPush: [],
-      idsToRemove: ['req_2'],
+      idsToRemove: ['req_2']
     });
 
     // Pull and get docs/resources
@@ -134,14 +134,14 @@ describe('Test push/pull behaviour', () => {
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
       encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
-      lastEdited: resourceRequest.lastEdited - 1000, // Same edited time
+      lastEdited: resourceRequest.lastEdited - 1000 // Same edited time
     });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
-      conflicts: [resourceConflict],
+      conflicts: [resourceConflict]
     });
 
     await sync.push(resourceRequest.resourceGroupId);
@@ -166,14 +166,14 @@ describe('Test push/pull behaviour', () => {
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
       encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
-      lastEdited: resourceRequest.lastEdited, // Same edited time
+      lastEdited: resourceRequest.lastEdited // Same edited time
     });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
-      conflicts: [resourceConflict],
+      conflicts: [resourceConflict]
     });
 
     await sync.push(resourceRequest.resourceGroupId);
@@ -198,14 +198,14 @@ describe('Test push/pull behaviour', () => {
     const resourceConflict = Object.assign({}, resourceRequest, {
       version: 'ver-2',
       encContent: await sync.encryptDoc(resourceRequest.resourceGroupId, requestServer),
-      lastEdited: resourceRequest.lastEdited + 1000,
+      lastEdited: resourceRequest.lastEdited + 1000
     });
 
     session.syncPush.mockReturnValueOnce({
       updated: [],
       created: [],
       removed: [],
-      conflicts: [resourceConflict],
+      conflicts: [resourceConflict]
     });
 
     await sync.push(resourceRequest.resourceGroupId);
@@ -268,8 +268,19 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect((await syncStorage.allConfigs()).length).toBe(2);
     expect((await syncStorage.allResources()).length).toBe(7);
 
+    // Mark all configs as auto sync
+    const configs = await syncStorage.allConfigs();
+    for (const config of configs) {
+      await syncStorage.updateConfig(config, {
+        syncMode: syncStorage.SYNC_MODE_ON
+      });
+    }
+
     // Do initial push
     await sync.push();
+
+    // Reset mocks once again before tests
+    await _setupSessionMocks();
   });
 
   it('Resources created on DB change', async () => {
@@ -294,15 +305,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(_decryptResource(resource).url).toBe('https://google.com');
     expect(resource.removed).toBe(false);
 
-    expect(session.syncPush.mock.calls.length).toBe(2);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(7);
-    // NOTE: This would be 1 if we were mocking the "push" response properly
-    // and telling the client to set the created docs to dirty=false
-    expect(session.syncPush.mock.calls[1][0].length).toBe(8);
+    expect(session.syncPush.mock.calls.length).toBe(1);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(8);
 
-    expect(session.syncPull.mock.calls.length).toBe(1);
-    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
-    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
+    expect(session.syncPull.mock.calls).toEqual([]);
   });
 
   it('Resources revived on DB change', async () => {
@@ -358,13 +364,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(_decryptResource(updatedResource).name).toBe('New Name');
     expect(resource.removed).toBe(false);
 
-    expect(session.syncPush.mock.calls.length).toBe(2);
+    expect(session.syncPush.mock.calls.length).toBe(1);
     expect(session.syncPush.mock.calls[0][0].length).toBe(7);
-    expect(session.syncPush.mock.calls[1][0].length).toBe(7);
 
-    expect(session.syncPull.mock.calls.length).toBe(1);
-    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
-    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
+    expect(session.syncPull.mock.calls).toEqual([]);
   });
 
   it('Resources removed on DB change', async () => {
@@ -384,13 +387,10 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(resource.removed).toBe(false);
     expect(updatedResource.removed).toBe(true);
 
-    expect(session.syncPush.mock.calls.length).toBe(2);
+    expect(session.syncPush.mock.calls.length).toBe(1);
     expect(session.syncPush.mock.calls[0][0].length).toBe(7);
-    expect(session.syncPush.mock.calls[1][0].length).toBe(7);
 
-    expect(session.syncPull.mock.calls.length).toBe(1);
-    expect(session.syncPull.mock.calls[0][0].blacklist.length).toBe(0);
-    expect(session.syncPull.mock.calls[0][0].resources.length).toEqual(7);
+    expect(session.syncPull.mock.calls).toEqual([]);
   });
 });
 
@@ -428,7 +428,7 @@ async function _setSessionData () {
     ad: '',
     d: (new Buffer(JSON.stringify(privateKey))).toString('hex'),
     iv: '968f1d810efdaec58f9e313e',
-    t: '0e87a2e57a198ca79cb99585fe9c244a',
+    t: '0e87a2e57a198ca79cb99585fe9c244a'
   };
 
   // Setup mocks and stuff
@@ -460,7 +460,7 @@ async function _setupSessionMocks () {
     resourceGroups[id] = Object.assign({}, {id, encSymmetricKey}, {
       parentResourceId: parentId,
       name: name,
-      encSymmetricKey: encSymmetricKey,
+      encSymmetricKey: encSymmetricKey
     });
     return resourceGroups[id];
   });
@@ -472,20 +472,20 @@ async function _setupSessionMocks () {
 
     const err = new Error(`Not Found for ${id}`);
     err.statusCode = 404;
-    throw err
+    throw err;
   });
 
   session.syncPull = jest.fn(body => ({
     updatedResources: [],
     createdResources: [],
     idsToPush: [],
-    idsToRemove: [],
+    idsToRemove: []
   }));
 
   session.syncPush = jest.fn(body => ({
     conflicts: [],
     updated: [],
     created: [],
-    removed: [],
+    removed: []
   }));
 }
