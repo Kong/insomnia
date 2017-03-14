@@ -5,7 +5,7 @@ import Editor from '../codemirror/code-editor';
 import {trackEvent} from '../../../analytics/index';
 import * as allHeaderNames from '../../../datasets/header-names.json';
 import * as allCharsets from '../../../datasets/charsets.json';
-import * as allMimeTypes from '../../../datasets/mimetypes.json';
+import * as allMimeTypes from '../../../datasets/content-types.json';
 import * as allEncodings from '../../../datasets/encodings.json';
 
 @autobind
