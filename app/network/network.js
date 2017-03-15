@@ -143,7 +143,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const curl = new Curl();
 
       // Set all the basic options
-      curl.setOpt(Curl.option.URL, renderedRequest.url);
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
       curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects); // Follow redirects
       curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0); // Follow POST redirects
@@ -166,6 +165,11 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
         return cancelCode;
       });
+
+      // Set the URL, including the query parameters
+      const qs = querystring.buildFromParams(renderedRequest.parameters);
+      const url = querystring.joinUrl(renderedRequest.url, qs);
+      curl.setOpt(Curl.option.URL, util.prepareUrlForSending(url));
 
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
