@@ -137,14 +137,16 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         parentId: renderedRequest._id,
         error: prefix ? `${prefix}: ${err.message}` : err.message,
         elapsedTime: 0,
-        statusMessage: 'Error',
+        statusMessage: 'Error'
       });
     }
 
     try {
       // Setup the cancellation logic
       let cancelCode = 0;
-      cancelRequestFunction = () => cancelCode = 1;
+      cancelRequestFunction = () => {
+        cancelCode = 1;
+      };
 
       // const cas = await _getCAs();
       // console.log('GOT EM', cas.length);
@@ -170,7 +172,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.VERBOSE, true);
       curl.setOpt(Curl.option.NOPROGRESS, false);
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+        // const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
         // console.log('DEBUG:', name, content);
         return 0; // Must be here
       });
@@ -182,7 +184,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         }
 
         const percent = Math.round(dlnow / dltotal * 100);
-        if (percent != lastPercent) {
+        if (percent !== lastPercent) {
           console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
           lastPercent = percent;
         }
@@ -209,7 +211,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           cookie.secure ? 'TRUE' : 'FALSE',
           cookie.expires ? Math.round(cookie.expires.getTime() / 1000) : 0,
           cookie.name,
-          cookie.value,
+          cookie.value
         ].join('\t'));
       }
 
@@ -243,9 +245,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           }
 
           // THIS IS NOT CORRECT
-          // if (passphrase) {
-          //   curl.setOpt(curl.SSLKEYPASSWD, 'myPassword');
-          // }
+          if (passphrase) {
+            curl.setOpt(curl.SSLKEYPASSWD, 'myPassword');
+          }
         }
       }
 
@@ -254,9 +256,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         const d = querystring.buildFromParams(renderedRequest.body.params || [], true);
         curl.setOpt(Curl.option.POSTFIELDS, d); // Send raw data
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-        const addParamFn = param => ((param.type === 'file' && param.fileName) ?
-            {name: param.name, file: param.fileName} :
-            {name: param.name, contents: param.value}
+        const addParamFn = param => ((param.type === 'file' && param.fileName)
+            ? {name: param.name, file: param.fileName}
+            : {name: param.name, contents: param.value}
         );
         const data = renderedRequest.body.params.map(addParamFn);
         curl.setOpt(Curl.option.HTTPPOST, data);
@@ -329,7 +331,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             secure: parts[3] === 'TRUE', // This doesn't exists?
             expires: new Date(parts[4] * 1000),
             name: parts[5],
-            value: parts[6],
+            value: parts[6]
           });
         }
         models.cookieJar.update(renderedRequest.cookieJar, {cookies});
@@ -350,7 +352,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           elapsedTime,
           contentType,
           statusCode,
-          statusMessage,
+          statusMessage
         });
 
         // Close the request
@@ -366,7 +368,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
         if (code === Curl.code.CURLE_ABORTED_BY_CALLBACK) {
           error = 'Request aborted';
-          statusMessage = 'Abort'
+          statusMessage = 'Abort';
         }
 
         resolve({parentId, elapsedTime, statusMessage, error});
@@ -376,7 +378,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
     } catch (err) {
       handleError(err);
     }
-  })
+  });
 }
 
 export function _actuallySend (renderedRequest, workspace, settings, familyIndex = 0) {

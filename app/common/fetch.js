@@ -29,7 +29,7 @@ export function put (path, sessionId = null) {
 }
 
 export function rawFetch (...args) {
-  return fetch(...args);
+  return window.fetch(...args);
 }
 
 async function _fetch (method, path, json, sessionId = null) {
