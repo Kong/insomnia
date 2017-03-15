@@ -35,8 +35,11 @@ class NunjucksModal extends PureComponent {
       defaultTemplate: template
     });
 
-    this.modal.show();
     trackEvent('Nunjucks', 'Editor', 'Show');
+
+    // NOTE: This must be called after setState() above because show() is going
+    // to force refresh the modal
+    this.modal.show();
   }
 
   hide () {

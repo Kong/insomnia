@@ -121,7 +121,7 @@ class Modal extends PureComponent {
   }
 
   render () {
-    const {tall, top, wide, noEscape, className, children} = this.props;
+    const {tall, wide, noEscape, className, children} = this.props;
     const {open, zIndex, forceRefreshCounter} = this.state;
 
     const classes = classnames(
@@ -129,7 +129,6 @@ class Modal extends PureComponent {
       className,
       {'modal--open': open},
       {'modal--fixed-height': tall},
-      {'modal--fixed-top': top},
       {'modal--noescape': noEscape},
       {'modal--wide': wide},
     );
@@ -146,8 +145,10 @@ class Modal extends PureComponent {
            style={styles}
            onClick={this._handleClick}>
         <div className="modal__backdrop overlay" data-close-modal></div>
-        <div className="modal__content" key={forceRefreshCounter}>
-          {children}
+        <div className="modal__content__wrapper">
+          <div className="modal__content" key={forceRefreshCounter}>
+            {children}
+          </div>
         </div>
       </div>
     );
@@ -156,7 +157,6 @@ class Modal extends PureComponent {
 
 Modal.propTypes = {
   tall: PropTypes.bool,
-  top: PropTypes.bool,
   wide: PropTypes.bool,
   noEscape: PropTypes.bool,
   dontFocus: PropTypes.bool,
