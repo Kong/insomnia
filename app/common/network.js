@@ -211,7 +211,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           cookie.path,
           cookie.secure ? 'TRUE' : 'FALSE',
           cookie.expires ? Math.round(cookie.expires.getTime() / 1000) : 0,
-          cookie.name,
+          cookie.key,
           cookie.value
         ].join('\t'));
       }
@@ -350,7 +350,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             path: parts[2],
             secure: parts[3] === 'TRUE', // This doesn't exists?
             expires: new Date(parts[4] * 1000),
-            name: parts[5],
+            key: parts[5],
             value: parts[6]
           });
           console.log('COOKIE', parts);
