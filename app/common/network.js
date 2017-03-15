@@ -119,18 +119,6 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   return Object.assign(config, patch);
 }
 
-// let cas = null;
-// async function _getCAs () {
-//   if (!cas) {
-//     const res = await fetch.rawFetch('https://curl.haxx.se/ca/cacert.pem');
-//     cas = await res.text();
-//   } else {
-//     console.log('CA HIT');
-//   }
-//
-//   return cas;
-// }
-
 export function _actuallySendCurl (renderedRequest, workspace, settings) {
   return new Promise(async resolve => {
     function handleError (err, prefix = null) {
@@ -149,9 +137,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       cancelRequestFunction = () => {
         cancelCode = 1;
       };
-
-      // const cas = await _getCAs();
-      // console.log('GOT EM', cas.length);
 
       // Initialize the curl handle
       const curl = new Curl();
@@ -172,11 +157,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       curl.setOpt(Curl.option.VERBOSE, true);
       curl.setOpt(Curl.option.NOPROGRESS, false);
-      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
-        // const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
-        // console.log('DEBUG:', name, content);
-        return 0; // Must be here
-      });
 
       let lastPercent = 0;
       curl.setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
@@ -193,15 +173,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         return cancelCode;
       });
 
-      // Set proxy if needed
-      const {protocol} = urlParse(renderedRequest.url);
-      const {httpProxy, httpsProxy} = settings;
-      const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-      const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-      if (proxy) {
-        curl.setOpt(Curl.option.PROXY, proxy);
-      }
-
       // Set cookies
       curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
       for (const cookie of renderedRequest.cookieJar.cookies) {
@@ -214,6 +185,18 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           cookie.key,
           cookie.value
         ].join('\t'));
+      }
+
+      // Set proxy
+      const {protocol} = urlParse(renderedRequest.url);
+      const {httpProxy, httpsProxy} = settings;
+      const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+      const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+      if (proxy) {
+        curl.setOpt(Curl.option.PROXY, proxy);
+      } else {
+        // Disable autodetection from env vars
+        curl.setOpt(Curl.option.PROXY, '');
       }
 
       // Set client certs if needed
@@ -305,6 +288,38 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const headers = renderedRequest.headers.map(h => `${h.name}: ${h.value}`);
       curl.setOpt(Curl.option.HTTPHEADER, headers);
 
+      // Setup debug handler
+      // NOTE: This is last on purpose so things like cookies don't show up
+      let debugData = '';
+      console.log('HELLO', Curl.info.debug);
+      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+        let symbol = null;
+        switch (name) {
+          case 'HEADER_IN':
+            symbol = '<';
+            break;
+          case 'HEADER_OUT':
+            symbol = '>';
+            break;
+          case 'TEXT':
+            symbol = '*';
+            break;
+          // Don't show these (too much data)
+          // case 'DATA_IN':
+          // case 'DATA_OUT':
+        }
+
+        if (symbol) {
+          const lines = content.replace(/\n$/, '').split('\n');
+          const newLines = lines.map(l => `${symbol} ${l}`);
+          const blob = newLines.join('\n');
+          debugData += blob + '\n';
+        }
+
+        return 0; // Must be here
+      });
+
       // Handle the response ending
       curl.on('end', function (_1, _2, curlHeaders) {
         // Headers are an array (one for each redirect)
@@ -327,6 +342,12 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
               headers.push({name, value});
             }
           }
+        }
+
+        // Handle debug data
+        if (debugData) {
+          // TODO: Do something with debug data
+          // fs.writeFileSync('/Users/gschier/Desktop/debug.txt', debugData, 'utf8');
         }
 
         // Calculate the content type
@@ -353,7 +374,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             key: parts[5],
             value: parts[6]
           });
-          console.log('COOKIE', parts);
         }
         models.cookieJar.update(renderedRequest.cookieJar, {cookies});
 
