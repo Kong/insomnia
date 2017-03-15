@@ -1,8 +1,10 @@
 import networkRequest from 'request';
+import electron from 'electron';
+import mkdirp from 'mkdirp';
 import {parse as urlParse} from 'url';
 import {Curl} from 'node-libcurl';
 import mime from 'mime-types';
-import {basename as pathBasename} from 'path';
+import {basename as pathBasename, join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from './querystring';
 import * as util from './misc.js';
@@ -216,7 +218,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       }
 
       // Set client certs if needed
-      // TODO: Test all of this
       for (const certificate of workspace.certificates) {
         const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
         const {hostname: cHostname, port: cPort} = urlParse(cHostWithProtocol);
@@ -227,26 +228,42 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
         // Exact host match (includes port)
         if (cHostname === hostname && assumedCPort === assumedPort) {
+          const ensureFile = blobOrFilename => {
+            if (blobOrFilename.indexOf('/') === 0) {
+              return blobOrFilename;
+            } else {
+              // Legacy support. Certs used to be stored in blobs, so lets write it to
+              // the temp directory first.
+              // TODO: Delete this fallback eventually
+              const fullBase = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
+              mkdirp.sync(fullBase);
+
+              const name = `${renderedRequest._id}_${renderedRequest.modified}`;
+              const fullPath = pathJoin(fullBase, name);
+              fs.writeFileSync(fullPath, new Buffer(blobOrFilename, 'base64'));
+
+              return fullPath;
+            }
+          };
+
           const {passphrase, cert, key, pfx} = certificate;
 
-          // TODO: Save cert to temporary file and delete it after (somehow)
           if (cert) {
-            curl.setOpt(curl.SSLCERT, 'cert.pem');
-            curl.setOpt(curl.SSLCERTTYPE, 'PEM');
+            curl.setOpt(Curl.option.SSLCERT, ensureFile(cert));
+            curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
           }
 
           if (pfx) {
-            curl.setOpt(curl.SSLCERT, 'cert.p12');
-            curl.setOpt(curl.SSLCERTTYPE, 'P12');
+            curl.setOpt(Curl.option.SSLCERT, ensureFile(pfx));
+            curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
           }
 
           if (key) {
-            curl.setOpt(curl.SSLKEY, 'hello.key');
+            curl.setOpt(Curl.option.SSLKEY, ensureFile(key));
           }
 
-          // THIS IS NOT CORRECT
           if (passphrase) {
-            curl.setOpt(curl.SSLKEYPASSWD, 'myPassword');
+            curl.setOpt(Curl.option.KEYPASSWD, passphrase);
           }
         }
       }
@@ -256,11 +273,13 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         const d = querystring.buildFromParams(renderedRequest.body.params || [], true);
         curl.setOpt(Curl.option.POSTFIELDS, d); // Send raw data
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-        const addParamFn = param => ((param.type === 'file' && param.fileName)
-            ? {name: param.name, file: param.fileName}
-            : {name: param.name, contents: param.value}
-        );
-        const data = renderedRequest.body.params.map(addParamFn);
+        const data = renderedRequest.body.params.map(param => {
+          if (param.type === 'file' && param.fileName) {
+            return {name: param.name, file: param.fileName};
+          } else {
+            return {name: param.name, contents: param.value};
+          }
+        });
         curl.setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
         const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
