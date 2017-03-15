@@ -6,14 +6,15 @@ import {Curl} from 'node-libcurl';
 import mime from 'mime-types';
 import {basename as pathBasename, join as pathJoin} from 'path';
 import * as models from '../models';
-import * as querystring from './querystring';
-import * as util from './misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from './constants';
-import {jarFromCookies, cookiesFromJar} from './cookies';
-import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from './misc';
-import {getRenderedRequest} from './render';
+import * as querystring from '../common/querystring';
+import * as util from '../common/misc.js';
+import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
+import {jarFromCookies, cookiesFromJar} from '../common/cookies';
+import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from '../common/misc';
+import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
-import * as db from './database';
+import * as db from '../common/database';
+import caCerts from './cacert';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
 // default dns.resolve which uses c-ares to do lookups. This doesn't work for
@@ -141,13 +142,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Initialize the curl handle
       const curl = new Curl();
 
-      // TODO: Make this work
-      // if (process.platform !== 'darwin') {
-      //   const caPath = path.resolve('./app/static/cacert.pem');
-      //   console.log(`[net] Set CA to ${caPath}`);
-      //   curl.setOpt(Curl.option.CAINFO, caPath);
-      // }
-
       // Set all the basic options
       curl.setOpt(Curl.option.URL, renderedRequest.url);
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
@@ -172,6 +166,20 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
         return cancelCode;
       });
+
+      // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
+      // certificates form the OS.
+      if (process.platform !== 'darwin') {
+        const fullBase = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
+        mkdirp.sync(fullBase);
+
+        const name = `ca.pem`;
+        const fullPath = pathJoin(fullBase, name);
+        fs.writeFileSync(fullPath, caCerts);
+
+        console.log('[net] Set CA to', fullPath);
+        curl.setOpt(Curl.option.CAINFO, fullPath);
+      }
 
       // Set cookies
       curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
@@ -291,7 +299,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup debug handler
       // NOTE: This is last on purpose so things like cookies don't show up
       let debugData = '';
-      console.log('HELLO', Curl.info.debug);
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
         const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
         let symbol = null;

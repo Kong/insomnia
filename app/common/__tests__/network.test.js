@@ -1,4 +1,4 @@
-import * as networkUtils from '../network';
+import * as networkUtils from '../../network/network';
 import * as db from '../database';
 import nock from 'nock';
 import {resolve as pathResolve, join as pathJoin} from 'path';

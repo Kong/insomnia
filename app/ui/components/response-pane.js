@@ -17,7 +17,7 @@ import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
 import {MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
 import {getSetCookieHeaders, nullFn} from '../../common/misc';
-import {cancelCurrentRequest} from '../../common/network';
+import {cancelCurrentRequest} from '../../network/network';
 import {trackEvent} from '../../analytics';
 
 @autobind
