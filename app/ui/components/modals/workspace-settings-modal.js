@@ -8,7 +8,6 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
-import * as fs from 'fs';
 import {trackEvent} from '../../../analytics/index';
 
 @autobind

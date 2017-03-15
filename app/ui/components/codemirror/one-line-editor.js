@@ -138,7 +138,13 @@ class OneLineEditor extends PureComponent {
     this._editor.clearSelection();
 
     if (!this.props.forceEditor) {
-      this._convertToInputIfNotFocused();
+      // Convert back to input sometime in the future.
+      // NOTE: this was originally added because the input would disappear if
+      // the user tabbed away very shortly after typing, but it's actually a pretty
+      // good feature.
+      setTimeout(() => {
+        this._convertToInputIfNotFocused();
+      }, 2000);
     }
 
     this.props.onBlur && this.props.onBlur();
@@ -191,7 +197,7 @@ class OneLineEditor extends PureComponent {
       return;
     }
 
-    if (this._editor.hasFocus()) {
+    if (!this._editor || this._editor.hasFocus()) {
       return;
     }
 

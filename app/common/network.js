@@ -170,7 +170,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0); // Follow POST redirects
       curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL); // Validate SSL
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
-      curl.setOpt(Curl.option.HTTPHEADER, renderedRequest.headers.map(h => `${h.name}: ${h.value}`));
       curl.setOpt(Curl.option.VERBOSE, true);
       curl.setOpt(Curl.option.NOPROGRESS, false);
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
@@ -283,10 +282,8 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         curl.setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
         const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
-        const mimeType = mime.lookup(renderedRequest.body.fileName);
         curl.setOpt(Curl.option.UPLOAD, 1);
         curl.setOpt(Curl.option.READDATA, fd);
-        curl.setOpt(Curl.option.HTTPHEADER, [`Content-Type: ${mimeType}`]);
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
@@ -303,6 +300,10 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         dataBuffers.push(chunk);
         dataBuffersLength += chunk.length;
       });
+
+      // Set the headers
+      const headers = renderedRequest.headers.map(h => `${h.name}: ${h.value}`);
+      curl.setOpt(Curl.option.HTTPHEADER, headers);
 
       // Handle the response ending
       curl.on('end', function (_1, _2, curlHeaders) {
@@ -352,6 +353,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             name: parts[5],
             value: parts[6]
           });
+          console.log('COOKIE', parts);
         }
         models.cookieJar.update(renderedRequest.cookieJar, {cookies});
 
