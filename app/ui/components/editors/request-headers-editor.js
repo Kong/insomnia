@@ -95,6 +95,8 @@ class RequestHeadersEditor extends PureComponent {
     const {
       bulk,
       headers,
+      editorFontSize,
+      editorLineWrapping,
       onChange,
       handleRender,
       handleGetRenderContext
@@ -103,6 +105,10 @@ class RequestHeadersEditor extends PureComponent {
     return bulk ? (
         <div className="tall">
           <Editor
+            getRenderContext={handleGetRenderContext}
+            render={handleRender}
+            fontSize={editorFontSize}
+            lineWrapping={editorLineWrapping}
             onChange={this._handleBulkUpdate}
             defaultValue={this._getHeadersString()}
           />
@@ -133,6 +139,8 @@ class RequestHeadersEditor extends PureComponent {
 RequestHeadersEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   bulk: PropTypes.bool.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   headers: PropTypes.arrayOf(PropTypes.shape({

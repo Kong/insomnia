@@ -8,7 +8,6 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
-import * as fs from 'fs';
 import {trackEvent} from '../../../analytics/index';
 
 @autobind
@@ -69,11 +68,16 @@ class WorkspaceSettingsModal extends PureComponent {
 
     const {workspace} = this.props;
     const {pfxPath, crtPath, keyPath, host, passphrase} = this.state;
-    const cert = crtPath ? fs.readFileSync(crtPath, 'base64') : null;
-    const key = keyPath ? fs.readFileSync(keyPath, 'base64') : null;
-    const pfx = pfxPath ? fs.readFileSync(pfxPath, 'base64') : null;
 
-    const certificate = {host, passphrase, cert, key, pfx, disabled: false};
+    const certificate = {
+      host,
+      passphrase,
+      cert: crtPath,
+      key: keyPath,
+      pfx: pfxPath,
+      disabled: false
+    };
+
     const certificates = [
       ...workspace.certificates.filter(c => c.host !== certificate.host),
       certificate

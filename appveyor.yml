@@ -10,7 +10,7 @@ deploy: off
 shallow_clone: true
 platform: x64
 environment:
-  nodejs_version: "6.5.0"
+  nodejs_version: "7.4.0"
 
 # Things to install after repo clone
 install:
@@ -19,9 +19,9 @@ install:
   - npm install > NUL
 
 cache:
-  - '%APPDATA%\npm-cache'
-  - '%USERPROFILE%\.electron'
-  - 'node_modules'
+  - '%APPDATA%\npm-cache -> .appveyor.cache'
+  - '%USERPROFILE%\.electron -> .appveyor.cache'
+  - 'node_modules -> .appveyor.cache'
 
 #---------------------------------#
 #       tests configuration       #
@@ -51,6 +51,6 @@ test_script:
 #         global handlers         #
 #---------------------------------#
 
-#on_success:
-#  - yarn run build-n-package:win
+#build_script:
+#  - npm run build-n-package:win
 #  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }

@@ -183,7 +183,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     const activeEnvironment = this._getActiveEnvironment();
 
     return (
-      <Modal ref={this._setModalRef} wide top tall {...this.props}>
+      <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll className="env-modal">
           <div className="env-modal__sidebar">

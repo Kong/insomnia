@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "4.2.14",
+  "version": "5.0.0",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "A simple and beautiful REST API client",
@@ -19,6 +19,7 @@
     "mkdirp": "~0.5.1",
     "nedb": "~1.8.0",
     "node-forge": "~0.7.0",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#3fc2afea435f3548eedbef9c68d3fee642dfcddb",
     "raven": "~1.1.2",
     "request": "~2.71.0",
     "srp-js": "0.2.0",

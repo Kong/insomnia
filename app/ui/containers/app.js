@@ -23,7 +23,7 @@ import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selec
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
-import * as network from '../../common/network';
+import * as network from '../../network/network';
 import {debounce} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';

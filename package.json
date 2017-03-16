@@ -26,6 +26,7 @@
     "build:copy": "cp -r ./app/package.json ./app/static ./app/icons/* ./build/",
     "build:install": "cd build && npm install",
     "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
+    "rebuild": "electron-rebuild -f -w node-libcurl",
     "package:mac": "rm -rf dist/mac && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --mac",
     "package:win": "rm -rf dist/win* && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --win",
     "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --linux",
@@ -62,7 +63,11 @@
   "build": {
     "appId": "com.insomnia.app",
     "category": "public.app-category.developer-tools",
-    "compression": "normal",
+    "compression": "maximum",
+    "directories": {
+      "app": "build",
+      "output": "dist"
+    },
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
       "remoteReleases": "https://s3.amazonaws.com/downloads.insomnia.rest/win",
@@ -78,10 +83,6 @@
         "deb"
       ]
     }
-  },
-  "directories": {
-    "app": "build",
-    "output": "dist"
   },
   "dependencies": {
     "analytics-node": "~2.1.0",
@@ -100,6 +101,7 @@
     "mkdirp": "~0.5.1",
     "nedb": "~1.8.0",
     "node-forge": "~0.7.0",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#3fc2afea435f3548eedbef9c68d3fee642dfcddb",
     "nunjucks": "~3.0.0",
     "raven": "~1.1.2",
     "react": "~15.4.2",
@@ -109,7 +111,6 @@
     "react-redux": "~5.0.3",
     "react-tabs": "~0.8.2",
     "redux": "~3.3.1",
-    "redux-logger": "~2.6.1",
     "redux-thunk": "~2.0.1",
     "request": "~2.74.0",
     "reselect": "~2.5.4",
@@ -138,8 +139,9 @@
     "concurrently": "~2.0.0",
     "cross-env": "~2.0.0",
     "css-loader": "~0.26.2",
-    "electron": "~1.6.1",
+    "electron": "~1.6.2",
     "electron-builder": "~10.17.3",
+    "electron-rebuild": "^1.5.7",
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",
     "eslint-config-standard": "^7.0.0",

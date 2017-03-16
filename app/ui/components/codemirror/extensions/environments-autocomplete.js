@@ -1,5 +1,6 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
+import * as misc from '../../../../common/misc';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -10,7 +11,7 @@ const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 const MAX_HINT_LOOK_BACK = 100;
-const HINT_DELAY_MILLIS = 100;
+const HINT_DELAY_MILLIS = 500;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
@@ -114,6 +115,12 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return completeAfter(cm, null, true);
   }
 
+  // Debounce this so we don't pop it open too frequently and annoy the user
+  const debouncedCompleteAfter = misc.debounce(
+    completeIfInVariableName,
+    HINT_DELAY_MILLIS
+  );
+
   cm.on('keydown', (cm, e) => {
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
@@ -121,10 +128,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    // In a timeout so it gives the editor chance to update first
-    setTimeout(() => {
-      completeIfInVariableName(cm);
-    }, HINT_DELAY_MILLIS);
+    debouncedCompleteAfter(cm);
   });
 
   // Add hot key triggers

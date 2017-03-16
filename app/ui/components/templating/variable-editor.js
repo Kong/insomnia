@@ -61,13 +61,9 @@ class VariableEditor extends PureComponent {
   _setInputRef (n) {
     this._input = n;
 
-    // Unmounting
-    if (!this._input) {
-      return;
-    }
-
+    // Let it render, then focus the input
     setTimeout(() => {
-      this._input.focusEnd();
+      this._input && this._input.focusEnd();
     }, 100);
   }
 
@@ -85,8 +81,12 @@ class VariableEditor extends PureComponent {
       error = err.message;
     }
 
-    this.setState({variable, value, error});
+    // Hack to skip updating if we unmounted for some reason
+    if (this._input) {
+      this.setState({variable, value, error});
+    }
 
+    // Call the callback if we need to
     if (!noCallback) {
       this.props.onChange(variable.getTemplate());
     }

@@ -75,7 +75,7 @@ class EnvironmentEditModal extends PureComponent {
     } = this.state;
 
     return (
-      <Modal ref={this._setModalRef} tall top {...extraProps}>
+      <Modal ref={this._setModalRef} tall {...extraProps}>
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll>
           <EnvironmentEditor

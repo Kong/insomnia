@@ -102,8 +102,7 @@ class ResponseViewer extends PureComponent {
       return (
         <div className="response-pane__notify">
           <p className="pad faint">
-            Previewing responses over {LARGE_RESPONSE_MB}MB may cause
-            slowdowns on some computers
+            Response body over {LARGE_RESPONSE_MB}MB hidden to prevent unresponsiveness
           </p>
           <p>
             <button onClick={this._handleDismissBlocker}

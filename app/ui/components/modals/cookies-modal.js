@@ -120,7 +120,7 @@ class CookiesModal extends PureComponent {
     const {filter} = this.state;
 
     return (
-      <Modal ref={this._setModalRef} wide top tall {...this.props}>
+      <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody className="cookie-editor" noScroll>
           <div className="pad">
