@@ -1,10 +1,10 @@
-import * as networkUtils from '../../network/network';
-import * as db from '../database';
+import * as networkUtils from '../network';
+import * as db from '../../common/database';
 import nock from 'nock';
 import {resolve as pathResolve, join as pathJoin} from 'path';
-import {getRenderedRequest} from '../render';
+import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
-import {CONTENT_TYPE_FORM_URLENCODED, getAppVersion, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA} from '../constants';
+import {CONTENT_TYPE_FORM_URLENCODED, getAppVersion, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA} from '../../common/constants';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
