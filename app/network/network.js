@@ -188,12 +188,18 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Set cookies
       curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
       for (const cookie of renderedRequest.cookieJar.cookies) {
+        let expiresTimestamp = 0;
+        if (cookie.expires) {
+          const expiresDate = new Date(cookie.expires);
+          console.log('HELLO', expiresDate);
+          expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
+        }
         curl.setOpt(Curl.option.COOKIELIST, [
           cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
           cookie.hostOnly ? 'TRUE' : 'FALSE',
           cookie.path,
           cookie.secure ? 'TRUE' : 'FALSE',
-          cookie.expires ? Math.round(cookie.expires.getTime() / 1000) : 0,
+          expiresTimestamp,
           cookie.key,
           cookie.value
         ].join('\t'));
