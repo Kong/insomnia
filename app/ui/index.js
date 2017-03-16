@@ -14,6 +14,9 @@ import {getAccountId} from '../sync/session';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
 
+// TODO: Remove this
+import '../windows/oauth';
+
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);
 
