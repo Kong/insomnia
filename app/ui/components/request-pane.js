@@ -307,6 +307,8 @@ class RequestPane extends PureComponent {
               headers={request.headers}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
+              editorFontSize={editorFontSize}
+              editorLineWrapping={editorLineWrapping}
               onChange={updateRequestHeaders}
               bulk={useBulkHeaderEditor}
             />
