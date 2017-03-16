@@ -77,6 +77,7 @@ class RequestHeadersEditor extends PureComponent {
   _getCommonHeaderValues (pair) {
     switch (pair.name.toLowerCase()) {
       case 'content-type':
+      case 'accept':
         return allMimeTypes;
       case 'accept-charset':
         return allCharsets;

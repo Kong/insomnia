@@ -306,6 +306,11 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const headers = renderedRequest.headers.map(h => `${h.name}: ${h.value}`);
       curl.setOpt(Curl.option.HTTPHEADER, headers);
 
+      // Set User-Agent if it't not already in headers
+      if (!hasAcceptHeader(renderedRequest.headers)) {
+        curl.setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
+      }
+
       // Setup debug handler
       // NOTE: This is last on purpose so things like cookies don't show up
       let debugData = '';
