@@ -6,7 +6,7 @@ import RequestHeadersEditor from './editors/request-headers-editor';
 import ContentTypeDropdown from './dropdowns/content-type-dropdown';
 import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
-import AuthEditor from './editors/auth-editor';
+import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
 import {MOD_SYM, getContentTypeName} from '../../common/constants';
 import {debounce} from '../../common/misc';
@@ -131,7 +131,7 @@ class RequestPane extends PureComponent {
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
             <div>
-              <table>
+              <table className="table--fancy">
                 <tbody>
                 <tr>
                   <td>New Request</td>
@@ -243,7 +243,7 @@ class RequestPane extends PureComponent {
           </TabPanel>
           <TabPanel className="scrollable-container">
             <div className="scrollable">
-              <AuthEditor
+              <AuthWrapper
                 key={uniqueKey}
                 showPasswords={showPasswords}
                 authentication={request.authentication}

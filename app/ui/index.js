@@ -15,7 +15,7 @@ import DNDBackend from './dnd-backend';
 import './css/index.less';
 
 // TODO: Remove this
-import '../windows/oauth';
+import '../windows/o-auth-2';
 
 // Don't inject component styles (use our own)
 Tabs.setUseDefaultStyles(false);

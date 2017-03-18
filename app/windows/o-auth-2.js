@@ -33,7 +33,11 @@ const Q_TOKEN_TYPE = 'token_type';
  * @param {string} [state] - OAuth2 state
  * @returns {Promise}
  */
-export function authorize (url, clientId, redirectUri = DEFAULT_REDIRECT_URI, scope = '', state = '') {
+export function authorize (url,
+                           clientId,
+                           redirectUri = DEFAULT_REDIRECT_URI,
+                           scope = '',
+                           state = '') {
   return new Promise(resolve => {
     const params = [{name: Q_RESPONSE_TYPE, value: DEFAULT_RESPONSE_TYPE}];
 
@@ -85,7 +89,12 @@ export function authorize (url, clientId, redirectUri = DEFAULT_REDIRECT_URI, sc
  * @param {string} [state]
  * @returns {{}}
  */
-export async function refresh (url, clientId, clientSecret, code, redirectUri = DEFAULT_REDIRECT_URI, state = '') {
+export async function refresh (url,
+                               clientId,
+                               clientSecret,
+                               code,
+                               redirectUri = DEFAULT_REDIRECT_URI,
+                               state = '') {
   const params = [
     {name: Q_CLIENT_ID, value: clientId},
     {name: Q_CLIENT_SECRET, value: clientSecret},

@@ -40,7 +40,7 @@ class CookiesEditor extends PureComponent {
     const {cookies} = this.props;
     return (
       <div>
-        <table className="cookie-edit-table table--striped">
+        <table className="table--fancy cookie-edit-table table--striped">
           <thead>
           <tr>
             <th style={{minWidth: '10rem'}}>Domain</th>

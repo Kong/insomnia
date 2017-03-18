@@ -61,16 +61,25 @@ class OneLineEditor extends PureComponent {
     }
   }
 
-  _handleEditorMouseLeave () {
-    this._convertToInputIfNotFocused();
-  }
-
   _handleInputDragEnter () {
     this._convertToEditorPreserveFocus();
   }
 
   _handleInputMouseEnter () {
-    this._convertToEditorPreserveFocus();
+    // Convert to editor when user hovers mouse over input
+    /*
+     * NOTE: we're doing it in a timeout because we don't want to convert if the
+     * mouse goes in an out right away.
+     */
+    this._mouseEnterTimeout = setTimeout(this._convertToEditorPreserveFocus, 100);
+  }
+
+  _handleInputMouseLeave () {
+    clearTimeout(this._mouseEnterTimeout);
+  }
+
+  _handleEditorMouseLeave () {
+    this._convertToInputIfNotFocused();
   }
 
   _handleEditorFocus (e) {
@@ -222,6 +231,7 @@ class OneLineEditor extends PureComponent {
 
   render () {
     const {
+      id,
       defaultValue,
       className,
       onChange,
@@ -249,6 +259,7 @@ class OneLineEditor extends PureComponent {
           noLint
           singleLine
           tabIndex={0}
+          id={id}
           placeholder={placeholder}
           onBlur={this._handleEditorBlur}
           onKeyDown={this._handleKeyDown}
@@ -266,6 +277,7 @@ class OneLineEditor extends PureComponent {
       return (
         <Input
           ref={this._setInputRef}
+          id={id}
           type={type}
           className={className}
           style={{
@@ -277,6 +289,7 @@ class OneLineEditor extends PureComponent {
           onBlur={this._handleInputBlur}
           onChange={this._handleInputChange}
           onMouseEnter={this._handleInputMouseEnter}
+          onMouseLeave={this._handleInputMouseLeave}
           onDragEnter={this._handleInputDragEnter}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
@@ -290,6 +303,7 @@ OneLineEditor.propTypes = {
   defaultValue: PropTypes.string.isRequired,
 
   // Optional
+  id: PropTypes.string,
   type: PropTypes.string,
   onBlur: PropTypes.func,
   onKeyDown: PropTypes.func,
@@ -301,8 +315,7 @@ OneLineEditor.propTypes = {
   placeholder: PropTypes.string,
   className: PropTypes.string,
   forceEditor: PropTypes.bool,
-  forceInput: PropTypes.bool,
-  handleRender: PropTypes.func
+  forceInput: PropTypes.bool
 };
 
 export default OneLineEditor;

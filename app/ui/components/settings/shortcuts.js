@@ -4,7 +4,7 @@ import {MOD_SYM} from '../../../common/constants';
 class Shortcuts extends PureComponent {
   render () {
     return (
-      <table className="wide">
+      <table className="table--fancy">
         <tbody>
         <tr>
           <td>Switch Requests</td>

@@ -512,7 +512,7 @@ class CodeEditor extends PureComponent {
   }
 
   render () {
-    const {readOnly, fontSize, mode, filter, onMouseLeave, onClick} = this.props;
+    const {id, readOnly, fontSize, mode, filter, onMouseLeave, onClick} = this.props;
 
     const classes = classnames(
       this.props.className,
@@ -576,6 +576,7 @@ class CodeEditor extends PureComponent {
              onClick={onClick}
              onMouseLeave={onMouseLeave}>
           <textarea
+            id={id}
             ref={this._handleInitTextarea}
             style={{display: 'none'}}
             defaultValue=" "
@@ -602,6 +603,7 @@ CodeEditor.propTypes = {
   getAutocompleteConstants: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
+  id: PropTypes.string,
   placeholder: PropTypes.string,
   lineWrapping: PropTypes.bool,
   hideLineNumbers: PropTypes.bool,

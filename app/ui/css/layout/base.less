@@ -81,7 +81,7 @@ webview {
   background-color: #fff;
 }
 
-table {
+table.table--fancy {
   width: 100%;
 
   td, th {
@@ -215,14 +215,8 @@ code, pre, .monospace {
   width: 100%;
 }
 
-.valign-center {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  align-content: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
+.valign-middle {
+  vertical-align: middle;
 }
 
 .pointer {
@@ -292,9 +286,17 @@ i.fa {
   padding-left: @padding-md;
 }
 
+.pad-left-sm {
+  padding-left: @padding-md / 2;
+}
+
 .pad-right {
   box-sizing: border-box;
   padding-right: @padding-md;
+}
+
+.pad-right-sm {
+  padding-right: @padding-md / 2;
 }
 
 .pad-top {
@@ -337,6 +339,18 @@ i.fa {
   padding-bottom: @padding-sm;
 }
 
+.no-margin {
+  margin: 0 !important;
+}
+
+.no-margin-top {
+  margin-top: 0 !important;
+}
+
+.no-pad {
+  padding: 0 !important;
+}
+
 .no-pad-bottom {
   padding-bottom: 0;
 }
@@ -347,26 +361,6 @@ i.fa {
 
 .no-pad-top {
   padding-top: 0 !important;
-}
-
-.no-margin {
-  margin: 0 !important;
-}
-
-.no-margin-top {
-  margin-top: 0 !important;
-}
-
-.pad-left-sm {
-  padding-left: @padding-md / 2;
-}
-
-.pad-right-sm {
-  padding-right: @padding-md / 2;
-}
-
-.no-pad {
-  padding: 0 !important;
 }
 
 .no-margin-left {

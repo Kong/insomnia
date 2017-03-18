@@ -11,7 +11,7 @@ const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 const MAX_HINT_LOOK_BACK = 100;
-const HINT_DELAY_MILLIS = 500;
+const HINT_DELAY_MILLIS = 400;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
@@ -232,11 +232,11 @@ function replaceHintMatch (cm, self, data) {
   let prefix = '';
   let suffix = '';
 
-  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{\s*$/)) {
+  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{[^}]*$/)) {
     prefix = '{{ '; // If no closer before
   } else if (data.type === TYPE_VARIABLE && prevChars.match(/{{$/)) {
     prefix = ' '; // If no space after opener
-  } else if (data.type === TYPE_TAG && !prevChars.match(/{%\s*$/)) {
+  } else if (data.type === TYPE_TAG && !prevChars.match(/{%[^%]*$/)) {
     prefix = '{% '; // If no closer before
   } else if (data.type === TYPE_TAG && prevChars.match(/{%$/)) {
     prefix = ' '; // If no space after opener

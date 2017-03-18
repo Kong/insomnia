@@ -8,7 +8,7 @@ const ResponseHeadersViewer = ({headers}) => {
 
   return (
     <div>
-      <table className="wide table--striped">
+      <table className="table--fancy table--striped">
         <thead>
         <tr>
           <th>Name</th>

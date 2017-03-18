@@ -37,6 +37,13 @@ class Editor extends PureComponent {
     };
   }
 
+  _setRowRef (n) {
+    // NOTE: We're not handling unmounting (may lead to a bug)
+    if (n) {
+      this._rows[n.props.pair.id] = n;
+    }
+  }
+
   _handlePairChange (pair) {
     const i = this._getPairIndex(pair);
     const pairs = [
@@ -333,9 +340,7 @@ class Editor extends PureComponent {
               noDelete={disableDelete}
               key={pair.id || 'no-id'}
               index={i} // For dragging
-              ref={n => {
-                this._rows[pair.id] = n;
-              }}
+              ref={this._setRowRef}
               sortable={sortable}
               namePlaceholder={namePlaceholder}
               valuePlaceholder={valuePlaceholder}

@@ -52,6 +52,13 @@ export const SEGMENT_WRITE_KEY = isDevelopment()
   ? 'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy'
   : 'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
 
+// Auth Types
+export const AUTH_NONE = 'none';
+export const AUTH_BASIC = 'basic';
+export const AUTH_DIGEST = 'digest';
+export const AUTH_OAUTH_2 = 'oauth2';
+export const AUTH_OAUTH_1 = 'oauth1';
+
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;
