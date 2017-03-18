@@ -2,6 +2,7 @@ import * as harUtils from '../har';
 import * as db from '../database';
 import * as render from '../render';
 import * as models from '../../models';
+import {AUTH_BASIC} from '../constants';
 
 describe('exportHarWithRequest()', () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
@@ -34,6 +35,7 @@ describe('exportHarWithRequest()', () => {
       },
       url: 'http://google.com',
       authentication: {
+        type: AUTH_BASIC,
         username: 'user',
         password: 'pass'
       }

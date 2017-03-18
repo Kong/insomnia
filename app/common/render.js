@@ -3,6 +3,8 @@ import * as models from '../models';
 import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
+import {AUTH_BASIC, AUTH_OAUTH_2} from './constants';
+import * as oauth2 from '../windows/o-auth-2';
 
 export function render (obj, context = {}, strict = false) {
   return recursiveRender(obj, context, strict);
@@ -156,10 +158,26 @@ export async function getRenderedRequest (request, environmentId) {
 
   // Add authentication
   const missingAuthHeader = !hasAuthHeader(renderedRequest.headers);
-  if (missingAuthHeader && renderedRequest.authentication.username) {
-    const {username, password} = renderedRequest.authentication;
-    const header = getBasicAuthHeader(username, password);
-    renderedRequest.headers.push(header);
+  if (missingAuthHeader && renderedRequest.authentication.type) {
+    const {authentication} = renderedRequest;
+    if (authentication.type === AUTH_BASIC) {
+      const {username, password} = authentication;
+      const header = getBasicAuthHeader(username, password);
+      renderedRequest.headers.push(header);
+    } else if (authentication.type === AUTH_OAUTH_2) {
+      const {
+        clientId,
+        clientSecret,
+        redirectUrl,
+        authorizationUrl,
+        accessTokenUrl,
+        scope,
+        state
+      } = authentication;
+      const {code} = await oauth2.authorize(authorizationUrl, clientId, redirectUrl, scope, state);
+      const {accessToken} = await oauth2.refresh(accessTokenUrl, clientId, clientSecret, code, redirectUrl, state);
+      renderedRequest.headers.push({name: 'Authorization', value: `token ${accessToken}`});
+    }
   }
 
   return renderedRequest;

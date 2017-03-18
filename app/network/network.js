@@ -191,7 +191,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         let expiresTimestamp = 0;
         if (cookie.expires) {
           const expiresDate = new Date(cookie.expires);
-          console.log('HELLO', expiresDate);
           expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
         }
         curl.setOpt(Curl.option.COOKIELIST, [
