@@ -70,8 +70,9 @@ small {
 label.label--small,
 table th {
   color: @hl;
+  font-weight: 600;
   text-transform: uppercase;
-  font-size: 0.8em;
+  font-size: @font-size-xs;
   padding-bottom: @padding-xxs;
 }
 
@@ -217,6 +218,14 @@ code, pre, .monospace {
 
 .valign-middle {
   vertical-align: middle;
+}
+
+.valign-top {
+  vertical-align: top;
+}
+
+.height-md {
+  height: @line-height-md;
 }
 
 .pointer {

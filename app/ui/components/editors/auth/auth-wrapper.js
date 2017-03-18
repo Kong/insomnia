@@ -58,15 +58,16 @@ class AuthWrapper extends PureComponent {
     return (
       <div className="pad">
         <div className="form-control form-control--outlined">
-          <label>Authentication Type
-            <select value={authentication.type || AUTH_NONE} onChange={this._handleTypeChange}>
-              <option value={AUTH_NONE}>None</option>
-              <option value={AUTH_BASIC}>Basic Auth</option>
-              {/* <option value={AUTH_DIGEST}>Digest</option> */}
-              {/* <option value={AUTH_OAUTH_1}>OAuth 1</option> */}
-              <option value={AUTH_OAUTH_2}>OAuth 2</option>
-            </select>
-          </label>
+          <label className="label--small" htmlFor="auth-type">Authentication Type</label>
+          <select id="auth-type"
+                  value={authentication.type || AUTH_NONE}
+                  onChange={this._handleTypeChange}>
+            <option value={AUTH_NONE}>None</option>
+            <option value={AUTH_BASIC}>Basic Auth</option>
+            {/* <option value={AUTH_DIGEST}>Digest</option> */}
+            {/* <option value={AUTH_OAUTH_1}>OAuth 1</option> */}
+            <option value={AUTH_OAUTH_2}>OAuth 2</option>
+          </select>
         </div>
         {this.renderEditor()}
       </div>

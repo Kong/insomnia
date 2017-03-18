@@ -57,12 +57,12 @@ class OAuth2 extends PureComponent {
     const {handleRender, handleGetRenderContext, authentication} = this.props;
     const id = label.replace(/ /g, '-');
     return (
-      <tr className="margin-top-sm">
+      <tr className="height-md">
         <td className="pad-right no-wrap valign-middle">
-          <label htmlFor={id}>{label}</label>
+          <label htmlFor={id} className="label--small no-pad">{label}</label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--underlined">
+          <div className="form-control form-control--underlined no-margin">
             <OneLineEditor
               id={id}
               onChange={onChange}
@@ -80,12 +80,12 @@ class OAuth2 extends PureComponent {
     const {authentication} = this.props;
     const id = label.replace(/ /g, '-');
     return (
-      <tr>
+      <tr className="height-md">
         <td className="pad-right no-wrap valign-middle">
-          <label htmlFor={id}>{label}</label>
+          <label htmlFor={id} className="label--small no-pad">{label}</label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--outlined">
+          <div className="form-control form-control--outlined no-margin">
             <select id={id}
                     onChange={onChange}
                     value={authentication[property] || options[0].value}>
