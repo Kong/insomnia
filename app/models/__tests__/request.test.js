@@ -8,7 +8,7 @@ describe('init()', () => {
   });
 
   it('contains all required fields', async () => {
-    Date.now = jest.genMockFunction().mockReturnValue(1478795580200);
+    Date.now = jest.fn().mockReturnValue(1478795580200);
     expect(requestModel.init()).toEqual({
       authentication: {},
       body: {},
@@ -28,7 +28,7 @@ describe('create()', async () => {
   });
 
   it('creates a valid request', async () => {
-    Date.now = jest.genMockFunction().mockReturnValue(1478795580200);
+    Date.now = jest.fn().mockReturnValue(1478795580200);
 
     const request = await requestModel.create({name: 'Test Request', parentId: 'fld_124'});
     const expected = {
@@ -52,7 +52,7 @@ describe('create()', async () => {
   });
 
   it('fails when missing parentId', async () => {
-    Date.now = jest.genMockFunction().mockReturnValue(1478795580200);
+    Date.now = jest.fn().mockReturnValue(1478795580200);
     expect(() => requestModel.create({name: 'Test Request'})).toThrow('New Requests missing `parentId`');
   });
 });
@@ -252,6 +252,8 @@ describe('migrate()', () => {
   });
 
   it('migrates from initModel()', () => {
+    Date.now = jest.fn().mockReturnValue(1478795580200);
+
     const original = {
       _id: 'req_123',
       headers: [],
