@@ -25,6 +25,10 @@ class OAuth2 extends PureComponent {
     this._handleChangeProperty('clientId', value);
   }
 
+  _handleChangeCredentialsInBody (value) {
+    this._handleChangeProperty('credentialsInBody', value);
+  }
+
   _handleChangeClientSecret (value) {
     this._handleChangeProperty('clientSecret', value);
   }
@@ -49,6 +53,14 @@ class OAuth2 extends PureComponent {
     this._handleChangeProperty('state', value);
   }
 
+  _handleChangeUsername (value) {
+    this._handleChangeProperty('username', value);
+  }
+
+  _handleChangePassword (value) {
+    this._handleChangeProperty('password', value);
+  }
+
   _handleChangeGrantType (e) {
     this._handleChangeProperty('grantType', e.target.value);
   }
@@ -57,7 +69,7 @@ class OAuth2 extends PureComponent {
     const {handleRender, handleGetRenderContext, authentication} = this.props;
     const id = label.replace(/ /g, '-');
     return (
-      <tr className="height-md">
+      <tr className="height-md" key={id}>
         <td className="pad-right no-wrap valign-middle">
           <label htmlFor={id} className="label--small no-pad">{label}</label>
         </td>
@@ -80,7 +92,7 @@ class OAuth2 extends PureComponent {
     const {authentication} = this.props;
     const id = label.replace(/ /g, '-');
     return (
-      <tr className="height-md">
+      <tr className="height-md" key={id}>
         <td className="pad-right no-wrap valign-middle">
           <label htmlFor={id} className="label--small no-pad">{label}</label>
         </td>
@@ -101,7 +113,67 @@ class OAuth2 extends PureComponent {
     );
   }
 
+  renderGrantTypeFields (grantType) {
+    let fields = null;
+
+    const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
+    const clientSecret = this.renderInputRow('Client Secret', 'clientSecret', this._handleChangeClientSecret);
+    const authorizationUrl = this.renderInputRow('Authorization URL', 'authorizationUrl', this._handleChangeAuthorizationUrl);
+    const accessTokenUrl = this.renderInputRow('Access Token URL', 'accessTokenUrl', this._handleChangeAccessTokenUrl);
+    const redirectUri = this.renderInputRow('Redirect URL', 'redirectUrl', this._handleChangeRedirectUrl);
+    const state = this.renderInputRow('State', 'state', this._handleChangeState);
+    const scope = this.renderInputRow('Scope', 'scope', this._handleChangeScope);
+    const username = this.renderInputRow('Username', 'username', this._handleChangeUsername);
+    const password = this.renderInputRow('Password', 'password', this._handleChangePassword);
+    const credentialsInBody = this.renderSelectRow('Client Credentials', 'credentialsInBody', [
+      {name: 'As Basic Auth Header (default)', value: false},
+      {name: 'In Request Body', value: true}
+    ], this._handleChangeCredentialsInBody);
+
+    if (grantType === GRANT_TYPE_CODE) {
+      fields = [
+        authorizationUrl,
+        accessTokenUrl,
+        clientId,
+        clientSecret,
+        credentialsInBody,
+        redirectUri,
+        scope,
+        state
+      ];
+    } else if (grantType === GRANT_TYPE_CREDENTIALS) {
+      fields = [
+        accessTokenUrl,
+        clientId,
+        clientSecret,
+        credentialsInBody,
+        scope
+      ];
+    } else if (grantType === GRANT_TYPE_PASSWORD) {
+      fields = [
+        username,
+        password,
+        accessTokenUrl,
+        clientId,
+        clientSecret,
+        credentialsInBody,
+        scope
+      ];
+    } else if (grantType === GRANT_TYPE_IMPLICIT) {
+      fields = [
+        authorizationUrl,
+        clientId,
+        redirectUri,
+        scope,
+        state
+      ];
+    }
+
+    return fields;
+  }
+
   render () {
+    const {authentication} = this.props;
     return (
       <div className="pad-top-sm">
         <table>
@@ -112,13 +184,7 @@ class OAuth2 extends PureComponent {
             {name: 'Resource Owner Password Credentials', value: GRANT_TYPE_PASSWORD},
             {name: 'Client Credentials', value: GRANT_TYPE_CREDENTIALS}
           ], this._handleChangeGrantType)}
-          {this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId)}
-          {this.renderInputRow('Client Secret', 'clientSecret', this._handleChangeClientSecret)}
-          {this.renderInputRow('Authorization URL', 'authorizationUrl', this._handleChangeAuthorizationUrl)}
-          {this.renderInputRow('Access Token URL', 'accessTokenUrl', this._handleChangeAccessTokenUrl)}
-          {this.renderInputRow('Redirect URL', 'redirectUrl', this._handleChangeRedirectUrl)}
-          {this.renderInputRow('Scope', 'scope', this._handleChangeScope)}
-          {this.renderInputRow('State', 'state', this._handleChangeState)}
+          {this.renderGrantTypeFields(authentication.grantType)}
           </tbody>
         </table>
       </div>

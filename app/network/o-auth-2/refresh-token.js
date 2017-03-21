@@ -3,18 +3,8 @@ import * as c from './constants';
 import {responseToObject} from './misc';
 import {getBasicAuthHeader} from '../../common/misc';
 
-/**
- * Refresh an OAuth 2.0 access token
- * @param url
- * @param {boolean} useBasicAuth
- * @param {string} clientId
- * @param {string} clientSecret
- * @param refreshToken
- * @param {string} [scope]
- * @returns {Promise.<{}>}
- */
 export async function refresh (url,
-                               useBasicAuth,
+                               credentialsInBody,
                                clientId,
                                clientSecret,
                                refreshToken,
@@ -32,12 +22,12 @@ export async function refresh (url,
     'Accept': 'application/x-www-form-urlencoded, application/json'
   });
 
-  if (useBasicAuth) {
-    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
-    headers.set(name, value);
-  } else {
+  if (credentialsInBody) {
     params.push({name: c.Q_CLIENT_ID, value: clientId});
     params.push({name: c.Q_CLIENT_SECRET, value: clientSecret});
+  } else {
+    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
+    headers.set(name, value);
   }
 
   const config = {

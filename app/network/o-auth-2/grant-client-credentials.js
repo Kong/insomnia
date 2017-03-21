@@ -3,7 +3,7 @@ import {getBasicAuthHeader} from '../../common/misc';
 import * as c from './constants';
 import {responseToObject} from './misc';
 
-export default async function (accessTokenUrl, useBasicAuth, clientId, clientSecret, scope = '') {
+export default async function (accessTokenUrl, credentialsInBody, clientId, clientSecret, scope = '') {
   const params = [
     {name: c.Q_GRANT_TYPE, value: c.GRANT_TYPE_CLIENT_CREDENTIALS}
   ];
@@ -16,12 +16,12 @@ export default async function (accessTokenUrl, useBasicAuth, clientId, clientSec
     'Accept': 'application/x-www-form-urlencoded, application/json'
   };
 
-  if (useBasicAuth) {
-    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
-    headers[name] = value;
-  } else {
+  if (credentialsInBody) {
     params.push({name: c.Q_CLIENT_ID, value: clientId});
     params.push({name: c.Q_CLIENT_SECRET, value: clientSecret});
+  } else {
+    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
+    headers[name] = value;
   }
 
   const config = {

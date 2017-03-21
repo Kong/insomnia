@@ -21,7 +21,7 @@ describe('authorization_code', () => {
     const result = await getToken(
       AUTHORIZE_URL,
       ACCESS_TOKEN_URL,
-      true,
+      false,
       CLIENT_ID,
       CLIENT_SECRET,
       REDIRECT_URI,
@@ -68,7 +68,7 @@ describe('authorization_code', () => {
     const result = await getToken(
       AUTHORIZE_URL,
       ACCESS_TOKEN_URL,
-      false,
+      true,
       CLIENT_ID,
       CLIENT_SECRET,
       REDIRECT_URI,

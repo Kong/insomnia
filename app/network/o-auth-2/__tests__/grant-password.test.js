@@ -17,7 +17,7 @@ describe('password', () => {
 
     const result = await getToken(
       ACCESS_TOKEN_URL,
-      true,
+      false,
       CLIENT_ID,
       CLIENT_SECRET,
       USERNAME,
@@ -62,7 +62,7 @@ describe('password', () => {
 
     const result = await getToken(
       ACCESS_TOKEN_URL,
-      false,
+      true,
       CLIENT_ID,
       CLIENT_SECRET,
       USERNAME,

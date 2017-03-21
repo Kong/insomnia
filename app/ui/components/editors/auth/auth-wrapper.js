@@ -1,19 +1,28 @@
 import React, {PropTypes, PureComponent} from 'react';
 import {AUTH_BASIC, AUTH_NONE, AUTH_OAUTH_2} from '../../../../common/constants';
+import AlertModal from '../../modals/alert-modal';
 import BasicAuth from './basic-auth';
 import OAuth2 from './o-auth-2';
 import autobind from 'autobind-decorator';
+import {showModal} from '../../modals/index';
 
 @autobind
 class AuthWrapper extends PureComponent {
-  _handleTypeChange (e) {
-    const authentication = Object.assign(
-      {},
-      this.props.authentication,
-      {type: e.target.value}
-    );
+  async _handleTypeChange (e) {
+    const newAuthentication = {type: e.target.value};
 
-    this.props.onChange(authentication);
+    try {
+      await showModal(AlertModal, {
+        title: 'Switch Authentication Mode',
+        message: 'Your current authentication settings will be lost. Are you sure you want to switch?',
+        addCancel: true
+      });
+    } catch (err) {
+      // Cancelled
+      return;
+    }
+
+    this.props.onChange(newAuthentication);
   }
 
   renderEditor () {

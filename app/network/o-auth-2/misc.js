@@ -24,19 +24,24 @@ export function responseToObject (body, keys) {
   return results;
 }
 
-export function authorizeUserInWindow (url) {
+export function authorizeUserInWindow (url, urlRegex = /.*/) {
   return new Promise(resolve => {
     // Create a child window
     const child = new electron.remote.BrowserWindow({
-      webPreferences: {nodeIntegration: false},
+      webPreferences: {
+        nodeIntegration: false,
+        partition: 'persist:oauth2'
+      },
       show: false
     });
 
     // Catch the redirect after login
     child.webContents.on('did-navigate', () => {
       const url = child.webContents.getURL();
-      resolve(url);
-      child.close();
+      if (url.match(urlRegex)) {
+        resolve(url);
+        child.close();
+      }
     });
 
     // Show the window to the user after it loads

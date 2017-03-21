@@ -4,7 +4,14 @@ import * as c from './constants';
 import {responseToObject, authorizeUserInWindow} from './misc';
 import {getBasicAuthHeader} from '../../common/misc';
 
-export default async function (authorizeUrl, accessTokenUrl, useBasicAuth, clientId, clientSecret, redirectUri = '', scope = '', state = '') {
+export default async function (authorizeUrl,
+                               accessTokenUrl,
+                               credentialsInBody,
+                               clientId,
+                               clientSecret,
+                               redirectUri = '',
+                               scope = '',
+                               state = '') {
   const authorizeResults = await _authorize(
     authorizeUrl,
     clientId,
@@ -17,7 +24,7 @@ export default async function (authorizeUrl, accessTokenUrl, useBasicAuth, clien
 
   const tokenResults = await _getToken(
     accessTokenUrl,
-    useBasicAuth,
+    credentialsInBody,
     clientId,
     clientSecret,
     authorizeResults[c.Q_CODE],
@@ -43,16 +50,18 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   const qs = querystring.buildFromParams(params);
   const finalUrl = querystring.joinUrl(url, qs);
 
-  const redirectedTo = await authorizeUserInWindow(finalUrl);
-  const {query} = urlParse(redirectedTo, true);
-
-  return {
-    code: query[c.Q_CODE], // Required
-    state: query[c.Q_STATE] || null // Optional
-  };
+  const redirectedTo = await authorizeUserInWindow(finalUrl, /(code=|error=)/);
+  const {query} = urlParse(redirectedTo);
+  return responseToObject(query, [
+    c.Q_CODE,
+    c.Q_STATE,
+    c.Q_ERROR,
+    c.Q_ERROR_DESCRIPTION,
+    c.Q_ERROR_URI
+  ]);
 }
 
-async function _getToken (url, useBasicAuth, clientId, clientSecret, code, redirectUri = '', state = '') {
+async function _getToken (url, credentialsInBody, clientId, clientSecret, code, redirectUri = '', state = '') {
   const params = [
     {name: c.Q_GRANT_TYPE, value: c.GRANT_TYPE_AUTHORIZATION_CODE},
     {name: c.Q_CODE, value: code}
@@ -67,12 +76,12 @@ async function _getToken (url, useBasicAuth, clientId, clientSecret, code, redir
     'Accept': 'application/x-www-form-urlencoded, application/json'
   };
 
-  if (useBasicAuth) {
-    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
-    headers[name] = value;
-  } else {
+  if (credentialsInBody) {
     params.push({name: c.Q_CLIENT_ID, value: clientId});
     params.push({name: c.Q_CLIENT_SECRET, value: clientSecret});
+  } else {
+    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
+    headers[name] = value;
   }
 
   const config = {

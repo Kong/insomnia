@@ -15,7 +15,7 @@ describe('client_credentials', () => {
 
     const result = await getToken(
       ACCESS_TOKEN_URL,
-      true,
+      false,
       CLIENT_ID,
       CLIENT_SECRET,
       SCOPE
@@ -55,7 +55,7 @@ describe('client_credentials', () => {
 
     const result = await getToken(
       ACCESS_TOKEN_URL,
-      false,
+      true,
       CLIENT_ID,
       CLIENT_SECRET,
       SCOPE

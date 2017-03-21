@@ -169,7 +169,7 @@ export async function getRenderedRequest (request, environmentId) {
       const data = await getAccessToken(
         authentication.authorizationUrl,
         authentication.accessTokenUrl,
-        authentication.useBasicAuth,
+        authentication.credentialsInBody,
         authentication.clientId,
         authentication.clientSecret,
         authentication.redirectUrl,
