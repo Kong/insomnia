@@ -144,9 +144,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
       // Set all the basic options
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects); // Follow redirects
-      curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0); // Follow POST redirects
-      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL); // Validate SSL
+      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+      curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0);
+      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL);
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       curl.setOpt(Curl.option.VERBOSE, true);
       curl.setOpt(Curl.option.NOPROGRESS, false);

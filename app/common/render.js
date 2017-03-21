@@ -4,7 +4,7 @@ import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 import {AUTH_BASIC, AUTH_OAUTH_2} from './constants';
-import * as oauth2 from '../network/o-auth-2/o-auth-2';
+import getAccessToken from '../network/o-auth-2/grant-authorization-code';
 
 export function render (obj, context = {}, strict = false) {
   return recursiveRender(obj, context, strict);
@@ -157,6 +157,7 @@ export async function getRenderedRequest (request, environmentId) {
   renderedRequest.cookieJar = cookieJar;
 
   // Add authentication
+  // TODO: Move this into HAR and network separately
   const missingAuthHeader = !hasAuthHeader(renderedRequest.headers);
   if (missingAuthHeader && renderedRequest.authentication.type) {
     const {authentication} = renderedRequest;
@@ -165,18 +166,20 @@ export async function getRenderedRequest (request, environmentId) {
       const header = getBasicAuthHeader(username, password);
       renderedRequest.headers.push(header);
     } else if (authentication.type === AUTH_OAUTH_2) {
-      const {
-        clientId,
-        clientSecret,
-        redirectUrl,
-        authorizationUrl,
-        accessTokenUrl,
-        scope,
-        state
-      } = authentication;
-      const {code} = await oauth2.authorizeAuthCode(authorizationUrl, clientId, redirectUrl, scope, state);
-      const {accessToken} = await oauth2.getAccessTokenAuthorizationCode(accessTokenUrl, clientId, clientSecret, code, redirectUrl, state);
-      renderedRequest.headers.push({name: 'Authorization', value: `token ${accessToken}`});
+      const data = await getAccessToken(
+        authentication.authorizationUrl,
+        authentication.accessTokenUrl,
+        authentication.useBasicAuth,
+        authentication.clientId,
+        authentication.clientSecret,
+        authentication.redirectUrl,
+        authentication.scope,
+        authentication.state
+      );
+      renderedRequest.headers.push({
+        name: 'Authorization',
+        value: `Bearer ${data.access_token}`
+      });
     }
   }
 
