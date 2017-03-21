@@ -2,11 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
-
-const GRANT_TYPE_CODE = 'code';
-const GRANT_TYPE_IMPLICIT = 'implicit';
-const GRANT_TYPE_PASSWORD = 'password';
-const GRANT_TYPE_CREDENTIALS = 'credentials';
+import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_PASSWORD, GRANT_TYPE_IMPLICIT} from '../../../../network/o-auth-2/constants';
 
 @autobind
 class OAuth2 extends PureComponent {
@@ -130,7 +126,7 @@ class OAuth2 extends PureComponent {
       {name: 'In Request Body', value: true}
     ], this._handleChangeCredentialsInBody);
 
-    if (grantType === GRANT_TYPE_CODE) {
+    if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
       fields = [
         authorizationUrl,
         accessTokenUrl,
@@ -141,7 +137,7 @@ class OAuth2 extends PureComponent {
         scope,
         state
       ];
-    } else if (grantType === GRANT_TYPE_CREDENTIALS) {
+    } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       fields = [
         accessTokenUrl,
         clientId,
@@ -179,10 +175,10 @@ class OAuth2 extends PureComponent {
         <table>
           <tbody>
           {this.renderSelectRow('Grant Type', 'grantType', [
-            {name: 'Authorization Code', value: GRANT_TYPE_CODE},
+            {name: 'Authorization Code', value: GRANT_TYPE_AUTHORIZATION_CODE},
             {name: 'Implicit', value: GRANT_TYPE_IMPLICIT},
             {name: 'Resource Owner Password Credentials', value: GRANT_TYPE_PASSWORD},
-            {name: 'Client Credentials', value: GRANT_TYPE_CREDENTIALS}
+            {name: 'Client Credentials', value: GRANT_TYPE_CLIENT_CREDENTIALS}
           ], this._handleChangeGrantType)}
           {this.renderGrantTypeFields(authentication.grantType)}
           </tbody>

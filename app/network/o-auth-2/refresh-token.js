@@ -10,7 +10,7 @@ export async function refresh (url,
                                refreshToken,
                                scope = '') {
   const params = [
-    {name: c.Q_GRANT_TYPE, value: c.GRANT_TYPE_REFRESH_TOKEN},
+    {name: c.Q_GRANT_TYPE, value: c.GRANT_TYPE_IMPLICIT},
     {name: c.Q_REFRESH_TOKEN, value: refreshToken}
   ];
 
