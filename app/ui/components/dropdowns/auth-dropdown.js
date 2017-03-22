@@ -10,6 +10,11 @@ import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthT
 @autobind
 class AuthDropdown extends PureComponent {
   async _handleTypeChange (type) {
+    if (type === this.props.authentication.type) {
+      // Type didn't change
+      return;
+    }
+
     const newAuthentication = models.request.newAuth(type);
     const defaultAuthentication = models.request.newAuth(this.props.authentication.type);
 
