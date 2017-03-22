@@ -16,7 +16,7 @@ describe('buildRequestConfig()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const config = networkUtils._buildRequestConfig(renderedRequest);
+    const config = await networkUtils._buildRequestConfig(renderedRequest);
     expect(config).toEqual({
       body: '',
       encoding: null,
@@ -71,7 +71,7 @@ describe('buildRequestConfig()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const config = networkUtils._buildRequestConfig(renderedRequest);
+    const config = await networkUtils._buildRequestConfig(renderedRequest);
     expect(config).toEqual({
       body: 'X=XX&Z=ZZ',
       encoding: null,

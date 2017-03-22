@@ -10,7 +10,7 @@ import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
 import {jarFromCookies, cookiesFromJar} from '../common/cookies';
-import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from '../common/misc';
+import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, hasAuthHeader} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -35,7 +35,7 @@ export function cancelCurrentRequest () {
   }
 }
 
-export function _buildRequestConfig (renderedRequest, patch = {}) {
+export async function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
     // Setup redirect rules
     followAllRedirects: true,
@@ -111,6 +111,14 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
   // Set UserAgent if it doesn't exist
   if (!hasUserAgentHeader(renderedRequest.headers)) {
     config.headers['User-Agent'] = `insomnia/${getAppVersion()}`;
+  }
+
+  // Set Authorization header
+  if (!hasAuthHeader(renderedRequest.headers)) {
+    const authHeader = await getAuthHeader(renderedRequest.authentication);
+    if (authHeader) {
+      config.headers[authHeader.name] = authHeader.value;
+    }
   }
 
   // Set the URL, including the query parameters
@@ -306,7 +314,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       });
 
       // Handle Authorization header
-      if (!hasAcceptHeader(renderedRequest.headers)) {
+      if (!hasAuthHeader(renderedRequest.headers)) {
         const authHeader = await getAuthHeader(renderedRequest.authentication);
         authHeader && headers.push(authHeader);
       }
@@ -473,7 +481,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
 
     let config;
     try {
-      config = _buildRequestConfig(renderedRequest, {
+      config = await _buildRequestConfig(renderedRequest, {
         jar: null, // We're doing our own cookies
         proxy: proxy,
         followAllRedirects: settings.followRedirects,
