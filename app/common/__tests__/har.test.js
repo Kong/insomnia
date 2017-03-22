@@ -42,7 +42,7 @@ describe('exportHarWithRequest()', () => {
     });
 
     const renderedRequest = await render.getRenderedRequest(request);
-    const har = harUtils.exportHarWithRequest(renderedRequest);
+    const har = await harUtils.exportHarWithRequest(renderedRequest);
 
     expect(har.cookies.length).toBe(1);
     expect(har).toEqual({

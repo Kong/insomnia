@@ -1,14 +1,8 @@
 import clone from 'clone';
 import * as models from '../models';
-import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
+import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
-import {AUTH_BASIC, AUTH_OAUTH_2} from './constants';
-import getAccessTokenAC from '../network/o-auth-2/grant-authorization-code';
-import getAccessTokenCC from '../network/o-auth-2/grant-client-credentials';
-import getAccessTokenP from '../network/o-auth-2/grant-password';
-import getAccessTokenI from '../network/o-auth-2/grant-implicit';
-import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_IMPLICIT, GRANT_TYPE_PASSWORD, GRANT_TYPE_CLIENT_CREDENTIALS} from '../network/o-auth-2/constants';
 
 export function render (obj, context = {}, strict = false) {
   return recursiveRender(obj, context, strict);
@@ -158,68 +152,8 @@ export async function getRenderedRequest (request, environmentId) {
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
   // Add the yummy cookies
+  // TODO: Don't deal with cookies in here
   renderedRequest.cookieJar = cookieJar;
-
-  // Add authentication
-  // TODO: Move this into HAR and network separately
-  const missingAuthHeader = !hasAuthHeader(renderedRequest.headers);
-  if (missingAuthHeader && renderedRequest.authentication.type) {
-    const {authentication} = renderedRequest;
-    if (authentication.type === AUTH_BASIC) {
-      const {username, password} = authentication;
-      const header = getBasicAuthHeader(username, password);
-      renderedRequest.headers.push(header);
-    } else if (authentication.type === AUTH_OAUTH_2) {
-      let oauth2Response;
-      if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-        oauth2Response = await getAccessTokenAC(
-          authentication.authorizationUrl,
-          authentication.accessTokenUrl,
-          authentication.credentialsInBody,
-          authentication.clientId,
-          authentication.clientSecret,
-          authentication.redirectUrl,
-          authentication.scope,
-          authentication.state
-        );
-      } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
-        oauth2Response = await getAccessTokenI(
-          authentication.authorizationUrl,
-          authentication.clientId,
-          authentication.redirectUrl,
-          authentication.scope,
-          authentication.state
-        );
-      } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
-        oauth2Response = await getAccessTokenP(
-          authentication.accessTokenUrl,
-          authentication.credentialsInBody,
-          authentication.clientId,
-          authentication.clientSecret,
-          authentication.username,
-          authentication.password,
-          authentication.scope
-        );
-      } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-        oauth2Response = await getAccessTokenCC(
-          authentication.accessTokenUrl,
-          authentication.credentialsInBody,
-          authentication.clientId,
-          authentication.clientSecret,
-          authentication.scope
-        );
-      }
-
-      console.log('DATA', authentication, oauth2Response);
-
-      if (oauth2Response) {
-        renderedRequest.headers.push({
-          name: 'Authorization',
-          value: `Bearer ${oauth2Response.access_token}`
-        });
-      }
-    }
-  }
 
   return renderedRequest;
 }

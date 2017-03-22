@@ -15,6 +15,7 @@ import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
 import caCerts from './cacert';
+import {getAuthHeader} from './authentication';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
 // default dns.resolve which uses c-ares to do lookups. This doesn't work for
@@ -150,6 +151,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       curl.setOpt(Curl.option.VERBOSE, true);
       curl.setOpt(Curl.option.NOPROGRESS, false);
+
+      // Set the headers (to be modified as we go)
+      const headers = [...renderedRequest.headers];
 
       let lastPercent = 0;
       curl.setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
@@ -301,9 +305,14 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         dataBuffersLength += chunk.length;
       });
 
-      // Set the headers
-      const headers = renderedRequest.headers.map(h => `${h.name}: ${h.value}`);
-      curl.setOpt(Curl.option.HTTPHEADER, headers);
+      // Handle Authorization header
+      if (!hasAcceptHeader(renderedRequest.headers)) {
+        const authHeader = await getAuthHeader(renderedRequest.authentication);
+        authHeader && headers.push(authHeader);
+      }
+
+      // NOTE: This is last because headers might be modified multiple times
+      curl.setOpt(Curl.option.HTTPHEADER, headers.map(h => `${h.name}: ${h.value}`));
 
       // Set User-Agent if it't not already in headers
       if (!hasAcceptHeader(renderedRequest.headers)) {
