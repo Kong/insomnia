@@ -5,21 +5,25 @@ import BasicAuth from './basic-auth';
 import OAuth2 from './o-auth-2';
 import autobind from 'autobind-decorator';
 import {showModal} from '../../modals/index';
+import * as models from '../../../../models/index';
 
 @autobind
 class AuthWrapper extends PureComponent {
   async _handleTypeChange (e) {
-    const newAuthentication = {type: e.target.value};
+    const newAuthentication = models.request.newAuth(e.target.value);
+    const defaultAuthentication = models.request.newAuth(this.props.authentication.type);
 
-    try {
-      await showModal(AlertModal, {
-        title: 'Switch Authentication Mode',
-        message: 'Your current authentication settings will be lost. Are you sure you want to switch?',
-        addCancel: true
-      });
-    } catch (err) {
-      // Cancelled
-      return;
+    // Prompt the user if they have edited the auth away from the default settings
+    for (const key of Object.keys(this.props.authentication)) {
+      const value = this.props.authentication[key];
+      if (defaultAuthentication[key] !== value) {
+        await showModal(AlertModal, {
+          title: 'Switch Authentication Mode',
+          message: 'Your current authentication settings will be lost. Are you sure you want to switch?',
+          addCancel: true
+        });
+        break;
+      }
     }
 
     this.props.onChange(newAuthentication);
