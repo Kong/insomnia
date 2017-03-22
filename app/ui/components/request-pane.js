@@ -1,14 +1,15 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
+import ContentTypeDropdown from './dropdowns/content-type-dropdown';
+import AuthDropdown from './dropdowns/auth-dropdown';
 import KeyValueEditor from './key-value-editor/editor';
 import RequestHeadersEditor from './editors/request-headers-editor';
-import ContentTypeDropdown from './dropdowns/content-type-dropdown';
 import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {MOD_SYM, getContentTypeName} from '../../common/constants';
+import {getAuthTypeName, getContentTypeName, MOD_SYM} from '../../common/constants';
 import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
@@ -19,14 +20,6 @@ class RequestPane extends PureComponent {
     super(props);
 
     this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
-  }
-
-  _handleHidePasswords () {
-    this.props.updateSettingsShowPasswords(false);
-  }
-
-  _handleShowPasswords () {
-    this.props.updateSettingsShowPasswords(true);
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor () {
@@ -176,7 +169,6 @@ class RequestPane extends PureComponent {
 
     const numParameters = request.parameters.filter(p => !p.disabled).length;
     const numHeaders = request.headers.filter(h => !h.disabled).length;
-    const hasAuth = !request.authentication.disabled && request.authentication.username;
     const urlHasQueryParameters = request.url.indexOf('?') >= 0;
 
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;
@@ -209,13 +201,18 @@ class RequestPane extends PureComponent {
               <ContentTypeDropdown onChange={updateRequestMimeType}
                                    contentType={request.body.mimeType}
                                    className="tall">
-                <i className="fa fa-caret-down"></i>
+                <i className="fa fa-caret-down"/>
               </ContentTypeDropdown>
             </Tab>
             <Tab onClick={this._trackTabAuthentication}>
               <button>
-                Auth {hasAuth ? <i className="fa fa-lock txt-sm"></i> : null}
+                {getAuthTypeName(request.authentication.type)}
               </button>
+              <AuthDropdown onChange={updateRequestAuthentication}
+                            authentication={request.authentication}
+                            className="tall">
+                <i className="fa fa-caret-down"/>
+              </AuthDropdown>
             </Tab>
             <Tab onClick={this._trackTabQuery}>
               <button>
@@ -252,17 +249,6 @@ class RequestPane extends PureComponent {
                 handleGetRenderContext={handleGetRenderContext}
                 onChange={updateRequestAuthentication}
               />
-              <div className="pad pull-right">
-                {showPasswords ? (
-                    <button className="btn btn--clicky" onClick={this._handleHidePasswords}>
-                      Hide Password
-                    </button>
-                  ) : (
-                    <button className="btn btn--clicky" onClick={this._handleShowPasswords}>
-                      Show Password
-                    </button>
-                  )}
-              </div>
             </div>
           </TabPanel>
           <TabPanel className="query-editor">

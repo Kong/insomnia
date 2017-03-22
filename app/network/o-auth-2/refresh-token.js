@@ -3,7 +3,7 @@ import * as c from './constants';
 import {responseToObject} from './misc';
 import {getBasicAuthHeader} from '../../common/misc';
 
-export async function refresh (url,
+export default async function (url,
                                credentialsInBody,
                                clientId,
                                clientSecret,

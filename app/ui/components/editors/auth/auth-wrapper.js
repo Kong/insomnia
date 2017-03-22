@@ -1,34 +1,11 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {AUTH_BASIC, AUTH_NONE, AUTH_OAUTH_2} from '../../../../common/constants';
-import AlertModal from '../../modals/alert-modal';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import OAuth2 from './o-auth-2';
 import autobind from 'autobind-decorator';
-import {showModal} from '../../modals/index';
-import * as models from '../../../../models/index';
 
 @autobind
 class AuthWrapper extends PureComponent {
-  async _handleTypeChange (e) {
-    const newAuthentication = models.request.newAuth(e.target.value);
-    const defaultAuthentication = models.request.newAuth(this.props.authentication.type);
-
-    // Prompt the user if they have edited the auth away from the default settings
-    for (const key of Object.keys(this.props.authentication)) {
-      const value = this.props.authentication[key];
-      if (defaultAuthentication[key] !== value) {
-        await showModal(AlertModal, {
-          title: 'Switch Authentication Mode',
-          message: 'Your current authentication settings will be lost. Are you sure you want to switch?',
-          addCancel: true
-        });
-        break;
-      }
-    }
-
-    this.props.onChange(newAuthentication);
-  }
-
   renderEditor () {
     const {
       authentication,
@@ -61,29 +38,42 @@ class AuthWrapper extends PureComponent {
           showPasswords={showPasswords}
         />
       );
+    } else if (authentication.type === AUTH_OAUTH_1) {
+      return (
+        <div className="vertically-center text-center">
+          <p className="pad super-faint text-sm text-center">
+            <i className="fa fa-commenting" style={{fontSize: '8rem', opacity: 0.3}}/>
+            <br/><br/>
+            Don't worry, OAuth 1.0 is coming soon!
+          </p>
+        </div>
+      );
+    } else if (authentication.type === AUTH_DIGEST) {
+      return (
+        <div className="vertically-center text-center">
+          <p className="pad super-faint text-sm text-center">
+            <i className="fa fa-commenting" style={{fontSize: '8rem', opacity: 0.3}}/>
+            <br/><br/>
+            Don't worry, digest auth is coming soon!
+          </p>
+        </div>
+      );
     } else {
-      return null;
+      return (
+        <div className="vertically-center text-center">
+          <p className="pad super-faint text-sm text-center">
+            <i className="fa fa-unlock-alt" style={{fontSize: '8rem', opacity: 0.3}}/>
+            <br/><br/>
+            Select an auth type from above
+          </p>
+        </div>
+      );
     }
   }
 
   render () {
-    const {authentication} = this.props;
     return (
-      <div className="pad">
-        <div className="form-control form-control--outlined">
-          <label className="label--small" htmlFor="auth-type">Authentication Type</label>
-          <select id="auth-type"
-                  value={authentication.type || AUTH_NONE}
-                  onChange={this._handleTypeChange}>
-            <option value={AUTH_NONE}>None</option>
-            <option value={AUTH_BASIC}>Basic Auth</option>
-            {/* <option value={AUTH_DIGEST}>Digest</option> */}
-            {/* <option value={AUTH_OAUTH_1}>OAuth 1</option> */}
-            <option value={AUTH_OAUTH_2}>OAuth 2</option>
-          </select>
-        </div>
-        {this.renderEditor()}
-      </div>
+      <div className="pad tall">{this.renderEditor()}</div>
     );
   }
 }

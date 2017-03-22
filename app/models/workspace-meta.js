@@ -4,6 +4,7 @@ import {DEFAULT_SIDEBAR_WIDTH, DEFAULT_PANE_WIDTH} from '../common/constants';
 export const name = 'Workspace Meta';
 export const type = 'WorkspaceMeta';
 export const prefix = 'wrkm';
+export const canDuplicate = true;
 
 export function init () {
   return {

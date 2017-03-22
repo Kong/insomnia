@@ -106,6 +106,10 @@ export async function recursiveRender (originalObj, context = {}, strict = false
 }
 
 export async function getRenderContext (request, environmentId, ancestors = null) {
+  if (!request) {
+    return {};
+  }
+
   if (!ancestors) {
     ancestors = await db.withAncestors(request);
   }

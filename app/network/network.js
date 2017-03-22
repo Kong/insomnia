@@ -115,7 +115,10 @@ export async function _buildRequestConfig (renderedRequest, patch = {}) {
 
   // Set Authorization header
   if (!hasAuthHeader(renderedRequest.headers)) {
-    const authHeader = await getAuthHeader(renderedRequest.authentication);
+    const authHeader = await getAuthHeader(
+      renderedRequest._id,
+      renderedRequest.authentication
+    );
     if (authHeader) {
       config.headers[authHeader.name] = authHeader.value;
     }
@@ -142,14 +145,20 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
     }
 
     try {
-      // Setup the cancellation logic
-      let cancelCode = 0;
-      cancelRequestFunction = () => {
-        cancelCode = 1;
-      };
-
       // Initialize the curl handle
       const curl = new Curl();
+      window.curl = curl;
+
+      // Setup the cancellation logic
+      cancelRequestFunction = () => {
+        resolve({
+          parentId: renderedRequest._id,
+          elapsedTime: curl.getInfo('TOTAL_TIME') * 1000,
+          statusMessage: 'Cancelled',
+          error: 'Request was cancelled'
+        });
+        curl.close();
+      };
 
       // Set all the basic options
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
@@ -166,16 +175,16 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       let lastPercent = 0;
       curl.setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
         if (dltotal === 0) {
-          return cancelCode;
+          return 0;
         }
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
-          console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
+          // console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
           lastPercent = percent;
         }
 
-        return cancelCode;
+        return 0;
       });
 
       // Set the URL, including the query parameters
@@ -315,7 +324,10 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
       // Handle Authorization header
       if (!hasAuthHeader(renderedRequest.headers)) {
-        const authHeader = await getAuthHeader(renderedRequest.authentication);
+        const authHeader = await getAuthHeader(
+          renderedRequest._id,
+          renderedRequest.authentication
+        );
         authHeader && headers.push(authHeader);
       }
 

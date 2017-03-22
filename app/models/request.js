@@ -1,4 +1,4 @@
-import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, AUTH_BASIC, AUTH_OAUTH_2} from '../common/constants';
+import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, AUTH_BASIC, AUTH_OAUTH_2, AUTH_OAUTH_1, AUTH_DIGEST} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {deconstructToParams, buildFromParams} from '../common/querystring';
@@ -7,6 +7,7 @@ import {GRANT_TYPE_AUTHORIZATION_CODE} from '../network/o-auth-2/constants';
 export const name = 'Request';
 export const type = 'Request';
 export const prefix = 'req';
+export const canDuplicate = true;
 
 export function init () {
   return {
@@ -26,6 +27,10 @@ export function newAuth (type) {
     return {type, username: '', password: ''};
   } else if (type === AUTH_OAUTH_2) {
     return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
+  } else if (type === AUTH_OAUTH_1) {
+    return {type};
+  } else if (type === AUTH_DIGEST) {
+    return {type};
   } else {
     return {};
   }

@@ -4,6 +4,7 @@ import {MAX_RESPONSES} from '../common/constants';
 export const name = 'Response';
 export const type = 'Response';
 export const prefix = 'res';
+export const canDuplicate = false;
 
 export function init () {
   return {
