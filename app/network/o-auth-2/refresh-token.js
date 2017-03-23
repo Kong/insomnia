@@ -3,7 +3,7 @@ import * as c from './constants';
 import {responseToObject} from './misc';
 import {getBasicAuthHeader} from '../../common/misc';
 
-export default async function (url,
+export default async function (accessTokenUrl,
                                credentialsInBody,
                                clientId,
                                clientSecret,
@@ -36,7 +36,7 @@ export default async function (url,
     headers: headers
   };
 
-  const response = await window.fetch(url, config);
+  const response = await window.fetch(accessTokenUrl, config);
   const body = await response.text();
   const results = responseToObject(body, [
     c.Q_ACCESS_TOKEN,

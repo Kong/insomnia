@@ -13,6 +13,8 @@ import {getAuthTypeName, getContentTypeName, MOD_SYM} from '../../common/constan
 import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
+import * as db from '../../common/database';
+import * as models from '../../models';
 
 @autobind
 class RequestPane extends PureComponent {
@@ -20,6 +22,18 @@ class RequestPane extends PureComponent {
     super(props);
 
     this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
+  }
+
+  async _autocompleteUrls () {
+    const docs = await db.withDescendants(this.props.workspace);
+
+    const urls = docs.filter(d => (
+      d.type === models.request.type && // Only requests
+      d._id !== this.props.request._id && // Not current request
+      d.url.length > 0 // Only ones with valid URLs
+    )).map(r => r.url);
+
+    return Array.from(new Set(urls));
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor () {
@@ -181,6 +195,7 @@ class RequestPane extends PureComponent {
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={this._handleUpdateRequestUrl}
+            handleAutocompleteUrls={this._autocompleteUrls}
             handleImport={handleImport}
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
@@ -243,7 +258,7 @@ class RequestPane extends PureComponent {
               <AuthWrapper
                 key={uniqueKey}
                 showPasswords={showPasswords}
-                authentication={request.authentication}
+                request={request}
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}

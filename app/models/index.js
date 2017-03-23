@@ -9,7 +9,7 @@ import * as _requestGroupMeta from './request-group-meta';
 import * as _request from './request';
 import * as _requestMeta from './request-meta';
 import * as _response from './response';
-import * as _oAuth2Token from './oauth2-token';
+import * as _oAuth2Token from './o-auth-2-token';
 
 // Reference to each model
 export const stats = _stats;

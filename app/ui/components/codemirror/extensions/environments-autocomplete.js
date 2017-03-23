@@ -45,7 +45,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return;
   }
 
-  function completeAfter (cm, fn, showAllOnNoMatch = false) {
+  async function completeAfter (cm, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
       return CodeMirror.Pass;
@@ -66,7 +66,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       hintsContainer = el;
     }
 
-    const constants = options.getConstants && options.getConstants();
+    const constants = options.getConstants && await options.getConstants();
 
     // Actually show the hint
     cm.showHint({
@@ -172,19 +172,19 @@ async function hint (cm, options) {
   const allShortMatches = [];
   const allLongMatches = [];
 
-  // Match constants
-  if (allowMatchingConstants) {
-    matchSegments(options.extraConstants, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
-      .map(m => allShortMatches.push(m));
-    matchSegments(options.extraConstants, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
-      .map(m => allLongMatches.push(m));
-  }
-
   // Match variables
   if (allowMatchingVariables) {
     matchSegments(context.keys, nameSegment, TYPE_VARIABLE, MAX_VARIABLES)
       .map(m => allShortMatches.push(m));
     matchSegments(context.keys, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES)
+      .map(m => allLongMatches.push(m));
+  }
+
+  // Match constants
+  if (allowMatchingConstants) {
+    matchSegments(options.extraConstants, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
+      .map(m => allShortMatches.push(m));
+    matchSegments(options.extraConstants, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
       .map(m => allLongMatches.push(m));
   }
 
