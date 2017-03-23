@@ -26,11 +26,7 @@ export function newAuth (type) {
   if (type === AUTH_BASIC) {
     return {type, username: '', password: ''};
   } else if (type === AUTH_OAUTH_2) {
-    return {
-      type,
-      grantType: GRANT_TYPE_AUTHORIZATION_CODE,
-      state: '{% uuid \'v4\' %}'
-    };
+    return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
   } else if (type === AUTH_OAUTH_1) {
     return {type};
   } else if (type === AUTH_DIGEST) {

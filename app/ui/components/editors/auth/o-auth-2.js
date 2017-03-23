@@ -17,7 +17,7 @@ class OAuth2 extends PureComponent {
     super(props);
 
     this.state = {
-      token: null
+      loading: false
     };
 
     this._mounted = false;
@@ -33,10 +33,11 @@ class OAuth2 extends PureComponent {
 
   async _handleRefreshToken () {
     const {request} = this.props;
+    this.setState({loading: true});
     const authentication = await this.props.handleRender(request.authentication);
     const oAuth2Token = await getAccessToken(request._id, authentication, true);
 
-    this.setState({token: oAuth2Token});
+    this.setState({token: oAuth2Token, loading: false});
   }
 
   _handleChangeProperty (property, value) {
@@ -264,6 +265,7 @@ class OAuth2 extends PureComponent {
 
   render () {
     const {request, oAuth2Token: tok} = this.props;
+    const {loading} = this.state;
     return (
       <div className="pad-top-sm pad-bottom">
         <table>
@@ -299,14 +301,19 @@ class OAuth2 extends PureComponent {
             </code>
           </div>
           <div className="pad-top text-right">
-            <button className="btn btn--clicky"
-                    onClick={this._handleClearTokens}
-                    disabled={!tok}>
-              Clear Tokens
-            </button>
+            {tok ? (
+              <button className="btn btn--clicky" onClick={this._handleClearTokens}>
+                Clear Tokens
+              </button>
+            ) : null}
             &nbsp;&nbsp;
-            <button className="btn btn--clicky" onClick={this._handleRefreshToken}>
-              {tok ? 'Refresh Token' : 'Fetch Token'}
+            <button className="btn btn--clicky"
+                    onClick={this._handleRefreshToken}
+                    disabled={loading}>
+              {loading
+                ? (tok ? 'Refreshing...' : 'Fetching...')
+                : (tok ? 'Refresh Token' : 'Fetch Tokens')
+              }
             </button>
           </div>
         </div>

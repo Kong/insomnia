@@ -648,7 +648,6 @@ function mapStateToProps (state, props) {
     workspaces,
     environments,
     requests,
-    oAuth2Tokens,
     requestGroups
   } = entitiesLists;
 
