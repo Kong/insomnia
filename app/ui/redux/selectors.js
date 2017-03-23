@@ -167,6 +167,15 @@ export const selectActiveRequest = createSelector(
   }
 );
 
+export const selectActiveOAuth2Token = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspaceMeta,
+  (entities, workspaceMeta) => {
+    const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
+    return entities.oAuth2Tokens.find(t => t.parentId === id);
+  }
+);
+
 export const selectActiveRequestMeta = createSelector(
   selectActiveRequest,
   selectEntitiesLists,

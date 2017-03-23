@@ -9,6 +9,7 @@ import * as _requestGroupMeta from './request-group-meta';
 import * as _request from './request';
 import * as _requestMeta from './request-meta';
 import * as _response from './response';
+import * as _oAuth2Token from './o-auth-2-token';
 
 // Reference to each model
 export const stats = _stats;
@@ -22,6 +23,7 @@ export const requestGroupMeta = _requestGroupMeta;
 export const request = _request;
 export const requestMeta = _requestMeta;
 export const response = _response;
+export const oAuth2Token = _oAuth2Token;
 
 const _models = {
   [stats.type]: stats,
@@ -34,7 +36,8 @@ const _models = {
   [requestGroupMeta.type]: requestGroupMeta,
   [request.type]: request,
   [requestMeta.type]: requestMeta,
-  [response.type]: response
+  [response.type]: response,
+  [oAuth2Token.type]: oAuth2Token
 };
 
 export function all () {
@@ -47,6 +50,11 @@ export function types () {
 
 export function getModel (type) {
   return _models[type] || null;
+}
+
+export function canDuplicate (type) {
+  const model = getModel(type);
+  return model ? model.canDuplicate : false;
 }
 
 export function getModelName (type, count = 1) {

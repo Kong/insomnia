@@ -44,8 +44,13 @@
     "moduleNameMapper": {
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js"
     },
+    "testMatch": [
+      "**/__tests__/**/*.test.js?(x)"
+    ],
     "rootDir": "app",
     "verbose": false,
+    "resetMocks": true,
+    "resetModules": true,
     "collectCoverage": false,
     "collectCoverageFrom": [
       "**/*.js",
@@ -153,7 +158,7 @@
     "eslint-plugin-react": "^6.10.0",
     "eslint-plugin-standard": "^2.1.1",
     "file-loader": "~0.10.1",
-    "jest": "~18.1.0",
+    "jest": "~19.0.2",
     "less": "~2.7.2",
     "less-loader": "~2.2.3",
     "nock": "~9.0.2",

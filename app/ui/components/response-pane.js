@@ -125,7 +125,7 @@ class ResponsePane extends PureComponent {
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
             <div>
-              <table>
+              <table className="table--fancy">
                 <tbody>
                 <tr>
                   <td>Send Request</td>

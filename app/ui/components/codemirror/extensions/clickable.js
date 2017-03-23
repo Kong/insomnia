@@ -3,7 +3,7 @@ import 'codemirror/addon/mode/overlay';
 
 CodeMirror.defineExtension('makeLinksClickable', function (handleClick) {
   // Only add the click mode if we have links to click
-  const regexUrl = /^https?:\/\/([\da-z\-.]+)\.([a-z.]{2,6})([/\w .\-+=;]*)*\/?/;
+  const regexUrl = /^https?:\/\/([\da-z\-.]+)\.([a-z.]{2,6})([/\w .\-+=:[]@!#?;]*)*\/?/;
 
   this.addOverlay({
     token: function (stream, state) {

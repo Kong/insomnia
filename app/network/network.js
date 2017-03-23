@@ -10,11 +10,12 @@ import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
 import {jarFromCookies, cookiesFromJar} from '../common/cookies';
-import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader} from '../common/misc';
+import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, hasAuthHeader} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
 import caCerts from './cacert';
+import {getAuthHeader} from './authentication';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
 // default dns.resolve which uses c-ares to do lookups. This doesn't work for
@@ -34,7 +35,7 @@ export function cancelCurrentRequest () {
   }
 }
 
-export function _buildRequestConfig (renderedRequest, patch = {}) {
+export async function _buildRequestConfig (renderedRequest, patch = {}) {
   const config = {
     // Setup redirect rules
     followAllRedirects: true,
@@ -112,6 +113,18 @@ export function _buildRequestConfig (renderedRequest, patch = {}) {
     config.headers['User-Agent'] = `insomnia/${getAppVersion()}`;
   }
 
+  // Set Authorization header
+  if (!hasAuthHeader(renderedRequest.headers)) {
+    const authHeader = await getAuthHeader(
+      renderedRequest._id,
+      renderedRequest.authentication
+    );
+
+    if (authHeader) {
+      config.headers[authHeader.name] = authHeader.value;
+    }
+  }
+
   // Set the URL, including the query parameters
   const qs = querystring.buildFromParams(renderedRequest.parameters);
   const url = querystring.joinUrl(renderedRequest.url, qs);
@@ -133,37 +146,47 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
     }
 
     try {
-      // Setup the cancellation logic
-      let cancelCode = 0;
-      cancelRequestFunction = () => {
-        cancelCode = 1;
-      };
-
       // Initialize the curl handle
       const curl = new Curl();
 
+      // Setup the cancellation logic
+      cancelRequestFunction = () => {
+        resolve({
+          parentId: renderedRequest._id,
+          elapsedTime: curl.getInfo('TOTAL_TIME') * 1000,
+          statusMessage: 'Cancelled',
+          error: 'Request was cancelled'
+        });
+
+        // Kill it!
+        curl.close();
+      };
+
       // Set all the basic options
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects); // Follow redirects
-      curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0); // Follow POST redirects
-      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL); // Validate SSL
+      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+      curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0);
+      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL);
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
       curl.setOpt(Curl.option.VERBOSE, true);
       curl.setOpt(Curl.option.NOPROGRESS, false);
 
+      // Set the headers (to be modified as we go)
+      const headers = [...renderedRequest.headers];
+
       let lastPercent = 0;
       curl.setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
         if (dltotal === 0) {
-          return cancelCode;
+          return 0;
         }
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
-          console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
+          // console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
           lastPercent = percent;
         }
 
-        return cancelCode;
+        return 0;
       });
 
       // Set the URL, including the query parameters
@@ -191,7 +214,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         let expiresTimestamp = 0;
         if (cookie.expires) {
           const expiresDate = new Date(cookie.expires);
-          console.log('HELLO', expiresDate);
           expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
         }
         curl.setOpt(Curl.option.COOKIELIST, [
@@ -302,9 +324,26 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         dataBuffersLength += chunk.length;
       });
 
-      // Set the headers
-      const headers = renderedRequest.headers.map(h => `${h.name}: ${h.value}`);
-      curl.setOpt(Curl.option.HTTPHEADER, headers);
+      // Handle Authorization header
+      if (!hasAuthHeader(renderedRequest.headers)) {
+        const authHeader = await getAuthHeader(
+          renderedRequest._id,
+          renderedRequest.authentication
+        );
+
+        if (authHeader) {
+          headers.push(authHeader);
+        }
+      }
+
+      // NOTE: This is last because headers might be modified multiple times
+      const headerStrings = headers.filter(h => h.name).map(h => `${h.name}: ${h.value}`);
+      curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
+
+      // Set User-Agent if it't not already in headers
+      if (!hasAcceptHeader(renderedRequest.headers)) {
+        curl.setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
+      }
 
       // Setup debug handler
       // NOTE: This is last on purpose so things like cookies don't show up
@@ -460,7 +499,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
 
     let config;
     try {
-      config = _buildRequestConfig(renderedRequest, {
+      config = await _buildRequestConfig(renderedRequest, {
         jar: null, // We're doing our own cookies
         proxy: proxy,
         followAllRedirects: settings.followRedirects,

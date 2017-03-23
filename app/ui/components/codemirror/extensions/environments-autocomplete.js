@@ -11,7 +11,7 @@ const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 const MAX_HINT_LOOK_BACK = 100;
-const HINT_DELAY_MILLIS = 500;
+const HINT_DELAY_MILLIS = 400;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
@@ -45,15 +45,15 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return;
   }
 
-  function completeAfter (cm, fn, showAllOnNoMatch = false) {
+  async function completeAfter (cm, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
-      return CodeMirror.Pass;
+      return;
     }
 
     // Bail early if completions are showing already
     if (cm.isHintDropdownActive()) {
-      return CodeMirror.Pass;
+      return;
     }
 
     // Put the hints in a container with class "dropdown__menu" (for themes)
@@ -66,7 +66,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       hintsContainer = el;
     }
 
-    const constants = options.getConstants && options.getConstants();
+    const constants = options.getConstants && await options.getConstants();
 
     // Actually show the hint
     cm.showHint({
@@ -89,30 +89,33 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
         }
       }
     });
-
-    return CodeMirror.Pass;
   }
 
   function completeIfInVariableName (cm) {
-    return completeAfter(cm, () => {
+    completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
       const range = cm.getRange(pos, cur);
       return range.match(COMPLETE_AFTER_WORD);
     });
+
+    return CodeMirror.Pass;
   }
 
   function completeIfAfterTagOrVarOpen (cm) {
-    return completeAfter(cm, () => {
+    completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
       const range = cm.getRange(pos, cur);
       return range.match(COMPLETE_AFTER_CURLIES);
     }, true);
+
+    return CodeMirror.Pass;
   }
 
   function completeForce (cm) {
-    return completeAfter(cm, null, true);
+    completeAfter(cm, null, true);
+    return CodeMirror.Pass;
   }
 
   // Debounce this so we don't pop it open too frequently and annoy the user
@@ -172,19 +175,19 @@ async function hint (cm, options) {
   const allShortMatches = [];
   const allLongMatches = [];
 
-  // Match constants
-  if (allowMatchingConstants) {
-    matchSegments(options.extraConstants, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
-      .map(m => allShortMatches.push(m));
-    matchSegments(options.extraConstants, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
-      .map(m => allLongMatches.push(m));
-  }
-
   // Match variables
   if (allowMatchingVariables) {
     matchSegments(context.keys, nameSegment, TYPE_VARIABLE, MAX_VARIABLES)
       .map(m => allShortMatches.push(m));
     matchSegments(context.keys, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES)
+      .map(m => allLongMatches.push(m));
+  }
+
+  // Match constants
+  if (allowMatchingConstants) {
+    matchSegments(options.extraConstants, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
+      .map(m => allShortMatches.push(m));
+    matchSegments(options.extraConstants, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
       .map(m => allLongMatches.push(m));
   }
 
@@ -232,28 +235,28 @@ function replaceHintMatch (cm, self, data) {
   let prefix = '';
   let suffix = '';
 
-  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{\s*$/)) {
+  if (data.type === TYPE_VARIABLE && !prevChars.match(/{{[^}]*$/)) {
     prefix = '{{ '; // If no closer before
   } else if (data.type === TYPE_VARIABLE && prevChars.match(/{{$/)) {
     prefix = ' '; // If no space after opener
-  } else if (data.type === TYPE_TAG && !prevChars.match(/{%\s*$/)) {
-    prefix = '{% '; // If no closer before
   } else if (data.type === TYPE_TAG && prevChars.match(/{%$/)) {
     prefix = ' '; // If no space after opener
+  } else if (data.type === TYPE_TAG && !prevChars.match(/{%[^%]*$/)) {
+    prefix = '{% '; // If no closer before
   }
 
   if (data.type === TYPE_VARIABLE && !nextChars.match(/^\s*}}/)) {
     suffix = ' }}'; // If no closer after
   } else if (data.type === TYPE_VARIABLE && nextChars.match(/^}}/)) {
     suffix = ' '; // If no space before closer
-  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
-    suffix = ' %}'; // If no closer after
   } else if (data.type === TYPE_TAG && nextChars.match(/^%}/)) {
     suffix = ' '; // If no space before closer
   } else if (data.type === TYPE_TAG && nextChars.match(/^\s*}/)) {
     // Edge case because "%" doesn't auto-close tags so sometimes you end
     // up in the scenario of {% foo}
     suffix = ' %';
+  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
+    suffix = ' %}'; // If no closer after
   }
 
   cm.replaceRange(`${prefix}${data.text}${suffix}`, from, to);

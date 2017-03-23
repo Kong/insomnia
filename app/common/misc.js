@@ -8,7 +8,7 @@ const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
 export function getBasicAuthHeader (username, password) {
   const name = 'Authorization';
   const header = `${username || ''}:${password || ''}`;
-  const authString = new Buffer(header, 'utf8').toString('base64');
+  const authString = Buffer.from(header, 'utf8').toString('base64');
   const value = `Basic ${authString}`;
   return {name, value};
 }

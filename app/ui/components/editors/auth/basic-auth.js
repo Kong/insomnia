@@ -1,10 +1,11 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import KeyValueEditor from '../key-value-editor/editor';
-import {trackEvent} from '../../../analytics/index';
+import KeyValueEditor from '../../key-value-editor/editor';
+import {trackEvent} from '../../../../analytics/index';
+import {AUTH_BASIC} from '../../../../common/constants';
 
 @autobind
-class AuthEditor extends PureComponent {
+class BasicAuth extends PureComponent {
   _handleOnCreate () {
     trackEvent('Auth Editor', 'Create');
   }
@@ -20,6 +21,7 @@ class AuthEditor extends PureComponent {
 
   _handleChange (pairs) {
     const pair = {
+      type: AUTH_BASIC,
       username: pairs.length ? pairs[0].name : '',
       password: pairs.length ? pairs[0].value : '',
       disabled: pairs.length ? pairs[0].disabled : false
@@ -61,7 +63,7 @@ class AuthEditor extends PureComponent {
   }
 }
 
-AuthEditor.propTypes = {
+BasicAuth.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
@@ -70,4 +72,4 @@ AuthEditor.propTypes = {
   showPasswords: PropTypes.bool.isRequired
 };
 
-export default AuthEditor;
+export default BasicAuth;

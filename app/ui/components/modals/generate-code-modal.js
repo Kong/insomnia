@@ -153,6 +153,7 @@ class GenerateCodeModal extends PureComponent {
           </div>
           <Editor
             lineWrapping
+            placeholder="Generating code snippet..."
             className="border-top"
             key={Date.now()}
             mode={MODE_MAP[target.key] || target.key}

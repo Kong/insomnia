@@ -4,8 +4,9 @@ import {getRenderedRequest} from './render';
 import {jarFromCookies} from './cookies';
 import * as misc from './misc';
 import {newBodyRaw} from '../models/request';
+import {getAuthHeader} from '../network/authentication';
 
-export function exportHarWithRequest (renderedRequest, addContentLength = false) {
+export async function exportHarWithRequest (renderedRequest, addContentLength = false) {
   let postData = '';
   if (renderedRequest.body.fileName) {
     try {
@@ -31,6 +32,15 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
     }
   }
 
+  // Set auth header if we have it
+  if (!misc.hasAuthHeader(renderedRequest.headers)) {
+    const header = await getAuthHeader(
+      renderedRequest._id,
+      renderedRequest.authentication
+    );
+    header && renderedRequest.headers.push(header);
+  }
+
   return {
     method: renderedRequest.method,
     url: misc.prepareUrlForSending(renderedRequest.url),
@@ -47,7 +57,7 @@ export function exportHarWithRequest (renderedRequest, addContentLength = false)
 export async function exportHar (requestId, environmentId, addContentLength = false) {
   const request = await models.request.getById(requestId);
   const renderedRequest = await getRenderedRequest(request, environmentId);
-  return exportHarWithRequest(renderedRequest, addContentLength);
+  return await exportHarWithRequest(renderedRequest, addContentLength);
 }
 
 function getCookies (renderedRequest) {

@@ -70,8 +70,9 @@ small {
 label.label--small,
 table th {
   color: @hl;
+  font-weight: 600;
   text-transform: uppercase;
-  font-size: 0.8em;
+  font-size: @font-size-xs;
   padding-bottom: @padding-xxs;
 }
 
@@ -81,7 +82,7 @@ webview {
   background-color: #fff;
 }
 
-table {
+table.table--fancy {
   width: 100%;
 
   td, th {
@@ -117,6 +118,25 @@ code, pre, .monospace {
   padding: @padding-sm * 1.5;
   border: 1px solid;
   border-radius: @radius-md;
+
+  p {
+    padding: 0;
+    margin: 0;
+  }
+
+  a {
+    text-decoration: underline;
+    color: var(--color-font);
+    opacity: @opacity-subtle;
+  }
+
+  a:hover {
+    opacity: 1;
+  }
+}
+
+.notice.error {
+  border-color: var(--color-danger);
 }
 
 .notice.warning {
@@ -179,6 +199,13 @@ code, pre, .monospace {
   vertical-align: bottom;
 }
 
+.vertically-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
 .row-fill {
   display: flex;
   flex-direction: row;
@@ -215,14 +242,16 @@ code, pre, .monospace {
   width: 100%;
 }
 
-.valign-center {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  align-content: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
+.valign-middle {
+  vertical-align: middle;
+}
+
+.valign-top {
+  vertical-align: top;
+}
+
+.height-md {
+  height: @line-height-md;
 }
 
 .pointer {
@@ -292,9 +321,17 @@ i.fa {
   padding-left: @padding-md;
 }
 
+.pad-left-sm {
+  padding-left: @padding-md / 2;
+}
+
 .pad-right {
   box-sizing: border-box;
   padding-right: @padding-md;
+}
+
+.pad-right-sm {
+  padding-right: @padding-md / 2;
 }
 
 .pad-top {
@@ -315,8 +352,16 @@ i.fa {
   margin-left: @padding-md;
 }
 
+.margin-left-sm {
+  margin-left: @padding-sm;
+}
+
 .margin-right-sm {
   margin-right: @padding-sm;
+}
+
+.margin-bottom {
+  margin-bottom: @padding-md;
 }
 
 .margin-bottom-sm {
@@ -337,6 +382,18 @@ i.fa {
   padding-bottom: @padding-sm;
 }
 
+.no-margin {
+  margin: 0 !important;
+}
+
+.no-margin-top {
+  margin-top: 0 !important;
+}
+
+.no-pad {
+  padding: 0 !important;
+}
+
 .no-pad-bottom {
   padding-bottom: 0;
 }
@@ -347,26 +404,6 @@ i.fa {
 
 .no-pad-top {
   padding-top: 0 !important;
-}
-
-.no-margin {
-  margin: 0 !important;
-}
-
-.no-margin-top {
-  margin-top: 0 !important;
-}
-
-.pad-left-sm {
-  padding-left: @padding-md / 2;
-}
-
-.pad-right-sm {
-  padding-right: @padding-md / 2;
-}
-
-.no-pad {
-  padding: 0 !important;
 }
 
 .no-margin-left {

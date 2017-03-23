@@ -19,7 +19,7 @@ import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
-import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups, selectActiveRequestMeta, selectActiveRequest, selectActiveWorkspaceMeta} from '../redux/selectors';
+import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups, selectActiveRequestMeta, selectActiveRequest, selectActiveWorkspaceMeta, selectActiveOAuth2Token} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -654,7 +654,6 @@ function mapStateToProps (state, props) {
   const settings = entitiesLists.settings[0];
 
   // Workspace stuff
-
   const workspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
   const activeWorkspace = selectActiveWorkspace(state, props);
   const sidebarHidden = workspaceMeta.sidebarHidden || false;
@@ -673,6 +672,9 @@ function mapStateToProps (state, props) {
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
 
+  // OAuth2Token stuff
+  const oAuth2Token = selectActiveOAuth2Token(state, props);
+
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
   const sidebarChildren = selectSidebarChildren(state, props);
@@ -683,6 +685,7 @@ function mapStateToProps (state, props) {
     workspaces,
     requestGroups,
     requests,
+    oAuth2Token,
     isLoading,
     loadStartTime,
     activeWorkspace,

@@ -11,7 +11,7 @@
   background: var(--color-bg);
   box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
   min-width: 20rem;
-  max-width: 35rem;
+  max-width: 40rem;
   max-height: 19rem;
   z-index: 999999; // So it shows up anywhere (modals)
 
@@ -20,8 +20,8 @@
     color: var(--color-font);
     padding: 0 !important; // ugh
     border-radius: 0;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
     background: var(--color-bg);
     font-size: @font-size-xs;
 
@@ -69,7 +69,6 @@
       font-style: italic;
       font-size: 0.9em;
       max-width: 100%;
-      min-width: 15rem;
 
       // Ellipsis when too long
       white-space: nowrap;

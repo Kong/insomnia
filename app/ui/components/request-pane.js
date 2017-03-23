@@ -1,17 +1,20 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
+import ContentTypeDropdown from './dropdowns/content-type-dropdown';
+import AuthDropdown from './dropdowns/auth-dropdown';
 import KeyValueEditor from './key-value-editor/editor';
 import RequestHeadersEditor from './editors/request-headers-editor';
-import ContentTypeDropdown from './dropdowns/content-type-dropdown';
 import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
-import AuthEditor from './editors/auth-editor';
+import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {MOD_SYM, getContentTypeName} from '../../common/constants';
+import {getAuthTypeName, getContentTypeName, MOD_SYM} from '../../common/constants';
 import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
+import * as db from '../../common/database';
+import * as models from '../../models';
 
 @autobind
 class RequestPane extends PureComponent {
@@ -21,12 +24,18 @@ class RequestPane extends PureComponent {
     this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
   }
 
-  _handleHidePasswords () {
-    this.props.updateSettingsShowPasswords(false);
-  }
+  async _autocompleteUrls () {
+    const docs = await db.withDescendants(this.props.workspace);
 
-  _handleShowPasswords () {
-    this.props.updateSettingsShowPasswords(true);
+    const requestId = this.props.request ? this.props.request._id : 'n/a';
+
+    const urls = docs.filter(d => (
+      d.type === models.request.type && // Only requests
+      d._id !== requestId && // Not current request
+      d.url // Only ones with non-empty URLs
+    )).map(r => r.url);
+
+    return Array.from(new Set(urls));
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor () {
@@ -103,26 +112,27 @@ class RequestPane extends PureComponent {
 
   render () {
     const {
-      request,
-      showPasswords,
       editorFontSize,
       editorKeyMap,
       editorLineWrapping,
+      forceRefreshCounter,
+      handleGenerateCode,
+      handleGetRenderContext,
+      handleImport,
+      handleRender,
       handleSend,
       handleSendAndDownload,
-      handleRender,
-      handleGetRenderContext,
-      forceRefreshCounter,
-      useBulkHeaderEditor,
-      handleGenerateCode,
-      handleImport,
-      updateRequestMethod,
-      updateRequestBody,
-      updateRequestParameters,
+      oAuth2Token,
+      request,
+      showPasswords,
       updateRequestAuthentication,
+      updateRequestBody,
       updateRequestHeaders,
+      updateRequestMethod,
       updateRequestMimeType,
-      updateSettingsShowPasswords
+      updateRequestParameters,
+      updateSettingsShowPasswords,
+      useBulkHeaderEditor
     } = this.props;
 
     if (!request) {
@@ -131,7 +141,7 @@ class RequestPane extends PureComponent {
           <header className="pane__header"></header>
           <div className="pane__body pane__body--placeholder">
             <div>
-              <table>
+              <table className="table--fancy">
                 <tbody>
                 <tr>
                   <td>New Request</td>
@@ -176,7 +186,6 @@ class RequestPane extends PureComponent {
 
     const numParameters = request.parameters.filter(p => !p.disabled).length;
     const numHeaders = request.headers.filter(h => !h.disabled).length;
-    const hasAuth = !request.authentication.disabled && request.authentication.username;
     const urlHasQueryParameters = request.url.indexOf('?') >= 0;
 
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;
@@ -189,6 +198,7 @@ class RequestPane extends PureComponent {
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={this._handleUpdateRequestUrl}
+            handleAutocompleteUrls={this._autocompleteUrls}
             handleImport={handleImport}
             handleGenerateCode={handleGenerateCode}
             handleSend={handleSend}
@@ -209,13 +219,18 @@ class RequestPane extends PureComponent {
               <ContentTypeDropdown onChange={updateRequestMimeType}
                                    contentType={request.body.mimeType}
                                    className="tall">
-                <i className="fa fa-caret-down"></i>
+                <i className="fa fa-caret-down"/>
               </ContentTypeDropdown>
             </Tab>
             <Tab onClick={this._trackTabAuthentication}>
               <button>
-                Auth {hasAuth ? <i className="fa fa-lock txt-sm"></i> : null}
+                {getAuthTypeName(request.authentication.type)}
               </button>
+              <AuthDropdown onChange={updateRequestAuthentication}
+                            authentication={request.authentication}
+                            className="tall">
+                <i className="fa fa-caret-down"/>
+              </AuthDropdown>
             </Tab>
             <Tab onClick={this._trackTabQuery}>
               <button>
@@ -243,26 +258,16 @@ class RequestPane extends PureComponent {
           </TabPanel>
           <TabPanel className="scrollable-container">
             <div className="scrollable">
-              <AuthEditor
+              <AuthWrapper
                 key={uniqueKey}
+                oAuth2Token={oAuth2Token}
                 showPasswords={showPasswords}
-                authentication={request.authentication}
+                request={request}
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
                 onChange={updateRequestAuthentication}
               />
-              <div className="pad pull-right">
-                {showPasswords ? (
-                    <button className="btn btn--clicky" onClick={this._handleHidePasswords}>
-                      Hide Password
-                    </button>
-                  ) : (
-                    <button className="btn btn--clicky" onClick={this._handleShowPasswords}>
-                      Show Password
-                    </button>
-                  )}
-              </div>
             </div>
           </TabPanel>
           <TabPanel className="query-editor">
@@ -357,7 +362,8 @@ RequestPane.propTypes = {
   forceRefreshCounter: PropTypes.number.isRequired,
 
   // Optional
-  request: PropTypes.object
+  request: PropTypes.object,
+  oAuth2Token: PropTypes.object
 };
 
 export default RequestPane;

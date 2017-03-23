@@ -12,7 +12,8 @@ class AlertModal extends PureComponent {
 
     this.state = {
       title: '',
-      message: ''
+      message: '',
+      addCancel: false
     };
   }
 
@@ -32,8 +33,8 @@ class AlertModal extends PureComponent {
   show (options = {}) {
     this.modal.show();
 
-    const {title, message} = options;
-    this.setState({title, message});
+    const {title, message, addCancel} = options;
+    this.setState({title, message, addCancel});
 
     return new Promise(resolve => {
       this._okCallback = resolve;
@@ -41,7 +42,7 @@ class AlertModal extends PureComponent {
   }
 
   render () {
-    const {message, title} = this.state;
+    const {message, title, addCancel} = this.state;
 
     return (
       <Modal ref={this._setModalRef} closeOnKeyCodes={[13]}>
@@ -50,9 +51,12 @@ class AlertModal extends PureComponent {
           {message}
         </ModalBody>
         <ModalFooter>
-          <button className="btn" onClick={this._handleOk}>
-            Ok
-          </button>
+          <div>
+            {addCancel ? <button className="btn" onClick={this.hide}>Cancel</button> : null}
+            <button className="btn" onClick={this._handleOk}>
+              Ok
+            </button>
+          </div>
         </ModalFooter>
       </Modal>
     );

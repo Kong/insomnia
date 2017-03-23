@@ -3,6 +3,7 @@ import * as db from '../common/database';
 export const name = 'Folder';
 export const type = 'RequestGroup';
 export const prefix = 'fld';
+export const canDuplicate = true;
 
 export function init () {
   return {

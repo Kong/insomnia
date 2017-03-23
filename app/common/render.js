@@ -1,6 +1,6 @@
 import clone from 'clone';
 import * as models from '../models';
-import {getBasicAuthHeader, hasAuthHeader, setDefaultProtocol} from './misc';
+import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 
@@ -106,6 +106,10 @@ export async function recursiveRender (originalObj, context = {}, strict = false
 }
 
 export async function getRenderContext (request, environmentId, ancestors = null) {
+  if (!request) {
+    return {};
+  }
+
   if (!ancestors) {
     ancestors = await db.withAncestors(request);
   }
@@ -152,15 +156,8 @@ export async function getRenderedRequest (request, environmentId) {
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
   // Add the yummy cookies
+  // TODO: Don't deal with cookies in here
   renderedRequest.cookieJar = cookieJar;
-
-  // Add authentication
-  const missingAuthHeader = !hasAuthHeader(renderedRequest.headers);
-  if (missingAuthHeader && renderedRequest.authentication.username) {
-    const {username, password} = renderedRequest.authentication;
-    const header = getBasicAuthHeader(username, password);
-    renderedRequest.headers.push(header);
-  }
 
   return renderedRequest;
 }

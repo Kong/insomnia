@@ -42,7 +42,7 @@ class FilterHelpModal extends PureComponent {
             Use {link} to filter the response body. Here are some examples that
             you might use on a book store API.
           </p>
-          <table className="pad-top-sm">
+          <table className="table--fancy pad-top-sm">
             <tbody>
             <tr>
               <td>

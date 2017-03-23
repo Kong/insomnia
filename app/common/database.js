@@ -397,7 +397,7 @@ export async function duplicate (originalDoc, patch = {}, first = true) {
   // 2. Get all the children
   for (const type of allTypes()) {
     // Note: We never want to duplicate a response
-    if (type === models.response.type) {
+    if (!models.canDuplicate(type)) {
       continue;
     }
 

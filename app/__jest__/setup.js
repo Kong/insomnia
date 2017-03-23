@@ -1,3 +1,5 @@
+import 'whatwg-fetch';
+
 const localStorageMock = (function () {
   let store = {};
 

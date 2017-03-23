@@ -3,6 +3,7 @@ import * as db from '../common/database';
 export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
+export const canDuplicate = true;
 export function init () {
   return {
     name: 'New Environment',

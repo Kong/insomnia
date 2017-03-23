@@ -3,6 +3,7 @@ import * as db from '../common/database';
 export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
+export const canDuplicate = true;
 export function init () {
   return {
     name: 'Default Jar',

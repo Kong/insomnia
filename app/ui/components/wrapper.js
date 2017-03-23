@@ -233,6 +233,7 @@ class Wrapper extends PureComponent {
       paneWidth,
       responseFilter,
       responsePreviewMode,
+      oAuth2Token,
       settings,
       sidebarChildren,
       sidebarFilter,
@@ -295,6 +296,7 @@ class Wrapper extends PureComponent {
           editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           workspace={activeWorkspace}
+          oAuth2Token={oAuth2Token}
           forceUpdateRequest={this._handleForceUpdateRequest}
           handleCreateRequest={handleCreateRequestForWorkspace}
           handleGenerateCode={handleGenerateCodeForActiveRequest}
@@ -464,6 +466,7 @@ Wrapper.propTypes = {
   }).isRequired,
 
   // Optional
+  oAuth2Token: PropTypes.object,
   activeRequest: PropTypes.object,
   activeEnvironment: PropTypes.object
 };

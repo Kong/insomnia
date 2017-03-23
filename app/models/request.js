@@ -1,11 +1,13 @@
-import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../common/constants';
+import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, AUTH_BASIC, AUTH_OAUTH_2, AUTH_OAUTH_1, AUTH_DIGEST, AUTH_NONE} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {deconstructToParams, buildFromParams} from '../common/querystring';
+import {GRANT_TYPE_AUTHORIZATION_CODE} from '../network/o-auth-2/constants';
 
 export const name = 'Request';
 export const type = 'Request';
 export const prefix = 'req';
+export const canDuplicate = true;
 
 export function init () {
   return {
@@ -18,6 +20,28 @@ export function init () {
     authentication: {},
     metaSortKey: -1 * Date.now()
   };
+}
+
+export function newAuth (type) {
+  switch (type) {
+    // HTTP Basic Authentication
+    case AUTH_BASIC:
+      return {type, username: '', password: ''};
+
+    // OAuth 2.0
+    case AUTH_OAUTH_2:
+      return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
+
+    // Unimplemented auth types
+    case AUTH_OAUTH_1:
+    case AUTH_DIGEST:
+      return {type};
+
+    // No Auth
+    case AUTH_NONE:
+    default:
+      return {};
+  }
 }
 
 export function newBodyRaw (rawBody, contentType) {
@@ -73,6 +97,7 @@ export function newBodyForm (parameters) {
 export function migrate (doc) {
   doc = migrateBody(doc);
   doc = migrateWeirdUrls(doc);
+  doc = migrateAuthType(doc);
   return doc;
 }
 
@@ -183,6 +208,11 @@ export function all () {
 // Migrations //
 // ~~~~~~~~~~ //
 
+/**
+ * Migrate old body (string) to new body (object)
+ * @param request
+ * @returns {*}
+ */
 function migrateBody (request) {
   if (request.body && typeof request.body === 'object') {
     return request;
@@ -205,12 +235,32 @@ function migrateBody (request) {
   return request;
 }
 
+/**
+ * Fix some weird URLs that were caused by an old bug
+ * @param request
+ * @returns {*}
+ */
 function migrateWeirdUrls (request) {
   // Some people seem to have requests with URLs that don't have the indexOf
   // function. This should clear that up. This can be removed at a later date.
 
   if (typeof request.url !== 'string') {
     request.url = '';
+  }
+
+  return request;
+}
+
+/**
+ * Ensure the request.authentication.type property is added
+ * @param request
+ * @returns {*}
+ */
+function migrateAuthType (request) {
+  const isAuthSet = request.authentication && request.authentication.username;
+
+  if (isAuthSet && !request.authentication.type) {
+    request.authentication.type = AUTH_BASIC;
   }
 
   return request;

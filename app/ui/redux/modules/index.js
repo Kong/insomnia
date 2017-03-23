@@ -23,7 +23,8 @@ export async function init () {
     ...(await models.requestGroup.all()),
     ...(await models.requestGroupMeta.all()),
     ...(await models.request.all()),
-    ...(await models.requestMeta.all())
+    ...(await models.requestMeta.all()),
+    ...(await models.oAuth2Token.all())
   ];
 
   // Link DB changes to entities reducer/actions

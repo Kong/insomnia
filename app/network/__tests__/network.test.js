@@ -4,7 +4,7 @@ import nock from 'nock';
 import {resolve as pathResolve, join as pathJoin} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
-import {CONTENT_TYPE_FORM_URLENCODED, getAppVersion, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA} from '../../common/constants';
+import {CONTENT_TYPE_FORM_URLENCODED, getAppVersion, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, AUTH_BASIC} from '../../common/constants';
 
 describe('buildRequestConfig()', () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
@@ -16,7 +16,7 @@ describe('buildRequestConfig()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const config = networkUtils._buildRequestConfig(renderedRequest);
+    const config = await networkUtils._buildRequestConfig(renderedRequest);
     expect(config).toEqual({
       body: '',
       encoding: null,
@@ -63,6 +63,7 @@ describe('buildRequestConfig()', () => {
       },
       url: 'http://foo.com:3332/★/hi@gmail.com/foo%20bar?bar=baz',
       authentication: {
+        type: AUTH_BASIC,
         disabled: false,
         username: 'user',
         password: 'pass'
@@ -70,7 +71,7 @@ describe('buildRequestConfig()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const config = networkUtils._buildRequestConfig(renderedRequest);
+    const config = await networkUtils._buildRequestConfig(renderedRequest);
     expect(config).toEqual({
       body: 'X=XX&Z=ZZ',
       encoding: null,
@@ -152,6 +153,7 @@ describe('actuallySend()', () => {
       },
       url: 'http://localhost',
       authentication: {
+        type: AUTH_BASIC,
         username: 'user',
         password: 'pass'
       }
