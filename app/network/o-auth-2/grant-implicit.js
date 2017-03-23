@@ -4,14 +4,14 @@ import {responseToObject, authorizeUserInWindow} from './misc';
 
 export default async function (authorizationUrl, clientId, redirectUri = '', scope = '', state = '') {
   const params = [
-    {name: c.Q_RESPONSE_TYPE, value: c.RESPONSE_TYPE_TOKEN},
-    {name: c.Q_CLIENT_ID, value: clientId}
+    {name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_TOKEN},
+    {name: c.P_CLIENT_ID, value: clientId}
   ];
 
   // Add optional params
-  redirectUri && params.push({name: c.Q_REDIRECT_URI, value: redirectUri});
-  scope && params.push({name: c.Q_SCOPE, value: scope});
-  state && params.push({name: c.Q_STATE, value: state});
+  redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
+  scope && params.push({name: c.P_SCOPE, value: scope});
+  state && params.push({name: c.P_STATE, value: state});
 
   // Add query params to URL
   const qs = querystring.buildFromParams(params);
@@ -22,14 +22,14 @@ export default async function (authorizationUrl, clientId, redirectUri = '', sco
 
   if (fragment) {
     return responseToObject(fragment, [
-      c.Q_ACCESS_TOKEN,
-      c.Q_TOKEN_TYPE,
-      c.Q_EXPIRES_IN,
-      c.Q_SCOPE,
-      c.Q_STATE,
-      c.Q_ERROR,
-      c.Q_ERROR_DESCRIPTION,
-      c.Q_ERROR_URI
+      c.P_ACCESS_TOKEN,
+      c.P_TOKEN_TYPE,
+      c.P_EXPIRES_IN,
+      c.P_SCOPE,
+      c.P_STATE,
+      c.P_ERROR,
+      c.P_ERROR_DESCRIPTION,
+      c.P_ERROR_URI
     ]);
   } else {
     // Bad redirect

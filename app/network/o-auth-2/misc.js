@@ -32,7 +32,7 @@ export function authorizeUserInWindow (url, urlRegex = /.*/) {
     const child = new electron.remote.BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
-        partition: `persist:oauth_1`
+        partition: `persist:oauth2`
       },
       show: false
     });

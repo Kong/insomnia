@@ -10,12 +10,12 @@ export default async function (accessTokenUrl,
                                refreshToken,
                                scope = '') {
   const params = [
-    {name: c.Q_GRANT_TYPE, value: c.GRANT_TYPE_IMPLICIT},
-    {name: c.Q_REFRESH_TOKEN, value: refreshToken}
+    {name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_IMPLICIT},
+    {name: c.P_REFRESH_TOKEN, value: refreshToken}
   ];
 
   // Add optional params
-  scope && params.push({name: c.Q_SCOPE, value: scope});
+  scope && params.push({name: c.P_SCOPE, value: scope});
 
   const headers = new window.Headers({
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -23,8 +23,8 @@ export default async function (accessTokenUrl,
   });
 
   if (credentialsInBody) {
-    params.push({name: c.Q_CLIENT_ID, value: clientId});
-    params.push({name: c.Q_CLIENT_SECRET, value: clientSecret});
+    params.push({name: c.P_CLIENT_ID, value: clientId});
+    params.push({name: c.P_CLIENT_SECRET, value: clientSecret});
   } else {
     const {name, value} = getBasicAuthHeader(clientId, clientSecret);
     headers.set(name, value);
@@ -39,14 +39,14 @@ export default async function (accessTokenUrl,
   const response = await window.fetch(accessTokenUrl, config);
   const body = await response.text();
   const results = responseToObject(body, [
-    c.Q_ACCESS_TOKEN,
-    c.Q_REFRESH_TOKEN,
-    c.Q_EXPIRES_IN,
-    c.Q_TOKEN_TYPE,
-    c.Q_SCOPE,
-    c.Q_ERROR,
-    c.Q_ERROR_URI,
-    c.Q_ERROR_DESCRIPTION
+    c.P_ACCESS_TOKEN,
+    c.P_REFRESH_TOKEN,
+    c.P_EXPIRES_IN,
+    c.P_TOKEN_TYPE,
+    c.P_SCOPE,
+    c.P_ERROR,
+    c.P_ERROR_URI,
+    c.P_ERROR_DESCRIPTION
   ]);
 
   return results;

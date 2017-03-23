@@ -27,10 +27,12 @@ class RequestPane extends PureComponent {
   async _autocompleteUrls () {
     const docs = await db.withDescendants(this.props.workspace);
 
+    const requestId = this.props.request ? this.props.request._id : 'n/a';
+
     const urls = docs.filter(d => (
       d.type === models.request.type && // Only requests
-      d._id !== this.props.request._id && // Not current request
-      d.url.length > 0 // Only ones with valid URLs
+      d._id !== requestId && // Not current request
+      d.url // Only ones with non-empty URLs
     )).map(r => r.url);
 
     return Array.from(new Set(urls));

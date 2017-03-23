@@ -27,7 +27,7 @@ export default async function (authorizeUrl,
     credentialsInBody,
     clientId,
     clientSecret,
-    authorizeResults[c.Q_CODE],
+    authorizeResults[c.P_CODE],
     redirectUri,
     state
   );
@@ -37,14 +37,14 @@ export default async function (authorizeUrl,
 
 async function _authorize (url, clientId, redirectUri = '', scope = '', state = '') {
   const params = [
-    {name: c.Q_RESPONSE_TYPE, value: c.RESPONSE_TYPE_CODE},
-    {name: c.Q_CLIENT_ID, value: clientId}
+    {name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_CODE},
+    {name: c.P_CLIENT_ID, value: clientId}
   ];
 
   // Add optional params
-  redirectUri && params.push({name: c.Q_REDIRECT_URI, value: redirectUri});
-  scope && params.push({name: c.Q_SCOPE, value: scope});
-  state && params.push({name: c.Q_STATE, value: state});
+  redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
+  scope && params.push({name: c.P_SCOPE, value: scope});
+  state && params.push({name: c.P_STATE, value: state});
 
   // Add query params to URL
   const qs = querystring.buildFromParams(params);
@@ -54,23 +54,23 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
 
   const {query} = urlParse(redirectedTo);
   return responseToObject(query, [
-    c.Q_CODE,
-    c.Q_STATE,
-    c.Q_ERROR,
-    c.Q_ERROR_DESCRIPTION,
-    c.Q_ERROR_URI
+    c.P_CODE,
+    c.P_STATE,
+    c.P_ERROR,
+    c.P_ERROR_DESCRIPTION,
+    c.P_ERROR_URI
   ]);
 }
 
 async function _getToken (url, credentialsInBody, clientId, clientSecret, code, redirectUri = '', state = '') {
   const params = [
-    {name: c.Q_GRANT_TYPE, value: c.GRANT_TYPE_AUTHORIZATION_CODE},
-    {name: c.Q_CODE, value: code}
+    {name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_AUTHORIZATION_CODE},
+    {name: c.P_CODE, value: code}
   ];
 
   // Add optional params
-  redirectUri && params.push({name: c.Q_REDIRECT_URI, value: redirectUri});
-  state && params.push({name: c.Q_STATE, value: state});
+  redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
+  state && params.push({name: c.P_STATE, value: state});
 
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -78,8 +78,8 @@ async function _getToken (url, credentialsInBody, clientId, clientSecret, code, 
   };
 
   if (credentialsInBody) {
-    params.push({name: c.Q_CLIENT_ID, value: clientId});
-    params.push({name: c.Q_CLIENT_SECRET, value: clientSecret});
+    params.push({name: c.P_CLIENT_ID, value: clientId});
+    params.push({name: c.P_CLIENT_SECRET, value: clientSecret});
   } else {
     const {name, value} = getBasicAuthHeader(clientId, clientSecret);
     headers[name] = value;
@@ -94,14 +94,14 @@ async function _getToken (url, credentialsInBody, clientId, clientSecret, code, 
   const response = await window.fetch(url, config);
   const body = await response.text();
   const results = responseToObject(body, [
-    c.Q_ACCESS_TOKEN,
-    c.Q_REFRESH_TOKEN,
-    c.Q_EXPIRES_IN,
-    c.Q_TOKEN_TYPE,
-    c.Q_SCOPE,
-    c.Q_ERROR,
-    c.Q_ERROR_URI,
-    c.Q_ERROR_DESCRIPTION
+    c.P_ACCESS_TOKEN,
+    c.P_REFRESH_TOKEN,
+    c.P_EXPIRES_IN,
+    c.P_TOKEN_TYPE,
+    c.P_SCOPE,
+    c.P_ERROR,
+    c.P_ERROR_URI,
+    c.P_ERROR_DESCRIPTION
   ]);
 
   return results;

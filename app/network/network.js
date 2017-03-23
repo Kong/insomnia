@@ -119,6 +119,7 @@ export async function _buildRequestConfig (renderedRequest, patch = {}) {
       renderedRequest._id,
       renderedRequest.authentication
     );
+
     if (authHeader) {
       config.headers[authHeader.name] = authHeader.value;
     }
@@ -147,7 +148,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
     try {
       // Initialize the curl handle
       const curl = new Curl();
-      window.curl = curl;
 
       // Setup the cancellation logic
       cancelRequestFunction = () => {
@@ -157,6 +157,8 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           statusMessage: 'Cancelled',
           error: 'Request was cancelled'
         });
+
+        // Kill it!
         curl.close();
       };
 
@@ -328,11 +330,15 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           renderedRequest._id,
           renderedRequest.authentication
         );
-        authHeader && headers.push(authHeader);
+
+        if (authHeader) {
+          headers.push(authHeader);
+        }
       }
 
       // NOTE: This is last because headers might be modified multiple times
-      curl.setOpt(Curl.option.HTTPHEADER, headers.map(h => `${h.name}: ${h.value}`));
+      const headerStrings = headers.filter(h => h.name).map(h => `${h.name}: ${h.value}`);
+      curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Set User-Agent if it't not already in headers
       if (!hasAcceptHeader(renderedRequest.headers)) {

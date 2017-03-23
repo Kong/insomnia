@@ -1,4 +1,4 @@
-import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, AUTH_BASIC, AUTH_OAUTH_2, AUTH_OAUTH_1, AUTH_DIGEST} from '../common/constants';
+import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, AUTH_BASIC, AUTH_OAUTH_2, AUTH_OAUTH_1, AUTH_DIGEST, AUTH_NONE} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {deconstructToParams, buildFromParams} from '../common/querystring';
@@ -23,16 +23,24 @@ export function init () {
 }
 
 export function newAuth (type) {
-  if (type === AUTH_BASIC) {
-    return {type, username: '', password: ''};
-  } else if (type === AUTH_OAUTH_2) {
-    return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
-  } else if (type === AUTH_OAUTH_1) {
-    return {type};
-  } else if (type === AUTH_DIGEST) {
-    return {type};
-  } else {
-    return {};
+  switch (type) {
+    // HTTP Basic Authentication
+    case AUTH_BASIC:
+      return {type, username: '', password: ''};
+
+    // OAuth 2.0
+    case AUTH_OAUTH_2:
+      return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
+
+    // Unimplemented auth types
+    case AUTH_OAUTH_1:
+    case AUTH_DIGEST:
+      return {type};
+
+    // No Auth
+    case AUTH_NONE:
+    default:
+      return {};
   }
 }
 

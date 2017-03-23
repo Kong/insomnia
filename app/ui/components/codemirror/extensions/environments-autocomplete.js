@@ -239,24 +239,24 @@ function replaceHintMatch (cm, self, data) {
     prefix = '{{ '; // If no closer before
   } else if (data.type === TYPE_VARIABLE && prevChars.match(/{{$/)) {
     prefix = ' '; // If no space after opener
-  } else if (data.type === TYPE_TAG && !prevChars.match(/{%[^%]*$/)) {
-    prefix = '{% '; // If no closer before
   } else if (data.type === TYPE_TAG && prevChars.match(/{%$/)) {
     prefix = ' '; // If no space after opener
+  } else if (data.type === TYPE_TAG && !prevChars.match(/{%[^%]*$/)) {
+    prefix = '{% '; // If no closer before
   }
 
   if (data.type === TYPE_VARIABLE && !nextChars.match(/^\s*}}/)) {
     suffix = ' }}'; // If no closer after
   } else if (data.type === TYPE_VARIABLE && nextChars.match(/^}}/)) {
     suffix = ' '; // If no space before closer
-  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
-    suffix = ' %}'; // If no closer after
   } else if (data.type === TYPE_TAG && nextChars.match(/^%}/)) {
     suffix = ' '; // If no space before closer
   } else if (data.type === TYPE_TAG && nextChars.match(/^\s*}/)) {
     // Edge case because "%" doesn't auto-close tags so sometimes you end
     // up in the scenario of {% foo}
     suffix = ' %';
+  } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
+    suffix = ' %}'; // If no closer after
   }
 
   cm.replaceRange(`${prefix}${data.text}${suffix}`, from, to);
