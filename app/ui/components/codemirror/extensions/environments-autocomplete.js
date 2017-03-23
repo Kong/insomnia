@@ -48,12 +48,12 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   async function completeAfter (cm, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
-      return CodeMirror.Pass;
+      return;
     }
 
     // Bail early if completions are showing already
     if (cm.isHintDropdownActive()) {
-      return CodeMirror.Pass;
+      return;
     }
 
     // Put the hints in a container with class "dropdown__menu" (for themes)
@@ -89,30 +89,33 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
         }
       }
     });
-
-    return CodeMirror.Pass;
   }
 
   function completeIfInVariableName (cm) {
-    return completeAfter(cm, () => {
+    completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
       const range = cm.getRange(pos, cur);
       return range.match(COMPLETE_AFTER_WORD);
     });
+
+    return CodeMirror.Pass;
   }
 
   function completeIfAfterTagOrVarOpen (cm) {
-    return completeAfter(cm, () => {
+    completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
       const range = cm.getRange(pos, cur);
       return range.match(COMPLETE_AFTER_CURLIES);
     }, true);
+
+    return CodeMirror.Pass;
   }
 
   function completeForce (cm) {
-    return completeAfter(cm, null, true);
+    completeAfter(cm, null, true);
+    return CodeMirror.Pass;
   }
 
   // Debounce this so we don't pop it open too frequently and annoy the user

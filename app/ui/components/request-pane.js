@@ -110,26 +110,27 @@ class RequestPane extends PureComponent {
 
   render () {
     const {
-      request,
-      showPasswords,
       editorFontSize,
       editorKeyMap,
       editorLineWrapping,
+      forceRefreshCounter,
+      handleGenerateCode,
+      handleGetRenderContext,
+      handleImport,
+      handleRender,
       handleSend,
       handleSendAndDownload,
-      handleRender,
-      handleGetRenderContext,
-      forceRefreshCounter,
-      useBulkHeaderEditor,
-      handleGenerateCode,
-      handleImport,
-      updateRequestMethod,
-      updateRequestBody,
-      updateRequestParameters,
+      oAuth2Token,
+      request,
+      showPasswords,
       updateRequestAuthentication,
+      updateRequestBody,
       updateRequestHeaders,
+      updateRequestMethod,
       updateRequestMimeType,
-      updateSettingsShowPasswords
+      updateRequestParameters,
+      updateSettingsShowPasswords,
+      useBulkHeaderEditor
     } = this.props;
 
     if (!request) {
@@ -257,6 +258,7 @@ class RequestPane extends PureComponent {
             <div className="scrollable">
               <AuthWrapper
                 key={uniqueKey}
+                oAuth2Token={oAuth2Token}
                 showPasswords={showPasswords}
                 request={request}
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
@@ -358,7 +360,8 @@ RequestPane.propTypes = {
   forceRefreshCounter: PropTypes.number.isRequired,
 
   // Optional
-  request: PropTypes.object
+  request: PropTypes.object,
+  oAuth2Token: PropTypes.object
 };
 
 export default RequestPane;

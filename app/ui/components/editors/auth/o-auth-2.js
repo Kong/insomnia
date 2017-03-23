@@ -24,6 +24,13 @@ class OAuth2 extends PureComponent {
     this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
   }
 
+  async _handleClearTokens () {
+    const oAuth2Token = await models.oAuth2Token.getByParentId(this.props.request._id);
+    if (oAuth2Token) {
+      await models.oAuth2Token.remove(oAuth2Token);
+    }
+  }
+
   async _handleRefreshToken () {
     const {request} = this.props;
     const authentication = await this.props.handleRender(request.authentication);
@@ -80,28 +87,6 @@ class OAuth2 extends PureComponent {
 
   _handleChangeGrantType (e) {
     this._handleChangeProperty('grantType', e.target.value);
-  }
-
-  async _loadToken () {
-    if (this.props.request) {
-      const token = await models.oAuth2Token.getByParentId(this.props.request._id);
-      if (token && this._mounted) {
-        this.setState({token});
-      }
-    }
-  }
-
-  componentDidUpdate () {
-    this._loadToken();
-  }
-
-  componentDidMount () {
-    this._loadToken();
-    this._mounted = true;
-  }
-
-  componentWillUnmount () {
-    this._mounted = false;
   }
 
   renderInputRow (label, property, onChange, handleAutocomplete = null) {
@@ -265,11 +250,22 @@ class OAuth2 extends PureComponent {
     return fields;
   }
 
+  renderExpireAt (token) {
+    if (!token) {
+      return null;
+    }
+
+    if (!token.expireAt) {
+      return <em>(never expires)</em>;
+    }
+
+    return <em>`(expires ${new Date(token.expireAt)})`</em>;
+  }
+
   render () {
-    const {request} = this.props;
-    const {token} = this.state;
+    const {request, oAuth2Token: tok} = this.props;
     return (
-      <div className="pad-top-sm">
+      <div className="pad-top-sm pad-bottom">
         <table>
           <tbody>
           {this.renderSelectRow('Grant Type', 'grantType', [
@@ -281,25 +277,39 @@ class OAuth2 extends PureComponent {
           {this.renderGrantTypeFields(request.authentication.grantType)}
           </tbody>
         </table>
-        {token ? (
-          <div className="pad-top">
-            <label className="label--small">Refresh Token</label>
+        <div className="pad-top-sm">
+          <div>
+            <label className="label--small">
+              Refresh Token
+              {' '}
+              <span>{(tok && tok.refreshToken) ? this.renderExpireAt(tok) : null}</span>
+            </label>
             <code className="block selectable">
-              {token.refreshToken || <span>&nbsp;</span>}
+              {(tok && tok.refreshToken) || <span className="faded">n/a</span>}
             </code>
-            <br/>
-            <label className="label--small">Access Token</label>
-            <code className="block selectable">
-              {token.accessToken || <span>&nbsp;</span>}
-            </code>
-            <div className="pad-top">
-              <button className="btn btn--clicky pull-right"
-                      onClick={this._handleRefreshToken}>
-                Refresh Token
-              </button>
-            </div>
           </div>
-        ) : null}
+          <div className="pad-top-sm">
+            <label className="label--small">
+              Access Token
+              {' '}
+              <span>{(tok && !tok.refreshToken) ? this.renderExpireAt(tok) : null}</span>
+            </label>
+            <code className="block selectable">
+              {(tok && tok.accessToken) || <span className="faded">n/a</span>}
+            </code>
+          </div>
+          <div className="pad-top text-right">
+            <button className="btn btn--clicky"
+                    onClick={this._handleClearTokens}
+                    disabled={!tok}>
+              Clear Tokens
+            </button>
+            &nbsp;&nbsp;
+            <button className="btn btn--clicky" onClick={this._handleRefreshToken}>
+              {tok ? 'Refresh Token' : 'Fetch Token'}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -311,7 +321,10 @@ OAuth2.propTypes = {
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired
+  showPasswords: PropTypes.bool.isRequired,
+
+  // Optional
+  oAuth2Token: PropTypes.object
 };
 
 export default OAuth2;

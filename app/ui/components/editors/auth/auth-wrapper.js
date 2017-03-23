@@ -8,6 +8,7 @@ import autobind from 'autobind-decorator';
 class AuthWrapper extends PureComponent {
   renderEditor () {
     const {
+      oAuth2Token,
       request,
       handleRender,
       handleGetRenderContext,
@@ -32,6 +33,7 @@ class AuthWrapper extends PureComponent {
     } else if (authentication.type === AUTH_OAUTH_2) {
       return (
         <OAuth2
+          oAuth2Token={oAuth2Token}
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
@@ -86,7 +88,10 @@ AuthWrapper.propTypes = {
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired
+  showPasswords: PropTypes.bool.isRequired,
+
+  // Optional
+  oAuth2Token: PropTypes.object
 };
 
 export default AuthWrapper;

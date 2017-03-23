@@ -30,6 +30,10 @@ export function update (token, patch) {
   return db.docUpdate(token, patch);
 }
 
+export function remove (token) {
+  return db.remove(token);
+}
+
 export function getByParentId (parentId) {
   return db.getWhere(type, {parentId});
 }
@@ -42,4 +46,8 @@ export async function getOrCreateByParentId (parentId, patch = {}) {
   }
 
   return token;
+}
+
+export function all () {
+  return db.all(type);
 }
