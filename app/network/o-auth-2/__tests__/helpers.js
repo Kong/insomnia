@@ -6,7 +6,8 @@ export function createBWRedirectMock (redirectTo) {
     this._emitter = new EventEmitter();
     this.loadURL = () => this.webContents.emit('did-navigate');
     this.on = (event, cb) => this._emitter.on(event, cb);
-    this.show = () => null;
+    this.show = () => this._emitter.emit('show');
+    this.close = () => this._emitter.emit('close');
 
     this.webContents = new EventEmitter();
     this.webContents.getURL = () => redirectTo;

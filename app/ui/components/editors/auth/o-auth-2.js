@@ -7,6 +7,7 @@ import authorizationUrls from '../../../../datasets/authorization-urls';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import * as models from '../../../../models';
+import Link from '../../base/link';
 
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
@@ -17,6 +18,7 @@ class OAuth2 extends PureComponent {
     super(props);
 
     this.state = {
+      error: '',
       loading: false
     };
 
@@ -32,12 +34,19 @@ class OAuth2 extends PureComponent {
   }
 
   async _handleRefreshToken () {
-    const {request} = this.props;
-    this.setState({loading: true});
-    const authentication = await this.props.handleRender(request.authentication);
-    const oAuth2Token = await getAccessToken(request._id, authentication, true);
+    // First, clear the state and the current tokens
+    this.setState({error: '', loading: true});
 
-    this.setState({token: oAuth2Token, loading: false});
+    const {request} = this.props;
+
+    try {
+      const authentication = await this.props.handleRender(request.authentication);
+      const oAuth2Token = await getAccessToken(request._id, authentication, true);
+      this.setState({token: oAuth2Token, loading: false});
+    } catch (err) {
+      await this._handleClearTokens(); // Clear existing tokens if there's an error
+      this.setState({error: err.message, loading: false});
+    }
   }
 
   _handleChangeProperty (property, value) {
@@ -265,7 +274,7 @@ class OAuth2 extends PureComponent {
 
   render () {
     const {request, oAuth2Token: tok} = this.props;
-    const {loading} = this.state;
+    const {loading, error} = this.state;
     return (
       <div className="pad-top-sm pad-bottom">
         <table>
@@ -280,6 +289,32 @@ class OAuth2 extends PureComponent {
           </tbody>
         </table>
         <div className="pad-top-sm">
+
+          {/* Handle major errors */}
+          {error ? (
+            <p className="notice warning margin-bottom">
+              {error}
+            </p>
+          ) : null}
+
+          {/* Handle minor errors */}
+          {tok && tok.error ? (
+            <div className="notice error margin-bottom">
+              <h2 className="no-margin-top txt-lg force-wrap">
+                {tok.error}
+              </h2>
+              <p>
+                {tok.errorDescription || 'no description provided'}
+                {tok.errorUri ? (
+                  <span>&nbsp;
+                    <Link href={tok.errorUri} title={tok.errorUri}>
+                      <i className="fa fa-question-circle"/>
+                    </Link>
+                  </span>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
           <div>
             <label className="label--small">
               Refresh Token

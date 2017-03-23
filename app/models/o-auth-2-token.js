@@ -2,7 +2,7 @@ import * as db from '../common/database';
 
 export const name = 'OAuth 2.0 Token';
 export const type = 'OAuth2Token';
-export const prefix = 'oa2t';
+export const prefix = 'oa2';
 export const canDuplicate = false;
 
 export function init () {
@@ -10,7 +10,12 @@ export function init () {
     parentId: null,
     refreshToken: null,
     accessToken: null,
-    expiresAt: null // Should be Date.now() if valid
+    expiresAt: null, // Should be Date.now() if valid
+
+    // Error handling
+    error: null,
+    errorDescription: null,
+    errorUri: null
   };
 }
 

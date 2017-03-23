@@ -51,6 +51,7 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   const finalUrl = querystring.joinUrl(url, qs);
 
   const redirectedTo = await authorizeUserInWindow(finalUrl, /(code=|error=)/);
+
   const {query} = urlParse(redirectedTo);
   return responseToObject(query, [
     c.Q_CODE,

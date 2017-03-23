@@ -7,7 +7,7 @@ import getAccessTokenClientCredentials from './grant-client-credentials';
 import getAccessTokenPassword from './grant-password';
 import getAccessTokenImplicit from './grant-implicit';
 import refreshAccessToken from './refresh-token';
-import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_IMPLICIT, GRANT_TYPE_PASSWORD, Q_ACCESS_TOKEN, Q_EXPIRES_IN, Q_REFRESH_TOKEN} from './constants';
+import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_IMPLICIT, GRANT_TYPE_PASSWORD, Q_ACCESS_TOKEN, Q_ERROR, Q_ERROR_DESCRIPTION, Q_ERROR_URI, Q_EXPIRES_IN, Q_REFRESH_TOKEN} from './constants';
 import * as models from '../../models';
 
 export default async function (requestId, authentication, forceRefresh = false) {
@@ -157,6 +157,16 @@ async function _updateOAuth2Token (requestId, authResults) {
   const expiresAt = expiresIn ? (Date.now() + (expiresIn * 1000)) : null;
   const refreshToken = authResults[Q_REFRESH_TOKEN];
   const accessToken = authResults[Q_ACCESS_TOKEN];
+  const error = authResults[Q_ERROR];
+  const errorDescription = authResults[Q_ERROR_DESCRIPTION];
+  const errorUri = authResults[Q_ERROR_URI];
 
-  return models.oAuth2Token.update(oAuth2Token, {expiresAt, refreshToken, accessToken});
+  return models.oAuth2Token.update(oAuth2Token, {
+    expiresAt,
+    refreshToken,
+    accessToken,
+    error,
+    errorDescription,
+    errorUri
+  });
 }

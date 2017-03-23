@@ -25,7 +25,9 @@ export function responseToObject (body, keys) {
 }
 
 export function authorizeUserInWindow (url, urlRegex = /.*/) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
+    let finalUrl = null;
+
     // Create a child window
     const child = new electron.remote.BrowserWindow({
       webPreferences: {
@@ -35,11 +37,20 @@ export function authorizeUserInWindow (url, urlRegex = /.*/) {
       show: false
     });
 
+    // Finish on close
+    child.on('close', () => {
+      if (finalUrl) {
+        resolve(finalUrl);
+      } else {
+        reject(new Error('Authorization window closed'));
+      }
+    });
+
     // Catch the redirect after login
     child.webContents.on('did-navigate', () => {
       const url = child.webContents.getURL();
       if (url.match(urlRegex)) {
-        resolve(url);
+        finalUrl = url;
         child.close();
       }
     });

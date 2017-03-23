@@ -118,6 +118,25 @@ code, pre, .monospace {
   padding: @padding-sm * 1.5;
   border: 1px solid;
   border-radius: @radius-md;
+
+  p {
+    padding: 0;
+    margin: 0;
+  }
+
+  a {
+    text-decoration: underline;
+    color: var(--color-font);
+    opacity: @opacity-subtle;
+  }
+
+  a:hover {
+    opacity: 1;
+  }
+}
+
+.notice.error {
+  border-color: var(--color-danger);
 }
 
 .notice.warning {
@@ -333,8 +352,16 @@ i.fa {
   margin-left: @padding-md;
 }
 
+.margin-left-sm {
+  margin-left: @padding-sm;
+}
+
 .margin-right-sm {
   margin-right: @padding-sm;
+}
+
+.margin-bottom {
+  margin-bottom: @padding-md;
 }
 
 .margin-bottom-sm {
