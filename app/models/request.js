@@ -1,7 +1,7 @@
-import {METHOD_GET, getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, AUTH_BASIC, AUTH_OAUTH_2, AUTH_OAUTH_1, AUTH_DIGEST, AUTH_NONE} from '../common/constants';
+import {AUTH_BASIC, AUTH_NONE, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
-import {deconstructToParams, buildFromParams} from '../common/querystring';
+import {buildFromParams, deconstructToParams} from '../common/querystring';
 import {GRANT_TYPE_AUTHORIZATION_CODE} from '../network/o-auth-2/constants';
 
 export const name = 'Request';
@@ -26,6 +26,7 @@ export function newAuth (type) {
   switch (type) {
     // No Auth
     case AUTH_NONE:
+      return {};
 
     // HTTP Basic Authentication
     case AUTH_BASIC:

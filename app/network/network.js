@@ -234,6 +234,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
       if (proxy) {
         curl.setOpt(Curl.option.PROXY, proxy);
+        curl.setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
       } else {
         // Disable autodetection from env vars
         curl.setOpt(Curl.option.PROXY, '');
