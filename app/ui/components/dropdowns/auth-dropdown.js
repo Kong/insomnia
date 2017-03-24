@@ -5,7 +5,7 @@ import {trackEvent} from '../../../analytics';
 import {showModal} from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthTypeName} from '../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NEGOTIATE, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthTypeName} from '../../../common/constants';
 
 @autobind
 class AuthDropdown extends PureComponent {
@@ -42,19 +42,27 @@ class AuthDropdown extends PureComponent {
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_BASIC}>
-          {getAuthTypeName(AUTH_BASIC, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_DIGEST}>
-          {getAuthTypeName(AUTH_DIGEST, true)}
-        </DropdownItem>
         <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_1}>
           {getAuthTypeName(AUTH_OAUTH_1, true)}
         </DropdownItem>
         <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_2}>
           {getAuthTypeName(AUTH_OAUTH_2, true)}
         </DropdownItem>
+        <DropdownItem onClick={this._handleTypeChange} value={AUTH_BASIC}>
+          {getAuthTypeName(AUTH_BASIC, true)}
+        </DropdownItem>
+        <DropdownItem onClick={this._handleTypeChange} value={AUTH_DIGEST}>
+          {getAuthTypeName(AUTH_DIGEST, true)}
+        </DropdownItem>
+        <DropdownItem onClick={this._handleTypeChange} value={AUTH_NTLM}>
+          {getAuthTypeName(AUTH_NTLM, true)}
+        </DropdownItem>
+        <DropdownItem onClick={this._handleTypeChange} value={AUTH_NEGOTIATE}>
+          {getAuthTypeName(AUTH_NEGOTIATE, true)}
+        </DropdownItem>
+
         <DropdownDivider/>
+
         <DropdownItem onClick={this._handleTypeChange} value={AUTH_NONE}>
           {getAuthTypeName(AUTH_NONE, true)}
         </DropdownItem>

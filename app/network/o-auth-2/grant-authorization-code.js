@@ -20,7 +20,7 @@ export default async function (authorizeUrl,
     state
   );
 
-  // TODO: Handle errors
+  // TODO: Handle error
 
   const tokenResults = await _getToken(
     accessTokenUrl,

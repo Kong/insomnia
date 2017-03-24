@@ -24,6 +24,9 @@ export function init () {
 
 export function newAuth (type) {
   switch (type) {
+    // No Auth
+    case AUTH_NONE:
+
     // HTTP Basic Authentication
     case AUTH_BASIC:
       return {type, username: '', password: ''};
@@ -32,15 +35,9 @@ export function newAuth (type) {
     case AUTH_OAUTH_2:
       return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
 
-    // Unimplemented auth types
-    case AUTH_OAUTH_1:
-    case AUTH_DIGEST:
-      return {type};
-
-    // No Auth
-    case AUTH_NONE:
+    // Types needing no defaults
     default:
-      return {};
+      return {type};
   }
 }
 

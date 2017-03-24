@@ -353,13 +353,17 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Set User-Agent if it't not already in headers
-      if (!hasAcceptHeader(renderedRequest.headers)) {
+      if (!hasUserAgentHeader(renderedRequest.headers)) {
         curl.setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
+      }
+
+      // Set Accept encoding
+      if (!hasAcceptHeader(renderedRequest.headers)) {
+        curl.setOpt(Curl.option.ENCODING, ''); // Accept anything
       }
 
       // Setup debug handler
       // NOTE: This is last on purpose so things like cookies don't show up
-      let debugData = '';
       let timeline = [];
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
         // Ignore the possibly large data messages
@@ -395,12 +399,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
               headers.push({name, value});
             }
           }
-        }
-
-        // Handle debug data
-        if (debugData) {
-          // TODO: Do something with debug data
-          // fs.writeFileSync('/Users/gschier/Desktop/debug.txt', debugData, 'utf8');
         }
 
         // Calculate the content type
