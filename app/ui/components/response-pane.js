@@ -217,7 +217,7 @@ class ResponsePane extends PureComponent {
             </Tab>
             {response.timeline && response.timeline.length ? (
               <Tab>
-                <Button onClick={this._trackTab} value="Headers">Debug</Button>
+                <Button onClick={this._trackTab} value="Headers">Timeline</Button>
               </Tab>
             ) : null}
           </TabList>
