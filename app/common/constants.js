@@ -128,14 +128,12 @@ export const AUTH_OAUTH_1 = 'oauth1';
 export const AUTH_BASIC = 'basic';
 export const AUTH_DIGEST = 'digest';
 export const AUTH_NTLM = 'ntlm';
-export const AUTH_NEGOTIATE = 'negotiate';
 
 export const authTypesMap = {
-  [AUTH_NONE]: ['No Auth', 'No Auth'],
+  [AUTH_NONE]: ['No Auth', 'No Authentication'],
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
   [AUTH_NTLM]: ['NTML', 'Microsoft NTML'],
-  [AUTH_NEGOTIATE]: ['Negotiate', 'Negotiate (SPNEGO)'],
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0']
 };

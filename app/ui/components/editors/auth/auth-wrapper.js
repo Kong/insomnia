@@ -1,9 +1,8 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NEGOTIATE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
 import NTLMAuth from './ntlm-auth';
-import NegotiateAuth from './negotiate-auth';
 import OAuth2 from './o-auth-2';
 import autobind from 'autobind-decorator';
 
@@ -69,17 +68,6 @@ class AuthWrapper extends PureComponent {
     } else if (authentication.type === AUTH_NTLM) {
       return (
         <NTLMAuth
-          authentication={authentication}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
-          onChange={onChange}
-          showPasswords={showPasswords}
-        />
-      );
-    } else if (authentication.type === AUTH_NEGOTIATE) {
-      return (
-        <NegotiateAuth
           authentication={authentication}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
