@@ -8,7 +8,7 @@ import {basename as pathBasename, join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
+import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, AUTH_DIGEST, AUTH_BASIC} from '../common/constants';
 import {jarFromCookies, cookiesFromJar} from '../common/cookies';
 import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, hasAuthHeader} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
@@ -326,13 +326,25 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
       // Handle Authorization header
       if (!hasAuthHeader(renderedRequest.headers)) {
-        const authHeader = await getAuthHeader(
-          renderedRequest._id,
-          renderedRequest.authentication
-        );
+        if (renderedRequest.authentication.type === AUTH_BASIC) {
+          const {username, password} = renderedRequest.authentication;
+          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
+          curl.setOpt(Curl.option.USERNAME, username);
+          curl.setOpt(Curl.option.PASSWORD, password);
+        } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
+          const {username, password} = renderedRequest.authentication;
+          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
+          curl.setOpt(Curl.option.USERNAME, username);
+          curl.setOpt(Curl.option.PASSWORD, password);
+        } else {
+          const authHeader = await getAuthHeader(
+            renderedRequest._id,
+            renderedRequest.authentication
+          );
 
-        if (authHeader) {
-          headers.push(authHeader);
+          if (authHeader) {
+            headers.push(authHeader);
+          }
         }
       }
 
@@ -348,30 +360,15 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup debug handler
       // NOTE: This is last on purpose so things like cookies don't show up
       let debugData = '';
+      let timeline = [];
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
-        let symbol = null;
-        switch (name) {
-          case 'HEADER_IN':
-            symbol = '<';
-            break;
-          case 'HEADER_OUT':
-            symbol = '>';
-            break;
-          case 'TEXT':
-            symbol = '*';
-            break;
-          // Don't show these (too much data)
-          // case 'DATA_IN':
-          // case 'DATA_OUT':
+        // Ignore the possibly large data messages
+        if (infoType === Curl.info.debug.DATA_IN || infoType === Curl.info.debug.DATA_OUT) {
+          return 0;
         }
 
-        if (symbol) {
-          const lines = content.replace(/\n$/, '').split('\n');
-          const newLines = lines.map(l => `${symbol} ${l}`);
-          const blob = newLines.join('\n');
-          debugData += blob + '\n';
-        }
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+        timeline.push({name, value: content});
 
         return 0; // Must be here
       });
@@ -443,6 +440,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           parentId: renderedRequest._id,
           headers,
           encoding,
+          timeline,
           body,
           url,
           bytesRead,

@@ -323,6 +323,7 @@ class CodeEditor extends PureComponent {
       lineWrapping,
       getRenderContext,
       getAutocompleteConstants,
+      hideGutters,
       tabIndex,
       placeholder,
       noMatchBrackets,
@@ -357,15 +358,15 @@ class CodeEditor extends PureComponent {
       gutters: []
     };
 
-    if (options.lineNumbers) {
+    if (!hideGutters && options.lineNumbers) {
       options.gutters.push('CodeMirror-linenumbers');
     }
 
-    if (options.foldGutter) {
+    if (!hideGutters && options.foldGutter) {
       options.gutters.push('CodeMirror-foldgutter');
     }
 
-    if (options.lint) {
+    if (!hideGutters && options.lint) {
       options.gutters.push('CodeMirror-lint-markers');
     }
 
@@ -512,13 +513,20 @@ class CodeEditor extends PureComponent {
   }
 
   render () {
-    const {id, readOnly, fontSize, mode, filter, onMouseLeave, onClick} = this.props;
+    const {
+      id,
+      readOnly,
+      fontSize,
+      mode,
+      filter,
+      onMouseLeave,
+      onClick
+    } = this.props;
 
-    const classes = classnames(
-      this.props.className,
-      'editor',
-      {'editor--readonly': readOnly}
-    );
+    const classes = classnames(this.props.className, {
+      'editor': true,
+      'editor--readonly': readOnly
+    });
 
     const toolbarChildren = [];
     if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
@@ -536,7 +544,7 @@ class CodeEditor extends PureComponent {
         <button key="help"
                 className="btn btn--compact"
                 onClick={this._showFilterHelp}>
-          <i className="fa fa-question-circle"></i>
+          <i className="fa fa-question-circle"/>
         </button>
       );
     }
@@ -607,6 +615,7 @@ CodeEditor.propTypes = {
   placeholder: PropTypes.string,
   lineWrapping: PropTypes.bool,
   hideLineNumbers: PropTypes.bool,
+  hideGutters: PropTypes.bool,
   noMatchBrackets: PropTypes.bool,
   hideScrollbars: PropTypes.bool,
   fontSize: PropTypes.number,
