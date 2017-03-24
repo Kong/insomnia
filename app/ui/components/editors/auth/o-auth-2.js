@@ -8,6 +8,7 @@ import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import * as models from '../../../../models';
 import Link from '../../base/link';
+import {trackEvent} from '../../../../analytics/index';
 
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
@@ -22,7 +23,6 @@ class OAuth2 extends PureComponent {
       loading: false
     };
 
-    this._mounted = false;
     this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
   }
 
@@ -96,6 +96,7 @@ class OAuth2 extends PureComponent {
   }
 
   _handleChangeGrantType (e) {
+    trackEvent('OAuth 2', 'Change Grant Type', e.target.value);
     this._handleChangeProperty('grantType', e.target.value);
   }
 

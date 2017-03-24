@@ -14,6 +14,7 @@ import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import PromptModal from '../components/modals/prompt-modal';
 import ChangelogModal from '../components/modals/changelog-modal';
 import SettingsModal from '../components/modals/settings-modal';
+import AlertModal from '../components/modals/alert-modal';
 import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion, PREVIEW_MODE_SOURCE, isMac} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
@@ -361,7 +362,10 @@ class App extends PureComponent {
       const responsePatch = await network.send(requestId, environmentId);
       await models.response.create(responsePatch);
     } catch (e) {
-      // It's OK
+      showModal(AlertModal, {
+        title: 'Request Failed',
+        message: e.message
+      });
     }
 
     // Unset active response because we just made a new one

@@ -48,14 +48,14 @@ class AuthDropdown extends PureComponent {
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
+        <DropdownItem onClick={this._handleTypeChange} value={AUTH_BASIC}>
+          {getAuthTypeName(AUTH_BASIC, true)}
+        </DropdownItem>
         <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_1}>
           {getAuthTypeName(AUTH_OAUTH_1, true)}
         </DropdownItem>
         <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_2}>
           {getAuthTypeName(AUTH_OAUTH_2, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_BASIC}>
-          {getAuthTypeName(AUTH_BASIC, true)}
         </DropdownItem>
         <DropdownItem onClick={this._handleTypeChange} value={AUTH_DIGEST}>
           {getAuthTypeName(AUTH_DIGEST, true)}

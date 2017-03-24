@@ -112,13 +112,13 @@ export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
 export const CONTENT_TYPE_OTHER = '';
 
-export const contentTypesMap = {
-  [CONTENT_TYPE_JSON]: 'JSON',
-  [CONTENT_TYPE_XML]: 'XML',
-  [CONTENT_TYPE_FORM_DATA]: 'Multipart Form',
-  [CONTENT_TYPE_FORM_URLENCODED]: 'Url Encoded',
-  [CONTENT_TYPE_FILE]: 'Binary File',
-  [CONTENT_TYPE_OTHER]: 'Other'
+const contentTypesMap = {
+  [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
+  [CONTENT_TYPE_XML]: ['XML', 'XML'],
+  [CONTENT_TYPE_FORM_DATA]: ['Multipart', 'Multipart Form'],
+  [CONTENT_TYPE_FORM_URLENCODED]: ['URL Encoded', 'Form URL Encoded'],
+  [CONTENT_TYPE_FILE]: ['Binary', 'Binary File'],
+  [CONTENT_TYPE_OTHER]: ['Other', 'Other']
 };
 
 // Auth Types
@@ -129,7 +129,7 @@ export const AUTH_BASIC = 'basic';
 export const AUTH_DIGEST = 'digest';
 export const AUTH_NTLM = 'ntlm';
 
-export const authTypesMap = {
+const authTypesMap = {
   [AUTH_NONE]: ['No Auth', 'No Authentication'],
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
@@ -138,24 +138,16 @@ export const authTypesMap = {
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0']
 };
 
-/**
- * Get the friendly name for a given content type
- *
- * @param contentType
- * @returns {*|string}
- */
-export function getContentTypeName (contentType) {
-  if (typeof contentType !== 'string') {
-    return 'No Body';
+export function getContentTypeName (contentType, useLong = false) {
+  if (contentTypesMap.hasOwnProperty(contentType)) {
+    return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
   } else {
-    return contentTypesMap[contentType] || 'Other';
+    return contentTypesMap[CONTENT_TYPE_OTHER];
   }
 }
 
 export function getAuthTypeName (authType, useLong = false) {
-  if (typeof authType !== 'string') {
-    return 'No Auth';
-  } else if (authTypesMap.hasOwnProperty(authType)) {
+  if (authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
     return 'No Auth';

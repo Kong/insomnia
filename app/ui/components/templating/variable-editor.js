@@ -100,8 +100,8 @@ class VariableEditor extends PureComponent {
         <div className="form-control form-control--outlined">
           <label>Variable Name
             <OneLineEditor
-              ref={this._setInputRef}
               forceEditor
+              ref={this._setInputRef}
               onChange={this._update}
               defaultValue={variable.getName()}
             />

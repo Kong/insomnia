@@ -326,17 +326,17 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       });
 
       // Handle Authorization header
-      if (!hasAuthHeader(renderedRequest.headers)) {
+      if (!hasAuthHeader(renderedRequest.headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
           const {username, password} = renderedRequest.authentication;
           curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
-          curl.setOpt(Curl.option.USERNAME, username);
-          curl.setOpt(Curl.option.PASSWORD, password);
+          curl.setOpt(Curl.option.USERNAME, username || '');
+          curl.setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const {username, password} = renderedRequest.authentication;
           curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
-          curl.setOpt(Curl.option.USERNAME, username);
-          curl.setOpt(Curl.option.PASSWORD, password);
+          curl.setOpt(Curl.option.USERNAME, username || '');
+          curl.setOpt(Curl.option.PASSWORD, password || '');
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,
@@ -662,18 +662,8 @@ export async function send (requestId, environmentId) {
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
 
-  let renderedRequest;
-
-  try {
-    renderedRequest = await getRenderedRequest(request, environmentId);
-  } catch (e) {
-    // Failed to render. Must be the user's fault
-    return {
-      parentId: request._id,
-      statusCode: STATUS_CODE_RENDER_FAILED,
-      error: e.message
-    };
-  }
+  // This may throw
+  const renderedRequest = await getRenderedRequest(request, environmentId);
 
   // Get the workspace for the request
   const ancestors = await db.withAncestors(request);
