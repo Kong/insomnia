@@ -3,10 +3,10 @@ import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import Editor from '../codemirror/code-editor';
 import {trackEvent} from '../../../analytics/index';
-import * as allHeaderNames from '../../../datasets/header-names';
-import * as allCharsets from '../../../datasets/charsets';
-import * as allMimeTypes from '../../../datasets/content-types';
-import * as allEncodings from '../../../datasets/encodings';
+import allHeaderNames from '../../../datasets/header-names';
+import allCharsets from '../../../datasets/charsets';
+import allMimeTypes from '../../../datasets/content-types';
+import allEncodings from '../../../datasets/encodings';
 
 @autobind
 class RequestHeadersEditor extends PureComponent {
