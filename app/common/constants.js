@@ -141,8 +141,10 @@ const authTypesMap = {
 export function getContentTypeName (contentType, useLong = false) {
   if (contentTypesMap.hasOwnProperty(contentType)) {
     return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
+  } else if (contentType) {
+    return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
   } else {
-    return contentTypesMap[CONTENT_TYPE_OTHER];
+    return '';
   }
 }
 

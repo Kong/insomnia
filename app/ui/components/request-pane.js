@@ -212,7 +212,7 @@ class RequestPane extends PureComponent {
           <TabList>
             <Tab onClick={this._trackTabBody}>
               <button>
-                {getContentTypeName(request.body.mimeType)}
+                {getContentTypeName(request.body.mimeType) || 'No Body'}
                 {' '}
                 {numBodyParams ? <span className="txt-sm">({numBodyParams})</span> : null}
               </button>
