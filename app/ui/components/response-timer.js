@@ -38,7 +38,7 @@ class ResponseTimer extends PureComponent {
     return (
       <div className={classnames('overlay', {'overlay--hidden': !show})}>
         {elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER
-          ? <h2>{elapsedTime} seconds...</h2>
+          ? <h2>{elapsedTime.toFixed(1)} seconds...</h2>
           : <h2>Loading...</h2>
         }
         <div className="pad">

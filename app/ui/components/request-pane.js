@@ -239,7 +239,7 @@ class RequestPane extends PureComponent {
             </Tab>
             <Tab onClick={this._trackTabHeaders}>
               <button>
-                Headers {numHeaders ? <span className="txt-sm">({numHeaders})</span> : null}
+                Header {numHeaders ? <span className="txt-sm">({numHeaders})</span> : null}
               </button>
             </Tab>
           </TabList>

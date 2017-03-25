@@ -205,13 +205,13 @@ class ResponsePane extends PureComponent {
             </Tab>
             <Tab>
               <Button onClick={this._trackTab} value="Headers">
-                Headers {response.headers.length ? (
+                Header {response.headers.length ? (
                 <span className="txt-sm">({response.headers.length})</span>) : null}
               </Button>
             </Tab>
             <Tab>
               <Button onClick={this._trackTab} value="Cookies">
-                Cookies {cookieHeaders.length ? (
+                Cookie {cookieHeaders.length ? (
                 <span className="txt-sm">({cookieHeaders.length})</span>) : null}
               </Button>
             </Tab>
