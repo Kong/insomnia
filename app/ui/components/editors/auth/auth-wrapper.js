@@ -91,7 +91,7 @@ class AuthWrapper extends PureComponent {
 
   render () {
     return (
-      <div className="pad tall">{this.renderEditor()}</div>
+      <div className="tall">{this.renderEditor()}</div>
     );
   }
 }

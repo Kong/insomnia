@@ -16,15 +16,22 @@ class AuthDropdown extends PureComponent {
     }
 
     const newAuthentication = models.request.newAuth(type, this.props.authentication);
-    // const defaultAuthentication = models.request.newAuth(type, this.props.authentication);
+    const defaultAuthentication = models.request.newAuth(this.props.authentication.type);
 
     // Prompt the user if fields will change between new and old
     for (const key of Object.keys(this.props.authentication)) {
+      if (key === 'type') {
+        continue;
+      }
+
       const value = this.props.authentication[key];
-      if (key !== 'type' && newAuthentication[key] !== value) {
+      const changedSinceDefault = defaultAuthentication[key] !== value;
+      const willChange = newAuthentication[key] !== value;
+
+      if (changedSinceDefault && willChange) {
         await showModal(AlertModal, {
-          title: 'Switch Authentication Mode',
-          message: 'Your current authentication settings will be lost. Are you sure you want to switch?',
+          title: 'Switch Authentication?',
+          message: 'Current authentication settings will be lost',
           addCancel: true
         });
         break;

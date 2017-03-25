@@ -171,6 +171,25 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.VERBOSE, true);
       curl.setOpt(Curl.option.NOPROGRESS, false);
 
+      // Setup debug handler
+      let timeline = [];
+      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
+        // Ignore the possibly large data messages
+        if (infoType === Curl.info.debug.DATA_IN || infoType === Curl.info.debug.DATA_OUT) {
+          return 0;
+        }
+
+        // Don't show cookie setting because this will display every domain in the jar
+        if (infoType === Curl.info.debug.TEXT && content.indexOf('Added cookie') === 0) {
+          return 0;
+        }
+
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+        timeline.push({name, value: content});
+
+        return 0; // Must be here
+      });
+
       // Set the headers (to be modified as we go)
       const headers = [...renderedRequest.headers];
 
@@ -362,21 +381,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       if (!hasAcceptHeader(renderedRequest.headers)) {
         curl.setOpt(Curl.option.ENCODING, ''); // Accept anything
       }
-
-      // Setup debug handler
-      // NOTE: This is last on purpose so things like cookies don't show up
-      let timeline = [];
-      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
-        // Ignore the possibly large data messages
-        if (infoType === Curl.info.debug.DATA_IN || infoType === Curl.info.debug.DATA_OUT) {
-          return 0;
-        }
-
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
-        timeline.push({name, value: content});
-
-        return 0; // Must be here
-      });
 
       // Handle the response ending
       curl.on('end', function (_1, _2, curlHeaders) {

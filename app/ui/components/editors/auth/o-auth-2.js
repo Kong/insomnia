@@ -277,7 +277,7 @@ class OAuth2 extends PureComponent {
     const {request, oAuth2Token: tok} = this.props;
     const {loading, error} = this.state;
     return (
-      <div className="pad-top-sm pad-bottom">
+      <div className="pad">
         <table>
           <tbody>
           {this.renderSelectRow('Grant Type', 'grantType', [

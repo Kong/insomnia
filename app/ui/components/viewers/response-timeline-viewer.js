@@ -21,9 +21,8 @@ class ResponseTimelineViewer extends PureComponent {
       case 'TEXT':
         symbol = '*';
         break;
-      // Don't show these (too much data)
-      // case 'DATA_IN':
-      // case 'DATA_OUT':
+      default:
+        console.log('HELLO?', name);
     }
 
     if (symbol) {
