@@ -1,7 +1,12 @@
 import React, {PropTypes, PureComponent} from 'react';
+import {shell} from 'electron';
 import CodeEditor from '../codemirror/code-editor';
 
 class ResponseTimelineViewer extends PureComponent {
+  _handleClickLink (link) {
+    shell.openExternal(link);
+  }
+
   renderRow (row) {
     const {name, value} = row;
 
@@ -37,6 +42,7 @@ class ResponseTimelineViewer extends PureComponent {
       <CodeEditor
         hideLineNumbers
         readOnly
+        onClickLink={this._handleClickLink}
         defaultValue={rows}
         fontSize={editorFontSize}
         lineWrapping={editorLineWrapping}

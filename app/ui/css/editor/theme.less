@@ -1,3 +1,5 @@
+@import '../constants/colors';
+
 /* Based on Sublime Text's Monokai theme */
 .editor {
   .CodeMirror {
@@ -135,8 +137,12 @@
     color: var(--color-notice);
   }
 
+  .cm-curl-header {
+    font-weight: bold;
+  }
+
   .cm-curl-comment {
-    color: var(--color-font);
+    color: var(--hl);
     font-style: italic;
   }
 

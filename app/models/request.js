@@ -1,4 +1,4 @@
-import {AUTH_BASIC, AUTH_NONE, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -22,7 +22,7 @@ export function init () {
   };
 }
 
-export function newAuth (type) {
+export function newAuth (type, oldAuth = {}) {
   switch (type) {
     // No Auth
     case AUTH_NONE:
@@ -30,7 +30,14 @@ export function newAuth (type) {
 
     // HTTP Basic Authentication
     case AUTH_BASIC:
-      return {type, username: '', password: ''};
+    case AUTH_DIGEST:
+    case AUTH_NTLM:
+      return {
+        type,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || ''
+      };
 
     // OAuth 2.0
     case AUTH_OAUTH_2:
