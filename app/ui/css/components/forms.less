@@ -45,6 +45,7 @@
   label {
     font-weight: 600;
     display: block;
+    padding-top: @padding-xs;
 
     * {
       font-weight: normal;
@@ -121,6 +122,13 @@
 .form-control--wide {
   margin-left: 0 !important;
   margin-right: 0 !important;
+}
+
+.form-control--no-label::before {
+  content: 'nothing';
+  opacity: 0;
+  padding-top: @padding-xs;
+  display: block;
 }
 
 .form-row {

@@ -104,7 +104,7 @@ class OAuth2 extends PureComponent {
     const {handleRender, handleGetRenderContext, request} = this.props;
     const id = label.replace(/ /g, '-');
     return (
-      <tr className="height-md" key={id}>
+      <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
           <label htmlFor={id} className="label--small no-pad">{label}</label>
         </td>
@@ -128,7 +128,7 @@ class OAuth2 extends PureComponent {
     const {request} = this.props;
     const id = label.replace(/ /g, '-');
     return (
-      <tr className="height-md" key={id}>
+      <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
           <label htmlFor={id} className="label--small no-pad">{label}</label>
         </td>
