@@ -31,28 +31,6 @@ class SyncDropdown extends PureComponent {
     showModal(WorkspaceShareSettingsModal, {workspace: this.props.workspace});
   }
 
-  async _handleToggleSyncMode () {
-    const {syncData} = this.state;
-    const resourceGroupId = syncData.resourceGroupId;
-
-    const config = await sync.getOrCreateConfig(resourceGroupId);
-
-    let syncMode = config.syncMode !== syncStorage.SYNC_MODE_ON
-      ? syncStorage.SYNC_MODE_ON
-      : syncStorage.SYNC_MODE_OFF;
-
-    await sync.createOrUpdateConfig(resourceGroupId, syncMode);
-
-    await this._reloadData();
-
-    // Trigger a sync right away if we're turning it on
-    if (syncMode === syncStorage.SYNC_MODE_ON) {
-      await this._handleSyncResourceGroupId();
-    }
-
-    trackEvent('Sync', 'Change Mode', syncMode);
-  }
-
   async _handleSyncResourceGroupId () {
     const {syncData} = this.state;
     const resourceGroupId = syncData.resourceGroupId;
@@ -177,26 +155,12 @@ class SyncDropdown extends PureComponent {
             </DropdownButton>
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>
 
-            {/* SYNC DISABLED */}
-
-            {syncMode === syncStorage.SYNC_MODE_NEVER
-              ? <DropdownItem onClick={this._handleShowSyncModePrompt}>
-                <i className="fa fa-wrench"/>
-                Change Sync Mode
-              </DropdownItem> : null
-            }
+            <DropdownItem onClick={this._handleShowSyncModePrompt}>
+              <i className="fa fa-wrench"/>
+              Change Sync Mode
+            </DropdownItem>
 
             {/* SYNCED */}
-
-            {syncMode !== syncStorage.SYNC_MODE_NEVER
-              ? <DropdownItem onClick={this._handleToggleSyncMode} stayOpenAfterClick={true}>
-                {syncMode === syncStorage.SYNC_MODE_ON
-                  ? <i className="fa fa-toggle-on"/>
-                  : <i className="fa fa-toggle-off"/>
-                }
-                Automatic Sync
-              </DropdownItem> : null
-            }
 
             {syncMode !== syncStorage.SYNC_MODE_NEVER
               ? <DropdownItem onClick={this._handleSyncResourceGroupId} stayOpenAfterClick>

@@ -15,14 +15,18 @@ class ResponseTimelineViewer extends PureComponent {
       case 'HEADER_IN':
         symbol = '<';
         break;
+      case 'SSL_DATA_IN':
+        symbol = '<';
+        break;
       case 'HEADER_OUT':
+        symbol = '>';
+        break;
+      case 'SSL_DATA_OUT':
         symbol = '>';
         break;
       case 'TEXT':
         symbol = '*';
         break;
-      default:
-        console.log('HELLO?', name);
     }
 
     if (symbol) {

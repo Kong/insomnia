@@ -6,53 +6,60 @@
   opacity: 0;
   position: absolute;
   z-index: 100;
-  bottom: @padding-md;
-  right: @padding-md;
+  bottom: -3rem;
+  right: -10rem;
   background: var(--color-bg);
   color: var(--color-font);
   box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  transition: opacity 500ms;
-  padding: @padding-sm @padding-xs @padding-sm @padding-md;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto;
+  transition: opacity 200ms, right 300ms, bottom 300ms, transform 200ms ease-out;
+  padding: @padding-sm;
+  transform: scale(0.8);
+  border-radius: @radius-md;
+  border: 1px solid var(--hl-sm);
 
   &.toast--show {
     opacity: 1;
+    transform: scale(1);
+    bottom: @padding-md;
+    right: @padding-md;
+  }
+
+  .toast__image,
+  .toast__content {
+    height: 100%;
+    width: 100%;
   }
 
   .toast__message {
-    display: inline-block;
-    padding-left: @padding-xs;
+    padding: 0;
+    margin: 0;
+    max-width: 20rem;
   }
 
-  .toast__action {
-    color: var(--color-surprise);
-    text-transform: uppercase;
-    font-size: @font-size-sm;
-    padding-left: @padding-md;
+  .toast__actions {
+    padding-top: @padding-sm;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
   }
 
-  .toast__action > button {
-    border-color: inherit;
-    min-width: 7em;
-  }
+  .toast__image {
+    padding-right: @padding-sm;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
 
-  .toast__action--close {
-    color: @hl-md;
-    padding-left: @padding-sm;
-
-    &:hover {
-      color: @hl;
+    img {
+      margin-left: @padding-sm;
+      margin-right: @padding-sm;
+      max-width: 5rem;
+      max-height: 5rem;
+      border-radius: 50%;
+      box-shadow: 0 0 @padding-sm rgba(0, 0, 0, 0.2);
     }
-  }
-
-  .toast__action--close > button:hover,
-  .toast__action--close > button {
-    font-size: @font-size-xs;
-    padding: 0 @padding-xs;
-    border: 0;
-    min-width: 0;
-    background: transparent;
   }
 }
