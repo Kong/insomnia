@@ -57,7 +57,7 @@ class RequestSettingsModal extends PureComponent {
     return (
       <div className="pad">
         <div className="form-control form-control--outlined">
-          <label>Request Name
+          <label>Request Name <small className="italic">(also rename by double-clicking in sidebar)</small>
             <DebouncedInput
               delay={500}
               type="text"
