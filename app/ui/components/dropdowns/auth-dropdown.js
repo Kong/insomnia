@@ -42,34 +42,32 @@ class AuthDropdown extends PureComponent {
     this.props.onChange(newAuthentication);
   }
 
-  render () {
-    const {children, className, ...extraProps} = this.props;
+  renderAuthType (type, nameOverride = null) {
+    const currentType = this.props.authentication.type || AUTH_NONE;
     return (
-      <Dropdown debug="true" {...extraProps}>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_NONE}>
-          {getAuthTypeName(AUTH_NONE, true)}
-        </DropdownItem>
+      <DropdownItem onClick={this._handleTypeChange} value={type}>
+        {currentType === type ? <i className="fa fa-check"/> : <i className="fa fa-empty"/>}
+        {' '}
+        {nameOverride || getAuthTypeName(type, true)}
+      </DropdownItem>
+    );
+  }
 
-        <DropdownDivider/>
-
+  render () {
+    const {children, className} = this.props;
+    return (
+      <Dropdown debug="true">
+        <DropdownDivider>Auth Types</DropdownDivider>
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_BASIC}>
-          {getAuthTypeName(AUTH_BASIC, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_1}>
-          {getAuthTypeName(AUTH_OAUTH_1, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_2}>
-          {getAuthTypeName(AUTH_OAUTH_2, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_DIGEST}>
-          {getAuthTypeName(AUTH_DIGEST, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_NTLM}>
-          {getAuthTypeName(AUTH_NTLM, true)}
-        </DropdownItem>
+        {this.renderAuthType(AUTH_BASIC)}
+        {this.renderAuthType(AUTH_OAUTH_1)}
+        {this.renderAuthType(AUTH_OAUTH_2)}
+        {this.renderAuthType(AUTH_DIGEST)}
+        {this.renderAuthType(AUTH_NTLM)}
+        <DropdownDivider>Other</DropdownDivider>
+        {this.renderAuthType(AUTH_NONE, 'No Authentication')}
       </Dropdown>
     );
   }

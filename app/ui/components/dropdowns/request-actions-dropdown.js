@@ -3,9 +3,11 @@ import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import PromptModal from '../modals/prompt-modal';
+import RequestSettingsModal from '../modals/request-settings-modal';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
+import {DropdownDivider} from '../base/dropdown/index';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -22,6 +24,10 @@ class RequestActionsDropdown extends PureComponent {
   _handleGenerateCode () {
     this.props.handleGenerateCode(this.props.request);
     trackEvent('Request', 'Generate Code', 'Request Action');
+  }
+
+  _handleShowRequestSettings () {
+    showModal(RequestSettingsModal, this.props.request);
   }
 
   async _handlePromptUpdateName () {
@@ -71,6 +77,13 @@ class RequestActionsDropdown extends PureComponent {
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o"/> Delete
+        </DropdownItem>
+
+        <DropdownDivider/>
+
+        <DropdownItem onClick={this._handleShowRequestSettings}>
+          <i className="fa fa-wrench"/> Settings
+          <DropdownHint alt shift char=","/>
         </DropdownItem>
       </Dropdown>
     );

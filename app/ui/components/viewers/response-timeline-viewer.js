@@ -15,11 +15,17 @@ class ResponseTimelineViewer extends PureComponent {
       case 'HEADER_IN':
         symbol = '<';
         break;
+      case 'DATA_IN':
+        symbol = '';
+        break;
       case 'SSL_DATA_IN':
         symbol = '<';
         break;
       case 'HEADER_OUT':
         symbol = '>';
+        break;
+      case 'DATA_OUT':
+        symbol = '';
         break;
       case 'SSL_DATA_OUT':
         symbol = '>';
@@ -29,9 +35,11 @@ class ResponseTimelineViewer extends PureComponent {
         break;
     }
 
-    if (symbol) {
-      const lines = value.replace(/\n$/, '').split('\n');
-      const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${symbol} ${l}`);
+    if (symbol !== null) {
+      const lines = (value + '').replace(/\n$/, '').split('\n');
+      const newLines = lines
+        .filter(l => !l.match(/^\s*$/))
+        .map(l => symbol ? `${symbol} ${l}` : l);
       return newLines.join('\n');
     } else {
       return null;

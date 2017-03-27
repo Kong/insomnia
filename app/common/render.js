@@ -4,8 +4,8 @@ import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 
-export function render (obj, context = {}, strict = false) {
-  return recursiveRender(obj, context, strict);
+export function render (obj, context = {}) {
+  return recursiveRender(obj, context, true);
 }
 
 export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
@@ -55,15 +55,19 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
  * Recursively render any JS object and return a new one
  * @param {*} originalObj - object to render
  * @param {object} context - context to render against
- * @param strict - whether to fail on undefined
+ * @param blacklistPathRegex - don't render these paths
  * @return {Promise.<*>}
  */
-export async function recursiveRender (originalObj, context = {}, strict = false) {
+export async function recursiveRender (originalObj, context = {}, blacklistPathRegex = null) {
   const obj = clone(originalObj);
   const toS = obj => Object.prototype.toString.call(obj);
 
   // Make a copy so no one gets mad :)
-  async function next (x) {
+  async function next (x, path = '') {
+    if (blacklistPathRegex && path.match(blacklistPathRegex)) {
+      return x;
+    }
+
     // Leave these types alone
     if (
       toS(x) === '[object Date]' ||
@@ -77,7 +81,7 @@ export async function recursiveRender (originalObj, context = {}, strict = false
       // Do nothing to these types
     } else if (toS(x) === '[object String]') {
       try {
-        x = await templating.render(x, {context, strict});
+        x = await templating.render(x, {context, path});
       } catch (err) {
         // TODO: Show paths here in errors
         throw err;
@@ -87,15 +91,18 @@ export async function recursiveRender (originalObj, context = {}, strict = false
       //   throw new Error('Tried to render an array');
       // };
       for (let i = 0; i < x.length; i++) {
-        x[i] = await next(x[i]);
+        x[i] = await next(x[i], `${path}[${i}]`);
       }
     } else if (typeof x === 'object') {
-      // x.toString = function () {
-      //   throw new Error('Tried to render an object');
-      // };
+      // Don't even try rendering disabled objects
+      if (x.disabled) {
+        return x;
+      }
+
       const keys = Object.keys(x);
       for (const key of keys) {
-        x[key] = await next(x[key]);
+        const pathPrefix = path ? path + '.' : '';
+        x[key] = await next(x[key], `${pathPrefix}${key}`);
       }
     }
 
@@ -134,7 +141,11 @@ export async function getRenderedRequest (request, environmentId) {
   const renderContext = await getRenderContext(request, environmentId, ancestors);
 
   // Render all request properties
-  const renderedRequest = await recursiveRender(request, renderContext);
+  const renderedRequest = await recursiveRender(
+    request,
+    renderContext,
+    request.settingDisableRenderRequestBody ? /^body.*/ : null
+  );
 
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);

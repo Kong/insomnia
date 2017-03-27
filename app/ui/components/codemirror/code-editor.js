@@ -349,8 +349,8 @@ class CodeEditor extends PureComponent {
       dragDrop: !noDragDrop,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       styleActiveLine: !noStyleActiveLine,
-      lineNumbers: !hideLineNumbers,
-      foldGutter: !hideLineNumbers,
+      lineNumbers: !hideGutters && !hideLineNumbers,
+      foldGutter: !hideGutters && !hideLineNumbers,
       lineWrapping: lineWrapping,
       keyMap: keyMap || 'default',
       matchBrackets: !noMatchBrackets,
@@ -520,7 +520,8 @@ class CodeEditor extends PureComponent {
       mode,
       filter,
       onMouseLeave,
-      onClick
+      onClick,
+      style
     } = this.props;
 
     const classes = classnames(this.props.className, {
@@ -578,7 +579,7 @@ class CodeEditor extends PureComponent {
     }
 
     return (
-      <div className={classes}>
+      <div className={classes} style={style}>
         <div className="editor__container input"
              style={styles}
              onClick={onClick}
@@ -627,6 +628,7 @@ CodeEditor.propTypes = {
   noDragDrop: PropTypes.bool,
   noStyleActiveLine: PropTypes.bool,
   className: PropTypes.any,
+  style: PropTypes.object,
   updateFilter: PropTypes.func,
   defaultTabBehavior: PropTypes.bool,
   readOnly: PropTypes.bool,

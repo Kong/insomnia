@@ -18,7 +18,12 @@ export function init () {
     parameters: [],
     headers: [],
     authentication: {},
-    metaSortKey: -1 * Date.now()
+    metaSortKey: -1 * Date.now(),
+
+    // Settings
+    settingStoreCookies: true,
+    settingSendCookies: true,
+    settingDisableRenderRequestBody: false
   };
 }
 

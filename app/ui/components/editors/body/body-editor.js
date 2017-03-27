@@ -42,9 +42,15 @@ class BodyEditor extends PureComponent {
       fontSize,
       lineWrapping,
       request,
-      handleRender,
-      handleGetRenderContext
+      handleRender: render,
+      handleGetRenderContext: getRenderContext
     } = this.props;
+
+    const noRender = request.settingDisableRenderRequestBody;
+    const handleRender = noRender ? null : render;
+    const handleGetRenderContext = noRender ? null : getRenderContext;
+
+    const uniqueKey = `${request._id}::${noRender}`;
 
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
@@ -53,7 +59,7 @@ class BodyEditor extends PureComponent {
     if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
       return (
         <UrlEncodedEditor
-          key={request._id}
+          key={uniqueKey}
           onChange={this._handleFormUrlEncodedChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
@@ -63,7 +69,7 @@ class BodyEditor extends PureComponent {
     } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
       return (
         <FormEditor
-          key={request._id}
+          key={uniqueKey}
           onChange={this._handleFormChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
@@ -73,7 +79,7 @@ class BodyEditor extends PureComponent {
     } else if (mimeType === CONTENT_TYPE_FILE) {
       return (
         <FileEditor
-          key={request._id}
+          key={uniqueKey}
           onChange={this._handleFileChange}
           path={fileName || ''}
         />
@@ -82,7 +88,7 @@ class BodyEditor extends PureComponent {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
-          key={request._id}
+          key={uniqueKey}
           fontSize={fontSize}
           keyMap={keyMap}
           lineWrapping={lineWrapping}

@@ -1,7 +1,7 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {showModal, registerModal} from './modals/index';
+import {registerModal, showModal} from './modals/index';
 import AlertModal from './modals/alert-modal';
 import ChangelogModal from './modals/changelog-modal';
 import CookiesModal from './modals/cookies-modal';
@@ -18,6 +18,8 @@ import SetupSyncModal from './modals/setup-sync-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import ResponsePane from './response-pane';
+import RequestSettingsModal from './modals/request-settings-modal';
+import RequestRenderErrorModal from './modals/request-render-error-modal';
 import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
@@ -347,6 +349,8 @@ class Wrapper extends PureComponent {
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
           <FilterHelpModal ref={registerModal}/>
+          <RequestSettingsModal ref={registerModal}/>
+          <RequestRenderErrorModal ref={registerModal}/>
           <CookiesModal
             ref={registerModal}
             workspace={activeWorkspace}

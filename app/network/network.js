@@ -229,22 +229,24 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       }
 
       // Set cookies
-      curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
-      for (const cookie of renderedRequest.cookieJar.cookies) {
-        let expiresTimestamp = 0;
-        if (cookie.expires) {
-          const expiresDate = new Date(cookie.expires);
-          expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
+      if (renderedRequest.settingSendCookies) {
+        curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
+        for (const cookie of renderedRequest.cookieJar.cookies) {
+          let expiresTimestamp = 0;
+          if (cookie.expires) {
+            const expiresDate = new Date(cookie.expires);
+            expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
+          }
+          curl.setOpt(Curl.option.COOKIELIST, [
+            cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
+            cookie.hostOnly ? 'TRUE' : 'FALSE',
+            cookie.path,
+            cookie.secure ? 'TRUE' : 'FALSE',
+            expiresTimestamp,
+            cookie.key,
+            cookie.value
+          ].join('\t'));
         }
-        curl.setOpt(Curl.option.COOKIELIST, [
-          cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-          cookie.hostOnly ? 'TRUE' : 'FALSE',
-          cookie.path,
-          cookie.secure ? 'TRUE' : 'FALSE',
-          expiresTimestamp,
-          cookie.key,
-          cookie.value
-        ].join('\t'));
       }
 
       // Set proxy
@@ -412,27 +414,31 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
-        const cookies = [];
-        for (const str of curl.getInfo(Curl.info.COOKIELIST)) {
-          //  0                    1                  2     3       4       5     6
-          // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
-          const parts = str.split('\t');
+        if (renderedRequest.settingStoreCookies) {
+          const cookieStrings = curl.getInfo(Curl.info.COOKIELIST);
+          const cookies = cookieStrings.map(str => {
+            //  0                    1                  2     3       4       5     6
+            // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
+            const parts = str.split('\t');
 
-          const hostname = parts[0].replace(/^#HttpOnly_/, '');
-          const httpOnly = hostname.length !== parts[0].length;
+            const hostname = parts[0].replace(/^#HttpOnly_/, '');
+            const httpOnly = hostname.length !== parts[0].length;
 
-          cookies.push({
-            domain: hostname,
-            httpOnly: httpOnly,
-            hostOnly: parts[1] === 'TRUE',
-            path: parts[2],
-            secure: parts[3] === 'TRUE', // This doesn't exists?
-            expires: new Date(parts[4] * 1000),
-            key: parts[5],
-            value: parts[6]
+            return {
+              domain: hostname,
+              httpOnly: httpOnly,
+              hostOnly: parts[1] === 'TRUE',
+              path: parts[2],
+              secure: parts[3] === 'TRUE', // This doesn't exists?
+              expires: new Date(parts[4] * 1000),
+              key: parts[5],
+              value: parts[6]
+            };
           });
+
+          // Do this async. We don't need to wait
+          models.cookieJar.update(renderedRequest.cookieJar, {cookies});
         }
-        models.cookieJar.update(renderedRequest.cookieJar, {cookies});
 
         // Handle the body
         const encoding = 'base64';

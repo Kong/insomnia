@@ -212,9 +212,9 @@ class RequestPane extends PureComponent {
           <TabList>
             <Tab onClick={this._trackTabBody}>
               <button>
-                {getContentTypeName(request.body.mimeType) || 'No Body'}
+                {getContentTypeName(request.body.mimeType) || 'Body'}
                 {' '}
-                {numBodyParams ? <span className="txt-sm">({numBodyParams})</span> : null}
+                {numBodyParams ? <span className="superscript">{numBodyParams}</span> : null}
               </button>
               <ContentTypeDropdown onChange={updateRequestMimeType}
                                    contentType={request.body.mimeType}
@@ -224,7 +224,7 @@ class RequestPane extends PureComponent {
             </Tab>
             <Tab onClick={this._trackTabAuthentication}>
               <button>
-                {getAuthTypeName(request.authentication.type)}
+                {getAuthTypeName(request.authentication.type) || 'Auth'}
               </button>
               <AuthDropdown onChange={updateRequestAuthentication}
                             authentication={request.authentication}
@@ -234,12 +234,12 @@ class RequestPane extends PureComponent {
             </Tab>
             <Tab onClick={this._trackTabQuery}>
               <button>
-                Query {numParameters ? <span className="txt-sm">({numParameters})</span> : null}
+                Query {numParameters ? <span className="superscript">{numParameters}</span> : null}
               </button>
             </Tab>
             <Tab onClick={this._trackTabHeaders}>
               <button>
-                Header {numHeaders ? <span className="txt-sm">({numHeaders})</span> : null}
+                Header {numHeaders ? <span className="superscript">{numHeaders}</span> : null}
               </button>
             </Tab>
           </TabList>

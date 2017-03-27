@@ -159,7 +159,7 @@ class WorkspaceSettingsModal extends PureComponent {
           <TabPanel className="pad no-pad-top scrollable">
             <div className="row-fill">
               <div className="form-control form-control--outlined">
-                <label>Name
+                <label>Workspace Name
                   <DebouncedInput
                     type="text"
                     delay={500}

@@ -47,7 +47,15 @@ export const CHANGELOG_URL = isDevelopment()
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_RENDER_FAILED = -333;
 export const LARGE_RESPONSE_MB = 5;
-export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
+
+// Hotkeys
+export const MOD_SYM = isMac() ? '⌘' : 'ctrl';
+export const ALT_SYM = isMac() ? '⌃' : 'alt';
+export const SHIFT_SYM = isMac() ? '⇧' : 'shift';
+export function joinHotKeys (keys) {
+  return keys.join(isMac() ? '' : '+');
+}
+
 export const SEGMENT_WRITE_KEY = isDevelopment()
   ? 'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy'
   : 'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
@@ -130,7 +138,6 @@ export const AUTH_DIGEST = 'digest';
 export const AUTH_NTLM = 'ntlm';
 
 const authTypesMap = {
-  [AUTH_NONE]: ['No Auth', 'No Authentication'],
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
   [AUTH_NTLM]: ['NTML', 'Microsoft NTML'],
@@ -152,7 +159,7 @@ export function getAuthTypeName (authType, useLong = false) {
   if (authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
-    return 'No Auth';
+    return '';
   }
 }
 

@@ -1,11 +1,11 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {toggleModal, showModal} from '../components/modals';
+import {showModal} from '../components/modals';
 import Wrapper from '../components/wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
 import Toast from '../components/toast';
@@ -14,16 +14,17 @@ import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import PromptModal from '../components/modals/prompt-modal';
 import ChangelogModal from '../components/modals/changelog-modal';
 import SettingsModal from '../components/modals/settings-modal';
-import AlertModal from '../components/modals/alert-modal';
-import {MAX_PANE_WIDTH, MIN_PANE_WIDTH, DEFAULT_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_SIDEBAR_REMS, DEFAULT_SIDEBAR_WIDTH, getAppVersion, PREVIEW_MODE_SOURCE, isMac} from '../../common/constants';
+import {DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, isMac, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent, trackLegacyEvent} from '../../analytics';
-import {selectEntitiesLists, selectActiveWorkspace, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups, selectActiveRequestMeta, selectActiveRequest, selectActiveWorkspaceMeta, selectActiveOAuth2Token} from '../redux/selectors';
+import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
+import RequestSettingsModal from '../components/modals/request-settings-modal';
+import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
 import {debounce} from '../../common/misc';
 import * as mime from 'mime-types';
@@ -65,23 +66,37 @@ class App extends PureComponent {
       { // Show Workspace Settings
         meta: true,
         shift: true,
+        alt: false,
         key: KEY_COMMA,
         callback: () => {
           const {activeWorkspace} = this.props;
-          toggleModal(WorkspaceSettingsModal, activeWorkspace);
+          showModal(WorkspaceSettingsModal, activeWorkspace);
           trackEvent('HotKey', 'Workspace Settings');
         }
       }, {
         meta: true,
+        shift: true,
+        alt: true,
+        key: KEY_COMMA,
+        callback: () => {
+          if (this.props.activeRequest) {
+            showModal(RequestSettingsModal, this.props.activeRequest);
+            trackEvent('HotKey', 'Request Settings');
+          }
+        }
+      }, {
+        meta: true,
         shift: false,
+        alt: false,
         key: KEY_P,
         callback: () => {
-          toggleModal(RequestSwitcherModal);
+          showModal(RequestSwitcherModal);
           trackEvent('HotKey', 'Quick Switcher');
         }
       }, {
         meta: true,
         shift: false,
+        alt: false,
         key: KEY_ENTER,
         callback: async e => {
           const {activeRequest, activeEnvironment} = this.props;
@@ -94,15 +109,17 @@ class App extends PureComponent {
       }, {
         meta: true,
         shift: false,
+        alt: false,
         key: KEY_E,
         callback: () => {
           const {activeWorkspace} = this.props;
-          toggleModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
+          showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
           trackEvent('HotKey', 'Environments');
         }
       }, {
         meta: true,
         shift: false,
+        alt: false,
         key: KEY_L,
         callback: () => {
           const node = document.body.querySelector('.urlbar input');
@@ -112,15 +129,17 @@ class App extends PureComponent {
       }, {
         meta: true,
         shift: false,
+        alt: false,
         key: KEY_K,
         callback: () => {
           const {activeWorkspace} = this.props;
-          toggleModal(CookiesModal, activeWorkspace);
+          showModal(CookiesModal, activeWorkspace);
           trackEvent('HotKey', 'Cookies');
         }
       }, {
         meta: true,
         shift: false,
+        alt: false,
         key: KEY_N,
         callback: async () => {
           const {activeRequest, activeWorkspace} = this.props;
@@ -131,6 +150,7 @@ class App extends PureComponent {
       }, {
         meta: true,
         shift: false,
+        alt: false,
         key: KEY_D,
         callback: async () => {
           await this._requestDuplicate(this.props.activeRequest);
@@ -361,11 +381,10 @@ class App extends PureComponent {
     try {
       const responsePatch = await network.send(requestId, environmentId);
       await models.response.create(responsePatch);
-    } catch (e) {
-      showModal(AlertModal, {
-        title: 'Request Failed',
-        message: e.message
-      });
+    } catch (err) {
+      if (err.type === 'render') {
+        showModal(RequestRenderErrorModal, {request, error: err});
+      }
     }
 
     // Unset active response because we just made a new one
@@ -441,14 +460,19 @@ class App extends PureComponent {
 
   _handleKeyDown (e) {
     const isMetaPressed = isMac() ? e.metaKey : e.ctrlKey;
+    const isAltPressed = isMac() ? e.ctrlKey : e.altKey;
     const isShiftPressed = e.shiftKey;
 
-    for (const {meta, shift, key, callback} of this._globalKeyMap) {
-      if (meta && !isMetaPressed) {
+    for (const {meta, shift, alt, key, callback} of this._globalKeyMap) {
+      if ((alt && !isAltPressed) || (!alt && isAltPressed)) {
         continue;
       }
 
-      if (shift && !isShiftPressed) {
+      if ((meta && !isMetaPressed) || (!meta && isMetaPressed)) {
+        continue;
+      }
+
+      if ((shift && !isShiftPressed) || (!shift && isShiftPressed)) {
         continue;
       }
 
@@ -562,11 +586,11 @@ class App extends PureComponent {
     });
 
     ipcRenderer.on('toggle-preferences', () => {
-      toggleModal(SettingsModal);
+      showModal(SettingsModal);
     });
 
     ipcRenderer.on('toggle-changelog', () => {
-      toggleModal(ChangelogModal);
+      showModal(ChangelogModal);
     });
 
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);

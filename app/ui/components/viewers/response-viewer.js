@@ -119,6 +119,14 @@ class ResponseViewer extends PureComponent {
       );
     }
 
+    if (bodyBuffer.length === 0) {
+      return (
+        <div className="pad faint">
+        No body returned in response
+      </div>
+      );
+    }
+
     switch (previewMode) {
       case PREVIEW_MODE_FRIENDLY:
         if (contentType.toLowerCase().indexOf('image/') === 0) {
