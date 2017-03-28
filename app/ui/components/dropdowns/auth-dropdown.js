@@ -1,11 +1,11 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {trackEvent} from '../../../analytics';
 import {showModal} from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthTypeName} from '../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthTypeName} from '../../../common/constants';
 
 @autobind
 class AuthDropdown extends PureComponent {
@@ -15,16 +15,23 @@ class AuthDropdown extends PureComponent {
       return;
     }
 
-    const newAuthentication = models.request.newAuth(type);
+    const newAuthentication = models.request.newAuth(type, this.props.authentication);
     const defaultAuthentication = models.request.newAuth(this.props.authentication.type);
 
-    // Prompt the user if they have edited the auth away from the default settings
+    // Prompt the user if fields will change between new and old
     for (const key of Object.keys(this.props.authentication)) {
+      if (key === 'type') {
+        continue;
+      }
+
       const value = this.props.authentication[key];
-      if (defaultAuthentication[key] !== value) {
+      const changedSinceDefault = defaultAuthentication[key] !== value;
+      const willChange = newAuthentication[key] !== value;
+
+      if (changedSinceDefault && willChange) {
         await showModal(AlertModal, {
-          title: 'Switch Authentication Mode',
-          message: 'Your current authentication settings will be lost. Are you sure you want to switch?',
+          title: 'Switch Authentication?',
+          message: 'Current authentication settings will be lost',
           addCancel: true
         });
         break;
@@ -35,29 +42,32 @@ class AuthDropdown extends PureComponent {
     this.props.onChange(newAuthentication);
   }
 
-  render () {
-    const {children, className, ...extraProps} = this.props;
+  renderAuthType (type, nameOverride = null) {
+    const currentType = this.props.authentication.type || AUTH_NONE;
     return (
-      <Dropdown debug="true" {...extraProps}>
+      <DropdownItem onClick={this._handleTypeChange} value={type}>
+        {currentType === type ? <i className="fa fa-check"/> : <i className="fa fa-empty"/>}
+        {' '}
+        {nameOverride || getAuthTypeName(type, true)}
+      </DropdownItem>
+    );
+  }
+
+  render () {
+    const {children, className} = this.props;
+    return (
+      <Dropdown debug="true">
+        <DropdownDivider>Auth Types</DropdownDivider>
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_BASIC}>
-          {getAuthTypeName(AUTH_BASIC, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_DIGEST}>
-          {getAuthTypeName(AUTH_DIGEST, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_1}>
-          {getAuthTypeName(AUTH_OAUTH_1, true)}
-        </DropdownItem>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_OAUTH_2}>
-          {getAuthTypeName(AUTH_OAUTH_2, true)}
-        </DropdownItem>
-        <DropdownDivider/>
-        <DropdownItem onClick={this._handleTypeChange} value={AUTH_NONE}>
-          {getAuthTypeName(AUTH_NONE, true)}
-        </DropdownItem>
+        {this.renderAuthType(AUTH_BASIC)}
+        {this.renderAuthType(AUTH_OAUTH_1)}
+        {this.renderAuthType(AUTH_OAUTH_2)}
+        {this.renderAuthType(AUTH_DIGEST)}
+        {this.renderAuthType(AUTH_NTLM)}
+        <DropdownDivider>Other</DropdownDivider>
+        {this.renderAuthType(AUTH_NONE, 'No Authentication')}
       </Dropdown>
     );
   }

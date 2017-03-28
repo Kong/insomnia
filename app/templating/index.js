@@ -6,22 +6,36 @@ import * as extensions from './extensions';
  * @param {String} text - Nunjucks template in text form
  * @param {Object} [config] - Config options for rendering
  * @param {Object} [config.context] - Context to render with
- * @param {Object} [config.strict] - Fail on undefined values
+ * @param {Object} [config.path] - Path to include in the error message
  */
 export function render (text, config = {}) {
   const context = config.context || {};
-  const strict = config.strict;
+  const path = config.path || null;
 
   return new Promise((resolve, reject) => {
-    const env = getNunjucksEnvironment(strict);
+    const env = getNunjucksEnvironment(true);
     env.renderString(text, context, (err, result) => {
       if (err) {
         const sanitizedMsg = err.message
-          .replace(/\(unknown path\)\s*/, '')
-          .replace(/^Error: */, '')
-          .replace('attempted to output null or undefined value', 'undefined variable');
+          .replace(/\(unknown path\)\n/, '')
+          .replace(/\[Line \d+, Column \d*]/, '')
+          .replace(/^\s*Error:\s*/, '')
+          .trim();
 
-        reject(new Error(sanitizedMsg));
+        const location = err.message.match(/\[Line (\d)+, Column (\d)*]/);
+        const line = location ? parseInt(location[1]) : 1;
+        const column = location ? parseInt(location[2]) : 1;
+        const reason = err.message.includes('attempted to output null or undefined value')
+          ? 'undefined'
+          : 'error';
+
+        const newError = new Error(sanitizedMsg);
+        newError.path = path || null;
+        newError.message = sanitizedMsg;
+        newError.location = {line, column};
+        newError.type = 'render';
+        newError.reason = reason;
+        reject(newError);
       } else {
         resolve(result);
       }

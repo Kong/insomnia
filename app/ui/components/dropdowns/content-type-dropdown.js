@@ -1,6 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {trackEvent} from '../../../analytics/index';
 import * as constants from '../../../common/constants';
 
@@ -10,7 +10,7 @@ const EMPTY_MIME_TYPE = null;
 class ContentTypeDropdown extends PureComponent {
   _handleChangeMimeType (mimeType) {
     this.props.onChange(mimeType);
-    trackEvent('Request', 'Content-Type Change', constants.contentTypesMap[mimeType]);
+    trackEvent('Request', 'Content-Type Change', mimeType);
   }
 
   _renderDropdownItem (mimeType, forcedName = null) {
@@ -22,7 +22,7 @@ class ContentTypeDropdown extends PureComponent {
     return (
       <DropdownItem onClick={this._handleChangeMimeType} value={mimeType}>
         <i className={`fa ${iconClass}`}/>
-        {forcedName || constants.getContentTypeName(mimeType)}
+        {forcedName || constants.getContentTypeName(mimeType, true)}
       </DropdownItem>
     );
   }

@@ -12,6 +12,7 @@ import PreviewModeDropdown from './dropdowns/preview-mode-dropdown';
 import ResponseViewer from './viewers/response-viewer';
 import ResponseHistoryDropdown from './dropdowns/response-history-dropdown';
 import ResponseTimer from './response-timer';
+import ResponseTimelineViewer from './viewers/response-timeline-viewer';
 import ResponseHeadersViewer from './viewers/response-headers-viewer';
 import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
@@ -169,27 +170,27 @@ class ResponsePane extends PureComponent {
     return (
       <section className="response-pane pane">
         {!response ? null : (
-            <header className="pane__header row-spaced">
-              <div className="no-wrap scrollable scrollable--no-bars pad-left">
-                <StatusTag
-                  statusCode={response.statusCode}
-                  statusMessage={response.statusMessage || null}
-                />
-                <TimeTag milliseconds={response.elapsedTime}/>
-                <SizeTag bytes={response.bytesRead}/>
-              </div>
-              <ResponseHistoryDropdown
-                requestId={request._id}
-                isLatestResponseActive={!activeResponseId}
-                activeResponseId={response._id}
-                handleSetActiveResponse={handleSetActiveResponse}
-                handleDeleteResponses={handleDeleteResponses}
-                onChange={nullFn}
-                className="tall pane__header__right"
-                right
+          <header className="pane__header row-spaced">
+            <div className="no-wrap scrollable scrollable--no-bars pad-left">
+              <StatusTag
+                statusCode={response.statusCode}
+                statusMessage={response.statusMessage || null}
               />
-            </header>
-          )}
+              <TimeTag milliseconds={response.elapsedTime}/>
+              <SizeTag bytes={response.bytesRead}/>
+            </div>
+            <ResponseHistoryDropdown
+              requestId={request._id}
+              isLatestResponseActive={!activeResponseId}
+              activeResponseId={response._id}
+              handleSetActiveResponse={handleSetActiveResponse}
+              handleDeleteResponses={handleDeleteResponses}
+              onChange={nullFn}
+              className="tall pane__header__right"
+              right
+            />
+          </header>
+        )}
         <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
@@ -203,23 +204,22 @@ class ResponsePane extends PureComponent {
               />
             </Tab>
             <Tab>
-              <Button onClick={this._trackTab} value="Cookies">
-                Cookies {cookieHeaders.length ? (
-                  <span className="txt-sm">
-                    ({cookieHeaders.length})
-                  </span>
-                ) : null}
+              <Button onClick={this._trackTab} value="Headers">
+                Header {response.headers.length ? (
+                <span className="bubble">{response.headers.length}</span>) : null}
               </Button>
             </Tab>
             <Tab>
-              <Button onClick={this._trackTab} value="Headers">
-                Headers {response.headers.length ? (
-                  <span className="txt-sm">
-                  ({response.headers.length})
-                </span>
-                ) : null}
+              <Button onClick={this._trackTab} value="Cookies">
+                Cookie {cookieHeaders.length ? (
+                <span className="bubble">{cookieHeaders.length}</span>) : null}
               </Button>
             </Tab>
+            {response.timeline && response.timeline.length ? (
+              <Tab>
+                <Button onClick={this._trackTab} value="Timeline">Timeline</Button>
+              </Tab>
+            ) : null}
           </TabList>
           <TabPanel>
             <ResponseViewer
@@ -242,6 +242,14 @@ class ResponsePane extends PureComponent {
           </TabPanel>
           <TabPanel className="scrollable-container">
             <div className="scrollable pad">
+              <ResponseHeadersViewer
+                key={response._id}
+                headers={response.headers}
+              />
+            </div>
+          </TabPanel>
+          <TabPanel className="scrollable-container">
+            <div className="scrollable pad">
               <ResponseCookiesViewer
                 showCookiesModal={showCookiesModal}
                 key={response._id}
@@ -249,14 +257,16 @@ class ResponsePane extends PureComponent {
               />
             </div>
           </TabPanel>
-          <TabPanel className="scrollable-container">
-            <div className="scrollable pad">
-              <ResponseHeadersViewer
-                key={response._id}
-                headers={response.headers}
-              />
-            </div>
-          </TabPanel>
+          {response.timeline && response.timeline.length ? (
+            <TabPanel>
+                <ResponseTimelineViewer
+                  key={response._id}
+                  timeline={response.timeline || []}
+                  editorLineWrapping={editorLineWrapping}
+                  editorFontSize={editorFontSize}
+                />
+            </TabPanel>
+          ) : null }
         </Tabs>
         <ResponseTimer
           handleCancel={cancelCurrentRequest}

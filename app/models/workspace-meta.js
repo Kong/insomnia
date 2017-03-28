@@ -1,5 +1,5 @@
 import * as db from '../common/database';
-import {DEFAULT_SIDEBAR_WIDTH, DEFAULT_PANE_WIDTH} from '../common/constants';
+import {DEFAULT_SIDEBAR_WIDTH, DEFAULT_PANE_WIDTH, DEFAULT_PANE_HEIGHT} from '../common/constants';
 
 export const name = 'Workspace Meta';
 export const type = 'WorkspaceMeta';
@@ -14,7 +14,8 @@ export function init () {
     sidebarFilter: '',
     sidebarHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    paneWidth: DEFAULT_PANE_WIDTH
+    paneWidth: DEFAULT_PANE_WIDTH,
+    paneHeight: DEFAULT_PANE_HEIGHT
   };
 }
 

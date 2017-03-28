@@ -1,3 +1,5 @@
+@import '../constants/colors';
+
 /* Based on Sublime Text's Monokai theme */
 .editor {
   .CodeMirror {
@@ -98,6 +100,7 @@
   }
 
   .cm-comment {
+    font-style: italic;
     color: var(--hl);
   }
 
@@ -124,6 +127,25 @@
 
   .cm-nunjucks-variable {
     color: var(--color-surprise);
+  }
+
+  .cm-curl-in {
+    color: var(--color-success);
+  }
+
+  .cm-curl-out {
+    color: var(--color-notice);
+  }
+
+  .cm-curl-header {
+    font-weight: bold;
+    display: inline-block;
+    padding-top: 1em;
+  }
+
+  .cm-curl-comment {
+    color: var(--hl);
+    font-style: italic;
   }
 
   .cm-nunjucks-tag {

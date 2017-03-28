@@ -1,6 +1,7 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import GravatarImg from './gravatar-img';
 import Link from './base/link';
 import * as fetch from '../../common/fetch';
 import {trackEvent} from '../../analytics/index';
@@ -118,23 +119,26 @@ class Toast extends PureComponent {
 
     return (
       <div className={classnames('toast', {'toast--show': visible})}>
-        <div className="toast__message">
-          {notification ? notification.message : 'Unknown'}
+        <div className="toast__image">
+          <GravatarImg email={notification.email || 'gschier1990@gmail.com'} size={100}/>
         </div>
-        <div className="toast__action">
-          <Link className="btn btn--super-duper-compact btn--outlined no-wrap"
-                onClick={this._handlePostCTACleanup}
-                button
-                href={notification.url}>
-            {notification.cta}
-          </Link>
-        </div>
-        <div className="toast__action toast__action--close">
-          <button className="btn btn--super-duper-compact"
-                  title="Dismiss notification"
-                  onClick={this._handleCancelClick}>
-            <i className="fa fa-close"></i>
-          </button>
+        <div className="toast__content">
+          <p className="toast__message">
+            {notification ? notification.message : 'Unknown'}
+          </p>
+          <footer className="toast__actions">
+            <button className="btn btn--super-duper-compact btn--outlined"
+                    onClick={this._handleCancelClick}>
+              Dismiss
+            </button>
+            &nbsp;&nbsp;
+            <Link button
+                  className="btn btn--super-duper-compact btn--outlined no-wrap"
+                  onClick={this._handlePostCTACleanup}
+                  href={notification.url}>
+              {notification.cta}
+            </Link>
+          </footer>
         </div>
       </div>
     );

@@ -89,7 +89,7 @@ class RequestCreateModal extends PureComponent {
     setTimeout(() => {
       this._input.focus();
       this._input.select();
-    }, 100);
+    }, 200);
 
     return new Promise(resolve => {
       this._onSubmitCallback = resolve;
@@ -104,14 +104,13 @@ class RequestCreateModal extends PureComponent {
         <ModalHeader>New Request</ModalHeader>
         <ModalBody noScroll>
           <form onSubmit={this._handleSubmit} className="pad">
-            <div className="row-fill">
+            <div className="form-row">
               <div className="form-control form-control--outlined">
                 <label>Name
                   <input ref={this._setInputRef} type="text"/>
                 </label>
               </div>
-              <div className="form-control" style={{width: 'auto'}}>
-                <label>&nbsp;</label>
+              <div className="form-control form-control--no-label" style={{width: 'auto'}}>
                 <MethodDropdown
                   right
                   className="btn btn--clicky no-wrap"
@@ -120,19 +119,17 @@ class RequestCreateModal extends PureComponent {
                 />
               </div>
               {!this._shouldNotHaveBody() ? (
-                  <div className="form-control" style={{width: 'auto'}}>
-                    <label htmlFor="nothing">&nbsp;
-                      <ContentTypeDropdown className="btn btn--clicky no-wrap"
-                                           right
-                                           contentType={selectedContentType}
-                                           onChange={this._handleChangeSelectedContentType}>
-                        {getContentTypeName(selectedContentType)}
-                        {' '}
-                        <i className="fa fa-caret-down"></i>
-                      </ContentTypeDropdown>
-                    </label>
-                  </div>
-                ) : null}
+                <div className="form-control form-control--no-label" style={{width: 'auto'}}>
+                  <ContentTypeDropdown className="btn btn--clicky no-wrap"
+                                       right
+                                       contentType={selectedContentType}
+                                       onChange={this._handleChangeSelectedContentType}>
+                    {getContentTypeName(selectedContentType) || 'No Body'}
+                    {' '}
+                    <i className="fa fa-caret-down"></i>
+                  </ContentTypeDropdown>
+                </div>
+              ) : null}
             </div>
           </form>
         </ModalBody>

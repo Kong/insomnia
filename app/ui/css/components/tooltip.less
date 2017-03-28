@@ -1,0 +1,45 @@
+@import '../constants/dimensions';
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  opacity: 0.8;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  .tooltip__bubble {
+    left: -999999px;
+    opacity: 0;
+    background: var(--color-bg);
+    border: 1px solid var(--color-bg);
+    box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
+    color: var(--color-font);
+    padding: @padding-xs @padding-sm;
+    border-radius: @radius-sm;
+    font-size: @font-size-sm;
+    white-space: nowrap;
+  }
+
+  &.tooltip--visible .tooltip__bubble {
+    opacity: 1;
+    transition: opacity 200ms;
+  }
+
+  &.tooltip--left .tooltip__bubble {
+    margin-right: @padding-xs;
+  }
+
+  &.tooltip--right .tooltip__bubble {
+    margin-left: @padding-xs;
+  }
+
+  &.tooltip--top .tooltip__bubble {
+    margin-bottom: @padding-xs;
+  }
+
+  .tooltip--bottom .tooltip__bubble {
+    margin-top: @padding-xs;
+  }
+}

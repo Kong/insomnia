@@ -11,12 +11,16 @@
     align-items: center;
     flex-direction: row;
     width: 100%;
-    height: @line-height-md;
+    padding-bottom: @padding-sm;
     box-sizing: border-box;
 
     &.key-value-editor__row-wrapper--disabled > * {
       opacity: @opacity-subtle;
       color: var(--hl) !important;
+
+      input, .input {
+        border-style: dashed;
+      }
     }
 
     &.key-value-editor__row-wrapper--dragging {
@@ -58,10 +62,10 @@
     padding-right: @padding-md;
     box-sizing: border-box;
     overflow: hidden;
-    color: var(--hl);
 
-    &:hover {
-      color: var(--hl);
+    // Remove hover effect
+    &, &:hover {
+      color: var(--hl-xl);
     }
   }
 
@@ -97,6 +101,7 @@
     & > button,
     .dropdown > button {
       color: @hl;
+      margin: 0;
 
       &:hover,
       &:focus {

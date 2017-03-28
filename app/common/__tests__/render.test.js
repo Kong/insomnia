@@ -275,12 +275,12 @@ describe('recursiveRender()', () => {
       foo: '{{ foo }}',
       bar: 'bar',
       baz: '{{ bad }}'
-    }, {foo: 'bar'});
+    }, {foo: 'bar', bad: 'hi'});
 
     expect(newObj).toEqual({
       foo: 'bar',
       bar: 'bar',
-      baz: ''
+      baz: 'hi'
     });
   });
 

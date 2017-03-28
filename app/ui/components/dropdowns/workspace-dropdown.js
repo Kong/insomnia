@@ -106,7 +106,7 @@ class WorkspaceDropdown extends PureComponent {
         <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
         <DropdownItem onClick={this._handleShowWorkspaceSettings}>
           <i className="fa fa-wrench"/> Workspace Settings
-          <DropdownHint char="&#8679;,"/>
+          <DropdownHint shift char=","/>
         </DropdownItem>
 
         <DropdownItem onClick={this._handleShowShareSettings}>

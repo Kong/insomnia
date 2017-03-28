@@ -182,7 +182,7 @@ class KeyValueEditorRow extends PureComponent {
                 <FileInputButton
                   ref={this._setValueInputRef}
                   showFileName
-                  className="btn btn--clicky wide ellipsis txt-sm"
+                  className="btn btn--clicky wide ellipsis txt-sm no-margin"
                   path={pair.fileName || ''}
                   onChange={this._handleFileNameChange}
                 />

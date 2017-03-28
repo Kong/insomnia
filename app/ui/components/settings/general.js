@@ -1,5 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
+import HelpTooltip from '../help-tooltip';
 
 @autobind
 class General extends PureComponent {
@@ -84,8 +85,7 @@ class General extends PureComponent {
           </div>
 
           <div className="form-control form-control--outlined pad-top-sm">
-            <label>
-              Text Editor Key Map
+            <label>Text Editor Key Map
               <select defaultValue={settings.editorKeyMap}
                       name="editorKeyMap"
                       onChange={this._handleUpdateSetting}>
@@ -98,7 +98,10 @@ class General extends PureComponent {
         </div>
 
         <div className="form-control form-control--outlined">
-          <label>Request Timeout (ms) (0 for no timeout)
+          <label>Network Request Timeout
+            <HelpTooltip className="space-left">
+              Request timeout in milliseconds (0 for no timeout)
+            </HelpTooltip>
             <input type="number"
                    name="timeout"
                    min={0}
@@ -106,11 +109,13 @@ class General extends PureComponent {
                    onChange={this._handleUpdateSetting}/>
           </label>
         </div>
+        <hr className="pad-top"/>
         <div className="form-row">
           <div className="form-control form-control--outlined">
             <label>HTTP Proxy
               <input type="text"
                      name="httpProxy"
+                     disabled={!settings.proxyEnabled}
                      placeholder="localhost:8005"
                      defaultValue={settings.httpProxy}
                      onChange={this._handleUpdateSetting}/>
@@ -119,6 +124,7 @@ class General extends PureComponent {
           <div className="form-control form-control--outlined">
             <label>HTTPS Proxy
               <input placeholder="localhost:8005"
+                     disabled={!settings.proxyEnabled}
                      name="httpsProxy"
                      type="text"
                      defaultValue={settings.httpsProxy}
@@ -126,6 +132,18 @@ class General extends PureComponent {
             </label>
           </div>
         </div>
+        <div className="form-control form-control--thin">
+          <label className="inline-block">Enable HTTP(S) Network Proxy
+            <HelpTooltip className="space-left">
+              Supports authentication via Basic Auth, digest, or NTLM
+            </HelpTooltip>
+            <input type="checkbox"
+                   name="proxyEnabled"
+                   checked={settings.proxyEnabled}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
         <br/>
       </div>
     );

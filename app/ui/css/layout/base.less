@@ -110,13 +110,18 @@ code {
 
 code, pre, .monospace {
   font-family: @font-monospace;
+  tab-size: 4;
+}
+
+.font-normal {
+  font-family: @font-default;
 }
 
 .notice {
   text-align: center;
   color: var(--color-font) !important;
   padding: @padding-sm * 1.5;
-  border: 1px solid;
+  border: 1px dotted;
   border-radius: @radius-md;
 
   p {
@@ -161,6 +166,11 @@ code, pre, .monospace {
 
 .pull-right {
   float: right;
+}
+
+.superscript {
+  vertical-align: super;
+  font-size: 0.75em;
 }
 
 .img--circle {
@@ -344,6 +354,14 @@ i.fa {
   padding-top: @padding-sm;
 }
 
+.space-left {
+  margin-left: 0.3em;
+}
+
+.space-right {
+  margin-right: 0.3em;
+}
+
 .margin-top-sm {
   margin-top: @padding-sm;
 }
@@ -369,7 +387,7 @@ i.fa {
 }
 
 .margin-top-sm {
-  margin-top: @padding-sm;
+  margin-top: @padding-sm !important;
 }
 
 .pad-bottom {
@@ -491,6 +509,14 @@ i.fa {
 .bold,
 strong {
   font-weight: 600;
+}
+
+.not-bold {
+  font-weight: normal;
+}
+
+.underline {
+  text-decoration: underline;
 }
 
 .hide-above-lg {

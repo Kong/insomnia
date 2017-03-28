@@ -3,7 +3,8 @@ import crypto from 'crypto';
 
 class GravatarImg extends PureComponent {
   render () {
-    const {email, size, className} = this.props;
+    const {email, size: rawSize, className} = this.props;
+    const size = rawSize || 100;
     const sanitizedEmail = email.trim().toLowerCase();
     const hash = crypto
       .createHash('md5')

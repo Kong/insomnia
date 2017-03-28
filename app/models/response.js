@@ -16,6 +16,7 @@ export function init () {
     elapsedTime: 0,
     headers: [],
     cookies: [],
+    timeline: [],
     body: '',
     encoding: 'utf8', // Legacy format
     error: ''

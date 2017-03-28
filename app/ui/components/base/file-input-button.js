@@ -35,7 +35,10 @@ class FileInputButton extends PureComponent {
     const {showFileName, path, name, ...extraProps} = this.props;
     const fileName = pathBasename(path);
     return (
-      <button type="button" ref={this._setRef} onClick={this._handleChooseFile} {...extraProps}>
+      <button type="button"
+              ref={this._setRef}
+              onClick={this._handleChooseFile}
+              {...extraProps}>
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>
     );

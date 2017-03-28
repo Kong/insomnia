@@ -323,6 +323,7 @@ class CodeEditor extends PureComponent {
       lineWrapping,
       getRenderContext,
       getAutocompleteConstants,
+      hideGutters,
       tabIndex,
       placeholder,
       noMatchBrackets,
@@ -348,8 +349,8 @@ class CodeEditor extends PureComponent {
       dragDrop: !noDragDrop,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       styleActiveLine: !noStyleActiveLine,
-      lineNumbers: !hideLineNumbers,
-      foldGutter: !hideLineNumbers,
+      lineNumbers: !hideGutters && !hideLineNumbers,
+      foldGutter: !hideGutters && !hideLineNumbers,
       lineWrapping: lineWrapping,
       keyMap: keyMap || 'default',
       matchBrackets: !noMatchBrackets,
@@ -357,15 +358,15 @@ class CodeEditor extends PureComponent {
       gutters: []
     };
 
-    if (options.lineNumbers) {
+    if (!hideGutters && options.lineNumbers) {
       options.gutters.push('CodeMirror-linenumbers');
     }
 
-    if (options.foldGutter) {
+    if (!hideGutters && options.foldGutter) {
       options.gutters.push('CodeMirror-foldgutter');
     }
 
-    if (options.lint) {
+    if (!hideGutters && options.lint) {
       options.gutters.push('CodeMirror-lint-markers');
     }
 
@@ -426,7 +427,7 @@ class CodeEditor extends PureComponent {
 
   _codemirrorValueBeforeChange (doc, change) {
     // If we're in single-line mode, merge all changed lines into one
-    if (this.props.singleLine && change.text.length > 1) {
+    if (this.props.singleLine && change.text && change.text.length > 1) {
       const text = change.text
         .join('') // join all changed lines into one
         .replace(/\n/g, ' '); // Convert all whitespace to spaces
@@ -512,13 +513,21 @@ class CodeEditor extends PureComponent {
   }
 
   render () {
-    const {id, readOnly, fontSize, mode, filter, onMouseLeave, onClick} = this.props;
+    const {
+      id,
+      readOnly,
+      fontSize,
+      mode,
+      filter,
+      onMouseLeave,
+      onClick,
+      style
+    } = this.props;
 
-    const classes = classnames(
-      this.props.className,
-      'editor',
-      {'editor--readonly': readOnly}
-    );
+    const classes = classnames(this.props.className, {
+      'editor': true,
+      'editor--readonly': readOnly
+    });
 
     const toolbarChildren = [];
     if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
@@ -536,7 +545,7 @@ class CodeEditor extends PureComponent {
         <button key="help"
                 className="btn btn--compact"
                 onClick={this._showFilterHelp}>
-          <i className="fa fa-question-circle"></i>
+          <i className="fa fa-question-circle"/>
         </button>
       );
     }
@@ -570,7 +579,7 @@ class CodeEditor extends PureComponent {
     }
 
     return (
-      <div className={classes}>
+      <div className={classes} style={style}>
         <div className="editor__container input"
              style={styles}
              onClick={onClick}
@@ -607,6 +616,7 @@ CodeEditor.propTypes = {
   placeholder: PropTypes.string,
   lineWrapping: PropTypes.bool,
   hideLineNumbers: PropTypes.bool,
+  hideGutters: PropTypes.bool,
   noMatchBrackets: PropTypes.bool,
   hideScrollbars: PropTypes.bool,
   fontSize: PropTypes.number,
@@ -618,6 +628,7 @@ CodeEditor.propTypes = {
   noDragDrop: PropTypes.bool,
   noStyleActiveLine: PropTypes.bool,
   className: PropTypes.any,
+  style: PropTypes.object,
   updateFilter: PropTypes.func,
   defaultTabBehavior: PropTypes.bool,
   readOnly: PropTypes.bool,

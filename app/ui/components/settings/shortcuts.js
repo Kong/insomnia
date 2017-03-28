@@ -1,47 +1,33 @@
 import React, {PureComponent} from 'react';
-import {MOD_SYM} from '../../../common/constants';
+import Hotkey from '../hotkey';
 
 class Shortcuts extends PureComponent {
+  renderHotkey (name, char, shift, alt) {
+    return (
+      <tr>
+        <td>{name}</td>
+        <td className="text-right">
+          <code><Hotkey char={char} shift={shift} alt={alt}/></code>
+        </td>
+      </tr>
+    );
+  }
+
   render () {
     return (
       <table className="table--fancy">
         <tbody>
-        <tr>
-          <td>Switch Requests</td>
-          <td><code>{MOD_SYM}P</code></td>
-        </tr>
-        <tr>
-          <td>Send Request</td>
-          <td><code>{MOD_SYM}Enter</code></td>
-        </tr>
-        <tr>
-          <td>New Request</td>
-          <td><code>{MOD_SYM}N</code></td>
-        </tr>
-        <tr>
-          <td>Duplicate Request</td>
-          <td><code>{MOD_SYM}D</code></td>
-        </tr>
-        <tr>
-          <td>Show Cookie Manager</td>
-          <td><code>{MOD_SYM}K</code></td>
-        </tr>
-        <tr>
-          <td>Show Environment Editor</td>
-          <td><code>{MOD_SYM}E</code></td>
-        </tr>
-        <tr>
-          <td>Focus URL Bar</td>
-          <td><code>{MOD_SYM}L</code></td>
-        </tr>
-        <tr>
-          <td>Toggle Sidebar</td>
-          <td><code>{MOD_SYM}\</code></td>
-        </tr>
-        <tr>
-          <td>Show Settings</td>
-          <td><code>{MOD_SYM},</code></td>
-        </tr>
+        {this.renderHotkey('Switch Requests', 'P')}
+        {this.renderHotkey('Send Request', 'Enter')}
+        {this.renderHotkey('New Request', 'N')}
+        {this.renderHotkey('Duplicate Request', 'D')}
+        {this.renderHotkey('Show Cookie Manager', 'K')}
+        {this.renderHotkey('Show Environment Editor', 'E')}
+        {this.renderHotkey('Focus URL Bar', 'L')}
+        {this.renderHotkey('Toggle Sidebar', '\\')}
+        {this.renderHotkey('Show App Preferences', ',')}
+        {this.renderHotkey('Show Workspace Settings', ',', true)}
+        {this.renderHotkey('Show Request Settings', ',', true, true)}
         </tbody>
       </table>
     );

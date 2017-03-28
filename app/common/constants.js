@@ -47,7 +47,15 @@ export const CHANGELOG_URL = isDevelopment()
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_RENDER_FAILED = -333;
 export const LARGE_RESPONSE_MB = 5;
-export const MOD_SYM = isMac() ? '⌘' : 'ctrl+';
+
+// Hotkeys
+export const MOD_SYM = isMac() ? '⌘' : 'ctrl';
+export const ALT_SYM = isMac() ? '⌃' : 'alt';
+export const SHIFT_SYM = isMac() ? '⇧' : 'shift';
+export function joinHotKeys (keys) {
+  return keys.join(isMac() ? '' : '+');
+}
+
 export const SEGMENT_WRITE_KEY = isDevelopment()
   ? 'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy'
   : 'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
@@ -59,7 +67,10 @@ export const COLLAPSE_SIDEBAR_REMS = 4;
 export const SIDEBAR_SKINNY_REMS = 10;
 export const MAX_PANE_WIDTH = 0.99;
 export const MIN_PANE_WIDTH = 0.01;
+export const MAX_PANE_HEIGHT = 0.99;
+export const MIN_PANE_HEIGHT = 0.01;
 export const DEFAULT_PANE_WIDTH = 0.5;
+export const DEFAULT_PANE_HEIGHT = 0.5;
 export const DEFAULT_SIDEBAR_WIDTH = 19;
 
 // HTTP Methods
@@ -112,51 +123,46 @@ export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
 export const CONTENT_TYPE_OTHER = '';
 
-export const contentTypesMap = {
-  [CONTENT_TYPE_JSON]: 'JSON',
-  [CONTENT_TYPE_XML]: 'XML',
-  [CONTENT_TYPE_FORM_DATA]: 'Multipart Form',
-  [CONTENT_TYPE_FORM_URLENCODED]: 'Url Encoded',
-  [CONTENT_TYPE_FILE]: 'Binary File',
-  [CONTENT_TYPE_OTHER]: 'Other'
+const contentTypesMap = {
+  [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
+  [CONTENT_TYPE_XML]: ['XML', 'XML'],
+  [CONTENT_TYPE_FORM_DATA]: ['Multipart', 'Multipart Form'],
+  [CONTENT_TYPE_FORM_URLENCODED]: ['URL Encoded', 'Form URL Encoded'],
+  [CONTENT_TYPE_FILE]: ['Binary', 'Binary File'],
+  [CONTENT_TYPE_OTHER]: ['Other', 'Other']
 };
 
 // Auth Types
 export const AUTH_NONE = 'none';
-export const AUTH_BASIC = 'basic';
-export const AUTH_DIGEST = 'digest';
 export const AUTH_OAUTH_2 = 'oauth2';
 export const AUTH_OAUTH_1 = 'oauth1';
+export const AUTH_BASIC = 'basic';
+export const AUTH_DIGEST = 'digest';
+export const AUTH_NTLM = 'ntlm';
 
-export const authTypesMap = {
-  [AUTH_NONE]: ['No Auth', 'No Auth'],
+const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
+  [AUTH_NTLM]: ['NTML', 'Microsoft NTML'],
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0']
 };
 
-/**
- * Get the friendly name for a given content type
- *
- * @param contentType
- * @returns {*|string}
- */
-export function getContentTypeName (contentType) {
-  if (typeof contentType !== 'string') {
-    return 'No Body';
+export function getContentTypeName (contentType, useLong = false) {
+  if (contentTypesMap.hasOwnProperty(contentType)) {
+    return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
+  } else if (contentType) {
+    return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
   } else {
-    return contentTypesMap[contentType] || 'Other';
+    return '';
   }
 }
 
 export function getAuthTypeName (authType, useLong = false) {
-  if (typeof authType !== 'string') {
-    return 'No Auth';
-  } else if (authTypesMap.hasOwnProperty(authType)) {
+  if (authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   } else {
-    return 'No Auth';
+    return '';
   }
 }
 

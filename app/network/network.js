@@ -8,13 +8,13 @@ import {basename as pathBasename, join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {DEBOUNCE_MILLIS, STATUS_CODE_RENDER_FAILED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
-import {jarFromCookies, cookiesFromJar} from '../common/cookies';
-import {setDefaultProtocol, hasAcceptHeader, hasUserAgentHeader, hasAuthHeader} from '../common/misc';
+import {AUTH_BASIC, AUTH_DIGEST, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
+import {cookiesFromJar, jarFromCookies} from '../common/cookies';
+import {hasAcceptHeader, hasAuthHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
-import caCerts from './cacert';
+import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
@@ -166,10 +166,30 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
       curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0);
-      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL);
-      curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout);
-      curl.setOpt(Curl.option.VERBOSE, true);
-      curl.setOpt(Curl.option.NOPROGRESS, false);
+      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL ? 1 : 0);
+      curl.setOpt(Curl.option.SSL_VERIFYHOST, settings.validateSSL ? 2 : 0);
+      curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
+      curl.setOpt(Curl.option.VERBOSE, true); // True so debug function works
+      curl.setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
+
+      // Setup debug handler
+      let timeline = [];
+      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
+        // Ignore the possibly large data messages
+        if (infoType === Curl.info.debug.DATA_IN || infoType === Curl.info.debug.DATA_OUT) {
+          return 0;
+        }
+
+        // Don't show cookie setting because this will display every domain in the jar
+        if (infoType === Curl.info.debug.TEXT && content.indexOf('Added cookie') === 0) {
+          return 0;
+        }
+
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+        timeline.push({name, value: content});
+
+        return 0; // Must be here
+      });
 
       // Set the headers (to be modified as we go)
       const headers = [...renderedRequest.headers];
@@ -197,46 +217,55 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
       if (process.platform !== 'darwin') {
-        const fullBase = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
-        mkdirp.sync(fullBase);
+        const basCAPath = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
+        const fullCAPath = pathJoin(basCAPath, CACerts.filename);
 
-        const name = `ca.pem`;
-        const fullPath = pathJoin(fullBase, name);
-        fs.writeFileSync(fullPath, caCerts);
+        try {
+          fs.statSync(fullCAPath);
+        } catch (err) {
+          // Doesn't exist yet, so write it
+          mkdirp.sync(basCAPath);
+          fs.writeFileSync(fullCAPath, CACerts.blob);
+          console.log('[net] Set CA to', fullCAPath);
+        }
 
-        console.log('[net] Set CA to', fullPath);
-        curl.setOpt(Curl.option.CAINFO, fullPath);
+        curl.setOpt(Curl.option.CAINFO, fullCAPath);
       }
 
       // Set cookies
-      curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
-      for (const cookie of renderedRequest.cookieJar.cookies) {
-        let expiresTimestamp = 0;
-        if (cookie.expires) {
-          const expiresDate = new Date(cookie.expires);
-          expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
+      if (renderedRequest.settingSendCookies) {
+        curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
+        for (const cookie of renderedRequest.cookieJar.cookies) {
+          let expiresTimestamp = 0;
+          if (cookie.expires) {
+            const expiresDate = new Date(cookie.expires);
+            expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
+          }
+          curl.setOpt(Curl.option.COOKIELIST, [
+            cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
+            cookie.hostOnly ? 'TRUE' : 'FALSE',
+            cookie.path,
+            cookie.secure ? 'TRUE' : 'FALSE',
+            expiresTimestamp,
+            cookie.key,
+            cookie.value
+          ].join('\t'));
         }
-        curl.setOpt(Curl.option.COOKIELIST, [
-          cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-          cookie.hostOnly ? 'TRUE' : 'FALSE',
-          cookie.path,
-          cookie.secure ? 'TRUE' : 'FALSE',
-          expiresTimestamp,
-          cookie.key,
-          cookie.value
-        ].join('\t'));
       }
 
-      // Set proxy
-      const {protocol} = urlParse(renderedRequest.url);
-      const {httpProxy, httpsProxy} = settings;
-      const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-      const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-      if (proxy) {
-        curl.setOpt(Curl.option.PROXY, proxy);
-      } else {
-        // Disable autodetection from env vars
-        curl.setOpt(Curl.option.PROXY, '');
+      // Disable auto proxy detection from env vars
+      curl.setOpt(Curl.option.PROXY, '');
+
+      // Set proxy settings if we have them
+      if (settings.proxyEnabled) {
+        const {protocol} = urlParse(renderedRequest.url);
+        const {httpProxy, httpsProxy} = settings;
+        const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+        const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+        if (proxy) {
+          curl.setOpt(Curl.option.PROXY, proxy);
+          curl.setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+        }
       }
 
       // Set client certs if needed
@@ -325,14 +354,26 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       });
 
       // Handle Authorization header
-      if (!hasAuthHeader(renderedRequest.headers)) {
-        const authHeader = await getAuthHeader(
-          renderedRequest._id,
-          renderedRequest.authentication
-        );
+      if (!hasAuthHeader(renderedRequest.headers) && !renderedRequest.authentication.disabled) {
+        if (renderedRequest.authentication.type === AUTH_BASIC) {
+          const {username, password} = renderedRequest.authentication;
+          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
+          curl.setOpt(Curl.option.USERNAME, username || '');
+          curl.setOpt(Curl.option.PASSWORD, password || '');
+        } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
+          const {username, password} = renderedRequest.authentication;
+          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
+          curl.setOpt(Curl.option.USERNAME, username || '');
+          curl.setOpt(Curl.option.PASSWORD, password || '');
+        } else {
+          const authHeader = await getAuthHeader(
+            renderedRequest._id,
+            renderedRequest.authentication
+          );
 
-        if (authHeader) {
-          headers.push(authHeader);
+          if (authHeader) {
+            headers.push(authHeader);
+          }
         }
       }
 
@@ -341,40 +382,14 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Set User-Agent if it't not already in headers
-      if (!hasAcceptHeader(renderedRequest.headers)) {
+      if (!hasUserAgentHeader(renderedRequest.headers)) {
         curl.setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
       }
 
-      // Setup debug handler
-      // NOTE: This is last on purpose so things like cookies don't show up
-      let debugData = '';
-      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
-        let symbol = null;
-        switch (name) {
-          case 'HEADER_IN':
-            symbol = '<';
-            break;
-          case 'HEADER_OUT':
-            symbol = '>';
-            break;
-          case 'TEXT':
-            symbol = '*';
-            break;
-          // Don't show these (too much data)
-          // case 'DATA_IN':
-          // case 'DATA_OUT':
-        }
-
-        if (symbol) {
-          const lines = content.replace(/\n$/, '').split('\n');
-          const newLines = lines.map(l => `${symbol} ${l}`);
-          const blob = newLines.join('\n');
-          debugData += blob + '\n';
-        }
-
-        return 0; // Must be here
-      });
+      // Set Accept encoding
+      if (!hasAcceptHeader(renderedRequest.headers)) {
+        curl.setOpt(Curl.option.ENCODING, ''); // Accept anything
+      }
 
       // Handle the response ending
       curl.on('end', function (_1, _2, curlHeaders) {
@@ -400,38 +415,36 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           }
         }
 
-        // Handle debug data
-        if (debugData) {
-          // TODO: Do something with debug data
-          // fs.writeFileSync('/Users/gschier/Desktop/debug.txt', debugData, 'utf8');
-        }
-
         // Calculate the content type
         const contentTypeHeader = util.getContentTypeHeader(headers);
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
-        const cookies = [];
-        for (const str of curl.getInfo(Curl.info.COOKIELIST)) {
-          //  0                    1                  2     3       4       5     6
-          // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
-          const parts = str.split('\t');
+        if (renderedRequest.settingStoreCookies) {
+          const cookieStrings = curl.getInfo(Curl.info.COOKIELIST);
+          const cookies = cookieStrings.map(str => {
+            //  0                    1                  2     3       4       5     6
+            // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
+            const parts = str.split('\t');
 
-          const hostname = parts[0].replace(/^#HttpOnly_/, '');
-          const httpOnly = hostname.length !== parts[0].length;
+            const hostname = parts[0].replace(/^#HttpOnly_/, '');
+            const httpOnly = hostname.length !== parts[0].length;
 
-          cookies.push({
-            domain: hostname,
-            httpOnly: httpOnly,
-            hostOnly: parts[1] === 'TRUE',
-            path: parts[2],
-            secure: parts[3] === 'TRUE', // This doesn't exists?
-            expires: new Date(parts[4] * 1000),
-            key: parts[5],
-            value: parts[6]
+            return {
+              domain: hostname,
+              httpOnly: httpOnly,
+              hostOnly: parts[1] === 'TRUE',
+              path: parts[2],
+              secure: parts[3] === 'TRUE', // This doesn't exists?
+              expires: new Date(parts[4] * 1000),
+              key: parts[5],
+              value: parts[6]
+            };
           });
+
+          // Do this async. We don't need to wait
+          models.cookieJar.update(renderedRequest.cookieJar, {cookies});
         }
-        models.cookieJar.update(renderedRequest.cookieJar, {cookies});
 
         // Handle the body
         const encoding = 'base64';
@@ -443,6 +456,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           parentId: renderedRequest._id,
           headers,
           encoding,
+          timeline,
           body,
           url,
           bytesRead,
@@ -468,7 +482,13 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           statusMessage = 'Abort';
         }
 
-        resolve({parentId, elapsedTime, statusMessage, error});
+        resolve({
+          parentId,
+          elapsedTime,
+          statusMessage,
+          error,
+          timeline
+        });
       });
 
       curl.perform();
@@ -501,7 +521,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
     try {
       config = await _buildRequestConfig(renderedRequest, {
         jar: null, // We're doing our own cookies
-        proxy: proxy,
+        proxy: settings.proxyEnabled ? proxy : null,
         followAllRedirects: settings.followRedirects,
         followRedirect: settings.followRedirects,
         timeout: settings.timeout > 0 ? settings.timeout : null,
@@ -665,18 +685,8 @@ export async function send (requestId, environmentId) {
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
 
-  let renderedRequest;
-
-  try {
-    renderedRequest = await getRenderedRequest(request, environmentId);
-  } catch (e) {
-    // Failed to render. Must be the user's fault
-    return {
-      parentId: request._id,
-      statusCode: STATUS_CODE_RENDER_FAILED,
-      error: e.message
-    };
-  }
+  // This may throw
+  const renderedRequest = await getRenderedRequest(request, environmentId);
 
   // Get the workspace for the request
   const ancestors = await db.withAncestors(request);

@@ -6,6 +6,10 @@ export function joinUrl (url, qs) {
     return url;
   }
 
+  if (!url) {
+    return qs;
+  }
+
   const [base, ...hashes] = url.split('#');
 
   // TODO: Make this work with URLs that have a #hash component
@@ -16,6 +20,10 @@ export function joinUrl (url, qs) {
 }
 
 export function extractFromUrl (url) {
+  if (!url) {
+    return '';
+  }
+
   // NOTE: This only splits on first ? sign. '1=2=3' --> ['1', '2=3']
   const things = url.split('?');
   if (things.length === 1) {

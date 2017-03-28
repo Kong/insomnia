@@ -2,26 +2,26 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
 import {trackEvent} from '../../../../analytics/index';
-import {AUTH_BASIC} from '../../../../common/constants';
+import {AUTH_NTLM} from '../../../../common/constants';
 
 @autobind
-class BasicAuth extends PureComponent {
+class NTLMAuth extends PureComponent {
   _handleOnCreate () {
-    trackEvent('Basic Auth Editor', 'Create');
+    trackEvent('NTLM Auth Editor', 'Create');
   }
 
   _handleOnDelete () {
-    trackEvent('Basic Auth Editor', 'Delete');
+    trackEvent('NTLM Auth Editor', 'Delete');
   }
 
   _handleToggleDisable (pair) {
     const label = pair.disabled ? 'Disable' : 'Enable';
-    trackEvent('Basic Auth Editor', 'Toggle', label);
+    trackEvent('NTLM Auth Editor', 'Toggle', label);
   }
 
   _handleChange (pairs) {
     const pair = {
-      type: AUTH_BASIC,
+      type: AUTH_NTLM,
       username: pairs.length ? pairs[0].name : '',
       password: pairs.length ? pairs[0].value : '',
       disabled: pairs.length ? pairs[0].disabled : false
@@ -63,7 +63,7 @@ class BasicAuth extends PureComponent {
   }
 }
 
-BasicAuth.propTypes = {
+NTLMAuth.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
@@ -72,4 +72,4 @@ BasicAuth.propTypes = {
   showPasswords: PropTypes.bool.isRequired
 };
 
-export default BasicAuth;
+export default NTLMAuth;

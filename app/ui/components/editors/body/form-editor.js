@@ -65,8 +65,10 @@ FormEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired
+
+  // Optional
+  handleRender: PropTypes.func,
+  handleGetRenderContext: PropTypes.func
 };
 
 export default FormEditor;

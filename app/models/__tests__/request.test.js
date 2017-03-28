@@ -17,7 +17,10 @@ describe('init()', () => {
       method: 'GET',
       name: 'New Request',
       parameters: [],
-      url: ''
+      url: '',
+      settingStoreCookies: true,
+      settingSendCookies: true,
+      settingDisableRenderRequestBody: false
     });
   });
 });
@@ -44,7 +47,10 @@ describe('create()', async () => {
       method: 'GET',
       name: 'Test Request',
       parameters: [],
-      url: ''
+      url: '',
+      settingStoreCookies: true,
+      settingSendCookies: true,
+      settingDisableRenderRequestBody: false
     };
 
     expect(request).toEqual(expected);
@@ -273,7 +279,10 @@ describe('migrate()', () => {
       authentication: {},
       parameters: [],
       parentId: null,
-      body: {mimeType: '', text: 'hello world!'}
+      body: {mimeType: '', text: 'hello world!'},
+      settingStoreCookies: true,
+      settingSendCookies: true,
+      settingDisableRenderRequestBody: false
     };
 
     const migrated = models.initModel(models.request.type, original);

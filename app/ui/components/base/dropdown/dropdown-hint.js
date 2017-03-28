@@ -1,17 +1,26 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {MOD_SYM} from '../../../../common/constants';
+import Hotkey from '../../hotkey';
 
 class DropdownHint extends PureComponent {
   render () {
-    const {char} = this.props;
+    const {char, shift, alt} = this.props;
     return (
-      <span className="dropdown__hint">{MOD_SYM}{char}</span>
+      <Hotkey
+        className="dropdown__hint"
+        char={char}
+        alt={alt}
+        shift={shift}
+      />
     );
   }
 }
 
 DropdownHint.propTypes = {
-  char: PropTypes.string.isRequired
+  char: PropTypes.string.isRequired,
+
+  // Optional
+  alt: PropTypes.bool,
+  shift: PropTypes.bool
 };
 
 export default DropdownHint;

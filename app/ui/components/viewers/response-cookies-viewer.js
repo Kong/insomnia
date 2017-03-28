@@ -6,7 +6,7 @@ const ResponseCookiesViewer = ({headers, showCookiesModal}) => {
     // Don't do anything if no cookies
     return (
       <span className="faint">
-        No cookies returned
+        No cookies returned in response
       </span>
     );
   }

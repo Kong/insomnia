@@ -12,6 +12,14 @@ export default async function (authorizeUrl,
                                redirectUri = '',
                                scope = '',
                                state = '') {
+  if (!authorizeUrl) {
+    throw new Error('Invalid authorization URL');
+  }
+
+  if (!accessTokenUrl) {
+    throw new Error('Invalid access token URL');
+  }
+
   const authorizeResults = await _authorize(
     authorizeUrl,
     clientId,
@@ -20,7 +28,7 @@ export default async function (authorizeUrl,
     state
   );
 
-  // TODO: Handle errors
+  // TODO: Handle error
 
   const tokenResults = await _getToken(
     accessTokenUrl,
