@@ -156,7 +156,7 @@ class WorkspaceSettingsModal extends PureComponent {
               <button>Client Certificates</button>
             </Tab>
           </TabList>
-          <TabPanel className="pad no-pad-top scrollable">
+          <TabPanel className="pad scrollable">
             <div className="row-fill">
               <div className="form-control form-control--outlined">
                 <label>Workspace Name

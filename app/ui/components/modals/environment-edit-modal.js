@@ -77,7 +77,7 @@ class EnvironmentEditModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef} tall {...extraProps}>
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
-        <ModalBody noScroll>
+        <ModalBody noScroll className="pad-top-sm">
           <EnvironmentEditor
             lightTheme
             editorFontSize={editorFontSize}
@@ -92,8 +92,8 @@ class EnvironmentEditModal extends PureComponent {
           />
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm">
-            * this can be used to override data in the global environment
+          <div className="margin-left italic txt-sm">
+            * Used to override data in the global environment
           </div>
           <button className="btn" disabled={!isValid} onClick={this.hide}>
             Done

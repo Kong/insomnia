@@ -482,7 +482,13 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           statusMessage = 'Abort';
         }
 
-        resolve({parentId, elapsedTime, statusMessage, error});
+        resolve({
+          parentId,
+          elapsedTime,
+          statusMessage,
+          error,
+          timeline
+        });
       });
 
       curl.perform();

@@ -133,7 +133,10 @@ class General extends PureComponent {
           </div>
         </div>
         <div className="form-control form-control--thin">
-          <label className="inline-block">Enable Network Proxy
+          <label className="inline-block">Enable HTTP(S) Network Proxy
+            <HelpTooltip className="space-left">
+              Supports authentication via Basic Auth, digest, or NTLM
+            </HelpTooltip>
             <input type="checkbox"
                    name="proxyEnabled"
                    checked={settings.proxyEnabled}

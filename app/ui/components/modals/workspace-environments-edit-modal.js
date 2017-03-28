@@ -270,8 +270,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
           </div>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">
-            * environment data can be used for&nbsp;
+          <div className="margin-left italic txt-sm tall">
+            * Environment data can be used for&nbsp;
             <Link href="https://insomnia.rest/documentation/templating/">
               Nunjucks Templating
             </Link> in your requests

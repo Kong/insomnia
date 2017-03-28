@@ -1,8 +1,8 @@
 {
   "private": true,
-  "name": "insomnia-beta",
+  "name": "insomnia",
   "version": "5.0.1",
-  "productName": "Insomnia Beta",
+  "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "A simple and beautiful REST API client",
   "homepage": "http://insomnia.rest",
