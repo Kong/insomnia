@@ -68,7 +68,6 @@
   "build": {
     "appId": "com.insomnia.app",
     "category": "public.app-category.developer-tools",
-    "compression": "maximum",
     "directories": {
       "app": "build",
       "output": "dist"

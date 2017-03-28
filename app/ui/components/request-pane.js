@@ -25,7 +25,10 @@ class RequestPane extends PureComponent {
   }
 
   async _autocompleteUrls () {
-    const docs = await db.withDescendants(this.props.workspace);
+    const docs = await db.withDescendants(
+      this.props.workspace,
+      models.request.type
+    );
 
     const requestId = this.props.request ? this.props.request._id : 'n/a';
 
@@ -214,7 +217,7 @@ class RequestPane extends PureComponent {
               <button>
                 {getContentTypeName(request.body.mimeType) || 'Body'}
                 {' '}
-                {numBodyParams ? <span className="superscript">{numBodyParams}</span> : null}
+                {numBodyParams ? <span className="bubble">{numBodyParams}</span> : null}
               </button>
               <ContentTypeDropdown onChange={updateRequestMimeType}
                                    contentType={request.body.mimeType}
@@ -234,12 +237,12 @@ class RequestPane extends PureComponent {
             </Tab>
             <Tab onClick={this._trackTabQuery}>
               <button>
-                Query {numParameters ? <span className="superscript">{numParameters}</span> : null}
+                Query {numParameters ? <span className="bubble">{numParameters}</span> : null}
               </button>
             </Tab>
             <Tab onClick={this._trackTabHeaders}>
               <button>
-                Header {numHeaders ? <span className="superscript">{numHeaders}</span> : null}
+                Header {numHeaders ? <span className="bubble">{numHeaders}</span> : null}
               </button>
             </Tab>
           </TabList>

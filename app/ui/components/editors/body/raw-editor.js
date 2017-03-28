@@ -41,11 +41,11 @@ RawEditor.propTypes = {
   fontSize: PropTypes.number.isRequired,
   keyMap: PropTypes.string.isRequired,
   lineWrapping: PropTypes.bool.isRequired,
-  render: PropTypes.func.isRequired,
-  getRenderContext: PropTypes.func.isRequired,
 
   // Optional
-  className: PropTypes.string
+  className: PropTypes.string,
+  render: PropTypes.func,
+  getRenderContext: PropTypes.func
 };
 
 export default RawEditor;

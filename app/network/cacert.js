@@ -1,4 +1,6 @@
-module.exports = `
+export const filename = '2017-01-18.pem';
+
+export const blob = `
 ##
 ## Bundle of CA Root Certificates
 ##

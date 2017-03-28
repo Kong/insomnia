@@ -235,3 +235,7 @@ export function nullFn () {
 export function preventDefault (e) {
   e.preventDefault();
 }
+
+export function stopPropagation (e) {
+  e.stopPropagation();
+}

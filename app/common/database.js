@@ -328,13 +328,17 @@ export function docCreate (type, patch = {}) {
 // GENERAL //
 // ~~~~~~~ //
 
-export async function withDescendants (doc = null) {
+export async function withDescendants (doc = null, stopType = null) {
   let docsToReturn = doc ? [doc] : [];
 
   async function next (docs) {
     let foundDocs = [];
 
     for (const d of docs) {
+      if (stopType && d.type === stopType) {
+        continue;
+      }
+
       for (const type of allTypes()) {
         // If the doc is null, we want to search for parentId === null
         const parentId = d ? d._id : null;

@@ -17,6 +17,7 @@
     width: 100%;
     height: 100%;
     box-sizing: border-box;
+    background-color: var(--color-bg);
 
     &::after {
       width: 100%;
@@ -35,15 +36,18 @@
     display: flex;
     position: static;
 
-    .superscript {
-      min-width: 0.8em;
+    .bubble {
+      position: relative;
+      bottom: 0.4em;
+      font-size: 0.7em;
+      min-width: 0.6em;
       background: var(--hl-sm);
-      padding: @padding-xxs;
+      padding: 2px;
       border-radius: 3px;
       display: inline-block;
       text-align: center;
-      height: 1em;
-      line-height: 1em;
+      line-height: 0.8em;
+      border: 1px solid var(--hl-xxs);
     }
 
     &:first-child {

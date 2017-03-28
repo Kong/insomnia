@@ -216,7 +216,8 @@ class Wrapper extends PureComponent {
       handleExportFile,
       handleMoveRequest,
       handleMoveRequestGroup,
-      handleResetDragPane,
+      handleResetDragPaneHorizontal,
+      handleResetDragPaneVertical,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
       handleSetActiveWorkspace,
@@ -224,7 +225,8 @@ class Wrapper extends PureComponent {
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
       handleSetSidebarRef,
-      handleStartDragPane,
+      handleStartDragPaneHorizontal,
+      handleStartDragPaneVertical,
       handleSetSidebarFilter,
       handleRender,
       handleGetRenderContext,
@@ -233,6 +235,7 @@ class Wrapper extends PureComponent {
       isLoading,
       loadStartTime,
       paneWidth,
+      paneHeight,
       responseFilter,
       responsePreviewMode,
       oAuth2Token,
@@ -246,12 +249,14 @@ class Wrapper extends PureComponent {
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
-    const gridTemplateColumns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
+
+    const columns = `${realSidebarWidth}rem 0 minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
+    const rows = `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
 
     return (
       <div id="wrapper"
            className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
-           style={{gridTemplateColumns: gridTemplateColumns}}>
+           style={{gridTemplateColumns: columns, gridTemplateRows: rows}}>
 
         <Sidebar
           ref={handleSetSidebarRef}
@@ -319,8 +324,17 @@ class Wrapper extends PureComponent {
           handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
         />
 
-        <div className="drag drag--pane">
-          <div onMouseDown={handleStartDragPane} onDoubleClick={handleResetDragPane}>
+        <div className="drag drag--pane-horizontal">
+          <div
+            onMouseDown={handleStartDragPaneHorizontal}
+            onDoubleClick={handleResetDragPaneHorizontal}>
+          </div>
+        </div>
+
+        <div className="drag drag--pane-vertical">
+          <div
+            onMouseDown={handleStartDragPaneVertical}
+            onDoubleClick={handleResetDragPaneVertical}>
           </div>
         </div>
 
@@ -444,8 +458,10 @@ Wrapper.propTypes = {
   handleSetSidebarRef: PropTypes.func.isRequired,
   handleStartDragSidebar: PropTypes.func.isRequired,
   handleResetDragSidebar: PropTypes.func.isRequired,
-  handleStartDragPane: PropTypes.func.isRequired,
-  handleResetDragPane: PropTypes.func.isRequired,
+  handleStartDragPaneHorizontal: PropTypes.func.isRequired,
+  handleStartDragPaneVertical: PropTypes.func.isRequired,
+  handleResetDragPaneHorizontal: PropTypes.func.isRequired,
+  handleResetDragPaneVertical: PropTypes.func.isRequired,
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleSendRequestWithEnvironment: PropTypes.func.isRequired,
   handleSendAndDownloadRequestWithEnvironment: PropTypes.func.isRequired,
@@ -454,6 +470,7 @@ Wrapper.propTypes = {
   loadStartTime: PropTypes.number.isRequired,
   isLoading: PropTypes.bool.isRequired,
   paneWidth: PropTypes.number.isRequired,
+  paneHeight: PropTypes.number.isRequired,
   responsePreviewMode: PropTypes.string.isRequired,
   responseFilter: PropTypes.string.isRequired,
   activeResponseId: PropTypes.string.isRequired,

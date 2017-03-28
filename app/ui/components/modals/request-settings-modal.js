@@ -3,6 +3,7 @@ import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
+import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 import DebouncedInput from '../base/debounced-input';
@@ -57,7 +58,11 @@ class RequestSettingsModal extends PureComponent {
     return (
       <div className="pad">
         <div className="form-control form-control--outlined">
-          <label>Request Name <small className="italic">(also rename by double-clicking in sidebar)</small>
+          <label>Request Name
+            {' '}
+            <small className="italic">
+              (also rename by double-clicking in sidebar)
+            </small>
             <DebouncedInput
               delay={500}
               type="text"
@@ -67,20 +72,26 @@ class RequestSettingsModal extends PureComponent {
             />
           </label>
         </div>
-        <div className="form-control pad-top-sm">
-          <label>Send cookies automatically
-            {this.renderCheckboxInput('settingSendCookies')}
-          </label>
-        </div>
-        <div className="form-control">
-          <label>Store cookies automatically
-            {this.renderCheckboxInput('settingStoreCookies')}
-          </label>
-        </div>
-        <div className="form-control">
-          <label>Skip rendering of request body
-            {this.renderCheckboxInput('settingDisableRenderRequestBody')}
-          </label>
+        <div className="pad-top-sm">
+          <div className="form-control form-control--thin">
+            <label>Send cookies automatically
+              {this.renderCheckboxInput('settingSendCookies')}
+            </label>
+          </div>
+          <div className="form-control form-control--thin">
+            <label>Store cookies automatically
+              {this.renderCheckboxInput('settingStoreCookies')}
+            </label>
+          </div>
+          <div className="form-control form-control--thin">
+            <label>Skip rendering of request body
+              {this.renderCheckboxInput('settingDisableRenderRequestBody')}
+              <HelpTooltip position="top" className="space-left">
+                Disable automatic rendering of Nunjucks variables and tags in
+                the request body
+              </HelpTooltip>
+            </label>
+          </div>
         </div>
       </div>
     );

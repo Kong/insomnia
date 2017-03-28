@@ -14,7 +14,7 @@ import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import PromptModal from '../components/modals/prompt-modal';
 import ChangelogModal from '../components/modals/changelog-modal';
 import SettingsModal from '../components/modals/settings-modal';
-import {DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, isMac, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
+import {DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, isMac, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
@@ -47,15 +47,19 @@ class App extends PureComponent {
     super(props);
 
     this.state = {
+      showDragOverlay: false,
       draggingSidebar: false,
-      draggingPane: false,
+      draggingPaneHorizontal: false,
+      draggingPaneVertical: false,
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
-      paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH
+      paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
+      paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT
     };
 
     this._getRenderContextPromiseCache = {};
 
     this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
+    this._savePaneHeight = debounce(paneHeight => this._updateActiveWorkspaceMeta({paneHeight}));
     this._saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
 
     this._globalKeyMap = null;
@@ -172,6 +176,14 @@ class App extends PureComponent {
     this._sidebar = n;
   }
 
+  _isDragging () {
+    return (
+      this.state.draggingPaneHorizontal ||
+      this.state.draggingPaneVertical ||
+      this.state.draggingSidebar
+    );
+  }
+
   async _requestGroupCreate (parentId) {
     const name = await showModal(PromptModal, {
       headerName: 'New Folder',
@@ -280,6 +292,11 @@ class App extends PureComponent {
   _handleSetPaneWidth (paneWidth) {
     this.setState({paneWidth});
     this._savePaneWidth(paneWidth);
+  }
+
+  _handleSetPaneHeight (paneHeight) {
+    this.setState({paneHeight});
+    this._savePaneHeight(paneHeight);
   }
 
   async _handleSetActiveRequest (activeRequestId) {
@@ -413,19 +430,36 @@ class App extends PureComponent {
     setTimeout(() => this._handleSetSidebarWidth(DEFAULT_SIDEBAR_WIDTH), 50);
   }
 
-  _startDragPane () {
+  _startDragPaneHorizontal () {
     trackEvent('App Pane', 'Drag Start');
-    this.setState({draggingPane: true});
+    this.setState({draggingPaneHorizontal: true});
   }
 
-  _resetDragPane () {
+  _startDragPaneVertical () {
+    trackEvent('App Pane', 'Drag Start Vertical');
+    this.setState({draggingPaneVertical: true});
+  }
+
+  _resetDragPaneHorizontal () {
     trackEvent('App Pane', 'Drag Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetPaneWidth(DEFAULT_PANE_WIDTH), 50);
   }
 
+  _resetDragPaneVertical () {
+    trackEvent('App Pane', 'Drag Reset Vertical');
+    // TODO: Remove setTimeout need be not triggering drag on double click
+    setTimeout(() => this._handleSetPaneHeight(DEFAULT_PANE_HEIGHT), 50);
+  }
+
   _handleMouseMove (e) {
-    if (this.state.draggingPane) {
+    if (this.state.draggingPaneHorizontal) {
+      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
+      const distance = this.props.paneWidth - this.state.paneWidth;
+      if (!this.state.showDragOverlay && Math.abs(distance) > 0.02 /* % */) {
+        this.setState({showDragOverlay: true});
+      }
+
       const requestPane = ReactDOM.findDOMNode(this._requestPane);
       const responsePane = ReactDOM.findDOMNode(this._responsePane);
 
@@ -437,7 +471,31 @@ class App extends PureComponent {
       paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
 
       this._handleSetPaneWidth(paneWidth);
+    } else if (this.state.draggingPaneVertical) {
+      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
+      const distance = this.props.paneHeight - this.state.paneHeight;
+      if (!this.state.showDragOverlay && Math.abs(distance) > 0.02 /* % */) {
+        this.setState({showDragOverlay: true});
+      }
+
+      const requestPane = ReactDOM.findDOMNode(this._requestPane);
+      const responsePane = ReactDOM.findDOMNode(this._responsePane);
+
+      const requestPaneHeight = requestPane.offsetHeight;
+      const responsePaneHeight = responsePane.offsetHeight;
+
+      const pixelOffset = e.clientY - requestPane.offsetTop;
+      let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
+      paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
+
+      this._handleSetPaneHeight(paneHeight);
     } else if (this.state.draggingSidebar) {
+      // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
+      const distance = this.props.sidebarWidth - this.state.sidebarWidth;
+      if (!this.state.showDragOverlay && Math.abs(distance) > 2 /* ems */) {
+        this.setState({showDragOverlay: true});
+      }
+
       const currentPixelWidth = ReactDOM.findDOMNode(this._sidebar).offsetWidth;
       const ratio = e.clientX / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
@@ -450,11 +508,15 @@ class App extends PureComponent {
 
   _handleMouseUp () {
     if (this.state.draggingSidebar) {
-      this.setState({draggingSidebar: false});
+      this.setState({draggingSidebar: false, showDragOverlay: false});
     }
 
-    if (this.state.draggingPane) {
-      this.setState({draggingPane: false});
+    if (this.state.draggingPaneHorizontal) {
+      this.setState({draggingPaneHorizontal: false, showDragOverlay: false});
+    }
+
+    if (this.state.draggingPaneVertical) {
+      this.setState({draggingPaneVertical: false, showDragOverlay: false});
     }
   }
 
@@ -610,6 +672,7 @@ class App extends PureComponent {
           {...this.props}
           ref={this._setWrapperRef}
           paneWidth={this.state.paneWidth}
+          paneHeight={this.state.paneHeight}
           sidebarWidth={this.state.sidebarWidth}
           handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
           handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
@@ -619,8 +682,10 @@ class App extends PureComponent {
           handleSetSidebarRef={this._setSidebarRef}
           handleStartDragSidebar={this._startDragSidebar}
           handleResetDragSidebar={this._resetDragSidebar}
-          handleStartDragPane={this._startDragPane}
-          handleResetDragPane={this._resetDragPane}
+          handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+          handleStartDragPaneVertical={this._startDragPaneVertical}
+          handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+          handleResetDragPaneVertical={this._resetDragPaneVertical}
           handleCreateRequest={this._requestCreate}
           handleRender={this._handleRenderText}
           handleGetRenderContext={this._handleGetRenderContext}
@@ -639,6 +704,9 @@ class App extends PureComponent {
           handleSetSidebarFilter={this._handleSetSidebarFilter}
         />
         <Toast/>
+
+        {/* Block all mouse activity by showing an overlay while dragging */}
+        {this.state.showDragOverlay ? <div className="blocker-overlay"></div> : null}
       </div>
     );
   }
@@ -648,6 +716,7 @@ App.propTypes = {
   // Required
   sidebarWidth: PropTypes.number.isRequired,
   paneWidth: PropTypes.number.isRequired,
+  paneHeight: PropTypes.number.isRequired,
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired
   }).isRequired,
@@ -688,6 +757,7 @@ function mapStateToProps (state, props) {
   const sidebarFilter = workspaceMeta.sidebarFilter || '';
   const sidebarWidth = workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
   const paneWidth = workspaceMeta.paneWidth || DEFAULT_PANE_WIDTH;
+  const paneHeight = workspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT;
 
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state, props) || {};
@@ -723,6 +793,7 @@ function mapStateToProps (state, props) {
     sidebarFilter,
     sidebarWidth,
     paneWidth,
+    paneHeight,
     responsePreviewMode,
     responseFilter,
     sidebarChildren,

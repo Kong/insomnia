@@ -14,7 +14,7 @@ import {hasAcceptHeader, hasAuthHeader, hasUserAgentHeader, setDefaultProtocol} 
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
-import caCerts from './cacert';
+import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
 
 // Defined fallback strategies for DNS lookup. By default, request uses Node's
@@ -217,15 +217,19 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
       if (process.platform !== 'darwin') {
-        const fullBase = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
-        mkdirp.sync(fullBase);
+        const basCAPath = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
+        const fullCAPath = pathJoin(basCAPath, CACerts.filename);
 
-        const name = `ca.pem`;
-        const fullPath = pathJoin(fullBase, name);
-        fs.writeFileSync(fullPath, caCerts);
+        try {
+          fs.statSync(fullCAPath);
+        } catch (err) {
+          // Doesn't exist yet, so write it
+          mkdirp.sync(basCAPath);
+          fs.writeFileSync(fullCAPath, CACerts.blob);
+          console.log('[net] Set CA to', fullCAPath);
+        }
 
-        console.log('[net] Set CA to', fullPath);
-        curl.setOpt(Curl.option.CAINFO, fullPath);
+        curl.setOpt(Curl.option.CAINFO, fullCAPath);
       }
 
       // Set cookies
@@ -249,17 +253,19 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         }
       }
 
-      // Set proxy
-      const {protocol} = urlParse(renderedRequest.url);
-      const {httpProxy, httpsProxy} = settings;
-      const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-      const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-      if (proxy) {
-        curl.setOpt(Curl.option.PROXY, proxy);
-        curl.setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
-      } else {
-        // Disable autodetection from env vars
-        curl.setOpt(Curl.option.PROXY, '');
+      // Disable auto proxy detection from env vars
+      curl.setOpt(Curl.option.PROXY, '');
+
+      // Set proxy settings if we have them
+      if (settings.proxyEnabled) {
+        const {protocol} = urlParse(renderedRequest.url);
+        const {httpProxy, httpsProxy} = settings;
+        const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+        const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+        if (proxy) {
+          curl.setOpt(Curl.option.PROXY, proxy);
+          curl.setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+        }
       }
 
       // Set client certs if needed
@@ -509,7 +515,7 @@ export function _actuallySend (renderedRequest, workspace, settings, familyIndex
     try {
       config = await _buildRequestConfig(renderedRequest, {
         jar: null, // We're doing our own cookies
-        proxy: proxy,
+        proxy: settings.proxyEnabled ? proxy : null,
         followAllRedirects: settings.followRedirects,
         followRedirect: settings.followRedirects,
         timeout: settings.timeout > 0 ? settings.timeout : null,

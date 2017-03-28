@@ -427,7 +427,7 @@ class CodeEditor extends PureComponent {
 
   _codemirrorValueBeforeChange (doc, change) {
     // If we're in single-line mode, merge all changed lines into one
-    if (this.props.singleLine && change.text.length > 1) {
+    if (this.props.singleLine && change.text && change.text.length > 1) {
       const text = change.text
         .join('') // join all changed lines into one
         .replace(/\n/g, ' '); // Convert all whitespace to spaces

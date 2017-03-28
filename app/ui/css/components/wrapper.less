@@ -6,7 +6,9 @@
   color: var(--color-font);
   display: grid;
 
-  grid-template-rows: minmax(0, 0.5fr) minmax(0, 0.5fr);
+  // These are set in JS
+  //grid-template-rows: ...;
+  //grid-template-columns: ...;
 
   height: 100%;
   width: 100%;
@@ -14,17 +16,21 @@
   .sidebar {
     grid-column-start: 1;
     grid-row-start: 1;
-    grid-row-end: span 2;
+    grid-row-end: span 3;
     min-width: 0;
   }
 
   .drag {
     grid-row-start: 1;
-    grid-row-end: span 2;
+    grid-row-end: span 3;
     position: relative;
 
+    &.drag--pane-vertical {
+      display: none;
+    }
+
     & > * {
-      //background-color: rgba(255, 0, 0, 0.2);
+      //background-color: rgba(255, 0, 0, 0.5);
       cursor: ew-resize;
       position: absolute;
       height: 100%;
@@ -40,7 +46,7 @@
     min-width: 0;
     grid-column-start: 3;
     grid-row-start: 1;
-    grid-row-end: span 2;
+    grid-row-end: span 3;
     background: inherit;
   }
 
@@ -48,7 +54,7 @@
     min-width: 0;
     grid-column-start: 5;
     grid-row-start: 1;
-    grid-row-end: span 2;
+    grid-row-end: span 3;
     background: inherit;
   }
 }
@@ -64,12 +70,30 @@
   .response-pane {
     grid-column-start: 3;
     grid-column-end: span 3;
-    grid-row-start: 2;
+    grid-row-start: 3;
     grid-row-end: span 1;
+    //z-index: 2; // So it covers the URL Bar and stuff
   }
 
-  .drag--pane {
-    display: none;
+  .drag--pane-horizontal {
+    display: none !important;
+  }
+
+  .drag--pane-vertical {
+    display: block !important;
+    grid-column-start: 3;
+    grid-column-end: span 3;
+    grid-row-start: 2;
+    grid-row-end: span 1;
+
+    & > * {
+      cursor: ns-resize;
+      height: @drag-width;
+      width: 100%;
+      left: 0;
+      // More to the right so it doesn't cover scroll bars
+      top: -@drag-width / 2;
+    }
   }
 }
 

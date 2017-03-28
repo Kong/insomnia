@@ -67,7 +67,10 @@ export const COLLAPSE_SIDEBAR_REMS = 4;
 export const SIDEBAR_SKINNY_REMS = 10;
 export const MAX_PANE_WIDTH = 0.99;
 export const MIN_PANE_WIDTH = 0.01;
+export const MAX_PANE_HEIGHT = 0.99;
+export const MIN_PANE_HEIGHT = 0.01;
 export const DEFAULT_PANE_WIDTH = 0.5;
+export const DEFAULT_PANE_HEIGHT = 0.5;
 export const DEFAULT_SIDEBAR_WIDTH = 19;
 
 // HTTP Methods
