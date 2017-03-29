@@ -153,7 +153,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       cancelRequestFunction = () => {
         resolve({
           parentId: renderedRequest._id,
-          elapsedTime: curl.getInfo('TOTAL_TIME') * 1000,
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           statusMessage: 'Cancelled',
           error: 'Request was cancelled'
         });
@@ -410,9 +410,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         // Collect various things
         const statusCode = curlHeaders.result.code || 0;
         const statusMessage = curlHeaders.result.reason || 'Unknown';
-        const elapsedTime = this.getInfo('TOTAL_TIME') * 1000;
-        const bytesRead = this.getInfo('SIZE_DOWNLOAD');
-        const url = this.getInfo('EFFECTIVE_URL');
+        const elapsedTime = this.getInfo(Curl.info.TOTAL_TIME) * 1000;
+        const bytesRead = this.getInfo(Curl.info.SIZE_DOWNLOAD);
+        const url = this.getInfo(Curl.info.EFFECTIVE_URL);
 
         // Collect the headers
         const headers = [];
@@ -482,7 +482,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       });
 
       curl.on('error', function (err, code) {
-        const elapsedTime = this.getInfo('TOTAL_TIME') * 1000;
+        const elapsedTime = this.getInfo(Curl.info.TOTAL_TIME) * 1000;
         const parentId = renderedRequest._id;
 
         let error = err + '';
