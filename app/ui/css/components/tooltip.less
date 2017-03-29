@@ -10,6 +10,7 @@
   }
 
   .tooltip__bubble {
+    position: absolute;
     left: -999999px;
     opacity: 0;
     background: var(--color-bg);
@@ -19,12 +20,21 @@
     padding: @padding-xs @padding-sm;
     border-radius: @radius-sm;
     font-size: @font-size-sm;
-    white-space: nowrap;
+    width: 18rem;
+    text-align: center;
+
+    // If this isn't like this, weird things happen like making the parent scroll
+    height: 0;
+    line-height: 0;
   }
 
   &.tooltip--visible .tooltip__bubble {
     opacity: 1;
     transition: opacity 200ms;
+
+    // Back to normal
+    height: auto;
+    line-height: normal;
   }
 
   &.tooltip--left .tooltip__bubble {

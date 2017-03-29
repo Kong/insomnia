@@ -60,7 +60,7 @@ class GenerateCodeModal extends PureComponent {
     this._editor = n;
   }
 
-  _hide () {
+  hide () {
     this.modal.hide();
   }
 
@@ -167,7 +167,7 @@ class GenerateCodeModal extends PureComponent {
           <div className="margin-left faint italic txt-sm tall">
             * copy/paste this command into a Unix terminal
           </div>
-          <button className="btn" onClick={this._hide}>
+          <button className="btn" onClick={this.hide}>
             Done
           </button>
         </ModalFooter>

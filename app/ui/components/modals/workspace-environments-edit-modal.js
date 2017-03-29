@@ -28,7 +28,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     };
   }
 
-  _hide () {
+  hide () {
     this.modal.hide();
   }
 
@@ -276,7 +276,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
               Nunjucks Templating
             </Link> in your requests
           </div>
-          <button className="btn" disabled={!isValid} onClick={this._hide}>
+          <button className="btn" disabled={!isValid} onClick={this.hide}>
             Done
           </button>
         </ModalFooter>

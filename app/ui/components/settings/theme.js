@@ -105,7 +105,8 @@ class Theme extends PureComponent {
 
   render () {
     return (
-      <div className="pad themes">
+      <div className="themes">
+        <h1 className="no-margin-top pad">Color Themes</h1>
         {this.renderThemeRows(THEMES)}
       </div>
     );

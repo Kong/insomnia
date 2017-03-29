@@ -461,12 +461,12 @@ export async function cancelTrial () {
 }
 
 export async function resetLocalData () {
-  for (const r of await store.allResources()) {
-    await store.removeResource(r);
-  }
-
   for (const c of await store.allConfigs()) {
     await store.removeConfig(c);
+  }
+
+  for (const r of await store.allResources()) {
+    await store.removeResource(r);
   }
 }
 
@@ -652,7 +652,7 @@ export async function createResourceGroup (parentId, name) {
 }
 
 export async function createResource (doc, resourceGroupId) {
-  return store.insertResource({
+  return await store.insertResource({
     id: doc._id,
     name: doc.name || 'n/a', // Set name to the doc name if it has one
     resourceGroupId: resourceGroupId,

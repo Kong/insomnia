@@ -350,7 +350,7 @@ class WorkspaceSettingsModal extends PureComponent {
   render () {
     const {workspace} = this.props;
     return (
-      <Modal ref={this._handleSetModalRef} tall freshState>
+      <Modal ref={this._handleSetModalRef} freshState>
         {workspace ? this.renderModalHeader() : null}
         {workspace ? this.renderModalBody() : null}
       </Modal>

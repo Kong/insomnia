@@ -63,11 +63,18 @@ p {
   line-height: 1.7em;
 }
 
+ul.ul--pretty {
+  list-style: disc;
+  padding-left: @padding-lg;
+  margin-bottom: 1.5em;
+}
+
 small {
   font-size: 0.85em;
 }
 
-label.label--small,
+.label--small,
+label > small,
 table th {
   color: @hl;
   font-weight: 600;
@@ -106,6 +113,11 @@ code {
   color: var(--color-font);
   border: 1px solid @hl-sm;
   font-size: 0.9em;
+
+  &.code--compact {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
 
 code, pre, .monospace {
@@ -117,12 +129,15 @@ code, pre, .monospace {
   font-family: @font-default;
 }
 
-.notice {
+div.notice,
+p.notice {
   text-align: center;
   color: var(--color-font) !important;
   padding: @padding-sm * 1.5;
   border: 1px dotted;
   border-radius: @radius-md;
+  position: relative;
+  z-index: 0;
 
   p {
     padding: 0;
@@ -138,18 +153,45 @@ code, pre, .monospace {
   a:hover {
     opacity: 1;
   }
+
+  &::before {
+    content: ' ';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: -1;
+    opacity: 0.05;
+  }
 }
 
 .notice.error {
   border-color: var(--color-danger);
+  &::before {
+    background-color: var(--color-danger);
+  }
 }
 
 .notice.warning {
   border-color: var(--color-warning);
+  &::before {
+    background-color: var(--color-warning);
+  }
 }
 
 .notice.info {
   border-color: var(--color-info);
+  &::before {
+    background-color: var(--color-info);
+  }
+}
+
+.notice.surprise {
+  border-color: var(--color-surprise);
+  &::before {
+    background-color: var(--color-surprise);
+  }
 }
 
 .text-center {
@@ -242,6 +284,7 @@ code, pre, .monospace {
   align-items: center;
   justify-content: space-between !important;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .row-stretch {
@@ -275,6 +318,10 @@ code, pre, .monospace {
 
 .width-auto {
   width: auto !important;
+}
+
+.margin-auto {
+  margin: auto;
 }
 
 .hide {
@@ -362,8 +409,16 @@ i.fa {
   margin-right: 0.3em;
 }
 
+.margin {
+  margin: @padding-md;
+}
+
 .margin-top-sm {
   margin-top: @padding-sm;
+}
+
+.margin-top {
+  margin-top: @padding-md;
 }
 
 .margin-left {
@@ -455,8 +510,16 @@ i.fa {
   cursor: text;
 }
 
+.text-shadow {
+  text-shadow: 0 0 0.2em rgba(0, 0, 0, 0.1);
+}
+
+.fa-outline::before {
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.2);
+}
+
 ::selection {
- background-color: var(--hl-md);
+  background-color: var(--hl-md);
 }
 
 .hide-scrollbars {

@@ -305,7 +305,11 @@ class App extends PureComponent {
 
   async _handleSetActiveEnvironment (activeEnvironmentId) {
     await this._updateActiveWorkspaceMeta({activeEnvironmentId});
-    this._wrapper._forceRequestPaneRefresh();
+
+    // Give it time to update and re-render
+    setTimeout(() => {
+      this._wrapper._forceRequestPaneRefresh();
+    }, 100);
   }
 
   _handleSetSidebarWidth (sidebarWidth) {
