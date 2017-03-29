@@ -153,11 +153,11 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Define helper to add base fields when responding
       const respond = patch => {
         resolve(Object.assign({
-          timeline,
+          parentId: renderedRequest._id,
+          timeline: timeline,
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
           url: curl.getInfo(Curl.info.EFFECTIVE_URL),
-          parentId: renderedRequest._id,
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies
         }, patch));

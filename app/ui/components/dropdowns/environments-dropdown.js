@@ -1,18 +1,39 @@
 import React, {PureComponent, PropTypes} from 'react';
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../base/dropdown';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
+import Tooltip from '../tooltip';
 
+@autobind
 class EnvironmentsDropdown extends PureComponent {
+  _handleActivateEnvironment (environmentId) {
+    this.props.handleChangeEnvironment(environmentId);
+    trackEvent('Environment', environmentId ? 'Activate' : 'Deactivate');
+  }
+
+  _handleShowEnvironmentModal () {
+    showModal(EnvironmentsModal, this.props.workspace);
+  }
+
+  renderEnvironmentItem (environment) {
+    return (
+      <DropdownItem key={environment._id}
+                    value={environment._id}
+                    onClick={this._handleActivateEnvironment}>
+        <i className="fa fa-random"/> Use <strong>{environment.name}</strong>
+      </DropdownItem>
+    );
+  }
+
   render () {
     const {
       className,
       workspace,
       environments,
       activeEnvironment,
-      handleChangeEnvironment,
       ...other
     } = this.props;
 
@@ -33,30 +54,31 @@ class EnvironmentsDropdown extends PureComponent {
       <Dropdown {...other} className={classnames(className, 'wide')}>
         <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
-            <span>{description}</span>
-            {' '}
-            <i className="fa fa-caret-down"/>
+            {!activeEnvironment && subEnvironments.length ? (
+              <Tooltip message="No environments active. Please select one to use."
+                       className="space-right"
+                       position="right">
+                <i className="fa fa-exclamation-triangle notice"/>
+              </Tooltip>
+            ) : null }
+            <div className="sidebar__menu__thing__text">
+              {description}
+            </div>
+            <i className="space-left fa fa-caret-down"/>
           </div>
         </DropdownButton>
-        <DropdownDivider>Switch Environment</DropdownDivider>
-        {subEnvironments.map(environment => (
-          <DropdownItem key={environment._id}
-                        onClick={e => {
-                          handleChangeEnvironment(environment._id);
-                          trackEvent('Environment', 'Activate');
-                        }}>
-            <i className="fa fa-random"/> Use <strong>{environment.name}</strong>
-          </DropdownItem>
-        ))}
-        <DropdownItem onClick={() => {
-          baseEnvironment && handleChangeEnvironment(null);
-          trackEvent('Environment', 'Deactivate');
-        }}>
+
+        <DropdownDivider>Activate Environment</DropdownDivider>
+        {subEnvironments.map(this.renderEnvironmentItem)}
+
+        <DropdownItem value={null} onClick={this._handleActivateEnvironment}>
           <i className="fa fa-empty"/> No Environment
         </DropdownItem>
+
         <DropdownDivider>General</DropdownDivider>
-        <DropdownItem onClick={e => showModal(EnvironmentsModal, workspace)}>
-          <i className="fa fa-wrench"></i> Manage Environments
+
+        <DropdownItem onClick={this._handleShowEnvironmentModal}>
+          <i className="fa fa-wrench"/> Manage Environments
           <DropdownHint char="E"/>
         </DropdownItem>
       </Dropdown>
