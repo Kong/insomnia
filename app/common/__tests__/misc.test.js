@@ -143,6 +143,11 @@ describe('prepareUrlForSending()', () => {
     const url2 = misc.prepareUrlForSending('https://google.com/%40%3B%2C%26%5E');
     expect(url2).toBe('https://google.com/%40%3B%2C%26%5E');
   });
+
+  it('doesn\'t encode if last param set', () => {
+    const url = misc.prepareUrlForSending('https://google.com/%%?foo=%%', false);
+    expect(url).toBe('https://google.com/%%?foo=%%');
+  });
 });
 
 describe('filterHeaders()', () => {

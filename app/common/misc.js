@@ -130,42 +130,46 @@ export function flexibleEncodeComponent (str, ignore = '') {
   return str;
 }
 
-export function prepareUrlForSending (url) {
+export function prepareUrlForSending (url, autoEncode = true) {
   const urlWithProto = setDefaultProtocol(url);
 
-  // Parse the URL into components
-  const parsedUrl = urlParse(urlWithProto);
+  if (!autoEncode) {
+    return urlWithProto;
+  } else {
+    // Parse the URL into components
+    const parsedUrl = urlParse(urlWithProto);
 
-  // ~~~~~~~~~~~ //
-  // 1. Pathname //
-  // ~~~~~~~~~~~ //
+    // ~~~~~~~~~~~ //
+    // 1. Pathname //
+    // ~~~~~~~~~~~ //
 
-  if (parsedUrl.pathname) {
-    const segments = parsedUrl.pathname.split('/');
-    parsedUrl.pathname = segments.map(
-      s => flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST)
-    ).join('/');
-  }
-
-  // ~~~~~~~~~~~~~~ //
-  // 2. Querystring //
-  // ~~~~~~~~~~~~~~ //
-
-  if (parsedUrl.query) {
-    const qsParams = querystring.deconstructToParams(parsedUrl.query);
-    const encodedQsParams = [];
-    for (const {name, value} of qsParams) {
-      encodedQsParams.push({
-        name: flexibleEncodeComponent(name),
-        value: flexibleEncodeComponent(value)
-      });
+    if (parsedUrl.pathname) {
+      const segments = parsedUrl.pathname.split('/');
+      parsedUrl.pathname = segments.map(
+        s => flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST)
+      ).join('/');
     }
 
-    parsedUrl.query = querystring.buildFromParams(encodedQsParams);
-    parsedUrl.search = `?${parsedUrl.query}`;
-  }
+    // ~~~~~~~~~~~~~~ //
+    // 2. Querystring //
+    // ~~~~~~~~~~~~~~ //
 
-  return urlFormat(parsedUrl);
+    if (parsedUrl.query) {
+      const qsParams = querystring.deconstructToParams(parsedUrl.query);
+      const encodedQsParams = [];
+      for (const {name, value} of qsParams) {
+        encodedQsParams.push({
+          name: flexibleEncodeComponent(name),
+          value: flexibleEncodeComponent(value)
+        });
+      }
+
+      parsedUrl.query = querystring.buildFromParams(encodedQsParams);
+      parsedUrl.search = `?${parsedUrl.query}`;
+    }
+
+    return urlFormat(parsedUrl);
+  }
 }
 
 export function delay (milliseconds = DEBOUNCE_MILLIS) {

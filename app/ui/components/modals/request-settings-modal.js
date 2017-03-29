@@ -73,6 +73,7 @@ class RequestSettingsModal extends PureComponent {
           </label>
         </div>
         <div className="pad-top-sm">
+          <h2 className="txt-lg">Cookie Handling</h2>
           <div className="form-control form-control--thin">
             <label>Send cookies automatically
               {this.renderCheckboxInput('settingSendCookies')}
@@ -83,12 +84,23 @@ class RequestSettingsModal extends PureComponent {
               {this.renderCheckboxInput('settingStoreCookies')}
             </label>
           </div>
+        </div>
+        <div className="pad-top-sm">
+          <h2 className="txt-lg">Advanced Settings</h2>
+          <div className="form-control form-control--thin">
+            <label>Automatically encode special characters in URL
+              {this.renderCheckboxInput('settingEncodeUrl')}
+              <HelpTooltip position="top" className="space-left">
+                Automatically encode special characters at send time (does not apply to
+                query parameters editor)
+              </HelpTooltip>
+            </label>
+          </div>
           <div className="form-control form-control--thin">
             <label>Skip rendering of request body
               {this.renderCheckboxInput('settingDisableRenderRequestBody')}
               <HelpTooltip position="top" className="space-left">
-                Disable automatic rendering of Nunjucks variables and tags in
-                the request body
+                Disable rendering of environment variables and tags for the request body
               </HelpTooltip>
             </label>
           </div>

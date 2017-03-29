@@ -96,6 +96,7 @@ class ResponsePane extends PureComponent {
     const {
       request,
       previewMode,
+      handleShowRequestSettings,
       handleSetPreviewMode,
       handleSetActiveResponse,
       handleDeleteResponses,
@@ -251,6 +252,9 @@ class ResponsePane extends PureComponent {
           <TabPanel className="scrollable-container">
             <div className="scrollable pad">
               <ResponseCookiesViewer
+                handleShowRequestSettings={handleShowRequestSettings}
+                cookiesSent={response.settingSendCookies}
+                cookiesStored={response.settingStoreCookies}
                 showCookiesModal={showCookiesModal}
                 key={response._id}
                 headers={cookieHeaders}
@@ -284,6 +288,7 @@ ResponsePane.propTypes = {
   handleSetPreviewMode: PropTypes.func.isRequired,
   handleSetActiveResponse: PropTypes.func.isRequired,
   handleDeleteResponses: PropTypes.func.isRequired,
+  handleShowRequestSettings: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired,
