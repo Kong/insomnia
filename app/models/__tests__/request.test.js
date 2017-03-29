@@ -20,7 +20,8 @@ describe('init()', () => {
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
-      settingDisableRenderRequestBody: false
+      settingDisableRenderRequestBody: false,
+      settingEncodeUrl: true
     });
   });
 });
@@ -50,7 +51,8 @@ describe('create()', async () => {
       url: '',
       settingStoreCookies: true,
       settingSendCookies: true,
-      settingDisableRenderRequestBody: false
+      settingDisableRenderRequestBody: false,
+      settingEncodeUrl: true
     };
 
     expect(request).toEqual(expected);
@@ -282,7 +284,8 @@ describe('migrate()', () => {
       body: {mimeType: '', text: 'hello world!'},
       settingStoreCookies: true,
       settingSendCookies: true,
-      settingDisableRenderRequestBody: false
+      settingDisableRenderRequestBody: false,
+      settingEncodeUrl: true
     };
 
     const migrated = models.initModel(models.request.type, original);
