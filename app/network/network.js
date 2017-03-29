@@ -148,12 +148,24 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
     try {
       // Initialize the curl handle
       const curl = new Curl();
+      let timeline = [];
+
+      // Define helper to add base fields when responding
+      const respond = patch => {
+        resolve(Object.assign({
+          parentId: renderedRequest._id,
+          timeline: timeline,
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
+          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+          url: curl.getInfo(Curl.info.EFFECTIVE_URL),
+          settingSendCookies: renderedRequest.settingSendCookies,
+          settingStoreCookies: renderedRequest.settingStoreCookies
+        }, patch));
+      };
 
       // Setup the cancellation logic
       cancelRequestFunction = () => {
-        resolve({
-          parentId: renderedRequest._id,
-          elapsedTime: curl.getInfo('TOTAL_TIME') * 1000,
+        respond({
           statusMessage: 'Cancelled',
           error: 'Request was cancelled'
         });
@@ -173,7 +185,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
 
       // Setup debug handler
-      let timeline = [];
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
         const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
 
@@ -188,7 +199,10 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         }
 
         if (infoType === Curl.info.debug.DATA_IN) {
-          timeline.push({name: 'TEXT', value: `received ${describeByteSize(content.length)} chunk`});
+          timeline.push({
+            name: 'TEXT',
+            value: `Received ${describeByteSize(content.length)} chunk`
+          });
           return 0;
         }
 
@@ -223,7 +237,16 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Set the URL, including the query parameters
       const qs = querystring.buildFromParams(renderedRequest.parameters);
       const url = querystring.joinUrl(renderedRequest.url, qs);
-      curl.setOpt(Curl.option.URL, util.prepareUrlForSending(url));
+      const finalUrl = util.prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
+      curl.setOpt(Curl.option.URL, finalUrl);
+      timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
+
+      // log some things
+      if (renderedRequest.settingEncodeUrl) {
+        timeline.push({name: 'TEXT', value: 'Enable automatic URL encoding'});
+      } else {
+        timeline.push({name: 'TEXT', value: 'Disable automatic URL encoding'});
+      }
 
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
@@ -246,7 +269,8 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Set cookies
       if (renderedRequest.settingSendCookies) {
         curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
-        for (const cookie of renderedRequest.cookieJar.cookies) {
+        const cookies = renderedRequest.cookieJar.cookies || [];
+        for (const cookie of cookies) {
           let expiresTimestamp = 0;
           if (cookie.expires) {
             const expiresDate = new Date(cookie.expires);
@@ -262,6 +286,17 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             cookie.value
           ].join('\t'));
         }
+
+        timeline.push({
+          name: 'TEXT',
+          value: 'Enable cookie sending with jar of ' +
+          `${cookies.length} cookie${cookies.length !== 1 ? 's' : ''}`
+        });
+      } else {
+        timeline.push({
+          name: 'TEXT',
+          value: 'Disable cookie sending due to user setting'
+        });
       }
 
       // Disable auto proxy detection from env vars
@@ -273,6 +308,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         const {httpProxy, httpsProxy} = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+        timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol}`});
         if (proxy) {
           curl.setOpt(Curl.option.PROXY, proxy);
           curl.setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
@@ -313,15 +349,18 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           if (cert) {
             curl.setOpt(Curl.option.SSLCERT, ensureFile(cert));
             curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
+            timeline.push({name: 'TEXT', value: 'Adding SSL PEM certificate'});
           }
 
           if (pfx) {
             curl.setOpt(Curl.option.SSLCERT, ensureFile(pfx));
             curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
+            timeline.push({name: 'TEXT', value: 'Adding SSL P12 certificate'});
           }
 
           if (key) {
             curl.setOpt(Curl.option.SSLKEY, ensureFile(key));
+            timeline.push({name: 'TEXT', value: 'Adding SSL KEY certificate'});
           }
 
           if (passphrase) {
@@ -389,7 +428,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       }
 
       // NOTE: This is last because headers might be modified multiple times
-      const headerStrings = headers.filter(h => h.name).map(h => `${h.name}: ${h.value}`);
+      const headerStrings = headers
+        .filter(h => h.name)
+        .map(h => `${(h.name || '').trim()}: ${h.value}`);
       curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Set User-Agent if it't not already in headers
@@ -410,9 +451,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         // Collect various things
         const statusCode = curlHeaders.result.code || 0;
         const statusMessage = curlHeaders.result.reason || 'Unknown';
-        const elapsedTime = this.getInfo('TOTAL_TIME') * 1000;
-        const bytesRead = this.getInfo('SIZE_DOWNLOAD');
-        const url = this.getInfo('EFFECTIVE_URL');
 
         // Collect the headers
         const headers = [];
@@ -431,8 +469,8 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
+        const cookieStrings = curl.getInfo(Curl.info.COOKIELIST);
         if (renderedRequest.settingStoreCookies) {
-          const cookieStrings = curl.getInfo(Curl.info.COOKIELIST);
           const cookies = cookieStrings.map(str => {
             //  0                    1                  2     3       4       5     6
             // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
@@ -455,6 +493,13 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
           // Do this async. We don't need to wait
           models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+
+          if (cookies.length) {
+            timeline.push({
+              name: 'TEXT',
+              value: `Updated cookie jar with ${cookies.length} cookies`
+            });
+          }
         }
 
         // Handle the body
@@ -463,15 +508,10 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         const body = bodyBuffer.toString(encoding);
 
         // Return the response data
-        resolve({
-          parentId: renderedRequest._id,
+        respond({
           headers,
           encoding,
-          timeline,
           body,
-          url,
-          bytesRead,
-          elapsedTime,
           contentType,
           statusCode,
           statusMessage
@@ -482,9 +522,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       });
 
       curl.on('error', function (err, code) {
-        const elapsedTime = this.getInfo('TOTAL_TIME') * 1000;
-        const parentId = renderedRequest._id;
-
         let error = err + '';
         let statusMessage = 'Error';
 
@@ -493,13 +530,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           statusMessage = 'Abort';
         }
 
-        resolve({
-          parentId,
-          elapsedTime,
-          statusMessage,
-          error,
-          timeline
-        });
+        respond({statusMessage, error});
       });
 
       curl.perform();

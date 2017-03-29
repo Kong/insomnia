@@ -15,6 +15,7 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import './base-imports';
 
 const TAB_KEY = 9;
+const TAB_SIZE = 4;
 
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
@@ -25,10 +26,10 @@ const BASE_CODEMIRROR_OPTIONS = {
   lineWrapping: true,
   scrollbarStyle: 'native',
   lint: true,
-  tabSize: 4,
   matchBrackets: true,
   autoCloseBrackets: true,
-  indentUnit: 4,
+  tabSize: TAB_SIZE,
+  indentUnit: TAB_SIZE,
   hintOptions: null,
   dragDrop: true,
   viewportMargin: 30, // default 10

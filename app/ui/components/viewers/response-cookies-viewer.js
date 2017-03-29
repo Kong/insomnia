@@ -1,51 +1,85 @@
-import React, {PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
-const ResponseCookiesViewer = ({headers, showCookiesModal}) => {
-  if (!headers.length) {
-    // Don't do anything if no cookies
+@autobind
+class ResponseCookiesViewer extends PureComponent {
+  renderRow (h, i) {
+    const cookie = h ? Cookie.parse(h.value) : null;
+    const blank = <span className="super-duper-faint italic">--</span>;
     return (
-      <span className="faint">
-        No cookies returned in response
-      </span>
+      <tr className="selectable" key={i}>
+        <td>{cookie ? cookie.key : blank}</td>
+        <td className="force-wrap">{cookie ? cookie.value : blank}</td>
+      </tr>
     );
   }
 
-  return (
-    <div>
-      <table className="table--fancy table--striped">
-        <thead>
-        <tr>
-          <th>Name</th>
-          <th>Value</th>
-        </tr>
-        </thead>
-        <tbody>
-        {headers.map((h, i) => {
-          const cookie = Cookie.parse(h.value);
+  render () {
+    const {
+      headers,
+      showCookiesModal,
+      handleShowRequestSettings,
+      cookiesSent,
+      cookiesStored
+    } = this.props;
 
-          return (
-            <tr className="selectable" key={i}>
-              <td>{cookie ? cookie.key : 'n/a'}</td>
-              <td className="force-wrap">{cookie ? cookie.value : 'malformed set-cookie header'}</td>
-            </tr>
-          );
-        })}
-        </tbody>
-      </table>
-      <p className="pad-top">
-        <button className="pull-right btn btn--clicky"
-                onClick={e => showCookiesModal()}>
-          Manage Cookies
-        </button>
-      </p>
-    </div>
-  );
-};
+    const notifyNotStored = !cookiesStored && headers.length;
+
+    let noticeMessage = null;
+    if (!cookiesSent && notifyNotStored) {
+      noticeMessage = 'sending and storing';
+    } else if (!cookiesSent) {
+      noticeMessage = 'sending';
+    } else if (notifyNotStored) {
+      noticeMessage = 'storing';
+    }
+
+    return (
+      <div>
+        {noticeMessage ? (
+          <div className="notice info margin-bottom no-margin-top">
+            <p>
+              Automatic {noticeMessage} of cookies was disabled for this request
+            </p>
+            <button className="btn btn--clicky-small margin-top-sm"
+                    onClick={handleShowRequestSettings}>
+              Open Settings
+            </button>
+          </div>
+        ) : null}
+
+        <table className="table--fancy table--striped">
+          <thead>
+          <tr>
+            <th>Name</th>
+            <th>Value</th>
+          </tr>
+          </thead>
+          <tbody>
+          {!headers.length
+            ? this.renderRow(null, -1)
+            : headers.map(this.renderRow)
+          }
+          </tbody>
+        </table>
+        <p className="pad-top">
+          <button className="pull-right btn btn--clicky"
+                  onClick={e => showCookiesModal()}>
+            Manage Cookies
+          </button>
+        </p>
+      </div>
+    );
+  }
+}
 
 ResponseCookiesViewer.propTypes = {
   showCookiesModal: PropTypes.func.isRequired,
-  headers: PropTypes.array.isRequired
+  cookiesSent: PropTypes.bool.isRequired,
+  cookiesStored: PropTypes.bool.isRequired,
+  headers: PropTypes.array.isRequired,
+  handleShowRequestSettings: PropTypes.func.isRequired
 };
 
 export default ResponseCookiesViewer;

@@ -20,9 +20,9 @@ const MAX_VARIABLES = -1;
 const MAX_TAGS = -1;
 
 const ICONS = {
-  [TYPE_CONSTANT]: '&#x1d484;',
-  [TYPE_VARIABLE]: '&#x1d465;',
-  [TYPE_TAG]: '&fnof;'
+  [TYPE_CONSTANT]: {char: '&#x1d484;', title: 'Constant'},
+  [TYPE_VARIABLE]: {char: '&#x1d465;', title: 'Environment Variable'},
+  [TYPE_TAG]: {char: '&fnof;', title: 'Generator Tag'}
 };
 
 const TAGS = [
@@ -333,8 +333,10 @@ function renderHintMatch (li, self, data) {
   const {displayText, segment} = data;
   const markedName = replaceWithSurround(displayText, segment, '<strong>', '</strong>');
 
+  const {char, title} = ICONS[data.type];
+
   li.innerHTML = `
-    <label class="label">${ICONS[data.type]}</label>
+    <label class="label" title="${title}">${char}</label>
     <div class="name">${markedName}</div>
     <div class="value" title=${data.displayValue}>
       ${data.displayValue}

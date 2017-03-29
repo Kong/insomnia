@@ -134,7 +134,7 @@ p.notice {
   text-align: center;
   color: var(--color-font) !important;
   padding: @padding-sm * 1.5;
-  border: 1px dotted;
+  border: 1px dotted var(--hl);
   border-radius: @radius-md;
   position: relative;
   z-index: 0;
@@ -229,6 +229,10 @@ p.notice {
 
 .super-faint {
   opacity: @opacity-subtle * 0.8;
+}
+
+.super-duper-faint {
+  opacity: @opacity-subtle * 0.5;
 }
 
 .faded {
@@ -344,7 +348,7 @@ i.fa {
 }
 
 .force-word-wrap {
-  white-space: normal;
+  white-space: normal !important;
 }
 
 .no-wrap {

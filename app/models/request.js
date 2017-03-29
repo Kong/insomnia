@@ -23,7 +23,8 @@ export function init () {
     // Settings
     settingStoreCookies: true,
     settingSendCookies: true,
-    settingDisableRenderRequestBody: false
+    settingDisableRenderRequestBody: false,
+    settingEncodeUrl: true
   };
 }
 

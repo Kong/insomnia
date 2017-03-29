@@ -20,10 +20,16 @@ class TimeTag extends PureComponent {
       number = milliseconds / 1000;
     }
 
-    // Round to 2 decimal places
-    number = Math.round(number * 100) / 100;
+    // Round to 0, 1, 2 decimal places depending on how big the number is
+    if (number > 100) {
+      number = Math.round(number);
+    } else if (number > 10) {
+      number = Math.round(number * 10) / 10;
+    } else {
+      number = Math.round(number * 100) / 100;
+    }
 
-    let description = `${milliseconds} milliseconds`;
+    let description = `${milliseconds.toFixed(1)} milliseconds`;
     return (
       <div className={classnames('tag', {'tag--small': small}, className)} title={description}>
         <strong>TIME</strong> {number} {unit}

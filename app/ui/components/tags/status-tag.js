@@ -1,9 +1,6 @@
 import classnames from 'classnames';
 import React, {PropTypes} from 'react';
-import {
-  RESPONSE_CODE_DESCRIPTIONS,
-  STATUS_CODE_RENDER_FAILED
-} from '../../../common/constants';
+import {RESPONSE_CODE_DESCRIPTIONS, STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
 
 const StatusTag = ({statusMessage, statusCode, small}) => {
   statusCode = String(statusCode);

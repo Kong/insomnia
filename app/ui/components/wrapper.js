@@ -148,6 +148,10 @@ class Wrapper extends PureComponent {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
+  _handleShowRequestSettingsModal () {
+    showModal(RequestSettingsModal, this.props.activeRequest);
+  }
+
   _handleDeleteResponses () {
     models.response.removeForRequest(this.props.activeRequest._id);
     this._handleSetActiveResponse(null);
@@ -349,6 +353,7 @@ class Wrapper extends PureComponent {
           filter={responseFilter}
           loadStartTime={loadStartTime}
           showCookiesModal={this._handleShowCookiesModal}
+          handleShowRequestSettings={this._handleShowRequestSettingsModal}
           handleSetActiveResponse={this._handleSetActiveResponse}
           handleSetPreviewMode={this._handleSetPreviewMode}
           handleDeleteResponses={this._handleDeleteResponses}

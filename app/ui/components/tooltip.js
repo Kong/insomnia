@@ -49,6 +49,11 @@ class Tooltip extends PureComponent {
           maxWidth = bubbleRect.right;
           break;
 
+        case 'bottom':
+          left = (tooltipRect.width / 2) - (bubbleRect.width / 2);
+          top = tooltipRect.height;
+          break;
+
         case 'top':
         default:
           left = (tooltipRect.width / 2) - (bubbleRect.width / 2);
