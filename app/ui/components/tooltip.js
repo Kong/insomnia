@@ -79,7 +79,6 @@ class Tooltip extends PureComponent {
     const bubbleClasses = classnames('tooltip__bubble', 'overlay');
 
     const bubbleStyles = {
-      position: 'absolute',
       left: left ? `${left}px` : null,
       top: top ? `${top}px` : null,
       right: right ? `${right}px` : null,

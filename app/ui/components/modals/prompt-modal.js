@@ -25,7 +25,7 @@ class PromptModal extends PureComponent {
   _done (rawValue) {
     const value = this.state.upperCase ? rawValue.toUpperCase() : rawValue;
     this._onSubmitCallback && this._onSubmitCallback(value);
-    this.modal.hide();
+    this.hide();
   }
 
   _setInputRef (n) {
@@ -44,6 +44,10 @@ class PromptModal extends PureComponent {
     e.preventDefault();
 
     this._done(this._input.value);
+  }
+
+  hide () {
+    this.modal.hide();
   }
 
   show (options) {

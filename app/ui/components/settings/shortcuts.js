@@ -15,21 +15,24 @@ class Shortcuts extends PureComponent {
 
   render () {
     return (
-      <table className="table--fancy">
-        <tbody>
-        {this.renderHotkey('Switch Requests', 'P')}
-        {this.renderHotkey('Send Request', 'Enter')}
-        {this.renderHotkey('New Request', 'N')}
-        {this.renderHotkey('Duplicate Request', 'D')}
-        {this.renderHotkey('Show Cookie Manager', 'K')}
-        {this.renderHotkey('Show Environment Editor', 'E')}
-        {this.renderHotkey('Focus URL Bar', 'L')}
-        {this.renderHotkey('Toggle Sidebar', '\\')}
-        {this.renderHotkey('Show App Preferences', ',')}
-        {this.renderHotkey('Show Workspace Settings', ',', true)}
-        {this.renderHotkey('Show Request Settings', ',', true, true)}
-        </tbody>
-      </table>
+      <div>
+        <h1 className="no-margin-top">Keyboard Shortcuts</h1>
+        <table className="table--fancy">
+          <tbody>
+          {this.renderHotkey('Switch Requests', 'P')}
+          {this.renderHotkey('Send Request', 'Enter')}
+          {this.renderHotkey('New Request', 'N')}
+          {this.renderHotkey('Duplicate Request', 'D')}
+          {this.renderHotkey('Show Cookie Manager', 'K')}
+          {this.renderHotkey('Show Environment Editor', 'E')}
+          {this.renderHotkey('Focus URL Bar', 'L')}
+          {this.renderHotkey('Toggle Sidebar', '\\')}
+          {this.renderHotkey('Show App Preferences', ',')}
+          {this.renderHotkey('Show Workspace Settings', ',', true)}
+          {this.renderHotkey('Show Request Settings', ',', true, true)}
+          </tbody>
+        </table>
+      </div>
     );
   }
 }

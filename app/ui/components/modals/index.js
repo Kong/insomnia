@@ -20,6 +20,13 @@ export function hideModal (modalCls) {
   return _getModal(modalCls).hide();
 }
 
+export function hideAllModals () {
+  for (const key of Object.keys(modals)) {
+    const modal = modals[key];
+    modal.hide && modal.hide();
+  }
+}
+
 function _getModal (modalCls) {
   return modals[modalCls.name];
 }

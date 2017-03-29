@@ -9,6 +9,7 @@ import SettingsShortcuts from '../settings/shortcuts';
 import About from '../settings/about';
 import General from '../settings/general';
 import ImportExport from '../settings/import-export';
+import Account from '../settings/account';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import {getAppVersion, getAppName} from '../../../common/constants';
@@ -127,6 +128,11 @@ class SettingsModal extends PureComponent {
                 </Button>
               </Tab>
               <Tab selected={this._currentTabIndex === 4}>
+                <Button value="Account" onClick={this._trackTab}>
+                  Account
+                </Button>
+              </Tab>
+              <Tab selected={this._currentTabIndex === 5}>
                 <Button value="About" onClick={this._trackTab}>
                   About
                 </Button>
@@ -145,14 +151,17 @@ class SettingsModal extends PureComponent {
                 handleImport={this._handleImport}
               />
             </TabPanel>
-            <TabPanel className="pad scrollable">
+            <TabPanel className="scrollable">
               <Theme
                 handleChangeTheme={this._handleChangeTheme}
                 activeTheme={settings.theme}
               />
             </TabPanel>
             <TabPanel className="pad scrollable">
-              <SettingsShortcuts />
+              <SettingsShortcuts/>
+            </TabPanel>
+            <TabPanel className="pad scrollable">
+              <Account/>
             </TabPanel>
             <TabPanel className="pad scrollable">
               <About/>

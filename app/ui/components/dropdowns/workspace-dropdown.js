@@ -1,4 +1,4 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import * as classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
@@ -16,7 +16,6 @@ import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import * as session from '../../../sync/session';
-import PromptButton from '../base/prompt-button';
 import LoginModal from '../modals/login-modal';
 
 @autobind
@@ -150,28 +149,7 @@ class WorkspaceDropdown extends PureComponent {
                           href="https://insomnia.rest/pricing/"
                           button>
               <i className="fa fa-users"/> Upgrade to Plus
-            </DropdownItem>
-          ) : null
-        }
-
-        {/* Is Logged In */}
-
-        {this.state.loggedIn ? (
-            <DropdownItem key="manage"
-                          buttonClass={Link}
-                          href="https://insomnia.rest/app/"
-                          button>
-              <i className="fa fa-user"/> Manage Account
-            </DropdownItem>
-          ) : null
-        }
-
-        {this.state.loggedIn ? (
-            <DropdownItem key="logout"
-                          buttonClass={PromptButton}
-                          onClick={session.logout}
-                          addIcon>
-              <i className="fa fa-sign-out"/> Log Out
+              <i className="fa fa-star notice fa-outline txt-lg"/>
             </DropdownItem>
           ) : null
         }

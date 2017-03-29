@@ -79,7 +79,6 @@ class EnvironmentEditModal extends PureComponent {
         <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
         <ModalBody noScroll className="pad-top-sm">
           <EnvironmentEditor
-            lightTheme
             editorFontSize={editorFontSize}
             editorKeyMap={editorKeyMap}
             ref={this._setEditorRef}

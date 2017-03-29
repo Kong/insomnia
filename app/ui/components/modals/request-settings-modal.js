@@ -56,7 +56,7 @@ class RequestSettingsModal extends PureComponent {
 
   renderModalBody (request) {
     return (
-      <div className="pad">
+      <div>
         <div className="form-control form-control--outlined">
           <label>Request Name
             {' '}
@@ -102,7 +102,7 @@ class RequestSettingsModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef} freshState>
         <ModalHeader>Request Settings</ModalHeader>
-        <ModalBody>
+        <ModalBody className="pad">
           {request ? this.renderModalBody(request) : null}
         </ModalBody>
       </Modal>

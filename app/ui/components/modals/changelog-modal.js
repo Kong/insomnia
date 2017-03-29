@@ -24,6 +24,10 @@ class ChangelogModal extends PureComponent {
     this.modal.show();
   }
 
+  hide () {
+    this.modal.hide();
+  }
+
   toggle () {
     this.modal.toggle();
   }

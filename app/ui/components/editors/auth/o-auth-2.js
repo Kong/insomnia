@@ -26,6 +26,28 @@ class OAuth2 extends PureComponent {
     this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
   }
 
+  async _handleUpdateAccessToken (e) {
+    const {oAuth2Token} = this.props;
+    const accessToken = e.target.value;
+
+    if (oAuth2Token) {
+      await models.oAuth2Token.update(this.props.oAuth2Token, {accessToken});
+    } else {
+      await models.oAuth2Token.create({accessToken, parentId: this.props.request._id});
+    }
+  }
+
+  async _handleUpdateRefreshToken (e) {
+    const {oAuth2Token} = this.props;
+    const refreshToken = e.target.value;
+
+    if (oAuth2Token) {
+      await models.oAuth2Token.update(this.props.oAuth2Token, {refreshToken});
+    } else {
+      await models.oAuth2Token.create({refreshToken, parentId: this.props.request._id});
+    }
+  }
+
   async _handleClearTokens () {
     const oAuth2Token = await models.oAuth2Token.getByParentId(this.props.request._id);
     if (oAuth2Token) {
@@ -267,15 +289,18 @@ class OAuth2 extends PureComponent {
     }
 
     if (!token.expireAt) {
-      return <em>(never expires)</em>;
+      return '(never expires)';
     }
 
-    return <em>`(expires ${new Date(token.expireAt)})`</em>;
+    return `(expires ${new Date(token.expireAt)})`;
   }
 
   render () {
     const {request, oAuth2Token: tok} = this.props;
     const {loading, error} = this.state;
+
+    const expireLabel = this.renderExpireAt(tok);
+
     return (
       <div className="pad">
         <table>
@@ -316,25 +341,27 @@ class OAuth2 extends PureComponent {
               </p>
             </div>
           ) : null}
-          <div>
-            <label className="label--small">
-              Refresh Token
-              {' '}
-              <span>{(tok && tok.refreshToken) ? this.renderExpireAt(tok) : null}</span>
+          <div className="form-control form-control--outlined">
+            <label>
+              <small>
+                Refresh Token
+                {(tok && tok.refreshToken) ? <em>&nbsp;{expireLabel}</em> : null}
+              </small>
+              <input value={(tok && tok.refreshToken) || ''}
+                     placeholder="n/a"
+                     onChange={this._handleUpdateRefreshToken}/>
             </label>
-            <code className="block selectable">
-              {(tok && tok.refreshToken) || <span className="faded">n/a</span>}
-            </code>
           </div>
-          <div className="pad-top-sm">
-            <label className="label--small">
-              Access Token
-              {' '}
-              <span>{(tok && !tok.refreshToken) ? this.renderExpireAt(tok) : null}</span>
+          <div className="form-control form-control--outlined">
+            <label>
+              <small>
+                Access Token
+                {(tok && !tok.refreshToken) ? <em>&nbsp;{expireLabel}</em> : null}
+              </small>
+              <input value={(tok && tok.accessToken) || ''}
+                     placeholder="n/a"
+                     onChange={this._handleUpdateAccessToken}/>
             </label>
-            <code className="block selectable">
-              {(tok && tok.accessToken) || <span className="faded">n/a</span>}
-            </code>
           </div>
           <div className="pad-top text-right">
             {tok ? (

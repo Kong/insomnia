@@ -18,6 +18,8 @@ class General extends PureComponent {
     const {settings} = this.props;
     return (
       <div>
+        <h1 className="no-margin-top">Global App Settings</h1>
+
         <div className="form-control form-control--thin">
           <label className="inline-block">Follow redirects automatically
             <input type="checkbox"
@@ -110,7 +112,24 @@ class General extends PureComponent {
           </label>
         </div>
         <hr className="pad-top"/>
-        <div className="form-row">
+
+        <h2>
+          HTTP Network Proxy
+          <HelpTooltip className="space-left txt-md" style={{maxWidth: '20rem', lineWrap: 'word'}}>
+            Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
+          </HelpTooltip>
+        </h2>
+
+        <div className="form-control form-control--thin">
+          <label className="inline-block">Enable Proxy
+            <input type="checkbox"
+                   name="proxyEnabled"
+                   checked={settings.proxyEnabled}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
+        <div className="form-row pad-top-sm">
           <div className="form-control form-control--outlined">
             <label>HTTP Proxy
               <input type="text"
@@ -132,18 +151,6 @@ class General extends PureComponent {
             </label>
           </div>
         </div>
-        <div className="form-control form-control--thin">
-          <label className="inline-block">Enable HTTP(S) Network Proxy
-            <HelpTooltip className="space-left">
-              Supports authentication via Basic Auth, digest, or NTLM
-            </HelpTooltip>
-            <input type="checkbox"
-                   name="proxyEnabled"
-                   checked={settings.proxyEnabled}
-                   onChange={this._handleUpdateSetting}/>
-          </label>
-        </div>
-
         <br/>
       </div>
     );

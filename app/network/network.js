@@ -10,7 +10,7 @@ import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_BASIC, AUTH_DIGEST, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
-import {hasAcceptHeader, hasAuthHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, hasAcceptHeader, hasAuthHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -175,8 +175,20 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup debug handler
       let timeline = [];
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+
         // Ignore the possibly large data messages
-        if (infoType === Curl.info.debug.DATA_IN || infoType === Curl.info.debug.DATA_OUT) {
+        if (infoType === Curl.info.debug.DATA_OUT) {
+          if (content.length < 2000) {
+            timeline.push({name, value: content});
+          } else {
+            timeline.push({name, value: `(${describeByteSize(content.length)} hidden)`});
+          }
+          return 0;
+        }
+
+        if (infoType === Curl.info.debug.DATA_IN) {
+          timeline.push({name: 'TEXT', value: `received ${describeByteSize(content.length)} chunk`});
           return 0;
         }
 
@@ -185,7 +197,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           return 0;
         }
 
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
         timeline.push({name, value: content});
 
         return 0; // Must be here

@@ -10,36 +10,36 @@ class ResponseTimelineViewer extends PureComponent {
   renderRow (row) {
     const {name, value} = row;
 
-    let symbol = null;
+    let prefix = null;
     switch (name) {
       case 'HEADER_IN':
-        symbol = '<';
+        prefix = '< ';
         break;
       case 'DATA_IN':
-        symbol = '';
+        prefix = '| ';
         break;
       case 'SSL_DATA_IN':
-        symbol = '<';
+        prefix = '< ';
         break;
       case 'HEADER_OUT':
-        symbol = '>';
+        prefix = '> ';
         break;
       case 'DATA_OUT':
-        symbol = '';
+        prefix = '| ';
         break;
       case 'SSL_DATA_OUT':
-        symbol = '>';
+        prefix = '> ';
         break;
       case 'TEXT':
-        symbol = '*';
+        prefix = '* ';
         break;
     }
 
-    if (symbol !== null) {
+    if (prefix !== null) {
       const lines = (value + '').replace(/\n$/, '').split('\n');
       const newLines = lines
         .filter(l => !l.match(/^\s*$/))
-        .map(l => symbol ? `${symbol} ${l}` : l);
+        .map(l => `${prefix}${l}`);
       return newLines.join('\n');
     } else {
       return null;

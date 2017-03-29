@@ -162,6 +162,7 @@
   padding: 0 (@padding-md * 1.5);
   height: @line-height-md;
   border: 1px solid transparent;
+  background: var(--color-bg);
 
   &.btn--compact {
     padding: 0 @padding-md;
@@ -185,6 +186,11 @@
 
   &.btn--clicky {
     .btn--super-compact;
+    .btn--outlined;
+  }
+
+  &.btn--clicky-small {
+    .btn--super-duper-compact;
     .btn--outlined;
   }
 }
