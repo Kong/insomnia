@@ -1,5 +1,5 @@
 import * as db from '../common/database';
-import {PREVIEW_MODE_SOURCE} from '../common/constants';
+import {PREVIEW_MODE_FRIENDLY} from '../common/constants';
 
 export const name = 'Request Meta';
 export const type = 'RequestMeta';
@@ -9,7 +9,7 @@ export const canDuplicate = true;
 export function init () {
   return {
     parentId: null,
-    previewMode: PREVIEW_MODE_SOURCE,
+    previewMode: PREVIEW_MODE_FRIENDLY,
     responseFilter: '',
     activeResponseId: null
   };

@@ -1,27 +1,24 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
-import {debounce} from '../../../common/misc';
 
 @autobind
 class ResponseRaw extends PureComponent {
   constructor (props) {
     super(props);
-
-    // Use a timeout so it doesn't block the UI
-    this._update = debounce(this._setTextAreaValue);
+    this._timeout = null;
   }
 
   _setTextAreaRef (n) {
     this._textarea = n;
   }
 
-  _setTextAreaValue (value) {
-    // Bail if we're not mounted
-    if (!this._textarea) {
-      return;
-    }
-
-    this._textarea.value = value;
+  _update (value) {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(() => {
+      if (this._textarea) {
+        this._textarea.value = value;
+      }
+    }, 200);
   }
 
   componentDidUpdate () {

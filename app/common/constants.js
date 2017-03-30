@@ -97,23 +97,12 @@ export const PREVIEW_MODE_SOURCE = 'source';
 export const PREVIEW_MODE_RAW = 'raw';
 
 const previewModeMap = {
-  [PREVIEW_MODE_SOURCE]: 'Source',
-  [PREVIEW_MODE_FRIENDLY]: 'Web View',
-  [PREVIEW_MODE_RAW]: 'Raw'
+  [PREVIEW_MODE_FRIENDLY]: ['Preview', 'Visual Preview'],
+  [PREVIEW_MODE_SOURCE]: ['Source', 'Source Code'],
+  [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data']
 };
 
 export const PREVIEW_MODES = Object.keys(previewModeMap);
-
-/**
- * Get the friendly name for a given preview mode
- *
- * @param previewMode
- * @returns {*|string}
- */
-export function getPreviewModeName (previewMode) {
-  // TODO: Make this more robust maybe...
-  return previewModeMap[previewMode] || 'Unknown';
-}
 
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
@@ -147,6 +136,14 @@ const authTypesMap = {
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0']
 };
+
+export function getPreviewModeName (previewMode, useLong = false) {
+  if (previewModeMap.hasOwnProperty(previewMode)) {
+    return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
+  } else {
+    return '';
+  }
+}
 
 export function getContentTypeName (contentType, useLong = false) {
   if (contentTypesMap.hasOwnProperty(contentType)) {

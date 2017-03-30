@@ -1,11 +1,11 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import Editor from '../codemirror/code-editor';
 import ResponseWebView from './response-webview';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
-import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_SOURCE} from '../../../common/constants';
+import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
 
 let alwaysShowLargeResponses = false;
 
@@ -122,68 +122,66 @@ class ResponseViewer extends PureComponent {
     if (bodyBuffer.length === 0) {
       return (
         <div className="pad faint">
-        No body returned in response
-      </div>
+          No body returned in response
+        </div>
       );
     }
 
-    switch (previewMode) {
-      case PREVIEW_MODE_FRIENDLY:
-        if (contentType.toLowerCase().indexOf('image/') === 0) {
-          const justContentType = contentType.split(';')[0];
-          return (
-            <div className="scrollable-container tall wide">
-              <div className="scrollable">
-                <img src={`data:${justContentType};base64,${base64Body}`}
-                     className="pad block"
-                     style={{maxWidth: '100%', maxHeight: '100%', margin: 'auto'}}/>
-              </div>
-            </div>
-          );
-        } else {
-          return (
-            <ResponseWebView
-              body={bodyBuffer.toString('utf8')}
-              contentType={contentType}
-              url={url}
-            />
-          );
-        }
-      case PREVIEW_MODE_SOURCE:
-        let mode = contentType;
-        const body = bodyBuffer.toString('utf8');
+    const ct = contentType.toLowerCase();
+    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
+      const justContentType = contentType.split(';')[0];
+      return (
+        <div className="scrollable-container tall wide">
+          <div className="scrollable">
+            <img src={`data:${justContentType};base64,${base64Body}`}
+                 className="pad block"
+                 style={{maxWidth: '100%', maxHeight: '100%', margin: 'auto'}}/>
+          </div>
+        </div>
+      );
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
+      return (
+        <ResponseWebView
+          body={bodyBuffer.toString('utf8')}
+          contentType={contentType}
+          url={url}
+        />
+      );
+    } else if (previewMode === PREVIEW_MODE_RAW) {
+      return (
+        <ResponseRaw
+          value={bodyBuffer.toString('utf8')}
+          fontSize={editorFontSize}
+        />
+      );
+    } else { // Show everything else as "source"
+      let mode = contentType;
+      const body = bodyBuffer.toString('utf8');
 
-        try {
-          // FEATURE: Detect JSON even without content-type
-          contentType.indexOf('json') === -1 && JSON.parse(body);
-          mode = 'application/json';
-        } catch (e) {
-          // Nothing
-        }
+      try {
+        // FEATURE: Detect JSON even without content-type
+        contentType.indexOf('json') === -1 && JSON.parse(body);
+        mode = 'application/json';
+      } catch (e) {
+        // Nothing
+      }
 
-        return (
-          <Editor
-            onClickLink={this._handleOpenLink}
-            defaultValue={body}
-            updateFilter={updateFilter}
-            filter={filter}
-            autoPrettify
-            noMatchBrackets
-            readOnly
-            mode={mode}
-            lineWrapping={editorLineWrapping}
-            fontSize={editorFontSize}
-            keyMap={editorKeyMap}
-            placeholder="..."
-          />
-        );
-      default: // Raw
-        return (
-          <ResponseRaw
-            value={bodyBuffer.toString('utf8')}
-            fontSize={editorFontSize}
-          />
-        );
+      return (
+        <Editor
+          onClickLink={this._handleOpenLink}
+          defaultValue={body}
+          updateFilter={updateFilter}
+          filter={filter}
+          autoPrettify
+          noMatchBrackets
+          readOnly
+          mode={mode}
+          lineWrapping={editorLineWrapping}
+          fontSize={editorFontSize}
+          keyMap={editorKeyMap}
+          placeholder="..."
+        />
+      );
     }
   }
 }

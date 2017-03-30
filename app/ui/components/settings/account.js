@@ -22,7 +22,7 @@ class Account extends PureComponent {
   renderUpgrade () {
     return (
       <div>
-        <div className="notice pad surprise margin">
+        <div className="notice pad surprise">
           <h1 className="no-margin-top">Get Insomnia Plus!</h1>
           <p>
             &#128640; Sync your data across devices or with a team<br/>
