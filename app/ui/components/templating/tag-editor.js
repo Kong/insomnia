@@ -67,7 +67,7 @@ class TagEditor extends PureComponent {
     }
 
     setTimeout(() => {
-      this._input.focusEnd();
+      this._input && this._input.focusEnd();
     }, 100);
   }
 

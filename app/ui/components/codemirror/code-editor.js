@@ -377,7 +377,8 @@ class CodeEditor extends PureComponent {
       if (getRenderContext) {
         getVariables = async () => {
           const context = await getRenderContext();
-          return context && context.keys;
+          const variables = context ? context.keys : [];
+          return variables || [];
         };
       }
       options.environmentAutocomplete = {

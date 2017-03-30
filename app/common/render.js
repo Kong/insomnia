@@ -126,11 +126,7 @@ export async function getRenderContext (request, environmentId, ancestors = null
   const subEnvironment = await models.environment.getById(environmentId);
 
   // Generate the context we need to render
-  return buildRenderContext(
-    ancestors,
-    rootEnvironment,
-    subEnvironment
-  );
+  return buildRenderContext(ancestors, rootEnvironment, subEnvironment);
 }
 
 export async function getRenderedRequest (request, environmentId) {
