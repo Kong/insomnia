@@ -66,17 +66,19 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       hintsContainer = el;
     }
 
-    const constants = options.getConstants && await options.getConstants();
+    const constants = options.getConstants ? await options.getConstants() : null;
+    const variables = options.getVariables ? await options.getVariables() : null;
 
     // Actually show the hint
     cm.showHint({
       // Insomnia-specific options
-      extraConstants: constants || [],
+      constants: constants || [],
+      variables: variables || [],
+      tags: options.getVariables ? TAGS : [], // Only match tags if we can vars
+      showAllOnNoMatch,
 
       // Codemirror native options
       hint,
-      showAllOnNoMatch,
-      getContext: options.getContext,
       container: hintsContainer,
       closeCharacters: COMPLETION_CLOSE_KEYS,
       completeSingle: false,
@@ -147,7 +149,11 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
  * @param options
  * @returns {Promise.<{list: Array, from, to}>}
  */
-async function hint (cm, options) {
+function hint (cm, options) {
+  const variablesToMatch = options.variables || [];
+  const constantsToMatch = options.constants || [];
+  const tagsToMatch = options.tags || [];
+
   // Get the text from the cursor back
   const cur = cm.getCursor();
   const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
@@ -158,7 +164,7 @@ async function hint (cm, options) {
   const isInTag = previousText.match(AFTER_TAG_MATCH);
   const isInNothing = !isInVariable && !isInTag;
   const allowMatchingVariables = isInNothing || isInVariable;
-  const allowMatchingTags = isInNothing || isInTag;
+  const allowMatchingTags = (isInNothing || isInTag);
   const allowMatchingConstants = isInNothing;
 
   // Define fallback segment to match everything or nothing
@@ -171,31 +177,30 @@ async function hint (cm, options) {
   const nameSegmentLong = nameMatchLong ? nameMatchLong[0] : fallbackSegment;
 
   // Actually try to match the list of things
-  const context = await options.getContext();
   const allShortMatches = [];
   const allLongMatches = [];
 
   // Match variables
   if (allowMatchingVariables) {
-    matchSegments(context.keys, nameSegment, TYPE_VARIABLE, MAX_VARIABLES)
+    matchSegments(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES)
       .map(m => allShortMatches.push(m));
-    matchSegments(context.keys, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES)
+    matchSegments(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES)
       .map(m => allLongMatches.push(m));
   }
 
   // Match constants
   if (allowMatchingConstants) {
-    matchSegments(options.extraConstants, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
+    matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
       .map(m => allShortMatches.push(m));
-    matchSegments(options.extraConstants, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
+    matchSegments(constantsToMatch, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
       .map(m => allLongMatches.push(m));
   }
 
   // Match tags
   if (allowMatchingTags) {
-    matchSegments(TAGS, nameSegment, TYPE_TAG, MAX_TAGS)
+    matchSegments(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS)
       .map(m => allShortMatches.push(m));
-    matchSegments(TAGS, nameSegmentLong, TYPE_TAG, MAX_TAGS)
+    matchSegments(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS)
       .map(m => allLongMatches.push(m));
   }
 
@@ -271,8 +276,12 @@ function replaceHintMatch (cm, self, data) {
  * @returns {Array}
  */
 function matchSegments (listOfThings, segment, type, limit = -1) {
-  const matches = [];
+  if (!Array.isArray(listOfThings)) {
+    console.warn('Autocomplete received items in non-list form', listOfThings);
+    return [];
+  }
 
+  const matches = [];
   for (const t of listOfThings) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;

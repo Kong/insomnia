@@ -68,6 +68,10 @@ class VariableEditor extends PureComponent {
   }
 
   async _update (variableName, noCallback = false) {
+    if (!variableName) {
+      return;
+    }
+
     const {handleRender} = this.props;
 
     let value = '';
@@ -92,6 +96,11 @@ class VariableEditor extends PureComponent {
     }
   }
 
+  async _autocompleteVariables () {
+    const context = await this.props.handleGetRenderContext();
+    return context.keys;
+  }
+
   render () {
     const {variable, error, value} = this.state;
 
@@ -103,6 +112,7 @@ class VariableEditor extends PureComponent {
               forceEditor
               ref={this._setInputRef}
               onChange={this._update}
+              getAutocompleteConstants={this._autocompleteVariables}
               defaultValue={variable.getName()}
             />
           </label>
@@ -122,6 +132,7 @@ class VariableEditor extends PureComponent {
 
 VariableEditor.propTypes = {
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   defaultValue: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired
 };
