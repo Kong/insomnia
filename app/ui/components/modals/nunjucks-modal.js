@@ -28,6 +28,12 @@ class NunjucksModal extends PureComponent {
     this._currentTemplate = template;
   }
 
+  _handleSubmit (e) {
+    e.preventDefault();
+    this._onDone && this._onDone(this._currentTemplate);
+    this.hide();
+  }
+
   show ({template, onDone}) {
     this._onDone = onDone;
 
@@ -47,14 +53,8 @@ class NunjucksModal extends PureComponent {
     trackEvent('Nunjucks', 'Editor', 'Hide');
   }
 
-  _handleSubmit (e) {
-    e.preventDefault();
-    this._onDone && this._onDone(this._currentTemplate);
-    this.hide();
-  }
-
   render () {
-    const {handleRender} = this.props;
+    const {handleRender, handleGetRenderContext} = this.props;
     const {defaultTemplate} = this.state;
 
     let editor = null;
@@ -66,6 +66,7 @@ class NunjucksModal extends PureComponent {
           onChange={this._handleTemplateChange}
           defaultValue={defaultTemplate}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
         />
       );
     } else if (defaultTemplate.indexOf('{%') === 0) {
@@ -96,7 +97,8 @@ class NunjucksModal extends PureComponent {
 }
 
 NunjucksModal.propTypes = {
-  handleRender: PropTypes.func.isRequired
+  handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired
 };
 
 export default NunjucksModal;

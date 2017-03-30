@@ -102,7 +102,7 @@ async function _highlightNunjucksTags (render) {
       el.setAttribute('data-error', 'off');
       el.setAttribute('data-template', tok.string);
 
-      await _updateElementText(renderString, el, tok.string);
+      _updateElementText(renderString, el, tok.string);
 
       const mark = this.markText(start, end, {
         __nunjucks: true, // Mark that we created it
@@ -201,7 +201,7 @@ async function _highlightNunjucksTags (render) {
   }
 }
 
-async function _updateElementText (render, el, text) {
+function _updateElementText (render, el, text) {
   try {
     const str = text.replace(/\\/g, '');
     const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
@@ -222,16 +222,18 @@ async function _updateElementText (render, el, text) {
 
       if (['response', 'res', 'uuid', 'timestamp', 'now'].includes(tag)) {
         // Try rendering these so we can show errors if needed
-        const v = await render(str);
-        el.title = v;
+        (async () => {
+          el.title = await render(str);
+        })();
       } else {
         el.setAttribute('data-ignore', 'on');
       }
     } else {
       // Render if it's a variable
       el.innerHTML = `<label>var</label> ${cleanedStr}`.trim();
-      const v = await render(str);
-      el.title = v;
+      (async () => {
+        el.title = await render(str);
+      })();
     }
     el.setAttribute('data-error', 'off');
   } catch (err) {

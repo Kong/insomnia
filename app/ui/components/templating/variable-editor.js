@@ -1,117 +1,91 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import OneLineEditor from '../codemirror/one-line-editor';
-
-class Variable {
-  constructor (template) {
-    const {name, post, pre} = this._extractValues(template);
-    this._name = name;
-    this._post = post;
-    this._pre = pre;
-  }
-
-  getTemplate () {
-    return `${this._pre}${this._name}${this._post}`;
-  }
-
-  getName () {
-    return this._name;
-  }
-
-  cloneWithNewName (name) {
-    const newTemplate = `${this._pre}${name}${this._post}`;
-    return new Variable(newTemplate);
-  }
-
-  _extractValues (template) {
-    const m1 = template.match(/^{{\s*/);
-    const m2 = template.match(/\s*}}$/);
-
-    const pre = m1[0];
-    const post = m2[0];
-
-    // Slice in between start and end
-    const name = template.slice(
-      m1.index + m1[0].length,
-      m2.index
-    );
-
-    return {name, pre, post};
-  }
-}
 
 @autobind
 class VariableEditor extends PureComponent {
   constructor (props) {
     super(props);
 
-    const variable = new Variable(props.defaultValue);
+    const inner = props.defaultValue
+      .replace(/\s*}}$/, '')
+      .replace(/^{{\s*/, '');
 
     this.state = {
-      variable,
-      value: '',
+      variables: [],
+      value: `{{ ${inner} }}`,
+      preview: '',
       error: ''
     };
   }
 
-  componentWillMount () {
-    this._update(this.state.variable.getName(), true);
+  componentDidMount () {
+    this._update(this.state.value, true);
   }
 
-  _setInputRef (n) {
-    this._input = n;
+  _handleChange (e) {
+    this._update(e.target.value);
+  }
+
+  _setSelectRef (n) {
+    this._select = n;
 
     // Let it render, then focus the input
     setTimeout(() => {
-      this._input && this._input.focusEnd();
+      this._select && this._select.focus();
     }, 100);
   }
 
-  async _update (variableName, noCallback = false) {
+  async _update (value, noCallback = false) {
     const {handleRender} = this.props;
 
-    let value = '';
+    let preview = '';
     let error = '';
 
-    const variable = this.state.variable.cloneWithNewName(variableName);
-
     try {
-      value = await handleRender(variable.getTemplate(), true);
+      preview = await handleRender(value, true);
     } catch (err) {
       error = err.message;
     }
 
+    const variables = await this._autocompleteVariables();
+
     // Hack to skip updating if we unmounted for some reason
-    if (this._input) {
-      this.setState({variable, value, error});
+    if (this._select) {
+      this.setState({preview, error, variables, value});
     }
 
     // Call the callback if we need to
     if (!noCallback) {
-      this.props.onChange(variable.getTemplate());
+      this.props.onChange(value);
     }
   }
 
+  async _autocompleteVariables () {
+    const context = await this.props.handleGetRenderContext();
+    return context.keys;
+  }
+
   render () {
-    const {variable, error, value} = this.state;
+    const {error, value, preview, variables} = this.state;
 
     return (
       <div>
         <div className="form-control form-control--outlined">
-          <label>Variable Name
-            <OneLineEditor
-              forceEditor
-              ref={this._setInputRef}
-              onChange={this._update}
-              defaultValue={variable.getName()}
-            />
+          <label>Environment Variable
+            <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
+              {variables.map((v, i) => (
+                <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error
               ? <code className="block danger selectable">{error}</code>
-              : <code className="block selectable">{value}</code>
+              : <code className="block selectable">{preview}</code>
             }
           </label>
         </div>
@@ -122,6 +96,7 @@ class VariableEditor extends PureComponent {
 
 VariableEditor.propTypes = {
   handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   defaultValue: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired
 };

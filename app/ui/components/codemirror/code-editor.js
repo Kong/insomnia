@@ -372,9 +372,17 @@ class CodeEditor extends PureComponent {
     }
 
     // Setup the hint options
-    if (getRenderContext) {
+    if (getRenderContext || getAutocompleteConstants) {
+      let getVariables = null;
+      if (getRenderContext) {
+        getVariables = async () => {
+          const context = await getRenderContext();
+          const variables = context ? context.keys : [];
+          return variables || [];
+        };
+      }
       options.environmentAutocomplete = {
-        getContext: getRenderContext,
+        getVariables,
         getConstants: getAutocompleteConstants
       };
     }

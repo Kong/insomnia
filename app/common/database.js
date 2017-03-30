@@ -176,21 +176,9 @@ export function all (type) {
   return find(type);
 }
 
-export function getWhere (type, query) {
-  return new Promise((resolve, reject) => {
-    db[type].find(query, (err, rawDocs) => {
-      if (err) {
-        return reject(err);
-      }
-
-      if (rawDocs.length === 0) {
-        // Not found. Too bad!
-        return resolve(null);
-      }
-
-      resolve(initModel(type, rawDocs[0]));
-    });
-  });
+export async function getWhere (type, query) {
+  const docs = await find(type, query);
+  return docs.length ? docs[0] : null;
 }
 
 export function get (type, id) {

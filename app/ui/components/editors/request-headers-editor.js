@@ -33,18 +33,8 @@ class RequestHeadersEditor extends PureComponent {
     for (const row of rows) {
       const items = row.split(':');
 
-      if (items.length !== 2) {
-        // Need a colon to be valid
-        continue;
-      }
-
-      const name = items[0].trim();
-      const value = items[1].trim();
-
-      if (!name || !value) {
-        // Need name and value to be valid
-        continue;
-      }
+      const name = (items[0] || '').trim();
+      const value = (items[1] || '').trim();
 
       headers.push({name, value});
     }

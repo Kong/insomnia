@@ -19,7 +19,6 @@ class ResponseCookiesViewer extends PureComponent {
     const {
       headers,
       showCookiesModal,
-      handleShowRequestSettings,
       cookiesSent,
       cookiesStored
     } = this.props;
@@ -40,12 +39,8 @@ class ResponseCookiesViewer extends PureComponent {
         {noticeMessage ? (
           <div className="notice info margin-bottom no-margin-top">
             <p>
-              Automatic {noticeMessage} of cookies was disabled for this request
+              Automatic {noticeMessage} of cookies was disabled at the time this request was made
             </p>
-            <button className="btn btn--clicky-small margin-top-sm"
-                    onClick={handleShowRequestSettings}>
-              Open Settings
-            </button>
           </div>
         ) : null}
 
