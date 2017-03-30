@@ -84,8 +84,8 @@ class VariableEditor extends PureComponent {
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error
-              ? <code className="block danger selectable">{error}</code>
-              : <code className="block selectable">{preview}</code>
+              ? <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
+              : <code className="block selectable">{preview || <span>&nbsp;</span>}</code>
             }
           </label>
         </div>

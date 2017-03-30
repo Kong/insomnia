@@ -8,6 +8,7 @@ class Tag {
     this._name = name;
     this._post = post;
     this._pre = pre;
+    this._timeout = null;
   }
 
   getTemplate () {
@@ -71,22 +72,25 @@ class TagEditor extends PureComponent {
     }, 100);
   }
 
-  async _update (tagName) {
-    const {handleRender} = this.props;
+  _update (tagName) {
+    clearTimeout(this._timeout);
+    this._timeout = setTimeout(async () => {
+      const {handleRender} = this.props;
 
-    let value = '';
-    let error = '';
+      let value = '';
+      let error = '';
 
-    const tag = this.state.tag.cloneWithNewName(tagName);
+      const tag = this.state.tag.cloneWithNewName(tagName);
 
-    try {
-      value = await handleRender(tag.getTemplate(), true);
-    } catch (err) {
-      error = err.message;
-    }
+      try {
+        value = await handleRender(tag.getTemplate(), true);
+      } catch (err) {
+        error = err.message;
+      }
 
-    this.setState({tag, value, error});
-    this.props.onChange(tag.getTemplate());
+      this.setState({tag, value, error});
+      this.props.onChange(tag.getTemplate());
+    }, 300);
   }
 
   render () {
@@ -95,7 +99,7 @@ class TagEditor extends PureComponent {
     return (
       <div>
         <div className="form-control form-control--outlined">
-          <label>Tag Name
+          <label>Template Function
             <OneLineEditor
               forceEditor
               ref={this._setInputRef}
@@ -107,8 +111,8 @@ class TagEditor extends PureComponent {
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error
-              ? <code className="block danger selectable">{error}</code>
-              : <code className="block selectable">{value}</code>
+              ? <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
+              : <code className="block selectable">{value || <span>&nbsp;</span>}</code>
             }
           </label>
         </div>
