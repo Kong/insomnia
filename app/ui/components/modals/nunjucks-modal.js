@@ -55,7 +55,7 @@ class NunjucksModal extends PureComponent {
   }
 
   render () {
-    const {handleRender, handleGetRenderContext} = this.props;
+    const {handleRender, handleGetRenderContext, uniqueKey} = this.props;
     const {defaultTemplate} = this.state;
 
     let editor = null;
@@ -82,7 +82,7 @@ class NunjucksModal extends PureComponent {
     }
 
     return (
-      <Modal ref={this._setModalRef} onHide={this._handleModalHide}>
+      <Modal ref={this._setModalRef} onHide={this._handleModalHide} key={uniqueKey}>
         <form onSubmit={this._handleSubmit}>
           <ModalHeader>Edit {title}</ModalHeader>
           <ModalBody className="pad" key={defaultTemplate}>
@@ -98,6 +98,7 @@ class NunjucksModal extends PureComponent {
 }
 
 NunjucksModal.propTypes = {
+  uniqueKey: PropTypes.string.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired
 };
