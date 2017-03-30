@@ -25,12 +25,6 @@ const ICONS = {
   [TYPE_TAG]: {char: '&fnof;', title: 'Generator Tag'}
 };
 
-const TAGS = [
-  'uuid',
-  'now',
-  'response'
-];
-
 CodeMirror.defineExtension('isHintDropdownActive', function () {
   return (
     this.state.completionActive &&
@@ -68,13 +62,14 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
 
     const constants = options.getConstants ? await options.getConstants() : null;
     const variables = options.getVariables ? await options.getVariables() : null;
+    const tags = options.getTags ? await options.getTags() : null;
 
     // Actually show the hint
     cm.showHint({
       // Insomnia-specific options
       constants: constants || [],
       variables: variables || [],
-      tags: options.getVariables ? TAGS : [], // Only match tags if we can vars
+      tags: tags || [],
       showAllOnNoMatch,
 
       // Codemirror native options

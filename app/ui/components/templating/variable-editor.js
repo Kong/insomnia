@@ -47,7 +47,8 @@ class VariableEditor extends PureComponent {
       error = err.message;
     }
 
-    const variables = await this._autocompleteVariables();
+    const context = await this.props.handleGetRenderContext();
+    const variables = context.keys;
 
     // Hack to skip updating if we unmounted for some reason
     if (this._select) {
@@ -58,11 +59,6 @@ class VariableEditor extends PureComponent {
     if (!noCallback) {
       this.props.onChange(value);
     }
-  }
-
-  async _autocompleteVariables () {
-    const context = await this.props.handleGetRenderContext();
-    return context.keys;
   }
 
   render () {
