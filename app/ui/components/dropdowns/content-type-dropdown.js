@@ -2,11 +2,9 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {trackEvent} from '../../../analytics/index';
-import * as constants from '../../../common/constants';
+import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_XML, getContentTypeName} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/alert-modal';
-import {CONTENT_TYPE_FORM_DATA} from '../../../common/constants';
-import {CONTENT_TYPE_FILE} from '../../../common/constants';
 
 const EMPTY_MIME_TYPE = null;
 
@@ -57,7 +55,7 @@ class ContentTypeDropdown extends PureComponent {
     return (
       <DropdownItem onClick={this._handleChangeMimeType} value={mimeType}>
         <i className={`fa ${iconClass}`}/>
-        {forcedName || constants.getContentTypeName(mimeType, true)}
+        {forcedName || getContentTypeName(mimeType, true)}
       </DropdownItem>
     );
   }
@@ -70,14 +68,14 @@ class ContentTypeDropdown extends PureComponent {
           {children}
         </DropdownButton>
         <DropdownDivider><span><i className="fa fa-bars"/> Form Data</span></DropdownDivider>
-        {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_DATA)}
-        {this._renderDropdownItem(constants.CONTENT_TYPE_FORM_URLENCODED)}
+        {this._renderDropdownItem(CONTENT_TYPE_FORM_DATA)}
+        {this._renderDropdownItem(CONTENT_TYPE_FORM_URLENCODED)}
         <DropdownDivider><span><i className="fa fa-code"/> Text</span></DropdownDivider>
-        {this._renderDropdownItem(constants.CONTENT_TYPE_JSON)}
-        {this._renderDropdownItem(constants.CONTENT_TYPE_XML)}
-        {this._renderDropdownItem(constants.CONTENT_TYPE_OTHER)}
+        {this._renderDropdownItem(CONTENT_TYPE_JSON)}
+        {this._renderDropdownItem(CONTENT_TYPE_XML)}
+        {this._renderDropdownItem(CONTENT_TYPE_OTHER)}
         <DropdownDivider><span><i className="fa fa-ellipsis-h"/> Other</span></DropdownDivider>
-        {this._renderDropdownItem(constants.CONTENT_TYPE_FILE)}
+        {this._renderDropdownItem(CONTENT_TYPE_FILE)}
         {this._renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
       </Dropdown>
     );

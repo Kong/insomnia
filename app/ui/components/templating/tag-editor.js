@@ -1,5 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
+import Input from '../codemirror/one-line-editor';
 
 const TAGS = [
   {name: `uuid 'v4'`},
@@ -69,12 +70,18 @@ class TagEditor extends PureComponent {
 
   render () {
     const {error, value, preview, tags} = this.state;
+    const isOther = !tags.find(v => value === `{% ${v.name} %}`);
 
     return (
       <div>
         <div className="form-control form-control--outlined">
           <label>Template Function
             <select ref={this._setSelectRef} onChange={this._handleChange} value={value}>
+              {isOther ? (
+                <option value={`{% uuid 'v4' %}`}>
+                  -- Custom Template --
+                </option>
+              ) : null}
               {tags.map((t, i) => (
                 <option key={`${i}::${t.name}`} value={`{% ${t.name} %}`}>
                   {t.name}
@@ -83,6 +90,17 @@ class TagEditor extends PureComponent {
             </select>
           </label>
         </div>
+        {isOther ? (
+          <div className="form-control form-control--outlined">
+            <Input
+              forceEditor
+              mode="nunjucks"
+              type="text"
+              defaultValue={value}
+              onChange={this._update}
+            />
+          </div>
+        ) : null}
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error

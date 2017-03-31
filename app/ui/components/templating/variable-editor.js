@@ -63,12 +63,19 @@ class VariableEditor extends PureComponent {
 
   render () {
     const {error, value, preview, variables} = this.state;
+    const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
 
     return (
       <div>
         <div className="form-control form-control--outlined">
           <label>Environment Variable
-            <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
+            <select ref={this._setSelectRef}
+                    value={value}
+                    defaultValue={null}
+                    onChange={this._handleChange}>
+              <option value={`{{ 'my custom template logic' | urlencode }}`}>
+                -- Custom Template --
+              </option>
               {variables.map((v, i) => (
                 <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
                   {v.name}
@@ -77,6 +84,11 @@ class VariableEditor extends PureComponent {
             </select>
           </label>
         </div>
+        {isOther ? (
+          <div className="form-control form-control--outlined">
+            <input type="text" defaultValue={value} onChange={this._handleChange}/>
+          </div>
+        ) : null}
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error
