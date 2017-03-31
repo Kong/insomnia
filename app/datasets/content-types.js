@@ -101,6 +101,7 @@ export default [
   'application/x-lzh-compressed',
   'application/x-ms-application',
   'application/x-ms-shortcut',
+  'application/x-ndjson',
   'application/x-perl',
   'application/x-pkcs7-certificates',
   'application/x-pkcs7-certreqresp',

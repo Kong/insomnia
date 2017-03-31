@@ -239,6 +239,7 @@ class OneLineEditor extends PureComponent {
       render,
       getRenderContext,
       getAutocompleteConstants,
+      mode: syntaxMode,
       type: originalType
     } = this.props;
 
@@ -260,6 +261,7 @@ class OneLineEditor extends PureComponent {
           singleLine
           tabIndex={0}
           id={id}
+          mode={syntaxMode}
           placeholder={placeholder}
           onBlur={this._handleEditorBlur}
           onKeyDown={this._handleKeyDown}
@@ -305,6 +307,7 @@ OneLineEditor.propTypes = {
   // Optional
   id: PropTypes.string,
   type: PropTypes.string,
+  mode: PropTypes.string,
   onBlur: PropTypes.func,
   onKeyDown: PropTypes.func,
   onFocus: PropTypes.func,

@@ -1,114 +1,111 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import OneLineEditor from '../codemirror/one-line-editor';
+import Input from '../codemirror/one-line-editor';
 
-class Tag {
-  constructor (template) {
-    const {name, post, pre} = this._extractValues(template);
-    this._name = name;
-    this._post = post;
-    this._pre = pre;
-  }
-
-  getTemplate () {
-    return `${this._pre}${this._name}${this._post}`;
-  }
-
-  getName () {
-    return this._name;
-  }
-
-  cloneWithNewName (name) {
-    const newTemplate = `${this._pre}${name}${this._post}`;
-    return new Tag(newTemplate);
-  }
-
-  _extractValues (template) {
-    const m1 = template.match(/^{%\s*/);
-    const m2 = template.match(/\s*%}$/);
-
-    const pre = m1[0];
-    const post = m2[0];
-
-    // Slice in between start and end
-    const name = template.slice(
-      m1.index + m1[0].length,
-      m2.index
-    );
-
-    return {name, pre, post};
-  }
-}
+const TAGS = [
+  {name: `uuid 'v4'`},
+  {name: `uuid 'v1'`},
+  {name: `now 'ISO-8601'`},
+  {name: `now 'unix'`},
+  {name: `now 'millis'`}
+  // 'response'
+];
 
 @autobind
 class TagEditor extends PureComponent {
   constructor (props) {
     super(props);
 
-    const tag = new Tag(props.defaultValue);
+    const inner = props.defaultValue
+      .replace(/\s*%}$/, '')
+      .replace(/^{%\s*/, '');
 
     this.state = {
-      tag,
-      value: '',
+      tags: TAGS,
+      value: `{% ${inner} %}`,
+      preview: '',
       error: ''
     };
   }
 
   componentWillMount () {
-    this._update(this.state.tag.getName());
+    this._update(this.state.value, true);
   }
 
-  _setInputRef (n) {
-    this._input = n;
+  _handleChange (e) {
+    this._update(e.target.value);
+  }
 
-    // Unmounting
-    if (!this._input) {
-      return;
-    }
+  _setSelectRef (n) {
+    this._select = n;
 
+    // Let it render, then focus the input
     setTimeout(() => {
-      this._input && this._input.focusEnd();
+      this._select && this._select.focus();
     }, 100);
   }
 
-  async _update (tagName) {
+  async _update (value, noCallback = false) {
     const {handleRender} = this.props;
 
-    let value = '';
+    let preview = '';
     let error = '';
 
-    const tag = this.state.tag.cloneWithNewName(tagName);
-
     try {
-      value = await handleRender(tag.getTemplate(), true);
+      preview = await handleRender(value, true);
     } catch (err) {
       error = err.message;
     }
 
-    this.setState({tag, value, error});
-    this.props.onChange(tag.getTemplate());
+    // Hack to skip updating if we unmounted for some reason
+    if (this._select) {
+      this.setState({preview, error, value});
+    }
+
+    // Call the callback if we need to
+    if (!noCallback) {
+      this.props.onChange(value);
+    }
   }
 
   render () {
-    const {tag, error, value} = this.state;
+    const {error, value, preview, tags} = this.state;
+    const isOther = !tags.find(v => value === `{% ${v.name} %}`);
 
     return (
       <div>
         <div className="form-control form-control--outlined">
-          <label>Tag Name
-            <OneLineEditor
-              forceEditor
-              ref={this._setInputRef}
-              onChange={this._update}
-              defaultValue={tag.getName()}
-            />
+          <label>Template Function
+            <select ref={this._setSelectRef} onChange={this._handleChange} value={value}>
+              {isOther ? (
+                <option value={`{% uuid 'v4' %}`}>
+                  -- Custom Template --
+                </option>
+              ) : null}
+              {tags.map((t, i) => (
+                <option key={`${i}::${t.name}`} value={`{% ${t.name} %}`}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
+        {isOther ? (
+          <div className="form-control form-control--outlined">
+            <Input
+              forceEditor
+              mode="nunjucks"
+              type="text"
+              defaultValue={value}
+              onChange={this._update}
+            />
+          </div>
+        ) : null}
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error
-              ? <code className="block danger selectable">{error}</code>
-              : <code className="block selectable">{value}</code>
+              ? <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
+              : <code className="block selectable">{preview || <span>&nbsp;</span>}</code>
             }
           </label>
         </div>

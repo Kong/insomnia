@@ -374,15 +374,27 @@ class CodeEditor extends PureComponent {
     // Setup the hint options
     if (getRenderContext || getAutocompleteConstants) {
       let getVariables = null;
+      let getTags = null;
       if (getRenderContext) {
         getVariables = async () => {
           const context = await getRenderContext();
           const variables = context ? context.keys : [];
           return variables || [];
         };
+
+        // Only allow tags if we have variables too
+        getTags = () => ([
+          `uuid 'v4'`,
+          `uuid 'v1'`,
+          `now 'ISO-8601'`,
+          `now 'unix'`,
+          `now 'millis'`
+          // 'response'
+        ]);
       }
       options.environmentAutocomplete = {
         getVariables,
+        getTags,
         getConstants: getAutocompleteConstants
       };
     }

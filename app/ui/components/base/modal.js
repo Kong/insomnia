@@ -108,6 +108,7 @@ class Modal extends PureComponent {
 
   hide () {
     this.setState({open: false});
+    this.props.onHide && this.props.onHide();
   }
 
   componentDidMount () {
@@ -161,6 +162,7 @@ Modal.propTypes = {
   noEscape: PropTypes.bool,
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,
+  onHide: PropTypes.func,
   freshState: PropTypes.bool,
   children: PropTypes.node,
   className: PropTypes.string

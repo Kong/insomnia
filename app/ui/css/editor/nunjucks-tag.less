@@ -25,6 +25,7 @@
       border-radius: 0.2em;
       box-sizing: border-box;
       box-shadow: inset 0 0 0.1em rgba(0, 0, 0, 0.4);
+      transition: background-color 300ms;
     }
 
     label {
@@ -33,6 +34,13 @@
       display: inline;
       font-style: italic;
       font-size: 0.9em;
+
+      i.fa {
+        font-family: FontAwesome, sans-serif !important;
+        font-size: 0.9em;
+        min-width: 1em;
+        margin: 0 0.5em 0 0;
+      }
     }
 
     &.nunjucks-tag {

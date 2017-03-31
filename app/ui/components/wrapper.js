@@ -375,6 +375,7 @@ class Wrapper extends PureComponent {
             workspace={activeWorkspace}
           />
           <NunjucksModal
+            uniqueKey={`key::${this.state.forceRefreshKey}`}
             ref={registerModal}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}

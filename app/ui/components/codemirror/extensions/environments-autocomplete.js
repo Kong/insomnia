@@ -25,12 +25,6 @@ const ICONS = {
   [TYPE_TAG]: {char: '&fnof;', title: 'Generator Tag'}
 };
 
-const TAGS = [
-  'uuid',
-  'now',
-  'response'
-];
-
 CodeMirror.defineExtension('isHintDropdownActive', function () {
   return (
     this.state.completionActive &&
@@ -68,13 +62,14 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
 
     const constants = options.getConstants ? await options.getConstants() : null;
     const variables = options.getVariables ? await options.getVariables() : null;
+    const tags = options.getTags ? await options.getTags() : null;
 
     // Actually show the hint
     cm.showHint({
       // Insomnia-specific options
       constants: constants || [],
       variables: variables || [],
-      tags: options.getVariables ? TAGS : [], // Only match tags if we can vars
+      tags: tags || [],
       showAllOnNoMatch,
 
       // Codemirror native options
@@ -188,10 +183,12 @@ function hint (cm, options) {
       .map(m => allLongMatches.push(m));
   }
 
-  // Match constants
+  // Match constants (only use long segment for a more strict match)
+  // TODO: Make this more flexible. This is really only here as a hack to make
+  // constants only match full string prefixes.
   if (allowMatchingConstants) {
-    matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
-      .map(m => allShortMatches.push(m));
+    // matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
+    //   .map(m => allShortMatches.push(m));
     matchSegments(constantsToMatch, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
       .map(m => allLongMatches.push(m));
   }
@@ -344,13 +341,19 @@ function renderHintMatch (li, self, data) {
 
   const {char, title} = ICONS[data.type];
 
-  li.innerHTML = `
+  let html = `
     <label class="label" title="${title}">${char}</label>
     <div class="name">${markedName}</div>
-    <div class="value" title=${data.displayValue}>
-      ${data.displayValue}
-    </div>
   `;
 
+  if (data.displayValue) {
+    html += `
+      <div class="value" title=${data.displayValue}>
+        ${data.displayValue}
+      </div>
+    `;
+  }
+
+  li.innerHTML = html;
   li.className += ` type--${data.type}`;
 }

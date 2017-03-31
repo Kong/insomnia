@@ -47,7 +47,8 @@ class VariableEditor extends PureComponent {
       error = err.message;
     }
 
-    const variables = await this._autocompleteVariables();
+    const context = await this.props.handleGetRenderContext();
+    const variables = context.keys;
 
     // Hack to skip updating if we unmounted for some reason
     if (this._select) {
@@ -60,19 +61,21 @@ class VariableEditor extends PureComponent {
     }
   }
 
-  async _autocompleteVariables () {
-    const context = await this.props.handleGetRenderContext();
-    return context.keys;
-  }
-
   render () {
     const {error, value, preview, variables} = this.state;
+    const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
 
     return (
       <div>
         <div className="form-control form-control--outlined">
           <label>Environment Variable
-            <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
+            <select ref={this._setSelectRef}
+                    value={value}
+                    defaultValue={null}
+                    onChange={this._handleChange}>
+              <option value={`{{ 'my custom template logic' | urlencode }}`}>
+                -- Custom Template --
+              </option>
               {variables.map((v, i) => (
                 <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
                   {v.name}
@@ -81,11 +84,16 @@ class VariableEditor extends PureComponent {
             </select>
           </label>
         </div>
+        {isOther ? (
+          <div className="form-control form-control--outlined">
+            <input type="text" defaultValue={value} onChange={this._handleChange}/>
+          </div>
+        ) : null}
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error
-              ? <code className="block danger selectable">{error}</code>
-              : <code className="block selectable">{preview}</code>
+              ? <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
+              : <code className="block selectable">{preview || <span>&nbsp;</span>}</code>
             }
           </label>
         </div>

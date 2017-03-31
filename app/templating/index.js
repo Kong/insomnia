@@ -17,7 +17,7 @@ export function render (text, config = {}) {
     env.renderString(text, context, (err, result) => {
       if (err) {
         const sanitizedMsg = err.message
-          .replace(/\(unknown path\)\n/, '')
+          .replace(/\(unknown path\)\s/, '')
           .replace(/\[Line \d+, Column \d*]/, '')
           .replace(/^\s*Error:\s*/, '')
           .trim();

@@ -30,21 +30,22 @@ class NunjucksModal extends PureComponent {
 
   _handleSubmit (e) {
     e.preventDefault();
-    this._onDone && this._onDone(this._currentTemplate);
     this.hide();
   }
 
+  _handleModalHide () {
+    if (this._onDone) {
+      this._onDone(this._currentTemplate);
+    }
+  }
+
   show ({template, onDone}) {
-    this._onDone = onDone;
-
-    this.setState({
-      defaultTemplate: template
-    });
-
     trackEvent('Nunjucks', 'Editor', 'Show');
 
-    // NOTE: This must be called after setState() above because show() is going
-    // to force refresh the modal
+    this._onDone = onDone;
+    this._currentTemplate = template;
+
+    this.setState({defaultTemplate: template});
     this.modal.show();
   }
 
@@ -54,7 +55,7 @@ class NunjucksModal extends PureComponent {
   }
 
   render () {
-    const {handleRender, handleGetRenderContext} = this.props;
+    const {handleRender, handleGetRenderContext, uniqueKey} = this.props;
     const {defaultTemplate} = this.state;
 
     let editor = null;
@@ -81,14 +82,14 @@ class NunjucksModal extends PureComponent {
     }
 
     return (
-      <Modal ref={this._setModalRef} freshState>
+      <Modal ref={this._setModalRef} onHide={this._handleModalHide} key={uniqueKey}>
         <form onSubmit={this._handleSubmit}>
           <ModalHeader>Edit {title}</ModalHeader>
-          <ModalBody className="pad">
+          <ModalBody className="pad" key={defaultTemplate}>
             {editor}
           </ModalBody>
           <ModalFooter>
-            <button className="btn">Done</button>
+            <button type="submit" className="btn">Done</button>
           </ModalFooter>
         </form>
       </Modal>
@@ -97,6 +98,7 @@ class NunjucksModal extends PureComponent {
 }
 
 NunjucksModal.propTypes = {
+  uniqueKey: PropTypes.string.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired
 };

@@ -20,8 +20,8 @@
     color: var(--color-font);
     padding: 0 !important; // ugh
     border-radius: 0;
-    display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr);
+    display: flex;
+    flex-direction: row;
     background: var(--color-bg);
     font-size: @font-size-xs;
 
@@ -59,8 +59,14 @@
     .name,
     .value {
       background: var(--color-bg);
-      width: 100%;
       font-family: @font-monospace !important;
+
+      // Ellipsis when too long
+      width: 100%;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .value {
@@ -68,12 +74,6 @@
       padding-left: @padding-lg;
       font-style: italic;
       font-size: 0.9em;
-      max-width: 100%;
-
-      // Ellipsis when too long
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .label {
