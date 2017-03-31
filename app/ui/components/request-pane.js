@@ -221,6 +221,7 @@ class RequestPane extends PureComponent {
               </button>
               <ContentTypeDropdown onChange={updateRequestMimeType}
                                    contentType={request.body.mimeType}
+                                   request={request}
                                    className="tall">
                 <i className="fa fa-caret-down"/>
               </ContentTypeDropdown>

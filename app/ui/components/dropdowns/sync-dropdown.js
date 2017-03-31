@@ -88,7 +88,7 @@ class SyncDropdown extends PureComponent {
   }
 
   async componentWillMount () {
-    this._interval = setInterval(this._reloadData, 200);
+    this._interval = setInterval(this._reloadData, 500);
     await this._reloadData();
   }
 

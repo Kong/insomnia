@@ -3,12 +3,47 @@ import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {trackEvent} from '../../../analytics/index';
 import * as constants from '../../../common/constants';
+import {showModal} from '../modals/index';
+import AlertModal from '../modals/alert-modal';
+import {CONTENT_TYPE_FORM_DATA} from '../../../common/constants';
+import {CONTENT_TYPE_FILE} from '../../../common/constants';
 
 const EMPTY_MIME_TYPE = null;
 
 @autobind
 class ContentTypeDropdown extends PureComponent {
-  _handleChangeMimeType (mimeType) {
+  async _handleChangeMimeType (mimeType) {
+    const {body} = this.props.request;
+
+    // Nothing to do
+    if (body.mimeType === mimeType) {
+      return;
+    }
+
+    const hasParams = body.params && body.params.length;
+    const hasText = body.text && body.text.length;
+    const hasFile = body.fileName && body.fileName.length;
+    const isEmpty = !hasParams && !hasText && !hasFile;
+
+    const isFile = mimeType === CONTENT_TYPE_FILE;
+    const isMultipart = mimeType === CONTENT_TYPE_FORM_DATA;
+    const canBeText = !isFile && !isMultipart;
+
+    const toFile = body.mimeType === CONTENT_TYPE_FILE;
+    const toMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA;
+    const toEmpty = !body.mimeType;
+    const willBeText = !toFile && !toMultipart;
+
+    const canConvert = canBeText && willBeText && !toEmpty;
+
+    if (!isEmpty && !canConvert) {
+      await showModal(AlertModal, {
+        title: 'Switch Body Type?',
+        message: 'Current body will be lost. Are you sure you want to continue?',
+        addCancel: true
+      });
+    }
+
     this.props.onChange(mimeType);
     trackEvent('Request', 'Content-Type Change', mimeType);
   }
@@ -51,6 +86,7 @@ class ContentTypeDropdown extends PureComponent {
 
 ContentTypeDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
+  request: PropTypes.object.isRequired,
 
   // Optional
   contentType: PropTypes.string, // Can be null
