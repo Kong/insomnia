@@ -77,6 +77,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       container: hintsContainer,
       closeCharacters: COMPLETION_CLOSE_KEYS,
       completeSingle: false,
+      // closeOnUnfocus: false, // Good for debugging (inspector)
       extraKeys: {
         'Tab': (cm, widget) => {
           // Override default behavior and don't select hint on Tab
@@ -84,8 +85,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
           return CodeMirror.Pass;
         }
       }
-
-      // closeOnUnfocus: false, // Good for debugging (inspector)
     });
   }
 
@@ -184,10 +183,12 @@ function hint (cm, options) {
       .map(m => allLongMatches.push(m));
   }
 
-  // Match constants
+  // Match constants (only use long segment for a more strict match)
+  // TODO: Make this more flexible. This is really only here as a hack to make
+  // constants only match full string prefixes.
   if (allowMatchingConstants) {
-    matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
-      .map(m => allShortMatches.push(m));
+    // matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
+    //   .map(m => allShortMatches.push(m));
     matchSegments(constantsToMatch, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
       .map(m => allLongMatches.push(m));
   }
