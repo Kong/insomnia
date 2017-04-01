@@ -1,0 +1,10 @@
+version: '2'
+services:
+  app:
+    build: '.'
+    command: 'npm run build-n-package:linux'
+    volumes:
+      - './build:/insomnia/build'
+      - './dist:/insomnia/dist'
+    environment:
+      - 'NODE_ENV=development'

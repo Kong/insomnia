@@ -1,0 +1,5 @@
+node_modules
+app/node_modules
+build
+dist
+coverage
