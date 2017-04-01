@@ -19,9 +19,9 @@ install:
   - npm install > NUL
 
 cache:
-  - '%APPDATA%\npm-cache -> .appveyor.cache'
-  - '%USERPROFILE%\.electron -> .appveyor.cache'
-  - 'node_modules -> .appveyor.cache'
+  - '%APPDATA%\npm-cache -> package.json'
+  - '%USERPROFILE%\.electron -> package.json'
+  - 'node_modules -> package.json'
 
 #---------------------------------#
 #       tests configuration       #
