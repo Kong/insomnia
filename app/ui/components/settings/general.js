@@ -18,8 +18,6 @@ class General extends PureComponent {
     const {settings} = this.props;
     return (
       <div>
-        <h1 className="no-margin-top">Global App Settings</h1>
-
         <div className="form-control form-control--thin">
           <label className="inline-block">Follow redirects automatically
             <input type="checkbox"

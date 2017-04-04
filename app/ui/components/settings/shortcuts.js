@@ -16,7 +16,6 @@ class Shortcuts extends PureComponent {
   render () {
     return (
       <div>
-        <h1 className="no-margin-top">Keyboard Shortcuts</h1>
         <table className="table--fancy">
           <tbody>
           {this.renderHotkey('Switch Requests', 'P')}

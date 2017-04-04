@@ -23,7 +23,7 @@ class Account extends PureComponent {
     return (
       <div>
         <div className="notice pad surprise">
-          <h1 className="no-margin-top">Get Insomnia Plus!</h1>
+          <h1 className="no-margin-top">Try Insomnia Plus!</h1>
           <p>
             &#128640; Sync your data across devices or with a team<br/>
             &#128640; Keep synced data safe with end-to-end encryption<br/>
@@ -54,9 +54,9 @@ class Account extends PureComponent {
   renderAccount () {
     return (
       <div>
-        <h1 className="no-margin-top">
+        <h2 className="no-margin-top">
           Welcome {session.getFirstName()}!
-        </h1>
+        </h2>
         <p>
           You are currently logged in as
           {' '}
