@@ -187,6 +187,13 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
         const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
 
+        if (
+          infoType === Curl.info.debug.SSL_DATA_IN ||
+          infoType === Curl.info.debug.SSL_DATA_OUT
+        ) {
+          return 0;
+        }
+
         // Ignore the possibly large data messages
         if (infoType === Curl.info.debug.DATA_OUT) {
           if (content.length < 2000) {
