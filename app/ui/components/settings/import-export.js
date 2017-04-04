@@ -14,8 +14,7 @@ class ImportExport extends PureComponent {
 
     return (
       <div>
-        <h1 className="no-margin-top">Data Import and Export</h1>
-        <p>
+        <p className="no-margin-top">
           Import format will be automatically detected (<strong>Insomnia, Postman v2, HAR, Curl</strong>)
         </p>
         <p>

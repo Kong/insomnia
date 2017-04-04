@@ -5,7 +5,7 @@ class About extends PureComponent {
   render () {
     return (
       <div>
-        <h1 className="no-margin-top">Hi, I'm Greg!</h1>
+        <h2 className="no-margin-top">Hi, I'm Greg!</h2>
         <p>
           Insomnia started as a side-project of mine in 2014 and transitioned into what I do full-time
           in mid 2016.
