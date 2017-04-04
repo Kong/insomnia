@@ -8,7 +8,7 @@ Insomnia is a cross-platform _REST client_, built on top of [Electron](http://el
 
 ![Insomnia REST Client Screenshot](https://insomnia.rest/images/docs/promo.png)
 
-## Bugs and feature requests
+## Bugs and Feature Requests
 
 Have a bug or a feature request? Please first read the 
 [issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and 
