@@ -34,6 +34,12 @@ CodeMirror.defineExtension('isHintDropdownActive', function () {
   );
 });
 
+CodeMirror.defineExtension('closeHint', function () {
+  if (this.state.completionActive) {
+    this.state.completionActive.close();
+  }
+});
+
 CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;
@@ -126,7 +132,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   cm.on('keydown', (cm, e) => {
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
-    if (e.key.length > 1) {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
       return;
     }
 
