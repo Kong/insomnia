@@ -51,6 +51,6 @@ test_script:
 #         global handlers         #
 #---------------------------------#
 
-#build_script:
-#  - npm run build-n-package:win
-#  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
+build_script:
+  - npm run build-n-package:win
+  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
