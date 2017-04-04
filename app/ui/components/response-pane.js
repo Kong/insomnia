@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
 import {remote} from 'electron';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import SizeTag from './tags/size-tag';
 import StatusTag from './tags/status-tag';
 import TimeTag from './tags/time-tag';
@@ -16,10 +16,11 @@ import ResponseTimelineViewer from './viewers/response-timeline-viewer';
 import ResponseHeadersViewer from './viewers/response-headers-viewer';
 import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
-import {MOD_SYM, PREVIEW_MODE_SOURCE, getPreviewModeName} from '../../common/constants';
+import {getPreviewModeName, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../network/network';
 import {trackEvent} from '../../analytics';
+import Hotkey from './hotkey';
 
 @autobind
 class ResponsePane extends PureComponent {
@@ -132,25 +133,25 @@ class ResponsePane extends PureComponent {
                 <tr>
                   <td>Send Request</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}Enter</code>
+                    <code><Hotkey char="Enter"/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Focus Url Bar</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}L</code>
+                    <code><Hotkey char="L"/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Manage Cookies</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}K</code>
+                    <code><Hotkey char="K"/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Edit Environments</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}E</code>
+                    <code><Hotkey char="E"/></code>
                   </td>
                 </tr>
                 </tbody>
