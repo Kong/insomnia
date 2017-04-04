@@ -102,16 +102,16 @@ async function _highlightNunjucksTags (render) {
       el.setAttribute('data-error', 'off');
       el.setAttribute('data-template', tok.string);
 
-      (async function () {
-        await _updateElementText(renderString, el, tok.string);
-      })();
-
       const mark = this.markText(start, end, {
         __nunjucks: true, // Mark that we created it
         __template: tok.string,
         handleMouseEvents: false,
         replacedWith: el
       });
+
+      (async function () {
+        await _updateElementText(renderString, mark, tok.string);
+      })();
 
       activeMarks.push(mark);
 
@@ -203,7 +203,9 @@ async function _highlightNunjucksTags (render) {
   }
 }
 
-async function _updateElementText (render, el, text) {
+async function _updateElementText (render, mark, text) {
+  const el = mark.replacedWith;
+
   try {
     const str = text.replace(/\\/g, '');
     const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
@@ -234,6 +236,7 @@ async function _updateElementText (render, el, text) {
       el.title = await render(str);
     }
     el.setAttribute('data-error', 'off');
+    mark.changed();
   } catch (err) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
@@ -241,5 +244,6 @@ async function _updateElementText (render, el, text) {
     label.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${label.innerHTML}`;
     el.title = message;
     el.setAttribute('data-error', 'on');
+    mark.changed();
   }
 }

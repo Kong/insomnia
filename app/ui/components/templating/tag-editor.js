@@ -79,7 +79,7 @@ class TagEditor extends PureComponent {
             <select ref={this._setSelectRef} onChange={this._handleChange} value={value}>
               {isOther ? (
                 <option value={`{% uuid 'v4' %}`}>
-                  -- Custom Template --
+                  -- Custom --
                 </option>
               ) : null}
               {tags.map((t, i) => (

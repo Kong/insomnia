@@ -61,7 +61,7 @@ class NunjucksModal extends PureComponent {
     let editor = null;
     let title = '';
     if (defaultTemplate.indexOf('{{') === 0) {
-      title = 'Variable Reference';
+      title = 'Variable';
       editor = (
         <VariableEditor
           onChange={this._handleTemplateChange}

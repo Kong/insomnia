@@ -60,9 +60,9 @@ class RequestSettingsModal extends PureComponent {
         <div className="form-control form-control--outlined">
           <label>Request Name
             {' '}
-            <small className="italic">
+            <span className="txt-sm faint italic">
               (also rename by double-clicking in sidebar)
-            </small>
+            </span>
             <DebouncedInput
               delay={500}
               type="text"
