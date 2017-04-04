@@ -20,8 +20,8 @@
     color: var(--color-font);
     padding: 0 !important; // ugh
     border-radius: 0;
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: @line-height-xxs auto minmax(0, 1fr);
     background: var(--color-bg);
     font-size: @font-size-xs;
 
@@ -81,7 +81,7 @@
       font-size: @font-size-sm;
       font-family: @font-default;
       text-align: center;
-      min-width: @line-height-xxs;
+      width: @line-height-xxs;
     }
 
     &:hover,

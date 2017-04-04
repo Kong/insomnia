@@ -57,6 +57,7 @@ class RequestUrlBar extends PureComponent {
       // If no pasted text in the queue, just fire the regular change handler
       if (!pastedText) {
         this.props.onUrlChange(url);
+        return;
       }
 
       // Reset pasted text cache
@@ -66,9 +67,7 @@ class RequestUrlBar extends PureComponent {
       const importedRequest = await this.props.handleImport(pastedText);
 
       // Update depending on whether something was imported
-      if (importedRequest) {
-        this.props.onUrlChange(importedRequest.url);
-      } else {
+      if (!importedRequest) {
         this.props.onUrlChange(url);
       }
     }, DEBOUNCE_MILLIS);
@@ -253,16 +252,16 @@ class RequestUrlBar extends PureComponent {
             <i className="fa fa-repeat"/> Repeat on Interval
           </DropdownItem>
           {downloadPath ? (
-              <DropdownItem stayOpenAfterClick addIcon
-                            buttonClass={PromptButton}
-                            onClick={this._handleClearDownloadLocation}>
-                <i className="fa fa-stop-circle"/> Stop Auto-Download
-              </DropdownItem>
-            ) : (
-              <DropdownItem onClick={this._handleSetDownloadLocation}>
-                <i className="fa fa-download"/> Download After Send
-              </DropdownItem>
-            )}
+            <DropdownItem stayOpenAfterClick addIcon
+                          buttonClass={PromptButton}
+                          onClick={this._handleClearDownloadLocation}>
+              <i className="fa fa-stop-circle"/> Stop Auto-Download
+            </DropdownItem>
+          ) : (
+            <DropdownItem onClick={this._handleSetDownloadLocation}>
+              <i className="fa fa-download"/> Download After Send
+            </DropdownItem>
+          )}
         </Dropdown>
       );
     }

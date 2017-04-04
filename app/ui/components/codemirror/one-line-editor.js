@@ -237,6 +237,7 @@ class OneLineEditor extends PureComponent {
       onChange,
       placeholder,
       render,
+      onPaste,
       getRenderContext,
       getAutocompleteConstants,
       mode: syntaxMode,
@@ -263,6 +264,7 @@ class OneLineEditor extends PureComponent {
           id={id}
           mode={syntaxMode}
           placeholder={placeholder}
+          onPaste={onPaste}
           onBlur={this._handleEditorBlur}
           onKeyDown={this._handleKeyDown}
           onFocus={this._handleEditorFocus}
@@ -293,6 +295,7 @@ class OneLineEditor extends PureComponent {
           onMouseEnter={this._handleInputMouseEnter}
           onMouseLeave={this._handleInputMouseLeave}
           onDragEnter={this._handleInputDragEnter}
+          onPaste={onPaste}
           onFocus={this._handleInputFocus}
           onKeyDown={this._handleInputKeyDown}
         />
@@ -312,6 +315,7 @@ OneLineEditor.propTypes = {
   onKeyDown: PropTypes.func,
   onFocus: PropTypes.func,
   onChange: PropTypes.func,
+  onPaste: PropTypes.func,
   render: PropTypes.func,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,

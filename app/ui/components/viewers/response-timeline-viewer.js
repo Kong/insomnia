@@ -19,7 +19,7 @@ class ResponseTimelineViewer extends PureComponent {
         prefix = '| ';
         break;
       case 'SSL_DATA_IN':
-        prefix = '< ';
+        prefix = '<< ';
         break;
       case 'HEADER_OUT':
         prefix = '> ';
@@ -28,7 +28,7 @@ class ResponseTimelineViewer extends PureComponent {
         prefix = '| ';
         break;
       case 'SSL_DATA_OUT':
-        prefix = '> ';
+        prefix = '>> ';
         break;
       case 'TEXT':
         prefix = '* ';

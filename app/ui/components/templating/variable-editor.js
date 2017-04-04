@@ -74,7 +74,7 @@ class VariableEditor extends PureComponent {
                     defaultValue={null}
                     onChange={this._handleChange}>
               <option value={`{{ 'my custom template logic' | urlencode }}`}>
-                -- Custom Template --
+                -- Custom --
               </option>
               {variables.map((v, i) => (
                 <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>

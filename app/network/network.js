@@ -178,7 +178,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
       curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0);
-      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL ? 1 : 0);
       curl.setOpt(Curl.option.SSL_VERIFYHOST, settings.validateSSL ? 2 : 0);
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       curl.setOpt(Curl.option.VERBOSE, true); // True so debug function works
@@ -187,6 +186,13 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup debug handler
       curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
         const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+
+        if (
+          infoType === Curl.info.debug.SSL_DATA_IN ||
+          infoType === Curl.info.debug.SSL_DATA_OUT
+        ) {
+          return 0;
+        }
 
         // Ignore the possibly large data messages
         if (infoType === Curl.info.debug.DATA_OUT) {

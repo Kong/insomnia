@@ -34,6 +34,12 @@ CodeMirror.defineExtension('isHintDropdownActive', function () {
   );
 });
 
+CodeMirror.defineExtension('closeHint', function () {
+  if (this.state.completionActive) {
+    this.state.completionActive.close();
+  }
+});
+
 CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;
@@ -77,7 +83,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       container: hintsContainer,
       closeCharacters: COMPLETION_CLOSE_KEYS,
       completeSingle: false,
-      // closeOnUnfocus: false, // Good for debugging (inspector)
       extraKeys: {
         'Tab': (cm, widget) => {
           // Override default behavior and don't select hint on Tab
@@ -85,6 +90,9 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
           return CodeMirror.Pass;
         }
       }
+
+      // Good for debugging
+      // closeOnUnfocus: false
     });
   }
 
@@ -124,7 +132,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   cm.on('keydown', (cm, e) => {
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
-    if (e.key.length > 1) {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
       return;
     }
 
@@ -344,15 +352,10 @@ function renderHintMatch (li, self, data) {
   let html = `
     <label class="label" title="${title}">${char}</label>
     <div class="name">${markedName}</div>
+    <div class="value" title=${data.displayValue}>
+      ${data.displayValue || ''}
+    </div>
   `;
-
-  if (data.displayValue) {
-    html += `
-      <div class="value" title=${data.displayValue}>
-        ${data.displayValue}
-      </div>
-    `;
-  }
 
   li.innerHTML = html;
   li.className += ` type--${data.type}`;

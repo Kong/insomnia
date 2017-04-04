@@ -9,12 +9,13 @@ import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {getAuthTypeName, getContentTypeName, MOD_SYM} from '../../common/constants';
+import {getAuthTypeName, getContentTypeName} from '../../common/constants';
 import {debounce} from '../../common/misc';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
 import * as models from '../../models';
+import Hotkey from './hotkey';
 
 @autobind
 class RequestPane extends PureComponent {
@@ -149,19 +150,19 @@ class RequestPane extends PureComponent {
                 <tr>
                   <td>New Request</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}N</code>
+                    <code><Hotkey char="N"/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Switch Requests</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}P</code>
+                    <code><Hotkey char="P"/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Edit Environments</td>
                   <td className="text-right">
-                    <code>{MOD_SYM}E</code>
+                    <code><Hotkey char="E"/></code>
                   </td>
                 </tr>
                 </tbody>

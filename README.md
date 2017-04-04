@@ -1,34 +1,30 @@
-# Insomnia REST Client [![Build Status](https://travis-ci.com/getinsomnia/app.svg?branch=master)](https://travis-ci.com/getinsomnia/app) [![Build status](https://ci.appveyor.com/api/projects/status/7b5a82uxbidpnkoa/branch/master?svg=true)](https://ci.appveyor.com/project/gschier/insomnia/branch/master)
+# Insomnia REST Client 
+
+[![Insomnia REST Client](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
+[![Build status](https://ci.appveyor.com/api/projects/status/7b5a82uxbidpnkoa/branch/master?svg=true)](https://ci.appveyor.com/project/gschier/insomnia/branch/master)
+[![license](https://img.shields.io/github/license/getinsomnia/importers.svg)]()
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
-![Insomnia REST Client Screenshot](https://insomnia.rest/images/docs/promo.png?bust=1)
+![Insomnia REST Client Screenshot](https://insomnia.rest/images/docs/promo.png)
 
-## Setup
+## Bugs and Feature Requests
 
-```bash
-# Install and use correct Node version
-nvm install
+Have a bug or a feature request? Please first read the 
+[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and 
+closed issues. If your problem or idea is not addressed yet, [please open a new issue](/issues).
 
-# Install dependencies
-npm install
-```
+## Contributing
 
-## Run Development
+Please read through our [contributing guidelines](CONTRIBUTING.md). Included are directions 
+for opening issues, coding standards, and notes on development.
 
-When you run the development environment, it will start both a dev server and an Electron
-instance. The dev server is part of Webpack and is used to control hot module replacement
-of UI components. This means that, if you change a component file, you will not need to
-refresh the app to see the change. It will inject the new component immediately.
+More over, if your pull request contains JavaScript patches or features, you must 
+include relevant unit tests.
 
-```bash
-npm run dev
-```
+Editor preferences are available in the [editor config](.editorconfig) for easy use in 
+common text editors. Read more and download plugins at <http://editorconfig.org>.
 
-## Build to Folder
+## License
 
-Build all assets into `./build/`
-
-```bash
-npm run build
-```
+[GNU AGPLv3](LICENSE) &copy; [Insomnia](https://insomnia.rest)

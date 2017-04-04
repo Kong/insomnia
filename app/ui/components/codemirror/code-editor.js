@@ -207,14 +207,14 @@ class CodeEditor extends PureComponent {
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
-    this.codeMirror.on('paste', this._codemirrorValueChanged);
+    this.codeMirror.on('paste', this._codemirrorPaste);
 
     this.codeMirror.setCursor({line: -1, ch: -1});
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
       this.codeMirror.setOption('extraKeys', {
         Tab: cm => {
-          const spaces = Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+          const spaces = (new Array(this.codeMirror.getOption('indentUnit') + 1)).join(' ');
           cm.replaceSelection(spaces);
         }
       });
@@ -458,6 +458,15 @@ class CodeEditor extends PureComponent {
     }
   }
 
+  _codemirrorPaste (cm, e) {
+    if (this.props.onPaste) {
+      this.props.onPaste(e);
+    }
+
+    // Notify of change right away
+    this._codemirrorValueChanged();
+  }
+
   /**
    * Wrapper function to add extra behaviour to our onChange event
    */
@@ -628,6 +637,7 @@ CodeEditor.propTypes = {
   onKeyDown: PropTypes.func,
   onMouseLeave: PropTypes.func,
   onClick: PropTypes.func,
+  onPaste: PropTypes.func,
   render: PropTypes.func,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,
