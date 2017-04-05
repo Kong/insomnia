@@ -178,6 +178,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
       curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       curl.setOpt(Curl.option.SSL_VERIFYHOST, settings.validateSSL ? 2 : 0);
+      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL ? 1 : 0);
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       curl.setOpt(Curl.option.VERBOSE, true); // True so debug function works
       curl.setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
