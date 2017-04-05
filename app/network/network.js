@@ -8,7 +8,7 @@ import {basename as pathBasename, join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_BASIC, AUTH_DIGEST, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import {describeByteSize, hasAcceptHeader, hasAuthHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
@@ -177,7 +177,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Set all the basic options
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
       curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      curl.setOpt(Curl.option.POSTREDIR, settings.followRedirects ? 2 ^ 3 : 0);
       curl.setOpt(Curl.option.SSL_VERIFYHOST, settings.validateSSL ? 2 : 0);
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       curl.setOpt(Curl.option.VERBOSE, true); // True so debug function works
@@ -419,6 +418,11 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const {username, password} = renderedRequest.authentication;
           curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
+          curl.setOpt(Curl.option.USERNAME, username || '');
+          curl.setOpt(Curl.option.PASSWORD, password || '');
+        } else if (renderedRequest.authentication.type === AUTH_NTLM) {
+          const {username, password} = renderedRequest.authentication;
+          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
           curl.setOpt(Curl.option.USERNAME, username || '');
           curl.setOpt(Curl.option.PASSWORD, password || '');
         } else {
