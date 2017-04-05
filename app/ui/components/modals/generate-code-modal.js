@@ -164,9 +164,6 @@ class GenerateCodeModal extends PureComponent {
           />
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">
-            * copy/paste this command into a Unix terminal
-          </div>
           <button className="btn" onClick={this.hide}>
             Done
           </button>
