@@ -47,6 +47,7 @@ export const CHANGELOG_URL = isDevelopment()
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_RENDER_FAILED = -333;
 export const LARGE_RESPONSE_MB = 5;
+export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[0-9a-zA-Z\-_.]+[/\w.\-+=:\][@%^*&!#?;]*/;
 
 // Hotkeys
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl';

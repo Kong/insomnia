@@ -1,18 +1,17 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
+import {FLEXIBLE_URL_REGEX} from '../../../../common/constants';
 
 CodeMirror.defineExtension('makeLinksClickable', function (handleClick) {
   // Only add the click mode if we have links to click
-  const regexUrl = /^(http|https):\/\/[0-9a-zA-Z\-.]+\.[a-zA-z.]{2,6}[/\w.\-+=:\][@%^*&!#?;]*/;
-
   this.addOverlay({
     token: function (stream, state) {
-      if (stream.match(regexUrl, true)) {
+      if (stream.match(FLEXIBLE_URL_REGEX, true)) {
         return 'clickable';
       }
 
       while (stream.next() != null) {
-        if (stream.match(regexUrl, false)) break;
+        if (stream.match(FLEXIBLE_URL_REGEX, false)) break;
       }
 
       return null;
