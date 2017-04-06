@@ -141,7 +141,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         parentId: renderedRequest._id,
         error: prefix ? `${prefix}: ${err.message}` : err.message,
         elapsedTime: 0,
-        statusMessage: 'Error'
+        statusMessage: 'Error',
+        settingSendCookies: renderedRequest.settingSendCookies,
+        settingStoreCookies: renderedRequest.settingStoreCookies
       });
     }
 
@@ -160,6 +162,16 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         }, patch));
       };
 
+      // Define helper to setOpt for better error handling
+      const setOpt = (opt, val) => {
+        const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+        try {
+          curl.setOpt(opt, val);
+        } catch (err) {
+          throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
+        }
+      };
+
       // Setup the cancellation logic
       cancelRequestFunction = () => {
         respond({
@@ -175,14 +187,14 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       };
 
       // Set all the basic options
-      curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
-      curl.setOpt(Curl.option.VERBOSE, true); // True so debug function works
-      curl.setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
+      setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
+      setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
+      setOpt(Curl.option.VERBOSE, true); // True so debug function works
+      setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
 
       // Setup debug handler
-      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
+      setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
         const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
 
         if (
@@ -224,7 +236,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const headers = [...renderedRequest.headers];
 
       let lastPercent = 0;
-      curl.setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
+      setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
         if (dltotal === 0) {
           return 0;
         }
@@ -242,7 +254,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const qs = querystring.buildFromParams(renderedRequest.parameters);
       const url = querystring.joinUrl(renderedRequest.url, qs);
       const finalUrl = util.prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
-      curl.setOpt(Curl.option.URL, finalUrl);
+      setOpt(Curl.option.URL, finalUrl);
       timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
 
       // log some things
@@ -252,17 +264,12 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         timeline.push({name: 'TEXT', value: 'Disable automatic URL encoding'});
       }
 
-      /*
-       curl --request GET \
-       --url 'https://www.mobi2go.com/api/1/headoffice/1879/orders?order_by=confirmed_at&sort_by=desc&progress_phase=confirmed&method=pickup&=' \
-       --header 'authorization: Basic Og=='
-       */
       // SSL Validation
       if (settings.validateSSL) {
         timeline.push({name: 'TEXT', value: 'Enable SSL validation'});
       } else {
-        curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
-        curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
+        setOpt(Curl.option.SSL_VERIFYHOST, 0);
+        setOpt(Curl.option.SSL_VERIFYPEER, 0);
         timeline.push({name: 'TEXT', value: 'Disable SSL validation'});
       }
 
@@ -281,12 +288,12 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           console.log('[net] Set CA to', fullCAPath);
         }
 
-        curl.setOpt(Curl.option.CAINFO, fullCAPath);
+        setOpt(Curl.option.CAINFO, fullCAPath);
       }
 
       // Set cookies
       if (renderedRequest.settingSendCookies) {
-        curl.setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
+        setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
         const cookies = renderedRequest.cookieJar.cookies || [];
         for (const cookie of cookies) {
           let expiresTimestamp = 0;
@@ -294,7 +301,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             const expiresDate = new Date(cookie.expires);
             expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
           }
-          curl.setOpt(Curl.option.COOKIELIST, [
+          setOpt(Curl.option.COOKIELIST, [
             cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
             cookie.hostOnly ? 'TRUE' : 'FALSE',
             cookie.path,
@@ -317,9 +324,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         });
       }
 
-      // Disable auto proxy detection from env vars
-      curl.setOpt(Curl.option.PROXY, '');
-
       // Set proxy settings if we have them
       if (settings.proxyEnabled) {
         const {protocol} = urlParse(renderedRequest.url);
@@ -328,9 +332,11 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
         timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol}`});
         if (proxy) {
-          curl.setOpt(Curl.option.PROXY, proxy);
-          curl.setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+          setOpt(Curl.option.PROXY, proxy);
+          setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
         }
+      } else {
+        setOpt(Curl.option.PROXY, '');
       }
 
       // Set client certs if needed
@@ -365,24 +371,24 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           const {passphrase, cert, key, pfx} = certificate;
 
           if (cert) {
-            curl.setOpt(Curl.option.SSLCERT, ensureFile(cert));
-            curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
+            setOpt(Curl.option.SSLCERT, ensureFile(cert));
+            setOpt(Curl.option.SSLCERTTYPE, 'PEM');
             timeline.push({name: 'TEXT', value: 'Adding SSL PEM certificate'});
           }
 
           if (pfx) {
-            curl.setOpt(Curl.option.SSLCERT, ensureFile(pfx));
-            curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
+            setOpt(Curl.option.SSLCERT, ensureFile(pfx));
+            setOpt(Curl.option.SSLCERTTYPE, 'P12');
             timeline.push({name: 'TEXT', value: 'Adding SSL P12 certificate'});
           }
 
           if (key) {
-            curl.setOpt(Curl.option.SSLKEY, ensureFile(key));
+            setOpt(Curl.option.SSLKEY, ensureFile(key));
             timeline.push({name: 'TEXT', value: 'Adding SSL KEY certificate'});
           }
 
           if (passphrase) {
-            curl.setOpt(Curl.option.KEYPASSWD, passphrase);
+            setOpt(Curl.option.KEYPASSWD, passphrase);
           }
         }
       }
@@ -390,7 +396,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Build the body
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         const d = querystring.buildFromParams(renderedRequest.body.params || [], true);
-        curl.setOpt(Curl.option.POSTFIELDS, d); // Send raw data
+        setOpt(Curl.option.POSTFIELDS, d); // Send raw data
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const data = renderedRequest.body.params.map(param => {
           if (param.type === 'file' && param.fileName) {
@@ -399,16 +405,16 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
             return {name: param.name, contents: param.value};
           }
         });
-        curl.setOpt(Curl.option.HTTPPOST, data);
+        setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
         const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
-        curl.setOpt(Curl.option.UPLOAD, 1);
-        curl.setOpt(Curl.option.READDATA, fd);
+        setOpt(Curl.option.UPLOAD, 1);
+        setOpt(Curl.option.READDATA, fd);
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
       } else if (typeof renderedRequest.body.text === 'string') {
-        curl.setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text);
+        setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text);
       } else {
         // No body
       }
@@ -425,19 +431,19 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       if (!hasAuthHeader(renderedRequest.headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
           const {username, password} = renderedRequest.authentication;
-          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
-          curl.setOpt(Curl.option.USERNAME, username || '');
-          curl.setOpt(Curl.option.PASSWORD, password || '');
+          setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
+          setOpt(Curl.option.USERNAME, username || '');
+          setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const {username, password} = renderedRequest.authentication;
-          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
-          curl.setOpt(Curl.option.USERNAME, username || '');
-          curl.setOpt(Curl.option.PASSWORD, password || '');
+          setOpt(Curl.option.HTTPAUTH, Curl.auth.DIGEST);
+          setOpt(Curl.option.USERNAME, username || '');
+          setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_NTLM) {
           const {username, password} = renderedRequest.authentication;
-          curl.setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
-          curl.setOpt(Curl.option.USERNAME, username || '');
-          curl.setOpt(Curl.option.PASSWORD, password || '');
+          setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
+          setOpt(Curl.option.USERNAME, username || '');
+          setOpt(Curl.option.PASSWORD, password || '');
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,
@@ -454,16 +460,16 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const headerStrings = headers
         .filter(h => h.name)
         .map(h => `${(h.name || '').trim()}: ${h.value}`);
-      curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
+      setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Set User-Agent if it't not already in headers
       if (!hasUserAgentHeader(renderedRequest.headers)) {
-        curl.setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
+        setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
       }
 
       // Set Accept encoding
       if (!hasAcceptHeader(renderedRequest.headers)) {
-        curl.setOpt(Curl.option.ENCODING, ''); // Accept anything
+        setOpt(Curl.option.ENCODING, ''); // Accept anything
       }
 
       // Handle the response ending
