@@ -236,6 +236,12 @@ class CodeEditor extends PureComponent {
       if (this.props.onClickLink) {
         this.codeMirror.makeLinksClickable(this.props.onClickLink);
       }
+
+      // HACK: Refresh because sometimes it renders too early and the scroll doesn't
+      // quite fit.
+      setTimeout(() => {
+        this.codeMirror.refresh();
+      }, 100);
     };
 
     // Do this a bit later for big values so we don't block the render process

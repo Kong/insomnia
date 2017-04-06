@@ -9,6 +9,10 @@ class FileInputButton extends PureComponent {
     this._button.focus();
   }
 
+  focusEnd () {
+    this._button.focus();
+  }
+
   _setRef (n) {
     this._button = n;
   }

@@ -123,6 +123,7 @@ class RequestCreateModal extends PureComponent {
                   <ContentTypeDropdown className="btn btn--clicky no-wrap"
                                        right
                                        contentType={selectedContentType}
+                                       request={null}
                                        onChange={this._handleChangeSelectedContentType}>
                     {getContentTypeName(selectedContentType) || 'No Body'}
                     {' '}

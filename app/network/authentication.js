@@ -15,7 +15,7 @@ export async function getAuthHeader (requestId, authentication) {
   if (authentication.type === AUTH_OAUTH_2) {
     const oAuth2Token = await getOAuth2Token(requestId, authentication);
     if (oAuth2Token) {
-      const token = oAuth2Token.refreshToken || oAuth2Token.accessToken;
+      const token = oAuth2Token.accessToken;
       return _buildBearerHeader(token);
     } else {
       return null;

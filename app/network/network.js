@@ -177,8 +177,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Set all the basic options
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
       curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      curl.setOpt(Curl.option.SSL_VERIFYHOST, settings.validateSSL ? 2 : 0);
-      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL ? 1 : 0);
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       curl.setOpt(Curl.option.VERBOSE, true); // True so debug function works
       curl.setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
@@ -252,6 +250,20 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         timeline.push({name: 'TEXT', value: 'Enable automatic URL encoding'});
       } else {
         timeline.push({name: 'TEXT', value: 'Disable automatic URL encoding'});
+      }
+
+      /*
+       curl --request GET \
+       --url 'https://www.mobi2go.com/api/1/headoffice/1879/orders?order_by=confirmed_at&sort_by=desc&progress_phase=confirmed&method=pickup&=' \
+       --header 'authorization: Basic Og=='
+       */
+      // SSL Validation
+      if (settings.validateSSL) {
+        timeline.push({name: 'TEXT', value: 'Enable SSL validation'});
+      } else {
+        curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+        curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
+        timeline.push({name: 'TEXT', value: 'Disable SSL validation'});
       }
 
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
@@ -466,7 +478,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
 
         // Collect the headers
         const headers = [];
-        for (const name of Object.keys(curlHeaders)) {
+        for (const name of curlHeaders ? Object.keys(curlHeaders) : []) {
           if (typeof curlHeaders[name] === 'string') {
             headers.push({name, value: curlHeaders[name]});
           } else if (Array.isArray(curlHeaders[name])) {

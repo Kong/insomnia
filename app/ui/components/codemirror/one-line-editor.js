@@ -89,6 +89,11 @@ class OneLineEditor extends PureComponent {
       this._editor.focusEnd();
     }
 
+    if (!this._editor) {
+      console.warn('Tried to focus editor when it was not mounted', this);
+      return;
+    }
+
     // Set focused state
     this._editor.setAttribute('data-focused', 'on');
 

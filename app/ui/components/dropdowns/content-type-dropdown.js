@@ -10,8 +10,8 @@ const EMPTY_MIME_TYPE = null;
 
 @autobind
 class ContentTypeDropdown extends PureComponent {
-  async _handleChangeMimeType (mimeType) {
-    const {body} = this.props.request;
+  async _checkMimeTypeChange (request, mimeType) {
+    const {body} = request;
 
     // Nothing to do
     if (body.mimeType === mimeType) {
@@ -40,6 +40,14 @@ class ContentTypeDropdown extends PureComponent {
         message: 'Current body will be lost. Are you sure you want to continue?',
         addCancel: true
       });
+    }
+  }
+
+  async _handleChangeMimeType (mimeType) {
+    const {request} = this.props;
+
+    if (request) {
+      await this._checkMimeTypeChange(request, mimeType);
     }
 
     this.props.onChange(mimeType);
@@ -84,12 +92,12 @@ class ContentTypeDropdown extends PureComponent {
 
 ContentTypeDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
-  request: PropTypes.object.isRequired,
 
   // Optional
   contentType: PropTypes.string, // Can be null
   className: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
+  request: PropTypes.object
 };
 
 export default ContentTypeDropdown;
