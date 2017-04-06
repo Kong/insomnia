@@ -5,5 +5,6 @@ services:
     command: 'bash -c "npm install && npm run build-n-package:linux"'
     volumes:
       - './dist/linux:/insomnia/dist'
+      - '.:/insomnia'
     environment:
       - 'NODE_ENV=development'
