@@ -1,8 +1,7 @@
 FROM ubuntu:14.04
 
-RUN mkdir -p /insomnia
+RUN mkdir -p /insomnia /insomnia-tmp
 WORKDIR /insomnia
-COPY . /insomnia
 
 RUN sudo apt-get update
 

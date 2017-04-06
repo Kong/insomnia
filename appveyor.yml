@@ -1,7 +1,5 @@
 image: Visual Studio 2015
-
 build: off
-deploy: off
 
 #---------------------------------#
 #    environment configuration    #
@@ -51,6 +49,6 @@ test_script:
 #         global handlers         #
 #---------------------------------#
 
-#build_script:
-#  - npm run build-n-package:win
-#  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
+deploy_script:
+  - npm run build-n-package:win
+  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }

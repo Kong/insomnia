@@ -1,11 +1,11 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
-  "description": "A simple and beautiful REST API client",
-  "homepage": "http://insomnia.rest",
+  "description": "Debug APIs like a human, not a robot",
+  "homepage": "https://insomnia.rest",
   "author": "Insomnia <support@insomnia.rest>",
   "main": "main.js",
   "dependencies": {

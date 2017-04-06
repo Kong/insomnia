@@ -180,6 +180,10 @@ class OneLineEditor extends PureComponent {
       return;
     }
 
+    if (!this._input) {
+      return;
+    }
+
     if (this._input.hasFocus()) {
       const start = this._input.getSelectionStart();
       const end = this._input.getSelectionEnd();

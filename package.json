@@ -5,7 +5,7 @@
   "description": "Insomnia App",
   "main": "main.js",
   "licence": "GNU AGPLv3",
-  "homepage": "http://insomnia.rest",
+  "homepage": "https://insomnia.rest",
   "repository": {
     "type": "git",
     "url": "https://github.com/gschier/insomnia"

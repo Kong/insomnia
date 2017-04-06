@@ -1,5 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
+import Input from '../codemirror/one-line-editor';
 
 @autobind
 class VariableEditor extends PureComponent {
@@ -69,10 +70,7 @@ class VariableEditor extends PureComponent {
       <div>
         <div className="form-control form-control--outlined">
           <label>Environment Variable
-            <select ref={this._setSelectRef}
-                    value={value}
-                    defaultValue={null}
-                    onChange={this._handleChange}>
+            <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
               <option value={`{{ 'my custom template logic' | urlencode }}`}>
                 -- Custom --
               </option>
@@ -86,7 +84,13 @@ class VariableEditor extends PureComponent {
         </div>
         {isOther ? (
           <div className="form-control form-control--outlined">
-            <input type="text" defaultValue={value} onChange={this._handleChange}/>
+            <Input
+              forceEditor
+              mode="nunjucks"
+              type="text"
+              defaultValue={value}
+              onChange={this._update}
+            />
           </div>
         ) : null}
         <div className="form-control form-control--outlined">

@@ -120,8 +120,13 @@ async function _highlightNunjucksTags (render) {
         showModal(NunjucksVariableModal, {
           template: mark.__template,
           onDone: template => {
-            const {from, to} = mark.find();
-            this.replaceRange(template, from, to);
+            const pos = mark.find();
+            if (pos) {
+              const {from, to} = pos;
+              this.replaceRange(template, from, to);
+            } else {
+              console.warn('Tried to replace mark that did not exist', mark);
+            }
           }
         });
       });

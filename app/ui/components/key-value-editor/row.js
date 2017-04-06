@@ -23,11 +23,19 @@ class KeyValueEditorRow extends PureComponent {
   }
 
   focusNameEnd () {
-    this._nameInput.focusEnd();
+    if (this._nameInput) {
+      this._nameInput.focusEnd();
+    } else {
+      console.warn('Unable to focus non-existing nameInput');
+    }
   }
 
   focusValueEnd () {
-    this._valueInput.focusEnd();
+    if (this._valueInput) {
+      this._valueInput.focusEnd();
+    } else {
+      console.warn('Unable to focus non-existing valueInput');
+    }
   }
 
   setDragDirection (dragDirection) {
@@ -179,82 +187,82 @@ class KeyValueEditorRow extends PureComponent {
           </div>
           <div className="form-control form-control--wide wide form-control--underlined">
             {pair.type === 'file' ? (
-                <FileInputButton
-                  ref={this._setValueInputRef}
-                  showFileName
-                  className="btn btn--clicky wide ellipsis txt-sm no-margin"
-                  path={pair.fileName || ''}
-                  onChange={this._handleFileNameChange}
-                />
-              ) : (
-                <OneLineEditor
-                  ref={this._setValueInputRef}
-                  readOnly={readOnly}
-                  forceInput={forceInput}
-                  type={valueInputType || 'text'}
-                  placeholder={valuePlaceholder || 'Value'}
-                  defaultValue={pair.value}
-                  onChange={this._handleValueChange}
-                  onBlur={this._handleBlurValue}
-                  onKeyDown={this._handleKeyDown}
-                  onFocus={this._handleFocusValue}
-                  render={handleRender}
-                  getRenderContext={handleGetRenderContext}
-                  getAutocompleteConstants={this._handleAutocompleteValues}
-                />
-              )}
+              <FileInputButton
+                ref={this._setValueInputRef}
+                showFileName
+                className="btn btn--clicky wide ellipsis txt-sm no-margin"
+                path={pair.fileName || ''}
+                onChange={this._handleFileNameChange}
+              />
+            ) : (
+              <OneLineEditor
+                ref={this._setValueInputRef}
+                readOnly={readOnly}
+                forceInput={forceInput}
+                type={valueInputType || 'text'}
+                placeholder={valuePlaceholder || 'Value'}
+                defaultValue={pair.value}
+                onChange={this._handleValueChange}
+                onBlur={this._handleBlurValue}
+                onKeyDown={this._handleKeyDown}
+                onFocus={this._handleFocusValue}
+                render={handleRender}
+                getRenderContext={handleGetRenderContext}
+                getAutocompleteConstants={this._handleAutocompleteValues}
+              />
+            )}
           </div>
 
           {multipart ? (
-              !hideButtons ? (
-                  <Dropdown right>
-                    <DropdownButton className="tall">
-                      <i className="fa fa-caret-down"></i>
-                    </DropdownButton>
-                    <DropdownItem onClick={this._handleTypeChange} value="text">
-                      Text
-                    </DropdownItem>
-                    <DropdownItem onClick={this._handleTypeChange} value="file">
-                      File
-                    </DropdownItem>
-                  </Dropdown>
-                ) : (
-                  <button>
-                    <i className="fa fa-empty"/>
-                  </button>
-                )
-            ) : null
+            !hideButtons ? (
+              <Dropdown right>
+                <DropdownButton className="tall">
+                  <i className="fa fa-caret-down"></i>
+                </DropdownButton>
+                <DropdownItem onClick={this._handleTypeChange} value="text">
+                  Text
+                </DropdownItem>
+                <DropdownItem onClick={this._handleTypeChange} value="file">
+                  File
+                </DropdownItem>
+              </Dropdown>
+            ) : (
+              <button>
+                <i className="fa fa-empty"/>
+              </button>
+            )
+          ) : null
           }
 
           {!hideButtons ? (
-              <Button onClick={this._handleDisableChange}
-                      value={!pair.disabled}
-                      title={pair.disabled ? 'Enable item' : 'Disable item'}>
-                {pair.disabled
-                  ? <i className="fa fa-square-o"/>
-                  : <i className="fa fa-check-square-o"/>
-                }
-              </Button>
-            ) : (
-              <button><i className="fa fa-empty"/></button>
-            )}
+            <Button onClick={this._handleDisableChange}
+                    value={!pair.disabled}
+                    title={pair.disabled ? 'Enable item' : 'Disable item'}>
+              {pair.disabled
+                ? <i className="fa fa-square-o"/>
+                : <i className="fa fa-check-square-o"/>
+              }
+            </Button>
+          ) : (
+            <button><i className="fa fa-empty"/></button>
+          )}
 
           {!noDelete ? (
-              !hideButtons ? (
-                  <PromptButton key={Math.random()}
-                                tabIndex={-1}
-                                confirmMessage=" "
-                                addIcon
-                                onClick={this._handleDelete}
-                                title="Delete item">
-                    <i className="fa fa-trash-o"/>
-                  </PromptButton>
-                ) : (
-                  <button>
-                    <i className="fa fa-empty"/>
-                  </button>
-                )
-            ) : null}
+            !hideButtons ? (
+              <PromptButton key={Math.random()}
+                            tabIndex={-1}
+                            confirmMessage=" "
+                            addIcon
+                            onClick={this._handleDelete}
+                            title="Delete item">
+                <i className="fa fa-trash-o"/>
+              </PromptButton>
+            ) : (
+              <button>
+                <i className="fa fa-empty"/>
+              </button>
+            )
+          ) : null}
         </div>
       </li>
     );

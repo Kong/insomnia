@@ -5,7 +5,6 @@ if (reboot) {
 
 import fs from 'fs';
 import Raven from 'raven';
-import request from 'request';
 import path from 'path';
 import electron from 'electron';
 import * as packageJSON from './package.json';
@@ -36,8 +35,6 @@ const UPDATE_URLS = {
   linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}`,
   win32: `https://downloads.insomnia.rest/win`
 };
-
-const DOWNLOAD_URL = 'http://download.insomnia.rest';
 
 let localStorage = null;
 
@@ -87,24 +84,7 @@ function checkForUpdates () {
     return;
   }
 
-  if (IS_LINUX) {
-    try {
-      request.get(UPDATE_URLS.linux, null, (err, response) => {
-        if (err) {
-          ravenClient.captureError(err);
-          return;
-        }
-
-        if (response.statusCode === 200) {
-          showDownloadModal(response.body);
-        } else {
-          // No update available (should be STATUS=204)
-        }
-      });
-    } catch (e) {
-      ravenClient.captureException(e);
-    }
-  } else {
+  if (!IS_LINUX) {
     try {
       autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
       autoUpdater.checkForUpdates();
@@ -151,26 +131,6 @@ function trackEvent (...args) {
   }
 
   window.webContents.send('analytics-track-event', args);
-}
-
-function showDownloadModal (version) {
-  hasPromptedForUpdates = true;
-
-  dialog.showMessageBox({
-    type: 'info',
-    buttons: ['Download', 'Later'],
-    defaultId: 0,
-    cancelId: 1,
-    title: 'Insomnia Update Available',
-    message: `Exciting news!\n\nVersion ${version} of Insomnia is now available.\n\n\n~Gregory`
-  }, id => {
-    if (id === 0) {
-      console.log('-- Installing Update --');
-      shell.openExternal(DOWNLOAD_URL);
-    } else {
-      console.log('-- Cancel Update --');
-    }
-  });
 }
 
 ipcMain.on('check-for-updates', () => {
@@ -521,13 +481,13 @@ function createWindow () {
       position: 'before=help',
       submenu: [{
         label: 'Reload',
-        accelerator: 'Command+R',
+        accelerator: 'CmdOrCtrl+R',
         click: function () {
           mainWindow.reload();
         }
       }, {
         label: 'Toggle DevTools',
-        accelerator: 'Alt+Command+I',
+        accelerator: 'Alt+CmdOrCtrl+I',
         click: function () {
           mainWindow.toggleDevTools();
         }

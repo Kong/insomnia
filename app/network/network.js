@@ -155,9 +155,6 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         resolve(Object.assign({
           parentId: renderedRequest._id,
           timeline: timeline,
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          url: curl.getInfo(Curl.info.EFFECTIVE_URL),
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies
         }, patch));
@@ -166,6 +163,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       // Setup the cancellation logic
       cancelRequestFunction = () => {
         respond({
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
+          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+          url: curl.getInfo(Curl.info.EFFECTIVE_URL),
           statusMessage: 'Cancelled',
           error: 'Request was cancelled'
         });
@@ -178,6 +178,7 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       curl.setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
       curl.setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       curl.setOpt(Curl.option.SSL_VERIFYHOST, settings.validateSSL ? 2 : 0);
+      curl.setOpt(Curl.option.SSL_VERIFYPEER, settings.validateSSL ? 1 : 0);
       curl.setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       curl.setOpt(Curl.option.VERBOSE, true); // True so debug function works
       curl.setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
@@ -459,8 +460,9 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         curlHeaders = curlHeaders[curlHeaders.length - 1];
 
         // Collect various things
-        const statusCode = curlHeaders.result.code || 0;
-        const statusMessage = curlHeaders.result.reason || 'Unknown';
+        const result = curlHeaders && curlHeaders.result;
+        const statusCode = result ? result.code : 0;
+        const statusMessage = result ? result.reason : 'Unknown';
 
         // Collect the headers
         const headers = [];
@@ -524,7 +526,10 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
           body,
           contentType,
           statusCode,
-          statusMessage
+          statusMessage,
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
+          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+          url: curl.getInfo(Curl.info.EFFECTIVE_URL)
         });
 
         // Close the request
