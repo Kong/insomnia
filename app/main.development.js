@@ -481,13 +481,13 @@ function createWindow () {
       position: 'before=help',
       submenu: [{
         label: 'Reload',
-        accelerator: 'Command+R',
+        accelerator: 'CmdOrCtrl+R',
         click: function () {
           mainWindow.reload();
         }
       }, {
         label: 'Toggle DevTools',
-        accelerator: 'Alt+Command+I',
+        accelerator: 'Alt+CmdOrCtrl+I',
         click: function () {
           mainWindow.toggleDevTools();
         }
