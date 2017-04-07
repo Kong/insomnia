@@ -7,7 +7,9 @@ const TAGS = [
   {name: `uuid 'v1'`},
   {name: `now 'ISO-8601'`},
   {name: `now 'unix'`},
-  {name: `now 'millis'`}
+  {name: `now 'millis'`},
+  {name: `base64 'encode'`, suffix: `, 'my string'`},
+  {name: `base64 'decode'`, suffix: `, 'bXkgc3RyaW5n'`}
   // 'response'
 ];
 
@@ -20,9 +22,11 @@ class TagEditor extends PureComponent {
       .replace(/\s*%}$/, '')
       .replace(/^{%\s*/, '');
 
+    const value = `{% ${inner} %}`;
     this.state = {
       tags: TAGS,
-      value: `{% ${inner} %}`,
+      value: value,
+      selectValue: value,
       preview: '',
       error: ''
     };
@@ -33,7 +37,7 @@ class TagEditor extends PureComponent {
   }
 
   _handleChange (e) {
-    this._update(e.target.value);
+    this._update(e.target.value, false, e.target.value);
   }
 
   _setSelectRef (n) {
@@ -45,7 +49,7 @@ class TagEditor extends PureComponent {
     }, 100);
   }
 
-  async _update (value, noCallback = false) {
+  async _update (value, noCallback = false, selectValue = null) {
     const {handleRender} = this.props;
 
     let preview = '';
@@ -57,9 +61,14 @@ class TagEditor extends PureComponent {
       error = err.message;
     }
 
-    // Hack to skip updating if we unmounted for some reason
-    if (this._select) {
-      this.setState({preview, error, value});
+    const isMounted = !!this._select;
+    if (isMounted) {
+      this.setState({
+        preview,
+        error,
+        value,
+        selectValue: selectValue || this.state.selectValue
+      });
     }
 
     // Call the callback if we need to
@@ -69,30 +78,31 @@ class TagEditor extends PureComponent {
   }
 
   render () {
-    const {error, value, preview, tags} = this.state;
-    const isOther = !tags.find(v => value === `{% ${v.name} %}`);
+    const {error, value, preview, tags, selectValue} = this.state;
+    const isFound = !tags.find(v => value === `{% ${v.name} %}`);
+    const isFlexible = value.indexOf('{% base64') === 0;
+    const isOther = isFound || isFlexible;
 
     return (
       <div>
         <div className="form-control form-control--outlined">
           <label>Template Function
-            <select ref={this._setSelectRef} onChange={this._handleChange} value={value}>
-              {isOther ? (
-                <option value={`{% uuid 'v4' %}`}>
-                  -- Custom --
-                </option>
-              ) : null}
+            <select ref={this._setSelectRef} onChange={this._handleChange} value={selectValue}>
               {tags.map((t, i) => (
-                <option key={`${i}::${t.name}`} value={`{% ${t.name} %}`}>
+                <option key={`${i}::${t.name}`} value={`{% ${t.name}${t.suffix || ''} %}`}>
                   {t.name}
                 </option>
               ))}
+              <option value={`{% custom 'tag' %}`}>
+                -- Custom --
+              </option>
             </select>
           </label>
         </div>
         {isOther ? (
           <div className="form-control form-control--outlined">
             <Input
+              key={selectValue}
               forceEditor
               mode="nunjucks"
               type="text"

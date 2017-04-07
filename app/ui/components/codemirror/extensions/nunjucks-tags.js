@@ -229,7 +229,7 @@ async function _updateElementText (render, mark, text) {
       const cleaned = cleanedStr.replace(tag, '').trim();
       el.innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
 
-      if (['response', 'res', 'uuid', 'timestamp', 'now'].includes(tag)) {
+      if (['response', 'res', 'uuid', 'timestamp', 'now', 'base64'].includes(tag)) {
         // Try rendering these so we can show errors if needed
         el.title = await render(str);
       } else {

@@ -1,6 +1,9 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
+import {AllHtmlEntities} from 'html-entities';
 import {FLEXIBLE_URL_REGEX} from '../../../../common/constants';
+
+const entities = new AllHtmlEntities();
 
 CodeMirror.defineExtension('makeLinksClickable', function (handleClick) {
   // Only add the click mode if we have links to click
@@ -21,7 +24,7 @@ CodeMirror.defineExtension('makeLinksClickable', function (handleClick) {
   this.getWrapperElement().addEventListener('click', e => {
     const cls = e.target.className;
     if (cls.indexOf('cm-clickable') >= 0) {
-      handleClick(e.target.innerHTML);
+      handleClick(entities.decode(e.target.innerHTML));
     }
   });
 });

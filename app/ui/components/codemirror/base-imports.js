@@ -10,7 +10,6 @@ import 'codemirror/mode/markdown/markdown';
 import 'codemirror/mode/python/python';
 import 'codemirror/mode/ruby/ruby';
 import 'codemirror/mode/swift/swift';
-import 'codemirror/lib/codemirror.css';
 import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/dialog/dialog';
 import 'codemirror/addon/dialog/dialog.css';
@@ -43,8 +42,11 @@ import './modes/curl';
 import './extensions/environments-autocomplete';
 import './extensions/clickable';
 import './extensions/nunjucks-tags';
-import '../../css/editor/index.less';
 
 // Make jsonlint available to the jsonlint plugin
 import {parser as jsonlint} from 'jsonlint';
 global.jsonlint = jsonlint;
+
+// CSS
+import 'codemirror/lib/codemirror.css';
+import '../../css/editor/index.less';

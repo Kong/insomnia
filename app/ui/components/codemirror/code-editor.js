@@ -236,6 +236,12 @@ class CodeEditor extends PureComponent {
       if (this.props.onClickLink) {
         this.codeMirror.makeLinksClickable(this.props.onClickLink);
       }
+
+      // HACK: Refresh because sometimes it renders too early and the scroll doesn't
+      // quite fit.
+      setTimeout(() => {
+        this.codeMirror.refresh();
+      }, 100);
     };
 
     // Do this a bit later for big values so we don't block the render process
@@ -388,8 +394,9 @@ class CodeEditor extends PureComponent {
           `uuid 'v1'`,
           `now 'ISO-8601'`,
           `now 'unix'`,
-          `now 'millis'`
-          // 'response'
+          `now 'millis'`,
+          `base64 'encode', 'my string'`,
+          `base64 'decode', 'bXkgc3RyaW5n'`
         ]);
       }
       options.environmentAutocomplete = {
@@ -462,9 +469,6 @@ class CodeEditor extends PureComponent {
     if (this.props.onPaste) {
       this.props.onPaste(e);
     }
-
-    // Notify of change right away
-    this._codemirrorValueChanged();
   }
 
   /**

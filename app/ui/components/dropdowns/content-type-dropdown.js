@@ -10,8 +10,8 @@ const EMPTY_MIME_TYPE = null;
 
 @autobind
 class ContentTypeDropdown extends PureComponent {
-  async _handleChangeMimeType (mimeType) {
-    const {body} = this.props.request;
+  async _checkMimeTypeChange (request, mimeType) {
+    const {body} = request;
 
     // Nothing to do
     if (body.mimeType === mimeType) {
@@ -22,24 +22,33 @@ class ContentTypeDropdown extends PureComponent {
     const hasText = body.text && body.text.length;
     const hasFile = body.fileName && body.fileName.length;
     const isEmpty = !hasParams && !hasText && !hasFile;
+    const isFile = body.mimeType === CONTENT_TYPE_FILE;
+    const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA;
+    const isFormUrlEncoded = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
+    const isText = !isFile && !isMultipart;
 
-    const isFile = mimeType === CONTENT_TYPE_FILE;
-    const isMultipart = mimeType === CONTENT_TYPE_FORM_DATA;
-    const canBeText = !isFile && !isMultipart;
+    const willBeFile = mimeType === CONTENT_TYPE_FILE;
+    const willBeMultipart = mimeType === CONTENT_TYPE_FORM_DATA;
+    const willBeEmpty = !mimeType;
 
-    const toFile = body.mimeType === CONTENT_TYPE_FILE;
-    const toMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA;
-    const toEmpty = !body.mimeType;
-    const willBeText = !toFile && !toMultipart;
+    const willConvertToText = !willBeFile && !willBeMultipart && !willBeEmpty;
+    const willPreserveText = willConvertToText && isText;
+    const willPreserveForm = isFormUrlEncoded && willBeMultipart;
 
-    const canConvert = canBeText && willBeText && !toEmpty;
-
-    if (!isEmpty && !canConvert) {
+    if (!isEmpty && !willPreserveText && !willPreserveForm) {
       await showModal(AlertModal, {
         title: 'Switch Body Type?',
         message: 'Current body will be lost. Are you sure you want to continue?',
         addCancel: true
       });
+    }
+  }
+
+  async _handleChangeMimeType (mimeType) {
+    const {request} = this.props;
+
+    if (request) {
+      await this._checkMimeTypeChange(request, mimeType);
     }
 
     this.props.onChange(mimeType);
@@ -84,12 +93,12 @@ class ContentTypeDropdown extends PureComponent {
 
 ContentTypeDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
-  request: PropTypes.object.isRequired,
 
   // Optional
   contentType: PropTypes.string, // Can be null
   className: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
+  request: PropTypes.object
 };
 
 export default ContentTypeDropdown;
