@@ -469,9 +469,6 @@ class CodeEditor extends PureComponent {
     if (this.props.onPaste) {
       this.props.onPaste(e);
     }
-
-    // Notify of change right away
-    this._codemirrorValueChanged();
   }
 
   /**
