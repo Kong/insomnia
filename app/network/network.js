@@ -163,14 +163,20 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       };
 
       // Define helper to setOpt for better error handling
-      const setOpt = (opt, val) => {
+      const setOpt = (opt, val, optional = false) => {
         const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
         try {
           curl.setOpt(opt, val);
         } catch (err) {
-          throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
+          if (!optional) {
+            throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
+          } else {
+            console.warn(`Failed to set optional Curl opt (${opt} ${name || 'n/a'})`);
+          }
         }
       };
+
+      const setOptionalOpt = (opt, val) => setOpt(opt, val, true);
 
       // Setup the cancellation logic
       cancelRequestFunction = () => {
@@ -236,7 +242,8 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
       const headers = [...renderedRequest.headers];
 
       let lastPercent = 0;
-      setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
+      // NOTE: This option was added in 7.32.0 so make it optional
+      setOptionalOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
         if (dltotal === 0) {
           return 0;
         }
