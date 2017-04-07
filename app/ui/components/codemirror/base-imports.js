@@ -1,6 +1,3 @@
-import 'codemirror/lib/codemirror.css';
-import '../../css/editor/index.less';
-
 import 'codemirror/mode/css/css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/javascript/javascript';
@@ -49,3 +46,7 @@ import './extensions/nunjucks-tags';
 // Make jsonlint available to the jsonlint plugin
 import {parser as jsonlint} from 'jsonlint';
 global.jsonlint = jsonlint;
+
+// CSS
+import 'codemirror/lib/codemirror.css';
+import '../../css/editor/index.less';

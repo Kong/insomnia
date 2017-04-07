@@ -125,8 +125,12 @@ function _convertUnicode (originalStr) {
   while ((m = unicodeRegex.exec(originalStr))) {
     try {
       c = String.fromCharCode(parseInt(m[1], 16));
+      if (c === '"') {
+        // Escape it if it's double quotes
+        c = `\\${c}`;
+      }
       convertedStr += originalStr.slice(lastI, m.index) + c;
-      lastI = m.index + 6;
+      lastI = m.index + m[0].length;
     } catch (err) {
       // Some reason we couldn't convert a char. Should never actually happen
       console.warn('Failed to convert unicode char', m[1], err);
