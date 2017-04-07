@@ -394,8 +394,9 @@ class CodeEditor extends PureComponent {
           `uuid 'v1'`,
           `now 'ISO-8601'`,
           `now 'unix'`,
-          `now 'millis'`
-          // 'response'
+          `now 'millis'`,
+          `base64 'encode', 'my string'`,
+          `base64 'decode', 'bXkgc3RyaW5n'`
         ]);
       }
       options.environmentAutocomplete = {
