@@ -414,7 +414,8 @@ export function _actuallySendCurl (renderedRequest, workspace, settings) {
         });
         setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
-        const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
+        const fd = fs.openSync(renderedRequest.body.fileName, 'r');
+        headers.push({name: 'Expect', value: ''}); // Don't use Expect: 100-continue
         setOpt(Curl.option.UPLOAD, 1);
         setOpt(Curl.option.READDATA, fd);
         const fn = () => fs.closeSync(fd);
