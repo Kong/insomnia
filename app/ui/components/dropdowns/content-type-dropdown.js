@@ -29,7 +29,7 @@ class ContentTypeDropdown extends PureComponent {
 
     const willBeFile = mimeType === CONTENT_TYPE_FILE;
     const willBeMultipart = mimeType === CONTENT_TYPE_FORM_DATA;
-    const willBeEmpty = !mimeType;
+    const willBeEmpty = typeof mimeType !== 'string';
 
     const willConvertToText = !willBeFile && !willBeMultipart && !willBeEmpty;
     const willPreserveText = willConvertToText && isText;

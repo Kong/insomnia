@@ -1,5 +1,6 @@
 import electron from 'electron';
 import mkdirp from 'mkdirp';
+import mimes from 'mime-types';
 import {parse as urlParse} from 'url';
 import {Curl} from 'node-libcurl';
 import {join as pathJoin} from 'path';
@@ -101,7 +102,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
         // Ignore the possibly large data messages
         if (infoType === Curl.info.debug.DATA_OUT) {
-          if (content.length < 2000) {
+          if (content.length < 1000) {
             timeline.push({name, value: content});
           } else {
             timeline.push({name, value: `(${describeByteSize(content.length)} hidden)`});
@@ -290,21 +291,23 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       }
 
       // Build the body
+      let noBody = false;
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         const d = querystring.buildFromParams(renderedRequest.body.params || [], true);
         setOpt(Curl.option.POSTFIELDS, d); // Send raw data
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const data = renderedRequest.body.params.map(param => {
           if (param.type === 'file' && param.fileName) {
-            return {name: param.name, file: param.fileName};
+            return {name: param.name, file: param.fileName, type: mimes.lookup(param.fileName)};
           } else {
             return {name: param.name, contents: param.value};
           }
         });
         setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
-        const fd = fs.openSync(renderedRequest.body.fileName, 'r');
-        headers.push({name: 'Expect', value: ''}); // Don't use Expect: 100-continue
+        const {size} = fs.statSync(renderedRequest.body.fileName);
+        headers.push({name: 'Content-Length', value: `${size}`});
+        const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
         setOpt(Curl.option.UPLOAD, 1);
         setOpt(Curl.option.READDATA, fd);
         const fn = () => fs.closeSync(fd);
@@ -314,6 +317,13 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text);
       } else {
         // No body
+        noBody = true;
+      }
+
+      if (!noBody) {
+        // Don't chunk uploads
+        headers.push({name: 'Expect', value: ''});
+        headers.push({name: 'Transfer-Encoding', value: ''});
       }
 
       // Build the body
