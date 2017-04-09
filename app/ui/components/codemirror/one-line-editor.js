@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import CodeEditor from './code-editor';
 import Input from '../base/debounced-input';
@@ -58,6 +59,26 @@ class OneLineEditor extends PureComponent {
       return this._editor.getValue();
     } else {
       return this._input.getValue();
+    }
+  }
+
+  componentDidMount () {
+    document.body.addEventListener('click', this._handleDocumentClick);
+  }
+
+  componentWillUnmount () {
+    document.body.removeEventListener('click', this._handleDocumentClick);
+  }
+
+  _handleDocumentClick (e) {
+    if (!this._editor) {
+      return;
+    }
+
+    const node = ReactDOM.findDOMNode(this._editor);
+    const clickWasOutsideOfComponent = !node.contains(e.target);
+    if (clickWasOutsideOfComponent) {
+      this._editor.clearSelection();
     }
   }
 
@@ -148,8 +169,6 @@ class OneLineEditor extends PureComponent {
 
     // Set focused state
     this._editor.removeAttribute('data-focused');
-
-    this._editor.clearSelection();
 
     if (!this.props.forceEditor) {
       // Convert back to input sometime in the future.
