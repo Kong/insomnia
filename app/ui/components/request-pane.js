@@ -198,7 +198,7 @@ class RequestPane extends PureComponent {
       <section className="pane request-pane">
         <header className="pane__header">
           <RequestUrlBar
-            key={uniqueKey}
+            uniquenessKey={uniqueKey}
             method={request.method}
             onMethodChange={updateRequestMethod}
             onUrlChange={this._handleUpdateRequestUrl}
@@ -210,6 +210,7 @@ class RequestPane extends PureComponent {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             url={request.url}
+            requestId={request._id}
           />
         </header>
         <Tabs className="pane__body" forceRenderTabPanel>
