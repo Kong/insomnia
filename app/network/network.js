@@ -8,7 +8,7 @@ import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
-import {describeByteSize, hasAcceptHeader, hasAuthHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -313,7 +313,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
-      } else if (typeof renderedRequest.body.text === 'string') {
+      } else if (renderedRequest.body.text) {
         setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text);
       } else {
         // No body
@@ -335,7 +335,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       });
 
       // Handle Authorization header
-      if (!hasAuthHeader(renderedRequest.headers) && !renderedRequest.authentication.disabled) {
+      if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
           const {username, password} = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
@@ -363,21 +363,26 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         }
       }
 
+      // Set User-Agent if it't not already in headers
+      if (!hasUserAgentHeader(headers)) {
+        setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
+      }
+
+      // Set Accept encoding
+      if (!hasAcceptHeader(headers)) {
+        setOpt(Curl.option.ENCODING, ''); // Accept anything
+      }
+
+      // Prevent curl from adding default content-type header
+      if (!hasContentTypeHeader(headers)) {
+        headers.push({name: 'content-type', value: ''});
+      }
+
       // NOTE: This is last because headers might be modified multiple times
       const headerStrings = headers
         .filter(h => h.name)
         .map(h => `${(h.name || '').trim()}: ${h.value}`);
       setOpt(Curl.option.HTTPHEADER, headerStrings);
-
-      // Set User-Agent if it't not already in headers
-      if (!hasUserAgentHeader(renderedRequest.headers)) {
-        setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
-      }
-
-      // Set Accept encoding
-      if (!hasAcceptHeader(renderedRequest.headers)) {
-        setOpt(Curl.option.ENCODING, ''); // Accept anything
-      }
 
       // Handle the response ending
       curl.on('end', function (_1, _2, curlHeaders) {

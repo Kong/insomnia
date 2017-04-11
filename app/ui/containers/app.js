@@ -240,12 +240,11 @@ class App extends PureComponent {
    * Heavily optimized render function
    *
    * @param text - template to render
-   * @param strict - whether to fail on undefined context values
    * @param contextCacheKey - if rendering multiple times in parallel, set this
    * @returns {Promise}
    * @private
    */
-  async _handleRenderText (text, strict = false, contextCacheKey = null) {
+  async _handleRenderText (text, contextCacheKey = null) {
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       const context = this._fetchRenderContext();
 
@@ -257,7 +256,7 @@ class App extends PureComponent {
     setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
 
     const context = await this._getRenderContextPromiseCache[contextCacheKey];
-    return render.render(text, context, strict);
+    return render.render(text, context);
   }
 
   _handleGenerateCodeForActiveRequest () {

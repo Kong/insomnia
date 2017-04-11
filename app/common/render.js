@@ -5,7 +5,7 @@ import * as db from './database';
 import * as templating from '../templating';
 
 export function render (obj, context = {}) {
-  return recursiveRender(obj, context, true);
+  return recursiveRender(obj, context);
 }
 
 export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
@@ -83,7 +83,6 @@ export async function recursiveRender (originalObj, context = {}, blacklistPathR
       try {
         x = await templating.render(x, {context, path});
       } catch (err) {
-        // TODO: Show paths here in errors
         throw err;
       }
     } else if (Array.isArray(x)) {
@@ -170,7 +169,14 @@ export async function getRenderedRequest (request, environmentId) {
 }
 
 async function _objectDeepAssignRender (base, obj) {
-  for (const key of Object.keys(obj)) {
+  // Sort the keys that may have Nunjucks last, so that other keys get
+  // defined first. Very important if env variables defined in same obj
+  // (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
+  const keys = Object.keys(obj).sort((k1, k2) =>
+    obj[k1].match && obj[k1].match(/({{)/) ? 1 : -1
+  );
+
+  for (const key of keys) {
     /*
      * If we're overwriting a string, try to render it first with the base as
      * a context. This allows for the following scenario:

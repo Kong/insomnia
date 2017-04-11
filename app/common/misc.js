@@ -27,6 +27,14 @@ export function filterHeaders (headers, name) {
   });
 }
 
+export function hasContentTypeHeader (headers) {
+  return filterHeaders(headers, 'content-type').length > 0;
+}
+
+export function hasContentLengthHeader (headers) {
+  return filterHeaders(headers, 'content-length').length > 0;
+}
+
 export function hasAuthHeader (headers) {
   return filterHeaders(headers, 'authorization').length > 0;
 }

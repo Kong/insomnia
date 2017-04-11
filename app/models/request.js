@@ -55,6 +55,10 @@ export function newAuth (type, oldAuth = {}) {
   }
 }
 
+export function newBodyNone () {
+  return {};
+}
+
 export function newBodyRaw (rawBody, contentType) {
   if (typeof contentType !== 'string') {
     return {text: rawBody};
@@ -173,7 +177,7 @@ export function updateMimeType (request, mimeType, doCreate = false) {
     body = newBodyFile('');
   } else if (typeof mimeType !== 'string') {
     // No body
-    body = newBodyRaw('');
+    body = newBodyNone();
   } else {
     // Raw Content-Type (ex: application/json)
     body = request.body.params
