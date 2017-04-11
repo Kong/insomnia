@@ -34,6 +34,7 @@ import {getKeys} from '../../templating/utils';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
+const KEY_SLASH = 191;
 const KEY_D = 68;
 const KEY_E = 69;
 const KEY_K = 75;
@@ -87,6 +88,15 @@ class App extends PureComponent {
             showModal(RequestSettingsModal, this.props.activeRequest);
             trackEvent('HotKey', 'Request Settings');
           }
+        }
+      }, {
+        meta: true,
+        shift: false,
+        alt: false,
+        key: KEY_SLASH,
+        callback: () => {
+          showModal(SettingsModal, 3);
+          trackEvent('HotKey', 'Settings Shortcuts');
         }
       }, {
         meta: true,

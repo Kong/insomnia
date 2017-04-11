@@ -237,7 +237,7 @@ async function _updateElementText (render, mark, text) {
       }
     } else {
       // Render if it's a variable
-      el.innerHTML = `<label>var</label> ${cleanedStr}`.trim();
+      el.innerHTML = `${cleanedStr}`.trim();
       el.title = await render(str);
     }
     el.setAttribute('data-error', 'off');
