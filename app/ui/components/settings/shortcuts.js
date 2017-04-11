@@ -29,6 +29,7 @@ class Shortcuts extends PureComponent {
           {this.renderHotkey('Show App Preferences', ',')}
           {this.renderHotkey('Show Workspace Settings', ',', true)}
           {this.renderHotkey('Show Request Settings', ',', true, true)}
+          {this.renderHotkey('Show Keyboard Shortcuts', '?')}
           </tbody>
         </table>
       </div>

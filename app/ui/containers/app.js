@@ -34,6 +34,7 @@ import {getKeys} from '../../templating/utils';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
+const KEY_SLASH = 191;
 const KEY_D = 68;
 const KEY_E = 69;
 const KEY_K = 75;
@@ -87,6 +88,15 @@ class App extends PureComponent {
             showModal(RequestSettingsModal, this.props.activeRequest);
             trackEvent('HotKey', 'Request Settings');
           }
+        }
+      }, {
+        meta: true,
+        shift: false,
+        alt: false,
+        key: KEY_SLASH,
+        callback: () => {
+          showModal(SettingsModal, 3);
+          trackEvent('HotKey', 'Settings Shortcuts');
         }
       }, {
         meta: true,
@@ -230,12 +240,11 @@ class App extends PureComponent {
    * Heavily optimized render function
    *
    * @param text - template to render
-   * @param strict - whether to fail on undefined context values
    * @param contextCacheKey - if rendering multiple times in parallel, set this
    * @returns {Promise}
    * @private
    */
-  async _handleRenderText (text, strict = false, contextCacheKey = null) {
+  async _handleRenderText (text, contextCacheKey = null) {
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       const context = this._fetchRenderContext();
 
@@ -247,7 +256,7 @@ class App extends PureComponent {
     setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
 
     const context = await this._getRenderContextPromiseCache[contextCacheKey];
-    return render.render(text, context, strict);
+    return render.render(text, context);
   }
 
   _handleGenerateCodeForActiveRequest () {

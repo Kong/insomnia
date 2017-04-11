@@ -23,8 +23,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
       isValid: true,
       subEnvironments: [],
       rootEnvironment: null,
-      activeEnvironmentId: null,
-      forceRefreshKey: 0
+      activeEnvironmentId: null
     };
   }
 
@@ -72,8 +71,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
       workspace,
       rootEnvironment,
       subEnvironments,
-      activeEnvironmentId,
-      forceRefreshKey: Date.now()
+      activeEnvironmentId
     });
   }
 
@@ -176,8 +174,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     const {
       subEnvironments,
       rootEnvironment,
-      isValid,
-      forceRefreshKey
+      isValid
     } = this.state;
 
     const activeEnvironment = this._getActiveEnvironment();
@@ -260,7 +257,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                 editorKeyMap={editorKeyMap}
                 lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
-                key={`${forceRefreshKey}::${(activeEnvironment ? activeEnvironment._id : 'n/a')}`}
+                key={activeEnvironment ? activeEnvironment._id : 'n/a'}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange}
                 render={render}

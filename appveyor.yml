@@ -14,6 +14,7 @@ environment:
 install:
   - ps: Install-Product node $env:nodejs_version $env:Platform
   - npm install -g npm@latest > Nul
+  - npm config set msvs_version 2013
   - npm install > NUL
 
 cache:
