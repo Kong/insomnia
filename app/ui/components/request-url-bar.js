@@ -180,6 +180,11 @@ class RequestUrlBar extends PureComponent {
     }
   }
 
+  _handleResetTimeouts () {
+    this._handleStopTimeout();
+    this._handleStopInterval();
+  }
+
   _handleClickSend (e) {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
 
@@ -200,6 +205,12 @@ class RequestUrlBar extends PureComponent {
 
   componentWillUnmount () {
     document.body.removeEventListener('keydown', this._handleKeyDown);
+  }
+
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.requestId !== this.props.requestId) {
+      this._handleResetTimeouts();
+    }
   }
 
   renderSendButton () {
@@ -278,7 +289,8 @@ class RequestUrlBar extends PureComponent {
       method,
       handleRender,
       handleGetRenderContext,
-      handleAutocompleteUrls
+      handleAutocompleteUrls,
+      uniquenessKey
     } = this.props;
 
     return (
@@ -288,6 +300,7 @@ class RequestUrlBar extends PureComponent {
         </MethodDropdown>
         <form onSubmit={this._handleFormSubmit}>
           <OneLineEditor
+            key={uniquenessKey}
             ref={this._setInputRef}
             onPaste={this._handleUrlPaste}
             forceEditor
@@ -316,7 +329,9 @@ RequestUrlBar.propTypes = {
   onMethodChange: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   url: PropTypes.string.isRequired,
-  method: PropTypes.string.isRequired
+  method: PropTypes.string.isRequired,
+  requestId: PropTypes.string.isRequired,
+  uniquenessKey: PropTypes.string.isRequired
 };
 
 export default RequestUrlBar;
