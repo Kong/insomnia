@@ -459,9 +459,7 @@ class CodeEditor extends PureComponent {
       const text = change.text
         .join('') // join all changed lines into one
         .replace(/\n/g, ' '); // Convert all whitespace to spaces
-      const from = {ch: change.from.ch, line: 0};
-      const to = {ch: from.ch + text.length, line: 0};
-      change.update(from, to, [text]);
+      change.update(change.from, change.to, [text]);
     }
   }
 
