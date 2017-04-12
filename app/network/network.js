@@ -188,9 +188,11 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         setOpt(Curl.option.CAINFO, fullCAPath);
       }
 
-      // Set cookies
+      // Enable cookie handling (this is required)
+      setOpt(Curl.option.COOKIEFILE, '');
+
+      // Set cookies from jar
       if (renderedRequest.settingSendCookies) {
-        setOpt(Curl.option.COOKIEFILE, ''); // Enable cookies
         const cookies = renderedRequest.cookieJar.cookies || [];
         for (const cookie of cookies) {
           let expiresTimestamp = 0;
@@ -298,7 +300,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const data = renderedRequest.body.params.map(param => {
           if (param.type === 'file' && param.fileName) {
-            return {name: param.name, file: param.fileName, type: mimes.lookup(param.fileName)};
+            const type = mimes.lookup(param.fileName) || 'application/octet-stream';
+            return {name: param.name, file: param.fileName, type};
           } else {
             return {name: param.name, contents: param.value};
           }
@@ -411,8 +414,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
-        const cookieStrings = curl.getInfo(Curl.info.COOKIELIST);
         if (renderedRequest.settingStoreCookies) {
+          const cookieStrings = curl.getInfo(Curl.info.COOKIELIST);
           const cookies = cookieStrings.map(str => {
             //  0                    1                  2     3       4       5     6
             // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
