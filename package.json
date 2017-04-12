@@ -26,7 +26,6 @@
     "build:copy": "cp -r ./app/package.json ./app/static ./app/icons/* ./build/",
     "build:install": "cd build && npm install",
     "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
-    "rebuild": "electron-rebuild -f -w node-libcurl",
     "package:mac": "rm -rf dist/mac && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --mac",
     "package:win": "rm -rf dist/win* && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --win",
     "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --linux",
@@ -34,8 +33,7 @@
     "build-n-package": "npm run build && npm run package",
     "build-n-package:win": "npm run build && npm run package:win",
     "build-n-package:mac": "npm run build && npm run package:mac",
-    "build-n-package:linux": "npm run build && npm run package:linux",
-    "sentry": "bash scripts/sentry-release.sh"
+    "build-n-package:linux": "npm run build && npm run package:linux"
   },
   "jest": {
     "setupFiles": [
@@ -172,7 +170,6 @@
     "jest": "~19.0.2",
     "less": "~2.7.2",
     "less-loader": "~2.2.3",
-    "nock": "~9.0.2",
     "react-hot-loader": "~3.0.0-beta.6",
     "redux-mock-store": "~1.0.2",
     "style-loader": "~0.13.2",
