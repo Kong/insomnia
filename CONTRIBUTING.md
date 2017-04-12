@@ -57,25 +57,3 @@ not get accepted into the project.
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owner to
 license your work under the same license as that used by the project.
-
-## Development Overview and Setup
-
-```bash
-# Install and use correct Node version
-nvm install
-
-# Actually use correct version
-nvm use
-
-# Install dependencies
-npm install
-```
-
-When you run the development environment, it will start both a dev server and an Electron
-instance. The dev server is part of Webpack and is used to control hot module replacement
-of UI components. This means that, if you change a component file, you will not need to
-refresh the app to see the change. It will inject the new component immediately.
-
-```bash
-npm run dev
-```

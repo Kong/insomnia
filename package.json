@@ -26,6 +26,7 @@
     "build:copy": "cp -r ./app/package.json ./app/static ./app/icons/* ./build/",
     "build:install": "cd build && npm install",
     "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
+    "rebuild": "electron-rebuild -f -w node-libcurl",
     "package:mac": "rm -rf dist/mac && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --mac",
     "package:win": "rm -rf dist/win* && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --win",
     "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --linux",

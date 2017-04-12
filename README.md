@@ -25,6 +25,23 @@ include relevant unit tests.
 Editor preferences are available in the [editor config](.editorconfig) for easy use in 
 common text editors. Read more and download plugins at <http://editorconfig.org>.
 
+## Developing
+
+Development on Insomnia can be done on Windows, Mac, and Linux with few requirements and only
+requires [NodeJS 7.4](https://nodejs.org) and [Git](https://git-scm.com/) to get started.
+
+```bash
+# Install dependencies
+npm install
+npm run rebuild 
+
+# Start app
+npm run dev
+
+# Run tests
+npm test
+```
+
 ## License
 
 [GNU AGPLv3](LICENSE) &copy; [Insomnia](https://insomnia.rest)
