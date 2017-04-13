@@ -63,6 +63,7 @@ class EnvironmentEditModal extends PureComponent {
     const {
       editorKeyMap,
       editorFontSize,
+      editorIndentSize,
       lineWrapping,
       render,
       getRenderContext,
@@ -80,6 +81,7 @@ class EnvironmentEditModal extends PureComponent {
         <ModalBody noScroll className="pad-top-sm">
           <EnvironmentEditor
             editorFontSize={editorFontSize}
+            editorIndentSize={editorIndentSize}
             editorKeyMap={editorKeyMap}
             ref={this._setEditorRef}
             key={requestGroup ? requestGroup._id : 'n/a'}
@@ -106,6 +108,7 @@ class EnvironmentEditModal extends PureComponent {
 EnvironmentEditModal.propTypes = {
   onChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
   getRenderContext: PropTypes.func.isRequired,

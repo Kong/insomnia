@@ -304,6 +304,7 @@ class Wrapper extends PureComponent {
           showPasswords={settings.showPasswords}
           useBulkHeaderEditor={settings.useBulkHeaderEditor}
           editorFontSize={settings.editorFontSize}
+          editorIndentSize={settings.editorIndentSize}
           editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           workspace={activeWorkspace}
@@ -346,6 +347,7 @@ class Wrapper extends PureComponent {
           ref={handleSetResponsePaneRef}
           request={activeRequest}
           editorFontSize={settings.editorFontSize}
+          editorIndentSize={settings.editorIndentSize}
           editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={responsePreviewMode}
@@ -391,6 +393,7 @@ class Wrapper extends PureComponent {
             ref={registerModal}
             environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
             editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
           />
           <SettingsModal
@@ -412,6 +415,7 @@ class Wrapper extends PureComponent {
           <EnvironmentEditModal
             ref={registerModal}
             editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             lineWrapping={settings.editorLineWrapping}
             onChange={models.requestGroup.update}
@@ -427,6 +431,7 @@ class Wrapper extends PureComponent {
             onChange={models.workspace.update}
             lineWrapping={settings.editorLineWrapping}
             editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
             render={handleRender}
             getRenderContext={handleGetRenderContext}

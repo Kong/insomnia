@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
-import Editor from '../codemirror/code-editor';
+import CodeEditor from '../codemirror/code-editor';
 import {trackEvent} from '../../../analytics/index';
 import allHeaderNames from '../../../datasets/header-names';
 import allCharsets from '../../../datasets/charsets';
@@ -87,6 +87,7 @@ class RequestHeadersEditor extends PureComponent {
       bulk,
       headers,
       editorFontSize,
+      editorIndentSize,
       editorLineWrapping,
       onChange,
       handleRender,
@@ -95,10 +96,11 @@ class RequestHeadersEditor extends PureComponent {
 
     return bulk ? (
         <div className="tall">
-          <Editor
+          <CodeEditor
             getRenderContext={handleGetRenderContext}
             render={handleRender}
             fontSize={editorFontSize}
+            indentSize={editorIndentSize}
             lineWrapping={editorLineWrapping}
             onChange={this._handleBulkUpdate}
             defaultValue={this._getHeadersString()}
@@ -131,6 +133,7 @@ RequestHeadersEditor.propTypes = {
   onChange: PropTypes.func.isRequired,
   bulk: PropTypes.bool.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,

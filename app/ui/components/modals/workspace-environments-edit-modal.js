@@ -165,6 +165,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
   render () {
     const {
       editorFontSize,
+      editorIndentSize,
       editorKeyMap,
       lineWrapping,
       render,
@@ -254,6 +255,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
             <div className="env-modal__editor">
               <EnvironmentEditor
                 editorFontSize={editorFontSize}
+                editorIndentSize={editorIndentSize}
                 editorKeyMap={editorKeyMap}
                 lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
@@ -285,6 +287,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
 WorkspaceEnvironmentsEditModal.propTypes = {
   onChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
   getRenderContext: PropTypes.func.isRequired,

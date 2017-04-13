@@ -40,6 +40,7 @@ class BodyEditor extends PureComponent {
     const {
       keyMap,
       fontSize,
+      indentSize,
       lineWrapping,
       request,
       handleRender: render,
@@ -90,6 +91,7 @@ class BodyEditor extends PureComponent {
         <RawEditor
           key={uniqueKey}
           fontSize={fontSize}
+          indentSize={indentSize}
           keyMap={keyMap}
           lineWrapping={lineWrapping}
           contentType={contentType || 'text/plain'}
@@ -123,6 +125,7 @@ BodyEditor.propTypes = {
 
   // Optional
   fontSize: PropTypes.number,
+  indentSize: PropTypes.number,
   keyMap: PropTypes.string,
   lineWrapping: PropTypes.bool
 };

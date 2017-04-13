@@ -1,5 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
-import Editor from '../../codemirror/code-editor';
+import CodeEditor from '../../codemirror/code-editor';
 
 class RawEditor extends PureComponent {
   render () {
@@ -7,6 +7,7 @@ class RawEditor extends PureComponent {
       contentType,
       content,
       fontSize,
+      indentSize,
       keyMap,
       render,
       getRenderContext,
@@ -16,9 +17,10 @@ class RawEditor extends PureComponent {
     } = this.props;
 
     return (
-      <Editor
+      <CodeEditor
         manualPrettify
         fontSize={fontSize}
+        indentSize={indentSize}
         keyMap={keyMap}
         defaultValue={content}
         className={className}
@@ -39,6 +41,7 @@ RawEditor.propTypes = {
   content: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
   fontSize: PropTypes.number.isRequired,
+  indentSize: PropTypes.number.isRequired,
   keyMap: PropTypes.string.isRequired,
   lineWrapping: PropTypes.bool.isRequired,
 

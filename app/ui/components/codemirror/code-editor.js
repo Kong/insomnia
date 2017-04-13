@@ -15,7 +15,7 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import './base-imports';
 
 const TAB_KEY = 9;
-const TAB_SIZE = 4;
+const DEFAULT_TAB_SIZE = 4;
 
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
@@ -28,8 +28,6 @@ const BASE_CODEMIRROR_OPTIONS = {
   lint: true,
   matchBrackets: true,
   autoCloseBrackets: true,
-  tabSize: TAB_SIZE,
-  indentUnit: TAB_SIZE,
   hintOptions: null,
   dragDrop: true,
   viewportMargin: 30, // default 10
@@ -337,7 +335,8 @@ class CodeEditor extends PureComponent {
       noDragDrop,
       hideScrollbars,
       noStyleActiveLine,
-      noLint
+      noLint,
+      indentSize
     } = this.props;
 
     let mode;
@@ -362,7 +361,9 @@ class CodeEditor extends PureComponent {
       keyMap: keyMap || 'default',
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
-      gutters: []
+      gutters: [],
+      tabSize: indentSize || DEFAULT_TAB_SIZE,
+      indentUnit: indentSize || DEFAULT_TAB_SIZE
     };
 
     if (!hideGutters && options.lineNumbers) {
@@ -653,6 +654,7 @@ CodeEditor.propTypes = {
   noMatchBrackets: PropTypes.bool,
   hideScrollbars: PropTypes.bool,
   fontSize: PropTypes.number,
+  indentSize: PropTypes.number,
   defaultValue: PropTypes.string,
   tabIndex: PropTypes.number,
   autoPrettify: PropTypes.bool,

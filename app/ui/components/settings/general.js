@@ -85,6 +85,17 @@ class General extends PureComponent {
           </div>
 
           <div className="form-control form-control--outlined pad-top-sm">
+            <label>Text Editor Indent Size
+                <input type="number"
+                       name="editorIndentSize"
+                       min={1}
+                       max={16}
+                       defaultValue={settings.editorIndentSize}
+                       onChange={this._handleUpdateSetting}/>
+            </label>
+          </div>
+
+          <div className="form-control form-control--outlined pad-top-sm">
             <label>Text Editor Key Map
               <select defaultValue={settings.editorKeyMap}
                       name="editorKeyMap"
