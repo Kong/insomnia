@@ -15,7 +15,7 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import './base-imports';
 
 const TAB_KEY = 9;
-const DEFAULT_TAB_SIZE = 4;
+const TAB_SIZE = 4;
 
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
@@ -28,6 +28,8 @@ const BASE_CODEMIRROR_OPTIONS = {
   lint: true,
   matchBrackets: true,
   autoCloseBrackets: true,
+  tabSize: TAB_SIZE,
+  indentUnit: TAB_SIZE,
   hintOptions: null,
   dragDrop: true,
   viewportMargin: 30, // default 10
@@ -361,10 +363,13 @@ class CodeEditor extends PureComponent {
       keyMap: keyMap || 'default',
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
-      gutters: [],
-      tabSize: indentSize || DEFAULT_TAB_SIZE,
-      indentUnit: indentSize || DEFAULT_TAB_SIZE
+      gutters: []
     };
+
+    if (indentSize) {
+      options.tabSize = indentSize;
+      options.indentUnit = indentSize;
+    }
 
     if (!hideGutters && options.lineNumbers) {
       options.gutters.push('CodeMirror-linenumbers');
