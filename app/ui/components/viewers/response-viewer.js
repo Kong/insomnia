@@ -1,7 +1,7 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
-import Editor from '../codemirror/code-editor';
+import CodeEditor from '../codemirror/code-editor';
 import ResponseWebView from './response-webview';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
@@ -75,6 +75,7 @@ class ResponseViewer extends PureComponent {
       contentType,
       editorLineWrapping,
       editorFontSize,
+      editorIndentSize,
       editorKeyMap,
       updateFilter,
       statusCode,
@@ -167,7 +168,7 @@ class ResponseViewer extends PureComponent {
       }
 
       return (
-        <Editor
+        <CodeEditor
           onClickLink={this._handleOpenLink}
           defaultValue={body}
           updateFilter={updateFilter}
@@ -178,6 +179,7 @@ class ResponseViewer extends PureComponent {
           mode={mode}
           lineWrapping={editorLineWrapping}
           fontSize={editorFontSize}
+          indentSize={editorIndentSize}
           keyMap={editorKeyMap}
           placeholder="..."
         />
@@ -192,6 +194,7 @@ ResponseViewer.propTypes = {
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,

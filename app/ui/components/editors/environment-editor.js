@@ -1,6 +1,6 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Editor from '../codemirror/code-editor';
+import CodeEditor from '../codemirror/code-editor';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 @autobind
@@ -30,6 +30,7 @@ class EnvironmentEditor extends PureComponent {
     const {
       environment,
       editorFontSize,
+      editorIndentSize,
       editorKeyMap,
       render,
       getRenderContext,
@@ -38,10 +39,11 @@ class EnvironmentEditor extends PureComponent {
     } = this.props;
 
     return (
-      <Editor
+      <CodeEditor
         ref={this._setEditorRef}
         autoPrettify
         fontSize={editorFontSize}
+        indentSize={editorIndentSize}
         lineWrapping={lineWrapping}
         keyMap={editorKeyMap}
         onChange={this._handleChange}
@@ -60,6 +62,7 @@ EnvironmentEditor.propTypes = {
   environment: PropTypes.object.isRequired,
   didChange: PropTypes.func.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
   getRenderContext: PropTypes.func.isRequired,

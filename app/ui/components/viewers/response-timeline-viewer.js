@@ -47,7 +47,7 @@ class ResponseTimelineViewer extends PureComponent {
   }
 
   render () {
-    const {timeline, editorFontSize, editorLineWrapping} = this.props;
+    const {timeline, editorFontSize, editorIndentSize, editorLineWrapping} = this.props;
     const rows = timeline.map(this.renderRow).filter(r => r !== null).join('\n');
     return (
       <CodeEditor
@@ -56,6 +56,7 @@ class ResponseTimelineViewer extends PureComponent {
         onClickLink={this._handleClickLink}
         defaultValue={rows}
         fontSize={editorFontSize}
+        indentSize={editorIndentSize}
         lineWrapping={editorLineWrapping}
         className="pad-left"
         mode="curl"
@@ -67,6 +68,7 @@ class ResponseTimelineViewer extends PureComponent {
 ResponseTimelineViewer.propTypes = {
   timeline: PropTypes.array.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired
 };
 

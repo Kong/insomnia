@@ -117,6 +117,7 @@ class RequestPane extends PureComponent {
   render () {
     const {
       editorFontSize,
+      editorIndentSize,
       editorKeyMap,
       editorLineWrapping,
       forceRefreshCounter,
@@ -258,6 +259,7 @@ class RequestPane extends PureComponent {
               request={request}
               onChange={updateRequestBody}
               fontSize={editorFontSize}
+              indentSize={editorIndentSize}
               keyMap={editorKeyMap}
               lineWrapping={editorLineWrapping}
             />
@@ -319,6 +321,7 @@ class RequestPane extends PureComponent {
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               editorFontSize={editorFontSize}
+              editorIndentSize={editorIndentSize}
               editorLineWrapping={editorLineWrapping}
               onChange={updateRequestHeaders}
               bulk={useBulkHeaderEditor}
@@ -362,6 +365,7 @@ RequestPane.propTypes = {
   useBulkHeaderEditor: PropTypes.bool.isRequired,
   showPasswords: PropTypes.bool.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,

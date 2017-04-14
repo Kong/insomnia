@@ -105,6 +105,7 @@ class ResponsePane extends PureComponent {
       loadStartTime,
       editorLineWrapping,
       editorFontSize,
+      editorIndentSize,
       editorKeyMap,
       filter,
       activeResponseId,
@@ -238,6 +239,7 @@ class ResponsePane extends PureComponent {
               responseId={response._id}
               editorLineWrapping={editorLineWrapping}
               editorFontSize={editorFontSize}
+              editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
               url={response.url}
             />
@@ -269,6 +271,7 @@ class ResponsePane extends PureComponent {
                   timeline={response.timeline || []}
                   editorLineWrapping={editorLineWrapping}
                   editorFontSize={editorFontSize}
+                  editorIndentSize={editorIndentSize}
                 />
             </TabPanel>
           ) : null }
@@ -295,6 +298,7 @@ ResponsePane.propTypes = {
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   loadStartTime: PropTypes.number.isRequired,

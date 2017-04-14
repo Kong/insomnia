@@ -11,6 +11,7 @@ export function init () {
     useBulkHeaderEditor: false,
     followRedirects: true,
     editorFontSize: 12,
+    editorIndentSize: 4,
     editorLineWrapping: true,
     editorKeyMap: 'default',
     httpProxy: '',

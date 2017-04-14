@@ -3,7 +3,7 @@ import autobind from 'autobind-decorator';
 import HTTPSnippet, {availableTargets} from 'httpsnippet';
 import CopyButton from '../base/copy-button';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
-import Editor from '../codemirror/code-editor';
+import CodeEditor from '../codemirror/code-editor';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -107,7 +107,7 @@ class GenerateCodeModal extends PureComponent {
 
   render () {
     const {cmd, target, client} = this.state;
-    const {editorFontSize, editorKeyMap} = this.props;
+    const {editorFontSize, editorIndentSize, editorKeyMap} = this.props;
 
     const targets = availableTargets();
 
@@ -152,7 +152,7 @@ class GenerateCodeModal extends PureComponent {
             &nbsp;&nbsp;
             <CopyButton content={cmd} className="pull-right btn btn--clicky"/>
           </div>
-          <Editor
+          <CodeEditor
             lineWrapping
             placeholder="Generating code snippet..."
             className="border-top"
@@ -160,6 +160,7 @@ class GenerateCodeModal extends PureComponent {
             mode={MODE_MAP[target.key] || target.key}
             ref={this._setEditorRef}
             fontSize={editorFontSize}
+            indentSize={editorIndentSize}
             keyMap={editorKeyMap}
             defaultValue={cmd}
           />
@@ -183,6 +184,7 @@ class GenerateCodeModal extends PureComponent {
 GenerateCodeModal.propTypes = {
   environmentId: PropTypes.string.isRequired,
   editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired
 };
 

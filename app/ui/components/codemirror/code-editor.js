@@ -337,7 +337,8 @@ class CodeEditor extends PureComponent {
       noDragDrop,
       hideScrollbars,
       noStyleActiveLine,
-      noLint
+      noLint,
+      indentSize
     } = this.props;
 
     let mode;
@@ -364,6 +365,11 @@ class CodeEditor extends PureComponent {
       lint: !noLint && !readOnly,
       gutters: []
     };
+
+    if (indentSize) {
+      options.tabSize = indentSize;
+      options.indentUnit = indentSize;
+    }
 
     if (!hideGutters && options.lineNumbers) {
       options.gutters.push('CodeMirror-linenumbers');
@@ -653,6 +659,7 @@ CodeEditor.propTypes = {
   noMatchBrackets: PropTypes.bool,
   hideScrollbars: PropTypes.bool,
   fontSize: PropTypes.number,
+  indentSize: PropTypes.number,
   defaultValue: PropTypes.string,
   tabIndex: PropTypes.number,
   autoPrettify: PropTypes.bool,
