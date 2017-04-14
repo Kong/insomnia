@@ -316,8 +316,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
-      } else if (renderedRequest.body.text) {
-        setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text);
+      } else if (typeof renderedRequest.body.mimeType === 'string') {
+        setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text || '');
       } else {
         // No body
         noBody = true;
@@ -373,7 +373,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Set Accept encoding
       if (!hasAcceptHeader(headers)) {
-        setOpt(Curl.option.ENCODING, ''); // Accept anything
+        setOpt(Curl.option.ACCEPT_ENCODING, ''); // Accept anything
       }
 
       // Prevent curl from adding default content-type header
