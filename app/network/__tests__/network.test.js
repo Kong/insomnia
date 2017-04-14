@@ -70,7 +70,7 @@ describe('actuallySend()', () => {
           'localhost\tTRUE\t/\tFALSE\t4000855249\tfoo\tbar'
         ],
         CUSTOMREQUEST: 'POST',
-        ENCODING: '',
+        ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/json',
@@ -150,7 +150,7 @@ describe('actuallySend()', () => {
       options: {
         COOKIEFILE: '',
         CUSTOMREQUEST: 'POST',
-        ENCODING: '',
+        ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/json',
@@ -204,7 +204,7 @@ describe('actuallySend()', () => {
       options: {
         COOKIEFILE: '',
         CUSTOMREQUEST: 'POST',
-        ENCODING: '',
+        ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
@@ -260,7 +260,7 @@ describe('actuallySend()', () => {
       options: {
         COOKIEFILE: '',
         CUSTOMREQUEST: 'POST',
-        ENCODING: '',
+        ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: multipart/form-data',
