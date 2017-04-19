@@ -190,6 +190,8 @@ class OneLineEditor extends PureComponent {
       for (let i = 0; i < 20 && node; i++) {
         if (node.tagName === 'FORM') {
           node.dispatchEvent(new window.Event('submit'));
+          e.preventDefault();
+          e.stopPropagation();
           break;
         }
         node = node.parentNode;
