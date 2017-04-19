@@ -139,7 +139,7 @@ async function _getAccessToken (requestId, authentication, forceRefresh) {
     authentication.credentialsInBody,
     authentication.clientId,
     authentication.clientSecret,
-    authentication.refreshToken,
+    token.refreshToken,
     authentication.scope
   );
 

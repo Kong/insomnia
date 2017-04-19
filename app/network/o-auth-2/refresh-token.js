@@ -10,7 +10,7 @@ export default async function (accessTokenUrl,
                                refreshToken,
                                scope = '') {
   const params = [
-    {name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_IMPLICIT},
+    {name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_REFRESH},
     {name: c.P_REFRESH_TOKEN, value: refreshToken}
   ];
 

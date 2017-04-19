@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import moment from 'moment';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
@@ -288,11 +289,13 @@ class OAuth2 extends PureComponent {
       return null;
     }
 
-    if (!token.expireAt) {
+    if (!token.expiresAt) {
       return '(never expires)';
     }
 
-    return `(expires ${new Date(token.expireAt)})`;
+    const expiresAt = new Date(token.expiresAt);
+    const str = moment(expiresAt).fromNow();
+    return <span title={expiresAt.toString()}>(expires {str})</span>;
   }
 
   render () {
@@ -345,7 +348,6 @@ class OAuth2 extends PureComponent {
             <label>
               <small>
                 Refresh Token
-                {(tok && tok.refreshToken) ? <em>&nbsp;{expireLabel}</em> : null}
               </small>
               <input value={(tok && tok.refreshToken) || ''}
                      placeholder="n/a"
@@ -355,8 +357,7 @@ class OAuth2 extends PureComponent {
           <div className="form-control form-control--outlined">
             <label>
               <small>
-                Access Token
-                {(tok && !tok.refreshToken) ? <em>&nbsp;{expireLabel}</em> : null}
+                Access Token {tok ? <em>{expireLabel}</em> : null}
               </small>
               <input value={(tok && tok.accessToken) || ''}
                      placeholder="n/a"

@@ -254,7 +254,7 @@ class OneLineEditor extends PureComponent {
   }
 
   _mayContainNunjucks (text) {
-    return !!text.match(NUNJUCKS_REGEX);
+    return !!(text && text.match(NUNJUCKS_REGEX));
   }
 
   render () {

@@ -1,8 +1,15 @@
+/**
+ * This function is temporary and should only be called when cleaning
+ * up duplicate ResourceGroups
+ * @param id
+ * @returns {*}
+ */
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import crypto from 'crypto';
 import * as util from '../common/misc';
+import {DB_PERSIST_INTERVAL} from '../common/constants';
 
 const TYPE_RESOURCE = 'Resource';
 const TYPE_CONFIG = 'Config';
@@ -66,12 +73,6 @@ export async function getResourceByDocId (id, resourceGroupId = null) {
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
-/**
- * This function is temporary and should only be called when cleaning
- * up duplicate ResourceGroups
- * @param id
- * @returns {*}
- */
 export function findResourcesByDocId (id) {
   return _execDB(TYPE_RESOURCE, 'find', {id});
 }
@@ -180,6 +181,10 @@ export function initDB (config, forceReset) {
     _database['Config'] = new NeDB(
       Object.assign({filename: configPath, autoload: true}, config)
     );
+
+    for (const key of Object.keys(_database)) {
+      _database[key].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+    }
 
     // Done
     console.log(`-- Initialize Sync DB at ${basePath} --`);
