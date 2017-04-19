@@ -121,6 +121,7 @@ describe('updateMimeType()', async () => {
     expect(request).not.toBeNull();
 
     const newRequest = await requestModel.updateMimeType(request, null);
+    expect(newRequest.body).toEqual({});
     expect(newRequest.headers).toEqual([]);
   });
 });

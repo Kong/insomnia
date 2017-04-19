@@ -144,7 +144,10 @@ export function updateMimeType (request, mimeType, doCreate = false) {
   // 1. Update Content-Type header //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  if (mimeType && contentTypeHeader) {
+  const hasBody = typeof mimeType === 'string';
+  if (!hasBody) {
+    headers = headers.filter(h => h !== contentTypeHeader);
+  } else if (mimeType && contentTypeHeader) {
     contentTypeHeader.value = mimeType;
   } else if (mimeType && !contentTypeHeader) {
     headers.push({name: 'Content-Type', value: mimeType});
