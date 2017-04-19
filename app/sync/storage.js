@@ -1,9 +1,3 @@
-/**
- * This function is temporary and should only be called when cleaning
- * up duplicate ResourceGroups
- * @param id
- * @returns {*}
- */
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
@@ -73,6 +67,12 @@ export async function getResourceByDocId (id, resourceGroupId = null) {
   return rawDocs.length >= 1 ? rawDocs[0] : null;
 }
 
+/**
+ * This function is temporary and should only be called when cleaning
+ * up duplicate ResourceGroups
+ * @param id
+ * @returns {*}
+ */
 export function findResourcesByDocId (id) {
   return _execDB(TYPE_RESOURCE, 'find', {id});
 }

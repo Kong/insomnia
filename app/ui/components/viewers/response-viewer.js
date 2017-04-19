@@ -1,4 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
+import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
 import CodeEditor from '../codemirror/code-editor';
@@ -141,24 +142,31 @@ class ResponseViewer extends PureComponent {
         </div>
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
+      const justContentType = contentType.split(';')[0];
+      const match = contentType.match(/charset=([\w-]+)/);
+      const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
       return (
         <ResponseWebView
-          body={bodyBuffer.toString('utf8')}
-          contentType={contentType}
+          body={iconv.decode(bodyBuffer, charset)}
+          contentType={`${justContentType}; charset=UTF-8`}
           url={url}
         />
       );
     } else if (previewMode === PREVIEW_MODE_RAW) {
+      const match = contentType.match(/charset=([\w-]+)/);
+      const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
       return (
         <ResponseRaw
-          value={bodyBuffer.toString('utf8')}
+          value={iconv.decode(bodyBuffer, charset)}
           fontSize={editorFontSize}
         />
       );
     } else { // Show everything else as "source"
-      let mode = contentType;
-      const body = bodyBuffer.toString('utf8');
+      const match = contentType.match(/charset=([\w-]+)/);
+      const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
+      const body = iconv.decode(bodyBuffer, charset);
 
+      let mode = contentType;
       try {
         // FEATURE: Detect JSON even without content-type
         contentType.indexOf('json') === -1 && JSON.parse(body);

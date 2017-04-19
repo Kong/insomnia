@@ -178,6 +178,7 @@ function hint (cm, options) {
   const nameMatchLong = previousText.match(NAME_MATCH_FLEXIBLE);
   const nameSegment = nameMatch ? nameMatch[0] : fallbackSegment;
   const nameSegmentLong = nameMatchLong ? nameMatchLong[0] : fallbackSegment;
+  const nameSegmentFull = previousText;
 
   // Actually try to match the list of things
   const allShortMatches = [];
@@ -195,9 +196,8 @@ function hint (cm, options) {
   // TODO: Make this more flexible. This is really only here as a hack to make
   // constants only match full string prefixes.
   if (allowMatchingConstants) {
-    // matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
-    //   .map(m => allShortMatches.push(m));
-    matchSegments(constantsToMatch, nameSegmentLong, TYPE_CONSTANT, MAX_CONSTANTS)
+    // Only match full segments with constants
+    matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS)
       .map(m => allLongMatches.push(m));
   }
 

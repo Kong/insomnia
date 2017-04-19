@@ -336,8 +336,6 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       curl.on('data', chunk => {
         dataBuffers.push(chunk);
         dataBuffersLength += chunk.length;
-        // console.log('CHUNK', iconv.decode(chunk, 'ISO-8859-1'));
-        // console.log('CHUNK', chunk.toString('utf8'));
       });
 
       // Handle Authorization header
