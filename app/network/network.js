@@ -84,6 +84,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Set all the basic options
       setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      setOpt(Curl.option.NOBODY, renderedRequest.method.toLowerCase() === 'head' ? 1 : 0);
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
