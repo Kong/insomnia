@@ -4,6 +4,7 @@ import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/d
 import * as constants from '../../../common/constants';
 import {showModal} from '../modals/index';
 import PromptModal from '../modals/prompt-modal';
+import {trackEvent} from '../../../analytics/index';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 
@@ -42,10 +43,21 @@ class MethodDropdown extends PureComponent {
 
     // Invoke callback
     this.props.onChange(method);
+    trackEvent('Request', 'Set Method', 'Custom');
+  }
+
+  _handleChange (method) {
+    this.props.onChange(method);
+    trackEvent('Request', 'Set Method', method);
   }
 
   render () {
-    const {method, onChange, right, ...extraProps} = this.props;
+    const {
+      method,
+      right,
+      onChange, // eslint-disable-line no-unused-vars
+      ...extraProps
+    } = this.props;
     return (
       <Dropdown className="method-dropdown" right={right}>
         <DropdownButton type="button" {...extraProps}>
@@ -54,7 +66,7 @@ class MethodDropdown extends PureComponent {
         {constants.HTTP_METHODS.map(method => (
           <DropdownItem key={method}
                         className={`http-method-${method}`}
-                        onClick={onChange}
+                        onClick={this._handleChange}
                         value={method}>
             {method}
           </DropdownItem>
