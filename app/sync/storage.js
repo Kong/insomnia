@@ -3,6 +3,7 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import crypto from 'crypto';
 import * as util from '../common/misc';
+import {DB_PERSIST_INTERVAL} from '../common/constants';
 
 const TYPE_RESOURCE = 'Resource';
 const TYPE_CONFIG = 'Config';
@@ -180,6 +181,10 @@ export function initDB (config, forceReset) {
     _database['Config'] = new NeDB(
       Object.assign({filename: configPath, autoload: true}, config)
     );
+
+    for (const key of Object.keys(_database)) {
+      _database[key].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+    }
 
     // Done
     console.log(`-- Initialize Sync DB at ${basePath} --`);

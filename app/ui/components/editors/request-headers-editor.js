@@ -31,10 +31,10 @@ class RequestHeadersEditor extends PureComponent {
     const rows = headersString.split(/[\n,]+/);
 
     for (const row of rows) {
-      const items = row.split(':');
+      const [rawName, ...items] = row.split(':');
 
-      const name = (items[0] || '').trim();
-      const value = (items[1] || '').trim();
+      const name = (rawName || '').trim();
+      const value = (items.join(':')).trim();
 
       headers.push({name, value});
     }

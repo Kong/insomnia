@@ -8,7 +8,7 @@ import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
-import {describeByteSize, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -84,10 +84,12 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Set all the basic options
       setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+      setOpt(Curl.option.NOBODY, renderedRequest.method.toLowerCase() === 'head' ? 1 : 0);
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
+      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
@@ -369,11 +371,6 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       // Set User-Agent if it't not already in headers
       if (!hasUserAgentHeader(headers)) {
         setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
-      }
-
-      // Set Accept encoding
-      if (!hasAcceptHeader(headers)) {
-        setOpt(Curl.option.ACCEPT_ENCODING, ''); // Accept anything
       }
 
       // Prevent curl from adding default content-type header

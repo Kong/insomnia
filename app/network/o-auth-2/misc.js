@@ -17,7 +17,7 @@ export function responseToObject (body, keys) {
 
   let results = {};
   for (const key of keys) {
-    const value = typeof data[key] === 'string' ? data[key] : null;
+    const value = data[key] !== undefined ? data[key] : null;
     results[key] = value;
   }
 
