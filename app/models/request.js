@@ -140,6 +140,17 @@ export function updateMimeType (request, mimeType, doCreate = false) {
   let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);
 
+  // Check if we are converting to/from variants of XML or JSON
+  let leaveContentTypeAlone = false;
+  if (contentTypeHeader && mimeType) {
+    const current = contentTypeHeader.value;
+    if (current.includes('xml') && mimeType.includes('xml')) {
+      leaveContentTypeAlone = true;
+    } else if (current.includes('json') && mimeType.includes('json')) {
+      leaveContentTypeAlone = true;
+    }
+  }
+
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // 1. Update Content-Type header //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -147,7 +158,7 @@ export function updateMimeType (request, mimeType, doCreate = false) {
   const hasBody = typeof mimeType === 'string';
   if (!hasBody) {
     headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (mimeType && contentTypeHeader) {
+  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
     contentTypeHeader.value = mimeType;
   } else if (mimeType && !contentTypeHeader) {
     headers.push({name: 'Content-Type', value: mimeType});
