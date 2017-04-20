@@ -11,7 +11,7 @@ const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 const MAX_HINT_LOOK_BACK = 100;
-const HINT_DELAY_MILLIS = 400;
+const HINT_DELAY_MILLIS = 700;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
@@ -48,6 +48,10 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   async function completeAfter (cm, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
+      return;
+    }
+
+    if (!cm.hasFocus()) {
       return;
     }
 

@@ -296,6 +296,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Build the body
       let noBody = false;
+      const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         const d = querystring.buildFromParams(renderedRequest.body.params || [], true);
         setOpt(Curl.option.POSTFIELDS, d); // Send raw data
@@ -318,7 +319,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
-      } else if (typeof renderedRequest.body.mimeType === 'string') {
+      } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
         setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text || '');
       } else {
         // No body
