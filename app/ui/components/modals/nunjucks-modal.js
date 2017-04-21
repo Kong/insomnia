@@ -36,6 +36,7 @@ class NunjucksModal extends PureComponent {
   _handleModalHide () {
     if (this._onDone) {
       this._onDone(this._currentTemplate);
+      this.setState({defaultTemplate: ''});
     }
   }
 
