@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav auto auto minmax(0, 1fr) auto;
+  grid-template-rows: @height-nav @line-height-sm auto minmax(0, 1fr) auto;
   grid-template-columns: 100%;
   z-index: 10;
 
@@ -14,10 +14,8 @@
   width: 100%;
   height: 100%;
 
-  // Don't collapse direct children, but their children
   &.sidebar--collapsed > * > * {
-    opacity: 0;
-    transition: opacity 300ms;
+    display: none;
   }
 
   &.sidebar--hidden {
@@ -57,29 +55,27 @@
 
   .sidebar__filter {
     // Nothing yet
-    width: 100%;
     display: grid;
     font-size: @font-size-sm;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+    box-sizing: border-box;
+    padding: 0 0 0 @padding-sm;
 
     .btn {
       padding: 0 (@padding-md - @padding-xs);
       margin-right: @padding-xxs;
       border-radius: @radius-md;
       margin-left: @padding-xxs;
-      margin-bottom: @padding-xxs;
+      margin-bottom: @padding-xs;
+      height: @line-height-xxs;
     }
 
-    .form-control {
-      padding: 0 @padding-sm 0 0;
-      margin: 0 0 @padding-sm @padding-sm;
-
-      input {
-        padding: @padding-xs;
-        height: auto;
-        background: transparent;
-      }
+    .form-control input {
+      padding: @padding-xs;
+      margin-top: 0;
+      height: auto;
+      background: transparent;
     }
   }
 
@@ -95,7 +91,7 @@
 
     & > * {
       width: 100%;
-      margin-top: @padding-sm;
+      margin-top: @padding-xs;
     }
 
     & > *:first-child {
@@ -142,6 +138,7 @@
 
   &.sidebar--skinny .sidebar__filter {
     grid-template-columns: 100%;
+    padding-right: @padding-sm;
 
     & > *:first-child {
       margin-right: @padding-xs;

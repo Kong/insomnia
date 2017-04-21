@@ -156,7 +156,7 @@
     "concurrently": "~2.0.0",
     "cross-env": "~2.0.0",
     "css-loader": "~0.26.2",
-    "electron": "~1.6.2",
+    "electron": "~1.6.5",
     "electron-builder": "~10.17.3",
     "electron-rebuild": "^1.5.7",
     "eslint": "^3.16.1",

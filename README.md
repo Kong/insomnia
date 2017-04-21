@@ -33,7 +33,6 @@ requires [NodeJS 7.4](https://nodejs.org) and [Git](https://git-scm.com/) to get
 ```bash
 # Install dependencies
 npm install
-npm run rebuild 
 
 # Start app
 npm run dev

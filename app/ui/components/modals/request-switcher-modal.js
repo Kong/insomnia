@@ -212,7 +212,7 @@ class RequestSwitcherModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef} dontFocus tall>
         <ModalHeader hideCloseButton>
-          <div className="pull-right txt-md pad-right">
+          <div className="pull-right txt-sm pad-right">
             <span className="monospace">tab</span> or
             &nbsp;
             <span className="monospace">↑ ↓</span> &nbsp;to navigate
@@ -228,6 +228,7 @@ class RequestSwitcherModal extends PureComponent {
             <div className="form-control form-control--outlined no-margin">
               <input
                 type="text"
+                placeholder="Search"
                 ref={this._setInputRef}
                 value={searchString}
                 onChange={this._handleChange}
@@ -238,7 +239,7 @@ class RequestSwitcherModal extends PureComponent {
             {matchedRequests.map((r, i) => {
               const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
-                'btn btn--compact wide text-left',
+                'btn btn--super-compact wide text-left',
                 {focus: activeIndex === i}
               );
 
@@ -266,7 +267,7 @@ class RequestSwitcherModal extends PureComponent {
 
             {matchedWorkspaces.map((w, i) => {
               const buttonClasses = classnames(
-                'btn btn--compact wide text-left',
+                'btn btn--super-compact wide text-left',
                 {focus: (activeIndex - matchedRequests.length) === i}
               );
 

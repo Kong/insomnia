@@ -497,7 +497,10 @@ export async function send (requestId, environmentId) {
   const renderedRequest = await getRenderedRequest(request, environmentId);
 
   // Get the workspace for the request
-  const ancestors = await db.withAncestors(request);
+  const ancestors = await db.withAncestors(request, [
+    models.requestGroup.type,
+    models.workspace.type
+  ]);
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!

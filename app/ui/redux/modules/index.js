@@ -13,19 +13,7 @@ export async function init () {
   const {addChanges, addChangesSync} = bindActionCreators(entities, store.dispatch);
   const {newCommand} = bindActionCreators(global, store.dispatch);
 
-  // Restore docs in parent->child->grandchild order
-  const allDocs = [
-    ...(await models.settings.all()),
-    ...(await models.workspace.all()),
-    ...(await models.workspaceMeta.all()),
-    ...(await models.environment.all()),
-    ...(await models.cookieJar.all()),
-    ...(await models.requestGroup.all()),
-    ...(await models.requestGroupMeta.all()),
-    ...(await models.request.all()),
-    ...(await models.requestMeta.all()),
-    ...(await models.oAuth2Token.all())
-  ];
+  const allDocs = await getAllDocs();
 
   // Link DB changes to entities reducer/actions
   const changes = allDocs.map(doc => [db.CHANGE_UPDATE, doc]);
@@ -44,3 +32,32 @@ export const reducer = combineReducers({
   entities: entities.reducer,
   global: global.reducer
 });
+
+/**
+ * Async function to get all docs concurrently
+ */
+async function getAllDocs () {
+  // Restore docs in parent->child->grandchild order
+  const allQueryResults = await Promise.all([
+    models.settings.all(),
+    models.workspace.all(),
+    models.workspaceMeta.all(),
+    models.environment.all(),
+    models.cookieJar.all(),
+    models.requestGroup.all(),
+    models.requestGroupMeta.all(),
+    models.request.all(),
+    models.requestMeta.all(),
+    models.oAuth2Token.all()
+  ]);
+
+  // Aggregate all results into one big array
+  const allDocs = [];
+  for (const result of allQueryResults) {
+    for (const doc of result) {
+      allDocs.push(doc);
+    }
+  }
+
+  return allDocs;
+}

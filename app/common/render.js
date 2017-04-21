@@ -117,7 +117,10 @@ export async function getRenderContext (request, environmentId, ancestors = null
   }
 
   if (!ancestors) {
-    ancestors = await db.withAncestors(request);
+    ancestors = await db.withAncestors(request, [
+      models.requestGroup.type,
+      models.workspace.type
+    ]);
   }
 
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
@@ -129,7 +132,10 @@ export async function getRenderContext (request, environmentId, ancestors = null
 }
 
 export async function getRenderedRequest (request, environmentId) {
-  const ancestors = await db.withAncestors(request);
+  const ancestors = await db.withAncestors(request, [
+    models.requestGroup.type,
+    models.workspace.type
+  ]);
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
   const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
 
