@@ -182,6 +182,11 @@ export async function getWhere (type, query) {
 }
 
 export function get (type, id) {
+  // Short circuit IDs used to represent nothing
+  if (!id || id === 'n/a') {
+    return null;
+  }
+
   return getWhere(type, {_id: id});
 }
 
@@ -348,17 +353,17 @@ export async function withDescendants (doc = null, stopType = null) {
   return await next([doc]);
 }
 
-export async function withAncestors (doc) {
+export async function withAncestors (doc, types = allTypes()) {
   let docsToReturn = doc ? [doc] : [];
 
   async function next (docs) {
     let foundDocs = [];
 
     for (const d of docs) {
-      for (const type of allTypes()) {
+      for (const type of types) {
         // If the doc is null, we want to search for parentId === null
-        const more = await find(type, {_id: d.parentId});
-        foundDocs = [...foundDocs, ...more];
+        const another = await get(type, d.parentId);
+        another && foundDocs.push(another);
       }
     }
 

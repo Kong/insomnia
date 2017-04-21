@@ -36,7 +36,7 @@ class ResponsePane extends PureComponent {
   }
 
   async _getResponse (requestId, responseId) {
-    let response = await models.response.getById(responseId);
+    let response = responseId ? await models.response.getById(responseId) : null;
 
     if (!response) {
       response = await models.response.getLatestByParentId(requestId);

@@ -75,7 +75,7 @@ class MethodDropdown extends PureComponent {
         <DropdownItem className="http-method-custom"
                       onClick={this._handleSetCustomMethod}
                       value={method}>
-          Set Custom Method
+          Custom Method
         </DropdownItem>
       </Dropdown>
     );
