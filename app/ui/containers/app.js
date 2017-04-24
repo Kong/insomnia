@@ -18,7 +18,7 @@ import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent, trackLegacyEvent} from '../../analytics';
+import {trackEvent} from '../../analytics';
 import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
@@ -357,7 +357,6 @@ class App extends PureComponent {
     const key = request._id;
     if (this._sendRequestTrackingKey !== key) {
       trackEvent('Request', 'Send and Download');
-      trackLegacyEvent('Request Send');
       this._sendRequestTrackingKey = key;
     }
 
@@ -402,7 +401,6 @@ class App extends PureComponent {
     const key = `${request._id}::${request.modified}`;
     if (this._sendRequestTrackingKey !== key) {
       trackEvent('Request', 'Send');
-      trackLegacyEvent('Request Send');
       this._sendRequestTrackingKey = key;
     }
 
@@ -602,9 +600,6 @@ class App extends PureComponent {
   }
 
   async componentDidMount () {
-    // Do The Analytics
-    trackLegacyEvent('App Launched');
-
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
@@ -619,7 +614,6 @@ class App extends PureComponent {
     const firstLaunch = !lastVersion;
     if (firstLaunch) {
       // TODO: Show a welcome message
-      trackLegacyEvent('First Launch');
       trackEvent('General', 'First Launch', getAppVersion(), {nonInteraction: true});
     } else if (lastVersion !== getAppVersion()) {
       trackEvent('General', 'Updated', getAppVersion(), {nonInteraction: true});

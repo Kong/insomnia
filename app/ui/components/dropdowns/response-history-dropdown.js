@@ -40,9 +40,7 @@ class ResponseHistoryDropdown extends PureComponent {
         return;
       }
 
-      if (this.state.responses.length !== responses.length) {
-        this.setState({responses});
-      }
+      this.setState({responses});
     }, 500);
   }
 

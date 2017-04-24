@@ -61,7 +61,5 @@ describe('init()', () => {
     analytics.init();
     jest.runAllTicks();
     expect(window.ga.mock.calls.length).toBe(9);
-
-    // TODO: Verify that Segment works (although it's not that important)
   });
 });
