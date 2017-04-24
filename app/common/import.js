@@ -3,6 +3,11 @@ import * as db from './database';
 import * as models from '../models';
 import {getAppVersion} from './constants';
 import * as misc from './misc';
+import {showModal} from '../ui/components/modals/index';
+import AlertModal from '../ui/components/modals/alert-modal';
+import * as fetch from './fetch';
+import fs from 'fs';
+import {trackEvent} from '../analytics/index';
 
 const EXPORT_FORMAT = 3;
 
@@ -22,6 +27,42 @@ const MODELS = {
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: models.environment
 };
+
+export async function importUri (workspaceId, uri) {
+  let rawText;
+  console.log('IMPORT FROM URI', uri);
+  if (uri.match(/^(http|https):\/\//)) {
+    console.log('URI');
+    const response = await fetch.rawFetch(uri);
+    rawText = await response.text();
+  } else {
+    rawText = fs.readFileSync(uri, 'utf8');
+  }
+
+  const workspace = await models.workspace.getById(workspaceId);
+  const result = await importRaw(workspace, rawText);
+  const {summary, source, error} = result;
+
+  if (error) {
+    showModal(AlertModal, {title: 'Import Failed', message: error});
+    return;
+  }
+
+  let statements = Object.keys(summary).map(type => {
+    const count = summary[type].length;
+    const name = models.getModelName(type, count);
+    return count === 0 ? null : `${count} ${name}`;
+  }).filter(s => s !== null);
+
+  let message;
+  if (statements.length === 0) {
+    message = 'Nothing was found to import.';
+  } else {
+    message = `You imported ${statements.join(', ')}!`;
+  }
+  showModal(AlertModal, {title: 'Import Succeeded', message});
+  trackEvent('Import', 'Success', source);
+}
 
 export async function importRaw (workspace, rawContent, generateNewIds = false) {
   let results;

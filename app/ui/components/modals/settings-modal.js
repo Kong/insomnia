@@ -53,8 +53,13 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  _handleImport () {
+  _handleImportFile () {
     this.props.handleImportFile();
+    this.modal.hide();
+  }
+
+  _handleImportUri (uri) {
+    this.props.handleImportUri(uri);
     this.modal.hide();
   }
 
@@ -148,7 +153,8 @@ class SettingsModal extends PureComponent {
               <ImportExport
                 handleExportAll={this._handleExportAllToFile}
                 handleExportWorkspace={this._handleExportWorkspace}
-                handleImport={this._handleImport}
+                handleImportFile={this._handleImportFile}
+                handleImportUri={this._handleImportUri}
               />
             </TabPanel>
             <TabPanel className="scrollable">
@@ -178,6 +184,7 @@ SettingsModal.propTypes = {
   handleExportWorkspaceToFile: PropTypes.func.isRequired,
   handleExportAllToFile: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,
+  handleImportUri: PropTypes.func.isRequired,
 
   // Properties
   settings: PropTypes.object.isRequired

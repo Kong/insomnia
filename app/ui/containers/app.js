@@ -823,6 +823,7 @@ function mapDispatchToProps (dispatch) {
 
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
+    handleImportUriToWorkspace: global.importUri,
     handleExportFile: global.exportFile,
     handleMoveRequest: _moveRequest,
     handleMoveRequestGroup: _moveRequestGroup
