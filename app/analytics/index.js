@@ -1,4 +1,3 @@
-import * as segment from './segment';
 import * as google from './google';
 import {ipcRenderer} from 'electron';
 import {getAppVersion, getAppPlatform} from '../common/constants';
@@ -9,7 +8,6 @@ export async function init (accountId) {
     return;
   }
 
-  await segment.init();
   await google.init(accountId, getAppPlatform(), getAppVersion());
 
   initialized = true;
@@ -30,11 +28,5 @@ export function setAccountId (accountId) {
   // Do on next tick in case it fails or blocks
   process.nextTick(() => {
     google.setUserId(accountId);
-  });
-}
-
-export function trackLegacyEvent (event, properties) {
-  process.nextTick(() => {
-    segment.trackLegacyEvent(event, properties);
   });
 }

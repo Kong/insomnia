@@ -9,7 +9,6 @@
   "author": "Insomnia <support@insomnia.rest>",
   "main": "main.js",
   "dependencies": {
-    "analytics-node": "~2.1.0",
     "electron-context-menu": "~0.8.0",
     "electron-squirrel-startup": "~1.0.0",
     "hkdf": "0.0.2",

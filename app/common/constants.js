@@ -57,10 +57,6 @@ export function joinHotKeys (keys) {
   return keys.join(isMac() ? '' : '+');
 }
 
-export const SEGMENT_WRITE_KEY = isDevelopment()
-  ? 'z7fwuyxxTragtISwExCNnoqUlWZbr4Sy'
-  : 'DlRubvWRIqAyzhLAQ5Lea1nXdIAsEoD2';
-
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;
