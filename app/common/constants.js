@@ -26,6 +26,14 @@ export function isMac () {
   return getAppPlatform() === 'darwin';
 }
 
+export function isLinux () {
+  return getAppPlatform() === 'linux';
+}
+
+export function isWindows () {
+  return getAppPlatform() === 'win32';
+}
+
 export function isDevelopment () {
   return getAppEnvironment() === 'development';
 }

@@ -138,7 +138,8 @@ export function importFile (workspaceId) {
       // Let's import all the paths!
       for (const path of paths) {
         try {
-          await importUtils.importUri(workspaceId, path);
+          const uri = `file://${path}`;
+          await importUtils.importUri(workspaceId, uri);
           trackEvent('Import File', 'Success');
         } catch (err) {
           showModal(AlertModal, {title: 'Import Failed', message: err + ''});

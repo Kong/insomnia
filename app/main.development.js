@@ -1,5 +1,5 @@
-import reboot from 'electron-squirrel-startup';
-if (reboot) {
+import needsRestart from 'electron-squirrel-startup';
+if (needsRestart) {
   process.exit(0);
 }
 
@@ -9,20 +9,16 @@ import path from 'path';
 import electron from 'electron';
 import * as packageJSON from './package.json';
 import LocalStorage from './common/local-storage';
-
-// Some useful helpers
-const IS_DEV = process.env.INSOMNIA_ENV === 'development';
-const IS_MAC = process.platform === 'darwin';
-const IS_WINDOWS = process.platform === 'win32';
-const IS_LINUX = !IS_MAC && !IS_WINDOWS;
+import * as protocols from './main/protocols';
+import {isDevelopment, isLinux, isMac} from './common/constants';
 
 const ravenClient = Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
-  environment: process.env.INSOMNIA_ENV || 'production',
+  environment: isDevelopment() ? 'development' : 'production',
   release: packageJSON.version,
   logger: 'electron.main'
 });
 
-if (!IS_DEV) {
+if (!isDevelopment()) {
   ravenClient.install();
 }
 
@@ -30,7 +26,6 @@ const {app, dialog, shell, ipcMain, autoUpdater, Menu, BrowserWindow} = electron
 const {version: appVersion, productName: appName} = packageJSON;
 
 const UPDATE_URLS = {
-  // Add `r` param to help cache bust
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
   linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}`,
   win32: `https://downloads.insomnia.rest/win`
@@ -45,7 +40,7 @@ let hasPromptedForUpdates = false;
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
 
 process.on('uncaughtException', e => {
-  if (IS_DEV) {
+  if (isDevelopment()) {
     console.error(e);
   } else {
     ravenClient.captureError(e, {});
@@ -53,7 +48,7 @@ process.on('uncaughtException', e => {
 });
 
 autoUpdater.on('error', e => {
-  if (IS_DEV) {
+  if (isDevelopment()) {
     console.error(e);
   } else {
     // Don't report autoUpdater error. They are way too noisy
@@ -79,12 +74,12 @@ function checkForUpdates () {
     return;
   }
 
-  if (IS_DEV) {
+  if (isDevelopment()) {
     console.log('-- Skipping update check in Development --');
     return;
   }
 
-  if (!IS_LINUX) {
+  if (!isLinux()) {
     try {
       autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
       autoUpdater.checkForUpdates();
@@ -186,7 +181,7 @@ function getZoomFactor () {
 
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
-  if (!IS_MAC) {
+  if (!isMac()) {
     app.quit();
   }
 });
@@ -210,6 +205,9 @@ app.on('ready', () => {
   initLocalStorage();
   createWindow();
   checkForUpdates();
+
+  // Register protocols
+  protocols.init();
 });
 
 function initLocalStorage () {
@@ -297,11 +295,11 @@ function createWindow () {
         {
           label: `About ${appName}`,
           role: 'about',
-          visible: IS_MAC
+          visible: isMac()
         },
         {
           type: 'separator',
-          visible: IS_MAC
+          visible: isMac()
         },
         {
           label: 'Preferences',
@@ -328,15 +326,15 @@ function createWindow () {
         },
         {
           type: 'separator',
-          visible: IS_MAC
+          visible: isMac()
         },
         {
           role: 'hide',
-          visible: IS_MAC
+          visible: isMac()
         },
         {
           role: 'hideothers',
-          visible: IS_MAC
+          visible: isMac()
         },
         {type: 'separator'},
         {
@@ -401,7 +399,7 @@ function createWindow () {
         },
         {
           label: 'Zoom In',
-          accelerator: IS_MAC ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
+          accelerator: isMac() ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
           click: () => {
             const window = BrowserWindow.getFocusedWindow();
             if (!window || !window.webContents) {
@@ -449,7 +447,7 @@ function createWindow () {
       role: 'window',
       submenu: [
         {role: 'minimize'},
-        ...(IS_MAC ? [{role: 'close'}] : [])
+        ...(isMac() ? [{role: 'close'}] : [])
       ]
     }, {
       label: 'Help',
@@ -475,7 +473,7 @@ function createWindow () {
     }
   ];
 
-  if (IS_DEV || process.env.INSOMNIA_FORCE_DEBUG) {
+  if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
     template.push({
       label: 'Developer',
       position: 'before=help',

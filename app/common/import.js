@@ -30,13 +30,14 @@ const MODELS = {
 
 export async function importUri (workspaceId, uri) {
   let rawText;
-  console.log('IMPORT FROM URI', uri);
   if (uri.match(/^(http|https):\/\//)) {
-    console.log('URI');
     const response = await fetch.rawFetch(uri);
     rawText = await response.text();
+  } else if (uri.match(/^(file):\/\//)) {
+    const path = uri.replace(/^(file):\/\//, '');
+    rawText = fs.readFileSync(path, 'utf8');
   } else {
-    rawText = fs.readFileSync(uri, 'utf8');
+    throw new Error(`Invalid import URI ${uri}`);
   }
 
   const workspace = await models.workspace.getById(workspaceId);
