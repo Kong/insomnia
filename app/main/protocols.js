@@ -1,5 +1,7 @@
-import {app, dialog} from 'electron';
+import electron from 'electron';
 import {isDevelopment} from '../common/constants';
+
+const {app, dialog} = electron;
 
 const PROTOCOL_INSOMNIA = isDevelopment() ? 'insomnia' : 'insomniadev';
 const PROTOCOLS = [PROTOCOL_INSOMNIA];

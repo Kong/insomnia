@@ -18,8 +18,6 @@
 <script>
   // UPDATE HANDLERS
   (function () {
-    const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
-
     function showUpdateNotification () {
       console.log('-- Update Available --');
 
@@ -37,12 +35,6 @@
       // you relaunch too soon it doesn't work the first time.
       setTimeout(showUpdateNotification, 1000 * 10);
     });
-
-    function checkForUpdates () {
-      ipcRenderer.send('check-for-updates');
-    }
-
-    setInterval(checkForUpdates, CHECK_FOR_UPDATES_INTERVAL);
   })();
 </script>
 <script>

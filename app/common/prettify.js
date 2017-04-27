@@ -92,6 +92,9 @@ export function prettifyJson (json, indentChars) {
         }
         newJson += currentChar;
         break;
+      case '\r':
+        // Skip windows return characters
+        break;
       default:
         newJson += currentChar;
         break;

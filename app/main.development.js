@@ -1,93 +1,25 @@
 import needsRestart from 'electron-squirrel-startup';
+import fs from 'fs';
+import path from 'path';
+import electron from 'electron';
+import LocalStorage from './common/local-storage';
+import {getAppName, isDevelopment, isMac} from './common/constants';
+import * as protocols from './main/protocols';
+import * as errorHandling from './main/error-handling';
+import * as updates from './main/updates';
+
+// Handle potential auto-update
 if (needsRestart) {
   process.exit(0);
 }
 
-import fs from 'fs';
-import Raven from 'raven';
-import path from 'path';
-import electron from 'electron';
-import * as packageJSON from './package.json';
-import LocalStorage from './common/local-storage';
-import * as protocols from './main/protocols';
-import {isDevelopment, isLinux, isMac} from './common/constants';
-
-const ravenClient = Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
-  environment: isDevelopment() ? 'development' : 'production',
-  release: packageJSON.version,
-  logger: 'electron.main'
-});
-
-if (!isDevelopment()) {
-  ravenClient.install();
-}
-
-const {app, dialog, shell, ipcMain, autoUpdater, Menu, BrowserWindow} = electron;
-const {version: appVersion, productName: appName} = packageJSON;
-
-const UPDATE_URLS = {
-  darwin: `https://updates.insomnia.rest/builds/check/mac?v=${appVersion}`,
-  linux: `https://updates.insomnia.rest/builds/check/linux?v=${appVersion}`,
-  win32: `https://downloads.insomnia.rest/win`
-};
+const {app, dialog, shell, Menu, BrowserWindow} = electron;
 
 let localStorage = null;
-
 let mainWindow = null;
-let hasPromptedForUpdates = false;
 
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
-
-process.on('uncaughtException', e => {
-  if (isDevelopment()) {
-    console.error(e);
-  } else {
-    ravenClient.captureError(e, {});
-  }
-});
-
-autoUpdater.on('error', e => {
-  if (isDevelopment()) {
-    console.error(e);
-  } else {
-    // Don't report autoUpdater error. They are way too noisy
-  }
-});
-
-autoUpdater.on('update-not-available', () => {
-  console.log('-- Update Not Available --');
-});
-
-autoUpdater.on('update-available', () => {
-  console.log('-- Update Available --');
-});
-
-autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
-  console.log(`-- Update Downloaded ${releaseName} --`);
-  showUpdateNotification();
-});
-
-function checkForUpdates () {
-  if (hasPromptedForUpdates) {
-    // We've already prompted for updates. Don't bug the user anymore
-    return;
-  }
-
-  if (isDevelopment()) {
-    console.log('-- Skipping update check in Development --');
-    return;
-  }
-
-  if (!isLinux()) {
-    try {
-      autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
-      autoUpdater.checkForUpdates();
-    } catch (e) {
-      // This will fail in development
-    }
-  }
-}
 
 function showUnresponsiveModal () {
   dialog.showMessageBox({
@@ -105,20 +37,6 @@ function showUnresponsiveModal () {
   });
 }
 
-function showUpdateNotification () {
-  if (hasPromptedForUpdates) {
-    return;
-  }
-
-  const window = BrowserWindow.getFocusedWindow();
-  if (!window || !window.webContents) {
-    return;
-  }
-
-  window.webContents.send('update-available');
-  hasPromptedForUpdates = true;
-}
-
 function trackEvent (...args) {
   const window = BrowserWindow.getFocusedWindow();
   if (!window || !window.webContents) {
@@ -127,11 +45,6 @@ function trackEvent (...args) {
 
   window.webContents.send('analytics-track-event', args);
 }
-
-ipcMain.on('check-for-updates', () => {
-  console.log('-- Checking for Updates --');
-  checkForUpdates();
-});
 
 function saveBounds () {
   if (!mainWindow) {
@@ -204,10 +117,10 @@ app.on('activate', (e, hasVisibleWindows) => {
 app.on('ready', () => {
   initLocalStorage();
   createWindow();
-  checkForUpdates();
 
-  // Register protocols
   protocols.init();
+  errorHandling.init();
+  updates.init();
 });
 
 function initLocalStorage () {
@@ -237,7 +150,7 @@ function createWindow () {
     y: finalY,
     fullscreen: fullscreen,
     fullscreenable: true,
-    title: appName,
+    title: getAppName(),
     width: width || 1200,
     height: height || 600,
     minHeight: 500,
@@ -268,6 +181,7 @@ function createWindow () {
       trackEvent('Window', 'Move');
     }, 1000);
   });
+
   mainWindow.on('unresponsive', e => {
     showUnresponsiveModal();
     trackEvent('Window', 'Unresponsive');
@@ -286,226 +200,194 @@ function createWindow () {
     trackEvent('Window', 'Close');
   });
 
-  require('electron-context-menu')({});
-
-  let template = [
-    {
-      label: 'Application',
-      submenu: [
-        {
-          label: `About ${appName}`,
-          role: 'about',
-          visible: isMac()
-        },
-        {
-          type: 'separator',
-          visible: isMac()
-        },
-        {
-          label: 'Preferences',
-          accelerator: 'CmdOrCtrl+,',
-          click: function (menuItem, window, e) {
-            if (!window || !window.webContents) {
-              return;
-            }
-
-            window.webContents.send('toggle-preferences');
-            trackEvent('App Menu', 'Preferences');
+  const applicationMenu = {
+    label: 'Application',
+    submenu: [
+      ...(isMac ? [
+        {label: `About ${getAppName()}`, role: 'about'},
+        {type: 'separator'}
+      ] : []),
+      {
+        label: 'Preferences',
+        accelerator: 'CmdOrCtrl+,',
+        click: function (menuItem, window, e) {
+          if (!window || !window.webContents) {
+            return;
           }
-        },
-        {
-          label: 'Changelog',
-          click: function (menuItem, window, e) {
-            if (!window || !window.webContents) {
-              return;
-            }
-
-            window.webContents.send('toggle-changelog');
-            trackEvent('App Menu', 'Changelog');
+          window.webContents.send('toggle-preferences');
+          trackEvent('App Menu', 'Preferences');
+        }
+      },
+      {
+        label: 'Changelog',
+        click: function (menuItem, window, e) {
+          if (!window || !window.webContents) {
+            return;
           }
-        },
-        {
-          type: 'separator',
-          visible: isMac()
-        },
-        {
-          role: 'hide',
-          visible: isMac()
-        },
-        {
-          role: 'hideothers',
-          visible: isMac()
-        },
+          window.webContents.send('toggle-changelog');
+          trackEvent('App Menu', 'Changelog');
+        }
+      },
+      ...(isMac ? [
         {type: 'separator'},
-        {
-          label: 'Quit',
-          accelerator: 'Command+Q',
-          click: function () {
-            app.quit();
+        {role: 'hide'},
+        {role: 'hideothers'}
+      ] : []),
+      {type: 'separator'},
+      {label: 'Quit', accelerator: 'Command+Q', click: () => app.quit()}
+    ]
+  };
+
+  const editMenu = {
+    label: 'Edit',
+    submenu: [
+      {label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:'},
+      {label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:'},
+      {type: 'separator'},
+      {label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:'},
+      {label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:'},
+      {label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:'},
+      {label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:'}
+    ]
+  };
+
+  const viewMenu = {
+    label: 'View',
+    submenu: [
+      {role: 'togglefullscreen'},
+      {
+        label: 'Actual Size',
+        accelerator: 'CmdOrCtrl+0',
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (!window || !window.webContents) {
+            return;
           }
+
+          const zoomFactor = 1;
+          window.webContents.setZoomFactor(zoomFactor);
+          saveZoomFactor(zoomFactor);
+          trackEvent('App Menu', 'Zoom Reset');
         }
-      ]
-    },
-    {
-      label: 'Edit',
-      submenu: [{
-        label: 'Undo',
-        accelerator: 'CmdOrCtrl+Z',
-        selector: 'undo:'
-      }, {
-        label: 'Redo',
-        accelerator: 'Shift+CmdOrCtrl+Z',
-        selector: 'redo:'
-      }, {
-        type: 'separator'
-      }, {
-        label: 'Cut',
-        accelerator: 'CmdOrCtrl+X',
-        selector: 'cut:'
-      }, {
-        label: 'Copy',
-        accelerator: 'CmdOrCtrl+C',
-        selector: 'copy:'
-      }, {
-        label: 'Paste',
-        accelerator: 'CmdOrCtrl+V',
-        selector: 'paste:'
-      }, {
-        label: 'Select All',
-        accelerator: 'CmdOrCtrl+A',
-        selector: 'selectAll:'
-      }]
-    },
-    {
-      label: 'View',
-      submenu: [
-        {
-          role: 'togglefullscreen'
-        },
-        {
-          label: 'Actual Size',
-          accelerator: 'CmdOrCtrl+0',
-          click: () => {
-            const window = BrowserWindow.getFocusedWindow();
-            if (!window || !window.webContents) {
-              return;
-            }
-
-            const zoomFactor = 1;
-            window.webContents.setZoomFactor(zoomFactor);
-            saveZoomFactor(zoomFactor);
-            trackEvent('App Menu', 'Zoom Reset');
+      },
+      {
+        label: 'Zoom In',
+        accelerator: isMac() ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (!window || !window.webContents) {
+            return;
           }
-        },
-        {
-          label: 'Zoom In',
-          accelerator: isMac() ? 'CmdOrCtrl+Plus' : 'CmdOrCtrl+=',
-          click: () => {
-            const window = BrowserWindow.getFocusedWindow();
-            if (!window || !window.webContents) {
-              return;
-            }
 
-            const zoomFactor = Math.min(1.8, getZoomFactor() + 0.05);
-            window.webContents.setZoomFactor(zoomFactor);
+          const zoomFactor = Math.min(1.8, getZoomFactor() + 0.05);
+          window.webContents.setZoomFactor(zoomFactor);
 
-            saveZoomFactor(zoomFactor);
-            trackEvent('App Menu', 'Zoom In');
-          }
-        },
-        {
-          label: 'Zoom Out',
-          accelerator: 'CmdOrCtrl+-',
-          click: () => {
-            const window = BrowserWindow.getFocusedWindow();
-            if (!window || !window.webContents) {
-              return;
-            }
-
-            const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
-            window.webContents.setZoomFactor(zoomFactor);
-            saveZoomFactor(zoomFactor);
-            trackEvent('App Menu', 'Zoom Out');
-          }
-        },
-        {
-          label: 'Toggle Sidebar',
-          accelerator: 'CmdOrCtrl+\\',
-          click: () => {
-            const window = BrowserWindow.getFocusedWindow();
-            if (!window || !window.webContents) {
-              return;
-            }
-
-            window.webContents.send('toggle-sidebar');
-            trackEvent('App Menu', 'Toggle Sidebar');
-          }
+          saveZoomFactor(zoomFactor);
+          trackEvent('App Menu', 'Zoom In');
         }
-      ]
+      },
+      {
+        label: 'Zoom Out',
+        accelerator: 'CmdOrCtrl+-',
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (!window || !window.webContents) {
+            return;
+          }
+
+          const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
+          window.webContents.setZoomFactor(zoomFactor);
+          saveZoomFactor(zoomFactor);
+          trackEvent('App Menu', 'Zoom Out');
+        }
+      },
+      {
+        label: 'Toggle Sidebar',
+        accelerator: 'CmdOrCtrl+\\',
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (!window || !window.webContents) {
+            return;
+          }
+
+          window.webContents.send('toggle-sidebar');
+          trackEvent('App Menu', 'Toggle Sidebar');
+        }
+      }
+    ]
+  };
+
+  const windowMenu = {
+    label: 'Window',
+    role: 'window',
+    submenu: [
+      {role: 'minimize'},
+      ...(isMac() ? [{role: 'close'}] : [])
+    ]
+  };
+
+  const helpMenu = {
+    label: 'Help',
+    role: 'help',
+    id: 'help',
+    submenu: [
+      {
+        label: 'Contact Support',
+        click: () => {
+          trackEvent('App Menu', 'Contact');
+          shell.openExternal('https://insomnia.rest/documentation/support-and-feedback/');
+        }
+      },
+      {
+        label: 'Insomnia Help',
+        accelerator: 'CmdOrCtrl+?',
+        click: () => {
+          trackEvent('App Menu', 'Help');
+          shell.openExternal('https://insomnia.rest/documentation/');
+        }
+      }
+    ]
+  };
+
+  const developerMenu = {
+    label: 'Developer',
+    position: 'before=help',
+    submenu: [{
+      label: 'Reload',
+      accelerator: 'CmdOrCtrl+R',
+      click: () => mainWindow.reload()
     }, {
-      label: 'Window',
-      role: 'window',
-      submenu: [
-        {role: 'minimize'},
-        ...(isMac() ? [{role: 'close'}] : [])
-      ]
+      label: 'Toggle DevTools',
+      accelerator: 'Alt+CmdOrCtrl+I',
+      click: () => mainWindow.toggleDevTools()
     }, {
-      label: 'Help',
-      role: 'help',
-      id: 'help',
-      submenu: [
-        {
-          label: 'Contact Support',
-          click: () => {
-            trackEvent('App Menu', 'Contact');
-            shell.openExternal('https://insomnia.rest/documentation/support-and-feedback/');
-          }
-        },
-        {
-          label: 'Insomnia Help',
-          accelerator: 'CmdOrCtrl+?',
-          click: () => {
-            trackEvent('App Menu', 'Help');
-            shell.openExternal('https://insomnia.rest/documentation/');
-          }
-        }
-      ]
-    }
-  ];
+      label: 'Resize to Default',
+      click: () => mainWindow.setBounds({x: 100, y: 100, width: 1000, height: 480})
+    }, {
+      label: 'Take Screenshot',
+      click: function () {
+        mainWindow.capturePage(image => {
+          const buffer = image.toPNG();
+          const dir = app.getPath('desktop');
+          fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
+        });
+      }
+    }]
+  };
+
+  let template = [];
+
+  template.push(applicationMenu);
+  template.push(editMenu);
+  template.push(viewMenu);
+  template.push(windowMenu);
+  template.push(helpMenu);
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
-    template.push({
-      label: 'Developer',
-      position: 'before=help',
-      submenu: [{
-        label: 'Reload',
-        accelerator: 'CmdOrCtrl+R',
-        click: function () {
-          mainWindow.reload();
-        }
-      }, {
-        label: 'Toggle DevTools',
-        accelerator: 'Alt+CmdOrCtrl+I',
-        click: function () {
-          mainWindow.toggleDevTools();
-        }
-      }, {
-        label: 'Resize to Default',
-        click: function () {
-          mainWindow.setBounds({x: 100, y: 100, width: 1000, height: 480});
-        }
-      }, {
-        label: 'Take Screenshot',
-        click: function () {
-          mainWindow.capturePage(image => {
-            const buffer = image.toPNG();
-            const dir = app.getPath('desktop');
-            fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
-          });
-        }
-      }]
-    });
+    template.push(developerMenu);
   }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+
+  require('electron-context-menu')({});
 }

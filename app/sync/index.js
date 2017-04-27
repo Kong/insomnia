@@ -450,8 +450,8 @@ export async function createOrUpdateConfig (resourceGroupId, syncMode) {
 }
 
 export async function logout () {
-  await resetLocalData();
   await session.logout();
+  await resetLocalData();
 }
 
 export async function cancelTrial () {
