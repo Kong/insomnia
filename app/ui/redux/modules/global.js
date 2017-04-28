@@ -1,4 +1,5 @@
 import electron from 'electron';
+import React from 'react';
 import {combineReducers} from 'redux';
 import fs from 'fs';
 
@@ -21,6 +22,7 @@ const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
+const COMMAND_IMPORT_URI = 'app/import';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -68,18 +70,25 @@ export const reducer = combineReducers({
 // ~~~~~~~ //
 
 export function newCommand (command, args) {
-  // TODO: Make this use reducer when Modals ported to Redux
-  if (command === COMMAND_ALERT) {
-    const {message, title} = args;
-    showModal(AlertModal, {title, message});
-  } else if (command === COMMAND_LOGIN) {
-    const {title, message} = args;
-    showModal(LoginModal, {title, message});
-  } else if (command === COMMAND_TRIAL_END) {
-    showModal(PaymentNotificationModal);
-  }
-
-  return {type: command, ...args};
+  return async dispatch => {
+    // TODO: Make this use reducer when Modals ported to Redux
+    if (command === COMMAND_ALERT) {
+      const {message, title} = args;
+      showModal(AlertModal, {title, message});
+    } else if (command === COMMAND_LOGIN) {
+      const {title, message} = args;
+      showModal(LoginModal, {title, message});
+    } else if (command === COMMAND_TRIAL_END) {
+      showModal(PaymentNotificationModal);
+    } else if (command === COMMAND_IMPORT_URI) {
+      await showModal(AlertModal, {
+        title: 'Confirm Data Import',
+        message: <span>Do you really want to import <code>{args.uri}</code>?</span>,
+        addCancel: true
+      });
+      dispatch(importUri(args.workspaceId, args.uri));
+    }
+  };
 }
 
 export function loadStart () {

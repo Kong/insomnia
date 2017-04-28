@@ -50,6 +50,5 @@ test_script:
 #         global handlers         #
 #---------------------------------#
 
-#deploy_script:
-#  - npm run build-n-package:win
-#  - ps: ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }
+deploy_script:
+  - ps: If ($env:APPVEYOR_REPO_TAG -Match "true") {npm run build-n-package:win ; ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }}

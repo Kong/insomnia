@@ -1,7 +1,7 @@
 import electron from 'electron';
 import {CHECK_FOR_UPDATES_INTERVAL, getAppVersion, isDevelopment, isLinux} from '../common/constants';
 
-const {ipcMain, autoUpdater, BrowserWindow} = electron;
+const {autoUpdater, BrowserWindow} = electron;
 
 const UPDATE_URLS = {
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${getAppVersion()}`,
