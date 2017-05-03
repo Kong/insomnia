@@ -13,8 +13,8 @@ addons:
   apt:
     packages:
     - libcurl4-openssl-dev
-    - build-essential
     - git-all
+    - build-essential
     - icnsutils
     - graphicsmagick
     - xz-utils
