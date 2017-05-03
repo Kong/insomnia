@@ -360,11 +360,16 @@ class CodeEditor extends PureComponent {
       lineNumbers: !hideGutters && !hideLineNumbers,
       foldGutter: !hideGutters && !hideLineNumbers,
       lineWrapping: lineWrapping,
-      keyMap: keyMap || 'default',
       matchBrackets: !noMatchBrackets,
       lint: !noLint && !readOnly,
       gutters: []
     };
+
+    // Only set keyMap if we're not read-only. This is so things like
+    // ctrl-a work on read-only mode.
+    if (!readOnly && keyMap) {
+      options.keyMap = keyMap;
+    }
 
     if (indentSize) {
       options.tabSize = indentSize;

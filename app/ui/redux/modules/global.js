@@ -1,8 +1,9 @@
 import electron from 'electron';
+import React from 'react';
 import {combineReducers} from 'redux';
 import fs from 'fs';
 
-import {importRaw, exportJSON} from '../../../common/import';
+import * as importUtils from '../../../common/import';
 import {trackEvent} from '../../../analytics';
 import AlertModal from '../../components/modals/alert-modal';
 import {showModal} from '../../components/modals';
@@ -21,6 +22,7 @@ const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
+const COMMAND_IMPORT_URI = 'app/import';
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -68,18 +70,25 @@ export const reducer = combineReducers({
 // ~~~~~~~ //
 
 export function newCommand (command, args) {
-  // TODO: Make this use reducer when Modals ported to Redux
-  if (command === COMMAND_ALERT) {
-    const {message, title} = args;
-    showModal(AlertModal, {title, message});
-  } else if (command === COMMAND_LOGIN) {
-    const {title, message} = args;
-    showModal(LoginModal, {title, message});
-  } else if (command === COMMAND_TRIAL_END) {
-    showModal(PaymentNotificationModal);
-  }
-
-  return {type: command, ...args};
+  return async dispatch => {
+    // TODO: Make this use reducer when Modals ported to Redux
+    if (command === COMMAND_ALERT) {
+      const {message, title} = args;
+      showModal(AlertModal, {title, message});
+    } else if (command === COMMAND_LOGIN) {
+      const {title, message} = args;
+      showModal(LoginModal, {title, message});
+    } else if (command === COMMAND_TRIAL_END) {
+      showModal(PaymentNotificationModal);
+    } else if (command === COMMAND_IMPORT_URI) {
+      await showModal(AlertModal, {
+        title: 'Confirm Data Import',
+        message: <span>Do you really want to import <code>{args.uri}</code>?</span>,
+        addCancel: true
+      });
+      dispatch(importUri(args.workspaceId, args.uri));
+    }
+  };
 }
 
 export function loadStart () {
@@ -114,7 +123,6 @@ export function importFile (workspaceId) {
   return async dispatch => {
     dispatch(loadStart());
 
-    const workspace = await models.workspace.getById(workspaceId);
     const options = {
       title: 'Import Insomnia Data',
       buttonLabel: 'Import',
@@ -132,44 +140,39 @@ export function importFile (workspaceId) {
       if (!paths) {
         // It was cancelled, so let's bail out
         dispatch(loadStop());
-        trackEvent('Import', 'Cancel');
+        trackEvent('Import File', 'Cancel');
         return;
       }
 
       // Let's import all the paths!
       for (const path of paths) {
         try {
-          const data = fs.readFileSync(path, 'utf8');
+          const uri = `file://${path}`;
+          await importUtils.importUri(workspaceId, uri);
+          trackEvent('Import File', 'Success');
+        } catch (err) {
+          showModal(AlertModal, {title: 'Import Failed', message: err + ''});
+          trackEvent('Import File', 'Failure');
+        } finally {
           dispatch(loadStop());
-
-          const result = await importRaw(workspace, data);
-          const {summary, source, error} = result;
-
-          if (error) {
-            showModal(AlertModal, {title: 'Import Failed', message: error});
-            return;
-          }
-
-          let statements = Object.keys(summary).map(type => {
-            const count = summary[type].length;
-            const name = models.getModelName(type, count);
-            return count === 0 ? null : `${count} ${name}`;
-          }).filter(s => s !== null);
-
-          let message;
-          if (statements.length === 0) {
-            message = 'Nothing was found to import.';
-          } else {
-            message = `You imported ${statements.join(', ')}!`;
-          }
-          showModal(AlertModal, {title: 'Import Succeeded', message});
-          trackEvent('Import', 'Success', source);
-        } catch (e) {
-          showModal(AlertModal, {title: 'Import Failed', message: e + ''});
-          trackEvent('Import', 'Failure');
         }
       }
     });
+  };
+}
+
+export function importUri (workspaceId, uri) {
+  return async dispatch => {
+    dispatch(loadStart());
+    try {
+      await importUtils.importUri(workspaceId, uri);
+      trackEvent('Import URI', 'Success');
+    } catch (err) {
+      trackEvent('Import URI', 'Failure');
+      showModal(AlertModal, {title: 'Import Failed', message: err + ''});
+    } finally {
+      dispatch(loadStop());
+    }
   };
 }
 
@@ -178,7 +181,7 @@ export function exportFile (workspaceId = null) {
     dispatch(loadStart());
 
     const workspace = await models.workspace.getById(workspaceId);
-    const json = await exportJSON(workspace);
+    const json = await importUtils.exportJSON(workspace);
     const options = {
       title: 'Export Insomnia Data',
       buttonLabel: 'Export',

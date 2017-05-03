@@ -1,6 +1,7 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
+import {parse as urlParse} from 'url';
 import {ipcRenderer} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
@@ -662,11 +663,23 @@ class App extends PureComponent {
       showModal(SettingsModal);
     });
 
+    ipcRenderer.on('run-command', (e, commandUri) => {
+      const parsed = urlParse(commandUri, true);
+
+      const command = `${parsed.hostname}${parsed.pathname}`;
+      const args = JSON.parse(JSON.stringify(parsed.query));
+      args.workspaceId = args.workspaceId || this.props.activeWorkspace._id;
+
+      this.props.handleCommand(command, args);
+    });
+
     ipcRenderer.on('toggle-changelog', () => {
       showModal(ChangelogModal);
     });
 
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
+
+    process.nextTick(() => ipcRenderer.send('app-ready'));
   }
 
   componentWillUnmount () {
@@ -728,6 +741,7 @@ App.propTypes = {
   sidebarWidth: PropTypes.number.isRequired,
   paneWidth: PropTypes.number.isRequired,
   paneHeight: PropTypes.number.isRequired,
+  handleCommand: PropTypes.func.isRequired,
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired
   }).isRequired,
@@ -823,6 +837,8 @@ function mapDispatchToProps (dispatch) {
 
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
+    handleImportUriToWorkspace: global.importUri,
+    handleCommand: global.newCommand,
     handleExportFile: global.exportFile,
     handleMoveRequest: _moveRequest,
     handleMoveRequestGroup: _moveRequestGroup

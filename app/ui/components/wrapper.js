@@ -132,6 +132,10 @@ class Wrapper extends PureComponent {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
   }
 
+  _handleImportUri (uri) {
+    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri);
+  }
+
   _handleExportWorkspaceToFile () {
     this.props.handleExportFile(this.props.activeWorkspace._id);
   }
@@ -401,6 +405,7 @@ class Wrapper extends PureComponent {
             handleExportWorkspaceToFile={this._handleExportWorkspaceToFile}
             handleExportAllToFile={handleExportFile}
             handleImportFile={this._handleImportFile}
+            handleImportUri={this._handleImportUri}
             settings={settings}
           />
           <RequestSwitcherModal
@@ -447,6 +452,7 @@ Wrapper.propTypes = {
   handleActivateRequest: PropTypes.func.isRequired,
   handleSetSidebarFilter: PropTypes.func.isRequired,
   handleImportFileToWorkspace: PropTypes.func.isRequired,
+  handleImportUriToWorkspace: PropTypes.func.isRequired,
   handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   handleSetActiveEnvironment: PropTypes.func.isRequired,

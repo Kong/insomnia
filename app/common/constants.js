@@ -26,6 +26,14 @@ export function isMac () {
   return getAppPlatform() === 'darwin';
 }
 
+export function isLinux () {
+  return getAppPlatform() === 'linux';
+}
+
+export function isWindows () {
+  return getAppPlatform() === 'win32';
+}
+
 export function isDevelopment () {
   return getAppEnvironment() === 'development';
 }
@@ -48,6 +56,7 @@ export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_RENDER_FAILED = -333;
 export const LARGE_RESPONSE_MB = 5;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[0-9a-zA-Z\-_.]+[/\w.\-+=:\][@%^*&!#?;]*/;
+export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 
 // Hotkeys
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl';

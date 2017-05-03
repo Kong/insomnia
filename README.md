@@ -31,8 +31,9 @@ Development on Insomnia can be done on Windows, Mac, and Linux with few requirem
 requires [NodeJS 7.4](https://nodejs.org) and [Git](https://git-scm.com/) to get started.
 
 ```bash
-# Install dependencies
+# Install dependencies and build addons for Electron
 npm install
+npm run rebuild
 
 # Start app
 npm run dev

@@ -1,19 +1,27 @@
+const webpack = require('webpack');
 const path = require('path');
 const productionConfig = require('./webpack.config.production.babel');
 
 let devtool;
+let plugins;
 const output = {
-  libraryTarget: 'commonjs2'
+  libraryTarget: 'commonjs2',
+  filename: 'main.min.js'
 };
 
 if (process.env.NODE_ENV === 'development') {
   output.path = path.join(__dirname, '../app');
-  output.filename = 'main.min.js';
   devtool = 'eval-source-map';
+  plugins = [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify('development'),
+      'process.env.INSOMNIA_ENV': JSON.stringify('development')
+    })
+  ]
 } else {
   output.path = path.join(__dirname, '../build');
-  output.filename = 'main.js';
   devtool = productionConfig.devtool;
+  plugins = productionConfig.plugins;
 }
 
 module.exports = {
@@ -27,5 +35,6 @@ module.exports = {
     __dirname: false,
     __filename: false
   },
-  target: 'electron-main'
+  target: 'electron-main',
+  plugins: plugins
 };
