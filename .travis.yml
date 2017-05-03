@@ -4,10 +4,10 @@ language: node_js
 
 matrix:
   include:
-#  - os: osx
-#    node_js: 7
   - os: linux
     node_js: 7
+#  - os: osx
+#    node_js: 7
 
 addons:
   apt:
