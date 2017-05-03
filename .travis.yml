@@ -1,39 +1,44 @@
 sudo: required
 dist: trusty
-
 language: node_js
 
 matrix:
   include:
-    - os: osx
-      node_js: 7
-    - os: linux
-      node_js: 7
+  - os: osx
+    node_js: 7
+  - os: linux
+    node_js: 7
 
 addons:
   apt:
     packages:
-      - libcurl4-openssl-dev
-      - build-essential
-      - git-all
-      - icnsutils
-      - graphicsmagick
-      - xz-utils
+    - libcurl4-openssl-dev
+    - build-essential
+    - git-all
+    - icnsutils
+    - graphicsmagick
+    - xz-utils
 
 install:
-  - npm install -g npm@latest > /dev/null
-  - npm install > /dev/null
+- npm install -g npm@latest > /dev/null
+- npm install > /dev/null
 
 script:
-  - npm test
+- npm test
 
-after_success:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then npm run build-n-package:linux; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then npm run build-n-package:mac; fi
+before_deploy:
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then npm run build-n-package:linux; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then npm run build-n-package:mac; fi
 
-artifacts:
-  s3_region: "us-east-1"
-  paths:
-    - ./dist/**/*.zip
-    - ./dist/**/*.AppImage
-    - ./dist/**/*.dmg
+deploy:
+  provider: releases
+  api_key:
+    secure: RE/7b5bOUu1zgsCLEu/aezuOxlrDG44pLzo4v0kFUNilhU10xBZhpbFRAn7zmFmO9CSq2OEXY/ZnplHIvglel1GM5x5N5kb5t19hIj8ul3wf7ka9fueg1he8VtRpzJOHAw2Rib/Yi5u7PLK/ddcAt39ccRxuSRhaKXYJNWos0ZJfPZbMAdvg6YJq+ep36TFcXxGMC8jQQUOgPb1yGTpChtiK298MenR5AH8qWiZdBnHahm9IQYqPIcSU4xpA7AtEyxgjVZUUPyIgI2/oX+fMyfwxG9fMSgiNt/ZM0dManpTN/yVn7v8D5RNd5U9YLhw8qwmxBFTIvv5PX0AJg0dLMKlvPHRDDbqYDL+/3L+xoaHV2pKtPTMr2/k79EF0V7sW93sdzyA2tcyAqFP5/I38X42tVJGeU/zIFMN4x5Ma+EzFGDT3s/0eiHdr4VGDs7Tv7EsQnQ0RDZTVngQCJY51xEKX9E+DT32mEZNpx790KnzkdORSptx1W/512OAkZ7X06uHWEi4U/KY1LyC7jOnyJ43RdEADfo/H9n/KyVkcYhUjLsFRIrgJHNZnU3usnrHBeRb7r644dmmAdo4yb3V0PYjZIBAsCL7eX4ApiyWoawRTz6LmjPPNtRD+IYOGAvJCki9kPXQcyb4j67xwqQDl5mxygIFRmRFxZeiEA/cdnsY=
+  file_glob: true
+  file:
+    - dist/mac/*.zip
+    - dist/mac/*.dmg
+    - dist/linux/*.deb
+    - dist/linux/*.AppImage
+  on:
+    tags: true
