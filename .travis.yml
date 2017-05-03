@@ -20,7 +20,6 @@ addons:
     - xz-utils
 
 install:
-- npm install -g npm@latest > /dev/null
 - npm install > /dev/null
 
 script:
@@ -36,9 +35,9 @@ deploy:
     secure: RE/7b5bOUu1zgsCLEu/aezuOxlrDG44pLzo4v0kFUNilhU10xBZhpbFRAn7zmFmO9CSq2OEXY/ZnplHIvglel1GM5x5N5kb5t19hIj8ul3wf7ka9fueg1he8VtRpzJOHAw2Rib/Yi5u7PLK/ddcAt39ccRxuSRhaKXYJNWos0ZJfPZbMAdvg6YJq+ep36TFcXxGMC8jQQUOgPb1yGTpChtiK298MenR5AH8qWiZdBnHahm9IQYqPIcSU4xpA7AtEyxgjVZUUPyIgI2/oX+fMyfwxG9fMSgiNt/ZM0dManpTN/yVn7v8D5RNd5U9YLhw8qwmxBFTIvv5PX0AJg0dLMKlvPHRDDbqYDL+/3L+xoaHV2pKtPTMr2/k79EF0V7sW93sdzyA2tcyAqFP5/I38X42tVJGeU/zIFMN4x5Ma+EzFGDT3s/0eiHdr4VGDs7Tv7EsQnQ0RDZTVngQCJY51xEKX9E+DT32mEZNpx790KnzkdORSptx1W/512OAkZ7X06uHWEi4U/KY1LyC7jOnyJ43RdEADfo/H9n/KyVkcYhUjLsFRIrgJHNZnU3usnrHBeRb7r644dmmAdo4yb3V0PYjZIBAsCL7eX4ApiyWoawRTz6LmjPPNtRD+IYOGAvJCki9kPXQcyb4j67xwqQDl5mxygIFRmRFxZeiEA/cdnsY=
   file_glob: true
   file:
-    - dist/mac/*.zip
-    - dist/mac/*.dmg
-    - dist/linux/*.deb
-    - dist/linux/*.AppImage
+    - dist/**/*.zip
+    - dist/**/*.dmg
+    - dist/**/*.deb
+    - dist/**/*.AppImage
   on:
     tags: true
