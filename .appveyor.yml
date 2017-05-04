@@ -16,31 +16,33 @@ install:
   - npm install -g npm@latest > Nul
   - npm config set msvs_version 2013
   - npm install > NUL
+  - node --version
+  - npm --version
+  - npm test
 
 cache:
-  - '%APPDATA%\npm-cache -> .appveyor.cache'
-  - '%USERPROFILE%\.electron -> .appveyor.cache'
-  - 'node_modules -> .appveyor.cache'
+  - '%APPDATA%\npm-cache -> package.json'
+  - '%USERPROFILE%\.electron -> package.json'
+  - 'node_modules -> package.json'
 
 #---------------------------------#
 #       tests configuration       #
 #---------------------------------#
 
-test_script:
-  - node --version
-  - npm --version
-  - npm test
+build_script:
+  - ps: if($env:APPVEYOR_REPO_TAG -eq 'true') { npm run build-n-package:win }
+
+#---------------------------------#
+#      artifacts configuration    #
+#---------------------------------#
+
+artifacts:
+  - path: dist\win\*
+    name: dist
 
 #---------------------------------#
 #     deployment configuration    #
 #---------------------------------#
-
-before_deploy:
-- npm run build-n-package:win
-
-artifacts:
-  - path: 'dist\win\*'
-    name: dist
 
 deploy:
   description: ''
@@ -48,9 +50,6 @@ deploy:
   auth_token:
     secure: Ffmgxn+wt5WSf/jgJ/L+/3mkUs4fn9Z5j4Dz73VATsgL14Rf/xUp2nOyE0ecow+1
   artifact: dist
-  draft: false
-  prerelease: false
-  force_update: false
   on:
     branch: master
     appveyor_repo_tag: true
