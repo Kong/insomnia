@@ -11,9 +11,13 @@ matrix:
       osx_image: xcode7.3
       env:
         - PLATFORM="mac"
-        - CSC_LINK="./code-signing/mac.p12" # CSC_KEY_PASSWORD is below
-        - secure: O9HY2qSlr+3rlKIgAk3Bhwi9jd/aHD+aaTI9NlN9Wfwg8+5VtjFGLlPbv3Pl4bZkQOjfHQujmXjbzT9evdjX0ZOcCipkYwPxNs6V3rE23NHmFvQRJdn0sDaJnb8iuITlCCUFpkpZqnLqsPiaORSPEBDZxjMk+rzdmInXUxC/9f5aRM5ZVFQZRRk2FY9F7RRDr8LCIUec8sotBI+dq5neb2fAVYISrzoZNRjTY3xu08gSepQAsrJzjsAYzSh1urrSrf9td2vsil8F8dmATGocqkEuBQOnX8TlAghGtToWBwUUZGyM4cdaxnGDVdjHF92wvB1LD+EnkCxwHta3CtlTwVTtbmN7+kJPBskqpu+Euq0qN1ylOWq3ubiIaEneZaPOk9qxgozjzQVWaGK4PAlcOsqG/3EcHSU1tjov8wwRKpwXFr+AbQhf9dHjjG9xHoFu0h/97t+Y2KmRfW1vJetC/B+vqMnOr7i+pAeBTfJU27GPmbv6AvEBEf28yPdZa74zcFjTYxOLsfCXKC2G3jDOVurse2Uxj8Ae/V5ZeD2y74TVf7RvJWXCw/a2bGrE2ti1DbESfXPcJcLnHp6L1yMe/LQTNPI4+gDVz6wflAZ/wdBp5y3tW2fCp/ulOe3NveeSPTUnazJM8nyb9BxC2LQvFPmbdAIBbJKpSdJ6tdkP6Ww=
+        - secure: kYQQjMAkkteAM98T8TLSZMgNtqS1/74kkmdMFBZ/ABfFCmIu2CgbIw19uyKlOEM6BYRu5UhUj1565QbXXAA0o16XbDrQ2qOyPGlz44x0Lh3aNQMXxJae2ukUhK0B1MJqmRJ6GmHkLc5EQbGGLK4VtvcFJkWEWDmXj+7N7Aqqd9e8hQhVI318+3YVjDy8nFFT48cel/y8RDb1ph9KoZKht9/ddbhmvaVkLYsx85Av+cDDsGWX0wdYaB8aYTfsWb8dvU4IR6xYnHln82lTtwIVXmi/G4OYxe+Ep044298kitbILD72oizRIiLtyMrwi6nh4RL7mVBdGhCmBhq0YVejJtwE9q4tErAvspb+8PYUiCaMckhMLaaPnLEJ85v87naVrZv1tc5yfKmqVUCrvAC+MI+F0yjw01S+p1fM9vj5hzuJad3wIR0BF8tBkAwHR75uSjsGm8DMZab4TjX9PUekFHSknrYeGH4wt7ay5fi02E4NGI62Q2RjwYD0REgyIgKChktKoyjgaLrDM/ASLTRzK0KiDiOVkLelzpvcqDEo0ObsHbSztK73a7Nk0cafSOH6CYtxDCJp7+JkWDtYz6wb3ZrtwF5TO17e32IidpS+AYM3J2WuR6OUCLJzk73rXa0Fob0ZXLDXT0cg2e+XR1BC9T+rYgeJMxWPnZG3I82kfgM=
       before_install:
+        - security create-keychain -p mysecretpassword build.keychain
+        - security default-keychain -s build.keychain
+        - security unlock-keychain -p mysecretpassword build.keychain
+        - security import ./code-signing/mac.p12 -k build.keychain -P $MAC_P12_PASSWORD -T /usr/bin/codesign
+        - security find-identity -v
         - openssl aes-256-cbc -K $encrypted_ba646dffc48f_key -iv $encrypted_ba646dffc48f_iv -in code-signing/mac.p12.enc -out code-signing/mac.p12 -d
 
 addons:
