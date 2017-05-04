@@ -30,7 +30,7 @@ cache:
 #---------------------------------#
 
 build_script:
-  - ps: if($env:APPVEYOR_REPO_TAG -eq 'true') { npm run build-n-package:win }
+  - if %APPVEYOR_REPO_TAG%==true npm run build-n-package:win
 
 #---------------------------------#
 #      artifacts configuration    #
