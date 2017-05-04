@@ -40,4 +40,5 @@ deploy:
     - dist/**/*.deb
     - dist/**/*.AppImage
   on:
+    branch: master
     tags: true

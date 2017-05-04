@@ -40,7 +40,7 @@ before_deploy:
 
 deploy:
   release: myproduct-v$(appveyor_build_version)
-  description: 'Release description'
+  description: ''
   provider: GitHub
   auth_token:
     secure: Ffmgxn+wt5WSf/jgJ/L+/3mkUs4fn9Z5j4Dz73VATsgL14Rf/xUp2nOyE0ecow+1
