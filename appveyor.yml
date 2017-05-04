@@ -35,20 +35,18 @@ test_script:
 #     deployment configuration    #
 #---------------------------------#
 
-#deploy:
-#  - provider: S3
-#    access_key_id:
-#      secure: ABcd==
-#    secret_access_key:
-#      secure: ABcd==
-#    bucket: my_bucket
-#    folder:
-#    artifact:
-#    set_public: false
+before_deploy:
+- npm run build-n-package:win
 
-#---------------------------------#
-#         global handlers         #
-#---------------------------------#
-
-deploy_script:
-  - ps: If ($env:APPVEYOR_REPO_TAG -Match "true") {npm run build-n-package:win ; ls .\dist\win\* | % { Push-AppveyorArtifact $_.FullName }}
+deploy:
+  release: myproduct-v$(appveyor_build_version)
+  description: ''
+  provider: GitHub
+  auth_token:
+    secure: Ffmgxn+wt5WSf/jgJ/L+/3mkUs4fn9Z5j4Dz73VATsgL14Rf/xUp2nOyE0ecow+1
+  artifact: ./dist/win/*
+  draft: false
+  prerelease: false
+  on:
+    branch: master
+    appveyor_repo_tag: true

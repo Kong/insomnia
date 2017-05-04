@@ -1,0 +1,52 @@
+language: node_js
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      env:
+        - PLATFORM="linux"
+    - os: osx
+      osx_image: xcode7.3
+      env:
+        - PLATFORM="mac"
+        - CSC_LINK="./code-signing/mac.p12" # CSC_KEY_PASSWORD is below
+        - secure: O9HY2qSlr+3rlKIgAk3Bhwi9jd/aHD+aaTI9NlN9Wfwg8+5VtjFGLlPbv3Pl4bZkQOjfHQujmXjbzT9evdjX0ZOcCipkYwPxNs6V3rE23NHmFvQRJdn0sDaJnb8iuITlCCUFpkpZqnLqsPiaORSPEBDZxjMk+rzdmInXUxC/9f5aRM5ZVFQZRRk2FY9F7RRDr8LCIUec8sotBI+dq5neb2fAVYISrzoZNRjTY3xu08gSepQAsrJzjsAYzSh1urrSrf9td2vsil8F8dmATGocqkEuBQOnX8TlAghGtToWBwUUZGyM4cdaxnGDVdjHF92wvB1LD+EnkCxwHta3CtlTwVTtbmN7+kJPBskqpu+Euq0qN1ylOWq3ubiIaEneZaPOk9qxgozjzQVWaGK4PAlcOsqG/3EcHSU1tjov8wwRKpwXFr+AbQhf9dHjjG9xHoFu0h/97t+Y2KmRfW1vJetC/B+vqMnOr7i+pAeBTfJU27GPmbv6AvEBEf28yPdZa74zcFjTYxOLsfCXKC2G3jDOVurse2Uxj8Ae/V5ZeD2y74TVf7RvJWXCw/a2bGrE2ti1DbESfXPcJcLnHp6L1yMe/LQTNPI4+gDVz6wflAZ/wdBp5y3tW2fCp/ulOe3NveeSPTUnazJM8nyb9BxC2LQvFPmbdAIBbJKpSdJ6tdkP6Ww=
+
+addons:
+  apt:
+    packages:
+    - libcurl4-openssl-dev
+    - git-all
+    - build-essential
+    - icnsutils
+    - graphicsmagick
+    - xz-utils
+
+before_install:
+- openssl aes-256-cbc -K $encrypted_ba646dffc48f_key -iv $encrypted_ba646dffc48f_iv -in code-signing/mac.p12.enc -out code-signing/mac.p12 -d
+
+install:
+- npm install > /dev/null
+
+script:
+- npm test
+
+before_deploy:
+- npm run build-n-package:$PLATFORM
+
+deploy:
+  provider: releases
+  api_key:
+    secure: RE/7b5bOUu1zgsCLEu/aezuOxlrDG44pLzo4v0kFUNilhU10xBZhpbFRAn7zmFmO9CSq2OEXY/ZnplHIvglel1GM5x5N5kb5t19hIj8ul3wf7ka9fueg1he8VtRpzJOHAw2Rib/Yi5u7PLK/ddcAt39ccRxuSRhaKXYJNWos0ZJfPZbMAdvg6YJq+ep36TFcXxGMC8jQQUOgPb1yGTpChtiK298MenR5AH8qWiZdBnHahm9IQYqPIcSU4xpA7AtEyxgjVZUUPyIgI2/oX+fMyfwxG9fMSgiNt/ZM0dManpTN/yVn7v8D5RNd5U9YLhw8qwmxBFTIvv5PX0AJg0dLMKlvPHRDDbqYDL+/3L+xoaHV2pKtPTMr2/k79EF0V7sW93sdzyA2tcyAqFP5/I38X42tVJGeU/zIFMN4x5Ma+EzFGDT3s/0eiHdr4VGDs7Tv7EsQnQ0RDZTVngQCJY51xEKX9E+DT32mEZNpx790KnzkdORSptx1W/512OAkZ7X06uHWEi4U/KY1LyC7jOnyJ43RdEADfo/H9n/KyVkcYhUjLsFRIrgJHNZnU3usnrHBeRb7r644dmmAdo4yb3V0PYjZIBAsCL7eX4ApiyWoawRTz6LmjPPNtRD+IYOGAvJCki9kPXQcyb4j67xwqQDl5mxygIFRmRFxZeiEA/cdnsY=
+  skip_cleanup: true
+  file_glob: true
+  file:
+    - dist/**/*.zip
+    - dist/**/*.dmg
+    - dist/**/*.deb
+    - dist/**/*.AppImage
+  on:
+    branch: master
+    tags: true
