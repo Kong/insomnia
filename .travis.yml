@@ -17,8 +17,7 @@ matrix:
         - security create-keychain -p mysecretpassword build.keychain
         - security default-keychain -s build.keychain
         - security unlock-keychain -p mysecretpassword build.keychain
-        - security import ./code-signing/mac.p12 -k build.keychain -P $MAC_P12_PASSWORD -T /usr/bin/codesign
-        - security find-identity -v
+        - security import ./code-signing/mac.p12 -k build.keychain -P $MAC_P12_PASSWORD -A
 
 addons:
   apt:
