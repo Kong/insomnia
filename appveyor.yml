@@ -38,12 +38,16 @@ test_script:
 before_deploy:
 - npm run build-n-package:win
 
+artifacts:
+  - path: dist/win/*
+    name: dist
+
 deploy:
   description: ''
   provider: GitHub
   auth_token:
     secure: Ffmgxn+wt5WSf/jgJ/L+/3mkUs4fn9Z5j4Dz73VATsgL14Rf/xUp2nOyE0ecow+1
-  artifact: ./dist/win/*
+  artifact: dist
   draft: false
   prerelease: false
   force_update: false
