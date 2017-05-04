@@ -18,8 +18,8 @@ matrix:
         - security create-keychain -p $KEYCHAIN_PASS build.keychain
         - security default-keychain -s build.keychain
         - security unlock-keychain -p $KEYCHAIN_PASS build.keychain
-        - security import ./code-signing/mac.p12 -k build.keychain -P $MAC_P12_PASSWORD -A
-        - 'security set-key-partition-list -S apple-tool:,apple: -s -k $KEYCHAIN_PASS build.keychain'
+        - sudo security import ./code-signing/mac.p12 -k build.keychain -P $MAC_P12_PASSWORD -A
+#        - 'security set-key-partition-list -S apple-tool:,apple: -s -k $KEYCHAIN_PASS build.keychain'
 
 addons:
   apt:
