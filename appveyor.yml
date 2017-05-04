@@ -39,7 +39,7 @@ before_deploy:
 - npm run build-n-package:win
 
 artifacts:
-  - path: dist/win/*
+  - path: 'dist\win\*'
     name: dist
 
 deploy:
