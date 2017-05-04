@@ -39,7 +39,6 @@ before_deploy:
 - npm run build-n-package:win
 
 deploy:
-  release: myproduct-v$(appveyor_build_version)
   description: ''
   provider: GitHub
   auth_token:
@@ -47,6 +46,7 @@ deploy:
   artifact: ./dist/win/*
   draft: false
   prerelease: false
+  force_update: false
   on:
     branch: master
     appveyor_repo_tag: true
