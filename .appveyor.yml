@@ -29,7 +29,7 @@ cache:
 #       tests configuration       #
 #---------------------------------#
 
-on_success:
+build_script:
   - ps: if($env:APPVEYOR_REPO_TAG -eq 'true') { npm run build-n-package:win }
 
 #---------------------------------#
