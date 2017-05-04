@@ -11,7 +11,7 @@ matrix:
       osx_image: xcode7.3
       env:
         - PLATFORM="mac"
-        - secure: kYQQjMAkkteAM98T8TLSZMgNtqS1/74kkmdMFBZ/ABfFCmIu2CgbIw19uyKlOEM6BYRu5UhUj1565QbXXAA0o16XbDrQ2qOyPGlz44x0Lh3aNQMXxJae2ukUhK0B1MJqmRJ6GmHkLc5EQbGGLK4VtvcFJkWEWDmXj+7N7Aqqd9e8hQhVI318+3YVjDy8nFFT48cel/y8RDb1ph9KoZKht9/ddbhmvaVkLYsx85Av+cDDsGWX0wdYaB8aYTfsWb8dvU4IR6xYnHln82lTtwIVXmi/G4OYxe+Ep044298kitbILD72oizRIiLtyMrwi6nh4RL7mVBdGhCmBhq0YVejJtwE9q4tErAvspb+8PYUiCaMckhMLaaPnLEJ85v87naVrZv1tc5yfKmqVUCrvAC+MI+F0yjw01S+p1fM9vj5hzuJad3wIR0BF8tBkAwHR75uSjsGm8DMZab4TjX9PUekFHSknrYeGH4wt7ay5fi02E4NGI62Q2RjwYD0REgyIgKChktKoyjgaLrDM/ASLTRzK0KiDiOVkLelzpvcqDEo0ObsHbSztK73a7Nk0cafSOH6CYtxDCJp7+JkWDtYz6wb3ZrtwF5TO17e32IidpS+AYM3J2WuR6OUCLJzk73rXa0Fob0ZXLDXT0cg2e+XR1BC9T+rYgeJMxWPnZG3I82kfgM=
+        - secure: GXCxM+6Cp25aol/V0jt7or0zDmPrvg5+snYQoQsQvAM1K1ERy3XP58TfBjDFKLIL4xlAppabBvfDi2eM0Z+pfnUrRBDJ8zvwGGxaUG3nvMJcmzpJZ+DYgOHxC8ArCrKhJLUT1aONKzl0O2VIcb2OX00xaXu+M1sY1JGM9fxGK45Y2kG/Eu4r42Xgbrujshztww7Q2iMNKqY9f9iPgJMuyBh/bxT+24j+o4HllrqB6TNnwau7rk6th62yWR8uvVGhdMW3MtI7wnAyIVR/203VlowVfdF4zQiTZIHrUhyL7qali8/W+xZhS2BZnDjKg65eFD31TjnjUXg424GX0xC0oNfLt8DXkGI9ag1luuKCtohNSniqlUIFFbGFjjVXndcEqamz1QtX+AZs5Mim0mhrHVD4lzLanQi8uIA0RBz4x3NJp0hBRRQZ9j2aoimlbAld4ggyVdAb9Fc+ppReuXCFi5lTO+3TpIm/eYsV/4PqA4FU9ba0tO5UN80ZTC8AaRd4TW0XyzOLjqsU4NCW73onUYa92WEE1sH2NE18yVCMrOVhNPlMHr3CVbT4F/sBl/85pARiIx2i4fkaAhyZH/HP//09d+eeuk6egEutsAxKSRlo89ab+U2CSZCpmcG6MqHQCxyDne24xVmU7SLRY2CRcdZ871RSZCQbwWQ2NkbDf38=
       before_install:
         - openssl aes-256-cbc -K $encrypted_ba646dffc48f_key -iv $encrypted_ba646dffc48f_iv -in code-signing/mac.p12.enc -out code-signing/mac.p12 -d
         - security create-keychain -p mysecretpassword build.keychain
