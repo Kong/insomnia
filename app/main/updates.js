@@ -6,7 +6,7 @@ const {autoUpdater, BrowserWindow} = electron;
 const UPDATE_URLS = {
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${getAppVersion()}`,
   linux: `https://updates.insomnia.rest/builds/check/linux?v=${getAppVersion()}`,
-  win32: `https://downloads.insomnia.rest/win`
+  win32: `https://updates.insomnia.rest/builds/proxy/win?v=${getAppVersion()}`
 };
 
 let hasPromptedForUpdates = false;
