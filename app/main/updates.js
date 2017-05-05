@@ -48,12 +48,11 @@ function _showUpdateNotification () {
     return;
   }
 
-  const window = BrowserWindow.getFocusedWindow();
-  if (!window || !window.webContents) {
-    return;
+  const windows = BrowserWindow.getAllWindows();
+  if (windows.length) {
+    windows[0].webContents.send('update-available');
   }
 
-  window.webContents.send('update-available');
   hasPromptedForUpdates = true;
 }
 
