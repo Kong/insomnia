@@ -49,7 +49,7 @@ function _showUpdateNotification () {
   }
 
   const windows = BrowserWindow.getAllWindows();
-  if (windows.length) {
+  if (windows.length && windows[0].webContents) {
     windows[0].webContents.send('update-available');
   }
 
