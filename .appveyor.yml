@@ -51,5 +51,4 @@ deploy:
     secure: Ffmgxn+wt5WSf/jgJ/L+/3mkUs4fn9Z5j4Dz73VATsgL14Rf/xUp2nOyE0ecow+1
   artifact: dist
   on:
-    branch: master
     appveyor_repo_tag: true

@@ -3,10 +3,14 @@ import {CHECK_FOR_UPDATES_INTERVAL, getAppVersion, isDevelopment, isLinux} from 
 
 const {autoUpdater, BrowserWindow} = electron;
 
-const UPDATE_URLS = {
+const UPDATE_URLS = isDevelopment() ? {
+  darwin: `http://localhost:8000/builds/check/mac?v=${getAppVersion()}`,
+  linux: `http://localhost:8000/builds/check/linux?v=${getAppVersion()}`,
+  win32: `http://localhost:8000/updates/win?v=${getAppVersion()}`
+} : {
   darwin: `https://updates.insomnia.rest/builds/check/mac?v=${getAppVersion()}`,
   linux: `https://updates.insomnia.rest/builds/check/linux?v=${getAppVersion()}`,
-  win32: `https://downloads.insomnia.rest/win`
+  win32: `https://updates.insomnia.rest/updates/win?v=${getAppVersion()}`
 };
 
 let hasPromptedForUpdates = false;
@@ -44,12 +48,11 @@ function _showUpdateNotification () {
     return;
   }
 
-  const window = BrowserWindow.getFocusedWindow();
-  if (!window || !window.webContents) {
-    return;
+  const windows = BrowserWindow.getAllWindows();
+  if (windows.length && windows[0].webContents) {
+    windows[0].webContents.send('update-available');
   }
 
-  window.webContents.send('update-available');
   hasPromptedForUpdates = true;
 }
 
@@ -59,19 +62,13 @@ function _checkForUpdates () {
     return;
   }
 
-  if (isDevelopment()) {
-    console.log('-- Skipping update check in Development --');
-    return;
-  } else {
-    console.log('-- Checking for Updates --');
-  }
-
   if (!isLinux()) {
     try {
       autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
       autoUpdater.checkForUpdates();
-    } catch (e) {
+    } catch (err) {
       // This will fail in development
+      console.warn('Failed to check for updates:', err.message);
     }
   }
 }

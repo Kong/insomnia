@@ -292,12 +292,12 @@ function showUnresponsiveModal () {
 }
 
 function trackEvent (...args) {
-  const window = BrowserWindow.getFocusedWindow();
-  if (!window || !window.webContents) {
+  const windows = BrowserWindow.getAllWindows();
+  if (!windows.length || !windows[0].webContents) {
     return;
   }
 
-  window.webContents.send('analytics-track-event', args);
+  windows[0].webContents.send('analytics-track-event', args);
 }
 
 function saveBounds () {
