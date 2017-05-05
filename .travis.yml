@@ -8,18 +8,13 @@ matrix:
       env:
         - PLATFORM="linux"
     - os: osx
-      osx_image: xcode8.3
       env:
         - PLATFORM="mac"
-        - secure: GXCxM+6Cp25aol/V0jt7or0zDmPrvg5+snYQoQsQvAM1K1ERy3XP58TfBjDFKLIL4xlAppabBvfDi2eM0Z+pfnUrRBDJ8zvwGGxaUG3nvMJcmzpJZ+DYgOHxC8ArCrKhJLUT1aONKzl0O2VIcb2OX00xaXu+M1sY1JGM9fxGK45Y2kG/Eu4r42Xgbrujshztww7Q2iMNKqY9f9iPgJMuyBh/bxT+24j+o4HllrqB6TNnwau7rk6th62yWR8uvVGhdMW3MtI7wnAyIVR/203VlowVfdF4zQiTZIHrUhyL7qali8/W+xZhS2BZnDjKg65eFD31TjnjUXg424GX0xC0oNfLt8DXkGI9ag1luuKCtohNSniqlUIFFbGFjjVXndcEqamz1QtX+AZs5Mim0mhrHVD4lzLanQi8uIA0RBz4x3NJp0hBRRQZ9j2aoimlbAld4ggyVdAb9Fc+ppReuXCFi5lTO+3TpIm/eYsV/4PqA4FU9ba0tO5UN80ZTC8AaRd4TW0XyzOLjqsU4NCW73onUYa92WEE1sH2NE18yVCMrOVhNPlMHr3CVbT4F/sBl/85pARiIx2i4fkaAhyZH/HP//09d+eeuk6egEutsAxKSRlo89ab+U2CSZCpmcG6MqHQCxyDne24xVmU7SLRY2CRcdZ871RSZCQbwWQ2NkbDf38=
-        - secure: SdjEYibkUjeHx4C3EoHgYb/w+NFIDPGNN9H9RLv0iLR3no6XHvPRTZtGSLRw9MtoyZcZHkQK2rd58HZu1WVfk1aeTsaOCPjI6cwrBKaG7CedPGEy8vVuE0zIqKtwKYUToqZ+jBY/7HpO3lJtcg2vzeuSWqCJy+CGL5i9+ctCfZWsSQAuxmBPoF1XEmYwBlj1R8fZVBAWFB6mLL1zuZzwYBWiclI5YFgOVlscKVHq4PawH9dbX4/v3H6mFZgYM0UU6GlR1u20cL83MoTgPJREj6U8xp+6Dds12A8mpJTjwvK4OFHftdnOiCEk8XqV9QviZbrWvsoM7tNlZgE546BwHhcMFZmTbeVCX6TrmGekrz0f+2fagbKwUWHIp4hpwbul3Mp4HZVKDABQo/LJ4WUpj6fBclHEEsu4cbYerTJPk967K43XkwQXgnRhdVXvOq0DIp9KtiwUYGRrFePKKypSpbfkEFDVU8lyJ74/IZPPGefgREcMYqp/Ms4tmfYX+SwQFNYxwAaMnhfpaPMelnedQ+sHZqe34+XGYIL3xRSzFxEcOLQWiH7ZdZgRAslO7i33Ae6POjteZ+vGKwwHT1fnAkUU4SYrcFaCiXKKNmLCnDIN6sviXwTW7n1BNz60dAt6tBd1KbFezURWggRhl2kRkzGr4AXmx0+qNslXLO2YP6I=
+        - CSC_LINK=./code-signing/mac.p12
+        # CSC_KEY_PASSWORD
+        - secure: "N8bXq4o/CYrir5ZcqLGw8+1RoXhGE8nY6pZFAzbC1njGwhHgQ+Yi7PDpvRbH8uvdv9HgTGIklJt7k86VI0yh4XDCy2Acigucudx3mdsFrytu6ERmzEWWy7Jq9DR/WeBKHigi9aEIv8RutsItdwYvnk4Vt0CwguyiFI8CyDviijqlVwMte87AuY22ieEe+nANAfMph3dsh2a27xgf66Uc25oEovNelrbh391fK60/+jnAk6EMNw59AhBYjCJl2owBzojok8ogG2+BEfKsLSBaMS98JxASf32iM4r6EpOrO2oZL3v3A/1HcCCkcJcJ1ObCD8TlRp8YmB/pqhFrHUXK8KdGLywpaZAwld1nj9cVVWJFzvbFh3b0tB1rULukquMj0wpgQRhDqV2PPj6rPr09tSLf3Tys3iR6tRslqOLxZpYeybd4CncHhh/ZLzdVhb0X1vWEmHzqq3wh7/qSWHFJ/9TkP3jdoVlK3nWfXTC1jE9tMbzRW3N63ALd5zVX3fRpSqWJE+5HUJ2GEmTPkFXYwjPYi8aieaY1Ibgkk3oHBlGL6xzbE//LLvDjCGhir8l9jHlHF9xTOcXDgMomBbnROWDPUJHbxcgBz7DU8iSDzVEEH2Cf9Deuv/LoJwLhEIJ23nLw/qmRoVIvtBjLUUbA6Z9aLdQusH9pzCl2m7MDWbk="
       before_install:
         - openssl aes-256-cbc -K $encrypted_ba646dffc48f_key -iv $encrypted_ba646dffc48f_iv -in code-signing/mac.p12.enc -out code-signing/mac.p12 -d
-        - security create-keychain -p $KEYCHAIN_PASS build.keychain
-        - security default-keychain -s build.keychain
-        - security unlock-keychain -p $KEYCHAIN_PASS build.keychain
-        - security import ./code-signing/mac.p12 -k build.keychain -P $MAC_P12_PASSWORD -A
-        - 'security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASS build.keychain'
 
 addons:
   apt:
