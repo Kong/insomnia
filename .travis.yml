@@ -11,7 +11,7 @@ matrix:
     - os: osx
       env:
         - PLATFORM="mac"
-        - 'CSC_LINK=`cat ./code-signing/mac.p12`'
+        - CSC_LINK=$(<code-signing/mac.p12)
         # CSC_KEY_PASSWORD
         - secure: "N8bXq4o/CYrir5ZcqLGw8+1RoXhGE8nY6pZFAzbC1njGwhHgQ+Yi7PDpvRbH8uvdv9HgTGIklJt7k86VI0yh4XDCy2Acigucudx3mdsFrytu6ERmzEWWy7Jq9DR/WeBKHigi9aEIv8RutsItdwYvnk4Vt0CwguyiFI8CyDviijqlVwMte87AuY22ieEe+nANAfMph3dsh2a27xgf66Uc25oEovNelrbh391fK60/+jnAk6EMNw59AhBYjCJl2owBzojok8ogG2+BEfKsLSBaMS98JxASf32iM4r6EpOrO2oZL3v3A/1HcCCkcJcJ1ObCD8TlRp8YmB/pqhFrHUXK8KdGLywpaZAwld1nj9cVVWJFzvbFh3b0tB1rULukquMj0wpgQRhDqV2PPj6rPr09tSLf3Tys3iR6tRslqOLxZpYeybd4CncHhh/ZLzdVhb0X1vWEmHzqq3wh7/qSWHFJ/9TkP3jdoVlK3nWfXTC1jE9tMbzRW3N63ALd5zVX3fRpSqWJE+5HUJ2GEmTPkFXYwjPYi8aieaY1Ibgkk3oHBlGL6xzbE//LLvDjCGhir8l9jHlHF9xTOcXDgMomBbnROWDPUJHbxcgBz7DU8iSDzVEEH2Cf9Deuv/LoJwLhEIJ23nLw/qmRoVIvtBjLUUbA6Z9aLdQusH9pzCl2m7MDWbk="
       before_install:
