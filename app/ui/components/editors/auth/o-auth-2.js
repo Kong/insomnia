@@ -82,8 +82,8 @@ class OAuth2 extends PureComponent {
     this._handleChangeProperty('clientId', value);
   }
 
-  _handleChangeCredentialsInBody (value) {
-    this._handleChangeProperty('credentialsInBody', value);
+  _handleChangeCredentialsInBody (e) {
+    this._handleChangeProperty('credentialsInBody', e.target.value);
   }
 
   _handleChangeClientSecret (value) {
@@ -150,6 +150,10 @@ class OAuth2 extends PureComponent {
   renderSelectRow (label, property, options, onChange) {
     const {request} = this.props;
     const id = label.replace(/ /g, '-');
+    const value = request.authentication.hasOwnProperty(property)
+      ? request.authentication[property]
+      : options[0];
+
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
@@ -157,9 +161,7 @@ class OAuth2 extends PureComponent {
         </td>
         <td className="wide">
           <div className="form-control form-control--outlined no-margin">
-            <select id={id}
-                    onChange={onChange}
-                    value={request.authentication[property] || options[0].value}>
+            <select id={id} onChange={onChange} value={value}>
               {options.map(({name, value}) => (
                 <option key={value} value={value}>{name}</option>
               ))}
@@ -232,13 +234,10 @@ class OAuth2 extends PureComponent {
     const credentialsInBody = this.renderSelectRow(
       'Client Credentials',
       'credentialsInBody',
-      [{
-        name: 'As Basic Auth Header (default)',
-        value: false
-      }, {
-        name: 'In Request Body',
-        value: true
-      }],
+      [
+        {name: 'As Basic Auth Header (default)', value: false},
+        {name: 'In Request Body', value: true}
+      ],
       this._handleChangeCredentialsInBody
     );
 
