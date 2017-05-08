@@ -2,6 +2,7 @@ import electron from 'electron';
 import React from 'react';
 import {combineReducers} from 'redux';
 import fs from 'fs';
+import * as moment from 'moment';
 
 import * as importUtils from '../../../common/import';
 import {trackEvent} from '../../../analytics';
@@ -182,9 +183,12 @@ export function exportFile (workspaceId = null) {
 
     const workspace = await models.workspace.getById(workspaceId);
     const json = await importUtils.exportJSON(workspace);
+    // Avoid colon for Windows
+    let now = moment().format('D MMMM YYYY HH mm');
     const options = {
       title: 'Export Insomnia Data',
       buttonLabel: 'Export',
+      defaultPath: 'Insomnia Export at ' + now,
       filters: [{
         name: 'Insomnia Export', extensions: ['json']
       }]
