@@ -2,6 +2,7 @@ import electron from 'electron';
 import React from 'react';
 import {combineReducers} from 'redux';
 import fs from 'fs';
+import path from 'path';
 import * as moment from 'moment';
 
 import * as importUtils from '../../../common/import';
@@ -146,9 +147,9 @@ export function importFile (workspaceId) {
       }
 
       // Let's import all the paths!
-      for (const path of paths) {
+      for (const p of paths) {
         try {
-          const uri = `file://${path}`;
+          const uri = `file://${p}`;
           await importUtils.importUri(workspaceId, uri);
           trackEvent('Import File', 'Success');
         } catch (err) {
@@ -183,12 +184,16 @@ export function exportFile (workspaceId = null) {
 
     const workspace = await models.workspace.getById(workspaceId);
     const json = await importUtils.exportJSON(workspace);
-    // Avoid colon for Windows
-    let now = moment().format('D MMMM YYYY HH mm');
+
+    const date = moment().format('YYYY-MM-DD');
+    const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
+    const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
+    const dir = lastDir || electron.remote.app.getPath('desktop');
+
     const options = {
       title: 'Export Insomnia Data',
       buttonLabel: 'Export',
-      defaultPath: 'Insomnia Export at ' + now,
+      defaultPath: path.join(dir, `${name}_${date}`),
       filters: [{
         name: 'Insomnia Export', extensions: ['json']
       }]
@@ -201,6 +206,12 @@ export function exportFile (workspaceId = null) {
         dispatch(loadStop());
         return;
       }
+
+      // Remember last exported path
+      window.localStorage.setItem(
+        'insomnia.lastExportPath',
+        path.dirname(filename)
+      );
 
       fs.writeFile(filename, json, {}, err => {
         if (err) {
