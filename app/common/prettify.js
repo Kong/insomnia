@@ -87,7 +87,7 @@ export function prettifyJson (json, indentChars) {
         }
         break;
       case '"':
-        if (i > 0 && previousChar !== '\\') {
+        if (previousChar !== '\\') {
           inString = !inString;
         }
         newJson += currentChar;
