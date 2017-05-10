@@ -14,7 +14,6 @@
     document.write(script.outerHTML);
   }());
 </script>
-<script src="static/raven.min.js"></script>
 <script>
   // UPDATE HANDLERS
   (function () {
@@ -35,70 +34,6 @@
       // you relaunch too soon it doesn't work the first time.
       setTimeout(showUpdateNotification, 1000 * 10);
     });
-  })();
-</script>
-<script>
-  // Sentry (with rate limiting)
-  (function () {
-    if (process.env.INSOMNIA_ENV === 'development') {
-      console.log('-- Not initializing Sentry for dev --');
-      return;
-    }
-    // Send a maximum of n errors per interval
-    const MAX_ERRORS_PER_INTERVAL = 5;
-    const MAX_ERRORS_INTERVAL = 1000 * 60;
-
-    // Variable to keep track of errors per interval
-    let intervalErrorCount = 0;
-
-    function resetErrorCount () {
-      intervalErrorCount = 0;
-    }
-
-    // Reset error count after every interval
-    setInterval(resetErrorCount, MAX_ERRORS_INTERVAL);
-
-    window.Raven.config('https://786e43ae199c4757a9ea4a48a9abd17d@sentry.io/109702', {
-      logger: 'electron.renderer',
-      environment: process.env.INSOMNIA_ENV || 'production',
-      level: 'warning',
-      release: require('./package.json').version,
-      ignoreUrls: [
-        /.*raven\.min\.js.*/
-      ],
-      includePaths: [
-        /^(?!.*raven.min.js$).*$/ // Ignore raven stuff
-      ],
-      shouldSendCallback: function (data) {
-        if (intervalErrorCount++ > MAX_ERRORS_PER_INTERVAL) {
-          console.log('-- Throttling Sentry Exceptions --');
-          return false;
-        }
-
-        return true;
-      },
-      dataCallback: function (data) {
-        const normalize = function (filename) {
-          const match = filename.match(/\/(app.asar|build)\/(.*)/);
-          if (match) {
-            return match[2]; // return everything after ../app.asar/*
-          } else {
-            return filename;
-          }
-        };
-
-        if (!data.exception) {
-          // Probably a regular console.error, etc
-          return data;
-        }
-
-        data.exception.values[0].stacktrace.frames.forEach(function (frame) {
-          frame.filename = normalize(frame.filename);
-        });
-
-        return data;
-      }
-    }).install();
   })();
 </script>
 <script>

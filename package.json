@@ -126,7 +126,6 @@
     "node-forge": "0.7.0",
     "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#3fc2afea435f3548eedbef9c68d3fee642dfcddb",
     "nunjucks": "3.0.0",
-    "raven": "1.1.2",
     "react": "15.4.2",
     "react-dnd": "2.2.3",
     "react-dnd-html5-backend": "2.2.3",

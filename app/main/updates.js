@@ -23,22 +23,19 @@ export function init () {
   setInterval(_checkForUpdates, CHECK_FOR_UPDATES_INTERVAL);
 
   autoUpdater.on('error', e => {
-    // NOTE: Don't report autoUpdater errors to Sentry. They are way too noisy.
-    if (isDevelopment()) {
-      console.error(e);
-    }
+    console.log(`[updater] Error: ${e.message}`);
   });
 
   autoUpdater.on('update-not-available', () => {
-    console.log('-- Update Not Available --');
+    console.log('[updater] Not Available --');
   });
 
   autoUpdater.on('update-available', () => {
-    console.log('-- Update Available --');
+    console.log('[updater] Update Available --');
   });
 
   autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
-    console.log(`-- Update Downloaded ${releaseName} --`);
+    console.log(`[updater] Downloaded ${releaseName} --`);
     _showUpdateNotification();
   });
 }
@@ -68,7 +65,7 @@ function _checkForUpdates () {
       autoUpdater.checkForUpdates();
     } catch (err) {
       // This will fail in development
-      console.warn('Failed to check for updates:', err.message);
+      console.warn('[updater] Failed to check for updates:', err.message);
     }
   }
 }
