@@ -1,7 +1,7 @@
 # Insomnia REST Client 
 
 [![Insomnia REST Client](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
-[![Build status](https://ci.appveyor.com/api/projects/status/pj03skhct2p1sved/branch/master?svg=true)](https://ci.appveyor.com/project/gschier/insomnia/branch/master)
+[![Build status](https://api.travis-ci.org/getinsomnia/insomnia.svg)](https://travis-ci.org/getinsomnia/insomnia)
 [![license](https://img.shields.io/github/license/getinsomnia/insomnia.svg)](LICENSE)
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
@@ -44,4 +44,4 @@ npm test
 
 ## License
 
-[GNU AGPLv3](LICENSE) &copy; [Insomnia](https://insomnia.rest)
+[GNU GPLv3](LICENSE) &copy; [Insomnia](https://insomnia.rest)
