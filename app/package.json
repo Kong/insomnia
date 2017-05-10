@@ -19,7 +19,6 @@
     "nedb": "1.8.0",
     "node-forge": "0.7.0",
     "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#3fc2afea435f3548eedbef9c68d3fee642dfcddb",
-    "raven": "1.1.2",
     "srp-js": "0.2.0",
     "tough-cookie": "2.3.1",
     "vkbeautify": "0.99.1"
