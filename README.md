@@ -1,6 +1,7 @@
 # Insomnia REST Client 
 
 [![Insomnia REST Client](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
+[![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![Build status](https://api.travis-ci.org/getinsomnia/insomnia.svg)](https://travis-ci.org/getinsomnia/insomnia)
 [![license](https://img.shields.io/github/license/getinsomnia/insomnia.svg)](LICENSE)
 
