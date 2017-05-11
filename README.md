@@ -2,10 +2,10 @@
 
 [![Insomnia](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
 [![Travis](https://api.travis-ci.org/getinsomnia/insomnia.svg)](https://travis-ci.org/getinsomnia/insomnia)
-[![AppVeyor](https://img.shields.io/appveyor/ci/getinsomnia/insomnia.svg)]()
+[![AppVeyor](https://img.shields.io/appveyor/ci/gschier/insomnia.svg)](https://ci.appveyor.com/project/gschier/insomnia)
 [![license](https://img.shields.io/github/license/getinsomnia/insomnia.svg)](LICENSE)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
-[![Twitter Follow](https://img.shields.io/twitter/follow/espadrine.svg?style=social&label=Follow%20on%20Twitter&style=plastic)]()
+[![Twitter Follow](https://img.shields.io/twitter/follow/getinsomnia.svg?style=social&label=Follow%20on%20Twitter&style=plastic)]()
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
