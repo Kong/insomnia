@@ -115,7 +115,7 @@ export function createWindow () {
         {role: 'hideothers'}
       ] : []),
       {type: 'separator'},
-      {label: 'Quit', accelerator: 'Command+Q', click: () => app.quit()}
+      {label: 'Quit', accelerator: 'CmdOrCtrl+Q', click: () => app.quit()}
     ]
   };
 
