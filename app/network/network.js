@@ -227,13 +227,16 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       // Set proxy settings if we have them
       if (settings.proxyEnabled) {
         const {protocol} = urlParse(renderedRequest.url);
-        const {httpProxy, httpsProxy} = settings;
+        const {httpProxy, httpsProxy, noProxy} = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
         timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol}`});
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
           setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+        }
+        if (noProxy) {
+          setOpt(Curl.option.NOPROXY, noProxy);
         }
       } else {
         setOpt(Curl.option.PROXY, '');

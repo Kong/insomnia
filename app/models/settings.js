@@ -16,6 +16,7 @@ export function init () {
     editorKeyMap: 'default',
     httpProxy: '',
     httpsProxy: '',
+    noProxy: '',
     proxyEnabled: false,
     timeout: 0,
     validateSSL: true,

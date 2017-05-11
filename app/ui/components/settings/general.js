@@ -185,6 +185,16 @@ class General extends PureComponent {
                      onChange={this._handleUpdateSetting}/>
             </label>
           </div>
+          <div className="form-control form-control--outlined">
+            <label>No Proxy
+              <input placeholder="localhost,127.0.0.1"
+                     disabled={!settings.proxyEnabled}
+                     name="noProxy"
+                     type="text"
+                     defaultValue={settings.noProxy}
+                     onChange={this._handleUpdateSetting}/>
+            </label>
+          </div>
         </div>
         <br/>
       </div>
