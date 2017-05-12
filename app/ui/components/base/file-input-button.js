@@ -25,9 +25,9 @@ class FileInputButton extends PureComponent {
     };
 
     remote.dialog.showOpenDialog(options, async paths => {
+      // Only change the file if a new file was selected
       if (!paths || paths.length === 0) {
-        // Cancelling will clear the value
-        this.props.onChange('');
+        return;
       }
 
       const path = paths[0];
