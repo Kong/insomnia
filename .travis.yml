@@ -38,7 +38,7 @@ script:
 - npm test
 
 before_deploy:
-- CSC_LINK=$(<code-signing/mac.p12) npm run build-n-package:$PLATFORM
+- npm run build-n-package:$PLATFORM
 
 deploy:
   provider: releases
