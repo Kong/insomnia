@@ -7,14 +7,12 @@ matrix:
       env: CC=clang CXX=clang++ npm_config_clang=1
       compiler: clang
       env:
-        - PLATFORM="linux"
+        - PLATFORM=linux
     - os: osx
       env:
-        - PLATFORM="mac"
-        # CSC_KEY_PASSWORD
-        - secure: "N8bXq4o/CYrir5ZcqLGw8+1RoXhGE8nY6pZFAzbC1njGwhHgQ+Yi7PDpvRbH8uvdv9HgTGIklJt7k86VI0yh4XDCy2Acigucudx3mdsFrytu6ERmzEWWy7Jq9DR/WeBKHigi9aEIv8RutsItdwYvnk4Vt0CwguyiFI8CyDviijqlVwMte87AuY22ieEe+nANAfMph3dsh2a27xgf66Uc25oEovNelrbh391fK60/+jnAk6EMNw59AhBYjCJl2owBzojok8ogG2+BEfKsLSBaMS98JxASf32iM4r6EpOrO2oZL3v3A/1HcCCkcJcJ1ObCD8TlRp8YmB/pqhFrHUXK8KdGLywpaZAwld1nj9cVVWJFzvbFh3b0tB1rULukquMj0wpgQRhDqV2PPj6rPr09tSLf3Tys3iR6tRslqOLxZpYeybd4CncHhh/ZLzdVhb0X1vWEmHzqq3wh7/qSWHFJ/9TkP3jdoVlK3nWfXTC1jE9tMbzRW3N63ALd5zVX3fRpSqWJE+5HUJ2GEmTPkFXYwjPYi8aieaY1Ibgkk3oHBlGL6xzbE//LLvDjCGhir8l9jHlHF9xTOcXDgMomBbnROWDPUJHbxcgBz7DU8iSDzVEEH2Cf9Deuv/LoJwLhEIJ23nLw/qmRoVIvtBjLUUbA6Z9aLdQusH9pzCl2m7MDWbk="
-      before_install:
-        - if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then openssl aes-256-cbc -K $encrypted_ba646dffc48f_key -iv $encrypted_ba646dffc48f_iv -in code-signing/mac.p12.enc -out code-signing/mac.p12 -d; fi
+        - PLATFORM=mac
+        - CSC_LINK=$MAC_CSC_LINK
+        - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
 
 addons:
   apt:
@@ -44,8 +42,7 @@ before_deploy:
 
 deploy:
   provider: releases
-  api_key:
-    secure: RE/7b5bOUu1zgsCLEu/aezuOxlrDG44pLzo4v0kFUNilhU10xBZhpbFRAn7zmFmO9CSq2OEXY/ZnplHIvglel1GM5x5N5kb5t19hIj8ul3wf7ka9fueg1he8VtRpzJOHAw2Rib/Yi5u7PLK/ddcAt39ccRxuSRhaKXYJNWos0ZJfPZbMAdvg6YJq+ep36TFcXxGMC8jQQUOgPb1yGTpChtiK298MenR5AH8qWiZdBnHahm9IQYqPIcSU4xpA7AtEyxgjVZUUPyIgI2/oX+fMyfwxG9fMSgiNt/ZM0dManpTN/yVn7v8D5RNd5U9YLhw8qwmxBFTIvv5PX0AJg0dLMKlvPHRDDbqYDL+/3L+xoaHV2pKtPTMr2/k79EF0V7sW93sdzyA2tcyAqFP5/I38X42tVJGeU/zIFMN4x5Ma+EzFGDT3s/0eiHdr4VGDs7Tv7EsQnQ0RDZTVngQCJY51xEKX9E+DT32mEZNpx790KnzkdORSptx1W/512OAkZ7X06uHWEi4U/KY1LyC7jOnyJ43RdEADfo/H9n/KyVkcYhUjLsFRIrgJHNZnU3usnrHBeRb7r644dmmAdo4yb3V0PYjZIBAsCL7eX4ApiyWoawRTz6LmjPPNtRD+IYOGAvJCki9kPXQcyb4j67xwqQDl5mxygIFRmRFxZeiEA/cdnsY=
+  api_key: $GITHUB_TOKEN
   skip_cleanup: true
   file_glob: true
   file:
