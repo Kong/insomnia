@@ -109,13 +109,22 @@ class RequestSwitcherModal extends PureComponent {
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
     if (searchString) {
+      const specialCharacters = ['.', '^', '$', '*', '+', '-', '?', '(', ')', '[', ']', '{', '}', '\\', '|'];
+
+      const regexSearchString = searchString
+        .toLowerCase()
+        .split('')
+        .map((c) => specialCharacters.includes(c) ? `\\${c}` : c)
+        .join('.*');
+
+      const toMatch = new RegExp(regexSearchString);
+
       matchedRequests = matchedRequests.filter(r => {
         const name = r.name.toLowerCase();
         const id = r._id.toLowerCase();
-        const toMatch = searchString.toLowerCase();
 
-        // Match substring of name
-        const matchesName = name.indexOf(toMatch) >= 0;
+        // Fuzzy match searchString to name
+        const matchesName = toMatch.test(name);
 
         // Match exact Id
         const matchesId = id === toMatch;
