@@ -81,6 +81,47 @@ class ResponsePane extends PureComponent {
     });
   }
 
+  async _handleDownloadFullResponseBody () {
+    if (!this.state.response) {
+      // Should never happen
+      console.warn('No response to download');
+      return;
+    }
+
+    const {body, timeline, encoding, contentType} = this.state.response;
+    const headers = timeline
+                      .filter(v => v.name === 'HEADER_IN')
+                      .map(v => v.value)
+                      .join('');
+    const bodyBuffer = new Buffer(body, encoding);
+    const fullResponse = `${headers}${bodyBuffer}`;
+    const extension = mime.extension(contentType) || '';
+
+    const options = {
+      title: 'Save Full Response',
+      buttonLabel: 'Save',
+      filters: [{
+        name: 'Download', extensions: [extension]
+      }]
+    };
+
+    remote.dialog.showSaveDialog(options, filename => {
+      if (!filename) {
+        trackEvent('Full Response', 'Save Cancel');
+        return;
+      }
+
+      fs.writeFile(filename, fullResponse, {}, err => {
+        if (err) {
+          console.warn('Failed to save full response', err);
+          trackEvent('Full Response', 'Save Failure');
+        } else {
+          trackEvent('Full Response', 'Save Success');
+        }
+      });
+    });
+  }
+
   componentWillReceiveProps (nextProps) {
     const activeRequestId = nextProps.request ? nextProps.request._id : null;
     const activeResponseId = nextProps.activeResponseId;
@@ -202,6 +243,7 @@ class ResponsePane extends PureComponent {
               </Button>
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody}
+                fullDownload={this._handleDownloadFullResponseBody}
                 previewMode={previewMode}
                 updatePreviewMode={handleSetPreviewMode}
               />
