@@ -269,9 +269,9 @@ describe('buildRenderContext()', () => {
   });
 });
 
-describe('recursiveRender()', () => {
+describe('render()', () => {
   it('correctly renders simple Object', async () => {
-    const newObj = await renderUtils.recursiveRender({
+    const newObj = await renderUtils.render({
       foo: '{{ foo }}',
       bar: 'bar',
       baz: '{{ bad }}'
@@ -299,7 +299,7 @@ describe('recursiveRender()', () => {
       }
     };
 
-    const newObj = await renderUtils.recursiveRender(obj, {foo: 'bar'});
+    const newObj = await renderUtils.render(obj, {foo: 'bar'});
 
     expect(newObj).toEqual({
       foo: 'bar',
@@ -322,7 +322,7 @@ describe('recursiveRender()', () => {
 
   it('fails on bad template', async () => {
     try {
-      await renderUtils.recursiveRender({
+      await renderUtils.render({
         foo: '{{ foo }',
         bar: 'bar',
         baz: '{{ bad }}'
@@ -331,5 +331,16 @@ describe('recursiveRender()', () => {
     } catch (err) {
       expect(err.message).toContain('expected variable end');
     }
+  });
+
+  it('does not render tags when not supposed to', async () => {
+    const template = '{{ foo }} {% uuid "v4" %}';
+    const context = {foo: 'bar'};
+
+    const resultOnlyVars = await renderUtils.render(template, context, null, true);
+    const resultEverything = await renderUtils.render(template, context, null, false);
+
+    expect(resultOnlyVars).toBe('bar {% uuid "v4" %}');
+    expect(resultEverything).toBe('bar e3e96e5f-dd68-4229-8b66-dee1f0940f3d');
   });
 });

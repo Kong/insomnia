@@ -40,7 +40,7 @@ class RequestRenderErrorModal extends PureComponent {
 
     const result = jq.query(request, `$.${error.path}`);
     const template = (result && result.length) ? result[0] : null;
-    const locationLabel = template.includes('\n')
+    const locationLabel = template && template.includes('\n')
       ? `line ${error.location.line} of`
       : null;
 

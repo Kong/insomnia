@@ -1,20 +1,27 @@
 import nunjucks from 'nunjucks';
 import * as extensions from './extensions';
 
+// Cached globals
+let nunjucksVariablesOnly = null;
+let nunjucksDefault = null;
+
 /**
  * Render text based on stuff
  * @param {String} text - Nunjucks template in text form
  * @param {Object} [config] - Config options for rendering
  * @param {Object} [config.context] - Context to render with
  * @param {Object} [config.path] - Path to include in the error message
+ * @param {Object} [config.variablesOnly] - Only render variables (not tags)
  */
 export function render (text, config = {}) {
   const context = config.context || {};
   const path = config.path || null;
+  const variablesOnly = config.variablesOnly || false;
 
   return new Promise((resolve, reject) => {
-    const env = getNunjucksEnvironment(true);
-    env.renderString(text, context, (err, result) => {
+    const nj = getNunjucks(variablesOnly);
+
+    nj.renderString(text, context, (err, result) => {
       if (err) {
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
@@ -43,41 +50,57 @@ export function render (text, config = {}) {
   });
 }
 
-function getNunjucksEnvironment (strict = false) {
-  return strict ? _getStrictEnv() : _getNormalEnv();
-}
-
-// ~~~~~~~~~~~~~ //
-// Private Stuff //
-// ~~~~~~~~~~~~~ //
-
-let _nunjucksEnvironment = null;
-function _getNormalEnv () {
-  if (!_nunjucksEnvironment) {
-    _nunjucksEnvironment = nunjucks.configure({
-      autoescape: false
-    });
-
-    for (const Cls of extensions.all()) {
-      _nunjucksEnvironment.addExtension(Cls.name, new Cls());
-    }
+function getNunjucks (variablesOnly) {
+  if (variablesOnly && nunjucksVariablesOnly) {
+    return nunjucksVariablesOnly;
   }
 
-  return _nunjucksEnvironment;
-}
-
-let _nunjucksStrictEnvironment = null;
-function _getStrictEnv () {
-  if (!_nunjucksStrictEnvironment) {
-    _nunjucksStrictEnvironment = nunjucks.configure({
-      autoescape: false,
-      throwOnUndefined: true
-    });
-
-    for (const Cls of extensions.all()) {
-      _nunjucksStrictEnvironment.addExtension(Cls.name, new Cls());
-    }
+  if (!variablesOnly && nunjucksDefault) {
+    return nunjucksDefault;
   }
 
-  return _nunjucksStrictEnvironment;
+  // ~~~~~~~~~~~~ //
+  // Setup Config //
+  // ~~~~~~~~~~~~ //
+
+  const config = {
+    autoescape: false, // Don't escape HTML
+    throwOnUndefined: true, // Strict mode
+    tags: {
+      blockStart: '{%',
+      blockEnd: '%}',
+      variableStart: '{{',
+      variableEnd: '}}',
+      commentStart: '{#',
+      commentEnd: '#}'
+    }
+  };
+
+  if (variablesOnly) {
+    // Set tag syntax to something that will never happen naturally
+    config.tags.blockStart = '<[{[{[{[{[$%';
+    config.tags.blockEnd = '%$]}]}]}]}]>';
+  }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+  // Create Env with Extensions //
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+  const nj = nunjucks.configure(config);
+
+  for (const Cls of extensions.all()) {
+    nj.addExtension(Cls.name, new Cls());
+  }
+
+  // ~~~~~~~~~~~~~~~~~~~~ //
+  // Cache Env and Return //
+  // ~~~~~~~~~~~~~~~~~~~~ //
+
+  if (variablesOnly) {
+    nunjucksVariablesOnly = nj;
+  } else {
+    nunjucksDefault = nj;
+  }
+
+  return nj;
 }
