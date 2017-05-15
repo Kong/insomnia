@@ -137,7 +137,7 @@ export function update (request, patch) {
 }
 
 export function updateMimeType (request, mimeType, doCreate = false) {
-  let headers = mimeType && request.headers ? [...request.headers] : [];
+  let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);
 
   // Check if we are converting to/from variants of XML or JSON
