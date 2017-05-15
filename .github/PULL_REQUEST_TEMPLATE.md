@@ -2,7 +2,7 @@ Please open an [Issue](https://github.com/getinsomnia/insomnia/issues/new) first
 ____
 
 ## What
-_(A description or bullet point list of what changes have been included in this PR.)_
+_(A description or bullet point list of what changes have been included in this PR. Please attach screenshots if UI changes were made)_
 
 ## Why
 _(A description or bullet point list of why the changes mentioned above have been included in this PR.)_
