@@ -37,7 +37,7 @@ class PreviewModeDropdown extends PureComponent {
         </DropdownItem>
         <DropdownItem onClick={fullDownload}>
           <i className="fa fa-save" />
-          Save Full Request
+          Save Full Response
         </DropdownItem>
       </Dropdown>
     );
