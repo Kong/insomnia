@@ -88,20 +88,19 @@ class ResponsePane extends PureComponent {
       return;
     }
 
-    const {body, timeline, encoding, contentType} = this.state.response;
+    const {body, timeline, encoding} = this.state.response;
     const headers = timeline
                       .filter(v => v.name === 'HEADER_IN')
                       .map(v => v.value)
                       .join('');
     const bodyBuffer = new Buffer(body, encoding);
     const fullResponse = `${headers}${bodyBuffer}`;
-    const extension = mime.extension(contentType) || '';
 
     const options = {
       title: 'Save Full Response',
       buttonLabel: 'Save',
       filters: [{
-        name: 'Download', extensions: [extension]
+        name: 'Download'
       }]
     };
 
