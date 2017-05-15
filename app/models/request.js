@@ -1,4 +1,4 @@
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -156,7 +156,7 @@ export function updateMimeType (request, mimeType, doCreate = false) {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
   const hasBody = typeof mimeType === 'string';
-  if (!hasBody) {
+  if (!hasBody || mimeType === CONTENT_TYPE_OTHER) {
     headers = headers.filter(h => h !== contentTypeHeader);
   } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
     contentTypeHeader.value = mimeType;
