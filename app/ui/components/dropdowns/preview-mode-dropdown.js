@@ -33,7 +33,7 @@ class PreviewModeDropdown extends PureComponent {
         <DropdownDivider>Actions</DropdownDivider>
         <DropdownItem onClick={download}>
           <i className="fa fa-save"/>
-          Save to File
+          Save Response Body
         </DropdownItem>
         <DropdownItem onClick={fullDownload}>
           <i className="fa fa-save" />

@@ -57,7 +57,7 @@ class ResponsePane extends PureComponent {
     const extension = mime.extension(contentType) || '';
 
     const options = {
-      title: 'Save Response',
+      title: 'Save Response Body',
       buttonLabel: 'Save',
       filters: [{
         name: 'Download', extensions: [extension]
@@ -107,16 +107,16 @@ class ResponsePane extends PureComponent {
 
     remote.dialog.showSaveDialog(options, filename => {
       if (!filename) {
-        trackEvent('Full Response', 'Save Cancel');
+        trackEvent('Response', 'Save Full Cancel');
         return;
       }
 
       fs.writeFile(filename, fullResponse, {}, err => {
         if (err) {
           console.warn('Failed to save full response', err);
-          trackEvent('Full Response', 'Save Failure');
+          trackEvent('Response', 'Save Full Failure');
         } else {
-          trackEvent('Full Response', 'Save Success');
+          trackEvent('Response', 'Save Full Success');
         }
       });
     });
