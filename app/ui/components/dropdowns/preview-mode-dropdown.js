@@ -22,7 +22,7 @@ class PreviewModeDropdown extends PureComponent {
   }
 
   render () {
-    const {download} = this.props;
+    const {download, fullDownload} = this.props;
     return (
       <Dropdown>
         <DropdownButton className="tall">
@@ -33,7 +33,11 @@ class PreviewModeDropdown extends PureComponent {
         <DropdownDivider>Actions</DropdownDivider>
         <DropdownItem onClick={download}>
           <i className="fa fa-save"/>
-          Save to File
+          Save Response Body
+        </DropdownItem>
+        <DropdownItem onClick={fullDownload}>
+          <i className="fa fa-save" />
+          Save Full Response
         </DropdownItem>
       </Dropdown>
     );
@@ -44,6 +48,7 @@ PreviewModeDropdown.propTypes = {
   // Functions
   updatePreviewMode: PropTypes.func.isRequired,
   download: PropTypes.func.isRequired,
+  fullDownload: PropTypes.func.isRequired,
 
   // Required
   previewMode: PropTypes.string.isRequired
