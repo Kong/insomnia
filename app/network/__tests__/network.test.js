@@ -64,10 +64,9 @@ describe('actuallySend()', () => {
     const body = JSON.parse(Buffer.from(response.body, 'base64'));
     expect(body).toEqual({
       options: {
-        COOKIEFILE: '',
         COOKIELIST: [
-          'notlocalhost\tTRUE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
-          'localhost\tTRUE\t/\tFALSE\t4000855249\tfoo\tbar'
+          'notlocalhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
+          'localhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbar'
         ],
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
@@ -149,7 +148,6 @@ describe('actuallySend()', () => {
     const body = JSON.parse(Buffer.from(response.body, 'base64'));
     expect(body).toEqual({
       options: {
-        COOKIEFILE: '',
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
@@ -204,7 +202,6 @@ describe('actuallySend()', () => {
 
     expect(body).toEqual({
       options: {
-        COOKIEFILE: '',
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
@@ -261,7 +258,6 @@ describe('actuallySend()', () => {
     const body = JSON.parse(Buffer.from(response.body, 'base64'));
     expect(body).toEqual({
       options: {
-        COOKIEFILE: '',
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
