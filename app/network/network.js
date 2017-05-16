@@ -8,12 +8,13 @@ import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
-import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, getSetCookieHeaders, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
+import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 
 let cancelRequestFunction = null;
 
@@ -190,9 +191,6 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         setOpt(Curl.option.CAINFO, fullCAPath);
       }
 
-      // Enable cookie handling (this is required)
-      setOpt(Curl.option.COOKIEFILE, '');
-
       // Set cookies from jar
       if (renderedRequest.settingSendCookies) {
         const cookies = renderedRequest.cookieJar.cookies || [];
@@ -202,9 +200,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
             const expiresDate = new Date(cookie.expires);
             expiresTimestamp = Math.round(expiresDate.getTime() / 1000);
           }
+
           setOpt(Curl.option.COOKIELIST, [
             cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-            cookie.hostOnly ? 'TRUE' : 'FALSE',
+            cookie.hostOnly ? 'FALSE' : 'TRUE',
             cookie.path,
             cookie.secure ? 'TRUE' : 'FALSE',
             expiresTimestamp,
@@ -386,7 +385,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Handle the response ending
-      curl.on('end', function (_1, _2, curlHeaders) {
+      curl.on('end', async function (_1, _2, curlHeaders) {
         // Headers are an array (one for each redirect)
         curlHeaders = curlHeaders[curlHeaders.length - 1];
 
@@ -412,37 +411,29 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
-        if (renderedRequest.settingStoreCookies) {
-          const cookieStrings = curl.getInfo(Curl.info.COOKIELIST);
-          const cookies = cookieStrings.map(str => {
-            //  0                    1                  2     3       4       5     6
-            // [#HttpOnly_.hostname, includeSubdomains, path, secure, expiry, name, value]
-            const parts = str.split('\t');
+        const setCookieHeaders = getSetCookieHeaders(headers);
+        if (renderedRequest.settingStoreCookies && setCookieHeaders.length) {
+          const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
+          for (const header of getSetCookieHeaders(headers)) {
+            jar.setCookieSync(header.value, curl.getInfo(Curl.info.EFFECTIVE_URL));
+          }
 
-            const hostname = parts[0].replace(/^#HttpOnly_/, '');
-            const httpOnly = hostname.length !== parts[0].length;
+          const cookies = await cookiesFromJar(jar);
 
-            return {
-              domain: hostname,
-              httpOnly: httpOnly,
-              hostOnly: parts[1] === 'TRUE',
-              path: parts[2],
-              secure: parts[3] === 'TRUE', // This doesn't exists?
-              expires: new Date(parts[4] * 1000),
-              key: parts[5],
-              value: parts[6]
-            };
-          });
+          // Make sure domains are prefixed with dots (Curl does this)
+          for (const cookie of cookies) {
+            if (cookie.domain[0] !== '.') {
+              cookie.domain = `.${cookie.domain}`;
+            }
+          }
 
-          // Do this async. We don't need to wait
           models.cookieJar.update(renderedRequest.cookieJar, {cookies});
 
-          if (cookies.length) {
-            timeline.push({
-              name: 'TEXT',
-              value: `Updated cookie jar with ${cookies.length} cookies`
-            });
-          }
+          const n = setCookieHeaders.length;
+          timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
+        } else {
+          const n = setCookieHeaders.length;
+          timeline.push({name: 'TEXT', value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`});
         }
 
         // Handle the body
