@@ -73,7 +73,7 @@ class Editable extends PureComponent {
     if (editing) {
       return (
         <input {...extra}
-               className={`editable ${className}`}
+               className={`editable ${className || ''}`}
                type="text"
                ref={this._handleSetInputRef}
                defaultValue={value}

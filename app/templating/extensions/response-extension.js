@@ -1,4 +1,6 @@
 import jq from 'jsonpath';
+import {DOMParser} from 'xmldom';
+import xpath from 'xpath';
 import * as models from '../../models';
 
 import BaseExtension from './base/base-extension';
@@ -33,14 +35,25 @@ export default class ResponseExtension extends BaseExtension {
     const bodyBuffer = new Buffer(response.body, response.encoding);
     const bodyStr = bodyBuffer.toString();
 
+    if (query.indexOf('$') === 0) {
+      return this.matchJSONPath(bodyStr, query);
+    } else if (query.indexOf('/') === 0) {
+      return this.matchXPath(bodyStr, query);
+    } else {
+      throw new Error(`Invalid format for response query: ${query}`);
+    }
+  }
+
+  matchJSONPath (bodyStr, query) {
     let body;
+    let results;
+
     try {
       body = JSON.parse(bodyStr);
     } catch (err) {
       throw new Error(`Invalid JSON: ${err.message}`);
     }
 
-    let results;
     try {
       results = jq.query(body, query);
     } catch (err) {
@@ -53,6 +66,30 @@ export default class ResponseExtension extends BaseExtension {
       throw new Error(`Returned more than one result: ${query}`);
     }
 
-    return `${results[0] || ''}`;
+    return results[0];
+  }
+
+  matchXPath (bodyStr, query) {
+    let dom;
+    let results;
+    try {
+      dom = new DOMParser().parseFromString(bodyStr);
+    } catch (err) {
+      throw new Error(`Invalid XML: ${err.message}`);
+    }
+
+    try {
+      results = xpath.select(query, dom);
+    } catch (err) {
+      throw new Error(`Invalid XPath query: ${query}`);
+    }
+
+    if (results.length === 0) {
+      throw new Error(`Returned no results: ${query}`);
+    } else if (results.length > 1) {
+      throw new Error(`Returned more than one result: ${query}`);
+    }
+
+    return results[0].childNodes.toString();
   }
 }
