@@ -431,7 +431,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
           const n = setCookieHeaders.length;
           timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
-        } else if (setCookieHeaders.length) {
+        } else {
           const n = setCookieHeaders.length;
           timeline.push({name: 'TEXT', value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`});
         }
