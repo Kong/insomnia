@@ -49,9 +49,7 @@ export const MAX_RESPONSES = 20;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
 export const GA_HOST = 'desktop.insomnia.rest';
-export const CHANGELOG_URL = isDevelopment()
-  ? 'http://localhost:1313/changelog-json/'
-  : 'https://changelog.insomnia.rest/changelog.json';
+export const CHANGELOG_URL = process.env.INSOMNIA_SYNC_URL || 'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_RENDER_FAILED = -333;
 export const LARGE_RESPONSE_MB = 5;

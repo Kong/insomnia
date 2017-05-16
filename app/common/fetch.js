@@ -70,11 +70,8 @@ async function _fetch (method, path, json, sessionId = null) {
 }
 
 function _getUrl (path) {
-  if (isDevelopment()) {
-    return `http://localhost:8000${path}`;
-  } else {
-    return `https://api.insomnia.rest${path}`;
-  }
+  const baseUrl = process.env.INSOMNIA_SYNC_URL || 'https://api.insomnia.rest';
+  return `${baseUrl}${path}`;
 }
 
 function _notifyCommandListeners (uri) {
