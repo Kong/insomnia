@@ -414,14 +414,13 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const setCookieHeaders = getSetCookieHeaders(headers);
         if (renderedRequest.settingStoreCookies && setCookieHeaders.length) {
           const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-          jar.rejectPublicSuffixes = false;
-          jar.looseMode = true;
-
           for (const header of getSetCookieHeaders(headers)) {
             jar.setCookieSync(header.value, curl.getInfo(Curl.info.EFFECTIVE_URL));
           }
 
           const cookies = await cookiesFromJar(jar);
+
+          // Make sure domains are prefixed with dots (Curl does this)
           for (const cookie of cookies) {
             if (cookie.domain[0] !== '.') {
               cookie.domain = `.${cookie.domain}`;
