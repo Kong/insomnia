@@ -8,6 +8,7 @@ export const canDuplicate = true;
 export function init () {
   return {
     name: 'New Folder',
+    description: '',
     environment: {},
     metaSortKey: -1 * Date.now()
   };

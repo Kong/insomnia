@@ -16,6 +16,7 @@ describe('init()', () => {
       metaSortKey: -1478795580200,
       method: 'GET',
       name: 'New Request',
+      description: '',
       parameters: [],
       url: '',
       settingStoreCookies: true,
@@ -34,7 +35,7 @@ describe('create()', async () => {
   it('creates a valid request', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
 
-    const request = await requestModel.create({name: 'Test Request', parentId: 'fld_124'});
+    const request = await requestModel.create({name: 'Test Request', parentId: 'fld_124', description: 'A test Request'});
     const expected = {
       _id: 'req_dd2ccc1a2745477a881a9e8ef9d42403',
       created: 1478795580200,
@@ -42,6 +43,7 @@ describe('create()', async () => {
       parentId: 'fld_124',
       type: 'Request',
       authentication: {},
+      description: 'A test Request',
       body: {},
       headers: [],
       metaSortKey: -1478795580200,
@@ -277,6 +279,7 @@ describe('migrate()', () => {
       modified: 1478795580200,
       metaSortKey: -1478795580200,
       name: 'New Request',
+      description: '',
       method: 'GET',
       headers: [],
       authentication: {},
