@@ -562,6 +562,12 @@ class App extends PureComponent {
     }
   }
 
+  async _handleToggleMenuBar (hide) {
+    let win = remote.BrowserWindow.getFocusedWindow();
+    win.setAutoHideMenuBar(hide);
+    win.setMenuBarVisibility(!hide);
+  }
+
   async _handleToggleSidebar () {
     const sidebarHidden = !this.props.sidebarHidden;
     await this._handleSetSidebarHidden(sidebarHidden);
@@ -623,10 +629,7 @@ class App extends PureComponent {
       trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
     }
 
-    // Update MenuBar
-    let win = remote.BrowserWindow.getFocusedWindow();
-    win.setAutoHideMenuBar(this.props.settings.autoHideMenuBar);
-    win.setMenuBarVisibility(!this.props.settings.autoHideMenuBar);
+    this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
 
     db.onChange(async changes => {
       for (const change of changes) {
@@ -731,6 +734,7 @@ class App extends PureComponent {
           handleSetActiveRequest={this._handleSetActiveRequest}
           handleSetActiveEnvironment={this._handleSetActiveEnvironment}
           handleSetSidebarFilter={this._handleSetSidebarFilter}
+          handleToggleMenuBar={this._handleToggleMenuBar}
         />
         <Toast/>
 

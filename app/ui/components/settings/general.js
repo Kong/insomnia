@@ -1,7 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
-import {remote} from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
+import {isMac} from '../../../common/constants';
 
 @autobind
 class General extends PureComponent {
@@ -17,10 +17,7 @@ class General extends PureComponent {
 
   _handleToggleMenuBar (e) {
     this._handleUpdateSetting(e);
-
-    let win = remote.BrowserWindow.getFocusedWindow();
-    win.setAutoHideMenuBar(!this.props.settings.autoHideMenuBar);
-    win.setMenuBarVisibility(this.props.settings.autoHideMenuBar);
+    this.props.handleToggleMenuBar(e.target.checked);
   }
 
   render () {
@@ -72,14 +69,16 @@ class General extends PureComponent {
           </label>
         </div>
 
-      <div className="form-control form-control--thin">
-          <label className="inline-block">Hide Menu Bar
-            <input type="checkbox"
-                   name="autoHideMenuBar"
-                   checked={settings.autoHideMenuBar}
-                   onChange={this._handleToggleMenuBar}/>
-          </label>
-        </div>
+        { !isMac() &&
+          <div className="form-control form-control--thin">
+            <label className="inline-block">Hide Menu Bar
+              <input type="checkbox"
+                     name="autoHideMenuBar"
+                     checked={settings.autoHideMenuBar}
+                     onChange={this._handleToggleMenuBar}/>
+            </label>
+          </div>
+        }
 
         <div className="form-control form-control--thin">
           <label className="inline-block">Wrap Long Lines
@@ -186,7 +185,8 @@ class General extends PureComponent {
 
 General.propTypes = {
   settings: PropTypes.object.isRequired,
-  updateSetting: PropTypes.func.isRequired
+  updateSetting: PropTypes.func.isRequired,
+  handleToggleMenuBar: PropTypes.func.isRequired
 };
 
 export default General;
