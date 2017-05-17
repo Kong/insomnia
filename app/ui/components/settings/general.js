@@ -1,4 +1,5 @@
 import React, {PureComponent, PropTypes} from 'react';
+import {remote} from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 
@@ -12,6 +13,14 @@ class General extends PureComponent {
     }
 
     this.props.updateSetting(e.target.name, value);
+  }
+
+  _handleToggleMenuBar (e) {
+    this._handleUpdateSetting(e);
+
+    let win = remote.BrowserWindow.getFocusedWindow();
+    win.setAutoHideMenuBar(!this.props.settings.autoHideMenuBar);
+    win.setMenuBarVisibility(this.props.settings.autoHideMenuBar);
   }
 
   render () {
@@ -60,6 +69,15 @@ class General extends PureComponent {
                    name="forceVerticalLayout"
                    checked={settings.forceVerticalLayout}
                    onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
+      <div className="form-control form-control--thin">
+          <label className="inline-block">Hide Menu Bar
+            <input type="checkbox"
+                   name="autoHideMenuBar"
+                   checked={settings.autoHideMenuBar}
+                   onChange={this._handleToggleMenuBar}/>
           </label>
         </div>
 

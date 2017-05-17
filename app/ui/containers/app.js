@@ -2,7 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {parse as urlParse} from 'url';
-import {ipcRenderer} from 'electron';
+import {ipcRenderer, remote} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
@@ -622,6 +622,11 @@ class App extends PureComponent {
     } else {
       trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
     }
+
+    // Update MenuBar
+    let win = remote.BrowserWindow.getFocusedWindow();
+    win.setAutoHideMenuBar(this.props.settings.autoHideMenuBar);
+    win.setMenuBarVisibility(!this.props.settings.autoHideMenuBar);
 
     db.onChange(async changes => {
       for (const change of changes) {

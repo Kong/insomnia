@@ -178,6 +178,12 @@ class ResponsePane extends PureComponent {
                   </td>
                 </tr>
                 <tr>
+                  <td>App Settings</td>
+                  <td className="text-right">
+                    <code><Hotkey char=","/></code>
+                  </td>
+                </tr>
+                <tr>
                   <td>Focus Url Bar</td>
                   <td className="text-right">
                     <code><Hotkey char="L"/></code>
