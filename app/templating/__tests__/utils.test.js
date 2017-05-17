@@ -42,3 +42,56 @@ describe('getKeys()', () => {
     ]);
   });
 });
+
+describe('tokenizeTag()', () => {
+  it('tokenizes complex tag', () => {
+    const actual = utils.tokenizeTag(
+      `{% name 'foo!@#$%', bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}`
+    );
+
+    const expected = {
+      name: 'name',
+      args: [
+        {type: 'literal', value: 'foo!@#$%'},
+        {type: 'variable', value: 'bar'},
+        {type: 'literal', value: 'baz "qux"'},
+        {type: 'expression', value: '1 + 5 | default("foo")'}
+      ]
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('handles whitespace', () => {
+    const minimal = utils.tokenizeTag(`{%name'foo',bar%}`);
+    const generous = utils.tokenizeTag(`{%name  \t'foo'  ,  bar\t\n%}`);
+
+    const expected = {
+      name: 'name',
+      args: [
+        {type: 'literal', value: 'foo'},
+        {type: 'variable', value: 'bar'}
+      ]
+    };
+
+    expect(minimal).toEqual(expected);
+    expect(generous).toEqual(expected);
+  });
+
+  /**
+   * NOTE: This is actually invalid Nunjucks but we handle it anyway
+   * because it's better (and easier to implement) than failing.
+   */
+  it('handles no commas', () => {
+    const actual = utils.tokenizeTag(`{% name foo bar baz %}`);
+
+    const expected = {
+      name: 'name',
+      args: [
+        {type: 'expression', value: 'foo bar baz'}
+      ]
+    };
+
+    expect(actual).toEqual(expected);
+  });
+});
