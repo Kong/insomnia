@@ -213,7 +213,7 @@ class KeyValueEditorRow extends PureComponent {
             )}
           </div>
 
-          {multipart ? (
+          {multipart && (
             !hideButtons ? (
               <Dropdown right>
                 <DropdownButton className="tall">
@@ -231,8 +231,7 @@ class KeyValueEditorRow extends PureComponent {
                 <i className="fa fa-empty"/>
               </button>
             )
-          ) : null
-          }
+          )}
 
           {!hideButtons ? (
             <Button onClick={this._handleDisableChange}
@@ -247,7 +246,7 @@ class KeyValueEditorRow extends PureComponent {
             <button><i className="fa fa-empty"/></button>
           )}
 
-          {!noDelete ? (
+          {!noDelete && (
             !hideButtons ? (
               <PromptButton key={Math.random()}
                             tabIndex={-1}
@@ -262,7 +261,7 @@ class KeyValueEditorRow extends PureComponent {
                 <i className="fa fa-empty"/>
               </button>
             )
-          ) : null}
+          )}
         </div>
       </li>
     );

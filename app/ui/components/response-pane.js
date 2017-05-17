@@ -259,11 +259,11 @@ class ResponsePane extends PureComponent {
                 <span className="bubble">{cookieHeaders.length}</span>) : null}
               </Button>
             </Tab>
-            {response.timeline && response.timeline.length ? (
+            {response.timeline && response.timeline.length && (
               <Tab>
                 <Button onClick={this._trackTab} value="Timeline">Timeline</Button>
               </Tab>
-            ) : null}
+            )}
           </TabList>
           <TabPanel>
             <ResponseViewer
@@ -305,7 +305,7 @@ class ResponsePane extends PureComponent {
               />
             </div>
           </TabPanel>
-          {response.timeline && response.timeline.length ? (
+          {(response.timeline && response.timeline.length) && (
             <TabPanel>
                 <ResponseTimelineViewer
                   key={response._id}
@@ -315,7 +315,7 @@ class ResponsePane extends PureComponent {
                   editorIndentSize={editorIndentSize}
                 />
             </TabPanel>
-          ) : null }
+          )}
         </Tabs>
         <ResponseTimer
           handleCancel={cancelCurrentRequest}

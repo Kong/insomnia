@@ -103,7 +103,7 @@ class TagEditor extends PureComponent {
             </select>
           </label>
         </div>
-        {(!isFound || isFlexible) ? (
+        {(!isFound || isFlexible) && (
           <div className="form-control form-control--outlined">
             <Input
               key={selectValue}
@@ -114,7 +114,7 @@ class TagEditor extends PureComponent {
               onChange={this._update}
             />
           </div>
-        ) : null}
+        )}
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error
