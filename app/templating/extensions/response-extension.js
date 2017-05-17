@@ -5,19 +5,14 @@ import * as models from '../../models';
 
 import BaseExtension from './base/base-extension';
 
-const TAG_NAME = 'response';
-const TAG_NAME_SHORT = 'res';
-
-const FIELD_BODY = ['body', 'b'];
-
 export default class ResponseExtension extends BaseExtension {
   constructor () {
     super();
-    this.tags = [TAG_NAME, TAG_NAME_SHORT];
+    this.tags = ['response'];
   }
 
   async run (context, field, id, query) {
-    if (!FIELD_BODY.includes(field)) {
+    if (field !== 'body') {
       throw new Error(`Invalid response field ${field}`);
     }
 
@@ -70,13 +65,10 @@ export default class ResponseExtension extends BaseExtension {
   }
 
   matchXPath (bodyStr, query) {
-    let dom;
     let results;
-    try {
-      dom = new DOMParser().parseFromString(bodyStr);
-    } catch (err) {
-      throw new Error(`Invalid XML: ${err.message}`);
-    }
+
+    // This will never throw
+    const dom = new DOMParser().parseFromString(bodyStr);
 
     try {
       results = xpath.select(query, dom);

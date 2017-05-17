@@ -83,7 +83,7 @@ class TagEditor extends PureComponent {
     const {error, value, preview, tags, selectValue} = this.state;
     const isFound = !!tags.find(v => value === `{% ${v.name} %}`);
     const isFlexible = value.indexOf('{% base64') === 0;
-    const isOther = !isFound || isFlexible;
+    const isCustom = !isFound && !isFlexible;
 
     return (
       <div>
@@ -91,7 +91,7 @@ class TagEditor extends PureComponent {
           <label>Template Function
             <select ref={this._setSelectRef}
                     onChange={this._handleChange}
-                    value={isOther ? CUSTOM_TAG_VALUE : selectValue}>
+                    value={isCustom ? CUSTOM_TAG_VALUE : selectValue}>
               {tags.map((t, i) => (
                 <option key={`${i}::${t.name}`} value={`{% ${t.name}${t.suffix || ''} %}`}>
                   {t.name}
@@ -103,7 +103,7 @@ class TagEditor extends PureComponent {
             </select>
           </label>
         </div>
-        {isOther ? (
+        {(!isFound || isFlexible) ? (
           <div className="form-control form-control--outlined">
             <Input
               key={selectValue}
