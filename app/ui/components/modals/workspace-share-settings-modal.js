@@ -23,9 +23,11 @@ class WorkspaceShareSettingsModal extends PureComponent {
   _handleSubmit (e) {
     e.preventDefault();
   }
+
   _handleClose () {
     this.hide();
   }
+
   _setModalRef (n) {
     this.modal = n;
   }
@@ -129,36 +131,36 @@ class WorkspaceShareSettingsModal extends PureComponent {
               <Dropdown outline>
                 <DropdownDivider>Teams</DropdownDivider>
                 {!loading ? (
-                    resourceGroup && resourceGroup.teamId ? (
-                        <DropdownButton className="btn btn--clicky">
-                          <i className="fa fa-users"/> Shared with
-                          {' '}
-                          <strong>{resourceGroup.teamName}</strong>
-                          {' '}
-                          <i className="fa fa-caret-down"/>
-                        </DropdownButton>
-                      ) : (
-                        <DropdownButton className="btn btn--clicky">
-                          <i className="fa fa-lock"/> Private <i className="fa fa-caret-down"/>
-                        </DropdownButton>
-                      )
-                  ) : (
+                  resourceGroup && resourceGroup.teamId ? (
                     <DropdownButton className="btn btn--clicky">
-                      <i className="fa fa-spin fa-refresh"/> Loading...
+                      <i className="fa fa-users"/> Shared with
+                      {' '}
+                      <strong>{resourceGroup.teamName}</strong>
                       {' '}
                       <i className="fa fa-caret-down"/>
                     </DropdownButton>
-                  )}
+                  ) : (
+                    <DropdownButton className="btn btn--clicky">
+                      <i className="fa fa-lock"/> Private <i className="fa fa-caret-down"/>
+                    </DropdownButton>
+                  )
+                ) : (
+                  <DropdownButton className="btn btn--clicky">
+                    <i className="fa fa-spin fa-refresh"/> Loading...
+                    {' '}
+                    <i className="fa fa-caret-down"/>
+                  </DropdownButton>
+                )}
                 {teams.map(team => (
                   <DropdownItem key={team.id} value={team} onClick={this._handleShareWithTeam}>
                     <i className="fa fa-users"/> Share with <strong>{team.name}</strong>
                   </DropdownItem>
                 ))}
-                {teams.length === 0 ? (
-                    <DropdownItem disabled onClick={this._handleShareWithTeam}>
-                      <i className="fa fa-warning"/> You have no teams
-                    </DropdownItem>
-                  ) : null}
+                {teams.length === 0 && (
+                  <DropdownItem disabled onClick={this._handleShareWithTeam}>
+                    <i className="fa fa-warning"/> You have no teams
+                  </DropdownItem>
+                )}
                 <DropdownDivider>Other</DropdownDivider>
                 <DropdownItem addIcon buttonClass={PromptButton}
                               confirmMessage="Really make private?"

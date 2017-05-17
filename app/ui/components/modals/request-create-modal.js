@@ -118,7 +118,7 @@ class RequestCreateModal extends PureComponent {
                   onChange={this._handleChangeSelectedMethod}
                 />
               </div>
-              {!this._shouldNotHaveBody() ? (
+              {!this._shouldNotHaveBody() && (
                 <div className="form-control form-control--no-label" style={{width: 'auto'}}>
                   <ContentTypeDropdown className="btn btn--clicky no-wrap"
                                        right
@@ -130,7 +130,7 @@ class RequestCreateModal extends PureComponent {
                     <i className="fa fa-caret-down"></i>
                   </ContentTypeDropdown>
                 </div>
-              ) : null}
+              )}
             </div>
           </form>
         </ModalBody>

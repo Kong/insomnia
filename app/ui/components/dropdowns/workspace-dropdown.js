@@ -136,23 +136,21 @@ class WorkspaceDropdown extends PureComponent {
 
         {/* Not Logged In */}
 
-        {!this.state.loggedIn ? (
-            <DropdownItem key="login" onClick={this._handleShowLogin}>
-              <i className="fa fa-sign-in"/> Log In
-            </DropdownItem>
-          ) : null
-        }
+        {!this.state.loggedIn && (
+          <DropdownItem key="login" onClick={this._handleShowLogin}>
+            <i className="fa fa-sign-in"/> Log In
+          </DropdownItem>
+        )}
 
-        {!this.state.loggedIn ? (
-            <DropdownItem key="invite"
-                          buttonClass={Link}
-                          href="https://insomnia.rest/pricing/"
-                          button>
-              <i className="fa fa-users"/> Upgrade to Plus
-              <i className="fa fa-star notice fa-outline txt-lg"/>
-            </DropdownItem>
-          ) : null
-        }
+        {!this.state.loggedIn && (
+          <DropdownItem key="invite"
+                        buttonClass={Link}
+                        href="https://insomnia.rest/pricing/"
+                        button>
+            <i className="fa fa-users"/> Upgrade to Plus
+            <i className="fa fa-star notice fa-outline txt-lg"/>
+          </DropdownItem>
+        )}
       </Dropdown>
     );
   }

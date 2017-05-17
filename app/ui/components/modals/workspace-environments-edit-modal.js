@@ -244,13 +244,13 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                           onSubmit={name => this._handleChangeEnvironmentName(activeEnvironment, name)}
                           value={activeEnvironment ? activeEnvironment.name : ''}/>
               </h1>
-              {rootEnvironment !== activeEnvironment ? (
+              {rootEnvironment !== activeEnvironment && (
                   <PromptButton className="btn btn--clicky"
                                 confirmMessage="Confirm"
                                 onClick={this._handleDeleteEnvironment}>
                     <i className="fa fa-trash-o"/> Delete
                   </PromptButton>
-                ) : null}
+                )}
             </div>
             <div className="env-modal__editor">
               <EnvironmentEditor
