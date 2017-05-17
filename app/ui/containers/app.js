@@ -2,7 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {parse as urlParse} from 'url';
-import {ipcRenderer} from 'electron';
+import {ipcRenderer, remote} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
@@ -562,6 +562,12 @@ class App extends PureComponent {
     }
   }
 
+  async _handleToggleMenuBar (hide) {
+    let win = remote.BrowserWindow.getFocusedWindow();
+    win.setAutoHideMenuBar(hide);
+    win.setMenuBarVisibility(!hide);
+  }
+
   async _handleToggleSidebar () {
     const sidebarHidden = !this.props.sidebarHidden;
     await this._handleSetSidebarHidden(sidebarHidden);
@@ -622,6 +628,8 @@ class App extends PureComponent {
     } else {
       trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
     }
+
+    this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
 
     db.onChange(async changes => {
       for (const change of changes) {
@@ -726,6 +734,7 @@ class App extends PureComponent {
           handleSetActiveRequest={this._handleSetActiveRequest}
           handleSetActiveEnvironment={this._handleSetActiveEnvironment}
           handleSetSidebarFilter={this._handleSetSidebarFilter}
+          handleToggleMenuBar={this._handleToggleMenuBar}
         />
         <Toast/>
 
