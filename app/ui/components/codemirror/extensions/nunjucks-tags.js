@@ -227,7 +227,7 @@ async function _updateElementText (render, mark, text) {
       // Don't render other tags because they may be two-parters
       // eg. {% for %}...{% endfor %}
       const cleaned = cleanedStr.replace(tag, '').trim();
-      const short = cleaned.length > 20 ? `${cleaned.slice(0, 20)}&hellip;` : cleaned;
+      const short = cleaned.length > 30 ? `${cleaned.slice(0, 30)}&hellip;` : cleaned;
       el.innerHTML = `<label>${tag}</label> ${short}`.trim();
 
       if (['response', 'res', 'uuid', 'timestamp', 'now', 'base64'].includes(tag)) {
