@@ -294,6 +294,8 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
   for (const t of listOfThings) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;
+    const displayName = t.displayName || name;
+    const defaultFill = t.defaultFill || name;
 
     const matchSegment = segment.toLowerCase();
     const matchName = name.toLowerCase();
@@ -312,8 +314,8 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
       score: name.length, // In case we want to sort by this
 
       // CodeMirror
-      text: name,
-      displayText: name,
+      text: defaultFill,
+      displayText: displayName,
       render: renderHintMatch,
       hint: replaceHintMatch
     });

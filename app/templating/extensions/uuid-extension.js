@@ -2,15 +2,31 @@ import uuid from 'uuid';
 import BaseExtension from './base/base-extension';
 
 export default class UuidExtension extends BaseExtension {
-  getTagName () {
+  getName () {
+    return 'UUID';
+  }
+
+  getTag () {
     return 'uuid';
+  }
+
+  getDefaultFill () {
+    return "uuid 'v4'";
+  }
+
+  getDescription () {
+    return 'generate v1 or v4 UUIDs';
   }
 
   getArguments () {
     return [{
-      name: 'type',
+      key: 'version',
+      label: 'Version',
       type: 'enum',
-      options: ['v4', 'v1']
+      options: [
+        {value: 'v4', name: 'Version 4'},
+        {value: 'v1', name: 'Version 1'}
+      ]
     }];
   }
 

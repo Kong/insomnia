@@ -2,11 +2,23 @@ const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
 export default class BaseExtension {
   constructor () {
-    this.tags = [this.getTagName()];
+    this.tags = [this.getTag()];
   }
 
-  getTagName () {
-    throw new Error(`${this.constructor.name} did not implement getTagName()`);
+  getName () {
+    throw new Error(`${this.constructor.name} did not implement getName()`);
+  }
+
+  getTag () {
+    throw new Error(`${this.constructor.name} did not implement getTag()`);
+  }
+
+  getDefaultFill () {
+    throw new Error(`${this.constructor.name} did not implement getDefaultFill()`);
+  }
+
+  getDescription () {
+    throw new Error(`${this.constructor.name} did not implement getDescription()`);
   }
 
   getArguments () {

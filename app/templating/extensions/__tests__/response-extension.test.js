@@ -25,6 +25,17 @@ describe('ResponseExtension General', async () => {
       expect(err.message).toContain('Could not find request req_test');
     }
   });
+
+  it('fails on empty filter', async () => {
+    await models.response.create({parentId: 'req_test', body: '{"foo": "bar"}'});
+
+    try {
+      await templating.render(`{% response "body", "req_test", "" %}`);
+      fail('Should have failed');
+    } catch (err) {
+      expect(err.message).toContain('No body filter specified');
+    }
+  });
 });
 
 describe('ResponseExtension JSONPath', async () => {
@@ -157,6 +168,50 @@ describe('ResponseExtension XPath', async () => {
       fail('should have failed');
     } catch (err) {
       expect(err.message).toContain('Returned more than one result: /foo/*');
+    }
+  });
+});
+
+describe('ResponseExtension Header', async () => {
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
+
+  it('renders basic response "header"', async () => {
+    const request = await models.request.create({parentId: 'foo'});
+    await models.response.create({
+      parentId: request._id,
+      headers: [
+        {name: 'Content-Type', value: 'application/json'},
+        {name: 'Content-Length', value: '20'}
+      ]
+    });
+
+    const id = request._id;
+
+    expect(await templating.render(`{% response "header", "${id}", "content-type" %}`))
+      .toBe('application/json');
+    expect(await templating.render(`{% response "header", "${id}", "Content-Type" %}`))
+      .toBe('application/json');
+    expect(await templating.render(`{% response "header", "${id}", "CONTENT-type" %}`))
+      .toBe('application/json');
+    expect(await templating.render(`{% response "header", "${id}", "  CONTENT-type  " %}`))
+      .toBe('application/json');
+  });
+
+  it('no results on missing header', async () => {
+    const request = await models.request.create({parentId: 'foo'});
+    await models.response.create({
+      parentId: request._id,
+      headers: [
+        {name: 'Content-Type', value: 'application/json'},
+        {name: 'Content-Length', value: '20'}
+      ]
+    });
+
+    try {
+      await templating.render(`{% response "header", "${request._id}", "dne" %}`);
+      fail('should have failed');
+    } catch (err) {
+      expect(err.message).toContain('No match for header: dne');
     }
   });
 });

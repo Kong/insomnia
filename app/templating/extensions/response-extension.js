@@ -6,32 +6,63 @@ import * as models from '../../models';
 import BaseExtension from './base/base-extension';
 
 export default class ResponseExtension extends BaseExtension {
-  getTagName () {
+  getName () {
+    return 'Response Value';
+  }
+
+  getTag () {
     return 'response';
+  }
+
+  getDescription () {
+    return 'reference values from other requests';
+  }
+
+  getDefaultFill () {
+    return "response 'body', '', ''";
   }
 
   getArguments () {
     return [
       {
-        name: 'field',
+        key: 'field',
+        label: 'Attribute',
         type: 'enum',
-        options: ['body']
+        options: [
+          {name: 'Body', value: 'body'},
+          {name: 'Header', value: 'header'}
+        ]
       },
       {
-        name: 'request',
+        key: 'request',
+        label: 'Request',
         type: 'model',
         model: 'Request'
       },
       {
-        name: 'query',
-        type: 'string'
+        key: 'filter',
+        type: 'string',
+        label: args => {
+          switch (args[0].value) {
+            case 'body':
+              return 'Filter (JSONPath or XPath)';
+            case 'header':
+              return 'Header Name';
+            default :
+              return 'Filter';
+          }
+        }
       }
     ];
   }
 
-  async run (context, field, id, query) {
-    if (field !== 'body') {
+  async run (context, field, id, filter) {
+    if (!['body', 'header'].includes(field)) {
       throw new Error(`Invalid response field ${field}`);
+    }
+
+    if (!filter) {
+      throw new Error(`No ${field} filter specified`);
     }
 
     const request = await models.request.getById(id);
@@ -42,18 +73,28 @@ export default class ResponseExtension extends BaseExtension {
     const response = await models.response.getLatestForRequest(id);
 
     if (!response) {
-      throw new Error(`No responses for request ${id}`);
+      throw new Error(`No response found for ${id}`);
     }
 
-    const bodyBuffer = new Buffer(response.body, response.encoding);
-    const bodyStr = bodyBuffer.toString();
+    if (!response.statusCode || response.statusCode < 100) {
+      throw new Error(`No response found for ${id}`);
+    }
 
-    if (query.indexOf('$') === 0) {
-      return this.matchJSONPath(bodyStr, query);
-    } else if (query.indexOf('/') === 0) {
-      return this.matchXPath(bodyStr, query);
-    } else {
-      throw new Error(`Invalid format for response query: ${query}`);
+    const sanitizedFilter = filter.trim();
+
+    if (field === 'header') {
+      return this.matchHeader(response.headers, sanitizedFilter);
+    } else { // match "body"
+      const bodyBuffer = new Buffer(response.body, response.encoding);
+      const bodyStr = bodyBuffer.toString();
+
+      if (sanitizedFilter.indexOf('$') === 0) {
+        return this.matchJSONPath(bodyStr, sanitizedFilter);
+      } else if (sanitizedFilter.indexOf('/') === 0) {
+        return this.matchXPath(bodyStr, sanitizedFilter);
+      } else {
+        throw new Error(`Invalid format for response query: ${sanitizedFilter}`);
+      }
     }
   }
 
@@ -101,5 +142,17 @@ export default class ResponseExtension extends BaseExtension {
     }
 
     return results[0].childNodes.toString();
+  }
+
+  matchHeader (headers, name) {
+    const header = headers.find(
+      h => h.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (!header) {
+      throw new Error(`No match for header: ${name}`);
+    }
+
+    return header.value;
   }
 }

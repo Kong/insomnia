@@ -562,10 +562,12 @@ class App extends PureComponent {
     }
   }
 
-  async _handleToggleMenuBar (hide) {
+  _handleToggleMenuBar (hide) {
     let win = remote.BrowserWindow.getFocusedWindow();
-    win.setAutoHideMenuBar(hide);
-    win.setMenuBarVisibility(!hide);
+    if (win.isMenuBarAutoHide() === hide) {
+      win.setAutoHideMenuBar(hide);
+      win.setMenuBarVisibility(!hide);
+    }
   }
 
   async _handleToggleSidebar () {
@@ -629,8 +631,6 @@ class App extends PureComponent {
       trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
     }
 
-    this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
-
     db.onChange(async changes => {
       for (const change of changes) {
         const [
@@ -688,6 +688,9 @@ class App extends PureComponent {
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
 
     process.nextTick(() => ipcRenderer.send('app-ready'));
+
+    // handle this
+    this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
   }
 
   componentWillUnmount () {
@@ -751,6 +754,7 @@ App.propTypes = {
   paneWidth: PropTypes.number.isRequired,
   paneHeight: PropTypes.number.isRequired,
   handleCommand: PropTypes.func.isRequired,
+  settings: PropTypes.object.isRequired,
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired
   }).isRequired,

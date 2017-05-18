@@ -386,6 +386,7 @@ class Wrapper extends PureComponent {
             ref={registerModal}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            workspace={activeWorkspace}
           />
           <WorkspaceSettingsModal
             ref={registerModal}

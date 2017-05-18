@@ -26,8 +26,9 @@ export function getKeys (obj, prefix = '') {
 }
 
 /**
- *
- * @param tagStr
+ * Parse a Nunjucks tag string into a usable abject
+ * @param {string} tagStr - the template string for the tag
+ * @return {object} parsed tag data
  */
 export function tokenizeTag (tagStr) {
   // ~~~~~~~~ //
@@ -98,20 +99,20 @@ export function tokenizeTag (tagStr) {
 
     // End current argument
     if (currentArg !== null && (argCompleted || finalChar)) {
-      let type;
+      let arg;
       if (quotedBy) {
-        type = 'string'; // string
+        arg = {type: 'string', value: currentArg, quotedBy};
       } else if (['true', 'false'].includes(currentArg)) {
-        type = 'boolean'; // keyword
+        arg = {type: 'boolean', value: currentArg};
       } else if (currentArg.match(/^\d*\.?\d*$/)) {
-        type = 'number'; // number
+        arg = {type: 'number', value: currentArg};
       } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
-        type = 'variable';
+        arg = {type: 'variable', value: currentArg};
       } else {
-        type = 'expression';
+        arg = {type: 'expression', value: currentArg};
       }
 
-      args.push({type, value: currentArg});
+      args.push(arg);
 
       currentArg = null;
       quotedBy = null;
@@ -119,4 +120,26 @@ export function tokenizeTag (tagStr) {
   }
 
   return {name, args};
+}
+
+/**
+ * Convert a tokenized tag back into a Nunjucks string
+ * @param {object} tagData - tag data to serialize
+ * @return {string} tag as a Nunjucks string
+ */
+export function unTokenizeTag (tagData) {
+  const args = [];
+  for (const arg of tagData.args) {
+    if (arg.type === 'string') {
+      const q = arg.quotedBy || "'";
+      const re = new RegExp(`([^\\\\])${q}`, 'g');
+      const str = arg.value.replace(re, `$1\\${q}`);
+      args.push(`${q}${str}${q}`);
+    } else {
+      args.push(arg.value);
+    }
+  }
+
+  const argsStr = args.join(', ');
+  return `{% ${tagData.name} ${argsStr} %}`;
 }
