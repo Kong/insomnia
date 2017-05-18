@@ -43,107 +43,11 @@ describe('getKeys()', () => {
   });
 });
 
-describe('tokenizeTag()', () => {
-  it('tokenizes complex tag', () => {
-    const actual = utils.tokenizeTag(
-      `{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}`
-    );
+describe('getTagDefinitions()', () => {
+  it('gets all tag definitions', () => {
+    const actual = utils.getTagDefinitions();
 
-    const expected = {
-      name: 'name',
-      args: [
-        {type: 'variable', value: 'bar'},
-        {type: 'string', value: 'baz "qux"'},
-        {type: 'expression', value: '1 + 5 | default("foo")'}
-      ]
-    };
-
-    expect(actual).toEqual(expected);
-  });
-
-  it('handles whitespace', () => {
-    const minimal = utils.tokenizeTag(`{%name'foo',bar%}`);
-    const generous = utils.tokenizeTag(`{%name  \t'foo'  ,  bar\t\n%}`);
-
-    const expected = {
-      name: 'name',
-      args: [
-        {type: 'string', value: 'foo'},
-        {type: 'variable', value: 'bar'}
-      ]
-    };
-
-    expect(minimal).toEqual(expected);
-    expect(generous).toEqual(expected);
-  });
-
-  it('handles type string', () => {
-    const actual = utils.tokenizeTag(`{% name 'foo' %}`);
-
-    const expected = {
-      name: 'name',
-      args: [
-        {type: 'string', value: 'foo'}
-      ]
-    };
-
-    expect(actual).toEqual(expected);
-  });
-
-  it('handles type number', () => {
-    const actual = utils.tokenizeTag(`{% name 1.222, 123 %}`);
-
-    const expected = {
-      name: 'name',
-      args: [
-        {type: 'number', value: '1.222'},
-        {type: 'number', value: '123'}
-      ]
-    };
-
-    expect(actual).toEqual(expected);
-  });
-
-  it('handles type boolean', () => {
-    const actual = utils.tokenizeTag(`{% name true, false %}`);
-
-    const expected = {
-      name: 'name',
-      args: [
-        {type: 'boolean', value: 'true'},
-        {type: 'boolean', value: 'false'}
-      ]
-    };
-
-    expect(actual).toEqual(expected);
-  });
-
-  it('handles type expression', () => {
-    const actual = utils.tokenizeTag(`{% name 5 * 10 + 'hello' | default(2 - 3) %}`);
-
-    const expected = {
-      name: 'name',
-      args: [
-        {type: 'expression', value: `5 * 10 + 'hello' | default(2 - 3)`}
-      ]
-    };
-
-    expect(actual).toEqual(expected);
-  });
-
-  /**
-   * NOTE: This is actually invalid Nunjucks but we handle it anyway
-   * because it's better (and easier to implement) than failing.
-   */
-  it('handles no commas', () => {
-    const actual = utils.tokenizeTag(`{% name foo bar baz %}`);
-
-    const expected = {
-      name: 'name',
-      args: [
-        {type: 'expression', value: 'foo bar baz'}
-      ]
-    };
+    const expected = {};
 
     expect(actual).toEqual(expected);
   });

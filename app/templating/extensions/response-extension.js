@@ -6,9 +6,27 @@ import * as models from '../../models';
 import BaseExtension from './base/base-extension';
 
 export default class ResponseExtension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['response'];
+  getTagName () {
+    return 'response';
+  }
+
+  getArguments () {
+    return [
+      {
+        name: 'field',
+        type: 'enum',
+        options: ['body']
+      },
+      {
+        name: 'request',
+        type: 'model',
+        model: 'Request'
+      },
+      {
+        name: 'query',
+        type: 'string'
+      }
+    ];
   }
 
   async run (context, field, id, query) {

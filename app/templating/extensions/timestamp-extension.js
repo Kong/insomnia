@@ -1,9 +1,12 @@
 import BaseExtension from './base/base-extension';
 
 export default class TimestampExtension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['timestamp'];
+  getTagName () {
+    return 'timestamp';
+  }
+
+  getArguments () {
+    return [];
   }
 
   run (context) {

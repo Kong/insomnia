@@ -2,9 +2,16 @@ import uuid from 'uuid';
 import BaseExtension from './base/base-extension';
 
 export default class UuidExtension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['uuid'];
+  getTagName () {
+    return 'uuid';
+  }
+
+  getArguments () {
+    return [{
+      name: 'type',
+      type: 'enum',
+      options: ['v4', 'v1']
+    }];
   }
 
   run (context, uuidType = 'v4') {

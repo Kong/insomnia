@@ -19,7 +19,7 @@
     "start-hot": "npm run build-main && cross-env HOT=1 INSOMNIA_ENV=development electron app",
     "build-main": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js",
     "hot-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
-    "dev": "concurrently --kill-others 'npm run hot-server' 'npm run start-hot'",
+    "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
     "build:clean": "rm -rf ./build/* && rm -rf ./dist/* && mkdirp ./build",
     "build:renderer": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.production.babel.js",
     "build:main": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.electron.babel.js",

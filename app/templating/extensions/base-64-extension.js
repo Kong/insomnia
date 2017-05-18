@@ -1,9 +1,22 @@
 import BaseExtension from './base/base-extension';
 
 export default class Base64Extension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['base64'];
+  getTagName () {
+    return 'base64';
+  }
+
+  getArguments () {
+    return [
+      {
+        name: 'action',
+        type: 'enum',
+        options: ['encode', 'decode']
+      },
+      {
+        name: 'value',
+        type: 'string'
+      }
+    ];
   }
 
   run (context, op, text) {

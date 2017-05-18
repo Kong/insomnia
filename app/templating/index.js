@@ -50,6 +50,18 @@ export function render (text, config = {}) {
   });
 }
 
+export function getTagDefinitions () {
+  const env = getNunjucks();
+
+  return Object.keys(env.extensions).map(k => {
+    const ext = env.extensions[k];
+    return {
+      name: ext.getTagName(),
+      args: ext.getArguments()
+    };
+  }).sort((a, b) => a.name > b.name ? 1 : -1);
+}
+
 function getNunjucks (variablesOnly) {
   if (variablesOnly && nunjucksVariablesOnly) {
     return nunjucksVariablesOnly;

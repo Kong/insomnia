@@ -1,9 +1,16 @@
 import BaseExtension from './base/base-extension';
 
 export default class NowExtension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['now'];
+  getTagName () {
+    return 'now';
+  }
+
+  getArguments () {
+    return [{
+      name: 'type',
+      type: 'enum',
+      options: ['millis', 'unix', 'iso-8601']
+    }];
   }
 
   run (context, dateType = 'iso-8601') {
