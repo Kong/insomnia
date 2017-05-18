@@ -236,6 +236,7 @@ class Wrapper extends PureComponent {
       handleStartDragPaneHorizontal,
       handleStartDragPaneVertical,
       handleSetSidebarFilter,
+      handleToggleMenuBar,
       handleRender,
       handleGetRenderContext,
       handleGenerateCodeForActiveRequest,
@@ -406,6 +407,7 @@ class Wrapper extends PureComponent {
             handleExportAllToFile={handleExportFile}
             handleImportFile={this._handleImportFile}
             handleImportUri={this._handleImportUri}
+            handleToggleMenuBar={handleToggleMenuBar}
             settings={settings}
           />
           <RequestSwitcherModal
@@ -451,6 +453,7 @@ Wrapper.propTypes = {
   // Helper Functions
   handleActivateRequest: PropTypes.func.isRequired,
   handleSetSidebarFilter: PropTypes.func.isRequired,
+  handleToggleMenuBar: PropTypes.func.isRequired,
   handleImportFileToWorkspace: PropTypes.func.isRequired,
   handleImportUriToWorkspace: PropTypes.func.isRequired,
   handleExportFile: PropTypes.func.isRequired,

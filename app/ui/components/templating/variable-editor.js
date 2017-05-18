@@ -82,7 +82,7 @@ class VariableEditor extends PureComponent {
             </select>
           </label>
         </div>
-        {isOther ? (
+        {isOther && (
           <div className="form-control form-control--outlined">
             <Input
               forceEditor
@@ -92,7 +92,7 @@ class VariableEditor extends PureComponent {
               onChange={this._update}
             />
           </div>
-        ) : null}
+        )}
         <div className="form-control form-control--outlined">
           <label>Live Preview
             {error

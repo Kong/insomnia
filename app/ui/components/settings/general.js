@@ -1,6 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
+import {isMac} from '../../../common/constants';
 
 @autobind
 class General extends PureComponent {
@@ -12,6 +13,11 @@ class General extends PureComponent {
     }
 
     this.props.updateSetting(e.target.name, value);
+  }
+
+  _handleToggleMenuBar (e) {
+    this._handleUpdateSetting(e);
+    this.props.handleToggleMenuBar(e.target.checked);
   }
 
   render () {
@@ -62,6 +68,17 @@ class General extends PureComponent {
                    onChange={this._handleUpdateSetting}/>
           </label>
         </div>
+
+        { !isMac() &&
+          <div className="form-control form-control--thin">
+            <label className="inline-block">Hide Menu Bar
+              <input type="checkbox"
+                     name="autoHideMenuBar"
+                     checked={settings.autoHideMenuBar}
+                     onChange={this._handleToggleMenuBar}/>
+            </label>
+          </div>
+        }
 
         <div className="form-control form-control--thin">
           <label className="inline-block">Wrap Long Lines
@@ -168,7 +185,8 @@ class General extends PureComponent {
 
 General.propTypes = {
   settings: PropTypes.object.isRequired,
-  updateSetting: PropTypes.func.isRequired
+  updateSetting: PropTypes.func.isRequired,
+  handleToggleMenuBar: PropTypes.func.isRequired
 };
 
 export default General;
