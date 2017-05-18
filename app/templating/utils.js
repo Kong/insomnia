@@ -100,11 +100,11 @@ export function tokenizeTag (tagStr) {
     if (currentArg !== null && (argCompleted || finalChar)) {
       let type;
       if (quotedBy) {
-        type = 'literal'; // string
-      } else if (['true', 'false', 'null'].includes(currentArg)) {
-        type = 'literal'; // keyword
+        type = 'string'; // string
+      } else if (['true', 'false'].includes(currentArg)) {
+        type = 'boolean'; // keyword
       } else if (currentArg.match(/^\d*\.?\d*$/)) {
-        type = 'literal'; // number
+        type = 'number'; // number
       } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
         type = 'variable';
       } else {

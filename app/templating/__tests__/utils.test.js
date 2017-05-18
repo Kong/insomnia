@@ -46,15 +46,14 @@ describe('getKeys()', () => {
 describe('tokenizeTag()', () => {
   it('tokenizes complex tag', () => {
     const actual = utils.tokenizeTag(
-      `{% name 'foo!@#$%', bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}`
+      `{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}`
     );
 
     const expected = {
       name: 'name',
       args: [
-        {type: 'literal', value: 'foo!@#$%'},
         {type: 'variable', value: 'bar'},
-        {type: 'literal', value: 'baz "qux"'},
+        {type: 'string', value: 'baz "qux"'},
         {type: 'expression', value: '1 + 5 | default("foo")'}
       ]
     };
@@ -69,13 +68,67 @@ describe('tokenizeTag()', () => {
     const expected = {
       name: 'name',
       args: [
-        {type: 'literal', value: 'foo'},
+        {type: 'string', value: 'foo'},
         {type: 'variable', value: 'bar'}
       ]
     };
 
     expect(minimal).toEqual(expected);
     expect(generous).toEqual(expected);
+  });
+
+  it('handles type string', () => {
+    const actual = utils.tokenizeTag(`{% name 'foo' %}`);
+
+    const expected = {
+      name: 'name',
+      args: [
+        {type: 'string', value: 'foo'}
+      ]
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('handles type number', () => {
+    const actual = utils.tokenizeTag(`{% name 1.222, 123 %}`);
+
+    const expected = {
+      name: 'name',
+      args: [
+        {type: 'number', value: '1.222'},
+        {type: 'number', value: '123'}
+      ]
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('handles type boolean', () => {
+    const actual = utils.tokenizeTag(`{% name true, false %}`);
+
+    const expected = {
+      name: 'name',
+      args: [
+        {type: 'boolean', value: 'true'},
+        {type: 'boolean', value: 'false'}
+      ]
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('handles type expression', () => {
+    const actual = utils.tokenizeTag(`{% name 5 * 10 + 'hello' | default(2 - 3) %}`);
+
+    const expected = {
+      name: 'name',
+      args: [
+        {type: 'expression', value: `5 * 10 + 'hello' | default(2 - 3)`}
+      ]
+    };
+
+    expect(actual).toEqual(expected);
   });
 
   /**
