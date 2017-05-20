@@ -178,6 +178,15 @@ class Wrapper extends PureComponent {
     models.workspace.remove(activeWorkspace);
   }
 
+  async _handleDuplicateActiveWorkspace () {
+    const {activeWorkspace} = this.props;
+
+    trackEvent('Workspace', 'Duplicate');
+
+    const newWorkspace = await models.workspace.duplicate(activeWorkspace);
+    await this.props.handleSetActiveWorkspace(newWorkspace._id);
+  }
+
   _handleSendRequestWithActiveEnvironment () {
     const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
@@ -390,7 +399,9 @@ class Wrapper extends PureComponent {
           <WorkspaceSettingsModal
             ref={registerModal}
             workspace={activeWorkspace}
-            handleRemoveWorkspace={this._handleRemoveActiveWorkspace}/>
+            handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
+            handleDuplicateWorkspace={this._handleDuplicateActiveWorkspace}
+          />
           <WorkspaceShareSettingsModal
             ref={registerModal}
             workspace={activeWorkspace}/>
