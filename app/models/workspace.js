@@ -68,5 +68,5 @@ export async function duplicate (workspace) {
   const sortKeyIncrement = (nextSortKey - workspace.metaSortKey) / 2;
   const metaSortKey = workspace.metaSortKey + sortKeyIncrement;
 
-  return db.duplicate(workspace, {name, metaSortKey})
+  return db.duplicate(workspace, {name, metaSortKey});
 }
