@@ -194,7 +194,7 @@ class WorkspaceSettingsModal extends PureComponent {
               </label>
             </div>
             <div className="form-control form-control--padded">
-              <label htmlFor="nothing">Danger Zone
+              <label htmlFor="nothing">Actions
                 <PromptButton onClick={this._handleRemoveWorkspace}
                               addIcon
                               className="width-auto btn btn--clicky">
