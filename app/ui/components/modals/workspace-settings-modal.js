@@ -38,6 +38,11 @@ class WorkspaceSettingsModal extends PureComponent {
     this.hide();
   }
 
+  _handleDuplicateWorkspace () {
+    this.props.handleDuplicateWorkspace();
+    this.hide();
+  }
+
   _handleToggleCertificateForm () {
     this.setState({showAddCertificateForm: !this.state.showAddCertificateForm});
   }
@@ -199,6 +204,11 @@ class WorkspaceSettingsModal extends PureComponent {
                               addIcon
                               className="width-auto btn btn--clicky">
                   <i className="fa fa-trash-o"/> Delete Workspace
+                </PromptButton>
+                <PromptButton onClick={this._handleDuplicateWorkspace}
+                              addIcon
+                              className="width-auto btn btn--clicky">
+                  <i className="fa fa-copy"/> Duplicate Workspace
                 </PromptButton>
               </label>
             </div>
@@ -371,6 +381,7 @@ class WorkspaceSettingsModal extends PureComponent {
 
 WorkspaceSettingsModal.propTypes = {
   handleRemoveWorkspace: PropTypes.func.isRequired,
+  handleDuplicateWorkspace: PropTypes.func.isRequired,
   workspace: PropTypes.object.isRequired
 };
 
