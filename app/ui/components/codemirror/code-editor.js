@@ -13,6 +13,7 @@ import {trackEvent} from '../../../analytics/index';
 import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import './base-imports';
+import {getTagDefinitions} from '../../../templating/index';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -400,15 +401,7 @@ class CodeEditor extends PureComponent {
         };
 
         // Only allow tags if we have variables too
-        getTags = () => ([
-          `uuid 'v4'`,
-          `uuid 'v1'`,
-          `now 'ISO-8601'`,
-          `now 'unix'`,
-          `now 'millis'`,
-          `base64 'encode', 'my string'`,
-          `base64 'decode', 'bXkgc3RyaW5n'`
-        ]);
+        getTags = getTagDefinitions;
       }
       options.environmentAutocomplete = {
         getVariables,

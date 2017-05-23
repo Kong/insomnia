@@ -2,6 +2,8 @@ import CodeMirror from 'codemirror';
 import * as misc from '../../../../common/misc';
 import NunjucksVariableModal from '../../modals/nunjucks-modal';
 import {showModal} from '../../modals/index';
+import {tokenizeTag} from '../../../../templating/utils';
+import {getTagDefinitions} from '../../../../templating/index';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
@@ -222,18 +224,23 @@ async function _updateElementText (render, mark, text) {
       .trim();
 
     if (tagMatch) {
-      const tag = tagMatch[1];
+      const tagData = tokenizeTag(str);
+      const tagDefinition = getTagDefinitions().find(d => d.name === tagData.name);
 
-      // Don't render other tags because they may be two-parters
-      // eg. {% for %}...{% endfor %}
-      const cleaned = cleanedStr.replace(tag, '').trim();
-      const short = cleaned.length > 30 ? `${cleaned.slice(0, 30)}&hellip;` : cleaned;
-      el.innerHTML = `<label>${tag}</label> ${short}`.trim();
-
-      if (['response', 'res', 'uuid', 'timestamp', 'now', 'base64'].includes(tag)) {
+      if (tagDefinition) {
         // Try rendering these so we can show errors if needed
+        const firstArg = tagDefinition.args[0];
+        if (firstArg && firstArg.type === 'enum') {
+          const argData = tagData.args[0];
+          const option = firstArg.options.find(d => d.value === argData.value);
+          el.innerHTML = `<label></label>${tagDefinition.displayName} &rArr; ${option.name}`;
+        } else {
+          el.innerHTML = `<label></label>${tagData.name}`;
+        }
         el.title = await render(str);
       } else {
+        el.innerHTML = `<label></label>${cleanedStr}`;
+        el.title = 'Unrecognized tag';
         el.setAttribute('data-ignore', 'on');
       }
     } else {

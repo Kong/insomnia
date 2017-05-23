@@ -1,9 +1,33 @@
 import BaseExtension from './base/base-extension';
 
 export default class NowExtension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['now'];
+  getName () {
+    return 'Now';
+  }
+
+  getTag () {
+    return 'now';
+  }
+
+  getDefaultFill () {
+    return "now 'iso-8601'";
+  }
+
+  getDescription () {
+    return 'get the current time';
+  }
+
+  getArguments () {
+    return [{
+      key: 'format',
+      label: 'Timestamp Format',
+      type: 'enum',
+      options: [
+        {name: 'Milliseconds', value: 'millis'},
+        {name: 'Unix Timestamp', value: 'unix'},
+        {name: 'ISO-8601 Format', value: 'iso-8601'}
+      ]
+    }];
   }
 
   run (context, dateType = 'iso-8601') {

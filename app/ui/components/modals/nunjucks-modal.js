@@ -56,7 +56,7 @@ class NunjucksModal extends PureComponent {
   }
 
   render () {
-    const {handleRender, handleGetRenderContext, uniqueKey} = this.props;
+    const {handleRender, handleGetRenderContext, uniqueKey, workspace} = this.props;
     const {defaultTemplate} = this.state;
 
     let editor = null;
@@ -78,21 +78,22 @@ class NunjucksModal extends PureComponent {
           onChange={this._handleTemplateChange}
           defaultValue={defaultTemplate}
           handleRender={handleRender}
+          workspace={workspace}
         />
       );
     }
 
     return (
       <Modal ref={this._setModalRef} onHide={this._handleModalHide} key={uniqueKey}>
-        <form onSubmit={this._handleSubmit}>
-          <ModalHeader>Edit {title}</ModalHeader>
-          <ModalBody className="pad" key={defaultTemplate}>
+        <ModalHeader>Edit {title}</ModalHeader>
+        <ModalBody className="pad" key={defaultTemplate}>
+          <form onSubmit={this._handleSubmit}>
             {editor}
-          </ModalBody>
-          <ModalFooter>
-            <button type="submit" className="btn">Done</button>
-          </ModalFooter>
-        </form>
+          </form>
+        </ModalBody>
+        <ModalFooter>
+          <button className="btn" onClick={this.hide}>Done</button>
+        </ModalFooter>
       </Modal>
     );
   }
@@ -101,7 +102,8 @@ class NunjucksModal extends PureComponent {
 NunjucksModal.propTypes = {
   uniqueKey: PropTypes.string.isRequired,
   handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired
+  handleGetRenderContext: PropTypes.func.isRequired,
+  workspace: PropTypes.object.isRequired
 };
 
 export default NunjucksModal;
