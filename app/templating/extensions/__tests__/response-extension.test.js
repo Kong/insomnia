@@ -43,7 +43,11 @@ describe('ResponseExtension JSONPath', async () => {
 
   it('renders basic response "body", query', async () => {
     const request = await models.request.create({parentId: 'foo'});
-    await models.response.create({parentId: request._id, body: '{"foo": "bar"}'});
+    await models.response.create({
+      parentId: request._id,
+      statusCode: 200,
+      body: '{"foo": "bar"}'
+    });
 
     const result = await templating.render(`{% response "body", "${request._id}", "$.foo" %}`);
 
@@ -52,7 +56,11 @@ describe('ResponseExtension JSONPath', async () => {
 
   it('fails on invalid JSON', async () => {
     const request = await models.request.create({parentId: 'foo'});
-    await models.response.create({parentId: request._id, body: '{"foo": "bar"'});
+    await models.response.create({
+      parentId: request._id,
+      body: '{"foo": "bar"',
+      statusCode: 200
+    });
 
     try {
       await templating.render(`{% response "body", "${request._id}", "$.foo" %}`);
@@ -64,7 +72,11 @@ describe('ResponseExtension JSONPath', async () => {
 
   it('fails on invalid query', async () => {
     const request = await models.request.create({parentId: 'foo'});
-    await models.response.create({parentId: request._id, body: '{"foo": "bar"}'});
+    await models.response.create({
+      parentId: request._id,
+      statusCode: 200,
+      body: '{"foo": "bar"}'
+    });
 
     try {
       await templating.render(`{% response "body", "${request._id}", "$$" %}`);
@@ -76,7 +88,11 @@ describe('ResponseExtension JSONPath', async () => {
 
   it('fails on no results', async () => {
     const request = await models.request.create({parentId: 'foo'});
-    await models.response.create({parentId: request._id, body: '{"foo": "bar"}'});
+    await models.response.create({
+      parentId: request._id,
+      statusCode: 200,
+      body: '{"foo": "bar"}'
+    });
 
     try {
       await templating.render(`{% response "body", "${request._id}", "$.missing" %}`);
@@ -88,7 +104,11 @@ describe('ResponseExtension JSONPath', async () => {
 
   it('fails on more than 1 result', async () => {
     const request = await models.request.create({parentId: 'foo'});
-    await models.response.create({parentId: request._id, body: '{"array": [1,2,3]}'});
+    await models.response.create({
+      parentId: request._id,
+      statusCode: 200,
+      body: '{"array": [1,2,3]}'
+    });
 
     try {
       await templating.render(`{% response "body", "${request._id}", "$.array.*" %}`);
@@ -106,6 +126,7 @@ describe('ResponseExtension XPath', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
       parentId: request._id,
+      statusCode: 200,
       body: '<foo><bar>Hello World!</bar></foo>'
     });
 
@@ -116,7 +137,11 @@ describe('ResponseExtension XPath', async () => {
 
   it('no results on invalid XML', async () => {
     const request = await models.request.create({parentId: 'foo'});
-    await models.response.create({parentId: request._id, body: '<hi></hi></sstr>'});
+    await models.response.create({
+      parentId: request._id,
+      statusCode: 200,
+      body: '<hi></hi></sstr>'
+    });
 
     try {
       await templating.render(`{% response "body", "${request._id}", "/foo" %}`);
@@ -130,6 +155,7 @@ describe('ResponseExtension XPath', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
       parentId: request._id,
+      statusCode: 200,
       body: '<foo><bar>Hello World!</bar></foo>'
     });
 
@@ -145,6 +171,7 @@ describe('ResponseExtension XPath', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
       parentId: request._id,
+      statusCode: 200,
       body: '<foo><bar>Hello World!</bar></foo>'
     });
 
@@ -160,6 +187,7 @@ describe('ResponseExtension XPath', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
       parentId: request._id,
+      statusCode: 200,
       body: '<foo><bar>Hello World!</bar><bar>And again!</bar></foo>'
     });
 
@@ -179,6 +207,7 @@ describe('ResponseExtension Header', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
       parentId: request._id,
+      statusCode: 200,
       headers: [
         {name: 'Content-Type', value: 'application/json'},
         {name: 'Content-Length', value: '20'}
@@ -201,6 +230,7 @@ describe('ResponseExtension Header', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
       parentId: request._id,
+      statusCode: 200,
       headers: [
         {name: 'Content-Type', value: 'application/json'},
         {name: 'Content-Length', value: '20'}

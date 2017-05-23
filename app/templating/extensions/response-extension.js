@@ -73,11 +73,11 @@ export default class ResponseExtension extends BaseExtension {
     const response = await models.response.getLatestForRequest(id);
 
     if (!response) {
-      throw new Error(`No response found for ${id}`);
+      throw new Error('No responses for request');
     }
 
     if (!response.statusCode || response.statusCode < 100) {
-      throw new Error(`No response found for ${id}`);
+      throw new Error('No responses for request');
     }
 
     const sanitizedFilter = filter.trim();
