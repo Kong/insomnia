@@ -6,7 +6,6 @@ import * as models from '../../models';
 import BaseExtension from './base/base-extension';
 
 export default class ResponseExtension extends BaseExtension {
-<<<<<<< HEAD
   getName () {
     return 'Response Value';
   }
@@ -30,9 +29,9 @@ export default class ResponseExtension extends BaseExtension {
         label: 'Attribute',
         type: 'enum',
         options: [
-          {name: 'Body – attribute of response body', value: 'body'},
-          {name: 'Raw Body – entire response body', value: 'raw'},
-          {name: 'Header – value of response header', value: 'header'}
+          {name: 'Body', description: 'attribute of response body', value: 'body'},
+          {name: 'Raw Body', description: 'entire response body', value: 'raw'},
+          {name: 'Header', description: 'value of response header', value: 'header'}
         ]
       },
       {
@@ -61,15 +60,6 @@ export default class ResponseExtension extends BaseExtension {
 
   async run (context, field, id, filter) {
     if (!['body', 'header', 'raw'].includes(field)) {
-=======
-  constructor () {
-    super();
-    this.tags = ['response'];
-  }
-
-  async run (context, field, id, query) {
-    if (field !== 'body') {
->>>>>>> improvement/better-response-tag
       throw new Error(`Invalid response field ${field}`);
     }
 
@@ -159,7 +149,6 @@ export default class ResponseExtension extends BaseExtension {
     }
 
     return results[0].childNodes.toString();
-<<<<<<< HEAD
   }
 
   matchHeader (headers, name) {
@@ -172,7 +161,5 @@ export default class ResponseExtension extends BaseExtension {
     }
 
     return header.value;
-=======
->>>>>>> improvement/better-response-tag
   }
 }
