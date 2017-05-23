@@ -7,6 +7,8 @@ import * as db from '../../../common/database';
 import {types as allModelTypes} from '../../../models';
 import HelpTooltip from '../help-tooltip';
 
+const CUSTOM_TAG_VALUE = `{% custom 'tag' %}`;
+
 @autobind
 class TagEditor extends PureComponent {
   constructor (props) {

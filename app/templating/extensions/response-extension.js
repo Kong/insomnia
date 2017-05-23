@@ -6,6 +6,7 @@ import * as models from '../../models';
 import BaseExtension from './base/base-extension';
 
 export default class ResponseExtension extends BaseExtension {
+<<<<<<< HEAD
   getName () {
     return 'Response Value';
   }
@@ -60,6 +61,15 @@ export default class ResponseExtension extends BaseExtension {
 
   async run (context, field, id, filter) {
     if (!['body', 'header', 'raw'].includes(field)) {
+=======
+  constructor () {
+    super();
+    this.tags = ['response'];
+  }
+
+  async run (context, field, id, query) {
+    if (field !== 'body') {
+>>>>>>> improvement/better-response-tag
       throw new Error(`Invalid response field ${field}`);
     }
 
@@ -149,6 +159,7 @@ export default class ResponseExtension extends BaseExtension {
     }
 
     return results[0].childNodes.toString();
+<<<<<<< HEAD
   }
 
   matchHeader (headers, name) {
@@ -161,5 +172,7 @@ export default class ResponseExtension extends BaseExtension {
     }
 
     return header.value;
+=======
+>>>>>>> improvement/better-response-tag
   }
 }
