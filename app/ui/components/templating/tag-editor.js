@@ -58,15 +58,19 @@ class TagEditor extends PureComponent {
     this.setState({models, loadingModels: false});
   }
 
-  _handleChange (e) {
-    const parent = e.target.parentNode;
-    const argIndex = parent.getAttribute('data-arg-index');
+  _updateArg (argValue, argIndex) {
     const {activeTagData, activeTagDefinition} = this.state;
 
     const tagData = clone(activeTagData);
-    tagData.args[argIndex].value = e.target.value;
+    tagData.args[argIndex].value = argValue;
 
     this._update(activeTagDefinition, tagData, false);
+  }
+
+  _handleChange (e) {
+    const parent = e.target.parentNode;
+    const argIndex = parent.getAttribute('data-arg-index');
+    return this._updateArg(e.target.value, argIndex);
   }
 
   _handleChangeCustomArg (e) {
@@ -183,6 +187,11 @@ class TagEditor extends PureComponent {
   }
 
   renderArg (argDefinition, args, argIndex) {
+    // Decide whether or not to show it
+    if (argDefinition.hide && argDefinition.hide(args)) {
+      return null;
+    }
+
     const argData = args[argIndex];
     const value = argData.value;
 

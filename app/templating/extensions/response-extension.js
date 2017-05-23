@@ -29,8 +29,9 @@ export default class ResponseExtension extends BaseExtension {
         label: 'Attribute',
         type: 'enum',
         options: [
-          {name: 'Body', value: 'body'},
-          {name: 'Header', value: 'header'}
+          {name: 'Body – attribute of response body', value: 'body'},
+          {name: 'Raw Body – entire response body', value: 'raw'},
+          {name: 'Header – value of response header', value: 'header'}
         ]
       },
       {
@@ -42,6 +43,7 @@ export default class ResponseExtension extends BaseExtension {
       {
         key: 'filter',
         type: 'string',
+        hide: args => args[0].value === 'raw',
         label: args => {
           switch (args[0].value) {
             case 'body':
@@ -57,11 +59,11 @@ export default class ResponseExtension extends BaseExtension {
   }
 
   async run (context, field, id, filter) {
-    if (!['body', 'header'].includes(field)) {
+    if (!['body', 'header', 'raw'].includes(field)) {
       throw new Error(`Invalid response field ${field}`);
     }
 
-    if (!filter) {
+    if (field !== 'raw' && !filter) {
       throw new Error(`No ${field} filter specified`);
     }
 
@@ -84,7 +86,10 @@ export default class ResponseExtension extends BaseExtension {
 
     if (field === 'header') {
       return this.matchHeader(response.headers, sanitizedFilter);
-    } else { // match "body"
+    } else if (field === 'raw') {
+      const bodyBuffer = new Buffer(response.body, response.encoding);
+      return bodyBuffer.toString();
+    } else if (field === 'body') {
       const bodyBuffer = new Buffer(response.body, response.encoding);
       const bodyStr = bodyBuffer.toString();
 
@@ -95,6 +100,8 @@ export default class ResponseExtension extends BaseExtension {
       } else {
         throw new Error(`Invalid format for response query: ${sanitizedFilter}`);
       }
+    } else {
+      throw new Error(`Unknown field ${field}`);
     }
   }
 

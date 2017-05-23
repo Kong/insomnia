@@ -245,3 +245,19 @@ describe('ResponseExtension Header', async () => {
     }
   });
 });
+
+describe('ResponseExtension Raw', async () => {
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
+
+  it('renders basic response "header"', async () => {
+    const request = await models.request.create({parentId: 'foo'});
+    await models.response.create({
+      parentId: request._id,
+      statusCode: 200,
+      body: 'Hello World!'
+    });
+
+    const result = await templating.render(`{% response "raw", "${request._id}", "" %}`);
+    expect(result).toBe('Hello World!');
+  });
+});
