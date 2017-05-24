@@ -9,6 +9,11 @@ const {app, Menu, BrowserWindow, shell, dialog} = electron;
 let mainWindow = null;
 let localStorage = null;
 
+export function init () {
+  initLocalStorage();
+  initContextMenus();
+}
+
 export function createWindow () {
   const zoomFactor = getZoomFactor();
   const {bounds, fullscreen} = getBounds();
@@ -270,8 +275,6 @@ export function createWindow () {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
-  require('electron-context-menu')({});
-
   return mainWindow;
 }
 
@@ -351,4 +354,6 @@ function initLocalStorage () {
   localStorage = new LocalStorage(localStoragePath);
 }
 
-initLocalStorage();
+function initContextMenus () {
+  require('electron-context-menu')({});
+}
