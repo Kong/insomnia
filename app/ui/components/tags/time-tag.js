@@ -29,7 +29,7 @@ class TimeTag extends PureComponent {
       number = Math.round(number * 100) / 100;
     }
 
-    let description = `${milliseconds.toFixed(1)} milliseconds`;
+    let description = `${milliseconds.toFixed(3)} milliseconds`;
     return (
       <div className={classnames('tag', {'tag--small': small}, className)} title={description}>
         <strong>TIME</strong> {number} {unit}

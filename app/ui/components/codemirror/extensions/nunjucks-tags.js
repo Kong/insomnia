@@ -2,6 +2,8 @@ import CodeMirror from 'codemirror';
 import * as misc from '../../../../common/misc';
 import NunjucksVariableModal from '../../modals/nunjucks-modal';
 import {showModal} from '../../modals/index';
+import {tokenizeTag} from '../../../../templating/utils';
+import {getTagDefinitions} from '../../../../templating/index';
 
 CodeMirror.defineExtension('enableNunjucksTags', function (handleRender) {
   if (!handleRender) {
@@ -222,17 +224,24 @@ async function _updateElementText (render, mark, text) {
       .trim();
 
     if (tagMatch) {
-      const tag = tagMatch[1];
+      const tagData = tokenizeTag(str);
+      const tagDefinition = getTagDefinitions().find(d => d.name === tagData.name);
 
-      // Don't render other tags because they may be two-parters
-      // eg. {% for %}...{% endfor %}
-      const cleaned = cleanedStr.replace(tag, '').trim();
-      el.innerHTML = `<label>${tag}</label> ${cleaned}`.trim();
-
-      if (['response', 'res', 'uuid', 'timestamp', 'now', 'base64'].includes(tag)) {
+      if (tagDefinition) {
         // Try rendering these so we can show errors if needed
+        const firstArg = tagDefinition.args[0];
+        if (firstArg && firstArg.type === 'enum') {
+          const argData = tagData.args[0];
+          const foundOption = firstArg.options.find(d => d.value === argData.value);
+          const option = foundOption || firstArg.options[0];
+          el.innerHTML = `<label></label>${tagDefinition.displayName} &rArr; ${option.name}`;
+        } else {
+          el.innerHTML = `<label></label>${tagData.name}`;
+        }
         el.title = await render(str);
       } else {
+        el.innerHTML = `<label></label>${cleanedStr}`;
+        el.title = 'Unrecognized tag';
         el.setAttribute('data-ignore', 'on');
       }
     } else {
@@ -246,6 +255,9 @@ async function _updateElementText (render, mark, text) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
     const label = el.querySelector('label');
+    if (!label) {
+      console.log(el);
+    }
     label.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${label.innerHTML}`;
     el.title = message;
     el.setAttribute('data-error', 'on');

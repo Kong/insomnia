@@ -20,6 +20,7 @@ export function init () {
     timeout: 0,
     validateSSL: true,
     forceVerticalLayout: false,
+    autoHideMenuBar: false,
     theme: 'default'
   };
 }

@@ -36,13 +36,13 @@ class ResponseCookiesViewer extends PureComponent {
 
     return (
       <div>
-        {noticeMessage ? (
+        {noticeMessage && (
           <div className="notice info margin-bottom no-margin-top">
             <p>
               Automatic {noticeMessage} of cookies was disabled at the time this request was made
             </p>
           </div>
-        ) : null}
+        )}
 
         <table className="table--fancy table--striped">
           <thead>
@@ -52,10 +52,7 @@ class ResponseCookiesViewer extends PureComponent {
           </tr>
           </thead>
           <tbody>
-          {!headers.length
-            ? this.renderRow(null, -1)
-            : headers.map(this.renderRow)
-          }
+          {!headers.length ? this.renderRow(null, -1) : headers.map(this.renderRow)}
           </tbody>
         </table>
         <p className="pad-top">

@@ -17,7 +17,6 @@ module.exports = {
   devServer: {
     hot: true,
     hotOnly: true,
-    noInfo: true,
     port: PORT,
     publicPath: `http://localhost:${PORT}/`
   },

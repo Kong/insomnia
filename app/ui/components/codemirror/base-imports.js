@@ -39,7 +39,7 @@ import 'codemirror/keymap/emacs';
 import 'codemirror/keymap/sublime';
 import './modes/nunjucks';
 import './modes/curl';
-import './extensions/environments-autocomplete';
+import './extensions/autocomplete';
 import './extensions/clickable';
 import './extensions/nunjucks-tags';
 

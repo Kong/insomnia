@@ -83,19 +83,19 @@ class CookiesEditor extends PureComponent {
           })}
           </tbody>
         </table>
-        {cookies.length === 0 ? (
-            <div className="pad faint italic text-center">
-              <p>
-                I couldn't find any cookies for you.
-              </p>
-              <p>
-                <button className="btn btn--clicky"
-                        onClick={e => this._handleCookieAdd()}>
-                  Add Cookie <i className="fa fa-plus-circle"></i>
-                </button>
-              </p>
-            </div>
-          ) : null}
+        {cookies.length === 0 && (
+          <div className="pad faint italic text-center">
+            <p>
+              I couldn't find any cookies for you.
+            </p>
+            <p>
+              <button className="btn btn--clicky"
+                      onClick={e => this._handleCookieAdd()}>
+                Add Cookie <i className="fa fa-plus-circle"></i>
+              </button>
+            </p>
+          </div>
+        )}
       </div>
     );
   }

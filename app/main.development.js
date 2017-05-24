@@ -3,7 +3,7 @@ import electron from 'electron';
 import {isDevelopment, isMac} from './common/constants';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
-import {createWindow} from './main/window-utils';
+import * as windowUtils from './main/window-utils';
 
 // Handle potential auto-update
 if (needsRestart) {
@@ -13,6 +13,7 @@ if (needsRestart) {
 // Initialize some things
 errorHandling.init();
 updates.init();
+windowUtils.init();
 
 function addUrlToOpen (e, url) {
   e.preventDefault();
@@ -43,7 +44,7 @@ app.on('activate', (e, hasVisibleWindows) => {
   // Create a new window when clicking the doc icon if there isn't one open
   if (!hasVisibleWindows) {
     try {
-      createWindow();
+      windowUtils.createWindow();
     } catch (e) {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
@@ -55,7 +56,7 @@ app.on('activate', (e, hasVisibleWindows) => {
 // When the app is first launched
 app.on('ready', () => {
   app.removeListener('open-url', addUrlToOpen);
-  const window = createWindow();
+  const window = windowUtils.createWindow();
 
   // Handle URLs sent via command line args
   ipcMain.once('app-ready', () => {

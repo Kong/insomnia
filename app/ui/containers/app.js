@@ -2,7 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {parse as urlParse} from 'url';
-import {ipcRenderer} from 'electron';
+import {ipcRenderer, remote} from 'electron';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
@@ -562,6 +562,15 @@ class App extends PureComponent {
     }
   }
 
+  _handleToggleMenuBar (hide) {
+    for (const win of remote.BrowserWindow.getAllWindows()) {
+      if (win.isMenuBarAutoHide() === hide) {
+        win.setAutoHideMenuBar(hide);
+        win.setMenuBarVisibility(!hide);
+      }
+    }
+  }
+
   async _handleToggleSidebar () {
     const sidebarHidden = !this.props.sidebarHidden;
     await this._handleSetSidebarHidden(sidebarHidden);
@@ -680,6 +689,9 @@ class App extends PureComponent {
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
 
     process.nextTick(() => ipcRenderer.send('app-ready'));
+
+    // handle this
+    this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
   }
 
   componentWillUnmount () {
@@ -726,6 +738,7 @@ class App extends PureComponent {
           handleSetActiveRequest={this._handleSetActiveRequest}
           handleSetActiveEnvironment={this._handleSetActiveEnvironment}
           handleSetSidebarFilter={this._handleSetSidebarFilter}
+          handleToggleMenuBar={this._handleToggleMenuBar}
         />
         <Toast/>
 
@@ -742,6 +755,7 @@ App.propTypes = {
   paneWidth: PropTypes.number.isRequired,
   paneHeight: PropTypes.number.isRequired,
   handleCommand: PropTypes.func.isRequired,
+  settings: PropTypes.object.isRequired,
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired
   }).isRequired,

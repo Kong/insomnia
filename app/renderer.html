@@ -10,8 +10,18 @@
   // HOT RELOADING IN DEV
   (function () {
     const script = document.createElement('script');
-    script.src = (process.env.HOT) ? 'http://localhost:3333/bundle.js' : './bundle.js';
+    script.async = true; // Make Chrome not warn about cross-origin script blocking
+    script.src = process.env.HOT
+      ? 'http://localhost:3333/bundle.js'
+      : 'bundle.js';
+
     document.write(script.outerHTML);
+
+    if (process.env.HOT) {
+      const msg = 'Waiting for build server. The initial build can ' +
+        'take over a minute on slower hardware.';
+      document.querySelector('#root').innerHTML = `<p>${msg}</p>`;
+    }
   }());
 </script>
 <script>

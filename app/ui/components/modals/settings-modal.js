@@ -146,6 +146,7 @@ class SettingsModal extends PureComponent {
             <TabPanel className="pad scrollable">
               <General
                 settings={settings}
+                handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
               />
             </TabPanel>
@@ -185,6 +186,7 @@ SettingsModal.propTypes = {
   handleExportAllToFile: PropTypes.func.isRequired,
   handleImportFile: PropTypes.func.isRequired,
   handleImportUri: PropTypes.func.isRequired,
+  handleToggleMenuBar: PropTypes.func.isRequired,
 
   // Properties
   settings: PropTypes.object.isRequired

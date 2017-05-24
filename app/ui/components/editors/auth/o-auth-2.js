@@ -319,30 +319,30 @@ class OAuth2 extends PureComponent {
         <div className="pad-top-sm">
 
           {/* Handle major errors */}
-          {error ? (
+          {error && (
             <p className="notice warning margin-bottom">
               {error}
             </p>
-          ) : null}
+          )}
 
           {/* Handle minor errors */}
-          {tok && tok.error ? (
+          {(tok && tok.error) && (
             <div className="notice error margin-bottom">
               <h2 className="no-margin-top txt-lg force-wrap">
                 {tok.error}
               </h2>
               <p>
                 {tok.errorDescription || 'no description provided'}
-                {tok.errorUri ? (
+                {tok.errorUri && (
                   <span>&nbsp;
                     <Link href={tok.errorUri} title={tok.errorUri}>
                       <i className="fa fa-question-circle"/>
                     </Link>
                   </span>
-                ) : null}
+                )}
               </p>
             </div>
-          ) : null}
+          )}
           <div className="form-control form-control--outlined">
             <label>
               <small>
@@ -364,11 +364,11 @@ class OAuth2 extends PureComponent {
             </label>
           </div>
           <div className="pad-top text-right">
-            {tok ? (
+            {tok && (
               <button className="btn btn--clicky" onClick={this._handleClearTokens}>
                 Clear Tokens
               </button>
-            ) : null}
+            )}
             &nbsp;&nbsp;
             <button className="btn btn--clicky"
                     onClick={this._handleRefreshToken}

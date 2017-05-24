@@ -40,7 +40,7 @@ class RequestRenderErrorModal extends PureComponent {
 
     const result = jq.query(request, `$.${error.path}`);
     const template = (result && result.length) ? result[0] : null;
-    const locationLabel = template.includes('\n')
+    const locationLabel = template && template.includes('\n')
       ? `line ${error.location.line} of`
       : null;
 
@@ -51,12 +51,12 @@ class RequestRenderErrorModal extends PureComponent {
             Failed to render <strong>{fullPath}</strong> prior to sending
           </p>
           <div className="pad-top-sm">
-            {error.path.match(/^body/) ? (
+            {error.path.match(/^body/) && (
               <button className="btn btn--clicky margin-right-sm"
                       onClick={this._handleShowRequestSettings}>
                 Adjust Render Settings
               </button>
-            ) : null}
+            )}
             <Link button
                   href="https://insomnia.rest/documentation/templating/"
                   className="btn btn--clicky">

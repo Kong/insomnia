@@ -4,10 +4,6 @@ import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 
-export function render (obj, context = {}) {
-  return recursiveRender(obj, context);
-}
-
 export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
   if (!Array.isArray(ancestors)) {
     ancestors = [];
@@ -32,12 +28,35 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
 
   // At this point, environments is a list of environments ordered
   // from top-most parent to bottom-most child
-
+  // Do an Object.assign, but render each property as it overwrites. This
+  // way we can keep same-name variables from the parent context.
   const renderContext = {};
   for (const environment of environments) {
-    // Do an Object.assign, but render each property as it overwrites. This
-    // way we can keep same-name variables from the parent context.
-    await _objectDeepAssignRender(renderContext, environment);
+    // Sort the keys that may have Nunjucks last, so that other keys get
+    // defined first. Very important if env variables defined in same obj
+    // (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
+    const keys = Object.keys(environment).sort((k1, k2) =>
+      environment[k1].match && environment[k1].match(/({{)/) ? 1 : -1
+    );
+
+    for (const key of keys) {
+      /*
+       * If we're overwriting a string, try to render it first with the base as
+       * a context. This allows for the following scenario:
+       *
+       * base:  { base_url: 'google.com' }
+       * obj:   { base_url: '{{ base_url }}/foo' }
+       * final: { base_url: 'google.com/foo' }
+       *
+       * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
+       * original base_url of google.com would be lost.
+       */
+      if (typeof renderContext[key] === 'string') {
+        renderContext[key] = await render(environment[key], renderContext, null, true);
+      } else {
+        renderContext[key] = environment[key];
+      }
+    }
   }
 
   // Render the context with itself to fill in the rest.
@@ -45,7 +64,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
 
   // Render up to 5 levels of recursive references.
   for (let i = 0; i < 3; i++) {
-    finalRenderContext = await recursiveRender(finalRenderContext, finalRenderContext);
+    finalRenderContext = await render(finalRenderContext, finalRenderContext, null, true);
   }
 
   return finalRenderContext;
@@ -53,47 +72,54 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
 
 /**
  * Recursively render any JS object and return a new one
- * @param {*} originalObj - object to render
+ * @param {*} obj - object to render
  * @param {object} context - context to render against
  * @param blacklistPathRegex - don't render these paths
+ * @param variablesOnly - only render variables
  * @return {Promise.<*>}
  */
-export async function recursiveRender (originalObj, context = {}, blacklistPathRegex = null) {
-  const obj = clone(originalObj);
-  const toS = obj => Object.prototype.toString.call(obj);
+export async function render (obj, context = {}, blacklistPathRegex = null, variablesOnly = false) {
+  // Make a deep copy so no one gets mad :)
+  const newObj = clone(obj);
 
-  // Make a copy so no one gets mad :)
   async function next (x, path = '') {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
 
+    const asStr = Object.prototype.toString.call(x);
+
     // Leave these types alone
     if (
-      toS(x) === '[object Date]' ||
-      toS(x) === '[object RegExp]' ||
-      toS(x) === '[object Error]' ||
-      toS(x) === '[object Boolean]' ||
-      toS(x) === '[object Number]' ||
-      toS(x) === '[object Null]' ||
-      toS(x) === '[object Undefined]'
+      asStr === '[object Date]' ||
+      asStr === '[object RegExp]' ||
+      asStr === '[object Error]' ||
+      asStr === '[object Boolean]' ||
+      asStr === '[object Number]' ||
+      asStr === '[object Null]' ||
+      asStr === '[object Undefined]'
     ) {
       // Do nothing to these types
-    } else if (toS(x) === '[object String]') {
+    } else if (asStr === '[object String]') {
       try {
-        x = await templating.render(x, {context, path});
+        x = await templating.render(x, {context, path, variablesOnly});
+
+        // If the variable outputs a tag, render it again. This is a common use
+        // case for environment variables:
+        //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
+        if (x.includes('{%')) {
+          x = await templating.render(x, {context, path, variablesOnly});
+        }
       } catch (err) {
         throw err;
       }
     } else if (Array.isArray(x)) {
-      // x.toString = function () {
-      //   throw new Error('Tried to render an array');
-      // };
       for (let i = 0; i < x.length; i++) {
         x[i] = await next(x[i], `${path}[${i}]`);
       }
     } else if (typeof x === 'object') {
       // Don't even try rendering disabled objects
+      // Note, this logic probably shouldn't be here, but w/e for now
       if (x.disabled) {
         return x;
       }
@@ -108,7 +134,7 @@ export async function recursiveRender (originalObj, context = {}, blacklistPathR
     return x;
   }
 
-  return next(obj);
+  return next(newObj);
 }
 
 export async function getRenderContext (request, environmentId, ancestors = null) {
@@ -142,7 +168,7 @@ export async function getRenderedRequest (request, environmentId) {
   const renderContext = await getRenderContext(request, environmentId, ancestors);
 
   // Render all request properties
-  const renderedRequest = await recursiveRender(
+  const renderedRequest = await render(
     request,
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null
@@ -172,32 +198,4 @@ export async function getRenderedRequest (request, environmentId) {
   renderedRequest.cookieJar = cookieJar;
 
   return renderedRequest;
-}
-
-async function _objectDeepAssignRender (base, obj) {
-  // Sort the keys that may have Nunjucks last, so that other keys get
-  // defined first. Very important if env variables defined in same obj
-  // (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
-  const keys = Object.keys(obj).sort((k1, k2) =>
-    obj[k1].match && obj[k1].match(/({{)/) ? 1 : -1
-  );
-
-  for (const key of keys) {
-    /*
-     * If we're overwriting a string, try to render it first with the base as
-     * a context. This allows for the following scenario:
-     *
-     * base:  { base_url: 'google.com' }
-     * obj:   { base_url: '{{ base_url }}/foo' }
-     * final: { base_url: 'google.com/foo' }
-     *
-     * A regular Object.assign would yield { base_url: '{{ base_url }}/foo' } and the
-     * original base_url of google.com would be lost.
-     */
-    if (typeof base[key] === 'string') {
-      base[key] = await render(obj[key], base);
-    } else {
-      base[key] = obj[key];
-    }
-  }
 }
