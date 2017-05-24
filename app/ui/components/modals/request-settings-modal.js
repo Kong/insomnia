@@ -7,6 +7,7 @@ import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 import DebouncedInput from '../base/debounced-input';
+import Markdown from '../markdown';
 
 @autobind
 class RequestSettingsModal extends PureComponent {
@@ -31,6 +32,11 @@ class RequestSettingsModal extends PureComponent {
 
   async _handleNameChange (name) {
     const request = await models.request.update(this.state.request, {name});
+    this.setState({request});
+  }
+
+  async _handleDescriptionChange (description) {
+    const request = await models.request.update(this.state.request, {description});
     this.setState({request});
   }
 
@@ -70,6 +76,20 @@ class RequestSettingsModal extends PureComponent {
               defaultValue={request.name}
               onChange={this._handleNameChange}
             />
+          </label>
+        </div>
+        <div className="form-control form-control--outlined">
+          <label>Description
+            {' '}
+            <span className="txt-sm faint italic">
+              (supports markdown)
+            </span>
+            <div className="input input--area">
+              <Markdown className="input"
+                defaultValue={request.description}
+                onChange={this._handleDescriptionChange}
+              />
+            </div>
           </label>
         </div>
         <div className="pad-top-sm">
