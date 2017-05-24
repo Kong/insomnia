@@ -2,9 +2,32 @@ import uuid from 'uuid';
 import BaseExtension from './base/base-extension';
 
 export default class UuidExtension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['uuid'];
+  getName () {
+    return 'UUID';
+  }
+
+  getTag () {
+    return 'uuid';
+  }
+
+  getDefaultFill () {
+    return "uuid 'v4'";
+  }
+
+  getDescription () {
+    return 'generate v1 or v4 UUIDs';
+  }
+
+  getArguments () {
+    return [{
+      key: 'version',
+      label: 'Version',
+      type: 'enum',
+      options: [
+        {value: 'v4', name: 'Version 4'},
+        {value: 'v1', name: 'Version 1'}
+      ]
+    }];
   }
 
   run (context, uuidType = 'v4') {

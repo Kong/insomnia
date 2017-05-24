@@ -1,6 +1,5 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Input from '../codemirror/one-line-editor';
 
 @autobind
 class VariableEditor extends PureComponent {
@@ -84,13 +83,7 @@ class VariableEditor extends PureComponent {
         </div>
         {isOther && (
           <div className="form-control form-control--outlined">
-            <Input
-              forceEditor
-              mode="nunjucks"
-              type="text"
-              defaultValue={value}
-              onChange={this._update}
-            />
+            <input type="text" defaultValue={value} onChange={this._handleChange} />
           </div>
         )}
         <div className="form-control form-control--outlined">

@@ -211,8 +211,12 @@ class WorkspaceSettingsModal extends PureComponent {
                     You have not yet added any certificates
                   </p>
                 ) : workspace.certificates.map(certificate => (
-                  <div key={certificate.host} className="row-spaced">
-                    <div>
+                  <div>
+                    <p className="notice info no-margin-top">
+                      Client certificates are an experimental feature
+                    </p>
+                    <div key={certificate.host} className="row-spaced">
+                      <div>
                       <span className="pad-right no-wrap">
                         <strong>PFX:</strong>
                         {' '}
@@ -221,51 +225,52 @@ class WorkspaceSettingsModal extends PureComponent {
                           : <i className="fa fa-remove"/>
                         }
                       </span>
-                      <span className="pad-right no-wrap">
+                        <span className="pad-right no-wrap">
                         <strong>CRT:</strong>
-                        {' '}
-                        {certificate.cert
-                          ? <i className="fa fa-check"/>
-                          : <i className="fa fa-remove"/>
-                        }
+                          {' '}
+                          {certificate.cert
+                            ? <i className="fa fa-check"/>
+                            : <i className="fa fa-remove"/>
+                          }
                       </span>
-                      <span className="pad-right no-wrap">
+                        <span className="pad-right no-wrap">
                         <strong>Key:</strong>
-                        {' '}
-                        {certificate.key
-                          ? <i className="fa fa-check"/>
-                          : <i className="fa fa-remove"/>
-                        }
+                          {' '}
+                          {certificate.key
+                            ? <i className="fa fa-check"/>
+                            : <i className="fa fa-remove"/>
+                          }
                       </span>
-                      <span className="pad-right no-wrap" title={certificate.passphrase || null}>
+                        <span className="pad-right no-wrap" title={certificate.passphrase || null}>
                         <strong>Passphrase:</strong>
-                        {' '}
-                        {certificate.passphrase
-                          ? <i className="fa fa-check"/>
-                          : <i className="fa fa-remove"/>
-                        }
+                          {' '}
+                          {certificate.passphrase
+                            ? <i className="fa fa-check"/>
+                            : <i className="fa fa-remove"/>
+                          }
                       </span>
-                      <span className="pad-right">
+                        <span className="pad-right">
                         <strong>Host:</strong>
-                        {' '}
-                        <span className="monospace selectable">{certificate.host}</span>
+                          {' '}
+                          <span className="monospace selectable">{certificate.host}</span>
                       </span>
-                    </div>
-                    <div className="no-wrap">
-                      <button className="btn btn--super-compact width-auto"
-                              title="Enable or disable certificate"
-                              onClick={() => this._handleToggleCertificate(certificate)}>
-                        {certificate.disabled
-                          ? <i className="fa fa-square-o"/>
-                          : <i className="fa fa-check-square-o"/>
-                        }
-                      </button>
-                      <PromptButton className="btn btn--super-compact width-auto"
-                                    confirmMessage=" "
-                                    addIcon
-                                    onClick={() => this._handleDeleteCertificate(certificate)}>
-                        <i className="fa fa-trash-o"></i>
-                      </PromptButton>
+                      </div>
+                      <div className="no-wrap">
+                        <button className="btn btn--super-compact width-auto"
+                                title="Enable or disable certificate"
+                                onClick={() => this._handleToggleCertificate(certificate)}>
+                          {certificate.disabled
+                            ? <i className="fa fa-square-o"/>
+                            : <i className="fa fa-check-square-o"/>
+                          }
+                        </button>
+                        <PromptButton className="btn btn--super-compact width-auto"
+                                      confirmMessage=" "
+                                      addIcon
+                                      onClick={() => this._handleDeleteCertificate(certificate)}>
+                          <i className="fa fa-trash-o"></i>
+                        </PromptButton>
+                      </div>
                     </div>
                   </div>
                 ))}

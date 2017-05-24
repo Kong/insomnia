@@ -1,46 +1,47 @@
-/* Padding */
-@padding-md: 1.2rem;
-@padding-sm: 0.6rem;
-@padding-xs: 0.4rem;
-@padding-xxs: 0.2rem;
-@padding-lg: 2.5rem;
-@padding-xl: 5rem;
-
 /* Fonts */
 @font-size: 13px;
-@font-size-xs: 0.8rem;
-@font-size-sm: 0.9rem;
-@font-size-md: 1.0rem;
-@font-size-lg: 1.2rem;
-@font-size-xl: 1.35rem;
-@font-size-xxl: 1.5rem;
-@font-size-xxxl: 1.7rem;
+@font-size-xs: round(@font-size * 0.8);
+@font-size-sm: round(@font-size * 0.9);
+@font-size-md: round(@font-size * 1.0);
+@font-size-lg: round(@font-size * 1.2);
+@font-size-xl: round(@font-size * 1.35);
+@font-size-xxl: round(@font-size * 1.5);
+@font-size-xxxl: round(@font-size * 1.7);
+
+/* Padding */
+@padding-md: round(@font-size * 1.2);
+@padding-sm: round(@font-size * 0.6);
+@padding-xs: round(@font-size * 0.4);
+@padding-xxs: round(@font-size * 0.2);
+@padding-lg: round(@font-size * 2.5);
+@padding-xl: round(@font-size * 5);
+
 
 /* Wrapper */
-@line-height-md: 3.6rem;
-@line-height-sm: @line-height-md * 0.8;
-@line-height-xs: @line-height-sm * 0.85;
-@line-height-xxs: @line-height-xs * 0.85;
+@line-height-md: round(@font-size * 3.6);
+@line-height-sm: round(@line-height-md * 0.8);
+@line-height-xs: round(@line-height-sm * 0.85);
+@line-height-xxs: round(@line-height-xs * 0.85);
 
 /* Nav */
 @height-nav: @line-height-md;
 
 /* Scrollbars */
-@scrollbar-width: 0.75rem;
+@scrollbar-width: round(@font-size * 0.75);
 
 /* Borders */
-@radius-sm: 0.2rem;
-@radius-md: 0.3rem;
+@radius-sm: round(@font-size * 0.2);
+@radius-md: round(@font-size * 0.3);
 
 /* Dropdowns */
-@dropdown-min-width: 12rem;
+@dropdown-min-width: round(@font-size * 12);
 
 /* Modals */
-@modal-width: 50rem;
-@modal-width-wide: 70rem;
+@modal-width: round(@font-size * 50);
+@modal-width-wide: round(@font-size * 70);
 
 /* Other */
-@drag-width: 0.5em;
+@drag-width: round(@font-size * 0.5);
 
 /* Breakpoints */
 @breakpoint-lg: 1100px;

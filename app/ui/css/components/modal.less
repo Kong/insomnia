@@ -34,15 +34,19 @@
   .modal__content__wrapper {
     top: 1rem;
     width: @modal-width;
+    height: 100%;
     max-width: 100%;
     max-height: 100%;
     margin: auto;
     position: relative;
     transform: scale(0.95);
     transition: transform 150ms ease-out, top 200ms ease-out;
+
+    // We want pointer events to pass through to the backdrop so we can close it
+    pointer-events: none;
   }
 
-  &.modal--fixed-height .modal__content__wrapper {
+  &.modal--fixed-height .modal__content {
     height: 100%;
   }
 
@@ -65,11 +69,13 @@
     box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.2);
     max-width: 100%;
     max-height: 100%;
-    height: 100%;
     width: 100%;
     background-color: var(--color-bg);
     color: var(--color-font);
     border: 1px solid @hl-sm;
+
+    // Since we disable pointer-events on the parent, re-enable them here
+    pointer-events: auto;
   }
 
   .modal__header {
