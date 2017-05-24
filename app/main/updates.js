@@ -59,12 +59,11 @@ function _checkForUpdates () {
     return;
   }
 
-  if (!isLinux()) {
+  if (!isLinux() && !isDevelopment()) {
     try {
       autoUpdater.setFeedURL(UPDATE_URLS[process.platform]);
       autoUpdater.checkForUpdates();
     } catch (err) {
-      // This will fail in development
       console.warn('[updater] Failed to check for updates:', err.message);
     }
   }

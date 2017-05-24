@@ -23,9 +23,9 @@ export default class NowExtension extends BaseExtension {
       label: 'Timestamp Format',
       type: 'enum',
       options: [
+        {name: 'ISO-8601', value: 'iso-8601'},
         {name: 'Milliseconds', value: 'millis'},
-        {name: 'Unix Timestamp', value: 'unix'},
-        {name: 'ISO-8601 Format', value: 'iso-8601'}
+        {name: 'Unix', value: 'unix'}
       ]
     }];
   }
