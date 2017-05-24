@@ -136,7 +136,7 @@ export const AUTH_NTLM = 'ntlm';
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
-  [AUTH_NTLM]: ['NTML', 'Microsoft NTML'],
+  [AUTH_NTLM]: ['NTLM', 'Microsoft NTLM'],
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0']
 };
