@@ -5,7 +5,6 @@ import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
 import Editable from '../base/editable';
-import Button from '../base/button';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
@@ -113,7 +112,6 @@ class SidebarRequestRow extends PureComponent {
               </div>
             </button>
             <div className="sidebar__actions">
-              <Button><i className="fa fa-book"/></Button>
               <RequestActionsDropdown
                 ref={this._setRequestActionsDropdownRef}
                 handleDuplicateRequest={handleDuplicateRequest}
