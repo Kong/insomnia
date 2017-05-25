@@ -90,9 +90,9 @@ class ResponsePane extends PureComponent {
 
     const {body, timeline, encoding} = this.state.response;
     const headers = timeline
-                      .filter(v => v.name === 'HEADER_IN')
-                      .map(v => v.value)
-                      .join('');
+      .filter(v => v.name === 'HEADER_IN')
+      .map(v => v.value)
+      .join('');
     const bodyBuffer = new Buffer(body, encoding);
     const fullResponse = `${headers}${bodyBuffer}`;
 
@@ -249,8 +249,11 @@ class ResponsePane extends PureComponent {
             </Tab>
             <Tab>
               <Button onClick={this._trackTab} value="Headers">
-                Header {response.headers.length ? (
-                <span className="bubble">{response.headers.length}</span>) : null}
+                Header
+                {' '}
+                {response.headers.length > 0 && (
+                  <span className="bubble">{response.headers.length}</span>
+                )}
               </Button>
             </Tab>
             <Tab>
@@ -259,7 +262,7 @@ class ResponsePane extends PureComponent {
                 <span className="bubble">{cookieHeaders.length}</span>) : null}
               </Button>
             </Tab>
-            {response.timeline && response.timeline.length && (
+            {(response.timeline && response.timeline.length > 0) && (
               <Tab>
                 <Button onClick={this._trackTab} value="Timeline">Timeline</Button>
               </Tab>
@@ -305,15 +308,15 @@ class ResponsePane extends PureComponent {
               />
             </div>
           </TabPanel>
-          {(response.timeline && response.timeline.length) && (
+          {(response.timeline && response.timeline.length > 0) && (
             <TabPanel>
-                <ResponseTimelineViewer
-                  key={response._id}
-                  timeline={response.timeline || []}
-                  editorLineWrapping={editorLineWrapping}
-                  editorFontSize={editorFontSize}
-                  editorIndentSize={editorIndentSize}
-                />
+              <ResponseTimelineViewer
+                key={response._id}
+                timeline={response.timeline || []}
+                editorLineWrapping={editorLineWrapping}
+                editorFontSize={editorFontSize}
+                editorIndentSize={editorIndentSize}
+              />
             </TabPanel>
           )}
         </Tabs>
