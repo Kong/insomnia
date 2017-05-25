@@ -415,14 +415,18 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         if (renderedRequest.settingStoreCookies && setCookieHeaders.length) {
           const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
           for (const header of getSetCookieHeaders(headers)) {
-            jar.setCookieSync(header.value, curl.getInfo(Curl.info.EFFECTIVE_URL));
+            try {
+              jar.setCookieSync(header.value, curl.getInfo(Curl.info.EFFECTIVE_URL));
+            } catch (err) {
+              timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
+            }
           }
 
           const cookies = await cookiesFromJar(jar);
 
           // Make sure domains are prefixed with dots (Curl does this)
           for (const cookie of cookies) {
-            if (cookie.domain[0] !== '.') {
+            if (cookie.domain && cookie.domain[0] !== '.') {
               cookie.domain = `.${cookie.domain}`;
             }
           }
