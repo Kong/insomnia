@@ -4,7 +4,7 @@ import clone from 'clone';
 import * as templating from '../../../templating';
 import * as templateUtils from '../../../templating/utils';
 import * as db from '../../../common/database';
-import {types as allModelTypes} from '../../../models';
+import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 
 @autobind
@@ -25,8 +25,8 @@ class TagEditor extends PureComponent {
     this.state = {
       activeTagData,
       activeTagDefinition,
-      loadingModels: true,
-      models: {},
+      loadingDocs: true,
+      allDocs: {},
       preview: '',
       error: ''
     };
@@ -46,16 +46,16 @@ class TagEditor extends PureComponent {
   }
 
   async _refreshModels (workspace) {
-    const models = {};
-    for (const type of allModelTypes()) {
-      models[type] = [];
+    const allDocs = {};
+    for (const type of models.types()) {
+      allDocs[type] = [];
     }
 
     for (const doc of await db.withDescendants(workspace)) {
-      models[doc.type].push(doc);
+      allDocs[doc.type].push(doc);
     }
 
-    this.setState({models, loadingModels: false});
+    this.setState({allDocs, loadingDocs: false});
   }
 
   _updateArg (argValue, argIndex) {
@@ -179,16 +179,30 @@ class TagEditor extends PureComponent {
   }
 
   renderArgModel (value, modelType) {
-    const {models, loadingModels} = this.state;
-    const docs = models[modelType] || [];
+    const {allDocs, loadingDocs} = this.state;
+    const docs = allDocs[modelType] || [];
     const id = value || 'n/a';
 
     return (
-      <select value={id} disabled={loadingModels} onChange={this._handleChange}>
+      <select value={id} disabled={loadingDocs} onChange={this._handleChange}>
         <option value="n/a">-- Select Item --</option>
-        {docs.map(m => (
-          <option key={m._id} value={m._id}>{m.name}</option>
-        ))}
+        {docs.map(doc => {
+          let namePrefix = null;
+
+          // Show paren't folder with name if it's a request
+          if (doc.type === models.request.type) {
+            const requests = allDocs[models.request.type] || [];
+            const request = requests.find(r => r._id === doc._id);
+            const parentId = request ? request.parentId : 'n/a';
+            const requestGroups = allDocs[models.requestGroup.type] || [];
+            const requestGroup = requestGroups.find(rg => rg._id === parentId);
+            namePrefix = requestGroup ? `${requestGroup.name} ⇒ ` : null;
+          }
+
+          return (
+            <option key={doc._id} value={doc._id}>{namePrefix}{doc.name}</option>
+          );
+        })}
       </select>
     );
   }
