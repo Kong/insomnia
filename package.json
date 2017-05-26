@@ -71,7 +71,9 @@
       {
         "name": "Insomnia",
         "role": "Viewer",
-        "schemes": ["insomnia"]
+        "schemes": [
+          "insomnia"
+        ]
       }
     ],
     "fileAssociations": [],
