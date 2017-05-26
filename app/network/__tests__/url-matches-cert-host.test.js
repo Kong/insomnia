@@ -52,6 +52,12 @@ describe('urlMatchesCertHost', () => {
   });
 
   describe('when using wildcard certificate hosts', () => {
+    it('should return true if the certificate host is only a wildcard', () => {
+      const requestUrl = 'https://www.example.org/some/resources?query=1';
+      const certificateHost = '*';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
     it('should return true if the request URL host matches a certificate host with a wildcard prefix', () => {
       const requestUrl = 'https://my.example.org/some/resources?query=1';
       const certificateHost = 'https://*.example.org';
