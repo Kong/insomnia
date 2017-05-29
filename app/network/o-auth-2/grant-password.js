@@ -1,5 +1,5 @@
 import * as querystring from '../../common/querystring';
-import {getBasicAuthHeader} from '../../common/misc';
+import {getBasicAuthHeader, setDefaultProtocol} from '../../common/misc';
 import * as c from './constants';
 import {responseToObject} from './misc';
 
@@ -38,7 +38,15 @@ export default async function (accessTokenUrl,
     headers: headers
   };
 
-  const response = await window.fetch(accessTokenUrl, config);
+  const url = setDefaultProtocol(accessTokenUrl);
+
+  let response;
+  try {
+    response = await window.fetch(url, config);
+  } catch (err) {
+    throw new Error(`Failed to fetch access token at URL "${url}"`);
+  }
+
   const body = await response.text();
   const results = responseToObject(body, [
     c.P_ACCESS_TOKEN,

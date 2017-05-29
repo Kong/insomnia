@@ -90,6 +90,55 @@ describe('actuallySend()', () => {
     });
   });
 
+  it('sends a urlencoded', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      headers: [{name: 'Content-Type', value: CONTENT_TYPE_FORM_URLENCODED}],
+      method: 'POST',
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: [
+          {name: 'foo', value: 'bar'},
+          {name: 'bar', value: ''},
+          {name: '', value: 'value'}
+        ]
+      },
+      url: 'http://localhost'
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      workspace,
+      settings
+    );
+
+    const body = JSON.parse(Buffer.from(response.body, 'base64'));
+    expect(body).toEqual({
+      options: {
+        CUSTOMREQUEST: 'POST',
+        ACCEPT_ENCODING: '',
+        NOBODY: 0,
+        FOLLOWLOCATION: true,
+        HTTPHEADER: [
+          'Content-Type: application/x-www-form-urlencoded',
+          'Expect: ',
+          'Transfer-Encoding: '
+        ],
+        NOPROGRESS: false,
+        POSTFIELDS: 'foo=bar&bar=&=value',
+        PROXY: '',
+        TIMEOUT_MS: 0,
+        URL: 'http://localhost/',
+        USERAGENT: `insomnia/${getAppVersion()}`,
+        VERBOSE: true
+      }
+    });
+  });
+
   it('skips sending and storing cookies with setting', async () => {
     const workspace = await models.workspace.create();
     const settings = await models.settings.create();

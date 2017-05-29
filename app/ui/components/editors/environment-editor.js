@@ -5,7 +5,40 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 @autobind
 class EnvironmentEditor extends PureComponent {
+  constructor (props) {
+    super(props);
+    this.state = {
+      error: null,
+      warning: null
+    };
+  }
+
   _handleChange () {
+    let error = null;
+    let warning = null;
+    let value = null;
+
+    // Check for JSON parse errors
+    try {
+      value = this.getValue();
+    } catch (err) {
+      error = err.message;
+    }
+
+    // Check for invalid key names
+    if (value) {
+      for (const key of Object.keys(value)) {
+        if (!key.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
+          warning = `"${key}" must only contain letters, numbers, and underscores`;
+          break;
+        }
+      }
+    }
+
+    if (this.state.error !== error || this.state.warning !== warning) {
+      this.setState({error, warning});
+    }
+
     this.props.didChange();
   }
 
@@ -18,12 +51,7 @@ class EnvironmentEditor extends PureComponent {
   }
 
   isValid () {
-    try {
-      return this.getValue() !== undefined;
-    } catch (e) {
-      // Failed to parse JSON
-      return false;
-    }
+    return !this.state.error;
   }
 
   render () {
@@ -38,22 +66,28 @@ class EnvironmentEditor extends PureComponent {
       ...props
     } = this.props;
 
+    const {error, warning} = this.state;
+
     return (
-      <CodeEditor
-        ref={this._setEditorRef}
-        autoPrettify
-        fontSize={editorFontSize}
-        indentSize={editorIndentSize}
-        lineWrapping={lineWrapping}
-        keyMap={editorKeyMap}
-        onChange={this._handleChange}
-        debounceMillis={DEBOUNCE_MILLIS * 6}
-        defaultValue={JSON.stringify(environment)}
-        render={render}
-        getRenderContext={getRenderContext}
-        mode="application/json"
-        {...props}
-      />
+      <div className="environment-editor">
+        <CodeEditor
+          ref={this._setEditorRef}
+          autoPrettify
+          fontSize={editorFontSize}
+          indentSize={editorIndentSize}
+          lineWrapping={lineWrapping}
+          keyMap={editorKeyMap}
+          onChange={this._handleChange}
+          debounceMillis={DEBOUNCE_MILLIS * 6}
+          defaultValue={JSON.stringify(environment)}
+          render={render}
+          getRenderContext={getRenderContext}
+          mode="application/json"
+          {...props}
+        />
+        {error && <p className="notice error margin">{error}</p>}
+        {(!error && warning) && <p className="notice warning margin">{warning}</p>}
+      </div>
     );
   }
 }

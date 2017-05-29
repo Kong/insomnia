@@ -211,11 +211,11 @@ class WorkspaceSettingsModal extends PureComponent {
                     You have not yet added any certificates
                   </p>
                 ) : workspace.certificates.map(certificate => (
-                  <div>
+                  <div key={certificate.host}>
                     <p className="notice info no-margin-top">
                       Client certificates are an experimental feature
                     </p>
-                    <div key={certificate.host} className="row-spaced">
+                    <div className="row-spaced">
                       <div>
                       <span className="pad-right no-wrap">
                         <strong>PFX:</strong>
