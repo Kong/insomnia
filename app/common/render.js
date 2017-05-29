@@ -4,7 +4,7 @@ import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 
-export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment) {
+export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment, variablesOnly = true) {
   if (!Array.isArray(ancestors)) {
     ancestors = [];
   }
@@ -52,7 +52,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
        * original base_url of google.com would be lost.
        */
       if (typeof renderContext[key] === 'string') {
-        renderContext[key] = await render(environment[key], renderContext, null, true);
+        renderContext[key] = await render(environment[key], renderContext, null, variablesOnly);
       } else {
         renderContext[key] = environment[key];
       }
@@ -64,7 +64,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
 
   // Render up to 5 levels of recursive references.
   for (let i = 0; i < 3; i++) {
-    finalRenderContext = await render(finalRenderContext, finalRenderContext, null, true);
+    finalRenderContext = await render(finalRenderContext, finalRenderContext, null, variablesOnly);
   }
 
   return finalRenderContext;
@@ -137,7 +137,7 @@ export async function render (obj, context = {}, blacklistPathRegex = null, vari
   return next(newObj);
 }
 
-export async function getRenderContext (request, environmentId, ancestors = null) {
+export async function getRenderContext (request, environmentId, ancestors = null, variablesOnly = true) {
   if (!request) {
     return {};
   }
@@ -154,7 +154,7 @@ export async function getRenderContext (request, environmentId, ancestors = null
   const subEnvironment = await models.environment.getById(environmentId);
 
   // Generate the context we need to render
-  return buildRenderContext(ancestors, rootEnvironment, subEnvironment);
+  return buildRenderContext(ancestors, rootEnvironment, subEnvironment, variablesOnly);
 }
 
 export async function getRenderedRequest (request, environmentId) {

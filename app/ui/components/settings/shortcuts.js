@@ -2,12 +2,12 @@ import React, {PureComponent} from 'react';
 import Hotkey from '../hotkey';
 
 class Shortcuts extends PureComponent {
-  renderHotkey (name, char, shift, alt) {
+  renderHotkey (name, char, shift, alt, ctrl) {
     return (
       <tr>
         <td>{name}</td>
         <td className="text-right">
-          <code><Hotkey char={char} shift={shift} alt={alt}/></code>
+          <code><Hotkey char={char} shift={shift} alt={alt} ctrl={ctrl}/></code>
         </td>
       </tr>
     );
@@ -26,6 +26,7 @@ class Shortcuts extends PureComponent {
           {this.renderHotkey('Show Environment Editor', 'E')}
           {this.renderHotkey('Focus URL Bar', 'L')}
           {this.renderHotkey('Toggle Sidebar', '\\')}
+          {this.renderHotkey('Show Autocomplete Dropdown', 'Enter', false, false, true)}
           {this.renderHotkey('Show App Preferences', ',')}
           {this.renderHotkey('Show Workspace Settings', ',', true)}
           {this.renderHotkey('Show Request Settings', ',', true, true)}

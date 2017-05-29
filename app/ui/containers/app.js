@@ -228,7 +228,7 @@ class App extends PureComponent {
   async _fetchRenderContext () {
     const {activeEnvironment, activeRequest} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    return render.getRenderContext(activeRequest, environmentId);
+    return render.getRenderContext(activeRequest, environmentId, null, false);
   }
 
   async _handleGetRenderContext () {

@@ -126,6 +126,7 @@ class OAuth2 extends PureComponent {
   renderInputRow (label, property, onChange, handleAutocomplete = null) {
     const {handleRender, handleGetRenderContext, request} = this.props;
     const id = label.replace(/ /g, '-');
+    const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
@@ -135,6 +136,7 @@ class OAuth2 extends PureComponent {
           <div className="form-control form-control--underlined no-margin">
             <OneLineEditor
               id={id}
+              type={type}
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               render={handleRender}

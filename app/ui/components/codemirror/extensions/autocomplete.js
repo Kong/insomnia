@@ -148,6 +148,9 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     'Ctrl-Space': completeForce, // Force autocomplete on hotkey
     "' '": completeIfAfterTagOrVarOpen
   });
+
+  // Close dropdown whenever something is clicked
+  document.addEventListener('click', () => cm.closeHint());
 });
 
 /**
