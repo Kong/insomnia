@@ -297,7 +297,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       let noBody = false;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        const d = querystring.buildFromParams(renderedRequest.body.params || [], true);
+        const d = querystring.buildFromParams(renderedRequest.body.params || [], false);
         setOpt(Curl.option.POSTFIELDS, d); // Send raw data
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const data = renderedRequest.body.params.map(param => {
