@@ -1,5 +1,6 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
+import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -82,7 +83,7 @@ class RequestSettingsModal extends PureComponent {
           <label>Description
             {' '}
             <span className="txt-sm faint italic">
-              (supports markdown)
+              (supports <Link href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"> markdown </Link>)
             </span>
             <div className="input input--area">
               <Markdown className="input"

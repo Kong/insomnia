@@ -1,9 +1,9 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
-import Button from './base/button';
 import {trackEvent} from '../../analytics';
-import DebouncedInput from './base/debounced-input';
+import Button from './base/button';
+import CodeEditor from './codemirror/code-editor';
 import marked from 'marked';
 
 marked.setOptions({
@@ -27,7 +27,7 @@ class Markdown extends PureComponent {
   }
 
   _trackTab (name) {
-    trackEvent('Markdown', 'Editor', name);
+    trackEvent('Request', 'Markdown Editor Tab', name);
   }
 
   _handleChange (value) {
@@ -37,7 +37,6 @@ class Markdown extends PureComponent {
 
   render () {
     return (
-      <div className="markdown">
         <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
@@ -52,15 +51,18 @@ class Markdown extends PureComponent {
             </Tab>
           </TabList>
           <TabPanel>
-            <div className="markdown--edit">
-              <DebouncedInput delay={500} textarea={true} placeholder="..." defaultValue={this._defaultValue} onChange={this._handleChange}/>
-            </div>
+            <CodeEditor
+              manualPrettify
+              mode="markdown"
+              placeholder="..."
+              defaultValue={this._defaultValue}
+              onChange={this._handleChange}
+            />
           </TabPanel>
           <TabPanel>
-            <div className="markdown--preview"><div dangerouslySetInnerHTML={{__html: this._compiled}}></div></div>
+            <div className="pad" dangerouslySetInnerHTML={{__html: this._compiled}}></div>
           </TabPanel>
         </Tabs>
-      </div>
     );
   }
 }
