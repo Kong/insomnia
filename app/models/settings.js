@@ -13,7 +13,6 @@ export function init () {
     editorFontSize: 11,
     editorIndentSize: 2,
     editorLineWrapping: true,
-    disableAnalyticsTracking: false,
     editorKeyMap: 'default',
     httpProxy: '',
     httpsProxy: '',
@@ -22,7 +21,8 @@ export function init () {
     validateSSL: true,
     forceVerticalLayout: false,
     autoHideMenuBar: false,
-    theme: 'default'
+    theme: 'default',
+    disableAnalyticsTracking: false
   };
 }
 
