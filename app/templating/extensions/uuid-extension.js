@@ -1,35 +1,18 @@
 import uuid from 'uuid';
-import BaseExtension from './base/base-extension';
 
-export default class UuidExtension extends BaseExtension {
-  getName () {
-    return 'UUID';
-  }
-
-  getTag () {
-    return 'uuid';
-  }
-
-  getDefaultFill () {
-    return "uuid 'v4'";
-  }
-
-  getDescription () {
-    return 'generate v1 or v4 UUIDs';
-  }
-
-  getArguments () {
-    return [{
-      key: 'version',
-      label: 'Version',
-      type: 'enum',
-      options: [
-        {value: 'v4', name: 'Version 4'},
-        {value: 'v1', name: 'Version 1'}
-      ]
-    }];
-  }
-
+export default {
+  displayName: 'UUID',
+  name: 'uuid',
+  defaultFill: "uuid 'v4'",
+  description: 'generate v1 or v4 UUIDs',
+  args: [{
+    displayName: 'Version',
+    type: 'enum',
+    options: [
+      {displayName: 'Version 4', value: 'v4'},
+      {displayName: 'Version 1', value: 'v1'}
+    ]
+  }],
   run (context, uuidType = 'v4') {
     if (typeof uuidType === 'number') {
       uuidType += '';
@@ -48,4 +31,4 @@ export default class UuidExtension extends BaseExtension {
         throw new Error(`Invalid UUID type "${uuidType}"`);
     }
   }
-}
+};

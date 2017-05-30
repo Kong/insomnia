@@ -1,35 +1,17 @@
-import BaseExtension from './base/base-extension';
-
-export default class NowExtension extends BaseExtension {
-  getName () {
-    return 'Now';
-  }
-
-  getTag () {
-    return 'now';
-  }
-
-  getDefaultFill () {
-    return "now 'iso-8601'";
-  }
-
-  getDescription () {
-    return 'get the current time';
-  }
-
-  getArguments () {
-    return [{
-      key: 'format',
-      label: 'Timestamp Format',
-      type: 'enum',
-      options: [
-        {name: 'ISO-8601', value: 'iso-8601'},
-        {name: 'Milliseconds', value: 'millis'},
-        {name: 'Unix', value: 'unix'}
-      ]
-    }];
-  }
-
+export default {
+  name: 'now',
+  displayName: 'Now Timestamp',
+  description: 'get the current time',
+  defaultFill: "now 'iso-8601'",
+  args: [{
+    displayName: 'Timestamp Format',
+    type: 'enum',
+    options: [
+      {displayName: 'ISO-8601', value: 'iso-8601'},
+      {displayName: 'Milliseconds', value: 'millis'},
+      {displayName: 'Unix', value: 'unix'}
+    ]
+  }],
   run (context, dateType = 'iso-8601') {
     if (typeof dateType === 'string') {
       dateType = dateType.toLowerCase();
@@ -51,4 +33,4 @@ export default class NowExtension extends BaseExtension {
         throw new Error(`Invalid date type "${dateType}"`);
     }
   }
-}
+};

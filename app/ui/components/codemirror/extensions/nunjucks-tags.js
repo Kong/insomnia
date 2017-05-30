@@ -234,9 +234,9 @@ async function _updateElementText (render, mark, text) {
           const argData = tagData.args[0];
           const foundOption = firstArg.options.find(d => d.value === argData.value);
           const option = foundOption || firstArg.options[0];
-          el.innerHTML = `<label></label>${tagDefinition.displayName} &rArr; ${option.name}`;
+          el.innerHTML = `<label></label>${tagDefinition.displayName} &rArr; ${option.displayName}`;
         } else {
-          el.innerHTML = `<label></label>${tagData.name}`;
+          el.innerHTML = `<label></label>${tagDefinition.displayName || tagData.name}`;
         }
         el.title = await render(str);
       } else {
@@ -255,9 +255,6 @@ async function _updateElementText (render, mark, text) {
     const fullMessage = err.message.replace(/\[.+,.+]\s*/, '');
     let message = fullMessage;
     const label = el.querySelector('label');
-    if (!label) {
-      console.log(el);
-    }
     label.innerHTML = `<i class="fa fa-exclamation-triangle"></i>${label.innerHTML}`;
     el.title = message;
     el.setAttribute('data-error', 'on');

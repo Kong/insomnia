@@ -87,13 +87,14 @@ describe('tokenizeTag()', () => {
   });
 
   it('handles type number', () => {
-    const actual = utils.tokenizeTag(`{% name 1.222, 123 %}`);
+    const actual = utils.tokenizeTag(`{% name 9.324, 8, 7 %}`);
 
     const expected = {
       name: 'name',
       args: [
-        {type: 'number', value: '1.222'},
-        {type: 'number', value: '123'}
+        {type: 'number', value: '9.324'},
+        {type: 'number', value: '8'},
+        {type: 'number', value: '7'}
       ]
     };
 

@@ -52,8 +52,9 @@ export function tokenizeTag (tagStr) {
   const args = [];
   let quotedBy = null;
   let currentArg = null;
-  for (let i = 0; i < argsStr.length; i++) {
-    const c = argsStr.charAt(i);
+  for (let i = 0; i < argsStr.length + 1; i++) {
+    // Adding an "invisible" at the end helps us terminate the last arg
+    const c = argsStr.charAt(i) || ',';
 
     // Do nothing if we're still on a space o comma
     if (currentArg === null && c.match(/[\s,]/)) {
@@ -83,7 +84,6 @@ export function tokenizeTag (tagStr) {
 
     const endQuoted = quotedBy && c === quotedBy;
     const endUnquoted = !quotedBy && c === ',';
-    const finalChar = i === argsStr.length - 1;
     const argCompleted = endQuoted || endUnquoted;
 
     // Append current char to argument
@@ -98,7 +98,7 @@ export function tokenizeTag (tagStr) {
     }
 
     // End current argument
-    if (currentArg !== null && (argCompleted || finalChar)) {
+    if (currentArg !== null && argCompleted) {
       let arg;
       if (quotedBy) {
         arg = {type: 'string', value: currentArg, quotedBy};
