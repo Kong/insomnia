@@ -15,7 +15,7 @@ import * as db from '../common/database';
 import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
-import {urlMatchesCertHost} from './url-matches-cert-host';
+import urlMatchesCertHost from './url-matches-cert-host';
 
 let cancelRequestFunction = null;
 
