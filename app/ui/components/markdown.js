@@ -21,7 +21,6 @@ marked.setOptions({
 class Markdown extends PureComponent {
   constructor (props) {
     super(props);
-    this._handleValueChange = props.onChange;
     this._defaultValue = props.defaultValue;
     this._compiled = marked(this._defaultValue);
   }
@@ -31,7 +30,7 @@ class Markdown extends PureComponent {
   }
 
   _handleChange (value) {
-    this._handleValueChange(value);
+    this.props.onChange(value);
     this._compiled = marked(value);
   }
 
@@ -51,13 +50,14 @@ class Markdown extends PureComponent {
             </Tab>
           </TabList>
           <TabPanel>
-            <CodeEditor
-              manualPrettify
-              mode="markdown"
-              placeholder="..."
-              defaultValue={this._defaultValue}
-              onChange={this._handleChange}
-            />
+              <CodeEditor
+                manualPrettify
+                mode="text/x-markdown"
+                placeholder="..."
+                defaultValue={this._defaultValue}
+                onChange={this._handleChange}
+                {...this.props}
+              />
           </TabPanel>
           <TabPanel>
             <div className="pad" dangerouslySetInnerHTML={{__html: this._compiled}}></div>
