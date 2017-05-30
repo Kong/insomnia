@@ -12,7 +12,6 @@ marked.setOptions({
   tables: true,
   breaks: false,
   pedantic: false,
-  sanitize: false,
   smartLists: true,
   smartypants: false
 });
@@ -30,13 +29,13 @@ class Markdown extends PureComponent {
   }
 
   _handleChange (value) {
-    this.props.onChange(value);
     this._compiled = marked(value);
+    this.props.onChange(value);
   }
 
   render () {
     return (
-        <Tabs className="pane__body" forceRenderTabPanel>
+        <Tabs>
           <TabList>
             <Tab>
               <Button onClick={this._trackTab} value="Write">
@@ -56,7 +55,6 @@ class Markdown extends PureComponent {
                 placeholder="..."
                 defaultValue={this._defaultValue}
                 onChange={this._handleChange}
-                {...this.props}
               />
           </TabPanel>
           <TabPanel>
