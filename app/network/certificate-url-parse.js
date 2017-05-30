@@ -1,15 +1,15 @@
 import {parse as urlParse} from 'url';
-const wildcardCharacter = '*';
+const WILDCARD_CHARACTER = '*';
 
 const certificateUrlParse = (url) => {
-  if (url.indexOf(wildcardCharacter) === -1) {
+  if (url.indexOf(WILDCARD_CHARACTER) === -1) {
     return urlParse(url);
   } else {
     const parsed = urlParse(url.replace(/\*/g, ''));
 
     if (parsed.hostname !== null) {
-      const wildcardIndices = findIndices(url, wildcardCharacter);
-      parsed.hostname = insertAtIndices(parsed.hostname, wildcardIndices, wildcardCharacter);
+      const wildcardIndices = findIndices(url, WILDCARD_CHARACTER);
+      parsed.hostname = insertAtIndices(parsed.hostname, wildcardIndices, WILDCARD_CHARACTER);
     }
 
     return parsed;
