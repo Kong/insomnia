@@ -5,7 +5,7 @@ import {trackEvent} from '../../../analytics';
 import {showModal} from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthTypeName} from '../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthTypeName} from '../../../common/constants';
 
 @autobind
 class AuthDropdown extends PureComponent {
@@ -65,6 +65,7 @@ class AuthDropdown extends PureComponent {
         {this.renderAuthType(AUTH_OAUTH_1)}
         {this.renderAuthType(AUTH_OAUTH_2)}
         {this.renderAuthType(AUTH_DIGEST)}
+        {this.renderAuthType(AUTH_BEARER)}
         {this.renderAuthType(AUTH_NTLM)}
         <DropdownDivider>Other</DropdownDivider>
         {this.renderAuthType(AUTH_NONE, 'No Authentication')}
