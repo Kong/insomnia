@@ -61,7 +61,7 @@ BearerAuth.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
-  onChange: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired
 };
 
 export default BearerAuth;
