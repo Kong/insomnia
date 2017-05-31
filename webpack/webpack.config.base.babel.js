@@ -38,6 +38,10 @@ module.exports = {
       {
         test: /\.(png)$/,
         loader: 'url-loader'
+      },
+      {
+        test: /\.(txt)$/,
+        use: 'raw-loader'
       }
     ]
   },

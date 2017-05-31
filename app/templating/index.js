@@ -51,6 +51,21 @@ export function render (text, config = {}) {
   });
 }
 
+/**
+ * Reload Nunjucks environments. Useful for if plugins change.
+ */
+export function reloadNunjucks () {
+  nunjucksDefault = null;
+  nunjucksVariablesOnly = null;
+
+  // TODO: Make this less horrible
+  getNunjucks(true);
+  getNunjucks(false);
+}
+
+/**
+ * Get definitions of template tags
+ */
 export function getTagDefinitions () {
   const env = getNunjucks();
 
