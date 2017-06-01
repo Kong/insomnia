@@ -60,6 +60,7 @@ export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl';
 export const ALT_SYM = isMac() ? '⌃' : 'alt';
 export const SHIFT_SYM = isMac() ? '⇧' : 'shift';
+export const CTRL_SYM = isMac() ? '⌃' : 'ctrl';
 export function joinHotKeys (keys) {
   return keys.join(isMac() ? '' : '+');
 }

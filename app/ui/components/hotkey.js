@@ -1,14 +1,15 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {ALT_SYM, isMac, joinHotKeys, MOD_SYM, SHIFT_SYM} from '../../common/constants';
+import {ALT_SYM, CTRL_SYM, isMac, joinHotKeys, MOD_SYM, SHIFT_SYM} from '../../common/constants';
 
 class Hotkey extends PureComponent {
   render () {
-    const {char, shift, alt, className} = this.props;
+    const {char, shift, alt, ctrl, className} = this.props;
     const chars = [ ];
 
     alt && chars.push(ALT_SYM);
     shift && chars.push(SHIFT_SYM);
-    chars.push(MOD_SYM);
+    ctrl && chars.push(CTRL_SYM);
+    !ctrl && chars.push(MOD_SYM);
     chars.push(char);
 
     return (
@@ -25,6 +26,7 @@ Hotkey.propTypes = {
   // Optional
   alt: PropTypes.bool,
   shift: PropTypes.bool,
+  ctrl: PropTypes.bool,
   className: PropTypes.string
 };
 

@@ -15,7 +15,7 @@ environment:
 # Things to install after repo clone
 install:
   - ps: Install-Product node $env:NODEJS_VERSION $env:Platform
-  - npm install -g npm@latest > Nul
+  - npm install -g npm@5 > Nul
   - npm config set msvs_version 2013
   - npm install > NUL
   - node --version

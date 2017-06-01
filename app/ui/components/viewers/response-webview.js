@@ -6,7 +6,9 @@ import contextMenu from 'electron-context-menu';
 class ResponseWebview extends PureComponent {
   _handleSetWebviewRef (n) {
     this._webview = n;
-    contextMenu({window: this._webview});
+    if (n) {
+      contextMenu({window: this._webview});
+    }
   }
 
   _handleDOMReady () {
