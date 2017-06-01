@@ -10,6 +10,7 @@ import About from '../settings/about';
 import General from '../settings/general';
 import ImportExport from '../settings/import-export';
 import Account from '../settings/account';
+import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import {getAppVersion, getAppName} from '../../../common/constants';
@@ -119,7 +120,7 @@ class SettingsModal extends PureComponent {
               </Tab>
               <Tab selected={this._currentTabIndex === 1}>
                 <Button value="Import/Export" onClick={this._trackTab}>
-                  Import/Export
+                  Data
                 </Button>
               </Tab>
               <Tab selected={this._currentTabIndex === 2}>
@@ -135,6 +136,11 @@ class SettingsModal extends PureComponent {
               <Tab selected={this._currentTabIndex === 4}>
                 <Button value="Account" onClick={this._trackTab}>
                   Account
+                </Button>
+              </Tab>
+              <Tab selected={this._currentTabIndex === 1}>
+                <Button value="Plugins" onClick={this._trackTab}>
+                  Plugins
                 </Button>
               </Tab>
               <Tab selected={this._currentTabIndex === 5}>
@@ -164,15 +170,10 @@ class SettingsModal extends PureComponent {
                 activeTheme={settings.theme}
               />
             </TabPanel>
-            <TabPanel className="pad scrollable">
-              <SettingsShortcuts/>
-            </TabPanel>
-            <TabPanel className="pad scrollable">
-              <Account/>
-            </TabPanel>
-            <TabPanel className="pad scrollable">
-              <About/>
-            </TabPanel>
+            <TabPanel className="pad scrollable"><SettingsShortcuts/></TabPanel>
+            <TabPanel className="pad scrollable"><Account/></TabPanel>
+            <TabPanel className="pad scrollable"><Plugins/></TabPanel>
+            <TabPanel className="pad scrollable"><About/></TabPanel>
           </Tabs>
         </ModalBody>
       </Modal>

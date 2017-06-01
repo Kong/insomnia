@@ -1,32 +1,10 @@
-import BaseExtension from './base/base-extension';
-
-export default class TimestampExtension extends BaseExtension {
-  constructor () {
-    super();
-    this.deprecated = true;
-  }
-
-  getName () {
-    return 'Timestamp';
-  }
-
-  getDefaultFill () {
-    return 'timestamp';
-  }
-
-  getTag () {
-    return 'timestamp';
-  }
-
-  getDescription () {
-    return 'generate timestamp in milliseconds';
-  }
-
-  getArguments () {
-    return [];
-  }
-
+export default {
+  deprecated: true,
+  name: 'timestamp',
+  displayName: 'Timestamp',
+  description: 'generate timestamp in milliseconds',
+  defaultFill: 'timestamp',
   run (context) {
     return Date.now();
   }
-}
+};

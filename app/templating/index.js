@@ -1,5 +1,6 @@
 import nunjucks from 'nunjucks';
 import * as extensions from './extensions';
+import BaseExtension from './base-extension';
 
 // Cached globals
 let nunjucksVariablesOnly = null;
@@ -50,20 +51,35 @@ export function render (text, config = {}) {
   });
 }
 
+/**
+ * Reload Nunjucks environments. Useful for if plugins change.
+ */
+export function reloadNunjucks () {
+  nunjucksDefault = null;
+  nunjucksVariablesOnly = null;
+
+  // TODO: Make this less horrible
+  getNunjucks(true);
+  getNunjucks(false);
+}
+
+/**
+ * Get definitions of template tags
+ */
 export function getTagDefinitions () {
   const env = getNunjucks();
 
   return Object.keys(env.extensions)
     .map(k => env.extensions[k])
-    .filter(ext => !ext.deprecated)
+    .filter(ext => !ext.isDeprecated())
+    .sort((a, b) => a.getPriority() > b.getPriority() ? 1 : -1)
     .map(ext => ({
       name: ext.getTag(),
       displayName: ext.getName(),
       defaultFill: ext.getDefaultFill(),
       description: ext.getDescription(),
-      args: ext.getArguments()
-    }))
-    .sort((a, b) => a.name > b.name ? 1 : -1);
+      args: ext.getArgs()
+    }));
 }
 
 function getNunjucks (variablesOnly) {
@@ -104,8 +120,12 @@ function getNunjucks (variablesOnly) {
 
   const nj = nunjucks.configure(config);
 
-  for (const Cls of extensions.all()) {
-    nj.addExtension(Cls.name, new Cls());
+  const allExtensions = extensions.all();
+  for (let i = 0; i < allExtensions.length; i++) {
+    const ext = allExtensions[i];
+    ext.priority = ext.priority || i * 100;
+    const instance = new BaseExtension(ext);
+    nj.addExtension(instance.getName(), instance);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //

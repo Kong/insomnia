@@ -70,7 +70,12 @@ class TagEditor extends PureComponent {
   _handleChange (e) {
     const parent = e.target.parentNode;
     const argIndex = parent.getAttribute('data-arg-index');
-    return this._updateArg(e.target.value, argIndex);
+
+    if (e.target.type === 'number') {
+      return this._updateArg(parseFloat(e.target.value), argIndex);
+    } else {
+      return this._updateArg(e.target.value, argIndex);
+    }
   }
 
   _handleChangeCustomArg (e) {
@@ -97,6 +102,19 @@ class TagEditor extends PureComponent {
     }, 100);
   }
 
+  _buildArgFromDefinition (argDefinition) {
+    if (argDefinition.type === 'enum') {
+      const {defaultValue, options} = argDefinition;
+      return {type: 'string', value: defaultValue || options[0].value};
+    } else if (argDefinition.type === 'number') {
+      const {defaultValue} = argDefinition;
+      const value = defaultValue !== undefined ? defaultValue : 0;
+      return {type: 'number', value};
+    } else {
+      return {type: 'string', value: argDefinition.defaultValue || ''};
+    }
+  }
+
   async _update (tagDefinition, tagData, noCallback = false) {
     const {handleRender} = this.props;
 
@@ -108,13 +126,7 @@ class TagEditor extends PureComponent {
       activeTagData = {
         name: tagDefinition.name,
         rawValue: null,
-        args: tagDefinition.args.map(arg => {
-          if (arg.type === 'enum') {
-            return {type: 'string', value: arg.options[0].value};
-          } else {
-            return {type: 'string', value: ''};
-          }
-        })
+        args: tagDefinition.args.map(this._buildArgFromDefinition)
       };
     } else if (!activeTagData && !tagDefinition) {
       activeTagData = {name: 'custom', rawValue: "{% tag 'arg1', 'arg2' %}"};
@@ -157,15 +169,26 @@ class TagEditor extends PureComponent {
     );
   }
 
+  renderArgNumber (value, placeholder) {
+    return (
+      <input
+        type="number"
+        defaultValue={value || 0}
+        placeholder={placeholder}
+        onChange={this._handleChange}
+      />
+    );
+  }
+
   renderArgEnum (value, options) {
     return (
       <select value={value} onChange={this._handleChange}>
         {options.map(option => {
           let label;
           if (option.description) {
-            label = `${option.name} – ${option.description}`;
+            label = `${option.displayName} – ${option.description}`;
           } else {
-            label = option.name;
+            label = option.displayName;
           }
 
           return (
@@ -226,20 +249,19 @@ class TagEditor extends PureComponent {
     } else if (argDefinition.type === 'model') {
       const {model} = argDefinition;
       argInput = this.renderArgModel(value, model);
+    } else if (argDefinition.type === 'number') {
+      const {placeholder} = argDefinition;
+      argInput = this.renderArgNumber(value, placeholder);
     } else {
       return null;
     }
 
-    const label = argDefinition.label;
-    const labelStr = typeof label === 'function' ? label(args) : label;
-
+    const {displayName} = argDefinition;
     return (
-      <div key={argDefinition.key} className="form-control form-control--outlined">
+      <div key={argIndex} className="form-control form-control--outlined">
         <label>
-          {labelStr || argDefinition.key}
-          {argDefinition.help && (
-            <HelpTooltip>{argDefinition.help}</HelpTooltip>
-          )}
+          {typeof displayName === 'function' ? displayName(args) : displayName}
+          {argDefinition.help && <HelpTooltip>{argDefinition.help}</HelpTooltip>}
           <div data-arg-index={argIndex}>
             {argInput}
           </div>

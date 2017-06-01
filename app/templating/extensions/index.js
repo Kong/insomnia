@@ -1,15 +1,19 @@
-import TimestampExtension from './timestamp-extension';
-import UuidExtension from './uuid-extension';
+import * as plugins from '../../plugins/index';
+
+import timestampExtension from './timestamp-extension';
+import uuidExtension from './uuid-extension';
 import NowExtension from './now-extension';
-import ResponseJsonPathExtension from './response-extension';
-import Base64Extension from './base-64-extension';
+import responseExtension from './response-extension';
+import base64Extension from './base-64-extension';
+
+const DEFAULT_EXTENSIONS = [
+  timestampExtension,
+  NowExtension,
+  uuidExtension,
+  base64Extension,
+  responseExtension
+];
 
 export function all () {
-  return [
-    TimestampExtension,
-    UuidExtension,
-    NowExtension,
-    ResponseJsonPathExtension,
-    Base64Extension
-  ];
+  return [...DEFAULT_EXTENSIONS, ...plugins.getTemplateTags()];
 }

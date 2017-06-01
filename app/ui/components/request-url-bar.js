@@ -1,12 +1,11 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from './base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from './base/dropdown';
 import {trackEvent} from '../../analytics';
-import {showModal} from './modals/index';
+import {showPrompt} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
-import PromptModal from './modals/prompt-modal';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
 
@@ -132,36 +131,38 @@ class RequestUrlBar extends PureComponent {
     }
   }
 
-  async _handleSendAfterDelay () {
-    const seconds = await showModal(PromptModal, {
+  _handleSendAfterDelay () {
+    showPrompt({
       inputType: 'decimal',
       headerName: 'Send After Delay',
       label: 'Delay in seconds',
       defaultValue: 3,
-      submitName: 'Start'
+      submitName: 'Start',
+      onComplete: seconds => {
+        this._handleStopTimeout();
+        this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
+        this.setState({currentTimeout: seconds});
+
+        trackEvent('Request', 'Send on Delay', 'Send Action', seconds);
+      }
     });
-
-    this._handleStopTimeout();
-    this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
-    this.setState({currentTimeout: seconds});
-
-    trackEvent('Request', 'Send on Delay', 'Send Action', seconds);
   }
 
-  async _handleSendOnInterval () {
-    const seconds = await showModal(PromptModal, {
+  _handleSendOnInterval () {
+    showPrompt({
       inputType: 'decimal',
       headerName: 'Send on Interval',
       label: 'Interval in seconds',
       defaultValue: 3,
-      submitName: 'Start'
+      submitName: 'Start',
+      onComplete: seconds => {
+        this._handleStopInterval();
+        this._sendInterval = setInterval(this._handleSend, seconds * 1000);
+        this.setState({currentInterval: seconds});
+
+        trackEvent('Request', 'Send on Interval', 'Send Action', seconds);
+      }
     });
-
-    this._handleStopInterval();
-    this._sendInterval = setInterval(this._handleSend, seconds * 1000);
-    this.setState({currentInterval: seconds});
-
-    trackEvent('Request', 'Send on Interval', 'Send Action', seconds);
   }
 
   _handleStopInterval () {

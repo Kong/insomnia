@@ -301,7 +301,7 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
     const defaultFill = t.defaultFill || name;
 
     const matchSegment = segment.toLowerCase();
-    const matchName = name.toLowerCase();
+    const matchName = displayName.toLowerCase();
 
     // Throw away things that don't match
     if (!matchName.includes(matchSegment)) {
