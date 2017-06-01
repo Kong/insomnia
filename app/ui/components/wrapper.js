@@ -401,6 +401,12 @@ class Wrapper extends PureComponent {
           <WorkspaceSettingsModal
             ref={registerModal}
             workspace={activeWorkspace}
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            editorLineWrapping={settings.editorLineWrapping}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}/>
           <WorkspaceShareSettingsModal
             ref={registerModal}

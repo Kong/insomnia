@@ -8,6 +8,7 @@ import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import {trackEvent} from '../../analytics';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
+import * as misc from '../../common/misc';
 
 @autobind
 class MarkdownEditor extends PureComponent {
@@ -45,6 +46,13 @@ class MarkdownEditor extends PureComponent {
     const el = ReactDOM.findDOMNode(this._preview);
     for (const block of el.querySelectorAll('pre > code')) {
       highlight.highlightBlock(block);
+    }
+
+    for (const a of el.querySelectorAll('a')) {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        misc.clickLink(e.target.getAttribute('href'));
+      });
     }
   }
 
