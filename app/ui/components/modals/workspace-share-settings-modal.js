@@ -1,6 +1,6 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -8,8 +8,7 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync/index';
-import {showModal} from './index';
-import PromptModal from './prompt-modal';
+import {showPrompt} from './index';
 import PromptButton from '../base/prompt-button';
 import {trackEvent} from '../../../analytics/index';
 
@@ -50,24 +49,25 @@ class WorkspaceShareSettingsModal extends PureComponent {
     }
   }
 
-  async _handleShareWithTeam (team) {
-    const passphrase = await showModal(PromptModal, {
+  _handleShareWithTeam (team) {
+    showPrompt({
       headerName: 'Share Workspace',
       label: 'Confirm password to share workspace',
       placeholder: '•••••••••••••••••',
       submitName: 'Share with Team',
-      inputType: 'password'
+      inputType: 'password',
+      onComplete: async passphrase => {
+        const {resourceGroup} = this.state;
+        this._resetState({loading: true});
+
+        try {
+          await session.shareWithTeam(resourceGroup.id, team.id, passphrase);
+          await this._load();
+        } catch (err) {
+          this._resetState({error: err.message, loading: false});
+        }
+      }
     });
-
-    const {resourceGroup} = this.state;
-    this._resetState({loading: true});
-
-    try {
-      await session.shareWithTeam(resourceGroup.id, team.id, passphrase);
-      await this._load();
-    } catch (err) {
-      this._resetState({error: err.message, loading: false});
-    }
   }
 
   async _load () {

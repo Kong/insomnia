@@ -1,20 +1,21 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
-import PromptModal from '../modals/prompt-modal';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import Link from '../base/link';
-import {showModal} from '../modals/index';
+import {showPrompt} from '../modals/index';
 
 @autobind
 class ImportExport extends PureComponent {
-  async _handleImportUri () {
-    const uri = await showModal(PromptModal, {
+  _handleImportUri () {
+    showPrompt({
       headerName: 'Import Data from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
-      placeholder: 'https://website.com/insomnia-import.json'
+      placeholder: 'https://website.com/insomnia-import.json',
+      onComplete: uri => {
+        this.props.handleImportUri(uri);
+      }
     });
-    this.props.handleImportUri(uri);
   }
 
   render () {

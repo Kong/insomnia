@@ -12,7 +12,6 @@ import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-envir
 import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
-import PromptModal from '../components/modals/prompt-modal';
 import ChangelogModal from '../components/modals/changelog-modal';
 import SettingsModal from '../components/modals/settings-modal';
 import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, isMac, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
@@ -32,6 +31,7 @@ import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
+import {showPrompt} from '../components/modals/index';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
@@ -195,16 +195,17 @@ class App extends PureComponent {
     );
   }
 
-  async _requestGroupCreate (parentId) {
-    const name = await showModal(PromptModal, {
+  _requestGroupCreate (parentId) {
+    showPrompt({
       headerName: 'New Folder',
       defaultValue: 'My Folder',
       submitName: 'Create',
       label: 'Name',
-      selectText: true
+      selectText: true,
+      onComplete: name => {
+        models.requestGroup.create({parentId, name});
+      }
     });
-
-    models.requestGroup.create({parentId, name});
   }
 
   async _requestCreate (parentId) {

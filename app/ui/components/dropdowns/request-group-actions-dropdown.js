@@ -1,12 +1,12 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider, DropdownHint} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
-import PromptModal from '../modals/prompt-modal';
 import * as models from '../../../models';
 import {showModal} from '../modals';
 import {trackEvent} from '../../../analytics/index';
+import {showPrompt} from '../modals/index';
 
 @autobind
 class RequestGroupActionsDropdown extends PureComponent {
@@ -14,17 +14,17 @@ class RequestGroupActionsDropdown extends PureComponent {
     this._dropdown = n;
   }
 
-  async _handleRename () {
+  _handleRename () {
     const {requestGroup} = this.props;
 
-    const name = await showModal(PromptModal, {
+    showPrompt({
       headerName: 'Rename Folder',
-      defaultValue: requestGroup.name
+      defaultValue: requestGroup.name,
+      onComplete: name => {
+        models.requestGroup.update(requestGroup, {name});
+        trackEvent('Folder', 'Rename', 'Folder Action');
+      }
     });
-
-    models.requestGroup.update(requestGroup, {name});
-
-    trackEvent('Folder', 'Rename', 'Folder Action');
   }
 
   async _handleRequestCreate () {

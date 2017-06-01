@@ -6,11 +6,10 @@ import DropdownDivider from '../base/dropdown/dropdown-divider';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/dropdown-hint';
-import PromptModal from '../modals/prompt-modal';
 import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/settings-modal';
 import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
-import {showModal} from '../modals/index';
+import {showModal, showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
@@ -62,20 +61,21 @@ class WorkspaceDropdown extends PureComponent {
     trackEvent('Workspace', 'Switch');
   }
 
-  async _handleWorkspaceCreate (noTrack) {
-    const name = await showModal(PromptModal, {
+  _handleWorkspaceCreate (noTrack) {
+    showPrompt({
       headerName: 'Create New Workspace',
       defaultValue: 'My Workspace',
       submitName: 'Create',
-      selectText: true
+      selectText: true,
+      onComplete: async name => {
+        const workspace = await models.workspace.create({name});
+        this.props.handleSetActiveWorkspace(workspace._id);
+
+        if (!noTrack) {
+          trackEvent('Workspace', 'Create');
+        }
+      }
     });
-
-    const workspace = await models.workspace.create({name});
-    this.props.handleSetActiveWorkspace(workspace._id);
-
-    if (!noTrack) {
-      trackEvent('Workspace', 'Create');
-    }
   }
 
   render () {

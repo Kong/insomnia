@@ -1,16 +1,15 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import * as constants from '../../../common/constants';
-import {showModal} from '../modals/index';
-import PromptModal from '../modals/prompt-modal';
+import {showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 
 @autobind
 class MethodDropdown extends PureComponent {
-  async _handleSetCustomMethod () {
+  _handleSetCustomMethod () {
     let recentMethods;
     try {
       const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
@@ -20,7 +19,7 @@ class MethodDropdown extends PureComponent {
     }
 
     // Prompt user for the method
-    const method = await showModal(PromptModal, {
+    showPrompt({
       defaultValue: this.props.method,
       headerName: 'HTTP Method',
       submitName: 'Done',
@@ -29,21 +28,22 @@ class MethodDropdown extends PureComponent {
       hint: 'Common examples are LINK, UNLINK, FIND, PURGE',
       label: 'Name',
       placeholder: 'CUSTOM',
-      hints: recentMethods
+      hints: recentMethods,
+      onComplete: method => {
+        if (!method) {
+          return;
+        }
+
+        // Save method as recent
+        recentMethods = recentMethods.filter(m => m !== method);
+        recentMethods.unshift(method);
+        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
+
+        // Invoke callback
+        this.props.onChange(method);
+        trackEvent('Request', 'Set Method', 'Custom');
+      }
     });
-
-    if (!method) {
-      return;
-    }
-
-    // Save method as recent
-    recentMethods = recentMethods.filter(m => m !== method);
-    recentMethods.unshift(method);
-    window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
-
-    // Invoke callback
-    this.props.onChange(method);
-    trackEvent('Request', 'Set Method', 'Custom');
   }
 
   _handleChange (method) {
