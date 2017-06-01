@@ -3,26 +3,30 @@ import {GA_HOST, getAppVersion, getAppPlatform} from '../../common/constants';
 import * as db from '../../common/database';
 import * as models from '../../models';
 
-global.document = {
-  getElementsByTagName () {
-    return {
-      parentNode: {
-        insertBefore () {
-
-        }
-      }
-    };
-  }
-};
-
 describe('init()', () => {
   beforeEach(() => {
+    window.localStorage = {};
+    global.document = {
+      getElementsByTagName () {
+        return {
+          parentNode: {
+            insertBefore () {
+            }
+          }
+        };
+      }
+    };
     return db.init(models.types(), {inMemoryOnly: true}, true);
+  });
+
+  afterEach(() => {
+    // Remove any trace of GA
+    global.document = undefined;
+    global.window.ga = undefined;
   });
 
   it('correctly initializes', async () => {
     jest.useFakeTimers();
-    window.localStorage = {};
 
     analytics.trackEvent('premature', 'event');
     analytics.setAccountId('acct_premature');
@@ -31,6 +35,10 @@ describe('init()', () => {
     window.ga = jest.genMockFunction();
     await analytics.init('acct_123');
     jest.runAllTicks();
+
+    // Make sure we have it enabled
+    const settings = await models.settings.getOrCreate();
+    expect(settings.disableAnalyticsTracking).toBe(false);
 
     // Verify that Google Analytics works
     expect(window.ga.mock.calls.length).toBe(7);
@@ -61,5 +69,21 @@ describe('init()', () => {
     analytics.init();
     jest.runAllTicks();
     expect(window.ga.mock.calls.length).toBe(9);
+  });
+
+  it('Does not work with click tracking disabled', async () => {
+    jest.useFakeTimers();
+
+    // Make sure we have it disabled
+    const settings = await models.settings.getOrCreate({disableAnalyticsTracking: true});
+    expect(settings.disableAnalyticsTracking).toBe(true);
+
+    await analytics.init('acct_123');
+    jest.runAllTicks();
+    expect(window.ga).toBeUndefined();
+
+    analytics.trackEvent('foo', 'bar', 'baz');
+    jest.runAllTicks();
+    expect(window.ga).toBeUndefined();
   });
 });

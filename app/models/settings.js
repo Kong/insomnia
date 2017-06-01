@@ -47,10 +47,10 @@ export async function update (settings, patch) {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate () {
+export async function getOrCreate (patch = {}) {
   const results = await db.all(type);
   if (results.length === 0) {
-    return await create();
+    return await create(patch);
   } else {
     return results[0];
   }
