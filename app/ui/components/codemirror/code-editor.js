@@ -557,10 +557,11 @@ class CodeEditor extends PureComponent {
       filter,
       onMouseLeave,
       onClick,
+      className,
       style
     } = this.props;
 
-    const classes = classnames(this.props.className, {
+    const classes = classnames(className, {
       'editor': true,
       'editor--readonly': readOnly
     });
@@ -616,7 +617,7 @@ class CodeEditor extends PureComponent {
 
     return (
       <div className={classes} style={style}>
-        <div className="editor__container input"
+        <div className={classnames('editor__container', 'input', className)}
              style={styles}
              onClick={onClick}
              onMouseLeave={onMouseLeave}>

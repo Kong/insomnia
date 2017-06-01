@@ -1,5 +1,6 @@
 import React, {PureComponent, PropTypes} from 'react';
 import ReactDOM from 'react-dom';
+import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import CodeEditor from './code-editor';
 import Input from '../base/debounced-input';
@@ -303,7 +304,7 @@ class OneLineEditor extends PureComponent {
           render={render}
           getRenderContext={getRenderContext}
           getAutocompleteConstants={getAutocompleteConstants}
-          className="editor--single-line"
+          className={classnames('editor--single-line', className)}
           defaultValue={defaultValue}
         />
       );

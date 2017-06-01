@@ -11,47 +11,26 @@ class BearerAuth extends PureComponent {
     this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
   }
 
-  _handleChangeProperty (property, value) {
+  _handleChange (token) {
     const {request} = this.props;
-    const authentication = Object.assign({}, request.authentication, {[property]: value});
+    const authentication = Object.assign({}, request.authentication, {token});
     this.props.onChange(authentication);
   }
 
-  _handleToken (value) {
-    this._handleChangeProperty('token', value);
-  }
-
-  renderInputRow (label, property, onChange) {
-    const {handleRender, handleGetRenderContext, request} = this.props;
-    const id = label.replace(/ /g, '-');
-    return (
-      <tr key={id}>
-        <td className="pad-right no-wrap valign-middle">
-          <label htmlFor={id} className="label--small no-pad">{label}</label>
-        </td>
-        <td className="wide">
-          <div className="form-control form-control--underlined no-margin">
-            <OneLineEditor
-              id={id}
-              onChange={onChange}
-              defaultValue={request.authentication[property] || ''}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
-            />
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
   render () {
+    const {request, handleRender, handleGetRenderContext} = this.props;
+    const {token} = request.authentication;
+
     return (
-      <div className="pad">
-        <table>
-          <tbody>
-          {this.renderInputRow('Token', 'token', this._handleToken)}
-          </tbody>
-        </table>
+      <div className="form-control form-control--underlined pad no-margin">
+        <OneLineEditor
+          className="no-margin"
+          onChange={this._handleChange}
+          defaultValue={token || ''}
+          render={handleRender}
+          placeholder="token"
+          getRenderContext={handleGetRenderContext}
+        />
       </div>
     );
   }
