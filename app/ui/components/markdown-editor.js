@@ -117,7 +117,7 @@ class MarkdownEditor extends PureComponent {
               dynamicHeight
               manualPrettify
               noStyleActiveLine
-              mode="text/x-markdown"
+              mode="text/plain"
               placeholder={placeholder}
               debounceMillis={300}
               keyMap={keyMap}

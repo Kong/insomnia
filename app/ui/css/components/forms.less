@@ -157,12 +157,24 @@
   }
 }
 
+.icon {
+  text-align: center;
+  color: var(--hl);
+
+  &:hover {
+    color: var(--color-font);
+  }
+}
+
 .btn {
   text-align: center;
-  padding: 0 (@padding-md * 1.5);
-  height: @line-height-md;
-  border: 1px solid transparent;
   background: var(--color-bg);
+
+  &:not(.btn--plain) {
+    padding: 0 (@padding-md * 1.5);
+    height: @line-height-md;
+    border: 1px solid transparent;
+  }
 
   &.btn--compact {
     padding: 0 @padding-md;

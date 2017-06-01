@@ -8,6 +8,8 @@ import Editable from '../base/editable';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
+import {showModal} from '../modals/index';
+import RequestSettingsModal from '../modals/request-settings-modal';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -53,6 +55,10 @@ class SidebarRequestRow extends PureComponent {
 
     handleActivateRequest(request._id);
     trackEvent('Request', 'Activate', 'Sidebar');
+  }
+
+  _handleShowRequestSettings () {
+    showModal(RequestSettingsModal, this.props.request);
   }
 
   setDragDirection (dragDirection) {
@@ -106,17 +112,28 @@ class SidebarRequestRow extends PureComponent {
                     onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
-                <Editable value={request.name}
-                          onEditStart={this._handleEditStart}
-                          onSubmit={this._handleRequestUpdateName}/>
+                <div>
+                  <Editable value={request.name}
+                            className="inline-block"
+                            onEditStart={this._handleEditStart}
+                            onSubmit={this._handleRequestUpdateName}/>
+                  {request.description && (
+                    <button title="View description"
+                            onClick={this._handleShowRequestSettings}
+                            className="icon space-left txt-sm super-faint">
+                      <i className="fa fa-file-text-o"/>
+                    </button>
+                  )}
+                </div>
               </div>
             </button>
             <div className="sidebar__actions">
               <RequestActionsDropdown
+                right
                 ref={this._setRequestActionsDropdownRef}
                 handleDuplicateRequest={handleDuplicateRequest}
                 handleGenerateCode={handleGenerateCode}
-                right
+                handleShowSettings={this._handleShowRequestSettings}
                 request={request}
                 requestGroup={requestGroup}
               />

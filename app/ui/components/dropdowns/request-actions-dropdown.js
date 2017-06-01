@@ -2,9 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
 import {Dropdown, DropdownButton, DropdownHint, DropdownItem} from '../base/dropdown';
-import RequestSettingsModal from '../modals/request-settings-modal';
 import * as models from '../../../models';
-import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import {DropdownDivider} from '../base/dropdown/index';
 
@@ -25,10 +23,6 @@ class RequestActionsDropdown extends PureComponent {
     trackEvent('Request', 'Generate Code', 'Request Action');
   }
 
-  _handleShowRequestSettings () {
-    showModal(RequestSettingsModal, this.props.request);
-  }
-
   _handleRemove () {
     const {request} = this.props;
     models.request.remove(request);
@@ -42,6 +36,7 @@ class RequestActionsDropdown extends PureComponent {
   render () {
     const {
       request, // eslint-disable-line no-unused-vars
+      handleShowSettings,
       ...other
     } = this.props;
 
@@ -63,7 +58,7 @@ class RequestActionsDropdown extends PureComponent {
 
         <DropdownDivider/>
 
-        <DropdownItem onClick={this._handleShowRequestSettings}>
+        <DropdownItem onClick={handleShowSettings}>
           <i className="fa fa-wrench"/> Settings
           <DropdownHint alt shift char=","/>
         </DropdownItem>
@@ -75,6 +70,7 @@ class RequestActionsDropdown extends PureComponent {
 RequestActionsDropdown.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
+  handleShowSettings: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired
 };
 

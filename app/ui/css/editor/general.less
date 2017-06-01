@@ -117,20 +117,12 @@
   }
 
   &.editor--dynamic-height {
-    display: block;
-
     .CodeMirror {
-      position: relative;
-      height: auto;
-      max-height: 100%;
+      position: static;
     }
 
     .CodeMirror-lines {
       padding-bottom: 0.5em;
-    }
-
-    .input {
-      height: auto !important;
     }
   }
 }
