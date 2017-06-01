@@ -339,7 +339,8 @@ class CodeEditor extends PureComponent {
       hideScrollbars,
       noStyleActiveLine,
       noLint,
-      indentSize
+      indentSize,
+      dynamicHeight
     } = this.props;
 
     let mode;
@@ -408,6 +409,10 @@ class CodeEditor extends PureComponent {
         getTags,
         getConstants: getAutocompleteConstants
       };
+    }
+
+    if (dynamicHeight) {
+      options.viewportMargin = Infinity;
     }
 
     // Strip of charset if there is one
@@ -558,11 +563,13 @@ class CodeEditor extends PureComponent {
       onMouseLeave,
       onClick,
       className,
+      dynamicHeight,
       style
     } = this.props;
 
     const classes = classnames(className, {
       'editor': true,
+      'editor--dynamic-height': dynamicHeight,
       'editor--readonly': readOnly
     });
 
@@ -673,7 +680,8 @@ CodeEditor.propTypes = {
   readOnly: PropTypes.bool,
   filter: PropTypes.string,
   singleLine: PropTypes.bool,
-  debounceMillis: PropTypes.number
+  debounceMillis: PropTypes.number,
+  dynamicHeight: PropTypes.bool
 };
 
 export default CodeEditor;
