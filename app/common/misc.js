@@ -13,6 +13,12 @@ export function getBasicAuthHeader (username, password) {
   return {name, value};
 }
 
+export function getBearerAuthHeader (token) {
+  const name = 'Authorization';
+  const value = `Bearer ${token}`;
+  return {name, value};
+}
+
 export function filterHeaders (headers, name) {
   if (!Array.isArray(headers) || !name) {
     return [];

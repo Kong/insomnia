@@ -137,12 +137,14 @@ export const AUTH_OAUTH_2 = 'oauth2';
 export const AUTH_OAUTH_1 = 'oauth1';
 export const AUTH_BASIC = 'basic';
 export const AUTH_DIGEST = 'digest';
+export const AUTH_BEARER = 'bearer';
 export const AUTH_NTLM = 'ntlm';
 
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
   [AUTH_NTLM]: ['NTLM', 'Microsoft NTLM'],
+  [AUTH_BEARER]: ['Bearer', 'Bearer Token'],
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0']
 };

@@ -1,5 +1,5 @@
-import {AUTH_BASIC, AUTH_OAUTH_2} from '../common/constants';
-import {getBasicAuthHeader} from '../common/misc';
+import {AUTH_BASIC, AUTH_BEARER, AUTH_OAUTH_2} from '../common/constants';
+import {getBasicAuthHeader, getBearerAuthHeader} from '../common/misc';
 import getOAuth2Token from './o-auth-2/get-token';
 
 export async function getAuthHeader (requestId, authentication) {
@@ -10,6 +10,11 @@ export async function getAuthHeader (requestId, authentication) {
   if (authentication.type === AUTH_BASIC) {
     const {username, password} = authentication;
     return getBasicAuthHeader(username, password);
+  }
+
+  if (authentication.type === AUTH_BEARER) {
+    const {token} = authentication;
+    return getBearerAuthHeader(token);
   }
 
   if (authentication.type === AUTH_OAUTH_2) {

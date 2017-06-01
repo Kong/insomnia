@@ -1,7 +1,8 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
+import BearerAuth from './bearer-auth';
 import NTLMAuth from './ntlm-auth';
 import OAuth2 from './o-auth-2';
 import autobind from 'autobind-decorator';
@@ -74,6 +75,16 @@ class AuthWrapper extends PureComponent {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
+        />
+      );
+    } else if (authentication.type === AUTH_BEARER) {
+      return (
+        <BearerAuth
+          authentication={authentication}
+          request={request}
+          handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
+          onChange={onChange}
         />
       );
     } else {
