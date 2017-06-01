@@ -21,7 +21,8 @@ export function init () {
     validateSSL: true,
     forceVerticalLayout: false,
     autoHideMenuBar: false,
-    theme: 'default'
+    theme: 'default',
+    disableAnalyticsTracking: false
   };
 }
 
