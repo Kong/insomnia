@@ -61,6 +61,11 @@ class SidebarRequestRow extends PureComponent {
     showModal(RequestSettingsModal, this.props.request);
   }
 
+  _handleClickDescription () {
+    trackEvent('Request', 'Click Description Icon');
+    this._handleShowRequestSettings();
+  }
+
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({dragDirection});
@@ -119,7 +124,7 @@ class SidebarRequestRow extends PureComponent {
                             onSubmit={this._handleRequestUpdateName}/>
                   {request.description && (
                     <button title="View description"
-                            onClick={this._handleShowRequestSettings}
+                            onClick={this._handleClickDescription}
                             className="icon space-left txt-sm super-faint">
                       <i className="fa fa-file-text-o"/>
                     </button>

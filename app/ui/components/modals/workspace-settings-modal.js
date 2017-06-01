@@ -34,6 +34,7 @@ class WorkspaceSettingsModal extends PureComponent {
 
   _handleAddDescription () {
     this.setState({showDescription: true});
+    trackEvent('Workspace', 'Add Description');
   }
 
   _handleSetModalRef (n) {

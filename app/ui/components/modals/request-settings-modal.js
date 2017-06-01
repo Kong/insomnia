@@ -43,6 +43,7 @@ class RequestSettingsModal extends PureComponent {
   }
 
   _handleAddDescription () {
+    trackEvent('Request', 'Add Description');
     this.setState({showDescription: true});
   }
 
