@@ -9,6 +9,7 @@ import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
+import MarkdownEditor from '../markdown-editor';
 
 @autobind
 class WorkspaceSettingsModal extends PureComponent {
@@ -21,12 +22,19 @@ class WorkspaceSettingsModal extends PureComponent {
       keyPath: '',
       pfxPath: '',
       host: '',
-      passphrase: ''
+      passphrase: '',
+      showDescription: false,
+      defaultPreviewMode: false
     };
   }
 
   _workspaceUpdate (patch) {
     models.workspace.update(this.props.workspace, patch);
+  }
+
+  _handleAddDescription () {
+    this.setState({showDescription: true});
+    trackEvent('Workspace', 'Add Description');
   }
 
   _handleSetModalRef (n) {
@@ -48,6 +56,10 @@ class WorkspaceSettingsModal extends PureComponent {
 
   _handleDescriptionChange (description) {
     this._workspaceUpdate({description});
+
+    if (this.state.defaultPreviewMode !== false) {
+      this.setState({defaultPreviewMode: false});
+    }
   }
 
   _handleCreateHostChange (e) {
@@ -126,13 +138,16 @@ class WorkspaceSettingsModal extends PureComponent {
 
   show () {
     this.modal.show();
+    const hasDescription = !!this.props.workspace.description;
     this.setState({
       showAddCertificateForm: false,
       crtPath: '',
       keyPath: '',
       pfxPath: '',
       host: '',
-      passphrase: ''
+      passphrase: '',
+      showDescription: hasDescription,
+      defaultPreviewMode: hasDescription
     });
   }
 
@@ -154,8 +169,25 @@ class WorkspaceSettingsModal extends PureComponent {
   }
 
   renderModalBody () {
-    const {workspace} = this.props;
-    const {pfxPath, crtPath, keyPath, showAddCertificateForm} = this.state;
+    const {
+      workspace,
+      editorLineWrapping,
+      editorFontSize,
+      editorIndentSize,
+      editorKeyMap,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
+
+    const {
+      pfxPath,
+      crtPath,
+      keyPath,
+      showAddCertificateForm,
+      showDescription,
+      defaultPreviewMode
+    } = this.state;
+
     return (
       <ModalBody key={`body::${workspace._id}`} noScroll>
         <Tabs forceRenderTabPanel>
@@ -167,40 +199,47 @@ class WorkspaceSettingsModal extends PureComponent {
               <button>Client Certificates</button>
             </Tab>
           </TabList>
-          <TabPanel className="pad scrollable">
-            <div className="row-fill">
-              <div className="form-control form-control--outlined">
-                <label>Workspace Name
-                  <DebouncedInput
-                    type="text"
-                    delay={500}
-                    placeholder="Awesome API"
-                    defaultValue={workspace.name}
-                    onChange={this._handleRename}
-                  />
-                </label>
-              </div>
-            </div>
+          <TabPanel className="pad scrollable pad-top-sm">
             <div className="form-control form-control--outlined">
-              <label>Description
+              <label>Name
                 <DebouncedInput
-                  textarea
+                  type="text"
                   delay={500}
-                  rows="4"
-                  placeholder="This workspace is for testing the Awesome API!"
-                  defaultValue={workspace.description}
-                  onChange={this._handleDescriptionChange}
+                  placeholder="Awesome API"
+                  defaultValue={workspace.name}
+                  onChange={this._handleRename}
                 />
               </label>
             </div>
+            <div>
+              {showDescription ? (
+                <MarkdownEditor
+                  className="margin-top"
+                  defaultPreviewMode={defaultPreviewMode}
+                  fontSize={editorFontSize}
+                  indentSize={editorIndentSize}
+                  keyMap={editorKeyMap}
+                  placeholder="Write a description"
+                  lineWrapping={editorLineWrapping}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  defaultValue={workspace.description}
+                  onChange={this._handleDescriptionChange}
+                />
+              ) : (
+                <button onClick={this._handleAddDescription}
+                        className="btn btn--outlined btn--super-duper-compact">
+                  Add Description
+                </button>
+              )}
+            </div>
             <div className="form-control form-control--padded">
-              <label htmlFor="nothing">Danger Zone
-                <PromptButton onClick={this._handleRemoveWorkspace}
-                              addIcon
-                              className="width-auto btn btn--clicky">
-                  <i className="fa fa-trash-o"/> Delete Workspace
-                </PromptButton>
-              </label>
+              <h2>Danger Zone</h2>
+              <PromptButton onClick={this._handleRemoveWorkspace}
+                            addIcon
+                            className="width-auto btn btn--clicky">
+                <i className="fa fa-trash-o"/> Delete Workspace
+              </PromptButton>
             </div>
           </TabPanel>
           <TabPanel className="pad scrollable">
@@ -376,7 +415,13 @@ class WorkspaceSettingsModal extends PureComponent {
 
 WorkspaceSettingsModal.propTypes = {
   handleRemoveWorkspace: PropTypes.func.isRequired,
-  workspace: PropTypes.object.isRequired
+  workspace: PropTypes.object.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
+  handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired
 };
 
 export default WorkspaceSettingsModal;

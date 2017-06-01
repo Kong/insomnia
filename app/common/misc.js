@@ -1,7 +1,8 @@
 import uuid from 'uuid';
 import {parse as urlParse, format as urlFormat} from 'url';
-import {DEBOUNCE_MILLIS} from './constants';
+import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
 import * as querystring from './querystring';
+import {shell} from 'electron';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
 
@@ -256,4 +257,16 @@ export function preventDefault (e) {
 
 export function stopPropagation (e) {
   e.stopPropagation();
+}
+
+export function clickLink (href) {
+  if (href.match(/^http/i)) {
+    const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
+    const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
+    const attributedHref = querystring.joinUrl(href, qs);
+    shell.openExternal(attributedHref);
+  } else {
+    // Don't modify non-http urls
+    shell.openExternal(href);
+  }
 }

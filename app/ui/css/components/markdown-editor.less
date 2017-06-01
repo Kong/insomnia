@@ -1,0 +1,124 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.markdown-editor {
+  border: 1px solid var(--hl-md);
+  border-radius: @radius-md;
+
+  .markdown-editor__edit {
+    padding: @padding-xs @padding-sm;
+
+    // Not sure why this style doesn't work on .CodeMirror...
+    .CodeMirror-scroll {
+      max-height: 30vh;
+    }
+
+    .input {
+      height: auto;
+    }
+  }
+
+  .markdown-editor__preview {
+    max-height: 30vh;
+    padding: @padding-sm;
+    overflow: auto;
+
+    h1 {
+      font-size: @font-size-xxl;
+    }
+
+    & > * {
+      margin: @padding-sm 0 @padding-md 0;
+      padding: 0;
+
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    p > code {
+      padding: 0 @padding-xs;
+    }
+
+    ul {
+      list-style: circle;
+      padding-left: @padding-md;
+    }
+
+    .hljs {
+      width: 100%;
+      box-sizing: border-box;
+
+      .hljs-meta,
+      .hljs-comment,
+      .hljs-quote {
+        color: var(--hl);
+        font-style: italic;
+      }
+
+      .hljs-keyword,
+      .hljs-selector-tag,
+      .hljs-subst {
+        color: var(--color-font);
+      }
+
+      .hljs-number,
+      .hljs-literal,
+      .hljs-variable,
+      .hljs-template-variable,
+      .hljs-built_in,
+      .hljs-builtin-name,
+      .hljs-type,
+      .hljs-class .hljs-title,
+      .hljs-tag .hljs-attr {
+        color: var(--color-surprise);
+      }
+
+      .hljs-symbol,
+      .hljs-bullet,
+      .hljs-title,
+      .hljs-section,
+      .hljs-selector-id,
+      .hljs-doctag {
+        color: var(--color-danger);
+      }
+
+      .hljs-string {
+        color: var(--color-notice);
+      }
+
+      .hljs-subst {
+        font-weight: normal;
+      }
+
+      .hljs-tag,
+      .hljs-name,
+      .hljs-attr,
+      .hljs-regexp,
+      .hljs-link,
+      .hljs-attribute {
+        color: var(--color-success);
+      }
+
+      .hljs-deletion {
+        background: #fdd;
+      }
+
+      .hljs-addition {
+        background: #dfd;
+      }
+
+      .hljs-emphasis {
+        font-style: italic;
+      }
+
+      .hljs-strong {
+        font-weight: bold;
+      }
+    }
+  }
+}
