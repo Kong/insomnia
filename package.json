@@ -121,6 +121,7 @@
     "insomnia-importers": "1.3.3",
     "jsonlint": "1.6.2",
     "jsonpath": "0.2.11",
+    "marked": "^0.3.6",
     "mime-types": "2.1.14",
     "mkdirp": "0.5.1",
     "moment": "2.18.1",

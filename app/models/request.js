@@ -13,6 +13,7 @@ export function init () {
   return {
     url: '',
     name: 'New Request',
+    description: '',
     method: METHOD_GET,
     body: {},
     parameters: [],
