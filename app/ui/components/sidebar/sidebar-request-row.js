@@ -99,8 +99,7 @@ class SidebarRequestRow extends PureComponent {
       node = (
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
-            <button className="sidebar__clickable"
-                    onClick={this._handleRequestCreateFromEmpty}>
+            <button className="sidebar__clickable" onClick={this._handleRequestCreateFromEmpty}>
               <em className="faded">click to add first request...</em>
             </button>
           </div>
@@ -123,11 +122,11 @@ class SidebarRequestRow extends PureComponent {
                             onEditStart={this._handleEditStart}
                             onSubmit={this._handleRequestUpdateName}/>
                   {request.description && (
-                    <button title="View description"
+                    <a title="View description"
                             onClick={this._handleClickDescription}
                             className="icon space-left txt-sm super-faint">
                       <i className="fa fa-file-text-o"/>
-                    </button>
+                    </a>
                   )}
                 </div>
               </div>
