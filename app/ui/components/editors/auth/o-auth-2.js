@@ -83,7 +83,7 @@ class OAuth2 extends PureComponent {
   }
 
   _handleChangeCredentialsInBody (e) {
-    this._handleChangeProperty('credentialsInBody', e.target.value);
+    this._handleChangeProperty('credentialsInBody', e.target.value === 'true');
   }
 
   _handleChangeClientSecret (value) {
@@ -237,8 +237,8 @@ class OAuth2 extends PureComponent {
       'Client Credentials',
       'credentialsInBody',
       [
-        {name: 'As Basic Auth Header (default)', value: false},
-        {name: 'In Request Body', value: true}
+        {name: 'As Basic Auth Header (default)', value: 'false'},
+        {name: 'In Request Body', value: 'true'}
       ],
       this._handleChangeCredentialsInBody
     );
