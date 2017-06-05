@@ -16,7 +16,8 @@ class MarkdownEditor extends PureComponent {
     super(props);
     this.state = {
       markdown: props.defaultValue,
-      compiled: ''
+      compiled: '',
+      renderError: ''
     };
   }
 
@@ -30,8 +31,15 @@ class MarkdownEditor extends PureComponent {
   }
 
   async _compileMarkdown (markdown) {
-    const compiled = marked(await this.props.handleRender(markdown));
-    this.setState({markdown, compiled});
+    const newState = {markdown};
+    try {
+      const rendered = await this.props.handleRender(markdown);
+      newState.compiled = marked(rendered);
+    } catch (err) {
+      newState.renderError = err.message;
+    }
+
+    this.setState(newState);
   }
 
   _setPreviewRef (n) {
@@ -91,7 +99,7 @@ class MarkdownEditor extends PureComponent {
       handleGetRenderContext
     } = this.props;
 
-    const {markdown, compiled} = this.state;
+    const {markdown, compiled, renderError} = this.state;
 
     return (
       <Tabs className={classnames('markdown-editor', 'outlined', className)}
@@ -134,8 +142,9 @@ class MarkdownEditor extends PureComponent {
             Styling with Markdown is supported
           </div>
         </TabPanel>
-        <TabPanel>
-          <div className="markdown-editor__preview" ref={this._setPreviewRef}
+        <TabPanel className="markdown-editor__preview">
+          {renderError && <p className="notice error no-margin">Failed to render: {renderError}</p>}
+          <div className="markdown-editor__preview__content" ref={this._setPreviewRef}
                dangerouslySetInnerHTML={{__html: compiled}}>
             {/* Set from above */}
           </div>

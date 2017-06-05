@@ -1,5 +1,6 @@
 @import '../constants/dimensions';
 @import '../constants/colors';
+@import '../constants/fonts';
 
 .markdown-editor {
   border: 1px solid var(--hl-md);
@@ -19,105 +20,141 @@
   }
 
   .markdown-editor__preview {
-    max-height: 30vh;
+    max-height: 35vh;
     padding: @padding-sm;
     overflow: auto;
 
-    h1 {
-      font-size: @font-size-xxl;
-    }
+    .markdown-editor__preview__content {
+      max-width: 34em;
+      margin-right: auto;
 
-    & > * {
-      margin: @padding-sm 0 @padding-md 0;
-      padding: 0;
-
-      &:first-child {
-        margin-top: 0;
+      h1 {
+        font-size: @font-size-xxl;
       }
 
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
+      & > * {
+        line-height: 1.7em;
+        margin: @padding-sm 0 @padding-md 0;
+        padding: 0;
 
-    p > code {
-      padding: 0 @padding-xs;
-    }
+        &:first-child {
+          margin-top: 0;
+        }
 
-    ul {
-      list-style: circle;
-      padding-left: @padding-md;
-    }
-
-    .hljs {
-      width: 100%;
-      box-sizing: border-box;
-
-      .hljs-meta,
-      .hljs-comment,
-      .hljs-quote {
-        color: var(--hl);
-        font-style: italic;
+        &:last-child {
+          margin-bottom: 0;
+        }
       }
 
-      .hljs-keyword,
-      .hljs-selector-tag,
-      .hljs-subst {
-        color: var(--color-font);
+      blockquote {
+        border-left: 0.4em solid var(--hl-md);
+        padding: @padding-xxs @padding-md;
+
+        p {
+          margin: @padding-xs 0;
+        }
       }
 
-      .hljs-number,
-      .hljs-literal,
-      .hljs-variable,
-      .hljs-template-variable,
-      .hljs-built_in,
-      .hljs-builtin-name,
-      .hljs-type,
-      .hljs-class .hljs-title,
-      .hljs-tag .hljs-attr {
-        color: var(--color-surprise);
+      *:not(pre) > code {
+        padding: @padding-xxs @padding-xs;
+        font-size: @font-size-sm;
+        line-height: @font-size-xs;
+        font-family: @font-monospace;
       }
 
-      .hljs-symbol,
-      .hljs-bullet,
-      .hljs-title,
-      .hljs-section,
-      .hljs-selector-id,
-      .hljs-doctag {
-        color: var(--color-danger);
+      code {
+        background-color: var(--hl-xs);
+        border: 1px solid var(--hl-sm);
+        border-radius: @radius-sm;
       }
 
-      .hljs-string {
-        color: var(--color-notice);
+      pre > code {
+        padding: @padding-sm;
       }
 
-      .hljs-subst {
-        font-weight: normal;
+      & > ul {
+        padding-left: @padding-xs;
+        list-style: disc;
+
+        ul {
+          list-style: circle;
+        }
       }
 
-      .hljs-tag,
-      .hljs-name,
-      .hljs-attr,
-      .hljs-regexp,
-      .hljs-link,
-      .hljs-attribute {
-        color: var(--color-success);
+      ul {
+        margin-left: @padding-md;
       }
 
-      .hljs-deletion {
-        background: #fdd;
-      }
+      .hljs {
+        width: 100%;
+        box-sizing: border-box;
 
-      .hljs-addition {
-        background: #dfd;
-      }
+        .hljs-meta,
+        .hljs-comment,
+        .hljs-quote {
+          color: var(--hl);
+          font-style: italic;
+        }
 
-      .hljs-emphasis {
-        font-style: italic;
-      }
+        .hljs-keyword,
+        .hljs-selector-tag,
+        .hljs-subst {
+          color: var(--color-font);
+        }
 
-      .hljs-strong {
-        font-weight: bold;
+        .hljs-number,
+        .hljs-literal,
+        .hljs-variable,
+        .hljs-template-variable,
+        .hljs-built_in,
+        .hljs-builtin-name,
+        .hljs-type,
+        .hljs-class .hljs-title,
+        .hljs-tag .hljs-attr {
+          color: var(--color-surprise);
+        }
+
+        .hljs-symbol,
+        .hljs-bullet,
+        .hljs-title,
+        .hljs-section,
+        .hljs-selector-id,
+        .hljs-doctag {
+          color: var(--color-danger);
+        }
+
+        .hljs-string {
+          color: var(--color-notice);
+        }
+
+        .hljs-subst {
+          font-weight: normal;
+        }
+
+        .hljs-tag,
+        .hljs-name,
+        .hljs-attr,
+        .hljs-regexp,
+        .hljs-link,
+        .hljs-attribute {
+          color: var(--color-success);
+        }
+
+        .hljs-deletion {
+          background: #fdd;
+        }
+
+        .hljs-addition {
+          background: #dfd;
+        }
+
+        .hljs-emphasis {
+          font-style: italic;
+        }
+
+        .hljs-strong {
+          font-weight: bold;
+        }
       }
     }
   }
