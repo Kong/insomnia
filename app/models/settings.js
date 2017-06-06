@@ -16,12 +16,14 @@ export function init () {
     editorKeyMap: 'default',
     httpProxy: '',
     httpsProxy: '',
+    noProxy: '',
     proxyEnabled: false,
     timeout: 0,
     validateSSL: true,
     forceVerticalLayout: false,
     autoHideMenuBar: false,
-    theme: 'default'
+    theme: 'default',
+    disableAnalyticsTracking: false
   };
 }
 
@@ -46,10 +48,10 @@ export async function update (settings, patch) {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate () {
+export async function getOrCreate (patch = {}) {
   const results = await db.all(type);
   if (results.length === 0) {
-    return await create();
+    return await create(patch);
   } else {
     return results[0];
   }

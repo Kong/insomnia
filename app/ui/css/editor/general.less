@@ -115,4 +115,14 @@
   &.editor--readonly .CodeMirror-cursors {
     visibility: hidden;
   }
+
+  &.editor--dynamic-height {
+    .CodeMirror {
+      position: static;
+    }
+
+    .CodeMirror-lines {
+      padding-bottom: 0.5em;
+    }
+  }
 }

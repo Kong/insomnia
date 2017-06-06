@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -7,13 +7,16 @@ import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 import DebouncedInput from '../base/debounced-input';
+import MarkdownEditor from '../markdown-editor';
 
 @autobind
 class RequestSettingsModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      request: null
+      request: null,
+      showDescription: false,
+      defaultPreviewMode: false
     };
   }
 
@@ -34,9 +37,24 @@ class RequestSettingsModal extends PureComponent {
     this.setState({request});
   }
 
+  async _handleDescriptionChange (description) {
+    const request = await models.request.update(this.state.request, {description});
+    this.setState({request, defaultPreviewMode: false});
+  }
+
+  _handleAddDescription () {
+    trackEvent('Request', 'Add Description');
+    this.setState({showDescription: true});
+  }
+
   show (request) {
     this.modal.show();
-    this.setState({request});
+    const hasDescription = !!request.description;
+    this.setState({
+      request,
+      showDescription: hasDescription,
+      defaultPreviewMode: hasDescription
+    });
   }
 
   hide () {
@@ -55,10 +73,21 @@ class RequestSettingsModal extends PureComponent {
   }
 
   renderModalBody (request) {
+    const {
+      editorLineWrapping,
+      editorFontSize,
+      editorIndentSize,
+      editorKeyMap,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
+
+    const {showDescription, defaultPreviewMode} = this.state;
+
     return (
       <div>
         <div className="form-control form-control--outlined">
-          <label>Request Name
+          <label>Name
             {' '}
             <span className="txt-sm faint italic">
               (also rename by double-clicking in sidebar)
@@ -72,8 +101,27 @@ class RequestSettingsModal extends PureComponent {
             />
           </label>
         </div>
-        <div className="pad-top-sm">
-          <h2 className="txt-lg">Cookie Handling</h2>
+        {showDescription ? (
+          <MarkdownEditor
+            className="margin-top"
+            defaultPreviewMode={defaultPreviewMode}
+            fontSize={editorFontSize}
+            indentSize={editorIndentSize}
+            keyMap={editorKeyMap}
+            placeholder="Write a description"
+            lineWrapping={editorLineWrapping}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+            defaultValue={request.description}
+            onChange={this._handleDescriptionChange}
+          />
+        ) : (
+          <button onClick={this._handleAddDescription}
+                  className="btn btn--outlined btn--super-duper-compact">
+            Add Description
+          </button>
+        )}
+        <div className="pad-top">
           <div className="form-control form-control--thin">
             <label>Send cookies automatically
               {this.renderCheckboxInput('settingSendCookies')}
@@ -84,9 +132,6 @@ class RequestSettingsModal extends PureComponent {
               {this.renderCheckboxInput('settingStoreCookies')}
             </label>
           </div>
-        </div>
-        <div className="pad-top-sm">
-          <h2 className="txt-lg">Advanced Settings</h2>
           <div className="form-control form-control--thin">
             <label>Automatically encode special characters in URL
               {this.renderCheckboxInput('settingEncodeUrl')}
@@ -126,6 +171,13 @@ class RequestSettingsModal extends PureComponent {
   }
 }
 
-RequestSettingsModal.propTypes = {};
+RequestSettingsModal.propTypes = {
+  editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
+  handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired
+};
 
 export default RequestSettingsModal;

@@ -89,6 +89,15 @@ class General extends PureComponent {
           </label>
         </div>
 
+        <div className="form-control form-control--thin">
+          <label className="inline-block">Disable Analytics Tracking (requires restart)
+            <input type="checkbox"
+                   name="disableAnalyticsTracking"
+                   checked={settings.disableAnalyticsTracking}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
         <div className="form-row">
           <div className="form-control form-control--outlined pad-top-sm">
             <label>Text Editor Font Size (px)
@@ -173,6 +182,16 @@ class General extends PureComponent {
                      name="httpsProxy"
                      type="text"
                      defaultValue={settings.httpsProxy}
+                     onChange={this._handleUpdateSetting}/>
+            </label>
+          </div>
+          <div className="form-control form-control--outlined">
+            <label>No Proxy
+              <input placeholder="localhost,127.0.0.1"
+                     disabled={!settings.proxyEnabled}
+                     name="noProxy"
+                     type="text"
+                     defaultValue={settings.noProxy}
                      onChange={this._handleUpdateSetting}/>
             </label>
           </div>

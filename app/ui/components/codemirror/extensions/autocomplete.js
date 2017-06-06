@@ -148,6 +148,9 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     'Ctrl-Space': completeForce, // Force autocomplete on hotkey
     "' '": completeIfAfterTagOrVarOpen
   });
+
+  // Close dropdown whenever something is clicked
+  document.addEventListener('click', () => cm.closeHint());
 });
 
 /**
@@ -294,9 +297,11 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
   for (const t of listOfThings) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;
+    const displayName = t.displayName || name;
+    const defaultFill = t.defaultFill || name;
 
     const matchSegment = segment.toLowerCase();
-    const matchName = name.toLowerCase();
+    const matchName = displayName.toLowerCase();
 
     // Throw away things that don't match
     if (!matchName.includes(matchSegment)) {
@@ -312,8 +317,8 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
       score: name.length, // In case we want to sort by this
 
       // CodeMirror
-      text: name,
-      displayText: name,
+      text: defaultFill,
+      displayText: displayName,
       render: renderHintMatch,
       hint: replaceHintMatch
     });

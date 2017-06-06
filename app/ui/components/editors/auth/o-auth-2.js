@@ -83,7 +83,7 @@ class OAuth2 extends PureComponent {
   }
 
   _handleChangeCredentialsInBody (e) {
-    this._handleChangeProperty('credentialsInBody', e.target.value);
+    this._handleChangeProperty('credentialsInBody', e.target.value === 'true');
   }
 
   _handleChangeClientSecret (value) {
@@ -126,6 +126,7 @@ class OAuth2 extends PureComponent {
   renderInputRow (label, property, onChange, handleAutocomplete = null) {
     const {handleRender, handleGetRenderContext, request} = this.props;
     const id = label.replace(/ /g, '-');
+    const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
@@ -135,6 +136,7 @@ class OAuth2 extends PureComponent {
           <div className="form-control form-control--underlined no-margin">
             <OneLineEditor
               id={id}
+              type={type}
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
               render={handleRender}
@@ -235,8 +237,8 @@ class OAuth2 extends PureComponent {
       'Client Credentials',
       'credentialsInBody',
       [
-        {name: 'As Basic Auth Header (default)', value: false},
-        {name: 'In Request Body', value: true}
+        {name: 'As Basic Auth Header (default)', value: 'false'},
+        {name: 'In Request Body', value: 'true'}
       ],
       this._handleChangeCredentialsInBody
     );

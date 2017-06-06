@@ -32,14 +32,18 @@ class CopyButton extends PureComponent {
     const {
       content, // eslint-disable-line no-unused-vars
       children,
+      title,
+      confirmMessage,
       ...other
     } = this.props;
     const {showConfirmation} = this.state;
 
+    const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
+
     return (
-      <button {...other} onClick={this._handleClick}>
+      <button {...other} title={title} onClick={this._handleClick}>
         {showConfirmation
-          ? <span>Copied <i className="fa fa-check-circle-o"/></span>
+          ? <span>{confirm} <i className="fa fa-check-circle-o"/></span>
           : (children || 'Copy to Clipboard')
         }
       </button>
@@ -52,7 +56,9 @@ CopyButton.propTypes = {
   content: PropTypes.string.isRequired,
 
   // Optional
-  children: PropTypes.node
+  children: PropTypes.node,
+  title: PropTypes.string,
+  confirmMessage: PropTypes.string
 };
 
 export default CopyButton;

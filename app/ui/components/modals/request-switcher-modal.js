@@ -250,7 +250,7 @@ class RequestSwitcherModal extends PureComponent {
                       <div className="pull-right faint italic">
                         {requestGroup.name}
                         &nbsp;&nbsp;
-                        <i className="fa fa-folder-o"></i>
+                        <i className="fa fa-folder-o"/>
                       </div>
                     )}
                     <MethodTag method={r.method}/>
@@ -260,10 +260,10 @@ class RequestSwitcherModal extends PureComponent {
               );
             })}
 
-            {matchedRequests.length && matchedWorkspaces.length && (
-              <div className="pad-left pad-right">
+            {(matchedRequests.length > 0 && matchedWorkspaces.length > 0) && (
+              <li className="pad-left pad-right">
                 <hr/>
-              </div>
+              </li>
             )}
 
             {matchedWorkspaces.map((w, i) => {

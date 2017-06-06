@@ -241,12 +241,12 @@ class RequestPane extends PureComponent {
             </Tab>
             <Tab onClick={this._trackTabQuery}>
               <button>
-                Query {numParameters ? <span className="bubble">{numParameters}</span> : null}
+                Query {numParameters > 0 && <span className="bubble">{numParameters}</span>}
               </button>
             </Tab>
             <Tab onClick={this._trackTabHeaders}>
               <button>
-                Header {numHeaders ? <span className="bubble">{numHeaders}</span> : null}
+                Header {numHeaders > 0 && <span className="bubble">{numHeaders}</span>}
               </button>
             </Tab>
           </TabList>

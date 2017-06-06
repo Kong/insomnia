@@ -13,6 +13,7 @@ import {trackEvent} from '../../../analytics/index';
 import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import './base-imports';
+import {getTagDefinitions} from '../../../templating/index';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -338,7 +339,8 @@ class CodeEditor extends PureComponent {
       hideScrollbars,
       noStyleActiveLine,
       noLint,
-      indentSize
+      indentSize,
+      dynamicHeight
     } = this.props;
 
     let mode;
@@ -400,21 +402,17 @@ class CodeEditor extends PureComponent {
         };
 
         // Only allow tags if we have variables too
-        getTags = () => ([
-          `uuid 'v4'`,
-          `uuid 'v1'`,
-          `now 'ISO-8601'`,
-          `now 'unix'`,
-          `now 'millis'`,
-          `base64 'encode', 'my string'`,
-          `base64 'decode', 'bXkgc3RyaW5n'`
-        ]);
+        getTags = getTagDefinitions;
       }
       options.environmentAutocomplete = {
         getVariables,
         getTags,
         getConstants: getAutocompleteConstants
       };
+    }
+
+    if (dynamicHeight) {
+      options.viewportMargin = Infinity;
     }
 
     // Strip of charset if there is one
@@ -564,11 +562,14 @@ class CodeEditor extends PureComponent {
       filter,
       onMouseLeave,
       onClick,
+      className,
+      dynamicHeight,
       style
     } = this.props;
 
-    const classes = classnames(this.props.className, {
+    const classes = classnames(className, {
       'editor': true,
+      'editor--dynamic-height': dynamicHeight,
       'editor--readonly': readOnly
     });
 
@@ -623,7 +624,7 @@ class CodeEditor extends PureComponent {
 
     return (
       <div className={classes} style={style}>
-        <div className="editor__container input"
+        <div className={classnames('editor__container', 'input', className)}
              style={styles}
              onClick={onClick}
              onMouseLeave={onMouseLeave}>
@@ -679,7 +680,8 @@ CodeEditor.propTypes = {
   readOnly: PropTypes.bool,
   filter: PropTypes.string,
   singleLine: PropTypes.bool,
-  debounceMillis: PropTypes.number
+  debounceMillis: PropTypes.number,
+  dynamicHeight: PropTypes.bool
 };
 
 export default CodeEditor;

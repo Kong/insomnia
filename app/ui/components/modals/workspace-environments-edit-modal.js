@@ -133,7 +133,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
   _didChange () {
     const isValid = this._envEditor.isValid();
 
-    if (this.state.isValid === isValid) {
+    if (this.state.isValid !== isValid) {
       this.setState({isValid});
     }
 

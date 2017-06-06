@@ -9,6 +9,7 @@ import {init as initStore} from './redux/modules';
 import {init as initDB} from '../common/database';
 import {init as initSync} from '../sync';
 import {init as initAnalytics} from '../analytics';
+import {init as initPlugins} from '../plugins';
 import {types as modelTypes} from '../models';
 import {getAccountId} from '../sync/session';
 import DNDBackend from './dnd-backend';
@@ -20,6 +21,7 @@ Tabs.setUseDefaultStyles(false);
 (async function () {
   await initDB(modelTypes());
   await initAnalytics(getAccountId());
+  await initPlugins();
 
   // Create Redux store
   const store = await initStore();

@@ -8,6 +8,8 @@ import Editable from '../base/editable';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
+import {showModal} from '../modals/index';
+import RequestSettingsModal from '../modals/request-settings-modal';
 
 @autobind
 class SidebarRequestRow extends PureComponent {
@@ -55,6 +57,15 @@ class SidebarRequestRow extends PureComponent {
     trackEvent('Request', 'Activate', 'Sidebar');
   }
 
+  _handleShowRequestSettings () {
+    showModal(RequestSettingsModal, this.props.request);
+  }
+
+  _handleClickDescription () {
+    trackEvent('Request', 'Click Description Icon');
+    this._handleShowRequestSettings();
+  }
+
   setDragDirection (dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({dragDirection});
@@ -88,8 +99,7 @@ class SidebarRequestRow extends PureComponent {
       node = (
         <li className={classes}>
           <div className="sidebar__item" tabIndex={0}>
-            <button className="sidebar__clickable"
-                    onClick={this._handleRequestCreateFromEmpty}>
+            <button className="sidebar__clickable" onClick={this._handleRequestCreateFromEmpty}>
               <em className="faded">click to add first request...</em>
             </button>
           </div>
@@ -106,17 +116,30 @@ class SidebarRequestRow extends PureComponent {
                     onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
-                <Editable value={request.name}
-                          onEditStart={this._handleEditStart}
-                          onSubmit={this._handleRequestUpdateName}/>
+                <div>
+                  <Editable value={request.name}
+                            className="inline-block"
+                            onEditStart={this._handleEditStart}
+                            onSubmit={this._handleRequestUpdateName}/>
+                  {request.description && (
+                    <a title={isActive ? 'View description' : null}
+                       onClick={isActive ? this._handleClickDescription : null}
+                       className={classnames('space-left super-duper-faint a--nocolor', {
+                         'icon': isActive
+                       })}>
+                      <i className="fa fa-file-text-o space-left"/>
+                    </a>
+                  )}
+                </div>
               </div>
             </button>
             <div className="sidebar__actions">
               <RequestActionsDropdown
+                right
                 ref={this._setRequestActionsDropdownRef}
                 handleDuplicateRequest={handleDuplicateRequest}
                 handleGenerateCode={handleGenerateCode}
-                right
+                handleShowSettings={this._handleShowRequestSettings}
                 request={request}
                 requestGroup={requestGroup}
               />

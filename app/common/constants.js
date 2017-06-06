@@ -1,4 +1,6 @@
 import * as packageJSON from '../package.json';
+import * as electron from 'electron';
+import path from 'path';
 
 // App Stuff
 
@@ -55,11 +57,15 @@ export const STATUS_CODE_RENDER_FAILED = -333;
 export const LARGE_RESPONSE_MB = 5;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[0-9a-zA-Z\-_.]+[/\w.\-+=:\][@%^*&!#?;]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
+export const PLUGIN_PATHS = [
+  path.join((electron.remote || electron).app.getPath('userData'), 'plugins')
+];
 
 // Hotkeys
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl';
 export const ALT_SYM = isMac() ? '⌃' : 'alt';
 export const SHIFT_SYM = isMac() ? '⇧' : 'shift';
+export const CTRL_SYM = isMac() ? '⌃' : 'ctrl';
 export function joinHotKeys (keys) {
   return keys.join(isMac() ? '' : '+');
 }
@@ -131,12 +137,14 @@ export const AUTH_OAUTH_2 = 'oauth2';
 export const AUTH_OAUTH_1 = 'oauth1';
 export const AUTH_BASIC = 'basic';
 export const AUTH_DIGEST = 'digest';
+export const AUTH_BEARER = 'bearer';
 export const AUTH_NTLM = 'ntlm';
 
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
-  [AUTH_NTLM]: ['NTML', 'Microsoft NTML'],
+  [AUTH_NTLM]: ['NTLM', 'Microsoft NTLM'],
+  [AUTH_BEARER]: ['Bearer', 'Bearer Token'],
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0']
 };

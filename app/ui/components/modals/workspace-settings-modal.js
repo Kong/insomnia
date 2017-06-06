@@ -9,6 +9,7 @@ import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
+import MarkdownEditor from '../markdown-editor';
 
 @autobind
 class WorkspaceSettingsModal extends PureComponent {
@@ -21,12 +22,19 @@ class WorkspaceSettingsModal extends PureComponent {
       keyPath: '',
       pfxPath: '',
       host: '',
-      passphrase: ''
+      passphrase: '',
+      showDescription: false,
+      defaultPreviewMode: false
     };
   }
 
   _workspaceUpdate (patch) {
     models.workspace.update(this.props.workspace, patch);
+  }
+
+  _handleAddDescription () {
+    this.setState({showDescription: true});
+    trackEvent('Workspace', 'Add Description');
   }
 
   _handleSetModalRef (n) {
@@ -53,6 +61,10 @@ class WorkspaceSettingsModal extends PureComponent {
 
   _handleDescriptionChange (description) {
     this._workspaceUpdate({description});
+
+    if (this.state.defaultPreviewMode !== false) {
+      this.setState({defaultPreviewMode: false});
+    }
   }
 
   _handleCreateHostChange (e) {
@@ -131,13 +143,16 @@ class WorkspaceSettingsModal extends PureComponent {
 
   show () {
     this.modal.show();
+    const hasDescription = !!this.props.workspace.description;
     this.setState({
       showAddCertificateForm: false,
       crtPath: '',
       keyPath: '',
       pfxPath: '',
       host: '',
-      passphrase: ''
+      passphrase: '',
+      showDescription: hasDescription,
+      defaultPreviewMode: hasDescription
     });
   }
 
@@ -159,8 +174,25 @@ class WorkspaceSettingsModal extends PureComponent {
   }
 
   renderModalBody () {
-    const {workspace} = this.props;
-    const {pfxPath, crtPath, keyPath, showAddCertificateForm} = this.state;
+    const {
+      workspace,
+      editorLineWrapping,
+      editorFontSize,
+      editorIndentSize,
+      editorKeyMap,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
+
+    const {
+      pfxPath,
+      crtPath,
+      keyPath,
+      showAddCertificateForm,
+      showDescription,
+      defaultPreviewMode
+    } = this.state;
+
     return (
       <ModalBody key={`body::${workspace._id}`} noScroll>
         <Tabs forceRenderTabPanel>
@@ -172,31 +204,39 @@ class WorkspaceSettingsModal extends PureComponent {
               <button>Client Certificates</button>
             </Tab>
           </TabList>
-          <TabPanel className="pad scrollable">
-            <div className="row-fill">
-              <div className="form-control form-control--outlined">
-                <label>Workspace Name
-                  <DebouncedInput
-                    type="text"
-                    delay={500}
-                    placeholder="Awesome API"
-                    defaultValue={workspace.name}
-                    onChange={this._handleRename}
-                  />
-                </label>
-              </div>
-            </div>
+          <TabPanel className="pad scrollable pad-top-sm">
             <div className="form-control form-control--outlined">
-              <label>Description
+              <label>Name
                 <DebouncedInput
-                  textarea
+                  type="text"
                   delay={500}
-                  rows="4"
-                  placeholder="This workspace is for testing the Awesome API!"
+                  placeholder="Awesome API"
+                  defaultValue={workspace.name}
+                  onChange={this._handleRename}
+                />
+              </label>
+            </div>
+            <div>
+              {showDescription ? (
+                <MarkdownEditor
+                  className="margin-top"
+                  defaultPreviewMode={defaultPreviewMode}
+                  fontSize={editorFontSize}
+                  indentSize={editorIndentSize}
+                  keyMap={editorKeyMap}
+                  placeholder="Write a description"
+                  lineWrapping={editorLineWrapping}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}
                 />
-              </label>
+              ) : (
+                <button onClick={this._handleAddDescription}
+                        className="btn btn--outlined btn--super-duper-compact">
+                  Add Description
+                </button>
+              )}
             </div>
             <div className="form-control form-control--padded">
               <label htmlFor="nothing">Actions
@@ -221,8 +261,12 @@ class WorkspaceSettingsModal extends PureComponent {
                     You have not yet added any certificates
                   </p>
                 ) : workspace.certificates.map(certificate => (
-                  <div key={certificate.host} className="row-spaced">
-                    <div>
+                  <div key={certificate.host}>
+                    <p className="notice info no-margin-top">
+                      Client certificates are an experimental feature
+                    </p>
+                    <div className="row-spaced">
+                      <div>
                       <span className="pad-right no-wrap">
                         <strong>PFX:</strong>
                         {' '}
@@ -231,51 +275,52 @@ class WorkspaceSettingsModal extends PureComponent {
                           : <i className="fa fa-remove"/>
                         }
                       </span>
-                      <span className="pad-right no-wrap">
+                        <span className="pad-right no-wrap">
                         <strong>CRT:</strong>
-                        {' '}
-                        {certificate.cert
-                          ? <i className="fa fa-check"/>
-                          : <i className="fa fa-remove"/>
-                        }
+                          {' '}
+                          {certificate.cert
+                            ? <i className="fa fa-check"/>
+                            : <i className="fa fa-remove"/>
+                          }
                       </span>
-                      <span className="pad-right no-wrap">
+                        <span className="pad-right no-wrap">
                         <strong>Key:</strong>
-                        {' '}
-                        {certificate.key
-                          ? <i className="fa fa-check"/>
-                          : <i className="fa fa-remove"/>
-                        }
+                          {' '}
+                          {certificate.key
+                            ? <i className="fa fa-check"/>
+                            : <i className="fa fa-remove"/>
+                          }
                       </span>
-                      <span className="pad-right no-wrap" title={certificate.passphrase || null}>
+                        <span className="pad-right no-wrap" title={certificate.passphrase || null}>
                         <strong>Passphrase:</strong>
-                        {' '}
-                        {certificate.passphrase
-                          ? <i className="fa fa-check"/>
-                          : <i className="fa fa-remove"/>
-                        }
+                          {' '}
+                          {certificate.passphrase
+                            ? <i className="fa fa-check"/>
+                            : <i className="fa fa-remove"/>
+                          }
                       </span>
-                      <span className="pad-right">
+                        <span className="pad-right">
                         <strong>Host:</strong>
-                        {' '}
-                        <span className="monospace selectable">{certificate.host}</span>
+                          {' '}
+                          <span className="monospace selectable">{certificate.host}</span>
                       </span>
-                    </div>
-                    <div className="no-wrap">
-                      <button className="btn btn--super-compact width-auto"
-                              title="Enable or disable certificate"
-                              onClick={() => this._handleToggleCertificate(certificate)}>
-                        {certificate.disabled
-                          ? <i className="fa fa-square-o"/>
-                          : <i className="fa fa-check-square-o"/>
-                        }
-                      </button>
-                      <PromptButton className="btn btn--super-compact width-auto"
-                                    confirmMessage=" "
-                                    addIcon
-                                    onClick={() => this._handleDeleteCertificate(certificate)}>
-                        <i className="fa fa-trash-o"></i>
-                      </PromptButton>
+                      </div>
+                      <div className="no-wrap">
+                        <button className="btn btn--super-compact width-auto"
+                                title="Enable or disable certificate"
+                                onClick={() => this._handleToggleCertificate(certificate)}>
+                          {certificate.disabled
+                            ? <i className="fa fa-square-o"/>
+                            : <i className="fa fa-check-square-o"/>
+                          }
+                        </button>
+                        <PromptButton className="btn btn--super-compact width-auto"
+                                      confirmMessage=" "
+                                      addIcon
+                                      onClick={() => this._handleDeleteCertificate(certificate)}>
+                          <i className="fa fa-trash-o"></i>
+                        </PromptButton>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -380,9 +425,15 @@ class WorkspaceSettingsModal extends PureComponent {
 }
 
 WorkspaceSettingsModal.propTypes = {
+  workspace: PropTypes.object.isRequired,
+  editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
+  handleRender: PropTypes.func.isRequired,
+  handleGetRenderContext: PropTypes.func.isRequired,
   handleRemoveWorkspace: PropTypes.func.isRequired,
-  handleDuplicateWorkspace: PropTypes.func.isRequired,
-  workspace: PropTypes.object.isRequired
+  handleDuplicateWorkspace: PropTypes.func.isRequired
 };
 
 export default WorkspaceSettingsModal;

@@ -2,6 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import * as querystring from '../../common/querystring';
 import * as misc from '../../common/misc';
+import CopyButton from './base/copy-button';
 
 @autobind
 class RenderedQueryString extends PureComponent {
@@ -59,11 +60,24 @@ class RenderedQueryString extends PureComponent {
   }
 
   render () {
+    let inner = null;
     if (this.state.string) {
-      return <span className="selectable force-wrap">{this.state.string}</span>;
+      inner = <span className="selectable force-wrap">{this.state.string}</span>;
     } else {
-      return <span className="super-duper-faint italic">...</span>;
+      inner = <span className="super-duper-faint italic">...</span>;
     }
+
+    return (
+      <div className="wide">
+        <CopyButton content={this.state.string}
+                    className="pull-right text-right icon"
+                    title="Copy URL"
+                    confirmMessage="">
+          <i className="fa fa-copy"/>
+        </CopyButton>
+        {inner}
+      </div>
+    );
   }
 }
 

@@ -1,3 +1,5 @@
+import PromptModal from './prompt-modal';
+
 const modals = {};
 
 export function registerModal (instance) {
@@ -6,6 +8,10 @@ export function registerModal (instance) {
     return;
   }
   modals[instance.constructor.name] = instance;
+}
+
+export function showPrompt (config) {
+  showModal(PromptModal, config);
 }
 
 export function showModal (modalCls, ...args) {

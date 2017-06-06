@@ -1,9 +1,7 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {shell} from 'electron';
 import {trackEvent} from '../../../analytics/index';
-import {getAppVersion, isDevelopment} from '../../../common/constants';
-import * as querystring from '../../../common/querystring';
+import * as misc from '../../../common/misc';
 
 @autobind
 class Link extends PureComponent {
@@ -13,17 +11,7 @@ class Link extends PureComponent {
 
     // Also call onClick that was passed to us if there was one
     onClick && onClick(e);
-
-    if (href.match(/^http/i)) {
-      const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
-      const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
-      const attributedHref = querystring.joinUrl(href, qs);
-      shell.openExternal(attributedHref);
-    } else {
-      // Don't modify non-http urls
-      shell.openExternal(href);
-    }
-
+    misc.clickLink(href);
     trackEvent('Link', 'Click', href);
   }
 

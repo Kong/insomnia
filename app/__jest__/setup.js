@@ -17,3 +17,4 @@ const localStorageMock = (function () {
 })();
 
 global.localStorage = localStorageMock;
+global.require = require;

@@ -384,8 +384,18 @@ class Wrapper extends PureComponent {
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
           <FilterHelpModal ref={registerModal}/>
-          <RequestSettingsModal ref={registerModal}/>
           <RequestRenderErrorModal ref={registerModal}/>
+
+          <RequestSettingsModal
+            ref={registerModal}
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            editorLineWrapping={settings.editorLineWrapping}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+          />
+
           <CookiesModal
             ref={registerModal}
             workspace={activeWorkspace}
@@ -395,16 +405,25 @@ class Wrapper extends PureComponent {
             ref={registerModal}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            workspace={activeWorkspace}
           />
           <WorkspaceSettingsModal
             ref={registerModal}
             workspace={activeWorkspace}
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            editorLineWrapping={settings.editorLineWrapping}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+            handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
             handleDuplicateWorkspace={this._handleDuplicateActiveWorkspace}
           />
           <WorkspaceShareSettingsModal
             ref={registerModal}
-            workspace={activeWorkspace}/>
+            workspace={activeWorkspace}
+          />
           <GenerateCodeModal
             ref={registerModal}
             environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}

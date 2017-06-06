@@ -86,12 +86,16 @@ class PromptButton extends PureComponent {
     let innerMsg;
     if (state === STATE_ASK && addIcon) {
       innerMsg = (
-        <span className="danger">
-          <i className="fa fa-exclamation-circle"/> {CONFIRM_MESSAGE}
+        <span className="warning" title="Click again to confirm">
+          <i className="fa fa-minus-circle"/> {CONFIRM_MESSAGE}
         </span>
       );
     } else if (state === STATE_ASK) {
-      innerMsg = <span className="danger">{CONFIRM_MESSAGE}</span>;
+      innerMsg = (
+        <span className="warning" title="Click again to confirm">
+          {CONFIRM_MESSAGE}
+        </span>
+      );
     } else if (state === STATE_DONE) {
       innerMsg = DONE_MESSAGE;
     } else {

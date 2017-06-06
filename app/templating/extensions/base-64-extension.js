@@ -1,11 +1,23 @@
-import BaseExtension from './base/base-extension';
-
-export default class Base64Extension extends BaseExtension {
-  constructor () {
-    super();
-    this.tags = ['base64'];
-  }
-
+export default {
+  name: 'base64',
+  displayName: 'Base64',
+  description: 'encode or decode values',
+  defaultFill: "base64 'encode', ''",
+  args: [
+    {
+      displayName: 'Action',
+      type: 'enum',
+      options: [
+        {displayName: 'Encode', value: 'encode'},
+        {displayName: 'Decode', value: 'decode'}
+      ]
+    },
+    {
+      displayName: 'Value',
+      type: 'string',
+      placeholder: 'My text'
+    }
+  ],
   run (context, op, text) {
     text = text || '';
 
@@ -17,4 +29,4 @@ export default class Base64Extension extends BaseExtension {
       throw new Error('Unsupported operation "' + op + '". Must be encode or decode.');
     }
   }
-}
+};
