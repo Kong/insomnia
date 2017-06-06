@@ -46,6 +46,11 @@ class WorkspaceSettingsModal extends PureComponent {
     this.hide();
   }
 
+  _handleDuplicateWorkspace () {
+    this.props.handleDuplicateWorkspace();
+    this.hide();
+  }
+
   _handleToggleCertificateForm () {
     this.setState({showAddCertificateForm: !this.state.showAddCertificateForm});
   }
@@ -234,12 +239,18 @@ class WorkspaceSettingsModal extends PureComponent {
               )}
             </div>
             <div className="form-control form-control--padded">
-              <h2>Danger Zone</h2>
-              <PromptButton onClick={this._handleRemoveWorkspace}
-                            addIcon
-                            className="width-auto btn btn--clicky">
-                <i className="fa fa-trash-o"/> Delete Workspace
-              </PromptButton>
+              <label htmlFor="nothing">Actions
+                <PromptButton onClick={this._handleRemoveWorkspace}
+                              addIcon
+                              className="width-auto btn btn--clicky">
+                  <i className="fa fa-trash-o"/> Delete Workspace
+                </PromptButton>
+                <PromptButton onClick={this._handleDuplicateWorkspace}
+                              addIcon
+                              className="width-auto btn btn--clicky">
+                  <i className="fa fa-copy"/> Duplicate Workspace
+                </PromptButton>
+              </label>
             </div>
           </TabPanel>
           <TabPanel className="pad scrollable">
@@ -414,14 +425,15 @@ class WorkspaceSettingsModal extends PureComponent {
 }
 
 WorkspaceSettingsModal.propTypes = {
-  handleRemoveWorkspace: PropTypes.func.isRequired,
   workspace: PropTypes.object.isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired
+  handleGetRenderContext: PropTypes.func.isRequired,
+  handleRemoveWorkspace: PropTypes.func.isRequired,
+  handleDuplicateWorkspace: PropTypes.func.isRequired
 };
 
 export default WorkspaceSettingsModal;
