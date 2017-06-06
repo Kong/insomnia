@@ -5,7 +5,6 @@ class Curl extends EventEmitter {
     super();
     this._options = {};
   }
-
   setOpt (name, value) {
     if (!name) {
       throw new Error(`Invalid option ${name} ${value}`);
@@ -94,6 +93,7 @@ Curl.option = {
   HTTPPOST: 'HTTPPOST',
   KEYPASSWD: 'KEYPASSWD',
   NOPROGRESS: 'NOPROGRESS',
+  NOPROXY: 'NOPROXY',
   PASSWORD: 'PASSWORD',
   POSTFIELDS: 'POSTFIELDS',
   PROXY: 'PROXY',
