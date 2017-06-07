@@ -79,6 +79,7 @@ class MarkdownEditor extends PureComponent {
       tables: true,
       breaks: false,
       pedantic: false,
+      sanitize: true,
       smartLists: true,
       smartypants: false
     });
