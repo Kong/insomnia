@@ -145,7 +145,7 @@ class MarkdownEditor extends PureComponent {
         </TabPanel>
         <TabPanel className="markdown-editor__preview">
           {renderError && <p className="notice error no-margin">Failed to render: {renderError}</p>}
-          <div className="markdown-editor__preview__content" ref={this._setPreviewRef}
+          <div className="markdown-editor__preview__content selectable" ref={this._setPreviewRef}
                dangerouslySetInnerHTML={{__html: compiled}}>
             {/* Set from above */}
           </div>
