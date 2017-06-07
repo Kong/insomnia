@@ -42,6 +42,8 @@ const KEY_K = 75;
 const KEY_L = 76;
 const KEY_N = 78;
 const KEY_P = 80;
+const KEY_R = 82;
+const KEY_F5 = 116;
 
 @autobind
 class App extends PureComponent {
@@ -112,15 +114,14 @@ class App extends PureComponent {
         meta: true,
         shift: false,
         alt: false,
-        key: KEY_ENTER,
-        callback: async e => {
-          const {activeRequest, activeEnvironment} = this.props;
-          await this._handleSendRequestWithEnvironment(
-            activeRequest ? activeRequest._id : 'n/a',
-            activeEnvironment ? activeEnvironment._id : 'n/a',
-          );
-          trackEvent('HotKey', 'Send');
-        }
+        key: [KEY_ENTER, KEY_R],
+        callback: this._handleSendShortcut
+      }, {
+        meta: false,
+        shift: false,
+        alt: false,
+        key: [KEY_F5],
+        callback: this._handleSendShortcut
       }, {
         meta: true,
         shift: false,
@@ -173,6 +174,15 @@ class App extends PureComponent {
         }
       }
     ];
+  }
+
+  async _handleSendShortcut () {
+    const {activeRequest, activeEnvironment} = this.props;
+    await this._handleSendRequestWithEnvironment(
+      activeRequest ? activeRequest._id : 'n/a',
+      activeEnvironment ? activeEnvironment._id : 'n/a',
+    );
+    trackEvent('HotKey', 'Send');
   }
 
   _setRequestPaneRef (n) {
@@ -558,23 +568,26 @@ class App extends PureComponent {
     const isShiftPressed = e.shiftKey;
 
     for (const {meta, shift, alt, key, callback} of this._globalKeyMap) {
-      if ((alt && !isAltPressed) || (!alt && isAltPressed)) {
-        continue;
-      }
+      const keys = Array.isArray(key) ? key : [key];
+      for (const key of keys) {
+        if ((alt && !isAltPressed) || (!alt && isAltPressed)) {
+          continue;
+        }
 
-      if ((meta && !isMetaPressed) || (!meta && isMetaPressed)) {
-        continue;
-      }
+        if ((meta && !isMetaPressed) || (!meta && isMetaPressed)) {
+          continue;
+        }
 
-      if ((shift && !isShiftPressed) || (!shift && isShiftPressed)) {
-        continue;
-      }
+        if ((shift && !isShiftPressed) || (!shift && isShiftPressed)) {
+          continue;
+        }
 
-      if (key !== e.keyCode) {
-        continue;
-      }
+        if (key !== e.keyCode) {
+          continue;
+        }
 
-      callback();
+        callback();
+      }
     }
   }
 

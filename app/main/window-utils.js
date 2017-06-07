@@ -240,7 +240,7 @@ export function createWindow () {
     position: 'before=help',
     submenu: [{
       label: 'Reload',
-      accelerator: 'CmdOrCtrl+R',
+      accelerator: 'CmdOrCtrl+Shift+R',
       click: () => mainWindow.reload()
     }, {
       label: 'Toggle DevTools',
