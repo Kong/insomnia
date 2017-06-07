@@ -380,34 +380,38 @@ export async function withAncestors (doc, types = allTypes()) {
   return await next([doc]);
 }
 
-export async function duplicate (originalDoc, patch = {}, first = true) {
+export async function duplicate (originalDoc, patch = {}) {
   bufferChanges();
 
-  // 1. Copy the doc
-  const newDoc = Object.assign({}, originalDoc, patch);
-  delete newDoc._id;
-  delete newDoc.created;
-  delete newDoc.modified;
+  async function next (docToCopy, patch) {
+    // 1. Copy the doc
+    const newDoc = Object.assign({}, docToCopy, patch);
+    delete newDoc._id;
+    delete newDoc.created;
+    delete newDoc.modified;
 
-  const createdDoc = await docCreate(newDoc.type, newDoc);
+    const createdDoc = await docCreate(newDoc.type, newDoc);
 
-  // 2. Get all the children
-  for (const type of allTypes()) {
-    // Note: We never want to duplicate a response
-    if (!models.canDuplicate(type)) {
-      continue;
+    // 2. Get all the children
+    for (const type of allTypes()) {
+      // Note: We never want to duplicate a response
+      if (!models.canDuplicate(type)) {
+        continue;
+      }
+
+      const parentId = docToCopy._id;
+      const children = await find(type, {parentId});
+      for (const doc of children) {
+        await next(doc, {parentId: createdDoc._id});
+      }
     }
 
-    const parentId = originalDoc._id;
-    const children = await find(type, {parentId});
-    for (const doc of children) {
-      await duplicate(doc, {parentId: createdDoc._id}, false);
-    }
+    return createdDoc;
   }
 
-  if (first) {
-    flushChanges();
-  }
+  const createdDoc = await next(originalDoc, patch);
+
+  flushChanges();
 
   return createdDoc;
 }

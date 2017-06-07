@@ -56,17 +56,3 @@ export function update (workspace, patch) {
 export function remove (workspace) {
   return db.remove(workspace);
 }
-
-export async function duplicate (workspace) {
-  const name = `${workspace.name} (Copy)`;
-  // Get sort key of next request
-  const q = {metaSortKey: {$gt: workspace.metaSortKey}};
-  const [nextRequest] = await db.find(type, q, {metaSortKey: 1});
-  const nextSortKey = nextRequest ? nextRequest.metaSortKey : workspace.metaSortKey + 100;
-
-  // Calculate new sort key
-  const sortKeyIncrement = (nextSortKey - workspace.metaSortKey) / 2;
-  const metaSortKey = workspace.metaSortKey + sortKeyIncrement;
-
-  return db.duplicate(workspace, {name, metaSortKey});
-}

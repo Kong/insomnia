@@ -69,7 +69,7 @@ class General extends PureComponent {
           </label>
         </div>
 
-        { !isMac() &&
+        {!isMac() && (
           <div className="form-control form-control--thin">
             <label className="inline-block">Hide Menu Bar
               <input type="checkbox"
@@ -78,7 +78,7 @@ class General extends PureComponent {
                      onChange={this._handleToggleMenuBar}/>
             </label>
           </div>
-        }
+        )}
 
         <div className="form-control form-control--thin">
           <label className="inline-block">Wrap Long Lines
@@ -112,12 +112,12 @@ class General extends PureComponent {
 
           <div className="form-control form-control--outlined pad-top-sm">
             <label>Text Editor Indent Size
-                <input type="number"
-                       name="editorIndentSize"
-                       min={1}
-                       max={16}
-                       defaultValue={settings.editorIndentSize}
-                       onChange={this._handleUpdateSetting}/>
+              <input type="number"
+                     name="editorIndentSize"
+                     min={1}
+                     max={16}
+                     defaultValue={settings.editorIndentSize}
+                     onChange={this._handleUpdateSetting}/>
             </label>
           </div>
 
@@ -186,7 +186,9 @@ class General extends PureComponent {
             </label>
           </div>
           <div className="form-control form-control--outlined">
-            <label>No Proxy
+            <label>
+              No Proxy <HelpTooltip>Comma-separated list of hostnames that do not require a
+              proxy to be contacted</HelpTooltip>
               <input placeholder="localhost,127.0.0.1"
                      disabled={!settings.proxyEnabled}
                      name="noProxy"

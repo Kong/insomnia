@@ -248,6 +248,7 @@ class Wrapper extends PureComponent {
       handleToggleMenuBar,
       handleRender,
       handleGetRenderContext,
+      handleDuplicateWorkspace,
       handleGenerateCodeForActiveRequest,
       handleGenerateCode,
       isLoading,
@@ -417,8 +418,7 @@ class Wrapper extends PureComponent {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-            handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-            handleDuplicateWorkspace={this._handleDuplicateActiveWorkspace}
+            handleDuplicateWorkspace={handleDuplicateWorkspace}
           />
           <WorkspaceShareSettingsModal
             ref={registerModal}
@@ -494,6 +494,7 @@ Wrapper.propTypes = {
   handleCreateRequest: PropTypes.func.isRequired,
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
+  handleDuplicateWorkspace: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
   handleGenerateCodeForActiveRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,

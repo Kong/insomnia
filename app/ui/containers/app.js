@@ -226,6 +226,21 @@ class App extends PureComponent {
     await this._handleSetActiveRequest(newRequest._id);
   }
 
+  async _workspaceDuplicate (callback) {
+    const workspace = this.props.activeWorkspace;
+    showPrompt({
+      headerName: 'Duplicate Workspace',
+      defaultValue: `${workspace.name} (Copy)`,
+      submitName: 'Duplicate',
+      selectText: true,
+      onComplete: async name => {
+        const newWorkspace = await db.duplicate(workspace, {name});
+        await this.props.handleSetActiveWorkspace(newWorkspace._id);
+        callback();
+      }
+    });
+  }
+
   async _fetchRenderContext () {
     const {activeEnvironment, activeRequest} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
@@ -728,6 +743,7 @@ class App extends PureComponent {
           handleGetRenderContext={this._handleGetRenderContext}
           handleDuplicateRequest={this._requestDuplicate}
           handleDuplicateRequestGroup={this._requestGroupDuplicate}
+          handleDuplicateWorkspace={this._workspaceDuplicate}
           handleCreateRequestGroup={this._requestGroupCreate}
           handleGenerateCode={this._handleGenerateCode}
           handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
@@ -760,6 +776,7 @@ App.propTypes = {
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired
   }).isRequired,
+  handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
   activeRequest: PropTypes.object,

@@ -47,8 +47,9 @@ class WorkspaceSettingsModal extends PureComponent {
   }
 
   _handleDuplicateWorkspace () {
-    this.props.handleDuplicateWorkspace();
-    this.hide();
+    this.props.handleDuplicateWorkspace(() => {
+      this.hide();
+    });
   }
 
   _handleToggleCertificateForm () {
@@ -238,19 +239,17 @@ class WorkspaceSettingsModal extends PureComponent {
                 </button>
               )}
             </div>
+            <h2>Workspace Actions</h2>
             <div className="form-control form-control--padded">
-              <label htmlFor="nothing">Actions
-                <PromptButton onClick={this._handleRemoveWorkspace}
-                              addIcon
-                              className="width-auto btn btn--clicky">
-                  <i className="fa fa-trash-o"/> Delete Workspace
-                </PromptButton>
-                <PromptButton onClick={this._handleDuplicateWorkspace}
-                              addIcon
-                              className="width-auto btn btn--clicky">
-                  <i className="fa fa-copy"/> Duplicate Workspace
-                </PromptButton>
-              </label>
+              <PromptButton onClick={this._handleRemoveWorkspace}
+                            addIcon
+                            className="width-auto btn btn--clicky inline-block">
+                <i className="fa fa-trash-o"/> Delete
+              </PromptButton>
+              <button onClick={this._handleDuplicateWorkspace}
+                      className="width-auto btn btn--clicky inline-block space-left">
+                <i className="fa fa-copy"/> Duplicate
+              </button>
             </div>
           </TabPanel>
           <TabPanel className="pad scrollable">

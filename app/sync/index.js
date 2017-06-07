@@ -745,6 +745,8 @@ export async function getOrCreateAllActiveResources (resourceGroupId = null) {
   const resources = Object.keys(activeResourceMap).map(k => activeResourceMap[k]);
 
   const time = (Date.now() - startTime) / 1000;
-  logger.debug(`Created ${created}/${resources.length} Resources (${time.toFixed(2)}s)`);
+  if (created > 0) {
+    logger.debug(`Created ${created}/${resources.length} Resources (${time.toFixed(2)}s)`);
+  }
   return resources;
 }
