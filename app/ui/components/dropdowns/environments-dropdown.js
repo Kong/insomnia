@@ -54,7 +54,7 @@ class EnvironmentsDropdown extends PureComponent {
       <Dropdown {...other} className={classnames(className, 'wide')}>
         <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
-            {(!activeEnvironment && subEnvironments.length) && (
+            {(!activeEnvironment && subEnvironments.length > 0) && (
               <Tooltip message="No environments active. Please select one to use."
                        className="space-right"
                        position="right">

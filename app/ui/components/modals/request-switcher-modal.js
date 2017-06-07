@@ -284,7 +284,7 @@ class RequestSwitcherModal extends PureComponent {
             })}
           </ul>
 
-          {(!matchedRequests.length && !matchedWorkspaces.length) && (
+          {(matchedRequests.length === 0 && matchedWorkspaces.length === 0) && (
             <div className="text-center">
               <p>
                 No matches found for <strong>{searchString}</strong>
