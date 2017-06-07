@@ -7,7 +7,7 @@
  * @param indentChars
  * @returns {string}
  */
-export function prettifyJson (json, indentChars) {
+export function prettifyJson (json, indentChars = '\t') {
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
   try {
@@ -19,10 +19,11 @@ export function prettifyJson (json, indentChars) {
 
   let i = 0;
   let il = json.length;
-  let tab = (typeof indentChars !== 'undefined') ? indentChars : '    ';
+  let tab = indentChars;
   let newJson = '';
   let indentLevel = 0;
   let inString = false;
+  let isEscaped = false;
   let currentChar = null;
   let previousChar = null;
   let nextChar = null;
@@ -32,7 +33,18 @@ export function prettifyJson (json, indentChars) {
     previousChar = json.charAt(i - 1);
     nextChar = json.charAt(i + 1);
 
+    // Handle the escaped case
+    if (isEscaped) {
+      isEscaped = false;
+      newJson += currentChar;
+      continue;
+    }
+
     switch (currentChar) {
+      case '\\':
+        isEscaped = !isEscaped;
+        newJson += currentChar;
+        break;
       case '{':
         if (!inString && nextChar !== '}') {
           newJson += currentChar + '\n' + _repeatString(tab, indentLevel + 1);
@@ -87,9 +99,7 @@ export function prettifyJson (json, indentChars) {
         }
         break;
       case '"':
-        if (previousChar !== '\\') {
-          inString = !inString;
-        }
+        inString = !inString;
         newJson += currentChar;
         break;
       case '\r':
@@ -101,7 +111,8 @@ export function prettifyJson (json, indentChars) {
     }
   }
 
-  return newJson;
+  // Remove lines that only contain whitespace
+  return newJson.replace(/^\s*\n/gm, '');
 }
 
 function _repeatString (s, count) {

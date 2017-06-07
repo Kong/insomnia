@@ -4,3 +4,4 @@ dist/**/*
 coverage/**/*
 node_modules/**/*
 webpack/**/*
+**/__fixtures__/prettify/*
