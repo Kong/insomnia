@@ -128,7 +128,7 @@
     "moment": "2.18.1",
     "nedb": "1.8.0",
     "node-forge": "0.7.0",
-    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#3fc2afea435f3548eedbef9c68d3fee642dfcddb",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#b3968130cbaeef6b432e617a5e835baf0f856880",
     "nunjucks": "3.0.0",
     "react": "15.4.2",
     "react-dnd": "2.2.3",
