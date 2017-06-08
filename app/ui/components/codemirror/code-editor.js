@@ -602,7 +602,7 @@ class CodeEditor extends PureComponent {
         />
       );
 
-      if (filterHistory.length) {
+      if (filterHistory && filterHistory.length) {
         toolbarChildren.push(
           <Dropdown key="history" className="tall" right>
             <DropdownButton className="btn btn--compact">
@@ -709,7 +709,7 @@ CodeEditor.propTypes = {
   defaultTabBehavior: PropTypes.bool,
   readOnly: PropTypes.bool,
   filter: PropTypes.string,
-  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired),
   singleLine: PropTypes.bool,
   debounceMillis: PropTypes.number,
   dynamicHeight: PropTypes.bool

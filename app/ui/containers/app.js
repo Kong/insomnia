@@ -382,6 +382,11 @@ class App extends PureComponent {
         return;
       }
 
+      // Blank?
+      if (!responseFilter) {
+        return;
+      }
+
       responseFilterHistory.unshift(responseFilter);
       await this._updateRequestMetaByParentId(requestId, {responseFilterHistory});
     }, 2000);
