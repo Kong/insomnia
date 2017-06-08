@@ -79,6 +79,7 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   }
 
   const {data} = results;
+  console.log('IMPORTING', JSON.parse(rawContent));
 
   // Fetch the base environment in case we need it
   const baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
