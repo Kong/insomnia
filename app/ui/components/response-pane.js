@@ -148,6 +148,7 @@ class ResponsePane extends PureComponent {
       editorIndentSize,
       editorKeyMap,
       filter,
+      filterHistory,
       activeResponseId,
       showCookiesModal
     } = this.props;
@@ -276,6 +277,7 @@ class ResponsePane extends PureComponent {
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
               statusCode={response.statusCode}
               filter={filter}
+              filterHistory={filterHistory}
               updateFilter={response.error ? null : handleSetFilter}
               body={response.error ? response.error : response.body}
               encoding={response.encoding}
@@ -341,6 +343,7 @@ ResponsePane.propTypes = {
   // Required
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
+  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,

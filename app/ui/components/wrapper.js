@@ -256,6 +256,7 @@ class Wrapper extends PureComponent {
       paneWidth,
       paneHeight,
       responseFilter,
+      responseFilterHistory,
       responsePreviewMode,
       oAuth2Token,
       settings,
@@ -368,6 +369,7 @@ class Wrapper extends PureComponent {
           previewMode={responsePreviewMode}
           activeResponseId={activeResponseId}
           filter={responseFilter}
+          filterHistory={responseFilterHistory}
           loadStartTime={loadStartTime}
           showCookiesModal={this._handleShowCookiesModal}
           handleShowRequestSettings={this._handleShowRequestSettingsModal}
@@ -524,6 +526,7 @@ Wrapper.propTypes = {
   paneHeight: PropTypes.number.isRequired,
   responsePreviewMode: PropTypes.string.isRequired,
   responseFilter: PropTypes.string.isRequired,
+  responseFilterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   activeResponseId: PropTypes.string.isRequired,
   sidebarWidth: PropTypes.number.isRequired,
   sidebarHidden: PropTypes.bool.isRequired,

@@ -308,20 +308,20 @@ class App extends PureComponent {
     const workspaceId = this.props.activeWorkspace._id;
     const requestMeta = await models.workspaceMeta.getByParentId(workspaceId);
     if (requestMeta) {
-      await models.workspaceMeta.update(requestMeta, patch);
+      return models.workspaceMeta.update(requestMeta, patch);
     } else {
       const newPatch = Object.assign({parentId: workspaceId}, patch);
-      await models.workspaceMeta.create(newPatch);
+      return models.workspaceMeta.create(newPatch);
     }
   }
 
   async _updateRequestMetaByParentId (requestId, patch) {
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     if (requestMeta) {
-      await models.requestMeta.update(requestMeta, patch);
+      return models.requestMeta.update(requestMeta, patch);
     } else {
       const newPatch = Object.assign({parentId: requestId}, patch);
-      await models.requestMeta.create(newPatch);
+      return models.requestMeta.create(newPatch);
     }
   }
 
@@ -369,8 +369,22 @@ class App extends PureComponent {
     this._updateRequestMetaByParentId(requestId, {previewMode});
   }
 
-  _handleSetResponseFilter (requestId, responseFilter) {
-    this._updateRequestMetaByParentId(requestId, {responseFilter});
+  async _handleSetResponseFilter (requestId, responseFilter) {
+    await this._updateRequestMetaByParentId(requestId, {responseFilter});
+
+    clearTimeout(this._responseFilterHistorySaveTimeout);
+    this._responseFilterHistorySaveTimeout = setTimeout(async () => {
+      const meta = await models.requestMeta.getByParentId(requestId);
+      const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
+
+      // Already in history?
+      if (responseFilterHistory.includes(responseFilter)) {
+        return;
+      }
+
+      responseFilterHistory.unshift(responseFilter);
+      await this._updateRequestMetaByParentId(requestId, {responseFilterHistory});
+    }, 2000);
   }
 
   async _handleSendAndDownloadRequestWithEnvironment (requestId, environmentId, dir) {
@@ -834,6 +848,7 @@ function mapStateToProps (state, props) {
   const activeRequest = selectActiveRequest(state, props);
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
+  const responseFilterHistory = requestMeta.responseFilterHistory || [];
   const activeResponseId = requestMeta.activeResponseId || '';
 
   // Environment stuff
@@ -866,6 +881,7 @@ function mapStateToProps (state, props) {
     paneHeight,
     responsePreviewMode,
     responseFilter,
+    responseFilterHistory,
     sidebarChildren,
     environments,
     activeEnvironment,
