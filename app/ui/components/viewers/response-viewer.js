@@ -73,6 +73,7 @@ class ResponseViewer extends PureComponent {
     const {
       previewMode,
       filter,
+      filterHistory,
       contentType,
       editorLineWrapping,
       editorFontSize,
@@ -181,6 +182,7 @@ class ResponseViewer extends PureComponent {
           defaultValue={body}
           updateFilter={updateFilter}
           filter={filter}
+          filterHistory={filterHistory}
           autoPrettify
           noMatchBrackets
           readOnly
@@ -201,6 +203,7 @@ ResponseViewer.propTypes = {
   encoding: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
+  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   editorFontSize: PropTypes.number.isRequired,
   editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,

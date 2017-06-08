@@ -14,6 +14,9 @@ import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import './base-imports';
 import {getTagDefinitions} from '../../../templating/index';
+import Dropdown from '../base/dropdown/dropdown';
+import DropdownButton from '../base/dropdown/dropdown-button';
+import DropdownItem from '../base/dropdown/dropdown-item';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -185,6 +188,10 @@ class CodeEditor extends PureComponent {
     } else {
       return '';
     }
+  }
+
+  _setFilterInputRef (n) {
+    this._filterInput = n;
   }
 
   _handleInitTextarea (textarea) {
@@ -518,9 +525,16 @@ class CodeEditor extends PureComponent {
     this.codeMirror.setValue(code || '');
   }
 
-  _handleFilterChange (e) {
-    const filter = e.target.value;
+  _handleFilterHistorySelect (filter) {
+    this._filterInput.value = filter;
+    this._setFilter(filter);
+  }
 
+  _handleFilterChange (e) {
+    this._setFilter(e.target.value);
+  }
+
+  _setFilter (filter) {
     clearTimeout(this._filterTimeout);
     this._filterTimeout = setTimeout(() => {
       this.setState({filter});
@@ -560,6 +574,7 @@ class CodeEditor extends PureComponent {
       fontSize,
       mode,
       filter,
+      filterHistory,
       onMouseLeave,
       onClick,
       className,
@@ -577,6 +592,7 @@ class CodeEditor extends PureComponent {
     if (this.props.updateFilter && (this._isJSON(mode) || this._isXML(mode))) {
       toolbarChildren.push(
         <input
+          ref={this._setFilterInputRef}
           key="filter"
           type="text"
           title="Filter response body"
@@ -585,10 +601,24 @@ class CodeEditor extends PureComponent {
           onChange={this._handleFilterChange}
         />
       );
+
+      if (filterHistory.length) {
+        toolbarChildren.push(
+          <Dropdown key="history" className="tall" right>
+            <DropdownButton className="btn btn--compact">
+              <i className="fa fa-clock-o"/>
+            </DropdownButton>
+            {filterHistory.reverse().map(filter => (
+              <DropdownItem key={filter} value={filter} onClick={this._handleFilterHistorySelect}>
+                {filter}
+              </DropdownItem>
+            ))}
+          </Dropdown>
+        );
+      }
+
       toolbarChildren.push(
-        <button key="help"
-                className="btn btn--compact"
-                onClick={this._showFilterHelp}>
+        <button key="help" className="btn btn--compact" onClick={this._showFilterHelp}>
           <i className="fa fa-question-circle"/>
         </button>
       );
@@ -679,6 +709,7 @@ CodeEditor.propTypes = {
   defaultTabBehavior: PropTypes.bool,
   readOnly: PropTypes.bool,
   filter: PropTypes.string,
+  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
   singleLine: PropTypes.bool,
   debounceMillis: PropTypes.number,
   dynamicHeight: PropTypes.bool

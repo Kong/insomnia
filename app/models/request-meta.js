@@ -11,6 +11,7 @@ export function init () {
     parentId: null,
     previewMode: PREVIEW_MODE_FRIENDLY,
     responseFilter: '',
+    responseFilterHistory: [],
     activeResponseId: null
   };
 }
