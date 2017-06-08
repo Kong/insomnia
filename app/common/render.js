@@ -154,7 +154,15 @@ export async function getRenderContext (request, environmentId, ancestors = null
   const subEnvironment = await models.environment.getById(environmentId);
 
   // Generate the context we need to render
-  return buildRenderContext(ancestors, rootEnvironment, subEnvironment, variablesOnly);
+  const context = await buildRenderContext(ancestors, rootEnvironment, subEnvironment, variablesOnly);
+
+  // Add meta data
+  context.getMeta = () => ({
+    requestId: request._id,
+    workspaceId: workspace._id
+  });
+
+  return context;
 }
 
 export async function getRenderedRequest (request, environmentId) {

@@ -4,9 +4,8 @@ import xpath from 'xpath';
 
 export default {
   name: 'response',
-  displayName: 'Response Value',
+  displayName: 'Response',
   description: 'reference values from other requests',
-  defaultFill: "response 'body', '', ''",
   args: [
     {
       displayName: 'Attribute',

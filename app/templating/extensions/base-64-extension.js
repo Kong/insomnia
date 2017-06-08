@@ -2,7 +2,6 @@ export default {
   name: 'base64',
   displayName: 'Base64',
   description: 'encode or decode values',
-  defaultFill: "base64 'encode', ''",
   args: [
     {
       displayName: 'Action',

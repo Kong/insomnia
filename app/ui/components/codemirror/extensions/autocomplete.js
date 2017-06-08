@@ -1,6 +1,7 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
 import * as misc from '../../../../common/misc';
+import {getDefaultFill} from '../../../../templating/utils';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -298,7 +299,7 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;
     const displayName = t.displayName || name;
-    const defaultFill = t.defaultFill || name;
+    const defaultFill = getDefaultFill(t.name, t.args);
 
     const matchSegment = segment.toLowerCase();
     const matchName = displayName.toLowerCase();

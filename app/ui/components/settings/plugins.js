@@ -5,6 +5,7 @@ import {createPlugin, getPlugins} from '../../../plugins/index';
 import Button from '../base/button';
 import CopyButton from '../base/copy-button';
 import {showPrompt} from '../modals/index';
+import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class Plugins extends PureComponent {
@@ -30,12 +31,14 @@ class Plugins extends PureComponent {
       onComplete: async name => {
         await createPlugin(name);
         this._handleRefreshPlugins();
+        trackEvent('Plugins', 'Generate');
       }
     });
   }
 
   _handleRefreshPlugins () {
     this.setState({plugins: getPlugins(true)});
+    trackEvent('Plugins', 'Refresh');
   }
 
   render () {

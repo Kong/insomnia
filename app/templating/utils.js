@@ -143,3 +143,27 @@ export function unTokenizeTag (tagData) {
   const argsStr = args.join(', ');
   return `{% ${tagData.name} ${argsStr} %}`;
 }
+
+/**
+ * Get the default Nunjucks string for an extension
+ * @param {string} name
+ * @param {object[]} args
+ * @returns {string}
+ */
+export function getDefaultFill (name, args) {
+  const stringArgs = (args || []).map(argDefinition => {
+    if (argDefinition.type === 'enum') {
+      const {defaultValue, options} = argDefinition;
+      const value = defaultValue !== undefined ? defaultValue : options[0].value;
+      return `'${value}'`;
+    } else if (argDefinition.type === 'number') {
+      const {defaultValue} = argDefinition;
+      return defaultValue !== undefined ? defaultValue : 0;
+    } else {
+      const {defaultValue} = argDefinition;
+      return defaultValue !== undefined ? `'${defaultValue}'` : "''";
+    }
+  });
+
+  return `${name} ${stringArgs.join(', ')}`;
+}

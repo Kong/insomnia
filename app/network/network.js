@@ -426,14 +426,6 @@ export function _actuallySend (renderedRequest, workspace, settings) {
           }
 
           const cookies = await cookiesFromJar(jar);
-
-          // Make sure domains are prefixed with dots (Curl does this)
-          for (const cookie of cookies) {
-            if (cookie.domain && cookie.domain[0] !== '.') {
-              cookie.domain = `.${cookie.domain}`;
-            }
-          }
-
           models.cookieJar.update(renderedRequest.cookieJar, {cookies});
 
           const n = setCookieHeaders.length;

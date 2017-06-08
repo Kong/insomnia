@@ -3,7 +3,6 @@ import uuid from 'uuid';
 export default {
   displayName: 'UUID',
   name: 'uuid',
-  defaultFill: "uuid 'v4'",
   description: 'generate v1 or v4 UUIDs',
   args: [{
     displayName: 'Version',

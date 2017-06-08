@@ -19,24 +19,6 @@ export default class BaseExtension {
     return this._ext.displayName || this.getTag();
   }
 
-  getDefaultFill () {
-    const args = this.getArgs().map(argDefinition => {
-      if (argDefinition.type === 'enum') {
-        const {defaultValue, options} = argDefinition;
-        const value = defaultValue !== undefined ? defaultValue : options[0].value;
-        return `'${value}'`;
-      } else if (argDefinition.type === 'number') {
-        const {defaultValue} = argDefinition;
-        return defaultValue !== undefined ? defaultValue : 0;
-      } else {
-        const {defaultValue} = argDefinition;
-        return defaultValue !== undefined ? `'${defaultValue}'` : "''";
-      }
-    });
-
-    return `${this.getTag()} ${args.join(', ')}`;
-  }
-
   getDescription () {
     return this._ext.description || 'no description';
   }
@@ -69,21 +51,23 @@ export default class BaseExtension {
     return new nodes.CallExtensionAsync(this, 'asyncRun', args);
   }
 
-  asyncRun (...runArgs) {
+  asyncRun ({ctx: renderContext}, ...runArgs) {
     // Pull the callback off the end
     const callback = runArgs[runArgs.length - 1];
 
-    // Only pass render context, not the entire Nunjucks instance
-    const renderContext = runArgs[0].ctx;
+    // Pull out the meta
+    const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
+    delete renderContext.getMeta;
 
     // Extract the rest of the args
     const args = runArgs
-      .slice(1, runArgs.length - 1)
+      .slice(0, runArgs.length - 1)
       .filter(a => a !== EMPTY_ARG);
 
-    // Define a plugin context with helpers
-    const pluginContext = {
+    // Define a helper context with utils
+    const helperContext = {
       context: renderContext,
+      meta: renderMeta,
       models: {
         request: {getById: models.request.getById},
         response: {getLatestForRequestId: models.response.getLatestForRequest}
@@ -92,7 +76,7 @@ export default class BaseExtension {
 
     let result;
     try {
-      result = this.run(pluginContext, ...args);
+      result = this.run(helperContext, ...args);
     } catch (err) {
       callback(err);
       return;
