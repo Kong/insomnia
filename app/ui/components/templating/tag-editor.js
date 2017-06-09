@@ -7,6 +7,7 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import {fnOrString} from '../../../common/misc';
+import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class TagEditor extends PureComponent {
@@ -92,6 +93,7 @@ class TagEditor extends PureComponent {
     const name = e.target.value;
     const tagDefinition = templating.getTagDefinitions().find(d => d.name === name);
     this._update(tagDefinition, false);
+    trackEvent('Tag Editor', 'Change Tag', name);
   }
 
   _setSelectRef (n) {
@@ -114,7 +116,10 @@ class TagEditor extends PureComponent {
       const defaultFill = templateUtils.getDefaultFill(tagDefinition.name, tagDefinition.args);
       activeTagData = templateUtils.tokenizeTag(defaultFill);
     } else if (!activeTagData && !tagDefinition) {
-      activeTagData = {name: 'custom', rawValue: "{% tag 'arg1', 'arg2' %}"};
+      activeTagData = {
+        name: 'custom',
+        rawValue: templateUtils.unTokenizeTag(this.state.activeTagData)
+      };
     }
 
     let template;
@@ -270,7 +275,7 @@ class TagEditor extends PureComponent {
                   {tagDefinition.displayName} – {tagDefinition.description}
                 </option>
               ))}
-              <option value="">-- Custom --</option>
+              <option value="custom">-- Custom --</option>
             </select>
           </label>
         </div>
