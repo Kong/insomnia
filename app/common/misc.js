@@ -271,10 +271,10 @@ export function clickLink (href) {
   }
 }
 
-export function fnOrString (v) {
+export function fnOrString (v, ...args) {
   if (typeof v === 'string') {
     return v;
   } else {
-    return v();
+    return v(...args);
   }
 }

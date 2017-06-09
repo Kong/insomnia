@@ -35,7 +35,7 @@ describe('RequestExtension cookie', async () => {
 describe('RequestExtension url', async () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
 
-  it('should get cookie by name', async () => {
+  it('should get url', async () => {
     // Create necessary models
     const workspace = await models.workspace.create({name: 'Workspace'});
     const request = await models.request.create({
@@ -48,5 +48,41 @@ describe('RequestExtension url', async () => {
     const result = await templating.render(`{% request 'url' %}`, {context});
 
     expect(result).toBe('https://insomnia.rest/foo/bar?foo=bar');
+  });
+
+  it('should get rendered url', async () => {
+    // Create necessary models
+    const workspace = await models.workspace.create({name: 'Workspace'});
+    const request = await models.request.create({
+      parentId: workspace._id,
+      url: 'https://insomnia.rest/foo/bar',
+      parameters: [{name: 'foo', value: '{{ foo }}'}]
+    });
+
+    const context = await getRenderContext(request);
+    context.foo = 'Hello World!';
+    const result = await templating.render(`{% request 'url' %}`, {context});
+
+    expect(result).toBe('https://insomnia.rest/foo/bar?foo=Hello%20World!');
+  });
+});
+
+describe('RequestExtension header', async () => {
+  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
+
+  it('should get url', async () => {
+    // Create necessary models
+    const workspace = await models.workspace.create({name: 'Workspace'});
+    const request = await models.request.create({
+      parentId: workspace._id,
+      url: 'https://insomnia.rest/foo/bar',
+      headers: [{name: 'foo', value: '{{ foo }}'}]
+    });
+
+    const context = await getRenderContext(request);
+    context.foo = 'Hello World!';
+    const result = await templating.render(`{% request 'header', 'foo' %}`, {context});
+
+    expect(result).toBe('Hello World!');
   });
 });

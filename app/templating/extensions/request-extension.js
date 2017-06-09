@@ -1,4 +1,3 @@
-import * as models from '../../models/index';
 import * as querystring from '../../common/querystring';
 import {prepareUrlForSending} from '../../common/misc';
 import {jarFromCookies} from '../../common/cookies';
@@ -40,8 +39,8 @@ export default {
       return null;
     }
 
-    const request = await models.request.getById(meta.requestId);
-    const workspace = await models.workspace.getById(meta.workspaceId);
+    const request = await context.util.models.request.getById(meta.requestId);
+    const workspace = await context.util.models.workspace.getById(meta.workspaceId);
 
     if (!request) {
       throw new Error(`Request not found for ${meta.requestId}`);
@@ -53,27 +52,40 @@ export default {
 
     switch (attribute) {
       case 'url':
-        return getRequestUrl(request);
+        return getRequestUrl(context, request);
       case 'cookie':
-        const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
-        const url = getRequestUrl(request);
+        const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
+        const url = await getRequestUrl(context, request);
         const value = await getCookieValue(cookieJar, url, name);
         return value;
       case 'header':
-        const header = request.headers.find(header => (
-          header.name.toLowerCase() === name.toLowerCase()
-        ));
-        return header ? header.value : null;
+        for (const header of request.headers) {
+          const currentName = await context.util.render(name);
+          if (currentName.toLowerCase() === name.toLowerCase()) {
+            return context.util.render(header.value);
+          }
+        }
+        throw new Error(`No header for name "${name}"`);
     }
 
     return null;
   }
 };
 
-function getRequestUrl (request) {
-  const qs = querystring.buildFromParams(request.parameters);
-  const url = querystring.joinUrl(request.url, qs);
-  return prepareUrlForSending(url, request.settingEncodeUrl);
+async function getRequestUrl (context, request) {
+  const url = await context.util.render(request.url);
+  const parameters = [];
+  for (const p of request.parameters) {
+    parameters.push({
+      name: await context.util.render(p.name),
+      value: await context.util.render(p.value)
+    });
+  }
+
+  const qs = querystring.buildFromParams(parameters);
+  const finalUrl = querystring.joinUrl(url, qs);
+
+  return prepareUrlForSending(finalUrl, request.settingEncodeUrl);
 }
 
 function getCookieValue (cookieJar, url, name) {

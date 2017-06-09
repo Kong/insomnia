@@ -1,5 +1,6 @@
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 import * as models from '../models/index';
+import * as templating from './index';
 
 export default class BaseExtension {
   constructor (ext) {
@@ -68,9 +69,14 @@ export default class BaseExtension {
     const helperContext = {
       context: renderContext,
       meta: renderMeta,
-      models: {
-        request: {getById: models.request.getById},
-        response: {getLatestForRequestId: models.response.getLatestForRequest}
+      util: {
+        render: str => templating.render(str, {context: renderContext}),
+        models: {
+          request: {getById: models.request.getById},
+          workspace: {getById: models.workspace.getById},
+          cookieJar: {getOrCreateForWorkspace: models.cookieJar.getOrCreateForWorkspace},
+          response: {getLatestForRequestId: models.response.getLatestForRequest}
+        }
       }
     };
 

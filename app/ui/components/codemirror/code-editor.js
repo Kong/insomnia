@@ -419,7 +419,7 @@ class CodeEditor extends PureComponent {
             }
 
             for (const option of tagDef.args[0].options) {
-              const optionName = misc.fnOrString(option.displayName) || option.name;
+              const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
               const newDef = clone(tagDef);
               newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
               newDef.args[0].defaultValue = option.value;

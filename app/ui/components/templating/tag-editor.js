@@ -245,7 +245,7 @@ class TagEditor extends PureComponent {
     return (
       <div key={argIndex} className="form-control form-control--outlined">
         <label>
-          {fnOrString(displayName)}
+          {fnOrString(displayName, args)}
           {argDefinition.help && <HelpTooltip>{argDefinition.help}</HelpTooltip>}
           <div data-arg-index={argIndex}>
             {argInput}
