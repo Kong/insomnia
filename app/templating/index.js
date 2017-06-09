@@ -76,7 +76,6 @@ export function getTagDefinitions () {
     .map(ext => ({
       name: ext.getTag(),
       displayName: ext.getName(),
-      defaultFill: ext.getDefaultFill(),
       description: ext.getDescription(),
       args: ext.getArgs()
     }));
@@ -125,7 +124,7 @@ function getNunjucks (variablesOnly) {
     const ext = allExtensions[i];
     ext.priority = ext.priority || i * 100;
     const instance = new BaseExtension(ext);
-    nj.addExtension(instance.getName(), instance);
+    nj.addExtension(instance.getTag(), instance);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //

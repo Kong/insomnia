@@ -1,8 +1,7 @@
 export default {
   name: 'now',
-  displayName: 'Now Timestamp',
+  displayName: 'Timestamp',
   description: 'get the current time',
-  defaultFill: "now 'iso-8601'",
   args: [{
     displayName: 'Timestamp Format',
     type: 'enum',

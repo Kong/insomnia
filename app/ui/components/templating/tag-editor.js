@@ -6,6 +6,8 @@ import * as templateUtils from '../../../templating/utils';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
+import {fnOrString} from '../../../common/misc';
+import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class TagEditor extends PureComponent {
@@ -91,6 +93,7 @@ class TagEditor extends PureComponent {
     const name = e.target.value;
     const tagDefinition = templating.getTagDefinitions().find(d => d.name === name);
     this._update(tagDefinition, false);
+    trackEvent('Tag Editor', 'Change Tag', name);
   }
 
   _setSelectRef (n) {
@@ -102,19 +105,6 @@ class TagEditor extends PureComponent {
     }, 100);
   }
 
-  _buildArgFromDefinition (argDefinition) {
-    if (argDefinition.type === 'enum') {
-      const {defaultValue, options} = argDefinition;
-      return {type: 'string', value: defaultValue || options[0].value};
-    } else if (argDefinition.type === 'number') {
-      const {defaultValue} = argDefinition;
-      const value = defaultValue !== undefined ? defaultValue : 0;
-      return {type: 'number', value};
-    } else {
-      return {type: 'string', value: argDefinition.defaultValue || ''};
-    }
-  }
-
   async _update (tagDefinition, tagData, noCallback = false) {
     const {handleRender} = this.props;
 
@@ -123,13 +113,13 @@ class TagEditor extends PureComponent {
 
     let activeTagData = tagData;
     if (!activeTagData && tagDefinition) {
-      activeTagData = {
-        name: tagDefinition.name,
-        rawValue: null,
-        args: tagDefinition.args.map(this._buildArgFromDefinition)
-      };
+      const defaultFill = templateUtils.getDefaultFill(tagDefinition.name, tagDefinition.args);
+      activeTagData = templateUtils.tokenizeTag(defaultFill);
     } else if (!activeTagData && !tagDefinition) {
-      activeTagData = {name: 'custom', rawValue: "{% tag 'arg1', 'arg2' %}"};
+      activeTagData = {
+        name: 'custom',
+        rawValue: templateUtils.unTokenizeTag(this.state.activeTagData)
+      };
     }
 
     let template;
@@ -219,7 +209,7 @@ class TagEditor extends PureComponent {
             const parentId = request ? request.parentId : 'n/a';
             const requestGroups = allDocs[models.requestGroup.type] || [];
             const requestGroup = requestGroups.find(rg => rg._id === parentId);
-            namePrefix = requestGroup ? `${requestGroup.name} ⇒ ` : null;
+            namePrefix = requestGroup ? `[${requestGroup.name}] ` : null;
           }
 
           return (
@@ -260,7 +250,7 @@ class TagEditor extends PureComponent {
     return (
       <div key={argIndex} className="form-control form-control--outlined">
         <label>
-          {typeof displayName === 'function' ? displayName(args) : displayName}
+          {fnOrString(displayName, args)}
           {argDefinition.help && <HelpTooltip>{argDefinition.help}</HelpTooltip>}
           <div data-arg-index={argIndex}>
             {argInput}
@@ -285,7 +275,7 @@ class TagEditor extends PureComponent {
                   {tagDefinition.displayName} – {tagDefinition.description}
                 </option>
               ))}
-              <option value="">-- Custom --</option>
+              <option value="custom">-- Custom --</option>
             </select>
           </label>
         </div>

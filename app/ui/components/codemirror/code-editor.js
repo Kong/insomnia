@@ -2,6 +2,7 @@ import React, {PureComponent, PropTypes} from 'react';
 import autobind from 'autobind-decorator';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
+import clone from 'clone';
 import jq from 'jsonpath';
 import vkBeautify from 'vkbeautify';
 import {DOMParser} from 'xmldom';
@@ -409,7 +410,25 @@ class CodeEditor extends PureComponent {
         };
 
         // Only allow tags if we have variables too
-        getTags = getTagDefinitions;
+        getTags = () => {
+          const expandedTags = [];
+          for (const tagDef of getTagDefinitions()) {
+            if (tagDef.args[0].type !== 'enum') {
+              expandedTags.push(tagDef);
+              continue;
+            }
+
+            for (const option of tagDef.args[0].options) {
+              const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
+              const newDef = clone(tagDef);
+              newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
+              newDef.args[0].defaultValue = option.value;
+              expandedTags.push(newDef);
+            }
+          }
+
+          return expandedTags;
+        };
       }
       options.environmentAutocomplete = {
         getVariables,

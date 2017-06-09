@@ -4,9 +4,8 @@ import xpath from 'xpath';
 
 export default {
   name: 'response',
-  displayName: 'Response Value',
+  displayName: 'Response',
   description: 'reference values from other requests',
-  defaultFill: "response 'body', '', ''",
   args: [
     {
       displayName: 'Attribute',
@@ -47,12 +46,12 @@ export default {
       throw new Error(`No ${field} filter specified`);
     }
 
-    const request = await context.models.request.getById(id);
+    const request = await context.util.models.request.getById(id);
     if (!request) {
       throw new Error(`Could not find request ${id}`);
     }
 
-    const response = await context.models.response.getLatestForRequestId(id);
+    const response = await context.util.models.response.getLatestForRequestId(id);
 
     if (!response) {
       throw new Error('No responses for request');

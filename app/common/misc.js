@@ -270,3 +270,11 @@ export function clickLink (href) {
     shell.openExternal(href);
   }
 }
+
+export function fnOrString (v, ...args) {
+  if (typeof v === 'string') {
+    return v;
+  } else {
+    return v(...args);
+  }
+}
