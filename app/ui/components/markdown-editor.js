@@ -93,17 +93,26 @@ class MarkdownEditor extends PureComponent {
       lineWrapping,
       indentSize,
       keyMap,
+      mode,
       placeholder,
       defaultPreviewMode,
       className,
+      tall,
       handleRender,
       handleGetRenderContext
     } = this.props;
 
     const {markdown, compiled, renderError} = this.state;
 
+    const classes = classnames(
+      'markdown-editor',
+      'outlined',
+      className,
+      {'markdown-editor--dynamic-height': !tall}
+    );
+
     return (
-      <Tabs className={classnames('markdown-editor', 'outlined', className)}
+      <Tabs className={classes}
             forceRenderTabPanel
             selectedIndex={defaultPreviewMode ? 1 : 0}>
         <TabList>
@@ -123,10 +132,10 @@ class MarkdownEditor extends PureComponent {
             <CodeEditor
               hideGutters
               hideLineNumbers
-              dynamicHeight
+              dynamicHeight={!tall}
               manualPrettify
               noStyleActiveLine
-              mode="text/plain"
+              mode={mode || 'text/plain'}
               placeholder={placeholder}
               debounceMillis={300}
               keyMap={keyMap}
@@ -170,7 +179,9 @@ MarkdownEditor.propTypes = {
   // Optional
   placeholder: PropTypes.string,
   defaultPreviewMode: PropTypes.bool,
-  className: PropTypes.string
+  className: PropTypes.string,
+  mode: PropTypes.string,
+  tall: PropTypes.bool
 };
 
 export default MarkdownEditor;

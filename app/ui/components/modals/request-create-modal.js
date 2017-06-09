@@ -46,7 +46,7 @@ class RequestCreateModal extends PureComponent {
       true,
     );
 
-    this._onSubmitCallback(finalRequest);
+    this._onComplete(finalRequest);
 
     this.hide();
   }
@@ -75,7 +75,7 @@ class RequestCreateModal extends PureComponent {
     this.modal.hide();
   }
 
-  show ({parentId}) {
+  show ({parentId, onComplete}) {
     this.modal.show();
 
     this._input.value = 'My Request';
@@ -91,9 +91,7 @@ class RequestCreateModal extends PureComponent {
       this._input.select();
     }, 200);
 
-    return new Promise(resolve => {
-      this._onSubmitCallback = resolve;
-    });
+    this._onComplete = onComplete;
   }
 
   render () {

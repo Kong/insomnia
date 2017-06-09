@@ -47,7 +47,7 @@ class Plugins extends PureComponent {
     return (
       <div>
         <p className="notice info no-margin-top">
-          Plugins are still experimental and may fail to work in future releases
+          Plugins are experimental and compatibility may break in future releases
         </p>
         <table className="table--fancy table--striped margin-top margin-bottom">
           <thead>

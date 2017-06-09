@@ -24,6 +24,7 @@ import Sidebar from './sidebar/sidebar';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
+import CodePromptModal from './modals/code-prompt-modal';
 import * as models from '../../models/index';
 import {updateMimeType} from '../../models/request';
 import {trackEvent} from '../../analytics/index';
@@ -388,6 +389,16 @@ class Wrapper extends PureComponent {
           <PaymentNotificationModal ref={registerModal}/>
           <FilterHelpModal ref={registerModal}/>
           <RequestRenderErrorModal ref={registerModal}/>
+
+          <CodePromptModal
+            ref={registerModal}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            editorLineWrapping={settings.editorLineWrapping}
+          />
 
           <RequestSettingsModal
             ref={registerModal}

@@ -73,10 +73,12 @@
       background-color: @hl-xxs;
     }
 
-    .input,
-    input,
-    select {
-      height: @line-height-xs;
+    &:not(.form-control--tall) {
+      .input,
+      input,
+      select {
+        height: @line-height-xs;
+      }
     }
 
     .input[data-focused="on"],

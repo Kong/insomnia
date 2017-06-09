@@ -157,10 +157,10 @@ class App extends PureComponent {
         shift: false,
         alt: false,
         key: KEY_N,
-        callback: async () => {
+        callback: () => {
           const {activeRequest, activeWorkspace} = this.props;
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          await this._requestCreate(parentId);
+          this._requestCreate(parentId);
           trackEvent('HotKey', 'Request Create');
         }
       }, {
@@ -218,9 +218,13 @@ class App extends PureComponent {
     });
   }
 
-  async _requestCreate (parentId) {
-    const request = await showModal(RequestCreateModal, {parentId});
-    await this._handleSetActiveRequest(request._id);
+  _requestCreate (parentId) {
+    showModal(RequestCreateModal, {
+      parentId,
+      onComplete: request => {
+        this._handleSetActiveRequest(request._id);
+      }
+    });
   }
 
   async _requestGroupDuplicate (requestGroup) {

@@ -5,6 +5,7 @@ import * as sync from '../../../sync/index';
 import Link from '../base/link';
 import LoginModal from '../modals/login-modal';
 import {hideAllModals, showModal} from '../modals/index';
+import PromptButton from '../base/prompt-button';
 
 @autobind
 class Account extends PureComponent {
@@ -45,7 +46,7 @@ class Account extends PureComponent {
           </div>
         </div>
         <p>
-          Or <a href="" onClick={this._handleLogin}>Login</a>
+          Or <a href="#" onClick={this._handleLogin}>Login</a>
         </p>
       </div>
     );
@@ -63,15 +64,12 @@ class Account extends PureComponent {
           <code className="code--compact">{session.getEmail()}</code>
         </p>
         <br/>
-        <Link button
-              href="https://insomnia.rest/app/"
-              className="btn btn--clicky">
+        <Link button href="https://insomnia.rest/app/" className="btn btn--clicky">
           Manage Account
         </Link>
-        <button className="margin-left-sm btn btn--clicky"
-                onClick={this._handleLogout}>
+        <PromptButton className="margin-left-sm btn btn--clicky" onClick={this._handleLogout}>
           Sign Out
-        </button>
+        </PromptButton>
       </div>
     );
   }

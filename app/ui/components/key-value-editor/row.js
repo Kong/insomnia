@@ -1,14 +1,16 @@
 // eslint-disable-next-line filenames/match-exported
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/file-input-button';
-import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown/index';
+import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown/index';
 import PromptButton from '../base/prompt-button';
+import CodePromptModal from '../modals/code-prompt-modal';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
+import {showModal} from '../modals/index';
 
 @autobind
 class KeyValueEditorRow extends PureComponent {
@@ -25,16 +27,12 @@ class KeyValueEditorRow extends PureComponent {
   focusNameEnd () {
     if (this._nameInput) {
       this._nameInput.focusEnd();
-    } else {
-      console.warn('Unable to focus non-existing nameInput');
     }
   }
 
   focusValueEnd () {
     if (this._valueInput) {
       this._valueInput.focusEnd();
-    } else {
-      console.warn('Unable to focus non-existing valueInput');
     }
   }
 
@@ -61,6 +59,24 @@ class KeyValueEditorRow extends PureComponent {
     this._sendChange({name});
   }
 
+  _handleValuePaste (e) {
+    const value = e.clipboardData.getData('text/plain');
+    if (value && value.includes('\n')) {
+      e.preventDefault();
+
+      // Insert the pasted text into the current selection. Unfortunately, this
+      // is the easiest way to do this.
+      const currentValue = this._valueInput.getValue();
+      const prefix = currentValue.slice(0, this._valueInput.getSelectionStart());
+      const suffix = currentValue.slice(this._valueInput.getSelectionEnd());
+      const finalValue = `${prefix}${value}${suffix}`;
+
+      // Update type and value
+      this._handleTypeChange({type: 'text', multiline: 'text/plain'});
+      this._handleValueChange(finalValue);
+    }
+  }
+
   _handleValueChange (value) {
     this._sendChange({value});
   }
@@ -69,8 +85,14 @@ class KeyValueEditorRow extends PureComponent {
     this._sendChange({fileName});
   }
 
-  _handleTypeChange (type) {
-    this._sendChange({type});
+  _handleTypeChange (def) {
+    // Remove newlines if converting to text
+    let value = this.props.pair.value || '';
+    if (def.type === 'text' && !def.multiline && value.includes('\n')) {
+      value = value.replace(/\n/g, '');
+    }
+
+    this._sendChange({type: def.type, multiline: def.multiline, value});
   }
 
   _handleDisableChange (disabled) {
@@ -123,15 +145,130 @@ class KeyValueEditorRow extends PureComponent {
     }
   }
 
+  _handleEditMultiline () {
+    const {pair, handleRender, handleGetRenderContext} = this.props;
+
+    showModal(CodePromptModal, {
+      submitName: 'Done',
+      title: `Edit ${pair.name}`,
+      defaultValue: pair.value,
+      onChange: this._handleValueChange,
+      enableRender: handleRender || handleGetRenderContext,
+      onModeChange: mode => {
+        this._handleTypeChange(Object.assign({}, pair, {multiline: mode}));
+      }
+    });
+  }
+
+  renderPairValue () {
+    const {
+      pair,
+      readOnly,
+      forceInput,
+      valueInputType,
+      valuePlaceholder,
+      handleRender,
+      handleGetRenderContext
+    } = this.props;
+
+    if (pair.type === 'file') {
+      return (
+        <FileInputButton
+          ref={this._setValueInputRef}
+          showFileName
+          className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+          path={pair.fileName || ''}
+          onChange={this._handleFileNameChange}
+        />
+      );
+    } else if (pair.type === 'text' && pair.multiline) {
+      const numWords = (pair.value || '').replace(/\s+/g, ' ').trim().split(' ').length;
+      return (
+        <button className="btn btn--outlined btn--super-duper-compact wide ellipsis no-min-width"
+                onClick={this._handleEditMultiline}>
+          <i className="fa fa-pencil-square-o space-right"/>
+          {pair.value
+            ? `${numWords} word${numWords === 1 ? '' : 's'}`
+            : 'Click to Edit'
+          }
+        </button>
+      );
+    } else {
+      return (
+        <OneLineEditor
+          ref={this._setValueInputRef}
+          readOnly={readOnly}
+          forceInput={forceInput}
+          type={valueInputType || 'text'}
+          placeholder={valuePlaceholder || 'Value'}
+          defaultValue={pair.value}
+          onPaste={this._handleValuePaste}
+          onChange={this._handleValueChange}
+          onBlur={this._handleBlurValue}
+          onKeyDown={this._handleKeyDown}
+          onFocus={this._handleFocusValue}
+          render={handleRender}
+          getRenderContext={handleGetRenderContext}
+          getAutocompleteConstants={this._handleAutocompleteValues}
+        />
+      );
+    }
+  }
+
+  renderPairSelector () {
+    const {
+      hideButtons,
+      allowMultiline,
+      allowFile
+    } = this.props;
+
+    const showDropdown = allowMultiline || allowFile;
+
+    // Put a spacer in for dropdown if needed
+    if (hideButtons && showDropdown) {
+      return (
+        <button>
+          <i className="fa fa-empty"/>
+        </button>
+      );
+    }
+
+    if (hideButtons) {
+      return null;
+    }
+
+    if (showDropdown) {
+      return (
+        <Dropdown right>
+          <DropdownButton className="tall">
+            <i className="fa fa-caret-down"/>
+          </DropdownButton>
+          <DropdownItem onClick={this._handleTypeChange} value={{type: 'text', multiline: false}}>
+            Text
+          </DropdownItem>
+          {allowMultiline && (
+            <DropdownItem onClick={this._handleTypeChange} value={{type: 'text', multiline: true}}>
+              Text (Multi-line)
+            </DropdownItem>
+          )}
+          {allowFile && (
+            <DropdownItem onClick={this._handleTypeChange} value={{type: 'file'}}>
+              File
+            </DropdownItem>
+          )}
+        </Dropdown>
+      );
+    } else {
+      return null;
+    }
+  }
+
   render () {
     const {
       pair,
       namePlaceholder,
-      valuePlaceholder,
       handleRender,
       handleGetRenderContext,
-      valueInputType,
-      multipart,
       sortable,
       noDropZone,
       hideButtons,
@@ -185,53 +322,11 @@ class KeyValueEditorRow extends PureComponent {
               onKeyDown={this._handleKeyDown}
             />
           </div>
-          <div className="form-control form-control--wide wide form-control--underlined">
-            {pair.type === 'file' ? (
-              <FileInputButton
-                ref={this._setValueInputRef}
-                showFileName
-                className="btn btn--clicky wide ellipsis txt-sm no-margin"
-                path={pair.fileName || ''}
-                onChange={this._handleFileNameChange}
-              />
-            ) : (
-              <OneLineEditor
-                ref={this._setValueInputRef}
-                readOnly={readOnly}
-                forceInput={forceInput}
-                type={valueInputType || 'text'}
-                placeholder={valuePlaceholder || 'Value'}
-                defaultValue={pair.value}
-                onChange={this._handleValueChange}
-                onBlur={this._handleBlurValue}
-                onKeyDown={this._handleKeyDown}
-                onFocus={this._handleFocusValue}
-                render={handleRender}
-                getRenderContext={handleGetRenderContext}
-                getAutocompleteConstants={this._handleAutocompleteValues}
-              />
-            )}
+          <div className="form-control form-control--wide form-control--underlined">
+            {this.renderPairValue()}
           </div>
 
-          {multipart && (
-            !hideButtons ? (
-              <Dropdown right>
-                <DropdownButton className="tall">
-                  <i className="fa fa-caret-down"></i>
-                </DropdownButton>
-                <DropdownItem onClick={this._handleTypeChange} value="text">
-                  Text
-                </DropdownItem>
-                <DropdownItem onClick={this._handleTypeChange} value="file">
-                  File
-                </DropdownItem>
-              </Dropdown>
-            ) : (
-              <button>
-                <i className="fa fa-empty"/>
-              </button>
-            )
-          )}
+          {this.renderPairSelector()}
 
           {!hideButtons ? (
             <Button onClick={this._handleDisableChange}
@@ -303,7 +398,8 @@ KeyValueEditorRow.propTypes = {
   valuePlaceholder: PropTypes.string,
   valueInputType: PropTypes.string,
   forceInput: PropTypes.bool,
-  multipart: PropTypes.bool,
+  allowMultiline: PropTypes.bool,
+  allowFile: PropTypes.bool,
   sortable: PropTypes.bool,
   noDelete: PropTypes.bool,
   noDropZone: PropTypes.bool,

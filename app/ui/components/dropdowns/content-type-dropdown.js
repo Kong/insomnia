@@ -23,9 +23,10 @@ class ContentTypeDropdown extends PureComponent {
     const hasFile = body.fileName && body.fileName.length;
     const isEmpty = !hasParams && !hasText && !hasFile;
     const isFile = body.mimeType === CONTENT_TYPE_FILE;
-    const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA;
+    const isMultipartWithFiles = body.mimeType === CONTENT_TYPE_FORM_DATA &&
+      body.params.find(p => p.type === 'file');
     const isFormUrlEncoded = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
-    const isText = !isFile && !isMultipart;
+    const isText = !isFile && !isMultipartWithFiles;
 
     const willBeFile = mimeType === CONTENT_TYPE_FILE;
     const willBeMultipart = mimeType === CONTENT_TYPE_FORM_DATA;

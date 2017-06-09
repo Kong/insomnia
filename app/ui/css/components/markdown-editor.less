@@ -8,14 +8,26 @@
 
   .markdown-editor__edit {
     padding: @padding-xs @padding-sm;
+  }
 
-    // Not sure why this style doesn't work on .CodeMirror...
+  &.markdown-editor--dynamic-height {
     .CodeMirror-scroll {
+      // Not sure why this style doesn't work on .CodeMirror...
       max-height: 30vh;
     }
 
     .input {
       height: auto;
+    }
+  }
+
+  &:not(.markdown-editor--dynamic-height) .markdown-editor__edit {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr auto;
+
+    .input {
+      height: 100%;
     }
   }
 
