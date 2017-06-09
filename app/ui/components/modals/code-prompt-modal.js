@@ -111,8 +111,8 @@ class CodePromptModal extends PureComponent {
                 defaultValue={defaultValue}
                 placeholder={placeholder}
                 onChange={this._handleChange}
-                handleGetRenderContext={enableRender && handleGetRenderContext}
-                handleRender={enableRender && handleRender}
+                handleGetRenderContext={enableRender ? handleGetRenderContext : null}
+                handleRender={enableRender ? handleRender : null}
                 mode={mode}
                 keyMap={editorKeyMap}
                 indentSize={editorIndentSize}
@@ -129,8 +129,8 @@ class CodePromptModal extends PureComponent {
                   defaultValue={defaultValue}
                   placeholder={placeholder}
                   onChange={this._handleChange}
-                  getRenderContext={enableRender && handleGetRenderContext}
-                  render={enableRender && handleRender}
+                  getRenderContext={enableRender ? handleGetRenderContext : null}
+                  render={enableRender ? handleRender : null}
                   mode={mode}
                   keyMap={editorKeyMap}
                   indentSize={editorIndentSize}

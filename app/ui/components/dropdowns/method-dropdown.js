@@ -29,8 +29,18 @@ class MethodDropdown extends PureComponent {
       label: 'Name',
       placeholder: 'CUSTOM',
       hints: recentMethods,
+      onDeleteHint: method => {
+        recentMethods = recentMethods.filter(m => m !== method);
+        window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
+      },
       onComplete: method => {
+        // Don't add empty methods
         if (!method) {
+          return;
+        }
+
+        // Don't add base methods
+        if (constants.HTTP_METHODS.includes(method)) {
           return;
         }
 

@@ -75,7 +75,7 @@ class CookiesEditor extends PureComponent {
                                 confirmMessage=" "
                                 onClick={e => this._handleDeleteCookie(cookie)}
                                 title="Delete cookie">
-                    <i className="fa fa-trash-o"></i>
+                    <i className="fa fa-trash-o"/>
                   </PromptButton>
                 </td>
               </tr>

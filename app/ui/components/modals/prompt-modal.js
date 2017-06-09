@@ -1,10 +1,12 @@
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import Button from '../base/button';
+import classnames from 'classnames';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
+import Button from '../base/button';
+import PromptButton from '../base/prompt-button';
 
 @autobind
 class PromptModal extends PureComponent {
@@ -40,6 +42,12 @@ class PromptModal extends PureComponent {
     this._done(hint);
   }
 
+  _handleDeleteHint (hint) {
+    this._onDeleteHint && this._onDeleteHint(hint);
+    const hints = this.state.hints.filter(h => h !== hint);
+    this.setState({hints});
+  }
+
   _handleSubmit (e) {
     e.preventDefault();
 
@@ -62,7 +70,8 @@ class PromptModal extends PureComponent {
       placeholder,
       label,
       hints,
-      onComplete
+      onComplete,
+      onDeleteHint
     } = options;
 
     this.modal.show();
@@ -75,6 +84,7 @@ class PromptModal extends PureComponent {
     }, 100);
 
     this._onComplete = onComplete;
+    this._onDeleteHint = onDeleteHint;
 
     this.setState({
       headerName,
@@ -91,14 +101,24 @@ class PromptModal extends PureComponent {
   }
 
   _renderHintButton (hint) {
+    const classes = classnames(
+      'btn btn--outlined btn--super-duper-compact',
+      'margin-right-sm margin-top-sm inline-block'
+    );
+
     return (
-      <Button type="button"
-              value={hint}
-              key={hint}
-              className="btn btn--outlined btn--super-duper-compact margin-right-sm margin-top-sm"
-              onClick={this._handleSelectHint}>
-        {hint}
-      </Button>
+      <div type="button" key={hint} className={classes}>
+        <Button className="tall" onClick={this._handleSelectHint} value={hint}>
+          {hint}
+        </Button>
+        <PromptButton addIcon
+                      confirmMessage=" "
+                      className="tall space-left icon"
+                      onClick={this._handleDeleteHint}
+                      value={hint}>
+          <i className="fa fa-close faint"/>
+        </PromptButton>
+      </div>
     );
   }
 
