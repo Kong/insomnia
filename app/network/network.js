@@ -7,7 +7,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, DEBOUNCE_MILLIS, getAppVersion} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
 import {describeByteSize, getSetCookieHeaders, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
@@ -16,7 +16,11 @@ import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 
+// Time since user's last keypress to wait before making the request
+const MAX_DELAY_TIME = 1000;
+
 let cancelRequestFunction = null;
+let lastUserInteraction = Date.now();
 
 export function cancelCurrentRequest () {
   if (typeof cancelRequestFunction === 'function') {
@@ -477,9 +481,21 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 }
 
 export async function send (requestId, environmentId) {
-  // First, lets wait for all debounces to finish
-  await util.delay(DEBOUNCE_MILLIS * 2);
+  // HACK: wait for all debounces to finish
+  /*
+   * TODO: Do this in a more robust way
+   * The following block adds a "long" delay to let potential debounces and
+   * database updates finish before making the request. This is done by tracking
+   * the time of the user's last keypress and making sure the request is sent a
+   * significant time after the last press.
+   */
+  const timeSinceLastInteraction = Date.now() - lastUserInteraction;
+  const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
+  if (delayMillis > 0) {
+    await util.delay(delayMillis);
+  }
 
+  // Fetch some things
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
 
@@ -496,3 +512,11 @@ export async function send (requestId, environmentId) {
   // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);
 }
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) {
+    return;
+  }
+
+  lastUserInteraction = Date.now();
+});
