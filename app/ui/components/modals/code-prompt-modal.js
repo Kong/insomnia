@@ -1,10 +1,22 @@
-import React, {PureComponent} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import CodeEditor from '../codemirror/code-editor';
+import Dropdown from '../base/dropdown/dropdown';
+import DropdownButton from '../base/dropdown/dropdown-button';
+import DropdownItem from '../base/dropdown/dropdown-item';
+import DropdownDivider from '../base/dropdown/dropdown-divider';
+
+const MODES = {
+  'text/plain': 'Text',
+  'application/json': 'JSON',
+  'application/xml': 'XML',
+  'application/javascript': 'JavaScript',
+  'text/x-markdown': 'Markdown'
+};
 
 @autobind
 class CodePromptModal extends PureComponent {
@@ -16,7 +28,8 @@ class CodePromptModal extends PureComponent {
       submitName: 'Not Set',
       placeholder: '',
       hint: '',
-      mode: 'text/plain'
+      mode: 'text/plain',
+      enableRender: false
     };
   }
 
@@ -26,6 +39,11 @@ class CodePromptModal extends PureComponent {
 
   _handleChange (value) {
     this._onChange(value);
+  }
+
+  _handleChangeMode (mode) {
+    this.setState({mode});
+    this._onModeChange && this._onModeChange(mode);
   }
 
   hide () {
@@ -40,12 +58,15 @@ class CodePromptModal extends PureComponent {
       placeholder,
       hint,
       mode,
-      onChange
+      enableRender,
+      onChange,
+      onModeChange
     } = options;
 
     this.modal.show();
 
     this._onChange = onChange;
+    this._onModeChange = onModeChange;
 
     this.setState({
       title,
@@ -53,18 +74,29 @@ class CodePromptModal extends PureComponent {
       submitName,
       placeholder,
       hint,
-      mode
+      enableRender,
+      mode: mode || this.state.mode
     });
   }
 
   render () {
+    const {
+      handleGetRenderContext,
+      handleRender,
+      editorKeyMap,
+      editorIndentSize,
+      editorFontSize,
+      editorLineWrapping
+    } = this.props;
+
     const {
       submitName,
       title,
       placeholder,
       defaultValue,
       hint,
-      mode
+      mode,
+      enableRender
     } = this.state;
 
     return (
@@ -75,10 +107,29 @@ class CodePromptModal extends PureComponent {
             defaultValue={defaultValue}
             placeholder={placeholder}
             onChange={this._handleChange}
+            getRenderContext={enableRender && handleGetRenderContext}
+            render={enableRender && handleRender}
             mode={mode}
+            keyMap={editorKeyMap}
+            indentSize={editorIndentSize}
+            fontSize={editorFontSize}
+            lineWrapping={editorLineWrapping}
           />
         </ModalBody>
         <ModalFooter>
+          <Dropdown>
+            <DropdownButton className="btn btn--clicky margin-left-sm">
+              {MODES[mode]}
+              <i className="fa fa-caret-down space-left"/>
+            </DropdownButton>
+            <DropdownDivider>Editor Syntax</DropdownDivider>
+            {Object.keys(MODES).map(mode => (
+              <DropdownItem key={mode} value={mode} onClick={this._handleChangeMode}>
+                <i className="fa fa-code"/>
+                {MODES[mode]}
+              </DropdownItem>
+            ))}
+          </Dropdown>
           <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this.hide}>
             {submitName || 'Submit'}
@@ -89,6 +140,16 @@ class CodePromptModal extends PureComponent {
   }
 }
 
-CodePromptModal.propTypes = {};
+CodePromptModal.propTypes = {
+  // Required
+  editorFontSize: PropTypes.number.isRequired,
+  editorIndentSize: PropTypes.number.isRequired,
+  editorKeyMap: PropTypes.string.isRequired,
+  editorLineWrapping: PropTypes.bool.isRequired,
+
+  // Optional
+  handleGetRenderContext: PropTypes.func,
+  handleRender: PropTypes.func
+};
 
 export default CodePromptModal;

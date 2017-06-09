@@ -385,11 +385,20 @@ class Wrapper extends PureComponent {
           <ChangelogModal ref={registerModal}/>
           <LoginModal ref={registerModal}/>
           <PromptModal ref={registerModal}/>
-          <CodePromptModal ref={registerModal}/>
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
           <FilterHelpModal ref={registerModal}/>
           <RequestRenderErrorModal ref={registerModal}/>
+
+          <CodePromptModal
+            ref={registerModal}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            editorLineWrapping={settings.editorLineWrapping}
+          />
 
           <RequestSettingsModal
             ref={registerModal}

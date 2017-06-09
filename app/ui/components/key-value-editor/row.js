@@ -72,7 +72,7 @@ class KeyValueEditorRow extends PureComponent {
       const finalValue = `${prefix}${value}${suffix}`;
 
       // Update type and value
-      this._handleTypeChange({type: 'text', multiline: true});
+      this._handleTypeChange({type: 'text', multiline: 'text/plain'});
       this._handleValueChange(finalValue);
     }
   }
@@ -92,7 +92,7 @@ class KeyValueEditorRow extends PureComponent {
       value = value.replace(/\n/g, '');
     }
 
-    this._sendChange({type: def.type, multiline: !!def.multiline, value});
+    this._sendChange({type: def.type, multiline: def.multiline, value});
   }
 
   _handleDisableChange (disabled) {
@@ -146,11 +146,17 @@ class KeyValueEditorRow extends PureComponent {
   }
 
   _handleEditMultiline () {
-    const {pair} = this.props;
+    const {pair, handleRender, handleGetRenderContext} = this.props;
+
     showModal(CodePromptModal, {
-      title: `Edit "${pair.name}" Value`,
+      submitName: 'Done',
+      title: `Edit ${pair.name}`,
       defaultValue: pair.value,
-      onChange: this._handleValueChange
+      onChange: this._handleValueChange,
+      enableRender: handleRender || handleGetRenderContext,
+      onModeChange: mode => {
+        this._handleTypeChange(Object.assign({}, pair, {multiline: mode}));
+      }
     });
   }
 
