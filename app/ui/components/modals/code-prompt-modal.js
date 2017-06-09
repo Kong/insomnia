@@ -9,13 +9,14 @@ import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
+import MarkdownEditor from '../markdown-editor';
 
 const MODES = {
-  'text/plain': 'Text',
+  'text/plain': 'Plain Text',
   'application/json': 'JSON',
   'application/xml': 'XML',
-  'application/javascript': 'JavaScript',
-  'text/x-markdown': 'Markdown'
+  'text/x-markdown': 'Markdown',
+  'text/html': 'HTML'
 };
 
 @autobind
@@ -103,18 +104,42 @@ class CodePromptModal extends PureComponent {
       <Modal ref={this._setModalRef} freshState tall>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide tall" style={{minHeight: '10rem'}}>
-          <CodeEditor
-            defaultValue={defaultValue}
-            placeholder={placeholder}
-            onChange={this._handleChange}
-            getRenderContext={enableRender && handleGetRenderContext}
-            render={enableRender && handleRender}
-            mode={mode}
-            keyMap={editorKeyMap}
-            indentSize={editorIndentSize}
-            fontSize={editorFontSize}
-            lineWrapping={editorLineWrapping}
-          />
+          {mode === 'text/x-markdown' ? (
+            <div className="pad-sm tall">
+              <MarkdownEditor
+                tall
+                defaultValue={defaultValue}
+                placeholder={placeholder}
+                onChange={this._handleChange}
+                handleGetRenderContext={enableRender && handleGetRenderContext}
+                handleRender={enableRender && handleRender}
+                mode={mode}
+                keyMap={editorKeyMap}
+                indentSize={editorIndentSize}
+                fontSize={editorFontSize}
+                lineWrapping={editorLineWrapping}
+              />
+            </div>
+          ) : (
+            <div className="pad-sm pad-bottom tall">
+              <div className="form-control form-control--outlined form-control--tall tall">
+                <CodeEditor
+                  hideLineNumbers
+                  className="tall"
+                  defaultValue={defaultValue}
+                  placeholder={placeholder}
+                  onChange={this._handleChange}
+                  getRenderContext={enableRender && handleGetRenderContext}
+                  render={enableRender && handleRender}
+                  mode={mode}
+                  keyMap={editorKeyMap}
+                  indentSize={editorIndentSize}
+                  fontSize={editorFontSize}
+                  lineWrapping={editorLineWrapping}
+                />
+              </div>
+            </div>
+          )}
         </ModalBody>
         <ModalFooter>
           <Dropdown>
