@@ -90,7 +90,10 @@ class General extends PureComponent {
         </div>
 
         <div className="form-control form-control--thin">
-          <label className="inline-block">Disable Analytics Tracking (requires restart)
+          <label className="inline-block">
+            Disable Usage Tracking
+            {' '}
+            <HelpTooltip>Requires restart to take effect</HelpTooltip>
             <input type="checkbox"
                    name="disableAnalyticsTracking"
                    checked={settings.disableAnalyticsTracking}

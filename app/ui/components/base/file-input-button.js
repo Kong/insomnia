@@ -36,13 +36,14 @@ class FileInputButton extends PureComponent {
   }
 
   render () {
-    const {showFileName, path, name, ...extraProps} = this.props;
+    const {showFileName, showFileIcon, path, name, ...extraProps} = this.props;
     const fileName = pathBasename(path);
     return (
       <button type="button"
               ref={this._setRef}
               onClick={this._handleChooseFile}
               {...extraProps}>
+        {showFileIcon && <i className="fa fa-file-o space-right"/>}
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>
     );
@@ -56,6 +57,7 @@ FileInputButton.propTypes = {
 
   // Optional
   showFileName: PropTypes.bool,
+  showFileIcon: PropTypes.bool,
   name: PropTypes.string
 };
 

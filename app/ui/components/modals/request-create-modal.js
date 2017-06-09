@@ -46,7 +46,7 @@ class RequestCreateModal extends PureComponent {
       true,
     );
 
-    this._onSubmitCallback(finalRequest);
+    this._onChange(finalRequest);
 
     this.hide();
   }
@@ -92,7 +92,7 @@ class RequestCreateModal extends PureComponent {
     }, 200);
 
     return new Promise(resolve => {
-      this._onSubmitCallback = resolve;
+      this._onChange = resolve;
     });
   }
 

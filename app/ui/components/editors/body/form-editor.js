@@ -42,6 +42,8 @@ class FormEditor extends PureComponent {
         <div className="scrollable">
           <KeyValueEditor
             sortable
+            allowFile
+            allowMultiline
             namePlaceholder="name"
             valuePlaceholder="value"
             handleRender={handleRender}
@@ -53,7 +55,6 @@ class FormEditor extends PureComponent {
             onDelete={this._handleTrackDelete}
             onChange={onChange}
             pairs={parameters}
-            multipart
           />
         </div>
       </div>

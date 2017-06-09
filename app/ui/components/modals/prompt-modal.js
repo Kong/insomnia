@@ -24,8 +24,7 @@ class PromptModal extends PureComponent {
 
   _done (rawValue) {
     const value = this.state.upperCase ? rawValue.toUpperCase() : rawValue;
-    this._onSubmitCallback && this._onSubmitCallback(value);
-    this._onSubmitCallback2 && this._onSubmitCallback2(value);
+    this._onComplete && this._onComplete(value);
     this.hide();
   }
 
@@ -75,22 +74,19 @@ class PromptModal extends PureComponent {
       selectText && this._input.select();
     }, 100);
 
-    return new Promise(resolve => {
-      this._onSubmitCallback = resolve;
-      this._onSubmitCallback2 = onComplete;
+    this._onComplete = onComplete;
 
-      this.setState({
-        headerName,
-        defaultValue,
-        submitName,
-        selectText,
-        placeholder,
-        upperCase,
-        hint,
-        inputType,
-        label,
-        hints
-      });
+    this.setState({
+      headerName,
+      defaultValue,
+      submitName,
+      selectText,
+      placeholder,
+      upperCase,
+      hint,
+      inputType,
+      label,
+      hints
     });
   }
 

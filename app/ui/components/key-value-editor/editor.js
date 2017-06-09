@@ -324,7 +324,8 @@ class Editor extends PureComponent {
       handleGetRenderContext,
       handleGetAutocompleteNameConstants,
       handleGetAutocompleteValueConstants,
-      multipart,
+      allowFile,
+      allowMultiline,
       sortable,
       disableDelete
     } = this.props;
@@ -357,7 +358,8 @@ class Editor extends PureComponent {
               handleGetRenderContext={handleGetRenderContext}
               handleGetAutocompleteNameConstants={handleGetAutocompleteNameConstants}
               handleGetAutocompleteValueConstants={handleGetAutocompleteValueConstants}
-              multipart={multipart}
+              allowMultiline={allowMultiline}
+              allowFile={allowFile}
               pair={pair}
             />
           ))}
@@ -378,7 +380,8 @@ class Editor extends PureComponent {
               valuePlaceholder={`New ${valuePlaceholder}`}
               onFocusName={this._handleAddFromName}
               onFocusValue={this._handleAddFromValue}
-              multipart={multipart}
+              allowMultiline={allowMultiline}
+              allowFile={allowFile}
               pair={{name: '', value: ''}}
             /> : null
           }
@@ -397,7 +400,8 @@ Editor.propTypes = {
   handleGetRenderContext: PropTypes.func,
   handleGetAutocompleteNameConstants: PropTypes.func,
   handleGetAutocompleteValueConstants: PropTypes.func,
-  multipart: PropTypes.bool,
+  allowFile: PropTypes.bool,
+  allowMultiline: PropTypes.bool,
   sortable: PropTypes.bool,
   maxPairs: PropTypes.number,
   namePlaceholder: PropTypes.string,

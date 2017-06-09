@@ -221,26 +221,26 @@ export function debounce (callback, millis = DEBOUNCE_MILLIS) {
   }, millis).bind(null, '__key__');
 }
 
-export function describeByteSize (bytes) {
+export function describeByteSize (bytes, long) {
   bytes = Math.round(bytes * 10) / 10;
   let size;
 
   // NOTE: We multiply these by 2 so we don't end up with
   // values like 0 GB
 
-  let unit = 'B';
+  let unit = long ? 'bytes' : 'B';
   if (bytes < 1024 * 2) {
     size = bytes;
-    unit = 'B';
+    unit = long ? 'bytes' : 'B';
   } else if (bytes < 1024 * 1024 * 2) {
     size = bytes / 1024;
-    unit = 'KB';
+    unit = long ? 'kilobytes' : 'KB';
   } else if (bytes < 1024 * 1024 * 1024 * 2) {
     size = bytes / 1024 / 1024;
-    unit = 'MB';
+    unit = long ? 'megabytes' : 'MB';
   } else {
     size = bytes / 1024 / 1024 / 1024;
-    unit = 'GB';
+    unit = long ? 'gigabytes' : 'GB';
   }
 
   const rounded = (Math.round(size * 10) / 10);

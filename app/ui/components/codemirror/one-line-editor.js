@@ -63,6 +63,24 @@ class OneLineEditor extends PureComponent {
     }
   }
 
+  getSelectionStart () {
+    if (this._editor) {
+      return this._editor.getSelectionStart();
+    } else {
+      console.warn('Tried to get selection start of one-line-editor when <input>');
+      return this._input.value.length;
+    }
+  }
+
+  getSelectionEnd () {
+    if (this._editor) {
+      return this._editor.getSelectionEnd();
+    } else {
+      console.warn('Tried to get selection end of one-line-editor when <input>');
+      return this._input.value.length;
+    }
+  }
+
   componentDidMount () {
     document.body.addEventListener('click', this._handleDocumentClick);
   }

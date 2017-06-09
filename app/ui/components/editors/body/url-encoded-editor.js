@@ -34,6 +34,7 @@ class UrlEncodedEditor extends PureComponent {
         <div className="scrollable">
           <KeyValueEditor
             sortable
+            allowMultiline
             namePlaceholder="name"
             valuePlaceholder="value"
             onChange={onChange}
