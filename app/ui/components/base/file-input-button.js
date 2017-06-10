@@ -42,6 +42,7 @@ class FileInputButton extends PureComponent {
       <button type="button"
               ref={this._setRef}
               onClick={this._handleChooseFile}
+              title={path}
               {...extraProps}>
         {showFileIcon && <i className="fa fa-file-o space-right"/>}
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}

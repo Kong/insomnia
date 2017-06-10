@@ -11,6 +11,7 @@ import CodePromptModal from '../modals/code-prompt-modal';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
 import {showModal} from '../modals/index';
+import {describeByteSize} from '../../../common/misc';
 
 @autobind
 class KeyValueEditorRow extends PureComponent {
@@ -176,21 +177,19 @@ class KeyValueEditorRow extends PureComponent {
         <FileInputButton
           ref={this._setValueInputRef}
           showFileName
+          showFileIcon
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
           path={pair.fileName || ''}
           onChange={this._handleFileNameChange}
         />
       );
     } else if (pair.type === 'text' && pair.multiline) {
-      const numWords = (pair.value || '').replace(/\s+/g, ' ').trim().split(' ').length;
+      const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
-        <button className="btn btn--outlined btn--super-duper-compact wide ellipsis no-min-width"
+        <button className="btn btn--outlined btn--super-duper-compact wide ellipsis"
                 onClick={this._handleEditMultiline}>
           <i className="fa fa-pencil-square-o space-right"/>
-          {pair.value
-            ? `${numWords} word${numWords === 1 ? '' : 's'}`
-            : 'Click to Edit'
-          }
+          {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
         </button>
       );
     } else {
@@ -322,7 +321,7 @@ class KeyValueEditorRow extends PureComponent {
               onKeyDown={this._handleKeyDown}
             />
           </div>
-          <div className="form-control form-control--wide form-control--underlined">
+          <div className="form-control form-control--wide form-control--underlined no-min-width">
             {this.renderPairValue()}
           </div>
 
