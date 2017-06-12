@@ -68,7 +68,7 @@ class RenderedQueryString extends PureComponent {
     }
 
     return (
-      <div className="wide">
+      <div className="wide scrollable">
         <CopyButton content={this.state.string}
                     className="pull-right text-right icon"
                     title="Copy URL"
