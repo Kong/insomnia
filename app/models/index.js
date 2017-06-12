@@ -7,6 +7,7 @@ import * as _cookieJar from './cookie-jar';
 import * as _requestGroup from './request-group';
 import * as _requestGroupMeta from './request-group-meta';
 import * as _request from './request';
+import * as _requestVersion from './request-version';
 import * as _requestMeta from './request-meta';
 import * as _response from './response';
 import * as _oAuth2Token from './o-auth-2-token';
@@ -21,6 +22,7 @@ export const cookieJar = _cookieJar;
 export const requestGroup = _requestGroup;
 export const requestGroupMeta = _requestGroupMeta;
 export const request = _request;
+export const requestVersion = _requestVersion;
 export const requestMeta = _requestMeta;
 export const response = _response;
 export const oAuth2Token = _oAuth2Token;
@@ -35,6 +37,7 @@ const _models = {
   [requestGroup.type]: requestGroup,
   [requestGroupMeta.type]: requestGroupMeta,
   [request.type]: request,
+  [requestVersion.type]: requestVersion,
   [requestMeta.type]: requestMeta,
   [response.type]: response,
   [oAuth2Token.type]: oAuth2Token

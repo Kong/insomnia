@@ -1,5 +1,6 @@
 import * as db from '../common/database';
 import {MAX_RESPONSES} from '../common/constants';
+import * as models from './index';
 
 export const name = 'Response';
 export const type = 'Response';
@@ -20,6 +21,7 @@ export function init () {
     body: '',
     encoding: 'utf8', // Legacy format
     error: '',
+    requestVersionId: null,
 
     // Things from the request
     settingStoreCookies: null,
@@ -62,6 +64,11 @@ export async function create (patch = {}) {
   }
 
   const {parentId} = patch;
+
+  // Create request version snapshot
+  const request = await models.request.getById(parentId);
+  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  patch.requestVersionId = requestVersion ? requestVersion._id : null;
 
   // Delete all other responses before creating the new one
   const allResponses = await db.findMostRecentlyModified(type, {parentId}, MAX_RESPONSES);
