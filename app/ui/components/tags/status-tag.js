@@ -1,43 +1,46 @@
 import classnames from 'classnames';
 import React, {PropTypes} from 'react';
-import {RESPONSE_CODE_DESCRIPTIONS, STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
+import {RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS, STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
 
 const StatusTag = ({statusMessage, statusCode, small}) => {
   statusCode = String(statusCode);
 
   let colorClass;
-  let backupStatusMessage;
+  let genericStatusMessage;
 
   if (statusCode.startsWith('1')) {
     colorClass = 'bg-info';
-    backupStatusMessage = 'INFORMATIONAL';
+    genericStatusMessage = 'INFORMATIONAL';
   } else if (statusCode.startsWith('2')) {
     colorClass = 'bg-success';
-    backupStatusMessage = 'SUCCESS';
+    genericStatusMessage = 'SUCCESS';
   } else if (statusCode.startsWith('3')) {
     colorClass = 'bg-surprise';
-    backupStatusMessage = 'REDIRECTION';
+    genericStatusMessage = 'REDIRECTION';
   } else if (statusCode.startsWith('4')) {
     colorClass = 'bg-warning';
-    backupStatusMessage = 'CLIENT ERROR';
+    genericStatusMessage = 'CLIENT ERROR';
   } else if (statusCode.startsWith('5')) {
     colorClass = 'bg-danger';
-    backupStatusMessage = 'SERVER ERROR';
+    genericStatusMessage = 'SERVER ERROR';
   } else if (statusCode.startsWith('0')) {
     colorClass = 'bg-danger';
-    backupStatusMessage = 'ERROR';
+    genericStatusMessage = 'ERROR';
     statusCode = '';  // Don't print a 0 status code
   } else if (statusCode === STATUS_CODE_RENDER_FAILED.toString()) {
     colorClass = 'bg-danger';
-    backupStatusMessage = 'Uh Oh!\xa0\xa0٩◔̯◔۶';
+    genericStatusMessage = 'Uh Oh!\xa0\xa0٩◔̯◔۶';
     statusCode = '';  // Don't print status code
   } else {
     colorClass = 'bg-danger';
-    backupStatusMessage = 'UNKNOWN';
+    genericStatusMessage = 'UNKNOWN';
   }
 
   const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
-  const message = typeof statusMessage === 'string' ? statusMessage : backupStatusMessage;
+  let message = statusMessage;
+  if (!message) {
+    message = RESPONSE_CODE_REASONS[statusCode] || genericStatusMessage;
+  }
 
   return (
     <div className={classnames('tag', colorClass, {'tag--small': small})}
