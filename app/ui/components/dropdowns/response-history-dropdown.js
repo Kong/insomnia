@@ -59,6 +59,8 @@ class ResponseHistoryDropdown extends PureComponent {
   renderDropdownItem (response, i) {
     const {activeResponseId} = this.props;
     const active = response._id === activeResponseId;
+    const message = 'Request will not be restored with this response because ' +
+      'it was created before this ability was added';
     return (
       <DropdownItem key={response._id}
                     disabled={active}
@@ -71,6 +73,7 @@ class ResponseHistoryDropdown extends PureComponent {
                    statusMessage={response.statusMessage || 'Error'}/>
         <TimeTag milliseconds={response.elapsedTime} small/>
         <SizeTag bytes={response.bytesRead} small/>
+        {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message}/>}
       </DropdownItem>
     );
   }

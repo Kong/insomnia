@@ -472,8 +472,26 @@ class App extends PureComponent {
     this.props.handleStopLoading(requestId);
   }
 
-  _handleSetActiveResponse (requestId, activeResponseId) {
-    this._updateRequestMetaByParentId(requestId, {activeResponseId});
+  async _handleSetActiveResponse (requestId, activeResponseId = null) {
+    await this._updateRequestMetaByParentId(requestId, {activeResponseId});
+
+    let response;
+    if (activeResponseId) {
+      response = await models.response.getById(activeResponseId);
+    } else {
+      response = await models.response.getLatestForRequest(requestId);
+    }
+
+    const requestVersionId = response ? response.requestVersionId : 'n/a';
+    const request = await models.requestVersion.restore(requestVersionId);
+
+    if (request) {
+      // Refresh app to reflect changes. Using timeout because we need to
+      // wait for the request update to propagate.
+      setTimeout(() => this._wrapper._forceRequestPaneRefresh(), 500);
+    } else {
+      // Couldn't restore request. That's okay
+    }
   }
 
   _requestCreateForWorkspace () {
