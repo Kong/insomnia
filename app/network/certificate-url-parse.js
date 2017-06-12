@@ -1,7 +1,7 @@
 import {parse as urlParse} from 'url';
 const WILDCARD_CHARACTER = '*';
 
-const certificateUrlParse = (url) => {
+export default function certificateUrlParse (url) {
   if (url.indexOf(WILDCARD_CHARACTER) === -1) {
     return urlParse(url);
   } else {
@@ -14,7 +14,7 @@ const certificateUrlParse = (url) => {
 
     return parsed;
   }
-};
+}
 
 const insertAtIndices = (string, indices, charToInsert) => {
   const result = Array.from(string).reduce((acc, char, index) => {
@@ -49,5 +49,3 @@ const removeProtocolAndAuth = (url) => {
   const {auth} = urlParse(url);
   return urlWithoutProtocol.replace(`${auth}@`, '');
 };
-
-export default certificateUrlParse;

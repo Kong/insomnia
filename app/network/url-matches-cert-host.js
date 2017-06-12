@@ -4,7 +4,7 @@ import {setDefaultProtocol} from '../common/misc';
 
 const DEFAULT_PORT = 443;
 
-const urlMatchesCertHost = (certificateHost, requestUrl) => {
+export default function urlMatchesCertHost (certificateHost, requestUrl) {
   const cHostWithProtocol = setDefaultProtocol(certificateHost, 'https:');
   const {hostname, port} = urlParse(requestUrl);
   const {hostname: cHostname, port: cPort} = certificateUrlParse(cHostWithProtocol);
@@ -16,6 +16,4 @@ const urlMatchesCertHost = (certificateHost, requestUrl) => {
                                           .replace(/\*/g, '.*');
 
   return (assumedCPort === assumedPort && !!hostname.match(`^${cHostnameRegex}$`));
-};
-
-export default urlMatchesCertHost;
+}
