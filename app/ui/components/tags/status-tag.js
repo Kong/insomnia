@@ -10,19 +10,19 @@ const StatusTag = ({statusMessage, statusCode, small}) => {
 
   if (statusCode.startsWith('1')) {
     colorClass = 'bg-info';
-    backupStatusMessage = 'INFO';
+    backupStatusMessage = 'INFORMATIONAL';
   } else if (statusCode.startsWith('2')) {
     colorClass = 'bg-success';
     backupStatusMessage = 'SUCCESS';
   } else if (statusCode.startsWith('3')) {
     colorClass = 'bg-surprise';
-    backupStatusMessage = 'REDIRECT';
+    backupStatusMessage = 'REDIRECTION';
   } else if (statusCode.startsWith('4')) {
     colorClass = 'bg-warning';
-    backupStatusMessage = 'INVALID';
+    backupStatusMessage = 'CLIENT ERROR';
   } else if (statusCode.startsWith('5')) {
     colorClass = 'bg-danger';
-    backupStatusMessage = 'ERROR';
+    backupStatusMessage = 'SERVER ERROR';
   } else if (statusCode.startsWith('0')) {
     colorClass = 'bg-danger';
     backupStatusMessage = 'ERROR';
