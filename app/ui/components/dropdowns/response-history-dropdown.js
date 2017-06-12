@@ -23,6 +23,11 @@ class ResponseHistoryDropdown extends PureComponent {
     this.props.handleDeleteResponses(this.props.requestId);
   }
 
+  _handleDeleteResponse () {
+    trackEvent('History', 'Delete Response');
+    this.props.handleDeleteResponse(this.props.activeResponseId);
+  }
+
   _handleSetActiveResponse (responseId) {
     trackEvent('History', 'Activate Response');
     this.props.handleSetActiveResponse(responseId);
@@ -80,19 +85,29 @@ class ResponseHistoryDropdown extends PureComponent {
       activeResponseId, // eslint-disable-line no-unused-vars
       handleSetActiveResponse, // eslint-disable-line no-unused-vars
       handleDeleteResponses, // eslint-disable-line no-unused-vars
+      handleDeleteResponse, // eslint-disable-line no-unused-vars
       isLatestResponseActive,
       ...extraProps
     } = this.props;
-    const {responses} = this.state;
+
+    const {
+      responses
+    } = this.state;
 
     return (
-      <Dropdown {...extraProps}>
+      <Dropdown key={activeResponseId} {...extraProps}>
         <DropdownButton className="btn btn--super-compact tall">
           {isLatestResponseActive
             ? <i className="fa fa-history"/>
             : <i className="fa fa-thumb-tack"/>}
         </DropdownButton>
         <DropdownDivider>Response History</DropdownDivider>
+        <DropdownItem buttonClass={PromptButton}
+                      addIcon
+                      onClick={this._handleDeleteResponse}>
+          <i className="fa fa-trash-o"/>
+          Delete Current Response
+        </DropdownItem>
         <DropdownItem buttonClass={PromptButton}
                       addIcon
                       onClick={this._handleDeleteResponses}>
@@ -109,6 +124,7 @@ class ResponseHistoryDropdown extends PureComponent {
 ResponseHistoryDropdown.propTypes = {
   handleSetActiveResponse: PropTypes.func.isRequired,
   handleDeleteResponses: PropTypes.func.isRequired,
+  handleDeleteResponse: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   requestId: PropTypes.string.isRequired,
   activeResponseId: PropTypes.string.isRequired,

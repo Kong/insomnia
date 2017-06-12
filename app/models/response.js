@@ -43,6 +43,10 @@ export async function removeForRequest (parentId) {
   db.removeBulkSilently(type, {parentId});
 }
 
+export function remove (request) {
+  return db.remove(request);
+}
+
 export function findRecentForRequest (requestId, limit) {
   return db.findMostRecentlyModified(type, {parentId: requestId}, limit);
 }

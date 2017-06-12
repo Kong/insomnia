@@ -162,6 +162,26 @@ class Wrapper extends PureComponent {
     this._handleSetActiveResponse(null);
   }
 
+  async _handleDeleteResponse (responseId) {
+    let response;
+    if (responseId) {
+      response = await models.response.getById(responseId);
+    } else {
+      const {activeRequest} = this.props;
+      const requestId = activeRequest ? activeRequest._id : 'n/a';
+      response = await models.response.getLatestForRequestId(requestId);
+    }
+
+    if (response) {
+      await models.response.remove(response);
+    }
+
+    // Also unset active response it's the one we're deleting
+    if (this.props.activeResponseId === response._id) {
+      this._handleSetActiveResponse(null);
+    }
+  }
+
   async _handleRemoveActiveWorkspace () {
     const {workspaces, activeWorkspace} = this.props;
     if (workspaces.length <= 1) {
@@ -377,6 +397,7 @@ class Wrapper extends PureComponent {
           handleSetActiveResponse={this._handleSetActiveResponse}
           handleSetPreviewMode={this._handleSetPreviewMode}
           handleDeleteResponses={this._handleDeleteResponses}
+          handleDeleteResponse={this._handleDeleteResponse}
           handleSetFilter={this._handleSetResponseFilter}
         />
 

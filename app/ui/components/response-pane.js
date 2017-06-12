@@ -141,6 +141,7 @@ class ResponsePane extends PureComponent {
       handleSetPreviewMode,
       handleSetActiveResponse,
       handleDeleteResponses,
+      handleDeleteResponse,
       handleSetFilter,
       loadStartTime,
       editorLineWrapping,
@@ -229,6 +230,7 @@ class ResponsePane extends PureComponent {
               activeResponseId={response._id}
               handleSetActiveResponse={handleSetActiveResponse}
               handleDeleteResponses={handleDeleteResponses}
+              handleDeleteResponse={handleDeleteResponse}
               onChange={nullFn}
               className="tall pane__header__right"
               right
@@ -338,6 +340,7 @@ ResponsePane.propTypes = {
   handleSetPreviewMode: PropTypes.func.isRequired,
   handleSetActiveResponse: PropTypes.func.isRequired,
   handleDeleteResponses: PropTypes.func.isRequired,
+  handleDeleteResponse: PropTypes.func.isRequired,
   handleShowRequestSettings: PropTypes.func.isRequired,
 
   // Required
