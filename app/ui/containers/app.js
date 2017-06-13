@@ -928,104 +928,50 @@ function mapDispatchToProps (dispatch) {
     handleImportUriToWorkspace: global.importUri,
     handleCommand: global.newCommand,
     handleExportFile: global.exportFile,
-    handleMoveRequest: _moveRequest,
-    handleMoveRequestGroup: _moveRequestGroup
+    handleMoveDoc: _moveDoc
   };
 }
 
-async function _moveRequestGroup (requestGroupToMove, requestGroupToTarget, targetOffset) {
-  // Oh God, this function is awful...
-
-  if (requestGroupToMove._id === requestGroupToTarget._id) {
-    // Nothing to do
-    return;
-  }
-
-  // NOTE: using requestToTarget's parentId so we can switch parents!
-  let requestGroups = await models.requestGroup.findByParentId(requestGroupToTarget.parentId);
-  requestGroups = requestGroups.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
-
-  // Find the index of request B so we can re-order and save everything
-  for (let i = 0; i < requestGroups.length; i++) {
-    const request = requestGroups[i];
-
-    if (request._id === requestGroupToTarget._id) {
-      let before, after;
-      if (targetOffset < 0) {
-        // We're moving to below
-        before = requestGroups[i];
-        after = requestGroups[i + 1];
-      } else {
-        // We're moving to above
-        before = requestGroups[i - 1];
-        after = requestGroups[i];
-      }
-
-      const beforeKey = before ? before.metaSortKey : requestGroups[0].metaSortKey - 100;
-      const afterKey = after ? after.metaSortKey : requestGroups[requestGroups.length - 1].metaSortKey + 100;
-
-      if (Math.abs(afterKey - beforeKey) < 0.000001) {
-        // If sort keys get too close together, we need to redistribute the list. This is
-        // not performant at all (need to update all siblings in DB), but it is extremely rare
-        // anyway
-        console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
-
-        db.bufferChanges(300);
-        requestGroups.map((r, i) => {
-          models.requestGroup.update(r, {
-            metaSortKey: i * 100,
-            parentId: requestGroupToTarget.parentId
-          });
-        });
-      } else {
-        const metaSortKey = afterKey - ((afterKey - beforeKey) / 2);
-        models.requestGroup.update(requestGroupToMove, {
-          metaSortKey,
-          parentId: requestGroupToTarget.parentId
-        });
-      }
-
-      break;
-    }
-  }
-}
-
-async function _moveRequest (requestToMove, parentId, targetId, targetOffset) {
-  // Oh God, this function is awful...
-
-  if (requestToMove._id === targetId) {
+async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
+  if (docToMove._id === targetId) {
     // Nothing to do. We are in the same spot as we started
     return;
   }
 
+  function __updateDoc (doc, patch) {
+    models.getModel(docToMove.type).update(doc, patch);
+  }
+
   if (targetId === null) {
     // We are moving to an empty area. No sorting required
-    models.request.update(requestToMove, {parentId});
+    await __updateDoc(docToMove, {parentId});
     return;
   }
 
   // NOTE: using requestToTarget's parentId so we can switch parents!
-  let requests = await models.request.findByParentId(parentId);
-  requests = requests.sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
+  let docs = [
+    ...await models.request.findByParentId(parentId),
+    ...await models.requestGroup.findByParentId(parentId)
+  ].sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1);
 
-  // Find the index of request B so we can re-order and save everything
-  for (let i = 0; i < requests.length; i++) {
-    const request = requests[i];
+  // Find the index of doc B so we can re-order and save everything
+  for (let i = 0; i < docs.length; i++) {
+    const doc = docs[i];
 
-    if (request._id === targetId) {
+    if (doc._id === targetId) {
       let before, after;
       if (targetOffset < 0) {
         // We're moving to below
-        before = requests[i];
-        after = requests[i + 1];
+        before = docs[i];
+        after = docs[i + 1];
       } else {
         // We're moving to above
-        before = requests[i - 1];
-        after = requests[i];
+        before = docs[i - 1];
+        after = docs[i];
       }
 
-      const beforeKey = before ? before.metaSortKey : requests[0].metaSortKey - 100;
-      const afterKey = after ? after.metaSortKey : requests[requests.length - 1].metaSortKey + 100;
+      const beforeKey = before ? before.metaSortKey : docs[0].metaSortKey - 100;
+      const afterKey = after ? after.metaSortKey : docs[docs.length - 1].metaSortKey + 100;
 
       if (Math.abs(afterKey - beforeKey) < 0.000001) {
         // If sort keys get too close together, we need to redistribute the list. This is
@@ -1034,12 +980,10 @@ async function _moveRequest (requestToMove, parentId, targetId, targetOffset) {
         console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
 
         db.bufferChanges(300);
-        requests.map((r, i) => {
-          models.request.update(r, {metaSortKey: i * 100, parentId});
-        });
+        docs.map((r, i) => __updateDoc(r, {metaSortKey: i * 100, parentId}));
       } else {
         const metaSortKey = afterKey - ((afterKey - beforeKey) / 2);
-        models.request.update(requestToMove, {metaSortKey, parentId});
+        __updateDoc(docToMove, {metaSortKey, parentId});
       }
 
       break;

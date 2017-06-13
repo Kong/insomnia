@@ -1,5 +1,4 @@
 import {createSelector} from 'reselect';
-import * as models from '../../models/index';
 
 // ~~~~~~~~~ //
 // Selectors //
@@ -67,16 +66,6 @@ export const selectSidebarChildren = createSelector(
       const children = requestsAndRequestGroups
         .filter(e => e.parentId === parentId)
         .sort((a, b) => {
-          // Always sort folders above
-          if (a.type === models.requestGroup.type && b.type !== models.requestGroup.type) {
-            return -1;
-          }
-
-          // Always sort folders above
-          if (b.type === models.requestGroup.type && a.type !== models.requestGroup.type) {
-            return 1;
-          }
-
           if (a.metaSortKey === b.metaSortKey) {
             return a._id > b._id ? -1 : 1;
           } else {

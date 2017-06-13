@@ -252,8 +252,7 @@ class Wrapper extends PureComponent {
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
       handleExportFile,
-      handleMoveRequest,
-      handleMoveRequestGroup,
+      handleMoveDoc,
       handleResetDragPaneHorizontal,
       handleResetDragPaneVertical,
       handleResetDragSidebar,
@@ -312,8 +311,7 @@ class Wrapper extends PureComponent {
           handleGenerateCode={handleGenerateCode}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleSetActiveEnvironment={handleSetActiveEnvironment}
-          moveRequest={handleMoveRequest}
-          moveRequestGroup={handleMoveRequestGroup}
+          moveDoc={handleMoveDoc}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           activeRequest={activeRequest}
           activeEnvironment={activeEnvironment}
@@ -523,8 +521,7 @@ Wrapper.propTypes = {
   handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   handleSetActiveEnvironment: PropTypes.func.isRequired,
-  handleMoveRequest: PropTypes.func.isRequired,
-  handleMoveRequestGroup: PropTypes.func.isRequired,
+  handleMoveDoc: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,

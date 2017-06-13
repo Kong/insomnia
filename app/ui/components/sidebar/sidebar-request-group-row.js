@@ -42,7 +42,7 @@ class SidebarRequestGroupRow extends PureComponent {
     const {
       connectDragSource,
       connectDropTarget,
-      moveRequest,
+      moveDoc,
       children,
       requestGroup,
       isCollapsed,
@@ -100,18 +100,18 @@ class SidebarRequestGroupRow extends PureComponent {
 
         <ul className={classnames('sidebar__list', {'sidebar__list--collapsed': isCollapsed})}>
           {children.length > 0 ? children : (
-              <SidebarRequestRow
-                handleActivateRequest={misc.nullFn}
-                handleDuplicateRequest={misc.nullFn}
-                handleGenerateCode={misc.nullFn}
-                moveRequest={moveRequest}
-                isActive={false}
-                request={null}
-                requestGroup={requestGroup}
-                workspace={workspace}
-                requestCreate={handleCreateRequest}
-              />
-            )}
+            <SidebarRequestRow
+              handleActivateRequest={misc.nullFn}
+              handleDuplicateRequest={misc.nullFn}
+              handleGenerateCode={misc.nullFn}
+              moveDoc={moveDoc}
+              isActive={false}
+              request={null}
+              requestGroup={requestGroup}
+              workspace={workspace}
+              requestCreate={handleCreateRequest}
+            />
+          )}
         </ul>
       </li>
     );
@@ -122,8 +122,7 @@ SidebarRequestGroupRow.propTypes = {
   // Functions
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
-  moveRequestGroup: PropTypes.func.isRequired,
-  moveRequest: PropTypes.func.isRequired,
+  moveDoc: PropTypes.func.isRequired,
   handleActivateRequest: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
@@ -167,10 +166,14 @@ function isAbove (monitor, component) {
 
 const dragTarget = {
   drop (props, monitor, component) {
+    const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
+    const parentId = props.requestGroup.parentId;
+    const targetId = props.requestGroup._id;
+
     if (isAbove(monitor, component)) {
-      props.moveRequestGroup(monitor.getItem().requestGroup, props.requestGroup, 1);
+      props.moveDoc(movingDoc, parentId, targetId, 1);
     } else {
-      props.moveRequestGroup(monitor.getItem().requestGroup, props.requestGroup, -1);
+      props.moveDoc(movingDoc, parentId, targetId, -1);
     }
   },
   hover (props, monitor, component) {
@@ -196,5 +199,5 @@ function targetCollect (connect, monitor) {
   };
 }
 
-const source = DragSource('SIDEBAR_REQUEST_GROUP_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
-export default DropTarget('SIDEBAR_REQUEST_GROUP_ROW', dragTarget, targetCollect)(source);
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
+export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);

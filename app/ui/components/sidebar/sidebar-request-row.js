@@ -163,7 +163,7 @@ SidebarRequestRow.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   requestCreate: PropTypes.func.isRequired,
-  moveRequest: PropTypes.func.isRequired,
+  moveDoc: PropTypes.func.isRequired,
 
   // Other
   isActive: PropTypes.bool.isRequired,
@@ -197,18 +197,15 @@ function isAbove (monitor, component) {
 
 const dragTarget = {
   drop (props, monitor, component) {
-    const {request} = monitor.getItem();
-    const targetRequest = props.request;
+    const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
 
-    const {requestGroup} = props;
-    const requestGroupId = requestGroup ? requestGroup._id : null;
-    const parentId = targetRequest ? targetRequest.parentId : requestGroupId;
-    const targetId = targetRequest ? targetRequest._id : null;
+    const parentId = props.requestGroup ? props.requestGroup._id : props.request.parentId;
+    const targetId = props.request ? props.request._id : null;
 
     if (isAbove(monitor, component)) {
-      props.moveRequest(request, parentId, targetId, 1);
+      props.moveDoc(movingDoc, parentId, targetId, 1);
     } else {
-      props.moveRequest(request, parentId, targetId, -1);
+      props.moveDoc(movingDoc, parentId, targetId, -1);
     }
   },
   hover (props, monitor, component) {
