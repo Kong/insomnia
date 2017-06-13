@@ -187,6 +187,7 @@ export function getContentTypeFromHeaders (headers) {
 export const RESPONSE_CODE_REASONS = {
   100: 'Continue',
   101: 'Switching Protocols',
+  102: 'Processing',
   200: 'OK',
   201: 'Created',
   202: 'Accepted',
@@ -194,13 +195,18 @@ export const RESPONSE_CODE_REASONS = {
   204: 'No Content',
   205: 'Reset Content',
   206: 'Partial Content',
+  207: 'Multi-Status',
+  208: 'Already Reported',
+  226: 'IM Used',
   300: 'Multiple Choices',
   301: 'Moved Permanently',
   302: 'Found',
   303: 'See Other',
   304: 'Not Modified',
   305: 'Use Proxy',
+  306: 'Unused',
   307: 'Temporary Redirect',
+  308: 'Permanent Redirect',
   400: 'Bad Request',
   401: 'Unauthorized',
   402: 'Payment Required',
@@ -219,12 +225,27 @@ export const RESPONSE_CODE_REASONS = {
   415: 'Unsupported Media Type',
   416: 'Requested range not satisfiable',
   417: 'Expectation Failed',
+  418: 'I\'m a teapot',
+  421: 'Misdirected Request',
+  422: 'Unprocessable Entity',
+  423: 'Locked',
+  424: 'Failed Dependency',
+  426: 'Upgrade Required',
+  428: 'Precondition Required',
+  429: 'Too Many Requests',
+  431: 'Request Header Fields Too Large',
+  451: 'Unavailable For Legal Reasons',
   500: 'Internal Server Error',
   501: 'Not Implemented',
   502: 'Bad Gateway',
   503: 'Service Unavailable',
   504: 'Gateway Time-out',
-  505: 'HTTP Version not supported'
+  505: 'HTTP Version not supported',
+  506: 'Variant Also Negotiates',
+  507: 'Insufficient Storage',
+  508: 'Loop Detected',
+  510: 'Not Extended',
+  511: 'Network Authentication Required'
 };
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
@@ -244,6 +265,9 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   204: 'There is no content to send for this request, but the headers may be useful. The user-agent may update its cached headers for this resource with the new ones.',
   205: 'This response code is sent after accomplishing request to tell user agent reset document view which sent this request.',
   206: 'This response code is used because of range header sent by the client to separate download into multiple streams.',
+  207: 'A Multi-Status response conveys information about multiple resources in situations where multiple status codes might be appropriate.',
+  208: 'Used inside a DAV: propstat response element to avoid enumerating the internal members of multiple bindings to the same collection repeatedly.',
+  226: 'The server has fulfilled a GET request for the resource, and the response is a representation of the result of one or more instance-manipulations applied to the current instance.',
 
   // 300s
 
@@ -279,10 +303,14 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   417: 'This response code means the expectation indicated by the Expect request header field can\'t be met by the server.',
   418: 'Any attempt to brew coffee with a teapot should result in the error code "418 I\'m a teapot". The resulting entity body MAY be short and stout.',
   421: 'The request was directed at a server that is not able to produce a response. This can be sent by a server that is not configured to produce responses for the combination of scheme and authority that are included in the request URI.',
+  422: 'The request was well-formed but was unable to be followed due to semantic errors.',
+  423: 'The resource that is being accessed is locked.',
+  424: 'The request failed due to failure of a previous request.',
   426: 'The server refuses to perform the request using the current protocol but might be willing to do so after the client upgrades to a different protocol. The server MUST send an Upgrade header field in a 426 response to indicate the required protocol(s) (Section 6.7 of [RFC7230]).',
   428: 'The origin server requires the request to be conditional. Intended to prevent "the \'lost update\' problem, where a client GETs a resource\'s state, modifies it, and PUTs it back to the server, when meanwhile a third party has modified the state on the server, leading to a conflict."',
   429: 'The user has sent too many requests in a given amount of time ("rate limiting").',
   431: 'The server is unwilling to process the request because its header fields are too large. The request MAY be resubmitted after reducing the size of the request header fields.',
+  451: 'The user requests an illegal resource, such as a web page censored by a government.',
 
   // 500s
 
@@ -294,5 +322,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   505: 'The HTTP version used in the request is not supported by the server.',
   506: 'The server has an internal configuration error: transparent content negotiation for the request results in a circular reference.',
   507: 'The server has an internal configuration error: the chosen variant resource is configured to engage in transparent content negotiation itself, and is therefore not a proper end point in the negotiation process.',
+  508: 'The server detected an infinite loop while processing the request.',
+  510: 'Further extensions to the request are required for the server to fulfill it.',
   511: 'The 511 status code indicates that the client needs to authenticate to gain network access.'
 };
