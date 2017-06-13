@@ -240,7 +240,7 @@ export const RESPONSE_CODE_REASONS = {
   502: 'Bad Gateway',
   503: 'Service Unavailable',
   504: 'Gateway Time-out',
-  505: 'HTTP Version not supported'
+  505: 'HTTP Version not supported',
   506: 'Variant Also Negotiates',
   507: 'Insufficient Storage',
   508: 'Loop Detected',
