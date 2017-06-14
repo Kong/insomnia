@@ -37,6 +37,7 @@ export function createWindow () {
     fullscreen: fullscreen,
     fullscreenable: true,
     title: getAppName(),
+    titleBarStyle: 'hidden',
     width: width || 1200,
     height: height || 600,
     minHeight: 500,

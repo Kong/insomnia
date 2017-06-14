@@ -27,10 +27,18 @@ body {
   // Default Colors
   --color-bg: #fff;
   --color-font: #555;
+  --color-border: var(--hl-md);
+  --border-width: 1px;
 
   .overlay {
     --color-bg: rgba(30, 30, 30, 0.8);
     --color-font: #ddd;
+  }
+
+  .theme--titlebar {
+    --color-bg: #e4e4e4;
+    --color-font: #444;
+    --border-width: 0;
   }
 }
 
@@ -50,7 +58,7 @@ body {
   --color-surprise: #7461bd;
   --color-info: #1c90b4;
 
-  .sidebar,
+  .theme--sidebar,
   .pane__body {
     --color-success: #8ccf3b;
     --color-notice: #ead950;
@@ -71,7 +79,7 @@ body {
     --color-info: #22c1ee;
   }
 
-  .sidebar__header {
+  .theme--sidebar__header {
     --color-bg: #695eb8;
     --color-font: #fff;
   }
@@ -88,7 +96,7 @@ body {
     --color-font: #444;
   }
 
-  .sidebar {
+  .theme--sidebar {
     --color-bg: #2e2f2b;
     --color-font: #e0e0e0;
     --hl: #999;
@@ -131,7 +139,7 @@ body {
     border-left: 0;
   }
 
-  .sidebar {
+  .theme--sidebar {
     --color-success: #a9ea6e;
     --color-notice: #ffdb02;
     --color-warning: #ffac49;
@@ -156,7 +164,7 @@ body {
     --hl-sm: rgba(240, 235, 255, 0.3);
   }
 
-  .sidebar__header {
+  .theme--sidebar__header {
     --color-font: #eee;
   }
 
@@ -183,8 +191,13 @@ body {
   --color-surprise: #9886ff;
   --color-info: #22c1ee;
 
-  --color-bg: #232421;
-  --color-font: #ddd;
+  &,
+  .theme--titlebar {
+    --color-bg: #232421;
+    --color-font: #ddd;
+    --color-border: var(--hl-md);
+    --border-width: 1px;
+  }
 
   --hl-xxs: rgba(120, 120, 120, 0.05);
   --hl-xs: rgba(120, 120, 120, 0.1);
@@ -213,7 +226,7 @@ body {
     --color-bg: #282925;
   }
 
-  .sidebar__header {
+  .theme--sidebar__header {
     --color-font: #ccc;
   }
 
@@ -268,6 +281,12 @@ body {
   --hl-xl: rgba(142, 149, 146, 0.8);
   --hl: rgb(142, 149, 146);
 
+  .theme--titlebar {
+    --color-bg: #fdf6e3;
+    --color-font: #657b83;
+    --border-width: 1px;
+  }
+
   .overlay {
     --color-bg: rgba(238, 231, 213, 0.8);
     --color-font: #657b83;
@@ -297,6 +316,12 @@ body {
   --hl-lg: rgba(91, 118, 133, 0.6);
   --hl-xl: rgba(91, 118, 133, 0.8);
   --hl: rgb(91, 118, 133);
+
+  .theme--titlebar {
+    --color-bg: #002b36;
+    --color-font: #8ea0a2;
+    --border-width: 1px;
+  }
 
   .overlay {
     --color-bg: rgba(0, 31, 41, 0.8);
@@ -350,7 +375,7 @@ body {
   .ReactTabs > *,
   .pane > *,
   .modal,
-  .sidebar {
+  .theme--sidebar {
     --hl-xxs: rgba(114, 145, 143, 0.0);
     --hl-xs: rgba(114, 145, 143, 0.0);
     --hl-sm: rgba(114, 145, 143, 0.0);
@@ -360,21 +385,25 @@ body {
     --hl: rgb(125, 153, 151);
   }
 
-  .sidebar {
+  .theme--titlebar,
+  .theme--sidebar {
     --color-bg: #1f2b31;
+    --color-border: var(--hl-sm);
+    --color-font: #dde1e1;
+    --border-width: 1px;
   }
 
   input,
   textarea,
   table,
-  .sidebar__item,
+  .theme--sidebar__item,
   .btn,
   .tag,
   .dropdown__menu,
   .CodeMirror,
   .pane__body,
   .modal__header,
-  .sidebar__header,
+  .theme--sidebar__header,
   .form-control {
     --hl-xxs: rgba(114, 145, 143, 0.05);
     --hl-xs: rgba(114, 145, 143, 0.08);
@@ -434,11 +463,12 @@ body {
     --color-bg: #faf4e0;
   }
 
-  .sidebar__header {
+  .theme--sidebar__header {
     --color-bg: #073440;
   }
 
-  .sidebar {
+  .theme--titlebar,
+  .theme--sidebar {
     --color-bg: #073642;
     --color-font: #8ea0a2;
 
@@ -451,6 +481,9 @@ body {
     --hl: rgb(98, 127, 143);
   }
 
+  .theme--titlebar {
+    --border-width: 1px;
+  }
 }
 
 *[theme="railscasts"] {
@@ -471,6 +504,12 @@ body {
   --hl-lg: rgba(120, 120, 120, 0.4);
   --hl-xl: rgba(120, 120, 120, 0.7);
   --hl: rgba(130, 130, 130, 1);
+
+  .theme--titlebar {
+    --color-bg: #2b2b2b;
+    --color-font: #e1deda;
+    --border-width: 1px;
+  }
 
   .overlay {
     --color-bg: rgba(30, 30, 30, 0.8);

@@ -5,6 +5,7 @@
   <title>Insomnia</title>
 </head>
 <body>
+<div id="titlebar" class="theme--titlebar"></div>
 <div id="root"></div>
 <script>
   // HOT RELOADING IN DEV
@@ -23,6 +24,30 @@
       document.querySelector('#root').innerHTML = `<p>${msg}</p>`;
     }
   }());
+</script>
+<script>
+  (function () {
+    const titleElement = document.querySelector('title');
+    const titleBarElement = document.querySelector('#titlebar');
+
+    document.documentElement.addEventListener('DOMSubtreeModified', e => {
+      if (e.target !== titleElement) {
+        return;
+      }
+
+      const title = e.target.innerHTML;
+      if (title === titleBarElement.innerHTML) {
+        return;
+      }
+
+      titleBarElement.innerHTML = e.target.innerHTML;
+    });
+
+    titleBarElement.addEventListener('dblclick', e => {
+      const {ipcRenderer} = require('electron');
+      ipcRenderer.send('double-click-titlebar');
+    });
+  })();
 </script>
 <script>
   // UPDATE HANDLERS
