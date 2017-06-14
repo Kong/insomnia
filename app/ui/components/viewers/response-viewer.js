@@ -80,7 +80,6 @@ class ResponseViewer extends PureComponent {
       editorIndentSize,
       editorKeyMap,
       updateFilter,
-      statusCode,
       body: base64Body,
       encoding,
       url,
@@ -95,7 +94,6 @@ class ResponseViewer extends PureComponent {
           url={url}
           error={bodyBuffer.toString('utf8')}
           fontSize={editorFontSize}
-          statusCode={statusCode}
         />
       );
     }
@@ -210,7 +208,6 @@ ResponseViewer.propTypes = {
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,
   bytes: PropTypes.number.isRequired,
-  statusCode: PropTypes.number.isRequired,
   responseId: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
 

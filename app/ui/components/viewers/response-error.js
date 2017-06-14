@@ -3,22 +3,13 @@ import React, {PureComponent, PropTypes} from 'react';
 import Link from '../base/link';
 import {showModal} from '../modals/index';
 import SettingsModal from '../modals/settings-modal';
-import {STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
 
 class ResponseError extends PureComponent {
   render () {
-    const {error, statusCode, fontSize} = this.props;
+    const {error, fontSize} = this.props;
 
     let msg = null;
-    if (statusCode === STATUS_CODE_RENDER_FAILED) {
-      msg = (
-        <Link button
-              className="btn btn--clicky"
-              href="https://insomnia.rest/documentation/templating/">
-          Template Documentation
-        </Link>
-      );
-    } else if (error && error.toLowerCase().indexOf('certificate') !== -1) {
+    if (error && error.toLowerCase().indexOf('certificate') !== -1) {
       msg = (
         <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Disable SSL Validation
@@ -66,7 +57,6 @@ ResponseError.propTypes = {
   // Required
   error: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
-  statusCode: PropTypes.number.isRequired,
   fontSize: PropTypes.number.isRequired
 };
 

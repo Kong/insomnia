@@ -277,7 +277,6 @@ class ResponsePane extends PureComponent {
               bytes={response.bytesRead}
               contentType={response.contentType || ''}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-              statusCode={response.statusCode}
               filter={filter}
               filterHistory={filterHistory}
               updateFilter={response.error ? null : handleSetFilter}

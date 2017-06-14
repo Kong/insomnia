@@ -1,54 +1,58 @@
+import React, {PropTypes, PureComponent} from 'react';
 import classnames from 'classnames';
-import React, {PropTypes} from 'react';
-import {RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS, STATUS_CODE_RENDER_FAILED} from '../../../common/constants';
+import {RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS} from '../../../common/constants';
 
-const StatusTag = ({statusMessage, statusCode, small}) => {
-  statusCode = String(statusCode);
+class StatusTag extends PureComponent {
+  render () {
+    const {statusMessage, statusCode, small} = this.props;
 
-  let colorClass;
-  let genericStatusMessage;
+    let colorClass;
+    let genericStatusMessage;
+    let statusCodeToDisplay = statusCode;
 
-  if (statusCode.startsWith('1')) {
-    colorClass = 'bg-info';
-    genericStatusMessage = 'INFORMATIONAL';
-  } else if (statusCode.startsWith('2')) {
-    colorClass = 'bg-success';
-    genericStatusMessage = 'SUCCESS';
-  } else if (statusCode.startsWith('3')) {
-    colorClass = 'bg-surprise';
-    genericStatusMessage = 'REDIRECTION';
-  } else if (statusCode.startsWith('4')) {
-    colorClass = 'bg-warning';
-    genericStatusMessage = 'CLIENT ERROR';
-  } else if (statusCode.startsWith('5')) {
-    colorClass = 'bg-danger';
-    genericStatusMessage = 'SERVER ERROR';
-  } else if (statusCode.startsWith('0')) {
-    colorClass = 'bg-danger';
-    genericStatusMessage = 'ERROR';
-    statusCode = '';  // Don't print a 0 status code
-  } else if (statusCode === STATUS_CODE_RENDER_FAILED.toString()) {
-    colorClass = 'bg-danger';
-    genericStatusMessage = 'Uh Oh!\xa0\xa0٩◔̯◔۶';
-    statusCode = '';  // Don't print status code
-  } else {
-    colorClass = 'bg-danger';
-    genericStatusMessage = 'UNKNOWN';
+    const firstChar = (statusCode + '')[0] || '';
+    switch (firstChar) {
+      case '1':
+        colorClass = 'bg-info';
+        genericStatusMessage = 'INFORMATIONAL';
+        break;
+      case '2':
+        colorClass = 'bg-success';
+        genericStatusMessage = 'SUCCESS';
+        break;
+      case '3':
+        colorClass = 'bg-surprise';
+        genericStatusMessage = 'REDIRECTION';
+        break;
+      case '4':
+        colorClass = 'bg-warning';
+        genericStatusMessage = 'CLIENT ERROR';
+        break;
+      case '5':
+        colorClass = 'bg-danger';
+        genericStatusMessage = 'SERVER ERROR';
+        break;
+      case '0':
+        colorClass = 'bg-danger';
+        genericStatusMessage = 'ERROR';
+        statusCodeToDisplay = '';
+        break;
+      default:
+        colorClass = 'bg-danger';
+        genericStatusMessage = 'UNKNOWN';
+        break;
+    }
+
+    const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
+    let msg = statusMessage || RESPONSE_CODE_REASONS[statusCodeToDisplay] || genericStatusMessage;
+
+    return (
+      <div className={classnames('tag', colorClass, {'tag--small': small})} title={description}>
+        <strong>{statusCodeToDisplay}</strong> {msg.toUpperCase()}
+      </div>
+    );
   }
-
-  const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
-  let message = statusMessage;
-  if (!message) {
-    message = RESPONSE_CODE_REASONS[statusCode] || genericStatusMessage;
-  }
-
-  return (
-    <div className={classnames('tag', colorClass, {'tag--small': small})}
-         title={description}>
-      <strong>{statusCode}</strong> {message.toUpperCase()}
-    </div>
-  );
-};
+}
 
 StatusTag.propTypes = {
   // Required

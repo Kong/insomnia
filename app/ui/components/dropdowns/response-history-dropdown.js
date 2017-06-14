@@ -73,9 +73,11 @@ class ResponseHistoryDropdown extends PureComponent {
                     onClick={this._handleSetActiveResponse}>
         {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
         {' '}
-        <StatusTag small
-                   statusCode={response.statusCode}
-                   statusMessage={response.statusMessage || 'Error'}/>
+        <StatusTag
+          small
+          statusCode={response.statusCode}
+          statusMessage={response.statusMessage || null}
+        />
         <TimeTag milliseconds={response.elapsedTime} small/>
         <SizeTag bytes={response.bytesRead} small/>
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message}/>}
