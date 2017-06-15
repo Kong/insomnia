@@ -45,11 +45,17 @@ export const selectCollapsedRequestGroups = createSelector(
   selectEntitiesLists,
   entities => {
     const collapsed = {};
-    for (const meta of entities.requestGroupMetas) {
-      if (meta.collapsed) {
-        collapsed[meta.parentId] = true;
-      }
+
+    // Default all to collapsed
+    for (const requestGroup of entities.requestGroups) {
+      collapsed[requestGroup._id] = true;
     }
+
+    // Update those that have metadata (not all do)
+    for (const meta of entities.requestGroupMetas) {
+      collapsed[meta.parentId] = meta.collapsed;
+    }
+
     return collapsed;
   }
 );
