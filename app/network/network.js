@@ -197,6 +197,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Set cookies from jar
       if (renderedRequest.settingSendCookies) {
+        // Tell Curl to store cookies that it receives. This is only important if we receive
+        // a cookie on a redirect that needs to be sent on the next request in the chain.
+        curl.setOpt(Curl.option.COOKIEFILE, '');
+
         const cookies = renderedRequest.cookieJar.cookies || [];
         for (const cookie of cookies) {
           let expiresTimestamp = 0;
@@ -441,13 +445,14 @@ export function _actuallySend (renderedRequest, workspace, settings) {
             }
           }
 
-          const cookies = await cookiesFromJar(jar);
-          models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+          // Update cookie jar if we found any cookies
+          if (cookiesFound > 0) {
+            const cookies = await cookiesFromJar(jar);
+            models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+          }
 
-          timeline.push({
-            name: 'TEXT',
-            value: `Saved ${cookiesFound} cookie${cookiesFound === 1 ? '' : 's'}`
-          });
+          const n = cookiesFound;
+          timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
         } else {
           timeline.push({name: 'TEXT', value: 'Ignored cookies'});
         }
