@@ -392,22 +392,22 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Handle the response ending
-      curl.on('end', async function (_1, _2, curlHeaders) {
+      curl.on('end', async function (_1, _2, allCurlHeadersObjects) {
         // Headers are an array (one for each redirect)
-        curlHeaders = curlHeaders[curlHeaders.length - 1];
+        const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 
         // Collect various things
-        const result = curlHeaders && curlHeaders.result;
+        const result = lastCurlHeadersObject && lastCurlHeadersObject.result;
         const statusCode = result ? result.code : 0;
         const statusMessage = result ? result.reason : 'Unknown';
 
         // Collect the headers
         const headers = [];
-        for (const name of curlHeaders ? Object.keys(curlHeaders) : []) {
-          if (typeof curlHeaders[name] === 'string') {
-            headers.push({name, value: curlHeaders[name]});
-          } else if (Array.isArray(curlHeaders[name])) {
-            for (const value of curlHeaders[name]) {
+        for (const name of lastCurlHeadersObject ? Object.keys(lastCurlHeadersObject) : []) {
+          if (typeof lastCurlHeadersObject[name] === 'string') {
+            headers.push({name, value: lastCurlHeadersObject[name]});
+          } else if (Array.isArray(lastCurlHeadersObject[name])) {
+            for (const value of lastCurlHeadersObject[name]) {
               headers.push({name, value});
             }
           }
