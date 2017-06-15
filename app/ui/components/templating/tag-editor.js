@@ -105,6 +105,15 @@ class TagEditor extends PureComponent {
     }, 100);
   }
 
+  _getDefaultTagData (tagDefinition) {
+    const defaultFill = templateUtils.getDefaultFill(
+      tagDefinition.name,
+      tagDefinition.args
+    );
+
+    return templateUtils.tokenizeTag(defaultFill);
+  }
+
   async _update (tagDefinition, tagData, noCallback = false) {
     const {handleRender} = this.props;
 
@@ -113,8 +122,7 @@ class TagEditor extends PureComponent {
 
     let activeTagData = tagData;
     if (!activeTagData && tagDefinition) {
-      const defaultFill = templateUtils.getDefaultFill(tagDefinition.name, tagDefinition.args);
-      activeTagData = templateUtils.tokenizeTag(defaultFill);
+      activeTagData = this._getDefaultTagData(tagDefinition);
     } else if (!activeTagData && !tagDefinition) {
       activeTagData = {
         name: 'custom',
@@ -226,7 +234,14 @@ class TagEditor extends PureComponent {
       return null;
     }
 
-    const argData = args[argIndex];
+    let argData;
+    if (argIndex < args.length) {
+      argData = args[argIndex];
+    } else {
+      const defaultTagData = this._getDefaultTagData(this.state.activeTagDefinition);
+      argData = defaultTagData.args[argIndex];
+    }
+
     const value = argData.value;
 
     let argInput;
