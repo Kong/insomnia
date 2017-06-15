@@ -4,7 +4,7 @@ import {PREVIEW_MODE_FRIENDLY} from '../common/constants';
 export const name = 'Request Meta';
 export const type = 'RequestMeta';
 export const prefix = 'reqm';
-export const canDuplicate = true;
+export const canDuplicate = false;
 
 export function init () {
   return {

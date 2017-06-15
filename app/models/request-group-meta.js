@@ -3,7 +3,7 @@ import * as db from '../common/database';
 export const name = 'Folder Meta';
 export const type = 'RequestGroupMeta';
 export const prefix = 'fldm';
-export const canDuplicate = true;
+export const canDuplicate = false;
 
 export function init () {
   return {

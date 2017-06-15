@@ -70,6 +70,7 @@ describe('actuallySend()', () => {
         ],
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
         NOBODY: 0,
         FOLLOWLOCATION: true,
         HTTPHEADER: [
@@ -121,6 +122,7 @@ describe('actuallySend()', () => {
       options: {
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
         NOBODY: 0,
         FOLLOWLOCATION: true,
         HTTPHEADER: [
@@ -253,6 +255,7 @@ describe('actuallySend()', () => {
       options: {
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
@@ -309,6 +312,7 @@ describe('actuallySend()', () => {
       options: {
         CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: multipart/form-data',
