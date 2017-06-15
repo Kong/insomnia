@@ -299,7 +299,7 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;
     const displayName = t.displayName || name;
-    const defaultFill = getDefaultFill(t.name, t.args);
+    const defaultFill = typeof t === 'string' ? name : getDefaultFill(t.name, t.args);
 
     const matchSegment = segment.toLowerCase();
     const matchName = displayName.toLowerCase();
