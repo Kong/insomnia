@@ -1,14 +1,14 @@
 import electron from 'electron';
 import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
-import {parse as urlParse} from 'url';
+import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'node-libcurl';
 import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
-import {describeByteSize, getSetCookieHeaders, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -197,6 +197,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Set cookies from jar
       if (renderedRequest.settingSendCookies) {
+        // Tell Curl to store cookies that it receives. This is only important if we receive
+        // a cookie on a redirect that needs to be sent on the next request in the chain.
+        curl.setOpt(Curl.option.COOKIEFILE, '');
+
         const cookies = renderedRequest.cookieJar.cookies || [];
         for (const cookie of cookies) {
           let expiresTimestamp = 0;
@@ -418,25 +422,45 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
-        const setCookieHeaders = getSetCookieHeaders(headers);
-        if (renderedRequest.settingStoreCookies && setCookieHeaders.length) {
-          const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-          for (const header of getSetCookieHeaders(headers)) {
-            try {
-              jar.setCookieSync(header.value, curl.getInfo(Curl.info.EFFECTIVE_URL));
-            } catch (err) {
-              timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
-            }
-          }
+        let currentUrl = finalUrl;
+        let setCookieStrings = [];
+        const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
+        for (const curlHeaderObject of allCurlHeadersObjects) {
+          // Collect Set-Cookie headers
+          const setCookieHeaders = _getCurlHeader(curlHeaderObject, 'set-cookie', []);
+          setCookieStrings = [...setCookieStrings, ...setCookieHeaders];
+
+          // Pull out new URL if there is a redirect
+          const newLocation = _getCurlHeader(curlHeaderObject, 'location', null);
+          if (newLocation !== null) {
+            currentUrl = urlResolve(currentUrl, newLocation);
+          }
+        }
+
+        // Update jar with Set-Cookie headers
+        for (const setCookieStr of setCookieStrings) {
+          try {
+            jar.setCookieSync(setCookieStr, currentUrl);
+          } catch (err) {
+            timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
+          }
+        }
+
+        // Update cookie jar if we need to and if we found any cookies
+        if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
           const cookies = await cookiesFromJar(jar);
           models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+        }
 
-          const n = setCookieHeaders.length;
-          timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
-        } else {
-          const n = setCookieHeaders.length;
-          timeline.push({name: 'TEXT', value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`});
+        // Print informational message
+        if (setCookieStrings.length > 0) {
+          const n = setCookieStrings.length;
+          if (renderedRequest.settingStoreCookies) {
+            timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
+          } else {
+            timeline.push({name: 'TEXT', value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`});
+          }
         }
 
         // Handle the body
@@ -507,10 +531,23 @@ export async function send (requestId, environmentId) {
     models.requestGroup.type,
     models.workspace.type
   ]);
+
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);
+}
+
+function _getCurlHeader (curlHeadersObj, name, fallback) {
+  const headerName = Object.keys(curlHeadersObj).find(
+    n => n.toLowerCase() === name.toLowerCase()
+  );
+
+  if (headerName) {
+    return curlHeadersObj[headerName];
+  } else {
+    return fallback;
+  }
 }
 
 document.addEventListener('keydown', e => {
