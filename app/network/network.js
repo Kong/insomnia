@@ -1,14 +1,14 @@
 import electron from 'electron';
 import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
-import {parse as urlParse} from 'url';
+import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'node-libcurl';
 import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
-import {describeByteSize, getSetCookieHeaders, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -392,22 +392,22 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Handle the response ending
-      curl.on('end', async function (_1, _2, curlHeaders) {
+      curl.on('end', async function (_1, _2, allCurlHeadersObjects) {
         // Headers are an array (one for each redirect)
-        curlHeaders = curlHeaders[curlHeaders.length - 1];
+        const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 
         // Collect various things
-        const result = curlHeaders && curlHeaders.result;
+        const result = lastCurlHeadersObject && lastCurlHeadersObject.result;
         const statusCode = result ? result.code : 0;
         const statusMessage = result ? result.reason : 'Unknown';
 
         // Collect the headers
         const headers = [];
-        for (const name of curlHeaders ? Object.keys(curlHeaders) : []) {
-          if (typeof curlHeaders[name] === 'string') {
-            headers.push({name, value: curlHeaders[name]});
-          } else if (Array.isArray(curlHeaders[name])) {
-            for (const value of curlHeaders[name]) {
+        for (const name of lastCurlHeadersObject ? Object.keys(lastCurlHeadersObject) : []) {
+          if (typeof lastCurlHeadersObject[name] === 'string') {
+            headers.push({name, value: lastCurlHeadersObject[name]});
+          } else if (Array.isArray(lastCurlHeadersObject[name])) {
+            for (const value of lastCurlHeadersObject[name]) {
               headers.push({name, value});
             }
           }
@@ -418,25 +418,38 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
-        const setCookieHeaders = getSetCookieHeaders(headers);
-        if (renderedRequest.settingStoreCookies && setCookieHeaders.length) {
+        if (renderedRequest.settingStoreCookies) {
+          let currentUrl = finalUrl;
+          let cookiesFound = 0;
           const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-          for (const header of getSetCookieHeaders(headers)) {
-            try {
-              jar.setCookieSync(header.value, curl.getInfo(Curl.info.EFFECTIVE_URL));
-            } catch (err) {
-              timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
+          for (const curlHeaderObject of allCurlHeadersObjects) {
+            const setCookieHeaders = curlHeaderObject['Set-Cookie'] || [];
+            for (const setCookieStr of setCookieHeaders) {
+              try {
+                jar.setCookieSync(setCookieStr, currentUrl);
+                cookiesFound++;
+              } catch (err) {
+                timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
+              }
+            }
+
+            const locationHeaderName = Object.keys(curlHeaderObject)
+              .find(n => n.toLowerCase() === 'location');
+            const newLocation = locationHeaderName ? curlHeaderObject[locationHeaderName] : null;
+            if (newLocation !== null) {
+              currentUrl = urlResolve(currentUrl, newLocation);
             }
           }
 
           const cookies = await cookiesFromJar(jar);
           models.cookieJar.update(renderedRequest.cookieJar, {cookies});
 
-          const n = setCookieHeaders.length;
-          timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
+          timeline.push({
+            name: 'TEXT',
+            value: `Saved ${cookiesFound} cookie${cookiesFound === 1 ? '' : 's'}`
+          });
         } else {
-          const n = setCookieHeaders.length;
-          timeline.push({name: 'TEXT', value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`});
+          timeline.push({name: 'TEXT', value: 'Ignored cookies'});
         }
 
         // Handle the body
