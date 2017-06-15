@@ -5,7 +5,9 @@
   <title>Insomnia</title>
 </head>
 <body>
-<div id="titlebar" class="theme--titlebar"></div>
+<div class="titlebar theme--titlebar">
+  <span class="titlebar__inner"></span>
+</div>
 <div id="root"></div>
 <script>
   // HOT RELOADING IN DEV
@@ -28,7 +30,8 @@
 <script>
   (function () {
     const titleElement = document.querySelector('title');
-    const titleBarElement = document.querySelector('#titlebar');
+    const titleBarElement = document.querySelector('.titlebar');
+    const titleBarInnerElement = document.querySelector('.titlebar__inner');
 
     document.documentElement.addEventListener('DOMSubtreeModified', e => {
       if (e.target !== titleElement) {
@@ -36,11 +39,11 @@
       }
 
       const title = e.target.innerHTML;
-      if (title === titleBarElement.innerHTML) {
+      if (title === titleBarInnerElement.innerHTML) {
         return;
       }
 
-      titleBarElement.innerHTML = e.target.innerHTML;
+      titleBarInnerElement.innerHTML = e.target.innerHTML;
     });
 
     titleBarElement.addEventListener('dblclick', e => {

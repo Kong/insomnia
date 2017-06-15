@@ -385,12 +385,16 @@ body {
     --hl: rgb(125, 153, 151);
   }
 
-  .theme--titlebar,
+  .theme--titlebar {
+    --color-bg: #263238;
+    --color-font: #dde1e1;
+    --color-border: var(--hl-sm);
+    --border-width: 1px;
+  }
+
   .theme--sidebar {
     --color-bg: #1f2b31;
-    --color-border: var(--hl-sm);
     --color-font: #dde1e1;
-    --border-width: 1px;
   }
 
   input,
@@ -467,7 +471,6 @@ body {
     --color-bg: #073440;
   }
 
-  .theme--titlebar,
   .theme--sidebar {
     --color-bg: #073642;
     --color-font: #8ea0a2;
@@ -479,10 +482,6 @@ body {
     --hl-lg: rgba(91, 127, 143, 0.6);
     --hl-xl: rgba(91, 127, 143, 0.8);
     --hl: rgb(98, 127, 143);
-  }
-
-  .theme--titlebar {
-    --border-width: 1px;
   }
 }
 
