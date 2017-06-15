@@ -23,7 +23,7 @@ export default {
       hide: args => args[0].value !== 'custom'
     }
   ],
-  run (context, dateType, formatStr) {
+  run (context, dateType = 'iso-8601', formatStr = '') {
     if (typeof dateType === 'string') {
       dateType = dateType.toLowerCase();
     }
