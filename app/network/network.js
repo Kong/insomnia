@@ -422,39 +422,45 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
-        if (renderedRequest.settingStoreCookies) {
-          let currentUrl = finalUrl;
-          let cookiesFound = 0;
-          const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-          for (const curlHeaderObject of allCurlHeadersObjects) {
-            const setCookieHeaders = curlHeaderObject['Set-Cookie'] || [];
-            for (const setCookieStr of setCookieHeaders) {
-              try {
-                jar.setCookieSync(setCookieStr, currentUrl);
-                cookiesFound++;
-              } catch (err) {
-                timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
-              }
-            }
+        let currentUrl = finalUrl;
+        let setCookieStrings = [];
+        const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
-            const locationHeaderName = Object.keys(curlHeaderObject)
-              .find(n => n.toLowerCase() === 'location');
-            const newLocation = locationHeaderName ? curlHeaderObject[locationHeaderName] : null;
-            if (newLocation !== null) {
-              currentUrl = urlResolve(currentUrl, newLocation);
-            }
+        for (const curlHeaderObject of allCurlHeadersObjects) {
+          // Collect Set-Cookie headers
+          const setCookieHeaders = _getCurlHeader(curlHeaderObject, 'set-cookie', []);
+          setCookieStrings = [...setCookieStrings, ...setCookieHeaders];
+
+          // Pull out new URL if there is a redirect
+          const newLocation = _getCurlHeader(curlHeaderObject, 'location', null);
+          if (newLocation !== null) {
+            currentUrl = urlResolve(currentUrl, newLocation);
           }
+        }
 
-          // Update cookie jar if we found any cookies
-          if (cookiesFound > 0) {
-            const cookies = await cookiesFromJar(jar);
-            models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+        // Update jar with Set-Cookie headers
+        for (const setCookieStr of setCookieStrings) {
+          try {
+            jar.setCookieSync(setCookieStr, currentUrl);
+          } catch (err) {
+            timeline.push({name: 'TEXT', value: `Rejected cookie: ${err.message}`});
           }
+        }
 
-          const n = cookiesFound;
-          timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
-        } else {
-          timeline.push({name: 'TEXT', value: 'Ignored cookies'});
+        // Update cookie jar if we need to and if we found any cookies
+        if (renderedRequest.settingStoreCookies && setCookieStrings.length) {
+          const cookies = await cookiesFromJar(jar);
+          models.cookieJar.update(renderedRequest.cookieJar, {cookies});
+        }
+
+        // Print informational message
+        if (setCookieStrings.length > 0) {
+          const n = setCookieStrings.length;
+          if (renderedRequest.settingStoreCookies) {
+            timeline.push({name: 'TEXT', value: `Saved ${n} cookie${n === 1 ? '' : 's'}`});
+          } else {
+            timeline.push({name: 'TEXT', value: `Ignored ${n} cookie${n === 1 ? '' : 's'}`});
+          }
         }
 
         // Handle the body
@@ -525,10 +531,23 @@ export async function send (requestId, environmentId) {
     models.requestGroup.type,
     models.workspace.type
   ]);
+
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
 
   // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);
+}
+
+function _getCurlHeader (curlHeadersObj, name, fallback) {
+  const headerName = Object.keys(curlHeadersObj).find(
+    n => n.toLowerCase() === name.toLowerCase()
+  );
+
+  if (headerName) {
+    return curlHeadersObj[headerName];
+  } else {
+    return fallback;
+  }
 }
 
 document.addEventListener('keydown', e => {
