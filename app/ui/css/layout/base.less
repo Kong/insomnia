@@ -34,7 +34,6 @@ body {
   width: 100%;
   background: var(--color-bg);
   color: var(--color-font);
-  box-shadow: inset 0 -10px 25px -5px rgba(0, 0, 0, 0.2);
   border-bottom: var(--border-width) solid var(--color-border);
   margin: 0;
   display: grid;
@@ -45,6 +44,10 @@ body {
   .titlebar__inner {
     opacity: 0.9;
   }
+}
+
+body[data-platform="darwin"] .titlebar {
+  box-shadow: inset 0 -10px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
 h1 {
