@@ -23,7 +23,7 @@ class RequestRenderErrorModal extends PureComponent {
 
   _handleShowRequestSettings () {
     this.hide();
-    showModal(RequestSettingsModal, this.state.request);
+    showModal(RequestSettingsModal, {request: this.state.request});
   }
 
   show ({request, error}) {

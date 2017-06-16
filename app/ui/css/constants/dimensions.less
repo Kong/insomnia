@@ -1,5 +1,6 @@
 /* Fonts */
 @font-size: 13px;
+@font-size-xxs: round(@font-size * 0.6);
 @font-size-xs: round(@font-size * 0.8);
 @font-size-sm: round(@font-size * 0.9);
 @font-size-md: round(@font-size * 1.0);
@@ -47,6 +48,10 @@
 @breakpoint-lg: 1100px;
 @breakpoint-md: 880px;
 @breakpoint-sm: 660px;
+
+.txt-xxs {
+  font-size: @font-size-xxs !important;
+}
 
 .txt-xs {
   font-size: @font-size-xs !important;

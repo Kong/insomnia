@@ -88,7 +88,7 @@ class App extends PureComponent {
         key: KEY_COMMA,
         callback: () => {
           if (this.props.activeRequest) {
-            showModal(RequestSettingsModal, this.props.activeRequest);
+            showModal(RequestSettingsModal, {request: this.props.activeRequest});
             trackEvent('HotKey', 'Request Settings');
           }
         }
