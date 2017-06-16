@@ -91,7 +91,7 @@ class WorkspaceDropdown extends PureComponent {
 
     const classes = classnames(className, 'wide', 'workspace-dropdown');
     return (
-      <Dropdown className={classes} onOpen={this._handleDropdownOpen} {...other}>
+      <Dropdown right className={classes} rightOffset={150} onOpen={this._handleDropdownOpen} {...other}>
         <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">

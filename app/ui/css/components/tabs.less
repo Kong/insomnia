@@ -18,6 +18,10 @@
     height: 100%;
     box-sizing: border-box;
     background-color: var(--color-bg);
+    overflow: auto;
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     &::after {
       width: 100%;
