@@ -1,14 +1,10 @@
 import React, {PropTypes, PureComponent} from 'react';
-import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import highlight from 'highlight.js';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import {trackEvent} from '../../analytics';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
-import * as misc from '../../common/misc';
-import {markdownToHTML} from '../../common/markdown-to-html';
 import MarkdownPreview from './markdown-preview';
 
 @autobind
@@ -26,6 +22,7 @@ class MarkdownEditor extends PureComponent {
 
   _handleChange (markdown) {
     this.props.onChange(markdown);
+    this.setState({markdown});
   }
 
   _setEditorRef (n) {

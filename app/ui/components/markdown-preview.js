@@ -17,15 +17,12 @@ class MarkdownPreview extends PureComponent {
   }
 
   async _compileMarkdown (markdown) {
-    const newState = {markdown};
     try {
       const rendered = await this.props.handleRender(markdown);
-      newState.compiled = markdownToHTML(rendered);
+      this.setState({compiled: markdownToHTML(rendered)});
     } catch (err) {
-      newState.renderError = err.message;
+      this.setState({renderError: err.message});
     }
-
-    this.setState(newState);
   }
 
   _setPreviewRef (n) {
@@ -56,6 +53,10 @@ class MarkdownPreview extends PureComponent {
 
   componentDidUpdate () {
     this._highlightCodeBlocks();
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this._compileMarkdown(nextProps.markdown);
   }
 
   componentDidMount () {

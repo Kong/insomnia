@@ -16,7 +16,6 @@ import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import Hotkey from './hotkey';
-import {markdownToHTML} from '../../common/markdown-to-html';
 import {showModal} from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
