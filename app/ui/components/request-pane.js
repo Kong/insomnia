@@ -16,6 +16,9 @@ import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import Hotkey from './hotkey';
+import {showModal} from './modals/index';
+import RequestSettingsModal from './modals/request-settings-modal';
+import MarkdownPreview from './markdown-preview';
 
 @autobind
 class RequestPane extends PureComponent {
@@ -23,6 +26,17 @@ class RequestPane extends PureComponent {
     super(props);
 
     this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
+  }
+
+  _handleEditDescriptionAdd () {
+    this._handleEditDescription(true);
+  }
+
+  _handleEditDescription (addDescription) {
+    showModal(RequestSettingsModal, {
+      request: this.props.request,
+      forceEditMode: addDescription
+    });
   }
 
   async _autocompleteUrls () {
@@ -104,6 +118,10 @@ class RequestPane extends PureComponent {
 
   _trackTabHeaders () {
     trackEvent('Request Pane', 'View', 'Headers');
+  }
+
+  _trackTabDescription () {
+    trackEvent('Request Pane', 'View', 'Description');
   }
 
   _trackTabAuthentication () {
@@ -249,6 +267,16 @@ class RequestPane extends PureComponent {
                 Header {numHeaders > 0 && <span className="bubble">{numHeaders}</span>}
               </button>
             </Tab>
+            <Tab onClick={this._trackTabDescription}>
+              <button>
+                Description
+                {request.description && (
+                  <span className="bubble space-left">
+                    <i className="fa fa--skinny fa-check txt-xxs"/>
+                  </span>
+                )}
+              </button>
+            </Tab>
           </TabList>
           <TabPanel className="editor-wrapper">
             <BodyEditor
@@ -333,6 +361,37 @@ class RequestPane extends PureComponent {
                 {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
+          </TabPanel>
+          <TabPanel key={uniqueKey}>
+            {request.description ? (
+              <div>
+                <div className="pull-right pad bg-default">
+                  <button className="btn btn--clicky" onClick={this._handleEditDescription}>
+                    Edit
+                  </button>
+                </div>
+                <MarkdownPreview
+                  className="pad"
+                  markdown={request.description}
+                  handleRender={handleRender}
+                />
+              </div>
+            ) : (
+              <div className="overflow-hidden editor vertically-center text-center">
+                <p className="pad text-sm text-center">
+                  <span className="super-faint">
+                  <i className="fa fa-file-text-o"
+                     style={{fontSize: '8rem', opacity: 0.3}}
+                  />
+                  </span>
+                  <br/><br/>
+                  <button className="btn btn--clicky faint"
+                          onClick={this._handleEditDescriptionAdd}>
+                    Add Description
+                  </button>
+                </p>
+              </div>
+            )}
           </TabPanel>
         </Tabs>
       </section>

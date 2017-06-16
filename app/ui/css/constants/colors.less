@@ -77,7 +77,7 @@ body {
   }
 
   .pane__header,
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .modal {
     --color-bg: #fff;
     --color-font: #555;
@@ -115,7 +115,7 @@ body {
   // Light Parts
   .request-pane,
   .response-pane,
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .modal {
     --hl-xxs: rgba(130, 130, 130, 0.05);
     --hl-xs: rgba(130, 130, 130, 0.1);
@@ -164,7 +164,7 @@ body {
     --color-bg: #fafaff;
   }
 
-  .dropdown__menu {
+  .theme--dropdown__menu {
     --color-bg: #fff;
     --color-font: #666;
   }
@@ -186,13 +186,13 @@ body {
   --color-bg: #232421;
   --color-font: #ddd;
 
-  --hl-xxs: rgba(120, 120, 120, 0.05);
-  --hl-xs: rgba(120, 120, 120, 0.1);
-  --hl-sm: rgba(120, 120, 120, 0.2);
-  --hl-md: rgba(120, 120, 120, 0.3);
-  --hl-lg: rgba(120, 120, 120, 0.5);
-  --hl-xl: rgba(120, 120, 120, 0.8);
-  --hl: rgba(120, 120, 120, 1);
+  --hl-xxs: rgba(130, 130, 130, 0.05);
+  --hl-xs: rgba(130, 130, 130, 0.1);
+  --hl-sm: rgba(130, 130, 130, 0.2);
+  --hl-md: rgba(130, 130, 130, 0.3);
+  --hl-lg: rgba(130, 130, 130, 0.5);
+  --hl-xl: rgba(130, 130, 130, 0.8);
+  --hl: rgba(140, 140, 140, 1);
 
   .tag {
     --color-success: #6ea932;
@@ -208,7 +208,7 @@ body {
     --color-font: #ddd;
   }
 
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .modal {
     --color-bg: #282925;
   }
@@ -217,7 +217,7 @@ body {
     --color-font: #ccc;
   }
 
-  .dropdown__menu {
+  .theme--dropdown__menu {
     --color-font: #aaa;
   }
 }
@@ -273,7 +273,7 @@ body {
     --color-font: #657b83;
   }
 
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .modal {
     --color-bg: #fff8e5;
   }
@@ -303,7 +303,7 @@ body {
     --color-font: #8ea0a2;
   }
 
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .modal {
     --color-bg: #073642;
   }
@@ -342,7 +342,7 @@ body {
   }
 
   .modal > *,
-  .dropdown__menu {
+  .theme--dropdown__menu {
     --color-bg: #303c43;
     --color-font: #dde1e1;
   }
@@ -370,7 +370,7 @@ body {
   .sidebar__item,
   .btn,
   .tag,
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .CodeMirror,
   .pane__body,
   .modal__header,
@@ -424,7 +424,7 @@ body {
     --color-bg: rgba(238, 231, 213, 0.8);
   }
 
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .modal {
     --color-bg: #fff8e5;
     --color-font: #657b83;
@@ -477,7 +477,7 @@ body {
     --color-font: #e1deda;
   }
 
-  .dropdown__menu,
+  .theme--dropdown__menu,
   .modal {
     --color-bg: #323232;
   }
@@ -533,6 +533,10 @@ body {
 
 .boring {
   color: var(--color-font) !important;
+}
+
+.bg-default {
+  background: var(--color-bg);
 }
 
 .bg-success,

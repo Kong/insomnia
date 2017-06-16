@@ -1,23 +1,18 @@
 import React, {PropTypes, PureComponent} from 'react';
-import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import marked from 'marked';
-import highlight from 'highlight.js';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import {trackEvent} from '../../analytics';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
-import * as misc from '../../common/misc';
+import MarkdownPreview from './markdown-preview';
 
 @autobind
 class MarkdownEditor extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      markdown: props.defaultValue,
-      compiled: '',
-      renderError: ''
+      markdown: props.defaultValue
     };
   }
 
@@ -27,64 +22,21 @@ class MarkdownEditor extends PureComponent {
 
   _handleChange (markdown) {
     this.props.onChange(markdown);
-    this._compileMarkdown(markdown);
+    this.setState({markdown});
+
+    // So we don't track on every keystroke, give analytics a longer timeout
+    clearTimeout(this._analyticsTimeout);
+    this._analyticsTimeout = setTimeout(() => {
+      trackEvent('Request', 'Edit Description');
+    }, 2000);
   }
 
-  async _compileMarkdown (markdown) {
-    const newState = {markdown};
-    try {
-      const rendered = await this.props.handleRender(markdown);
-      newState.compiled = marked(rendered);
-    } catch (err) {
-      newState.renderError = err.message;
-    }
-
-    this.setState(newState);
+  _setEditorRef (n) {
+    this._editor = n;
   }
 
-  _setPreviewRef (n) {
-    this._preview = n;
-  }
-
-  _highlightCodeBlocks () {
-    if (!this._preview) {
-      return;
-    }
-
-    const el = ReactDOM.findDOMNode(this._preview);
-    for (const block of el.querySelectorAll('pre > code')) {
-      highlight.highlightBlock(block);
-    }
-
-    for (const a of el.querySelectorAll('a')) {
-      a.addEventListener('click', e => {
-        e.preventDefault();
-        misc.clickLink(e.target.getAttribute('href'));
-      });
-    }
-  }
-
-  componentWillMount () {
-    this._compileMarkdown(this.state.markdown);
-  }
-
-  componentDidUpdate () {
-    this._highlightCodeBlocks();
-  }
-
-  componentDidMount () {
-    marked.setOptions({
-      renderer: new marked.Renderer(),
-      gfm: true,
-      tables: true,
-      breaks: false,
-      pedantic: false,
-      sanitize: true,
-      smartLists: true,
-      smartypants: false
-    });
-
-    this._highlightCodeBlocks();
+  focusEnd () {
+    this._editor && this._editor.focusEnd();
   }
 
   render () {
@@ -102,7 +54,7 @@ class MarkdownEditor extends PureComponent {
       handleGetRenderContext
     } = this.props;
 
-    const {markdown, compiled, renderError} = this.state;
+    const {markdown} = this.state;
 
     const classes = classnames(
       'markdown-editor',
@@ -130,6 +82,7 @@ class MarkdownEditor extends PureComponent {
         <TabPanel className="markdown-editor__edit">
           <div className="form-control form-control--outlined">
             <CodeEditor
+              ref={this._setEditorRef}
               hideGutters
               hideLineNumbers
               dynamicHeight={!tall}
@@ -153,12 +106,10 @@ class MarkdownEditor extends PureComponent {
           </div>
         </TabPanel>
         <TabPanel className="markdown-editor__preview">
-          {renderError && <p className="notice error no-margin">Failed to render: {renderError}</p>}
-          <div className="markdown-editor__preview__content selectable"
-               ref={this._setPreviewRef}
-               dangerouslySetInnerHTML={{__html: compiled}}>
-            {/* Set from above */}
-          </div>
+          <MarkdownPreview
+            markdown={markdown}
+            handleRender={handleRender}
+          />
         </TabPanel>
       </Tabs>
     );

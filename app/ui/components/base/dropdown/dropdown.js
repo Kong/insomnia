@@ -173,6 +173,7 @@ class Dropdown extends PureComponent {
 
     const menuClasses = classnames({
       'dropdown__menu': true,
+      'theme--dropdown__menu': true,
       'dropdown__menu--open': open,
       'dropdown__menu--outlined': outline,
       'dropdown__menu--up': dropUp,

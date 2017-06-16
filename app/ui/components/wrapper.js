@@ -154,7 +154,7 @@ class Wrapper extends PureComponent {
   }
 
   _handleShowRequestSettingsModal () {
-    showModal(RequestSettingsModal, this.props.activeRequest);
+    showModal(RequestSettingsModal, {request: this.props.activeRequest});
   }
 
   _handleDeleteResponses () {

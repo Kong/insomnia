@@ -24,6 +24,10 @@ class RequestSettingsModal extends PureComponent {
     this.modal = n;
   }
 
+  _setEditorRef (n) {
+    this._editor = n;
+  }
+
   async _updateRequestSettingBoolean (e) {
     const value = e.target.checked;
     const setting = e.target.name;
@@ -47,14 +51,20 @@ class RequestSettingsModal extends PureComponent {
     this.setState({showDescription: true});
   }
 
-  show (request) {
+  show ({request, forceEditMode}) {
     this.modal.show();
     const hasDescription = !!request.description;
     this.setState({
       request,
-      showDescription: hasDescription,
-      defaultPreviewMode: hasDescription
+      showDescription: forceEditMode || hasDescription,
+      defaultPreviewMode: hasDescription && !forceEditMode
     });
+
+    if (forceEditMode) {
+      setTimeout(() => {
+        this._editor.focusEnd();
+      }, 400);
+    }
   }
 
   hide () {
@@ -103,6 +113,7 @@ class RequestSettingsModal extends PureComponent {
         </div>
         {showDescription ? (
           <MarkdownEditor
+            ref={this._setEditorRef}
             className="margin-top"
             defaultPreviewMode={defaultPreviewMode}
             fontSize={editorFontSize}
