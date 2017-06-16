@@ -36,7 +36,7 @@ class ResponseTimer extends PureComponent {
     const {show, elapsedTime} = this.state;
 
     return (
-      <div className={classnames('overlay', {'overlay--hidden': !show})}>
+      <div className={classnames('overlay theme--overlay', {'overlay--hidden': !show})}>
         {elapsedTime > REQUEST_TIME_TO_SHOW_COUNTER
           ? <h2>{elapsedTime.toFixed(1)} seconds...</h2>
           : <h2>Loading...</h2>

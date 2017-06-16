@@ -213,7 +213,7 @@ class Dropdown extends PureComponent {
       finalChildren = [
         dropdownButtons[0],
         <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
-          <div className="dropdown__backdrop"></div>
+          <div className="dropdown__backdrop theme--overlay"></div>
           <ul ref={this._addDropdownListRef}>
             {dropdownItems}
           </ul>

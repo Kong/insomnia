@@ -86,14 +86,18 @@
         padding-right: @padding-md;
       }
     }
-  }
 
-  .ReactTabs__Tab--selected {
-    border: 1px solid @border-color;
-    border-bottom-color: transparent;
+    &:not(.ReactTabs__Tab--selected) i.fa {
+      opacity: @opacity-super-subtle;
+    }
 
-    * {
-      color: inherit;
+    &.ReactTabs__Tab--selected {
+      border: 1px solid @border-color;
+      border-bottom-color: transparent;
+
+      * {
+        color: inherit;
+      }
     }
   }
 
