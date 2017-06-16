@@ -23,6 +23,12 @@ class MarkdownEditor extends PureComponent {
   _handleChange (markdown) {
     this.props.onChange(markdown);
     this.setState({markdown});
+
+    // So we don't track on every keystroke, give analytics a longer timeout
+    clearTimeout(this._analyticsTimeout);
+    this._analyticsTimeout = setTimeout(() => {
+      trackEvent('Request', 'Edit Description');
+    }, 2000);
   }
 
   _setEditorRef (n) {
