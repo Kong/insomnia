@@ -53,13 +53,13 @@ class Sidebar extends PureComponent {
     } = this.props;
 
     return (
-      <aside className={classnames('sidebar', {
+      <aside className={classnames('sidebar', 'theme--sidebar', {
         'sidebar--hidden': hidden,
         'sidebar--skinny': width < SIDEBAR_SKINNY_REMS,
         'sidebar--collapsed': width < COLLAPSE_SIDEBAR_REMS
       })}>
         <WorkspaceDropdown
-          className="sidebar__header"
+          className="sidebar__header theme--sidebar__header"
           activeWorkspace={workspace}
           workspaces={workspaces}
           handleExportFile={handleExportFile}

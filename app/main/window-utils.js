@@ -37,6 +37,8 @@ export function createWindow () {
     fullscreen: fullscreen,
     fullscreenable: true,
     title: getAppName(),
+    titleBarStyle: isMac() ? 'hidden' : null,
+    frame: isMac(),
     width: width || 1200,
     height: height || 600,
     minHeight: 500,
@@ -151,7 +153,9 @@ export function createWindow () {
           }
 
           const zoomFactor = 1;
-          window.webContents.setZoomFactor(zoomFactor);
+          for (const window of BrowserWindow.getAllWindows()) {
+            window.send('set-zoom', zoomFactor);
+          }
           saveZoomFactor(zoomFactor);
           trackEvent('App Menu', 'Zoom Reset');
         }
@@ -166,7 +170,9 @@ export function createWindow () {
           }
 
           const zoomFactor = Math.min(1.8, getZoomFactor() + 0.05);
-          window.webContents.setZoomFactor(zoomFactor);
+          for (const window of BrowserWindow.getAllWindows()) {
+            window.send('set-zoom', zoomFactor);
+          }
 
           saveZoomFactor(zoomFactor);
           trackEvent('App Menu', 'Zoom In');
@@ -182,7 +188,9 @@ export function createWindow () {
           }
 
           const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
-          window.webContents.setZoomFactor(zoomFactor);
+          for (const window of BrowserWindow.getAllWindows()) {
+            window.send('set-zoom', zoomFactor);
+          }
           saveZoomFactor(zoomFactor);
           trackEvent('App Menu', 'Zoom Out');
         }

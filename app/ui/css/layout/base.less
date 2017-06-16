@@ -19,6 +19,35 @@ html, h1, h2, h3, h4, h5, h6, input {
 body {
   margin: 0;
   padding: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+.titlebar {
+  font-family: Helvetica, sans-serif !important;
+  font-size: 13.5px;
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+  cursor: default;
+  height: 22px;
+  width: 100%;
+  background: var(--color-bg);
+  color: var(--color-font);
+  border-bottom: var(--border-width) solid var(--color-border);
+  margin: 0;
+  display: grid;
+  text-align: center;
+  align-content: center;
+  position: relative;
+
+  .titlebar__inner {
+    opacity: 0.9;
+  }
+}
+
+body[data-platform="darwin"] .titlebar {
+  box-shadow: inset 0 -10px 25px -5px rgba(0, 0, 0, 0.2);
 }
 
 h1 {

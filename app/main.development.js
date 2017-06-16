@@ -20,7 +20,7 @@ function addUrlToOpen (e, url) {
   args.push(url);
 }
 
-const {app, ipcMain} = electron;
+const {app, ipcMain, BrowserWindow, systemPreferences} = electron;
 
 const args = process.argv.slice(1);
 
@@ -77,4 +77,27 @@ app.on('ready', () => {
       window.focus();
     }, 100);
   });
+});
+
+ipcMain.on('double-click-titlebar', e => {
+  const window = BrowserWindow.getFocusedWindow();
+
+  if (!window) {
+    return;
+  }
+
+  const action = systemPreferences.getUserDefault(
+    'AppleActionOnDoubleClick',
+    'string'
+  );
+
+  if (action === 'Maximize') {
+    if (window.isMaximized()) {
+      window.unmaximize();
+    } else {
+      window.maximize();
+    }
+  } else if (action === 'Minimize') {
+    window.minimize();
+  }
 });
