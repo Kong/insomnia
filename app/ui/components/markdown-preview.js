@@ -35,6 +35,11 @@ class MarkdownPreview extends PureComponent {
     this._preview = n;
   }
 
+  _handleClickLink (e) {
+    e.preventDefault();
+    misc.clickLink(e.target.getAttribute('href'));
+  }
+
   _highlightCodeBlocks () {
     if (!this._preview) {
       return;
@@ -46,10 +51,9 @@ class MarkdownPreview extends PureComponent {
     }
 
     for (const a of el.querySelectorAll('a')) {
-      a.addEventListener('click', e => {
-        e.preventDefault();
-        misc.clickLink(e.target.getAttribute('href'));
-      });
+      a.title = `Open ${a.getAttribute('href')} in browser`;
+      a.removeEventListener('click', this._handleClickLink);
+      a.addEventListener('click', this._handleClickLink);
     }
   }
 
@@ -80,7 +84,8 @@ class MarkdownPreview extends PureComponent {
             Failed to render: {renderError}
           </p>
         )}
-        <div className="markdown-preview__content" dangerouslySetInnerHTML={{__html: compiled}}>
+        <div className="markdown-preview__content selectable"
+             dangerouslySetInnerHTML={{__html: compiled}}>
           {/* Set from above */}
         </div>
       </div>
