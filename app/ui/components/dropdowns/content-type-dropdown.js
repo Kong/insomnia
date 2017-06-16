@@ -73,7 +73,7 @@ class ContentTypeDropdown extends PureComponent {
   render () {
     const {children, className, ...extraProps} = this.props;
     return (
-      <Dropdown debug="true" {...extraProps}>
+      <Dropdown beside {...extraProps}>
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
