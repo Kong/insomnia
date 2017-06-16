@@ -362,7 +362,7 @@ class RequestPane extends PureComponent {
               </button>
             </div>
           </TabPanel>
-          <TabPanel key={uniqueKey}>
+          <TabPanel key={uniqueKey} className="tall scrollable">
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">
