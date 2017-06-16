@@ -22,11 +22,12 @@ class PreviewModeDropdown extends PureComponent {
   }
 
   render () {
-    const {download, fullDownload} = this.props;
+    const {download, fullDownload, previewMode} = this.props;
     return (
-      <Dropdown>
+      <Dropdown beside>
         <DropdownButton className="tall">
-          <i className="fa fa-caret-down"/>
+          {getPreviewModeName(previewMode)}
+          <i className="fa fa-caret-down space-left"/>
         </DropdownButton>
         <DropdownDivider>Preview Mode</DropdownDivider>
         {PREVIEW_MODES.map(this.renderPreviewMode)}
@@ -36,7 +37,7 @@ class PreviewModeDropdown extends PureComponent {
           Save Response Body
         </DropdownItem>
         <DropdownItem onClick={fullDownload}>
-          <i className="fa fa-save" />
+          <i className="fa fa-save"/>
           Save Full Response
         </DropdownItem>
       </Dropdown>

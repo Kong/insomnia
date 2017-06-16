@@ -19,6 +19,7 @@
     box-sizing: border-box;
     background-color: var(--color-bg);
     overflow: auto;
+
     &::-webkit-scrollbar {
       display: none;
     }
@@ -38,7 +39,16 @@
     border-top: 0 !important;
     white-space: nowrap;
     display: flex;
-    position: static;
+    position: relative;
+
+    &:not(.ReactTabs__Tab--selected)::after {
+      content: ' ';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
 
     .bubble {
       position: relative;

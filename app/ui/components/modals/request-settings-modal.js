@@ -62,7 +62,7 @@ class RequestSettingsModal extends PureComponent {
 
     if (forceEditMode) {
       setTimeout(() => {
-        this._editor.focusEnd();
+        this._editor.focus();
       }, 400);
     }
   }

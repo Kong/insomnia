@@ -235,26 +235,22 @@ class RequestPane extends PureComponent {
         <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab onClick={this._trackTabBody}>
-              <button>
-                {getContentTypeName(request.body.mimeType) || 'Body'}
-                {' '}
-                {numBodyParams ? <span className="bubble">{numBodyParams}</span> : null}
-              </button>
               <ContentTypeDropdown onChange={updateRequestMimeType}
                                    contentType={request.body.mimeType}
                                    request={request}
                                    className="tall">
-                <i className="fa fa-caret-down"/>
+                {getContentTypeName(request.body.mimeType) || 'Body'}
+                {' '}
+                {numBodyParams ? <span className="bubble">{numBodyParams}</span> : null}
+                <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
             </Tab>
             <Tab onClick={this._trackTabAuthentication}>
-              <button>
-                {getAuthTypeName(request.authentication.type) || 'Auth'}
-              </button>
               <AuthDropdown onChange={updateRequestAuthentication}
                             authentication={request.authentication}
                             className="tall">
-                <i className="fa fa-caret-down"/>
+                {getAuthTypeName(request.authentication.type) || 'Auth'}
+                <i className="fa fa-caret-down space-left"/>
               </AuthDropdown>
             </Tab>
             <Tab onClick={this._trackTabQuery}>
@@ -372,6 +368,7 @@ class RequestPane extends PureComponent {
                 </div>
                 <MarkdownPreview
                   className="pad"
+                  debounceMillis={1000}
                   markdown={request.description}
                   handleRender={handleRender}
                 />

@@ -16,19 +16,25 @@ class MarkdownPreview extends PureComponent {
     };
   }
 
-  async _compileMarkdown (markdown) {
-    try {
-      const rendered = await this.props.handleRender(markdown);
-      this.setState({
-        compiled: markdownToHTML(rendered),
-        renderError: ''
-      });
-    } catch (err) {
-      this.setState({
-        renderError: err.message,
-        compiled: ''
-      });
-    }
+  /**
+   * Debounce and compile the markdown (won't debounce first render)
+   */
+  _compileMarkdown (markdown) {
+    clearTimeout(this._compileTimeout);
+    this._compileTimeout = setTimeout(async () => {
+      try {
+        const rendered = await this.props.handleRender(markdown);
+        this.setState({
+          compiled: markdownToHTML(rendered),
+          renderError: ''
+        });
+      } catch (err) {
+        this.setState({
+          renderError: err.message,
+          compiled: ''
+        });
+      }
+    }, this.state.compiled ? this.props.debounceMillis : 0);
   }
 
   _setPreviewRef (n) {
@@ -61,12 +67,12 @@ class MarkdownPreview extends PureComponent {
     this._compileMarkdown(this.props.markdown);
   }
 
-  componentDidUpdate () {
-    this._highlightCodeBlocks();
-  }
-
   componentWillReceiveProps (nextProps) {
     this._compileMarkdown(nextProps.markdown);
+  }
+
+  componentDidUpdate () {
+    this._highlightCodeBlocks();
   }
 
   componentDidMount () {
@@ -99,7 +105,8 @@ MarkdownPreview.propTypes = {
   handleRender: PropTypes.func.isRequired,
 
   // Optional
-  className: PropTypes.string
+  className: PropTypes.string,
+  debounceMillis: PropTypes.number
 };
 
 export default MarkdownPreview;

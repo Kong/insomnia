@@ -39,6 +39,10 @@ class MarkdownEditor extends PureComponent {
     this._editor && this._editor.focusEnd();
   }
 
+  focus () {
+    this._editor && this._editor.focus();
+  }
+
   render () {
     const {
       fontSize,
@@ -88,7 +92,7 @@ class MarkdownEditor extends PureComponent {
               dynamicHeight={!tall}
               manualPrettify
               noStyleActiveLine
-              mode={mode || 'text/plain'}
+              mode={mode || 'text/x-markdown'}
               placeholder={placeholder}
               debounceMillis={300}
               keyMap={keyMap}

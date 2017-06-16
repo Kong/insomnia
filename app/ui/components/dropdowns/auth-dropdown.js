@@ -56,7 +56,7 @@ class AuthDropdown extends PureComponent {
   render () {
     const {children, className} = this.props;
     return (
-      <Dropdown debug="true">
+      <Dropdown beside debug="true">
         <DropdownDivider>Auth Types</DropdownDivider>
         <DropdownButton className={className}>
           {children}

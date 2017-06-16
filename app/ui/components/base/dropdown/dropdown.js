@@ -36,7 +36,7 @@ class Dropdown extends PureComponent {
   }
 
   _checkSizeAndPosition () {
-    if (!this.state.open) {
+    if (!this.state.open || !this._dropdownList) {
       return;
     }
 
@@ -58,15 +58,19 @@ class Dropdown extends PureComponent {
     const {right, wide} = this.props;
     if (right || wide) {
       const {right} = dropdownRect;
-      this._dropdownList.style.right = `${bodyRect.width - right}px`;
-      this._dropdownList.style.maxWidth = `${right}px`;
+      const {beside} = this.props;
+      const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
+      this._dropdownList.style.right = `${bodyRect.width - right + offset}px`;
+      this._dropdownList.style.maxWidth = `${right + offset}px`;
       this._dropdownList.style.minWidth = `${Math.min(right, 200)}px`;
     }
 
     if (!right || wide) {
       const {left} = dropdownRect;
-      this._dropdownList.style.left = `${left}px`;
-      this._dropdownList.style.maxWidth = `${bodyRect.width - left - 5}px`;
+      const {beside} = this.props;
+      const offset = beside ? dropdownRect.width - dropdownRect.height : 0;
+      this._dropdownList.style.left = `${left + offset}px`;
+      this._dropdownList.style.maxWidth = `${bodyRect.width - left - 5 - offset}px`;
       this._dropdownList.style.minWidth = `${Math.min(bodyRect.width - left, 200)}px`;
     }
 
@@ -93,6 +97,10 @@ class Dropdown extends PureComponent {
 
   _addDropdownListRef (n) {
     this._dropdownList = n;
+  }
+
+  _addDropdownMenuRef (n) {
+    this._dropdownMenu = n;
 
     // Move the element to the body so we can position absolutely
     if (n) {
@@ -103,7 +111,7 @@ class Dropdown extends PureComponent {
         document.body.appendChild(container);
       }
 
-      container.appendChild(ReactDOM.findDOMNode(n));
+      container.appendChild(ReactDOM.findDOMNode(this._dropdownMenu));
     }
   }
 
@@ -163,7 +171,7 @@ class Dropdown extends PureComponent {
   }
 
   render () {
-    const {right, outline, wide, className, style, children, rightOffset} = this.props;
+    const {right, outline, wide, className, style, children} = this.props;
     const {dropUp, open} = this.state;
 
     const classes = classnames('dropdown', className, {
@@ -202,16 +210,14 @@ class Dropdown extends PureComponent {
         {allChildren}
       );
     } else {
-      const styles = {};
-      if (typeof rightOffset === 'number') {
-        styles.marginRight = `-${rightOffset}px`;
-      }
-
       finalChildren = [
         dropdownButtons[0],
-        <ul key="items" className={menuClasses} style={styles} ref={this._addDropdownListRef}>
-          {dropdownItems}
-        </ul>
+        <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
+          <div className="dropdown__backdrop"></div>
+          <ul ref={this._addDropdownListRef}>
+            {dropdownItems}
+          </ul>
+        </div>
       ];
     }
 
@@ -222,7 +228,6 @@ class Dropdown extends PureComponent {
            onClick={this._handleClick}
            onMouseDown={this._handleMouseDown}>
         {finalChildren}
-        <div className="dropdown__backdrop"></div>
       </div>
     );
   }
@@ -240,7 +245,7 @@ Dropdown.propTypes = {
   onHide: PropTypes.func,
   className: PropTypes.string,
   style: PropTypes.string,
-  rightOffset: PropTypes.number
+  beside: PropTypes.bool
 };
 
 export default Dropdown;

@@ -16,7 +16,7 @@ import ResponseTimelineViewer from './viewers/response-timeline-viewer';
 import ResponseHeadersViewer from './viewers/response-headers-viewer';
 import ResponseCookiesViewer from './viewers/response-cookies-viewer';
 import * as models from '../../models';
-import {getPreviewModeName, PREVIEW_MODE_SOURCE} from '../../common/constants';
+import {PREVIEW_MODE_SOURCE} from '../../common/constants';
 import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../network/network';
 import {trackEvent} from '../../analytics';
@@ -240,9 +240,6 @@ class ResponsePane extends PureComponent {
         <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
-              <Button onClick={this._trackTab} value="Response">
-                {getPreviewModeName(previewMode)}
-              </Button>
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
