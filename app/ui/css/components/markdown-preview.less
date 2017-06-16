@@ -99,6 +99,34 @@
       margin-left: @padding-md;
     }
 
+    table {
+      width: 100%;
+      background: @hl-xxs;
+      border-spacing: 2px;
+      border-collapse: collapse;
+
+      td, th {
+        padding: @padding-xxs @padding-sm;
+      }
+
+      th {
+        text-align: left;
+      }
+
+      td, th {
+        border: 1px solid var(--hl-sm);
+        color: var(--color-font);
+      }
+
+      td {
+        background: var(--color-bg);
+      }
+
+      thead tr {
+        background: @hl-xxs;
+      }
+    }
+
     .hljs {
       width: 100%;
       box-sizing: border-box;
