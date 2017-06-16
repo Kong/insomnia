@@ -19,9 +19,15 @@ class MarkdownPreview extends PureComponent {
   async _compileMarkdown (markdown) {
     try {
       const rendered = await this.props.handleRender(markdown);
-      this.setState({compiled: markdownToHTML(rendered)});
+      this.setState({
+        compiled: markdownToHTML(rendered),
+        renderError: ''
+      });
     } catch (err) {
-      this.setState({renderError: err.message});
+      this.setState({
+        renderError: err.message,
+        compiled: ''
+      });
     }
   }
 

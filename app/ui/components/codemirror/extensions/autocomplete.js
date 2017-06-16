@@ -61,12 +61,11 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    // Put the hints in a container with class "dropdown__menu" (for themes)
     let hintsContainer = document.querySelector('#hints-container');
     if (!hintsContainer) {
       const el = document.createElement('div');
       el.id = 'hints-container';
-      el.className = 'dropdown__menu';
+      el.className = 'theme--dropdown__menu';
       document.body.appendChild(el);
       hintsContainer = el;
     }
@@ -97,7 +96,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       }
 
       // Good for debugging
-      // closeOnUnfocus: false
+      // ,closeOnUnfocus: false
     });
   }
 
