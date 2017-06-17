@@ -20,8 +20,19 @@
     background-color: var(--color-bg);
     overflow: auto;
 
+    @scrollbar-height: 3px;
+
     &::-webkit-scrollbar {
-      display: none;
+      height: @scrollbar-height;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: var(--color-bg);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: @scrollbar-height / 2;
+      background-color: var(--hl-sm);
     }
 
     &::after {
@@ -65,7 +76,7 @@
     }
 
     &:first-child {
-      border-left-color: transparent;
+      border-left: 0 !important;
     }
 
     &:focus {
@@ -87,7 +98,7 @@
       }
     }
 
-    &:not(.ReactTabs__Tab--selected) i.fa {
+    &:not(.ReactTabs__Tab--selected) .dropdown i.fa {
       opacity: @opacity-super-subtle;
     }
 
