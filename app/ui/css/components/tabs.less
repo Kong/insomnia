@@ -20,10 +20,11 @@
     background-color: var(--color-bg);
     overflow: auto;
 
-    @scrollbar-height: 3px;
+    @scrollbar-height: @padding-sm;
 
     &::-webkit-scrollbar {
       height: @scrollbar-height;
+      border-radius: @scrollbar-height / 2;
     }
 
     &::-webkit-scrollbar-track {
@@ -31,7 +32,14 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      border-radius: @scrollbar-height / 2;
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--hl-xxs);
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
       background-color: var(--hl-sm);
     }
 
