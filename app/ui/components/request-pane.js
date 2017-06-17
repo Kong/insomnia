@@ -366,12 +366,14 @@ class RequestPane extends PureComponent {
                     Edit
                   </button>
                 </div>
-                <MarkdownPreview
-                  className="pad"
-                  debounceMillis={1000}
-                  markdown={request.description}
-                  handleRender={handleRender}
-                />
+                <div className="pad">
+                  <MarkdownPreview
+                    heading={request.name}
+                    debounceMillis={1000}
+                    markdown={request.description}
+                    handleRender={handleRender}
+                  />
+                </div>
               </div>
             ) : (
               <div className="overflow-hidden editor vertically-center text-center">

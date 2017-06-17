@@ -80,8 +80,10 @@ class MarkdownPreview extends PureComponent {
   }
 
   render () {
-    const {className} = this.props;
+    const {className, heading} = this.props;
     const {compiled, renderError} = this.state;
+
+    let html = heading ? `<h1>${heading}</h1>\n${compiled}` : compiled;
 
     return (
       <div ref={this._setPreviewRef} className={classnames('markdown-preview', className)}>
@@ -91,7 +93,7 @@ class MarkdownPreview extends PureComponent {
           </p>
         )}
         <div className="markdown-preview__content selectable"
-             dangerouslySetInnerHTML={{__html: compiled}}>
+             dangerouslySetInnerHTML={{__html: html}}>
           {/* Set from above */}
         </div>
       </div>
@@ -106,7 +108,8 @@ MarkdownPreview.propTypes = {
 
   // Optional
   className: PropTypes.string,
-  debounceMillis: PropTypes.number
+  debounceMillis: PropTypes.number,
+  heading: PropTypes.string
 };
 
 export default MarkdownPreview;
