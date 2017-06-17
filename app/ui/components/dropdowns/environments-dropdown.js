@@ -1,8 +1,7 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import classnames from 'classnames';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
-import {Dropdown, DropdownDivider, DropdownButton, DropdownItem, DropdownHint} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown';
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import Tooltip from '../tooltip';
