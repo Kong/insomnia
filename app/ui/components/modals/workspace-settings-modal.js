@@ -6,6 +6,7 @@ import FileInputButton from '../base/file-input-button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
+import HelpTooltip from '../help-tooltip';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
@@ -334,7 +335,11 @@ class WorkspaceSettingsModal extends PureComponent {
             ) : (
               <form onSubmit={this._handleSubmitCertificate}>
                 <div className="form-control form-control--outlined no-pad-top">
-                  <label>Host <span className="faint">(port optional)</span>
+                  <label>Host
+                    <HelpTooltip position="right" className="space-left">
+                      The host for which this client certificate is valid.
+                      Port number is optional and * can be used as a wildcard.
+                    </HelpTooltip>
                     <input
                       type="text"
                       required="required"

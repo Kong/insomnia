@@ -15,6 +15,7 @@ import * as db from '../common/database';
 import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
+import urlMatchesCertHost from './url-matches-cert-host';
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -253,14 +254,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       // Set client certs if needed
       for (const certificate of workspace.certificates) {
         const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
-        const {hostname: cHostname, port: cPort} = urlParse(cHostWithProtocol);
-        const {hostname, port} = urlParse(renderedRequest.url);
 
-        const assumedPort = parseInt(port) || 443;
-        const assumedCPort = parseInt(cPort) || 443;
-
-        // Exact host match (includes port)
-        if (cHostname === hostname && assumedCPort === assumedPort) {
+        if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
           const ensureFile = blobOrFilename => {
             if (blobOrFilename.indexOf('/') === 0) {
               return blobOrFilename;
