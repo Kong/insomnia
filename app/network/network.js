@@ -323,8 +323,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
-        headers.push({name: 'Content-Length', value: `${size}`});
         const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
+        setOpt(Curl.option.INFILESIZE, size);
         setOpt(Curl.option.UPLOAD, 1);
         setOpt(Curl.option.READDATA, fd);
         const fn = () => fs.closeSync(fd);

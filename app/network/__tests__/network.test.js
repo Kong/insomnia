@@ -259,11 +259,11 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
-          'Content-Length: 13',
           'Expect: ',
           'Transfer-Encoding: '
         ],
         NOPROGRESS: false,
+        INFILESIZE: 13,
         PROXY: '',
         NOBODY: 0,
         TIMEOUT_MS: 0,
