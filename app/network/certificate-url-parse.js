@@ -1,51 +1,25 @@
 import {parse as urlParse} from 'url';
 const WILDCARD_CHARACTER = '*';
+const WILDCARD_SUBSTITUTION = Math.random().toString().split('.')[1];
+const WILDCARD_SUBSTITUTION_PATTERN = new RegExp(`${WILDCARD_SUBSTITUTION}`, 'g');
 
 export default function certificateUrlParse (url) {
   if (url.indexOf(WILDCARD_CHARACTER) === -1) {
     return urlParse(url);
   } else {
-    const parsed = urlParse(url.replace(/\*/g, ''));
-
-    if (parsed.hostname !== null) {
-      const wildcardIndices = findIndices(url, WILDCARD_CHARACTER);
-      parsed.hostname = insertAtIndices(parsed.hostname, wildcardIndices, WILDCARD_CHARACTER);
-    }
+    const parsed = urlParse(url.replace(/\*/g, WILDCARD_SUBSTITUTION));
+    parsed.hostname = reinstateWildcards(parsed.hostname);
+    parsed.host = reinstateWildcards(parsed.host);
+    parsed.href = reinstateWildcards(parsed.href);
 
     return parsed;
   }
 }
 
-const insertAtIndices = (string, indices, charToInsert) => {
-  const result = Array.from(string).reduce((acc, char, index) => {
-    if (indices.includes(acc.length)) {
-      return `${acc}${charToInsert}${char}`;
-    } else {
-      return `${acc}${char}`;
-    }
-  }, '');
-
-  if (indices.includes(result.length)) {
-    return `${result}${charToInsert}`;
+const reinstateWildcards = (string) => {
+  if (string) {
+    return string.replace(WILDCARD_SUBSTITUTION_PATTERN, WILDCARD_CHARACTER);
   } else {
-    return result;
+    return string;
   }
-};
-
-const findIndices = (url, character) => {
-  const hostAndPath = removeProtocolAndAuth(url);
-  const indices = [];
-  for (let index = 0; index < hostAndPath.length; index++) {
-    if (hostAndPath[index] === character) {
-      indices.push(index);
-    }
-  }
-
-  return indices;
-};
-
-const removeProtocolAndAuth = (url) => {
-  const urlWithoutProtocol = url.split('://')[1] || '';
-  const {auth} = urlParse(url);
-  return urlWithoutProtocol.replace(`${auth}@`, '');
 };

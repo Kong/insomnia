@@ -105,6 +105,8 @@ describe('certificateUrlParse', () => {
     const nonWildcardUrl = `${protocol}://${user}:${password}@${nonWildcardHost}:${port}${path}?${query}#${fragment}`;
     const expected = urlParse(nonWildcardUrl);
     expected.hostname = host;
+    expected.href = url;
+    expected.host = `${host}:${port}`;
     expect(certificateUrlParse(url)).toEqual(expected);
   });
 });
