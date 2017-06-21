@@ -110,7 +110,9 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
         // Ignore the possibly large data messages
         if (infoType === Curl.info.debug.DATA_OUT) {
-          if (content.length < 1000) {
+          if (content.length === 0) {
+            // Sometimes this happens, but I'm not sure why. Just ignore it.
+          } else if (content.length < 1000) {
             timeline.push({name, value: content});
           } else {
             timeline.push({name, value: `(${describeByteSize(content.length)} hidden)`});
