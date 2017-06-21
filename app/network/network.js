@@ -255,6 +255,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Set client certs if needed
       for (const certificate of workspace.certificates) {
+        if (certificate.disabled) {
+          continue;
+        }
+
         const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
 
         if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
