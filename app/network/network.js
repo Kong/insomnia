@@ -164,10 +164,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       const finalUrl = util.prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
       if (isUnixSocket) {
         // URL prep will convert "unix:/path" hostname to "unix/path"
-        const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):(.+)/);
-        const protocol = match[1] || '';
-        const socketPath = match[2] || '';
-        const socketUrl = match[3] || '';
+        const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+        const protocol = (match && match[1]) || '';
+        const socketPath = (match && match[2]) || '';
+        const socketUrl = (match && match[3]) || '';
         setOpt(Curl.option.URL, `${protocol}//${socketUrl}`);
         setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
       } else {

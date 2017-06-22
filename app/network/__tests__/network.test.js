@@ -361,7 +361,7 @@ describe('actuallySend()', () => {
         PROXY: '',
         NOBODY: 0,
         TIMEOUT_MS: 0,
-        URL: 'http:///my/path',
+        URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true
