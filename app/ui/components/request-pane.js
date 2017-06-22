@@ -240,8 +240,7 @@ class RequestPane extends PureComponent {
                                    request={request}
                                    className="tall">
                 {getContentTypeName(request.body.mimeType) || 'Body'}
-                {' '}
-                {numBodyParams ? <span className="bubble">{numBodyParams}</span> : null}
+                {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
             </Tab>
@@ -255,17 +254,19 @@ class RequestPane extends PureComponent {
             </Tab>
             <Tab onClick={this._trackTabQuery}>
               <button>
-                Query {numParameters > 0 && <span className="bubble">{numParameters}</span>}
+                Query
+                {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
             <Tab onClick={this._trackTabHeaders}>
               <button>
-                Header {numHeaders > 0 && <span className="bubble">{numHeaders}</span>}
+                Header
+                {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
             <Tab onClick={this._trackTabDescription}>
               <button>
-                Description
+                Docs
                 {request.description && (
                   <span className="bubble space-left">
                     <i className="fa fa--skinny fa-check txt-xxs"/>

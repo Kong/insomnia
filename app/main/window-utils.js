@@ -6,6 +6,11 @@ import {getAppName, isDevelopment, isMac} from '../common/constants';
 
 const {app, Menu, BrowserWindow, shell, dialog} = electron;
 
+const DEFAULT_WIDTH = 1100;
+const DEFAULT_HEIGHT = 550;
+const MINIMUM_WIDTH = 500;
+const MINIMUM_HEIGHT = 400;
+
 let mainWindow = null;
 let localStorage = null;
 
@@ -37,10 +42,10 @@ export function createWindow () {
     fullscreen: fullscreen,
     fullscreenable: true,
     title: getAppName(),
-    width: width || 1200,
-    height: height || 600,
-    minHeight: 500,
-    minWidth: 500,
+    width: width || DEFAULT_WIDTH,
+    height: height || DEFAULT_HEIGHT,
+    minHeight: MINIMUM_WIDTH,
+    minWidth: MINIMUM_HEIGHT,
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
@@ -248,7 +253,12 @@ export function createWindow () {
       click: () => mainWindow.toggleDevTools()
     }, {
       label: 'Resize to Default',
-      click: () => mainWindow.setBounds({x: 100, y: 100, width: 1000, height: 480})
+      click: () => mainWindow.setBounds({
+        x: 100,
+        y: 100,
+        width: DEFAULT_WIDTH,
+        height: DEFAULT_HEIGHT
+      })
     }, {
       label: 'Take Screenshot',
       click: function () {
