@@ -160,8 +160,19 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       // Set the URL, including the query parameters
       const qs = querystring.buildFromParams(renderedRequest.parameters);
       const url = querystring.joinUrl(renderedRequest.url, qs);
+      const isUnixSocket = url.match(/https?:\/\/unix:/);
       const finalUrl = util.prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
-      setOpt(Curl.option.URL, finalUrl);
+      if (isUnixSocket) {
+        // URL prep will convert "unix:/path" hostname to "unix/path"
+        const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):(.+)/);
+        const protocol = match[1] || '';
+        const socketPath = match[2] || '';
+        const socketUrl = match[3] || '';
+        setOpt(Curl.option.URL, `${protocol}//${socketUrl}`);
+        setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
+      } else {
+        setOpt(Curl.option.URL, finalUrl);
+      }
       timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
 
       // log some things
