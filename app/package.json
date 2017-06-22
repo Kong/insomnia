@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "5.3.6",
+  "version": "5.4.0",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "Debug APIs like a human, not a robot",
