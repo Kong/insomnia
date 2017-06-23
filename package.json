@@ -140,6 +140,7 @@
     "redux": "3.3.1",
     "redux-thunk": "2.0.1",
     "reselect": "2.5.4",
+    "simple-react-pdf": "^1.0.8",
     "srp-js": "0.2.0",
     "tough-cookie": "2.3.1",
     "uuid": "3.0.0",
