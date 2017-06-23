@@ -2,6 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
+import {SimplePDF} from 'simple-react-pdf';
 import CodeEditor from '../codemirror/code-editor';
 import ResponseWebView from './response-webview';
 import ResponseRaw from './response-raw';
@@ -150,6 +151,17 @@ class ResponseViewer extends PureComponent {
           contentType={`${justContentType}; charset=UTF-8`}
           url={url}
         />
+      );
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
+      const justContentType = contentType.split(';')[0];
+      return (
+        <div className="scrollable-container tall wide">
+          <div className="scrollable">
+            <SimplePDF
+              file={`data:${justContentType};base64,${base64Body}`}
+            />
+          </div>
+        </div>
       );
     } else if (previewMode === PREVIEW_MODE_RAW) {
       const match = contentType.match(/charset=([\w-]+)/);
