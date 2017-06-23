@@ -155,12 +155,8 @@ class ResponseViewer extends PureComponent {
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
       const justContentType = contentType.split(';')[0];
       return (
-        <div className="scrollable-container tall wide">
-          <div className="scrollable">
-            <SimplePDF
-              file={`data:${justContentType};base64,${base64Body}`}
-            />
-          </div>
+        <div className="tall wide scrollable">
+          <SimplePDF file={`data:${justContentType};base64,${base64Body}`}/>
         </div>
       );
     } else if (previewMode === PREVIEW_MODE_RAW) {
