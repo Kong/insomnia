@@ -290,6 +290,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
             });
           }
         }
+      }).catch((r) => {
+        timeline.push({name: 'TEXT', value: `Error during proxy lookup: ${r.message}`});
       });
 
       // Set client certs if needed
