@@ -264,23 +264,24 @@ export function _actuallySend (renderedRequest, workspace, settings) {
           resolve();
         } else {
           const session = electron.session || electron.remote.getCurrentWebContents().session;
-          if(session && session.resolveProxy) {
+          if (session && session.resolveProxy) {
             session.resolveProxy(renderedRequest.url, (pacString) => {
-              let type, hostAndPort, proxy = '';
+              let type, hostAndPort;
+              let proxy = '';
               [type, hostAndPort] = pacString.split(' ', 2);
               type = type.toUpperCase();
-              if(type === 'PROXY') {
+              if (type === 'PROXY') {
                 proxy = `http://${hostAndPort}`;
-              } else if(type === 'SOCKS' || type === 'SOCKS4') {
+              } else if (type === 'SOCKS' || type === 'SOCKS4') {
                 proxy = `socks4://${hostAndPort}`;
-              } else if(type === 'SOCKS5') {
+              } else if (type === 'SOCKS5') {
                 proxy = `socks5://${hostAndPort}`;
-              } else if(type === 'HTTPS') {
+              } else if (type === 'HTTPS') {
                 proxy = `https://${hostAndPort}`;
-              } else if(type === 'QUIC') {
+              } else if (type === 'QUIC') {
                 proxy = `quic://${hostAndPort}`;
               } // Else assume direct or unsupported...
-              if(proxy !== '') {
+              if (proxy !== '') {
                 setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
                 setOpt(Curl.option.PROXY, proxy);
                 timeline.push({name: 'TEXT', value: `Auto-resolved network proxy as ${proxy}`});
@@ -536,7 +537,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         respond({statusMessage, error});
       });
 
-      proxyPromise.then(()=>curl.perform())
+      proxyPromise.then(() => curl.perform());
     } catch (err) {
       handleError(err);
     }

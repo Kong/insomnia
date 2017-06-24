@@ -28,7 +28,7 @@ export function init () {
 }
 
 export function migrate (doc) {
-  doc = migrateProxyEnabled(doc)
+  doc = migrateProxyEnabled(doc);
   return doc;
 }
 
@@ -72,7 +72,7 @@ function migrateProxyEnabled (settings) {
     return settings;
   }
 
-  if(settings.proxyEnabled === true) {
+  if (settings.proxyEnabled === true) {
     settings.proxyConfiguration = 'manual';
   } else {
     settings.proxyConfiguration = 'auto';
