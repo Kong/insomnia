@@ -246,23 +246,50 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         });
       }
 
-      // Set proxy settings if we have them
-      if (settings.proxyEnabled) {
-        const {protocol} = urlParse(renderedRequest.url);
-        const {httpProxy, httpsProxy, noProxy} = settings;
-        const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-        const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-        timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol}`});
-        if (proxy) {
-          setOpt(Curl.option.PROXY, proxy);
-          setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+      const proxyPromise = new Promise((resolve) => {
+        // Set proxy settings if we have them
+        if (settings.proxyConfiguration === 'manual') {
+          const {protocol} = urlParse(renderedRequest.url);
+          const {httpProxy, httpsProxy, noProxy} = settings;
+          const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+          const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+          timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol}`});
+          if (proxy) {
+            setOpt(Curl.option.PROXY, proxy);
+            setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+          }
+          if (noProxy) {
+            setOpt(Curl.option.NOPROXY, noProxy);
+          }
+          resolve();
+        } else {
+          const session = electron.session || electron.remote.getCurrentWebContents().session;
+          if(session && session.resolveProxy) {
+            session.resolveProxy(renderedRequest.url, (pacString) => {
+              let type, hostAndPort, proxy = '';
+              [type, hostAndPort] = pacString.split(' ', 2);
+              type = type.toUpperCase();
+              if(type === 'PROXY') {
+                proxy = `http://${hostAndPort}`;
+              } else if(type === 'SOCKS' || type === 'SOCKS4') {
+                proxy = `socks4://${hostAndPort}`;
+              } else if(type === 'SOCKS5') {
+                proxy = `socks5://${hostAndPort}`;
+              } else if(type === 'HTTPS') {
+                proxy = `https://${hostAndPort}`;
+              } else if(type === 'QUIC') {
+                proxy = `quic://${hostAndPort}`;
+              } // Else assume direct or unsupported...
+              if(proxy !== '') {
+                setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
+                setOpt(Curl.option.PROXY, proxy);
+                timeline.push({name: 'TEXT', value: `Auto-resolved network proxy as ${proxy}`});
+              }
+              resolve();
+            });
+          }
         }
-        if (noProxy) {
-          setOpt(Curl.option.NOPROXY, noProxy);
-        }
-      } else {
-        setOpt(Curl.option.PROXY, '');
-      }
+      });
 
       // Set client certs if needed
       for (const certificate of workspace.certificates) {
@@ -509,7 +536,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         respond({statusMessage, error});
       });
 
-      curl.perform();
+      proxyPromise.then(()=>curl.perform())
     } catch (err) {
       handleError(err);
     }

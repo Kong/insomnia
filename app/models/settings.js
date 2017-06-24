@@ -17,7 +17,7 @@ export function init () {
     httpProxy: '',
     httpsProxy: '',
     noProxy: '',
-    proxyEnabled: false,
+    proxyConfiguration: 'auto',
     timeout: 0,
     validateSSL: true,
     forceVerticalLayout: false,
@@ -28,6 +28,7 @@ export function init () {
 }
 
 export function migrate (doc) {
+  doc = migrateProxyEnabled(doc)
   return doc;
 }
 
@@ -55,4 +56,28 @@ export async function getOrCreate (patch = {}) {
   } else {
     return results[0];
   }
+}
+
+// ~~~~~~~~~~ //
+// Migrations //
+// ~~~~~~~~~~ //
+
+/**
+ * Migrate proxyEnabled setting to proxyConfiguration ('auto' or 'manual')
+ * @param settings
+ * @returns {*}
+ */
+function migrateProxyEnabled (settings) {
+  if (settings.proxyConfiguration) {
+    return settings;
+  }
+
+  if(settings.proxyEnabled === true) {
+    settings.proxyConfiguration = 'manual';
+  } else {
+    settings.proxyConfiguration = 'auto';
+  }
+  delete settings.proxyEnabled;
+
+  return settings;
 }
