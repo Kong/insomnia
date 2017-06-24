@@ -280,7 +280,9 @@ export function _actuallySend (renderedRequest, workspace, settings) {
                 proxy = `https://${hostAndPort}`;
               } else if (type === 'QUIC') {
                 proxy = `quic://${hostAndPort}`;
-              } // Else assume direct or unsupported...
+              } else if (type !== 'DIRECT') {
+                timeline.push({name: 'TEXT', value: `Network proxy auto-resolution failed: unknown PAC type ${type}`});
+              }
               if (proxy !== '') {
                 setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
                 setOpt(Curl.option.PROXY, proxy);
