@@ -44,8 +44,8 @@ export function createWindow () {
     title: getAppName(),
     width: width || DEFAULT_WIDTH,
     height: height || DEFAULT_HEIGHT,
-    minHeight: MINIMUM_WIDTH,
-    minWidth: MINIMUM_HEIGHT,
+    minHeight: MINIMUM_HEIGHT,
+    minWidth: MINIMUM_WIDTH,
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, 'static/icon.png'),
     webPreferences: {
