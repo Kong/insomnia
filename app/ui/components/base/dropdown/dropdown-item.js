@@ -27,14 +27,17 @@ class DropdownItem extends PureComponent {
       buttonClass,
       children,
       className,
+      color,
       onClick, // eslint-disable-line no-unused-vars
       stayOpenAfterClick, // eslint-disable-line no-unused-vars
       ...props
     } = this.props;
 
+    const styles = color ? {color} : {};
+
     const inner = (
       <div className={classnames('dropdown__inner', className)}>
-        <div className="dropdown__text">{children}</div>
+        <div className="dropdown__text" style={styles}>{children}</div>
       </div>
     );
 
@@ -58,7 +61,8 @@ DropdownItem.propTypes = {
   disabled: PropTypes.bool,
   onClick: PropTypes.func,
   children: PropTypes.node,
-  className: PropTypes.string
+  className: PropTypes.string,
+  color: PropTypes.string
 };
 
 export default DropdownItem;

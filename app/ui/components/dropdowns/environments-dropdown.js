@@ -22,7 +22,8 @@ class EnvironmentsDropdown extends PureComponent {
       <DropdownItem key={environment._id}
                     value={environment._id}
                     onClick={this._handleActivateEnvironment}>
-        <i className="fa fa-random"/> Use <strong>{environment.name}</strong>
+        <i className="fa fa-random" style={{color: environment.color}}/>
+        Use <strong>{environment.name}</strong>
       </DropdownItem>
     );
   }
@@ -61,6 +62,9 @@ class EnvironmentsDropdown extends PureComponent {
               </Tooltip>
             )}
             <div className="sidebar__menu__thing__text">
+              {activeEnvironment && (
+                <i className="fa fa-circle space-right" style={{color: activeEnvironment.color}}/>
+              )}
               {description}
             </div>
             <i className="space-left fa fa-caret-down"/>

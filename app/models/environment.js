@@ -8,6 +8,7 @@ export function init () {
   return {
     name: 'New Environment',
     data: {},
+    color: null,
     isPrivate: false
   };
 }

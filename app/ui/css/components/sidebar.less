@@ -4,7 +4,7 @@
 .sidebar {
   position: relative;
   display: grid;
-  grid-template-rows: @height-nav @line-height-sm auto minmax(0, 1fr) auto;
+  grid-template-rows: @height-nav auto auto minmax(0, 1fr) auto;
   grid-template-columns: 100%;
   z-index: 10;
 
@@ -82,16 +82,28 @@
   .sidebar__menu {
     box-sizing: border-box;
     width: 100%;
-    display: grid;
-    grid-template-columns: 55% 45%;
-    justify-items: center;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     font-size: @font-size-sm;
     color: @hl;
-    padding: 0 @padding-sm;
+    padding-left: @padding-xs;
+    padding-right: @padding-xs;
+
+    // Make it scroll when too skinny
+    overflow: auto;
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     & > * {
-      width: 100%;
+      flex: 1;
       margin-top: @padding-xs;
+      margin-bottom: @padding-xs;
+    }
+
+    & > .dropdown > * {
+      width: 100%;
     }
 
     & > *:first-child {
@@ -122,7 +134,6 @@
     }
 
     .btn {
-      width: 100%;
       border-radius: 900px;
       height: @line-height-xxs;
       padding-left: @padding-xxs;
@@ -146,19 +157,6 @@
 
     & > *:last-child {
       display: none;
-    }
-  }
-
-  &.sidebar--skinny .sidebar__menu {
-    grid-template-columns: 100%;
-
-    & > *:last-child {
-      display: none;
-    }
-
-    .btn {
-      padding-left: @padding-xs;
-      padding-right: @padding-xs;
     }
   }
 

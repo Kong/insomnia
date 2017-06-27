@@ -13,6 +13,7 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
+import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 @autobind
 class WorkspaceEnvironmentsEditModal extends PureComponent {
@@ -102,9 +103,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     trackEvent('Environment Editor', 'Show Environment');
   }
 
-  async _handleDeleteEnvironment () {
+  async _handleDeleteEnvironment (environment) {
     const {rootEnvironment, workspace} = this.state;
-    const environment = this._getActiveEnvironment();
 
     // Don't delete the root environment
     if (environment === rootEnvironment) {
@@ -130,6 +130,17 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
     trackEvent('Environment', 'Rename');
   }
 
+  _handleChangeEnvironmentColor (environment, color) {
+    clearTimeout(this._colorChangeTimeout);
+    this._colorChangeTimeout = setTimeout(async () => {
+      const {workspace} = this.state;
+      await models.environment.update(environment, {color});
+      await this._load(workspace);
+
+      trackEvent('Environment', color ? 'Change Color' : 'Unset Color');
+    }, DEBOUNCE_MILLIS);
+  }
+
   _didChange () {
     const isValid = this._envEditor.isValid();
 
@@ -142,12 +153,39 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
 
   _getActiveEnvironment () {
     const {activeEnvironmentId, subEnvironments, rootEnvironment} = this.state;
-
     if (rootEnvironment && rootEnvironment._id === activeEnvironmentId) {
       return rootEnvironment;
     } else {
       return subEnvironments.find(e => e._id === activeEnvironmentId);
     }
+  }
+
+  _handleUnsetColor (environment) {
+    this._handleChangeEnvironmentColor(environment, null);
+  }
+
+  async _handleClickColorChange (environment, e) {
+    let el = document.querySelector('#env-color-picker');
+
+    if (!el) {
+      el = document.createElement('input');
+      el.id = 'env-color-picker';
+      el.type = 'color';
+      document.body.appendChild(el);
+    }
+
+    let color = environment.color || '#7d69cb';
+
+    if (!environment.color) {
+      await this._handleChangeEnvironmentColor(environment, color);
+    }
+
+    el.value = color;
+    el.addEventListener('input', e => {
+      this._handleChangeEnvironmentColor(environment, e.target.value);
+    });
+
+    el.click();
   }
 
   _saveChanges () {
@@ -218,14 +256,18 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
                 return (
                   <li key={environment._id} className={classes}>
                     <Button onClick={this._handleShowEnvironment} value={environment}>
-                      {environment.isPrivate ? (
-                          <i className="fa fa-eye-slash faint"
-                             title="Environment will not be exported or synced"
-                          />
-                        ) : (
-                          <i className="fa fa-blank faint"/>
-                        )}
-                      &nbsp;&nbsp;
+                      {environment.color
+                        ? <i className="space-right fa fa-circle"
+                             style={{color: environment.color}}/>
+                        : <i className="space-right fa fa-empty"/>
+                      }
+
+                      {environment.isPrivate
+                        ? <i className="fa fa-eye-slash faint space-right"
+                             title="Environment will not be exported or synced"/>
+                        : null
+                      }
+
                       <Editable
                         className="inline-block"
                         onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
@@ -241,16 +283,43 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
             <div className="env-modal__main__header">
               <h1>
                 <Editable singleClick
+                          className="wide"
                           onSubmit={name => this._handleChangeEnvironmentName(activeEnvironment, name)}
                           value={activeEnvironment ? activeEnvironment.name : ''}/>
               </h1>
-              {rootEnvironment !== activeEnvironment && (
-                  <PromptButton className="btn btn--clicky"
-                                confirmMessage="Confirm"
-                                onClick={this._handleDeleteEnvironment}>
-                    <i className="fa fa-trash-o"/> Delete
-                  </PromptButton>
-                )}
+
+              {activeEnvironment && rootEnvironment !== activeEnvironment && (
+                <Dropdown className="space-right" right>
+                  <DropdownButton className="btn btn--clicky">
+                    {activeEnvironment.color && (
+                      <i className="fa fa-circle space-right"
+                         style={{color: activeEnvironment.color}}/>
+                    )}
+                    Color <i className="fa fa-caret-down"/>
+                  </DropdownButton>
+
+                  <DropdownItem value={activeEnvironment} onClick={this._handleClickColorChange}>
+                    <i className="fa fa-circle" style={{color: activeEnvironment.color}}/>
+                    {activeEnvironment.color ? 'Change Color' : 'Assign Color'}
+                  </DropdownItem>
+
+                  <DropdownItem value={activeEnvironment}
+                                onClick={this._handleUnsetColor}
+                                disabled={!activeEnvironment.color}>
+                    <i className="fa fa-minus-circle"/>
+                    Unset Color
+                  </DropdownItem>
+                </Dropdown>
+              )}
+
+              {activeEnvironment && rootEnvironment !== activeEnvironment && (
+                <PromptButton
+                  value={activeEnvironment}
+                  onClick={this._handleDeleteEnvironment}
+                  className="btn btn--clicky">
+                  <i className="fa fa-trash-o"/>
+                </PromptButton>
+              )}
             </div>
             <div className="env-modal__editor">
               <EnvironmentEditor
