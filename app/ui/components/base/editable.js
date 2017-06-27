@@ -63,7 +63,7 @@ class Editable extends PureComponent {
   render () {
     const {
       value,
-      singleClick, // eslint-disable-line no-unused-vars
+      singleClick,
       onEditStart, // eslint-disable-line no-unused-vars
       className,
       ...extra
@@ -85,6 +85,7 @@ class Editable extends PureComponent {
       return (
         <div {...extra}
              className={`editable ${className}`}
+             title={singleClick ? 'Click to edit' : 'Double click to edit'}
              onClick={this._handleSingleClickEditStart}
              onDoubleClick={this._handleEditStart}>
           {value}

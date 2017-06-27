@@ -19,7 +19,6 @@ const TYPE_CONSTANT = 'constant';
 const MAX_CONSTANTS = -1;
 const MAX_VARIABLES = -1;
 const MAX_TAGS = -1;
-const MIN_CHAR_MATCH = 1;
 
 const ICONS = {
   [TYPE_CONSTANT]: {char: '&#x1d484;', title: 'Constant'},
@@ -306,11 +305,6 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
 
     // Throw away things that don't match
     if (!matchName.includes(matchSegment)) {
-      continue;
-    }
-
-    // Throw away short matches
-    if (matchSegment.length < MIN_CHAR_MATCH) {
       continue;
     }
 
