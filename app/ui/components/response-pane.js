@@ -39,7 +39,7 @@ class ResponsePane extends PureComponent {
     let response = responseId ? await models.response.getById(responseId) : null;
 
     if (!response) {
-      response = await models.response.getLatestByParentId(requestId);
+      response = await models.response.getLatestForRequest(requestId);
     }
 
     this.setState({response});
@@ -52,8 +52,8 @@ class ResponsePane extends PureComponent {
       return;
     }
 
-    const {body, encoding, contentType} = this.state.response;
-    const bodyBuffer = new Buffer(body, encoding);
+    const {response} = this.state;
+    const {contentType} = response;
     const extension = mime.extension(contentType) || '';
 
     const options = {
@@ -64,13 +64,15 @@ class ResponsePane extends PureComponent {
       }]
     };
 
-    remote.dialog.showSaveDialog(options, filename => {
-      if (!filename) {
+    remote.dialog.showSaveDialog(options, outputPath => {
+      if (!outputPath) {
         trackEvent('Response', 'Save Cancel');
         return;
       }
 
-      fs.writeFile(filename, bodyBuffer, {}, err => {
+      const bodyBuffer = models.response.getBodyBuffer(response.bodyPath);
+
+      fs.writeFile(outputPath, bodyBuffer, err => {
         if (err) {
           console.warn('Failed to save response body', err);
           trackEvent('Response', 'Save Failure');
@@ -81,19 +83,21 @@ class ResponsePane extends PureComponent {
     });
   }
 
-  async _handleDownloadFullResponseBody () {
+  _handleDownloadFullResponseBody () {
     if (!this.state.response) {
       // Should never happen
       console.warn('No response to download');
       return;
     }
 
-    const {body, timeline, encoding} = this.state.response;
+    const {timeline, bodyPath} = this.state.response;
     const headers = timeline
       .filter(v => v.name === 'HEADER_IN')
       .map(v => v.value)
       .join('');
-    const bodyBuffer = new Buffer(body, encoding);
+
+    const bodyBuffer = models.response.getBodyBuffer(bodyPath);
+
     const fullResponse = `${headers}${bodyBuffer}`;
 
     const options = {
@@ -277,10 +281,9 @@ class ResponsePane extends PureComponent {
               filter={filter}
               filterHistory={filterHistory}
               updateFilter={response.error ? null : handleSetFilter}
-              body={response.error ? response.error : response.body}
+              bodyPath={response.bodyPath}
               encoding={response.encoding}
-              error={!!response.error}
-              responseId={response._id}
+              error={response.error}
               editorLineWrapping={editorLineWrapping}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}

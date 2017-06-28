@@ -55,13 +55,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(
+    const {bodyBuffer} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const body = JSON.parse(Buffer.from(response.body, 'base64'));
+    const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
         COOKIELIST: [
@@ -111,13 +111,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(
+    const {bodyBuffer} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const body = JSON.parse(Buffer.from(response.body, 'base64'));
+    const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
         CUSTOMREQUEST: 'POST',
@@ -190,13 +190,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(
+    const {bodyBuffer} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const body = JSON.parse(Buffer.from(response.body, 'base64'));
+    const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
         CUSTOMREQUEST: 'POST',
@@ -239,13 +239,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(
+    const {bodyBuffer} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const body = JSON.parse(Buffer.from(response.body, 'base64'));
+    const body = JSON.parse(bodyBuffer);
 
     // READDATA is an fd (random int), so fuzzy assert this one
     expect(typeof body.options.READDATA).toBe('number');
@@ -301,13 +301,12 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(
+    const {bodyBuffer} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
-
-    const body = JSON.parse(Buffer.from(response.body, 'base64'));
+    const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
         CUSTOMREQUEST: 'POST',
@@ -346,10 +345,10 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
     // console.log('HELLO', response);
 
-    const body = JSON.parse(Buffer.from(response.body, 'base64'));
+    const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
         CUSTOMREQUEST: 'GET',

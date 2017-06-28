@@ -1,5 +1,6 @@
 import uuid from 'uuid';
-import {parse as urlParse, format as urlFormat} from 'url';
+import zlib from 'zlib';
+import {format as urlFormat, parse as urlParse} from 'url';
 import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
 import * as querystring from './querystring';
 import {shell} from 'electron';
@@ -277,4 +278,22 @@ export function fnOrString (v, ...args) {
   } else {
     return v(...args);
   }
+}
+
+export function compressObject (obj) {
+  const compressed = compress(JSON.stringify(obj));
+  return compressed.toString('base64');
+}
+
+export function decompressObject (input) {
+  const jsonBuffer = decompress(Buffer.from(input, 'base64'));
+  return JSON.parse(jsonBuffer);
+}
+
+export function compress (inputBuffer) {
+  return zlib.gzipSync(inputBuffer);
+}
+
+export function decompress (inputBuffer) {
+  return zlib.gunzipSync(inputBuffer);
 }

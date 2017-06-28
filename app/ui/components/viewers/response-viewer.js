@@ -8,6 +8,8 @@ import ResponseWebView from './response-webview';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
 import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
+import * as models from '../../../models/index';
+import HelpTooltip from '../help-tooltip';
 
 let alwaysShowLargeResponses = false;
 
@@ -16,7 +18,8 @@ class ResponseViewer extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      blockingBecauseTooLarge: false
+      blockingBecauseTooLarge: false,
+      bodyBuffer: null
     };
   }
 
@@ -33,23 +36,25 @@ class ResponseViewer extends PureComponent {
     this._handleDismissBlocker();
   }
 
-  _checkResponseBlocker (props) {
-    if (alwaysShowLargeResponses) {
-      return;
-    }
-
+  _maybeLoadResponseBody (props) {
     // Block the response if it's too large
-    if (props.bytes > LARGE_RESPONSE_MB * 1024 * 1024) {
+    const responseIsTooLarge = props.bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+    if (!alwaysShowLargeResponses && responseIsTooLarge) {
       this.setState({blockingBecauseTooLarge: true});
+    } else {
+      this.setState({
+        blockingBecauseTooLarge: false,
+        bodyBuffer: models.response.getBodyBuffer(props.bodyPath)
+      });
     }
   }
 
   componentWillMount () {
-    this._checkResponseBlocker(this.props);
+    this._maybeLoadResponseBody(this.props);
   }
 
   componentWillReceiveProps (nextProps) {
-    this._checkResponseBlocker(nextProps);
+    this._maybeLoadResponseBody(nextProps);
   }
 
   shouldComponentUpdate (nextProps, nextState) {
@@ -81,19 +86,18 @@ class ResponseViewer extends PureComponent {
       editorIndentSize,
       editorKeyMap,
       updateFilter,
-      body: base64Body,
-      encoding,
+      bodyPath,
       url,
       error
     } = this.props;
 
-    const bodyBuffer = new Buffer(base64Body, encoding);
+    const {bodyBuffer} = this.state;
 
     if (error) {
       return (
         <ResponseError
           url={url}
-          error={bodyBuffer.toString('utf8')}
+          error={error}
           fontSize={editorFontSize}
         />
       );
@@ -121,7 +125,16 @@ class ResponseViewer extends PureComponent {
       );
     }
 
-    if (bodyBuffer.length === 0) {
+    if (!bodyBuffer && bodyPath) {
+      return (
+        <div className="pad faint">
+          Failed to load body from filesystem <HelpTooltip>Failed to load response body
+          from {bodyPath}</HelpTooltip>
+        </div>
+      );
+    }
+
+    if (!bodyBuffer && !bodyPath) {
       return (
         <div className="pad faint">
           No body returned in response
@@ -132,6 +145,7 @@ class ResponseViewer extends PureComponent {
     const ct = contentType.toLowerCase();
     if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
+      const base64Body = bodyBuffer.toString('base64');
       return (
         <div className="scrollable-container tall wide">
           <div className="scrollable">
@@ -154,6 +168,7 @@ class ResponseViewer extends PureComponent {
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
       const justContentType = contentType.split(';')[0];
+      const base64Body = bodyBuffer.toString('base64');
       return (
         <div className="tall wide scrollable">
           <SimplePDF file={`data:${justContentType};base64,${base64Body}`}/>
@@ -205,8 +220,7 @@ class ResponseViewer extends PureComponent {
 }
 
 ResponseViewer.propTypes = {
-  body: PropTypes.string.isRequired,
-  encoding: PropTypes.string.isRequired,
+  bodyPath: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
@@ -216,12 +230,11 @@ ResponseViewer.propTypes = {
   editorLineWrapping: PropTypes.bool.isRequired,
   url: PropTypes.string.isRequired,
   bytes: PropTypes.number.isRequired,
-  responseId: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
 
   // Optional
   updateFilter: PropTypes.func,
-  error: PropTypes.bool
+  error: PropTypes.string
 };
 
 export default ResponseViewer;

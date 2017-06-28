@@ -81,7 +81,7 @@ class Tooltip extends PureComponent {
       {'tooltip--visible': visible}
     );
 
-    const bubbleClasses = classnames('tooltip__bubble', 'theme--overlay');
+    const bubbleClasses = classnames('tooltip__bubble');
 
     const bubbleStyles = {
       left: left ? `${left}px` : null,
