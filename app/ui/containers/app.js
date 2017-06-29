@@ -1,10 +1,9 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
-import {clipboard} from 'electron';
+import {clipboard, ipcRenderer, remote} from 'electron';
 import {parse as urlParse} from 'url';
-import {ipcRenderer, remote} from 'electron';
-import HTTPSnippet, {availableTargets} from 'httpsnippet';
+import HTTPSnippet from 'httpsnippet';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
