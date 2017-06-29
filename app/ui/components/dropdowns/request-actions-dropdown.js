@@ -23,6 +23,11 @@ class RequestActionsDropdown extends PureComponent {
     trackEvent('Request', 'Generate Code', 'Request Action');
   }
 
+  _handleCopyAsCurl () {
+    trackEvent('Request', 'Copy As Curl', 'Request Action');
+    this.props.handleCopyAsCurl(this.props.request);
+  }
+
   _handleRemove () {
     const {request} = this.props;
     models.request.remove(request);
@@ -52,6 +57,12 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code"/> Generate Code
         </DropdownItem>
+        <DropdownItem onClick={this._handleCopyAsCurl}
+                      buttonClass={PromptButton}
+                      addIcon
+                      confirmMessage="Click Again to Copy">
+          <i className="fa fa-copy"/> Copy as Curl
+        </DropdownItem>
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o"/> Delete
         </DropdownItem>
@@ -70,6 +81,7 @@ class RequestActionsDropdown extends PureComponent {
 RequestActionsDropdown.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
+  handleCopyAsCurl: PropTypes.func.isRequired,
   handleShowSettings: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired
 };

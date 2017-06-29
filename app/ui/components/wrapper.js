@@ -271,6 +271,7 @@ class Wrapper extends PureComponent {
       handleDuplicateWorkspace,
       handleGenerateCodeForActiveRequest,
       handleGenerateCode,
+      handleCopyAsCurl,
       isLoading,
       loadStartTime,
       paneWidth,
@@ -309,6 +310,7 @@ class Wrapper extends PureComponent {
           handleSetActiveWorkspace={handleSetActiveWorkspace}
           handleDuplicateRequest={handleDuplicateRequest}
           handleGenerateCode={handleGenerateCode}
+          handleCopyAsCurl={handleCopyAsCurl}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleSetActiveEnvironment={handleSetActiveEnvironment}
           moveDoc={handleMoveDoc}
@@ -529,6 +531,7 @@ Wrapper.propTypes = {
   handleCreateRequestGroup: PropTypes.func.isRequired,
   handleGenerateCodeForActiveRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
+  handleCopyAsCurl: PropTypes.func.isRequired,
   handleCreateRequestForWorkspace: PropTypes.func.isRequired,
   handleSetRequestPaneRef: PropTypes.func.isRequired,
   handleSetResponsePaneRef: PropTypes.func.isRequired,

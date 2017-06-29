@@ -45,6 +45,7 @@ class Sidebar extends PureComponent {
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
       handleGenerateCode,
+      handleCopyAsCurl,
       handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
       moveDoc,
@@ -98,6 +99,7 @@ class Sidebar extends PureComponent {
           handleDuplicateRequest={handleDuplicateRequest}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
           handleGenerateCode={handleGenerateCode}
+          handleCopyAsCurl={handleCopyAsCurl}
           moveDoc={moveDoc}
           workspace={workspace}
           activeRequest={activeRequest}
@@ -128,6 +130,7 @@ Sidebar.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
+  handleCopyAsCurl: PropTypes.func.isRequired,
   showEnvironmentsModal: PropTypes.func.isRequired,
   showCookiesModal: PropTypes.func.isRequired,
 
