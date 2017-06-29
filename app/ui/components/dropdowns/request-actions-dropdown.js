@@ -5,7 +5,6 @@ import {Dropdown, DropdownButton, DropdownHint, DropdownItem} from '../base/drop
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 import {DropdownDivider} from '../base/dropdown/index';
-import CopyButton from '../base/copy-button';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
