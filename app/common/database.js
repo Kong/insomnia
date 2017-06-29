@@ -294,10 +294,10 @@ export function docUpdate (originalDoc, patch = {}) {
   return update(doc);
 }
 
-export function docCreate (type, patch = {}) {
+export function docCreate (type, ...patches) {
   const doc = initModel(
     type,
-    patch,
+    ...patches,
 
     // Fields that the user can't touch
     {

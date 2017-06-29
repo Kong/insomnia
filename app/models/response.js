@@ -82,12 +82,8 @@ export async function create (patch = {}, bodyBuffer = null) {
   await db.removeBulkSilently(type, {parentId, _id: {$nin: recentIds}});
 
   // Actually create the new response
-  const response = await db.docCreate(type, patch);
-
-  // Store the body.
-  // NOTE: Storing body requires doc to have an ID, so do this after insert
   const bodyPath = bodyBuffer ? storeBodyBuffer(bodyBuffer) : '';
-  return db.docUpdate(response, {bodyPath});
+  return db.docCreate(type, {bodyPath}, patch);
 }
 
 export function getLatestByParentId (parentId) {
