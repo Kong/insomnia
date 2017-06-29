@@ -62,7 +62,7 @@ class EnvironmentsDropdown extends PureComponent {
               </Tooltip>
             )}
             <div className="sidebar__menu__thing__text">
-              {activeEnvironment && (
+              {activeEnvironment && activeEnvironment.color && (
                 <i className="fa fa-circle space-right" style={{color: activeEnvironment.color}}/>
               )}
               {description}
