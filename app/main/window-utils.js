@@ -21,7 +21,7 @@ export function init () {
 
 export function createWindow () {
   const zoomFactor = getZoomFactor();
-  const {bounds, fullscreen} = getBounds();
+  const {bounds, fullscreen, maximize} = getBounds();
   const {x, y, width, height} = bounds;
 
   // Make sure we don't place the window outside of the visible space
@@ -53,6 +53,11 @@ export function createWindow () {
     }
   });
 
+  // BrowserWindow doesn't have an option for this, so we have to do it manually :(
+  if (maximize) {
+    mainWindow.maximize();
+  }
+
   let _resizeTimeout = null;
   mainWindow.on('resize', e => {
     saveBounds();
@@ -61,6 +66,16 @@ export function createWindow () {
     _resizeTimeout = setTimeout(() => {
       trackEvent('Window', 'Resize');
     }, 1000);
+  });
+
+  mainWindow.on('maximize', e => {
+    saveBounds();
+    trackEvent('Window', 'Maximize');
+  });
+
+  mainWindow.on('unmaximize', e => {
+    saveBounds();
+    trackEvent('Window', 'Unmaximize');
   });
 
   let _moveTimeout = null;
@@ -323,6 +338,7 @@ function saveBounds () {
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
     localStorage.setItem('bounds', mainWindow.getBounds());
+    localStorage.setItem('maximize', mainWindow.isMaximized());
     localStorage.setItem('fullscreen', false);
   } else {
     localStorage.setItem('fullscreen', true);
@@ -332,15 +348,17 @@ function saveBounds () {
 function getBounds () {
   let bounds = {};
   let fullscreen = false;
+  let maximize = false;
   try {
     bounds = localStorage.getItem('bounds', {});
     fullscreen = localStorage.getItem('fullscreen', false);
+    maximize = localStorage.getItem('maximize', false);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse window bounds', e);
   }
 
-  return {bounds, fullscreen};
+  return {bounds, fullscreen, maximize};
 }
 
 function saveZoomFactor (zoomFactor) {
