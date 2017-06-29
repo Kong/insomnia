@@ -5,6 +5,7 @@ import {Dropdown, DropdownButton, DropdownHint, DropdownItem} from '../base/drop
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 import {DropdownDivider} from '../base/dropdown/index';
+import CopyButton from '../base/copy-button';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -21,6 +22,11 @@ class RequestActionsDropdown extends PureComponent {
   _handleGenerateCode () {
     this.props.handleGenerateCode(this.props.request);
     trackEvent('Request', 'Generate Code', 'Request Action');
+  }
+
+  _handleCopyAsCurl () {
+    trackEvent('Request', 'Copy As Curl', 'Request Action');
+    this.props.handleCopyAsCurl(this.props.request);
   }
 
   _handleRemove () {
@@ -52,6 +58,12 @@ class RequestActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code"/> Generate Code
         </DropdownItem>
+        <DropdownItem onClick={this._handleCopyAsCurl}
+                      buttonClass={PromptButton}
+                      addIcon
+                      confirmMessage="Click Again to Copy">
+          <i className="fa fa-copy"/> Copy as Curl
+        </DropdownItem>
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>
           <i className="fa fa-trash-o"/> Delete
         </DropdownItem>
@@ -70,6 +82,7 @@ class RequestActionsDropdown extends PureComponent {
 RequestActionsDropdown.propTypes = {
   handleDuplicateRequest: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
+  handleCopyAsCurl: PropTypes.func.isRequired,
   handleShowSettings: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired
 };

@@ -14,7 +14,10 @@ class Dropdown extends PureComponent {
     this.state = {
       open: false,
       dropUp: false,
-      focused: false
+      focused: false,
+
+      // Use this to force new menu every time dropdown opens
+      uniquenessKey: 0
     };
   }
 
@@ -158,7 +161,7 @@ class Dropdown extends PureComponent {
     const dropdownTop = this._node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;
 
-    this.setState({open: true, dropUp});
+    this.setState({open: true, dropUp, uniquenessKey: this.state.uniquenessKey + 1});
     this.props.onOpen && this.props.onOpen();
   }
 
@@ -172,7 +175,7 @@ class Dropdown extends PureComponent {
 
   render () {
     const {right, outline, wide, className, style, children} = this.props;
-    const {dropUp, open} = this.state;
+    const {dropUp, open, uniquenessKey} = this.state;
 
     const classes = classnames('dropdown', className, {
       'dropdown--wide': wide,
@@ -214,7 +217,7 @@ class Dropdown extends PureComponent {
         dropdownButtons[0],
         <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
           <div className="dropdown__backdrop theme--overlay"></div>
-          <ul ref={this._addDropdownListRef}>
+          <ul ref={this._addDropdownListRef} key={uniquenessKey}>
             {dropdownItems}
           </ul>
         </div>

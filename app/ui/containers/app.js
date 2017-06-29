@@ -1,8 +1,10 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
+import {clipboard} from 'electron';
 import {parse as urlParse} from 'url';
 import {ipcRenderer, remote} from 'electron';
+import HTTPSnippet, {availableTargets} from 'httpsnippet';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
@@ -32,6 +34,7 @@ import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
 import {showPrompt} from '../components/modals/index';
+import {exportHar} from '../../common/har';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
@@ -296,6 +299,15 @@ class App extends PureComponent {
 
   _handleGenerateCode (request) {
     showModal(GenerateCodeModal, request);
+  }
+
+  async _handleCopyAsCurl (request) {
+    const {activeEnvironment} = this.props;
+    const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    const har = await exportHar(request._id, environmentId);
+    const snippet = new HTTPSnippet(har);
+    const cmd = snippet.convert('shell', 'curl');
+    clipboard.writeText(cmd);
   }
 
   async _updateRequestGroupMetaByParentId (requestGroupId, patch) {
@@ -801,6 +813,7 @@ class App extends PureComponent {
           handleCreateRequestGroup={this._requestGroupCreate}
           handleGenerateCode={this._handleGenerateCode}
           handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+          handleCopyAsCurl={this._handleCopyAsCurl}
           handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
           handleSetResponseFilter={this._handleSetResponseFilter}
           handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}

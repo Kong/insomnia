@@ -11,11 +11,17 @@ class CopyButton extends PureComponent {
     };
   }
 
-  _handleClick (e) {
+  async _handleClick (e) {
     e.preventDefault();
     e.stopPropagation();
 
-    clipboard.writeText(this.props.content);
+    const content = typeof this.props.content === 'string'
+      ? this.props.content
+      : await this.props.content();
+
+    if (content) {
+      clipboard.writeText(content);
+    }
 
     this.setState({showConfirmation: true});
 
@@ -53,7 +59,10 @@ class CopyButton extends PureComponent {
 
 CopyButton.propTypes = {
   // Required
-  content: PropTypes.string.isRequired,
+  content: PropTypes.oneOfType([
+    PropTypes.string.isRequired,
+    PropTypes.func.isRequired
+  ]).isRequired,
 
   // Optional
   children: PropTypes.node,

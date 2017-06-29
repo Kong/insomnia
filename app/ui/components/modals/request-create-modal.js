@@ -133,6 +133,9 @@ class RequestCreateModal extends PureComponent {
           </form>
         </ModalBody>
         <ModalFooter>
+          <div className="margin-left italic txt-sm tall">
+            * Tip: paste Curl command into URL afterwards to import it
+          </div>
           <button className="btn" onClick={this._handleSubmit}>
             Create
           </button>
