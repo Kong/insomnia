@@ -1,4 +1,4 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PropTypes, PureComponent} from 'react';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
@@ -14,7 +14,12 @@ class Dropdown extends PureComponent {
     this.state = {
       open: false,
       dropUp: false,
-      focused: false,
+
+      // Filter Stuff
+      filter: '',
+      filterVisible: false,
+      filterItems: null,
+      filterActiveIndex: 0,
 
       // Use this to force new menu every time dropdown opens
       uniquenessKey: 0
@@ -25,14 +30,85 @@ class Dropdown extends PureComponent {
     this._node = n;
   }
 
-  _handleKeyDown (e) {
-    // Catch all key presses if we're open
-    if (this.state.open) {
-      e.stopPropagation();
+  _handleCheckFilterSubmit (e) {
+    if (e.key === 'Enter') {
+      // Listen for the Enter key and "click" on the active list item
+      const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
+      const button = this._dropdownList.querySelector(selector);
+      button && button.click();
+    }
+  }
+
+  _handleChangeFilter (e) {
+    const newFilter = e.target.value;
+
+    // Nothing to do if the filter didn't change
+    if (newFilter === this.state.filter) {
+      return;
     }
 
-    // Pressed escape?
-    if (this.state.open && e.keyCode === 27) {
+    // Filter the list items that are filterable (have data-filter-index property)
+    const filterItems = [];
+    for (const listItem of this._dropdownList.querySelectorAll('li')) {
+      if (!listItem.hasAttribute('data-filter-index')) {
+        continue;
+      }
+
+      // We're matching against lowercase things with no special characters
+      const listItemTextWithoutSpaces = listItem.textContent.toLowerCase().replace(/[^\w_]*/g, '');
+      const filterWithoutSpaces = newFilter.toLowerCase().replace(/[^\w_]*/g, '');
+
+      if (!newFilter || listItemTextWithoutSpaces.includes(filterWithoutSpaces)) {
+        const filterIndex = listItem.getAttribute('data-filter-index');
+        filterItems.push(parseInt(filterIndex, 10));
+      }
+    }
+
+    this.setState({
+      filter: newFilter,
+      filterItems: newFilter ? filterItems : null,
+      filterActiveIndex: filterItems[0] || -1,
+      filterVisible: this.state.filterVisible ? true : newFilter.length > 0
+    });
+  }
+
+  _handleDropdownNavigation (key, shiftPressed) {
+    // Handle tab and arrows to move up and down dropdown entries
+    const {filterItems, filterActiveIndex} = this.state;
+    if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
+      let items = filterItems || [];
+      if (!filterItems) {
+        for (const li of this._dropdownList.querySelectorAll('li')) {
+          if (li.hasAttribute('data-filter-index')) {
+            const filterIndex = li.getAttribute('data-filter-index');
+            items.push(parseInt(filterIndex, 10));
+          }
+        }
+      }
+
+      const i = items.indexOf(filterActiveIndex);
+      if (key === 'ArrowUp' || (key === 'Tab' && shiftPressed)) {
+        const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
+        this.setState({filterActiveIndex: nextI});
+      } else {
+        this.setState({filterActiveIndex: items[i + 1] || items[0]});
+      }
+    }
+
+    this._filter.focus();
+  }
+
+  _handleBodyKeyDown (e) {
+    if (!this.state.open) {
+      return;
+    }
+
+    // Catch all key presses (like global app hotkeys) if we're open
+    e.stopPropagation();
+
+    this._handleDropdownNavigation(e.key, e.shiftKey);
+
+    if (e.key === 'Escape') {
       e.preventDefault();
       this.hide();
     }
@@ -57,6 +133,18 @@ class Dropdown extends PureComponent {
     this._dropdownList.style.right = 'initial';
     this._dropdownList.style.top = 'initial';
     this._dropdownList.style.bottom = 'initial';
+    this._dropdownList.style.minWidth = 'initial';
+    this._dropdownList.style.maxWidth = 'initial';
+
+    // Make dropdown keep it's shape when filtering
+    const ul = this._dropdownList.querySelector('ul');
+    const ulRect = this._dropdownList.getBoundingClientRect();
+    if (!ul.hasAttribute('data-fixed-shape')) {
+      ul.style.minHeight = `${ulRect.height}px`;
+      ul.style.minWidth = `${ulRect.width}px`;
+      ul.style.width = `100%`;
+      ul.setAttribute('data-fixed-shape', 'on');
+    }
 
     const {right, wide} = this.props;
     if (right || wide) {
@@ -93,8 +181,7 @@ class Dropdown extends PureComponent {
   }
 
   _handleMouseDown (e) {
-    // Intercept mouse down so that clicks don't trigger things like
-    // drag and drop.
+    // Intercept mouse down so that clicks don't trigger things like drag and drop.
     e.preventDefault();
   }
 
@@ -102,20 +189,17 @@ class Dropdown extends PureComponent {
     this._dropdownList = n;
   }
 
+  _addFilterRef (n) {
+    this._filter = n;
+
+    // Automatically focus the filter element when mounted so we can start typing
+    if (this._filter) {
+      this._filter.focus();
+    }
+  }
+
   _addDropdownMenuRef (n) {
     this._dropdownMenu = n;
-
-    // Move the element to the body so we can position absolutely
-    if (n) {
-      let container = document.querySelector('#dropdowns-container');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'dropdowns-container';
-        document.body.appendChild(container);
-      }
-
-      container.appendChild(ReactDOM.findDOMNode(this._dropdownMenu));
-    }
   }
 
   _getFlattenedChildren (children) {
@@ -141,17 +225,46 @@ class Dropdown extends PureComponent {
     this._checkSizeAndPosition();
   }
 
+  _getContainer () {
+    let container = document.querySelector('#dropdowns-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'dropdowns-container';
+      document.body.appendChild(container);
+    }
+
+    return container;
+  }
+
   componentDidMount () {
-    document.body.addEventListener('keydown', this._handleKeyDown);
+    document.body.addEventListener('keydown', this._handleBodyKeyDown);
     window.addEventListener('resize', this._checkSizeAndPosition);
+
+    // Move the element to the body so we can position absolutely
+    if (this._dropdownMenu) {
+      const el = ReactDOM.findDOMNode(this._dropdownMenu);
+      this._getContainer().appendChild(el);
+    }
   }
 
   componentWillUnmount () {
-    document.body.removeEventListener('keydown', this._handleKeyDown);
+    document.body.removeEventListener('keydown', this._handleBodyKeyDown);
     window.removeEventListener('resize', this._checkSizeAndPosition);
+
+    // Remove the element from the body
+    if (this._dropdownMenu) {
+      const el = ReactDOM.findDOMNode(this._dropdownMenu);
+      this._getContainer().removeChild(el);
+    }
   }
 
   hide () {
+    // Focus the dropdown button after hiding
+    if (this._node) {
+      const button = this._node.querySelector('button');
+      button && button.focus();
+    }
+
     this.setState({open: false});
     this.props.onHide && this.props.onHide();
   }
@@ -161,7 +274,16 @@ class Dropdown extends PureComponent {
     const dropdownTop = this._node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;
 
-    this.setState({open: true, dropUp, uniquenessKey: this.state.uniquenessKey + 1});
+    this.setState({
+      open: true,
+      dropUp,
+      filterVisible: false,
+      filter: '',
+      filterItems: null,
+      filterActiveIndex: -1,
+      uniquenessKey: this.state.uniquenessKey + 1
+    });
+
     this.props.onOpen && this.props.onOpen();
   }
 
@@ -174,8 +296,24 @@ class Dropdown extends PureComponent {
   }
 
   render () {
-    const {right, outline, wide, className, style, children} = this.props;
-    const {dropUp, open, uniquenessKey} = this.state;
+    const {
+      right,
+      outline,
+      wide,
+      className,
+      style,
+      children
+    } = this.props;
+
+    const {
+      dropUp,
+      open,
+      uniquenessKey,
+      filterVisible,
+      filterActiveIndex,
+      filterItems,
+      filter
+    } = this.state;
 
     const classes = classnames('dropdown', className, {
       'dropdown--wide': wide,
@@ -196,13 +334,36 @@ class Dropdown extends PureComponent {
 
     const listedChildren = Array.isArray(children) ? children : [children];
     const allChildren = this._getFlattenedChildren(listedChildren);
-    for (const child of allChildren) {
+
+    const visibleChildren = allChildren.filter((child, i) => {
+      if (child.type.name !== DropdownItem.name) {
+        return true;
+      }
+
+      // It's visible if its index is in the filterItems
+      return !filterItems || filterItems.includes(i);
+    });
+
+    for (let i = 0; i < allChildren.length; i++) {
+      const child = allChildren[i];
       if (child.type.name === DropdownButton.name) {
         dropdownButtons.push(child);
       } else if (child.type.name === DropdownItem.name) {
-        dropdownItems.push(child);
+        const active = i === filterActiveIndex;
+        const hide = !visibleChildren.includes(child);
+        dropdownItems.push(
+          <li key={i} data-filter-index={i} className={classnames({active, hide})}>
+            {child}
+          </li>
+        );
       } else if (child.type.name === DropdownDivider.name) {
-        dropdownItems.push(child);
+        const currentIndex = visibleChildren.indexOf(child);
+        const nextChild = visibleChildren[currentIndex + 1];
+
+        // Only show the divider if the next child is a DropdownItem
+        if (nextChild && nextChild.type.name === DropdownItem.name) {
+          dropdownItems.push(<li key={i}>{child}</li>);
+        }
       }
     }
 
@@ -213,13 +374,29 @@ class Dropdown extends PureComponent {
         {allChildren}
       );
     } else {
+      const noResults = filter && filterItems && filterItems.length === 0;
       finalChildren = [
         dropdownButtons[0],
         <div key="item" className={menuClasses} ref={this._addDropdownMenuRef}>
           <div className="dropdown__backdrop theme--overlay"></div>
-          <ul ref={this._addDropdownListRef} key={uniquenessKey}>
-            {dropdownItems}
-          </ul>
+          <div key={uniquenessKey}
+               ref={this._addDropdownListRef}
+               tabIndex="-1"
+               className={classnames('dropdown__list', {
+                 'dropdown__list--filtering': filterVisible
+               })}>
+            <div className="form-control dropdown__filter">
+              <i className="fa fa-search"/>
+              <input type="text"
+                     onInput={this._handleChangeFilter}
+                     ref={this._addFilterRef}
+                     onKeyPress={this._handleCheckFilterSubmit}/>
+            </div>
+            {noResults && <div className="text-center pad faint">Nothing to show</div>}
+            <ul className={classnames({hide: noResults})}>
+              {dropdownItems}
+            </ul>
+          </div>
         </div>
       ];
     }
@@ -229,6 +406,7 @@ class Dropdown extends PureComponent {
            className={classes}
            ref={this._setRef}
            onClick={this._handleClick}
+           tabIndex="-1"
            onMouseDown={this._handleMouseDown}>
         {finalChildren}
       </div>

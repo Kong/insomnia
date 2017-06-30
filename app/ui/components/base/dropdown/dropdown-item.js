@@ -47,10 +47,7 @@ class DropdownItem extends PureComponent {
       ...props
     };
 
-    const button = React.createElement(buttonClass || 'button', buttonProps, inner);
-    return (
-      <li>{button}</li>
-    );
+    return React.createElement(buttonClass || 'button', buttonProps, inner);
   }
 }
 
