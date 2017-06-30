@@ -367,4 +367,38 @@ describe('actuallySend()', () => {
       }
     });
   });
+
+  it('uses works with "unix" host', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      url: 'http://unix:3000/my/path',
+      method: 'GET'
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    // console.log('HELLO', response);
+
+    const body = JSON.parse(bodyBuffer);
+    expect(body).toEqual({
+      options: {
+        CUSTOMREQUEST: 'GET',
+        ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
+        FOLLOWLOCATION: true,
+        HTTPHEADER: ['content-type: '],
+        NOPROGRESS: false,
+        PROXY: '',
+        NOBODY: 0,
+        TIMEOUT_MS: 0,
+        URL: 'http://unix:3000/my/path',
+        USERAGENT: `insomnia/${getAppVersion()}`,
+        VERBOSE: true
+      }
+    });
+  });
 });

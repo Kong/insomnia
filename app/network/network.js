@@ -162,7 +162,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       // Set the URL, including the query parameters
       const qs = querystring.buildFromParams(renderedRequest.parameters);
       const url = querystring.joinUrl(renderedRequest.url, qs);
-      const isUnixSocket = url.match(/https?:\/\/unix:/);
+      const isUnixSocket = url.match(/https?:\/\/unix:\//);
       const finalUrl = util.prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
       if (isUnixSocket) {
         // URL prep will convert "unix:/path" hostname to "unix/path"
