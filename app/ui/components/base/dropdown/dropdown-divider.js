@@ -11,11 +11,11 @@ class DropdownDivider extends PureComponent {
     );
 
     return (
-      <li className={classes}>
+      <div className={classes}>
       <span className="dropdown__divider__label">
         {children}
       </span>
-      </li>
+      </div>
     );
   }
 }

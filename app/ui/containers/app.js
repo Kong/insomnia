@@ -432,7 +432,11 @@ class App extends PureComponent {
         const filename = path.join(dir, `${name}.${extension}`);
         const partialResponse = Object.assign({}, responsePatch);
         await models.response.create(partialResponse, `Saved to ${filename}`);
-        fs.writeFile(filename, bodyBuffer);
+        fs.writeFile(filename, bodyBuffer, err => {
+          if (err) {
+            console.warn('Failed to download request after sending', err);
+          }
+        });
       } else {
         await models.response.create(responsePatch, bodyBuffer);
       }

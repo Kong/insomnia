@@ -90,12 +90,17 @@ export function getLatestByParentId (parentId) {
   return db.getMostRecentlyModified(type, {parentId});
 }
 
-export function getBodyBuffer (bodyPath) {
+export function getBodyBuffer (response, readFailureValue = null) {
+  // No body, so return empty Buffer
+  if (!response.bodyPath) {
+    return new Buffer([]);
+  }
+
   try {
-    return decompress(fs.readFileSync(bodyPath));
+    return decompress(fs.readFileSync(response.bodyPath));
   } catch (err) {
     console.warn('Failed to read response body', err.message);
-    return null;
+    return readFailureValue;
   }
 }
 

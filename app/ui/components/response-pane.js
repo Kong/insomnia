@@ -35,6 +35,10 @@ class ResponsePane extends PureComponent {
     trackEvent('Response Pane', 'View', name);
   }
 
+  _handleGetResponseBody () {
+    return models.response.getBodyBuffer(this.state.response);
+  }
+
   async _getResponse (requestId, responseId) {
     let response = responseId ? await models.response.getById(responseId) : null;
 
@@ -70,7 +74,7 @@ class ResponsePane extends PureComponent {
         return;
       }
 
-      const bodyBuffer = models.response.getBodyBuffer(response.bodyPath);
+      const bodyBuffer = models.response.getBodyBuffer(response);
 
       fs.writeFile(outputPath, bodyBuffer, err => {
         if (err) {
@@ -84,19 +88,20 @@ class ResponsePane extends PureComponent {
   }
 
   _handleDownloadFullResponseBody () {
-    if (!this.state.response) {
+    const {response} = this.state;
+
+    if (!response) {
       // Should never happen
       console.warn('No response to download');
       return;
     }
 
-    const {timeline, bodyPath} = this.state.response;
-    const headers = timeline
+    const headers = response.timeline
       .filter(v => v.name === 'HEADER_IN')
       .map(v => v.value)
       .join('');
 
-    const bodyBuffer = models.response.getBodyBuffer(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
 
     const fullResponse = `${headers}${bodyBuffer}`;
 
@@ -282,6 +287,7 @@ class ResponsePane extends PureComponent {
               filterHistory={filterHistory}
               updateFilter={response.error ? null : handleSetFilter}
               bodyPath={response.bodyPath}
+              getBody={this._handleGetResponseBody}
               encoding={response.encoding}
               error={response.error}
               editorLineWrapping={editorLineWrapping}

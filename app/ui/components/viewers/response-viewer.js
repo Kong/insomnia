@@ -8,8 +8,6 @@ import ResponseWebView from './response-webview';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
 import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
-import * as models from '../../../models/index';
-import HelpTooltip from '../help-tooltip';
 
 let alwaysShowLargeResponses = false;
 
@@ -44,7 +42,7 @@ class ResponseViewer extends PureComponent {
     } else {
       this.setState({
         blockingBecauseTooLarge: false,
-        bodyBuffer: models.response.getBodyBuffer(props.bodyPath)
+        bodyBuffer: props.getBody()
       });
     }
   }
@@ -86,7 +84,6 @@ class ResponseViewer extends PureComponent {
       editorIndentSize,
       editorKeyMap,
       updateFilter,
-      bodyPath,
       url,
       error
     } = this.props;
@@ -125,19 +122,18 @@ class ResponseViewer extends PureComponent {
       );
     }
 
-    if (!bodyBuffer && bodyPath) {
+    if (!bodyBuffer) {
       return (
         <div className="pad faint">
-          Failed to load body from filesystem <HelpTooltip>Failed to load response body
-          from {bodyPath}</HelpTooltip>
+          Failed to read response body from filesystem
         </div>
       );
     }
 
-    if (!bodyBuffer && !bodyPath) {
+    if (bodyBuffer.length === 0) {
       return (
         <div className="pad faint">
-          No body returned in response
+          No body returned for response
         </div>
       );
     }
@@ -220,7 +216,7 @@ class ResponseViewer extends PureComponent {
 }
 
 ResponseViewer.propTypes = {
-  bodyPath: PropTypes.string.isRequired,
+  getBody: PropTypes.func.isRequired,
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,

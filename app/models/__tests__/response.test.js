@@ -16,7 +16,7 @@ describe('migrate()', () => {
       electron.remote.app.getPath('userData'),
       `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
     );
-    const storedBody = models.response.getBodyBuffer(expectedBodyPath);
+    const storedBody = models.response.getBodyBuffer({bodyPath: expectedBodyPath});
 
     // Should have stripped these
     expect(newModel.body).toBeUndefined();
@@ -36,7 +36,7 @@ describe('migrate()', () => {
       electron.remote.app.getPath('userData'),
       `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
     );
-    const storedBody = models.response.getBodyBuffer(expectedBodyPath);
+    const storedBody = models.response.getBodyBuffer({bodyPath: expectedBodyPath});
 
     // Should have stripped these
     expect(newModel.body).toBeUndefined();
@@ -47,7 +47,7 @@ describe('migrate()', () => {
     expect(storedBody + '').toBe('hello world!');
   });
 
-  it.only('migrates empty body', async () => {
+  it('migrates empty body', async () => {
     const initialModel = {body: ''};
 
     const newModel = models.initModel(models.response.type, initialModel);
@@ -58,7 +58,7 @@ describe('migrate()', () => {
       electron.remote.app.getPath('userData'),
       'responses/d41d8cd98f00b204e9800998ecf8427e.zip'
     );
-    const storedBody = models.response.getBodyBuffer(expectedBodyPath);
+    const storedBody = models.response.getBodyBuffer({bodyPath: expectedBodyPath});
 
     // Should have stripped these
     expect(newModel.body).toBeUndefined();

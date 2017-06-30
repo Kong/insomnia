@@ -30,7 +30,7 @@
     display: block;
   }
 
-  ul {
+  .dropdown__list {
     z-index: 99999;
     display: none;
     position: fixed;
@@ -49,6 +49,39 @@
 
     border-radius: @radius-md;
     overflow: auto;
+
+    .dropdown__filter {
+      border: 1px solid var(--hl-md);
+      margin: @padding-xs;
+      width: auto;
+      border-radius: @radius-sm;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding-left: @padding-sm;
+
+      // Can't "display: none" this because we need to be able to type
+      // in it. So, we'll just store it off screen
+      position: absolute;
+      left: -9999999px;
+
+      input {
+        margin: 0;
+        padding: @padding-xs @padding-sm;
+      }
+    }
+
+    &.dropdown__list--filtering {
+      .dropdown__filter {
+        // Reposition the filter on screen
+        position: static;
+        left: auto;
+      }
+    }
+
+    &:focus {
+      outline: 0;
+    }
 
     .dropdown__inner {
       width: 100%;
@@ -84,15 +117,6 @@
       white-space: nowrap;
       margin: 0;
 
-      &:hover:not(:disabled),
-      &:focus:not(:disabled) {
-        background: @hl-sm;
-      }
-
-      &:active:not(:disabled) {
-        background: @hl-md;
-      }
-
       i.fa:first-child {
         display: inline-block;
         width: 2.2em;
@@ -100,12 +124,20 @@
       }
     }
 
-    li.dropdown__divider {
+    li > button:hover:not(:disabled),
+    li.active > button:not(:disabled) {
+      background: @hl-sm;
+    }
+
+    li > button:active:not(:disabled) {
+      background: @hl-md;
+    }
+
+    .dropdown__divider {
       border-bottom: 1px solid @hl-lg;
       overflow: visible !important;
       height: 0;
       margin: @padding-md @padding-md @padding-md @padding-md;
-      min-width: @dropdown-min-width - @padding-md * 2;
 
       .dropdown__divider__label {
         position: relative;
@@ -128,7 +160,7 @@
     }
   }
 
-  &.dropdown__menu--open ul {
+  &.dropdown__menu--open .dropdown__list {
     display: block;
     animation: fadeIn 200ms ease-out;
   }

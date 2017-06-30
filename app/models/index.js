@@ -89,6 +89,7 @@ export function initModel (type, ...sources) {
 
   const fullObject = Object.assign({}, objectDefaults, ...sources);
 
+  // Generate an _id if there isn't one yet
   if (!fullObject._id) {
     fullObject._id = generateId(getModel(type).prefix);
   }
