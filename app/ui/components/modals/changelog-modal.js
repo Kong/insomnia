@@ -97,12 +97,30 @@ class ChangelogModal extends PureComponent {
           ];
         }
 
+        const printThing = (text, key) => {
+          const match = text.match(/\(PR:(\d+)(:([^)]+))?\)/);
+          let link = null;
+          if (match) {
+            const prNumber = match[1];
+            const user = match[3] || '';
+            text = text.replace(match[0], '');
+            link = (
+              <Link href={`https://github.com/getinsomnia/insomnia/pull/${prNumber}`}>
+                #{prNumber}
+                {user ? ` by ${user}` : null}
+              </Link>
+            );
+          }
+
+          return <li key={key}>{text}{link && '('}{link}{link && ')'}</li>;
+        };
+
         if (change.major && change.major.length) {
           html = [
             ...html,
             <h3 key={`major.${i}`}>Major</h3>,
             <ul key={`major.${i}.list`}>
-              {change.major.map((text, i) => <li key={i}>{text}</li>)}
+              {change.major.map(printThing)}
             </ul>
           ];
         }
@@ -112,7 +130,7 @@ class ChangelogModal extends PureComponent {
             ...html,
             <h3 key={`fixes.${i}`}>Bug Fixes</h3>,
             <ul key={`fixes.${i}.list`}>
-              {change.fixes.map((text, j) => <li key={j}>{text}</li>)}
+              {change.fixes.map(printThing)}
             </ul>
           ];
         }
@@ -122,7 +140,7 @@ class ChangelogModal extends PureComponent {
             ...html,
             <h3 key={`minor.${i}`}>Minor</h3>,
             <ul key={`minor.${i}.list`}>
-              {change.minor.map((text, i) => <li key={i}>{text}</li>)}
+              {change.minor.map(printThing)}
             </ul>
           ];
         }
