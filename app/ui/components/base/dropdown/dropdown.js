@@ -138,10 +138,11 @@ class Dropdown extends PureComponent {
 
     // Make dropdown keep it's shape when filtering
     const ul = this._dropdownList.querySelector('ul');
-    const ulRect = ul.getBoundingClientRect();
+    const ulRect = this._dropdownList.getBoundingClientRect();
     if (!ul.hasAttribute('data-fixed-shape')) {
-      ul.style.height = `${ulRect.height}px`;
-      ul.style.width = `${ulRect.width}px`;
+      ul.style.minHeight = `${ulRect.height}px`;
+      ul.style.minWidth = `${ulRect.width}px`;
+      ul.style.width = `100%`;
       ul.setAttribute('data-fixed-shape', 'on');
     }
 
@@ -333,19 +334,36 @@ class Dropdown extends PureComponent {
 
     const listedChildren = Array.isArray(children) ? children : [children];
     const allChildren = this._getFlattenedChildren(listedChildren);
-    for (let i = 0; i < allChildren.length; i++) {
-      let classes = classnames({
-        active: i === filterActiveIndex,
-        hide: filterItems && !filterItems.includes(i)
-      });
 
+    const visibleChildren = allChildren.filter((child, i) => {
+      if (child.type.name !== DropdownItem.name) {
+        return true;
+      }
+
+      // It's visible if its index is in the filterItems
+      return !filterItems || filterItems.includes(i);
+    });
+
+    for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];
       if (child.type.name === DropdownButton.name) {
         dropdownButtons.push(child);
       } else if (child.type.name === DropdownItem.name) {
-        dropdownItems.push(<li key={i} data-filter-index={i} className={classes}>{child}</li>);
+        const active = i === filterActiveIndex;
+        const hide = !visibleChildren.includes(child);
+        dropdownItems.push(
+          <li key={i} data-filter-index={i} className={classnames({active, hide})}>
+            {child}
+          </li>
+        );
       } else if (child.type.name === DropdownDivider.name) {
-        dropdownItems.push(<li key={i}>{child}</li>);
+        const currentIndex = visibleChildren.indexOf(child);
+        const nextChild = visibleChildren[currentIndex + 1];
+
+        // Only show the divider if the next child is a DropdownItem
+        if (nextChild && nextChild.type.name === DropdownItem.name) {
+          dropdownItems.push(<li key={i}>{child}</li>);
+        }
       }
     }
 
