@@ -346,7 +346,6 @@ describe('actuallySend()', () => {
 
     const renderedRequest = await getRenderedRequest(request);
     const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
-    // console.log('HELLO', response);
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
@@ -381,7 +380,6 @@ describe('actuallySend()', () => {
 
     const renderedRequest = await getRenderedRequest(request);
     const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
-    // console.log('HELLO', response);
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
