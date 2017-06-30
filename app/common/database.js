@@ -3,8 +3,7 @@ import NeDB from 'nedb';
 import fs from 'fs';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
-import {generateId} from './misc';
-import {getModel, initModel} from '../models';
+import {initModel} from '../models';
 import * as models from '../models/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import {showModal} from '../ui/components/modals/index';
@@ -145,13 +144,18 @@ export async function getMostRecentlyModified (type, query = {}) {
 
 export function findMostRecentlyModified (type, query = {}, limit = null) {
   return new Promise(resolve => {
-    db[type].find(query).sort({modified: -1}).limit(limit).exec((err, docs) => {
+    db[type].find(query).sort({modified: -1}).limit(limit).exec((err, rawDocs) => {
       if (err) {
         console.warn('[db] Failed to find docs', err);
         resolve([]);
-      } else {
-        resolve(docs);
+        return;
       }
+
+      const docs = rawDocs.map(rawDoc => {
+        return initModel(type, rawDoc);
+      });
+
+      resolve(docs);
     });
   });
 }
@@ -290,16 +294,10 @@ export function docUpdate (originalDoc, patch = {}) {
   return update(doc);
 }
 
-export function docCreate (type, patch = {}) {
-  const idPrefix = getModel(type).prefix;
-
-  if (!idPrefix) {
-    throw new Error(`No ID prefix for ${type}`);
-  }
-
+export function docCreate (type, ...patches) {
   const doc = initModel(
     type,
-    patch,
+    ...patches,
 
     // Fields that the user can't touch
     {
@@ -307,12 +305,6 @@ export function docCreate (type, patch = {}) {
       modified: Date.now()
     }
   );
-
-  // NOTE: This CAN'T be inside initModel() because initModel checks
-  // for _id existence to do migrations and stuff
-  if (!doc._id) {
-    doc._id = generateId(idPrefix);
-  }
 
   return insert(doc);
 }

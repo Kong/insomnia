@@ -425,20 +425,20 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const responsePatch = await network.send(requestId, environmentId);
+      const {response: responsePatch, bodyBuffer} = await network.send(requestId, environmentId);
       if (responsePatch.statusCode >= 200 && responsePatch.statusCode < 300) {
         const extension = mime.extension(responsePatch.contentType) || '';
         const name = request.name.replace(/\s/g, '-').toLowerCase();
         const filename = path.join(dir, `${name}.${extension}`);
-        const partialResponse = Object.assign({}, responsePatch, {
-          contentType: 'text/plain',
-          body: `Saved to ${filename}`,
-          encoding: 'utf8'
+        const partialResponse = Object.assign({}, responsePatch);
+        await models.response.create(partialResponse, `Saved to ${filename}`);
+        fs.writeFile(filename, bodyBuffer, err => {
+          if (err) {
+            console.warn('Failed to download request after sending', err);
+          }
         });
-        await models.response.create(partialResponse);
-        fs.writeFile(filename, responsePatch.body, responsePatch.encoding);
       } else {
-        await models.response.create(responsePatch);
+        await models.response.create(responsePatch, bodyBuffer);
       }
     } catch (e) {
       // It's OK
@@ -468,8 +468,8 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const responsePatch = await network.send(requestId, environmentId);
-      await models.response.create(responsePatch);
+      const {response: responsePatch, bodyBuffer} = await network.send(requestId, environmentId);
+      await models.response.create(responsePatch, bodyBuffer);
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {request, error: err});

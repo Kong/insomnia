@@ -75,7 +75,10 @@ export default class BaseExtension {
           request: {getById: models.request.getById},
           workspace: {getById: models.workspace.getById},
           cookieJar: {getOrCreateForWorkspace: models.cookieJar.getOrCreateForWorkspace},
-          response: {getLatestForRequestId: models.response.getLatestForRequest}
+          response: {
+            getLatestForRequestId: models.response.getLatestForRequest,
+            getBodyBuffer: models.response.getBodyBuffer
+          }
         }
       }
     };

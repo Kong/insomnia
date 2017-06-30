@@ -49,13 +49,15 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       let timeline = [];
 
       // Define helper to add base fields when responding
-      const respond = patch => {
-        resolve(Object.assign({
+      const respond = (patch, bodyBuffer = null) => {
+        const response = Object.assign({
           parentId: renderedRequest._id,
           timeline: timeline,
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies
-        }, patch));
+        }, patch);
+
+        resolve({bodyBuffer, response});
       };
 
       // Define helper to setOpt for better error handling
@@ -476,22 +478,18 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         }
 
         // Handle the body
-        const encoding = 'base64';
         const bodyBuffer = Buffer.concat(dataBuffers, dataBuffersLength);
-        const body = bodyBuffer.toString(encoding);
 
         // Return the response data
         respond({
           headers,
-          encoding,
-          body,
           contentType,
           statusCode,
           statusMessage,
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
           url: curl.getInfo(Curl.info.EFFECTIVE_URL)
-        });
+        }, bodyBuffer);
 
         // Close the request
         this.close();

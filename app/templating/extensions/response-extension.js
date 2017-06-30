@@ -66,11 +66,9 @@ export default {
     if (field === 'header') {
       return matchHeader(response.headers, sanitizedFilter);
     } else if (field === 'raw') {
-      const bodyBuffer = new Buffer(response.body, response.encoding);
-      return bodyBuffer.toString();
+      return context.util.models.response.getBodyBuffer(response, '').toString();
     } else if (field === 'body') {
-      const bodyBuffer = new Buffer(response.body, response.encoding);
-      const bodyStr = bodyBuffer.toString();
+      const bodyStr = context.util.models.response.getBodyBuffer(response, '').toString();
 
       if (sanitizedFilter.indexOf('$') === 0) {
         return matchJSONPath(bodyStr, sanitizedFilter);

@@ -11,6 +11,7 @@ import * as _requestVersion from './request-version';
 import * as _requestMeta from './request-meta';
 import * as _response from './response';
 import * as _oAuth2Token from './o-auth-2-token';
+import {generateId} from '../common/misc';
 
 // Reference to each model
 export const stats = _stats;
@@ -79,15 +80,19 @@ export function initModel (type, ...sources) {
 
   // Define global default fields
   const objectDefaults = Object.assign({
-    type: type,
     _id: null,
+    type: type,
     parentId: null,
     modified: Date.now(),
     created: Date.now()
   }, model.init());
 
-  // Make a new object
   const fullObject = Object.assign({}, objectDefaults, ...sources);
+
+  // Generate an _id if there isn't one yet
+  if (!fullObject._id) {
+    fullObject._id = generateId(getModel(type).prefix);
+  }
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
