@@ -72,10 +72,13 @@ class Dropdown extends PureComponent {
     });
   }
 
-  _handleDropdownNavigation (key, shiftPressed) {
+  _handleDropdownNavigation (e) {
+    const {key, shiftKey} = e;
+
     // Handle tab and arrows to move up and down dropdown entries
     const {filterItems, filterActiveIndex} = this.state;
     if (['Tab', 'ArrowDown', 'ArrowUp'].includes(key)) {
+      e.preventDefault();
       let items = filterItems || [];
       if (!filterItems) {
         for (const li of this._dropdownList.querySelectorAll('li')) {
@@ -87,7 +90,7 @@ class Dropdown extends PureComponent {
       }
 
       const i = items.indexOf(filterActiveIndex);
-      if (key === 'ArrowUp' || (key === 'Tab' && shiftPressed)) {
+      if (key === 'ArrowUp' || (key === 'Tab' && shiftKey)) {
         const nextI = i > 0 ? items[i - 1] : items[items.length - 1];
         this.setState({filterActiveIndex: nextI});
       } else {
@@ -106,7 +109,7 @@ class Dropdown extends PureComponent {
     // Catch all key presses (like global app hotkeys) if we're open
     e.stopPropagation();
 
-    this._handleDropdownNavigation(e.key, e.shiftKey);
+    this._handleDropdownNavigation(e);
 
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -138,11 +141,11 @@ class Dropdown extends PureComponent {
 
     // Make dropdown keep it's shape when filtering
     const ul = this._dropdownList.querySelector('ul');
-    const ulRect = this._dropdownList.getBoundingClientRect();
+    const ulRect = ul.getBoundingClientRect();
     if (!ul.hasAttribute('data-fixed-shape')) {
       ul.style.minHeight = `${ulRect.height}px`;
       ul.style.minWidth = `${ulRect.width}px`;
-      ul.style.width = `100%`;
+      ul.style.width = '100%';
       ul.setAttribute('data-fixed-shape', 'on');
     }
 
