@@ -104,7 +104,7 @@ class SyncDropdown extends PureComponent {
     }
 
     // Sync has not yet been configured for this workspace, so prompt the user to do so
-    const isModeUnset = syncData.syncMode === syncStorage.SYNC_MODE_UNSET;
+    const isModeUnset = !syncData.syncMode || syncData.syncMode === syncStorage.SYNC_MODE_UNSET;
     if (isModeUnset && !this._hasPrompted) {
       this._hasPrompted = true;
       await this._handleShowSyncModePrompt();
@@ -121,7 +121,7 @@ class SyncDropdown extends PureComponent {
       el = <span><i className="fa fa-pause-circle-o"/> Sync Required</span>;
     } else if (syncMode === syncStorage.SYNC_MODE_ON) {
       el = <span>Sync Pending</span>;
-    } else if (syncMode === syncStorage.SYNC_MODE_UNSET) {
+    } else if (!syncMode || syncMode === syncStorage.SYNC_MODE_UNSET) {
       el = <span><i className="fa fa-exclamation-circle"/> Configure Sync</span>;
     }
 
