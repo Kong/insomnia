@@ -49,15 +49,15 @@ class AuthWrapper extends PureComponent {
     } else if (authentication.type === AUTH_OAUTH_1) {
       return (
         <div className="vertically-center text-center">
-          <p className="pad text-sm text-center">
+          <div className="pad text-sm text-center">
             <i className="fa fa-commenting super-faint" style={{fontSize: '8rem', opacity: 0.3}}/>
-            <div className="faint pad-top">
-            Want OAuth 1.0? Please upvote
-            the <Link href="https://github.com/getinsomnia/insomnia/issues/197">
-            Issue on GitHub
-          </Link>
-            </div>
-          </p>
+            <p className="faint pad-top">
+              Want OAuth 1.0? Please upvote
+              the <Link href="https://github.com/getinsomnia/insomnia/issues/197">
+              Issue on GitHub
+            </Link>
+            </p>
+          </div>
         </div>
       );
     } else if (authentication.type === AUTH_DIGEST) {

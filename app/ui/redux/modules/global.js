@@ -3,6 +3,7 @@ import React from 'react';
 import {combineReducers} from 'redux';
 import fs from 'fs';
 import path from 'path';
+import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
 import * as importUtils from '../../../common/import';
@@ -183,7 +184,30 @@ export function exportFile (workspaceId = null) {
     dispatch(loadStart());
 
     const workspace = await models.workspace.getById(workspaceId);
-    const json = await importUtils.exportJSON(workspace);
+
+    // Check if we want to export private environments
+    let environments;
+    if (workspace) {
+      const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
+      environments = [
+        parentEnv,
+        ...await models.environment.findByParentId(parentEnv._id)
+      ];
+    } else {
+      environments = await models.environment.all();
+    }
+
+    let exportPrivateEnvironments = false;
+    const privateEnvironments = environments.filter(e => e.isPrivate);
+    if (privateEnvironments.length) {
+      const names = privateEnvironments.map(e => e.name).join(', ');
+      exportPrivateEnvironments = await showModal(AskModal, {
+        title: 'Export Private Environments?',
+        message: `Do you want to include private environments (${names}) in your export?`
+      });
+    }
+
+    const json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
 
     const date = moment().format('YYYY-MM-DD');
     const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');

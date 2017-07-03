@@ -79,7 +79,6 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   }
 
   const {data} = results;
-  console.log('IMPORTING', JSON.parse(rawContent));
 
   // Fetch the base environment in case we need it
   const baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
@@ -145,7 +144,7 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   };
 }
 
-export async function exportJSON (parentDoc = null) {
+export async function exportJSON (parentDoc = null, includePrivateDocs = false) {
   const data = {
     _type: 'export',
     __export_format: EXPORT_FORMAT,
@@ -156,32 +155,37 @@ export async function exportJSON (parentDoc = null) {
 
   const docs = await db.withDescendants(parentDoc);
 
-  data.resources = docs.filter(d => (
-    !d.isPrivate && (
+  data.resources = docs
+    .filter(d => (
+      // Don't include if private, except if we want to
+      !d.isPrivate || includePrivateDocs
+    ))
+    .filter(d => (
+      // Only export these model types
       d.type === models.request.type ||
       d.type === models.requestGroup.type ||
       d.type === models.workspace.type ||
       d.type === models.cookieJar.type ||
       d.type === models.environment.type
-    )
-  )).map(d => {
-    if (d.type === models.workspace.type) {
-      d._type = EXPORT_TYPE_WORKSPACE;
-    } else if (d.type === models.cookieJar.type) {
-      d._type = EXPORT_TYPE_COOKIE_JAR;
-    } else if (d.type === models.environment.type) {
-      d._type = EXPORT_TYPE_ENVIRONMENT;
-    } else if (d.type === models.requestGroup.type) {
-      d._type = EXPORT_TYPE_REQUEST_GROUP;
-    } else if (d.type === models.request.type) {
-      d._type = EXPORT_TYPE_REQUEST;
-    }
+    ))
+    .map(d => {
+      if (d.type === models.workspace.type) {
+        d._type = EXPORT_TYPE_WORKSPACE;
+      } else if (d.type === models.cookieJar.type) {
+        d._type = EXPORT_TYPE_COOKIE_JAR;
+      } else if (d.type === models.environment.type) {
+        d._type = EXPORT_TYPE_ENVIRONMENT;
+      } else if (d.type === models.requestGroup.type) {
+        d._type = EXPORT_TYPE_REQUEST_GROUP;
+      } else if (d.type === models.request.type) {
+        d._type = EXPORT_TYPE_REQUEST;
+      }
 
-    // Delete the things we don't want to export
-    delete d.type;
-    delete d.isPrivate;
-    return d;
-  });
+      // Delete the things we don't want to export
+      delete d.type;
+      delete d.isPrivate;
+      return d;
+    });
 
   return JSON.stringify(data, null, '\t');
 }
