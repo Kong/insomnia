@@ -296,7 +296,7 @@ class OneLineEditor extends PureComponent {
     const {mode} = this.state;
 
     const type = originalType || TYPE_TEXT;
-    const showEditor = type === TYPE_TEXT && mode === MODE_EDITOR;
+    const showEditor = mode === MODE_EDITOR;
 
     if (showEditor) {
       return (
@@ -311,6 +311,7 @@ class OneLineEditor extends PureComponent {
           singleLine
           tabIndex={0}
           id={id}
+          type={type}
           mode={syntaxMode}
           placeholder={placeholder}
           onPaste={onPaste}

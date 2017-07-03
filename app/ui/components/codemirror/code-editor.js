@@ -598,7 +598,8 @@ class CodeEditor extends PureComponent {
       onClick,
       className,
       dynamicHeight,
-      style
+      style,
+      type
     } = this.props;
 
     const classes = classnames(className, {
@@ -672,7 +673,7 @@ class CodeEditor extends PureComponent {
     }
 
     return (
-      <div className={classes} style={style}>
+      <div className={classes} style={style} data-editor-type={type}>
         <div className={classnames('editor__container', 'input', className)}
              style={styles}
              onClick={onClick}
@@ -727,6 +728,7 @@ CodeEditor.propTypes = {
   updateFilter: PropTypes.func,
   defaultTabBehavior: PropTypes.bool,
   readOnly: PropTypes.bool,
+  type: PropTypes.string,
   filter: PropTypes.string,
   filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired),
   singleLine: PropTypes.bool,
