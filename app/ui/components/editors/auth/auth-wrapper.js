@@ -6,6 +6,7 @@ import BearerAuth from './bearer-auth';
 import NTLMAuth from './ntlm-auth';
 import OAuth2 from './o-auth-2';
 import autobind from 'autobind-decorator';
+import Link from '../../base/link';
 
 @autobind
 class AuthWrapper extends PureComponent {
@@ -48,10 +49,14 @@ class AuthWrapper extends PureComponent {
     } else if (authentication.type === AUTH_OAUTH_1) {
       return (
         <div className="vertically-center text-center">
-          <p className="pad super-faint text-sm text-center">
-            <i className="fa fa-commenting" style={{fontSize: '8rem', opacity: 0.3}}/>
-            <br/><br/>
-            Don't worry, OAuth 1.0 is coming soon!
+          <p className="pad text-sm text-center">
+            <i className="fa fa-commenting super-faint" style={{fontSize: '8rem', opacity: 0.3}}/>
+            <div className="faint pad-top">
+            Want OAuth 1.0? Please upvote
+            the <Link href="https://github.com/getinsomnia/insomnia/issues/197">
+            Issue on GitHub
+          </Link>
+            </div>
           </p>
         </div>
       );
