@@ -7,7 +7,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, AUTH_AWS_IAM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
@@ -16,6 +16,7 @@ import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import urlMatchesCertHost from './url-matches-cert-host';
+import aws4 from 'aws4';
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -383,6 +384,13 @@ export function _actuallySend (renderedRequest, workspace, settings) {
           setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
+        } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
+          if (!renderedRequest.body.text) {
+            throw new Error('AWS authentication not supported for provided body type');
+          }
+          _getAwsAuthHeaders(renderedRequest, finalUrl).forEach((header) => {
+            headers.push(header);
+          });
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,
@@ -560,6 +568,33 @@ function _getCurlHeader (curlHeadersObj, name, fallback) {
   } else {
     return fallback;
   }
+}
+
+// exported for unit tests only
+export function _getAwsAuthHeaders (req, url) {
+  const credentials = {
+    accessKeyId: req.authentication.accessKeyId,
+    secretAccessKey: req.authentication.secretAccessKey
+  };
+  const parsedUrl = urlParse(url);
+  const contentTypeHeader = util.getContentTypeHeader(req.headers);
+  const options = {
+    path: parsedUrl.path,
+    // hostname is what we want here whether your URL has port or not
+    host: parsedUrl.hostname,
+    headers: {
+      'content-type': contentTypeHeader ? contentTypeHeader.value : ''
+    }
+  };
+  const body = req.body && req.body.text;
+  if (body) {
+    options.body = body;
+  }
+  const signature = aws4.sign(options, credentials);
+  return Object.keys(signature.headers)
+    // Don't use the inferred content type aws4 provides
+    .filter((name) => name !== 'content-type')
+    .map((name) => ({name, value: signature.headers[name]}));
 }
 
 document.addEventListener('keydown', e => {
