@@ -56,9 +56,8 @@ export default class BaseExtension {
     // Pull the callback off the end
     const callback = runArgs[runArgs.length - 1];
 
-    // Pull out the meta
+    // Pull out the meta helper
     const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
-    delete renderContext.getMeta;
 
     // Extract the rest of the args
     const args = runArgs

@@ -2,9 +2,15 @@ import nunjucks from 'nunjucks';
 import * as extensions from './extensions';
 import BaseExtension from './base-extension';
 
+// Some constants
+export const RENDER_ALL = 'all';
+export const RENDER_VARS = 'variables';
+export const RENDER_TAGS = 'tags';
+
 // Cached globals
 let nunjucksVariablesOnly = null;
-let nunjucksDefault = null;
+let nunjucksTagsOnly = null;
+let nunjucksAll = null;
 
 /**
  * Render text based on stuff
@@ -12,15 +18,15 @@ let nunjucksDefault = null;
  * @param {Object} [config] - Config options for rendering
  * @param {Object} [config.context] - Context to render with
  * @param {Object} [config.path] - Path to include in the error message
- * @param {Object} [config.variablesOnly] - Only render variables (not tags)
+ * @param {Object} [config.renderMode] - Only render variables (not tags)
  */
 export function render (text, config = {}) {
   const context = config.context || {};
   const path = config.path || null;
-  const variablesOnly = config.variablesOnly || false;
+  const renderMode = config.renderMode || RENDER_ALL;
 
   return new Promise((resolve, reject) => {
-    const nj = getNunjucks(variablesOnly);
+    const nj = getNunjucks(renderMode);
 
     nj.renderString(text, context, (err, result) => {
       if (err) {
@@ -54,13 +60,10 @@ export function render (text, config = {}) {
 /**
  * Reload Nunjucks environments. Useful for if plugins change.
  */
-export function reloadNunjucks () {
-  nunjucksDefault = null;
+export function reload () {
+  nunjucksAll = null;
   nunjucksVariablesOnly = null;
-
-  // TODO: Make this less horrible
-  getNunjucks(true);
-  getNunjucks(false);
+  nunjucksTagsOnly = null;
 }
 
 /**
@@ -81,13 +84,17 @@ export function getTagDefinitions () {
     }));
 }
 
-function getNunjucks (variablesOnly) {
-  if (variablesOnly && nunjucksVariablesOnly) {
+function getNunjucks (renderMode) {
+  if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
     return nunjucksVariablesOnly;
   }
 
-  if (!variablesOnly && nunjucksDefault) {
-    return nunjucksDefault;
+  if (renderMode === RENDER_TAGS && nunjucksTagsOnly) {
+    return nunjucksTagsOnly;
+  }
+
+  if (renderMode === RENDER_ALL && nunjucksAll) {
+    return nunjucksAll;
   }
 
   // ~~~~~~~~~~~~ //
@@ -107,10 +114,16 @@ function getNunjucks (variablesOnly) {
     }
   };
 
-  if (variablesOnly) {
+  if (renderMode === RENDER_VARS) {
     // Set tag syntax to something that will never happen naturally
     config.tags.blockStart = '<[{[{[{[{[$%';
     config.tags.blockEnd = '%$]}]}]}]}]>';
+  }
+
+  if (renderMode === RENDER_TAGS) {
+    // Set tag syntax to something that will never happen naturally
+    config.tags.variableStart = '<[{[{[{[{[$%';
+    config.tags.variableEnd = '%$]}]}]}]}]>';
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -125,16 +138,25 @@ function getNunjucks (variablesOnly) {
     ext.priority = ext.priority || i * 100;
     const instance = new BaseExtension(ext);
     nj.addExtension(instance.getTag(), instance);
+
+    // Hidden helper filter to debug complicated things
+    // eg. `{{ foo | urlencode | debug | upper }}`
+    nj.addFilter('debug', o => {
+      console.log('DEBUG', {o}, JSON.stringify(o));
+      return o;
+    });
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //
   // Cache Env and Return //
   // ~~~~~~~~~~~~~~~~~~~~ //
 
-  if (variablesOnly) {
+  if (renderMode === RENDER_VARS) {
     nunjucksVariablesOnly = nj;
+  } else if (renderMode === RENDER_TAGS) {
+    nunjucksTagsOnly = nj;
   } else {
-    nunjucksDefault = nj;
+    nunjucksAll = nj;
   }
 
   return nj;

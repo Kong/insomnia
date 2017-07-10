@@ -45,7 +45,7 @@ class VariableEditor extends PureComponent {
     let error = '';
 
     try {
-      preview = await handleRender(value, true);
+      preview = await handleRender(value);
     } catch (err) {
       error = err.message;
     }

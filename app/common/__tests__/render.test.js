@@ -1,5 +1,6 @@
 import * as renderUtils from '../render';
 import * as models from '../../models';
+import {RENDER_VARS} from '../../templating/index';
 
 jest.mock('electron');
 
@@ -337,8 +338,8 @@ describe('render()', () => {
     const template = '{{ foo }} {% uuid "v4" %}';
     const context = {foo: 'bar'};
 
-    const resultOnlyVars = await renderUtils.render(template, context, null, true);
-    const resultEverything = await renderUtils.render(template, context, null, false);
+    const resultOnlyVars = await renderUtils.render(template, context, null, RENDER_VARS);
+    const resultEverything = await renderUtils.render(template, context, null);
 
     expect(resultOnlyVars).toBe('bar {% uuid "v4" %}');
     expect(resultEverything).toBe('bar e3e96e5f-dd68-4229-8b66-dee1f0940f3d');
