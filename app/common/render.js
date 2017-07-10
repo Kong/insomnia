@@ -3,7 +3,9 @@ import * as models from '../models';
 import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
-import {RENDER_ALL, RENDER_VARS} from '../templating/index';
+
+export const KEEP_ON_ERROR = 'keep';
+export const THROW_ON_ERROR = 'throw';
 
 export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment, baseContext = {}) {
   if (!Array.isArray(ancestors)) {
@@ -57,7 +59,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
           environment[key],
           renderContext,
           null,
-          RENDER_VARS,
+          KEEP_ON_ERROR,
           'Environment'
         );
       } else {
@@ -75,7 +77,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
       finalRenderContext,
       finalRenderContext,
       null,
-      RENDER_VARS,
+      KEEP_ON_ERROR,
       'Environment'
     );
   }
@@ -88,11 +90,11 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
  * @param {*} obj - object to render
  * @param {object} context - context to render against
  * @param blacklistPathRegex - don't render these paths
- * @param renderMode - how to render
+ * @param errorMode - how to handle errors
  * @param name - name to include in error message
  * @return {Promise.<*>}
  */
-export async function render (obj, context = {}, blacklistPathRegex = null, renderMode = RENDER_ALL, name = '') {
+export async function render (obj, context = {}, blacklistPathRegex = null, errorMode = THROW_ON_ERROR, name = '') {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
@@ -116,16 +118,18 @@ export async function render (obj, context = {}, blacklistPathRegex = null, rend
       // Do nothing to these types
     } else if (asStr === '[object String]') {
       try {
-        x = await templating.render(x, {context, path, renderMode});
+        x = await templating.render(x, {context, path});
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
         //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
         if (x.includes('{%')) {
-          x = await templating.render(x, {context, path, renderMode});
+          x = await templating.render(x, {context, path});
         }
       } catch (err) {
-        throw err;
+        if (errorMode !== KEEP_ON_ERROR) {
+          throw err;
+        }
       }
     } else if (Array.isArray(x)) {
       for (let i = 0; i < x.length; i++) {
