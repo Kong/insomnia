@@ -567,3 +567,7 @@ document.addEventListener('keydown', e => {
 
   lastUserInteraction = Date.now();
 });
+
+document.addEventListener('paste', e => {
+  lastUserInteraction = Date.now();
+});
