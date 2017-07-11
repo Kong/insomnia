@@ -22,7 +22,7 @@ class Plugins extends PureComponent {
 
   _handleGeneratePlugin () {
     showPrompt({
-      headerName: 'Plugin Name',
+      title: 'Plugin Name',
       defaultValue: 'My Plugin',
       submitName: 'Generate Plugin',
       selectText: true,

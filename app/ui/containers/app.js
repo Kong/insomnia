@@ -209,7 +209,7 @@ class App extends PureComponent {
 
   _requestGroupCreate (parentId) {
     showPrompt({
-      headerName: 'New Folder',
+      title: 'New Folder',
       defaultValue: 'My Folder',
       submitName: 'Create',
       label: 'Name',
@@ -245,7 +245,7 @@ class App extends PureComponent {
   async _workspaceDuplicate (callback) {
     const workspace = this.props.activeWorkspace;
     showPrompt({
-      headerName: 'Duplicate Workspace',
+      title: 'Duplicate Workspace',
       defaultValue: `${workspace.name} (Copy)`,
       submitName: 'Duplicate',
       selectText: true,

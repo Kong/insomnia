@@ -63,7 +63,7 @@ class WorkspaceDropdown extends PureComponent {
 
   _handleWorkspaceCreate (noTrack) {
     showPrompt({
-      headerName: 'Create New Workspace',
+      title: 'Create New Workspace',
       defaultValue: 'My Workspace',
       submitName: 'Create',
       selectText: true,

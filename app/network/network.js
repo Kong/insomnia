@@ -14,11 +14,11 @@ import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
+import * as plugins from '../plugins/index';
+import * as pluginContexts from '../plugins/context/index';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import urlMatchesCertHost from './url-matches-cert-host';
-import * as plugins from '../plugins/index';
-import {showAlert} from '../ui/components/modals/index';
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -46,6 +46,16 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       }, patch);
 
       resolve({bodyBuffer, response});
+
+      // Apply plugin hooks and don't wait for them and don't throw from them
+      process.nextTick(async () => {
+        try {
+          await _applyResponsePluginHooks(response, bodyBuffer);
+        } catch (err) {
+          // TODO: Better error handling here
+          console.warn('Response plugin failed', err);
+        }
+      });
     };
 
     const handleError = err => {
@@ -489,7 +499,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const bodyBuffer = Buffer.concat(dataBuffers, dataBuffersLength);
 
         // Return the response data
-        respond({
+        const responsePatch = {
           headers,
           contentType,
           statusCode,
@@ -497,10 +507,12 @@ export function _actuallySend (renderedRequest, workspace, settings) {
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
           url: curl.getInfo(Curl.info.EFFECTIVE_URL)
-        }, bodyBuffer);
+        };
 
         // Close the request
         this.close();
+
+        respond(responsePatch, bodyBuffer);
       });
 
       curl.on('error', function (err, code) {
@@ -549,7 +561,7 @@ export async function send (requestId, environmentId) {
 
   let renderedRequest;
   try {
-    renderedRequest = await _applyPluginHooks(renderedRequestBeforePlugins);
+    renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins);
   } catch (err) {
     return {
       response: {
@@ -569,64 +581,14 @@ export async function send (requestId, environmentId) {
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
-async function _applyPluginHooks (renderedRequest) {
+async function _applyRequestPluginHooks (renderedRequest) {
   let newRenderedRequest = renderedRequest;
-  for (const {plugin, hook} of plugins.getPreRequestHooks()) {
+  for (const {plugin, hook} of plugins.getRequestHooks()) {
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
-      getId () {
-        return renderedRequest._id;
-      },
-      getName () {
-        return renderedRequest.name;
-      },
-      getUrl () {
-        // TODO: Get full URL, including querystring
-        return renderedRequest.url;
-      },
-      getMethod () {
-        return renderedRequest.method;
-      },
-      getHeader (name) {
-        const headers = util.filterHeaders(newRenderedRequest.headers, name);
-        if (headers.length) {
-          // Use the last header if there are multiple of the same
-          const header = headers[headers.length - 1];
-          return header.value || '';
-        } else {
-          return null;
-        }
-      },
-      hasHeader (name) {
-        return this.getHeader(name) !== null;
-      },
-      removeHeader (name) {
-        const headers = util.filterHeaders(newRenderedRequest.headers, name);
-        newRenderedRequest.headers = newRenderedRequest.headers.filter(
-          h => !headers.includes(h)
-        );
-      },
-      setHeader (name, value) {
-        const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
-        if (header) {
-          header.value = value;
-        } else {
-          this.addHeader(name, value);
-        }
-      },
-      addHeader (name, value) {
-        const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
-        if (!header) {
-          newRenderedRequest.headers.push({name, value});
-        }
-      },
-      setCookie (name, value) {
-        newRenderedRequest.cookies.push({name, value});
-      },
-      alert (message) {
-        showAlert({title: `Plugin ${plugin.name}`, message});
-      }
+      ...pluginContexts.app.init(plugin),
+      ...pluginContexts.request.init(plugin, newRenderedRequest)
     };
 
     try {
@@ -638,6 +600,22 @@ async function _applyPluginHooks (renderedRequest) {
   }
 
   return newRenderedRequest;
+}
+
+async function _applyResponsePluginHooks (response, bodyBuffer) {
+  for (const {plugin, hook} of plugins.getResponseHooks()) {
+    const context = {
+      ...pluginContexts.app.init(plugin),
+      ...pluginContexts.response.init(plugin, response, bodyBuffer)
+    };
+
+    try {
+      await hook(context);
+    } catch (err) {
+      err.plugin = plugin;
+      throw err;
+    }
+  }
 }
 
 function _getCurlHeader (curlHeadersObj, name, fallback) {

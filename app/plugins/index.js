@@ -71,10 +71,23 @@ export function getTemplateTags () {
   return extensions;
 }
 
-export function getPreRequestHooks () {
+export function getRequestHooks () {
   let functions = [];
   for (const plugin of getPlugins()) {
-    const moreFunctions = plugin.module.preRequestHooks || [];
+    const moreFunctions = plugin.module.requestHooks || [];
+    functions = [...functions, ...moreFunctions.map(fn => ({
+      plugin: plugin.name,
+      hook: fn
+    }))];
+  }
+
+  return functions;
+}
+
+export function getResponseHooks () {
+  let functions = [];
+  for (const plugin of getPlugins()) {
+    const moreFunctions = plugin.module.responseHooks || [];
     functions = [...functions, ...moreFunctions.map(fn => ({
       plugin: plugin.name,
       hook: fn

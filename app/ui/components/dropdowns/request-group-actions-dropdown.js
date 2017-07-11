@@ -18,7 +18,7 @@ class RequestGroupActionsDropdown extends PureComponent {
     const {requestGroup} = this.props;
 
     showPrompt({
-      headerName: 'Rename Folder',
+      title: 'Rename Folder',
       defaultValue: requestGroup.name,
       onComplete: name => {
         models.requestGroup.update(requestGroup, {name});

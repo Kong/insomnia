@@ -8,7 +8,7 @@ import {showPrompt} from '../modals/index';
 class ImportExport extends PureComponent {
   _handleImportUri () {
     showPrompt({
-      headerName: 'Import Data from URL',
+      title: 'Import Data from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',

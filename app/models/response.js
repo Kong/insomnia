@@ -22,7 +22,6 @@ export function init () {
     bytesRead: 0,
     elapsedTime: 0,
     headers: [],
-    cookies: [],
     timeline: [],
     bodyPath: '', // Actual bodies are stored on the filesystem
     error: '',

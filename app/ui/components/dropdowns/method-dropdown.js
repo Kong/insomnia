@@ -21,7 +21,7 @@ class MethodDropdown extends PureComponent {
     // Prompt user for the method
     showPrompt({
       defaultValue: this.props.method,
-      headerName: 'HTTP Method',
+      title: 'HTTP Method',
       submitName: 'Done',
       upperCase: true,
       selectText: true,
