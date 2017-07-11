@@ -135,7 +135,7 @@ class TagEditor extends PureComponent {
       template = typeof activeTagData.rawValue === 'string'
         ? activeTagData.rawValue
         : templateUtils.unTokenizeTag(activeTagData);
-      preview = await handleRender(template, true);
+      preview = await handleRender(template);
     } catch (err) {
       error = err.message;
     }

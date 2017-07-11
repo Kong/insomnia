@@ -333,14 +333,23 @@ describe('render()', () => {
     }
   });
 
-  it('does not render tags when not supposed to', async () => {
-    const template = '{{ foo }} {% uuid "v4" %}';
+  it('keep on error setting', async () => {
+    const template = '{{ foo }} {% invalid "hi" %}';
     const context = {foo: 'bar'};
 
-    const resultOnlyVars = await renderUtils.render(template, context, null, true);
-    const resultEverything = await renderUtils.render(template, context, null, false);
+    const resultOnlyVars = await renderUtils.render(
+      template,
+      context,
+      null,
+      renderUtils.KEEP_ON_ERROR
+    );
 
-    expect(resultOnlyVars).toBe('bar {% uuid "v4" %}');
-    expect(resultEverything).toBe('bar e3e96e5f-dd68-4229-8b66-dee1f0940f3d');
+    expect(resultOnlyVars).toBe('{{ foo }} {% invalid "hi" %}');
+    try {
+      await renderUtils.render(template, context, null);
+      fail('Render should not have succeeded');
+    } catch (err) {
+      expect(err.message).toBe('unknown block tag: invalid');
+    }
   });
 });

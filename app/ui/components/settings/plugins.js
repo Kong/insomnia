@@ -6,6 +6,7 @@ import Button from '../base/button';
 import CopyButton from '../base/copy-button';
 import {showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
+import {reload} from '../../../templating/index';
 
 @autobind
 class Plugins extends PureComponent {
@@ -37,7 +38,11 @@ class Plugins extends PureComponent {
   }
 
   _handleRefreshPlugins () {
-    this.setState({plugins: getPlugins(true)});
+    // Get and reload plugins
+    const plugins = getPlugins(true);
+    reload();
+
+    this.setState({plugins});
     trackEvent('Plugins', 'Refresh');
   }
 
