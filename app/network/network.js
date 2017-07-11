@@ -31,8 +31,22 @@ export function cancelCurrentRequest () {
 
 export function _actuallySend (renderedRequest, workspace, settings) {
   return new Promise(async resolve => {
+    let timeline = [];
+
+    // Define helper to add base fields when responding
+    const respond = (patch, bodyBuffer = null) => {
+      const response = Object.assign({
+        parentId: renderedRequest._id,
+        timeline: timeline,
+        settingSendCookies: renderedRequest.settingSendCookies,
+        settingStoreCookies: renderedRequest.settingStoreCookies
+      }, patch);
+
+      resolve({bodyBuffer, response});
+    };
+
     function handleError (err, prefix = null) {
-      resolve({
+      respond({
         url: renderedRequest.url,
         parentId: renderedRequest._id,
         error: prefix ? `${prefix}: ${err.message}` : err.message,
@@ -47,18 +61,6 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       // Initialize the curl handle
       const curl = new Curl();
       let timeline = [];
-
-      // Define helper to add base fields when responding
-      const respond = (patch, bodyBuffer = null) => {
-        const response = Object.assign({
-          parentId: renderedRequest._id,
-          timeline: timeline,
-          settingSendCookies: renderedRequest.settingSendCookies,
-          settingStoreCookies: renderedRequest.settingStoreCookies
-        }, patch);
-
-        resolve({bodyBuffer, response});
-      };
 
       // Define helper to setOpt for better error handling
       const setOpt = (opt, val, optional = false) => {
