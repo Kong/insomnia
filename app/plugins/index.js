@@ -62,8 +62,24 @@ export function getTemplateTags () {
   let extensions = [];
   for (const plugin of getPlugins()) {
     const templateTags = plugin.module.templateTags || [];
-    extensions = [...extensions, ...templateTags];
+    extensions = [...extensions, ...templateTags.map(tt => ({
+      plugin: plugin.name,
+      templateTag: tt
+    }))];
   }
 
   return extensions;
+}
+
+export function getPreRequestHooks () {
+  let functions = [];
+  for (const plugin of getPlugins()) {
+    const moreFunctions = plugin.module.preRequestHooks || [];
+    functions = [...functions, ...moreFunctions.map(fn => ({
+      plugin: plugin.name,
+      hook: fn
+    }))];
+  }
+
+  return functions;
 }

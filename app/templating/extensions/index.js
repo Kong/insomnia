@@ -17,5 +17,5 @@ const DEFAULT_EXTENSIONS = [
 ];
 
 export function all () {
-  return [...DEFAULT_EXTENSIONS, ...plugins.getTemplateTags()];
+  return [...DEFAULT_EXTENSIONS, ...plugins.getTemplateTags().map(p => p.templateTag)];
 }

@@ -205,5 +205,8 @@ export async function getRenderedRequest (request, environmentId) {
   // TODO: Don't deal with cookies in here
   renderedRequest.cookieJar = cookieJar;
 
+  // Only used in plugins at the moment, but this for easily adding extra cookies
+  renderedRequest.cookies = [];
+
   return renderedRequest;
 }

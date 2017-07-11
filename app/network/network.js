@@ -1,6 +1,7 @@
 import electron from 'electron';
 import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
+import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'node-libcurl';
 import {join as pathJoin} from 'path';
@@ -16,6 +17,8 @@ import * as CACerts from './cacert';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import urlMatchesCertHost from './url-matches-cert-host';
+import * as plugins from '../plugins/index';
+import {showAlert} from '../ui/components/modals/index';
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -31,34 +34,35 @@ export function cancelCurrentRequest () {
 
 export function _actuallySend (renderedRequest, workspace, settings) {
   return new Promise(async resolve => {
-    function handleError (err, prefix = null) {
-      resolve({
+    let timeline = [];
+
+    // Define helper to add base fields when responding
+    const respond = (patch, bodyBuffer = null) => {
+      const response = Object.assign({
+        parentId: renderedRequest._id,
+        timeline: timeline,
+        settingSendCookies: renderedRequest.settingSendCookies,
+        settingStoreCookies: renderedRequest.settingStoreCookies
+      }, patch);
+
+      resolve({bodyBuffer, response});
+    };
+
+    const handleError = err => {
+      respond({
         url: renderedRequest.url,
         parentId: renderedRequest._id,
-        error: prefix ? `${prefix}: ${err.message}` : err.message,
+        error: err.message,
         elapsedTime: 0,
         statusMessage: 'Error',
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies
       });
-    }
+    };
 
     try {
       // Initialize the curl handle
       const curl = new Curl();
-      let timeline = [];
-
-      // Define helper to add base fields when responding
-      const respond = (patch, bodyBuffer = null) => {
-        const response = Object.assign({
-          parentId: renderedRequest._id,
-          timeline: timeline,
-          settingSendCookies: renderedRequest.settingSendCookies,
-          settingStoreCookies: renderedRequest.settingStoreCookies
-        }, patch);
-
-        resolve({bodyBuffer, response});
-      };
 
       // Define helper to setOpt for better error handling
       const setOpt = (opt, val, optional = false) => {
@@ -234,6 +238,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
             cookie.key,
             cookie.value
           ].join('\t'));
+        }
+
+        for (const {name, value} of renderedRequest.cookies) {
+          setOpt(Curl.option.COOKIE, `${name}=${value}`);
         }
 
         timeline.push({
@@ -534,7 +542,22 @@ export async function send (requestId, environmentId) {
   const settings = await models.settings.getOrCreate();
 
   // This may throw
-  const renderedRequest = await getRenderedRequest(request, environmentId);
+  const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
+  console.log('BEFORE PLUGINS', renderedRequestBeforePlugins);
+  const renderedRequest = await _applyPluginHooks(renderedRequestBeforePlugins);
+  if (renderedRequest instanceof Error) {
+    return {
+      response: {
+        url: renderedRequestBeforePlugins.url,
+        parentId: renderedRequestBeforePlugins._id,
+        error: renderedRequest.message,
+        statusMessage: 'Plugin Error',
+        settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
+        settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
+      }
+    };
+  }
+  console.log('AFTER PLUGINS', renderedRequest);
 
   // Get the workspace for the request
   const ancestors = await db.withAncestors(request, [
@@ -546,6 +569,68 @@ export async function send (requestId, environmentId) {
 
   // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);
+}
+
+async function _applyPluginHooks (renderedRequest) {
+  let newRenderedRequest = renderedRequest;
+  for (const {plugin, hook} of plugins.getPreRequestHooks()) {
+    newRenderedRequest = clone(newRenderedRequest);
+
+    const stopRequest = message => {
+      throw new Error(`${plugin} stopped request: ${message}`);
+    };
+
+    try {
+      await hook({
+        getId: () => renderedRequest._id,
+        getName: () => renderedRequest.name,
+        getUrl: () => renderedRequest.url,
+        getMethod: () => renderedRequest.method,
+        hasHeader: name => util.filterHeaders(newRenderedRequest.headers, name).length > 0,
+        getHeader: name => {
+          const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
+          if (header) {
+            return header.value;
+          } else {
+            return null;
+          }
+        },
+        removeHeader: name => {
+          const headers = util.filterHeaders(newRenderedRequest.headers, name);
+          newRenderedRequest.headers = newRenderedRequest.headers.filter(
+            h => !headers.includes(h)
+          );
+        },
+        setHeader: (name, value) => {
+          const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
+          if (header) {
+            header.value = value;
+          } else {
+            newRenderedRequest.headers.push({name, value});
+          }
+        },
+        addHeader: (name, value) => {
+          const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
+          if (!header) {
+            newRenderedRequest.headers.push({name, value});
+          }
+        },
+        setCookie: (name, value) => {
+          newRenderedRequest.cookies.push({name, value});
+        },
+        alert: message => {
+          showAlert({title: `Plugin ${plugin.name}`, message});
+        },
+        fail: message => {
+          stopRequest(message);
+        }
+      });
+    } catch (err) {
+      return err;
+    }
+  }
+
+  return newRenderedRequest;
 }
 
 function _getCurlHeader (curlHeadersObj, name, fallback) {
