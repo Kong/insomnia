@@ -8,7 +8,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
@@ -540,34 +540,32 @@ export async function send (requestId, environmentId) {
   // Fetch some things
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
-
-  // This may throw
-  const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
-  console.log('BEFORE PLUGINS', renderedRequestBeforePlugins);
-  const renderedRequest = await _applyPluginHooks(renderedRequestBeforePlugins);
-  if (renderedRequest instanceof Error) {
-    return {
-      response: {
-        url: renderedRequestBeforePlugins.url,
-        parentId: renderedRequestBeforePlugins._id,
-        error: renderedRequest.message,
-        statusMessage: 'Plugin Error',
-        settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
-        settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
-      }
-    };
-  }
-  console.log('AFTER PLUGINS', renderedRequest);
-
-  // Get the workspace for the request
   const ancestors = await db.withAncestors(request, [
     models.requestGroup.type,
     models.workspace.type
   ]);
 
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
+
+  let renderedRequest;
+  try {
+    renderedRequest = await _applyPluginHooks(renderedRequestBeforePlugins);
+  } catch (err) {
+    return {
+      response: {
+        url: renderedRequestBeforePlugins.url,
+        parentId: renderedRequestBeforePlugins._id,
+        error: err.message,
+        statusCode: STATUS_CODE_PLUGIN_ERROR,
+        statusMessage: err.plugin ? `Plugin ${err.plugin}` : 'Plugin',
+        settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
+        settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
+      }
+    };
+  }
 
   // Render succeeded so we're good to go!
+  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
@@ -576,57 +574,66 @@ async function _applyPluginHooks (renderedRequest) {
   for (const {plugin, hook} of plugins.getPreRequestHooks()) {
     newRenderedRequest = clone(newRenderedRequest);
 
-    const stopRequest = message => {
-      throw new Error(`${plugin} stopped request: ${message}`);
+    const context = {
+      getId () {
+        return renderedRequest._id;
+      },
+      getName () {
+        return renderedRequest.name;
+      },
+      getUrl () {
+        // TODO: Get full URL, including querystring
+        return renderedRequest.url;
+      },
+      getMethod () {
+        return renderedRequest.method;
+      },
+      getHeader (name) {
+        const headers = util.filterHeaders(newRenderedRequest.headers, name);
+        if (headers.length) {
+          // Use the last header if there are multiple of the same
+          const header = headers[headers.length - 1];
+          return header.value || '';
+        } else {
+          return null;
+        }
+      },
+      hasHeader (name) {
+        return this.getHeader(name) !== null;
+      },
+      removeHeader (name) {
+        const headers = util.filterHeaders(newRenderedRequest.headers, name);
+        newRenderedRequest.headers = newRenderedRequest.headers.filter(
+          h => !headers.includes(h)
+        );
+      },
+      setHeader (name, value) {
+        const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
+        if (header) {
+          header.value = value;
+        } else {
+          this.addHeader(name, value);
+        }
+      },
+      addHeader (name, value) {
+        const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
+        if (!header) {
+          newRenderedRequest.headers.push({name, value});
+        }
+      },
+      setCookie (name, value) {
+        newRenderedRequest.cookies.push({name, value});
+      },
+      alert (message) {
+        showAlert({title: `Plugin ${plugin.name}`, message});
+      }
     };
 
     try {
-      await hook({
-        getId: () => renderedRequest._id,
-        getName: () => renderedRequest.name,
-        getUrl: () => renderedRequest.url,
-        getMethod: () => renderedRequest.method,
-        hasHeader: name => util.filterHeaders(newRenderedRequest.headers, name).length > 0,
-        getHeader: name => {
-          const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
-          if (header) {
-            return header.value;
-          } else {
-            return null;
-          }
-        },
-        removeHeader: name => {
-          const headers = util.filterHeaders(newRenderedRequest.headers, name);
-          newRenderedRequest.headers = newRenderedRequest.headers.filter(
-            h => !headers.includes(h)
-          );
-        },
-        setHeader: (name, value) => {
-          const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
-          if (header) {
-            header.value = value;
-          } else {
-            newRenderedRequest.headers.push({name, value});
-          }
-        },
-        addHeader: (name, value) => {
-          const header = util.filterHeaders(newRenderedRequest.headers, name)[0];
-          if (!header) {
-            newRenderedRequest.headers.push({name, value});
-          }
-        },
-        setCookie: (name, value) => {
-          newRenderedRequest.cookies.push({name, value});
-        },
-        alert: message => {
-          showAlert({title: `Plugin ${plugin.name}`, message});
-        },
-        fail: message => {
-          stopRequest(message);
-        }
-      });
+      await hook(context);
     } catch (err) {
-      return err;
+      err.plugin = plugin;
+      throw err;
     }
   }
 
