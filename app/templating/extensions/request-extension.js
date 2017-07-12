@@ -100,7 +100,7 @@ function getCookieValue (cookieJar, url, name) {
       const cookie = cookies.find(cookie => cookie.key === name);
       if (!cookie) {
         const names = cookies.map(c => `"${c.key}"`).join(', ');
-        reject(new Error(`No cookie for "${name}". Choices are ${names}`));
+        reject(new Error(`No cookie with name "${name}". Choices are ${names} for url "${url}"`));
       } else {
         resolve(cookie ? cookie.value : null);
       }
