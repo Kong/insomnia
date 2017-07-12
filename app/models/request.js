@@ -1,4 +1,4 @@
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -49,6 +49,14 @@ export function newAuth (type, oldAuth = {}) {
     // OAuth 2.0
     case AUTH_OAUTH_2:
       return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
+
+    case AUTH_AWS_IAM:
+      return {
+        type,
+        disabled: oldAuth.disabled || false,
+        accessKeyId: oldAuth.accessKeyId || '',
+        secretAccessKey: oldAuth.secretAccessKey || ''
+      };
 
     // Types needing no defaults
     default:
