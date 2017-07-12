@@ -1,6 +1,7 @@
 import electron from 'electron';
 import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
+import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'node-libcurl';
 import {join as pathJoin} from 'path';
@@ -144,7 +145,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       });
 
       // Set the headers (to be modified as we go)
-      const headers = [...renderedRequest.headers];
+      const headers = clone(renderedRequest.headers);
 
       let lastPercent = 0;
       // NOTE: This option was added in 7.32.0 so make it optional
@@ -323,10 +324,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Build the body
       let noBody = false;
+      let requestBody = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        const d = querystring.buildFromParams(renderedRequest.body.params || [], false);
-        setOpt(Curl.option.POSTFIELDS, d); // Send raw data
+        requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const data = renderedRequest.body.params.map(param => {
           if (param.type === 'file' && param.fileName) {
@@ -347,7 +348,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         curl.on('end', fn);
         curl.on('error', fn);
       } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
-        setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text || '');
+        requestBody = renderedRequest.body.text || '';
       } else {
         // No body
         noBody = true;
@@ -357,6 +358,11 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         // Don't chunk uploads
         headers.push({name: 'Expect', value: ''});
         headers.push({name: 'Transfer-Encoding', value: ''});
+      }
+
+      // If we calculated the body within Insomnia (ie. not computed by Curl)
+      if (requestBody !== null) {
+        setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
       // Build the body
@@ -385,12 +391,19 @@ export function _actuallySend (renderedRequest, workspace, settings) {
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          if (!renderedRequest.body.text) {
-            throw new Error('AWS authentication not supported for provided body type');
+          if (!requestBody) {
+            return handleError(new Error('AWS authentication not supported for provided body type'));
           }
-          _getAwsAuthHeaders(renderedRequest, finalUrl).forEach((header) => {
+          const extraHeaders = _getAwsAuthHeaders(
+            renderedRequest.authentication.accessKeyId || '',
+            renderedRequest.authentication.secretAccessKey || '',
+            headers,
+            requestBody,
+            finalUrl
+          );
+          for (const header of extraHeaders) {
             headers.push(header);
-          });
+          }
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,
@@ -571,30 +584,26 @@ function _getCurlHeader (curlHeadersObj, name, fallback) {
 }
 
 // exported for unit tests only
-export function _getAwsAuthHeaders (req, url) {
-  const credentials = {
-    accessKeyId: req.authentication.accessKeyId,
-    secretAccessKey: req.authentication.secretAccessKey
-  };
+export function _getAwsAuthHeaders (accessKeyId, secretAccessKey, headers, body, url) {
+  const credentials = {accessKeyId, secretAccessKey};
+
   const parsedUrl = urlParse(url);
-  const contentTypeHeader = util.getContentTypeHeader(req.headers);
-  const options = {
+  const contentTypeHeader = util.getContentTypeHeader(headers);
+
+  const awsSignOptions = {
+    body,
     path: parsedUrl.path,
-    // hostname is what we want here whether your URL has port or not
-    host: parsedUrl.hostname,
+    host: parsedUrl.hostname, // Purposefully not ".host" because we don't want the port
     headers: {
       'content-type': contentTypeHeader ? contentTypeHeader.value : ''
     }
   };
-  const body = req.body && req.body.text;
-  if (body) {
-    options.body = body;
-  }
-  const signature = aws4.sign(options, credentials);
+
+  const signature = aws4.sign(awsSignOptions, credentials);
+
   return Object.keys(signature.headers)
-    // Don't use the inferred content type aws4 provides
-    .filter((name) => name !== 'content-type')
-    .map((name) => ({name, value: signature.headers[name]}));
+    .filter(name => name !== 'content-type') // Don't add this because we already have it
+    .map(name => ({name, value: signature.headers[name]}));
 }
 
 document.addEventListener('keydown', e => {

@@ -411,10 +411,16 @@ describe('_getAwsAuthHeaders', () => {
         secretAccessKey: 'SAK9999999999999'
       },
       headers: [{name: 'content-type', value: 'application/json'}],
-      body: {text: '{}'}
+      body: {text: '{}'},
+      url: 'https://example.com/path?query=q1'
     };
-    const url = 'https://example.com/path?query=q1';
-    const headers = networkUtils._getAwsAuthHeaders(req, url);
+    const headers = networkUtils._getAwsAuthHeaders(
+      req.authentication.accessKeyId,
+      req.authentication.secretAccessKey,
+      req.headers,
+      req.body.text,
+      req.url
+    );
     expect(filterHeaders(headers, 'x-amz-date')[0].value)
       .toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
@@ -431,10 +437,18 @@ describe('_getAwsAuthHeaders', () => {
         accessKeyId: 'AKIA99999999',
         secretAccessKey: 'SAK9999999999999'
       },
-      headers: []
+      headers: [],
+      url: 'https://example.com'
     };
-    const url = 'https://example.com';
-    const headers = networkUtils._getAwsAuthHeaders(req, url);
+
+    const headers = networkUtils._getAwsAuthHeaders(
+      req.authentication.accessKeyId,
+      req.authentication.secretAccessKey,
+      req.headers,
+      null,
+      req.url
+    );
+
     expect(filterHeaders(headers, 'x-amz-date')[0].value)
       .toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
