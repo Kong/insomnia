@@ -7,17 +7,18 @@
 export function getKeys (obj, prefix = '') {
   let allKeys = [];
 
-  if (Array.isArray(obj)) {
+  const typeOfObj = Object.prototype.toString.call(obj);
+
+  if (typeOfObj === '[object Array]') {
     for (let i = 0; i < obj.length; i++) {
       allKeys = [...allKeys, ...getKeys(obj[i], `${prefix}[${i}]`)];
     }
-  } else if (typeof obj === 'object') {
-    for (const key of Object.keys(obj)) {
+  } else if (typeOfObj === '[object Object]') {
+    const keys = Object.keys(obj);
+    for (const key of keys) {
       const newPrefix = prefix ? `${prefix}.${key}` : key;
       allKeys = [...allKeys, ...getKeys(obj[key], newPrefix)];
     }
-  } else if (typeof obj === 'function') {
-    // Skip functions
   } else if (prefix) {
     allKeys.push({name: prefix, value: obj});
   }

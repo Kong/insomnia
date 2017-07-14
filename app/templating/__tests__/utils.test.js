@@ -5,6 +5,9 @@ describe('getKeys()', () => {
     const obj = {
       foo: 'bar',
       nested: {a: {b: {}}},
+      null: null,
+      undefined: undefined,
+      false: false,
       array: [
         'hello',
         {hi: 'there'},
@@ -24,7 +27,10 @@ describe('getKeys()', () => {
       {name: 'array[3][0]', value: obj.array[3][0]},
       {name: 'array[3][1]', value: obj.array[3][1]},
       {name: 'array[3][2]', value: obj.array[3][2]},
-      {name: 'foo', value: obj.foo}
+      {name: 'false', value: obj.false},
+      {name: 'foo', value: obj.foo},
+      {name: 'null', value: obj.null},
+      {name: 'undefined', value: obj.undefined}
     ]);
   });
 
