@@ -19,6 +19,8 @@ export function getKeys (obj, prefix = '') {
       const newPrefix = prefix ? `${prefix}.${key}` : key;
       allKeys = [...allKeys, ...getKeys(obj[key], newPrefix)];
     }
+  } else if (typeOfObj === '[object Function]') {
+    // Ignore functions
   } else if (prefix) {
     allKeys.push({name: prefix, value: obj});
   }
