@@ -1,0 +1,14 @@
+
+[ignore]
+.*/node_modules/.*
+.*/__fixtures__/.*
+
+[include]
+
+[libs]
+flow-typed/.*
+
+[options]
+esproposal.decorators=ignore
+
+[lints]

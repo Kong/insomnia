@@ -1,4 +1,5 @@
-import React, {PropTypes, PureComponent} from 'react';
+// @flow
+import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
@@ -24,22 +25,38 @@ import Hotkey from './hotkey';
 
 @autobind
 class ResponsePane extends PureComponent {
-  _trackTab (name) {
+  props: {
+    // Functions
+    handleSetFilter: Function,
+    showCookiesModal: Function,
+    handleSetPreviewMode: Function,
+    handleSetActiveResponse: Function,
+    handleDeleteResponses: Function,
+    handleDeleteResponse: Function,
+    handleShowRequestSettings: Function,
+
+    // Required
+    previewMode: string,
+    filter: string,
+    filterHistory: Array<string>,
+    editorFontSize: number,
+    editorIndentSize: number,
+    editorKeyMap: string,
+    editorLineWrapping: boolean,
+    loadStartTime: number,
+    responses: Array<Object>,
+
+    // Other
+    request?: Object,
+    response?: Object
+  };
+
+  _trackTab (name: string) {
     trackEvent('Response Pane', 'View', name);
   }
 
   _handleGetResponseBody () {
     return models.response.getBodyBuffer(this.props.response);
-  }
-
-  async _getResponse (requestId, responseId) {
-    let response = responseId ? await models.response.getById(responseId) : null;
-
-    if (!response) {
-      response = await models.response.getLatestForRequest(requestId);
-    }
-
-    this.setState({response});
   }
 
   async _handleDownloadResponseBody () {
@@ -313,31 +330,5 @@ class ResponsePane extends PureComponent {
     );
   }
 }
-
-ResponsePane.propTypes = {
-  // Functions
-  handleSetFilter: PropTypes.func.isRequired,
-  showCookiesModal: PropTypes.func.isRequired,
-  handleSetPreviewMode: PropTypes.func.isRequired,
-  handleSetActiveResponse: PropTypes.func.isRequired,
-  handleDeleteResponses: PropTypes.func.isRequired,
-  handleDeleteResponse: PropTypes.func.isRequired,
-  handleShowRequestSettings: PropTypes.func.isRequired,
-
-  // Required
-  previewMode: PropTypes.string.isRequired,
-  filter: PropTypes.string.isRequired,
-  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  loadStartTime: PropTypes.number.isRequired,
-  responses: PropTypes.arrayOf(PropTypes.object),
-
-  // Other
-  request: PropTypes.object,
-  response: PropTypes.object
-};
 
 export default ResponsePane;
