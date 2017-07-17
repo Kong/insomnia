@@ -44,14 +44,14 @@ class SidebarFilter extends PureComponent {
         </div>
         <Dropdown right>
           <DropdownButton className="btn btn--compact">
-            <i className="fa fa-plus-circle"></i>
+            <i className="fa fa-plus-circle"/>
           </DropdownButton>
           <DropdownItem onClick={this._handleRequestCreate}>
             <i className="fa fa-plus-circle"></i> New Request
             <DropdownHint char="N"></DropdownHint>
           </DropdownItem>
           <DropdownItem onClick={this._handleRequestGroupCreate}>
-            <i className="fa fa-folder"></i> New Folder
+            <i className="fa fa-folder"/> New Folder
           </DropdownItem>
         </Dropdown>
       </div>
