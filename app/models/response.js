@@ -48,7 +48,7 @@ export function all () {
 }
 
 export async function removeForRequest (parentId) {
-  db.removeBulkSilently(type, {parentId});
+  await db.removeWhere(type, {parentId});
 }
 
 export function remove (request) {
@@ -79,7 +79,7 @@ export async function create (patch = {}, bodyBuffer = null) {
   // Delete all other responses before creating the new one
   const allResponses = await db.findMostRecentlyModified(type, {parentId}, MAX_RESPONSES);
   const recentIds = allResponses.map(r => r._id);
-  await db.removeBulkSilently(type, {parentId, _id: {$nin: recentIds}});
+  await db.removeWhere(type, {parentId, _id: {$nin: recentIds}});
 
   // Actually create the new response
   const bodyPath = bodyBuffer ? storeBodyBuffer(bodyBuffer) : '';

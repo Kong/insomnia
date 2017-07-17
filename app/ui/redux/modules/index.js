@@ -48,6 +48,7 @@ async function getAllDocs () {
     models.requestGroupMeta.all(),
     models.request.all(),
     models.requestMeta.all(),
+    models.response.all(),
     models.oAuth2Token.all()
   ]);
 

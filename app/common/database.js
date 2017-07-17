@@ -259,24 +259,21 @@ export async function remove (doc, fromSync = false) {
   flushChanges();
 }
 
-/**
- * Remove a lot of documents quickly and silently
- *
- * @param type
- * @param query
- * @returns {Promise.<T>}
- */
-export function removeBulkSilently (type, query) {
-  return new Promise(resolve => {
-    db[type].remove(query, {multi: true}, err => {
-      if (err) {
-        console.warn('[db] Failed to remove', err);
-        resolve();
-      } else {
-        resolve();
-      }
-    });
-  });
+export async function removeWhere (type, query) {
+  bufferChanges();
+
+  for (const doc of await find(type, query)) {
+    const docs = await withDescendants(doc);
+    const docIds = docs.map(d => d._id);
+    const types = [...new Set(docs.map(d => d.type))];
+
+    // Don't really need to wait for this to be over;
+    types.map(t => db[t].remove({_id: {$in: docIds}}, {multi: true}));
+
+    docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
+  }
+
+  flushChanges();
 }
 
 // ~~~~~~~~~~~~~~~~~~~ //

@@ -20,7 +20,7 @@ import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent} from '../../analytics';
-import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -483,7 +483,8 @@ class App extends PureComponent {
     this.props.handleStopLoading(requestId);
   }
 
-  async _handleSetActiveResponse (requestId, activeResponseId = null) {
+  async _handleSetActiveResponse (requestId, activeResponse = null) {
+    const activeResponseId = activeResponse ? activeResponse._id : null;
     await this._updateRequestMetaByParentId(requestId, {activeResponseId});
 
     let response;
@@ -888,7 +889,10 @@ function mapStateToProps (state, props) {
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
-  const activeResponseId = requestMeta.activeResponseId || '';
+
+  // Response stuff
+  const activeRequestResponses = selectActiveRequestResponses(state, props) || [];
+  const activeResponse = selectActiveResponse(state, props) || null;
 
   // Environment stuff
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
@@ -912,7 +916,8 @@ function mapStateToProps (state, props) {
     loadStartTime,
     activeWorkspace,
     activeRequest,
-    activeResponseId,
+    activeRequestResponses,
+    activeResponse,
     sidebarHidden,
     sidebarFilter,
     sidebarWidth,
