@@ -32,7 +32,7 @@ import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
-import {showPrompt} from '../components/modals/index';
+import {showAlert, showPrompt} from '../components/modals/index';
 import {exportHar} from '../../common/har';
 
 const KEY_ENTER = 13;
@@ -440,8 +440,18 @@ class App extends PureComponent {
       } else {
         await models.response.create(responsePatch, bodyBuffer);
       }
-    } catch (e) {
-      // It's OK
+    } catch (err) {
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{err.message}</pre>
+            </code>
+          </div>
+        )
+      });
     }
 
     // Unset active response because we just made a new one
@@ -473,6 +483,18 @@ class App extends PureComponent {
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {request, error: err});
+      } else {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          )
+        });
       }
     }
 
