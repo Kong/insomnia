@@ -49,7 +49,7 @@ class ResponsePane extends PureComponent {
       return;
     }
 
-    const {response} = this.state;
+    const {response} = this.props;
     const {contentType} = response;
     const extension = mime.extension(contentType) || '';
 
@@ -81,7 +81,7 @@ class ResponsePane extends PureComponent {
   }
 
   _handleDownloadFullResponseBody () {
-    const {response} = this.state;
+    const {response} = this.props;
 
     if (!response) {
       // Should never happen
