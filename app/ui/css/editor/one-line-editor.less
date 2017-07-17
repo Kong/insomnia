@@ -20,16 +20,13 @@
   }
 
   .CodeMirror {
-    /*
-     * NOTE: This screws up CodeMirror's scroll height calculations, but that's okay
-     * for now since we can only have one line here
-    */
-    padding: inherit !important;
+    padding-left: inherit !important;
+    padding-right: inherit !important;
     color: inherit !important;
-    margin: 0 0 0 -4px; // to undo CodeMirror's .CodeMirror-line offset
   }
 
   .CodeMirror-lines {
+    margin-left: -4px; // Undo CodeMirror-line left margin
     padding: 0;
   }
 

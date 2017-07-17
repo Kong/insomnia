@@ -93,7 +93,6 @@
       "target": [
         "AppImage",
         "deb",
-        "snap",
         "tar.gz"
       ]
     },
@@ -105,19 +104,6 @@
         "libappindicator1",
         "libxtst6",
         "libnss3",
-        "libcurl3"
-      ]
-    },
-    "snap": {
-      "stagePackages": [
-        "libnotify4",
-        "libappindicator1",
-        "libxtst6",
-        "libnss3",
-        "libxss1",
-        "fontconfig-config",
-        "gconf2",
-        "libasound2",
         "libcurl3"
       ]
     }
