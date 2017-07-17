@@ -1,23 +1,14 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownButton, DropdownItem, DropdownDivider} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import SizeTag from '../tags/size-tag';
 import StatusTag from '../tags/status-tag';
 import TimeTag from '../tags/time-tag';
-import * as models from '../../../models/index';
 import PromptButton from '../base/prompt-button';
 import {trackEvent} from '../../../analytics/index';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
-  constructor (props) {
-    super(props);
-    this._interval = null;
-    this.state = {
-      responses: []
-    };
-  }
-
   _handleDeleteResponses () {
     trackEvent('History', 'Delete Responses');
     this.props.handleDeleteResponses(this.props.requestId);
@@ -25,51 +16,29 @@ class ResponseHistoryDropdown extends PureComponent {
 
   _handleDeleteResponse () {
     trackEvent('History', 'Delete Response');
-    this.props.handleDeleteResponse(this.props.activeResponseId);
+    this.props.handleDeleteResponse(this.props.activeResponse);
   }
 
-  _handleSetActiveResponse (responseId) {
+  _handleSetActiveResponse (response) {
     trackEvent('History', 'Activate Response');
-    this.props.handleSetActiveResponse(responseId);
-  }
-
-  _load (requestId) {
-    clearTimeout(this._interval);
-    this._interval = setTimeout(async () => {
-      const responses = await models.response.findRecentForRequest(requestId);
-
-      // NOTE: this is bad practice, but I can't figure out a better way.
-      // This component may not be mounted if the user switches to a request that
-      // doesn't have a response
-      if (this._unmounted) {
-        return;
-      }
-
-      this.setState({responses});
-    }, 500);
+    this.props.handleSetActiveResponse(response);
   }
 
   componentWillUnmount () {
     clearTimeout(this._interval);
   }
 
-  componentWillReceiveProps (nextProps) {
-    this._load(nextProps.requestId);
-  }
-
-  componentDidMount () {
-    this._load(this.props.requestId);
-  }
-
   renderDropdownItem (response, i) {
-    const {activeResponseId} = this.props;
+    const {activeResponse} = this.props;
+    const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const message = 'Request will not be restored with this response because ' +
       'it was created before this ability was added';
+
     return (
       <DropdownItem key={response._id}
                     disabled={active}
-                    value={i === 0 ? null : response._id}
+                    value={i === 0 ? null : response}
                     onClick={this._handleSetActiveResponse}>
         {active ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-empty"/>}
         {' '}
@@ -87,20 +56,18 @@ class ResponseHistoryDropdown extends PureComponent {
 
   render () {
     const {
-      activeResponseId, // eslint-disable-line no-unused-vars
+      activeResponse, // eslint-disable-line no-unused-vars
       handleSetActiveResponse, // eslint-disable-line no-unused-vars
       handleDeleteResponses, // eslint-disable-line no-unused-vars
       handleDeleteResponse, // eslint-disable-line no-unused-vars
-      isLatestResponseActive,
+      responses,
       ...extraProps
     } = this.props;
 
-    const {
-      responses
-    } = this.state;
+    const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
 
     return (
-      <Dropdown key={activeResponseId} {...extraProps}>
+      <Dropdown key={activeResponse ? activeResponse._id : 'n/a'} {...extraProps}>
         <DropdownButton className="btn btn--super-compact tall">
           {isLatestResponseActive
             ? <i className="fa fa-history"/>
@@ -132,8 +99,10 @@ ResponseHistoryDropdown.propTypes = {
   handleDeleteResponse: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
   requestId: PropTypes.string.isRequired,
-  activeResponseId: PropTypes.string.isRequired,
-  isLatestResponseActive: PropTypes.bool.isRequired
+  responses: PropTypes.arrayOf(PropTypes.object).isRequired,
+
+  // Optional
+  activeResponse: PropTypes.object
 };
 
 export default ResponseHistoryDropdown;

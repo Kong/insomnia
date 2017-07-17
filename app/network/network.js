@@ -8,7 +8,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, AUTH_AWS_IAM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
@@ -19,6 +19,7 @@ import * as pluginContexts from '../plugins/context/index';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import urlMatchesCertHost from './url-matches-cert-host';
+import aws4 from 'aws4';
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -155,7 +156,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       });
 
       // Set the headers (to be modified as we go)
-      const headers = [...renderedRequest.headers];
+      const headers = clone(renderedRequest.headers);
 
       let lastPercent = 0;
       // NOTE: This option was added in 7.32.0 so make it optional
@@ -338,10 +339,10 @@ export function _actuallySend (renderedRequest, workspace, settings) {
 
       // Build the body
       let noBody = false;
+      let requestBody = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        const d = querystring.buildFromParams(renderedRequest.body.params || [], false);
-        setOpt(Curl.option.POSTFIELDS, d); // Send raw data
+        requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const data = renderedRequest.body.params.map(param => {
           if (param.type === 'file' && param.fileName) {
@@ -362,7 +363,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         curl.on('end', fn);
         curl.on('error', fn);
       } else if (typeof renderedRequest.body.mimeType === 'string' || expectsBody) {
-        setOpt(Curl.option.POSTFIELDS, renderedRequest.body.text || '');
+        requestBody = renderedRequest.body.text || '';
       } else {
         // No body
         noBody = true;
@@ -372,6 +373,11 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         // Don't chunk uploads
         headers.push({name: 'Expect', value: ''});
         headers.push({name: 'Transfer-Encoding', value: ''});
+      }
+
+      // If we calculated the body within Insomnia (ie. not computed by Curl)
+      if (requestBody !== null) {
+        setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
       // Build the body
@@ -399,6 +405,20 @@ export function _actuallySend (renderedRequest, workspace, settings) {
           setOpt(Curl.option.HTTPAUTH, Curl.auth.NTLM);
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
+        } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
+          if (!requestBody) {
+            return handleError(new Error('AWS authentication not supported for provided body type'));
+          }
+          const extraHeaders = _getAwsAuthHeaders(
+            renderedRequest.authentication.accessKeyId || '',
+            renderedRequest.authentication.secretAccessKey || '',
+            headers,
+            requestBody,
+            finalUrl
+          );
+          for (const header of extraHeaders) {
+            headers.push(header);
+          }
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,
@@ -628,6 +648,29 @@ function _getCurlHeader (curlHeadersObj, name, fallback) {
   } else {
     return fallback;
   }
+}
+
+// exported for unit tests only
+export function _getAwsAuthHeaders (accessKeyId, secretAccessKey, headers, body, url) {
+  const credentials = {accessKeyId, secretAccessKey};
+
+  const parsedUrl = urlParse(url);
+  const contentTypeHeader = util.getContentTypeHeader(headers);
+
+  const awsSignOptions = {
+    body,
+    path: parsedUrl.path,
+    host: parsedUrl.hostname, // Purposefully not ".host" because we don't want the port
+    headers: {
+      'content-type': contentTypeHeader ? contentTypeHeader.value : ''
+    }
+  };
+
+  const signature = aws4.sign(awsSignOptions, credentials);
+
+  return Object.keys(signature.headers)
+    .filter(name => name !== 'content-type') // Don't add this because we already have it
+    .map(name => ({name, value: signature.headers[name]}));
 }
 
 document.addEventListener('keydown', e => {

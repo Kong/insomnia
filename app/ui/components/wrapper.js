@@ -163,22 +163,13 @@ class Wrapper extends PureComponent {
     this._handleSetActiveResponse(null);
   }
 
-  async _handleDeleteResponse (responseId) {
-    let response;
-    if (responseId) {
-      response = await models.response.getById(responseId);
-    } else {
-      const {activeRequest} = this.props;
-      const requestId = activeRequest ? activeRequest._id : 'n/a';
-      response = await models.response.getLatestForRequestId(requestId);
-    }
-
+  async _handleDeleteResponse (response) {
     if (response) {
       await models.response.remove(response);
     }
 
     // Also unset active response it's the one we're deleting
-    if (this.props.activeResponseId === response._id) {
+    if (this.props.activeResponse && this.props.activeResponse._id === response._id) {
       this._handleSetActiveResponse(null);
     }
   }
@@ -243,8 +234,9 @@ class Wrapper extends PureComponent {
     const {
       activeEnvironment,
       activeRequest,
-      activeResponseId,
       activeWorkspace,
+      activeRequestResponses,
+      activeResponse,
       environments,
       handleActivateRequest,
       handleCreateRequest,
@@ -384,12 +376,13 @@ class Wrapper extends PureComponent {
         <ResponsePane
           ref={handleSetResponsePaneRef}
           request={activeRequest}
+          responses={activeRequestResponses}
+          response={activeResponse}
           editorFontSize={settings.editorFontSize}
           editorIndentSize={settings.editorIndentSize}
           editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           previewMode={responsePreviewMode}
-          activeResponseId={activeResponseId}
           filter={responseFilter}
           filterHistory={responseFilterHistory}
           loadStartTime={loadStartTime}
@@ -561,7 +554,6 @@ Wrapper.propTypes = {
   responsePreviewMode: PropTypes.string.isRequired,
   responseFilter: PropTypes.string.isRequired,
   responseFilterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  activeResponseId: PropTypes.string.isRequired,
   sidebarWidth: PropTypes.number.isRequired,
   sidebarHidden: PropTypes.bool.isRequired,
   sidebarFilter: PropTypes.string.isRequired,
@@ -570,6 +562,7 @@ Wrapper.propTypes = {
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
+  activeRequestResponses: PropTypes.arrayOf(PropTypes.object).isRequired,
   activeWorkspace: PropTypes.shape({
     _id: PropTypes.string.isRequired
   }).isRequired,
@@ -577,6 +570,7 @@ Wrapper.propTypes = {
   // Optional
   oAuth2Token: PropTypes.object,
   activeRequest: PropTypes.object,
+  activeResponse: PropTypes.object,
   activeEnvironment: PropTypes.object
 };
 

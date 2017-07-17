@@ -63,6 +63,10 @@ class MarkdownPreview extends PureComponent {
     }
   }
 
+  componentWillUnmount () {
+    clearTimeout(this._compileTimeout);
+  }
+
   componentWillMount () {
     this._compileMarkdown(this.props.markdown);
   }

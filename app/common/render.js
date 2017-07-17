@@ -4,7 +4,10 @@ import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 
-export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment, variablesOnly = true) {
+export const KEEP_ON_ERROR = 'keep';
+export const THROW_ON_ERROR = 'throw';
+
+export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment, baseContext = {}) {
   if (!Array.isArray(ancestors)) {
     ancestors = [];
   }
@@ -30,7 +33,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
   // from top-most parent to bottom-most child
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
-  const renderContext = {};
+  const renderContext = baseContext;
   for (const environment of environments) {
     // Sort the keys that may have Nunjucks last, so that other keys get
     // defined first. Very important if env variables defined in same obj
@@ -52,7 +55,13 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
        * original base_url of google.com would be lost.
        */
       if (typeof renderContext[key] === 'string') {
-        renderContext[key] = await render(environment[key], renderContext, null, variablesOnly);
+        renderContext[key] = await render(
+          environment[key],
+          renderContext,
+          null,
+          KEEP_ON_ERROR,
+          'Environment'
+        );
       } else {
         renderContext[key] = environment[key];
       }
@@ -62,9 +71,15 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
   // Render the context with itself to fill in the rest.
   let finalRenderContext = renderContext;
 
-  // Render up to 5 levels of recursive references.
+  // Render recursive references.
   for (let i = 0; i < 3; i++) {
-    finalRenderContext = await render(finalRenderContext, finalRenderContext, null, variablesOnly);
+    finalRenderContext = await render(
+      finalRenderContext,
+      finalRenderContext,
+      null,
+      KEEP_ON_ERROR,
+      'Environment'
+    );
   }
 
   return finalRenderContext;
@@ -75,14 +90,15 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
  * @param {*} obj - object to render
  * @param {object} context - context to render against
  * @param blacklistPathRegex - don't render these paths
- * @param variablesOnly - only render variables
+ * @param errorMode - how to handle errors
+ * @param name - name to include in error message
  * @return {Promise.<*>}
  */
-export async function render (obj, context = {}, blacklistPathRegex = null, variablesOnly = false) {
+export async function render (obj, context = {}, blacklistPathRegex = null, errorMode = THROW_ON_ERROR, name = '') {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
-  async function next (x, path = '') {
+  async function next (x, path = name) {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
@@ -102,16 +118,18 @@ export async function render (obj, context = {}, blacklistPathRegex = null, vari
       // Do nothing to these types
     } else if (asStr === '[object String]') {
       try {
-        x = await templating.render(x, {context, path, variablesOnly});
+        x = await templating.render(x, {context, path});
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
         //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
         if (x.includes('{%')) {
-          x = await templating.render(x, {context, path, variablesOnly});
+          x = await templating.render(x, {context, path});
         }
       } catch (err) {
-        throw err;
+        if (errorMode !== KEEP_ON_ERROR) {
+          throw err;
+        }
       }
     } else if (Array.isArray(x)) {
       for (let i = 0; i < x.length; i++) {
@@ -137,7 +155,7 @@ export async function render (obj, context = {}, blacklistPathRegex = null, vari
   return next(newObj);
 }
 
-export async function getRenderContext (request, environmentId, ancestors = null, variablesOnly = true) {
+export async function getRenderContext (request, environmentId, ancestors = null) {
   if (!request) {
     return {};
   }
@@ -153,14 +171,20 @@ export async function getRenderContext (request, environmentId, ancestors = null
   const rootEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
   const subEnvironment = await models.environment.getById(environmentId);
 
-  // Generate the context we need to render
-  const context = await buildRenderContext(ancestors, rootEnvironment, subEnvironment, variablesOnly);
-
-  // Add meta data
-  context.getMeta = () => ({
+  // Add meta data helper function
+  const baseContext = {};
+  baseContext.getMeta = () => ({
     requestId: request._id,
     workspaceId: workspace._id
   });
+
+  // Generate the context we need to render
+  const context = await buildRenderContext(
+    ancestors,
+    rootEnvironment,
+    subEnvironment,
+    baseContext
+  );
 
   return context;
 }

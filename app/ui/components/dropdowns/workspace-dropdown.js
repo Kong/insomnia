@@ -148,7 +148,7 @@ class WorkspaceDropdown extends PureComponent {
                         href="https://insomnia.rest/pricing/"
                         button>
             <i className="fa fa-users"/> Upgrade to Plus
-            <i className="fa fa-star notice fa-outline txt-lg"/>
+            <i className="fa fa-star surprise fa-outline"/>
           </DropdownItem>
         )}
       </Dropdown>

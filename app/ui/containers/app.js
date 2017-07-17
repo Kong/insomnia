@@ -20,7 +20,7 @@ import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent} from '../../analytics';
-import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -32,7 +32,7 @@ import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
-import {showPrompt} from '../components/modals/index';
+import {showAlert, showPrompt} from '../components/modals/index';
 import {exportHar} from '../../common/har';
 
 const KEY_ENTER = 13;
@@ -260,7 +260,7 @@ class App extends PureComponent {
   async _fetchRenderContext () {
     const {activeEnvironment, activeRequest} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    return render.getRenderContext(activeRequest, environmentId, null, false);
+    return render.getRenderContext(activeRequest, environmentId, null);
   }
 
   async _handleGetRenderContext () {
@@ -440,8 +440,18 @@ class App extends PureComponent {
       } else {
         await models.response.create(responsePatch, bodyBuffer);
       }
-    } catch (e) {
-      // It's OK
+    } catch (err) {
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{err.message}</pre>
+            </code>
+          </div>
+        )
+      });
     }
 
     // Unset active response because we just made a new one
@@ -473,6 +483,18 @@ class App extends PureComponent {
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {request, error: err});
+      } else {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          )
+        });
       }
     }
 
@@ -483,7 +505,8 @@ class App extends PureComponent {
     this.props.handleStopLoading(requestId);
   }
 
-  async _handleSetActiveResponse (requestId, activeResponseId = null) {
+  async _handleSetActiveResponse (requestId, activeResponse = null) {
+    const activeResponseId = activeResponse ? activeResponse._id : null;
     await this._updateRequestMetaByParentId(requestId, {activeResponseId});
 
     let response;
@@ -888,7 +911,10 @@ function mapStateToProps (state, props) {
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
-  const activeResponseId = requestMeta.activeResponseId || '';
+
+  // Response stuff
+  const activeRequestResponses = selectActiveRequestResponses(state, props) || [];
+  const activeResponse = selectActiveResponse(state, props) || null;
 
   // Environment stuff
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
@@ -912,7 +938,8 @@ function mapStateToProps (state, props) {
     loadStartTime,
     activeWorkspace,
     activeRequest,
-    activeResponseId,
+    activeRequestResponses,
+    activeResponse,
     sidebarHidden,
     sidebarFilter,
     sidebarWidth,

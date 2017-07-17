@@ -24,19 +24,12 @@ import Hotkey from './hotkey';
 
 @autobind
 class ResponsePane extends PureComponent {
-  constructor (props) {
-    super(props);
-    this.state = {
-      response: null
-    };
-  }
-
   _trackTab (name) {
     trackEvent('Response Pane', 'View', name);
   }
 
   _handleGetResponseBody () {
-    return models.response.getBodyBuffer(this.state.response);
+    return models.response.getBodyBuffer(this.props.response);
   }
 
   async _getResponse (requestId, responseId) {
@@ -50,7 +43,7 @@ class ResponsePane extends PureComponent {
   }
 
   async _handleDownloadResponseBody () {
-    if (!this.state.response) {
+    if (!this.props.response) {
       // Should never happen
       console.warn('No response to download');
       return;
@@ -130,21 +123,11 @@ class ResponsePane extends PureComponent {
     });
   }
 
-  componentWillReceiveProps (nextProps) {
-    const activeRequestId = nextProps.request ? nextProps.request._id : null;
-    const activeResponseId = nextProps.activeResponseId;
-    this._getResponse(activeRequestId, activeResponseId);
-  }
-
-  componentDidMount () {
-    const activeRequestId = this.props.request ? this.props.request._id : null;
-    const activeResponseId = this.props.activeResponseId;
-    this._getResponse(activeRequestId, activeResponseId);
-  }
-
   render () {
     const {
       request,
+      responses,
+      response,
       previewMode,
       handleShowRequestSettings,
       handleSetPreviewMode,
@@ -159,11 +142,8 @@ class ResponsePane extends PureComponent {
       editorKeyMap,
       filter,
       filterHistory,
-      activeResponseId,
       showCookiesModal
     } = this.props;
-
-    const {response} = this.state;
 
     if (!request) {
       return (
@@ -234,9 +214,9 @@ class ResponsePane extends PureComponent {
               <SizeTag bytes={response.bytesRead}/>
             </div>
             <ResponseHistoryDropdown
+              activeResponse={response}
+              responses={responses}
               requestId={request._id}
-              isLatestResponseActive={!activeResponseId}
-              activeResponseId={response._id}
               handleSetActiveResponse={handleSetActiveResponse}
               handleDeleteResponses={handleDeleteResponses}
               handleDeleteResponse={handleDeleteResponse}
@@ -271,11 +251,9 @@ class ResponsePane extends PureComponent {
                 <span className="bubble">{cookieHeaders.length}</span>) : null}
               </Button>
             </Tab>
-            {(response.timeline && response.timeline.length > 0) && (
-              <Tab>
-                <Button onClick={this._trackTab} value="Timeline">Timeline</Button>
-              </Tab>
-            )}
+            <Tab>
+              <Button onClick={this._trackTab} value="Timeline">Timeline</Button>
+            </Tab>
           </TabList>
           <TabPanel>
             <ResponseViewer
@@ -317,17 +295,15 @@ class ResponsePane extends PureComponent {
               />
             </div>
           </TabPanel>
-          {(response.timeline && response.timeline.length > 0) && (
-            <TabPanel>
-              <ResponseTimelineViewer
-                key={response._id}
-                timeline={response.timeline || []}
-                editorLineWrapping={editorLineWrapping}
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
-              />
-            </TabPanel>
-          )}
+          <TabPanel>
+            <ResponseTimelineViewer
+              key={response._id}
+              timeline={response.timeline || []}
+              editorLineWrapping={editorLineWrapping}
+              editorFontSize={editorFontSize}
+              editorIndentSize={editorIndentSize}
+            />
+          </TabPanel>
         </Tabs>
         <ResponseTimer
           handleCancel={cancelCurrentRequest}
@@ -357,10 +333,11 @@ ResponsePane.propTypes = {
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
   loadStartTime: PropTypes.number.isRequired,
-  activeResponseId: PropTypes.string.isRequired,
+  responses: PropTypes.arrayOf(PropTypes.object),
 
   // Other
-  request: PropTypes.object
+  request: PropTypes.object,
+  response: PropTypes.object
 };
 
 export default ResponsePane;

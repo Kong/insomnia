@@ -3,7 +3,8 @@ import * as db from '../../common/database';
 import {join as pathJoin, resolve as pathResolve} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
-import {AUTH_BASIC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
+import {AUTH_BASIC, AUTH_AWS_IAM, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
+import {filterHeaders} from '../../common/misc';
 
 describe('actuallySend()', () => {
   beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
@@ -398,5 +399,62 @@ describe('actuallySend()', () => {
         VERBOSE: true
       }
     });
+  });
+});
+
+describe('_getAwsAuthHeaders', () => {
+  it('should generate expected headers', () => {
+    const req = {
+      authentication: {
+        type: AUTH_AWS_IAM,
+        accessKeyId: 'AKIA99999999',
+        secretAccessKey: 'SAK9999999999999'
+      },
+      headers: [{name: 'content-type', value: 'application/json'}],
+      body: {text: '{}'},
+      url: 'https://example.com/path?query=q1'
+    };
+    const headers = networkUtils._getAwsAuthHeaders(
+      req.authentication.accessKeyId,
+      req.authentication.secretAccessKey,
+      req.headers,
+      req.body.text,
+      req.url
+    );
+    expect(filterHeaders(headers, 'x-amz-date')[0].value)
+      .toMatch(/^\d{8}T\d{6}Z$/);
+    expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
+    expect(filterHeaders(headers, 'authorization')[0].value)
+      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999/);
+    expect(filterHeaders(headers, 'content-type'))
+      .toHaveLength(0);
+  });
+
+  it('should handle sparse request', () => {
+    const req = {
+      authentication: {
+        type: AUTH_AWS_IAM,
+        accessKeyId: 'AKIA99999999',
+        secretAccessKey: 'SAK9999999999999'
+      },
+      headers: [],
+      url: 'https://example.com'
+    };
+
+    const headers = networkUtils._getAwsAuthHeaders(
+      req.authentication.accessKeyId,
+      req.authentication.secretAccessKey,
+      req.headers,
+      null,
+      req.url
+    );
+
+    expect(filterHeaders(headers, 'x-amz-date')[0].value)
+      .toMatch(/^\d{8}T\d{6}Z$/);
+    expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
+    expect(filterHeaders(headers, 'authorization')[0].value)
+      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999/);
+    expect(filterHeaders(headers, 'content-type'))
+      .toHaveLength(0);
   });
 });

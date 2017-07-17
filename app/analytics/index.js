@@ -23,6 +23,16 @@ export async function init (accountId) {
   ipcRenderer.on('analytics-track-event', (_, args) => {
     trackEvent(...args);
   });
+
+  if (window) {
+    window.addEventListener('error', e => {
+      trackEvent('Error', 'Uncaught Error');
+    });
+
+    window.addEventListener('unhandledrejection', e => {
+      trackEvent('Error', 'Uncaught Promise');
+    });
+  }
 }
 
 export function trackEvent (...args) {
