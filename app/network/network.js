@@ -62,7 +62,6 @@ export function _actuallySend (renderedRequest, workspace, settings) {
     try {
       // Initialize the curl handle
       const curl = new Curl();
-      let timeline = [];
 
       // Define helper to setOpt for better error handling
       const setOpt = (opt, val, optional = false) => {
