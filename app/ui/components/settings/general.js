@@ -160,10 +160,18 @@ class General extends PureComponent {
         </h2>
 
         <div className="form-control form-control--thin">
-          <label className="inline-block">Enable Proxy
-            <input type="checkbox"
-                   name="proxyEnabled"
-                   checked={settings.proxyEnabled}
+          <label>Auto-detect proxy configuration
+            <input type="radio"
+                   name="proxyConfiguration"
+                   value="auto"
+                   checked={settings.proxyConfiguration === 'auto'}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+          <label>Manually set proxy:
+            <input type="radio"
+                   name="proxyConfiguration"
+                   value="manual"
+                   checked={settings.proxyConfiguration === 'manual'}
                    onChange={this._handleUpdateSetting}/>
           </label>
         </div>
@@ -173,7 +181,7 @@ class General extends PureComponent {
             <label>HTTP Proxy
               <input type="text"
                      name="httpProxy"
-                     disabled={!settings.proxyEnabled}
+                     disabled={settings.proxyConfiguration === 'auto'}
                      placeholder="localhost:8005"
                      defaultValue={settings.httpProxy}
                      onChange={this._handleUpdateSetting}/>
@@ -182,7 +190,7 @@ class General extends PureComponent {
           <div className="form-control form-control--outlined">
             <label>HTTPS Proxy
               <input placeholder="localhost:8005"
-                     disabled={!settings.proxyEnabled}
+                     disabled={settings.proxyConfiguration === 'auto'}
                      name="httpsProxy"
                      type="text"
                      defaultValue={settings.httpsProxy}
@@ -194,7 +202,7 @@ class General extends PureComponent {
               No Proxy <HelpTooltip>Comma-separated list of hostnames that do not require a
               proxy to be contacted</HelpTooltip>
               <input placeholder="localhost,127.0.0.1"
-                     disabled={!settings.proxyEnabled}
+                     disabled={settings.proxyConfiguration === 'auto'}
                      name="noProxy"
                      type="text"
                      defaultValue={settings.noProxy}
