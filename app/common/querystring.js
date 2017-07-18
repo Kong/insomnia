@@ -1,7 +1,10 @@
 // @flow
-import type {Parameter} from '../models/request';
-
 import * as util from './misc.js';
+
+type Parameter = Object & {
+  name: string,
+  value: string
+}
 
 /** Join a URL with a querystring  */
 export function joinUrl (url: string, qs: string): string {

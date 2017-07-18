@@ -11,19 +11,32 @@ export const prefix = 'req';
 export const canDuplicate = true;
 
 export type RequestAuthentication = Object;
-
-export type Parameter = {
+export type RequestHeader = {
   name: string,
   value: string,
-  id?: string,
-  fileName?: string,
   disabled?: boolean
+};
+
+export type RequestParameter = {
+  name: string,
+  value: string,
+  disabled?: boolean,
+  id?: string,
+  fileName?: string
+};
+
+export type RequestBodyParameter = {
+  name: string,
+  value: string,
+  disabled?: boolean,
+  id?: string,
+  fileName?: string
 };
 
 export type RequestBody = {
   text?: string,
   fileName?: string,
-  params?: Array<Parameter>
+  params?: Array<RequestBodyParameter>
 };
 
 export type Request = {
@@ -32,8 +45,8 @@ export type Request = {
   description: string,
   method: string,
   body: RequestBody,
-  parameters: Array<Parameter>,
-  headers: Array<Parameter>,
+  parameters: Array<RequestParameter>,
+  headers: Array<RequestHeader>,
   authentication: RequestAuthentication,
   metaSortKey: number,
 
@@ -112,10 +125,10 @@ export function newBodyRaw (rawBody: string, contentType: string): RequestBody {
   return {mimeType, text: rawBody};
 }
 
-export function newBodyFormUrlEncoded (parameters: Array<Parameter> | null): RequestBody {
+export function newBodyFormUrlEncoded (parameters: Array<RequestBodyParameter> | null): RequestBody {
   // Remove any properties (eg. fileName) that might not fit
   parameters = (parameters || []).map(parameter => {
-    const newParameter: Parameter = {
+    const newParameter: RequestBodyParameter = {
       name: parameter.name,
       value: parameter.value
     };
@@ -146,7 +159,7 @@ export function newBodyFile (path: string): RequestBody {
   };
 }
 
-export function newBodyForm (parameters: Array<Parameter> | null): RequestBody {
+export function newBodyForm (parameters: Array<RequestBodyParameter>): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
     params: parameters || []
@@ -225,12 +238,12 @@ export function updateMimeType (
     // Urlencoded
     body = request.body.params
       ? newBodyFormUrlEncoded(request.body.params)
-      : newBodyFormUrlEncoded(deconstructToParams(request.body.text).map(n => ({name: n.name, value: n.value})));
+      : newBodyFormUrlEncoded(deconstructToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
     // Form Data
     body = request.body.params
       ? newBodyForm(request.body.params)
-      : newBodyForm(deconstructToParams(request.body.text).map(n => ({name: n.name, value: n.value})));
+      : newBodyForm(deconstructToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FILE) {
     // File
     body = newBodyFile('');
@@ -300,8 +313,7 @@ function migrateBody (request: Request): Request {
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
     const body = typeof request.body === 'string' ? request.body : '';
-    const params = deconstructToParams(body, false).map(n => ({name: n.name, value: n.value}));
-    request.body = newBodyFormUrlEncoded(params);
+    request.body = newBodyFormUrlEncoded(deconstructToParams(body, false));
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {
