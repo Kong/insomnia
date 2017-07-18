@@ -1,23 +1,44 @@
-import React, {PureComponent} from 'react';
+// @flow
+import type {Plugin} from '../../../plugins/index';
+import {createPlugin, getPlugins} from '../../../plugins/index';
+import React from 'react';
 import autobind from 'autobind-decorator';
 import * as electron from 'electron';
-import {createPlugin, getPlugins} from '../../../plugins/index';
 import Button from '../base/button';
 import CopyButton from '../base/copy-button';
 import {showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import {reload} from '../../../templating/index';
 
+type DefaultProps = void;
+type Props = void;
+type State = {
+  plugins: Array<Plugin>,
+  npmPluginValue: string
+};
+
 @autobind
-class Plugins extends PureComponent {
-  constructor (props) {
+class Plugins extends React.PureComponent<DefaultProps, Props, State> {
+  props: Props;
+  state: State;
+
+  constructor (props: Props) {
     super(props);
     this.state = {
-      plugins: getPlugins(true)
+      plugins: getPlugins(true),
+      npmPluginValue: ''
     };
   }
 
-  _handleOpenDirectory (directory) {
+  _handleAddNpmPluginChange (e: Event & { target: HTMLButtonElement }) {
+    this.setState({npmPluginValue: e.target.value});
+  }
+
+  _handleAddFromNpm () {
+    console.log('ADD FROM NPM', this.state.npmPluginValue);
+  }
+
+  _handleOpenDirectory (directory: string) {
     electron.remote.shell.showItemInFolder(directory);
   }
 
@@ -85,19 +106,31 @@ class Plugins extends PureComponent {
           </tbody>
         </table>
         <p className="text-right">
-          <button className="btn btn--clicky" onClick={this._handleRefreshPlugins}>
-            Reload Plugins
-          </button>
-          {' '}
-          <button className="btn btn--clicky" onClick={this._handleGeneratePlugin}>
-            Generate New Plugin
-          </button>
         </p>
+        <div className="form-row">
+          <div className="form-control form-control--outlined">
+            <input onChange={this._handleAddNpmPluginChange} type="text"
+                   placeholder="insomnia-foo-bar"/>
+          </div>
+          <div className="form-control width-auto">
+            <button className="btn btn--clicky" onClick={this._handleAddFromNpm}>
+              Add From NPM
+            </button>
+          </div>
+          <div className="form-control width-auto">
+            <button className="btn btn--clicky" onClick={this._handleRefreshPlugins}>
+              Reload
+            </button>
+          </div>
+          <div className="form-control width-auto">
+            <button className="btn btn--clicky" onClick={this._handleGeneratePlugin}>
+              New Plugin
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 }
-
-Plugins.propTypes = {};
 
 export default Plugins;

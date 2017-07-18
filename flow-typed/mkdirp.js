@@ -1,3 +1,3 @@
-declare module 'mime-types' {
+declare module 'mkdirp' {
   declare module.exports: *
 }

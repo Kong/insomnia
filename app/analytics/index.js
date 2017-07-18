@@ -27,10 +27,12 @@ export async function init (accountId) {
   if (window) {
     window.addEventListener('error', e => {
       trackEvent('Error', 'Uncaught Error');
+      console.error('Uncaught Error', e);
     });
 
     window.addEventListener('unhandledrejection', e => {
       trackEvent('Error', 'Uncaught Promise');
+      console.error('Unhandled Promise', e);
     });
   }
 }

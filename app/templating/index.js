@@ -142,7 +142,6 @@ function getNunjucks (renderMode) {
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
     nj.addFilter('debug', o => {
-      console.log('DEBUG', {o}, JSON.stringify(o));
       return o;
     });
   }
