@@ -1,6 +1,7 @@
 {
   "presets": [
-    "react"
+    "react",
+    "flow"
   ],
   "plugins": [
     "transform-object-rest-spread",
@@ -14,7 +15,8 @@
     },
     "test": {
       "presets": [
-        "es2015"
+        "es2015",
+        "flow" // We need to add this again because it has to run before es2015
       ],
       "plugins": [
         "transform-regenerator",
