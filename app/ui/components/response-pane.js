@@ -1,4 +1,8 @@
 // @flow
+import type {BaseModel} from '../../models/index';
+import type {Request} from '../../models/request';
+import type {Response} from '../../models/response';
+
 import React, {PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
@@ -47,15 +51,19 @@ class ResponsePane extends PureComponent {
     responses: Array<Object>,
 
     // Other
-    request?: Object,
-    response?: Object
+    request?: BaseModel & Request,
+    response?: BaseModel & Response
   };
 
   _trackTab (name: string) {
     trackEvent('Response Pane', 'View', name);
   }
 
-  _handleGetResponseBody () {
+  _handleGetResponseBody (): Buffer | null {
+    if (!this.props.response) {
+      return null;
+    }
+
     return models.response.getBodyBuffer(this.props.response);
   }
 
@@ -86,14 +94,16 @@ class ResponsePane extends PureComponent {
 
       const bodyBuffer = models.response.getBodyBuffer(response);
 
-      fs.writeFile(outputPath, bodyBuffer, err => {
-        if (err) {
-          console.warn('Failed to save response body', err);
-          trackEvent('Response', 'Save Failure');
-        } else {
-          trackEvent('Response', 'Save Success');
-        }
-      });
+      if (bodyBuffer) {
+        fs.writeFile(outputPath, bodyBuffer, err => {
+          if (err) {
+            console.warn('Failed to save response body', err);
+            trackEvent('Response', 'Save Failure');
+          } else {
+            trackEvent('Response', 'Save Success');
+          }
+        });
+      }
     });
   }
 
@@ -111,9 +121,8 @@ class ResponsePane extends PureComponent {
       .map(v => v.value)
       .join('');
 
-    const bodyBuffer = models.response.getBodyBuffer(response);
-
-    const fullResponse = `${headers}${bodyBuffer}`;
+    const bodyBuffer = models.response.getBodyBuffer(response) || Buffer.from('');
+    const fullResponse = `${headers}${bodyBuffer.toString()}`;
 
     const options = {
       title: 'Save Full Response',
@@ -283,7 +292,6 @@ class ResponsePane extends PureComponent {
               updateFilter={response.error ? null : handleSetFilter}
               bodyPath={response.bodyPath}
               getBody={this._handleGetResponseBody}
-              encoding={response.encoding}
               error={response.error}
               editorLineWrapping={editorLineWrapping}
               editorFontSize={editorFontSize}

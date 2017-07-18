@@ -1,7 +1,10 @@
+// @flow
+import type {Parameter} from '../models/request';
+
 import * as util from './misc.js';
 
 /** Join a URL with a querystring  */
-export function joinUrl (url, qs) {
+export function joinUrl (url: string, qs: string): string {
   if (!qs) {
     return url;
   }
@@ -19,7 +22,7 @@ export function joinUrl (url, qs) {
   return `${baseUrl}${joiner}${qs}${hash}`;
 }
 
-export function extractFromUrl (url) {
+export function extractFromUrl (url: string): string {
   if (!url) {
     return '';
   }
@@ -34,13 +37,13 @@ export function extractFromUrl (url) {
   }
 }
 
-export function getJoiner (url) {
+export function getJoiner (url: string): string {
   url = url || '';
   return url.indexOf('?') === -1 ? '?' : '&';
 }
 
 /** Build a querystring param out of a name/value pair */
-export function build (param, strict = true) {
+export function build (param: Parameter, strict: boolean = true): string {
   // Skip non-name ones in strict mode
   if (strict && !param.name) {
     return '';
@@ -67,7 +70,10 @@ export function build (param, strict = true) {
  * @param parameters
  * @param strict allow empty names and values
  */
-export function buildFromParams (parameters, strict = true) {
+export function buildFromParams (
+  parameters: Array<Parameter>,
+  strict: boolean = true
+): string {
   let items = [];
 
   for (const param of parameters) {
@@ -88,13 +94,14 @@ export function buildFromParams (parameters, strict = true) {
  * @param qs
  * @param strict allow empty names and values
  */
-export function deconstructToParams (qs, strict = true) {
+export function deconstructToParams (qs: ?string, strict: boolean = true): Array<Parameter> {
+  const pairs: Array<Parameter> = [];
+
   if (!qs) {
-    return [];
+    return pairs;
   }
 
   const stringPairs = qs.split('&');
-  const pairs = [];
 
   for (let stringPair of stringPairs) {
     // NOTE: This only splits on first equals sign. '1=2=3' --> ['1', '2=3']

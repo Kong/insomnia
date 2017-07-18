@@ -1,3 +1,4 @@
+// @flow
 import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
@@ -13,7 +14,35 @@ export const type = 'Response';
 export const prefix = 'res';
 export const canDuplicate = false;
 
-export function init () {
+export type ResponseHeader = {
+  name: string,
+  value: string
+}
+
+export type ResponseTimelineEntry = {
+  name: string,
+  value: string
+}
+
+export type Response = {
+  statusCode: number,
+  statusMessage: string,
+  contentType: string,
+  url: string,
+  bytesRead: number,
+  elapsedTime: number,
+  headers: Array<ResponseHeader>,
+  timeline: Array<ResponseTimelineEntry>,
+  bodyPath: string, // Actual bodies are stored on the filesystem
+  error: string,
+  requestVersionId: string | null,
+
+  // Things from the request
+  settingStoreCookies: boolean | null,
+  settingSendCookies: boolean | null
+};
+
+export function init (): Response {
   return {
     statusCode: 0,
     statusMessage: '',
@@ -34,12 +63,12 @@ export function init () {
   };
 }
 
-export function migrate (doc) {
+export function migrate (doc: Object) {
   doc = migrateBody(doc);
   return doc;
 }
 
-export function getById (id) {
+export function getById (id: string) {
   return db.get(type, id);
 }
 
@@ -47,24 +76,24 @@ export function all () {
   return db.all(type);
 }
 
-export async function removeForRequest (parentId) {
+export async function removeForRequest (parentId: string) {
   await db.removeWhere(type, {parentId});
 }
 
-export function remove (request) {
+export function remove (request: Request) {
   return db.remove(request);
 }
 
-export function findRecentForRequest (requestId, limit) {
+export function findRecentForRequest (requestId: string, limit: number) {
   return db.findMostRecentlyModified(type, {parentId: requestId}, limit);
 }
 
-export async function getLatestForRequest (requestId) {
+export async function getLatestForRequest (requestId: string) {
   const responses = await findRecentForRequest(requestId, 1);
   return responses[0] || null;
 }
 
-export async function create (patch = {}, bodyBuffer = null) {
+export async function create (patch: Object = {}, bodyBuffer: Buffer | null = null) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
@@ -86,11 +115,11 @@ export async function create (patch = {}, bodyBuffer = null) {
   return db.docCreate(type, {bodyPath}, patch);
 }
 
-export function getLatestByParentId (parentId) {
+export function getLatestByParentId (parentId: string) {
   return db.getMostRecentlyModified(type, {parentId});
 }
 
-export function getBodyBuffer (response, readFailureValue = null) {
+export function getBodyBuffer (response: Response, readFailureValue: any = null) {
   // No body, so return empty Buffer
   if (!response.bodyPath) {
     return new Buffer([]);
@@ -104,14 +133,13 @@ export function getBodyBuffer (response, readFailureValue = null) {
   }
 }
 
-export function storeBodyBuffer (bodyBuffer) {
+export function storeBodyBuffer (bodyBuffer: Buffer | null) {
   const root = electron.remote.app.getPath('userData');
   const dir = path.join(root, 'responses');
 
   mkdirp.sync(dir);
 
-  const hash = crypto.createHash('md5').update(bodyBuffer).digest('hex');
-
+  const hash = crypto.createHash('md5').update(bodyBuffer || '').digest('hex');
   const fullPath = path.join(dir, `${hash}.zip`);
 
   try {
@@ -123,7 +151,7 @@ export function storeBodyBuffer (bodyBuffer) {
   return fullPath;
 }
 
-function migrateBody (doc) {
+function migrateBody (doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const bodyPath = storeBodyBuffer(bodyBuffer);

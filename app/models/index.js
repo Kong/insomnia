@@ -1,3 +1,4 @@
+// @flow
 import * as _stats from './stats';
 import * as _settings from './settings';
 import * as _workspace from './workspace';
@@ -12,6 +13,12 @@ import * as _requestMeta from './request-meta';
 import * as _response from './response';
 import * as _oAuth2Token from './o-auth-2-token';
 import {generateId} from '../common/misc';
+
+export type BaseModel = {
+  _id: string,
+  modified: number,
+  created: number
+}
 
 // Reference to each model
 export const stats = _stats;
@@ -52,16 +59,16 @@ export function types () {
   return all().map(model => model.type);
 }
 
-export function getModel (type) {
+export function getModel (type: string) {
   return _models[type] || null;
 }
 
-export function canDuplicate (type) {
+export function canDuplicate (type: string) {
   const model = getModel(type);
   return model ? model.canDuplicate : false;
 }
 
-export function getModelName (type, count = 1) {
+export function getModelName (type: string, count: number = 1) {
   const model = getModel(type);
   if (!model) {
     return 'Unknown';
@@ -75,8 +82,12 @@ export function getModelName (type, count = 1) {
   }
 }
 
-export function initModel (type, ...sources) {
+export function initModel (type: string, ...sources: Array<Object>) {
   const model = getModel(type);
+
+  if (!model) {
+    throw new Error(`Tried to init invalid model type ${type}`);
+  }
 
   // Define global default fields
   const objectDefaults = Object.assign({
@@ -91,7 +102,7 @@ export function initModel (type, ...sources) {
 
   // Generate an _id if there isn't one yet
   if (!fullObject._id) {
-    fullObject._id = generateId(getModel(type).prefix);
+    fullObject._id = generateId(model.prefix);
   }
 
   // Migrate the model

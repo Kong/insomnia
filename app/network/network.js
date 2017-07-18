@@ -1,4 +1,8 @@
 // @flow
+import type {ResponseTimelineEntry} from '../models/response';
+import type {Request} from '../models/request';
+import type {BaseModel} from '../models/index';
+
 import electron from 'electron';
 import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
@@ -9,7 +13,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, AUTH_AWS_IAM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
@@ -38,31 +42,12 @@ type Header = {
   disabled: boolean
 }
 
-type RenderedRequest = {
-  _id: string,
-  created: number,
-  modified: number,
-  url: string,
-  settingSendCookies: boolean,
-  settingStoreCookies: boolean,
-  settingEncodeUrl: boolean,
-  bytesRead: number,
-  method: string,
-  headers: Array<Header>,
-  parameters: Array<{ name: string, value: string, disabled: boolean }>,
-  cookies: Array<{ name: string, value: string, disabled: boolean }>,
-  cookieJar: CookieJar,
-  authentication: Object,
-  body: {
-    mimeType?: string,
-    text?: string,
-    fileName?: string,
-    params?: Array<{ name: string, value?: string, fileName?: string, disabled: boolean }>
-  }
+type RenderedRequest = BaseModel & Request & {
+  cookies: Array<{name: string, value: string, disabled: boolean}>,
+  cookieJar: CookieJar
 };
 
-type ResponsePatch = {
-};
+type ResponsePatch = {};
 
 type Workspace = {
   _id: string,
@@ -96,11 +81,13 @@ export function cancelCurrentRequest () {
   }
 }
 
-export function _actuallySend (renderedRequest: RenderedRequest,
-                               workspace: Workspace,
-                               settings: Settings): Promise<{ bodyBuffer: ?Buffer, response: ResponsePatch }> {
+export function _actuallySend (
+  renderedRequest: RenderedRequest,
+  workspace: Workspace,
+  settings: Settings
+): Promise<{bodyBuffer: ?Buffer, response: ResponsePatch}> {
   return new Promise(async resolve => {
-    let timeline = [];
+    let timeline: Array<ResponseTimelineEntry> = [];
 
     // Define helper to add base fields when responding
     function respond (patch: ResponsePatch, bodyBuffer: ?Buffer = null): void {
@@ -170,8 +157,8 @@ export function _actuallySend (renderedRequest: RenderedRequest,
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Setup debug handler
-      setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+      setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
 
         if (
           infoType === Curl.info.debug.SSL_DATA_IN ||
@@ -639,7 +626,7 @@ export async function send (requestId: string, environmentId: string) {
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
-function _getCurlHeader (curlHeadersObj: { [string]: string }, name: string, fallback: any): string {
+function _getCurlHeader (curlHeadersObj: {[string]: string}, name: string, fallback: any): string {
   const headerName = Object.keys(curlHeadersObj).find(
     n => n.toLowerCase() === name.toLowerCase()
   );
@@ -652,11 +639,13 @@ function _getCurlHeader (curlHeadersObj: { [string]: string }, name: string, fal
 }
 
 // exported for unit tests only
-export function _getAwsAuthHeaders (accessKeyId: string,
-                                    secretAccessKey: string,
-                                    headers: Array<Header>,
-                                    body: string,
-                                    url: string) {
+export function _getAwsAuthHeaders (
+  accessKeyId: string,
+  secretAccessKey: string,
+  headers: Array<Header>,
+  body: string,
+  url: string
+) {
   const credentials = {accessKeyId, secretAccessKey};
 
   const parsedUrl = urlParse(url);
