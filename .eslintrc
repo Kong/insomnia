@@ -1,7 +1,10 @@
 {
   "parser": "babel-eslint",
-  "extends": ["semistandard"],
-  "plugins": ["flowtype", "react", "jest", "html", "json", "filenames"],
+  "extends": [
+    "semistandard",
+    "plugin:flowtype/recommended"
+  ],
+  "plugins": ["react", "jest", "html", "json", "filenames", "flowtype"],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -15,6 +18,7 @@
     "jest/globals": true
   },
   "rules": {
+    "no-duplicate-imports": "off",
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",
     "react/prop-types": "error",

@@ -1,3 +1,4 @@
+// @flow
 import electron from 'electron';
 import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
@@ -19,6 +20,70 @@ import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import urlMatchesCertHost from './url-matches-cert-host';
 import aws4 from 'aws4';
 
+type Cookie = {
+  domain: string,
+  path: string,
+  key: string,
+  value: string,
+  expires: number
+}
+
+type CookieJar = {
+  cookies: Array<Cookie>
+}
+
+type Header = {
+  name: string,
+  value: string,
+  disabled: boolean
+}
+
+type RenderedRequest = {
+  _id: string,
+  created: number,
+  modified: number,
+  url: string,
+  settingSendCookies: boolean,
+  settingStoreCookies: boolean,
+  settingEncodeUrl: boolean,
+  bytesRead: number,
+  method: string,
+  headers: Array<Header>,
+  parameters: Array<{ name: string, value: string, disabled: boolean }>,
+  cookies: Array<{ name: string, value: string, disabled: boolean }>,
+  cookieJar: CookieJar,
+  authentication: Object,
+  body: {
+    mimeType?: string,
+    text?: string,
+    fileName?: string,
+    params?: Array<{ name: string, value?: string, fileName?: string, disabled: boolean }>
+  }
+};
+
+type ResponsePatch = {
+};
+
+type Workspace = {
+  _id: string,
+  certificates: Array<{
+    host: string,
+    passphrase: string,
+    cert: string,
+    key: string,
+    pfx: string
+  }>
+};
+
+type Settings = {
+  _id: string,
+  followRedirects: boolean,
+  timeout: number,
+  httpProxy: string,
+  httpsProxy: string,
+  noProxy: string
+};
+
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
@@ -31,12 +96,14 @@ export function cancelCurrentRequest () {
   }
 }
 
-export function _actuallySend (renderedRequest, workspace, settings) {
+export function _actuallySend (renderedRequest: RenderedRequest,
+                               workspace: Workspace,
+                               settings: Settings): Promise<{ bodyBuffer: ?Buffer, response: ResponsePatch }> {
   return new Promise(async resolve => {
     let timeline = [];
 
     // Define helper to add base fields when responding
-    const respond = (patch, bodyBuffer = null) => {
+    function respond (patch: ResponsePatch, bodyBuffer: ?Buffer = null): void {
       const response = Object.assign({
         parentId: renderedRequest._id,
         timeline: timeline,
@@ -45,7 +112,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       }, patch);
 
       resolve({bodyBuffer, response});
-    };
+    }
 
     function handleError (err, prefix = null) {
       respond({
@@ -257,7 +324,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         const {httpProxy, httpsProxy, noProxy} = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
         const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-        timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol}`});
+        timeline.push({name: 'TEXT', value: `Enable network proxy for ${protocol || ''}`});
         if (proxy) {
           setOpt(Curl.option.PROXY, proxy);
           setOpt(Curl.option.PROXYAUTH, Curl.auth.ANY);
@@ -328,7 +395,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-        const data = renderedRequest.body.params.map(param => {
+        const params = renderedRequest.body.params || [];
+        const data = params.map(param => {
           if (param.type === 'file' && param.fileName) {
             const type = mimes.lookup(param.fileName) || 'application/octet-stream';
             return {name: param.name, file: param.fileName, type};
@@ -339,7 +407,8 @@ export function _actuallySend (renderedRequest, workspace, settings) {
         setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
-        const fd = fs.openSync(renderedRequest.body.fileName, 'r+');
+        const fileName = renderedRequest.body.fileName || '';
+        const fd = fs.openSync(fileName, 'r+');
         setOpt(Curl.option.INFILESIZE, size);
         setOpt(Curl.option.UPLOAD, 1);
         setOpt(Curl.option.READDATA, fd);
@@ -536,7 +605,7 @@ export function _actuallySend (renderedRequest, workspace, settings) {
   });
 }
 
-export async function send (requestId, environmentId) {
+export async function send (requestId: string, environmentId: string) {
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way
@@ -570,7 +639,7 @@ export async function send (requestId, environmentId) {
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
-function _getCurlHeader (curlHeadersObj, name, fallback) {
+function _getCurlHeader (curlHeadersObj: { [string]: string }, name: string, fallback: any): string {
   const headerName = Object.keys(curlHeadersObj).find(
     n => n.toLowerCase() === name.toLowerCase()
   );
@@ -583,7 +652,11 @@ function _getCurlHeader (curlHeadersObj, name, fallback) {
 }
 
 // exported for unit tests only
-export function _getAwsAuthHeaders (accessKeyId, secretAccessKey, headers, body, url) {
+export function _getAwsAuthHeaders (accessKeyId: string,
+                                    secretAccessKey: string,
+                                    headers: Array<Header>,
+                                    body: string,
+                                    url: string) {
   const credentials = {accessKeyId, secretAccessKey};
 
   const parsedUrl = urlParse(url);
@@ -605,7 +678,7 @@ export function _getAwsAuthHeaders (accessKeyId, secretAccessKey, headers, body,
     .map(name => ({name, value: signature.headers[name]}));
 }
 
-document.addEventListener('keydown', e => {
+document.addEventListener('keydown', (e: KeyboardEvent) => {
   if (e.ctrlKey || e.metaKey || e.altKey) {
     return;
   }
