@@ -1,13 +1,9 @@
-import * as db from '../database';
 import * as models from '../../models';
 import * as importUtil from '../import';
 import {getAppVersion} from '../constants';
 
 describe('export()', () => {
-  beforeEach(async () => {
-    await db.init(models.types(), {inMemoryOnly: true}, true);
-  });
-
+  beforeEach(global.insomniaBeforeEach);
   it('succeed with username and password', async () => {
     const w = await models.workspace.create({name: 'Workspace'});
     const r1 = await models.request.create({name: 'Request', parentId: w._id});

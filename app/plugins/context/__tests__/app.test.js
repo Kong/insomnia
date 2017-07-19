@@ -9,6 +9,7 @@ const PLUGIN = {
 };
 
 describe('init()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('initializes correctly', () => {
     const result = plugin.init({name: PLUGIN});
     expect(Object.keys(result)).toEqual(['app']);
@@ -17,6 +18,7 @@ describe('init()', () => {
 });
 
 describe('app.alert()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('shows alert with message', async () => {
     modals.showAlert = jest.fn().mockReturnValue('dummy-return-value');
     const result = plugin.init(PLUGIN);

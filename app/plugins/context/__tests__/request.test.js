@@ -1,5 +1,4 @@
 import * as plugin from '../request';
-import * as db from '../../../common/database';
 import * as models from '../../../models';
 
 const PLUGIN = {
@@ -11,7 +10,7 @@ const PLUGIN = {
 
 describe('init()', () => {
   beforeEach(async () => {
-    db.init(models.types(), {inMemoryOnly: true}, true);
+    await global.insomniaBeforeEach();
     await models.workspace.create({_id: 'wrk_1', name: 'My Workspace'});
     await models.request.create({_id: 'req_1', parentId: 'wrk_1', name: 'My Request'});
   });
@@ -41,7 +40,7 @@ describe('init()', () => {
 
 describe('request.*', () => {
   beforeEach(async () => {
-    db.init(models.types(), {inMemoryOnly: true}, true);
+    await global.insomniaBeforeEach();
     await models.workspace.create({_id: 'wrk_1', name: 'My Workspace'});
     await models.request.create({
       _id: 'req_1',

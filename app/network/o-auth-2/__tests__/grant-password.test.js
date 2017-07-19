@@ -9,6 +9,7 @@ const PASSWORD = 'password';
 const SCOPE = 'scope_123';
 
 describe('password', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('gets token with JSON and basic auth', async () => {
     window.fetch = jest.fn(() => new window.Response(
       JSON.stringify({access_token: 'token_123', token_type: 'token_type', scope: SCOPE}),

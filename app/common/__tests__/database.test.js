@@ -14,6 +14,7 @@ function loadFixture (name) {
 }
 
 describe('init()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('handles being initialized twice', async () => {
     await db.init(models.types(), {inMemoryOnly: true});
     await db.init(models.types(), {inMemoryOnly: true});
@@ -22,6 +23,7 @@ describe('init()', () => {
 });
 
 describe('onChange()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('handles change listeners', async () => {
     const doc = {
       type: models.request.type,
@@ -51,6 +53,7 @@ describe('onChange()', () => {
 });
 
 describe('bufferChanges()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('properly buffers changes', async () => {
     const doc = {
       type: models.request.type,
@@ -88,8 +91,7 @@ describe('bufferChanges()', () => {
 });
 
 describe('requestCreate()', () => {
-  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
-
+  beforeEach(global.insomniaBeforeEach);
   it('creates a valid request', async () => {
     const now = Date.now();
 
@@ -124,7 +126,7 @@ describe('requestCreate()', () => {
 
 describe('requestGroupDuplicate()', () => {
   beforeEach(async () => {
-    await db.init(models.types(), {inMemoryOnly: true}, true);
+    await global.insomniaBeforeEach();
     await loadFixture('nestedfolders');
   });
 

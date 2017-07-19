@@ -202,6 +202,23 @@ class General extends PureComponent {
             </label>
           </div>
         </div>
+
+        <hr className="pad-top"/>
+
+        <h2>Plugins</h2>
+
+        <div className="form-control form-control--outlined">
+          <label>
+            Additional Plugin Path <HelpTooltip>Tell Insomnia to look for plugins in a different
+            directory</HelpTooltip>
+            <input placeholder="~/.insomnia:/other/path"
+                   name="pluginPath"
+                   type="text"
+                   defaultValue={settings.pluginPath}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
         <br/>
       </div>
     );

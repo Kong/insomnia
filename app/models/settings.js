@@ -19,7 +19,8 @@ type BaseSettings = {
   forceVerticalLayout: boolean,
   autoHideMenuBar: boolean,
   theme: string,
-  disableAnalyticsTracking: boolean
+  disableAnalyticsTracking: boolean,
+  pluginPath: string
 };
 
 export type Settings = BaseModel & Settings;
@@ -47,7 +48,8 @@ export function init (): BaseSettings {
     forceVerticalLayout: false,
     autoHideMenuBar: false,
     theme: 'default',
-    disableAnalyticsTracking: false
+    disableAnalyticsTracking: false,
+    pluginPath: ''
   };
 }
 

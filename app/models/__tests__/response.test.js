@@ -3,7 +3,8 @@ import * as electron from 'electron';
 import * as models from '../../models';
 
 describe('migrate()', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await global.insomniaBeforeEach();
     Date.now = jest.genMockFunction().mockReturnValue(1234567890);
     jest.useFakeTimers();
   });

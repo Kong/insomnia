@@ -3,7 +3,8 @@ import fs from 'fs';
 import LocalStorage from '../local-storage';
 
 describe('LocalStorage()', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await global.insomniaBeforeEach();
     jest.useFakeTimers();
 
     // There has to be a better way to reset this...

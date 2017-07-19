@@ -225,7 +225,7 @@ async function _updateElementText (render, mark, text) {
 
     if (tagMatch) {
       const tagData = tokenizeTag(str);
-      const tagDefinition = getTagDefinitions().find(d => d.name === tagData.name);
+      const tagDefinition = (await getTagDefinitions()).find(d => d.name === tagData.name);
 
       if (tagDefinition) {
         // Try rendering these so we can show errors if needed

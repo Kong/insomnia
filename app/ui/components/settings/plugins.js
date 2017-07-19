@@ -25,12 +25,12 @@ class Plugins extends React.PureComponent<DefaultProps, Props, State> {
   constructor (props: Props) {
     super(props);
     this.state = {
-      plugins: getPlugins(true),
+      plugins: [],
       npmPluginValue: ''
     };
   }
 
-  _handleAddNpmPluginChange (e: Event & { target: HTMLButtonElement }) {
+  _handleAddNpmPluginChange (e: Event & {target: HTMLButtonElement}) {
     this.setState({npmPluginValue: e.target.value});
   }
 
@@ -52,19 +52,23 @@ class Plugins extends React.PureComponent<DefaultProps, Props, State> {
       label: 'Plugin Name',
       onComplete: async name => {
         await createPlugin(name);
-        this._handleRefreshPlugins();
+        await this._handleRefreshPlugins();
         trackEvent('Plugins', 'Generate');
       }
     });
   }
 
-  _handleRefreshPlugins () {
+  async _handleRefreshPlugins () {
     // Get and reload plugins
-    const plugins = getPlugins(true);
+    const plugins = await getPlugins(true);
     reload();
 
     this.setState({plugins});
     trackEvent('Plugins', 'Refresh');
+  }
+
+  componentDidMount () {
+    this._handleRefreshPlugins();
   }
 
   render () {
@@ -109,7 +113,8 @@ class Plugins extends React.PureComponent<DefaultProps, Props, State> {
         </p>
         <div className="form-row">
           <div className="form-control form-control--outlined">
-            <input onChange={this._handleAddNpmPluginChange} type="text"
+            <input onChange={this._handleAddNpmPluginChange}
+                   type="text"
                    placeholder="insomnia-foo-bar"/>
           </div>
           <div className="form-control width-auto">

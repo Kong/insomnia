@@ -1,5 +1,6 @@
 import {FLEXIBLE_URL_REGEX} from '../constants';
 describe('URL Regex', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('matches valid URLs', () => {
     expect('https://google.com').toMatch(FLEXIBLE_URL_REGEX);
     expect('http://google.com').toMatch(FLEXIBLE_URL_REGEX);

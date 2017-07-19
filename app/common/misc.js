@@ -1,6 +1,7 @@
 // @flow
 import uuid from 'uuid';
 import zlib from 'zlib';
+import {join as pathJoin} from 'path';
 import {format as urlFormat, parse as urlParse} from 'url';
 import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
 import * as querystring from './querystring';
@@ -298,4 +299,12 @@ export function compress (inputBuffer: Buffer | string): Buffer {
 
 export function decompress (inputBuffer: Buffer | string): Buffer {
   return zlib.gunzipSync(inputBuffer);
+}
+
+export function resolveHomePath (p: string): string {
+  if (p.indexOf('~/') === 0) {
+    return pathJoin(process.env.HOME || '/', p.slice(1));
+  } else {
+    return p;
+  }
 }

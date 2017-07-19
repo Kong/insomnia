@@ -1,12 +1,10 @@
 import * as templating from '../../index';
-import * as db from '../../../common/database';
 import * as models from '../../../models';
 import {cookiesFromJar, jarFromCookies} from '../../../common/cookies';
 import {getRenderContext} from '../../../common/render';
 
 describe('RequestExtension cookie', async () => {
-  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
-
+  beforeEach(global.insomniaBeforeEach);
   it('should get cookie by name', async () => {
     // Create necessary models
     const workspace = await models.workspace.create({name: 'Workspace'});
@@ -33,8 +31,7 @@ describe('RequestExtension cookie', async () => {
 });
 
 describe('RequestExtension url', async () => {
-  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
-
+  beforeEach(global.insomniaBeforeEach);
   it('should get url', async () => {
     // Create necessary models
     const workspace = await models.workspace.create({name: 'Workspace'});
@@ -68,8 +65,7 @@ describe('RequestExtension url', async () => {
 });
 
 describe('RequestExtension header', async () => {
-  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
-
+  beforeEach(global.insomniaBeforeEach);
   it('should get url', async () => {
     // Create necessary models
     const workspace = await models.workspace.create({name: 'Workspace'});

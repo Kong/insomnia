@@ -410,9 +410,9 @@ class CodeEditor extends PureComponent {
         };
 
         // Only allow tags if we have variables too
-        getTags = () => {
+        getTags = async () => {
           const expandedTags = [];
-          for (const tagDef of getTagDefinitions()) {
+          for (const tagDef of await getTagDefinitions()) {
             if (tagDef.args[0].type !== 'enum') {
               expandedTags.push(tagDef);
               continue;

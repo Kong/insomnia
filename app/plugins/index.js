@@ -1,11 +1,13 @@
 // @flow
 import mkdirp from 'mkdirp';
+import * as models from '../models';
 import fs from 'fs';
 import path from 'path';
 import {PLUGIN_PATHS} from '../common/constants';
 import {render} from '../templating';
 import skeletonPackageJson from './skeleton/package.json.js';
 import skeletonPluginJs from './skeleton/plugin.js.js';
+import {resolveHomePath} from '../common/misc';
 
 export type Plugin = {
   name: string,
@@ -31,24 +33,28 @@ export type ResponseHook = {
 
 let plugins: ?Array<Plugin> = null;
 
-export function init (): void {
+export async function init (): Promise<void> {
   // Force plugins to load.
-  getPlugins(true);
+  await getPlugins(true);
 }
 
-export function getPlugins (force: boolean = false): Array<Plugin> {
+export async function getPlugins (force: boolean = false): Promise<Array<Plugin>> {
   if (force) {
     plugins = null;
   }
 
   if (!plugins) {
-    // Make sure the directories exist
+    const settings = await models.settings.getOrCreate();
+    const extraPaths = settings.pluginPath.split(':').filter(p => p).map(resolveHomePath);
+    const allPaths = [...PLUGIN_PATHS, ...extraPaths];
+
+    // Make sure the default directories exist
     for (const p of PLUGIN_PATHS) {
       mkdirp.sync(p);
     }
 
     plugins = [];
-    for (const p of PLUGIN_PATHS) {
+    for (const p of allPaths) {
       for (const dir of fs.readdirSync(p)) {
         if (dir.indexOf('.') === 0) {
           continue;
@@ -92,9 +98,10 @@ export async function createPlugin (displayName: string): Promise<void> {
   fs.writeFileSync(path.join(dir, 'package.json'), renderedPackageJson);
 }
 
-export function getTemplateTags (): Array<TemplateTag> {
+export async function getTemplateTags (): Promise<Array<TemplateTag>> {
+  console.log('GETTING TEMPLATE TAGS');
   let extensions = [];
-  for (const plugin of getPlugins()) {
+  for (const plugin of await getPlugins()) {
     const templateTags = plugin.module.templateTags || [];
     extensions = [
       ...extensions,
@@ -105,9 +112,9 @@ export function getTemplateTags (): Array<TemplateTag> {
   return extensions;
 }
 
-export function getRequestHooks (): Array<RequestHook> {
+export async function getRequestHooks (): Promise<Array<RequestHook>> {
   let functions = [];
-  for (const plugin of getPlugins()) {
+  for (const plugin of await getPlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
     functions = [
       ...functions,
@@ -118,9 +125,9 @@ export function getRequestHooks (): Array<RequestHook> {
   return functions;
 }
 
-export function getResponseHooks (): Array<ResponseHook> {
+export async function getResponseHooks (): Promise<Array<ResponseHook>> {
   let functions = [];
-  for (const plugin of getPlugins()) {
+  for (const plugin of await getPlugins()) {
     const moreFunctions = plugin.module.responseHooks || [];
     functions = [
       ...functions,

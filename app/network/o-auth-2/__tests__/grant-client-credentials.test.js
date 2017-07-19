@@ -7,6 +7,7 @@ const CLIENT_SECRET = 'secret_12345456677756343';
 const SCOPE = 'scope_123';
 
 describe('client_credentials', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('gets token with JSON and basic auth', async () => {
     window.fetch = jest.fn(() => new window.Response(
       JSON.stringify({access_token: 'token_123', token_type: 'token_type', scope: SCOPE}),

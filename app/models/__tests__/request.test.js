@@ -1,12 +1,8 @@
-import * as db from '../../common/database';
 import * as requestModel from '../../models/request';
 import * as models from '../index';
 
 describe('init()', () => {
-  beforeEach(() => {
-    return db.init(models.types(), {inMemoryOnly: true}, true);
-  });
-
+  beforeEach(global.insomniaBeforeEach);
   it('contains all required fields', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
     expect(requestModel.init()).toEqual({
@@ -28,16 +24,13 @@ describe('init()', () => {
 });
 
 describe('create()', async () => {
-  beforeEach(() => {
-    return db.init(models.types(), {inMemoryOnly: true}, true);
-  });
-
+  beforeEach(global.insomniaBeforeEach);
   it('creates a valid request', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
 
     const request = await requestModel.create({name: 'Test Request', parentId: 'fld_124', description: 'A test Request'});
     const expected = {
-      _id: 'req_dd2ccc1a2745477a881a9e8ef9d42403',
+      _id: 'req_cc1dd2ca4275747aa88199e8efd42403',
       created: 1478795580200,
       modified: 1478795580200,
       parentId: 'fld_124',
@@ -68,10 +61,7 @@ describe('create()', async () => {
 });
 
 describe('updateMimeType()', async () => {
-  beforeEach(() => {
-    return db.init(models.types(), {inMemoryOnly: true}, true);
-  });
-
+  beforeEach(global.insomniaBeforeEach);
   it('adds header when does not exist', async () => {
     const request = await requestModel.create({name: 'My Request', parentId: 'fld_1'});
     expect(request).not.toBeNull();
@@ -129,6 +119,7 @@ describe('updateMimeType()', async () => {
 });
 
 describe('migrate()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('migrates basic case', () => {
     const original = {
       headers: [],

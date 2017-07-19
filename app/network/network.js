@@ -639,7 +639,7 @@ export async function send (requestId: string, environmentId: string) {
 
 async function _applyRequestPluginHooks (renderedRequest: RenderedRequest): Promise<RenderedRequest> {
   let newRenderedRequest = renderedRequest;
-  for (const {plugin, hook} of plugins.getRequestHooks()) {
+  for (const {plugin, hook} of await plugins.getRequestHooks()) {
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
@@ -662,7 +662,7 @@ async function _applyResponsePluginHooks (
   response: ResponsePatch,
   bodyBuffer: ?Buffer = null
 ): Promise<void> {
-  for (const {plugin, hook} of plugins.getResponseHooks()) {
+  for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
       ...pluginContexts.app.init(plugin),
       ...pluginContexts.response.init(plugin, response, bodyBuffer)

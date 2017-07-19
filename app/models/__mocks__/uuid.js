@@ -15,6 +15,7 @@ const v1UUIDs = [
 ];
 
 const v4UUIDs = [
+  'cc1dd2ca-4275-747a-a881-99e8efd42403',
   'dd2ccc1a-2745-477a-881a-9e8ef9d42403',
   'e3e96e5f-dd68-4229-8b66-dee1f0940f3d',
   'a262d22b-5fa8-491c-9bd9-58fba03e301e',

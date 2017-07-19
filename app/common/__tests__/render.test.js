@@ -4,6 +4,7 @@ import * as models from '../../models';
 jest.mock('electron');
 
 describe('render()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('renders hello world', async () => {
     const rendered = await renderUtils.render('Hello {{ msg }}!', {msg: 'World'});
     expect(rendered).toBe('Hello World!');
@@ -30,6 +31,7 @@ describe('render()', () => {
 });
 
 describe('buildRenderContext()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('cascades properly', async () => {
     const ancestors = [
       {
@@ -270,6 +272,7 @@ describe('buildRenderContext()', () => {
 });
 
 describe('render()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('correctly renders simple Object', async () => {
     const newObj = await renderUtils.render({
       foo: '{{ foo }}',

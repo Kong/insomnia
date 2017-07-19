@@ -123,7 +123,7 @@ export async function render<T> (
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
-  async function next (x, path = name) {
+  async function next (x: any, path: string = name): Promise<any> {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
@@ -141,7 +141,7 @@ export async function render<T> (
       asStr === '[object Undefined]'
     ) {
       // Do nothing to these types
-    } else if (asStr === '[object String]') {
+    } else if (typeof x === 'string') {
       try {
         x = await templating.render(x, {context, path});
 
@@ -218,7 +218,10 @@ export async function getRenderContext (
   return context;
 }
 
-export async function getRenderedRequest (request: Request, environmentId: string): Promise<RenderedRequest> {
+export async function getRenderedRequest (
+  request: Request,
+  environmentId: string
+): Promise<RenderedRequest> {
   const ancestors = await db.withAncestors(request, [
     models.requestGroup.type,
     models.workspace.type

@@ -1,12 +1,13 @@
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
+import classnames from 'classnames';
 import clone from 'clone';
 import * as templating from '../../../templating';
 import * as templateUtils from '../../../templating/utils';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
-import {fnOrString} from '../../../common/misc';
+import {delay, fnOrString} from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
 
 @autobind
@@ -14,29 +15,31 @@ class TagEditor extends PureComponent {
   constructor (props) {
     super(props);
 
-    const activeTagData = templateUtils.tokenizeTag(props.defaultValue);
-
-    const tagDefinitions = templating.getTagDefinitions();
-    const activeTagDefinition = tagDefinitions.find(d => d.name === activeTagData.name);
-
-    // Edit tags raw that we don't know about
-    if (!activeTagDefinition) {
-      activeTagData.rawValue = props.defaultValue;
-    }
-
     this.state = {
-      activeTagData,
-      activeTagDefinition,
-      loadingDocs: true,
+      activeTagData: null,
+      activeTagDefinition: null,
+      tagDefinitions: [],
+      loadingDocs: false,
       allDocs: {},
+      rendering: true,
       preview: '',
       error: ''
     };
   }
 
-  async componentWillMount () {
+  async componentDidMount () {
+    const activeTagData = templateUtils.tokenizeTag(this.props.defaultValue);
+
+    const tagDefinitions = await templating.getTagDefinitions();
+    const activeTagDefinition = tagDefinitions.find(d => d.name === activeTagData.name);
+
+    // Edit tags raw that we don't know about
+    if (!activeTagDefinition) {
+      activeTagData.rawValue = this.props.defaultValue;
+    }
+
     await this._refreshModels(this.props.workspace);
-    await this._update(this.state.activeTagDefinition, this.state.activeTagData, true);
+    await this._update(tagDefinitions, activeTagDefinition, activeTagData, true);
   }
 
   componentWillReceiveProps (nextProps) {
@@ -45,6 +48,15 @@ class TagEditor extends PureComponent {
     if (this.props.workspace._id !== workspace._id) {
       this._refreshModels(workspace);
     }
+  }
+
+  _handleRefresh () {
+    this._update(
+      this.state.tagDefinitions,
+      this.state.activeTagDefinition,
+      this.state.activeTagData,
+      true
+    );
   }
 
   async _refreshModels (workspace) {
@@ -61,12 +73,12 @@ class TagEditor extends PureComponent {
   }
 
   _updateArg (argValue, argIndex) {
-    const {activeTagData, activeTagDefinition} = this.state;
+    const {tagDefinitions, activeTagData, activeTagDefinition} = this.state;
 
     const tagData = clone(activeTagData);
     tagData.args[argIndex].value = argValue;
 
-    this._update(activeTagDefinition, tagData, false);
+    this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
   _handleChange (e) {
@@ -81,18 +93,18 @@ class TagEditor extends PureComponent {
   }
 
   _handleChangeCustomArg (e) {
-    const {activeTagData, activeTagDefinition} = this.state;
+    const {tagDefinitions, activeTagData, activeTagDefinition} = this.state;
 
     const tagData = clone(activeTagData);
     tagData.rawValue = e.target.value;
 
-    this._update(activeTagDefinition, tagData, false);
+    this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
-  _handleChangeTag (e) {
+  async _handleChangeTag (e) {
     const name = e.target.value;
-    const tagDefinition = templating.getTagDefinitions().find(d => d.name === name);
-    this._update(tagDefinition, false);
+    const tagDefinition = (await templating.getTagDefinitions()).find(d => d.name === name);
+    this._update(this.state.tagDefinitions, tagDefinition, false);
     trackEvent('Tag Editor', 'Change Tag', name);
   }
 
@@ -114,8 +126,13 @@ class TagEditor extends PureComponent {
     return templateUtils.tokenizeTag(defaultFill);
   }
 
-  async _update (tagDefinition, tagData, noCallback = false) {
+  async _update (tagDefinitions, tagDefinition, tagData, noCallback = false) {
     const {handleRender} = this.props;
+    this.setState({rendering: true});
+
+    // Start render loader
+    const start = Date.now();
+    this.setState({rendering: true});
 
     let preview = '';
     let error = '';
@@ -140,15 +157,17 @@ class TagEditor extends PureComponent {
       error = err.message;
     }
 
-    const isMounted = !!this._select;
-    if (isMounted) {
-      this.setState({
-        activeTagData,
-        preview,
-        error,
-        activeTagDefinition: tagDefinition
-      });
-    }
+    // Make rendering take at least this long so we can see a spinner
+    await delay(300 - (Date.now() - start));
+
+    this.setState({
+      tagDefinitions,
+      activeTagData,
+      preview,
+      error,
+      rendering: false,
+      activeTagDefinition: tagDefinition
+    });
 
     // Call the callback if we need to
     if (!noCallback) {
@@ -278,7 +297,26 @@ class TagEditor extends PureComponent {
   }
 
   render () {
-    const {error, preview, activeTagDefinition, activeTagData} = this.state;
+    const {error, preview, activeTagDefinition, activeTagData, rendering} = this.state;
+
+    if (!activeTagData) {
+      return null;
+    }
+
+    let previewElement;
+    if (error) {
+      previewElement = (
+        <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
+      );
+    } else if (rendering) {
+      previewElement = (
+        <code className="block"><span className="faint italic">rendering...</span></code>
+      );
+    } else {
+      previewElement = (
+        <code className="block selectable">{preview || <span>&nbsp;</span>}</code>
+      );
+    }
 
     return (
       <div>
@@ -287,7 +325,7 @@ class TagEditor extends PureComponent {
             <select ref={this._setSelectRef}
                     onChange={this._handleChangeTag}
                     value={activeTagDefinition ? activeTagDefinition.name : ''}>
-              {templating.getTagDefinitions().map((tagDefinition, i) => (
+              {this.state.tagDefinitions.map((tagDefinition, i) => (
                 <option key={`${i}::${tagDefinition.name}`} value={tagDefinition.name}>
                   {tagDefinition.displayName} – {tagDefinition.description}
                 </option>
@@ -308,13 +346,17 @@ class TagEditor extends PureComponent {
             </label>
           </div>
         )}
-        <div className="form-control form-control--outlined">
-          <label>Live Preview
-            {error
-              ? <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
-              : <code className="block selectable">{preview || <span>&nbsp;</span>}</code>
-            }
-          </label>
+        <div className="form-row">
+          <div className="form-control form-control--outlined">
+            <button type="button"
+                    className="txt-sm pull-right icon inline-block"
+                    onClick={this._handleRefresh}>
+              refresh <i className={classnames('fa fa-refresh', {'fa-spin': rendering})}/>
+            </button>
+            <label>Live Preview
+              {previewElement}
+            </label>
+          </div>
         </div>
       </div>
     );
