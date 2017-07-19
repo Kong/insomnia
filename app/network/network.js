@@ -1,8 +1,9 @@
 // @flow
 import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
-import type {Request, RequestHeader} from '../models/request';
+import type {RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
+import type {RenderedRequest} from '../common/render';
 
 import electron from 'electron';
 import mkdirp from 'mkdirp';
@@ -27,22 +28,7 @@ import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import urlMatchesCertHost from './url-matches-cert-host';
 import aws4 from 'aws4';
 
-type Cookie = {
-  domain: string,
-  path: string,
-  key: string,
-  value: string,
-  expires: number
-}
-
-type RenderedRequest = Request & {
-  cookies: Array<{name: string, value: string, disabled: boolean}>,
-  cookieJar: {
-    cookies: Array<Cookie>
-  }
-};
-
-type ResponsePatch = {
+export type ResponsePatch = {
   statusMessage?: string,
   error?: string,
   url?: string,
@@ -618,6 +604,10 @@ export async function send (requestId: string, environmentId: string) {
     models.requestGroup.type,
     models.workspace.type
   ]);
+
+  if (!request) {
+    throw new Error(`Failed to find request to send for ${requestId}`);
+  }
 
   const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
 

@@ -1,3 +1,4 @@
+// @flow
 import * as _app from './app';
 import * as _request from './request';
 import * as _response from './response';

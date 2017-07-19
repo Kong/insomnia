@@ -1,18 +1,20 @@
+// @flow
 import * as electron from 'electron';
 import {showAlert} from '../../ui/components/modals/index';
 
-export function init (plugin) {
+export function init (plugin: string): {app: Object} {
   return {
     app: {
-      async alert (message) {
-        showAlert({title: `Plugin ${plugin.name}`, message});
+      alert (message: string): Promise<void> {
+        return showAlert({title: `Plugin ${plugin}`, message});
       },
-      getPath (name) {
-        if (name.toLowerCase() === 'desktop') {
-          return electron.remote.app.getPath('desktop');
+      getPath (name: string): string {
+        switch (name.toLowerCase()) {
+          case 'desktop':
+            return electron.remote.app.getPath('desktop');
+          default:
+            throw new Error(`Unknown path name ${name}`);
         }
-
-        throw new Error(`Unknown path name ${name}`);
       }
     }
   };

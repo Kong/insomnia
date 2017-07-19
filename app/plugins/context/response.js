@@ -1,4 +1,18 @@
-export function init (plugin, response, bodyBuffer = null) {
+// @flow
+
+type MaybeResponse = {
+  parentId?: string,
+  statusCode?: number,
+  statusMessage?: string,
+  bytesRead?: number,
+  elapsedTime?: number,
+}
+
+export function init (
+  plugin: string,
+  response: MaybeResponse,
+  bodyBuffer: Buffer | null = null
+): {response: Object} {
   if (!response) {
     throw new Error('contexts.response initialized without response');
   }
@@ -10,22 +24,22 @@ export function init (plugin, response, bodyBuffer = null) {
       // getId () {
       //   return response.parentId;
       // },
-      getRequestId () {
-        return response.parentId;
+      getRequestId (): string {
+        return response.parentId || '';
       },
-      getStatusCode () {
-        return response.statusCode;
+      getStatusCode (): number {
+        return response.statusCode || 0;
       },
-      getStatusMessage () {
-        return response.statusMessage;
+      getStatusMessage (): string {
+        return response.statusMessage || '';
       },
-      getBytesRead () {
-        return response.bytesRead;
+      getBytesRead (): number {
+        return response.bytesRead || 0;
       },
-      getTime () {
-        return response.elapsedTime;
+      getTime (): number {
+        return response.elapsedTime || 0;
       },
-      getBody () {
+      getBody (): Buffer | null {
         return bodyBuffer;
       }
     }

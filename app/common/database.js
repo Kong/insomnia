@@ -16,7 +16,6 @@ export const CHANGE_UPDATE = 'update';
 export const CHANGE_REMOVE = 'remove';
 
 let db = {};
-window.db = db;
 
 // ~~~~~~~ //
 // HELPERS //

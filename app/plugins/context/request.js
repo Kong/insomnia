@@ -1,26 +1,28 @@
+// @flow
+import type {RenderedRequest} from '../../common/render';
 import * as misc from '../../common/misc';
 
-export function init (plugin, renderedRequest) {
+export function init (plugin: string, renderedRequest: RenderedRequest): {request: Object} {
   if (!renderedRequest) {
     throw new Error('contexts.request initialized without request');
   }
 
   return {
     request: {
-      getId () {
+      getId (): string {
         return renderedRequest._id;
       },
-      getName () {
+      getName (): string {
         return renderedRequest.name;
       },
-      getUrl () {
+      getUrl (): string {
         // TODO: Get full URL, including querystring
         return renderedRequest.url;
       },
-      getMethod () {
+      getMethod (): string {
         return renderedRequest.method;
       },
-      getHeader (name) {
+      getHeader (name: string): string | null {
         const headers = misc.filterHeaders(renderedRequest.headers, name);
         if (headers.length) {
           // Use the last header if there are multiple of the same
@@ -30,16 +32,16 @@ export function init (plugin, renderedRequest) {
           return null;
         }
       },
-      hasHeader (name) {
+      hasHeader (name: string): boolean {
         return this.getHeader(name) !== null;
       },
-      removeHeader (name) {
+      removeHeader (name: string): void {
         const headers = misc.filterHeaders(renderedRequest.headers, name);
         renderedRequest.headers = renderedRequest.headers.filter(
           h => !headers.includes(h)
         );
       },
-      setHeader (name, value) {
+      setHeader (name: string, value: string): void {
         const header = misc.filterHeaders(renderedRequest.headers, name)[0];
         if (header) {
           header.value = value;
@@ -47,13 +49,13 @@ export function init (plugin, renderedRequest) {
           this.addHeader(name, value);
         }
       },
-      addHeader (name, value) {
+      addHeader (name: string, value: string): void {
         const header = misc.filterHeaders(renderedRequest.headers, name)[0];
         if (!header) {
           renderedRequest.headers.push({name, value});
         }
       },
-      setCookie (name, value) {
+      setCookie (name: string, value: string): void {
         renderedRequest.cookies.push({name, value});
       }
     }
