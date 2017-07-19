@@ -1,4 +1,9 @@
 // @flow
+import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
+import type {BaseModel} from '../models/index';
+import type {Request, RequestHeader} from '../models/request';
+import type {Workspace} from '../models/workspace';
+
 import electron from 'electron';
 import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
@@ -9,7 +14,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, AUTH_AWS_IAM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, STATUS_CODE_PLUGIN_ERROR, getAppVersion} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
@@ -30,50 +35,26 @@ type Cookie = {
   expires: number
 }
 
-type CookieJar = {
-  cookies: Array<Cookie>
-}
-
-type Header = {
-  name: string,
-  value: string,
-  disabled: boolean
-}
-
-type RenderedRequest = {
-  _id: string,
-  created: number,
-  modified: number,
-  url: string,
-  settingSendCookies: boolean,
-  settingStoreCookies: boolean,
-  settingEncodeUrl: boolean,
-  bytesRead: number,
-  method: string,
-  headers: Array<Header>,
-  parameters: Array<{name: string, value: string, disabled: boolean}>,
+type RenderedRequest = BaseModel & Request & {
   cookies: Array<{name: string, value: string, disabled: boolean}>,
-  cookieJar: CookieJar,
-  authentication: Object,
-  body: {
-    mimeType?: string,
-    text?: string,
-    fileName?: string,
-    params?: Array<{name: string, value?: string, fileName?: string, disabled: boolean}>
+  cookieJar: {
+    cookies: Array<Cookie>
   }
 };
 
-type ResponsePatch = {};
-
-type Workspace = {
-  _id: string,
-  certificates: Array<{
-    host: string,
-    passphrase: string,
-    cert: string,
-    key: string,
-    pfx: string
-  }>
+type ResponsePatch = {
+  statusMessage?: string,
+  error?: string,
+  url?: string,
+  statusCode?: number,
+  headers?: Array<ResponseHeader>,
+  elapsedTime?: number,
+  contentType?: string,
+  bytesRead?: number,
+  parentId?: string,
+  settingStoreCookies?: boolean,
+  settingSendCookies?: boolean,
+  timeline?: Array<ResponseTimelineEntry>
 };
 
 type Settings = {
@@ -103,16 +84,16 @@ export function _actuallySend (
   settings: Settings
 ): Promise<{bodyBuffer: ?Buffer, response: ResponsePatch}> {
   return new Promise(async resolve => {
-    let timeline = [];
+    let timeline: Array<ResponseTimelineEntry> = [];
 
     // Define helper to add base fields when responding
     function respond (patch: ResponsePatch, bodyBuffer: ?Buffer = null): void {
-      const response = Object.assign({
+      const response = Object.assign(({
         parentId: renderedRequest._id,
         timeline: timeline,
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies
-      }, patch);
+      }: ResponsePatch), patch);
 
       resolve({bodyBuffer, response});
 
@@ -183,8 +164,8 @@ export function _actuallySend (
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Setup debug handler
-      setOpt(Curl.option.DEBUGFUNCTION, (infoType, content) => {
-        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType);
+      setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
+        const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
 
         if (
           infoType === Curl.info.debug.SSL_DATA_IN ||
@@ -667,8 +648,12 @@ export async function send (requestId: string, environmentId: string) {
     };
   }
 
-  // Render succeeded so we're good to go!
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
+  if (!workspace) {
+    throw new Error(`Failed to find workspace for request: ${requestId}`);
+  }
+
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
@@ -712,7 +697,11 @@ async function _applyResponsePluginHooks (
   }
 }
 
-function _getCurlHeader (curlHeadersObj: {[string]: string}, name: string, fallback: any): string {
+function _getCurlHeader (
+  curlHeadersObj: {[string]: string},
+  name: string,
+  fallback: any
+): string {
   const headerName = Object.keys(curlHeadersObj).find(
     n => n.toLowerCase() === name.toLowerCase()
   );
@@ -728,7 +717,7 @@ function _getCurlHeader (curlHeadersObj: {[string]: string}, name: string, fallb
 export function _getAwsAuthHeaders (
   accessKeyId: string,
   secretAccessKey: string,
-  headers: Array<Header>,
+  headers: Array<RequestHeader>,
   body: string,
   url: string
 ) {

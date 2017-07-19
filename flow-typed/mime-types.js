@@ -1,3 +1,6 @@
 declare module 'mime-types' {
-  declare module.exports: *
+  declare module.exports: {
+    lookup: (fileName: string) => string,
+    extension: (mimeType: string) => string
+  }
 }

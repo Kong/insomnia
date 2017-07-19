@@ -1,3 +1,4 @@
+// @flow
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {format as urlFormat, parse as urlParse} from 'url';
@@ -7,7 +8,12 @@ import {shell} from 'electron';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
 
-export function getBasicAuthHeader (username, password) {
+type Header = {
+  name: string,
+  value: string
+};
+
+export function getBasicAuthHeader (username: ?string, password: ?string): Header {
   const name = 'Authorization';
   const header = `${username || ''}:${password || ''}`;
   const authString = Buffer.from(header, 'utf8').toString('base64');
@@ -15,13 +21,13 @@ export function getBasicAuthHeader (username, password) {
   return {name, value};
 }
 
-export function getBearerAuthHeader (token) {
+export function getBearerAuthHeader (token: string): Header {
   const name = 'Authorization';
   const value = `Bearer ${token}`;
   return {name, value};
 }
 
-export function filterHeaders (headers, name) {
+export function filterHeaders<T: Header> (headers: Array<T>, name: string): Array<T> {
   if (!Array.isArray(headers) || !name) {
     return [];
   }
@@ -35,41 +41,41 @@ export function filterHeaders (headers, name) {
   });
 }
 
-export function hasContentTypeHeader (headers) {
+export function hasContentTypeHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'content-type').length > 0;
 }
 
-export function hasContentLengthHeader (headers) {
+export function hasContentLengthHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'content-length').length > 0;
 }
 
-export function hasAuthHeader (headers) {
+export function hasAuthHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'authorization').length > 0;
 }
 
-export function hasAcceptHeader (headers) {
+export function hasAcceptHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'accept').length > 0;
 }
 
-export function hasUserAgentHeader (headers) {
+export function hasUserAgentHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'user-agent').length > 0;
 }
 
-export function getSetCookieHeaders (headers) {
+export function getSetCookieHeaders<T: Header> (headers: Array<T>): Array<T> {
   return filterHeaders(headers, 'set-cookie');
 }
 
-export function getContentTypeHeader (headers) {
+export function getContentTypeHeader<T: Header> (headers: Array<T>): T | null {
   const matches = filterHeaders(headers, 'content-type');
   return matches.length ? matches[0] : null;
 }
 
-export function getContentLengthHeader (headers) {
+export function getContentLengthHeader<T: Header> (headers: Array<T>): T | null {
   const matches = filterHeaders(headers, 'content-length');
   return matches.length ? matches[0] : null;
 }
 
-export function setDefaultProtocol (url, defaultProto = 'http:') {
+export function setDefaultProtocol (url: string, defaultProto: string = 'http:'): string {
   // If no url, don't bother returning anything
   if (!url) {
     return '';
@@ -88,7 +94,7 @@ export function setDefaultProtocol (url, defaultProto = 'http:') {
  * @param prefix
  * @returns {string}
  */
-export function generateId (prefix) {
+export function generateId (prefix: string): string {
   const id = uuid.v4().replace(/-/g, '');
 
   if (prefix) {
@@ -98,7 +104,7 @@ export function generateId (prefix) {
   }
 }
 
-export function flexibleEncodeComponent (str, ignore = '') {
+export function flexibleEncodeComponent (str: string, ignore: string = ''): string {
   // Sometimes spaces screw things up because of url.parse
   str = str.replace(/%20/g, ' ');
 
@@ -146,7 +152,7 @@ export function flexibleEncodeComponent (str, ignore = '') {
   return str;
 }
 
-export function prepareUrlForSending (url, autoEncode = true) {
+export function prepareUrlForSending (url: string, autoEncode: boolean = true): string {
   const urlWithProto = setDefaultProtocol(url);
 
   if (!autoEncode) {
@@ -188,15 +194,15 @@ export function prepareUrlForSending (url, autoEncode = true) {
   }
 }
 
-export function delay (milliseconds = DEBOUNCE_MILLIS) {
+export function delay (milliseconds: number = DEBOUNCE_MILLIS): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
-export function removeVowels (str) {
+export function removeVowels (str: string): string {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
 
-export function keyedDebounce (callback, millis = DEBOUNCE_MILLIS) {
+export function keyedDebounce (callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   let timeout = null;
   let results = {};
 
@@ -215,14 +221,14 @@ export function keyedDebounce (callback, millis = DEBOUNCE_MILLIS) {
   };
 }
 
-export function debounce (callback, millis = DEBOUNCE_MILLIS) {
+export function debounce (callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
     callback.apply(null, results['__key__']);
   }, millis).bind(null, '__key__');
 }
 
-export function describeByteSize (bytes, long) {
+export function describeByteSize (bytes: number, long: boolean = false): string {
   bytes = Math.round(bytes * 10) / 10;
   let size;
 
@@ -248,19 +254,15 @@ export function describeByteSize (bytes, long) {
   return `${rounded} ${unit}`;
 }
 
-export function nullFn () {
+export function nullFn (): void {
   // Do nothing
 }
 
-export function preventDefault (e) {
+export function preventDefault (e: Event): void {
   e.preventDefault();
 }
 
-export function stopPropagation (e) {
-  e.stopPropagation();
-}
-
-export function clickLink (href) {
+export function clickLink (href: string): void {
   if (href.match(/^http/i)) {
     const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
     const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
@@ -272,7 +274,7 @@ export function clickLink (href) {
   }
 }
 
-export function fnOrString (v, ...args) {
+export function fnOrString (v: string | Function, ...args: Array<any>) {
   if (typeof v === 'string') {
     return v;
   } else {
@@ -280,20 +282,20 @@ export function fnOrString (v, ...args) {
   }
 }
 
-export function compressObject (obj) {
+export function compressObject (obj: any): string {
   const compressed = compress(JSON.stringify(obj));
   return compressed.toString('base64');
 }
 
-export function decompressObject (input) {
+export function decompressObject (input: string): any {
   const jsonBuffer = decompress(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer);
+  return JSON.parse(jsonBuffer.toString('utf8'));
 }
 
-export function compress (inputBuffer) {
+export function compress (inputBuffer: Buffer | string): Buffer {
   return zlib.gzipSync(inputBuffer);
 }
 
-export function decompress (inputBuffer) {
+export function decompress (inputBuffer: Buffer | string): Buffer {
   return zlib.gunzipSync(inputBuffer);
 }

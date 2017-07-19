@@ -1,5 +1,6 @@
 declare module 'electron' {
   declare module.exports: {
-    remote: *
+    shell: Object,
+    remote: Object
   }
 }

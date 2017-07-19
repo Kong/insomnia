@@ -1,3 +1,5 @@
+// @flow
+import type {BaseModel} from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fs from 'fs';
@@ -39,7 +41,7 @@ function getDBFilePath (modelType) {
  * @param forceReset
  * @returns {null}
  */
-export function init (types, config = {}, forceReset = false) {
+export function init (types: Array<string>, config: Object = {}, forceReset: boolean = false) {
   if (forceReset) {
     changeListeners = [];
     db = {};
@@ -78,12 +80,14 @@ export function init (types, config = {}, forceReset = false) {
       // File probably did not exist probably, so no big deal
     }
 
-    db[modelType] = new NeDB(Object.assign({
+    const collection = new NeDB(Object.assign({
       autoload: true,
       filename: filePath
     }, config));
 
-    db[modelType].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+    collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+
+    db[modelType] = collection;
   }
 
   console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
@@ -97,20 +101,20 @@ let bufferingChanges = false;
 let changeBuffer = [];
 let changeListeners = [];
 
-export function onChange (callback) {
+export function onChange (callback: Function): void {
   changeListeners.push(callback);
 }
 
-export function offChange (callback) {
+export function offChange (callback: Function): void {
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
-export function bufferChanges (millis = 1000) {
+export function bufferChanges (millis: number = 1000): void {
   bufferingChanges = true;
   setTimeout(flushChanges, millis);
 }
 
-export async function flushChanges () {
+export async function flushChanges (): Promise<void> {
   bufferingChanges = false;
   const changes = [...changeBuffer];
   changeBuffer = [];
@@ -125,7 +129,7 @@ export async function flushChanges () {
   }
 }
 
-async function notifyOfChange (event, doc, fromSync) {
+async function notifyOfChange (event: string, doc: BaseModel, fromSync: boolean): Promise<void> {
   changeBuffer.push([event, doc, fromSync]);
 
   // Flush right away if we're not buffering
@@ -138,12 +142,19 @@ async function notifyOfChange (event, doc, fromSync) {
 // Helpers //
 // ~~~~~~~ //
 
-export async function getMostRecentlyModified (type, query = {}) {
+export async function getMostRecentlyModified (
+  type: string,
+  query: Object = {}
+): Promise<BaseModel | null> {
   const docs = await findMostRecentlyModified(type, query, 1);
   return docs.length ? docs[0] : null;
 }
 
-export function findMostRecentlyModified (type, query = {}, limit = null) {
+export function findMostRecentlyModified (
+  type: string,
+  query: Object = {},
+  limit: number | null = null
+): Promise<Array<BaseModel>> {
   return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(limit).exec((err, rawDocs) => {
       if (err) {
@@ -161,7 +172,11 @@ export function findMostRecentlyModified (type, query = {}, limit = null) {
   });
 }
 
-export function find (type, query = {}, sort = {created: 1}) {
+export function find<T: BaseModel> (
+  type: string,
+  query: Object = {},
+  sort: Object = {created: 1}
+): Promise<Array<T>> {
   return new Promise((resolve, reject) => {
     db[type].find(query).sort(sort).exec((err, rawDocs) => {
       if (err) {
@@ -177,25 +192,25 @@ export function find (type, query = {}, sort = {created: 1}) {
   });
 }
 
-export function all (type) {
+export function all <T: BaseModel> (type: string): Promise<Array<T>> {
   return find(type);
 }
 
-export async function getWhere (type, query) {
+export async function getWhere<T: BaseModel> (type: string, query: Object): Promise<T | null> {
   const docs = await find(type, query);
   return docs.length ? docs[0] : null;
 }
 
-export function get (type, id) {
+export async function get<T: BaseModel> (type: string, id: string): Promise<T | null> {
   // Short circuit IDs used to represent nothing
   if (!id || id === 'n/a') {
     return null;
+  } else {
+    return getWhere(type, {_id: id});
   }
-
-  return getWhere(type, {_id: id});
 }
 
-export function count (type, query = {}) {
+export function count (type: string, query: Object = {}): Promise<number> {
   return new Promise((resolve, reject) => {
     db[type].count(query, (err, count) => {
       if (err) {
@@ -207,7 +222,7 @@ export function count (type, query = {}) {
   });
 }
 
-export async function upsert (doc, fromSync = false) {
+export async function upsert (doc: BaseModel, fromSync: boolean = false): Promise<BaseModel> {
   const existingDoc = await get(doc.type, doc._id);
   if (existingDoc) {
     return update(doc, fromSync);
@@ -216,7 +231,7 @@ export async function upsert (doc, fromSync = false) {
   }
 }
 
-export function insert (doc, fromSync = false) {
+export function insert<T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
   return new Promise((resolve, reject) => {
     const docWithDefaults = initModel(doc.type, doc);
     db[doc.type].insert(docWithDefaults, (err, newDoc) => {
@@ -230,7 +245,7 @@ export function insert (doc, fromSync = false) {
   });
 }
 
-export function update (doc, fromSync = false) {
+export function update <T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
   return new Promise((resolve, reject) => {
     const docWithDefaults = initModel(doc.type, doc);
     db[doc.type].update({_id: docWithDefaults._id}, docWithDefaults, err => {
@@ -245,7 +260,7 @@ export function update (doc, fromSync = false) {
   });
 }
 
-export async function remove (doc, fromSync = false) {
+export async function remove <T: BaseModel> (doc: T, fromSync: boolean = false): Promise<void> {
   bufferChanges();
 
   const docs = await withDescendants(doc);
@@ -260,7 +275,7 @@ export async function remove (doc, fromSync = false) {
   flushChanges();
 }
 
-export async function removeWhere (type, query) {
+export async function removeWhere (type: string, query: Object): Promise<void> {
   bufferChanges();
 
   for (const doc of await find(type, query)) {
@@ -271,7 +286,7 @@ export async function removeWhere (type, query) {
     // Don't really need to wait for this to be over;
     types.map(t => db[t].remove({_id: {$in: docIds}}, {multi: true}));
 
-    docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
+    docs.map(d => notifyOfChange(CHANGE_REMOVE, d, false));
   }
 
   flushChanges();
@@ -281,7 +296,7 @@ export async function removeWhere (type, query) {
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-export function docUpdate (originalDoc, patch = {}) {
+export function docUpdate <T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
   const doc = initModel(
     originalDoc.type,
     originalDoc,
@@ -292,7 +307,7 @@ export function docUpdate (originalDoc, patch = {}) {
   return update(doc);
 }
 
-export function docCreate (type, ...patches) {
+export function docCreate<T: BaseModel> (type: string, ...patches: Array<Object>): Promise<T> {
   const doc = initModel(
     type,
     ...patches,
@@ -311,10 +326,13 @@ export function docCreate (type, ...patches) {
 // GENERAL //
 // ~~~~~~~ //
 
-export async function withDescendants (doc = null, stopType = null) {
+export async function withDescendants (
+  doc: BaseModel,
+  stopType: string | null = null
+): Promise<Array<BaseModel>> {
   let docsToReturn = doc ? [doc] : [];
 
-  async function next (docs) {
+  async function next (docs: Array<BaseModel>): Promise<Array<BaseModel>> {
     let foundDocs = [];
 
     for (const d of docs) {
@@ -343,13 +361,19 @@ export async function withDescendants (doc = null, stopType = null) {
   return await next([doc]);
 }
 
-export async function withAncestors (doc, types = allTypes()) {
+export async function withAncestors (
+  doc: BaseModel | null,
+  types: Array<string> = allTypes()
+): Promise<Array<BaseModel>> {
+  if (!doc) {
+    return [];
+  }
+
   let docsToReturn = doc ? [doc] : [];
 
-  async function next (docs) {
+  async function next (docs: Array<BaseModel>): Promise<Array<BaseModel>> {
     let foundDocs = [];
-
-    for (const d of docs) {
+    for (const d: BaseModel of docs) {
       for (const type of types) {
         // If the doc is null, we want to search for parentId === null
         const another = await get(type, d.parentId);
@@ -370,10 +394,10 @@ export async function withAncestors (doc, types = allTypes()) {
   return await next([doc]);
 }
 
-export async function duplicate (originalDoc, patch = {}) {
+export async function duplicate <T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
   bufferChanges();
 
-  async function next (docToCopy, patch) {
+  async function next <T: BaseModel> (docToCopy: T, patch: Object): Promise<T> {
     // 1. Copy the doc
     const newDoc = Object.assign({}, docToCopy, patch);
     delete newDoc._id;

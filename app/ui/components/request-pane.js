@@ -1,4 +1,8 @@
-import React, {PropTypes, PureComponent} from 'react';
+// @flow
+import type {Request} from '../../models/request';
+import type {Workspace} from '../../models/workspace';
+
+import React from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import ContentTypeDropdown from './dropdowns/content-type-dropdown';
@@ -9,8 +13,7 @@ import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {getAuthTypeName, getContentTypeName} from '../../common/constants';
-import {debounce} from '../../common/misc';
+import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
@@ -20,19 +23,53 @@ import {showModal} from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 
-@autobind
-class RequestPane extends PureComponent {
-  constructor (props) {
-    super(props);
+type Props = {
+  // Functions
+  forceUpdateRequest: Function,
+  handleSend: Function,
+  handleSendAndDownload: Function,
+  handleCreateRequest: Function,
+  handleGenerateCode: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  updateRequestUrl: Function,
+  updateRequestMethod: Function,
+  updateRequestBody: Function,
+  updateRequestParameters: Function,
+  updateRequestAuthentication: Function,
+  updateRequestHeaders: Function,
+  updateRequestMimeType: Function,
+  updateSettingsShowPasswords: Function,
+  updateSettingsUseBulkHeaderEditor: Function,
+  handleImport: Function,
+  handleImportFile: Function,
 
-    this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
-  }
+  // Other
+  useBulkHeaderEditor: boolean,
+  showPasswords: boolean,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  workspace: Workspace,
+  forceRefreshCounter: number,
+
+  // Optional
+  request: Request,
+  oAuth2Token: Object
+}
+
+@autobind
+class RequestPane extends React.PureComponent<void, Props, void> {
+  props: Props;
+
+  _handleUpdateRequestUrlTimeout: number;
 
   _handleEditDescriptionAdd () {
     this._handleEditDescription(true);
   }
 
-  _handleEditDescription (addDescription) {
+  _handleEditDescription (addDescription: boolean) {
     showModal(RequestSettingsModal, {
       request: this.props.request,
       forceEditMode: addDescription
@@ -50,8 +87,8 @@ class RequestPane extends PureComponent {
     const urls = docs.filter(d => (
       d.type === models.request.type && // Only requests
       d._id !== requestId && // Not current request
-      d.url // Only ones with non-empty URLs
-    )).map(r => r.url);
+      (d.url || '') // Only ones with non-empty URLs
+    )).map(r => r.url || '');
 
     return Array.from(new Set(urls));
   }
@@ -72,8 +109,11 @@ class RequestPane extends PureComponent {
     trackEvent('Request Pane', 'CTA', 'New Request');
   }
 
-  _handleUpdateRequestUrl (url) {
-    this.props.updateRequestUrl(url);
+  _handleUpdateRequestUrl (url: string) {
+    clearTimeout(this._handleUpdateRequestUrlTimeout);
+    this._handleUpdateRequestUrlTimeout = setTimeout(() => {
+      this.props.updateRequestUrl(url);
+    }, DEBOUNCE_MILLIS);
   }
 
   _handleImportQueryFromUrl () {
@@ -100,7 +140,7 @@ class RequestPane extends PureComponent {
     }
   }
 
-  _trackQueryToggle (pair) {
+  _trackQueryToggle (pair: {disabled: boolean}) {
     trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
   }
 
@@ -236,10 +276,10 @@ class RequestPane extends PureComponent {
           <TabList>
             <Tab onClick={this._trackTabBody}>
               <ContentTypeDropdown onChange={updateRequestMimeType}
-                                   contentType={request.body.mimeType}
+                                   contentType={request.body.mimeType || ''}
                                    request={request}
                                    className="tall">
-                {getContentTypeName(request.body.mimeType) || 'Body'}
+                {getContentTypeName(request.body.mimeType || '') || 'Body'}
                 {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
@@ -398,41 +438,5 @@ class RequestPane extends PureComponent {
     );
   }
 }
-
-RequestPane.propTypes = {
-  // Functions
-  forceUpdateRequest: PropTypes.func.isRequired,
-  handleSend: PropTypes.func.isRequired,
-  handleSendAndDownload: PropTypes.func.isRequired,
-  handleCreateRequest: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  updateRequestUrl: PropTypes.func.isRequired,
-  updateRequestMethod: PropTypes.func.isRequired,
-  updateRequestBody: PropTypes.func.isRequired,
-  updateRequestParameters: PropTypes.func.isRequired,
-  updateRequestAuthentication: PropTypes.func.isRequired,
-  updateRequestHeaders: PropTypes.func.isRequired,
-  updateRequestMimeType: PropTypes.func.isRequired,
-  updateSettingsShowPasswords: PropTypes.func.isRequired,
-  updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
-  handleImport: PropTypes.func.isRequired,
-  handleImportFile: PropTypes.func.isRequired,
-
-  // Other
-  useBulkHeaderEditor: PropTypes.bool.isRequired,
-  showPasswords: PropTypes.bool.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  workspace: PropTypes.object.isRequired,
-  forceRefreshCounter: PropTypes.number.isRequired,
-
-  // Optional
-  request: PropTypes.object,
-  oAuth2Token: PropTypes.object
-};
 
 export default RequestPane;
