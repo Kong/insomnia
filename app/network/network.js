@@ -621,7 +621,7 @@ export async function send (requestId: string, environmentId: string) {
 
   const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
 
-  let renderedRequest;
+  let renderedRequest: RenderedRequest;
   try {
     renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins);
   } catch (err) {
