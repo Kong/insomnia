@@ -1,5 +1,4 @@
 // @flow
-import type {BaseModel} from '../../models/index';
 import type {Request} from '../../models/request';
 import type {Response} from '../../models/response';
 
@@ -51,8 +50,8 @@ class ResponsePane extends PureComponent {
     responses: Array<Object>,
 
     // Other
-    request?: BaseModel & Request,
-    response?: BaseModel & Response
+    request: ?Request,
+    response: ?Response
   };
 
   _trackTab (name: string) {

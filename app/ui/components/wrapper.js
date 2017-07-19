@@ -1,4 +1,11 @@
-import React, {PropTypes, PureComponent} from 'react';
+// @flow
+import type {Settings} from '../../models/settings';
+import type {Response} from '../../models/response';
+import type {OAuth2Token} from '../../models/o-auth-2-token';
+import type {Workspace} from '../../models/workspace';
+import type {Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../../models/request';
+
+import React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {registerModal, showModal} from './modals/index';
@@ -31,12 +38,90 @@ import {updateMimeType} from '../../models/request';
 import {trackEvent} from '../../analytics/index';
 import * as importers from 'insomnia-importers';
 
-const rUpdate = models.request.update;
+const rUpdate = (request, ...args) => {
+  if (!request) {
+    throw new Error('Tried to update null request');
+  }
+
+  return models.request.update(request, ...args);
+};
+
 const sUpdate = models.settings.update;
 
+type Props = {
+  // Helper Functions
+  handleActivateRequest: Function,
+  handleSetSidebarFilter: Function,
+  handleToggleMenuBar: Function,
+  handleImportFileToWorkspace: Function,
+  handleImportUriToWorkspace: Function,
+  handleExportFile: Function,
+  handleSetActiveWorkspace: Function,
+  handleSetActiveEnvironment: Function,
+  handleMoveDoc: Function,
+  handleCreateRequest: Function,
+  handleDuplicateRequest: Function,
+  handleDuplicateRequestGroup: Function,
+  handleDuplicateWorkspace: Function,
+  handleCreateRequestGroup: Function,
+  handleGenerateCodeForActiveRequest: Function,
+  handleGenerateCode: Function,
+  handleCopyAsCurl: Function,
+  handleCreateRequestForWorkspace: Function,
+  handleSetRequestPaneRef: Function,
+  handleSetResponsePaneRef: Function,
+  handleSetResponsePreviewMode: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  handleSetResponseFilter: Function,
+  handleSetActiveResponse: Function,
+  handleSetSidebarRef: Function,
+  handleStartDragSidebar: Function,
+  handleResetDragSidebar: Function,
+  handleStartDragPaneHorizontal: Function,
+  handleStartDragPaneVertical: Function,
+  handleResetDragPaneHorizontal: Function,
+  handleResetDragPaneVertical: Function,
+  handleSetRequestGroupCollapsed: Function,
+  handleSendRequestWithEnvironment: Function,
+  handleSendAndDownloadRequestWithEnvironment: Function,
+
+  // Properties
+  loadStartTime: number,
+  isLoading: boolean,
+  paneWidth: number,
+  paneHeight: number,
+  responsePreviewMode: string,
+  responseFilter: string,
+  responseFilterHistory: Array<string>,
+  sidebarWidth: number,
+  sidebarHidden: boolean,
+  sidebarFilter: string,
+  sidebarChildren: Array<Object>,
+  settings: Settings,
+  workspaces: Array<Workspace>,
+  workspaceChildren: Array<Object>,
+  environments: Array<Object>,
+  activeRequestResponses: Array<Response>,
+  activeWorkspace: Workspace,
+
+  // Optional
+  oAuth2Token: ?OAuth2Token,
+  activeRequest: ?Request,
+  activeResponse: ?Response,
+  activeEnvironment: ?Object
+};
+
+type State = {
+  forceRefreshKey: number
+};
+
 @autobind
-class Wrapper extends PureComponent {
-  constructor (props) {
+class Wrapper extends React.PureComponent<void, Props, State> {
+  props: Props;
+  state: State;
+
+  constructor (props: Props) {
     super(props);
     this.state = {
       forceRefreshKey: Date.now()
@@ -44,7 +129,7 @@ class Wrapper extends PureComponent {
   }
 
   // Request updaters
-  async _handleForceUpdateRequest (patch) {
+  async _handleForceUpdateRequest (patch: Object): Promise<Request> {
     const newRequest = await rUpdate(this.props.activeRequest, patch);
 
     // Give it a second for the app to render first. If we don't wait, it will refresh
@@ -54,45 +139,52 @@ class Wrapper extends PureComponent {
     return newRequest;
   }
 
-  _handleUpdateRequestBody (body) {
-    rUpdate(this.props.activeRequest, {body});
+  _handleUpdateRequestBody (body: RequestBody): Promise<Request> {
+    return rUpdate(this.props.activeRequest, {body});
   }
 
-  _handleUpdateRequestMethod (method) {
-    rUpdate(this.props.activeRequest, {method});
+  _handleUpdateRequestMethod (method: string): Promise<Request> {
+    return rUpdate(this.props.activeRequest, {method});
   }
 
-  _handleUpdateRequestParameters (parameters) {
-    rUpdate(this.props.activeRequest, {parameters});
+  _handleUpdateRequestParameters (parameters: Array<RequestParameter>): Promise<Request> {
+    return rUpdate(this.props.activeRequest, {parameters});
   }
 
-  _handleUpdateRequestAuthentication (authentication) {
-    rUpdate(this.props.activeRequest, {authentication});
+  _handleUpdateRequestAuthentication (authentication: RequestAuthentication): Promise<Request> {
+    return rUpdate(this.props.activeRequest, {authentication});
   }
 
-  _handleUpdateRequestHeaders (headers) {
-    rUpdate(this.props.activeRequest, {headers});
+  _handleUpdateRequestHeaders (headers: Array<RequestHeader>): Promise<Request> {
+    return rUpdate(this.props.activeRequest, {headers});
   }
 
-  _handleUpdateRequestUrl (url) {
-    rUpdate(this.props.activeRequest, {url});
+  _handleUpdateRequestUrl (url: string): Promise<Request> {
+    return rUpdate(this.props.activeRequest, {url});
   }
 
   // Special request updaters
-  async _handleUpdateRequestMimeType (mimeType) {
-    await updateMimeType(this.props.activeRequest, mimeType);
+  async _handleUpdateRequestMimeType (mimeType: string): Promise<Request | null> {
+    if (!this.props.activeRequest) {
+      console.warn('Tried to update request mime-type when no active request');
+      return null;
+    }
+
+    const newRequest = await updateMimeType(this.props.activeRequest, mimeType);
 
     // Force it to update, because other editor components (header editor)
     // needs to change. Need to wait a delay so the next render can finish
     setTimeout(this._forceRequestPaneRefresh, 300);
+
+    return newRequest;
   }
 
-  _handleStartDragSidebar (e) {
+  _handleStartDragSidebar (e: Event): void {
     e.preventDefault();
     this.props.handleStartDragSidebar();
   }
 
-  async _handleImport (text) {
+  async _handleImport (text: string): Promise<Request | null> {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -121,49 +213,59 @@ class Wrapper extends PureComponent {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords (showPasswords) {
-    sUpdate(this.props.settings, {showPasswords});
+  _handleUpdateSettingsShowPasswords (showPasswords: boolean): Promise<Request> {
+    return sUpdate(this.props.settings, {showPasswords});
   }
 
-  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor) {
-    sUpdate(this.props.settings, {useBulkHeaderEditor});
+  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor: boolean): Promise<Request> {
+    return sUpdate(this.props.settings, {useBulkHeaderEditor});
   }
 
   // Other Helpers
-  _handleImportFile () {
+  _handleImportFile (): void {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id);
   }
 
-  _handleImportUri (uri) {
+  _handleImportUri (uri: string): void {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri);
   }
 
-  _handleExportWorkspaceToFile () {
+  _handleExportWorkspaceToFile (): void {
     this.props.handleExportFile(this.props.activeWorkspace._id);
   }
 
-  _handleSetActiveResponse (responseId) {
+  _handleSetActiveResponse (responseId: string | null): void {
+    if (!this.props.activeRequest) {
+      console.warn('Tried to set active response when request not active');
+      return;
+    }
+
     this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   }
 
-  _handleShowEnvironmentsModal () {
+  _handleShowEnvironmentsModal (): void {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   }
 
-  _handleShowCookiesModal () {
+  _handleShowCookiesModal (): void {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  _handleShowRequestSettingsModal () {
+  _handleShowRequestSettingsModal (): void {
     showModal(RequestSettingsModal, {request: this.props.activeRequest});
   }
 
-  _handleDeleteResponses () {
+  _handleDeleteResponses (): void {
+    if (!this.props.activeRequest) {
+      console.warn('Tried to delete responses when request not active');
+      return;
+    }
+
     models.response.removeForRequest(this.props.activeRequest._id);
     this._handleSetActiveResponse(null);
   }
 
-  async _handleDeleteResponse (response) {
+  async _handleDeleteResponse (response: Response): Promise<void> {
     if (response) {
       await models.response.remove(response);
     }
@@ -174,7 +276,7 @@ class Wrapper extends PureComponent {
     }
   }
 
-  async _handleRemoveActiveWorkspace () {
+  async _handleRemoveActiveWorkspace (): Promise<void> {
     const {workspaces, activeWorkspace} = this.props;
     if (workspaces.length <= 1) {
       showModal(AlertModal, {
@@ -188,45 +290,36 @@ class Wrapper extends PureComponent {
       trackEvent('Workspace', 'Delete');
     }
 
-    models.workspace.remove(activeWorkspace);
+    await models.workspace.remove(activeWorkspace);
   }
 
-  async _handleDuplicateActiveWorkspace () {
-    const {activeWorkspace} = this.props;
-
-    trackEvent('Workspace', 'Duplicate');
-
-    const newWorkspace = await models.workspace.duplicate(activeWorkspace);
-    await this.props.handleSetActiveWorkspace(newWorkspace._id);
-  }
-
-  _handleSendRequestWithActiveEnvironment () {
+  _handleSendRequestWithActiveEnvironment (): void {
     const {activeRequest, activeEnvironment, handleSendRequestWithEnvironment} = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
-  _handleSendAndDownloadRequestWithActiveEnvironment (filename) {
+  _handleSendAndDownloadRequestWithActiveEnvironment (filename: string): void {
     const {activeRequest, activeEnvironment, handleSendAndDownloadRequestWithEnvironment} = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendAndDownloadRequestWithEnvironment(activeRequestId, activeEnvironmentId, filename);
   }
 
-  _handleSetPreviewMode (previewMode) {
+  _handleSetPreviewMode (previewMode: string): void {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
   }
 
-  _handleSetResponseFilter (filter) {
+  _handleSetResponseFilter (filter: string): void {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponseFilter(activeRequestId, filter);
   }
 
-  _forceRequestPaneRefresh () {
+  _forceRequestPaneRefresh (): void {
     this.setState({forceRefreshKey: Date.now()});
   }
 
@@ -507,71 +600,5 @@ class Wrapper extends PureComponent {
     );
   }
 }
-
-Wrapper.propTypes = {
-  // Helper Functions
-  handleActivateRequest: PropTypes.func.isRequired,
-  handleSetSidebarFilter: PropTypes.func.isRequired,
-  handleToggleMenuBar: PropTypes.func.isRequired,
-  handleImportFileToWorkspace: PropTypes.func.isRequired,
-  handleImportUriToWorkspace: PropTypes.func.isRequired,
-  handleExportFile: PropTypes.func.isRequired,
-  handleSetActiveWorkspace: PropTypes.func.isRequired,
-  handleSetActiveEnvironment: PropTypes.func.isRequired,
-  handleMoveDoc: PropTypes.func.isRequired,
-  handleCreateRequest: PropTypes.func.isRequired,
-  handleDuplicateRequest: PropTypes.func.isRequired,
-  handleDuplicateRequestGroup: PropTypes.func.isRequired,
-  handleDuplicateWorkspace: PropTypes.func.isRequired,
-  handleCreateRequestGroup: PropTypes.func.isRequired,
-  handleGenerateCodeForActiveRequest: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  handleCopyAsCurl: PropTypes.func.isRequired,
-  handleCreateRequestForWorkspace: PropTypes.func.isRequired,
-  handleSetRequestPaneRef: PropTypes.func.isRequired,
-  handleSetResponsePaneRef: PropTypes.func.isRequired,
-  handleSetResponsePreviewMode: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  handleSetResponseFilter: PropTypes.func.isRequired,
-  handleSetActiveResponse: PropTypes.func.isRequired,
-  handleSetSidebarRef: PropTypes.func.isRequired,
-  handleStartDragSidebar: PropTypes.func.isRequired,
-  handleResetDragSidebar: PropTypes.func.isRequired,
-  handleStartDragPaneHorizontal: PropTypes.func.isRequired,
-  handleStartDragPaneVertical: PropTypes.func.isRequired,
-  handleResetDragPaneHorizontal: PropTypes.func.isRequired,
-  handleResetDragPaneVertical: PropTypes.func.isRequired,
-  handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
-  handleSendRequestWithEnvironment: PropTypes.func.isRequired,
-  handleSendAndDownloadRequestWithEnvironment: PropTypes.func.isRequired,
-
-  // Properties
-  loadStartTime: PropTypes.number.isRequired,
-  isLoading: PropTypes.bool.isRequired,
-  paneWidth: PropTypes.number.isRequired,
-  paneHeight: PropTypes.number.isRequired,
-  responsePreviewMode: PropTypes.string.isRequired,
-  responseFilter: PropTypes.string.isRequired,
-  responseFilterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  sidebarWidth: PropTypes.number.isRequired,
-  sidebarHidden: PropTypes.bool.isRequired,
-  sidebarFilter: PropTypes.string.isRequired,
-  sidebarChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
-  settings: PropTypes.object.isRequired,
-  workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  workspaceChildren: PropTypes.arrayOf(PropTypes.object).isRequired,
-  environments: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeRequestResponses: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeWorkspace: PropTypes.shape({
-    _id: PropTypes.string.isRequired
-  }).isRequired,
-
-  // Optional
-  oAuth2Token: PropTypes.object,
-  activeRequest: PropTypes.object,
-  activeResponse: PropTypes.object,
-  activeEnvironment: PropTypes.object
-};
 
 export default Wrapper;

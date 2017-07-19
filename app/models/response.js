@@ -1,5 +1,7 @@
 // @flow
-import type {Request} from './request';
+import type {BaseModel} from './index';
+import * as models from './index';
+
 import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
@@ -7,7 +9,6 @@ import mkdirp from 'mkdirp';
 import * as electron from 'electron';
 import {MAX_RESPONSES} from '../common/constants';
 import * as db from '../common/database';
-import * as models from './index';
 import {compress, decompress} from '../common/misc';
 
 export const name = 'Response';
@@ -25,7 +26,7 @@ export type ResponseTimelineEntry = {
   value: string
 }
 
-export type Response = {
+type BaseResponse = {
   statusCode: number,
   statusMessage: string,
   contentType: string,
@@ -43,7 +44,9 @@ export type Response = {
   settingSendCookies: boolean | null
 };
 
-export function init (): Response {
+export type Response = BaseModel & BaseResponse;
+
+export function init (): BaseResponse {
   return {
     statusCode: 0,
     statusMessage: '',
@@ -81,8 +84,8 @@ export async function removeForRequest (parentId: string) {
   await db.removeWhere(type, {parentId});
 }
 
-export function remove (request: Request) {
-  return db.remove(request);
+export function remove (response: Response) {
+  return db.remove(response);
 }
 
 export function findRecentForRequest (requestId: string, limit: number) {

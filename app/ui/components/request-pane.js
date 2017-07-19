@@ -1,6 +1,7 @@
 // @flow
 import type {Request} from '../../models/request';
 import type {Workspace} from '../../models/workspace';
+import type {OAuth2Token} from '../../models/o-auth-2-token';
 
 import React from 'react';
 import autobind from 'autobind-decorator';
@@ -55,8 +56,8 @@ type Props = {
   forceRefreshCounter: number,
 
   // Optional
-  request: Request,
-  oAuth2Token: Object
+  request: ?Request,
+  oAuth2Token: ?OAuth2Token
 }
 
 @autobind
@@ -118,6 +119,11 @@ class RequestPane extends React.PureComponent<void, Props, void> {
 
   _handleImportQueryFromUrl () {
     const {request} = this.props;
+
+    if (!request) {
+      console.warn('Tried to import query when no request active');
+      return;
+    }
 
     let query;
     try {
