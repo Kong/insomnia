@@ -16,6 +16,8 @@ import {generateId} from '../common/misc';
 
 export type BaseModel = {
   _id: string,
+  type: string,
+  parentId: string,
   modified: number,
   created: number
 }

@@ -1,7 +1,8 @@
 // @flow
 import type {ResponseTimelineEntry} from '../models/response';
-import type {Request} from '../models/request';
 import type {BaseModel} from '../models/index';
+import type {Request} from '../models/request';
+import type {Workspace} from '../models/workspace';
 
 import electron from 'electron';
 import mkdirp from 'mkdirp';
@@ -48,17 +49,6 @@ type RenderedRequest = BaseModel & Request & {
 };
 
 type ResponsePatch = {};
-
-type Workspace = {
-  _id: string,
-  certificates: Array<{
-    host: string,
-    passphrase: string,
-    cert: string,
-    key: string,
-    pfx: string
-  }>
-};
 
 type Settings = {
   _id: string,
@@ -620,7 +610,11 @@ export async function send (requestId: string, environmentId: string) {
     models.workspace.type
   ]);
 
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
+  if (!workspace) {
+    throw new Error(`Failed to find workspace for request: ${requestId}`);
+  }
 
   // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);

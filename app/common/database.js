@@ -1,4 +1,5 @@
 // @flow
+import type {BaseModel} from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fs from 'fs';
@@ -9,8 +10,6 @@ import * as models from '../models/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import {showModal} from '../ui/components/modals/index';
 import {trackEvent} from '../analytics/index';
-
-type Doc = Object;
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -80,12 +79,14 @@ export function init (types: Array<string>, config: Object = {}, forceReset: boo
       // File probably did not exist probably, so no big deal
     }
 
-    db[modelType] = new NeDB(Object.assign({
+    const collection = new NeDB(Object.assign({
       autoload: true,
       filename: filePath
     }, config));
 
-    db[modelType].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+    collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+
+    db[modelType] = collection;
   }
 
   console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
@@ -127,7 +128,7 @@ export async function flushChanges (): Promise<void> {
   }
 }
 
-async function notifyOfChange (event: string, doc: Doc, fromSync: boolean): Promise<void> {
+async function notifyOfChange (event: string, doc: BaseModel, fromSync: boolean): Promise<void> {
   changeBuffer.push([event, doc, fromSync]);
 
   // Flush right away if we're not buffering
@@ -143,7 +144,7 @@ async function notifyOfChange (event: string, doc: Doc, fromSync: boolean): Prom
 export async function getMostRecentlyModified (
   type: string,
   query: Object = {}
-): Promise<Doc | null> {
+): Promise<BaseModel | null> {
   const docs = await findMostRecentlyModified(type, query, 1);
   return docs.length ? docs[0] : null;
 }
@@ -152,7 +153,7 @@ export function findMostRecentlyModified (
   type: string,
   query: Object = {},
   limit: number | null = null
-): Promise<Array<Doc>> {
+): Promise<Array<BaseModel>> {
   return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(limit).exec((err, rawDocs) => {
       if (err) {
@@ -170,11 +171,11 @@ export function findMostRecentlyModified (
   });
 }
 
-export function find (
+export function find<T: BaseModel> (
   type: string,
   query: Object = {},
   sort: Object = {created: 1}
-): Promise<Array<Doc>> {
+): Promise<Array<T>> {
   return new Promise((resolve, reject) => {
     db[type].find(query).sort(sort).exec((err, rawDocs) => {
       if (err) {
@@ -190,22 +191,22 @@ export function find (
   });
 }
 
-export function all (type: string): Promise<Array<Doc>> {
+export function all <T: BaseModel> (type: string): Promise<Array<T>> {
   return find(type);
 }
 
-export async function getWhere (type: string, query: Object): Promise<Array<Doc>> {
+export async function getWhere<T: BaseModel> (type: string, query: Object): Promise<T | null> {
   const docs = await find(type, query);
   return docs.length ? docs[0] : null;
 }
 
-export function get (type: string, id: string): Promise<Doc | null> {
+export async function get<T: BaseModel> (type: string, id: string): Promise<T | null> {
   // Short circuit IDs used to represent nothing
   if (!id || id === 'n/a') {
     return null;
+  } else {
+    return getWhere(type, {_id: id});
   }
-
-  return getWhere(type, {_id: id});
 }
 
 export function count (type: string, query: Object = {}): Promise<number> {
@@ -220,7 +221,7 @@ export function count (type: string, query: Object = {}): Promise<number> {
   });
 }
 
-export async function upsert (doc: Doc, fromSync: boolean = false): Promise<Doc> {
+export async function upsert (doc: BaseModel, fromSync: boolean = false): Promise<BaseModel> {
   const existingDoc = await get(doc.type, doc._id);
   if (existingDoc) {
     return update(doc, fromSync);
@@ -229,7 +230,7 @@ export async function upsert (doc: Doc, fromSync: boolean = false): Promise<Doc>
   }
 }
 
-export function insert (doc: Doc, fromSync: boolean = false): Promise<Doc> {
+export function insert<T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
   return new Promise((resolve, reject) => {
     const docWithDefaults = initModel(doc.type, doc);
     db[doc.type].insert(docWithDefaults, (err, newDoc) => {
@@ -243,7 +244,7 @@ export function insert (doc: Doc, fromSync: boolean = false): Promise<Doc> {
   });
 }
 
-export function update (doc: Doc, fromSync: boolean = false): Promise<Doc> {
+export function update <T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
   return new Promise((resolve, reject) => {
     const docWithDefaults = initModel(doc.type, doc);
     db[doc.type].update({_id: docWithDefaults._id}, docWithDefaults, err => {
@@ -258,7 +259,7 @@ export function update (doc: Doc, fromSync: boolean = false): Promise<Doc> {
   });
 }
 
-export async function remove (doc: Doc, fromSync: boolean = false): Promise<void> {
+export async function remove <T: BaseModel> (doc: T, fromSync: boolean = false): Promise<void> {
   bufferChanges();
 
   const docs = await withDescendants(doc);
@@ -284,7 +285,7 @@ export async function removeWhere (type: string, query: Object): Promise<void> {
     // Don't really need to wait for this to be over;
     types.map(t => db[t].remove({_id: {$in: docIds}}, {multi: true}));
 
-    docs.map(d => notifyOfChange(CHANGE_REMOVE, d));
+    docs.map(d => notifyOfChange(CHANGE_REMOVE, d, false));
   }
 
   flushChanges();
@@ -294,7 +295,7 @@ export async function removeWhere (type: string, query: Object): Promise<void> {
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-export function docUpdate (originalDoc: Doc, patch: Object = {}): Promise<Doc> {
+export function docUpdate <T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
   const doc = initModel(
     originalDoc.type,
     originalDoc,
@@ -305,7 +306,7 @@ export function docUpdate (originalDoc: Doc, patch: Object = {}): Promise<Doc> {
   return update(doc);
 }
 
-export function docCreate (type: string, ...patches: Array<Object>): Promise<Doc> {
+export function docCreate<T: BaseModel> (type: string, ...patches: Array<Object>): Promise<T> {
   const doc = initModel(
     type,
     ...patches,
@@ -325,12 +326,12 @@ export function docCreate (type: string, ...patches: Array<Object>): Promise<Doc
 // ~~~~~~~ //
 
 export async function withDescendants (
-  doc: Doc = null,
+  doc: BaseModel,
   stopType: string | null = null
-): Promise<Array<Doc>> {
+): Promise<Array<BaseModel>> {
   let docsToReturn = doc ? [doc] : [];
 
-  async function next (docs: Array<Doc>): Promise<Array<Doc>> {
+  async function next (docs: Array<BaseModel>): Promise<Array<BaseModel>> {
     let foundDocs = [];
 
     for (const d of docs) {
@@ -360,14 +361,18 @@ export async function withDescendants (
 }
 
 export async function withAncestors (
-  doc: Doc,
+  doc: BaseModel | null,
   types: Array<string> = allTypes()
-): Promise<Array<Doc>> {
+): Promise<Array<BaseModel>> {
+  if (!doc) {
+    return [];
+  }
+
   let docsToReturn = doc ? [doc] : [];
 
-  async function next (docs: Array<Doc>): Promise<Array<Doc>> {
+  async function next (docs: Array<BaseModel>): Promise<Array<BaseModel>> {
     let foundDocs = [];
-    for (const d of docs) {
+    for (const d: BaseModel of docs) {
       for (const type of types) {
         // If the doc is null, we want to search for parentId === null
         const another = await get(type, d.parentId);
@@ -388,10 +393,10 @@ export async function withAncestors (
   return await next([doc]);
 }
 
-export async function duplicate (originalDoc: Doc, patch: Object = {}): Promise<Doc> {
+export async function duplicate <T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
   bufferChanges();
 
-  async function next (docToCopy: Doc, patch: Object): Promise<Doc> {
+  async function next <T: BaseModel> (docToCopy: T, patch: Object): Promise<T> {
     // 1. Copy the doc
     const newDoc = Object.assign({}, docToCopy, patch);
     delete newDoc._id;

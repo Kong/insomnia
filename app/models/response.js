@@ -1,4 +1,5 @@
 // @flow
+import type {Request} from './request';
 import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';

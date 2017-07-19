@@ -1,3 +1,7 @@
+// @flow
+import type {Request} from '../../models/request';
+import type {Workspace} from '../../models/workspace';
+
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
@@ -20,11 +24,48 @@ import {showModal} from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 
+type Props = {
+  // Functions
+  forceUpdateRequest: Function,
+  handleSend: Function,
+  handleSendAndDownload: Function,
+  handleCreateRequest: Function,
+  handleGenerateCode: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  updateRequestUrl: Function,
+  updateRequestMethod: Function,
+  updateRequestBody: Function,
+  updateRequestParameters: Function,
+  updateRequestAuthentication: Function,
+  updateRequestHeaders: Function,
+  updateRequestMimeType: Function,
+  updateSettingsShowPasswords: Function,
+  updateSettingsUseBulkHeaderEditor: Function,
+  handleImport: Function,
+  handleImportFile: Function,
+
+  // Other
+  useBulkHeaderEditor: boolean,
+  showPasswords: boolean,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  workspace: Workspace,
+  forceRefreshCounter: number,
+
+  // Optional
+  request: Request,
+  oAuth2Token: Object
+}
+
 @autobind
 class RequestPane extends PureComponent {
-  constructor (props) {
-    super(props);
+  _handleUpdateRequestUrl: Function;
 
+  constructor (props: Props) {
+    super(props);
     this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
   }
 
@@ -32,7 +73,7 @@ class RequestPane extends PureComponent {
     this._handleEditDescription(true);
   }
 
-  _handleEditDescription (addDescription) {
+  _handleEditDescription (addDescription: boolean) {
     showModal(RequestSettingsModal, {
       request: this.props.request,
       forceEditMode: addDescription
@@ -50,8 +91,8 @@ class RequestPane extends PureComponent {
     const urls = docs.filter(d => (
       d.type === models.request.type && // Only requests
       d._id !== requestId && // Not current request
-      d.url // Only ones with non-empty URLs
-    )).map(r => r.url);
+      (d.url || '') // Only ones with non-empty URLs
+    )).map(r => r.url || '');
 
     return Array.from(new Set(urls));
   }
@@ -72,7 +113,7 @@ class RequestPane extends PureComponent {
     trackEvent('Request Pane', 'CTA', 'New Request');
   }
 
-  _handleUpdateRequestUrl (url) {
+  _handleUpdateRequestUrl (url: string) {
     this.props.updateRequestUrl(url);
   }
 
@@ -100,7 +141,7 @@ class RequestPane extends PureComponent {
     }
   }
 
-  _trackQueryToggle (pair) {
+  _trackQueryToggle (pair: {disabled: boolean}) {
     trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
   }
 
@@ -236,10 +277,10 @@ class RequestPane extends PureComponent {
           <TabList>
             <Tab onClick={this._trackTabBody}>
               <ContentTypeDropdown onChange={updateRequestMimeType}
-                                   contentType={request.body.mimeType}
+                                   contentType={request.body.mimeType || ''}
                                    request={request}
                                    className="tall">
-                {getContentTypeName(request.body.mimeType) || 'Body'}
+                {getContentTypeName(request.body.mimeType || '') || 'Body'}
                 {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>

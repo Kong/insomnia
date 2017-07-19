@@ -1,4 +1,5 @@
 // @flow
+import type {BaseModel} from './index';
 import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
@@ -39,7 +40,7 @@ export type RequestBody = {
   params?: Array<RequestBodyParameter>
 };
 
-export type Request = {
+type BaseRequest = {
   url: string,
   name: string,
   description: string,
@@ -49,6 +50,7 @@ export type Request = {
   headers: Array<RequestHeader>,
   authentication: RequestAuthentication,
   metaSortKey: number,
+  bodyPath: string,
 
   // Settings
   settingStoreCookies: boolean,
@@ -56,6 +58,8 @@ export type Request = {
   settingDisableRenderRequestBody: boolean,
   settingEncodeUrl: boolean
 };
+
+export type Request = BaseModel & BaseRequest;
 
 export function init () {
   return {
@@ -185,7 +189,7 @@ export function getById (id: string): Promise<Request | null> {
   return db.get(type, id);
 }
 
-export function findByParentId (parentId: string): Promise<Request | null> {
+export function findByParentId (parentId: string): Promise<Array<Request>> {
   return db.find(type, {parentId: parentId});
 }
 
