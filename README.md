@@ -33,6 +33,9 @@ common text editors. Read more and download plugins at [editorconfig.org](http:/
 Development on Insomnia can be done on Mac, Windows, or Linux as long as you have
 [NodeJS 7.4](https://nodejs.org) and [Git](https://git-scm.com/).
 
+<details>
+<summary>Initial Dev Setup</summary>
+
 ```bash
 # Install dependencies and build addons for Electron
 npm install
@@ -44,6 +47,20 @@ npm run dev
 # Run tests
 npm test
 ```
+
+</details>
+
+<details>
+<summary>Editor Requirements</summary>
+
+You can use any editor you'd like, but make sure to have support/plugins for
+the following tools:
+
+- [ESLint](http://eslint.org/) – For catching syntax problems and common errors
+- [JSX Syntax](https://facebook.github.io/react/docs/jsx-in-depth.html) – For React components
+- [Flow](https://flow.org/) – For type annotations
+
+</details>
 
 ## License
 

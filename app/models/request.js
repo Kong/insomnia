@@ -50,7 +50,6 @@ type BaseRequest = {
   headers: Array<RequestHeader>,
   authentication: RequestAuthentication,
   metaSortKey: number,
-  bodyPath: string,
 
   // Settings
   settingStoreCookies: boolean,
@@ -61,7 +60,7 @@ type BaseRequest = {
 
 export type Request = BaseModel & BaseRequest;
 
-export function init () {
+export function init (): BaseRequest {
   return {
     url: '',
     name: 'New Request',
