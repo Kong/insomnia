@@ -144,7 +144,7 @@ export function storeBodyBuffer (bodyBuffer: Buffer | null) {
   const fullPath = path.join(dir, `${hash}.zip`);
 
   try {
-    fs.writeFileSync(fullPath, compress(bodyBuffer));
+    fs.writeFileSync(fullPath, compress(bodyBuffer || Buffer.from('')));
   } catch (err) {
     console.warn('Failed to write response body to file', err.message);
   }

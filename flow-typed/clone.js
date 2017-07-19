@@ -1,3 +1,3 @@
 declare module 'clone' {
-  declare module.exports: (value: *) => *
+  declare module.exports: <T>(value: T) => T
 }

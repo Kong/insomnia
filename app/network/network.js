@@ -1,7 +1,7 @@
 // @flow
 import type {ResponseTimelineEntry} from '../models/response';
 import type {BaseModel} from '../models/index';
-import type {Request} from '../models/request';
+import type {Request, RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 
 import electron from 'electron';
@@ -35,12 +35,6 @@ type Cookie = {
 
 type CookieJar = {
   cookies: Array<Cookie>
-}
-
-type Header = {
-  name: string,
-  value: string,
-  disabled: boolean
 }
 
 type RenderedRequest = BaseModel & Request & {
@@ -616,6 +610,7 @@ export async function send (requestId: string, environmentId: string) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
 
+
   // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);
 }
@@ -636,7 +631,7 @@ function _getCurlHeader (curlHeadersObj: {[string]: string}, name: string, fallb
 export function _getAwsAuthHeaders (
   accessKeyId: string,
   secretAccessKey: string,
-  headers: Array<Header>,
+  headers: Array<RequestHeader>,
   body: string,
   url: string
 ) {

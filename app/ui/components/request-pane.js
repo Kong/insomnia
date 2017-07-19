@@ -2,7 +2,7 @@
 import type {Request} from '../../models/request';
 import type {Workspace} from '../../models/workspace';
 
-import React, {PropTypes, PureComponent} from 'react';
+import React from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import ContentTypeDropdown from './dropdowns/content-type-dropdown';
@@ -13,8 +13,7 @@ import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {getAuthTypeName, getContentTypeName} from '../../common/constants';
-import {debounce} from '../../common/misc';
+import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
@@ -61,13 +60,10 @@ type Props = {
 }
 
 @autobind
-class RequestPane extends PureComponent {
-  _handleUpdateRequestUrl: Function;
+class RequestPane extends React.PureComponent<void, Props, void> {
+  props: Props;
 
-  constructor (props: Props) {
-    super(props);
-    this._handleUpdateRequestUrl = debounce(this._handleUpdateRequestUrl);
-  }
+  _handleUpdateRequestUrlTimeout: number;
 
   _handleEditDescriptionAdd () {
     this._handleEditDescription(true);
@@ -114,7 +110,10 @@ class RequestPane extends PureComponent {
   }
 
   _handleUpdateRequestUrl (url: string) {
-    this.props.updateRequestUrl(url);
+    clearTimeout(this._handleUpdateRequestUrlTimeout);
+    this._handleUpdateRequestUrlTimeout = setTimeout(() => {
+      this.props.updateRequestUrl(url);
+    }, DEBOUNCE_MILLIS);
   }
 
   _handleImportQueryFromUrl () {
@@ -439,41 +438,5 @@ class RequestPane extends PureComponent {
     );
   }
 }
-
-RequestPane.propTypes = {
-  // Functions
-  forceUpdateRequest: PropTypes.func.isRequired,
-  handleSend: PropTypes.func.isRequired,
-  handleSendAndDownload: PropTypes.func.isRequired,
-  handleCreateRequest: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  updateRequestUrl: PropTypes.func.isRequired,
-  updateRequestMethod: PropTypes.func.isRequired,
-  updateRequestBody: PropTypes.func.isRequired,
-  updateRequestParameters: PropTypes.func.isRequired,
-  updateRequestAuthentication: PropTypes.func.isRequired,
-  updateRequestHeaders: PropTypes.func.isRequired,
-  updateRequestMimeType: PropTypes.func.isRequired,
-  updateSettingsShowPasswords: PropTypes.func.isRequired,
-  updateSettingsUseBulkHeaderEditor: PropTypes.func.isRequired,
-  handleImport: PropTypes.func.isRequired,
-  handleImportFile: PropTypes.func.isRequired,
-
-  // Other
-  useBulkHeaderEditor: PropTypes.bool.isRequired,
-  showPasswords: PropTypes.bool.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  workspace: PropTypes.object.isRequired,
-  forceRefreshCounter: PropTypes.number.isRequired,
-
-  // Optional
-  request: PropTypes.object,
-  oAuth2Token: PropTypes.object
-};
 
 export default RequestPane;

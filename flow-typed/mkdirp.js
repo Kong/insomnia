@@ -1,3 +1,5 @@
 declare module 'mkdirp' {
-  declare module.exports: *
+  declare module.exports: {
+    sync: (path: string) => void
+  }
 }
