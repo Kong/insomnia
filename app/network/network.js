@@ -1,8 +1,8 @@
 // @flow
 import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
-import type {BaseModel} from '../models/index';
 import type {Request, RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
+import type {Settings} from '../models/settings';
 
 import electron from 'electron';
 import mkdirp from 'mkdirp';
@@ -35,7 +35,7 @@ type Cookie = {
   expires: number
 }
 
-type RenderedRequest = BaseModel & Request & {
+type RenderedRequest = Request & {
   cookies: Array<{name: string, value: string, disabled: boolean}>,
   cookieJar: {
     cookies: Array<Cookie>
@@ -55,15 +55,6 @@ type ResponsePatch = {
   settingStoreCookies?: boolean,
   settingSendCookies?: boolean,
   timeline?: Array<ResponseTimelineEntry>
-};
-
-type Settings = {
-  _id: string,
-  followRedirects: boolean,
-  timeout: number,
-  httpProxy: string,
-  httpsProxy: string,
-  noProxy: string
 };
 
 // Time since user's last keypress to wait before making the request
@@ -86,7 +77,10 @@ export function _actuallySend (
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
 
-    // Define helper to add base fields when responding
+    // Initialize the curl handle
+    const curl = new Curl();
+
+    /** Helper function to respond with a success */
     function respond (patch: ResponsePatch, bodyBuffer: ?Buffer = null): void {
       const response = Object.assign(({
         parentId: renderedRequest._id,
@@ -108,7 +102,8 @@ export function _actuallySend (
       });
     }
 
-    const handleError = err => {
+    /** Helper function to respond with an error */
+    function handleError (err: Error): void {
       respond({
         url: renderedRequest.url,
         parentId: renderedRequest._id,
@@ -118,28 +113,23 @@ export function _actuallySend (
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies
       });
-    };
+    }
+
+    /** Helper function to set Curl options */
+    function setOpt (opt: string, val: any, optional: boolean = false) {
+      const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+      try {
+        curl.setOpt(opt, val);
+      } catch (err) {
+        if (!optional) {
+          throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
+        } else {
+          console.warn(`Failed to set optional Curl opt (${opt} ${name || 'n/a'})`);
+        }
+      }
+    }
 
     try {
-      // Initialize the curl handle
-      const curl = new Curl();
-
-      // Define helper to setOpt for better error handling
-      const setOpt = (opt, val, optional = false) => {
-        const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
-        try {
-          curl.setOpt(opt, val);
-        } catch (err) {
-          if (!optional) {
-            throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
-          } else {
-            console.warn(`Failed to set optional Curl opt (${opt} ${name || 'n/a'})`);
-          }
-        }
-      };
-
-      const setOptionalOpt = (opt, val) => setOpt(opt, val, true);
-
       // Setup the cancellation logic
       cancelRequestFunction = () => {
         respond({
@@ -156,7 +146,7 @@ export function _actuallySend (
 
       // Set all the basic options
       setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      setOpt(Curl.option.NOBODY, renderedRequest.method.toLowerCase() === 'head' ? 1 : 0);
+      setOpt(Curl.option.NOBODY, renderedRequest.method.toUpperCase() === 'HEAD' ? 1 : 0);
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
@@ -209,7 +199,7 @@ export function _actuallySend (
 
       let lastPercent = 0;
       // NOTE: This option was added in 7.32.0 so make it optional
-      setOptionalOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
+      setOpt(Curl.option.XFERINFOFUNCTION, (dltotal, dlnow, ultotal, ulnow) => {
         if (dltotal === 0) {
           return 0;
         }
@@ -221,7 +211,7 @@ export function _actuallySend (
         }
 
         return 0;
-      });
+      }, true);
 
       // Set the URL, including the query parameters
       const qs = querystring.buildFromParams(renderedRequest.parameters);
@@ -631,7 +621,7 @@ export async function send (requestId: string, environmentId: string) {
 
   const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
 
-  let renderedRequest;
+  let renderedRequest: RenderedRequest;
   try {
     renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins);
   } catch (err) {

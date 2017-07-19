@@ -1,11 +1,35 @@
+// @flow
+import type {BaseModel} from './index';
 import * as db from '../common/database';
+
+type BaseSettings = {
+  showPasswords: boolean,
+  useBulkHeaderEditor: boolean,
+  followRedirects: boolean,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorLineWrapping: boolean,
+  editorKeyMap: string,
+  httpProxy: string,
+  httpsProxy: string,
+  noProxy: string,
+  proxyEnabled: boolean,
+  timeout: number,
+  validateSSL: boolean,
+  forceVerticalLayout: boolean,
+  autoHideMenuBar: boolean,
+  theme: string,
+  disableAnalyticsTracking: boolean
+};
+
+export type Settings = BaseModel & Settings;
 
 export const name = 'Settings';
 export const type = 'Settings';
 export const prefix = 'set';
 export const canDuplicate = false;
 
-export function init () {
+export function init (): BaseSettings {
   return {
     showPasswords: false,
     useBulkHeaderEditor: false,
@@ -27,11 +51,11 @@ export function init () {
   };
 }
 
-export function migrate (doc) {
+export function migrate <T> (doc: T): T {
   return doc;
 }
 
-export async function all () {
+export async function all (): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -40,15 +64,15 @@ export async function all () {
   }
 }
 
-export async function create (patch = {}) {
+export async function create (patch: Object = {}): Promise<Settings> {
   return db.docCreate(type, patch);
 }
 
-export async function update (settings, patch) {
+export async function update (settings: Settings, patch: Object): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate (patch = {}) {
+export async function getOrCreate (patch: Object = {}): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
     return await create(patch);
