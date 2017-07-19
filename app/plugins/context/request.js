@@ -1,8 +1,9 @@
 // @flow
+import type {Plugin} from '../';
 import type {RenderedRequest} from '../../common/render';
 import * as misc from '../../common/misc';
 
-export function init (plugin: string, renderedRequest: RenderedRequest): {request: Object} {
+export function init (plugin: Plugin, renderedRequest: RenderedRequest): {request: Object} {
   if (!renderedRequest) {
     throw new Error('contexts.request initialized without request');
   }
@@ -56,8 +57,18 @@ export function init (plugin: string, renderedRequest: RenderedRequest): {reques
         }
       },
       setCookie (name: string, value: string): void {
-        renderedRequest.cookies.push({name, value});
+        const cookie = renderedRequest.cookies.find(c => c.name === name);
+        if (cookie) {
+          cookie.value = value;
+        } else {
+          renderedRequest.cookies.push({name, value});
+        }
       }
+
+      // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
+      // addCookie (name: string, value: string): void {}
+      // getCookie (name: string): string | null {}
+      // removeCookie (name: string): void {}
     }
   };
 }

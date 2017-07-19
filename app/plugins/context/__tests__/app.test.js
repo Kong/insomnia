@@ -1,27 +1,34 @@
-import * as app from '../app';
+import * as plugin from '../app';
 import * as modals from '../../../ui/components/modals';
 
+const PLUGIN = {
+  name: 'my-plugin',
+  version: '1.0.0',
+  directory: '/plugins/my-plugin',
+  module: {}
+};
+
 describe('init()', () => {
-  it('does it', () => {
-    const plugin = app.init('plugin-name');
-    expect(Object.keys(plugin)).toEqual(['app']);
-    expect(Object.keys(plugin.app)).toEqual(['alert', 'getPath']);
+  it('initializes correctly', () => {
+    const result = plugin.init({name: PLUGIN});
+    expect(Object.keys(result)).toEqual(['app']);
+    expect(Object.keys(result.app)).toEqual(['alert', 'getPath']);
   });
 });
 
 describe('app.alert()', () => {
   it('shows alert with message', async () => {
     modals.showAlert = jest.fn().mockReturnValue('dummy-return-value');
-    const plugin = app.init('plugin-name');
+    const result = plugin.init(PLUGIN);
 
     // Make sure it returns result of showAlert()
-    expect(plugin.app.alert()).toBeInstanceOf('dummy-return-value');
-    expect(plugin.app.alert('My message')).toBeInstanceOf('dummy-return-value');
+    expect(result.app.alert()).toBe('dummy-return-value');
+    expect(result.app.alert('My message')).toBe('dummy-return-value');
 
     // Make sure it passes correct arguments
-    expect(modals.showAlert.mock.calls).toEqual([[
-      {message: '', title: 'Plugin plugin-name'},
-      {message: 'My message', title: 'Plugin plugin-name'}
-    ]]);
+    expect(modals.showAlert.mock.calls).toEqual([
+      [{message: '', title: 'Plugin my-plugin'}],
+      [{message: 'My message', title: 'Plugin my-plugin'}]
+    ]);
   });
 });

@@ -20,12 +20,12 @@ export type TemplateTag = {
 }
 
 export type RequestHook = {
-  plugin: string,
+  plugin: Plugin,
   hook: Function
 }
 
 export type ResponseHook = {
-  plugin: string,
+  plugin: Plugin,
   hook: Function
 }
 
@@ -111,7 +111,7 @@ export function getRequestHooks (): Array<RequestHook> {
     const moreFunctions = plugin.module.requestHooks || [];
     functions = [
       ...functions,
-      ...moreFunctions.map(fn => ({plugin: plugin.name, hook: fn}))
+      ...moreFunctions.map(hook => ({plugin, hook}))
     ];
   }
 
@@ -124,7 +124,7 @@ export function getResponseHooks (): Array<ResponseHook> {
     const moreFunctions = plugin.module.responseHooks || [];
     functions = [
       ...functions,
-      ...moreFunctions.map(fn => ({plugin: plugin.name, hook: fn}))
+      ...moreFunctions.map(hook => ({plugin, hook}))
     ];
   }
 

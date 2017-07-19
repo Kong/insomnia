@@ -1,4 +1,5 @@
 // @flow
+import type {Plugin} from '../';
 
 type MaybeResponse = {
   parentId?: string,
@@ -9,7 +10,7 @@ type MaybeResponse = {
 }
 
 export function init (
-  plugin: string,
+  plugin: Plugin,
   response: MaybeResponse,
   bodyBuffer: Buffer | null = null
 ): {response: Object} {
