@@ -1,6 +1,22 @@
+// @flow
 import nunjucks from 'nunjucks';
 import * as extensions from './extensions';
 import BaseExtension from './base-extension';
+
+export class RenderError extends Error {
+  message: string;
+  path: string | null;
+  location: {line: number, column: number};
+  type: string;
+  reason: string;
+}
+
+export type NunjucksTag = {
+  name: string,
+  displayName: string,
+  description: string,
+  args: Array<Object>
+};
 
 // Some constants
 export const RENDER_ALL = 'all';
@@ -20,7 +36,7 @@ let nunjucksAll = null;
  * @param {Object} [config.path] - Path to include in the error message
  * @param {Object} [config.renderMode] - Only render variables (not tags)
  */
-export function render (text, config = {}) {
+export function render (text: string, config: Object = {}): Promise<string> {
   const context = config.context || {};
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
@@ -43,7 +59,7 @@ export function render (text, config = {}) {
           ? 'undefined'
           : 'error';
 
-        const newError = new Error(sanitizedMsg);
+        const newError = new RenderError(sanitizedMsg);
         newError.path = path || null;
         newError.message = sanitizedMsg;
         newError.location = {line, column};
@@ -60,7 +76,7 @@ export function render (text, config = {}) {
 /**
  * Reload Nunjucks environments. Useful for if plugins change.
  */
-export function reload () {
+export function reload (): void {
   nunjucksAll = null;
   nunjucksVariablesOnly = null;
   nunjucksTagsOnly = null;
