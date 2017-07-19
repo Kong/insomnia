@@ -610,7 +610,6 @@ export async function send (requestId: string, environmentId: string) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
 
-
   // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);
 }
