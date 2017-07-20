@@ -10,6 +10,7 @@
   "main": "main.min.js",
   "dependencies": {
     "electron-context-menu": "^0.9.0",
+    "electron-devtools-installer": "^2.2.0",
     "electron-squirrel-startup": "^1.0.0",
     "deep-equal": "^1.0.1",
     "hkdf": "^0.0.2",

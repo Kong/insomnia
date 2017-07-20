@@ -4,7 +4,7 @@ import {isDevelopment, isMac} from './common/constants';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import installExtension, {REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS} from 'electron-devtools-installer';
 
 // Handle potential auto-update
 if (needsRestart) {
@@ -55,13 +55,16 @@ app.on('activate', (e, hasVisibleWindows) => {
 });
 
 // When the app is first launched
-app.on('ready', () => {
-  installExtension(REACT_DEVELOPER_TOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log('An error occurred: ', err));
-  installExtension(REDUX_DEVTOOLS)
-    .then((name) => console.log(`Added Extension:  ${name}`))
-    .catch((err) => console.log('An error occurred: ', err));
+app.on('ready', async () => {
+  // Install developer extensions if we're in dev mode
+  if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
+    try {
+      console.log('Installed Extension: ' + await installExtension(REACT_DEVELOPER_TOOLS));
+      console.log('Installed Extension: ' + await installExtension(REDUX_DEVTOOLS));
+    } catch (err) {
+      console.warn('Failed to install devtools extension', err);
+    }
+  }
 
   app.removeListener('open-url', addUrlToOpen);
   const window = windowUtils.createWindow();
