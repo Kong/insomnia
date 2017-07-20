@@ -10,5 +10,6 @@ function assertTemplate (txt, expected) {
 const millisRe = /^\d{13}$/;
 
 describe('TimestampExtension', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('renders basic', assertTemplate('{% timestamp %}', millisRe));
 });

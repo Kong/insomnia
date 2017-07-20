@@ -7,6 +7,8 @@ import * as crypt from '../crypt';
 
 describe('Test push/pull behaviour', () => {
   beforeEach(async () => {
+    await global.insomniaBeforeEach();
+
     // Reset some things
     sync._testReset();
     await _setSessionData();
@@ -15,7 +17,6 @@ describe('Test push/pull behaviour', () => {
     // Init sync and storage
     const config = {inMemoryOnly: true, autoload: false, filename: null};
     await syncStorage.initDB(config, true);
-    await db.init(models.types(), config, true);
 
     // Add some data
     await models.workspace.create({_id: 'wrk_1', name: 'Workspace 1'});
@@ -226,6 +227,8 @@ describe('Test push/pull behaviour', () => {
 
 describe('Integration tests for creating Resources and pushing', () => {
   beforeEach(async () => {
+    await global.insomniaBeforeEach();
+
     // Reset some things
     await _setSessionData();
     sync._testReset();
@@ -237,7 +240,6 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Init storage
     const config = {inMemoryOnly: true, autoload: false, filename: null};
     await syncStorage.initDB(config, true);
-    await db.init(models.types(), config, true);
 
     // Add some data
     await models.workspace.create({_id: 'wrk_empty', name: 'Workspace Empty'});

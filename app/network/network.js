@@ -1,8 +1,9 @@
 // @flow
-import type {ResponseTimelineEntry} from '../models/response';
-import type {Request, RequestHeader} from '../models/request';
+import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
+import type {RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
+import type {RenderedRequest} from '../common/render';
 
 import electron from 'electron';
 import mkdirp from 'mkdirp';
@@ -14,35 +15,33 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
+import * as plugins from '../plugins/index';
+import * as pluginContexts from '../plugins/context/index';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import urlMatchesCertHost from './url-matches-cert-host';
 import aws4 from 'aws4';
 
-type Cookie = {
-  domain: string,
-  path: string,
-  key: string,
-  value: string,
-  expires: number
-}
-
-type CookieJar = {
-  cookies: Array<Cookie>
-}
-
-type RenderedRequest = Request & {
-  cookies: Array<{name: string, value: string, disabled: boolean}>,
-  cookieJar: CookieJar
+export type ResponsePatch = {
+  statusMessage?: string,
+  error?: string,
+  url?: string,
+  statusCode?: number,
+  headers?: Array<ResponseHeader>,
+  elapsedTime?: number,
+  contentType?: string,
+  bytesRead?: number,
+  parentId?: string,
+  settingStoreCookies?: boolean,
+  settingSendCookies?: boolean,
+  timeline?: Array<ResponseTimelineEntry>
 };
-
-type ResponsePatch = {};
 
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
@@ -69,14 +68,24 @@ export function _actuallySend (
 
     /** Helper function to respond with a success */
     function respond (patch: ResponsePatch, bodyBuffer: ?Buffer = null): void {
-      const response = Object.assign({
+      const response = Object.assign(({
         parentId: renderedRequest._id,
         timeline: timeline,
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies
-      }, patch);
+      }: ResponsePatch), patch);
 
       resolve({bodyBuffer, response});
+
+      // Apply plugin hooks and don't wait for them and don't throw from them
+      process.nextTick(async () => {
+        try {
+          await _applyResponsePluginHooks(response, bodyBuffer);
+        } catch (err) {
+          // TODO: Better error handling here
+          console.warn('Response plugin failed', err);
+        }
+      });
     }
 
     /** Helper function to respond with an error */
@@ -267,6 +276,10 @@ export function _actuallySend (
           ].join('\t'));
         }
 
+        for (const {name, value} of renderedRequest.cookies) {
+          setOpt(Curl.option.COOKIE, `${name}=${value}`);
+        }
+
         timeline.push({
           name: 'TEXT',
           value: 'Enable cookie sending with jar of ' +
@@ -421,7 +434,8 @@ export function _actuallySend (
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
           if (!requestBody) {
-            return handleError(new Error('AWS authentication not supported for provided body type'));
+            return handleError(
+              new Error('AWS authentication not supported for provided body type'));
           }
           const extraHeaders = _getAwsAuthHeaders(
             renderedRequest.authentication.accessKeyId || '',
@@ -533,7 +547,7 @@ export function _actuallySend (
         const bodyBuffer = Buffer.concat(dataBuffers, dataBuffersLength);
 
         // Return the response data
-        respond({
+        const responsePatch = {
           headers,
           contentType,
           statusCode,
@@ -541,10 +555,12 @@ export function _actuallySend (
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
           url: curl.getInfo(Curl.info.EFFECTIVE_URL)
-        }, bodyBuffer);
+        };
 
         // Close the request
         this.close();
+
+        respond(responsePatch, bodyBuffer);
       });
 
       curl.on('error', function (err, code) {
@@ -584,15 +600,33 @@ export async function send (requestId: string, environmentId: string) {
   // Fetch some things
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
-
-  // This may throw
-  const renderedRequest = await getRenderedRequest(request, environmentId);
-
-  // Get the workspace for the request
   const ancestors = await db.withAncestors(request, [
     models.requestGroup.type,
     models.workspace.type
   ]);
+
+  if (!request) {
+    throw new Error(`Failed to find request to send for ${requestId}`);
+  }
+
+  const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
+
+  let renderedRequest: RenderedRequest;
+  try {
+    renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins);
+  } catch (err) {
+    return {
+      response: {
+        url: renderedRequestBeforePlugins.url,
+        parentId: renderedRequestBeforePlugins._id,
+        error: err.message,
+        statusCode: STATUS_CODE_PLUGIN_ERROR,
+        statusMessage: err.plugin ? `Plugin ${err.plugin}` : 'Plugin',
+        settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
+        settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
+      }
+    };
+  }
 
   const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
   const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
@@ -600,11 +634,54 @@ export async function send (requestId: string, environmentId: string) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
 
-  // Render succeeded so we're good to go!
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
-function _getCurlHeader (curlHeadersObj: {[string]: string}, name: string, fallback: any): string {
+async function _applyRequestPluginHooks (renderedRequest: RenderedRequest): Promise<RenderedRequest> {
+  let newRenderedRequest = renderedRequest;
+  for (const {plugin, hook} of await plugins.getRequestHooks()) {
+    newRenderedRequest = clone(newRenderedRequest);
+
+    const context = {
+      ...pluginContexts.app.init(plugin),
+      ...pluginContexts.request.init(plugin, newRenderedRequest)
+    };
+
+    try {
+      await hook(context);
+    } catch (err) {
+      err.plugin = plugin;
+      throw err;
+    }
+  }
+
+  return newRenderedRequest;
+}
+
+async function _applyResponsePluginHooks (
+  response: ResponsePatch,
+  bodyBuffer: ?Buffer = null
+): Promise<void> {
+  for (const {plugin, hook} of await plugins.getResponseHooks()) {
+    const context = {
+      ...pluginContexts.app.init(plugin),
+      ...pluginContexts.response.init(plugin, response, bodyBuffer)
+    };
+
+    try {
+      await hook(context);
+    } catch (err) {
+      err.plugin = plugin;
+      throw err;
+    }
+  }
+}
+
+function _getCurlHeader (
+  curlHeadersObj: {[string]: string},
+  name: string,
+  fallback: any
+): string {
   const headerName = Object.keys(curlHeadersObj).find(
     n => n.toLowerCase() === name.toLowerCase()
   );

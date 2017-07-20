@@ -1,4 +1,10 @@
 module.exports = `
+module.exports.preRequestHooks = [
+  context => {
+    context.addHeader('foo', 'bar');
+  }
+];
+
 module.exports.templateTags = [{
     name: 'hello',
     displayName: 'Say Hello',

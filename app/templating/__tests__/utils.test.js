@@ -1,6 +1,7 @@
 import * as utils from '../utils';
 
 describe('getKeys()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('flattens complex object', () => {
     const obj = {
       foo: 'bar',
@@ -48,6 +49,7 @@ describe('getKeys()', () => {
 });
 
 describe('tokenizeTag()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('tokenizes complex tag', () => {
     const actual = utils.tokenizeTag(
       `{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}`
@@ -149,6 +151,7 @@ describe('tokenizeTag()', () => {
 });
 
 describe('unTokenizeTag()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('untokenizes a tag', () => {
     const tagStr = `{% name bar, "baz \\"qux\\""   , 1 + 5, 'hi' %}`;
 

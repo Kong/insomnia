@@ -1,6 +1,7 @@
 import * as misc from '../misc';
 
 describe('getBasicAuthHeader()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('succeed with username and password', () => {
     const header = misc.getBasicAuthHeader('user', 'password');
     expect(header).toEqual({
@@ -35,6 +36,7 @@ describe('getBasicAuthHeader()', () => {
 });
 
 describe('hasAuthHeader()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('finds valid header', () => {
     const yes = misc.hasAuthHeader([
       {name: 'foo', value: 'bar'},
@@ -55,6 +57,7 @@ describe('hasAuthHeader()', () => {
 });
 
 describe('generateId()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('generates a valid ID', () => {
     const id = misc.generateId('foo');
     expect(id).toMatch(/^foo_[a-z0-9]{32}$/);
@@ -67,6 +70,7 @@ describe('generateId()', () => {
 });
 
 describe('setDefaultProtocol()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('no-ops on empty url', () => {
     const url = misc.setDefaultProtocol('');
     expect(url).toBe('');
@@ -94,6 +98,7 @@ describe('setDefaultProtocol()', () => {
 });
 
 describe('prepareUrlForSending()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('does not touch normal url', () => {
     const url = misc.prepareUrlForSending('http://google.com');
     expect(url).toBe('http://google.com/');
@@ -151,6 +156,7 @@ describe('prepareUrlForSending()', () => {
 });
 
 describe('filterHeaders()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('handles bad headers', () => {
     expect(misc.filterHeaders(null, null)).toEqual([]);
     expect(misc.filterHeaders([], null)).toEqual([]);
@@ -164,7 +170,8 @@ describe('filterHeaders()', () => {
 });
 
 describe('keyedDebounce()', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await global.insomniaBeforeEach();
     jest.useFakeTimers();
 
     // There has to be a better way to reset this...
@@ -199,7 +206,8 @@ describe('keyedDebounce()', () => {
 });
 
 describe('debounce()', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await global.insomniaBeforeEach();
     jest.useFakeTimers();
 
     // There has to be a better way to reset this...

@@ -51,7 +51,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
 
   _handleShareWithTeam (team) {
     showPrompt({
-      headerName: 'Share Workspace',
+      title: 'Share Workspace',
       label: 'Confirm password to share workspace',
       placeholder: '•••••••••••••••••',
       submitName: 'Share with Team',

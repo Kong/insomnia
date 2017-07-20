@@ -16,6 +16,10 @@ const DEFAULT_EXTENSIONS = [
   responseExtension
 ];
 
-export function all () {
-  return [...DEFAULT_EXTENSIONS, ...plugins.getTemplateTags()];
+export async function all () {
+  const templateTags = await plugins.getTemplateTags();
+  return [
+    ...DEFAULT_EXTENSIONS,
+    ...templateTags.map(p => p.templateTag)
+  ];
 }

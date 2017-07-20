@@ -41,8 +41,8 @@ export function render (text: string, config: Object = {}): Promise<string> {
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
 
-  return new Promise((resolve, reject) => {
-    const nj = getNunjucks(renderMode);
+  return new Promise(async (resolve, reject) => {
+    const nj = await getNunjucks(renderMode);
 
     nj.renderString(text, context, (err, result) => {
       if (err) {
@@ -85,8 +85,8 @@ export function reload (): void {
 /**
  * Get definitions of template tags
  */
-export function getTagDefinitions () {
-  const env = getNunjucks();
+export async function getTagDefinitions (): Promise<Array<NunjucksTag>> {
+  const env = await getNunjucks(RENDER_ALL);
 
   return Object.keys(env.extensions)
     .map(k => env.extensions[k])
@@ -100,7 +100,7 @@ export function getTagDefinitions () {
     }));
 }
 
-function getNunjucks (renderMode) {
+async function getNunjucks (renderMode: string) {
   if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
     return nunjucksVariablesOnly;
   }
@@ -148,7 +148,7 @@ function getNunjucks (renderMode) {
 
   const nj = nunjucks.configure(config);
 
-  const allExtensions = extensions.all();
+  const allExtensions = await extensions.all();
   for (let i = 0; i < allExtensions.length; i++) {
     const ext = allExtensions[i];
     ext.priority = ext.priority || i * 100;
@@ -158,7 +158,6 @@ function getNunjucks (renderMode) {
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
     nj.addFilter('debug', o => {
-      console.log('DEBUG', {o}, JSON.stringify(o));
       return o;
     });
   }

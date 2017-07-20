@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 describe('prettify()', () => {
+  beforeEach(global.insomniaBeforeEach);
   const basePath = path.join(__dirname, '../__fixtures__/prettify');
   const files = fs.readdirSync(basePath);
   for (const file of files) {

@@ -134,7 +134,7 @@ class RequestUrlBar extends PureComponent {
   _handleSendAfterDelay () {
     showPrompt({
       inputType: 'decimal',
-      headerName: 'Send After Delay',
+      title: 'Send After Delay',
       label: 'Delay in seconds',
       defaultValue: 3,
       submitName: 'Start',
@@ -151,7 +151,7 @@ class RequestUrlBar extends PureComponent {
   _handleSendOnInterval () {
     showPrompt({
       inputType: 'decimal',
-      headerName: 'Send on Interval',
+      title: 'Send on Interval',
       label: 'Interval in seconds',
       defaultValue: 3,
       submitName: 'Start',

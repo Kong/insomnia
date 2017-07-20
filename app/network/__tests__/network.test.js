@@ -1,14 +1,12 @@
 import * as networkUtils from '../network';
-import * as db from '../../common/database';
 import {join as pathJoin, resolve as pathResolve} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
-import {AUTH_BASIC, AUTH_AWS_IAM, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
 
 describe('actuallySend()', () => {
-  beforeEach(() => db.init(models.types(), {inMemoryOnly: true}, true));
-
+  beforeEach(global.insomniaBeforeEach);
   it('sends a generic request', async () => {
     const workspace = await models.workspace.create();
     const settings = await models.settings.create();
@@ -403,6 +401,7 @@ describe('actuallySend()', () => {
 });
 
 describe('_getAwsAuthHeaders', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('should generate expected headers', () => {
     const req = {
       authentication: {

@@ -1,10 +1,10 @@
 import * as analytics from '../index';
-import {GA_HOST, getAppVersion, getAppPlatform} from '../../common/constants';
-import * as db from '../../common/database';
+import {GA_HOST, getAppPlatform, getAppVersion} from '../../common/constants';
 import * as models from '../../models';
 
 describe('init()', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await global.insomniaBeforeEach();
     window.localStorage = {};
     global.document = {
       getElementsByTagName () {
@@ -16,7 +16,6 @@ describe('init()', () => {
         };
       }
     };
-    return db.init(models.types(), {inMemoryOnly: true}, true);
   });
 
   afterEach(() => {

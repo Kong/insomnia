@@ -53,7 +53,7 @@ export const GA_ID = 'UA-86416787-1';
 export const GA_HOST = 'desktop.insomnia.rest';
 export const CHANGELOG_URL = process.env.INSOMNIA_SYNC_URL || 'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
-export const STATUS_CODE_RENDER_FAILED = -333;
+export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[0-9a-zA-Z\-_.]+[/\w.\-+=:\][@%^*&!#?;]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
@@ -252,6 +252,9 @@ export const RESPONSE_CODE_REASONS = {
 
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS = {
+
+  // Special
+  [STATUS_CODE_PLUGIN_ERROR]: 'An Insomnia plugin threw an error which prevented the request from sending',
 
   // 100s
 

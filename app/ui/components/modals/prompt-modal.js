@@ -13,7 +13,7 @@ class PromptModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      headerName: 'Not Set',
+      title: 'Not Set',
       defaultValue: '',
       submitName: 'Not Set',
       selectText: false,
@@ -60,7 +60,7 @@ class PromptModal extends PureComponent {
 
   show (options) {
     const {
-      headerName,
+      title,
       defaultValue,
       submitName,
       selectText,
@@ -87,7 +87,7 @@ class PromptModal extends PureComponent {
     this._onDeleteHint = onDeleteHint;
 
     this.setState({
-      headerName,
+      title,
       defaultValue,
       submitName,
       selectText,
@@ -125,7 +125,7 @@ class PromptModal extends PureComponent {
   render () {
     const {
       submitName,
-      headerName,
+      title,
       hint,
       inputType,
       placeholder,
@@ -153,7 +153,7 @@ class PromptModal extends PureComponent {
 
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader>{headerName}</ModalHeader>
+        <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
             <div className="form-control form-control--outlined form-control--wide">

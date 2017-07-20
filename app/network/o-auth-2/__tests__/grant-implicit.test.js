@@ -9,6 +9,7 @@ const SCOPE = 'scope_123';
 const STATE = 'state_123';
 
 describe('implicit', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('works in default case', async () => {
     createBWRedirectMock(`${REDIRECT_URI}#access_token=token_123&state=${STATE}&foo=bar`);
 

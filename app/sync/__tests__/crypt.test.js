@@ -1,6 +1,7 @@
 import * as crypt from '../crypt';
 
 describe('deriveKey()', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('derives a key properly', async () => {
     const result = await crypt.deriveKey('Password', 'email', 'salt');
 
@@ -11,6 +12,7 @@ describe('deriveKey()', () => {
 });
 
 describe('encryptRSA', () => {
+  beforeEach(global.insomniaBeforeEach);
   it('encrypts and decrypts', () => {
     const resultEncrypted = crypt.encryptAES('rawkey', 'Hello World!', 'additional data');
     const resultDecrypted = crypt.decryptAES('rawkey', resultEncrypted);

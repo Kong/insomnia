@@ -1,3 +1,7 @@
+// @flow
+import type {Request} from '../models/request';
+import type {BaseModel} from '../models/index';
+
 import clone from 'clone';
 import * as models from '../models';
 import {setDefaultProtocol} from './misc';
@@ -7,11 +11,27 @@ import * as templating from '../templating';
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
 
-export async function buildRenderContext (ancestors, rootEnvironment, subEnvironment, baseContext = {}) {
-  if (!Array.isArray(ancestors)) {
-    ancestors = [];
-  }
+type Cookie = {
+  domain: string,
+  path: string,
+  key: string,
+  value: string,
+  expires: number
+}
 
+export type RenderedRequest = Request & {
+  cookies: Array<{name: string, value: string, disabled?: boolean}>,
+  cookieJar: {
+    cookies: Array<Cookie>
+  }
+};
+
+export async function buildRenderContext (
+  ancestors: Array<BaseModel> | null,
+  rootEnvironment: {data: Object},
+  subEnvironment: {data: Object},
+  baseContext: Object = {}
+): Object {
   const environments = [];
 
   if (rootEnvironment) {
@@ -22,11 +42,10 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
     environments.push(subEnvironment.data);
   }
 
-  for (const doc of ancestors.reverse()) {
-    if (!doc.environment) {
-      continue;
+  for (const doc of (ancestors || []).reverse()) {
+    if (typeof doc.environment === 'object' && doc.environment !== null) {
+      environments.push(doc.environment);
     }
-    environments.push(doc.environment);
   }
 
   // At this point, environments is a list of environments ordered
@@ -34,7 +53,7 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
   const renderContext = baseContext;
-  for (const environment of environments) {
+  for (const environment: Object of environments) {
     // Sort the keys that may have Nunjucks last, so that other keys get
     // defined first. Very important if env variables defined in same obj
     // (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
@@ -94,11 +113,17 @@ export async function buildRenderContext (ancestors, rootEnvironment, subEnviron
  * @param name - name to include in error message
  * @return {Promise.<*>}
  */
-export async function render (obj, context = {}, blacklistPathRegex = null, errorMode = THROW_ON_ERROR, name = '') {
+export async function render<T> (
+  obj: T,
+  context: Object = {},
+  blacklistPathRegex: RegExp | null = null,
+  errorMode: string = THROW_ON_ERROR,
+  name: string = ''
+): Promise<T> {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
-  async function next (x, path = name) {
+  async function next (x: any, path: string = name): Promise<any> {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
@@ -116,7 +141,7 @@ export async function render (obj, context = {}, blacklistPathRegex = null, erro
       asStr === '[object Undefined]'
     ) {
       // Do nothing to these types
-    } else if (asStr === '[object String]') {
+    } else if (typeof x === 'string') {
       try {
         x = await templating.render(x, {context, path});
 
@@ -135,7 +160,7 @@ export async function render (obj, context = {}, blacklistPathRegex = null, erro
       for (let i = 0; i < x.length; i++) {
         x[i] = await next(x[i], `${path}[${i}]`);
       }
-    } else if (typeof x === 'object') {
+    } else if (typeof x === 'object' && x !== null) {
       // Don't even try rendering disabled objects
       // Note, this logic probably shouldn't be here, but w/e for now
       if (x.disabled) {
@@ -155,7 +180,11 @@ export async function render (obj, context = {}, blacklistPathRegex = null, erro
   return next(newObj);
 }
 
-export async function getRenderContext (request, environmentId, ancestors = null) {
+export async function getRenderContext (
+  request: Request,
+  environmentId: string,
+  ancestors: Array<BaseModel> | null = null
+): Promise<Object> {
   if (!request) {
     return {};
   }
@@ -175,7 +204,7 @@ export async function getRenderContext (request, environmentId, ancestors = null
   const baseContext = {};
   baseContext.getMeta = () => ({
     requestId: request._id,
-    workspaceId: workspace._id
+    workspaceId: workspace ? workspace._id : 'n/a'
   });
 
   // Generate the context we need to render
@@ -189,7 +218,10 @@ export async function getRenderContext (request, environmentId, ancestors = null
   return context;
 }
 
-export async function getRenderedRequest (request, environmentId) {
+export async function getRenderedRequest (
+  request: Request,
+  environmentId: string
+): Promise<RenderedRequest> {
   const ancestors = await db.withAncestors(request, [
     models.requestGroup.type,
     models.workspace.type
@@ -225,9 +257,31 @@ export async function getRenderedRequest (request, environmentId) {
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
-  // Add the yummy cookies
-  // TODO: Don't deal with cookies in here
-  renderedRequest.cookieJar = cookieJar;
+  return {
+    // Add the yummy cookies
+    // TODO: Eventually get rid of RenderedRequest type and put these elsewhere
+    cookieJar,
+    cookies: [],
 
-  return renderedRequest;
+    // NOTE: Flow doesn't like Object.assign, so we have to do each property manually
+    // for now to convert Request to RenderedRequest.
+    _id: renderedRequest._id,
+    authentication: renderedRequest.authentication,
+    body: renderedRequest.body,
+    created: renderedRequest.created,
+    modified: renderedRequest.modified,
+    description: renderedRequest.description,
+    headers: renderedRequest.headers,
+    metaSortKey: renderedRequest.metaSortKey,
+    method: renderedRequest.method,
+    name: renderedRequest.name,
+    parameters: renderedRequest.parameters,
+    parentId: renderedRequest.parentId,
+    settingDisableRenderRequestBody: renderedRequest.settingDisableRenderRequestBody,
+    settingEncodeUrl: renderedRequest.settingEncodeUrl,
+    settingSendCookies: renderedRequest.settingSendCookies,
+    settingStoreCookies: renderedRequest.settingStoreCookies,
+    type: renderedRequest.type,
+    url: renderedRequest.url
+  };
 }

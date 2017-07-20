@@ -40,6 +40,7 @@ class StatusTag extends PureComponent {
       default:
         colorClass = 'bg-danger';
         genericStatusMessage = 'UNKNOWN';
+        statusCodeToDisplay = '';
         break;
     }
 
