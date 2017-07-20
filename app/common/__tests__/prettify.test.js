@@ -1,9 +1,10 @@
 import {prettifyJson} from '../prettify';
 import fs from 'fs';
 import path from 'path';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('prettify()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   const basePath = path.join(__dirname, '../__fixtures__/prettify');
   const files = fs.readdirSync(basePath);
   for (const file of files) {

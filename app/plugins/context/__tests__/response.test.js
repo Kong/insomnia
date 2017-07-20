@@ -1,4 +1,5 @@
 import * as plugin from '../response';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -8,7 +9,7 @@ const PLUGIN = {
 };
 
 describe('init()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('initializes correctly', async () => {
     const result = plugin.init(PLUGIN, {});
     expect(Object.keys(result)).toEqual(['response']);
@@ -29,7 +30,7 @@ describe('init()', () => {
 });
 
 describe('response.*', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('works for basic and full response', async () => {
     const response = {
       parentId: 'req_1',

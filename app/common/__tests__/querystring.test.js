@@ -1,7 +1,8 @@
 import * as querystringUtils from '../querystring';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('getBasicAuthHeader()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('gets joiner for bare URL', () => {
     const joiner = querystringUtils.getJoiner('http://google.com');
     expect(joiner).toBe('?');
@@ -36,7 +37,7 @@ describe('getBasicAuthHeader()', () => {
 });
 
 describe('joinUrl()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('joins bare URL', () => {
     const url = querystringUtils.joinUrl(
       'http://google.com',
@@ -79,7 +80,7 @@ describe('joinUrl()', () => {
 });
 
 describe('build()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('builds simple param', () => {
     const str = querystringUtils.build({name: 'foo', value: 'bar??'});
     expect(str).toBe('foo=bar%3F%3F');
@@ -105,7 +106,7 @@ describe('build()', () => {
 });
 
 describe('buildFromParams()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('builds from params', () => {
     const str = querystringUtils.buildFromParams([
       {name: 'foo', value: 'bar??'},
@@ -131,7 +132,7 @@ describe('buildFromParams()', () => {
 });
 
 describe('deconstructToParams()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('builds from params', () => {
     const str = querystringUtils.deconstructToParams(
       'foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val'
@@ -157,7 +158,7 @@ describe('deconstructToParams()', () => {
 });
 
 describe('deconstructToParams()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('builds from params not strict', () => {
     const str = querystringUtils.deconstructToParams(
       'foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val',

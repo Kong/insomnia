@@ -2,9 +2,10 @@ import * as templating from '../../index';
 import * as models from '../../../models';
 import {cookiesFromJar, jarFromCookies} from '../../../common/cookies';
 import {getRenderContext} from '../../../common/render';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 describe('RequestExtension cookie', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('should get cookie by name', async () => {
     // Create necessary models
     const workspace = await models.workspace.create({name: 'Workspace'});
@@ -31,7 +32,7 @@ describe('RequestExtension cookie', async () => {
 });
 
 describe('RequestExtension url', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('should get url', async () => {
     // Create necessary models
     const workspace = await models.workspace.create({name: 'Workspace'});
@@ -65,7 +66,7 @@ describe('RequestExtension url', async () => {
 });
 
 describe('RequestExtension header', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('should get url', async () => {
     // Create necessary models
     const workspace = await models.workspace.create({name: 'Workspace'});

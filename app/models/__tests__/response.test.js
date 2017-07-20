@@ -1,10 +1,11 @@
 import path from 'path';
 import * as electron from 'electron';
 import * as models from '../../models';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('migrate()', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
     Date.now = jest.genMockFunction().mockReturnValue(1234567890);
     jest.useFakeTimers();
   });

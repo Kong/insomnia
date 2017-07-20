@@ -1,4 +1,5 @@
 import getToken from '../grant-client-credentials';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 // Mock some test things
 const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
@@ -7,7 +8,7 @@ const CLIENT_SECRET = 'secret_12345456677756343';
 const SCOPE = 'scope_123';
 
 describe('client_credentials', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('gets token with JSON and basic auth', async () => {
     window.fetch = jest.fn(() => new window.Response(
       JSON.stringify({access_token: 'token_123', token_type: 'token_type', scope: SCOPE}),

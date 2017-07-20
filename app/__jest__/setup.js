@@ -1,5 +1,4 @@
 import 'whatwg-fetch';
-import beforeEach from './before-each';
 
 const localStorageMock = (function () {
   let store = {};
@@ -19,4 +18,3 @@ const localStorageMock = (function () {
 
 global.localStorage = localStorageMock;
 global.require = require;
-global.insomniaBeforeEach = beforeEach;

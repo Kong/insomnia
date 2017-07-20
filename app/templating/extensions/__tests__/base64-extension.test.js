@@ -1,4 +1,5 @@
 import * as templating from '../../index';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 function assertTemplate (txt, expected) {
   return async function () {
@@ -19,7 +20,7 @@ function assertTemplateFails (txt, expected) {
 }
 
 describe('Base64EncodeExtension', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('encodes nothing', assertTemplate("{% base64 'encode' %}", ''));
   it('encodes something', assertTemplate("{% base64 'encode', 'my string' %}", 'bXkgc3RyaW5n'));
   it('decodes nothing', assertTemplate("{% base64 'decode' %}", ''));

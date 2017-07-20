@@ -1,7 +1,7 @@
 import * as db from '../common/database';
 import * as models from '../models';
 
-export default function () {
+export async function globalBeforeEach () {
   // Setup the local database in case it's used
-  db.init(models.types(), {inMemoryOnly: true}, true);
+  await db.init(models.types(), {inMemoryOnly: true}, true);
 }

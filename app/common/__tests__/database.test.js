@@ -1,5 +1,6 @@
 import * as models from '../../models';
 import * as db from '../database';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 function loadFixture (name) {
   const fixtures = require(`../__fixtures__/${name}`).data;
@@ -14,7 +15,7 @@ function loadFixture (name) {
 }
 
 describe('init()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('handles being initialized twice', async () => {
     await db.init(models.types(), {inMemoryOnly: true});
     await db.init(models.types(), {inMemoryOnly: true});
@@ -23,7 +24,7 @@ describe('init()', () => {
 });
 
 describe('onChange()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('handles change listeners', async () => {
     const doc = {
       type: models.request.type,
@@ -53,7 +54,7 @@ describe('onChange()', () => {
 });
 
 describe('bufferChanges()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('properly buffers changes', async () => {
     const doc = {
       type: models.request.type,
@@ -91,7 +92,7 @@ describe('bufferChanges()', () => {
 });
 
 describe('requestCreate()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('creates a valid request', async () => {
     const now = Date.now();
 
@@ -126,7 +127,7 @@ describe('requestCreate()', () => {
 
 describe('requestGroupDuplicate()', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
     await loadFixture('nestedfolders');
   });
 

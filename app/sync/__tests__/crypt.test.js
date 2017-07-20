@@ -1,7 +1,8 @@
 import * as crypt from '../crypt';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('deriveKey()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('derives a key properly', async () => {
     const result = await crypt.deriveKey('Password', 'email', 'salt');
 
@@ -12,7 +13,7 @@ describe('deriveKey()', () => {
 });
 
 describe('encryptRSA', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('encrypts and decrypts', () => {
     const resultEncrypted = crypt.encryptAES('rawkey', 'Hello World!', 'additional data');
     const resultDecrypted = crypt.decryptAES('rawkey', resultEncrypted);

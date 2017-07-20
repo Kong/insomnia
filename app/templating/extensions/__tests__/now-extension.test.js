@@ -1,4 +1,5 @@
 import * as templating from '../../index';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 function assertTemplate (txt, expected) {
   return async function () {
@@ -23,7 +24,7 @@ const secondsRe = /^\d{10}$/;
 const millisRe = /^\d{13}$/;
 
 describe('NowExtension', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders default ISO', assertTemplate('{% now %}', isoRe));
   it('renders ISO-8601', assertTemplate('{% now "ISO-8601" %}', isoRe));
   it('renders seconds', assertTemplate('{% now "seconds" %}', secondsRe));

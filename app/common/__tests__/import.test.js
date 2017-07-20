@@ -1,9 +1,10 @@
 import * as models from '../../models';
 import * as importUtil from '../import';
 import {getAppVersion} from '../constants';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('export()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('succeed with username and password', async () => {
     const w = await models.workspace.create({name: 'Workspace'});
     const r1 = await models.request.create({name: 'Request', parentId: w._id});

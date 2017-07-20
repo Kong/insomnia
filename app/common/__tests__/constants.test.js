@@ -1,6 +1,7 @@
 import {FLEXIBLE_URL_REGEX} from '../constants';
+import {globalBeforeEach} from '../../__jest__/before-each';
 describe('URL Regex', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('matches valid URLs', () => {
     expect('https://google.com').toMatch(FLEXIBLE_URL_REGEX);
     expect('http://google.com').toMatch(FLEXIBLE_URL_REGEX);

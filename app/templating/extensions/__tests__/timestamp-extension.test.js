@@ -1,4 +1,5 @@
 import * as templating from '../../index';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 function assertTemplate (txt, expected) {
   return async function () {
@@ -10,6 +11,6 @@ function assertTemplate (txt, expected) {
 const millisRe = /^\d{13}$/;
 
 describe('TimestampExtension', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders basic', assertTemplate('{% timestamp %}', millisRe));
 });

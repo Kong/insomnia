@@ -88,7 +88,8 @@ export function initModel (type: string, ...sources: Array<Object>) {
   const model = getModel(type);
 
   if (!model) {
-    throw new Error(`Tried to init invalid model type ${type}`);
+    const choices = Object.keys(_models).join(', ');
+    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
   }
 
   // Define global default fields

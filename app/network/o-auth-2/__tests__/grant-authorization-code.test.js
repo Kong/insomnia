@@ -1,5 +1,6 @@
 import getToken from '../grant-authorization-code';
 import {createBWRedirectMock} from './helpers';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
@@ -11,7 +12,7 @@ const SCOPE = 'scope_123';
 const STATE = 'state_123';
 
 describe('authorization_code', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('gets token with JSON and basic auth', async () => {
     createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
     window.fetch = jest.fn(() => new window.Response(

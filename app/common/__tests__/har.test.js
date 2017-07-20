@@ -2,9 +2,10 @@ import * as harUtils from '../har';
 import * as render from '../render';
 import * as models from '../../models';
 import {AUTH_BASIC} from '../constants';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('exportHarWithRequest()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders does it correctly', async () => {
     const workspace = await models.workspace.create();
     const cookies = [{

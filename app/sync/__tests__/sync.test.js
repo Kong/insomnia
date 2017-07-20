@@ -4,10 +4,11 @@ import * as models from '../../models';
 import * as db from '../../common/database';
 import * as syncStorage from '../storage';
 import * as crypt from '../crypt';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('Test push/pull behaviour', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
 
     // Reset some things
     sync._testReset();
@@ -227,7 +228,7 @@ describe('Test push/pull behaviour', () => {
 
 describe('Integration tests for creating Resources and pushing', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
 
     // Reset some things
     await _setSessionData();

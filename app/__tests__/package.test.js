@@ -1,8 +1,9 @@
 import * as appPackage from '../package.json';
 import * as globalPackage from '../../package.json';
+import {globalBeforeEach} from '../__jest__/before-each';
 
 describe('package.json', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('all app dependencies should be same in global', () => {
     for (const name of Object.keys(appPackage.dependencies)) {
       const expected = globalPackage.dependencies[name];

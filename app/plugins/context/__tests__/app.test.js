@@ -1,5 +1,6 @@
 import * as plugin from '../app';
 import * as modals from '../../../ui/components/modals';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -9,7 +10,7 @@ const PLUGIN = {
 };
 
 describe('init()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('initializes correctly', () => {
     const result = plugin.init({name: PLUGIN});
     expect(Object.keys(result)).toEqual(['app']);
@@ -18,7 +19,7 @@ describe('init()', () => {
 });
 
 describe('app.alert()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('shows alert with message', async () => {
     modals.showAlert = jest.fn().mockReturnValue('dummy-return-value');
     const result = plugin.init(PLUGIN);

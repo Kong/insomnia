@@ -4,9 +4,10 @@ import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
 import {AUTH_AWS_IAM, AUTH_BASIC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('actuallySend()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('sends a generic request', async () => {
     const workspace = await models.workspace.create();
     const settings = await models.settings.create();
@@ -401,7 +402,7 @@ describe('actuallySend()', () => {
 });
 
 describe('_getAwsAuthHeaders', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('should generate expected headers', () => {
     const req = {
       authentication: {

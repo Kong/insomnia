@@ -1,5 +1,6 @@
 import * as plugin from '../request';
 import * as models from '../../../models';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -10,7 +11,7 @@ const PLUGIN = {
 
 describe('init()', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
     await models.workspace.create({_id: 'wrk_1', name: 'My Workspace'});
     await models.request.create({_id: 'req_1', parentId: 'wrk_1', name: 'My Request'});
   });
@@ -40,7 +41,7 @@ describe('init()', () => {
 
 describe('request.*', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
     await models.workspace.create({_id: 'wrk_1', name: 'My Workspace'});
     await models.request.create({
       _id: 'req_1',

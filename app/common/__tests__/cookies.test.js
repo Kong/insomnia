@@ -1,8 +1,9 @@
 import {CookieJar} from 'tough-cookie';
 import * as cookieUtils from '../cookies';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('jarFromCookies()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('returns valid cookies', done => {
     const jar = cookieUtils.jarFromCookies([{
       key: 'foo',
@@ -28,7 +29,7 @@ describe('jarFromCookies()', () => {
 });
 
 describe('cookiesFromJar()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('returns valid jar', async () => {
     const d = new Date();
     const initialCookies = [{
@@ -66,7 +67,7 @@ describe('cookiesFromJar()', () => {
 });
 
 describe('cookieHeaderValueForUri()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('gets cookies for valid case', async () => {
     const jar = cookieUtils.jarFromCookies([{
       key: 'foo',
@@ -100,7 +101,7 @@ describe('cookieHeaderValueForUri()', () => {
   });
 
   describe('cookieToString()', () => {
-    beforeEach(global.insomniaBeforeEach);
+    beforeEach(globalBeforeEach);
     it('does it\'s thing', async () => {
       const jar = cookieUtils.jarFromCookies([{
         key: 'foo',

@@ -1,10 +1,11 @@
 import * as analytics from '../index';
 import {GA_HOST, getAppPlatform, getAppVersion} from '../../common/constants';
 import * as models from '../../models';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('init()', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
     window.localStorage = {};
     global.document = {
       getElementsByTagName () {

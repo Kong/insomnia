@@ -1,11 +1,11 @@
-import * as requestModel from '../../models/request';
 import * as models from '../index';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('init()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('contains all required fields', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
-    expect(requestModel.init()).toEqual({
+    expect(models.request.init()).toEqual({
       authentication: {},
       body: {},
       headers: [],
@@ -24,11 +24,11 @@ describe('init()', () => {
 });
 
 describe('create()', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('creates a valid request', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
 
-    const request = await requestModel.create({name: 'Test Request', parentId: 'fld_124', description: 'A test Request'});
+    const request = await models.request.create({name: 'Test Request', parentId: 'fld_124', description: 'A test Request'});
     const expected = {
       _id: 'req_cc1dd2ca4275747aa88199e8efd42403',
       created: 1478795580200,
@@ -51,27 +51,27 @@ describe('create()', async () => {
     };
 
     expect(request).toEqual(expected);
-    expect(await requestModel.getById(expected._id)).toEqual(expected);
+    expect(await models.request.getById(expected._id)).toEqual(expected);
   });
 
   it('fails when missing parentId', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
-    expect(() => requestModel.create({name: 'Test Request'})).toThrow('New Requests missing `parentId`');
+    expect(() => models.request.create({name: 'Test Request'})).toThrow('New Requests missing `parentId`');
   });
 });
 
 describe('updateMimeType()', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('adds header when does not exist', async () => {
-    const request = await requestModel.create({name: 'My Request', parentId: 'fld_1'});
+    const request = await models.request.create({name: 'My Request', parentId: 'fld_1'});
     expect(request).not.toBeNull();
 
-    const newRequest = await requestModel.updateMimeType(request, 'text/html');
+    const newRequest = await models.request.updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([{name: 'Content-Type', value: 'text/html'}]);
   });
 
   it('replaces header when exists', async () => {
-    const request = await requestModel.create({
+    const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
       headers: [
@@ -83,7 +83,7 @@ describe('updateMimeType()', async () => {
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await requestModel.updateMimeType(request, 'text/html');
+    const newRequest = await models.request.updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([
       {name: 'content-tYPE', value: 'text/html'},
       {name: 'foo', value: 'bar'},
@@ -93,33 +93,33 @@ describe('updateMimeType()', async () => {
   });
 
   it('replaces header when exists', async () => {
-    const request = await requestModel.create({
+    const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
       headers: [{name: 'content-tYPE', value: 'application/json'}]
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await requestModel.updateMimeType(request, 'text/html');
+    const newRequest = await models.request.updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([{name: 'content-tYPE', value: 'text/html'}]);
   });
 
   it('removes content-type', async () => {
-    const request = await requestModel.create({
+    const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
       headers: [{name: 'content-tYPE', value: 'application/json'}]
     });
     expect(request).not.toBeNull();
 
-    const newRequest = await requestModel.updateMimeType(request, null);
+    const newRequest = await models.request.updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
     expect(newRequest.headers).toEqual([]);
   });
 });
 
 describe('migrate()', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('migrates basic case', () => {
     const original = {
       headers: [],
@@ -132,7 +132,7 @@ describe('migrate()', () => {
       url: ''
     };
 
-    expect(requestModel.migrate(original)).toEqual(expected);
+    expect(models.request.migrate(original)).toEqual(expected);
   });
 
   it('migrates form-urlencoded', () => {
@@ -153,7 +153,7 @@ describe('migrate()', () => {
       url: ''
     };
 
-    expect(requestModel.migrate(original)).toEqual(expected);
+    expect(models.request.migrate(original)).toEqual(expected);
   });
 
   it('migrates form-urlencoded with charset', () => {
@@ -174,7 +174,7 @@ describe('migrate()', () => {
       url: ''
     };
 
-    expect(requestModel.migrate(original)).toEqual(expected);
+    expect(models.request.migrate(original)).toEqual(expected);
   });
 
   it('migrates form-urlencoded malformed', () => {
@@ -194,7 +194,7 @@ describe('migrate()', () => {
       url: ''
     };
 
-    expect(requestModel.migrate(original)).toEqual(expected);
+    expect(models.request.migrate(original)).toEqual(expected);
   });
 
   it('migrates mime-type', () => {
@@ -216,7 +216,7 @@ describe('migrate()', () => {
         url: ''
       };
 
-      expect(requestModel.migrate(original)).toEqual(expected);
+      expect(models.request.migrate(original)).toEqual(expected);
     }
   });
 
@@ -225,7 +225,7 @@ describe('migrate()', () => {
       body: {mimeType: 'text/plain', text: 'foo'}
     };
 
-    expect(requestModel.migrate(original)).toBe(original);
+    expect(models.request.migrate(original)).toBe(original);
   });
 
   it('migrates with weird data', () => {
@@ -247,10 +247,10 @@ describe('migrate()', () => {
       url: ''
     };
 
-    expect(requestModel.migrate(newBody)).toEqual(expected);
-    expect(requestModel.migrate(stringBody)).toEqual(expected);
-    expect(requestModel.migrate(nullBody)).toEqual(expected2);
-    expect(requestModel.migrate(noBody)).toEqual(expected2);
+    expect(models.request.migrate(newBody)).toEqual(expected);
+    expect(models.request.migrate(stringBody)).toEqual(expected);
+    expect(models.request.migrate(nullBody)).toEqual(expected2);
+    expect(models.request.migrate(noBody)).toEqual(expected2);
   });
 
   it('migrates from initModel()', () => {

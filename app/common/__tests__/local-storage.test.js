@@ -1,10 +1,11 @@
 import path from 'path';
 import fs from 'fs';
 import LocalStorage from '../local-storage';
+import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('LocalStorage()', () => {
   beforeEach(async () => {
-    await global.insomniaBeforeEach();
+    await globalBeforeEach();
     jest.useFakeTimers();
 
     // There has to be a better way to reset this...

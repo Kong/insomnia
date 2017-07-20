@@ -1,8 +1,9 @@
 import * as templating from '../../index';
 import * as models from '../../../models';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 describe('ResponseExtension General', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('fails on no responses', async () => {
     const request = await models.request.create({parentId: 'foo'});
 
@@ -38,7 +39,7 @@ describe('ResponseExtension General', async () => {
 });
 
 describe('ResponseExtension JSONPath', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders basic response "body", query', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
@@ -113,7 +114,7 @@ describe('ResponseExtension JSONPath', async () => {
 });
 
 describe('ResponseExtension XPath', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders basic response "body", query', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
@@ -188,7 +189,7 @@ describe('ResponseExtension XPath', async () => {
 });
 
 describe('ResponseExtension Header', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders basic response "header"', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
@@ -233,7 +234,7 @@ describe('ResponseExtension Header', async () => {
 });
 
 describe('ResponseExtension Raw', async () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders basic response "header"', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({

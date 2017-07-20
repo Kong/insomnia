@@ -1,4 +1,5 @@
 import * as templating from '../../index';
+import {globalBeforeEach} from '../../../__jest__/before-each';
 
 function assertTemplate (txt, expected) {
   return async function () {
@@ -19,7 +20,7 @@ function assertTemplateFails (txt, expected) {
 }
 
 describe('UuidExtension', () => {
-  beforeEach(global.insomniaBeforeEach);
+  beforeEach(globalBeforeEach);
   it('renders default v4', assertTemplate('{% uuid %}', 'dd2ccc1a-2745-477a-881a-9e8ef9d42403'));
   it('renders 4', assertTemplate('{% uuid "4" %}', 'e3e96e5f-dd68-4229-8b66-dee1f0940f3d'));
   it('renders 4 num', assertTemplate('{% uuid 4 %}', 'a262d22b-5fa8-491c-9bd9-58fba03e301e'));
