@@ -172,6 +172,7 @@
     "css-loader": "^0.26.2",
     "electron": "^1.6.11",
     "electron-builder": "^10.17.3",
+    "electron-devtools-installer": "^2.2.0",
     "electron-rebuild": "^1.5.7",
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",
