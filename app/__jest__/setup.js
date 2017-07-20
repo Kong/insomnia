@@ -1,8 +1,5 @@
 import 'whatwg-fetch';
 
-// For slow CI servers
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
 const localStorageMock = (function () {
   let store = {};
 
