@@ -9,6 +9,7 @@ import CopyButton from '../base/copy-button';
 import {showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import {reload} from '../../../templating/index';
+import installPlugin from '../../../plugins/install';
 
 @autobind
 class Plugins extends React.PureComponent {
@@ -29,8 +30,14 @@ class Plugins extends React.PureComponent {
     this.setState({npmPluginValue: e.target.value});
   }
 
-  _handleAddFromNpm () {
-    console.log('ADD FROM NPM', this.state.npmPluginValue);
+  async _handleAddFromNpm (e: Event): Promise<void> {
+    e.preventDefault();
+    try {
+      await installPlugin(this.state.npmPluginValue);
+      await this._handleRefreshPlugins();
+    } catch (err) {
+      // TODO: HAndle errors
+    }
   }
 
   _handleOpenDirectory (directory: string) {
@@ -106,28 +113,30 @@ class Plugins extends React.PureComponent {
         </table>
         <p className="text-right">
         </p>
-        <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <input onChange={this._handleAddNpmPluginChange}
-                   type="text"
-                   placeholder="insomnia-foo-bar"/>
+        <form onSubmit={this._handleAddFromNpm}>
+          <div className="form-row">
+            <div className="form-control form-control--outlined">
+              <input onChange={this._handleAddNpmPluginChange}
+                     type="text"
+                     placeholder="insomnia-foo-bar"/>
+            </div>
+            <div className="form-control width-auto">
+              <button className="btn btn--clicky">
+                Add From NPM
+              </button>
+            </div>
+            <div className="form-control width-auto">
+              <button type="button" className="btn btn--clicky" onClick={this._handleRefreshPlugins}>
+                Reload
+              </button>
+            </div>
+            <div className="form-control width-auto">
+              <button type="button" className="btn btn--clicky" onClick={this._handleGeneratePlugin}>
+                New Plugin
+              </button>
+            </div>
           </div>
-          <div className="form-control width-auto">
-            <button className="btn btn--clicky" onClick={this._handleAddFromNpm}>
-              Add From NPM
-            </button>
-          </div>
-          <div className="form-control width-auto">
-            <button className="btn btn--clicky" onClick={this._handleRefreshPlugins}>
-              Reload
-            </button>
-          </div>
-          <div className="form-control width-auto">
-            <button className="btn btn--clicky" onClick={this._handleGeneratePlugin}>
-              New Plugin
-            </button>
-          </div>
-        </div>
+        </form>
       </div>
     );
   }
