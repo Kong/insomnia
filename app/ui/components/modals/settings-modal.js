@@ -13,9 +13,11 @@ import Account from '../settings/account';
 import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
+import {Curl} from 'node-libcurl';
 import {getAppVersion, getAppName} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 import * as session from '../../../sync/session';
+import Tooltip from '../tooltip';
 
 export const TAB_INDEX_EXPORT = 1;
 
@@ -105,6 +107,9 @@ class SettingsModal extends PureComponent {
           <span className="faint txt-sm">
           &nbsp;&nbsp;–&nbsp;
             v{getAppVersion()}
+            <Tooltip position="bottom" message={Curl.getVersion()}>
+              <i className="fa fa-info-circle"/>
+            </Tooltip>
             {email ? ` – ${email}` : null}
           </span>
         </ModalHeader>

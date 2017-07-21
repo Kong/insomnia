@@ -12,7 +12,9 @@
   },
   "globals": {
     "__DEV__": true,
-    "fail": true
+    "fail": true,
+    "HTMLDivElement": true,
+    "HTMLElement": true
   },
   "env": {
     "jest/globals": true

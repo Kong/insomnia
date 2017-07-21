@@ -26,7 +26,7 @@ class Shortcuts extends PureComponent {
           {this.renderHotkey('Show Environment Editor', 'E')}
           {this.renderHotkey('Focus URL Bar', 'L')}
           {this.renderHotkey('Toggle Sidebar', '\\')}
-          {this.renderHotkey('Show Autocomplete Dropdown', 'Enter', false, false, true)}
+          {this.renderHotkey('Show Autocomplete Dropdown', 'Space', false, false, true)}
           {this.renderHotkey('Show App Preferences', ',')}
           {this.renderHotkey('Show Workspace Settings', ',', true)}
           {this.renderHotkey('Show Request Settings', ',', true, true)}

@@ -10,19 +10,14 @@ import {showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import {reload} from '../../../templating/index';
 
-type DefaultProps = void;
-type Props = void;
-type State = {
-  plugins: Array<Plugin>,
-  npmPluginValue: string
-};
-
 @autobind
-class Plugins extends React.PureComponent<DefaultProps, Props, State> {
-  props: Props;
-  state: State;
+class Plugins extends React.PureComponent {
+  state: {
+    plugins: Array<Plugin>,
+    npmPluginValue: string
+  };
 
-  constructor (props: Props) {
+  constructor (props: any) {
     super(props);
     this.state = {
       plugins: [],

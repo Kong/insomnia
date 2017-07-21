@@ -1,11 +1,32 @@
-import React, {PropTypes, PureComponent} from 'react';
+// @flow
+import React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import ReactDOM from 'react-dom';
 
 @autobind
-class Tooltip extends PureComponent {
-  constructor (props) {
+class Tooltip extends React.PureComponent {
+  props: {
+    children: React.Children,
+    message: string,
+
+    // Optional
+    position?: string,
+    className?: string,
+    delay?: number
+  };
+
+  state: {
+    visible: boolean
+  };
+
+  _showTimeout: number;
+
+  // TODO: Figure out what type these should be
+  _tooltip: any;
+  _bubble: any;
+
+  constructor (props: any) {
     super(props);
 
     this.state = {
@@ -19,85 +40,92 @@ class Tooltip extends PureComponent {
     };
   }
 
-  _setTooltipRef (n) {
+  _setTooltipRef (n: React.Element<*>): void {
     this._tooltip = n;
   }
 
-  _setBubbleRef (n) {
+  _setBubbleRef (n: React.Element<*>): void {
     this._bubble = n;
   }
 
-  _handleMouseEnter (e) {
-    this._showTimeout = setTimeout(() => {
+  _handleMouseEnter (e: MouseEvent): void {
+    this._showTimeout = setTimeout((): void => {
       const tooltip = ReactDOM.findDOMNode(this._tooltip);
       const bubble = ReactDOM.findDOMNode(this._bubble);
+
+      if (!tooltip || !(tooltip instanceof HTMLDivElement)) {
+        return;
+      }
+
+      if (!bubble || !(bubble instanceof HTMLDivElement)) {
+        return;
+      }
 
       const tooltipRect = tooltip.getBoundingClientRect();
       const bubbleRect = bubble.getBoundingClientRect();
 
-      let top = null;
-      let left = null;
-      let bottom = null;
-      let right = null;
-      let maxWidth = null;
-      let maxHeight = null;
-
       switch (this.props.position) {
         case 'right':
-          top = (tooltipRect.height / 2) - (bubbleRect.height / 2);
-          left = tooltipRect.width;
-          maxWidth = bubbleRect.right;
+          bubble.style.top = `${tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2)}px`;
+          bubble.style.left = `${tooltipRect.left + tooltipRect.width}px`;
           break;
 
         case 'bottom':
-          left = (tooltipRect.width / 2) - (bubbleRect.width / 2);
-          top = tooltipRect.height;
+          bubble.style.top = `${tooltipRect.top + tooltipRect.height}px`;
+          bubble.style.left = `${tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2)}px`;
           break;
 
         case 'top':
         default:
-          left = (tooltipRect.width / 2) - (bubbleRect.width / 2);
-          bottom = tooltipRect.height;
+          bubble.style.top = `${tooltipRect.top - bubbleRect.height}px`;
+          bubble.style.left = `${tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2)}px`;
           break;
       }
 
-      this.setState({top, left, bottom, right, maxWidth, maxHeight, visible: true});
+      this.setState({visible: true});
     }, this.props.delay || 100);
   }
 
-  _handleMouseLeave () {
+  _handleMouseLeave (): void {
     clearTimeout(this._showTimeout);
-    this.setState({visible: false, left: 0, top: 0});
+    this.setState({visible: false});
+  }
+
+  _getContainer (): HTMLElement {
+    let container = document.querySelector('#tooltips-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'tooltips-container';
+
+      document.body && document.body.appendChild(container);
+    }
+
+    return container;
+  }
+
+  componentDidMount () {
+    // Move the element to the body so we can position absolutely
+    if (this._bubble) {
+      const el = ReactDOM.findDOMNode(this._bubble);
+      el && this._getContainer().appendChild(el);
+    }
   }
 
   render () {
     const {children, message, className} = this.props;
-    const {left, top, right, bottom, visible, maxHeight, maxWidth} = this.state;
+    const {visible} = this.state;
 
-    const tooltipClasses = classnames(
-      className,
-      'tooltip',
-      `tooltip--${this.props.position || 'top'}`,
-      {'tooltip--visible': visible}
-    );
-
-    const bubbleClasses = classnames('tooltip__bubble');
-
-    const bubbleStyles = {
-      left: left ? `${left}px` : null,
-      top: top ? `${top}px` : null,
-      right: right ? `${right}px` : null,
-      bottom: bottom ? `${bottom}px` : null,
-      maxWidth: `${maxWidth}px`,
-      maxHeight: `${maxHeight}px`
-    };
+    const tooltipClasses = classnames(className, 'tooltip');
+    const bubbleClasses = classnames('tooltip__bubble', {
+      'tooltip__bubble--visible': visible
+    });
 
     return (
       <div className={tooltipClasses}
            ref={this._setTooltipRef}
            onMouseEnter={this._handleMouseEnter}
            onMouseLeave={this._handleMouseLeave}>
-        <div style={bubbleStyles} className={bubbleClasses} ref={this._setBubbleRef}>
+        <div className={bubbleClasses} ref={this._setBubbleRef}>
           {message}
         </div>
         {children}
@@ -105,15 +133,5 @@ class Tooltip extends PureComponent {
     );
   }
 }
-
-Tooltip.propTypes = {
-  children: PropTypes.node.isRequired,
-  message: PropTypes.node.isRequired,
-
-  // Optional
-  position: PropTypes.string,
-  className: PropTypes.string,
-  delay: PropTypes.number
-};
 
 export default Tooltip;

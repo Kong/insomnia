@@ -99,7 +99,6 @@ export async function createPlugin (displayName: string): Promise<void> {
 }
 
 export async function getTemplateTags (): Promise<Array<TemplateTag>> {
-  console.log('GETTING TEMPLATE TAGS');
   let extensions = [];
   for (const plugin of await getPlugins()) {
     const templateTags = plugin.module.templateTags || [];

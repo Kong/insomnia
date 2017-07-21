@@ -48,80 +48,77 @@ const rUpdate = (request, ...args) => {
 
 const sUpdate = models.settings.update;
 
-type Props = {
-  // Helper Functions
-  handleActivateRequest: Function,
-  handleSetSidebarFilter: Function,
-  handleToggleMenuBar: Function,
-  handleImportFileToWorkspace: Function,
-  handleImportUriToWorkspace: Function,
-  handleExportFile: Function,
-  handleSetActiveWorkspace: Function,
-  handleSetActiveEnvironment: Function,
-  handleMoveDoc: Function,
-  handleCreateRequest: Function,
-  handleDuplicateRequest: Function,
-  handleDuplicateRequestGroup: Function,
-  handleDuplicateWorkspace: Function,
-  handleCreateRequestGroup: Function,
-  handleGenerateCodeForActiveRequest: Function,
-  handleGenerateCode: Function,
-  handleCopyAsCurl: Function,
-  handleCreateRequestForWorkspace: Function,
-  handleSetRequestPaneRef: Function,
-  handleSetResponsePaneRef: Function,
-  handleSetResponsePreviewMode: Function,
-  handleRender: Function,
-  handleGetRenderContext: Function,
-  handleSetResponseFilter: Function,
-  handleSetActiveResponse: Function,
-  handleSetSidebarRef: Function,
-  handleStartDragSidebar: Function,
-  handleResetDragSidebar: Function,
-  handleStartDragPaneHorizontal: Function,
-  handleStartDragPaneVertical: Function,
-  handleResetDragPaneHorizontal: Function,
-  handleResetDragPaneVertical: Function,
-  handleSetRequestGroupCollapsed: Function,
-  handleSendRequestWithEnvironment: Function,
-  handleSendAndDownloadRequestWithEnvironment: Function,
-
-  // Properties
-  loadStartTime: number,
-  isLoading: boolean,
-  paneWidth: number,
-  paneHeight: number,
-  responsePreviewMode: string,
-  responseFilter: string,
-  responseFilterHistory: Array<string>,
-  sidebarWidth: number,
-  sidebarHidden: boolean,
-  sidebarFilter: string,
-  sidebarChildren: Array<Object>,
-  settings: Settings,
-  workspaces: Array<Workspace>,
-  workspaceChildren: Array<Object>,
-  environments: Array<Object>,
-  activeRequestResponses: Array<Response>,
-  activeWorkspace: Workspace,
-
-  // Optional
-  oAuth2Token: ?OAuth2Token,
-  activeRequest: ?Request,
-  activeResponse: ?Response,
-  activeEnvironment: ?Object
-};
-
-type State = {
-  forceRefreshKey: number
-};
-
 @autobind
-class Wrapper extends React.PureComponent<void, Props, State> {
-  props: Props;
-  state: State;
+class Wrapper extends React.PureComponent {
+  props: {
+    // Helper Functions
+    handleActivateRequest: Function,
+    handleSetSidebarFilter: Function,
+    handleToggleMenuBar: Function,
+    handleImportFileToWorkspace: Function,
+    handleImportUriToWorkspace: Function,
+    handleExportFile: Function,
+    handleSetActiveWorkspace: Function,
+    handleSetActiveEnvironment: Function,
+    handleMoveDoc: Function,
+    handleCreateRequest: Function,
+    handleDuplicateRequest: Function,
+    handleDuplicateRequestGroup: Function,
+    handleDuplicateWorkspace: Function,
+    handleCreateRequestGroup: Function,
+    handleGenerateCodeForActiveRequest: Function,
+    handleGenerateCode: Function,
+    handleCopyAsCurl: Function,
+    handleCreateRequestForWorkspace: Function,
+    handleSetRequestPaneRef: Function,
+    handleSetResponsePaneRef: Function,
+    handleSetResponsePreviewMode: Function,
+    handleRender: Function,
+    handleGetRenderContext: Function,
+    handleSetResponseFilter: Function,
+    handleSetActiveResponse: Function,
+    handleSetSidebarRef: Function,
+    handleStartDragSidebar: Function,
+    handleResetDragSidebar: Function,
+    handleStartDragPaneHorizontal: Function,
+    handleStartDragPaneVertical: Function,
+    handleResetDragPaneHorizontal: Function,
+    handleResetDragPaneVertical: Function,
+    handleSetRequestGroupCollapsed: Function,
+    handleSendRequestWithEnvironment: Function,
+    handleSendAndDownloadRequestWithEnvironment: Function,
 
-  constructor (props: Props) {
+    // Properties
+    loadStartTime: number,
+    isLoading: boolean,
+    paneWidth: number,
+    paneHeight: number,
+    responsePreviewMode: string,
+    responseFilter: string,
+    responseFilterHistory: Array<string>,
+    sidebarWidth: number,
+    sidebarHidden: boolean,
+    sidebarFilter: string,
+    sidebarChildren: Array<Object>,
+    settings: Settings,
+    workspaces: Array<Workspace>,
+    workspaceChildren: Array<Object>,
+    environments: Array<Object>,
+    activeRequestResponses: Array<Response>,
+    activeWorkspace: Workspace,
+
+    // Optional
+    oAuth2Token: ?OAuth2Token,
+    activeRequest: ?Request,
+    activeResponse: ?Response,
+    activeEnvironment: ?Object
+  };
+
+  state: {
+    forceRefreshKey: number
+  };
+
+  constructor (props: any) {
     super(props);
     this.state = {
       forceRefreshKey: Date.now()

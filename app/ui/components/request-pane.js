@@ -24,45 +24,43 @@ import {showModal} from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 
-type Props = {
-  // Functions
-  forceUpdateRequest: Function,
-  handleSend: Function,
-  handleSendAndDownload: Function,
-  handleCreateRequest: Function,
-  handleGenerateCode: Function,
-  handleRender: Function,
-  handleGetRenderContext: Function,
-  updateRequestUrl: Function,
-  updateRequestMethod: Function,
-  updateRequestBody: Function,
-  updateRequestParameters: Function,
-  updateRequestAuthentication: Function,
-  updateRequestHeaders: Function,
-  updateRequestMimeType: Function,
-  updateSettingsShowPasswords: Function,
-  updateSettingsUseBulkHeaderEditor: Function,
-  handleImport: Function,
-  handleImportFile: Function,
-
-  // Other
-  useBulkHeaderEditor: boolean,
-  showPasswords: boolean,
-  editorFontSize: number,
-  editorIndentSize: number,
-  editorKeyMap: string,
-  editorLineWrapping: boolean,
-  workspace: Workspace,
-  forceRefreshCounter: number,
-
-  // Optional
-  request: ?Request,
-  oAuth2Token: ?OAuth2Token
-}
-
 @autobind
-class RequestPane extends React.PureComponent<void, Props, void> {
-  props: Props;
+class RequestPane extends React.PureComponent {
+  props: {
+    // Functions
+    forceUpdateRequest: Function,
+    handleSend: Function,
+    handleSendAndDownload: Function,
+    handleCreateRequest: Function,
+    handleGenerateCode: Function,
+    handleRender: Function,
+    handleGetRenderContext: Function,
+    updateRequestUrl: Function,
+    updateRequestMethod: Function,
+    updateRequestBody: Function,
+    updateRequestParameters: Function,
+    updateRequestAuthentication: Function,
+    updateRequestHeaders: Function,
+    updateRequestMimeType: Function,
+    updateSettingsShowPasswords: Function,
+    updateSettingsUseBulkHeaderEditor: Function,
+    handleImport: Function,
+    handleImportFile: Function,
+
+    // Other
+    useBulkHeaderEditor: boolean,
+    showPasswords: boolean,
+    editorFontSize: number,
+    editorIndentSize: number,
+    editorKeyMap: string,
+    editorLineWrapping: boolean,
+    workspace: Workspace,
+    forceRefreshCounter: number,
+
+    // Optional
+    request: ?Request,
+    oAuth2Token: ?OAuth2Token
+  };
 
   _handleUpdateRequestUrlTimeout: number;
 

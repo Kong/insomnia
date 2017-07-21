@@ -241,7 +241,6 @@ class Dropdown extends PureComponent {
 
   componentDidMount () {
     document.body.addEventListener('keydown', this._handleBodyKeyDown);
-    window.addEventListener('resize', this._checkSizeAndPosition);
 
     // Move the element to the body so we can position absolutely
     if (this._dropdownMenu) {
@@ -252,7 +251,6 @@ class Dropdown extends PureComponent {
 
   componentWillUnmount () {
     document.body.removeEventListener('keydown', this._handleBodyKeyDown);
-    window.removeEventListener('resize', this._checkSizeAndPosition);
 
     // Remove the element from the body
     if (this._dropdownMenu) {

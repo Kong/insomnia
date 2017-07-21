@@ -8,50 +8,31 @@
   &:hover {
     opacity: 1;
   }
+}
 
-  .tooltip__bubble {
-    position: absolute;
-    left: -999999px;
-    opacity: 0;
-    background: var(--color-bg);
-    border: 1px solid var(--color-bg);
-    box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
-    color: var(--color-font);
-    padding: @padding-xs @padding-sm;
-    border-radius: @radius-sm;
-    font-size: @font-size-sm;
-    width: 18rem;
-    text-align: center;
-    z-index: 10;
-    white-space: normal !important;
+.tooltip__bubble {
+  position: fixed;
+  left: -999999px;
+  opacity: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--hl-sm);
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
+  color: var(--color-font);
+  padding: @padding-xs @padding-sm;
+  border-radius: @radius-sm;
+  font-size: @font-size-sm;
+  width: 18rem;
+  text-align: center;
+  z-index: 10;
+  white-space: normal !important;
 
-    // If this isn't like this, weird things happen like making the parent scroll
-    height: 0;
-    line-height: 0;
-  }
-
-  &.tooltip--visible .tooltip__bubble {
+  &.tooltip__bubble--visible {
     opacity: 1;
+    z-index: 99999;
     transition: opacity 200ms;
 
     // Back to normal
     height: auto;
     line-height: normal;
-  }
-
-  &.tooltip--left .tooltip__bubble {
-    margin-right: @padding-xs;
-  }
-
-  &.tooltip--right .tooltip__bubble {
-    margin-left: @padding-xs;
-  }
-
-  &.tooltip--top .tooltip__bubble {
-    margin-bottom: @padding-xs;
-  }
-
-  .tooltip--bottom .tooltip__bubble {
-    margin-top: @padding-xs;
   }
 }

@@ -9,13 +9,14 @@
   transition: opacity 250ms;
   position: absolute;
   top: 0;
-  left: 0;
+  left: -99999px;
   right: 0;
   bottom: 0;
   padding: @padding-lg;
 
   &.modal--open {
     opacity: 1;
+    left: 0;
   }
 
   &:focus {
