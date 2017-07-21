@@ -1,22 +1,46 @@
-import React, {PropTypes, PureComponent} from 'react';
+// @flow
+import type {Request} from '../../../../models/request';
+import type {OAuth2Token} from '../../../../models/o-auth-2-token';
+
+import React from 'react';
 import moment from 'moment';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
-import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_PASSWORD, GRANT_TYPE_IMPLICIT} from '../../../../network/o-auth-2/constants';
+import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_IMPLICIT, GRANT_TYPE_PASSWORD} from '../../../../network/o-auth-2/constants';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import * as models from '../../../../models';
 import Link from '../../base/link';
 import {trackEvent} from '../../../../analytics/index';
+import HelpTooltip from '../../help-tooltip';
 
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
 
 @autobind
-class OAuth2 extends PureComponent {
-  constructor (props) {
+class OAuth2 extends React.PureComponent {
+  props: {
+    handleRender: Function,
+    handleGetRenderContext: Function,
+    handleUpdateSettingsShowPasswords: Function,
+    onChange: Function,
+    request: Request,
+    showPasswords: boolean,
+
+    // Optional
+    oAuth2Token: OAuth2Token | null
+  };
+
+  state: {
+    error: string,
+    loading: boolean
+  };
+
+  _handleChangeProperty: Function;
+
+  constructor (props: any) {
     super(props);
 
     this.state = {
@@ -27,36 +51,36 @@ class OAuth2 extends PureComponent {
     this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
   }
 
-  async _handleUpdateAccessToken (e) {
+  async _handleUpdateAccessToken (e: Event & {target: HTMLButtonElement}): Promise<void> {
     const {oAuth2Token} = this.props;
     const accessToken = e.target.value;
 
     if (oAuth2Token) {
-      await models.oAuth2Token.update(this.props.oAuth2Token, {accessToken});
+      await models.oAuth2Token.update(oAuth2Token, {accessToken});
     } else {
       await models.oAuth2Token.create({accessToken, parentId: this.props.request._id});
     }
   }
 
-  async _handleUpdateRefreshToken (e) {
+  async _handleUpdateRefreshToken (e: Event & {target: HTMLButtonElement}): Promise<void> {
     const {oAuth2Token} = this.props;
     const refreshToken = e.target.value;
 
     if (oAuth2Token) {
-      await models.oAuth2Token.update(this.props.oAuth2Token, {refreshToken});
+      await models.oAuth2Token.update(oAuth2Token, {refreshToken});
     } else {
       await models.oAuth2Token.create({refreshToken, parentId: this.props.request._id});
     }
   }
 
-  async _handleClearTokens () {
+  async _handleClearTokens (): Promise<void> {
     const oAuth2Token = await models.oAuth2Token.getByParentId(this.props.request._id);
     if (oAuth2Token) {
       await models.oAuth2Token.remove(oAuth2Token);
     }
   }
 
-  async _handleRefreshToken () {
+  async _handleRefreshToken (): Promise<void> {
     // First, clear the state and the current tokens
     this.setState({error: '', loading: true});
 
@@ -64,73 +88,82 @@ class OAuth2 extends PureComponent {
 
     try {
       const authentication = await this.props.handleRender(request.authentication);
-      const oAuth2Token = await getAccessToken(request._id, authentication, true);
-      this.setState({token: oAuth2Token, loading: false});
+      await getAccessToken(request._id, authentication, true);
+      this.setState({loading: false});
     } catch (err) {
       await this._handleClearTokens(); // Clear existing tokens if there's an error
       this.setState({error: err.message, loading: false});
     }
   }
 
-  _handleChangeProperty (property, value) {
+  _handleChangeProperty (property: string, value: string | boolean): void {
     const {request} = this.props;
     const authentication = Object.assign({}, request.authentication, {[property]: value});
     this.props.onChange(authentication);
   }
 
-  _handleChangeClientId (value) {
+  _handleChangeClientId (value: string): void {
     this._handleChangeProperty('clientId', value);
   }
 
-  _handleChangeCredentialsInBody (e) {
+  _handleChangeCredentialsInBody (e: Event & {target: HTMLButtonElement}): void {
     this._handleChangeProperty('credentialsInBody', e.target.value === 'true');
   }
 
-  _handleChangeClientSecret (value) {
+  _handleChangeClientSecret (value: string): void {
     this._handleChangeProperty('clientSecret', value);
   }
 
-  _handleChangeAuthorizationUrl (value) {
+  _handleChangeAuthorizationUrl (value: string): void {
     this._handleChangeProperty('authorizationUrl', value);
   }
 
-  _handleChangeAccessTokenUrl (value) {
+  _handleChangeAccessTokenUrl (value: string): void {
     this._handleChangeProperty('accessTokenUrl', value);
   }
 
-  _handleChangeRedirectUrl (value) {
+  _handleChangeRedirectUrl (value: string): void {
     this._handleChangeProperty('redirectUrl', value);
   }
 
-  _handleChangeScope (value) {
+  _handleChangeScope (value: string): void {
     this._handleChangeProperty('scope', value);
   }
 
-  _handleChangeState (value) {
+  _handleChangeState (value: string): void {
     this._handleChangeProperty('state', value);
   }
 
-  _handleChangeUsername (value) {
+  _handleChangeUsername (value: string): void {
     this._handleChangeProperty('username', value);
   }
 
-  _handleChangePassword (value) {
+  _handleChangePassword (value: string): void {
     this._handleChangeProperty('password', value);
   }
 
-  _handleChangeGrantType (e) {
+  _handleChangeGrantType (e: Event & {target: HTMLButtonElement}): void {
     trackEvent('OAuth 2', 'Change Grant Type', e.target.value);
     this._handleChangeProperty('grantType', e.target.value);
   }
 
-  renderInputRow (label, property, onChange, handleAutocomplete = null) {
+  renderInputRow (
+    label: string,
+    property: string,
+    onChange: Function,
+    help: string | null = null,
+    handleAutocomplete: Function | null = null
+  ): React.Element<*> {
     const {handleRender, handleGetRenderContext, request} = this.props;
     const id = label.replace(/ /g, '-');
     const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
-          <label htmlFor={id} className="label--small no-pad">{label}</label>
+          <label htmlFor={id} className="label--small no-pad">
+            {label}
+            {help && <HelpTooltip>{help}</HelpTooltip>}
+          </label>
         </td>
         <td className="wide">
           <div className="form-control form-control--underlined no-margin">
@@ -149,7 +182,13 @@ class OAuth2 extends PureComponent {
     );
   }
 
-  renderSelectRow (label, property, options, onChange) {
+  renderSelectRow (
+    label: string,
+    property: string,
+    options: Array<{name: string, value: string}>,
+    onChange: Function,
+    help: string | null = null
+  ): React.Element<*> {
     const {request} = this.props;
     const id = label.replace(/ /g, '-');
     const value = request.authentication.hasOwnProperty(property)
@@ -159,7 +198,10 @@ class OAuth2 extends PureComponent {
     return (
       <tr key={id}>
         <td className="pad-right no-wrap valign-middle">
-          <label htmlFor={id} className="label--small no-pad">{label}</label>
+          <label htmlFor={id} className="label--small no-pad">
+            {label}
+            {help && <HelpTooltip>{help}</HelpTooltip>}
+          </label>
         </td>
         <td className="wide">
           <div className="form-control form-control--outlined no-margin">
@@ -174,8 +216,8 @@ class OAuth2 extends PureComponent {
     );
   }
 
-  renderGrantTypeFields (grantType) {
-    let fields = null;
+  renderGrantTypeFields (grantType: string): Array<React.Element<*>> {
+    let fields = [];
 
     const clientId = this.renderInputRow(
       'Client ID',
@@ -193,6 +235,7 @@ class OAuth2 extends PureComponent {
       'Authorization URL',
       'authorizationUrl',
       this._handleChangeAuthorizationUrl,
+      null,
       getAuthorizationUrls
     );
 
@@ -200,13 +243,15 @@ class OAuth2 extends PureComponent {
       'Access Token URL',
       'accessTokenUrl',
       this._handleChangeAccessTokenUrl,
+      null,
       getAccessTokenUrls
     );
 
     const redirectUri = this.renderInputRow(
       'Redirect URL',
       'redirectUrl',
-      this._handleChangeRedirectUrl
+      this._handleChangeRedirectUrl,
+      'Insomnia will intercept this no matter what, so it can be whatever you want/need'
     );
 
     const state = this.renderInputRow(
@@ -240,7 +285,8 @@ class OAuth2 extends PureComponent {
         {name: 'As Basic Auth Header (default)', value: 'false'},
         {name: 'In Request Body', value: 'true'}
       ],
-      this._handleChangeCredentialsInBody
+      this._handleChangeCredentialsInBody,
+      'Whether or not to send credentials as Basic Auth, or as plain text in the request body',
     );
 
     if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
@@ -285,7 +331,7 @@ class OAuth2 extends PureComponent {
     return fields;
   }
 
-  renderExpireAt (token) {
+  renderExpireAt (token: OAuth2Token | null): React.Element<*> | string | null {
     if (!token) {
       return null;
     }
@@ -386,17 +432,5 @@ class OAuth2 extends PureComponent {
     );
   }
 }
-
-OAuth2.propTypes = {
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  request: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired,
-
-  // Optional
-  oAuth2Token: PropTypes.object
-};
 
 export default OAuth2;

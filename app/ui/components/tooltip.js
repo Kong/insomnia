@@ -63,21 +63,22 @@ class Tooltip extends React.PureComponent {
 
       const tooltipRect = tooltip.getBoundingClientRect();
       const bubbleRect = bubble.getBoundingClientRect();
+      const margin = 3;
 
       switch (this.props.position) {
         case 'right':
           bubble.style.top = `${tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2)}px`;
-          bubble.style.left = `${tooltipRect.left + tooltipRect.width}px`;
+          bubble.style.left = `${tooltipRect.left + tooltipRect.width + margin}px`;
           break;
 
         case 'bottom':
-          bubble.style.top = `${tooltipRect.top + tooltipRect.height}px`;
+          bubble.style.top = `${tooltipRect.top + tooltipRect.height + margin}px`;
           bubble.style.left = `${tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2)}px`;
           break;
 
         case 'top':
         default:
-          bubble.style.top = `${tooltipRect.top - bubbleRect.height}px`;
+          bubble.style.top = `${tooltipRect.top - bubbleRect.height - margin}px`;
           bubble.style.left = `${tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2)}px`;
           break;
       }
@@ -89,6 +90,17 @@ class Tooltip extends React.PureComponent {
   _handleMouseLeave (): void {
     clearTimeout(this._showTimeout);
     this.setState({visible: false});
+
+    const bubble = ReactDOM.findDOMNode(this._bubble);
+    if (!bubble || !(bubble instanceof HTMLDivElement)) {
+      return;
+    }
+
+    // Reset positioning stuff
+    bubble.style.left = '';
+    bubble.style.top = '';
+    bubble.style.bottom = '';
+    bubble.style.right = '';
   }
 
   _getContainer (): HTMLElement {
