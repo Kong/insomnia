@@ -299,8 +299,11 @@ export function docUpdate <T: BaseModel> (originalDoc: T, patch: Object = {}): P
   const doc = initModel(
     originalDoc.type,
     originalDoc,
-    patch,
+
+    // NOTE: This is before `patch` because we want `patch.modified` to win if it has it
     {modified: Date.now()},
+
+    patch,
   );
 
   return update(doc);
