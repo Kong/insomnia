@@ -10,6 +10,7 @@ import {showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import {reload} from '../../../templating/index';
 import installPlugin from '../../../plugins/install';
+import HelpTooltip from '../help-tooltip';
 
 @autobind
 class Plugins extends React.PureComponent {
@@ -92,7 +93,12 @@ class Plugins extends React.PureComponent {
           <tbody>
           {plugins.map(plugin => (
             <tr key={plugin.name}>
-              <td>{plugin.name}</td>
+              <td>
+                {plugin.name}
+                {plugin.description && (
+                  <HelpTooltip info className="space-left">{plugin.description}</HelpTooltip>
+                )}
+              </td>
               <td>{plugin.version}</td>
               <td className="no-wrap" style={{width: '10rem'}}>
                 <CopyButton className="btn btn--outlined btn--super-duper-compact"
@@ -126,12 +132,14 @@ class Plugins extends React.PureComponent {
               </button>
             </div>
             <div className="form-control width-auto">
-              <button type="button" className="btn btn--clicky" onClick={this._handleRefreshPlugins}>
+              <button type="button" className="btn btn--clicky"
+                      onClick={this._handleRefreshPlugins}>
                 Reload
               </button>
             </div>
             <div className="form-control width-auto">
-              <button type="button" className="btn btn--clicky" onClick={this._handleGeneratePlugin}>
+              <button type="button" className="btn btn--clicky"
+                      onClick={this._handleGeneratePlugin}>
                 New Plugin
               </button>
             </div>

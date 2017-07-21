@@ -11,6 +11,7 @@ import {resolveHomePath} from '../common/misc';
 
 export type Plugin = {
   name: string,
+  description: string,
   version: string,
   directory: string,
   module: *
@@ -88,13 +89,17 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
         delete global.require.cache[global.require.resolve(modulePath)];
         const module = global.require(modulePath);
 
-        plugins.push({
-          name: pluginJson.name,
+        const pluginMeta = pluginJson.insomnia || {};
+
+        const plugin: Plugin = {
+          name: pluginMeta.name || pluginJson.name,
+          description: pluginMeta.description || '',
           version: pluginJson.version || '0.0.0',
           directory: modulePath,
           module
-        });
+        };
 
+        plugins.push(plugin);
         // console.log(`[plugin] Loaded ${modulePath}`);
       }
     }
