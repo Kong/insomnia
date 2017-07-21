@@ -1,5 +1,6 @@
 import React, {PureComponent} from 'react';
 import Link from '../base/link';
+import {Curl} from 'node-libcurl';
 
 class About extends PureComponent {
   render () {
@@ -24,6 +25,10 @@ class About extends PureComponent {
         <p>
           ~ Gregory
         </p>
+        <h3>App Details</h3>
+        <ul>
+          <li>Compiled with <strong>{Curl.getVersion()}</strong></li>
+        </ul>
       </div>
     );
   }
