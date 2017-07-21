@@ -191,7 +191,7 @@ export function find<T: BaseModel> (
   });
 }
 
-export function all <T: BaseModel> (type: string): Promise<Array<T>> {
+export function all<T: BaseModel> (type: string): Promise<Array<T>> {
   return find(type);
 }
 
@@ -244,7 +244,7 @@ export function insert<T: BaseModel> (doc: T, fromSync: boolean = false): Promis
   });
 }
 
-export function update <T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
+export function update<T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
   return new Promise((resolve, reject) => {
     const docWithDefaults = initModel(doc.type, doc);
     db[doc.type].update({_id: docWithDefaults._id}, docWithDefaults, err => {
@@ -259,7 +259,7 @@ export function update <T: BaseModel> (doc: T, fromSync: boolean = false): Promi
   });
 }
 
-export async function remove <T: BaseModel> (doc: T, fromSync: boolean = false): Promise<void> {
+export async function remove<T: BaseModel> (doc: T, fromSync: boolean = false): Promise<void> {
   bufferChanges();
 
   const docs = await withDescendants(doc);
@@ -295,7 +295,7 @@ export async function removeWhere (type: string, query: Object): Promise<void> {
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-export function docUpdate <T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
+export function docUpdate<T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
   const doc = initModel(
     originalDoc.type,
     originalDoc,
@@ -315,10 +315,7 @@ export function docCreate<T: BaseModel> (type: string, ...patches: Array<Object>
     ...patches,
 
     // Fields that the user can't touch
-    {
-      type: type,
-      modified: Date.now()
-    }
+    {type: type}
   );
 
   return insert(doc);
@@ -396,10 +393,10 @@ export async function withAncestors (
   return await next([doc]);
 }
 
-export async function duplicate <T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
+export async function duplicate<T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
   bufferChanges();
 
-  async function next <T: BaseModel> (docToCopy: T, patch: Object): Promise<T> {
+  async function next<T: BaseModel> (docToCopy: T, patch: Object): Promise<T> {
     // 1. Copy the doc
     const newDoc = Object.assign({}, docToCopy, patch);
     delete newDoc._id;
