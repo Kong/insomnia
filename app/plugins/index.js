@@ -4,9 +4,6 @@ import * as models from '../models';
 import fs from 'fs';
 import path from 'path';
 import {PLUGIN_PATH} from '../common/constants';
-import {render} from '../templating';
-import skeletonPackageJson from './skeleton/package.json.js';
-import skeletonPluginJs from './skeleton/plugin.js.js';
 import {resolveHomePath} from '../common/misc';
 
 export type Plugin = {
@@ -106,18 +103,6 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
   }
 
   return plugins;
-}
-
-export async function createPlugin (displayName: string): Promise<void> {
-  // Create root plugin dir
-  const name = displayName.replace(/\s/g, '-').toLowerCase();
-  const dir = path.join(PLUGIN_PATH, name);
-  mkdirp.sync(dir);
-
-  fs.writeFileSync(path.join(dir, 'plugin.js'), skeletonPluginJs);
-
-  const renderedPackageJson = await render(skeletonPackageJson, {context: {name, displayName}});
-  fs.writeFileSync(path.join(dir, 'package.json'), renderedPackageJson);
 }
 
 export async function getTemplateTags (): Promise<Array<TemplateTag>> {

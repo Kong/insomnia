@@ -140,6 +140,11 @@ p.notice {
   z-index: 0;
   overflow: auto;
 
+  .pre {
+    line-height: 1.3em;
+    white-space: pre;
+  }
+
   p {
     min-width: 8rem;
     padding: 0;
@@ -215,6 +220,15 @@ p.notice {
 .superscript {
   vertical-align: super;
   font-size: 0.75em;
+}
+
+blockquote {
+  border-left: 0.4em solid var(--hl-md);
+  padding: @padding-xxs @padding-md;
+
+  p {
+    margin: @padding-xs 0;
+  }
 }
 
 .img--circle {

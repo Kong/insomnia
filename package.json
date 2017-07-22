@@ -16,7 +16,7 @@
     "test:coverage": "cross-env NODE_ENV=test jest --coverage --silent && open ./coverage/lcov-report/index.html",
     "test:watch": "cross-env NODE_ENV=test jest --silent --watch",
     "test:flow": "flow check",
-    "test": "npm run test:flow && npm run test:lint && cross-env NODE_ENV=test jest --silent",
+    "test": "npm run test:flow && npm run test:lint && cross-env NODE_ENV=test jest --silent --maxWorkers 1",
     "start-hot": "npm run build-main && cross-env HOT=1 INSOMNIA_ENV=development electron app",
     "build-main": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js",
     "hot-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",

@@ -6,7 +6,7 @@
 [include]
 
 [libs]
-flow-typed/.*
+flow-typed/
 
 [options]
 esproposal.decorators=ignore
