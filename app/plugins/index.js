@@ -3,14 +3,12 @@ import mkdirp from 'mkdirp';
 import * as models from '../models';
 import fs from 'fs';
 import path from 'path';
-import {PLUGIN_PATHS} from '../common/constants';
-import {render} from '../templating';
-import skeletonPackageJson from './skeleton/package.json.js';
-import skeletonPluginJs from './skeleton/plugin.js.js';
+import {PLUGIN_PATH} from '../common/constants';
 import {resolveHomePath} from '../common/misc';
 
 export type Plugin = {
   name: string,
+  description: string,
   version: string,
   directory: string,
   module: *
@@ -46,56 +44,65 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
   if (!plugins) {
     const settings = await models.settings.getOrCreate();
     const extraPaths = settings.pluginPath.split(':').filter(p => p).map(resolveHomePath);
-    const allPaths = [...PLUGIN_PATHS, ...extraPaths];
 
     // Make sure the default directories exist
-    for (const p of PLUGIN_PATHS) {
-      mkdirp.sync(p);
-    }
+    mkdirp.sync(PLUGIN_PATH);
+
+    // Also look in node_modules folder in each directory
+    const basePaths = [PLUGIN_PATH, ...extraPaths];
+    const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
+    const allPaths = [...basePaths, ...extendedPaths];
 
     plugins = [];
     for (const p of allPaths) {
-      for (const dir of fs.readdirSync(p)) {
-        if (dir.indexOf('.') === 0) {
+      if (!fs.existsSync(p)) {
+        continue;
+      }
+
+      for (const filename of fs.readdirSync(p)) {
+        const modulePath = path.join(p, filename);
+        const packageJSONPath = path.join(modulePath, 'package.json');
+
+        // Only read directories
+        if (!fs.statSync(modulePath).isDirectory()) {
           continue;
         }
 
-        const modulePath = path.join(p, dir);
-        const packageJSONPath = path.join(modulePath, 'package.json');
+        // Is it a Node module?
+        if (!fs.readdirSync(modulePath).includes('package.json')) {
+          continue;
+        }
 
         // Use global.require() instead of require() because Webpack wraps require()
         delete global.require.cache[global.require.resolve(packageJSONPath)];
         const pluginJson = global.require(packageJSONPath);
 
+        // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
+        if (!pluginJson.hasOwnProperty('insomnia')) {
+          continue;
+        }
+
         // Delete require cache entry and re-require
         delete global.require.cache[global.require.resolve(modulePath)];
         const module = global.require(modulePath);
 
-        plugins.push({
-          name: pluginJson.name,
+        const pluginMeta = pluginJson.insomnia || {};
+
+        const plugin: Plugin = {
+          name: pluginMeta.name || pluginJson.name,
+          description: pluginMeta.description || '',
           version: pluginJson.version || '0.0.0',
           directory: modulePath,
           module
-        });
+        };
 
+        plugins.push(plugin);
         // console.log(`[plugin] Loaded ${modulePath}`);
       }
     }
   }
 
   return plugins;
-}
-
-export async function createPlugin (displayName: string): Promise<void> {
-  // Create root plugin dir
-  const name = displayName.replace(/\s/g, '-').toLowerCase();
-  const dir = path.join(PLUGIN_PATHS[0], name);
-  mkdirp.sync(dir);
-
-  fs.writeFileSync(path.join(dir, 'plugin.js'), skeletonPluginJs);
-
-  const renderedPackageJson = await render(skeletonPackageJson, {context: {name, displayName}});
-  fs.writeFileSync(path.join(dir, 'package.json'), renderedPackageJson);
 }
 
 export async function getTemplateTags (): Promise<Array<TemplateTag>> {

@@ -1,25 +1,27 @@
-import React, {PropTypes, PureComponent} from 'react';
+// @flow
+import React from 'react';
 import autobind from 'autobind-decorator';
 import Tooltip from './tooltip';
 
 @autobind
-class HelpTooltip extends PureComponent {
+class HelpTooltip extends React.PureComponent {
+  props: {
+    children: React.Children,
+
+    // Optional
+    position?: string,
+    className?: string,
+    info?: boolean
+  };
+
   render () {
-    const {children, className, ...props} = this.props;
+    const {children, className, info, ...props} = this.props;
     return (
       <Tooltip {...props} className={className} message={children}>
-        <i className="fa fa-question-circle"/>
+        <i className={'fa ' + (info ? 'fa-info-circle' : 'fa-question-circle')}/>
       </Tooltip>
     );
   }
 }
-
-HelpTooltip.propTypes = {
-  children: PropTypes.node.isRequired,
-
-  // Optional
-  position: PropTypes.string,
-  className: PropTypes.string
-};
 
 export default HelpTooltip;

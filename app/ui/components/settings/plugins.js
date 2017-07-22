@@ -1,56 +1,62 @@
 // @flow
 import type {Plugin} from '../../../plugins/index';
-import {createPlugin, getPlugins} from '../../../plugins/index';
+import {getPlugins} from '../../../plugins/index';
 import React from 'react';
 import autobind from 'autobind-decorator';
 import * as electron from 'electron';
 import Button from '../base/button';
 import CopyButton from '../base/copy-button';
-import {showPrompt} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import {reload} from '../../../templating/index';
+import installPlugin from '../../../plugins/install';
+import HelpTooltip from '../help-tooltip';
+import Link from '../base/link';
 
 @autobind
 class Plugins extends React.PureComponent {
   state: {
     plugins: Array<Plugin>,
-    npmPluginValue: string
+    npmPluginValue: string,
+    error: string,
+    loading: boolean
   };
 
   constructor (props: any) {
     super(props);
     this.state = {
       plugins: [],
-      npmPluginValue: ''
+      npmPluginValue: '',
+      error: '',
+      loading: false
     };
+  }
+
+  _handleClearError () {
+    this.setState({error: ''});
   }
 
   _handleAddNpmPluginChange (e: Event & {target: HTMLButtonElement}) {
     this.setState({npmPluginValue: e.target.value});
   }
 
-  _handleAddFromNpm () {
-    console.log('ADD FROM NPM', this.state.npmPluginValue);
+  async _handleAddFromNpm (e: Event): Promise<void> {
+    e.preventDefault();
+
+    this.setState({loading: true});
+
+    const newState = {loading: false, error: ''};
+    try {
+      await installPlugin(this.state.npmPluginValue);
+      await this._handleRefreshPlugins();
+    } catch (err) {
+      newState.error = err.message;
+    }
+
+    this.setState(newState);
   }
 
   _handleOpenDirectory (directory: string) {
     electron.remote.shell.showItemInFolder(directory);
-  }
-
-  _handleGeneratePlugin () {
-    showPrompt({
-      title: 'Plugin Name',
-      defaultValue: 'My Plugin',
-      submitName: 'Generate Plugin',
-      selectText: true,
-      placeholder: 'My Cool Plugin',
-      label: 'Plugin Name',
-      onComplete: async name => {
-        await createPlugin(name);
-        await this._handleRefreshPlugins();
-        trackEvent('Plugins', 'Generate');
-      }
-    });
   }
 
   async _handleRefreshPlugins () {
@@ -67,12 +73,16 @@ class Plugins extends React.PureComponent {
   }
 
   render () {
-    const {plugins} = this.state;
+    const {plugins, error, loading} = this.state;
 
     return (
       <div>
         <p className="notice info no-margin-top">
-          Plugins are experimental and compatibility may break in future releases
+          Plugins is still an experimental feature. Please
+          {' '}
+          <Link href="https://insomnia.rest/documentation/support-and-feedback/">
+            Submit Feedback
+          </Link> if you have any.
         </p>
         <table className="table--fancy table--striped margin-top margin-bottom">
           <thead>
@@ -85,7 +95,12 @@ class Plugins extends React.PureComponent {
           <tbody>
           {plugins.map(plugin => (
             <tr key={plugin.name}>
-              <td>{plugin.name}</td>
+              <td>
+                {plugin.name}
+                {plugin.description && (
+                  <HelpTooltip info className="space-left">{plugin.description}</HelpTooltip>
+                )}
+              </td>
               <td>{plugin.version}</td>
               <td className="no-wrap" style={{width: '10rem'}}>
                 <CopyButton className="btn btn--outlined btn--super-duper-compact"
@@ -104,29 +119,40 @@ class Plugins extends React.PureComponent {
           ))}
           </tbody>
         </table>
-        <p className="text-right">
-        </p>
-        <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <input onChange={this._handleAddNpmPluginChange}
-                   type="text"
-                   placeholder="insomnia-foo-bar"/>
-          </div>
-          <div className="form-control width-auto">
-            <button className="btn btn--clicky" onClick={this._handleAddFromNpm}>
-              Add From NPM
+
+        {error && (
+          <div className="notice error text-left margin-bottom">
+            <button className="pull-right icon" onClick={this._handleClearError}>
+              <i className="fa fa-times"/>
             </button>
+            {error}
           </div>
-          <div className="form-control width-auto">
-            <button className="btn btn--clicky" onClick={this._handleRefreshPlugins}>
-              Reload
-            </button>
+        )}
+
+        <form onSubmit={this._handleAddFromNpm}>
+          <div className="form-row">
+            <div className="form-control form-control--outlined">
+              <input onChange={this._handleAddNpmPluginChange}
+                     disabled={loading}
+                     type="text"
+                     placeholder="npm-package-name"/>
+            </div>
+            <div className="form-control width-auto">
+              <button className="btn btn--clicky" disabled={loading}>
+                {loading && <i className="fa fa-refresh fa-spin space-right"/>}
+                Install Plugin
+              </button>
+            </div>
           </div>
-          <div className="form-control width-auto">
-            <button className="btn btn--clicky" onClick={this._handleGeneratePlugin}>
-              New Plugin
-            </button>
-          </div>
+        </form>
+
+        <hr/>
+
+        <div className="text-right">
+          <button type="button" className="btn btn--clicky"
+                  onClick={this._handleRefreshPlugins}>
+            Reload Plugin List
+          </button>
         </div>
       </div>
     );

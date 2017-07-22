@@ -14,7 +14,7 @@ describe('init()', () => {
   it('initializes correctly', () => {
     const result = plugin.init({name: PLUGIN});
     expect(Object.keys(result)).toEqual(['app']);
-    expect(Object.keys(result.app)).toEqual(['alert', 'getPath']);
+    expect(Object.keys(result.app)).toEqual(['alert', 'getPath', 'showSaveDialog']);
   });
 });
 
