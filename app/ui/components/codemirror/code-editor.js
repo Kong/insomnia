@@ -45,6 +45,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   cursorScrollMargin: 12, // NOTE: This is px
   keyMap: 'default',
   extraKeys: {
+    'Ctrl-Space': 'autocomplete',
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     }
@@ -330,7 +331,7 @@ class CodeEditor extends PureComponent {
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
-  _codemirrorSetOptions () {
+  async _codemirrorSetOptions () {
     const {
       mode: rawMode,
       readOnly,
@@ -348,7 +349,9 @@ class CodeEditor extends PureComponent {
       noStyleActiveLine,
       noLint,
       indentSize,
-      dynamicHeight
+      dynamicHeight,
+      hintOptions,
+      lintOptions
     } = this.props;
 
     let mode;
@@ -394,8 +397,17 @@ class CodeEditor extends PureComponent {
       options.gutters.push('CodeMirror-foldgutter');
     }
 
+    if (hintOptions) {
+      options.hintOptions = hintOptions;
+    }
+
+    if (lintOptions) {
+      options.lint = lintOptions;
+    }
+
     if (!hideGutters && options.lint) {
-      options.gutters.push('CodeMirror-lint-markers');
+      // Don't really need this
+      // options.gutters.push('CodeMirror-lint-markers');
     }
 
     // Setup the hint options
@@ -456,7 +468,10 @@ class CodeEditor extends PureComponent {
   _normalizeMode (mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
 
-    if (this._isJSON(mimeType)) {
+    if (mimeType === 'graphql') {
+      // Because graphQL plugin doesn't recognize application/graphql content-type
+      return 'graphql';
+    } else if (this._isJSON(mimeType)) {
       return 'application/json';
     } else if (this._isXML(mimeType)) {
       return 'application/xml';
@@ -733,7 +748,9 @@ CodeEditor.propTypes = {
   filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired),
   singleLine: PropTypes.bool,
   debounceMillis: PropTypes.number,
-  dynamicHeight: PropTypes.bool
+  dynamicHeight: PropTypes.bool,
+  hintOptions: PropTypes.object,
+  lintOptions: PropTypes.object
 };
 
 export default CodeEditor;

@@ -118,14 +118,16 @@ export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
+export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
 
 const contentTypesMap = {
   [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
   [CONTENT_TYPE_XML]: ['XML', 'XML'],
   [CONTENT_TYPE_FORM_DATA]: ['Multipart', 'Multipart Form'],
-  [CONTENT_TYPE_FORM_URLENCODED]: ['URL Encoded', 'Form URL Encoded'],
-  [CONTENT_TYPE_FILE]: ['Binary', 'Binary File'],
+  [CONTENT_TYPE_FORM_URLENCODED]: ['Form', 'Form URL Encoded'],
+  [CONTENT_TYPE_FILE]: ['File', 'Binary File'],
+  [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
   [CONTENT_TYPE_OTHER]: ['Other', 'Other']
 };
 

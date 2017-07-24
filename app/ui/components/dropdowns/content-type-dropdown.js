@@ -2,7 +2,7 @@ import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {trackEvent} from '../../../analytics/index';
-import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_XML, getContentTypeName} from '../../../common/constants';
+import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_XML, getContentTypeName} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/alert-modal';
 
@@ -31,8 +31,9 @@ class ContentTypeDropdown extends PureComponent {
     const willBeFile = mimeType === CONTENT_TYPE_FILE;
     const willBeMultipart = mimeType === CONTENT_TYPE_FORM_DATA;
     const willBeEmpty = typeof mimeType !== 'string';
+    const willBeGraphQL = mimeType === CONTENT_TYPE_GRAPHQL;
 
-    const willConvertToText = !willBeFile && !willBeMultipart && !willBeEmpty;
+    const willConvertToText = !willBeGraphQL && !willBeFile && !willBeMultipart && !willBeEmpty;
     const willPreserveText = willConvertToText && isText;
     const willPreserveForm = isFormUrlEncoded && willBeMultipart;
 
@@ -77,9 +78,10 @@ class ContentTypeDropdown extends PureComponent {
         <DropdownButton className={className}>
           {children}
         </DropdownButton>
-        <DropdownDivider><span><i className="fa fa-bars"/> Form Data</span></DropdownDivider>
+        <DropdownDivider><span><i className="fa fa-bars"/> Structured</span></DropdownDivider>
         {this._renderDropdownItem(CONTENT_TYPE_FORM_DATA)}
         {this._renderDropdownItem(CONTENT_TYPE_FORM_URLENCODED)}
+        {this._renderDropdownItem(CONTENT_TYPE_GRAPHQL)}
         <DropdownDivider><span><i className="fa fa-code"/> Text</span></DropdownDivider>
         {this._renderDropdownItem(CONTENT_TYPE_JSON)}
         {this._renderDropdownItem(CONTENT_TYPE_XML)}
