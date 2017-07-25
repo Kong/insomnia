@@ -1,6 +1,5 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
-import * as misc from '../../../../common/misc';
 import {getDefaultFill} from '../../../../templating/utils';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
