@@ -156,26 +156,6 @@ class RequestPane extends React.PureComponent {
     trackEvent('Query', 'Delete');
   }
 
-  _trackTabBody () {
-    trackEvent('Request Pane', 'View', 'Body');
-  }
-
-  _trackTabHeaders () {
-    trackEvent('Request Pane', 'View', 'Headers');
-  }
-
-  _trackTabDescription () {
-    trackEvent('Request Pane', 'View', 'Description');
-  }
-
-  _trackTabAuthentication () {
-    trackEvent('Request Pane', 'View', 'Authentication');
-  }
-
-  _trackTabQuery () {
-    trackEvent('Request Pane', 'View', 'Query');
-  }
-
   render () {
     const {
       editorFontSize,
@@ -278,7 +258,7 @@ class RequestPane extends React.PureComponent {
         </header>
         <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
-            <Tab onClick={this._trackTabBody}>
+            <Tab>
               <ContentTypeDropdown onChange={updateRequestMimeType}
                                    contentType={request.body.mimeType || ''}
                                    request={request}
@@ -288,7 +268,7 @@ class RequestPane extends React.PureComponent {
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
             </Tab>
-            <Tab onClick={this._trackTabAuthentication}>
+            <Tab>
               <AuthDropdown onChange={updateRequestAuthentication}
                             authentication={request.authentication}
                             className="tall">
@@ -296,19 +276,19 @@ class RequestPane extends React.PureComponent {
                 <i className="fa fa-caret-down space-left"/>
               </AuthDropdown>
             </Tab>
-            <Tab onClick={this._trackTabQuery}>
+            <Tab>
               <button>
                 Query
                 {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
-            <Tab onClick={this._trackTabHeaders}>
+            <Tab>
               <button>
                 Header
                 {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
-            <Tab onClick={this._trackTabDescription}>
+            <Tab>
               <button>
                 Docs
                 {request.description && (

@@ -39,7 +39,7 @@ class ImportExport extends PureComponent {
         <div className="pad-top">
           <Dropdown outline>
             <DropdownButton className="btn btn--clicky">
-              Export Data <i className="fa fa-caret-down"></i>
+              Export Data <i className="fa fa-caret-down"/>
             </DropdownButton>
             <DropdownDivider>Choose Export Type</DropdownDivider>
             <DropdownItem onClick={handleExportWorkspace}>
@@ -54,7 +54,7 @@ class ImportExport extends PureComponent {
           &nbsp;&nbsp;
           <Dropdown outline>
             <DropdownButton className="btn btn--clicky">
-              Import Data <i className="fa fa-caret-down"></i>
+              Import Data <i className="fa fa-caret-down"/>
             </DropdownButton>
             <DropdownDivider>Choose Import Type</DropdownDivider>
             <DropdownItem onClick={handleImportFile}>

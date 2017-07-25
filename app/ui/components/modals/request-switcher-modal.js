@@ -284,7 +284,7 @@ class RequestSwitcherModal extends PureComponent {
               return (
                 <li key={w._id}>
                   <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
-                    <i className="fa fa-random"></i>
+                    <i className="fa fa-random"/>
                     &nbsp;&nbsp;&nbsp;
                     Switch to <strong>{w.name}</strong>
                   </Button>

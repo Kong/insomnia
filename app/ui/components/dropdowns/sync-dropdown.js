@@ -173,7 +173,7 @@ class SyncDropdown extends PureComponent {
 
             {syncMode !== syncStorage.SYNC_MODE_NEVER
               ? <DropdownItem onClick={this._handleShowShareSettings}>
-                <i className="fa fa-users"></i>
+                <i className="fa fa-users"/>
                 Share Settings
               </DropdownItem> : null
             }

@@ -318,7 +318,7 @@ class WorkspaceSettingsModal extends PureComponent {
                                       confirmMessage=" "
                                       addIcon
                                       onClick={() => this._handleDeleteCertificate(certificate)}>
-                          <i className="fa fa-trash-o"></i>
+                          <i className="fa fa-trash-o"/>
                         </PromptButton>
                       </div>
                     </div>
