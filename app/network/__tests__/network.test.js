@@ -68,10 +68,8 @@ describe('actuallySend()', () => {
           'notlocalhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
           'localhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbar'
         ],
-        CUSTOMREQUEST: 'POST',
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
-        NOBODY: 0,
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/json',
@@ -82,6 +80,7 @@ describe('actuallySend()', () => {
         USERNAME: 'user',
         PASSWORD: 'pass',
         POSTFIELDS: 'foo=bar',
+        POST: 1,
         PROXY: '',
         TIMEOUT_MS: 0,
         URL: 'http://localhost/?foo%20bar=hello%26world',
@@ -120,10 +119,9 @@ describe('actuallySend()', () => {
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
-        CUSTOMREQUEST: 'POST',
+        POST: 1,
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
-        NOBODY: 0,
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
@@ -174,7 +172,7 @@ describe('actuallySend()', () => {
       parentId: workspace._id,
       headers: [{name: 'Content-Type', value: 'application/json'}],
       parameters: [{name: 'foo bar', value: 'hello&world'}],
-      method: 'POST',
+      method: 'GET',
       body: {
         mimeType: CONTENT_TYPE_FORM_URLENCODED,
         params: [{name: 'foo', value: 'bar'}]
@@ -199,7 +197,7 @@ describe('actuallySend()', () => {
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
-        CUSTOMREQUEST: 'POST',
+        CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
@@ -211,7 +209,6 @@ describe('actuallySend()', () => {
         USERNAME: 'user',
         PASSWORD: 'pass',
         POSTFIELDS: 'foo=bar',
-        NOBODY: 0,
         PROXY: '',
         TIMEOUT_MS: 0,
         URL: 'http://localhost/?foo%20bar=hello%26world',
@@ -253,7 +250,7 @@ describe('actuallySend()', () => {
 
     expect(body).toEqual({
       options: {
-        CUSTOMREQUEST: 'POST',
+        POST: 1,
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
@@ -265,7 +262,6 @@ describe('actuallySend()', () => {
         NOPROGRESS: false,
         INFILESIZE: 13,
         PROXY: '',
-        NOBODY: 0,
         TIMEOUT_MS: 0,
         UPLOAD: 1,
         URL: 'http://localhost/',
@@ -309,7 +305,7 @@ describe('actuallySend()', () => {
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       options: {
-        CUSTOMREQUEST: 'POST',
+        POST: 1,
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
@@ -324,7 +320,6 @@ describe('actuallySend()', () => {
         ],
         NOPROGRESS: false,
         PROXY: '',
-        NOBODY: 0,
         TIMEOUT_MS: 0,
         URL: 'http://localhost/',
         USERAGENT: `insomnia/${getAppVersion()}`,
@@ -357,10 +352,41 @@ describe('actuallySend()', () => {
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
-        NOBODY: 0,
         TIMEOUT_MS: 0,
         URL: 'http://my/path',
         UNIX_SOCKET_PATH: '/my/socket',
+        USERAGENT: `insomnia/${getAppVersion()}`,
+        VERBOSE: true
+      }
+    });
+  });
+
+  it('uses works with HEAD', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      url: 'http://localhost:3000/foo/bar',
+      method: 'HEAD'
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+
+    const body = JSON.parse(bodyBuffer);
+    expect(body).toEqual({
+      options: {
+        NOBODY: 1,
+        ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
+        FOLLOWLOCATION: true,
+        HTTPHEADER: ['content-type: '],
+        NOPROGRESS: false,
+        PROXY: '',
+        TIMEOUT_MS: 0,
+        URL: 'http://localhost:3000/foo/bar',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true
       }
@@ -391,7 +417,6 @@ describe('actuallySend()', () => {
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
-        NOBODY: 0,
         TIMEOUT_MS: 0,
         URL: 'http://unix:3000/my/path',
         USERAGENT: `insomnia/${getAppVersion()}`,

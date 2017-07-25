@@ -102,7 +102,7 @@ export function _actuallySend (
     }
 
     /** Helper function to set Curl options */
-    function setOpt (opt: string, val: any, optional: boolean = false) {
+    function setOpt (opt: number, val: any, optional: boolean = false) {
       const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
       try {
         curl.setOpt(opt, val);
@@ -131,13 +131,28 @@ export function _actuallySend (
       };
 
       // Set all the basic options
-      setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-      setOpt(Curl.option.NOBODY, renderedRequest.method.toUpperCase() === 'HEAD' ? 1 : 0);
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
+
+      // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
+      // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
+      switch (renderedRequest.method.toUpperCase()) {
+        case 'HEAD':
+          // This is how you tell Curl to send a HEAD request
+          setOpt(Curl.option.NOBODY, 1);
+          break;
+        case 'POST':
+          // This is how you tell Curl to send a POST request
+          setOpt(Curl.option.POST, 1);
+          break;
+        default:
+          // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
+          setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+          break;
+      }
 
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
