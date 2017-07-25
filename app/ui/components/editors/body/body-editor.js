@@ -96,7 +96,7 @@ class BodyEditor extends PureComponent {
       return (
         <GraphQLEditor
           key={uniqueKey}
-          schemaUrl={request.url}
+          request={request}
           fontSize={fontSize}
           indentSize={indentSize}
           content={request.body.text || ''}
