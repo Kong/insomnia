@@ -367,5 +367,5 @@ function renderHintMatch (li, self, data) {
   `;
 
   li.innerHTML = html;
-  li.className += ` type--${data.type}`;
+  li.className += ` fancy-hint type--${data.type}`;
 }

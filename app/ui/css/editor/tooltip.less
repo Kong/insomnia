@@ -1,13 +1,16 @@
 @import '../constants/dimensions';
+@import '../constants/fonts';
 
 // Tooltip for errors
 // NOTE: This is a global element, and does not live inside .editor
 .CodeMirror-lint-tooltip {
+  max-width: 30em;
   background-color: var(--color-bg);
   color: var(--color-font);
-  border-color: var(--hl-md);
+  border-color: var(--color-danger);
   border-radius: 0;
-  font-size: @font-size-md;
+  font-size: @font-size-sm;
+  font-family: @font-monospace;
   padding: @padding-xs @padding-sm;
   z-index: 99999;
 

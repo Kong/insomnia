@@ -1,6 +1,6 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -250,6 +250,11 @@ export function updateMimeType (
   } else if (mimeType === CONTENT_TYPE_FILE) {
     // File
     body = newBodyFile('');
+  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    if (contentTypeHeader) {
+      contentTypeHeader.value = CONTENT_TYPE_JSON;
+    }
+    body = newBodyRaw('', CONTENT_TYPE_GRAPHQL);
   } else if (typeof mimeType !== 'string') {
     // No body
     body = newBodyNone();

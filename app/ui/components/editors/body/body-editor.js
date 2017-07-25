@@ -4,8 +4,9 @@ import RawEditor from './raw-editor';
 import UrlEncodedEditor from './url-encoded-editor';
 import FormEditor from './form-editor';
 import FileEditor from './file-editor';
-import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE} from '../../../../common/constants';
+import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, CONTENT_TYPE_GRAPHQL} from '../../../../common/constants';
 import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
+import GraphQLEditor from './graph-ql-editor';
 
 @autobind
 class BodyEditor extends PureComponent {
@@ -15,6 +16,12 @@ class BodyEditor extends PureComponent {
     const contentType = getContentTypeFromHeaders(request.headers);
     const newBody = newBodyRaw(rawValue, contentType || '');
 
+    onChange(newBody);
+  }
+
+  _handleGraphQLChange (content) {
+    const {onChange} = this.props;
+    const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
     onChange(newBody);
   }
 
@@ -83,6 +90,21 @@ class BodyEditor extends PureComponent {
           key={uniqueKey}
           onChange={this._handleFileChange}
           path={fileName || ''}
+        />
+      );
+    } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+      return (
+        <GraphQLEditor
+          key={uniqueKey}
+          request={request}
+          fontSize={fontSize}
+          indentSize={indentSize}
+          content={request.body.text || ''}
+          keyMap={keyMap}
+          lineWrapping={lineWrapping}
+          render={handleRender}
+          getRenderContext={handleGetRenderContext}
+          onChange={this._handleGraphQLChange}
         />
       );
     } else if (!isBodyEmpty) {
