@@ -185,12 +185,19 @@ class ResponseViewer extends PureComponent {
       const body = iconv.decode(bodyBuffer, charset);
 
       let mode = contentType;
-      try {
-        // FEATURE: Detect JSON even without content-type
-        contentType.indexOf('json') === -1 && JSON.parse(body);
-        mode = 'application/json';
-      } catch (e) {
-        // Nothing
+
+      // Try to detect content-types if there isn't one
+      if (!mode) {
+        if (body.match(/^\s*<\?xml version="\d\.\d".*\?>/)) {
+          mode = 'application/xml';
+        } else {
+          try {
+            JSON.parse(body);
+            mode = 'application/json';
+          } catch (e) {
+            // Nothing
+          }
+        }
       }
 
       return (
