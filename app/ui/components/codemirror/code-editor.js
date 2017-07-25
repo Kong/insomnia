@@ -215,6 +215,8 @@ class CodeEditor extends PureComponent {
     this.codeMirror.on('changes', misc.debounce(this._codemirrorValueChanged, debounceMillis));
     this.codeMirror.on('beforeChange', this._codemirrorValueBeforeChange);
     this.codeMirror.on('keydown', this._codemirrorKeyDown);
+    this.codeMirror.on('keyup', this._codemirrorTriggerCompletionKeyUp);
+    this.codeMirror.on('endCompletion', this._codemirrorEndCompletion);
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
@@ -351,6 +353,7 @@ class CodeEditor extends PureComponent {
       indentSize,
       dynamicHeight,
       hintOptions,
+      infoOptions,
       lintOptions
     } = this.props;
 
@@ -399,6 +402,10 @@ class CodeEditor extends PureComponent {
 
     if (hintOptions) {
       options.hintOptions = hintOptions;
+    }
+
+    if (infoOptions) {
+      options.info = infoOptions;
     }
 
     if (lintOptions) {
@@ -488,6 +495,26 @@ class CodeEditor extends PureComponent {
 
     if (this.props.onKeyDown && !doc.isHintDropdownActive()) {
       this.props.onKeyDown(e, doc.getValue());
+    }
+  }
+
+  _codemirrorEndCompletion (doc, e) {
+    clearInterval(this._autocompleteDebounce);
+  }
+
+  _codemirrorTriggerCompletionKeyUp (doc, e) {
+    // Enable graphql completion if we're in that mode
+    if (doc.options.mode === 'graphql') {
+      // Only operate on one-letter keys. This will filter out
+      // any special keys (Backspace, Enter, etc)
+      if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
+        return;
+      }
+
+      clearTimeout(this._autocompleteDebounce);
+      this._autocompleteDebounce = setTimeout(() => {
+        doc.execCommand('autocomplete');
+      }, 700);
     }
   }
 
@@ -750,7 +777,8 @@ CodeEditor.propTypes = {
   debounceMillis: PropTypes.number,
   dynamicHeight: PropTypes.bool,
   hintOptions: PropTypes.object,
-  lintOptions: PropTypes.object
+  lintOptions: PropTypes.object,
+  infoOptions: PropTypes.object
 };
 
 export default CodeEditor;

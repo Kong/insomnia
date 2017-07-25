@@ -127,11 +127,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return CodeMirror.Pass;
   }
 
-  // Debounce this so we don't pop it open too frequently and annoy the user
-  const debouncedCompleteAfter = misc.debounce(
-    completeIfInVariableName,
-    HINT_DELAY_MILLIS
-  );
+  let keydownDebounce = null;
 
   cm.on('keydown', (cm, e) => {
     // Only operate on one-letter keys. This will filter out
@@ -140,7 +136,15 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    debouncedCompleteAfter(cm);
+    clearTimeout(keydownDebounce);
+    keydownDebounce = setTimeout(() => {
+      completeIfInVariableName(cm);
+    }, HINT_DELAY_MILLIS);
+  });
+
+  // Clear timeout if we already closed the completion
+  cm.on('endCompletion', () => {
+    clearTimeout(keydownDebounce);
   });
 
   // Add hot key triggers

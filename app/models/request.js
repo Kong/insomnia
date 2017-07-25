@@ -204,6 +204,11 @@ export function updateMimeType (
   let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);
 
+  // GraphQL uses JSON content-type
+  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL
+    ? CONTENT_TYPE_JSON
+    : mimeType;
+
   // Check if we are converting to/from variants of XML or JSON
   let leaveContentTypeAlone = false;
   if (contentTypeHeader && mimeType) {
@@ -223,9 +228,9 @@ export function updateMimeType (
   if (!hasBody || mimeType === CONTENT_TYPE_OTHER) {
     headers = headers.filter(h => h !== contentTypeHeader);
   } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = mimeType;
+    contentTypeHeader.value = contentTypeHeaderValue;
   } else if (mimeType && !contentTypeHeader) {
-    headers.push({name: 'Content-Type', value: mimeType});
+    headers.push({name: 'Content-Type', value: contentTypeHeaderValue});
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -234,10 +239,7 @@ export function updateMimeType (
 
   let body;
 
-  if (mimeType === request.body.mimeType) {
-    // Unchanged
-    body = request.body;
-  } else if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     // Urlencoded
     body = request.body.params
       ? newBodyFormUrlEncoded(request.body.params)
@@ -254,7 +256,7 @@ export function updateMimeType (
     if (contentTypeHeader) {
       contentTypeHeader.value = CONTENT_TYPE_JSON;
     }
-    body = newBodyRaw('', CONTENT_TYPE_GRAPHQL);
+    body = newBodyRaw(request.body.text || '', CONTENT_TYPE_GRAPHQL);
   } else if (typeof mimeType !== 'string') {
     // No body
     body = newBodyNone();

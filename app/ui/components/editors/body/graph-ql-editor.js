@@ -41,23 +41,27 @@ class GraphQLEditor extends React.PureComponent {
     body: GraphQLBody,
     schema: Object | null,
     schemaFetchError: string,
+    hideSchemaFetchErrors: boolean,
     variablesSyntaxError: string,
     forceRefreshKey: number
   };
+  _isMounted: boolean;
 
   constructor (props: Props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       body: this._stringToGraphQL(props.content),
       schema: null,
       schemaFetchError: '',
+      hideSchemaFetchErrors: false,
       variablesSyntaxError: '',
       forceRefreshKey: 0
     };
   }
 
   _hideSchemaFetchError () {
-    this.setState({schemaFetchError: ''});
+    this.setState({hideSchemaFetchErrors: true});
   }
 
   async _fetchAndSetSchema (rawRequest: Request) {
@@ -72,6 +76,8 @@ class GraphQLEditor extends React.PureComponent {
       headers[name] = value;
     }
 
+    const newState = {schema: this.state.schema, schemaFetchError: ''};
+
     try {
       // TODO: Use Insomnia's network stack to handle things like authentication
       const response = await window.fetch(schemaUrl, {
@@ -83,14 +89,19 @@ class GraphQLEditor extends React.PureComponent {
       const {status} = response;
       if (status < 200 || status >= 300) {
         const msg = `Got status ${status} fetching schema from "${schemaUrl}"`;
-        this.setState({schemaFetchError: msg});
+        newState.schemaFetchError = msg;
       } else {
         const {data} = await response.json();
         const schema = buildClientSchema(data);
-        this.setState({schema: schema, schemaFetchError: ''});
+        newState.schema = schema;
       }
     } catch (err) {
-      this.setState({schemaFetchError: err.message});
+      console.warn(`Failed to fetch GraphQL schema from ${schemaUrl}`, err);
+      newState.schemaFetchError = `Failed to contact "${schemaUrl}" to fetch schema`;
+    }
+
+    if (this._isMounted) {
+      this.setState(newState);
     }
   }
 
@@ -155,6 +166,11 @@ class GraphQLEditor extends React.PureComponent {
 
   componentDidMount () {
     this._fetchAndSetSchema(this.props.request);
+    this._isMounted = true;
+  }
+
+  componentWillUnmount () {
+    this._isMounted = false;
   }
 
   render () {
@@ -172,6 +188,7 @@ class GraphQLEditor extends React.PureComponent {
     const {
       schema,
       schemaFetchError,
+      hideSchemaFetchErrors,
       variablesSyntaxError,
       forceRefreshKey
     } = this.state;
@@ -187,7 +204,10 @@ class GraphQLEditor extends React.PureComponent {
           <CodeEditor
             dynamicHeight
             manualPrettify
-            hintOptions={schema ? {schema} : null}
+            hintOptions={{
+              schema: schema || null,
+              completeSingle: false
+            }}
             lintOptions={schema ? {schema} : null}
             fontSize={fontSize}
             indentSize={indentSize}
@@ -197,12 +217,12 @@ class GraphQLEditor extends React.PureComponent {
             onChange={this._handleQueryChange}
             mode="graphql"
             lineWrapping={lineWrapping}
-            placeholder="query {}"
+            placeholder=""
           />
         </div>
         <div className="graphql-editor__schema-error">
-          {schemaFetchError && (
-            <div className="notice error margin">
+          {!hideSchemaFetchErrors && schemaFetchError && (
+            <div className="notice error margin no-margin-top margin-bottom-sm">
               <button className="pull-right icon" onClick={this._hideSchemaFetchError}>
                 <i className="fa fa-times"/>
               </button>
@@ -211,8 +231,8 @@ class GraphQLEditor extends React.PureComponent {
           )}
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
-          Query Variables <HelpTooltip>Variables to use in GraphQL query, in JSON
-          format</HelpTooltip>
+          Query Variables <HelpTooltip>Variables to use in GraphQL query <br/>(JSON
+          format)</HelpTooltip>
           {variablesSyntaxError && (
             <span className="text-danger italic pull-right">
               {variablesSyntaxError}

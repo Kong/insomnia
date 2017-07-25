@@ -192,7 +192,6 @@
     "jest": "^19.0.2",
     "less": "^2.7.2",
     "less-loader": "^2.2.3",
-    "react-flow-types": "^0.1.1",
     "react-hot-loader": "^3.0.0-beta.6",
     "redux-mock-store": "^1.0.2",
     "style-loader": "^0.13.2",

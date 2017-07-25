@@ -40,6 +40,8 @@ import 'codemirror/keymap/sublime';
 import 'codemirror-graphql/hint';
 import 'codemirror-graphql/lint';
 import 'codemirror-graphql/mode';
+import 'codemirror-graphql/info';
+import 'codemirror-graphql/jump';
 import './modes/nunjucks';
 import './modes/curl';
 import './extensions/autocomplete';
