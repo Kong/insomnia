@@ -188,7 +188,7 @@ class ResponseViewer extends PureComponent {
 
       // Try to detect content-types if there isn't one
       if (!mode) {
-        if (body.match(/^\s*<\?xml version="\d\.\d".*\?>/)) {
+        if (body.match(/^\s*<\?xml [^?]*\?>/)) {
           mode = 'application/xml';
         } else {
           try {
