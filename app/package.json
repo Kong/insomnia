@@ -14,7 +14,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "deep-equal": "^1.0.1",
     "hkdf": "^0.0.2",
-    "httpsnippet": "^1.16.5",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#b3968130cbaeef6b432e617a5e835baf0f856880",
     "insomnia-importers": "^1.3.8",
     "jsonpath": "^0.2.11",
     "mkdirp": "^0.5.1",
