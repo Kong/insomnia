@@ -260,10 +260,12 @@ class RequestPane extends React.PureComponent {
           <TabList>
             <Tab>
               <ContentTypeDropdown onChange={updateRequestMimeType}
-                                   contentType={request.body.mimeType || ''}
+                                   contentType={request.body.mimeType || null}
                                    request={request}
                                    className="tall">
-                {getContentTypeName(request.body.mimeType || '') || 'Body'}
+                {typeof request.body.mimeType === 'string'
+                  ? getContentTypeName(request.body.mimeType)
+                  : 'Body'}
                 {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
