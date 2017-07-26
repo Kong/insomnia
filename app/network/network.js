@@ -398,9 +398,14 @@ export function _actuallySend (
         const {size} = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
         const fd = fs.openSync(fileName, 'r+');
+
         setOpt(Curl.option.INFILESIZE, size);
         setOpt(Curl.option.UPLOAD, 1);
         setOpt(Curl.option.READDATA, fd);
+
+        // We need this, otherwise curl will send it as a POST
+        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+
         const fn = () => fs.closeSync(fd);
         curl.on('end', fn);
         curl.on('error', fn);
