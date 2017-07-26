@@ -15,7 +15,7 @@
     "deep-equal": "^1.0.1",
     "hkdf": "^0.0.2",
     "httpsnippet": "git://github.com/getinsomnia/httpsnippet.git#85e00f4d2574ff2457f3de21dd3faf50db4ab74a",
-    "insomnia-importers": "^1.3.8",
+    "insomnia-importers": "^1.3.9",
     "jsonpath": "^0.2.11",
     "mkdirp": "^0.5.1",
     "nedb": "^1.8.0",
