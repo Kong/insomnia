@@ -171,6 +171,21 @@ export const selectActiveOAuth2Token = createSelector(
   }
 );
 
+export const selectUnseenWorkspaces = createSelector(
+  selectEntitiesLists,
+  entities => {
+    const {workspaces, workspaceMetas} = entities;
+    return workspaces.filter(workspace => {
+      const meta = workspaceMetas.find(m => m.parentId === workspace._id);
+      if (meta && !meta.hasSeen) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+  }
+);
+
 export const selectActiveRequestMeta = createSelector(
   selectActiveRequest,
   selectEntitiesLists,

@@ -16,6 +16,7 @@ import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import * as session from '../../../sync/session';
 import LoginModal from '../modals/login-modal';
+import Tooltip from '../tooltip';
 
 @autobind
 class WorkspaceDropdown extends PureComponent {
@@ -26,9 +27,19 @@ class WorkspaceDropdown extends PureComponent {
     };
   }
 
-  _handleDropdownOpen () {
+  async _handleDropdownOpen () {
     if (this.state.loggedIn !== session.isLoggedIn()) {
       this.setState({loggedIn: session.isLoggedIn()});
+    }
+  }
+
+  async _handleDropdownHide () {
+    // Mark all unseen workspace as seen
+    for (const workspace of this.props.unseenWorkspaces) {
+      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+      if (!workspaceMeta.hasSeen) {
+        models.workspaceMeta.update(workspaceMeta, {hasSeen: true});
+      }
     }
   }
 
@@ -83,21 +94,38 @@ class WorkspaceDropdown extends PureComponent {
       className,
       workspaces,
       activeWorkspace,
+      unseenWorkspaces,
       isLoading,
       ...other
     } = this.props;
 
     const nonActiveWorkspaces = workspaces.filter(w => w._id !== activeWorkspace._id);
-
+    const addedWorkspaceNames = unseenWorkspaces.map(w => `"${w.name}"`).join(', ');
     const classes = classnames(className, 'wide', 'workspace-dropdown');
+
+    const unseenWorkspacesMessage = (
+      <div>
+        The following workspaces were added<br/>
+        {addedWorkspaceNames}
+      </div>
+    );
+
     return (
-      <Dropdown beside className={classes} onOpen={this._handleDropdownOpen} {...other}>
+      <Dropdown beside
+                className={classes}
+                onOpen={this._handleDropdownOpen}
+                onHide={this._handleDropdownHide}
+                {...other}>
         <DropdownButton className="btn wide">
           <h1 className="no-pad text-left">
             <div className="pull-right">
               {isLoading ? <i className="fa fa-refresh fa-spin"/> : null}
-              {' '}
-              <i className="fa fa-caret-down"/>
+              {unseenWorkspaces.length > 0 && (
+                <Tooltip message={unseenWorkspacesMessage} position="bottom">
+                  <i className="fa fa-asterisk space-left"/>
+                </Tooltip>
+              )}
+              <i className="fa fa-caret-down space-left"/>
             </div>
             {activeWorkspace.name}
           </h1>
@@ -114,11 +142,19 @@ class WorkspaceDropdown extends PureComponent {
 
         <DropdownDivider>Switch Workspace</DropdownDivider>
 
-        {nonActiveWorkspaces.map(w => (
-          <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
-            <i className="fa fa-random"/> To <strong>{w.name}</strong>
-          </DropdownItem>
-        ))}
+        {nonActiveWorkspaces.map(w => {
+          const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
+          return (
+            <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
+              <i className="fa fa-random"/> To <strong>{w.name}</strong>
+              {isUnseen && (
+                <Tooltip message="This workspace is new">
+                  <i className="width-auto fa fa-asterisk surprise"/>
+                </Tooltip>
+              )}
+            </DropdownItem>
+          );
+        })}
 
         <DropdownItem onClick={this._handleWorkspaceCreate}>
           <i className="fa fa-empty"/> New Workspace
@@ -163,6 +199,7 @@ WorkspaceDropdown.propTypes = {
   handleExportFile: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
+  unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   activeWorkspace: PropTypes.object.isRequired,
 
   // Optional

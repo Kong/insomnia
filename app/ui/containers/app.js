@@ -20,7 +20,7 @@ import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent} from '../../analytics';
-import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -321,9 +321,9 @@ class App extends PureComponent {
 
   async _updateActiveWorkspaceMeta (patch) {
     const workspaceId = this.props.activeWorkspace._id;
-    const requestMeta = await models.workspaceMeta.getByParentId(workspaceId);
-    if (requestMeta) {
-      return models.workspaceMeta.update(requestMeta, patch);
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    if (workspaceMeta) {
+      return models.workspaceMeta.update(workspaceMeta, patch);
     } else {
       const newPatch = Object.assign({parentId: workspaceId}, patch);
       return models.workspaceMeta.create(newPatch);
@@ -927,10 +927,12 @@ function mapStateToProps (state, props) {
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
   const sidebarChildren = selectSidebarChildren(state, props);
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
+  const unseenWorkspaces = selectUnseenWorkspaces(state, props);
 
   return Object.assign({}, state, {
     settings,
     workspaces,
+    unseenWorkspaces,
     requestGroups,
     requests,
     oAuth2Token,

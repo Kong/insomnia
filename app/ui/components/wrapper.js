@@ -102,6 +102,7 @@ class Wrapper extends React.PureComponent {
     sidebarChildren: Array<Object>,
     settings: Settings,
     workspaces: Array<Workspace>,
+    unseenWorkspaces: Array<Workspace>,
     workspaceChildren: Array<Object>,
     environments: Array<Object>,
     activeRequestResponses: Array<Response>,
@@ -369,7 +370,8 @@ class Wrapper extends React.PureComponent {
       sidebarHidden,
       sidebarWidth,
       workspaceChildren,
-      workspaces
+      workspaces,
+      unseenWorkspaces
     } = this.props;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
@@ -405,6 +407,7 @@ class Wrapper extends React.PureComponent {
           filter={sidebarFilter || ''}
           hidden={sidebarHidden || false}
           workspace={activeWorkspace}
+          unseenWorkspaces={unseenWorkspaces}
           childObjects={sidebarChildren}
           width={sidebarWidth}
           isLoading={isLoading}

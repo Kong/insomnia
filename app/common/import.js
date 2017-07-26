@@ -129,8 +129,19 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
       continue;
     }
 
-    const doc = await model.getById(resource._id);
-    const newDoc = doc ? await model.update(doc, resource) : await model.create(resource);
+    const existingDoc = await model.getById(resource._id);
+    let newDoc;
+    if (existingDoc) {
+      newDoc = await model.update(existingDoc, resource);
+    } else {
+      newDoc = await model.create(resource);
+
+      // Mark as not seen if we created a new workspace from sync
+      if (newDoc.type === models.workspace.type) {
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newDoc._id);
+        await models.workspaceMeta.update(workspaceMeta, {hasSeen: false});
+      }
+    }
 
     importedDocs[newDoc.type].push(newDoc);
   }
