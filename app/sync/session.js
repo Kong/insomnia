@@ -3,7 +3,9 @@ import * as crypt from './crypt';
 import * as util from '../common/fetch';
 import {trackEvent, setAccountId} from '../analytics';
 
-/** Create a new session for the user */
+// Other
+export const SYNC_FAILURE_BACKOFF_SECONDS = 60;
+
 export async function login (rawEmail, rawPassphrase) {
   // ~~~~~~~~~~~~~~~ //
   // Sanitize Inputs //
@@ -89,12 +91,34 @@ export function syncGetResourceGroup (id) {
   return util.get(`/api/resource_groups/${id}`);
 }
 
+let lastPullFailure = 0;
 export function syncPull (body) {
-  return util.post('/sync/pull', body);
+  const secondsToWait = SYNC_FAILURE_BACKOFF_SECONDS - Math.round((Date.now() - lastPullFailure) / 1000);
+  if (secondsToWait > 0) {
+    throw new Error(`Too many sync pull failures. Waiting ${secondsToWait} seconds...`);
+  }
+
+  try {
+    return util.post('/sync/pull', body);
+  } catch (err) {
+    lastPullFailure = Date.now();
+    throw err;
+  }
 }
 
+let lastPushFailure = 0;
 export function syncPush (body) {
-  return util.post('/sync/push', body);
+  const secondsToWait = SYNC_FAILURE_BACKOFF_SECONDS - Math.round((Date.now() - lastPushFailure) / 1000);
+  if (secondsToWait > 0) {
+    throw new Error(`Too many sync push failures. Waiting ${secondsToWait} seconds...`);
+  }
+
+  try {
+    return util.post('/sync/push', body);
+  } catch (err) {
+    lastPushFailure = Date.now();
+    throw err;
+  }
 }
 
 export function syncResetData () {
@@ -190,14 +214,16 @@ export function getSessionData () {
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */
-export function setSessionData (sessionId,
-                                accountId,
-                                firstName,
-                                lastName,
-                                email,
-                                symmetricKey,
-                                publicKey,
-                                encPrivateKey) {
+export function setSessionData (
+  sessionId,
+  accountId,
+  firstName,
+  lastName,
+  email,
+  symmetricKey,
+  publicKey,
+  encPrivateKey
+) {
   const dataStr = JSON.stringify({
     id: sessionId,
     accountId: accountId,
