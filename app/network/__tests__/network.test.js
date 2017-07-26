@@ -252,6 +252,7 @@ describe('actuallySend()', () => {
       options: {
         POST: 1,
         ACCEPT_ENCODING: '',
+        CUSTOMREQUEST: 'POST',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
