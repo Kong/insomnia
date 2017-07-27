@@ -15,6 +15,7 @@ class SyncDropdown extends PureComponent {
     super(props);
 
     this._hasPrompted = false;
+    this._isMounted = false;
 
     this.state = {
       loggedIn: null,
@@ -79,7 +80,9 @@ class SyncDropdown extends PureComponent {
       name: workspace.name
     };
 
-    this.setState({syncData});
+    if (this._isMounted) {
+      this.setState({syncData});
+    }
   }
 
   async _handleShowSyncModePrompt () {
@@ -92,8 +95,13 @@ class SyncDropdown extends PureComponent {
     await this._reloadData();
   }
 
+  componentDidMount () {
+    this._isMounted = true;
+  }
+
   componentWillUnmount () {
     clearInterval(this._interval);
+    this._isMounted = false;
   }
 
   async componentDidUpdate () {

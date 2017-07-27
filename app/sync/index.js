@@ -341,7 +341,17 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // insert the document. However, we're using an upsert here instead because
     // it's very possible that the client already had that document locally.
     // This might happen, for example, if the user logs out and back in again.
-    await db.upsert(doc, true);
+    const existingDoc = await db.get(doc.type, doc._id);
+    if (existingDoc) {
+      await db.update(doc, true);
+    } else {
+      // Mark as not seen if we created a new workspace from sync
+      if (doc.type === models.workspace.type) {
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+        await models.workspaceMeta.update(workspaceMeta, {hasSeen: false});
+      }
+      await db.insert(doc, true);
+    }
   }
 
   if (createdResources.length) {

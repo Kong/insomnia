@@ -34,6 +34,7 @@ class Sidebar extends PureComponent {
       width,
       workspace,
       workspaces,
+      unseenWorkspaces,
       environments,
       activeEnvironment,
       handleSetActiveWorkspace,
@@ -63,6 +64,7 @@ class Sidebar extends PureComponent {
           className="sidebar__header"
           activeWorkspace={workspace}
           workspaces={workspaces}
+          unseenWorkspaces={unseenWorkspaces}
           handleExportFile={handleExportFile}
           handleImportFile={handleImportFile}
           handleSetActiveWorkspace={handleSetActiveWorkspace}
@@ -141,6 +143,7 @@ Sidebar.propTypes = {
   workspace: PropTypes.object.isRequired,
   childObjects: PropTypes.arrayOf(PropTypes.object).isRequired,
   workspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
+  unseenWorkspaces: PropTypes.arrayOf(PropTypes.object).isRequired,
   environments: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional

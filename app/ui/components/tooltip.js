@@ -48,6 +48,10 @@ class Tooltip extends React.PureComponent {
     this._bubble = n;
   }
 
+  _handleClick (e: MouseEvent): void {
+    e.stopPropagation();
+  }
+
   _handleMouseEnter (e: MouseEvent): void {
     this._showTimeout = setTimeout((): void => {
       const tooltip = ReactDOM.findDOMNode(this._tooltip);
@@ -123,6 +127,14 @@ class Tooltip extends React.PureComponent {
     }
   }
 
+  componentWillUnmount () {
+    // Remove the element from the body
+    if (this._bubble) {
+      const el = ReactDOM.findDOMNode(this._bubble);
+      el && this._getContainer().removeChild(el);
+    }
+  }
+
   render () {
     const {children, message, className} = this.props;
     const {visible} = this.state;
@@ -135,6 +147,7 @@ class Tooltip extends React.PureComponent {
     return (
       <div className={tooltipClasses}
            ref={this._setTooltipRef}
+           onClick={this._handleClick}
            onMouseEnter={this._handleMouseEnter}
            onMouseLeave={this._handleMouseLeave}>
         <div className={bubbleClasses} ref={this._setBubbleRef}>
