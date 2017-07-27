@@ -1,11 +1,12 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM} from '../../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_NETRC} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
 import BearerAuth from './bearer-auth';
 import NTLMAuth from './ntlm-auth';
 import OAuth2 from './o-auth-2';
 import AWSAuth from './aws-auth';
+import NETRCAuth from './netrc-auth';
 import autobind from 'autobind-decorator';
 import Link from '../../base/link';
 
@@ -103,6 +104,10 @@ class AuthWrapper extends PureComponent {
           onChange={onChange}
           showPasswords={showPasswords}
         />
+      );
+    } else if (authentication.type === AUTH_NETRC) {
+      return (
+        <NETRCAuth />
       );
     } else {
       return (
