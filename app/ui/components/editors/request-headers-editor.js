@@ -28,13 +28,17 @@ class RequestHeadersEditor extends PureComponent {
 
   _getHeadersFromString (headersString) {
     const headers = [];
-    const rows = headersString.split(/[\n,]+/);
+    const rows = headersString.split(/\n+/);
 
     for (const row of rows) {
-      const [rawName, ...items] = row.split(':');
+      const [rawName, rawValue] = row.split(/:(.*)$/);
 
       const name = (rawName || '').trim();
-      const value = (items.join(':')).trim();
+      const value = (rawValue || '').trim();
+
+      if (!name && !value) {
+        continue;
+      }
 
       headers.push({name, value});
     }
@@ -53,8 +57,8 @@ class RequestHeadersEditor extends PureComponent {
         continue;
       }
 
-      // Make sure it's a valid header (key + value)
-      if (!header.name || !header.value) {
+      // Make sure it's not blank
+      if (!header.name && !header.value) {
         continue;
       }
 
