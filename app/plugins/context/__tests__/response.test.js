@@ -19,7 +19,9 @@ describe('init()', () => {
       'getStatusMessage',
       'getBytesRead',
       'getTime',
-      'getBody'
+      'getBody',
+      'getHeader',
+      'hasHeader'
     ]);
   });
 
@@ -55,5 +57,21 @@ describe('response.*', () => {
     expect(result.response.getBytesRead()).toBe(0);
     expect(result.response.getTime()).toBe(0);
     expect(result.response.getBody()).toBeNull();
+  });
+
+  it('works for getting headers', () => {
+    const response = {
+      headers: [
+        {name: 'content-type', value: 'application/json'},
+        {name: 'set-cookie', value: 'foo=bar'},
+        {name: 'set-cookie', value: 'baz=qux'}
+      ]
+    };
+    const result = plugin.init(PLUGIN, response);
+    expect(result.response.getHeader('Does-Not-Exist')).toBeNull();
+    expect(result.response.getHeader('CONTENT-TYPE')).toBe('application/json');
+    expect(result.response.getHeader('set-cookie')).toEqual(['foo=bar', 'baz=qux']);
+    expect(result.response.hasHeader('foo')).toBe(false);
+    expect(result.response.hasHeader('ConTent-Type')).toBe(true);
   });
 });

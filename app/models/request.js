@@ -1,6 +1,6 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -209,6 +209,11 @@ export function updateMimeType (
   let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);
 
+  // GraphQL uses JSON content-type
+  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL
+    ? CONTENT_TYPE_JSON
+    : mimeType;
+
   // Check if we are converting to/from variants of XML or JSON
   let leaveContentTypeAlone = false;
   if (contentTypeHeader && mimeType) {
@@ -228,9 +233,9 @@ export function updateMimeType (
   if (!hasBody || mimeType === CONTENT_TYPE_OTHER) {
     headers = headers.filter(h => h !== contentTypeHeader);
   } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = mimeType;
+    contentTypeHeader.value = contentTypeHeaderValue;
   } else if (mimeType && !contentTypeHeader) {
-    headers.push({name: 'Content-Type', value: mimeType});
+    headers.push({name: 'Content-Type', value: contentTypeHeaderValue});
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -239,10 +244,7 @@ export function updateMimeType (
 
   let body;
 
-  if (mimeType === request.body.mimeType) {
-    // Unchanged
-    body = request.body;
-  } else if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     // Urlencoded
     body = request.body.params
       ? newBodyFormUrlEncoded(request.body.params)
@@ -255,6 +257,11 @@ export function updateMimeType (
   } else if (mimeType === CONTENT_TYPE_FILE) {
     // File
     body = newBodyFile('');
+  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    if (contentTypeHeader) {
+      contentTypeHeader.value = CONTENT_TYPE_JSON;
+    }
+    body = newBodyRaw(request.body.text || '', CONTENT_TYPE_GRAPHQL);
   } else if (typeof mimeType !== 'string') {
     // No body
     body = newBodyNone();

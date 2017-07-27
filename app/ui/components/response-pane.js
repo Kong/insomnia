@@ -54,10 +54,6 @@ class ResponsePane extends PureComponent {
     response: ?Response
   };
 
-  _trackTab (name: string) {
-    trackEvent('Response Pane', 'View', name);
-  }
-
   _handleGetResponseBody (): Buffer | null {
     if (!this.props.response) {
       return null;
@@ -262,7 +258,7 @@ class ResponsePane extends PureComponent {
               />
             </Tab>
             <Tab>
-              <Button onClick={this._trackTab} value="Headers">
+              <Button>
                 Header
                 {' '}
                 {response.headers.length > 0 && (
@@ -271,13 +267,13 @@ class ResponsePane extends PureComponent {
               </Button>
             </Tab>
             <Tab>
-              <Button onClick={this._trackTab} value="Cookies">
+              <Button>
                 Cookie {cookieHeaders.length ? (
                 <span className="bubble">{cookieHeaders.length}</span>) : null}
               </Button>
             </Tab>
             <Tab>
-              <Button onClick={this._trackTab} value="Timeline">Timeline</Button>
+              <Button>Timeline</Button>
             </Tab>
           </TabList>
           <TabPanel>

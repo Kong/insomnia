@@ -25,8 +25,8 @@ class ResponseTimer extends PureComponent {
         const elapsedTime = Math.round(millis / 100) / 10;
         this.setState({show: true, elapsedTime});
       } else if (this.state.show) {
-        // Hide if needed
-        this.setState({show: false});
+        // Hide if needed after a small delay (so it doesn't disappear too quickly)
+        setTimeout(() => this.setState({show: false}), 200);
       }
     }, 100);
   }

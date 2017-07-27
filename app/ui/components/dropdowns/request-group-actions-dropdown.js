@@ -64,27 +64,27 @@ class RequestGroupActionsDropdown extends PureComponent {
     return (
       <Dropdown ref={this._setDropdownRef} {...other}>
         <DropdownButton>
-          <i className="fa fa-caret-down"></i>
+          <i className="fa fa-caret-down"/>
         </DropdownButton>
         <DropdownItem onClick={this._handleRequestCreate}>
-          <i className="fa fa-plus-circle"></i> New Request
+          <i className="fa fa-plus-circle"/> New Request
           <DropdownHint char="N"></DropdownHint>
         </DropdownItem>
         <DropdownItem onClick={this._handleRequestGroupCreate}>
-          <i className="fa fa-folder"></i> New Folder
+          <i className="fa fa-folder"/> New Folder
         </DropdownItem>
         <DropdownDivider />
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
-          <i className="fa fa-copy"></i> Duplicate
+          <i className="fa fa-copy"/> Duplicate
         </DropdownItem>
         <DropdownItem onClick={this._handleRename}>
-          <i className="fa fa-edit"></i> Rename
+          <i className="fa fa-edit"/> Rename
         </DropdownItem>
         <DropdownItem onClick={this._handleEditEnvironment}>
-          <i className="fa fa-code"></i> Environment
+          <i className="fa fa-code"/> Environment
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
-          <i className="fa fa-trash-o"></i> Delete
+          <i className="fa fa-trash-o"/> Delete
         </DropdownItem>
       </Dropdown>
     );

@@ -46,16 +46,25 @@
       }
     }
 
+    &:not(.fancy-hint)::before {
+      margin-left: -@padding-sm;
+      content: '\1d43a';
+      background: var(--color-warning);
+      color: var(--color-font-warning);
+    }
+
+    &:not(.fancy-hint),
     .name,
     .value,
     .label {
       min-height: 100%;
       line-height: @line-height-xxs;
-      padding: 0 @padding-sm;
+      padding: 0 @padding-sm !important;
       margin: 0;
       box-sizing: border-box;
     }
 
+    &:not(.fancy-hint),
     .name,
     .value {
       background: var(--color-bg);
@@ -76,6 +85,7 @@
       font-size: 0.9em;
     }
 
+    &:not(.fancy-hint)::before,
     .label {
       opacity: 0.8;
       font-size: @font-size-sm;

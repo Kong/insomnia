@@ -16,6 +16,19 @@ export function init (plugin: Plugin): {app: Object} {
           default:
             throw new Error(`Unknown path name ${name}`);
         }
+      },
+      async showSaveDialog (options: {defaultPath?: string} = {}): Promise<string | null> {
+        return new Promise(resolve => {
+          const saveOptions = {
+            title: 'Save File',
+            buttonLabel: 'Save',
+            defaultPath: options.defaultPath
+          };
+
+          electron.remote.dialog.showSaveDialog(saveOptions, filename => {
+            resolve(filename || null);
+          });
+        });
       }
     }
   };

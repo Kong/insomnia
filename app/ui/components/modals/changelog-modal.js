@@ -53,7 +53,7 @@ class ChangelogModal extends PureComponent {
     if (!changelog) {
       html = [
         <div key="spinner" className="txt-lg">
-          <i className="fa fa-refresh fa-spin"></i>
+          <i className="fa fa-refresh fa-spin"/>
         </div>
       ];
     } else {

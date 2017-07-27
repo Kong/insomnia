@@ -60,7 +60,7 @@ class Modal extends PureComponent {
     let shouldHide = false;
 
     for (let i = 0; i < 5; i++) {
-      if (target.hasAttribute('data-close-modal')) {
+      if (target instanceof HTMLElement && target.hasAttribute('data-close-modal')) {
         shouldHide = true;
         break;
       }

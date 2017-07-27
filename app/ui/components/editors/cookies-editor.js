@@ -49,7 +49,7 @@ class CookiesEditor extends PureComponent {
               <button className="btn btn--super-compact"
                       onClick={this._handleCookieAdd}
                       title="Add cookie">
-                <i className="fa fa-plus-circle"></i>
+                <i className="fa fa-plus-circle"/>
               </button>
             </th>
           </tr>
@@ -91,7 +91,7 @@ class CookiesEditor extends PureComponent {
             <p>
               <button className="btn btn--clicky"
                       onClick={e => this._handleCookieAdd()}>
-                Add Cookie <i className="fa fa-plus-circle"></i>
+                Add Cookie <i className="fa fa-plus-circle"/>
               </button>
             </p>
           </div>

@@ -66,10 +66,35 @@ export async function init () {
   await push();
   await pull();
 
+  let nextSyncTime = 0;
+  let isSyncing = false;
   _pullChangesInterval = setInterval(async () => {
-    await push();
-    await pull();
-  }, PULL_PERIOD);
+    if (isSyncing) {
+      return;
+    }
+
+    if (Date.now() < nextSyncTime) {
+      return;
+    }
+
+    // Mark that we are currently executing a sync op
+    isSyncing = true;
+
+    const syncStartTime = Date.now();
+
+    try {
+      await push();
+      await pull();
+    } catch (err) {
+      logger.error('Sync failed with', err);
+    }
+
+    const syncTotalTime = Date.now() - syncStartTime;
+
+    // Add sync duration to give the server some room if it's being slow
+    nextSyncTime = Date.now() + PULL_PERIOD + (syncTotalTime * 2);
+    isSyncing = false;
+  }, PULL_PERIOD / 5);
 
   _writeChangesInterval = setInterval(writePendingChanges, WRITE_PERIOD);
 
@@ -341,7 +366,17 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // insert the document. However, we're using an upsert here instead because
     // it's very possible that the client already had that document locally.
     // This might happen, for example, if the user logs out and back in again.
-    await db.upsert(doc, true);
+    const existingDoc = await db.get(doc.type, doc._id);
+    if (existingDoc) {
+      await db.update(doc, true);
+    } else {
+      // Mark as not seen if we created a new workspace from sync
+      if (doc.type === models.workspace.type) {
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+        await models.workspaceMeta.update(workspaceMeta, {hasSeen: false});
+      }
+      await db.insert(doc, true);
+    }
   }
 
   if (createdResources.length) {

@@ -1,0 +1,24 @@
+@import '../constants/dimensions';
+
+.graphql-editor {
+  display: grid;
+  height: 100%;
+  grid-template-rows: minmax(0, auto) min-content min-content minmax(0, min-content) min-content;
+
+  & > h2 {
+    color: var(--hl);
+    padding: @padding-xs @padding-sm;
+    font-size: @font-size-md;
+    border-top: 1px dashed var(--hl-sm);
+  }
+
+  .graphql-editor__query, .graphql-editor__variables {
+    height: 100%;
+    max-height: 100%;
+    overflow: auto;
+  }
+
+  .graphql-editor__query .cm-attribute {
+    color: var(--color-info);
+  }
+}

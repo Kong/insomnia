@@ -1,5 +1,6 @@
 // @flow
 import type {Plugin} from '../';
+import type {ResponseHeader} from '../../models/response';
 
 type MaybeResponse = {
   parentId?: string,
@@ -7,6 +8,7 @@ type MaybeResponse = {
   statusMessage?: string,
   bytesRead?: number,
   elapsedTime?: number,
+  headers?: Array<ResponseHeader>
 }
 
 export function init (
@@ -42,6 +44,20 @@ export function init (
       },
       getBody (): Buffer | null {
         return bodyBuffer;
+      },
+      getHeader (name: string): string | Array<string> | null {
+        const headers = response.headers || [];
+        const matchedHeaders = headers.filter(h => h.name.toLowerCase() === name.toLowerCase());
+        if (matchedHeaders.length > 1) {
+          return matchedHeaders.map(h => h.value);
+        } else if (matchedHeaders.length === 1) {
+          return matchedHeaders[0].value;
+        } else {
+          return null;
+        }
+      },
+      hasHeader (name: string): boolean {
+        return this.getHeader(name) !== null;
       }
     }
   };

@@ -54,12 +54,10 @@ export const GA_HOST = 'desktop.insomnia.rest';
 export const CHANGELOG_URL = process.env.INSOMNIA_SYNC_URL || 'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_PLUGIN_ERROR = -222;
-export const LARGE_RESPONSE_MB = 5;
+export const LARGE_RESPONSE_MB = 3;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[0-9a-zA-Z\-_.]+[/\w.\-+=:\][@%^*&!#?;]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
-export const PLUGIN_PATHS = [
-  path.join((electron.remote || electron).app.getPath('userData'), 'plugins')
-];
+export const PLUGIN_PATH = path.join((electron.remote || electron).app.getPath('userData'), 'plugins');
 
 // Hotkeys
 export const MOD_SYM = isMac() ? '⌘' : 'ctrl';
@@ -120,14 +118,16 @@ export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
 export const CONTENT_TYPE_FILE = 'application/octet-stream';
+export const CONTENT_TYPE_GRAPHQL = 'application/graphql';
 export const CONTENT_TYPE_OTHER = '';
 
 const contentTypesMap = {
   [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
   [CONTENT_TYPE_XML]: ['XML', 'XML'],
   [CONTENT_TYPE_FORM_DATA]: ['Multipart', 'Multipart Form'],
-  [CONTENT_TYPE_FORM_URLENCODED]: ['URL Encoded', 'Form URL Encoded'],
-  [CONTENT_TYPE_FILE]: ['Binary', 'Binary File'],
+  [CONTENT_TYPE_FORM_URLENCODED]: ['Form', 'Form URL Encoded'],
+  [CONTENT_TYPE_FILE]: ['File', 'Binary File'],
+  [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
   [CONTENT_TYPE_OTHER]: ['Other', 'Other']
 };
 
@@ -162,13 +162,15 @@ export function getPreviewModeName (previewMode, useLong = false) {
 }
 
 export function getContentTypeName (contentType, useLong = false) {
-  if (contentTypesMap.hasOwnProperty(contentType)) {
-    return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
-  } else if (contentType) {
-    return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
-  } else {
+  if (typeof contentType !== 'string') {
     return '';
   }
+
+  if (contentTypesMap.hasOwnProperty(contentType)) {
+    return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
+  }
+
+  return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
 }
 
 export function getAuthTypeName (authType, useLong = false) {

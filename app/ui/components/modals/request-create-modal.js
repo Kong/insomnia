@@ -125,7 +125,7 @@ class RequestCreateModal extends PureComponent {
                                        onChange={this._handleChangeSelectedContentType}>
                     {getContentTypeName(selectedContentType) || 'No Body'}
                     {' '}
-                    <i className="fa fa-caret-down"></i>
+                    <i className="fa fa-caret-down"/>
                   </ContentTypeDropdown>
                 </div>
               )}

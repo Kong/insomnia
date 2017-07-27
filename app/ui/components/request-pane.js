@@ -24,45 +24,43 @@ import {showModal} from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 
-type Props = {
-  // Functions
-  forceUpdateRequest: Function,
-  handleSend: Function,
-  handleSendAndDownload: Function,
-  handleCreateRequest: Function,
-  handleGenerateCode: Function,
-  handleRender: Function,
-  handleGetRenderContext: Function,
-  updateRequestUrl: Function,
-  updateRequestMethod: Function,
-  updateRequestBody: Function,
-  updateRequestParameters: Function,
-  updateRequestAuthentication: Function,
-  updateRequestHeaders: Function,
-  updateRequestMimeType: Function,
-  updateSettingsShowPasswords: Function,
-  updateSettingsUseBulkHeaderEditor: Function,
-  handleImport: Function,
-  handleImportFile: Function,
-
-  // Other
-  useBulkHeaderEditor: boolean,
-  showPasswords: boolean,
-  editorFontSize: number,
-  editorIndentSize: number,
-  editorKeyMap: string,
-  editorLineWrapping: boolean,
-  workspace: Workspace,
-  forceRefreshCounter: number,
-
-  // Optional
-  request: ?Request,
-  oAuth2Token: ?OAuth2Token
-}
-
 @autobind
-class RequestPane extends React.PureComponent<void, Props, void> {
-  props: Props;
+class RequestPane extends React.PureComponent {
+  props: {
+    // Functions
+    forceUpdateRequest: Function,
+    handleSend: Function,
+    handleSendAndDownload: Function,
+    handleCreateRequest: Function,
+    handleGenerateCode: Function,
+    handleRender: Function,
+    handleGetRenderContext: Function,
+    updateRequestUrl: Function,
+    updateRequestMethod: Function,
+    updateRequestBody: Function,
+    updateRequestParameters: Function,
+    updateRequestAuthentication: Function,
+    updateRequestHeaders: Function,
+    updateRequestMimeType: Function,
+    updateSettingsShowPasswords: Function,
+    updateSettingsUseBulkHeaderEditor: Function,
+    handleImport: Function,
+    handleImportFile: Function,
+
+    // Other
+    useBulkHeaderEditor: boolean,
+    showPasswords: boolean,
+    editorFontSize: number,
+    editorIndentSize: number,
+    editorKeyMap: string,
+    editorLineWrapping: boolean,
+    workspace: Workspace,
+    forceRefreshCounter: number,
+
+    // Optional
+    request: ?Request,
+    oAuth2Token: ?OAuth2Token
+  };
 
   _handleUpdateRequestUrlTimeout: number;
 
@@ -156,26 +154,6 @@ class RequestPane extends React.PureComponent<void, Props, void> {
 
   _trackQueryDelete () {
     trackEvent('Query', 'Delete');
-  }
-
-  _trackTabBody () {
-    trackEvent('Request Pane', 'View', 'Body');
-  }
-
-  _trackTabHeaders () {
-    trackEvent('Request Pane', 'View', 'Headers');
-  }
-
-  _trackTabDescription () {
-    trackEvent('Request Pane', 'View', 'Description');
-  }
-
-  _trackTabAuthentication () {
-    trackEvent('Request Pane', 'View', 'Authentication');
-  }
-
-  _trackTabQuery () {
-    trackEvent('Request Pane', 'View', 'Query');
   }
 
   render () {
@@ -280,17 +258,19 @@ class RequestPane extends React.PureComponent<void, Props, void> {
         </header>
         <Tabs className="pane__body" forceRenderTabPanel>
           <TabList>
-            <Tab onClick={this._trackTabBody}>
+            <Tab>
               <ContentTypeDropdown onChange={updateRequestMimeType}
-                                   contentType={request.body.mimeType || ''}
+                                   contentType={request.body.mimeType || null}
                                    request={request}
                                    className="tall">
-                {getContentTypeName(request.body.mimeType || '') || 'Body'}
+                {typeof request.body.mimeType === 'string'
+                  ? getContentTypeName(request.body.mimeType)
+                  : 'Body'}
                 {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
             </Tab>
-            <Tab onClick={this._trackTabAuthentication}>
+            <Tab>
               <AuthDropdown onChange={updateRequestAuthentication}
                             authentication={request.authentication}
                             className="tall">
@@ -298,19 +278,19 @@ class RequestPane extends React.PureComponent<void, Props, void> {
                 <i className="fa fa-caret-down space-left"/>
               </AuthDropdown>
             </Tab>
-            <Tab onClick={this._trackTabQuery}>
+            <Tab>
               <button>
                 Query
                 {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
-            <Tab onClick={this._trackTabHeaders}>
+            <Tab>
               <button>
                 Header
                 {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
-            <Tab onClick={this._trackTabDescription}>
+            <Tab>
               <button>
                 Docs
                 {request.description && (

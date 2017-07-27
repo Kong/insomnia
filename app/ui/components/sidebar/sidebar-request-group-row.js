@@ -72,7 +72,7 @@ class SidebarRequestGroupRow extends PureComponent {
     const button = connectDragSource(connectDropTarget(
       <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
         <div className="sidebar__clickable">
-          <i className={'sidebar__item__icon fa ' + folderIconClass}></i>
+          <i className={'sidebar__item__icon fa ' + folderIconClass}/>
           <span>{requestGroup.name}</span>
         </div>
       </button>

@@ -102,7 +102,7 @@ class LoginModal extends PureComponent {
             <Link href="https://insomnia.rest/app/">Signup</Link>
           </div>
           <button type="submit" className="btn">
-            {loading ? <i className="fa fa-spin fa-refresh margin-right-sm"></i> : null}
+            {loading ? <i className="fa fa-spin fa-refresh margin-right-sm"/> : null}
             Login
           </button>
         </ModalFooter>
