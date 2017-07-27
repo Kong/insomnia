@@ -66,10 +66,35 @@ export async function init () {
   await push();
   await pull();
 
+  let nextSyncTime = 0;
+  let isSyncing = false;
   _pullChangesInterval = setInterval(async () => {
-    await push();
-    await pull();
-  }, PULL_PERIOD);
+    if (isSyncing) {
+      return;
+    }
+
+    if (Date.now() < nextSyncTime) {
+      return;
+    }
+
+    // Mark that we are currently executing a sync op
+    isSyncing = true;
+
+    const syncStartTime = Date.now();
+
+    try {
+      await push();
+      await pull();
+    } catch (err) {
+      logger.error('Sync failed with', err);
+    }
+
+    const syncTotalTime = Date.now() - syncStartTime;
+
+    // Add sync duration to give the server some room if it's being slow
+    nextSyncTime = Date.now() + PULL_PERIOD + (syncTotalTime * 2);
+    isSyncing = false;
+  }, PULL_PERIOD / 5);
 
   _writeChangesInterval = setInterval(writePendingChanges, WRITE_PERIOD);
 

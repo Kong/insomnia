@@ -42,7 +42,7 @@ async function _fetch (method, path, json, sessionId = null) {
   config.headers.set('X-Insomnia-Client', getClientString());
 
   if (json) {
-    config.body = JSON.stringify(json, null, 2);
+    config.body = JSON.stringify(json);
     config.headers.set('Content-Type', 'application/json');
   }
 
