@@ -14,6 +14,7 @@ declare class Curl {
     HTTPPOST: number,
     INFILESIZE: number,
     KEYPASSWD: number,
+    NETRC: number,
     NOBODY: number,
     NOPROGRESS: number,
     NOPROXY: number,
