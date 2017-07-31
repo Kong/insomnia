@@ -1,6 +1,6 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -101,6 +101,7 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
     case AUTH_OAUTH_2:
       return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
 
+    // Aws IAM
     case AUTH_AWS_IAM:
       return {
         type,
@@ -108,6 +109,10 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         accessKeyId: oldAuth.accessKeyId || '',
         secretAccessKey: oldAuth.secretAccessKey || ''
       };
+
+    // netrc
+    case AUTH_NETRC:
+      return {type};
 
     // Types needing no defaults
     default:

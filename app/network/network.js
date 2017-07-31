@@ -15,7 +15,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import {getRenderedRequest} from '../common/render';
 import fs from 'fs';
@@ -467,6 +467,8 @@ export function _actuallySend (
           for (const header of extraHeaders) {
             headers.push(header);
           }
+        } else if (renderedRequest.authentication.type === AUTH_NETRC) {
+          setOpt(Curl.option.NETRC, Curl.netrc.REQUIRED);
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,

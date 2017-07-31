@@ -14,6 +14,7 @@ declare class Curl {
     HTTPPOST: number,
     INFILESIZE: number,
     KEYPASSWD: number,
+    NETRC: number,
     NOBODY: number,
     NOPROGRESS: number,
     NOPROXY: number,
@@ -47,6 +48,12 @@ declare class Curl {
 
   static code: {
     CURLE_ABORTED_BY_CALLBACK: string
+  };
+
+  static netrc: {
+    IGNORED: number,
+    OPTIONAL: number,
+    REQUIRED: number,
   };
 
   static info: {

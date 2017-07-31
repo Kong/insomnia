@@ -79,6 +79,12 @@ Curl.auth = {
   ANY: 'ANY'
 };
 
+Curl.netrc = {
+  IGNORED: 0,
+  OPTIONAL: 1,
+  REQUIRED: 2
+};
+
 Curl.option = {
   ACCEPT_ENCODING: 'ACCEPT_ENCODING',
   CAINFO: 'CAINFO',
@@ -93,6 +99,7 @@ Curl.option = {
   HTTPPOST: 'HTTPPOST',
   INFILESIZE: 'INFILESIZE',
   KEYPASSWD: 'KEYPASSWD',
+  NETRC: 'NETRC',
   NOBODY: 'NOBODY',
   NOPROGRESS: 'NOPROGRESS',
   NOPROXY: 'NOPROXY',
