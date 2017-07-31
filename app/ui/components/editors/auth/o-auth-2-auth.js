@@ -20,7 +20,7 @@ const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
 
 @autobind
-class OAuth2 extends React.PureComponent {
+class OAuth2Auth extends React.PureComponent {
   props: {
     handleRender: Function,
     handleGetRenderContext: Function,
@@ -433,4 +433,4 @@ class OAuth2 extends React.PureComponent {
   }
 }
 
-export default OAuth2;
+export default OAuth2Auth;

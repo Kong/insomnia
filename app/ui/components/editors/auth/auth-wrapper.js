@@ -1,11 +1,12 @@
 import React, {PropTypes, PureComponent} from 'react';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM} from '../../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_NETRC} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
 import BearerAuth from './bearer-auth';
 import NTLMAuth from './ntlm-auth';
-import OAuth2 from './o-auth-2';
+import OAuth2Auth from './o-auth-2-auth';
 import AWSAuth from './aws-auth';
+import NetrcAuth from './netrc-auth';
 import autobind from 'autobind-decorator';
 import Link from '../../base/link';
 
@@ -37,7 +38,7 @@ class AuthWrapper extends PureComponent {
       );
     } else if (authentication.type === AUTH_OAUTH_2) {
       return (
-        <OAuth2
+        <OAuth2Auth
           oAuth2Token={oAuth2Token}
           request={request}
           handleRender={handleRender}
@@ -103,6 +104,10 @@ class AuthWrapper extends PureComponent {
           onChange={onChange}
           showPasswords={showPasswords}
         />
+      );
+    } else if (authentication.type === AUTH_NETRC) {
+      return (
+        <NetrcAuth />
       );
     } else {
       return (
