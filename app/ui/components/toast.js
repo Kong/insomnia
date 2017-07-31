@@ -8,6 +8,7 @@ import {trackEvent} from '../../analytics/index';
 import * as models from '../../models/index';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';
+import {isLoggedIn} from '../../sync/session';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -28,45 +29,69 @@ class Toast extends PureComponent {
     this._dismissNotification();
   }
 
+  _hasSeenNotification (notification) {
+    const seenNotifications = this._loadSeen();
+    return seenNotifications[notification.key];
+  }
+
   async _handleCheckNotifications () {
     // If there is a notification open, skip check
     if (this.state.notification) {
       return;
     }
 
-    const seenNotifications = this._loadSeen();
     const stats = await models.stats.get();
 
     let notification;
-    try {
-      const data = {
-        lastLaunch: stats.lastLaunch,
-        firstLaunch: stats.created,
-        launches: stats.launches,
-        platform: constants.getAppPlatform(),
-        version: constants.getAppVersion(),
-        requests: await db.count(models.request.type),
-        requestGroups: await db.count(models.requestGroup.type),
-        environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type)
-      };
 
-      notification = await fetch.post(`/notification`, data);
-    } catch (e) {
-      console.warn('[toast] Failed to fetch notifications', e);
+    // Try fetching user notification
+    if (isLoggedIn()) {
+      try {
+        const data = {
+          lastLaunch: stats.lastLaunch,
+          firstLaunch: stats.created,
+          launches: stats.launches,
+          platform: constants.getAppPlatform(),
+          version: constants.getAppVersion(),
+          requests: await db.count(models.request.type),
+          requestGroups: await db.count(models.requestGroup.type),
+          environments: await db.count(models.environment.type),
+          workspaces: await db.count(models.workspace.type)
+        };
+
+        notification = await fetch.post(`/notification`, data);
+      } catch (err) {
+        console.warn('[toast] Failed to fetch user notifications', err);
+      }
+    }
+
+    // Try fetching guest version-specific notification
+    if (!notification || this._hasSeenNotification(notification)) {
+      try {
+        notification = await fetch.get(
+          `https://insomnia.rest/notifications/v${constants.getAppVersion()}.json`
+        );
+      } catch (err) {
+        console.warn('[toast] Failed to fetch version notifications', err);
+      }
+    }
+
+    // Try fetching guest generic notification
+    if (!notification || this._hasSeenNotification(notification)) {
+      try {
+        notification = await fetch.get('https://insomnia.rest/notifications/all.json');
+      } catch (err) {
+        console.warn('[toast] Failed to fetch generic notifications', err);
+      }
     }
 
     // No new notifications
-    if (!notification) {
-      return;
-    }
-
-    // We've already seen this one, so bail
-    if (seenNotifications && seenNotifications[notification.key]) {
+    if (!notification || this._hasSeenNotification(notification)) {
       return;
     }
 
     // Remember that we've seen it
+    const seenNotifications = this._loadSeen();
     seenNotifications[notification.key] = true;
     const obj = JSON.stringify(seenNotifications, null, 2);
     window.localStorage.setItem(LOCALSTORAGE_KEY, obj);

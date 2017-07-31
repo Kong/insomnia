@@ -4,6 +4,7 @@ import {getClientString} from './constants';
 import * as session from '../sync/session';
 
 let commandListeners = [];
+
 export function onCommand (callback) {
   commandListeners.push(callback);
 }
@@ -62,16 +63,21 @@ async function _fetch (method, path, json, sessionId = null) {
     throw err;
   }
 
-  if (response.headers.get('content-type') === 'application/json') {
+  if (response.headers.get('content-type') === 'application/json' || path.match(/\.json$/)) {
     return response.json();
   } else {
     return response.text();
   }
 }
 
-function _getUrl (path) {
+function _getUrl (pathOrUrl) {
+  // If it's a URL, just return it
+  if (pathOrUrl.match(/^https?:\/\//)) {
+    return pathOrUrl;
+  }
+
   const baseUrl = process.env.INSOMNIA_SYNC_URL || 'https://api.insomnia.rest';
-  return `${baseUrl}${path}`;
+  return `${baseUrl}${pathOrUrl}`;
 }
 
 function _notifyCommandListeners (uri) {

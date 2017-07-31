@@ -82,17 +82,19 @@ export async function init () {
 
     const syncStartTime = Date.now();
 
+    let extraDelay = 0;
     try {
       await push();
       await pull();
     } catch (err) {
       logger.error('Sync failed with', err);
+      extraDelay += PULL_PERIOD;
     }
 
-    const syncTotalTime = Date.now() - syncStartTime;
-
     // Add sync duration to give the server some room if it's being slow
-    nextSyncTime = Date.now() + PULL_PERIOD + (syncTotalTime * 2);
+    extraDelay += (Date.now() - syncStartTime) * 2;
+
+    nextSyncTime = Date.now() + PULL_PERIOD + extraDelay;
     isSyncing = false;
   }, PULL_PERIOD / 5);
 
