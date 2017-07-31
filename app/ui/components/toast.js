@@ -8,7 +8,6 @@ import {trackEvent} from '../../analytics/index';
 import * as models from '../../models/index';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';
-import {isLoggedIn} from '../../sync/session';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
