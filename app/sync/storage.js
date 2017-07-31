@@ -99,12 +99,12 @@ export async function insertResource (resource) {
 
 export async function updateResource (resource, ...patches) {
   const newDoc = Object.assign({}, resource, ...patches);
-  await _execDB(TYPE_RESOURCE, 'update', {_id: resource._id}, newDoc);
+  await _execDB(TYPE_RESOURCE, 'update', {_id: resource._id}, newDoc, {multi: true});
   return newDoc;
 }
 
 export function removeResource (resource) {
-  return _execDB(TYPE_RESOURCE, 'remove', {_id: resource._id});
+  return _execDB(TYPE_RESOURCE, 'remove', {_id: resource._id}, {multi: true});
 }
 
 // ~~~~~~ //

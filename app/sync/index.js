@@ -6,6 +6,7 @@ import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
 import {trackEvent} from '../analytics/index';
+import * as zlib from 'zlib';
 
 export const START_DELAY = 1E3;
 export const PULL_PERIOD = 15E3;
@@ -542,6 +543,7 @@ async function _handleChangeAndPush (event, doc, timestamp) {
  */
 const _fetchResourceGroupPromises = {};
 const _resourceGroupCache = {};
+
 export async function fetchResourceGroup (resourceGroupId, invalidateCache = false) {
   if (invalidateCache) {
     delete _resourceGroupCache[resourceGroupId];
@@ -630,7 +632,14 @@ async function _getResourceGroupSymmetricKey (resourceGroupId) {
 export async function encryptDoc (resourceGroupId, doc) {
   try {
     const symmetricKey = await _getResourceGroupSymmetricKey(resourceGroupId);
+
+    // TODO: Turn on compression once enough users are on version >= 5.7.0
+    // const jsonStr = JSON.stringify(doc);
+    // const docStr = zlib.gzipSync(jsonStr);
+
+    // Don't use compression for now
     const docStr = JSON.stringify(doc);
+
     const message = crypt.encryptAES(symmetricKey, docStr);
     return JSON.stringify(message);
   } catch (e) {
@@ -648,6 +657,12 @@ export async function decryptDoc (resourceGroupId, messageJSON) {
   } catch (e) {
     logger.error(`Failed to decrypt from ${resourceGroupId}: ${e}`, messageJSON);
     throw e;
+  }
+
+  try {
+    decrypted = zlib.gunzipSync(decrypted);
+  } catch (err) {
+    // It's not compressed (legacy), which is okay for now
   }
 
   try {
@@ -730,7 +745,13 @@ export async function createResourceForDoc (doc) {
 }
 
 export async function getOrCreateResourceForDoc (doc) {
-  let resource = await store.getResourceByDocId(doc._id);
+  let [resource, ...extras] = await store.findResourcesByDocId(doc._id);
+
+  // Sometimes there may be multiple resources created by accident for
+  // the same doc. Let's delete the extras here if there are any.
+  for (const resource of extras) {
+    await store.removeResource(resource);
+  }
 
   if (resource) {
     return resource;
