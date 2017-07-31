@@ -103,7 +103,7 @@ class Toast extends PureComponent {
 
   componentDidMount () {
     setTimeout(this._handleCheckNotifications, 1000 * 10);
-    this._interval = setInterval(this._handleCheckNotifications, 1000 * 60 * 10);
+    this._interval = setInterval(this._handleCheckNotifications, 1000 * 60 * 30);
   }
 
   componentWillUnmount () {
