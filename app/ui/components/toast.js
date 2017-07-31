@@ -45,44 +45,22 @@ class Toast extends PureComponent {
     let notification;
 
     // Try fetching user notification
-    if (isLoggedIn()) {
-      try {
-        const data = {
-          lastLaunch: stats.lastLaunch,
-          firstLaunch: stats.created,
-          launches: stats.launches,
-          platform: constants.getAppPlatform(),
-          version: constants.getAppVersion(),
-          requests: await db.count(models.request.type),
-          requestGroups: await db.count(models.requestGroup.type),
-          environments: await db.count(models.environment.type),
-          workspaces: await db.count(models.workspace.type)
-        };
+    try {
+      const data = {
+        lastLaunch: stats.lastLaunch,
+        firstLaunch: stats.created,
+        launches: stats.launches,
+        platform: constants.getAppPlatform(),
+        version: constants.getAppVersion(),
+        requests: await db.count(models.request.type),
+        requestGroups: await db.count(models.requestGroup.type),
+        environments: await db.count(models.environment.type),
+        workspaces: await db.count(models.workspace.type)
+      };
 
-        notification = await fetch.post(`/notification`, data);
-      } catch (err) {
-        console.warn('[toast] Failed to fetch user notifications', err);
-      }
-    }
-
-    // Try fetching guest version-specific notification
-    if (!notification || this._hasSeenNotification(notification)) {
-      try {
-        notification = await fetch.get(
-          `https://insomnia.rest/notifications/v${constants.getAppVersion()}.json`
-        );
-      } catch (err) {
-        console.warn('[toast] Failed to fetch version notifications', err);
-      }
-    }
-
-    // Try fetching guest generic notification
-    if (!notification || this._hasSeenNotification(notification)) {
-      try {
-        notification = await fetch.get('https://insomnia.rest/notifications/all.json');
-      } catch (err) {
-        console.warn('[toast] Failed to fetch generic notifications', err);
-      }
+      notification = await fetch.post(`/notification`, data);
+    } catch (err) {
+      console.warn('[toast] Failed to fetch user notifications', err);
     }
 
     // No new notifications

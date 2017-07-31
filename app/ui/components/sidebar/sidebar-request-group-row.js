@@ -84,7 +84,6 @@ class SidebarRequestGroupRow extends PureComponent {
           'sidebar__item sidebar__item--big', {'sidebar__item--active': isActive}
         )}>
           {button}
-
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
               ref={this._setRequestGroupActionsDropdownRef}
@@ -99,7 +98,7 @@ class SidebarRequestGroupRow extends PureComponent {
         </div>
 
         <ul className={classnames('sidebar__list', {'sidebar__list--collapsed': isCollapsed})}>
-          {children.length > 0 ? children : (
+          {!isCollapsed && children.length > 0 ? children : (
             <SidebarRequestRow
               handleActivateRequest={misc.nullFn}
               handleDuplicateRequest={misc.nullFn}

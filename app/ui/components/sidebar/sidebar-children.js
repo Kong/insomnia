@@ -1,6 +1,7 @@
 import React, {PureComponent, PropTypes} from 'react';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
+import * as models from '../../../models/index';
 
 class SidebarChildren extends PureComponent {
   _renderChildren (children) {
@@ -25,7 +26,7 @@ class SidebarChildren extends PureComponent {
         return null;
       }
 
-      if (child.doc.type === 'Request') {
+      if (child.doc.type === models.request.type) {
         return (
           <SidebarRequestRow
             key={child.doc._id}
