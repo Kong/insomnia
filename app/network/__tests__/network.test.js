@@ -2,7 +2,7 @@ import * as networkUtils from '../network';
 import {join as pathJoin, resolve as pathResolve} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
-import {AUTH_AWS_IAM, AUTH_BASIC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
 
@@ -420,6 +420,40 @@ describe('actuallySend()', () => {
         PROXY: '',
         TIMEOUT_MS: 0,
         URL: 'http://unix:3000/my/path',
+        USERAGENT: `insomnia/${getAppVersion()}`,
+        VERBOSE: true
+      }
+    });
+  });
+
+  it('uses netrc', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      authentication: {
+        type: AUTH_NETRC
+      }
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+
+    const body = JSON.parse(bodyBuffer);
+    expect(body).toEqual({
+      options: {
+        CUSTOMREQUEST: 'GET',
+        ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
+        FOLLOWLOCATION: true,
+        HTTPHEADER: ['content-type: '],
+        NOPROGRESS: false,
+        PROXY: '',
+        TIMEOUT_MS: 0,
+        NETRC: 2,
+        URL: '',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true
       }
