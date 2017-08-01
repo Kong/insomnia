@@ -453,7 +453,7 @@ export function _actuallySend (
           setOpt(Curl.option.USERNAME, username || '');
           setOpt(Curl.option.PASSWORD, password || '');
         } else if (renderedRequest.authentication.type === AUTH_AWS_IAM) {
-          if (!requestBody) {
+          if (!noBody && !requestBody) {
             return handleError(
               new Error('AWS authentication not supported for provided body type'));
           }
@@ -461,7 +461,7 @@ export function _actuallySend (
             renderedRequest.authentication.accessKeyId || '',
             renderedRequest.authentication.secretAccessKey || '',
             headers,
-            requestBody,
+            requestBody || '',
             finalUrl
           );
           for (const header of extraHeaders) {
