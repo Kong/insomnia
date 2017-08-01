@@ -1,3 +1,5 @@
+// @flow
+import type {Request} from '../../../models/request';
 import React, {PropTypes, PureComponent} from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
@@ -11,24 +13,37 @@ import MarkdownEditor from '../markdown-editor';
 
 @autobind
 class RequestSettingsModal extends PureComponent {
-  constructor (props) {
+  state: {
+    showDescription: boolean,
+    defaultPreviewMode: boolean,
+    request: Request | null
+  };
+
+  modal: Modal;
+  _editor: HTMLElement;
+
+  constructor (props: Object) {
     super(props);
     this.state = {
-      request: null,
       showDescription: false,
-      defaultPreviewMode: false
+      defaultPreviewMode: false,
+      request: null
     };
   }
 
-  _setModalRef (n) {
+  _setModalRef (n: HTMLElement) {
     this.modal = n;
   }
 
-  _setEditorRef (n) {
+  _setEditorRef (n: HTMLElement) {
     this._editor = n;
   }
 
-  async _updateRequestSettingBoolean (e) {
+  async _updateRequestSettingBoolean (e: Event & {target: HTMLInputElement}): Promise<void> {
+    if (!this.state.request) {
+      return;
+    }
+
     const value = e.target.checked;
     const setting = e.target.name;
     const request = await models.request.update(this.state.request, {[setting]: value});
@@ -36,12 +51,32 @@ class RequestSettingsModal extends PureComponent {
     trackEvent('Request Settings', setting, value ? 'Enable' : 'Disable');
   }
 
-  async _handleNameChange (name) {
+  async _updateRequestSetting (e: Event & {target: HTMLInputElement}): Promise<void> {
+    if (!this.state.request) {
+      return;
+    }
+
+    const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
+    const setting = e.target.name;
+    const request = await models.request.update(this.state.request, {[setting]: value});
+    this.setState({request});
+    trackEvent('Request Settings', setting, value);
+  }
+
+  async _handleNameChange (name: string): Promise<void> {
+    if (!this.state.request) {
+      return;
+    }
+
     const request = await models.request.update(this.state.request, {name});
     this.setState({request});
   }
 
-  async _handleDescriptionChange (description) {
+  async _handleDescriptionChange (description: string): Promise<void> {
+    if (!this.state.request) {
+      return;
+    }
+
     const request = await models.request.update(this.state.request, {description});
     this.setState({request, defaultPreviewMode: false});
   }
@@ -51,7 +86,7 @@ class RequestSettingsModal extends PureComponent {
     this.setState({showDescription: true});
   }
 
-  show ({request, forceEditMode}) {
+  show ({request, forceEditMode}: {request: Request, forceEditMode: boolean}) {
     this.modal.show();
     const hasDescription = !!request.description;
     this.setState({
@@ -71,7 +106,12 @@ class RequestSettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  renderCheckboxInput (setting) {
+  renderCheckboxInput (setting: string) {
+    if (!this.state.request) {
+      console.warn('Tried to render checkbox without request', this.state);
+      return null;
+    }
+
     return (
       <input
         type="checkbox"
@@ -82,7 +122,24 @@ class RequestSettingsModal extends PureComponent {
     );
   }
 
-  renderModalBody (request) {
+  renderInputDecimal (setting: string) {
+    if (!this.state.request) {
+      console.warn('Tried to render input without request', this.state);
+      return null;
+    }
+
+    return (
+      <input
+        type="number"
+        step="0.01"
+        name={setting}
+        defaultValue={this.state.request[setting]}
+        onChange={this._updateRequestSetting}
+      />
+    );
+  }
+
+  renderModalBody (request: Request) {
     const {
       editorLineWrapping,
       editorFontSize,
@@ -159,6 +216,24 @@ class RequestSettingsModal extends PureComponent {
                 Disable rendering of environment variables and tags for the request body
               </HelpTooltip>
             </label>
+          </div>
+          <div className="form-row">
+            <div className="form-control form-control--outlined">
+              <label>Limit Upload Speed
+                <HelpTooltip position="top" className="space-left">
+                  Limit the upload speed of the request in KB/sec. Specify 0 for no limit
+                </HelpTooltip>
+                {this.renderInputDecimal('settingMaxSend')}
+              </label>
+            </div>
+            <div className="form-control form-control--outlined">
+              <label>Limit Download Speed
+                <HelpTooltip position="top" className="space-left">
+                  Limit the download speed of the response in KB/sec. Specify 0 for no limit
+                </HelpTooltip>
+                {this.renderInputDecimal('settingMaxReceive')}
+              </label>
+            </div>
           </div>
         </div>
       </div>

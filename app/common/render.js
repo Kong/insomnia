@@ -281,6 +281,8 @@ export async function getRenderedRequest (
     settingEncodeUrl: renderedRequest.settingEncodeUrl,
     settingSendCookies: renderedRequest.settingSendCookies,
     settingStoreCookies: renderedRequest.settingStoreCookies,
+    settingMaxSend: renderedRequest.settingMaxSend,
+    settingMaxReceive: renderedRequest.settingMaxReceive,
     type: renderedRequest.type,
     url: renderedRequest.url
   };

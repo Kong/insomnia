@@ -55,7 +55,9 @@ type BaseRequest = {
   settingStoreCookies: boolean,
   settingSendCookies: boolean,
   settingDisableRenderRequestBody: boolean,
-  settingEncodeUrl: boolean
+  settingEncodeUrl: boolean,
+  settingMaxSend: number,
+  settingMaxReceive: number
 };
 
 export type Request = BaseModel & BaseRequest;
@@ -76,7 +78,9 @@ export function init (): BaseRequest {
     settingStoreCookies: true,
     settingSendCookies: true,
     settingDisableRenderRequestBody: false,
-    settingEncodeUrl: true
+    settingEncodeUrl: true,
+    settingMaxSend: 0,
+    settingMaxReceive: 0
   };
 }
 
