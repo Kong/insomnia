@@ -1,6 +1,7 @@
 import 'whatwg-fetch';
+import * as electron from 'electron';
 import {parse as urlParse} from 'url';
-import {getClientString} from './constants';
+import {getClientString, isDevelopment} from './constants';
 import * as session from '../sync/session';
 import * as zlib from 'zlib';
 

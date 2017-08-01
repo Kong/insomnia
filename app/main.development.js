@@ -21,7 +21,7 @@ function addUrlToOpen (e, url) {
   args.push(url);
 }
 
-const {app, ipcMain} = electron;
+const {app, ipcMain, session} = electron;
 
 const args = process.argv.slice(1);
 
@@ -87,5 +87,11 @@ app.on('ready', async () => {
     setTimeout(() => {
       window.focus();
     }, 100);
+  });
+
+  // Don't send origin header from Insomnia app because we're not technically using CORS
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    delete details.requestHeaders['Origin'];
+    callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
 });
