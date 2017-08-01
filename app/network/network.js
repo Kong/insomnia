@@ -504,7 +504,7 @@ export function _actuallySend (
 
         // Collect various things
         const result = lastCurlHeadersObject && lastCurlHeadersObject.result;
-        const statusCode = result ? result.code : 0;
+        const statusCode = result ? result.code : -1;
         const statusMessage = result ? result.reason : 'Unknown';
 
         // Collect the headers

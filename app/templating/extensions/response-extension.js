@@ -57,7 +57,7 @@ export default {
       throw new Error('No responses for request');
     }
 
-    if (!response.statusCode || response.statusCode < 100) {
+    if (!response.statusCode) {
       throw new Error('No responses for request');
     }
 
