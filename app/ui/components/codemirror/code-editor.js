@@ -12,7 +12,7 @@ import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
 import {prettifyJson} from '../../../common/prettify';
-import {DEBOUNCE_MILLIS} from '../../../common/constants';
+import {DEBOUNCE_MILLIS, isMac} from '../../../common/constants';
 import './base-imports';
 import {getTagDefinitions} from '../../../templating/index';
 import Dropdown from '../base/dropdown/dropdown';
@@ -45,10 +45,14 @@ const BASE_CODEMIRROR_OPTIONS = {
   cursorScrollMargin: 12, // NOTE: This is px
   keyMap: 'default',
   extraKeys: {
-    'Ctrl-Space': 'autocomplete',
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
-    }
+    },
+    'Ctrl-Space': 'autocomplete',
+
+    // Change default find command from "find" to "findPersistent" so the
+    // search box stays open after pressing Enter
+    [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent'
   }
 };
 
