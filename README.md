@@ -31,7 +31,7 @@ common text editors. Read more and download plugins at [editorconfig.org](http:/
 ## Developing
 
 Development on Insomnia can be done on Mac, Windows, or Linux as long as you have
-[NodeJS 7.4](https://nodejs.org) and [Git](https://git-scm.com/).
+[NodeJS 8](https://nodejs.org) and [Git](https://git-scm.com/).
 
 <details>
 <summary>Initial Dev Setup</summary>

@@ -135,7 +135,7 @@
     "moment": "^2.18.1",
     "nedb": "^1.8.0",
     "node-forge": "^0.7.0",
-    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#b3968130cbaeef6b432e617a5e835baf0f856880",
+    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#d3ee4d436a174c2bd5f2dc89b165257a5cac32ea",
     "nunjucks": "^3.0.0",
     "react": "^15.4.2",
     "react-dnd": "^2.2.3",
@@ -148,6 +148,7 @@
     "reselect": "^2.5.4",
     "simple-react-pdf": "^1.0.8",
     "srp-js": "^0.2.0",
+    "tar": "^3.1.7",
     "tough-cookie": "^2.3.1",
     "uuid": "^3.0.0",
     "vkbeautify": "^0.99.1",
@@ -201,9 +202,5 @@
     "webpack-dev-server": "^2.4.1",
     "webpack-hot-middleware": "^2.17.1",
     "webpack-target-electron-renderer": "^0.4.0"
-  },
-  "devEngines": {
-    "node": "6.x",
-    "npm": "2.x || 3.x"
   }
 }
