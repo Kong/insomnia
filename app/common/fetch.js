@@ -2,6 +2,7 @@ import 'whatwg-fetch';
 import {parse as urlParse} from 'url';
 import {getClientString} from './constants';
 import * as session from '../sync/session';
+import * as zlib from 'zlib';
 
 let commandListeners = [];
 
@@ -33,7 +34,7 @@ export function rawFetch (...args) {
   return window.fetch(...args);
 }
 
-async function _fetch (method, path, json, sessionId = null) {
+async function _fetch (method, path, obj, sessionId = null) {
   const config = {
     method: method,
     headers: new window.Headers()
@@ -42,9 +43,10 @@ async function _fetch (method, path, json, sessionId = null) {
   // Set some client information
   config.headers.set('X-Insomnia-Client', getClientString());
 
-  if (json) {
-    config.body = JSON.stringify(json);
+  if (obj) {
+    config.body = zlib.gzipSync(JSON.stringify(obj));
     config.headers.set('Content-Type', 'application/json');
+    config.headers.set('Content-Encoding', 'gzip');
   }
 
   sessionId = sessionId || session.getCurrentSessionId();
@@ -70,14 +72,9 @@ async function _fetch (method, path, json, sessionId = null) {
   }
 }
 
-function _getUrl (pathOrUrl) {
-  // If it's a URL, just return it
-  if (pathOrUrl.match(/^https?:\/\//)) {
-    return pathOrUrl;
-  }
-
+function _getUrl (path) {
   const baseUrl = process.env.INSOMNIA_SYNC_URL || 'https://api.insomnia.rest';
-  return `${baseUrl}${pathOrUrl}`;
+  return `${baseUrl}${path}`;
 }
 
 function _notifyCommandListeners (uri) {
