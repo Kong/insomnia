@@ -35,7 +35,8 @@ class ChangelogModal extends PureComponent {
   async componentDidMount () {
     let changelog;
     try {
-      const response = await window.fetch(`${CHANGELOG_URL}?bust=${Date.now()}`);
+      // TODO: Implement release channels
+      const response = await window.fetch(`${CHANGELOG_URL}?channel=stable`);
       changelog = await response.json();
     } catch (e) {
       console.warn('Failed to fetch changelog', e);
