@@ -57,7 +57,8 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   // Add query params to URL
   const qs = querystring.buildFromParams(params);
   const finalUrl = querystring.joinUrl(url, qs);
-  const regex = redirectUri ? new RegExp(redirectUri + '.*(code=|error=).*') : /(code=|error=)/;
+  const escapedUri = redirectUri.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
+  const regex = new RegExp(`${escapedUri}.*(code=|error=)`);
 
   const redirectedTo = await authorizeUserInWindow(finalUrl, regex);
 
