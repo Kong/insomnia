@@ -308,3 +308,11 @@ export function resolveHomePath (p: string): string {
     return p;
   }
 }
+
+export function jsonParseOr (str: string, fallback: any): any {
+  try {
+    return JSON.parse(str);
+  } catch (err) {
+    return fallback;
+  }
+}
