@@ -8,14 +8,14 @@ import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
 import clone from 'clone';
 import CodeEditor from '../../codemirror/code-editor';
-import {setDefaultProtocol} from '../../../../common/misc';
+import {jsonParseOr, setDefaultProtocol} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
 import {DEBOUNCE_MILLIS} from '../../../../common/constants';
 import {prettifyJson} from '../../../../common/prettify';
 
 type GraphQLBody = {
   query: string,
-  variables: string,
+  variables: Object,
   operationName?: string
 }
 
@@ -108,23 +108,17 @@ class GraphQLEditor extends React.PureComponent {
   _handlePrettify () {
     const {body, forceRefreshKey} = this.state;
     const {variables, query} = body;
-    this._handleBodyChange(print(parse(query)), prettifyJson(variables));
+    const prettyQuery = query && print(parse(query));
+    const prettyVariables = variables && prettifyJson(JSON.stringify(variables));
+    this._handleBodyChange(prettyQuery, prettyVariables);
     setTimeout(() => {
       this.setState({forceRefreshKey: forceRefreshKey + 1});
     }, 200);
   }
 
-  _handleBodyChange (query: string, variables: string): void {
+  _handleBodyChange (query: string, variables: Object): void {
     const body = clone(this.state.body);
     const newState = {variablesSyntaxError: '', body};
-
-    // Make sure variables are JSON
-    variables = variables || '{}';
-    try {
-      JSON.parse(variables);
-    } catch (err) {
-      newState.variablesSyntaxError = err.message;
-    }
 
     newState.body.query = query;
     newState.body.variables = variables;
@@ -137,7 +131,12 @@ class GraphQLEditor extends React.PureComponent {
   }
 
   _handleVariablesChange (variables: string): void {
-    this._handleBodyChange(this.state.body.query, variables);
+    try {
+      const variablesObj = JSON.parse(variables || '{}');
+      this._handleBodyChange(this.state.body.query, variablesObj);
+    } catch (err) {
+      this.setState({variablesSyntaxError: err.message});
+    }
   }
 
   _stringToGraphQL (text: string): GraphQLBody {
@@ -145,12 +144,16 @@ class GraphQLEditor extends React.PureComponent {
     try {
       obj = JSON.parse(text);
     } catch (err) {
-      obj = {query: '', variables: ''};
+      obj = {query: '', variables: {}};
+    }
+
+    if (typeof obj.variables === 'string') {
+      obj.variables = jsonParseOr(obj.variables, {});
     }
 
     return {
       query: obj.query || '',
-      variables: obj.variables || ''
+      variables: obj.variables || {}
     };
   }
 
@@ -195,8 +198,10 @@ class GraphQLEditor extends React.PureComponent {
 
     const {
       query,
-      variables
+      variables: variablesObject
     } = this._stringToGraphQL(content);
+
+    const variables = prettifyJson(JSON.stringify(variablesObject));
 
     return (
       <div key={forceRefreshKey} className="graphql-editor">
@@ -247,7 +252,7 @@ class GraphQLEditor extends React.PureComponent {
             fontSize={fontSize}
             indentSize={indentSize}
             keyMap={keyMap}
-            defaultValue={variables || '{}'}
+            defaultValue={variables}
             className={className}
             render={render}
             getRenderContext={getRenderContext}
