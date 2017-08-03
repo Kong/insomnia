@@ -377,6 +377,26 @@ export function _actuallySend (
         }
       }
 
+      // Max download speed
+      if (renderedRequest.settingMaxReceive > 0) {
+        const speed = renderedRequest.settingMaxReceive * 1024;
+        setOpt(Curl.option.MAX_RECV_SPEED_LARGE, speed);
+        timeline.push({
+          name: 'TEXT',
+          value: `Enabled max receive speed of ${speed} bytes/sec`
+        });
+      }
+
+      // Max upload speed
+      if (renderedRequest.settingMaxSend > 0) {
+        const speed = renderedRequest.settingMaxSend * 1024;
+        setOpt(Curl.option.MAX_SEND_SPEED_LARGE, speed);
+        timeline.push({
+          name: 'TEXT',
+          value: `Enabled max send speed of ${speed} bytes/sec`
+        });
+      }
+
       // Build the body
       let noBody = false;
       let requestBody = null;
@@ -585,7 +605,7 @@ export function _actuallySend (
         respond(responsePatch, bodyBuffer);
       });
 
-      curl.on('error', function (err, code) {
+      curl.on('error', (err, code) => {
         let error = err + '';
         let statusMessage = 'Error';
 

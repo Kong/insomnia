@@ -452,7 +452,7 @@ describe('actuallySend()', () => {
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
-        NETRC: 2,
+        NETRC: 'REQUIRED',
         URL: '',
         USERAGENT: `insomnia/${getAppVersion()}`,
         VERBOSE: true

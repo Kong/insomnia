@@ -18,7 +18,9 @@ describe('init()', () => {
       settingStoreCookies: true,
       settingSendCookies: true,
       settingDisableRenderRequestBody: false,
-      settingEncodeUrl: true
+      settingEncodeUrl: true,
+      settingMaxSend: 0,
+      settingMaxReceive: 0
     });
   });
 });
@@ -47,7 +49,9 @@ describe('create()', async () => {
       settingStoreCookies: true,
       settingSendCookies: true,
       settingDisableRenderRequestBody: false,
-      settingEncodeUrl: true
+      settingEncodeUrl: true,
+      settingMaxSend: 0,
+      settingMaxReceive: 0
     };
 
     expect(request).toEqual(expected);
@@ -280,7 +284,9 @@ describe('migrate()', () => {
       settingStoreCookies: true,
       settingSendCookies: true,
       settingDisableRenderRequestBody: false,
-      settingEncodeUrl: true
+      settingEncodeUrl: true,
+      settingMaxSend: 0,
+      settingMaxReceive: 0
     };
 
     const migrated = models.initModel(models.request.type, original);
