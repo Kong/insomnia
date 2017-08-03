@@ -78,7 +78,6 @@ class ResponseViewer extends PureComponent {
       previewMode,
       filter,
       filterHistory,
-      contentType,
       editorLineWrapping,
       editorFontSize,
       editorIndentSize,
@@ -87,6 +86,8 @@ class ResponseViewer extends PureComponent {
       url,
       error
     } = this.props;
+
+    let contentType = this.props.contentType;
 
     const {bodyBuffer} = this.state;
 
@@ -138,6 +139,15 @@ class ResponseViewer extends PureComponent {
       );
     }
 
+    // Try to detect JSON in all cases (even if header is set). Apparently users
+    // often send JSON with weird content-types like text/plain
+    try {
+      JSON.parse(bodyBuffer);
+      contentType = 'application/json';
+    } catch (e) {
+      // Nothing
+    }
+
     const ct = contentType.toLowerCase();
     if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
@@ -184,20 +194,12 @@ class ResponseViewer extends PureComponent {
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
       const body = iconv.decode(bodyBuffer, charset);
 
-      let mode = contentType;
-
       // Try to detect content-types if there isn't one
-      if (!mode) {
-        if (body.match(/^\s*<\?xml [^?]*\?>/)) {
-          mode = 'application/xml';
-        } else {
-          try {
-            JSON.parse(body);
-            mode = 'application/json';
-          } catch (e) {
-            // Nothing
-          }
-        }
+      let mode;
+      if (!mode && body.match(/^\s*<\?xml [^?]*\?>/)) {
+        mode = 'application/xml';
+      } else {
+        mode = contentType;
       }
 
       return (
