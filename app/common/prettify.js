@@ -1,3 +1,9 @@
+const NUNJUCKS_REGEXES = [
+  /{{[^}]*}}/, // variables
+  /{%[^%]*%}/, // tags
+  /{#[^#]*#}/ // comments
+];
+
 /**
  * Format a JSON string without parsing it as JavaScript.
  *
@@ -5,9 +11,10 @@
  *
  * @param json
  * @param indentChars
+ * @param ignoreRegexes
  * @returns {string}
  */
-export function prettifyJson (json, indentChars = '\t') {
+export function prettifyJson (json, indentChars = '\t', ignoreRegexes = NUNJUCKS_REGEXES) {
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
   try {
@@ -15,6 +22,17 @@ export function prettifyJson (json, indentChars = '\t') {
   } catch (err) {
     // Just in case (should never happen)
     console.warn('Prettify failed to handle unicode', err);
+  }
+
+  // Replace ignored strings with placeholders, so we can put them back at the end
+  const ignoredSubstrings = {};
+  for (let x = 0; x < ignoreRegexes.length; x++) {
+    let m;
+    for (let y = 0; (m = ignoreRegexes[x].exec(json)); y++) {
+      const v = `__IGNORED_${x}_${y}_IGNORED__`;
+      ignoredSubstrings[v] = m[0];
+      json = `${json.slice(0, m.index)}${v}${json.slice(m.index + m[0].length)}`;
+    }
   }
 
   let i = 0;
@@ -109,6 +127,11 @@ export function prettifyJson (json, indentChars = '\t') {
         newJson += currentChar;
         break;
     }
+  }
+
+  // Put the ignored strings back where they were
+  for (const v of Object.keys(ignoredSubstrings)) {
+    newJson = newJson.replace(v, ignoredSubstrings[v]);
   }
 
   // Remove lines that only contain whitespace
