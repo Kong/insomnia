@@ -8,7 +8,7 @@ import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
 import clone from 'clone';
 import CodeEditor from '../../codemirror/code-editor';
-import {jsonParseOr, setDefaultProtocol} from '../../../../common/misc';
+import {hasContentTypeHeader, jsonParseOr, setDefaultProtocol} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
 import {DEBOUNCE_MILLIS} from '../../../../common/constants';
 import {prettifyJson} from '../../../../common/prettify';
@@ -74,6 +74,10 @@ class GraphQLEditor extends React.PureComponent {
     const headers = {};
     for (const {name, value} of request.headers) {
       headers[name] = value;
+    }
+
+    if (!hasContentTypeHeader(request.headears)) {
+      headers['Content-Type'] = 'application/json';
     }
 
     const newState = {schema: this.state.schema, schemaFetchError: ''};
