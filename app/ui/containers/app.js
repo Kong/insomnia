@@ -37,7 +37,6 @@ import {exportHar} from '../../common/har';
 
 const KEY_ENTER = 13;
 const KEY_COMMA = 188;
-const KEY_SLASH = 191;
 const KEY_D = 68;
 const KEY_E = 69;
 const KEY_K = 75;
