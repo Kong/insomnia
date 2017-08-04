@@ -245,8 +245,18 @@ export function createWindow () {
         }
       },
       {
+        label: 'Keyboard Shortcuts',
+        click: (menuItem, window, e) => {
+          if (!window || !window.webContents) {
+            return;
+          }
+          window.webContents.send('toggle-preferences-shortcuts');
+          trackEvent('App Menu', 'Shortcuts');
+        }
+      },
+      {
         label: 'Insomnia Help',
-        accelerator: 'CmdOrCtrl+?',
+        accelerator: 'CmdOrCtrl+/',
         click: () => {
           trackEvent('App Menu', 'Help');
           shell.openExternal('https://insomnia.rest/documentation/');

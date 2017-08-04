@@ -1,6 +1,7 @@
 import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/overlay';
 import {getDefaultFill} from '../../../../templating/utils';
+import {escapeRegex} from '../../../../common/misc';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -9,7 +10,6 @@ const AFTER_TAG_MATCH = /{%\s*[\w.\][]*$/;
 const COMPLETE_AFTER_WORD = /[\w.\][-]+/;
 const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
-const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 const MAX_HINT_LOOK_BACK = 100;
 const HINT_DELAY_MILLIS = 700;
 const TYPE_VARIABLE = 'variable';
@@ -343,7 +343,7 @@ function matchSegments (listOfThings, segment, type, limit = -1) {
  * @returns string
  */
 function replaceWithSurround (text, find, prefix, suffix) {
-  const escapedString = find.replace(ESCAPE_REGEX_MATCH, '\\$&');
+  const escapedString = escapeRegex(find);
   const re = new RegExp(escapedString, 'gi');
   return text.replace(re, matched => prefix + matched + suffix);
 }

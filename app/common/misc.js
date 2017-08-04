@@ -8,6 +8,7 @@ import * as querystring from './querystring';
 import {shell} from 'electron';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
+const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
 type Header = {
   name: string,
@@ -315,4 +316,13 @@ export function jsonParseOr (str: string, fallback: any): any {
   } catch (err) {
     return fallback;
   }
+}
+
+/**
+ * Escape a dynamic string for use inside of a regular expression
+ * @param str - string to escape
+ * @returns {string} escaped string
+ */
+export function escapeRegex (str: string): string {
+  return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }

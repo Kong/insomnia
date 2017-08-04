@@ -84,7 +84,10 @@
   }
 
   .CodeMirror-guttermarker-subtle {
-    color: var(--hl-lg) !important;
+    color: var(--hl-lg);
+    &:hover {
+      color: var(--hl);
+    }
   }
 
   .CodeMirror-gutters {

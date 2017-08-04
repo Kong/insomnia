@@ -2,7 +2,7 @@ import {parse as urlParse} from 'url';
 import * as querystring from '../../common/querystring';
 import * as c from './constants';
 import {responseToObject, authorizeUserInWindow} from './misc';
-import {getBasicAuthHeader} from '../../common/misc';
+import {escapeRegex, getBasicAuthHeader} from '../../common/misc';
 
 export default async function (authorizeUrl,
                                accessTokenUrl,
@@ -57,8 +57,7 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   // Add query params to URL
   const qs = querystring.buildFromParams(params);
   const finalUrl = querystring.joinUrl(url, qs);
-  const escapedUri = redirectUri.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
-  const regex = new RegExp(`${escapedUri}.*(code=|error=)`);
+  const regex = new RegExp(`${escapeRegex(redirectUri)}.*(code=|error=)`);
 
   const redirectedTo = await authorizeUserInWindow(finalUrl, regex);
 

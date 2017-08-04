@@ -1,6 +1,6 @@
 import {parse as urlParse} from 'url';
 import certificateUrlParse from './certificate-url-parse';
-import {setDefaultProtocol} from '../common/misc';
+import {escapeRegex, setDefaultProtocol} from '../common/misc';
 
 const DEFAULT_PORT = 443;
 
@@ -12,8 +12,7 @@ export default function urlMatchesCertHost (certificateHost, requestUrl) {
   const assumedPort = parseInt(port) || DEFAULT_PORT;
   const assumedCPort = parseInt(cPort) || DEFAULT_PORT;
 
-  const cHostnameRegex = (cHostname || '').replace(/([.+?^=!:${}()|[\]/\\])/g, '\\$1')
-                                          .replace(/\*/g, '.*');
+  const cHostnameRegex = escapeRegex(cHostname || '').replace(/\\\*/g, '.*');
 
   return (assumedCPort === assumedPort && !!hostname.match(`^${cHostnameRegex}$`));
 }

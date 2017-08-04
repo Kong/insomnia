@@ -20,6 +20,7 @@ import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
 
 export const TAB_INDEX_EXPORT = 1;
+export const TAB_INDEX_SHORTCUTS = 3;
 
 @autobind
 class SettingsModal extends PureComponent {
@@ -118,37 +119,37 @@ class SettingsModal extends PureComponent {
                 selectedIndex={currentTabIndex}
                 forceRenderTabPanel>
             <TabList>
-              <Tab selected={this._currentTabIndex === 0}>
+              <Tab>
                 <Button value="General" onClick={this._trackTab}>
                   General
                 </Button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 1}>
+              <Tab>
                 <Button value="Import/Export" onClick={this._trackTab}>
                   Data
                 </Button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 2}>
+              <Tab>
                 <Button value="Themes" onClick={this._trackTab}>
                   Themes
                 </Button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 3}>
-                <Button value="shortcuts" onClick={this._trackTab}>
-                  Shortcuts
+              <Tab>
+                <Button value="Shortcuts" onClick={this._trackTab}>
+                  Keyboard
                 </Button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 4}>
+              <Tab>
                 <Button value="Account" onClick={this._trackTab}>
                   Account
                 </Button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 1}>
+              <Tab>
                 <Button value="Plugins" onClick={this._trackTab}>
                   Plugins
                 </Button>
               </Tab>
-              <Tab selected={this._currentTabIndex === 5}>
+              <Tab>
                 <Button value="About" onClick={this._trackTab}>
                   About
                 </Button>
