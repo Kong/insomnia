@@ -194,7 +194,6 @@ export async function exportJSON (parentDoc = null, includePrivateDocs = false) 
 
       // Delete the things we don't want to export
       delete d.type;
-      delete d.isPrivate;
       return d;
     });
 
