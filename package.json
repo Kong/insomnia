@@ -197,7 +197,7 @@
     "redux-mock-store": "^1.0.2",
     "style-loader": "^0.13.2",
     "url-loader": "^0.5.8",
-    "webpack": "^2.2.1",
+    "webpack": "^3.5.1",
     "webpack-dev-middleware": "^1.10.1",
     "webpack-dev-server": "^2.4.1",
     "webpack-hot-middleware": "^2.17.1",
