@@ -225,6 +225,11 @@ class CodeEditor extends PureComponent {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
 
+    // Prevent these things if we're type === "password"
+    this.codeMirror.on('copy', this._codemirrorPreventWhenTypePassword);
+    this.codeMirror.on('cut', this._codemirrorPreventWhenTypePassword);
+    this.codeMirror.on('dragstart', this._codemirrorPreventWhenTypePassword);
+
     this.codeMirror.setCursor({line: -1, ch: -1});
 
     if (!this.codeMirror.getOption('indentWithTabs')) {
@@ -547,6 +552,12 @@ class CodeEditor extends PureComponent {
   _codemirrorPaste (cm, e) {
     if (this.props.onPaste) {
       this.props.onPaste(e);
+    }
+  }
+
+  _codemirrorPreventWhenTypePassword (cm, e) {
+    if (this.props.type.toLowerCase() === 'password') {
+      e.preventDefault();
     }
   }
 
