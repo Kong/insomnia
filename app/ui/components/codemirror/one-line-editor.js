@@ -82,18 +82,21 @@ class OneLineEditor extends PureComponent {
   }
 
   componentDidMount () {
-    document.body.addEventListener('click', this._handleDocumentClick);
+    document.body.addEventListener('mousedown', this._handleDocumentMousedown);
   }
 
   componentWillUnmount () {
-    document.body.removeEventListener('click', this._handleDocumentClick);
+    document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
   }
 
-  _handleDocumentClick (e) {
+  _handleDocumentMousedown (e) {
     if (!this._editor) {
       return;
     }
 
+    // Clear the selection if mousedown happens outside the input so we act like
+    // a regular <input>
+    // NOTE: Must be "mousedown", not "click" because "click" triggers on selection drags
     const node = ReactDOM.findDOMNode(this._editor);
     const clickWasOutsideOfComponent = !node.contains(e.target);
     if (clickWasOutsideOfComponent) {
