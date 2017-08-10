@@ -12,6 +12,25 @@ export const SYNC_MODE_OFF = 'paused';
 export const SYNC_MODE_ON = 'active';
 export const SYNC_MODE_NEVER = 'never';
 export const SYNC_MODE_UNSET = 'unset';
+let changeListeners = [];
+
+export function onChange (callback) {
+  changeListeners.push(callback);
+}
+
+export function offChange (callback) {
+  changeListeners = changeListeners.filter(l => l !== callback);
+}
+
+let _changeTimeout = null;
+function _notifyChange () {
+  clearTimeout(_changeTimeout);
+  _changeTimeout = setTimeout(() => {
+    for (const fn of changeListeners) {
+      fn();
+    }
+  }, 200);
+}
 
 export function allActiveResources (resourceGroupId = null) {
   if (resourceGroupId) {
@@ -86,6 +105,7 @@ export function findResourcesByDocId (id) {
 export async function removeResourceGroup (resourceGroupId) {
   await _execDB(TYPE_RESOURCE, 'remove', {resourceGroupId}, {multi: true});
   await _execDB(TYPE_CONFIG, 'remove', {resourceGroupId}, {multi: true});
+  _notifyChange();
 }
 
 export async function insertResource (resource) {
@@ -94,17 +114,20 @@ export async function insertResource (resource) {
   h.update(resource.id);
   const newResource = Object.assign({}, resource, {_id: `rs_${h.digest('hex')}`});
   await _execDB(TYPE_RESOURCE, 'insert', newResource);
+  _notifyChange();
   return newResource;
 }
 
 export async function updateResource (resource, ...patches) {
   const newDoc = Object.assign({}, resource, ...patches);
   await _execDB(TYPE_RESOURCE, 'update', {_id: resource._id}, newDoc, {multi: true});
+  _notifyChange();
   return newDoc;
 }
 
-export function removeResource (resource) {
-  return _execDB(TYPE_RESOURCE, 'remove', {_id: resource._id}, {multi: true});
+export async function removeResource (resource) {
+  await _execDB(TYPE_RESOURCE, 'remove', {_id: resource._id}, {multi: true});
+  _notifyChange();
 }
 
 // ~~~~~~ //
@@ -196,6 +219,7 @@ export function initDB (config, forceReset) {
 // ~~~~~~~ //
 
 let _database = null;
+
 function _getDB (type, config = {}) {
   initDB(config);
   return _database[type];

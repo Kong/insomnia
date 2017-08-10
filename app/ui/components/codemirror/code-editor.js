@@ -27,7 +27,6 @@ const BASE_CODEMIRROR_OPTIONS = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  autoRefresh: 500,
   lineWrapping: true,
   scrollbarStyle: 'native',
   lint: true,

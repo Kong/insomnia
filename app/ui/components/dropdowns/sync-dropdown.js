@@ -19,8 +19,11 @@ class SyncDropdown extends PureComponent {
 
     this.state = {
       loggedIn: null,
-      syncData: null,
-      loading: false
+      loading: false,
+      resourceGroupId: null,
+      syncMode: null,
+      syncPercent: 0,
+      workspaceName: ''
     };
   }
 
@@ -33,8 +36,7 @@ class SyncDropdown extends PureComponent {
   }
 
   async _handleSyncResourceGroupId () {
-    const {syncData} = this.state;
-    const resourceGroupId = syncData.resourceGroupId;
+    const resourceGroupId = this.state;
 
     // Set loading state
     this.setState({loading: true});
@@ -73,15 +75,13 @@ class SyncDropdown extends PureComponent {
     const numClean = all.length - dirty.length;
     const syncPercent = all.length === 0 ? 100 : parseInt(numClean / all.length * 1000) / 10;
 
-    const syncData = {
-      resourceGroupId,
-      syncPercent,
-      syncMode: config.syncMode,
-      name: workspace.name
-    };
-
     if (this._isMounted) {
-      this.setState({syncData});
+      this.setState({
+        resourceGroupId,
+        syncPercent,
+        syncMode: config.syncMode,
+        workspaceName: workspace.name
+      });
     }
   }
 
@@ -90,29 +90,26 @@ class SyncDropdown extends PureComponent {
     await this._reloadData();
   }
 
-  async componentWillMount () {
-    this._interval = setInterval(this._reloadData, 500);
+  async componentDidMount () {
+    this._isMounted = true;
+    syncStorage.onChange(this._reloadData);
     await this._reloadData();
   }
 
-  componentDidMount () {
-    this._isMounted = true;
-  }
-
   componentWillUnmount () {
-    clearInterval(this._interval);
+    syncStorage.offChange(this._reloadData);
     this._isMounted = false;
   }
 
   async componentDidUpdate () {
-    const {syncData} = this.state;
+    const {resourceGroupId, syncMode} = this.state;
 
-    if (!syncData) {
+    if (!resourceGroupId) {
       return;
     }
 
     // Sync has not yet been configured for this workspace, so prompt the user to do so
-    const isModeUnset = !syncData.syncMode || syncData.syncMode === syncStorage.SYNC_MODE_UNSET;
+    const isModeUnset = !syncMode || syncMode === syncStorage.SYNC_MODE_UNSET;
     if (isModeUnset && !this._hasPrompted) {
       this._hasPrompted = true;
       await this._handleShowSyncModePrompt();
@@ -138,14 +135,14 @@ class SyncDropdown extends PureComponent {
 
   render () {
     const {className} = this.props;
-    const {syncData, loading, loggedIn} = this.state;
+    const {resourceGroupId, loading, loggedIn} = this.state;
 
     // Don't show the sync menu unless we're logged in
     if (!loggedIn) {
       return null;
     }
 
-    if (!syncData) {
+    if (!resourceGroupId) {
       return (
         <div className={className}>
           <button className="btn btn--compact wide" disabled>
@@ -154,7 +151,7 @@ class SyncDropdown extends PureComponent {
         </div>
       );
     } else {
-      const {syncMode, syncPercent} = syncData;
+      const {syncMode, syncPercent} = this.state;
       return (
         <div className={className}>
           <Dropdown wide className="wide tall">
