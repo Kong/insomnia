@@ -431,6 +431,8 @@ class Wrapper extends React.PureComponent {
           editorKeyMap={settings.editorKeyMap}
           editorLineWrapping={settings.editorLineWrapping}
           workspace={activeWorkspace}
+          settings={settings}
+          environmentId={activeEnvironment ? activeEnvironment._id : ''}
           oAuth2Token={oAuth2Token}
           forceUpdateRequest={this._handleForceUpdateRequest}
           handleCreateRequest={handleCreateRequestForWorkspace}

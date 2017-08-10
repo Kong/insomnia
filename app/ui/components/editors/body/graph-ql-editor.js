@@ -1,5 +1,6 @@
 // @flow
 import type {Request} from '../../../../models/request';
+import {newBodyRaw} from '../../../../models/request';
 
 import React from 'react';
 import autobind from 'autobind-decorator';
@@ -8,10 +9,15 @@ import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
 import clone from 'clone';
 import CodeEditor from '../../codemirror/code-editor';
-import {hasContentTypeHeader, jsonParseOr, setDefaultProtocol} from '../../../../common/misc';
+import {jsonParseOr} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
-import {DEBOUNCE_MILLIS} from '../../../../common/constants';
+import {CONTENT_TYPE_JSON, DEBOUNCE_MILLIS} from '../../../../common/constants';
 import {prettifyJson} from '../../../../common/prettify';
+import * as network from '../../../../network/network';
+import type {Workspace} from '../../../../models/workspace';
+import type {Settings} from '../../../../models/settings';
+import type {RenderedRequest} from '../../../../common/render';
+import {getRenderedRequest} from '../../../../common/render';
 
 type GraphQLBody = {
   query: string,
@@ -29,6 +35,9 @@ type Props = {
   render: Function,
   getRenderContext: Function,
   request: Request,
+  workspace: Workspace,
+  settings: Settings,
+  environmentId: string,
 
   // Optional
   className?: string
@@ -65,43 +74,45 @@ class GraphQLEditor extends React.PureComponent {
   }
 
   async _fetchAndSetSchema (rawRequest: Request) {
-    const {render} = this.props;
-    const request = await render(rawRequest);
-
-    // Render the URL in case we're using variables
-    const schemaUrl = setDefaultProtocol(request.url);
-
-    const headers = {};
-    for (const {name, value} of request.headers) {
-      headers[name] = value;
-    }
-
-    if (!hasContentTypeHeader(request.headears)) {
-      headers['Content-Type'] = 'application/json';
-    }
-
+    const {workspace, settings, environmentId} = this.props;
+    const request: RenderedRequest = await getRenderedRequest(rawRequest, environmentId);
     const newState = {schema: this.state.schema, schemaFetchError: ''};
 
     try {
       // TODO: Use Insomnia's network stack to handle things like authentication
-      const response = await window.fetch(schemaUrl, {
-        method: request.method,
-        headers: headers,
-        body: JSON.stringify({query: introspectionQuery})
+      const bodyJson = JSON.stringify({query: introspectionQuery});
+      const introspectionRequest = Object.assign({}, request, {
+        body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
+
+        // NOTE: We're not actually saving this request or response but let's pretend
+        // like we are by setting these properties to prevent bugs in the future.
+        _id: request._id + '.graphql',
+        parentId: request._id
       });
 
-      const {status} = response;
-      if (status < 200 || status >= 300) {
-        const msg = `Got status ${status} fetching schema from "${schemaUrl}"`;
+      const {bodyBuffer, response} = await network._actuallySend(
+        introspectionRequest,
+        workspace,
+        settings
+      );
+
+      const status = response.statusCode || 0;
+
+      if (response.error) {
+        newState.schemaFetchError = response.error;
+      } else if (status < 200 || status >= 300) {
+        const msg = `Got status ${status} fetching schema from "${request.url}"`;
         newState.schemaFetchError = msg;
-      } else {
-        const {data} = await response.json();
+      } else if (bodyBuffer) {
+        const {data} = JSON.parse(bodyBuffer.toString());
         const schema = buildClientSchema(data);
         newState.schema = schema;
+      } else {
+        newState.schemaFetchError = 'No response body received when fetching schema';
       }
     } catch (err) {
-      console.warn(`Failed to fetch GraphQL schema from ${schemaUrl}`, err);
-      newState.schemaFetchError = `Failed to contact "${schemaUrl}" to fetch schema`;
+      console.warn(`Failed to fetch GraphQL schema from ${request.url}`, err);
+      newState.schemaFetchError = `Failed to contact "${request.url}" to fetch schema`;
     }
 
     if (this._isMounted) {

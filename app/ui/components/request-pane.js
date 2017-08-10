@@ -23,6 +23,7 @@ import Hotkey from './hotkey';
 import {showModal} from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
+import type {Settings} from '../../models/settings';
 
 @autobind
 class RequestPane extends React.PureComponent {
@@ -55,6 +56,8 @@ class RequestPane extends React.PureComponent {
     editorKeyMap: string,
     editorLineWrapping: boolean,
     workspace: Workspace,
+    settings: Settings,
+    environmentId: string,
     forceRefreshCounter: number,
 
     // Optional
@@ -171,6 +174,9 @@ class RequestPane extends React.PureComponent {
       handleSendAndDownload,
       oAuth2Token,
       request,
+      workspace,
+      environmentId,
+      settings,
       showPasswords,
       updateRequestAuthentication,
       updateRequestBody,
@@ -308,6 +314,9 @@ class RequestPane extends React.PureComponent {
               handleGetRenderContext={handleGetRenderContext}
               key={uniqueKey}
               request={request}
+              workspace={workspace}
+              environmentId={environmentId}
+              settings={settings}
               onChange={updateRequestBody}
               fontSize={editorFontSize}
               indentSize={editorIndentSize}
