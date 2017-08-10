@@ -1,7 +1,6 @@
 // @flow
 import type {Request} from '../../../../models/request';
 import {newBodyRaw} from '../../../../models/request';
-
 import React from 'react';
 import autobind from 'autobind-decorator';
 import {parse, print} from 'graphql';
@@ -18,6 +17,7 @@ import type {Workspace} from '../../../../models/workspace';
 import type {Settings} from '../../../../models/settings';
 import type {RenderedRequest} from '../../../../common/render';
 import {getRenderedRequest} from '../../../../common/render';
+import TimeFromNow from '../../time-from-now';
 
 type GraphQLBody = {
   query: string,
@@ -50,6 +50,8 @@ class GraphQLEditor extends React.PureComponent {
     body: GraphQLBody,
     schema: Object | null,
     schemaFetchError: string,
+    schemaLastFetchTime: number,
+    schemaIsFetching: boolean,
     hideSchemaFetchErrors: boolean,
     variablesSyntaxError: string,
     forceRefreshKey: number
@@ -63,6 +65,8 @@ class GraphQLEditor extends React.PureComponent {
       body: this._stringToGraphQL(props.content),
       schema: null,
       schemaFetchError: '',
+      schemaLastFetchTime: 0,
+      schemaIsFetching: false,
       hideSchemaFetchErrors: false,
       variablesSyntaxError: '',
       forceRefreshKey: 0
@@ -74,9 +78,16 @@ class GraphQLEditor extends React.PureComponent {
   }
 
   async _fetchAndSetSchema (rawRequest: Request) {
+    this.setState({schemaIsFetching: true});
+
     const {workspace, settings, environmentId} = this.props;
     const request: RenderedRequest = await getRenderedRequest(rawRequest, environmentId);
-    const newState = {schema: this.state.schema, schemaFetchError: ''};
+    const newState = {
+      schema: this.state.schema,
+      schemaFetchError: '',
+      schemaLastFetchTime: this.state.schemaLastFetchTime,
+      schemaIsFetching: false
+    };
 
     try {
       // TODO: Use Insomnia's network stack to handle things like authentication
@@ -107,6 +118,7 @@ class GraphQLEditor extends React.PureComponent {
         const {data} = JSON.parse(bodyBuffer.toString());
         const schema = buildClientSchema(data);
         newState.schema = schema;
+        newState.schemaLastFetchTime = Date.now();
       } else {
         newState.schemaFetchError = 'No response body received when fetching schema';
       }
@@ -124,7 +136,7 @@ class GraphQLEditor extends React.PureComponent {
     const {body, forceRefreshKey} = this.state;
     const {variables, query} = body;
     const prettyQuery = query && print(parse(query));
-    const prettyVariables = variables && prettifyJson(JSON.stringify(variables));
+    const prettyVariables = variables && JSON.parse(prettifyJson(JSON.stringify(variables)));
     this._handleBodyChange(prettyQuery, prettyVariables);
     setTimeout(() => {
       this.setState({forceRefreshKey: forceRefreshKey + 1});
@@ -191,6 +203,24 @@ class GraphQLEditor extends React.PureComponent {
     this._isMounted = false;
   }
 
+  renderSchemaFetchMessage () {
+    let message;
+    const {schemaLastFetchTime, schemaIsFetching} = this.state;
+    if (schemaIsFetching) {
+      message = 'Fetching schema...';
+    } else if (schemaLastFetchTime > 0) {
+      message = <span>schema last fetched <TimeFromNow timestamp={schemaLastFetchTime}/></span>;
+    } else {
+      message = 'schema not yet fetched';
+    }
+
+    return (
+      <div className="txt-sm super-faint italic pad-sm">
+        {message}
+      </div>
+    );
+  }
+
   render () {
     const {
       content,
@@ -249,6 +279,9 @@ class GraphQLEditor extends React.PureComponent {
               {schemaFetchError}
             </div>
           )}
+        </div>
+        <div className="graphql-editor__schema-notice">
+          {this.renderSchemaFetchMessage()}
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
           Query Variables <HelpTooltip>Variables to use in GraphQL query <br/>(JSON

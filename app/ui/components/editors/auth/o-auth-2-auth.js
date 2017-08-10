@@ -4,7 +4,6 @@ import type {OAuth2Token} from '../../../../models/o-auth-2-token';
 
 import React from 'react';
 import classnames from 'classnames';
-import moment from 'moment';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
@@ -17,6 +16,7 @@ import Link from '../../base/link';
 import {trackEvent} from '../../../../analytics/index';
 import HelpTooltip from '../../help-tooltip';
 import PromptButton from '../../base/prompt-button';
+import TimeFromNow from '../../time-from-now';
 
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
@@ -381,9 +381,9 @@ class OAuth2Auth extends React.PureComponent {
       return '(never expires)';
     }
 
-    const expiresAt = new Date(token.expiresAt);
-    const str = moment(expiresAt).fromNow();
-    return <span title={expiresAt.toString()}>(expires {str})</span>;
+    return (
+      <span>&#x28;expires <TimeFromNow timestamp={token.expiresAt}/>&#x29;</span>
+    );
   }
 
   render () {
