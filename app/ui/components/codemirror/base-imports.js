@@ -10,6 +10,7 @@ import 'codemirror/mode/markdown/markdown';
 import 'codemirror/mode/python/python';
 import 'codemirror/mode/ruby/ruby';
 import 'codemirror/mode/swift/swift';
+import 'codemirror/addon/display/autorefresh';
 import 'codemirror/addon/dialog/dialog';
 import 'codemirror/addon/dialog/dialog.css';
 import 'codemirror/addon/fold/foldcode';
