@@ -51,6 +51,8 @@ class BodyEditor extends PureComponent {
       indentSize,
       lineWrapping,
       request,
+      workspace,
+      settings,
       handleRender: render,
       handleGetRenderContext: getRenderContext
     } = this.props;
@@ -104,6 +106,8 @@ class BodyEditor extends PureComponent {
           keyMap={keyMap}
           lineWrapping={lineWrapping}
           render={handleRender}
+          workspace={workspace}
+          settings={settings}
           getRenderContext={handleGetRenderContext}
           onChange={this._handleGraphQLChange}
         />
@@ -145,6 +149,9 @@ BodyEditor.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
+  workspace: PropTypes.object.isRequired,
+  settings: PropTypes.object.isRequired,
+  environmentId: PropTypes.string.isRequired,
 
   // Optional
   fontSize: PropTypes.number,
