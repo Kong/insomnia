@@ -25,6 +25,25 @@ class RequestSwitcherModal extends PureComponent {
     };
   }
 
+  _handleKeydown (e) {
+    const keyCode = e.keyCode;
+
+    if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
+      // Up or Shift+Tab
+      this._setActiveIndex(this.state.activeIndex - 1);
+    } else if (keyCode === 40 || keyCode === 9) {
+      // Down or Tab
+      this._setActiveIndex(this.state.activeIndex + 1);
+    } else if (keyCode === 13) {
+      // Enter
+      this._activateCurrentIndex();
+    } else {
+      return;
+    }
+
+    e.preventDefault();
+  }
+
   _setModalRef (n) {
     this.modal = n;
   }
@@ -186,27 +205,6 @@ class RequestSwitcherModal extends PureComponent {
     }
   }
 
-  componentDidMount () {
-    ReactDOM.findDOMNode(this).addEventListener('keydown', e => {
-      const keyCode = e.keyCode;
-
-      if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
-        // Up or Shift+Tab
-        this._setActiveIndex(this.state.activeIndex - 1);
-      } else if (keyCode === 40 || keyCode === 9) {
-        // Down or Tab
-        this._setActiveIndex(this.state.activeIndex + 1);
-      } else if (keyCode === 13) {
-        // Enter
-        this._activateCurrentIndex();
-      } else {
-        return;
-      }
-
-      e.preventDefault();
-    });
-  }
-
   render () {
     const {
       searchString,
@@ -219,7 +217,7 @@ class RequestSwitcherModal extends PureComponent {
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
 
     return (
-      <Modal ref={this._setModalRef} dontFocus tall>
+      <Modal ref={this._setModalRef} dontFocus tall onKeyDown={this._handleKeydown}>
         <ModalHeader hideCloseButton>
           <div className="pull-right txt-sm pad-right">
             <span className="monospace">tab</span> or

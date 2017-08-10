@@ -111,24 +111,17 @@ class Modal extends PureComponent {
     this.props.onHide && this.props.onHide();
   }
 
-  componentDidMount () {
-    this._node.addEventListener('keydown', this._handleKeyDown);
-  }
-
-  componentWillUnmount () {
-    if (this._node) {
-      this._node.removeEventListener('keydown', this._handleKeyDown);
-    }
-  }
-
   render () {
     const {tall, wide, noEscape, className, children} = this.props;
     const {open, zIndex, forceRefreshCounter} = this.state;
 
+    if (!open) {
+      return null;
+    }
+
     const classes = classnames(
       'modal',
       className,
-      {'modal--open': open},
       {'modal--fixed-height': tall},
       {'modal--noescape': noEscape},
       {'modal--wide': wide},
@@ -141,6 +134,7 @@ class Modal extends PureComponent {
 
     return (
       <div ref={this._setModalRef}
+           onKeyDown={this._handleKeyDown}
            tabIndex="-1"
            className={classes}
            style={styles}

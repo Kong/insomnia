@@ -3,21 +3,12 @@
 
 .modal {
   // Hidden state
-  opacity: 0;
-  z-index: -999999; // Component updates this manually
-
-  transition: opacity 250ms;
   position: absolute;
   top: 0;
-  left: -99999px;
+  left: 0;
   right: 0;
   bottom: 0;
   padding: @padding-lg;
-
-  &.modal--open {
-    opacity: 1;
-    left: 0;
-  }
 
   &:focus {
     outline: 0;
@@ -33,15 +24,11 @@
   }
 
   .modal__content__wrapper {
-    top: 1rem;
     width: @modal-width;
     height: 100%;
     max-width: 100%;
     max-height: 100%;
     margin: auto;
-    position: relative;
-    transform: scale(0.95);
-    transition: transform 150ms ease-out, top 200ms ease-out;
 
     // We want pointer events to pass through to the backdrop so we can close it
     pointer-events: none;
@@ -49,11 +36,6 @@
 
   &.modal--fixed-height .modal__content {
     height: 100%;
-  }
-
-  &.modal--open .modal__content__wrapper {
-    transform: scale(1);
-    top: 0;
   }
 
   &.modal--wide .modal__content__wrapper {

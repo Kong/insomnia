@@ -23,6 +23,8 @@ class Plugins extends React.PureComponent {
     isRefreshingPlugins: boolean
   };
 
+  _isMounted: boolean;
+
   constructor (props: any) {
     super(props);
     this.state = {
@@ -75,12 +77,20 @@ class Plugins extends React.PureComponent {
     const delta = Date.now() - start;
     await delay(500 - delta);
 
-    this.setState({plugins, isRefreshingPlugins: false});
     trackEvent('Plugins', 'Refresh');
+
+    if (this._isMounted) {
+      this.setState({plugins, isRefreshingPlugins: false});
+    }
   }
 
   componentDidMount () {
+    this._isMounted = true;
     this._handleRefreshPlugins();
+  }
+
+  componentWillUnmount () {
+    this._isMounted = false;
   }
 
   render () {
