@@ -21,7 +21,7 @@ export async function getAuthHeader (requestId, authentication) {
     const oAuth2Token = await getOAuth2Token(requestId, authentication);
     if (oAuth2Token) {
       const token = oAuth2Token.accessToken;
-      return _buildBearerHeader(token);
+      return _buildBearerHeader(token, authentication.tokenPrefix);
     } else {
       return null;
     }
@@ -30,13 +30,13 @@ export async function getAuthHeader (requestId, authentication) {
   return null;
 }
 
-function _buildBearerHeader (accessToken) {
+function _buildBearerHeader (accessToken, prefix) {
   if (!accessToken) {
     return null;
   }
 
   const name = 'Authorization';
-  const value = `Bearer ${accessToken}`;
+  const value = `${prefix || 'Bearer'} ${accessToken}`;
 
   return {name, value};
 }
