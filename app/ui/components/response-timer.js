@@ -7,7 +7,6 @@ class ResponseTimer extends PureComponent {
     super(props);
     this._interval = null;
     this.state = {
-      show: false,
       elapsedTime: 0
     };
   }
@@ -16,24 +15,27 @@ class ResponseTimer extends PureComponent {
     clearInterval(this._interval);
   }
 
-  componentDidMount () {
+  componentWillReceiveProps (nextProps) {
+    const {loadStartTime} = nextProps;
+
+    if (loadStartTime <= 0) {
+      clearInterval(this._interval);
+      return;
+    }
+
+    clearInterval(this._interval); // Just to be sure
     this._interval = setInterval(() => {
-      const {loadStartTime} = this.props;
-      if (loadStartTime > 0) {
-        // Show and update if needed
-        const millis = Date.now() - loadStartTime - 200;
-        const elapsedTime = Math.round(millis / 100) / 10;
-        this.setState({show: true, elapsedTime});
-      } else if (this.state.show) {
-        // Hide if needed after a small delay (so it doesn't disappear too quickly)
-        setTimeout(() => this.setState({show: false}), 200);
-      }
+      const millis = Date.now() - loadStartTime - 200;
+      const elapsedTime = Math.round(millis / 100) / 10;
+      this.setState({elapsedTime});
     }, 100);
   }
 
   render () {
-    const {handleCancel} = this.props;
-    const {show, elapsedTime} = this.state;
+    const {handleCancel, loadStartTime} = this.props;
+    const {elapsedTime} = this.state;
+
+    const show = loadStartTime > 0;
 
     return (
       <div className={classnames('overlay theme--overlay', {'overlay--hidden': !show})}>
