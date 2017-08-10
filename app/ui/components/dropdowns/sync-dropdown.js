@@ -1,5 +1,5 @@
+// @flow
 import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
 import {showModal} from '../modals';
@@ -9,10 +9,31 @@ import * as sync from '../../../sync';
 import {trackEvent} from '../../../analytics';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import SetupSyncModal from '../modals/setup-sync-modal';
+import type {Workspace} from '../../../models/workspace';
+
+type Props = {
+  workspace: Workspace,
+
+  // Optional
+  className?: string
+};
 
 @autobind
 class SyncDropdown extends PureComponent {
-  constructor (props) {
+  props: Props;
+  state: {
+    loggedIn: boolean | null,
+    loading: boolean,
+    resourceGroupId: string | null,
+    syncMode: string | null,
+    syncPercent: number,
+    workspaceName: string
+  };
+
+  _hasPrompted: boolean;
+  _isMounted: boolean;
+
+  constructor (props: Props) {
     super(props);
 
     this._hasPrompted = false;
@@ -37,7 +58,7 @@ class SyncDropdown extends PureComponent {
   }
 
   async _handleSyncResourceGroupId () {
-    const resourceGroupId = this.state;
+    const {resourceGroupId} = this.state;
 
     // Set loading state
     this.setState({loading: true});
@@ -91,10 +112,10 @@ class SyncDropdown extends PureComponent {
     await this._reloadData();
   }
 
-  async componentDidMount () {
+  componentDidMount () {
     this._isMounted = true;
     syncStorage.onChange(this._reloadData);
-    await this._reloadData();
+    this._reloadData();
   }
 
   componentWillUnmount () {
@@ -102,7 +123,7 @@ class SyncDropdown extends PureComponent {
     this._isMounted = false;
   }
 
-  async componentDidUpdate () {
+  componentDidUpdate () {
     const {resourceGroupId, syncMode} = this.state;
 
     if (!resourceGroupId) {
@@ -113,11 +134,11 @@ class SyncDropdown extends PureComponent {
     const isModeUnset = !syncMode || syncMode === syncStorage.SYNC_MODE_UNSET;
     if (isModeUnset && !this._hasPrompted) {
       this._hasPrompted = true;
-      await this._handleShowSyncModePrompt();
+      this._handleShowSyncModePrompt();
     }
   }
 
-  _getSyncDescription (syncMode, syncPercentage) {
+  _getSyncDescription (syncMode: string | null, syncPercentage: number) {
     let el = null;
     if (syncMode === syncStorage.SYNC_MODE_NEVER) {
       el = <span>Sync Disabled</span>;
@@ -189,13 +210,5 @@ class SyncDropdown extends PureComponent {
     }
   }
 }
-
-SyncDropdown.propTypes = {
-  // Required
-  workspace: PropTypes.object.isRequired,
-
-  // Optional
-  className: PropTypes.string
-};
 
 export default SyncDropdown;
