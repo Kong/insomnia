@@ -3,6 +3,7 @@ import type {Request} from '../../../../models/request';
 import type {OAuth2Token} from '../../../../models/o-auth-2-token';
 
 import React from 'react';
+import classnames from 'classnames';
 import moment from 'moment';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
@@ -15,9 +16,12 @@ import * as models from '../../../../models';
 import Link from '../../base/link';
 import {trackEvent} from '../../../../analytics/index';
 import HelpTooltip from '../../help-tooltip';
+import PromptButton from '../../base/prompt-button';
 
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
+
+let showAdvanced = false;
 
 @autobind
 class OAuth2Auth extends React.PureComponent {
@@ -35,7 +39,8 @@ class OAuth2Auth extends React.PureComponent {
 
   state: {
     error: string,
-    loading: boolean
+    loading: boolean,
+    showAdvanced: boolean
   };
 
   _handleChangeProperty: Function;
@@ -45,10 +50,17 @@ class OAuth2Auth extends React.PureComponent {
 
     this.state = {
       error: '',
-      loading: false
+      loading: false,
+      showAdvanced: showAdvanced // Remember from last time
     };
 
     this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
+  }
+
+  _handleToggleAdvanced (): void {
+    // Remember this for the entirety of the session
+    showAdvanced = !this.state.showAdvanced;
+    this.setState({showAdvanced});
   }
 
   async _handleUpdateAccessToken (e: Event & {target: HTMLButtonElement}): Promise<void> {
@@ -142,6 +154,10 @@ class OAuth2Auth extends React.PureComponent {
     this._handleChangeProperty('password', value);
   }
 
+  _handleChangeTokenPrefix (value: string): void {
+    this._handleChangeProperty('tokenPrefix', value);
+  }
+
   _handleChangeGrantType (e: Event & {target: HTMLButtonElement}): void {
     trackEvent('OAuth 2', 'Change Grant Type', e.target.value);
     this._handleChangeProperty('grantType', e.target.value);
@@ -216,8 +232,9 @@ class OAuth2Auth extends React.PureComponent {
     );
   }
 
-  renderGrantTypeFields (grantType: string): Array<React.Element<*>> {
-    let fields = [];
+  renderGrantTypeFields (grantType: string): {basic: Array<React.Element<*>>, advanced: Array<React.Element<*>>} {
+    let basicFields = [];
+    let advancedFields = [];
 
     const clientId = this.renderInputRow(
       'Client ID',
@@ -251,7 +268,8 @@ class OAuth2Auth extends React.PureComponent {
       'Redirect URL',
       'redirectUrl',
       this._handleChangeRedirectUrl,
-      'Insomnia will intercept this no matter what, so it can be whatever you want/need'
+      'This can be whatever you want or need it to be. Insomnia will automatically ' +
+      'detect the redirect from the browser window and extract the credentials.'
     );
 
     const state = this.renderInputRow(
@@ -278,8 +296,15 @@ class OAuth2Auth extends React.PureComponent {
       this._handleChangePassword
     );
 
+    const tokenPrefix = this.renderInputRow(
+      'Token Prefix',
+      'tokenPrefix',
+      this._handleChangeTokenPrefix,
+      'Change Authorization header prefix from Bearer to something else'
+    );
+
     const credentialsInBody = this.renderSelectRow(
-      'Client Credentials',
+      'Credentials',
       'credentialsInBody',
       [
         {name: 'As Basic Auth Header (default)', value: 'false'},
@@ -290,49 +315,65 @@ class OAuth2Auth extends React.PureComponent {
     );
 
     if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-      fields = [
+      basicFields = [
         authorizationUrl,
         accessTokenUrl,
         clientId,
         clientSecret,
-        credentialsInBody,
-        redirectUri,
+        redirectUri
+      ];
+
+      advancedFields = [
         scope,
-        state
+        state,
+        credentialsInBody,
+        tokenPrefix
       ];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-      fields = [
+      basicFields = [
         accessTokenUrl,
         clientId,
-        clientSecret,
+        clientSecret
+      ];
+
+      advancedFields = [
+        scope,
         credentialsInBody,
-        scope
+        tokenPrefix
       ];
     } else if (grantType === GRANT_TYPE_PASSWORD) {
-      fields = [
+      basicFields = [
         username,
         password,
         accessTokenUrl,
         clientId,
-        clientSecret,
+        clientSecret
+      ];
+
+      advancedFields = [
+        scope,
         credentialsInBody,
-        scope
+        tokenPrefix
       ];
     } else if (grantType === GRANT_TYPE_IMPLICIT) {
-      fields = [
+      basicFields = [
         authorizationUrl,
         clientId,
-        redirectUri,
+        redirectUri
+      ];
+
+      advancedFields = [
         scope,
-        state
+        state,
+        tokenPrefix
       ];
     }
 
-    return fields;
+    return {basic: basicFields, advanced: advancedFields};
   }
 
   renderExpireAt (token: OAuth2Token | null): React.Element<*> | string | null {
-    if (!token) {
+    if (!token || !token.accessToken) {
       return null;
     }
 
@@ -347,9 +388,10 @@ class OAuth2Auth extends React.PureComponent {
 
   render () {
     const {request, oAuth2Token: tok} = this.props;
-    const {loading, error} = this.state;
+    const {loading, error, showAdvanced} = this.state;
 
     const expireLabel = this.renderExpireAt(tok);
+    const fields = this.renderGrantTypeFields(request.authentication.grantType);
 
     return (
       <div className="pad">
@@ -361,11 +403,24 @@ class OAuth2Auth extends React.PureComponent {
             {name: 'Resource Owner Password Credentials', value: GRANT_TYPE_PASSWORD},
             {name: 'Client Credentials', value: GRANT_TYPE_CLIENT_CREDENTIALS}
           ], this._handleChangeGrantType)}
-          {this.renderGrantTypeFields(request.authentication.grantType)}
+          {fields.basic}
+          <tr>
+            <td className="pad-top">
+              <button onClick={this._handleToggleAdvanced} className="faint">
+                <i style={{minWidth: '0.8rem'}}
+                   className={classnames(
+                     'fa fa--skinny',
+                     `fa-caret-${showAdvanced ? 'down' : 'right'}`
+                   )}
+                />
+                Advanced Options
+              </button>
+            </td>
+          </tr>
+          {showAdvanced && fields.advanced}
           </tbody>
         </table>
-        <div className="pad-top-sm">
-
+        <div className="notice subtle margin-top text-left">
           {/* Handle major errors */}
           {error && (
             <p className="notice warning margin-bottom">
@@ -413,9 +468,9 @@ class OAuth2Auth extends React.PureComponent {
           </div>
           <div className="pad-top text-right">
             {tok && (
-              <button className="btn btn--clicky" onClick={this._handleClearTokens}>
-                Clear Tokens
-              </button>
+              <PromptButton className="btn btn--clicky" onClick={this._handleClearTokens}>
+                Clear
+              </PromptButton>
             )}
             &nbsp;&nbsp;
             <button className="btn btn--clicky"

@@ -194,6 +194,14 @@ p.notice {
   }
 }
 
+.notice.subtle {
+  border-color: var(--hl-lg);
+  &::before {
+    opacity: 1;
+    background-color: var(--hl-xxs);
+  }
+}
+
 .notice.surprise {
   border-color: var(--color-surprise);
   &::before {
