@@ -3,7 +3,7 @@
 
 @border-color: var(--hl-md);
 
-.ReactTabs {
+.react-tabs {
   width: 100%;
   height: 100%;
   display: grid;
@@ -11,7 +11,7 @@
   grid-template-columns: 100%;
   align-content: stretch;
 
-  .ReactTabs__TabList {
+  .react-tabs__tab-list {
     display: flex;
     flex-direction: row;
     width: 100%;
@@ -51,7 +51,7 @@
     }
   }
 
-  .ReactTabs__Tab {
+  .react-tabs__tab {
     height: @line-height-sm;
     border: 1px solid transparent;
     border-bottom: 1px solid @border-color;
@@ -60,7 +60,7 @@
     display: flex;
     position: relative;
 
-    &:not(.ReactTabs__Tab--selected)::after {
+    &:not(.react-tabs__tab--selected)::after {
       content: ' ';
       position: absolute;
       top: 0;
@@ -106,11 +106,11 @@
       }
     }
 
-    &:not(.ReactTabs__Tab--selected) .dropdown i.fa {
+    &:not(.react-tabs__tab--selected) .dropdown i.fa {
       opacity: @opacity-super-subtle;
     }
 
-    &.ReactTabs__Tab--selected {
+    &.react-tabs__tab--selected {
       border: 1px solid @border-color;
       border-bottom-color: transparent;
 
@@ -120,19 +120,22 @@
     }
   }
 
-  .ReactTabs__Tab > button,
-  .ReactTabs__Tab > .dropdown > button {
+  .react-tabs__tab > button,
+  .react-tabs__tab > .dropdown > button {
     background: transparent;
   }
 
-  .ReactTabs__Tab > button > a {
+  .react-tabs__tab > button > a {
     color: inherit;
   }
 
-  .ReactTabs__TabPanel {
+  .react-tabs__tab-panel {
     width: 100%;
     height: 100%;
     position: relative;
     box-sizing: border-box;
+    &:not(.react-tabs__tab-panel--selected) {
+      display: none;
+    }
   }
 }

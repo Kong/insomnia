@@ -1,4 +1,5 @@
-import React, {PropTypes, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
@@ -61,6 +62,7 @@ class MarkdownEditor extends PureComponent {
     const {markdown} = this.state;
 
     const classes = classnames(
+      'react-tabs',
       'markdown-editor',
       'outlined',
       className,
@@ -68,9 +70,7 @@ class MarkdownEditor extends PureComponent {
     );
 
     return (
-      <Tabs className={classes}
-            forceRenderTabPanel
-            selectedIndex={defaultPreviewMode ? 1 : 0}>
+      <Tabs className={classes} defaultIndex={defaultPreviewMode ? 1 : 0}>
         <TabList>
           <Tab>
             <Button onClick={this._trackTab} value="Write">
@@ -83,7 +83,7 @@ class MarkdownEditor extends PureComponent {
             </Button>
           </Tab>
         </TabList>
-        <TabPanel className="markdown-editor__edit">
+        <TabPanel className="react-tabs__tab-panel markdown-editor__edit">
           <div className="form-control form-control--outlined">
             <CodeEditor
               ref={this._setEditorRef}
@@ -109,7 +109,7 @@ class MarkdownEditor extends PureComponent {
             Styling with Markdown is supported
           </div>
         </TabPanel>
-        <TabPanel className="markdown-editor__preview">
+        <TabPanel className="react-tabs__tab-panel markdown-editor__preview">
           <MarkdownPreview
             markdown={markdown}
             handleRender={handleRender}

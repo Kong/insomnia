@@ -1,4 +1,5 @@
-import React, {PropTypes, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import {ALT_SYM, CTRL_SYM, isMac, joinHotKeys, MOD_SYM, SHIFT_SYM} from '../../common/constants';
 
 class Hotkey extends PureComponent {

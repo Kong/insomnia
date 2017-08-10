@@ -1,4 +1,5 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
@@ -27,7 +28,6 @@ class SettingsModal extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {};
-    this._currentTabIndex = -1;
   }
 
   _setModalRef (n) {
@@ -36,10 +36,6 @@ class SettingsModal extends PureComponent {
 
   _trackTab (name) {
     trackEvent('Setting', `Tab ${name}`);
-  }
-
-  _handleTabSelect (currentTabIndex) {
-    this.setState({currentTabIndex});
   }
 
   _handleUpdateSetting (key, value) {
@@ -115,7 +111,7 @@ class SettingsModal extends PureComponent {
           </span>
         </ModalHeader>
         <ModalBody noScroll>
-          <Tabs onSelect={this._handleTabSelect} selectedIndex={currentTabIndex}>
+          <Tabs className="react-tabs" defaultIndex={currentTabIndex}>
             <TabList>
               <Tab>
                 <Button value="General" onClick={this._trackTab}>
@@ -153,14 +149,14 @@ class SettingsModal extends PureComponent {
                 </Button>
               </Tab>
             </TabList>
-            <TabPanel className="pad scrollable">
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
               <General
                 settings={settings}
                 handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
               />
             </TabPanel>
-            <TabPanel className="pad scrollable">
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
                 handleExportAll={this._handleExportAllToFile}
                 handleExportWorkspace={this._handleExportWorkspace}
@@ -168,16 +164,16 @@ class SettingsModal extends PureComponent {
                 handleImportUri={this._handleImportUri}
               />
             </TabPanel>
-            <TabPanel className="scrollable">
+            <TabPanel className="react-tabs__tab-panel scrollable">
               <Theme
                 handleChangeTheme={this._handleChangeTheme}
                 activeTheme={settings.theme}
               />
             </TabPanel>
-            <TabPanel className="pad scrollable"><SettingsShortcuts/></TabPanel>
-            <TabPanel className="pad scrollable"><Account/></TabPanel>
-            <TabPanel className="pad scrollable"><Plugins/></TabPanel>
-            <TabPanel className="pad scrollable"><About/></TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable"><SettingsShortcuts/></TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable"><Account/></TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable"><Plugins/></TabPanel>
+            <TabPanel className="react-tabs__tab-panel pad scrollable"><About/></TabPanel>
           </Tabs>
         </ModalBody>
       </Modal>

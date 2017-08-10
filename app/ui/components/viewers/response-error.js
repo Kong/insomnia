@@ -1,5 +1,5 @@
-import React, {PureComponent, PropTypes} from 'react';
-
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import Link from '../base/link';
 import {showModal} from '../modals/index';
 import SettingsModal from '../modals/settings-modal';

@@ -1,4 +1,5 @@
-import React, {PropTypes, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';

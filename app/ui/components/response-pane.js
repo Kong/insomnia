@@ -247,7 +247,7 @@ class ResponsePane extends PureComponent {
             />
           </header>
         )}
-        <Tabs className="pane__body" forceRenderTabPanel>
+        <Tabs className="react-tabs pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
               <PreviewModeDropdown
@@ -276,7 +276,7 @@ class ResponsePane extends PureComponent {
               <Button>Timeline</Button>
             </Tab>
           </TabList>
-          <TabPanel>
+          <TabPanel className="react-tabs__tab-panel">
             <ResponseViewer
               key={response._id}
               bytes={response.bytesRead}
@@ -295,7 +295,7 @@ class ResponsePane extends PureComponent {
               url={response.url}
             />
           </TabPanel>
-          <TabPanel className="scrollable-container">
+          <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
               <ResponseHeadersViewer
                 key={response._id}
@@ -303,7 +303,7 @@ class ResponsePane extends PureComponent {
               />
             </div>
           </TabPanel>
-          <TabPanel className="scrollable-container">
+          <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
               <ResponseCookiesViewer
                 handleShowRequestSettings={handleShowRequestSettings}
@@ -315,7 +315,7 @@ class ResponsePane extends PureComponent {
               />
             </div>
           </TabPanel>
-          <TabPanel>
+          <TabPanel className="react-tabs__tab-panel">
             <ResponseTimelineViewer
               key={response._id}
               timeline={response.timeline || []}

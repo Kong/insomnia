@@ -1,5 +1,6 @@
 // eslint-disable-next-line filenames/match-exported
-import React, {PropTypes, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import autobind from 'autobind-decorator';
 import {DragSource, DropTarget} from 'react-dnd';

@@ -1,4 +1,5 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import {REQUEST_TIME_TO_SHOW_COUNTER} from '../../common/constants';
 

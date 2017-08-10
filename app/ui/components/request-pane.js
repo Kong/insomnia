@@ -256,7 +256,7 @@ class RequestPane extends React.PureComponent {
             requestId={request._id}
           />
         </header>
-        <Tabs className="pane__body" forceRenderTabPanel>
+        <Tabs className="react-tabs pane__body" forceRenderTabPanel>
           <TabList>
             <Tab>
               <ContentTypeDropdown onChange={updateRequestMimeType}
@@ -301,7 +301,7 @@ class RequestPane extends React.PureComponent {
               </button>
             </Tab>
           </TabList>
-          <TabPanel className="editor-wrapper">
+          <TabPanel className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
@@ -315,7 +315,7 @@ class RequestPane extends React.PureComponent {
               lineWrapping={editorLineWrapping}
             />
           </TabPanel>
-          <TabPanel className="scrollable-container">
+          <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
               <AuthWrapper
                 key={uniqueKey}
@@ -329,7 +329,7 @@ class RequestPane extends React.PureComponent {
               />
             </div>
           </TabPanel>
-          <TabPanel className="query-editor">
+          <TabPanel className="react-tabs__tab-panel query-editor">
             <div className="pad pad-bottom-sm query-editor__preview">
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
@@ -365,7 +365,7 @@ class RequestPane extends React.PureComponent {
               </button>
             </div>
           </TabPanel>
-          <TabPanel className="header-editor">
+          <TabPanel className="react-tabs__tab-panel header-editor">
             <RequestHeadersEditor
               key={uniqueKey}
               headers={request.headers}
@@ -385,7 +385,7 @@ class RequestPane extends React.PureComponent {
               </button>
             </div>
           </TabPanel>
-          <TabPanel key={uniqueKey} className="tall scrollable">
+          <TabPanel key={uniqueKey} className="react-tabs__tab-panel tall scrollable">
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">

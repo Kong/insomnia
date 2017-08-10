@@ -1,4 +1,5 @@
-import React, {PureComponent, PropTypes} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import DebouncedInput from '../base/debounced-input';
@@ -197,7 +198,7 @@ class WorkspaceSettingsModal extends PureComponent {
 
     return (
       <ModalBody key={`body::${workspace._id}`} noScroll>
-        <Tabs forceRenderTabPanel>
+        <Tabs forceRenderTabPanel className="react-tabs">
           <TabList>
             <Tab>
               <button>Overview</button>
@@ -206,7 +207,7 @@ class WorkspaceSettingsModal extends PureComponent {
               <button>Client Certificates</button>
             </Tab>
           </TabList>
-          <TabPanel className="pad scrollable pad-top-sm">
+          <TabPanel className="react-tabs__tab-panel pad scrollable pad-top-sm">
             <div className="form-control form-control--outlined">
               <label>Name
                 <DebouncedInput
@@ -253,7 +254,7 @@ class WorkspaceSettingsModal extends PureComponent {
               </button>
             </div>
           </TabPanel>
-          <TabPanel className="pad scrollable">
+          <TabPanel className="react-tabs__tab-panel pad scrollable">
             {!showAddCertificateForm ? (
               <div>
                 {workspace.certificates.length === 0 ? (

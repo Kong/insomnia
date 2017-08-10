@@ -1,4 +1,5 @@
-import React, {PropTypes, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
+import PropTypes from 'prop-types';
 import * as constants from '../../../common/constants';
 import * as util from '../../../common/misc';
 

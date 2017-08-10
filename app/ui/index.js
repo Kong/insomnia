@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {AppContainer} from 'react-hot-loader';
 import {Provider} from 'react-redux';
-import {Tabs} from 'react-tabs';
 import {DragDropContext} from 'react-dnd';
 import App from './containers/app';
 import {init as initStore} from './redux/modules';
@@ -14,9 +13,6 @@ import {types as modelTypes} from '../models';
 import {getAccountId} from '../sync/session';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
-
-// Don't inject component styles (use our own)
-Tabs.setUseDefaultStyles(false);
 
 (async function () {
   await initDB(modelTypes());
