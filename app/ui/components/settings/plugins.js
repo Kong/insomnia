@@ -77,11 +77,14 @@ class Plugins extends React.PureComponent {
     const delta = Date.now() - start;
     await delay(500 - delta);
 
-    trackEvent('Plugins', 'Refresh');
-
     if (this._isMounted) {
       this.setState({plugins, isRefreshingPlugins: false});
     }
+  }
+
+  async _handleClickRefreshPlugins () {
+    await this._handleRefreshPlugins();
+    trackEvent('Plugins', 'Refresh');
   }
 
   componentDidMount () {
@@ -177,7 +180,7 @@ class Plugins extends React.PureComponent {
           <button type="button"
                   disabled={isRefreshingPlugins}
                   className="btn btn--clicky"
-                  onClick={this._handleRefreshPlugins}>
+                  onClick={this._handleClickRefreshPlugins}>
             Reload Plugin List
             {isRefreshingPlugins && (
               <i className="fa fa-refresh fa-spin space-left"/>

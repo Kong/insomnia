@@ -115,9 +115,7 @@ class SettingsModal extends PureComponent {
           </span>
         </ModalHeader>
         <ModalBody noScroll>
-          <Tabs onSelect={this._handleTabSelect}
-                selectedIndex={currentTabIndex}
-                forceRenderTabPanel>
+          <Tabs onSelect={this._handleTabSelect} selectedIndex={currentTabIndex}>
             <TabList>
               <Tab>
                 <Button value="General" onClick={this._trackTab}>
