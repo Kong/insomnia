@@ -1,9 +1,17 @@
+// @flow
 import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import Tooltip from '../tooltip';
 
 class TimeTag extends PureComponent {
+  props: {
+    milliseconds: number,
+
+    // Optional
+    small?: boolean,
+    className?: string
+  };
+
   render () {
     const {
       milliseconds,
@@ -41,14 +49,5 @@ class TimeTag extends PureComponent {
     );
   }
 }
-
-TimeTag.propTypes = {
-  // Required
-  milliseconds: PropTypes.number.isRequired,
-
-  // Optional
-  small: PropTypes.bool,
-  className: PropTypes.string
-};
 
 export default TimeTag;

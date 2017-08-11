@@ -1,10 +1,18 @@
+// @flow
 import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import {RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS} from '../../../common/constants';
 import Tooltip from '../tooltip';
 
 class StatusTag extends PureComponent {
+  props: {
+    statusCode: number,
+
+    // Optional
+    small?: boolean,
+    statusMessage?: string
+  };
+
   render () {
     const {statusMessage, statusCode, small} = this.props;
 
@@ -58,14 +66,5 @@ class StatusTag extends PureComponent {
     );
   }
 }
-
-StatusTag.propTypes = {
-  // Required
-  statusCode: PropTypes.number.isRequired,
-
-  // Optional
-  small: PropTypes.bool,
-  statusMessage: PropTypes.string
-};
 
 export default StatusTag;

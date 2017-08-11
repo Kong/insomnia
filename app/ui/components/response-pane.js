@@ -229,7 +229,7 @@ class ResponsePane extends PureComponent {
             <div className="no-wrap scrollable scrollable--no-bars pad-left">
               <StatusTag
                 statusCode={response.statusCode}
-                statusMessage={response.statusMessage || null}
+                statusMessage={response.statusMessage}
               />
               <TimeTag milliseconds={response.elapsedTime}/>
               <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent}/>
