@@ -32,6 +32,7 @@ type BaseResponse = {
   contentType: string,
   url: string,
   bytesRead: number,
+  bytesContent: number,
   elapsedTime: number,
   headers: Array<ResponseHeader>,
   timeline: Array<ResponseTimelineEntry>,
@@ -53,6 +54,7 @@ export function init (): BaseResponse {
     contentType: '',
     url: '',
     bytesRead: 0,
+    bytesContent: -1, // -1 means that it was legacy and this property didn't exist yet
     elapsedTime: 0,
     headers: [],
     timeline: [],

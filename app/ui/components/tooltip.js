@@ -8,10 +8,10 @@ import ReactDOM from 'react-dom';
 class Tooltip extends React.PureComponent {
   props: {
     children: React.Children,
-    message: string,
+    message: React.Children | string,
+    position: 'bottom' | 'top' | 'right' | 'left',
 
     // Optional
-    position?: string,
     className?: string,
     delay?: number
   };

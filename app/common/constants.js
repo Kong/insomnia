@@ -54,7 +54,7 @@ export const GA_HOST = 'desktop.insomnia.rest';
 export const CHANGELOG_URL = process.env.INSOMNIA_SYNC_URL || 'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_PLUGIN_ERROR = -222;
-export const LARGE_RESPONSE_MB = 3;
+export const LARGE_RESPONSE_MB = 5;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[0-9a-zA-Z\-_.]+[/\w.\-+=:\][@%^*&!#?;]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 export const PLUGIN_PATH = path.join((electron.remote || electron).app.getPath('userData'), 'plugins');

@@ -1,6 +1,7 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
+import Tooltip from '../tooltip';
 
 class TimeTag extends PureComponent {
   render () {
@@ -32,8 +33,10 @@ class TimeTag extends PureComponent {
 
     let description = `${milliseconds.toFixed(3)} milliseconds`;
     return (
-      <div className={classnames('tag', {'tag--small': small}, className)} title={description}>
-        <strong>TIME</strong> {number} {unit}
+      <div className={classnames('tag', {'tag--small': small}, className)}>
+        <Tooltip message={description} position="bottom">
+          <strong>TIME</strong> {number} {unit}
+        </Tooltip>
       </div>
     );
   }

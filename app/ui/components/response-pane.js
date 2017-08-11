@@ -232,7 +232,7 @@ class ResponsePane extends PureComponent {
                 statusMessage={response.statusMessage || null}
               />
               <TimeTag milliseconds={response.elapsedTime}/>
-              <SizeTag bytes={response.bytesRead}/>
+              <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent}/>
             </div>
             <ResponseHistoryDropdown
               activeResponse={response}
@@ -279,7 +279,8 @@ class ResponsePane extends PureComponent {
           <TabPanel className="react-tabs__tab-panel">
             <ResponseViewer
               key={response._id}
-              bytes={response.bytesRead}
+              // Send larger one because legacy responses have bytesContent === -1
+              bytes={Math.max(response.bytesContent, response.bytesRead)}
               contentType={response.contentType || ''}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
               filter={filter}

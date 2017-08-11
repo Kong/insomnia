@@ -49,7 +49,7 @@ class ResponseHistoryDropdown extends PureComponent {
           statusMessage={response.statusMessage || null}
         />
         <TimeTag milliseconds={response.elapsedTime} small/>
-        <SizeTag bytes={response.bytesRead} small/>
+        <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small/>
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message}/>}
       </DropdownItem>
     );

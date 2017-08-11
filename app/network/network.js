@@ -577,6 +577,7 @@ export function _actuallySend (
           statusMessage,
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+          bytesContent: bodyBuffer.length,
           url: curl.getInfo(Curl.info.EFFECTIVE_URL)
         };
 
