@@ -64,6 +64,7 @@ function getCookies (renderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = jar.getCookiesSync(renderedRequest.url);
   return domainCookies.map(c => Object.assign(c.toJSON(), {
-    name: c.key
+    name: c.key,
+    value: c.value || '' // Sometimes cookies don't have values for some reason
   }));
 }
