@@ -5,7 +5,8 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE} from '../../../common/constants';
+import {getAppVersion, CHANGELOG_URL, CHANGELOG_PAGE, isDevelopment} from '../../../common/constants';
+import * as querystring from '../../../common/querystring';
 
 @autobind
 class ChangelogModal extends PureComponent {
@@ -37,7 +38,19 @@ class ChangelogModal extends PureComponent {
     try {
       // TODO: Implement release channels
       // NOTE: We add current version to break CDN cache
-      const response = await window.fetch(`${CHANGELOG_URL}?v=${getAppVersion()}&channel=stable`);
+      const params = [
+        {name: 'v', value: getAppVersion()},
+        {name: 'channel', value: 'stable'}
+      ];
+
+      // Add extra param during dev so we don't affect CDN cache
+      if (isDevelopment()) {
+        params.push({name: 'dev'});
+      }
+
+      const qs = querystring.buildFromParams(params);
+      const url = querystring.joinUrl(CHANGELOG_URL, qs);
+      const response = await window.fetch(url);
       changelog = await response.json();
     } catch (e) {
       console.warn('Failed to fetch changelog', e);
