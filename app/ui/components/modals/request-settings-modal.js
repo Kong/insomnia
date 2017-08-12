@@ -53,7 +53,6 @@ class RequestSettingsModal extends PureComponent {
   }
 
   show ({request, forceEditMode}) {
-    this.modal.show();
     const hasDescription = !!request.description;
     this.setState({
       request,
@@ -61,10 +60,10 @@ class RequestSettingsModal extends PureComponent {
       defaultPreviewMode: hasDescription && !forceEditMode
     });
 
+    this.modal.show();
+
     if (forceEditMode) {
-      setTimeout(() => {
-        this._editor.focus();
-      }, 400);
+      setTimeout(() => this._editor.focus(), 400);
     }
   }
 

@@ -102,9 +102,9 @@ class WorkspaceShareSettingsModal extends PureComponent {
   }
 
   async show () {
-    this.modal.show();
     this._resetState();
     await this._load();
+    this.modal.show();
   }
 
   hide () {

@@ -19,8 +19,8 @@ class FilterHelpModal extends PureComponent {
   }
 
   show (isJson) {
-    this.modal.show();
     this.setState({isJson});
+    this.modal.show();
   }
 
   hide () {

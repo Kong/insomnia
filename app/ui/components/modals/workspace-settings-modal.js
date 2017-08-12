@@ -145,7 +145,6 @@ class WorkspaceSettingsModal extends PureComponent {
   }
 
   show () {
-    this.modal.show();
     const hasDescription = !!this.props.workspace.description;
     this.setState({
       showAddCertificateForm: false,
@@ -157,6 +156,7 @@ class WorkspaceSettingsModal extends PureComponent {
       showDescription: hasDescription,
       defaultPreviewMode: hasDescription
     });
+    this.modal.show();
   }
 
   hide () {

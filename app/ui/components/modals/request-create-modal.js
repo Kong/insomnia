@@ -79,13 +79,13 @@ class RequestCreateModal extends PureComponent {
   }
 
   show ({parentId, onComplete}) {
-    this.modal.show();
-
     this.setState({
       parentId,
       selectedContentType: null,
       selectedMethod: METHOD_GET
     });
+
+    this.modal.show();
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {

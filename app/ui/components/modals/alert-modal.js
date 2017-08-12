@@ -31,10 +31,10 @@ class AlertModal extends PureComponent {
   }
 
   show (options = {}) {
-    this.modal.show();
-
     const {title, message, addCancel} = options;
     this.setState({title, message, addCancel});
+
+    this.modal.show();
 
     return new Promise(resolve => {
       this._okCallback = resolve;

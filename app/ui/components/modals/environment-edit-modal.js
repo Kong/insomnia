@@ -47,8 +47,8 @@ class EnvironmentEditModal extends PureComponent {
   }
 
   show (requestGroup) {
-    this.modal.show();
     this.setState({requestGroup});
+    this.modal.show();
   }
 
   hide () {

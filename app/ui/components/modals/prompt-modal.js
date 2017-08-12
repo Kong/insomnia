@@ -74,15 +74,6 @@ class PromptModal extends PureComponent {
       onDeleteHint
     } = options;
 
-    this.modal.show();
-
-    // Need to do this after render because modal focuses itself too
-    setTimeout(() => {
-      this._input.value = defaultValue || '';
-      this._input.focus();
-      selectText && this._input.select();
-    }, 100);
-
     this._onComplete = onComplete;
     this._onDeleteHint = onDeleteHint;
 
@@ -98,6 +89,15 @@ class PromptModal extends PureComponent {
       label,
       hints
     });
+
+    this.modal.show();
+
+    // Need to do this after render because modal focuses itself too
+    setTimeout(() => {
+      this._input.value = defaultValue || '';
+      this._input.focus();
+      selectText && this._input.select();
+    }, 100);
   }
 
   _renderHintButton (hint) {

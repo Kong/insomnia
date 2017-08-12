@@ -20,6 +20,7 @@ class SizeTag extends React.PureComponent {
     const responseSizeRawString = misc.describeByteSize(bytesContent);
     const message = (
       <table>
+        <tbody>
         <tr>
           <td className="text-left pad-right">Read</td>
           <td className="text-right selectable no-wrap">{responseSizeReadString}</td>
@@ -30,6 +31,7 @@ class SizeTag extends React.PureComponent {
             <td className="text-right selectable no-wrap">{responseSizeRawString}</td>
           </tr>
         )}
+        </tbody>
       </table>
     );
     return (

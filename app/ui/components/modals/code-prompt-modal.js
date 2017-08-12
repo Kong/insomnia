@@ -65,8 +65,6 @@ class CodePromptModal extends PureComponent {
       onModeChange
     } = options;
 
-    this.modal.show();
-
     this._onChange = onChange;
     this._onModeChange = onModeChange;
 
@@ -79,6 +77,8 @@ class CodePromptModal extends PureComponent {
       enableRender,
       mode: mode || this.state.mode
     });
+
+    this.modal.show();
   }
 
   render () {

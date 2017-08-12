@@ -42,8 +42,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent {
   }
 
   async show (workspace) {
-    this.modal.show();
     await this._load(workspace);
+    this.modal.show();
     trackEvent('Environment Editor', 'Show');
   }
 

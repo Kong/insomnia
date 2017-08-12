@@ -38,22 +38,20 @@ class SetupSyncModal extends PureComponent {
     this.setState({selectedSyncMode: e.target.value});
   }
 
-  show () {
-    (async () => {
-      const {workspace} = this.props;
+  async show () {
+    const {workspace} = this.props;
 
-      const resource = await sync.getOrCreateResourceForDoc(workspace);
-      const config = await sync.getOrCreateConfig(resource.resourceGroupId);
-      const {syncMode} = config;
+    const resource = await sync.getOrCreateResourceForDoc(workspace);
+    const config = await sync.getOrCreateConfig(resource.resourceGroupId);
+    const {syncMode} = config;
 
-      // Set selected sync mode. If it's unset, default it to ON
-      const selectedSyncMode = syncMode !== SYNC_MODE_UNSET ? syncMode : SYNC_MODE_ON;
+    // Set selected sync mode. If it's unset, default it to ON
+    const selectedSyncMode = syncMode !== SYNC_MODE_UNSET ? syncMode : SYNC_MODE_ON;
 
-      this.setState({
-        syncMode,
-        selectedSyncMode
-      });
-    })();
+    this.setState({
+      syncMode,
+      selectedSyncMode
+    });
 
     this.modal.show();
 

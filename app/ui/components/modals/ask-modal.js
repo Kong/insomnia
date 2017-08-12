@@ -43,11 +43,11 @@ class AskModal extends PureComponent {
       onDone
     } = options;
 
-    this.modal.show();
-
     this._doneCallback = onDone;
 
     this.setState({title, message});
+
+    this.modal.show();
 
     return new Promise(resolve => {
       this._promiseCallback = resolve;

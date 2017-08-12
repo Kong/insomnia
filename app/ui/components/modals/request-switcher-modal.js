@@ -188,9 +188,9 @@ class RequestSwitcherModal extends PureComponent {
   }
 
   async show () {
-    this.modal.show();
     await this._handleChangeValue('');
-    this._input.focus();
+    this.modal.show();
+    setTimeout(() => this._input.focus(), 100);
   }
 
   hide () {

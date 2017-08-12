@@ -96,11 +96,11 @@ class CookiesModal extends PureComponent {
   }
 
   async show () {
-    this.modal.show();
     await this._load();
-    setTimeout(() => {
-      this.filterInput.focus();
-    }, 100);
+
+    this.modal.show();
+
+    setTimeout(() => this.filterInput.focus(), 100);
     trackEvent('Cookie Editor', 'Show');
   }
 
