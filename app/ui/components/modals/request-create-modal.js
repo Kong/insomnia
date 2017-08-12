@@ -28,6 +28,9 @@ class RequestCreateModal extends PureComponent {
 
   _setInputRef (n) {
     this._input = n;
+    if (this._input) {
+      this._input.value = 'My Request';
+    }
   }
 
   async _handleSubmit (e) {
@@ -78,7 +81,6 @@ class RequestCreateModal extends PureComponent {
   show ({parentId, onComplete}) {
     this.modal.show();
 
-    this._input.value = 'My Request';
     this.setState({
       parentId,
       selectedContentType: null,
