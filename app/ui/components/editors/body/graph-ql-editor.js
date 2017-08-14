@@ -81,13 +81,22 @@ class GraphQLEditor extends React.PureComponent {
     this.setState({schemaIsFetching: true});
 
     const {workspace, settings, environmentId} = this.props;
-    const request: RenderedRequest = await getRenderedRequest(rawRequest, environmentId);
+
     const newState = {
       schema: this.state.schema,
       schemaFetchError: '',
       schemaLastFetchTime: this.state.schemaLastFetchTime,
       schemaIsFetching: false
     };
+
+    let request: RenderedRequest;
+    try {
+      request = await getRenderedRequest(rawRequest, environmentId);
+    } catch (err) {
+      newState.schemaFetchError = `Failed to fetch schema: ${err}`;
+      this.setState(newState);
+      return;
+    }
 
     try {
       // TODO: Use Insomnia's network stack to handle things like authentication
