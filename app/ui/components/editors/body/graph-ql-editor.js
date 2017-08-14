@@ -89,51 +89,51 @@ class GraphQLEditor extends React.PureComponent {
       schemaIsFetching: false
     };
 
-    let request: RenderedRequest;
+    let request: RenderedRequest | null = null;
     try {
       request = await getRenderedRequest(rawRequest, environmentId);
     } catch (err) {
       newState.schemaFetchError = `Failed to fetch schema: ${err}`;
-      this.setState(newState);
-      return;
     }
 
-    try {
-      // TODO: Use Insomnia's network stack to handle things like authentication
-      const bodyJson = JSON.stringify({query: introspectionQuery});
-      const introspectionRequest = Object.assign({}, request, {
-        body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
+    if (request) {
+      try {
+        // TODO: Use Insomnia's network stack to handle things like authentication
+        const bodyJson = JSON.stringify({query: introspectionQuery});
+        const introspectionRequest = Object.assign({}, request, {
+          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
 
-        // NOTE: We're not actually saving this request or response but let's pretend
-        // like we are by setting these properties to prevent bugs in the future.
-        _id: request._id + '.graphql',
-        parentId: request._id
-      });
+          // NOTE: We're not actually saving this request or response but let's pretend
+          // like we are by setting these properties to prevent bugs in the future.
+          _id: request._id + '.graphql',
+          parentId: request._id
+        });
 
-      const {bodyBuffer, response} = await network._actuallySend(
-        introspectionRequest,
-        workspace,
-        settings
-      );
+        const {bodyBuffer, response} = await network._actuallySend(
+          introspectionRequest,
+          workspace,
+          settings
+        );
 
-      const status = response.statusCode || 0;
+        const status = response.statusCode || 0;
 
-      if (response.error) {
-        newState.schemaFetchError = response.error;
-      } else if (status < 200 || status >= 300) {
-        const msg = `Got status ${status} fetching schema from "${request.url}"`;
-        newState.schemaFetchError = msg;
-      } else if (bodyBuffer) {
-        const {data} = JSON.parse(bodyBuffer.toString());
-        const schema = buildClientSchema(data);
-        newState.schema = schema;
-        newState.schemaLastFetchTime = Date.now();
-      } else {
-        newState.schemaFetchError = 'No response body received when fetching schema';
+        if (response.error) {
+          newState.schemaFetchError = response.error;
+        } else if (status < 200 || status >= 300) {
+          const msg = `Got status ${status} fetching schema from "${request.url}"`;
+          newState.schemaFetchError = msg;
+        } else if (bodyBuffer) {
+          const {data} = JSON.parse(bodyBuffer.toString());
+          const schema = buildClientSchema(data);
+          newState.schema = schema;
+          newState.schemaLastFetchTime = Date.now();
+        } else {
+          newState.schemaFetchError = 'No response body received when fetching schema';
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch GraphQL schema from ${request.url}`, err);
+        newState.schemaFetchError = `Failed to contact "${request.url}" to fetch schema`;
       }
-    } catch (err) {
-      console.warn(`Failed to fetch GraphQL schema from ${request.url}`, err);
-      newState.schemaFetchError = `Failed to contact "${request.url}" to fetch schema`;
     }
 
     if (this._isMounted) {
