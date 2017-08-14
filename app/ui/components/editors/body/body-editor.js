@@ -53,6 +53,7 @@ class BodyEditor extends PureComponent {
       request,
       workspace,
       settings,
+      environmentId,
       handleRender: render,
       handleGetRenderContext: getRenderContext
     } = this.props;
@@ -108,6 +109,7 @@ class BodyEditor extends PureComponent {
           render={handleRender}
           workspace={workspace}
           settings={settings}
+          environmentId={environmentId}
           getRenderContext={handleGetRenderContext}
           onChange={this._handleGraphQLChange}
         />
