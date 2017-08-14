@@ -557,7 +557,8 @@ class CodeEditor extends PureComponent {
   }
 
   _codemirrorPreventWhenTypePassword (cm, e) {
-    if (this.props.type.toLowerCase() === 'password') {
+    const {type} = this.props;
+    if (type && type.toLowerCase() === 'password') {
       e.preventDefault();
     }
   }
