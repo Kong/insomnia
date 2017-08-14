@@ -1,19 +1,28 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import React from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {trackEvent} from '../../../analytics/index';
 import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_XML, getContentTypeName} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/alert-modal';
+import type {Request, RequestBody} from '../../../models/request';
 
 const EMPTY_MIME_TYPE = null;
 
 @autobind
-class ContentTypeDropdown extends PureComponent {
-  async _checkMimeTypeChange (request, mimeType) {
-    const {body} = request;
+class ContentTypeDropdown extends React.PureComponent {
+  props: {
+    onChange: Function,
+    contentType: string | null,
+    children: React.Children,
 
+    // Optional
+    className?: string,
+    request?: Request
+  };
+
+  async _checkMimeTypeChange (body: RequestBody, mimeType: string | null) {
     // Nothing to do
     if (body.mimeType === mimeType) {
       return;
@@ -25,7 +34,7 @@ class ContentTypeDropdown extends PureComponent {
     const isEmpty = !hasParams && !hasText && !hasFile;
     const isFile = body.mimeType === CONTENT_TYPE_FILE;
     const isMultipartWithFiles = body.mimeType === CONTENT_TYPE_FORM_DATA &&
-      body.params.find(p => p.type === 'file');
+      (body.params || []).find(p => p.type === 'file');
     const isFormUrlEncoded = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
     const isText = !isFile && !isMultipartWithFiles;
 
@@ -47,18 +56,18 @@ class ContentTypeDropdown extends PureComponent {
     }
   }
 
-  async _handleChangeMimeType (mimeType) {
+  async _handleChangeMimeType (mimeType: string | null) {
     const {request} = this.props;
 
     if (request) {
-      await this._checkMimeTypeChange(request, mimeType);
+      await this._checkMimeTypeChange(request.body, mimeType);
     }
 
     this.props.onChange(mimeType);
     trackEvent('Request', 'Content-Type Change', mimeType);
   }
 
-  _renderDropdownItem (mimeType, forcedName = null) {
+  _renderDropdownItem (mimeType: string | null, forcedName: string = '') {
     const contentType = typeof this.props.contentType !== 'string'
       ? EMPTY_MIME_TYPE : this.props.contentType;
 
@@ -94,15 +103,5 @@ class ContentTypeDropdown extends PureComponent {
     );
   }
 }
-
-ContentTypeDropdown.propTypes = {
-  onChange: PropTypes.func.isRequired,
-
-  // Optional
-  contentType: PropTypes.string, // Can be null
-  className: PropTypes.string,
-  children: PropTypes.node,
-  request: PropTypes.object
-};
 
 export default ContentTypeDropdown;

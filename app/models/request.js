@@ -31,10 +31,12 @@ export type RequestBodyParameter = {
   value: string,
   disabled?: boolean,
   id?: string,
-  fileName?: string
+  fileName?: string,
+  type?: string
 };
 
 export type RequestBody = {
+  mimeType?: string | null,
   text?: string,
   fileName?: string,
   params?: Array<RequestBodyParameter>
