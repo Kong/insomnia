@@ -21,7 +21,6 @@
     "nedb": "^1.8.0",
     "node-forge": "^0.7.0",
     "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#d3ee4d436a174c2bd5f2dc89b165257a5cac32ea",
-    "simple-react-pdf": "^1.0.8",
     "srp-js": "^0.2.0",
     "tar": "^3.1.7",
     "tough-cookie": "^2.3.1",
