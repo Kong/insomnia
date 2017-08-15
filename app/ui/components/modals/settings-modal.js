@@ -1,6 +1,6 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
-import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
+import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import Button from '../base/button';
@@ -15,7 +15,7 @@ import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import {Curl} from 'node-libcurl';
-import {getAppVersion, getAppName} from '../../../common/constants';
+import {getAppName, getAppVersion} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
@@ -32,10 +32,6 @@ class SettingsModal extends PureComponent {
 
   _setModalRef (n) {
     this.modal = n;
-  }
-
-  _trackTab (name) {
-    trackEvent('Setting', `Tab ${name}`);
   }
 
   _handleUpdateSetting (key, value) {
@@ -114,37 +110,37 @@ class SettingsModal extends PureComponent {
           <Tabs className="react-tabs" defaultIndex={currentTabIndex}>
             <TabList>
               <Tab>
-                <Button value="General" onClick={this._trackTab}>
+                <Button value="General">
                   General
                 </Button>
               </Tab>
               <Tab>
-                <Button value="Import/Export" onClick={this._trackTab}>
+                <Button value="Import/Export">
                   Data
                 </Button>
               </Tab>
               <Tab>
-                <Button value="Themes" onClick={this._trackTab}>
+                <Button value="Themes">
                   Themes
                 </Button>
               </Tab>
               <Tab>
-                <Button value="Shortcuts" onClick={this._trackTab}>
+                <Button value="Shortcuts">
                   Keyboard
                 </Button>
               </Tab>
               <Tab>
-                <Button value="Account" onClick={this._trackTab}>
+                <Button value="Account">
                   Account
                 </Button>
               </Tab>
               <Tab>
-                <Button value="Plugins" onClick={this._trackTab}>
+                <Button value="Plugins">
                   Plugins
                 </Button>
               </Tab>
               <Tab>
-                <Button value="About" onClick={this._trackTab}>
+                <Button value="About">
                   About
                 </Button>
               </Tab>
