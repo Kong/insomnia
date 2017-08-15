@@ -6,7 +6,6 @@ module.exports = {
   devtool: 'source-map',
   plugins: [
     ...baseConfig.plugins,
-    new webpack.optimize.ModuleConcatenationPlugin(),
     new webpack.DefinePlugin({
       __DEV__: false,
       'process.env.NODE_ENV': JSON.stringify('production'),
