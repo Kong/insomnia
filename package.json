@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "Insomnia App",
+  "cache": 1,
   "main": "main.js",
   "licence": "GNU AGPLv3",
   "homepage": "https://insomnia.rest",
