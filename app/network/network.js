@@ -60,12 +60,10 @@ export function _actuallySend (
   workspace: Workspace,
   settings: Settings
 ): Promise<{bodyBuffer: ?Buffer, response: ResponsePatch}> {
-  console.log('[curl] CREATING PROMISE');
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
 
     // Initialize the curl handle
-    console.log('[curl] INIT CURL HANDLE');
     const curl = new Curl();
 
     /** Helper function to respond with a success */
@@ -132,7 +130,6 @@ export function _actuallySend (
         curl.close();
       };
 
-      console.log('[curl] SETTING BASIC OPTS');
       // Set all the basic options
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
       setOpt(Curl.option.MAXREDIRS, 20);
@@ -158,7 +155,6 @@ export function _actuallySend (
           break;
       }
 
-      console.log('[curl] SETTING DEBUG FUNC');
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, content: string) => {
         const name = Object.keys(Curl.info.debug).find(k => Curl.info.debug[k] === infoType) || '';
@@ -169,8 +165,6 @@ export function _actuallySend (
         ) {
           return 0;
         }
-
-        console.log('[curl] TIMELINE PUSH', {name, content});
 
         // Ignore the possibly large data messages
         if (infoType === Curl.info.debug.DATA_OUT) {
@@ -221,7 +215,6 @@ export function _actuallySend (
         return 0;
       }, true);
 
-      console.log('[curl] BUILD URL');
       // Set the URL, including the query parameters
       const qs = querystring.buildFromParams(renderedRequest.parameters);
       const url = querystring.joinUrl(renderedRequest.url, qs);
@@ -276,7 +269,6 @@ export function _actuallySend (
 
       // Set cookies from jar
       if (renderedRequest.settingSendCookies) {
-        console.log('[curl] SETUP COOKIES');
         // Tell Curl to store cookies that it receives. This is only important if we receive
         // a cookie on a redirect that needs to be sent on the next request in the chain.
         curl.setOpt(Curl.option.COOKIEFILE, '');
@@ -318,7 +310,6 @@ export function _actuallySend (
 
       // Set proxy settings if we have them
       if (settings.proxyEnabled) {
-        console.log('[curl] SETUP PROXY');
         const {protocol} = urlParse(renderedRequest.url);
         const {httpProxy, httpsProxy, noProxy} = settings;
         const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
@@ -337,7 +328,6 @@ export function _actuallySend (
 
       // Set client certs if needed
       for (const certificate of workspace.certificates) {
-        console.log('[curl] SETUP CERTS');
         if (certificate.disabled) {
           continue;
         }
@@ -392,7 +382,6 @@ export function _actuallySend (
       let noBody = false;
       let requestBody = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
-      console.log('[curl] SETUP BODY');
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
@@ -443,14 +432,12 @@ export function _actuallySend (
       const dataBuffers = [];
       let dataBuffersLength = 0;
       curl.on('data', chunk => {
-        console.log('[curl] GOT DATA', chunk + '');
         dataBuffers.push(chunk);
         dataBuffersLength += chunk.length;
       });
 
       // Handle Authorization header
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
-        console.log('[curl] AUTH HEADERS');
         if (renderedRequest.authentication.type === AUTH_BASIC) {
           const {username, password} = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, Curl.auth.BASIC);
@@ -513,7 +500,6 @@ export function _actuallySend (
 
       // Handle the response ending
       curl.on('end', async function (_1, _2, allCurlHeadersObjects) {
-        console.log('[curl] REQUEST END', allCurlHeadersObjects);
         // Headers are an array (one for each redirect)
         const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 

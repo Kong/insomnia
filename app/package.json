@@ -7,23 +7,5 @@
   "description": "Debug APIs like a human, not a robot",
   "homepage": "https://insomnia.rest",
   "author": "Insomnia <support@insomnia.rest>",
-  "main": "main.min.js",
-  "dependencies": {
-    "electron-context-menu": "^0.9.0",
-    "electron-devtools-installer": "^2.2.0",
-    "electron-squirrel-startup": "^1.0.0",
-    "deep-equal": "^1.0.1",
-    "hkdf": "^0.0.2",
-    "httpsnippet": "git://github.com/getinsomnia/httpsnippet.git#85e00f4d2574ff2457f3de21dd3faf50db4ab74a",
-    "insomnia-importers": "^1.3.9",
-    "jsonpath": "^0.2.11",
-    "mkdirp": "^0.5.1",
-    "nedb": "^1.8.0",
-    "node-forge": "^0.7.0",
-    "node-libcurl": "git://github.com/getinsomnia/node-libcurl.git#d3ee4d436a174c2bd5f2dc89b165257a5cac32ea",
-    "srp-js": "^0.2.0",
-    "tar": "^3.1.7",
-    "tough-cookie": "^2.3.1",
-    "vkbeautify": "^0.99.1"
-  }
+  "main": "main.min.js"
 }
