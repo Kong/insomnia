@@ -16,7 +16,7 @@
     "hkdf": "^0.0.2",
     "insomnia-httpsnippet": "^1.16.5",
     "insomnia-importers": "^1.3.9",
-    "insomnia-node-libcurl": "^1.1.0",
+    "insomnia-node-libcurl": "^1.2.1",
     "jsonpath": "^0.2.11",
     "mkdirp": "^0.5.1",
     "nedb": "^1.8.0",
