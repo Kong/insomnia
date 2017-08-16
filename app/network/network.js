@@ -132,7 +132,7 @@ export function _actuallySend (
 
       // Set all the basic options
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      setOpt(Curl.option.MAXREDIRS, 20);
+      setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works

@@ -19,6 +19,7 @@ type BaseSettings = {
   forceVerticalLayout: boolean,
   autoHideMenuBar: boolean,
   theme: string,
+  maxRedirects: number,
   disableAnalyticsTracking: boolean,
   pluginPath: string
 };
@@ -42,6 +43,7 @@ export function init (): BaseSettings {
     httpProxy: '',
     httpsProxy: '',
     noProxy: '',
+    maxRedirects: -1,
     proxyEnabled: false,
     timeout: 0,
     validateSSL: true,

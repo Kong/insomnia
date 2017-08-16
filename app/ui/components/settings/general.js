@@ -140,6 +140,19 @@ class General extends PureComponent {
         </div>
 
         <div className="form-control form-control--outlined">
+          <label>Maximum Redirects
+            <HelpTooltip className="space-left">
+              (-1 for unlimited)
+            </HelpTooltip>
+            <input type="number"
+                   name="maxRedirects"
+                   min={-1}
+                   defaultValue={settings.maxRedirects}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
+        <div className="form-control form-control--outlined">
           <label>Network Request Timeout
             <HelpTooltip className="space-left">
               Request timeout in milliseconds (0 for no timeout)
