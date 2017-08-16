@@ -28,6 +28,7 @@ class ResponseViewer extends PureComponent {
 
   _handleDismissBlocker () {
     this.setState({blockingBecauseTooLarge: false});
+    this._maybeLoadResponseBody(this.props, true);
   }
 
   _handleDisableBlocker () {
@@ -35,10 +36,10 @@ class ResponseViewer extends PureComponent {
     this._handleDismissBlocker();
   }
 
-  _maybeLoadResponseBody (props) {
+  _maybeLoadResponseBody (props, forceShow = false) {
     // Block the response if it's too large
     const responseIsTooLarge = props.bytes > LARGE_RESPONSE_MB * 1024 * 1024;
-    if (!alwaysShowLargeResponses && responseIsTooLarge) {
+    if (!forceShow && !alwaysShowLargeResponses && responseIsTooLarge) {
       this.setState({blockingBecauseTooLarge: true});
     } else {
       this.setState({
