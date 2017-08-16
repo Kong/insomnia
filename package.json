@@ -128,7 +128,7 @@
     "iconv-lite": "^0.4.15",
     "insomnia-httpsnippet": "^1.16.5",
     "insomnia-importers": "^1.3.9",
-    "insomnia-node-libcurl": "^1.2.2",
+    "insomnia-node-libcurl": "^1.2.3",
     "jsonlint": "^1.6.2",
     "jsonpath": "^0.2.11",
     "marked": "^0.3.6",
