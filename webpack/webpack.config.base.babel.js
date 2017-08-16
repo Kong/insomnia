@@ -1,6 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
-const pkg = require('../package.json');
+const pkg = require('../app/package.json');
 
 module.exports = {
   devtool: 'source-map',
@@ -54,11 +54,12 @@ module.exports = {
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...pkg.externals,
+    ...Object.keys(pkg.dependencies),
 
     // To get jsonlint working...
     'file', 'system'
   ],
-  plugins: [],
+  plugins: [
+  ],
   target: 'electron-renderer'
 };
