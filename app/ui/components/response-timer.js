@@ -21,7 +21,7 @@ class ResponseTimer extends PureComponent {
   _handleUpdateElapsedTime () {
     const {loadStartTime} = this.props;
     const millis = Date.now() - loadStartTime - 200;
-    const elapsedTime = Math.round(millis / 1000);
+    const elapsedTime = Math.round(millis / 100) / 10;
     this.setState({elapsedTime});
   }
 
@@ -34,7 +34,7 @@ class ResponseTimer extends PureComponent {
     }
 
     clearInterval(this._interval); // Just to be sure
-    this._interval = setInterval(this._handleUpdateElapsedTime, 1000);
+    this._interval = setInterval(this._handleUpdateElapsedTime, 100);
     this._handleUpdateElapsedTime();
   }
 
@@ -47,7 +47,7 @@ class ResponseTimer extends PureComponent {
     return (
       <div className={classnames('overlay theme--overlay', {'overlay--hidden': !show})}>
         {elapsedTime >= REQUEST_TIME_TO_SHOW_COUNTER
-          ? <h2>{elapsedTime} second{elapsedTime === 1 ? '' : 's'}...</h2>
+          ? <h2>{elapsedTime} seconds...</h2>
           : <h2>Loading...</h2>
         }
         <div className="pad">

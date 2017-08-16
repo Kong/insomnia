@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const path = require('path');
 const pkg = require('../app/package.json');
 
@@ -58,6 +59,8 @@ module.exports = {
     // To get jsonlint working...
     'file', 'system'
   ],
-  plugins: [],
+  plugins: [
+    new webpack.optimize.ModuleConcatenationPlugin(),
+  ],
   target: 'electron-renderer'
 };
