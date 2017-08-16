@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import HTTPSnippet, {availableTargets} from 'httpsnippet';
+import HTTPSnippet, {availableTargets} from 'insomnia-httpsnippet';
 import CopyButton from '../base/copy-button';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown';
 import CodeEditor from '../codemirror/code-editor';

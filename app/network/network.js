@@ -10,7 +10,7 @@ import mkdirp from 'mkdirp';
 import mimes from 'mime-types';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
-import {Curl} from 'node-libcurl';
+import {Curl} from 'insomnia-node-libcurl';
 import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';

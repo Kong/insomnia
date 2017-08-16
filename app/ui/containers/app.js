@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import fs from 'fs';
 import {clipboard, ipcRenderer, remote} from 'electron';
 import {parse as urlParse} from 'url';
-import HTTPSnippet from 'httpsnippet';
+import HTTPSnippet from 'insomnia-httpsnippet';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
