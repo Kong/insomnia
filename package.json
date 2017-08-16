@@ -177,7 +177,7 @@
     "css-loader": "^0.26.2",
     "electron": "^1.7.5",
     "electron-builder": "^10.17.3",
-    "electron-rebuild": "^1.5.7",
+    "electron-rebuild": "^1.6.0",
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",
     "eslint-config-standard": "^7.0.0",
