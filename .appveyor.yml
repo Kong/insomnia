@@ -17,6 +17,7 @@ install:
   - ps: Install-Product node $env:NODEJS_VERSION $env:Platform
   - npm install -g npm@5 > Nul
   - npm config set msvs_version 2013
+  - npm install 7zip-win-bin # Need this for some reason
   - npm install > NUL
   - node --version
   - npm --version
