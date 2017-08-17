@@ -473,6 +473,8 @@ export function _actuallySend (
         } else {
           const authHeader = await getAuthHeader(
             renderedRequest._id,
+            renderedRequest.url,
+            renderedRequest.method,
             renderedRequest.authentication
           );
 
