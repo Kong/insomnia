@@ -37,6 +37,9 @@ export function init (
           return null;
         }
       },
+      getHeaders (): Array<{name: string, value: string}> {
+        return renderedRequest.headers.map(h => ({ name: h.name, value: h.value }));
+      },
       hasHeader (name: string): boolean {
         return this.getHeader(name) !== null;
       },

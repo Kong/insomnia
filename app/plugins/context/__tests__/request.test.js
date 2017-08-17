@@ -33,6 +33,7 @@ describe('init()', () => {
       'getUrl',
       'getMethod',
       'getHeader',
+      'getHeaders',
       'hasHeader',
       'removeHeader',
       'setHeader',
@@ -73,7 +74,13 @@ describe('request.*', () => {
   });
 
   it('works for headers', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'));
+    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
+
+    // getHeaders()
+    expect(result.request.getHeaders()).toEqual([
+      {name: 'hello', value: 'world'},
+      {name: 'Content-Type', value: 'application/json'}
+    ]);
 
     // getHeader()
     expect(result.request.getHeader('content-type')).toBe('application/json');
