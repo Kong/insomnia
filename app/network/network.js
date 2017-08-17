@@ -17,7 +17,7 @@ import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
 import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
-import {getRenderedRequest} from '../common/render';
+import {getRenderedRequest, getRenderContext} from '../common/render';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -634,10 +634,11 @@ export async function send (requestId: string, environmentId: string) {
   }
 
   const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
+  const renderedContextBeforePlugins = await getRenderContext(request, environmentId, ancestors);
 
   let renderedRequest: RenderedRequest;
   try {
-    renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins);
+    renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins, renderedContextBeforePlugins);
   } catch (err) {
     return {
       response: {
@@ -661,14 +662,14 @@ export async function send (requestId: string, environmentId: string) {
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
-async function _applyRequestPluginHooks (renderedRequest: RenderedRequest): Promise<RenderedRequest> {
+async function _applyRequestPluginHooks (renderedRequest: RenderedRequest, renderedContext: Object): Promise<RenderedRequest> {
   let newRenderedRequest = renderedRequest;
   for (const {plugin, hook} of await plugins.getRequestHooks()) {
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
       ...pluginContexts.app.init(plugin),
-      ...pluginContexts.request.init(plugin, newRenderedRequest)
+      ...pluginContexts.request.init(plugin, newRenderedRequest, renderedContext)
     };
 
     try {
