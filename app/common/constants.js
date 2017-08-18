@@ -150,7 +150,7 @@ const authTypesMap = {
   [AUTH_BEARER]: ['Bearer', 'Bearer Token'],
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0'],
-  [AUTH_HAWK]: ['Hawk', 'Hawk Authentication'],
+  [AUTH_HAWK]: ['Hawk', 'Hawk'],
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_NETRC]: ['Netrc', 'Netrc']
 };

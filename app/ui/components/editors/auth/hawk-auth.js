@@ -30,11 +30,11 @@ class HawkAuth extends React.PureComponent {
   }
 
   _handleChangeHawkAuthId (value: string): void {
-    this._handleChangeProperty('hawkAuthId', value);
+    this._handleChangeProperty('id', value);
   }
 
   _handleChangeHawkAuthKey (value: string): void {
-    this._handleChangeProperty('hawkAuthKey', value);
+    this._handleChangeProperty('key', value);
   }
 
   _handleChangeAlgorithm (value: string): void {
@@ -44,13 +44,13 @@ class HawkAuth extends React.PureComponent {
   renderHawkAuthenticationFields (): Array<React.Element<*>> {
     const hawkAuthId = this.renderInputRow(
       'Hawk Auth ID',
-      'hawkAuthId',
+      'id',
       this._handleChangeHawkAuthId
     );
 
     const hawkAuthKey = this.renderInputRow(
       'Hawk Auth Key',
-      'hawkAuthKey',
+      'key',
       this._handleChangeHawkAuthKey
     );
 

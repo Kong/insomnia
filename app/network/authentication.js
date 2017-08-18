@@ -3,7 +3,7 @@ import {getBasicAuthHeader, getBearerAuthHeader} from '../common/misc';
 import getOAuth2Token from './o-auth-2/get-token';
 import * as Hawk from 'hawk';
 
-export async function getAuthHeader (requestId, requestUrl, requestMethod, authentication) {
+export async function getAuthHeader (requestId, url, method, authentication) {
   if (authentication.disabled) {
     return null;
   }
@@ -29,18 +29,12 @@ export async function getAuthHeader (requestId, requestUrl, requestMethod, authe
   }
 
   if (authentication.type === AUTH_HAWK) {
-    const {hawkAuthId, hawkAuthKey, algorithm} = authentication;
-
-    const credentials = {
-      id: hawkAuthId,
-      key: hawkAuthKey,
-      algorithm: algorithm
-    };
+    const {id, key, algorithm} = authentication;
 
     const header = Hawk.client.header(
-      requestUrl,
-      requestMethod,
-      {credentials: credentials}
+      url,
+      method,
+      {credentials: {id, key, algorithm}}
     );
 
     return {
