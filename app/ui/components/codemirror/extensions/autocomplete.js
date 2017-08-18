@@ -129,6 +129,14 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   let keydownDebounce = null;
 
   cm.on('keydown', (cm, e) => {
+    // Close dropdown on Escape if it's open
+    if (cm.isHintDropdownActive() && e.key === 'Escape') {
+      cm.closeHint();
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
     // Only operate on one-letter keys. This will filter out
     // any special keys (Backspace, Enter, etc)
     if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
