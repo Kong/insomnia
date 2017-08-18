@@ -70,6 +70,11 @@ class HawkAuth extends React.PureComponent {
     const id = label.replace(/ /g, '-');
     return (
       <tr key={id}>
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor={id} className="label--small no-pad">
+            {label}
+          </label>
+        </td>
         <td className="wide">
           <div className="form-control form-control--underlined no-margin">
             <OneLineEditor
