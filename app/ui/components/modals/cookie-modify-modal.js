@@ -94,9 +94,12 @@ class CookieModifyModal extends PureComponent {
     }
 
     if (valid) {
+      const newCookie = Object.assign({}, cookie, {[field]: input});
+
       clearTimeout(this._cookieUpdateTimeout);
       this._cookieUpdateTimeout = setTimeout(() => {
-        this._handleCookieUpdate(cookie, Object.assign({}, cookie, {[field]: input}));
+        this._handleCookieUpdate(cookie, newCookie);
+        this.setState({cookie: newCookie});
       }, DEBOUNCE_MILLIS * 2);
     }
 
@@ -104,10 +107,6 @@ class CookieModifyModal extends PureComponent {
       isValid: {
         ...this.state.isValid,
         [field]: valid
-      },
-      cookie: {
-        ...cookie,
-        [field]: input
       }
     });
   }
