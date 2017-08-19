@@ -1,7 +1,7 @@
 @import '../constants/dimensions';
 @import '../constants/colors';
 
-.cookie-editor.modal__body {
+.cookie-modify.modal__body {
   overflow: visible;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -12,17 +12,32 @@
       width: 100%;
       background: none;
     }
+    
+    td {
+      cursor: pointer;
+      vertical-align: middle;
+    }
 
     .btn {
+      cursor: pointer;
       margin: 0;
       padding: 0 @padding-sm;
       height: @line-height-xs;
     }
   }
 
-  .cookie-editor__editor {
-    padding: 0 @padding-md @padding-md @padding-md;
-    overflow-y: auto;
+  .cookie-modify__checkboxes {
+    padding-top: 0;
     position: relative;
+    display: flex;
+    justify-content: space-around;
+    font-size: medium;
+    
+    label > input {
+      vertical-align: middle;
+      margin-left: 5px;
+      height: 20px;
+      width: 20px;
+    }
   }
 }

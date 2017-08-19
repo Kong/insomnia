@@ -5,7 +5,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import CookiesEditor from '../editors/cookies-editor';
+import CookieList from '../cookie-list';
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 
@@ -15,7 +15,6 @@ class CookiesModal extends PureComponent {
     super(props);
     this.state = {
       cookieJar: null,
-      workspace: null,
       filter: ''
     };
   }
@@ -32,21 +31,6 @@ class CookiesModal extends PureComponent {
     const {cookieJar} = this.state;
     await models.cookieJar.update(cookieJar);
     this._load();
-  }
-
-  _handleCookieUpdate (oldCookie, cookie) {
-    const {cookieJar} = this.state;
-    const {cookies} = cookieJar;
-    const index = cookies.findIndex(c => c.domain === oldCookie.domain && c.key === oldCookie.key);
-
-    cookieJar.cookies = [
-      ...cookies.slice(0, index),
-      cookie,
-      ...cookies.slice(index + 1)
-    ];
-
-    this._saveChanges(cookieJar);
-    trackEvent('Cookie', 'Update');
   }
 
   _handleCookieAdd (cookie) {
@@ -101,7 +85,7 @@ class CookiesModal extends PureComponent {
     this.modal.show();
 
     setTimeout(() => this.filterInput.focus(), 100);
-    trackEvent('Cookie Editor', 'Show');
+    trackEvent('Cookie Manager', 'Show');
   }
 
   hide () {
@@ -118,12 +102,15 @@ class CookiesModal extends PureComponent {
 
   render () {
     const filteredCookies = this._getFilteredSortedCookies();
+    const {
+      handleShowModifyCookieModal
+    } = this.props;
     const {filter} = this.state;
 
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
-        <ModalBody className="cookie-editor" noScroll>
+        <ModalBody className="cookie-list" noScroll>
           <div className="pad">
             <div className="form-control form-control--outlined">
               <label>Filter Cookies
@@ -135,11 +122,11 @@ class CookiesModal extends PureComponent {
               </label>
             </div>
           </div>
-          <div className="cookie-editor__editor border-top">
+          <div className="cookie-list__list border-top">
             <div className="pad-top">
-              <CookiesEditor
+              <CookieList
+                handleShowModifyCookieModal={handleShowModifyCookieModal}
                 cookies={filteredCookies}
-                onCookieUpdate={this._handleCookieUpdate}
                 onCookieAdd={this._handleCookieAdd}
                 onCookieDelete={this._handleCookieDelete}
                 // Set the domain to the filter so that it shows up if we're filtering
@@ -150,7 +137,7 @@ class CookiesModal extends PureComponent {
         </ModalBody>
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">
-            * cookies are automatically sent with relevant requests
+            * click a cookie to modify it
           </div>
           <button className="btn" onClick={this.hide}>
             Done
@@ -162,6 +149,7 @@ class CookiesModal extends PureComponent {
 }
 
 CookiesModal.propTypes = {
+  handleShowModifyCookieModal: PropTypes.func.isRequired,
   workspace: PropTypes.object.isRequired
 };
 

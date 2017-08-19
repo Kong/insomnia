@@ -1,0 +1,33 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.cookie-list.modal__body {
+  overflow: visible;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+
+  table {
+    td {
+      cursor: pointer;
+    }
+    
+    input:not([type="checkbox"]) {
+      padding: @padding-xs @padding-xxs;
+      width: 100%;
+      background: none;
+    }
+
+    .btn {
+      cursor: pointer;
+      margin: 0;
+      padding: 0 @padding-sm;
+      height: @line-height-xs;
+    }
+  }
+
+  .cookie-list__list {
+    padding: 0 @padding-md @padding-md @padding-md;
+    overflow-y: auto;
+    position: relative;
+  }
+}

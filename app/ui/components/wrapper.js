@@ -8,10 +8,11 @@ import type {Request, RequestAuthentication, RequestBody, RequestHeader, Request
 import React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {registerModal, showModal} from './modals/index';
+import {registerModal, showModal, reloadModal} from './modals/index';
 import AlertModal from './modals/alert-modal';
 import ChangelogModal from './modals/changelog-modal';
 import CookiesModal from './modals/cookies-modal';
+import CookieModifyModal from '../components/modals/cookie-modify-modal';
 import EnvironmentEditModal from './modals/environment-edit-modal';
 import GenerateCodeModal from './modals/generate-code-modal';
 import LoginModal from './modals/login-modal';
@@ -247,6 +248,14 @@ class Wrapper extends React.PureComponent {
 
   _handleShowCookiesModal (): void {
     showModal(CookiesModal, this.props.activeWorkspace);
+  }
+
+  _handleReloadCookiesModal (): void {
+    reloadModal(CookiesModal);
+  }
+
+  _handleShowModifyCookieModal (cookie: Object): void {
+    showModal(CookieModifyModal, cookie, this.props.activeWorkspace);
   }
 
   _handleShowRequestSettingsModal (): void {
@@ -522,6 +531,14 @@ class Wrapper extends React.PureComponent {
           />
 
           <CookiesModal
+            handleShowModifyCookieModal={this._handleShowModifyCookieModal}
+            ref={registerModal}
+            workspace={activeWorkspace}
+          />
+          <CookieModifyModal
+            reloadCookiesModal={this._handleReloadCookiesModal}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
             ref={registerModal}
             workspace={activeWorkspace}
           />
