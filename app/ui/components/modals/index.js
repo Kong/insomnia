@@ -31,6 +31,10 @@ export function hideModal (modalCls) {
   return _getModal(modalCls).hide();
 }
 
+export function reloadModal (modalCls) {
+  return _getModal(modalCls)._load();
+}
+
 export function hideAllModals () {
   for (const key of Object.keys(modals)) {
     const modal = modals[key];
