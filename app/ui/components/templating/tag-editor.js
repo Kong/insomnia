@@ -241,8 +241,7 @@ class TagEditor extends PureComponent {
 
             const requestGroupStr = requestGroup ? `[${requestGroup.name}] ` : ''
             const requestMethodStr = request.method ? `${request.method} ` : ''
-            // <MethodTag method={request.method}/>
-            console.log(request)
+            
             namePrefix = requestGroupStr + requestMethodStr
           }
 
