@@ -326,3 +326,9 @@ export function jsonParseOr (str: string, fallback: any): any {
 export function escapeRegex (str: string): string {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
+
+export function fuzzyMatch (searchString: string, text: string): boolean {
+  const regexSearchString = escapeRegex(searchString.toLowerCase()).split('').join('.*');
+  const toMatch = new RegExp(regexSearchString);
+  return toMatch.test(text.toLowerCase());
+}

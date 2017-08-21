@@ -139,8 +139,12 @@ export const AUTH_BASIC = 'basic';
 export const AUTH_DIGEST = 'digest';
 export const AUTH_BEARER = 'bearer';
 export const AUTH_NTLM = 'ntlm';
+export const AUTH_HAWK = 'hawk';
 export const AUTH_AWS_IAM = 'iam';
 export const AUTH_NETRC = 'netrc';
+
+export const HAWK_ALGORITHM_SHA256 = 'sha256';
+export const HAWK_ALGORITHM_SHA1 = 'sha1';
 
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
@@ -149,6 +153,7 @@ const authTypesMap = {
   [AUTH_BEARER]: ['Bearer', 'Bearer Token'],
   [AUTH_OAUTH_1]: ['OAuth 1', 'OAuth 1.0'],
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0'],
+  [AUTH_HAWK]: ['Hawk', 'Hawk'],
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_NETRC]: ['Netrc', 'Netrc']
 };

@@ -8,6 +8,8 @@ import {getAuthHeader} from '../network/authentication';
 
 export async function exportHarWithRequest (renderedRequest, addContentLength = false) {
   let postData = '';
+  const url = misc.prepareUrlForSending(renderedRequest.url);
+
   if (renderedRequest.body.fileName) {
     try {
       postData = newBodyRaw(fs.readFileSync(renderedRequest.body.fileName, 'base64'));
@@ -36,6 +38,8 @@ export async function exportHarWithRequest (renderedRequest, addContentLength = 
   if (!misc.hasAuthHeader(renderedRequest.headers)) {
     const header = await getAuthHeader(
       renderedRequest._id,
+      url,
+      renderedRequest.method,
       renderedRequest.authentication
     );
     header && renderedRequest.headers.push(header);
@@ -43,7 +47,7 @@ export async function exportHarWithRequest (renderedRequest, addContentLength = 
 
   return {
     method: renderedRequest.method,
-    url: misc.prepareUrlForSending(renderedRequest.url),
+    url,
     httpVersion: 'HTTP/1.1',
     cookies: getCookies(renderedRequest),
     headers: renderedRequest.headers,
