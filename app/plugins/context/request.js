@@ -74,7 +74,7 @@ export function init (
       getEnvironmentVariable (name: string): string | number | boolean | Object | Array<any> | null {
         return renderedContext[name];
       },
-      getEnvironment (): string | number | boolean | Object | Array<any> | null {
+      getEnvironment (): Object {
         return renderedContext;
       }
 

@@ -136,5 +136,6 @@ describe('request.*', () => {
     expect(result.request.getEnvironmentVariable('array_test')).toEqual(['a', 'b']);
     expect(result.request.getEnvironmentVariable('object_test')).toEqual({a: 'A', b: 'B'});
     expect(result.request.getEnvironmentVariable('null_test')).toBe(null);
+    expect(result.request.getEnvironmentVariable('bad')).toBeUndefined();
   });
 });
