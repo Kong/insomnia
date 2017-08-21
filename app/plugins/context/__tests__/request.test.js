@@ -9,6 +9,14 @@ const PLUGIN = {
   module: {}
 };
 
+const CONTEXT = {
+  user_key: 'my_user_key',
+  hello: 'world',
+  array_test: ['a', 'b'],
+  object_test: {a: 'A', b: 'B'},
+  null_test: null
+};
+
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
@@ -17,7 +25,7 @@ describe('init()', () => {
   });
 
   it('initializes correctly', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'));
+    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request)).toEqual([
       'getId',
@@ -25,11 +33,14 @@ describe('init()', () => {
       'getUrl',
       'getMethod',
       'getHeader',
+      'getHeaders',
       'hasHeader',
       'removeHeader',
       'setHeader',
       'addHeader',
-      'setCookie'
+      'setCookie',
+      'getEnvironmentVariable',
+      'getEnvironment'
     ]);
   });
 
@@ -55,7 +66,7 @@ describe('request.*', () => {
   });
 
   it('works for basic getters', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'));
+    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
     expect(result.request.getId()).toBe('req_1');
     expect(result.request.getName()).toBe('My Request');
     expect(result.request.getUrl()).toBe('');
@@ -63,7 +74,13 @@ describe('request.*', () => {
   });
 
   it('works for headers', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'));
+    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
+
+    // getHeaders()
+    expect(result.request.getHeaders()).toEqual([
+      {name: 'hello', value: 'world'},
+      {name: 'Content-Type', value: 'application/json'}
+    ]);
 
     // getHeader()
     expect(result.request.getHeader('content-type')).toBe('application/json');
@@ -91,10 +108,33 @@ describe('request.*', () => {
     const request = await models.request.getById('req_1');
     request.cookies = []; // Because the plugin technically needs a RenderedRequest
 
-    const result = plugin.init(PLUGIN, request);
+    const result = plugin.init(PLUGIN, request, CONTEXT);
 
     result.request.setCookie('foo', 'bar');
     result.request.setCookie('foo', 'baz');
     expect(request.cookies).toEqual([{name: 'foo', value: 'baz'}]);
+  });
+
+  it('works for environment', async () => {
+    const request = await models.request.getById('req_1');
+    request.cookies = []; // Because the plugin technically needs a RenderedRequest
+
+    const result = plugin.init(PLUGIN, request, CONTEXT);
+
+    // getEnvironment
+    expect(result.request.getEnvironment()).toEqual({
+      user_key: 'my_user_key',
+      hello: 'world',
+      array_test: ['a', 'b'],
+      object_test: {a: 'A', b: 'B'},
+      null_test: null
+    });
+
+    // getEnvironmentVariable
+    expect(result.request.getEnvironmentVariable('user_key')).toBe('my_user_key');
+    expect(result.request.getEnvironmentVariable('hello')).toBe('world');
+    expect(result.request.getEnvironmentVariable('array_test')).toEqual(['a', 'b']);
+    expect(result.request.getEnvironmentVariable('object_test')).toEqual({a: 'A', b: 'B'});
+    expect(result.request.getEnvironmentVariable('null_test')).toBe(null);
   });
 });

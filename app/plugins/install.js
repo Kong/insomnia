@@ -71,21 +71,13 @@ export default async function (moduleName: string): Promise<void> {
 async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
   return new Promise((resolve, reject) => {
     childProcess.exec(
-      `npm show ${moduleName} insomnia version name dist.shasum dist.tarball`,
-      (err, stdout, stderr) => {
+      `npm show ${moduleName} --json`, (err, stdout, stderr) => {
         if (err && stderr.includes('E404')) {
           reject(new Error(`${moduleName} not found on npm`));
           return;
         }
 
-        const lines = stdout.split('\n').filter(l => !!l);
-        const info = {};
-        for (const line of lines) {
-          const match = line.match(/(.*) = '(.*)'/);
-
-          // Strip quotes off of the value
-          info[match[1]] = match[2];
-        }
+        const info = JSON.parse(stdout);
 
         if (!info.hasOwnProperty('insomnia')) {
           reject(new Error(`"${moduleName}" not a plugin! Package missing "insomnia" attribute`));
@@ -97,8 +89,8 @@ async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
           name: info.name,
           version: info.version,
           dist: {
-            shasum: info['dist.shasum'],
-            tarball: info['dist.tarball']
+            shasum: info.dist.shasum,
+            tarball: info.dist.tarball
           }
         });
       }

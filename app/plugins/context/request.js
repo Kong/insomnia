@@ -3,7 +3,11 @@ import type {Plugin} from '../';
 import type {RenderedRequest} from '../../common/render';
 import * as misc from '../../common/misc';
 
-export function init (plugin: Plugin, renderedRequest: RenderedRequest): {request: Object} {
+export function init (
+  plugin: Plugin,
+  renderedRequest: RenderedRequest,
+  renderedContext: Object
+): {request: Object} {
   if (!renderedRequest) {
     throw new Error('contexts.request initialized without request');
   }
@@ -32,6 +36,9 @@ export function init (plugin: Plugin, renderedRequest: RenderedRequest): {reques
         } else {
           return null;
         }
+      },
+      getHeaders (): Array<{name: string, value: string}> {
+        return renderedRequest.headers.map(h => ({ name: h.name, value: h.value }));
       },
       hasHeader (name: string): boolean {
         return this.getHeader(name) !== null;
@@ -63,6 +70,12 @@ export function init (plugin: Plugin, renderedRequest: RenderedRequest): {reques
         } else {
           renderedRequest.cookies.push({name, value});
         }
+      },
+      getEnvironmentVariable (name: string): string | number | boolean | Object | Array<any> | null {
+        return renderedContext[name];
+      },
+      getEnvironment (): string | number | boolean | Object | Array<any> | null {
+        return renderedContext;
       }
 
       // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
