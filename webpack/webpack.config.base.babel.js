@@ -59,8 +59,6 @@ module.exports = {
     // To get jsonlint working...
     'file', 'system'
   ],
-  plugins: [
-    new webpack.optimize.ModuleConcatenationPlugin(),
-  ],
+  plugins: [],
   target: 'electron-renderer'
 };

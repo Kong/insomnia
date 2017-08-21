@@ -143,6 +143,9 @@ export const AUTH_HAWK = 'hawk';
 export const AUTH_AWS_IAM = 'iam';
 export const AUTH_NETRC = 'netrc';
 
+export const HAWK_ALGORITHM_SHA256 = 'sha256';
+export const HAWK_ALGORITHM_SHA1 = 'sha1';
+
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],

@@ -1,4 +1,5 @@
 import {createSelector} from 'reselect';
+import {fuzzyMatch} from '../../common/misc';
 
 // ~~~~~~~~~ //
 // Selectors //
@@ -106,13 +107,13 @@ export const selectSidebarChildren = createSelector(
         // Build the monster string to match on
         const method = child.doc.method || '';
         const name = child.doc.name;
-        const toMatch = `${method}❅${name}❅${parentNames.join('❅')}`.toLowerCase();
+        const toMatch = `${method}❅${name}❅${parentNames.join('❅')}`;
 
         // Try to match name
         let hasMatchedName = true;
-        for (const token of sidebarFilter.trim().toLowerCase().split(' ')) {
+        for (const token of sidebarFilter.trim().split(' ')) {
           // Filter failed. Don't render children
-          if (toMatch.indexOf(token) === -1) {
+          if (!fuzzyMatch(token, toMatch)) {
             hasMatchedName = false;
             break;
           }

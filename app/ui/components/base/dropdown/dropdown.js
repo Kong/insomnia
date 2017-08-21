@@ -6,6 +6,7 @@ import classnames from 'classnames';
 import DropdownButton from './dropdown-button';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
+import {fuzzyMatch} from '../../../../common/misc';
 
 @autobind
 class Dropdown extends PureComponent {
@@ -59,7 +60,7 @@ class Dropdown extends PureComponent {
       const listItemTextWithoutSpaces = listItem.textContent.toLowerCase().replace(/[^\w_]*/g, '');
       const filterWithoutSpaces = newFilter.toLowerCase().replace(/[^\w_]*/g, '');
 
-      if (!newFilter || listItemTextWithoutSpaces.includes(filterWithoutSpaces)) {
+      if (!newFilter || fuzzyMatch(filterWithoutSpaces, listItemTextWithoutSpaces)) {
         const filterIndex = listItem.getAttribute('data-filter-index');
         filterItems.push(parseInt(filterIndex, 10));
       }

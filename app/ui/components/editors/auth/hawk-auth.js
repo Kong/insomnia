@@ -1,10 +1,12 @@
 // @flow
-import type { Request } from '../../../../models/request';
+import type {Request} from '../../../../models/request';
 
 import React from 'react';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
+import {HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256} from '../../../../common/constants';
+import HelpTooltip from '../../help-tooltip';
 
 @autobind
 class HawkAuth extends React.PureComponent {
@@ -43,29 +45,69 @@ class HawkAuth extends React.PureComponent {
 
   renderHawkAuthenticationFields (): Array<React.Element<*>> {
     const hawkAuthId = this.renderInputRow(
-      'Hawk Auth ID',
+      'Auth ID',
       'id',
       this._handleChangeHawkAuthId
     );
 
     const hawkAuthKey = this.renderInputRow(
-      'Hawk Auth Key',
+      'Auth Key',
       'key',
       this._handleChangeHawkAuthKey
     );
 
-    const algorithm = this.renderInputRow(
+    const algorithm = this.renderSelectRow(
       'Algorithm',
       'algorithm',
+      [
+        {name: HAWK_ALGORITHM_SHA256, value: HAWK_ALGORITHM_SHA256},
+        {name: HAWK_ALGORITHM_SHA1, value: HAWK_ALGORITHM_SHA1}
+      ],
       this._handleChangeAlgorithm
     );
 
     return [hawkAuthId, hawkAuthKey, algorithm];
   }
 
-  renderInputRow (label: string,
-                  property: string,
-                  onChange: Function): React.Element<*> {
+  renderSelectRow (
+    label: string,
+    property: string,
+    options: Array<{name: string, value: string}>,
+    onChange: Function,
+    help: string | null = null
+  ): React.Element<*> {
+    const {request} = this.props;
+    const id = label.replace(/ /g, '-');
+    const value = request.authentication.hasOwnProperty(property)
+      ? request.authentication[property]
+      : options[0];
+
+    return (
+      <tr key={id}>
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor={id} className="label--small no-pad">
+            {label}
+            {help && <HelpTooltip>{help}</HelpTooltip>}
+          </label>
+        </td>
+        <td className="wide">
+          <div className="form-control form-control--outlined no-margin">
+            <select id={id} onChange={onChange} value={value}>
+              {options.map(({name, value}) => (
+                <option key={value} value={value}>{name}</option>
+              ))}
+            </select>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  renderInputRow (
+    label: string,
+    property: string,
+    onChange: Function
+  ): React.Element<*> {
     const {handleRender, handleGetRenderContext, request} = this.props;
     const id = label.replace(/ /g, '-');
     return (

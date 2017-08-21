@@ -8,6 +8,7 @@ import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
+import {fuzzyMatch} from '../../../common/misc';
 
 @autobind
 class RequestSwitcherModal extends PureComponent {
@@ -128,25 +129,14 @@ class RequestSwitcherModal extends PureComponent {
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
     if (searchString) {
-      const specialCharacters = ['.', '^', '$', '*', '+', '-', '?', '(', ')', '[', ']', '{', '}', '\\', '|'];
-
-      const regexSearchString = searchString
-        .toLowerCase()
-        .split('')
-        .map((c) => specialCharacters.includes(c) ? `\\${c}` : c)
-        .join('.*');
-
-      const toMatch = new RegExp(regexSearchString);
-
       matchedRequests = matchedRequests.filter(r => {
         const name = r.name.toLowerCase();
-        const id = r._id.toLowerCase();
 
         // Fuzzy match searchString to name
-        const matchesName = toMatch.test(name);
+        const matchesName = fuzzyMatch(searchString, name);
 
         // Match exact Id
-        const matchesId = id === toMatch;
+        const matchesId = r._id === searchString;
 
         return matchesName || matchesId;
       });
