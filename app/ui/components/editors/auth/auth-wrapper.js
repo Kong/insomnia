@@ -1,11 +1,12 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_NETRC} from '../../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_HAWK, AUTH_NETRC} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
 import BearerAuth from './bearer-auth';
 import NTLMAuth from './ntlm-auth';
 import OAuth2Auth from './o-auth-2-auth';
+import HawkAuth from './hawk-auth';
 import AWSAuth from './aws-auth';
 import NetrcAuth from './netrc-auth';
 import autobind from 'autobind-decorator';
@@ -47,6 +48,15 @@ class AuthWrapper extends PureComponent {
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
+        />
+      );
+    } else if (authentication.type === AUTH_HAWK) {
+      return (
+        <HawkAuth
+          request={request}
+          handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
+          onChange={onChange}
         />
       );
     } else if (authentication.type === AUTH_OAUTH_1) {

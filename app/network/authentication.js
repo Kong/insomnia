@@ -1,8 +1,9 @@
-import {AUTH_BASIC, AUTH_BEARER, AUTH_OAUTH_2} from '../common/constants';
+import {AUTH_BASIC, AUTH_BEARER, AUTH_OAUTH_2, AUTH_HAWK} from '../common/constants';
 import {getBasicAuthHeader, getBearerAuthHeader} from '../common/misc';
 import getOAuth2Token from './o-auth-2/get-token';
+import * as Hawk from 'hawk';
 
-export async function getAuthHeader (requestId, authentication) {
+export async function getAuthHeader (requestId, url, method, authentication) {
   if (authentication.disabled) {
     return null;
   }
@@ -25,6 +26,21 @@ export async function getAuthHeader (requestId, authentication) {
     } else {
       return null;
     }
+  }
+
+  if (authentication.type === AUTH_HAWK) {
+    const {id, key, algorithm} = authentication;
+
+    const header = Hawk.client.header(
+      url,
+      method,
+      {credentials: {id, key, algorithm}}
+    );
+
+    return {
+      name: 'Authorization',
+      value: header.field
+    };
   }
 
   return null;
