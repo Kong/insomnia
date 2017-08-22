@@ -237,7 +237,8 @@ class TagEditor extends PureComponent {
             const parentId = request ? request.parentId : 'n/a';
             const requestGroups = allDocs[models.requestGroup.type] || [];
             const requestGroup = requestGroups.find(rg => rg._id === parentId);
-            namePrefix = requestGroup ? `[${requestGroup.name}] ` : null;
+            const requestGroupStr = requestGroup ? `[${requestGroup.name}] ` : '';
+            namePrefix = `${requestGroupStr + request.method} `;
           }
 
           return (
