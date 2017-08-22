@@ -13,7 +13,7 @@ describe('RequestExtension cookie', async () => {
       parentId: workspace._id,
       url: 'https://insomnia.rest/foo/bar'
     });
-    const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
     const jar = jarFromCookies(cookieJar.cookies);
     jar.setCookieSync([
       'foo=bar',

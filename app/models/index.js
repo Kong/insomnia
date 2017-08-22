@@ -37,24 +37,22 @@ export const requestMeta = _requestMeta;
 export const response = _response;
 export const oAuth2Token = _oAuth2Token;
 
-const _models = {
-  [stats.type]: stats,
-  [settings.type]: settings,
-  [workspace.type]: workspace,
-  [workspaceMeta.type]: workspaceMeta,
-  [environment.type]: environment,
-  [cookieJar.type]: cookieJar,
-  [requestGroup.type]: requestGroup,
-  [requestGroupMeta.type]: requestGroupMeta,
-  [request.type]: request,
-  [requestVersion.type]: requestVersion,
-  [requestMeta.type]: requestMeta,
-  [response.type]: response,
-  [oAuth2Token.type]: oAuth2Token
-};
-
 export function all () {
-  return Object.keys(_models).map(type => _models[type]);
+  return [
+    stats,
+    settings,
+    workspace,
+    workspaceMeta,
+    environment,
+    cookieJar,
+    requestGroup,
+    requestGroupMeta,
+    request,
+    requestVersion,
+    requestMeta,
+    response,
+    oAuth2Token
+  ];
 }
 
 export function types () {
@@ -62,7 +60,7 @@ export function types () {
 }
 
 export function getModel (type: string) {
-  return _models[type] || null;
+  return all().find(m => m.type === type) || null;
 }
 
 export function canDuplicate (type: string) {
@@ -88,12 +86,12 @@ export function initModel (type: string, ...sources: Array<Object>) {
   const model = getModel(type);
 
   if (!model) {
-    const choices = Object.keys(_models).join(', ');
+    const choices = all().map(m => m.type).join(', ');
     throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
   }
 
   // Define global default fields
-  const objectDefaults = Object.assign({
+  const objectDefaults = Object.assign({}, {
     _id: null,
     type: type,
     parentId: null,

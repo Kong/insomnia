@@ -1,9 +1,27 @@
+// @flow
 import * as db from '../common/database';
+import type {BaseModel} from './index';
 
 export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
 export const canDuplicate = true;
+
+export type Cookie = {
+  domain: string,
+  path: string,
+  key: string,
+  value: string,
+  expires: number
+}
+
+type BaseCookieJar = {
+  name: string,
+  cookies: Array<Cookie>
+};
+
+export type CookieJar = BaseModel & BaseCookieJar;
+
 export function init () {
   return {
     name: 'Default Jar',
@@ -11,16 +29,15 @@ export function init () {
   };
 }
 
-export function migrate (doc) {
+export function migrate (doc: CookieJar): CookieJar {
   return doc;
 }
 
-export function create (patch = {}) {
+export function create (patch: Object = {}) {
   return db.docCreate(type, patch);
 }
 
-export async function getOrCreateForWorkspace (workspace) {
-  const parentId = workspace._id;
+export async function getOrCreateForParentId (parentId: string) {
   const cookieJars = await db.find(type, {parentId});
   if (cookieJars.length === 0) {
     return await create({parentId});
@@ -33,10 +50,10 @@ export function all () {
   return db.all(type);
 }
 
-export function getById (id) {
+export function getById (id: string) {
   return db.get(type, id);
 }
 
-export function update (cookieJar, patch) {
+export function update (cookieJar: CookieJar, patch: Object = {}) {
   return db.docUpdate(cookieJar, patch);
 }

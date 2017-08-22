@@ -214,7 +214,7 @@ p.notice {
 }
 
 .text-right {
-  text-align: right;
+  text-align: right !important;
 }
 
 .text-left {
@@ -310,6 +310,15 @@ blockquote {
   & > *:not(:last-child) {
     padding-right: @padding-xs;
   }
+}
+
+.row-around {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .row-spaced {

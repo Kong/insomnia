@@ -7,23 +7,14 @@ import * as models from '../models';
 import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
+import type {CookieJar} from '../models/cookie-jar';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
 
-type Cookie = {
-  domain: string,
-  path: string,
-  key: string,
-  value: string,
-  expires: number
-}
-
 export type RenderedRequest = Request & {
   cookies: Array<{name: string, value: string, disabled?: boolean}>,
-  cookieJar: {
-    cookies: Array<Cookie>
-  }
+  cookieJar: CookieJar
 };
 
 export async function buildRenderContext (
@@ -227,7 +218,8 @@ export async function getRenderedRequest (
     models.workspace.type
   ]);
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
-  const cookieJar = await models.cookieJar.getOrCreateForWorkspace(workspace);
+  const parentId = workspace ? workspace._id : 'n/a';
+  const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
 
   const renderContext = await getRenderContext(request, environmentId, ancestors);
 

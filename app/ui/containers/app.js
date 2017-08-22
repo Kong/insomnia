@@ -21,7 +21,7 @@ import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import {trackEvent} from '../../analytics';
-import {selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -903,6 +903,7 @@ function mapStateToProps (state, props) {
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state, props) || {};
   const activeRequest = selectActiveRequest(state, props);
+  const activeCookieJar = selectActiveCookieJar(state, props);
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
@@ -937,6 +938,7 @@ function mapStateToProps (state, props) {
     activeRequest,
     activeRequestResponses,
     activeResponse,
+    activeCookieJar,
     sidebarHidden,
     sidebarFilter,
     sidebarWidth,

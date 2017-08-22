@@ -4,11 +4,12 @@ import type {Response} from '../../models/response';
 import type {OAuth2Token} from '../../models/o-auth-2-token';
 import type {Workspace} from '../../models/workspace';
 import type {Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../../models/request';
+import {updateMimeType} from '../../models/request';
 
 import React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {registerModal, showModal, reloadModal} from './modals/index';
+import {registerModal, reloadModal, showModal} from './modals/index';
 import AlertModal from './modals/alert-modal';
 import ChangelogModal from './modals/changelog-modal';
 import CookiesModal from './modals/cookies-modal';
@@ -35,9 +36,9 @@ import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as models from '../../models/index';
-import {updateMimeType} from '../../models/request';
 import {trackEvent} from '../../analytics/index';
 import * as importers from 'insomnia-importers';
+import type {CookieJar} from '../../models/cookie-jar';
 
 const rUpdate = (request, ...args) => {
   if (!request) {
@@ -108,6 +109,7 @@ class Wrapper extends React.PureComponent {
     environments: Array<Object>,
     activeRequestResponses: Array<Response>,
     activeWorkspace: Workspace,
+    activeCookieJar: CookieJar,
 
     // Optional
     oAuth2Token: ?OAuth2Token,
@@ -250,12 +252,8 @@ class Wrapper extends React.PureComponent {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  _handleReloadCookiesModal (): void {
-    reloadModal(CookiesModal);
-  }
-
   _handleShowModifyCookieModal (cookie: Object): void {
-    showModal(CookieModifyModal, cookie, this.props.activeWorkspace);
+    showModal(CookieModifyModal, cookie);
   }
 
   _handleShowRequestSettingsModal (): void {
@@ -335,6 +333,7 @@ class Wrapper extends React.PureComponent {
       activeEnvironment,
       activeRequest,
       activeWorkspace,
+      activeCookieJar,
       activeRequestResponses,
       activeResponse,
       environments,
@@ -532,11 +531,12 @@ class Wrapper extends React.PureComponent {
 
           <CookiesModal
             handleShowModifyCookieModal={this._handleShowModifyCookieModal}
+            handleRender={handleRender}
             ref={registerModal}
             workspace={activeWorkspace}
+            cookieJar={activeCookieJar}
           />
           <CookieModifyModal
-            reloadCookiesModal={this._handleReloadCookiesModal}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             ref={registerModal}

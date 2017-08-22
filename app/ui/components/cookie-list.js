@@ -5,13 +5,10 @@ import {Cookie} from 'tough-cookie';
 
 import {cookieToString} from '../../common/cookies';
 import PromptButton from './base/prompt-button';
+import RenderedText from './rendered-text';
 
 @autobind
 class CookieList extends PureComponent {
-  shouldComponentUpdate (nextProps, nextState) {
-    return nextProps.cookies !== this.props.cookies;
-  }
-
   _handleCookieAdd () {
     const newCookie = new Cookie({
       key: 'foo',
@@ -32,7 +29,8 @@ class CookieList extends PureComponent {
   render () {
     const {
       cookies,
-      handleShowModifyCookieModal
+      handleShowModifyCookieModal,
+      handleRender
     } = this.props;
 
     return (
@@ -43,10 +41,10 @@ class CookieList extends PureComponent {
             <th style={{minWidth: '10rem'}}>Domain</th>
             <th style={{width: '90%'}}>Cookie</th>
             <th style={{width: '2rem'}} className="text-right">
-              <button className="btn btn--super-compact"
+              <button className="btn btn--super-duper-compact btn--outlined txt-md"
                       onClick={this._handleCookieAdd}
                       title="Add cookie">
-                <i className="fa fa-plus-circle"/>
+                Add Cookie
               </button>
             </th>
           </tr>
@@ -57,18 +55,20 @@ class CookieList extends PureComponent {
 
             return (
               <tr className="selectable" key={i}>
-                <td
-                  onClick={() => handleShowModifyCookieModal(cookie)}>
+                <RenderedText render={handleRender} component="td">
                   {cookie.domain}
-                </td>
-                <td
-                  onClick={() => handleShowModifyCookieModal(cookie)}>
+                </RenderedText>
+                <RenderedText render={handleRender} component="td">
                   {cookieString}
-                </td>
-                <td
-                  onClick={null}
-                  className="text-right">
-                  <PromptButton className="btn btn--super-compact"
+                </RenderedText>
+                <td onClick={null} className="text-right no-wrap">
+                  <button className="btn btn--super-compact btn--outlined"
+                          onClick={e => handleShowModifyCookieModal(cookie)}
+                          title="Edit cookie properties">
+                    Edit
+                  </button>
+                  {' '}
+                  <PromptButton className="btn btn--super-compact btn--outlined"
                                 addIcon
                                 confirmMessage=" "
                                 onClick={e => this._handleDeleteCookie(cookie)}
@@ -87,8 +87,7 @@ class CookieList extends PureComponent {
               I couldn't find any cookies for you.
             </p>
             <p>
-              <button className="btn btn--clicky"
-                      onClick={e => this._handleCookieAdd()}>
+              <button className="btn btn--clicky" onClick={e => this._handleCookieAdd()}>
                 Add Cookie <i className="fa fa-plus-circle"/>
               </button>
             </p>
@@ -104,7 +103,8 @@ CookieList.propTypes = {
   onCookieDelete: PropTypes.func.isRequired,
   cookies: PropTypes.array.isRequired,
   newCookieDomainName: PropTypes.string.isRequired,
-  handleShowModifyCookieModal: PropTypes.func.isRequired
+  handleShowModifyCookieModal: PropTypes.func.isRequired,
+  handleRender: PropTypes.func.isRequired
 };
 
 export default CookieList;
