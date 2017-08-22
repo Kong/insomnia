@@ -540,6 +540,7 @@ class Wrapper extends React.PureComponent {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             ref={registerModal}
+            cookieJar={activeCookieJar}
             workspace={activeWorkspace}
           />
           <NunjucksModal

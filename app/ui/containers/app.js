@@ -903,10 +903,12 @@ function mapStateToProps (state, props) {
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state, props) || {};
   const activeRequest = selectActiveRequest(state, props);
-  const activeCookieJar = selectActiveCookieJar(state, props);
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
+
+  // Cookie Jar
+  const activeCookieJar = selectActiveCookieJar(state, props);
 
   // Response stuff
   const activeRequestResponses = selectActiveRequestResponses(state, props) || [];

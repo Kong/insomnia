@@ -5,7 +5,8 @@ class RenderedText extends React.PureComponent {
   props: {
     component: string,
     children: string,
-    render: Function
+    render: Function,
+    props?: Object
   };
 
   state: {
@@ -34,8 +35,8 @@ class RenderedText extends React.PureComponent {
   }
 
   render () {
-    const {component} = this.props;
-    return React.createElement(component, {}, this.state.renderedText);
+    const {component, props} = this.props;
+    return React.createElement(component, props || {}, this.state.renderedText);
   }
 }
 

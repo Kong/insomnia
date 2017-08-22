@@ -12,7 +12,9 @@ export type Cookie = {
   path: string,
   key: string,
   value: string,
-  expires: number
+  expires: number,
+  httpOnly: boolean,
+  secure: boolean
 }
 
 type BaseCookieJar = {

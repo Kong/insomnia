@@ -1,5 +1,5 @@
+// @flow
 import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Cookie} from 'tough-cookie';
 
@@ -9,6 +9,15 @@ import RenderedText from './rendered-text';
 
 @autobind
 class CookieList extends PureComponent {
+  props: {
+    onCookieAdd: Function,
+    onCookieDelete: Function,
+    cookies: Array<Cookie>,
+    newCookieDomainName: string,
+    handleShowModifyCookieModal: Function,
+    handleRender: Function
+  };
+
   _handleCookieAdd () {
     const newCookie = new Cookie({
       key: 'foo',
@@ -22,7 +31,7 @@ class CookieList extends PureComponent {
     this.props.onCookieAdd(newCookie);
   }
 
-  _handleDeleteCookie (cookie) {
+  _handleDeleteCookie (cookie: Cookie) {
     this.props.onCookieDelete(cookie);
   }
 
@@ -58,7 +67,8 @@ class CookieList extends PureComponent {
                 <RenderedText render={handleRender} component="td">
                   {cookie.domain}
                 </RenderedText>
-                <RenderedText render={handleRender} component="td">
+                <RenderedText render={handleRender} component="td"
+                              props={{className: 'force-wrap wide'}}>
                   {cookieString}
                 </RenderedText>
                 <td onClick={null} className="text-right no-wrap">
@@ -97,14 +107,5 @@ class CookieList extends PureComponent {
     );
   }
 }
-
-CookieList.propTypes = {
-  onCookieAdd: PropTypes.func.isRequired,
-  onCookieDelete: PropTypes.func.isRequired,
-  cookies: PropTypes.array.isRequired,
-  newCookieDomainName: PropTypes.string.isRequired,
-  handleShowModifyCookieModal: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired
-};
 
 export default CookieList;

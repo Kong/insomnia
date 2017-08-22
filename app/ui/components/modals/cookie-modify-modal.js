@@ -1,8 +1,8 @@
+// @flow
 import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
 import {Tabs, TabList, Tab, TabPanel} from 'react-tabs';
 import autobind from 'autobind-decorator';
-import {Cookie} from 'tough-cookie';
+import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
@@ -12,14 +12,38 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import OneLineEditor from '../codemirror/one-line-editor';
 import {cookieToString} from '../../../common/cookies';
+import type {Cookie, CookieJar} from '../../../models/cookie-jar';
+import type {Workspace} from '../../../models/workspace';
 
 @autobind
 class CookieModifyModal extends PureComponent {
-  constructor (props) {
+  props: {
+    handleRender: Function,
+    handleGetRenderContext: Function,
+    workspace: Workspace,
+    cookieJar: CookieJar
+  };
+
+  state: {
+    cookie: Cookie | null,
+    rawValue: string,
+    isValid: {
+      key: boolean,
+      value: boolean,
+      domain: boolean,
+      path: boolean,
+      expires: boolean
+    }
+  };
+
+  modal: Modal | null;
+  _rawTimeout: number | null;
+  _cookieUpdateTimeout: number | null;
+
+  constructor (props: any) {
     super(props);
 
     this.state = {
-      cookieJar: null,
       cookie: null,
       rawValue: '',
       isValid: {
@@ -30,52 +54,49 @@ class CookieModifyModal extends PureComponent {
         expires: true
       }
     };
+
+    this._rawTimeout = null;
+    this._cookieUpdateTimeout = null;
   }
 
-  _setModalRef (n) {
+  _setModalRef (n: Modal | null) {
     this.modal = n;
   }
 
-  async _load () {
-    const {workspace} = this.props;
-    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
-    this.setState({cookieJar});
-  }
-
-  async show (cookie) {
-    await this._load();
-
+  async show (cookie: Cookie) {
     // Dunno why this is sent as an array
     cookie = cookie[0] || cookie;
     this.setState({cookie});
 
-    this.modal.show();
+    this.modal && this.modal.show();
 
     trackEvent('Cookie Modifier', 'Show');
   }
 
   hide () {
-    this.modal.hide();
+    this.modal && this.modal.hide();
   }
 
-  async _saveChanges () {
-    const {cookieJar} = this.state;
+  async _saveChanges (cookieJar: CookieJar) {
     await models.cookieJar.update(cookieJar);
-    await this._load();
   }
 
-  _handleChangeRawValue (e) {
+  _handleChangeRawValue (e: Event & {target: HTMLInputElement}) {
     const value = e.target.value;
 
     clearTimeout(this._rawTimeout);
     this._rawTimeout = setTimeout(async () => {
-      const cookie = Cookie.parse(value);
+      const cookie = toughCookie.Cookie.parse(value);
+      if (!this.state.cookie) {
+        return;
+      }
+
       await this._handleCookieUpdate(this.state.cookie, cookie);
     }, DEBOUNCE_MILLIS);
   }
 
-  async _handleCookieUpdate (oldCookie, cookie) {
-    const {cookieJar} = this.state;
+  async _handleCookieUpdate (oldCookie: Cookie, cookie: Cookie) {
+    const {cookieJar} = this.props;
     const {cookies} = cookieJar;
     const index = cookies.findIndex(c => c.domain === oldCookie.domain && c.key === oldCookie.key);
 
@@ -91,21 +112,23 @@ class CookieModifyModal extends PureComponent {
     trackEvent('Cookie', 'Update');
   }
 
-  _handleChange (input, field) {
+  _handleChange (field: string, eventOrValue: Event & {target: HTMLInputElement}) {
     const {cookie} = this.state;
     let valid = true;
 
-    if (typeof input === 'object') {
-      input = input.target.checked;
-    }
+    const value = typeof eventOrValue === 'object'
+      ? eventOrValue.target.checked
+      : eventOrValue;
 
     if (valid) {
-      const newCookie = Object.assign({}, cookie, {[field]: input});
+      const newCookie = Object.assign({}, cookie, {[field]: value});
 
       clearTimeout(this._cookieUpdateTimeout);
-      this._cookieUpdateTimeout = setTimeout(() => {
-        this._handleCookieUpdate(cookie, newCookie);
-        this.setState({cookie: newCookie});
+      this._cookieUpdateTimeout = setTimeout(async () => {
+        if (cookie) {
+          await this._handleCookieUpdate(cookie, newCookie);
+          this.setState({cookie: newCookie});
+        }
       }, DEBOUNCE_MILLIS * 2);
     }
 
@@ -117,20 +140,24 @@ class CookieModifyModal extends PureComponent {
     });
   }
 
-  _capitalize (str) {
+  _capitalize (str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
   render () {
     const {
+      cookieJar,
       handleRender,
       handleGetRenderContext
     } = this.props;
 
+    if (!cookieJar) {
+      return null;
+    }
+
     const {
       isValid,
-      cookie,
-      cookieJar
+      cookie
     } = this.state;
 
     if (!cookie || !cookieJar) {
@@ -142,7 +169,7 @@ class CookieModifyModal extends PureComponent {
 
     let rawCookieString = '';
     try {
-      rawCookieString = cookieToString(Cookie.fromJSON(JSON.stringify(cookie)));
+      rawCookieString = cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
     } catch (err) {
       console.warn('Failed to parse cookie', err);
     }
@@ -170,13 +197,12 @@ class CookieModifyModal extends PureComponent {
                       <label>{this._capitalize(field)}
                         <OneLineEditor
                           className={isValid[field] ? '' : 'input--error'}
-                          ref={this._setInputRef}
                           forceEditor
                           type="text"
                           render={handleRender}
                           getRenderContext={handleGetRenderContext}
                           defaultValue={val || ''}
-                          onChange={(i) => this._handleChange(i, field)}/>
+                          onChange={value => this._handleChange(field, value)}/>
                       </label>
                     </div>
                   );
@@ -193,7 +219,7 @@ class CookieModifyModal extends PureComponent {
                         type="checkbox"
                         name={field}
                         defaultChecked={checked || false}
-                        onChange={(e) => this._handleChange(e, field)}
+                        onChange={e => this._handleChange(field, e)}
                       />
                     </label>
                   );
@@ -220,12 +246,6 @@ class CookieModifyModal extends PureComponent {
     );
   }
 }
-
-CookieModifyModal.propTypes = {
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  workspace: PropTypes.object.isRequired
-};
 
 // export CookieModifyModal;
 export default CookieModifyModal;

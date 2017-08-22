@@ -34,6 +34,13 @@ class CookiesModal extends PureComponent {
     };
   }
 
+  async _ensureCookieJarExists () {
+    const {cookieJar, workspace} = this.props;
+    if (!cookieJar) {
+      models.cookieJar.getOrCreateForParentId(workspace._id);
+    }
+  }
+
   _setModalRef (n: React.Element<*> | null) {
     this.modal = n;
   }
@@ -85,11 +92,13 @@ class CookiesModal extends PureComponent {
   }
 
   async show () {
-    this.modal && this.modal.show();
+    await this._ensureCookieJarExists();
 
     setTimeout(() => {
       this.filterInput && this.filterInput.focus();
     }, 100);
+
+    this.modal && this.modal.show();
     trackEvent('Cookie Manager', 'Show');
   }
 
@@ -98,15 +107,21 @@ class CookiesModal extends PureComponent {
   }
 
   render () {
-    const filteredCookies = this._getFilteredSortedCookies();
     const {
       handleShowModifyCookieModal,
-      handleRender
+      handleRender,
+      cookieJar
     } = this.props;
+
+    if (!cookieJar) {
+      return null;
+    }
 
     const {
       filter
     } = this.state;
+
+    const filteredCookies = this._getFilteredSortedCookies();
 
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>

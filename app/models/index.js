@@ -59,7 +59,7 @@ export function types () {
   return all().map(model => model.type);
 }
 
-export function getModel (type: string) {
+export function getModel (type: string): Object | null {
   return all().find(m => m.type === type) || null;
 }
 
@@ -99,7 +99,7 @@ export function initModel (type: string, ...sources: Array<Object>) {
     created: Date.now()
   }, model.init());
 
-  const fullObject = Object.assign({}, objectDefaults, ...sources);
+  const fullObject = Object.assign(objectDefaults, ...sources);
 
   // Generate an _id if there isn't one yet
   if (!fullObject._id) {
