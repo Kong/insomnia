@@ -1,5 +1,6 @@
 // @flow
 import React, {PureComponent} from 'react';
+import deepEqual from 'deep-equal';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -10,6 +11,7 @@ import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
+import {fuzzyMatch} from '../../../common/misc';
 
 @autobind
 class CookiesModal extends PureComponent {
@@ -21,7 +23,8 @@ class CookiesModal extends PureComponent {
   };
 
   state: {
-    filter: string
+    filter: string,
+    visibleCookieIndexes: Array<number> | null
   };
 
   modal: Modal | null;
@@ -29,8 +32,10 @@ class CookiesModal extends PureComponent {
 
   constructor (props: any) {
     super(props);
+
     this.state = {
-      filter: ''
+      filter: '',
+      visibleCookieIndexes: null
     };
   }
 
@@ -74,21 +79,56 @@ class CookiesModal extends PureComponent {
     trackEvent('Cookie', 'Delete');
   }
 
-  _handleFilterChange (e: Event & {target: HTMLInputElement}) {
+  async _handleFilterChange (e: Event & {target: HTMLInputElement}) {
     const filter = e.target.value;
-    this.setState({filter});
-    trackEvent('Cookie Editor', 'Filter Change');
+    this._applyFilter(filter, this.props.cookieJar.cookies);
   }
 
-  _getFilteredSortedCookies () {
-    const {cookieJar} = this.props;
-    const {filter} = this.state;
+  componentWillReceiveProps (nextProps: any) {
+    // Re-filter if we received new cookies
+    // Compare cookies with Dates cast to strings
+    const sameCookies = deepEqual(
+      this.props.cookieJar.cookies,
+      nextProps.cookieJar.cookies
+    );
 
-    const {cookies} = cookieJar;
-    return cookies.filter(c => {
-      const toSearch = JSON.stringify(c).toLowerCase();
-      return toSearch.indexOf(filter.toLowerCase()) !== -1;
-    });
+    if (!sameCookies) {
+      this._applyFilter(this.state.filter, nextProps.cookieJar.cookies);
+    }
+  }
+
+  async _applyFilter (filter: string, cookies: Array<Cookie>) {
+    const renderedCookies = await this.props.handleRender(cookies);
+
+    let visibleCookieIndexes;
+
+    if (filter) {
+      visibleCookieIndexes = [];
+      for (let i = 0; i < renderedCookies.length; i++) {
+        const toSearch = JSON.stringify(renderedCookies[i]);
+        const matched = fuzzyMatch(filter, toSearch);
+        if (matched) {
+          visibleCookieIndexes.push(i);
+        }
+      }
+    } else {
+      visibleCookieIndexes = null;
+    }
+
+    console.log('APPLIED FILTER', filter, visibleCookieIndexes);
+
+    this.setState({filter, visibleCookieIndexes});
+  }
+
+  _getVisibleCookies () {
+    const {cookieJar} = this.props;
+    const {visibleCookieIndexes} = this.state;
+
+    if (visibleCookieIndexes === null) {
+      return cookieJar.cookies;
+    }
+
+    return cookieJar.cookies.filter((c, i) => visibleCookieIndexes.includes(i));
   }
 
   async show () {
@@ -97,6 +137,9 @@ class CookiesModal extends PureComponent {
     setTimeout(() => {
       this.filterInput && this.filterInput.focus();
     }, 100);
+
+    // make sure the filter is up to date
+    await this._applyFilter(this.state.filter, this.props.cookieJar.cookies);
 
     this.modal && this.modal.show();
     trackEvent('Cookie Manager', 'Show');
@@ -113,44 +156,42 @@ class CookiesModal extends PureComponent {
       cookieJar
     } = this.props;
 
-    if (!cookieJar) {
-      return null;
-    }
-
     const {
       filter
     } = this.state;
-
-    const filteredCookies = this._getFilteredSortedCookies();
 
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody className="cookie-list" noScroll>
-          <div className="pad">
-            <div className="form-control form-control--outlined">
-              <label>Filter Cookies
-                <input ref={this._setFilterInputRef}
-                       onChange={this._handleFilterChange}
-                       type="text"
-                       placeholder="twitter.com"
-                       defaultValue=""/>
-              </label>
+          {cookieJar && (
+            <div>
+              <div className="pad">
+                <div className="form-control form-control--outlined">
+                  <label>Filter Cookies
+                    <input ref={this._setFilterInputRef}
+                           onChange={this._handleFilterChange}
+                           type="text"
+                           placeholder="twitter.com"
+                           defaultValue=""/>
+                  </label>
+                </div>
+              </div>
+              <div className="cookie-list__list border-top">
+                <div className="pad-top">
+                  <CookieList
+                    handleShowModifyCookieModal={handleShowModifyCookieModal}
+                    handleRender={handleRender}
+                    cookies={this._getVisibleCookies()}
+                    onCookieAdd={this._handleCookieAdd}
+                    onCookieDelete={this._handleCookieDelete}
+                    // Set the domain to the filter so that it shows up if we're filtering
+                    newCookieDomainName={filter || 'domain.com'}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="cookie-list__list border-top">
-            <div className="pad-top">
-              <CookieList
-                handleShowModifyCookieModal={handleShowModifyCookieModal}
-                handleRender={handleRender}
-                cookies={filteredCookies}
-                onCookieAdd={this._handleCookieAdd}
-                onCookieDelete={this._handleCookieDelete}
-                // Set the domain to the filter so that it shows up if we're filtering
-                newCookieDomainName={filter || 'domain.com'}
-              />
-            </div>
-          </div>
+          )}
         </ModalBody>
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">

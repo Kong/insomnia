@@ -2,8 +2,10 @@
 import React, {PureComponent} from 'react';
 import {Tabs, TabList, Tab, TabPanel} from 'react-tabs';
 import autobind from 'autobind-decorator';
+import deepEqual from 'deep-equal';
 import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
+import clone from 'clone';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 import Modal from '../base/modal';
@@ -96,9 +98,11 @@ class CookieModifyModal extends PureComponent {
   }
 
   async _handleCookieUpdate (oldCookie: Cookie, cookie: Cookie) {
-    const {cookieJar} = this.props;
+    // Clone so we don't modify the original
+    const cookieJar = clone(this.props.cookieJar);
+
     const {cookies} = cookieJar;
-    const index = cookies.findIndex(c => c.domain === oldCookie.domain && c.key === oldCookie.key);
+    const index = cookies.findIndex(c => deepEqual(c, oldCookie));
 
     cookieJar.cookies = [
       ...cookies.slice(0, index),
@@ -144,6 +148,21 @@ class CookieModifyModal extends PureComponent {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
+  _getRawCookieString () {
+    const {cookie} = this.state;
+
+    if (!cookie) {
+      return '';
+    }
+
+    try {
+      return cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
+    } catch (err) {
+      console.warn('Failed to parse cookie string', err);
+      return '';
+    }
+  }
+
   render () {
     const {
       cookieJar,
@@ -151,91 +170,78 @@ class CookieModifyModal extends PureComponent {
       handleGetRenderContext
     } = this.props;
 
-    if (!cookieJar) {
-      return null;
-    }
-
     const {
       isValid,
       cookie
     } = this.state;
 
-    if (!cookie || !cookieJar) {
-      return null;
-    }
-
     const textFields = ['key', 'value', 'domain', 'path', 'expires'];
     const checkFields = ['secure', 'httpOnly'];
-
-    let rawCookieString = '';
-    try {
-      rawCookieString = cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
-    } catch (err) {
-      console.warn('Failed to parse cookie', err);
-    }
 
     return (
       <Modal ref={this._setModalRef} {...this.props}>
         <ModalHeader>Edit Cookie</ModalHeader>
         <ModalBody className="cookie-modify">
-          <Tabs>
-            <TabList>
-              <Tab>
-                <button>Friendly</button>
-              </Tab>
-              <Tab>
-                <button>Raw</button>
-              </Tab>
-            </TabList>
-            <TabPanel>
-              <div className="pad">
-                {textFields.map((field, i) => {
-                  const val = (cookie[field] || '').toString();
+          {cookieJar && cookie && (
+            <Tabs>
+              <TabList>
+                <Tab>
+                  <button>Friendly</button>
+                </Tab>
+                <Tab>
+                  <button>Raw</button>
+                </Tab>
+              </TabList>
+              <TabPanel>
+                <div className="pad">
+                  {textFields.map((field, i) => {
+                    const val = (cookie[field] || '').toString();
 
-                  return (
-                    <div className="form-control form-control--outlined" key={i}>
-                      <label>{this._capitalize(field)}
-                        <OneLineEditor
-                          className={isValid[field] ? '' : 'input--error'}
-                          forceEditor
-                          type="text"
-                          render={handleRender}
-                          getRenderContext={handleGetRenderContext}
-                          defaultValue={val || ''}
-                          onChange={value => this._handleChange(field, value)}/>
+                    return (
+                      <div className="form-control form-control--outlined" key={i}>
+                        <label>{this._capitalize(field)}
+                          <OneLineEditor
+                            className={isValid[field] ? '' : 'input--error'}
+                            forceEditor
+                            type="text"
+                            render={handleRender}
+                            getRenderContext={handleGetRenderContext}
+                            defaultValue={val || ''}
+                            onChange={value => this._handleChange(field, value)}/>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
+                  {checkFields.map((field, i) => {
+                    const checked = !!cookie[field];
+
+                    return (
+                      <label key={i}>{this._capitalize(field)}
+                        <input
+                          className="space-left"
+                          type="checkbox"
+                          name={field}
+                          defaultChecked={checked || false}
+                          onChange={e => this._handleChange(field, e)}
+                        />
                       </label>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
-                {checkFields.map((field, i) => {
-                  const checked = !!cookie[field];
-
-                  return (
-                    <label key={i}>{this._capitalize(field)}
-                      <input
-                        className="space-left"
-                        type="checkbox"
-                        name={field}
-                        defaultChecked={checked || false}
-                        onChange={e => this._handleChange(field, e)}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad">
-              <div className="form-control form-control--outlined">
-                <label>Raw Cookie String
-                  <input type="text"
-                         onChange={this._handleChangeRawValue}
-                         defaultValue={rawCookieString}/>
-                </label>
-              </div>
-            </TabPanel>
-          </Tabs>
+                    );
+                  })}
+                </div>
+              </TabPanel>
+              <TabPanel className="react-tabs__tab-panel pad">
+                <div className="form-control form-control--outlined">
+                  <label>Raw Cookie String
+                    <input type="text"
+                           onChange={this._handleChangeRawValue}
+                           defaultValue={this._getRawCookieString()}/>
+                  </label>
+                </div>
+              </TabPanel>
+            </Tabs>
+          )}
         </ModalBody>
         <ModalFooter>
           <button className="btn" onClick={this.hide}>
