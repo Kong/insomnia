@@ -1,11 +1,12 @@
 // @flow
 import React, {PureComponent} from 'react';
+import uuid from 'uuid';
+import * as toughCookie from 'tough-cookie';
 import autobind from 'autobind-decorator';
-import {Cookie} from 'tough-cookie';
-
 import {cookieToString} from '../../common/cookies';
 import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
+import type {Cookie} from '../../models/cookie-jar';
 
 @autobind
 class CookieList extends PureComponent {
@@ -19,14 +20,16 @@ class CookieList extends PureComponent {
   };
 
   _handleCookieAdd () {
-    const newCookie = new Cookie({
+    const newCookie: Cookie = {
+      id: uuid.v4(),
       key: 'foo',
       value: 'bar',
       domain: this.props.newCookieDomainName,
+      expires: null,
       path: '/',
       secure: false,
       httpOnly: false
-    });
+    };
 
     this.props.onCookieAdd(newCookie);
   }
@@ -60,7 +63,7 @@ class CookieList extends PureComponent {
           </thead>
           <tbody key={cookies.length}>
           {cookies.map((cookie, i) => {
-            const cookieString = cookieToString(Cookie.fromJSON(JSON.stringify(cookie)));
+            const cookieString = cookieToString(toughCookie.Cookie.fromJSON(cookie));
 
             return (
               <tr className="selectable" key={i}>

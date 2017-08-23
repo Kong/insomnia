@@ -10,6 +10,7 @@ import * as models from '../models/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import {showModal} from '../ui/components/modals/index';
 import {trackEvent} from '../analytics/index';
+import {workspace} from '../models/index';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -40,7 +41,7 @@ function getDBFilePath (modelType) {
  * @param forceReset
  * @returns {null}
  */
-export function init (types: Array<string>, config: Object = {}, forceReset: boolean = false) {
+export async function init (types: Array<string>, config: Object = {}, forceReset: boolean = false) {
   if (forceReset) {
     changeListeners = [];
     db = {};
@@ -87,6 +88,12 @@ export function init (types: Array<string>, config: Object = {}, forceReset: boo
     collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
 
     db[modelType] = collection;
+  }
+
+  // Make sure CookieJars and environments exist for all workspaces
+  for (const workspace of await models.workspace.all()) {
+    await models.cookieJar.getOrCreateForParentId(workspace._id);
+    await models.environment.getOrCreateForWorkspace(workspace);
   }
 
   console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);

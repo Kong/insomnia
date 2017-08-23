@@ -1,18 +1,19 @@
 // @flow
 import * as db from '../common/database';
 import type {BaseModel} from './index';
-
+import uuid from 'uuid';
 export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
 export const canDuplicate = true;
 
 export type Cookie = {
+  id: string,
   domain: string,
   path: string,
   key: string,
   value: string,
-  expires: number,
+  expires: number | null,
   httpOnly: boolean,
   secure: boolean
 }
@@ -32,6 +33,7 @@ export function init () {
 }
 
 export function migrate (doc: CookieJar): CookieJar {
+  doc = migrateCookieId(doc);
   return doc;
 }
 
@@ -58,4 +60,14 @@ export function getById (id: string) {
 
 export function update (cookieJar: CookieJar, patch: Object = {}) {
   return db.docUpdate(cookieJar, patch);
+}
+
+/** Ensure every cookie has an ID property */
+function migrateCookieId (cookieJar: CookieJar) {
+  for (const cookie of cookieJar.cookies) {
+    if (!cookie.id) {
+      cookie.id = uuid.v4();
+    }
+  }
+  return cookieJar;
 }

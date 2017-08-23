@@ -536,6 +536,7 @@ class Wrapper extends React.PureComponent {
             workspace={activeWorkspace}
             cookieJar={activeCookieJar}
           />
+
           <CookieModifyModal
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
@@ -543,6 +544,7 @@ class Wrapper extends React.PureComponent {
             cookieJar={activeCookieJar}
             workspace={activeWorkspace}
           />
+
           <NunjucksModal
             uniqueKey={`key::${this.state.forceRefreshKey}`}
             ref={registerModal}

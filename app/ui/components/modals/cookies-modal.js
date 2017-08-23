@@ -39,13 +39,6 @@ class CookiesModal extends PureComponent {
     };
   }
 
-  async _ensureCookieJarExists () {
-    const {cookieJar, workspace} = this.props;
-    if (!cookieJar) {
-      models.cookieJar.getOrCreateForParentId(workspace._id);
-    }
-  }
-
   _setModalRef (n: React.Element<*> | null) {
     this.modal = n;
   }
@@ -115,8 +108,6 @@ class CookiesModal extends PureComponent {
       visibleCookieIndexes = null;
     }
 
-    console.log('APPLIED FILTER', filter, visibleCookieIndexes);
-
     this.setState({filter, visibleCookieIndexes});
   }
 
@@ -132,7 +123,8 @@ class CookiesModal extends PureComponent {
   }
 
   async show () {
-    await this._ensureCookieJarExists();
+    // Opened without cookie jar. Bail out and create one
+    const {cookieJar, workspace} = this.props;
 
     setTimeout(() => {
       this.filterInput && this.filterInput.focus();
