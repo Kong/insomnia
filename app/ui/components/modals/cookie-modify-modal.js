@@ -1,7 +1,6 @@
 // @flow
 import React, {PureComponent} from 'react';
-import uuid from 'uuid';
-import {Tabs, TabList, Tab, TabPanel} from 'react-tabs';
+import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import autobind from 'autobind-decorator';
 import deepEqual from 'deep-equal';
 import * as toughCookie from 'tough-cookie';

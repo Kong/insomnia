@@ -123,9 +123,6 @@ class CookiesModal extends PureComponent {
   }
 
   async show () {
-    // Opened without cookie jar. Bail out and create one
-    const {cookieJar, workspace} = this.props;
-
     setTimeout(() => {
       this.filterInput && this.filterInput.focus();
     }, 100);

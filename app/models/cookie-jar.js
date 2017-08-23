@@ -1,7 +1,6 @@
 // @flow
 import * as db from '../common/database';
 import type {BaseModel} from './index';
-import uuid from 'uuid';
 export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
@@ -66,7 +65,7 @@ export function update (cookieJar: CookieJar, patch: Object = {}) {
 function migrateCookieId (cookieJar: CookieJar) {
   for (const cookie of cookieJar.cookies) {
     if (!cookie.id) {
-      cookie.id = uuid.v4();
+      cookie.id = Math.random().toString().replace('0.', '');
     }
   }
   return cookieJar;
