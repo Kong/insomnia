@@ -20,13 +20,13 @@ describe('migrate()', () => {
     );
     const storedBody = models.response.getBodyBuffer({bodyPath: expectedBodyPath});
 
-    // Should have stripped these
-    expect(newModel.body).toBeUndefined();
-    expect(newModel.encoding).toBeUndefined();
-
     // Should have set bodyPath and stored the body
     expect(newModel.bodyPath).toBe(expectedBodyPath);
     expect(storedBody + '').toBe('hello world!');
+
+    // Should have stripped these
+    expect(newModel.body).toBeUndefined();
+    expect(newModel.encoding).toBeUndefined();
   });
 
   it('migrates base64 body correctly', async () => {

@@ -73,7 +73,9 @@ export default class BaseExtension {
         models: {
           request: {getById: models.request.getById},
           workspace: {getById: models.workspace.getById},
-          cookieJar: {getOrCreateForWorkspace: models.cookieJar.getOrCreateForWorkspace},
+          cookieJar: {getOrCreateForWorkspace: workspace => {
+            return models.cookieJar.getOrCreateForParentId(workspace._id);
+          }},
           response: {
             getLatestForRequestId: models.response.getLatestForRequest,
             getBodyBuffer: models.response.getBodyBuffer

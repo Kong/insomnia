@@ -54,7 +54,7 @@ export default {
       case 'url':
         return getRequestUrl(context, request);
       case 'cookie':
-        const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
+        const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
         const url = await getRequestUrl(context, request);
         const value = await getCookieValue(cookieJar, url, name);
         return value;

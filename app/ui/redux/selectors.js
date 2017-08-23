@@ -1,6 +1,5 @@
 import {createSelector} from 'reselect';
 import {fuzzyMatch} from '../../common/misc';
-import * as models from '../../models/index';
 
 // ~~~~~~~~~ //
 // Selectors //

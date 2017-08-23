@@ -9,7 +9,7 @@ import {updateMimeType} from '../../models/request';
 import React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {registerModal, reloadModal, showModal} from './modals/index';
+import {registerModal, showModal} from './modals/index';
 import AlertModal from './modals/alert-modal';
 import ChangelogModal from './modals/changelog-modal';
 import CookiesModal from './modals/cookies-modal';
