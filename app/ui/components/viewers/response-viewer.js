@@ -191,7 +191,7 @@ class ResponseViewer extends PureComponent {
             <source src={`data:${justContentType};base64,${base64Body}`} />
           </audio>
         </div>
-      )
+      );
     } else if (previewMode === PREVIEW_MODE_RAW) {
       const match = contentType.match(/charset=([\w-]+)/);
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
