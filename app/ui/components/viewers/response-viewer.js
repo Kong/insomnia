@@ -182,6 +182,16 @@ class ResponseViewer extends PureComponent {
           <SimplePDF file={`data:${justContentType};base64,${base64Body}`}/>
         </div>
       );
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
+      const justContentType = contentType.split(';')[0];
+      const base64Body = bodyBuffer.toString('base64');
+      return (
+        <div className="vertically-center">
+          <audio controls>
+            <source src={`data:${justContentType};base64,${base64Body}`} />
+          </audio>
+        </div>
+      );
     } else if (previewMode === PREVIEW_MODE_RAW) {
       const match = contentType.match(/charset=([\w-]+)/);
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
