@@ -3,7 +3,7 @@
 .graphql-editor {
   display: grid;
   height: 100%;
-  grid-template-rows: minmax(0, auto)
+  grid-template-rows: minmax(0, 1fr)
   min-content
   min-content
   min-content
@@ -20,7 +20,6 @@
   .graphql-editor__query, .graphql-editor__variables {
     height: 100%;
     max-height: 100%;
-    overflow: auto;
   }
 
   .graphql-editor__query .cm-attribute {
