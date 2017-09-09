@@ -8,18 +8,17 @@ build: off
 shallow_clone: true
 platform: x64
 environment:
-  NODEJS_VERSION: "7"
+  NODEJS_VERSION: "8"
   CSC_LINK: '%WINDOWS_CSC_LINK%'
   CSC_KEY_PASSWORD: '%WINDOWS_CSC_KEY_PASSWORD%'
 
 # Things to install after repo clone
 install:
   - ps: Install-Product node $env:NODEJS_VERSION $env:Platform
-  - npm install -g npm@5 > Nul
-  - npm config set msvs_version 2013
-  - npm install > NUL
   - node --version
   - npm --version
+  - npm config set msvs_version 2013
+  - npm install > NUL
   - npm test
 
 cache:
