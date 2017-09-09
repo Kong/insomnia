@@ -265,7 +265,7 @@ describe('actuallySend()', () => {
           'Transfer-Encoding: '
         ],
         NOPROGRESS: false,
-        INFILESIZE: 13,
+        INFILESIZE_LARGE: 13,
         PROXY: '',
         TIMEOUT_MS: 0,
         UPLOAD: 1,

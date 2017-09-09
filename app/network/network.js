@@ -400,7 +400,7 @@ export function _actuallySend (
         const fileName = renderedRequest.body.fileName || '';
         const fd = fs.openSync(fileName, 'r+');
 
-        setOpt(Curl.option.INFILESIZE, size);
+        setOpt(Curl.option.INFILESIZE_LARGE, size);
         setOpt(Curl.option.UPLOAD, 1);
         setOpt(Curl.option.READDATA, fd);
 

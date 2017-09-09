@@ -12,7 +12,7 @@ declare class Curl {
     HTTPGET: number,
     HTTPHEADER: number,
     HTTPPOST: number,
-    INFILESIZE: number,
+    INFILESIZE_LARGE: number,
     KEYPASSWD: number,
     MAXREDIRS: number,
     NETRC: number,
