@@ -150,6 +150,17 @@ class ResponseViewer extends PureComponent {
       // Nothing
     }
 
+    // Try to detect HTML in all cases (even if header is set). It is fairly
+    // common for webservers to send errors in HTML by default.
+    // NOTE: This will probably never throw but I'm not 100% so wrap anyway
+    try {
+      if (bodyBuffer.slice(0, 100).toString().trim().match(/^<!doctype html.*>/i)) {
+        contentType = 'text/html';
+      }
+    } catch (e) {
+      // Nothing
+    }
+
     const ct = contentType.toLowerCase();
     if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
@@ -188,7 +199,7 @@ class ResponseViewer extends PureComponent {
       return (
         <div className="vertically-center">
           <audio controls>
-            <source src={`data:${justContentType};base64,${base64Body}`} />
+            <source src={`data:${justContentType};base64,${base64Body}`}/>
           </audio>
         </div>
       );
