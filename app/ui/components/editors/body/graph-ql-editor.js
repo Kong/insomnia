@@ -141,6 +141,10 @@ class GraphQLEditor extends React.PureComponent {
     }
   }
 
+  _handleRefreshSchema (): void {
+    this._fetchAndSetSchema(this.props.request);
+  }
+
   _handlePrettify () {
     const {body, forceRefreshKey} = this.state;
     const {variables, query} = body;
@@ -224,7 +228,7 @@ class GraphQLEditor extends React.PureComponent {
     }
 
     return (
-      <div className="txt-sm super-faint italic pad-sm">
+      <div className="txt-sm super-faint italic pad-sm inline-block">
         {message}
       </div>
     );
@@ -290,6 +294,12 @@ class GraphQLEditor extends React.PureComponent {
           )}
         </div>
         <div className="graphql-editor__schema-notice">
+          <button
+            className="icon pad-left-sm pad-top-sm pad-bottom-sm"
+            onClick={this._handleRefreshSchema}
+          >
+            <i className="fa fa-refresh" />
+          </button>
           {this.renderSchemaFetchMessage()}
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
