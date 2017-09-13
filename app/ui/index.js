@@ -21,12 +21,6 @@ import {isDevelopment} from '../common/constants';
   await initAnalytics(getAccountId());
   await initPlugins();
 
-  // Make sure CookieJars and environments exist for all workspaces
-  for (const workspace of await models.workspace.all()) {
-    await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.environment.getOrCreateForWorkspace(workspace);
-  }
-
   // Create Redux store
   const store = await initStore();
 

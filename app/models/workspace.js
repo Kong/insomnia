@@ -1,6 +1,7 @@
 // @flow
 import type {BaseModel} from './index';
 import * as db from '../common/database';
+import * as models from './index';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -46,8 +47,15 @@ export function getById (id: string): Promise<Workspace | null> {
   return db.get(type, id);
 }
 
-export function create (patch: Object = {}): Promise<Workspace> {
-  return db.docCreate(type, patch);
+export async function create (patch: Object = {}): Promise<Workspace> {
+  const workspace = await db.docCreate(type, patch);
+
+  // Make sure CookieJars and environments exist for all workspaces
+  // TODO: Find a better place to do this
+  await models.cookieJar.getOrCreateForParentId(workspace._id);
+  await models.environment.getOrCreateForWorkspace(workspace);
+
+  return workspace;
 }
 
 export async function all (): Promise<Array<Workspace>> {
