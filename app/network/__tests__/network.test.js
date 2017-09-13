@@ -31,7 +31,8 @@ describe('actuallySend()', () => {
       lastAccessed: new Date('2096-10-05T04:40:49.505Z')
     }];
 
-    await models.cookieJar.create({
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
+    await models.cookieJar.update(cookieJar, {
       parentId: workspace._id,
       cookies
     });

@@ -33,19 +33,23 @@ export function findByParentId (parentId) {
   return db.find(type, {parentId});
 }
 
-export async function getOrCreateForWorkspace (workspace) {
+export async function getOrCreateForWorkspaceId (workspaceId) {
   let environment = await db.getWhere(type, {
-    parentId: workspace._id
+    parentId: workspaceId
   });
 
   if (!environment) {
     environment = await create({
-      parentId: workspace._id,
+      parentId: workspaceId,
       name: 'Base Environment'
     });
   }
 
   return environment;
+}
+
+export async function getOrCreateForWorkspace (workspace) {
+  return getOrCreateForWorkspaceId(workspace._id);
 }
 
 export function getById (id) {

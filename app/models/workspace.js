@@ -32,13 +32,17 @@ export function init () {
   };
 }
 
-export function migrate (doc: Object) {
+export async function migrate (doc: Object) {
   // There was a bug on import that would set this to the current workspace ID.
   // Let's remove it here so that nothing bad happens.
   if (doc.parentId !== null) {
     // Save it to the DB for this one
     process.nextTick(() => update(doc, {parentId: null}));
   }
+
+  // Ensure child dependencies exist
+  await models.cookieJar.getOrCreateForParentId(doc._id);
+  await models.environment.getOrCreateForWorkspaceId(doc._id);
 
   return doc;
 }
@@ -47,15 +51,8 @@ export function getById (id: string): Promise<Workspace | null> {
   return db.get(type, id);
 }
 
-export async function create (patch: Object = {}): Promise<Workspace> {
-  const workspace = await db.docCreate(type, patch);
-
-  // Make sure CookieJars and environments exist for all workspaces
-  // TODO: Find a better place to do this
-  await models.cookieJar.getOrCreateForParentId(workspace._id);
-  await models.environment.getOrCreateForWorkspace(workspace);
-
-  return workspace;
+export function create (patch: Object = {}): Promise<Workspace> {
+  return db.docCreate(type, patch);
 }
 
 export async function all (): Promise<Array<Workspace>> {

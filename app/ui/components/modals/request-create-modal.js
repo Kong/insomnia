@@ -37,7 +37,7 @@ class RequestCreateModal extends PureComponent {
     e.preventDefault();
 
     const {parentId, selectedContentType, selectedMethod} = this.state;
-    const request = models.initModel(models.request.type, {
+    const request = await models.initModel(models.request.type, {
       parentId,
       name: this._input.value,
       method: selectedMethod

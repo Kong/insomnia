@@ -248,8 +248,6 @@ describe('Integration tests for creating Resources and pushing', () => {
     await models.request.create({_id: 'req_1', name: 'Request 1', parentId: 'wrk_1'});
     await models.request.create({_id: 'req_2', name: 'Request 2', parentId: 'wrk_1'});
     await models.request.create({_id: 'req_3', name: 'Request 3', parentId: 'wrk_1'});
-    await models.cookieJar.create({_id: 'jar_1', name: 'Jar 1', parentId: 'wrk_1'});
-    await models.environment.create({_id: 'env_1', name: 'Env 1', parentId: 'wrk_1'});
     await models.environment.create({_id: 'env_2', name: 'Env Prv', parentId: 'wrk_1', isPrivate: true});
 
     // Flush changes just to be sure they won't affect our tests
@@ -259,8 +257,8 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Assert that all our new models were created
     expect((await models.workspace.all()).length).toBe(2);
     expect((await models.request.all()).length).toBe(3);
-    expect((await models.environment.all()).length).toBe(2);
-    expect((await models.cookieJar.all()).length).toBe(1);
+    expect((await models.environment.all()).length).toBe(3);
+    expect((await models.cookieJar.all()).length).toBe(2);
 
     // Assert that initializing sync will create the initial resources
     expect((await syncStorage.allConfigs()).length).toBe(0);
@@ -269,7 +267,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     jest.runOnlyPendingTimers();
     await promise;
     expect((await syncStorage.allConfigs()).length).toBe(2);
-    expect((await syncStorage.allResources()).length).toBe(7);
+    expect((await syncStorage.allResources()).length).toBe(9);
 
     // Mark all configs as auto sync
     const configs = await syncStorage.allConfigs();
@@ -304,12 +302,12 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Assert
     expect((await syncStorage.allConfigs()).length).toBe(2);
-    expect((await syncStorage.allResources()).length).toBe(8);
+    expect((await syncStorage.allResources()).length).toBe(10);
     expect(_decryptResource(resource).url).toBe('https://google.com');
     expect(resource.removed).toBe(false);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(8);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(10);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });
@@ -368,7 +366,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(resource.removed).toBe(false);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(7);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(9);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });
@@ -391,7 +389,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(updatedResource.removed).toBe(true);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(7);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(9);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });

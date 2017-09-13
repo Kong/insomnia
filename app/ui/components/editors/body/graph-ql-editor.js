@@ -1,5 +1,6 @@
 // @flow
 import type {Request} from '../../../../models/request';
+import classnames from 'classnames';
 import {newBodyRaw} from '../../../../models/request';
 import React from 'react';
 import autobind from 'autobind-decorator';
@@ -228,7 +229,7 @@ class GraphQLEditor extends React.PureComponent {
     }
 
     return (
-      <div className="txt-sm super-faint italic pad-sm inline-block">
+      <div className="txt-sm super-faint italic pad-sm no-pad-right inline-block">
         {message}
       </div>
     );
@@ -251,7 +252,8 @@ class GraphQLEditor extends React.PureComponent {
       schemaFetchError,
       hideSchemaFetchErrors,
       variablesSyntaxError,
-      forceRefreshKey
+      forceRefreshKey,
+      schemaIsFetching
     } = this.state;
 
     const {
@@ -294,13 +296,10 @@ class GraphQLEditor extends React.PureComponent {
           )}
         </div>
         <div className="graphql-editor__schema-notice">
-          <button
-            className="icon pad-left-sm pad-top-sm pad-bottom-sm"
-            onClick={this._handleRefreshSchema}
-          >
-            <i className="fa fa-refresh" />
-          </button>
           {this.renderSchemaFetchMessage()}
+          <button className={classnames('icon space-left', {'fa-spin': schemaIsFetching})} onClick={this._handleRefreshSchema}>
+            <i className="fa fa-refresh"/>
+          </button>
         </div>
         <h2 className="no-margin pad-left-sm pad-top-sm pad-bottom-sm">
           Query Variables <HelpTooltip>Variables to use in GraphQL query <br/>(JSON

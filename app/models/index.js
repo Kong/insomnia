@@ -82,7 +82,7 @@ export function getModelName (type: string, count: number = 1) {
   }
 }
 
-export function initModel (type: string, ...sources: Array<Object>) {
+export async function initModel <T: BaseModel> (type: string, ...sources: Array<Object>): Promise<T> {
   const model = getModel(type);
 
   if (!model) {
@@ -108,14 +108,14 @@ export function initModel (type: string, ...sources: Array<Object>) {
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  model.migrate(fullObject);
+  const migratedDoc = await model.migrate(fullObject);
 
   // Prune extra keys from doc
-  for (const key of Object.keys(fullObject)) {
+  for (const key of Object.keys(migratedDoc)) {
     if (!objectDefaults.hasOwnProperty(key)) {
-      delete fullObject[key];
+      delete migratedDoc[key];
     }
   }
 
-  return fullObject;
+  return migratedDoc;
 }

@@ -253,7 +253,7 @@ describe('migrate()', () => {
     expect(models.request.migrate(noBody)).toEqual(expected2);
   });
 
-  it('migrates from initModel()', () => {
+  it('migrates from initModel()', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
 
     const original = {
@@ -283,7 +283,7 @@ describe('migrate()', () => {
       settingEncodeUrl: true
     };
 
-    const migrated = models.initModel(models.request.type, original);
+    const migrated = await models.initModel(models.request.type, original);
     expect(migrated).toEqual(expected);
   });
 });

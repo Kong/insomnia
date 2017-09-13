@@ -8,7 +8,7 @@ describe('export()', () => {
   it('succeed with username and password', async () => {
     const w = await models.workspace.create({name: 'Workspace'});
     const r1 = await models.request.create({name: 'Request', parentId: w._id});
-    const eBase = await models.environment.create({name: 'Base', parentId: w._id});
+    const eBase = await models.environment.getOrCreateForWorkspace(w);
     const ePub = await models.environment.create({name: 'Public', parentId: eBase._id});
     await models.environment.create({name: 'Private', isPrivate: true, parentId: eBase._id});
 
@@ -21,8 +21,9 @@ describe('export()', () => {
     expect(data.__export_source).toBe(`insomnia.desktop.app:v${getAppVersion()}`);
     expect(data.resources[0]._id).toBe(w._id);
     expect(data.resources[1]._id).toBe(eBase._id);
-    expect(data.resources[2]._id).toBe(r1._id);
-    expect(data.resources[3]._id).toBe(ePub._id);
-    expect(data.resources.length).toBe(4);
+    expect(data.resources[2]._id).toBe('jar_dd2ccc1a2745477a881a9e8ef9d42403');
+    expect(data.resources[3]._id).toBe(r1._id);
+    expect(data.resources[4]._id).toBe(ePub._id);
+    expect(data.resources.length).toBe(5);
   });
 });
