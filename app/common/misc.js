@@ -3,9 +3,10 @@ import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
 import {format as urlFormat, parse as urlParse} from 'url';
-import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
+import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment, isMac} from './constants';
 import * as querystring from './querystring';
 import {shell} from 'electron';
+import type {Hotkey} from './hotkeys';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
@@ -319,4 +320,33 @@ export function fuzzyMatch (searchString: string, text: string): boolean {
   const regexSearchString = escapeRegex(searchString.toLowerCase()).split('').join('.*');
   const toMatch = new RegExp(regexSearchString);
   return toMatch.test(text.toLowerCase());
+}
+
+export function executeHotKey (
+  e: KeyboardEvent,
+  definition: Hotkey,
+  callback: Function
+): void {
+  const isMetaPressed = isMac() ? e.metaKey : e.ctrlKey;
+  const isAltPressed = isMac() ? e.ctrlKey : e.altKey;
+
+  const {meta, alt, key} = definition;
+  const keys = Array.isArray(key) ? key : [key];
+
+  for (const key of keys) {
+    if ((alt && !isAltPressed) || (!alt && isAltPressed)) {
+      continue;
+    }
+
+    if ((meta && !isMetaPressed) || (!meta && isMetaPressed)) {
+      continue;
+    }
+
+    if (key !== e.key) {
+      continue;
+    }
+
+    // We made it!
+    callback();
+  }
 }

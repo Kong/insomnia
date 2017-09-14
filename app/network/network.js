@@ -25,7 +25,7 @@ import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
 import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
-import urlMatchesCertHost from './url-matches-cert-host';
+import {urlMatchesCertHost} from './url-matches-cert-host';
 import aws4 from 'aws4';
 
 export type ResponsePatch = {

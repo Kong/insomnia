@@ -9,6 +9,9 @@ import {showPrompt} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
+import {executeHotKey} from '../../common/misc';
+import * as hotkeys from '../../common/hotkeys';
+import KeydownBinder from './keydown-binder';
 
 @autobind
 class RequestUrlBar extends PureComponent {
@@ -26,6 +29,10 @@ class RequestUrlBar extends PureComponent {
 
   _setDropdownRef (n) {
     this._dropdown = n;
+  }
+
+  _setMethodDropdownRef (n) {
+    this._methodDropdown = n;
   }
 
   _setInputRef (n) {
@@ -109,13 +116,21 @@ class RequestUrlBar extends PureComponent {
       return;
     }
 
-    // meta+l
-    const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
-    if (metaPressed && e.keyCode === 76) {
-      e.preventDefault();
+    executeHotKey(e, hotkeys.FOCUS_URL, () => {
+      if (!this._input) {
+        return;
+      }
+
       this._input.focus();
       this._input.selectAll();
-    }
+    });
+
+    executeHotKey(e, hotkeys.TOGGLE_METHOD_DROPDOWN, () => {
+      if (!this._methodDropdown) {
+        return;
+      }
+      this._methodDropdown.toggle();
+    });
   }
 
   _handleSend () {
@@ -199,14 +214,6 @@ class RequestUrlBar extends PureComponent {
     // If we're not pressing a meta key, cancel dropdown and send the request
     e.stopPropagation(); // Don't trigger the dropdown
     this._handleFormSubmit(e);
-  }
-
-  componentDidMount () {
-    document.body.addEventListener('keydown', this._handleKeyDown);
-  }
-
-  componentWillUnmount () {
-    document.body.removeEventListener('keydown', this._handleKeyDown);
   }
 
   componentWillReceiveProps (nextProps) {
@@ -296,26 +303,30 @@ class RequestUrlBar extends PureComponent {
     } = this.props;
 
     return (
-      <div className="urlbar">
-        <MethodDropdown onChange={this._handleMethodChange} method={method}>
-          {method} <i className="fa fa-caret-down"/>
-        </MethodDropdown>
-        <form onSubmit={this._handleFormSubmit}>
-          <OneLineEditor
-            key={uniquenessKey}
-            ref={this._setInputRef}
-            onPaste={this._handleUrlPaste}
-            forceEditor
-            type="text"
-            render={handleRender}
-            getAutocompleteConstants={handleAutocompleteUrls}
-            getRenderContext={handleGetRenderContext}
-            placeholder="https://api.myproduct.com/v1/users"
-            defaultValue={url}
-            onChange={this._handleUrlChange}/>
-          {this.renderSendButton()}
-        </form>
-      </div>
+      <KeydownBinder onKeydown={this._handleKeyDown}>
+        <div className="urlbar">
+          <MethodDropdown ref={this._setMethodDropdownRef}
+                          onChange={this._handleMethodChange}
+                          method={method}>
+            {method} <i className="fa fa-caret-down"/>
+          </MethodDropdown>
+          <form onSubmit={this._handleFormSubmit}>
+            <OneLineEditor
+              key={uniquenessKey}
+              ref={this._setInputRef}
+              onPaste={this._handleUrlPaste}
+              forceEditor
+              type="text"
+              render={handleRender}
+              getAutocompleteConstants={handleAutocompleteUrls}
+              getRenderContext={handleGetRenderContext}
+              placeholder="https://api.myproduct.com/v1/users"
+              defaultValue={url}
+              onChange={this._handleUrlChange}/>
+            {this.renderSendButton()}
+          </form>
+        </div>
+      </KeydownBinder>
     );
   }
 }

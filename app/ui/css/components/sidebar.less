@@ -236,24 +236,24 @@
 
     &.sidebar__item--active > button {
       color: var(--color-font);
-
       .tag {
         opacity: 1;
       }
     }
 
-    // Active sidebar request
-    &.sidebar__item--request > button {
+    & > button {
       border-left: @padding-xs solid transparent;
     }
 
-    &.sidebar__item--active.sidebar__item--request > button,
-    &.sidebar__item--active.sidebar__item--request > .sidebar__actions,
-    &:hover > button,
-    & > button:focus,
-    &:hover .sidebar__actions {
-      transition: background-color 130ms ease-out;
+    & > button:focus {
+      border-left-color: var(--color-surprise);
+    }
+
+    &.sidebar__item--active.sidebar__item--request,
+    &:focus,
+    &:hover {
       background-color: @hl-xs;
+      transition: background-color 0ms;
     }
 
     .tag {

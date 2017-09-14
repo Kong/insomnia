@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {isMac} from '../../../common/constants';
+import KeydownBinder from '../keydown-binder';
 
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
@@ -23,13 +24,6 @@ class Modal extends PureComponent {
   _handleKeyDown (e) {
     if (!this.state.open) {
       return;
-    }
-
-    // Don't bubble up meta events up past the modal no matter what
-    // Example: ctrl+Enter to send requests
-    const isMeta = isMac() ? e.metaKey : e.ctrlKey;
-    if (isMeta) {
-      e.stopPropagation();
     }
 
     // Don't check for close keys if we don't want them
@@ -134,19 +128,20 @@ class Modal extends PureComponent {
     }
 
     return (
-      <div ref={this._setModalRef}
-           onKeyDown={this._handleKeyDown}
-           tabIndex="-1"
-           className={classes}
-           style={styles}
-           onClick={this._handleClick}>
-        <div className="modal__backdrop overlay theme--overlay" data-close-modal></div>
-        <div className="modal__content__wrapper">
-          <div className="modal__content" key={forceRefreshCounter}>
-            {children}
+      <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
+        <div ref={this._setModalRef}
+             tabIndex="-1"
+             className={classes}
+             style={styles}
+             onClick={this._handleClick}>
+          <div className="modal__backdrop overlay theme--overlay" data-close-modal></div>
+          <div className="modal__content__wrapper">
+            <div className="modal__content" key={forceRefreshCounter}>
+              {children}
+            </div>
           </div>
         </div>
-      </div>
+      </KeydownBinder>
     );
   }
 }
