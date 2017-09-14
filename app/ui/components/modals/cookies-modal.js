@@ -152,9 +152,9 @@ class CookiesModal extends PureComponent {
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
-        <ModalBody className="cookie-list" noScroll>
+        <ModalBody noScroll>
           {cookieJar && (
-            <div>
+            <div className="cookie-list">
               <div className="pad">
                 <div className="form-control form-control--outlined">
                   <label>Filter Cookies
@@ -166,18 +166,16 @@ class CookiesModal extends PureComponent {
                   </label>
                 </div>
               </div>
-              <div className="cookie-list__list border-top">
-                <div className="pad-top">
-                  <CookieList
-                    handleShowModifyCookieModal={handleShowModifyCookieModal}
-                    handleRender={handleRender}
-                    cookies={this._getVisibleCookies()}
-                    onCookieAdd={this._handleCookieAdd}
-                    onCookieDelete={this._handleCookieDelete}
-                    // Set the domain to the filter so that it shows up if we're filtering
-                    newCookieDomainName={filter || 'domain.com'}
-                  />
-                </div>
+              <div className="cookie-list__list border-tops pad">
+                <CookieList
+                  handleShowModifyCookieModal={handleShowModifyCookieModal}
+                  handleRender={handleRender}
+                  cookies={this._getVisibleCookies()}
+                  onCookieAdd={this._handleCookieAdd}
+                  onCookieDelete={this._handleCookieDelete}
+                  // Set the domain to the filter so that it shows up if we're filtering
+                  newCookieDomainName={filter || 'domain.com'}
+                />
               </div>
             </div>
           )}

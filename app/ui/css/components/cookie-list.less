@@ -1,8 +1,8 @@
 @import '../constants/dimensions';
 @import '../constants/colors';
 
-.cookie-list.modal__body {
-  overflow: visible;
+.cookie-list {
+  height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 
@@ -22,8 +22,9 @@
   }
 
   .cookie-list__list {
+    height: 100%;
     padding: 0 @padding-md @padding-md @padding-md;
-    overflow-y: auto;
     position: relative;
+    overflow-y: auto;
   }
 }
