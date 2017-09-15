@@ -6,7 +6,7 @@ import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} f
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../analytics/index';
 import Tooltip from '../tooltip';
-import {executeHotKey} from '../../../common/misc';
+import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
 
@@ -97,7 +97,7 @@ class EnvironmentsDropdown extends PureComponent {
 
           <DropdownItem onClick={this._handleShowEnvironmentModal}>
             <i className="fa fa-wrench"/> Manage Environments
-            <DropdownHint char="E"/>
+            <DropdownHint hotkey={hotkeys.SHOW_ENVIRONMENTS}/>
           </DropdownItem>
         </Dropdown>
       </KeydownBinder>

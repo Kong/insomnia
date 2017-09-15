@@ -28,7 +28,7 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import {debounce, executeHotKey} from '../../common/misc';
+import {debounce} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -37,6 +37,7 @@ import {showAlert, showPrompt} from '../components/modals/index';
 import {exportHar} from '../../common/har';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from '../components/keydown-binder';
+import {executeHotKey} from '../../common/hotkeys';
 
 @autobind
 class App extends PureComponent {
@@ -68,45 +69,40 @@ class App extends PureComponent {
       [hotkeys.SHOW_WORKSPACE_SETTINGS, () => {
         const {activeWorkspace} = this.props;
         showModal(WorkspaceSettingsModal, activeWorkspace);
-        trackEvent('HotKey', 'Workspace Settings');
       }],
       [hotkeys.SHOW_REQUEST_SETTINGS, () => {
         if (this.props.activeRequest) {
           showModal(RequestSettingsModal, {request: this.props.activeRequest});
-          trackEvent('HotKey', 'Request Settings');
         }
       }],
       [hotkeys.SHOW_QUICK_SWITCHER, () => {
         showModal(RequestSwitcherModal);
-        trackEvent('HotKey', 'Quick Switcher');
       }],
       [hotkeys.SEND_REQUEST_META, this._handleSendShortcut],
       [hotkeys.SEND_REQUEST_F5, this._handleSendShortcut],
       [hotkeys.SHOW_ENVIRONMENTS, () => {
         const {activeWorkspace} = this.props;
         showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
-        trackEvent('HotKey', 'Environments');
       }],
       [hotkeys.SHOW_COOKIES, () => {
         const {activeWorkspace} = this.props;
         showModal(CookiesModal, activeWorkspace);
-        trackEvent('HotKey', 'Cookies');
       }],
       [hotkeys.CREATE_REQUEST, () => {
         const {activeRequest, activeWorkspace} = this.props;
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
         this._requestCreate(parentId);
-        trackEvent('HotKey', 'Request Create');
       }],
       [hotkeys.CREATE_FOLDER, () => {
         const {activeRequest, activeWorkspace} = this.props;
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
         this._requestGroupCreate(parentId);
-        trackEvent('HotKey', 'Folder Create');
+      }],
+      [hotkeys.GENERATE_CODE, async () => {
+        showModal(GenerateCodeModal, this.props.activeRequest);
       }],
       [hotkeys.DUPLICATE_REQUEST, async () => {
         await this._requestDuplicate(this.props.activeRequest);
-        trackEvent('HotKey', 'Request Duplicate');
       }]
     ];
   }
@@ -117,7 +113,6 @@ class App extends PureComponent {
       activeRequest ? activeRequest._id : 'n/a',
       activeEnvironment ? activeEnvironment._id : 'n/a',
     );
-    trackEvent('HotKey', 'Send');
   }
 
   _setRequestPaneRef (n) {

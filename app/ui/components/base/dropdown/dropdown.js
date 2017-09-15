@@ -6,9 +6,10 @@ import classnames from 'classnames';
 import DropdownButton from './dropdown-button';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
-import {executeHotKey, fuzzyMatch} from '../../../../common/misc';
+import {fuzzyMatch} from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
 import * as hotkeys from '../../../../common/hotkeys';
+import {executeHotKey} from '../../../../common/hotkeys';
 
 @autobind
 class Dropdown extends PureComponent {

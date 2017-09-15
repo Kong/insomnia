@@ -2,8 +2,9 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import {isMac} from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
+import * as hotkeys from '../../../common/hotkeys';
+import {pressedHotKey} from '../../../common/hotkeys';
 
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
@@ -32,7 +33,7 @@ class Modal extends PureComponent {
     }
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-    const pressedEscape = e.keyCode === 27;
+    const pressedEscape = pressedHotKey(e, hotkeys.CLOSE_MODAL);
     const pressedElse = closeOnKeyCodes.find(c => c === e.keyCode);
 
     if (pressedEscape || pressedElse) {

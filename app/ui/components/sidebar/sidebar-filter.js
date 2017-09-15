@@ -5,7 +5,7 @@ import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/drop
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import {trackEvent} from '../../../analytics/index';
 import KeydownBinder from '../keydown-binder';
-import {executeHotKey} from '../../../common/misc';
+import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 
 @autobind
@@ -64,11 +64,11 @@ class SidebarFilter extends PureComponent {
             </DropdownButton>
             <DropdownItem onClick={this._handleRequestCreate}>
               <i className="fa fa-plus-circle"/> New Request
-              <DropdownHint char="N"></DropdownHint>
+              <DropdownHint hotkey={hotkeys.CREATE_REQUEST}/>
             </DropdownItem>
             <DropdownItem onClick={this._handleRequestGroupCreate}>
               <i className="fa fa-folder"/> New Folder
-              <DropdownHint char="N" shift></DropdownHint>
+              <DropdownHint hotkey={hotkeys.CREATE_FOLDER}/>
             </DropdownItem>
           </Dropdown>
         </div>

@@ -18,7 +18,7 @@ import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-moda
 import * as session from '../../../sync/session';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
-import {executeHotKey} from '../../../common/misc';
+import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
 
@@ -149,7 +149,7 @@ class WorkspaceDropdown extends PureComponent {
           <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
           <DropdownItem onClick={this._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench"/> Workspace Settings
-            <DropdownHint shift char=","/>
+            <DropdownHint hotkey={hotkeys.SHOW_WORKSPACE_SETTINGS}/>
           </DropdownItem>
 
           <DropdownItem onClick={this._handleShowShareSettings}>
@@ -180,7 +180,7 @@ class WorkspaceDropdown extends PureComponent {
 
           <DropdownItem onClick={this._handleShowSettings}>
             <i className="fa fa-cog"/> Preferences
-            <DropdownHint char=","/>
+            <DropdownHint hotkey={hotkeys.SHOW_SETTINGS}/>
           </DropdownItem>
           <DropdownItem onClick={this._handleShowExport}>
             <i className="fa fa-share"/> Import/Export

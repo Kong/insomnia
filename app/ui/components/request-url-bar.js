@@ -9,7 +9,7 @@ import {showPrompt} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
-import {executeHotKey} from '../../common/misc';
+import {executeHotKey} from '../../common/hotkeys';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from './keydown-binder';
 
@@ -259,7 +259,7 @@ class RequestUrlBar extends PureComponent {
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
             <i className="fa fa-arrow-circle-o-right"/> Send Now
-            <DropdownHint char="Enter"/>
+            <DropdownHint hotkey={hotkeys.SEND_REQUEST_META}/>
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
             <i className="fa fa-code"/> Generate Client Code
