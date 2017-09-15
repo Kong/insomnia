@@ -38,27 +38,19 @@ export const reducer = combineReducers({
  */
 async function getAllDocs () {
   // Restore docs in parent->child->grandchild order
-  const allQueryResults = await Promise.all([
-    models.settings.all(),
-    models.workspace.all(),
-    models.workspaceMeta.all(),
-    models.environment.all(),
-    models.cookieJar.all(),
-    models.requestGroup.all(),
-    models.requestGroupMeta.all(),
-    models.request.all(),
-    models.requestMeta.all(),
-    models.response.all(),
-    models.oAuth2Token.all()
-  ]);
-
-  // Aggregate all results into one big array
-  const allDocs = [];
-  for (const result of allQueryResults) {
-    for (const doc of result) {
-      allDocs.push(doc);
-    }
-  }
+  const allDocs = [
+    ...await models.settings.all(),
+    ...await models.workspace.all(),
+    ...await models.workspaceMeta.all(),
+    ...await models.environment.all(),
+    ...await models.cookieJar.all(),
+    ...await models.requestGroup.all(),
+    ...await models.requestGroupMeta.all(),
+    ...await models.request.all(),
+    ...await models.requestMeta.all(),
+    ...await models.response.all(),
+    ...await models.oAuth2Token.all()
+  ];
 
   return allDocs;
 }
