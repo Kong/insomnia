@@ -131,6 +131,10 @@ class RequestUrlBar extends PureComponent {
       }
       this._methodDropdown.toggle();
     });
+
+    executeHotKey(e, hotkeys.SHOW_SEND_OPTIONS, () => {
+      this._dropdown.toggle(true);
+    });
   }
 
   _handleSend () {
@@ -259,7 +263,7 @@ class RequestUrlBar extends PureComponent {
           <DropdownDivider>Basic</DropdownDivider>
           <DropdownItem type="submit">
             <i className="fa fa-arrow-circle-o-right"/> Send Now
-            <DropdownHint hotkey={hotkeys.SEND_REQUEST_META}/>
+            <DropdownHint hotkey={hotkeys.SEND_REQUEST}/>
           </DropdownItem>
           <DropdownItem onClick={this._handleGenerateCode}>
             <i className="fa fa-code"/> Generate Client Code

@@ -22,7 +22,8 @@ class Shortcuts extends PureComponent {
         <table className="table--fancy">
           <tbody>
           {this.renderHotkey(hotkeys.SHOW_QUICK_SWITCHER)}
-          {this.renderHotkey(hotkeys.SEND_REQUEST_META)}
+          {this.renderHotkey(hotkeys.SEND_REQUEST)}
+          {this.renderHotkey(hotkeys.SHOW_SEND_OPTIONS)}
           {this.renderHotkey(hotkeys.CREATE_REQUEST)}
           {this.renderHotkey(hotkeys.CREATE_FOLDER)}
           {this.renderHotkey(hotkeys.DUPLICATE_REQUEST)}
@@ -37,7 +38,6 @@ class Shortcuts extends PureComponent {
           {this.renderHotkey(hotkeys.SHOW_SETTINGS)}
           {this.renderHotkey(hotkeys.SHOW_WORKSPACE_SETTINGS)}
           {this.renderHotkey(hotkeys.SHOW_REQUEST_SETTINGS)}
-          {this.renderHotkey(hotkeys.SHOW_KEYBOARD_SHORTCUTS)}
           {this.renderHotkey(hotkeys.TOGGLE_MAIN_MENU)}
           </tbody>
         </table>

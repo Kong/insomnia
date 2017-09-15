@@ -27,14 +27,6 @@ export const SHOW_REQUEST_SETTINGS: Hotkey = {
   keycode: keycodes.comma
 };
 
-export const SHOW_KEYBOARD_SHORTCUTS: Hotkey = {
-  description: 'Show Keyboard Shortcuts',
-  meta: true,
-  alt: false,
-  shift: true,
-  keycode: keycodes.forwardslash
-};
-
 export const SHOW_SETTINGS: Hotkey = {
   description: 'Show App Preferences',
   meta: true,
@@ -75,7 +67,7 @@ export const SHOW_AUTOCOMPLETE: Hotkey = {
   keycode: keycodes.space
 };
 
-export const SEND_REQUEST_META: Hotkey = {
+export const SEND_REQUEST: Hotkey = {
   description: 'Send Request',
   meta: true,
   alt: false,
@@ -89,6 +81,14 @@ export const SEND_REQUEST_F5: Hotkey = {
   alt: false,
   shift: false,
   keycode: keycodes.f5
+};
+
+export const SHOW_SEND_OPTIONS: Hotkey = {
+  description: 'Send Request (Options)',
+  meta: true,
+  alt: false,
+  shift: true,
+  keycode: keycodes.enter
 };
 
 export const SHOW_ENVIRONMENTS: Hotkey = {

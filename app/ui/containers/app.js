@@ -78,7 +78,7 @@ class App extends PureComponent {
       [hotkeys.SHOW_QUICK_SWITCHER, () => {
         showModal(RequestSwitcherModal);
       }],
-      [hotkeys.SEND_REQUEST_META, this._handleSendShortcut],
+      [hotkeys.SEND_REQUEST, this._handleSendShortcut],
       [hotkeys.SEND_REQUEST_F5, this._handleSendShortcut],
       [hotkeys.SHOW_ENVIRONMENTS, () => {
         const {activeWorkspace} = this.props;

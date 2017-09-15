@@ -269,7 +269,8 @@ class OAuth2Auth extends React.PureComponent {
       'redirectUrl',
       this._handleChangeRedirectUrl,
       'This can be whatever you want or need it to be. Insomnia will automatically ' +
-      'detect the redirect from the browser window and extract the credentials.'
+      'detect a redirect in the client browser window and extract the code from the ' +
+      'redirected URL'
     );
 
     const state = this.renderInputRow(

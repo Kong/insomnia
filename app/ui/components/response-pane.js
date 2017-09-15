@@ -187,7 +187,7 @@ class ResponsePane extends PureComponent {
                 <tr>
                   <td>Send Request</td>
                   <td className="text-right">
-                    <code><Hotkey hotkey={hotkeys.SEND_REQUEST_META}/></code>
+                    <code><Hotkey hotkey={hotkeys.SEND_REQUEST}/></code>
                   </td>
                 </tr>
                 <tr>

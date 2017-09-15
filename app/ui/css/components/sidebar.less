@@ -236,13 +236,14 @@
 
     &.sidebar__item--active > button {
       color: var(--color-font);
+
       .tag {
         opacity: 1;
       }
     }
 
     & > button {
-      border-left: @padding-xs solid transparent;
+      border-left: @padding-xxs solid transparent;
     }
 
     &.sidebar__item--active.sidebar__item--request,
@@ -287,31 +288,31 @@
   // Padding for nested folders
 
   .sidebar__list .sidebar__clickable {
-    padding-left: @padding-md;
+    padding-left: @padding-sm;
   }
 
   .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-md * 2;
+    padding-left: @padding-sm + @padding-md * 1;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-md * 3;
+    padding-left: @padding-sm + @padding-md * 2;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-md * 4;
+    padding-left: @padding-sm + @padding-md * 3;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-md * 5;
+    padding-left: @padding-sm + @padding-md * 4;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-md * 6;
+    padding-left: @padding-sm + @padding-md * 5;
   }
 
   .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
-    padding-left: @padding-md * 7;
+    padding-left: @padding-sm + @padding-md * 6;
   }
 
   // ~~~~~~~~~~~~~~~ //
