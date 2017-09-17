@@ -18,6 +18,9 @@ import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-moda
 import * as session from '../../../sync/session';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
+import {executeHotKey} from '../../../common/hotkeys';
+import * as hotkeys from '../../../common/hotkeys';
+import KeydownBinder from '../keydown-binder';
 
 @autobind
 class WorkspaceDropdown extends PureComponent {
@@ -42,6 +45,10 @@ class WorkspaceDropdown extends PureComponent {
         models.workspaceMeta.update(workspaceMeta, {hasSeen: true});
       }
     }
+  }
+
+  _setDropdownRef (n) {
+    this._dropdown = n;
   }
 
   _handleShowLogin () {
@@ -90,6 +97,12 @@ class WorkspaceDropdown extends PureComponent {
     });
   }
 
+  _handleKeydown (e) {
+    executeHotKey(e, hotkeys.TOGGLE_MAIN_MENU, () => {
+      this._dropdown && this._dropdown.toggle(true);
+    });
+  }
+
   render () {
     const {
       className,
@@ -112,83 +125,86 @@ class WorkspaceDropdown extends PureComponent {
     );
 
     return (
-      <Dropdown beside
-                className={classes}
-                onOpen={this._handleDropdownOpen}
-                onHide={this._handleDropdownHide}
-                {...other}>
-        <DropdownButton className="btn wide">
-          <h1 className="no-pad text-left">
-            <div className="pull-right">
-              {isLoading ? <i className="fa fa-refresh fa-spin"/> : null}
-              {unseenWorkspaces.length > 0 && (
-                <Tooltip message={unseenWorkspacesMessage} position="bottom">
-                  <i className="fa fa-asterisk space-left"/>
-                </Tooltip>
-              )}
-              <i className="fa fa-caret-down space-left"/>
-            </div>
-            {activeWorkspace.name}
-          </h1>
-        </DropdownButton>
-        <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
-        <DropdownItem onClick={this._handleShowWorkspaceSettings}>
-          <i className="fa fa-wrench"/> Workspace Settings
-          <DropdownHint shift char=","/>
-        </DropdownItem>
+      <KeydownBinder onKeydown={this._handleKeydown}>
+        <Dropdown beside
+                  ref={this._setDropdownRef}
+                  className={classes}
+                  onOpen={this._handleDropdownOpen}
+                  onHide={this._handleDropdownHide}
+                  {...other}>
+          <DropdownButton className="btn wide">
+            <h1 className="no-pad text-left">
+              <div className="pull-right">
+                {isLoading ? <i className="fa fa-refresh fa-spin"/> : null}
+                {unseenWorkspaces.length > 0 && (
+                  <Tooltip message={unseenWorkspacesMessage} position="bottom">
+                    <i className="fa fa-asterisk space-left"/>
+                  </Tooltip>
+                )}
+                <i className="fa fa-caret-down space-left"/>
+              </div>
+              {activeWorkspace.name}
+            </h1>
+          </DropdownButton>
+          <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
+          <DropdownItem onClick={this._handleShowWorkspaceSettings}>
+            <i className="fa fa-wrench"/> Workspace Settings
+            <DropdownHint hotkey={hotkeys.SHOW_WORKSPACE_SETTINGS}/>
+          </DropdownItem>
 
-        <DropdownItem onClick={this._handleShowShareSettings}>
-          <i className="fa fa-globe"/> Share <strong>{activeWorkspace.name}</strong>
-        </DropdownItem>
+          <DropdownItem onClick={this._handleShowShareSettings}>
+            <i className="fa fa-globe"/> Share <strong>{activeWorkspace.name}</strong>
+          </DropdownItem>
 
-        <DropdownDivider>Switch Workspace</DropdownDivider>
+          <DropdownDivider>Switch Workspace</DropdownDivider>
 
-        {nonActiveWorkspaces.map(w => {
-          const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
-          return (
-            <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
-              <i className="fa fa-random"/> To <strong>{w.name}</strong>
-              {isUnseen && (
-                <Tooltip message="This workspace is new">
-                  <i className="width-auto fa fa-asterisk surprise"/>
-                </Tooltip>
-              )}
+          {nonActiveWorkspaces.map(w => {
+            const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
+            return (
+              <DropdownItem key={w._id} onClick={this._handleSwitchWorkspace} value={w._id}>
+                <i className="fa fa-random"/> To <strong>{w.name}</strong>
+                {isUnseen && (
+                  <Tooltip message="This workspace is new">
+                    <i className="width-auto fa fa-asterisk surprise"/>
+                  </Tooltip>
+                )}
+              </DropdownItem>
+            );
+          })}
+
+          <DropdownItem onClick={this._handleWorkspaceCreate}>
+            <i className="fa fa-empty"/> New Workspace
+          </DropdownItem>
+
+          <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
+
+          <DropdownItem onClick={this._handleShowSettings}>
+            <i className="fa fa-cog"/> Preferences
+            <DropdownHint hotkey={hotkeys.SHOW_SETTINGS}/>
+          </DropdownItem>
+          <DropdownItem onClick={this._handleShowExport}>
+            <i className="fa fa-share"/> Import/Export
+          </DropdownItem>
+
+          {/* Not Logged In */}
+
+          {!this.state.loggedIn && (
+            <DropdownItem key="login" onClick={this._handleShowLogin}>
+              <i className="fa fa-sign-in"/> Log In
             </DropdownItem>
-          );
-        })}
+          )}
 
-        <DropdownItem onClick={this._handleWorkspaceCreate}>
-          <i className="fa fa-empty"/> New Workspace
-        </DropdownItem>
-
-        <DropdownDivider>Insomnia Version {getAppVersion()}</DropdownDivider>
-
-        <DropdownItem onClick={this._handleShowSettings}>
-          <i className="fa fa-cog"/> Preferences
-          <DropdownHint char=","/>
-        </DropdownItem>
-        <DropdownItem onClick={this._handleShowExport}>
-          <i className="fa fa-share"/> Import/Export
-        </DropdownItem>
-
-        {/* Not Logged In */}
-
-        {!this.state.loggedIn && (
-          <DropdownItem key="login" onClick={this._handleShowLogin}>
-            <i className="fa fa-sign-in"/> Log In
-          </DropdownItem>
-        )}
-
-        {!this.state.loggedIn && (
-          <DropdownItem key="invite"
-                        buttonClass={Link}
-                        href="https://insomnia.rest/pricing/"
-                        button>
-            <i className="fa fa-users"/> Upgrade to Plus
-            <i className="fa fa-star surprise fa-outline"/>
-          </DropdownItem>
-        )}
-      </Dropdown>
+          {!this.state.loggedIn && (
+            <DropdownItem key="invite"
+                          buttonClass={Link}
+                          href="https://insomnia.rest/pricing/"
+                          button>
+              <i className="fa fa-users"/> Upgrade to Plus
+              <i className="fa fa-star surprise fa-outline"/>
+            </DropdownItem>
+          )}
+        </Dropdown>
+      </KeydownBinder>
     );
   }
 }

@@ -25,6 +25,7 @@ import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../network/network';
 import {trackEvent} from '../../analytics';
 import Hotkey from './hotkey';
+import * as hotkeys from '../../common/hotkeys';
 
 @autobind
 class ResponsePane extends PureComponent {
@@ -186,25 +187,25 @@ class ResponsePane extends PureComponent {
                 <tr>
                   <td>Send Request</td>
                   <td className="text-right">
-                    <code><Hotkey char="Enter"/></code>
+                    <code><Hotkey hotkey={hotkeys.SEND_REQUEST}/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Focus Url Bar</td>
                   <td className="text-right">
-                    <code><Hotkey char="L"/></code>
+                    <code><Hotkey hotkey={hotkeys.FOCUS_URL}/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Manage Cookies</td>
                   <td className="text-right">
-                    <code><Hotkey char="K"/></code>
+                    <code><Hotkey hotkey={hotkeys.SHOW_COOKIES}/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Edit Environments</td>
                   <td className="text-right">
-                    <code><Hotkey char="E"/></code>
+                    <code><Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS}/></code>
                   </td>
                 </tr>
                 </tbody>

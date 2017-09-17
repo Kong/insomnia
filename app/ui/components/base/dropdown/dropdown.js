@@ -7,6 +7,9 @@ import DropdownButton from './dropdown-button';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
 import {fuzzyMatch} from '../../../../common/misc';
+import KeydownBinder from '../../keydown-binder';
+import * as hotkeys from '../../../../common/hotkeys';
+import {executeHotKey} from '../../../../common/hotkeys';
 
 @autobind
 class Dropdown extends PureComponent {
@@ -113,10 +116,9 @@ class Dropdown extends PureComponent {
 
     this._handleDropdownNavigation(e);
 
-    if (e.key === 'Escape') {
-      e.preventDefault();
+    executeHotKey(e, hotkeys.CLOSE_DROPDOWN, () => {
       this.hide();
-    }
+    });
   }
 
   _checkSizeAndPosition () {
@@ -242,8 +244,6 @@ class Dropdown extends PureComponent {
   }
 
   componentDidMount () {
-    document.body.addEventListener('keydown', this._handleBodyKeyDown);
-
     // Move the element to the body so we can position absolutely
     if (this._dropdownMenu) {
       const el = ReactDOM.findDOMNode(this._dropdownMenu);
@@ -252,8 +252,6 @@ class Dropdown extends PureComponent {
   }
 
   componentWillUnmount () {
-    document.body.removeEventListener('keydown', this._handleBodyKeyDown);
-
     // Remove the element from the body
     if (this._dropdownMenu) {
       const el = ReactDOM.findDOMNode(this._dropdownMenu);
@@ -272,7 +270,7 @@ class Dropdown extends PureComponent {
     this.props.onHide && this.props.onHide();
   }
 
-  show () {
+  show (filterVisible = false) {
     const bodyHeight = document.body.getBoundingClientRect().height;
     const dropdownTop = this._node.getBoundingClientRect().top;
     const dropUp = dropdownTop > bodyHeight - 200;
@@ -280,7 +278,7 @@ class Dropdown extends PureComponent {
     this.setState({
       open: true,
       dropUp,
-      filterVisible: false,
+      filterVisible,
       filter: '',
       filterItems: null,
       filterActiveIndex: -1,
@@ -290,11 +288,11 @@ class Dropdown extends PureComponent {
     this.props.onOpen && this.props.onOpen();
   }
 
-  toggle () {
+  toggle (filterVisible = false) {
     if (this.state.open) {
       this.hide();
     } else {
-      this.show();
+      this.show(filterVisible);
     }
   }
 
@@ -405,14 +403,16 @@ class Dropdown extends PureComponent {
     }
 
     return (
-      <div style={style}
-           className={classes}
-           ref={this._setRef}
-           onClick={this._handleClick}
-           tabIndex="-1"
-           onMouseDown={this._handleMouseDown}>
-        {finalChildren}
-      </div>
+      <KeydownBinder stopMetaPropagation onKeydown={this._handleBodyKeyDown} disabled={!open}>
+        <div style={style}
+             className={classes}
+             ref={this._setRef}
+             onClick={this._handleClick}
+             tabIndex="-1"
+             onMouseDown={this._handleMouseDown}>
+          {finalChildren}
+        </div>
+      </KeydownBinder>
     );
   }
 }

@@ -95,7 +95,7 @@ class SidebarRequestRow extends PureComponent {
     if (!request) {
       node = (
         <li className={classes}>
-          <div className="sidebar__item" tabIndex={0}>
+          <div className="sidebar__item">
             <button className="sidebar__clickable" onClick={this._handleRequestCreateFromEmpty}>
               <em className="faded">click to add first request...</em>
             </button>

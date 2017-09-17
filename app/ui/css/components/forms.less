@@ -45,7 +45,8 @@
   label {
     font-weight: 600;
     display: block;
-    padding-top: @padding-xs;
+    margin-top: @padding-xs;
+    padding-top: 0;
 
     * {
       font-weight: normal;
@@ -278,4 +279,25 @@ textarea.no-resize {
 input[type="color"] {
   height: @line-height-xs !important;
   padding: @padding-xxs !important;
+}
+
+label {
+  // So we can highlight from CSS checkbox selector
+  position: relative;
+  z-index: 1;
+
+  input[type="checkbox"]:focus,
+  input[type="radio"]:focus {
+    &::before {
+      z-index: -1;
+      content: ' ';
+      position: absolute;
+      top: -@padding-xxs;
+      bottom: -@padding-xxs;
+      left: -@padding-xxs;
+      right: -@padding-xxs;
+      border-radius: @radius-sm;
+      background-color: var(--hl-sm);
+    }
+  }
 }

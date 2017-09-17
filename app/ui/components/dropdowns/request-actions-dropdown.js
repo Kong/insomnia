@@ -6,6 +6,7 @@ import {Dropdown, DropdownButton, DropdownHint, DropdownItem} from '../base/drop
 import * as models from '../../../models';
 import {trackEvent} from '../../../analytics/index';
 import {DropdownDivider} from '../base/dropdown/index';
+import * as hotkeys from '../../../common/hotkeys';
 
 @autobind
 class RequestActionsDropdown extends PureComponent {
@@ -53,10 +54,11 @@ class RequestActionsDropdown extends PureComponent {
         </DropdownButton>
         <DropdownItem onClick={this._handleDuplicate}>
           <i className="fa fa-copy"/> Duplicate
-          <DropdownHint char="D"/>
+          <DropdownHint hotkey={hotkeys.DUPLICATE_REQUEST}/>
         </DropdownItem>
         <DropdownItem onClick={this._handleGenerateCode}>
           <i className="fa fa-code"/> Generate Code
+          <DropdownHint hotkey={hotkeys.GENERATE_CODE}/>
         </DropdownItem>
         <DropdownItem onClick={this._handleCopyAsCurl}
                       buttonClass={PromptButton}
@@ -72,7 +74,7 @@ class RequestActionsDropdown extends PureComponent {
 
         <DropdownItem onClick={handleShowSettings}>
           <i className="fa fa-wrench"/> Settings
-          <DropdownHint alt shift char=","/>
+          <DropdownHint hotkey={hotkeys.SHOW_REQUEST_SETTINGS}/>
         </DropdownItem>
       </Dropdown>
     );

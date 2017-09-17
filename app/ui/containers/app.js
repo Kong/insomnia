@@ -16,7 +16,7 @@ import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import ChangelogModal from '../components/modals/changelog-modal';
 import SettingsModal, {TAB_INDEX_SHORTCUTS} from '../components/modals/settings-modal';
-import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, isMac, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
+import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
@@ -35,17 +35,9 @@ import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
 import {showAlert, showPrompt} from '../components/modals/index';
 import {exportHar} from '../../common/har';
-
-const KEY_ENTER = 13;
-const KEY_COMMA = 188;
-const KEY_D = 68;
-const KEY_E = 69;
-const KEY_K = 75;
-const KEY_L = 76;
-const KEY_N = 78;
-const KEY_P = 80;
-const KEY_R = 82;
-const KEY_F5 = 116;
+import * as hotkeys from '../../common/hotkeys';
+import KeydownBinder from '../components/keydown-binder';
+import {executeHotKey} from '../../common/hotkeys';
 
 @autobind
 class App extends PureComponent {
@@ -66,106 +58,52 @@ class App extends PureComponent {
 
     this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
     this._savePaneHeight = debounce(paneHeight => this._updateActiveWorkspaceMeta({paneHeight}));
-    this._saveSidebarWidth = debounce(sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
+    this._saveSidebarWidth = debounce(
+      sidebarWidth => this._updateActiveWorkspaceMeta({sidebarWidth}));
 
     this._globalKeyMap = null;
   }
 
   _setGlobalKeyMap () {
     this._globalKeyMap = [
-      { // Show Workspace Settings
-        meta: true,
-        shift: true,
-        alt: false,
-        key: KEY_COMMA,
-        callback: () => {
-          const {activeWorkspace} = this.props;
-          showModal(WorkspaceSettingsModal, activeWorkspace);
-          trackEvent('HotKey', 'Workspace Settings');
+      [hotkeys.SHOW_WORKSPACE_SETTINGS, () => {
+        const {activeWorkspace} = this.props;
+        showModal(WorkspaceSettingsModal, activeWorkspace);
+      }],
+      [hotkeys.SHOW_REQUEST_SETTINGS, () => {
+        if (this.props.activeRequest) {
+          showModal(RequestSettingsModal, {request: this.props.activeRequest});
         }
-      }, {
-        meta: true,
-        shift: true,
-        alt: true,
-        key: KEY_COMMA,
-        callback: () => {
-          if (this.props.activeRequest) {
-            showModal(RequestSettingsModal, {request: this.props.activeRequest});
-            trackEvent('HotKey', 'Request Settings');
-          }
-        }
-      }, {
-        meta: true,
-        shift: false,
-        alt: false,
-        key: KEY_P,
-        callback: () => {
-          showModal(RequestSwitcherModal);
-          trackEvent('HotKey', 'Quick Switcher');
-        }
-      }, {
-        meta: true,
-        shift: false,
-        alt: false,
-        key: [KEY_ENTER, KEY_R],
-        callback: this._handleSendShortcut
-      }, {
-        meta: false,
-        shift: false,
-        alt: false,
-        key: [KEY_F5],
-        callback: this._handleSendShortcut
-      }, {
-        meta: true,
-        shift: false,
-        alt: false,
-        key: KEY_E,
-        callback: () => {
-          const {activeWorkspace} = this.props;
-          showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
-          trackEvent('HotKey', 'Environments');
-        }
-      }, {
-        meta: true,
-        shift: false,
-        alt: false,
-        key: KEY_L,
-        callback: () => {
-          const node = document.body.querySelector('.urlbar input');
-          node && node.focus();
-          trackEvent('HotKey', 'Url');
-        }
-      }, {
-        meta: true,
-        shift: false,
-        alt: false,
-        key: KEY_K,
-        callback: () => {
-          const {activeWorkspace} = this.props;
-          showModal(CookiesModal, activeWorkspace);
-          trackEvent('HotKey', 'Cookies');
-        }
-      }, {
-        meta: true,
-        shift: false,
-        alt: false,
-        key: KEY_N,
-        callback: () => {
-          const {activeRequest, activeWorkspace} = this.props;
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          this._requestCreate(parentId);
-          trackEvent('HotKey', 'Request Create');
-        }
-      }, {
-        meta: true,
-        shift: false,
-        alt: false,
-        key: KEY_D,
-        callback: async () => {
-          await this._requestDuplicate(this.props.activeRequest);
-          trackEvent('HotKey', 'Request Duplicate');
-        }
-      }
+      }],
+      [hotkeys.SHOW_QUICK_SWITCHER, () => {
+        showModal(RequestSwitcherModal);
+      }],
+      [hotkeys.SEND_REQUEST, this._handleSendShortcut],
+      [hotkeys.SEND_REQUEST_F5, this._handleSendShortcut],
+      [hotkeys.SHOW_ENVIRONMENTS, () => {
+        const {activeWorkspace} = this.props;
+        showModal(WorkspaceEnvironmentsEditModal, activeWorkspace);
+      }],
+      [hotkeys.SHOW_COOKIES, () => {
+        const {activeWorkspace} = this.props;
+        showModal(CookiesModal, activeWorkspace);
+      }],
+      [hotkeys.CREATE_REQUEST, () => {
+        const {activeRequest, activeWorkspace} = this.props;
+        const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+        this._requestCreate(parentId);
+      }],
+      [hotkeys.CREATE_FOLDER, () => {
+        const {activeRequest, activeWorkspace} = this.props;
+        const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+        this._requestGroupCreate(parentId);
+      }],
+      [hotkeys.GENERATE_CODE, async () => {
+        showModal(GenerateCodeModal, this.props.activeRequest);
+      }],
+      [hotkeys.DUPLICATE_REQUEST, async () => {
+        await this._requestDuplicate(this.props.activeRequest);
+      }]
     ];
   }
 
@@ -175,7 +113,6 @@ class App extends PureComponent {
       activeRequest ? activeRequest._id : 'n/a',
       activeEnvironment ? activeEnvironment._id : 'n/a',
     );
-    trackEvent('HotKey', 'Send');
   }
 
   _setRequestPaneRef (n) {
@@ -629,31 +566,8 @@ class App extends PureComponent {
   }
 
   _handleKeyDown (e) {
-    const isMetaPressed = isMac() ? e.metaKey : e.ctrlKey;
-    const isAltPressed = isMac() ? e.ctrlKey : e.altKey;
-    const isShiftPressed = e.shiftKey;
-
-    for (const {meta, shift, alt, key, callback} of this._globalKeyMap) {
-      const keys = Array.isArray(key) ? key : [key];
-      for (const key of keys) {
-        if ((alt && !isAltPressed) || (!alt && isAltPressed)) {
-          continue;
-        }
-
-        if ((meta && !isMetaPressed) || (!meta && isMetaPressed)) {
-          continue;
-        }
-
-        if ((shift && !isShiftPressed) || (!shift && isShiftPressed)) {
-          continue;
-        }
-
-        if (key !== e.keyCode) {
-          continue;
-        }
-
-        callback();
-      }
+    for (const [definition, callback] of this._globalKeyMap) {
+      executeHotKey(e, definition, callback);
     }
   }
 
@@ -708,7 +622,6 @@ class App extends PureComponent {
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
-    document.addEventListener('keydown', this._handleKeyDown);
     this._setGlobalKeyMap();
 
     // Update title
@@ -797,55 +710,56 @@ class App extends PureComponent {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
-    document.removeEventListener('keydown', this._handleKeyDown);
   }
 
   render () {
     return (
-      <div className="app">
-        <Wrapper
-          {...this.props}
-          ref={this._setWrapperRef}
-          paneWidth={this.state.paneWidth}
-          paneHeight={this.state.paneHeight}
-          sidebarWidth={this.state.sidebarWidth}
-          handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-          handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-          handleActivateRequest={this._handleSetActiveRequest}
-          handleSetRequestPaneRef={this._setRequestPaneRef}
-          handleSetResponsePaneRef={this._setResponsePaneRef}
-          handleSetSidebarRef={this._setSidebarRef}
-          handleStartDragSidebar={this._startDragSidebar}
-          handleResetDragSidebar={this._resetDragSidebar}
-          handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-          handleStartDragPaneVertical={this._startDragPaneVertical}
-          handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-          handleResetDragPaneVertical={this._resetDragPaneVertical}
-          handleCreateRequest={this._requestCreate}
-          handleRender={this._handleRenderText}
-          handleGetRenderContext={this._handleGetRenderContext}
-          handleDuplicateRequest={this._requestDuplicate}
-          handleDuplicateRequestGroup={this._requestGroupDuplicate}
-          handleDuplicateWorkspace={this._workspaceDuplicate}
-          handleCreateRequestGroup={this._requestGroupCreate}
-          handleGenerateCode={this._handleGenerateCode}
-          handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-          handleCopyAsCurl={this._handleCopyAsCurl}
-          handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-          handleSetResponseFilter={this._handleSetResponseFilter}
-          handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-          handleSendAndDownloadRequestWithEnvironment={this._handleSendAndDownloadRequestWithEnvironment}
-          handleSetActiveResponse={this._handleSetActiveResponse}
-          handleSetActiveRequest={this._handleSetActiveRequest}
-          handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-          handleSetSidebarFilter={this._handleSetSidebarFilter}
-          handleToggleMenuBar={this._handleToggleMenuBar}
-        />
-        <Toast/>
+      <KeydownBinder onKeydown={this._handleKeyDown}>
+        <div className="app">
+          <Wrapper
+            {...this.props}
+            ref={this._setWrapperRef}
+            paneWidth={this.state.paneWidth}
+            paneHeight={this.state.paneHeight}
+            sidebarWidth={this.state.sidebarWidth}
+            handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+            handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+            handleActivateRequest={this._handleSetActiveRequest}
+            handleSetRequestPaneRef={this._setRequestPaneRef}
+            handleSetResponsePaneRef={this._setResponsePaneRef}
+            handleSetSidebarRef={this._setSidebarRef}
+            handleStartDragSidebar={this._startDragSidebar}
+            handleResetDragSidebar={this._resetDragSidebar}
+            handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+            handleStartDragPaneVertical={this._startDragPaneVertical}
+            handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+            handleResetDragPaneVertical={this._resetDragPaneVertical}
+            handleCreateRequest={this._requestCreate}
+            handleRender={this._handleRenderText}
+            handleGetRenderContext={this._handleGetRenderContext}
+            handleDuplicateRequest={this._requestDuplicate}
+            handleDuplicateRequestGroup={this._requestGroupDuplicate}
+            handleDuplicateWorkspace={this._workspaceDuplicate}
+            handleCreateRequestGroup={this._requestGroupCreate}
+            handleGenerateCode={this._handleGenerateCode}
+            handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+            handleCopyAsCurl={this._handleCopyAsCurl}
+            handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+            handleSetResponseFilter={this._handleSetResponseFilter}
+            handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+            handleSendAndDownloadRequestWithEnvironment={this._handleSendAndDownloadRequestWithEnvironment}
+            handleSetActiveResponse={this._handleSetActiveResponse}
+            handleSetActiveRequest={this._handleSetActiveRequest}
+            handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+            handleSetSidebarFilter={this._handleSetSidebarFilter}
+            handleToggleMenuBar={this._handleToggleMenuBar}
+          />
+          <Toast/>
 
-        {/* Block all mouse activity by showing an overlay while dragging */}
-        {this.state.showDragOverlay ? <div className="blocker-overlay"></div> : null}
-      </div>
+          {/* Block all mouse activity by showing an overlay while dragging */}
+          {this.state.showDragOverlay ? <div className="blocker-overlay"></div> : null}
+        </div>
+      </KeydownBinder>
     );
   }
 }
