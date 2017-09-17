@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import {PLUGIN_PATH} from '../common/constants';
 import {resolveHomePath} from '../common/misc';
+import {showError} from '../ui/components/modals/index';
 
 export type Plugin = {
   name: string,
@@ -60,44 +61,52 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
       }
 
       for (const filename of fs.readdirSync(p)) {
-        const modulePath = path.join(p, filename);
-        const packageJSONPath = path.join(modulePath, 'package.json');
+        try {
+          const modulePath = path.join(p, filename);
+          const packageJSONPath = path.join(modulePath, 'package.json');
 
-        // Only read directories
-        if (!fs.statSync(modulePath).isDirectory()) {
-          continue;
+          // Only read directories
+          if (!fs.statSync(modulePath).isDirectory()) {
+            continue;
+          }
+
+          // Is it a Node module?
+          if (!fs.readdirSync(modulePath).includes('package.json')) {
+            continue;
+          }
+
+          // Use global.require() instead of require() because Webpack wraps require()
+          delete global.require.cache[global.require.resolve(packageJSONPath)];
+          const pluginJson = global.require(packageJSONPath);
+
+          // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
+          if (!pluginJson.hasOwnProperty('insomnia')) {
+            continue;
+          }
+
+          // Delete require cache entry and re-require
+          delete global.require.cache[global.require.resolve(modulePath)];
+          const module = global.require(modulePath);
+
+          const pluginMeta = pluginJson.insomnia || {};
+
+          const plugin: Plugin = {
+            name: pluginMeta.name || pluginJson.name,
+            description: pluginMeta.description || '',
+            version: pluginJson.version || '0.0.0',
+            directory: modulePath,
+            module
+          };
+
+          plugins.push(plugin);
+          // console.log(`[plugin] Loaded ${modulePath}`);
+        } catch (err) {
+          showError({
+            title: 'Plugin Error',
+            message: 'Failed to load plugin ' + filename,
+            error: err
+          });
         }
-
-        // Is it a Node module?
-        if (!fs.readdirSync(modulePath).includes('package.json')) {
-          continue;
-        }
-
-        // Use global.require() instead of require() because Webpack wraps require()
-        delete global.require.cache[global.require.resolve(packageJSONPath)];
-        const pluginJson = global.require(packageJSONPath);
-
-        // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
-        if (!pluginJson.hasOwnProperty('insomnia')) {
-          continue;
-        }
-
-        // Delete require cache entry and re-require
-        delete global.require.cache[global.require.resolve(modulePath)];
-        const module = global.require(modulePath);
-
-        const pluginMeta = pluginJson.insomnia || {};
-
-        const plugin: Plugin = {
-          name: pluginMeta.name || pluginJson.name,
-          description: pluginMeta.description || '',
-          version: pluginJson.version || '0.0.0',
-          directory: modulePath,
-          module
-        };
-
-        plugins.push(plugin);
-        // console.log(`[plugin] Loaded ${modulePath}`);
       }
     }
   }

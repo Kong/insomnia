@@ -12,6 +12,7 @@ import installPlugin from '../../../plugins/install';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import {delay} from '../../../common/misc';
+import {PLUGIN_PATH} from '../../../common/constants';
 
 @autobind
 class Plugins extends React.PureComponent {
@@ -87,6 +88,11 @@ class Plugins extends React.PureComponent {
     trackEvent('Plugins', 'Refresh');
   }
 
+  _handleClickShowPluginsFolder () {
+    electron.remote.shell.showItemInFolder(PLUGIN_PATH);
+    trackEvent('Plugins', 'Show Folder');
+  }
+
   componentDidMount () {
     this._isMounted = true;
     this._handleRefreshPlugins();
@@ -102,11 +108,11 @@ class Plugins extends React.PureComponent {
     return (
       <div>
         <p className="notice info no-margin-top">
-          Plugins is still an experimental feature. Please
+          Plugins is still an experimental feature. See
           {' '}
-          <Link href="https://insomnia.rest/documentation/support-and-feedback/">
-            Submit Feedback
-          </Link> if you have any.
+          <Link href="https://insomnia.rest/documentation/plugins/">
+            Documentation
+          </Link> for more info.
         </p>
         {plugins.length === 0 ? (
           <div className="text-center faint italic pad">No Plugins Added</div>
@@ -178,13 +184,16 @@ class Plugins extends React.PureComponent {
 
         <div className="text-right">
           <button type="button"
-                  disabled={isRefreshingPlugins}
                   className="btn btn--clicky"
+                  onClick={this._handleClickShowPluginsFolder}>
+            Show Plugins Folder
+          </button>
+          <button type="button"
+                  disabled={isRefreshingPlugins}
+                  className="btn btn--clicky space-left"
                   onClick={this._handleClickRefreshPlugins}>
             Reload Plugin List
-            {isRefreshingPlugins && (
-              <i className="fa fa-refresh fa-spin space-left"/>
-            )}
+            {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left"/>}
           </button>
         </div>
       </div>
