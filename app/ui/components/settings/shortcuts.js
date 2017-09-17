@@ -1,13 +1,16 @@
 import React, {PureComponent} from 'react';
+import autobind from 'autobind-decorator';
 import Hotkey from '../hotkey';
+import * as hotkeys from '../../../common/hotkeys';
 
+@autobind
 class Shortcuts extends PureComponent {
-  renderHotkey (name, char, shift, alt, ctrl) {
+  renderHotkey (hotkey, i) {
     return (
-      <tr>
-        <td>{name}</td>
+      <tr key={i}>
+        <td>{hotkey.description}</td>
         <td className="text-right">
-          <code><Hotkey char={char} shift={shift} alt={alt} ctrl={ctrl}/></code>
+          <code><Hotkey hotkey={hotkey}/></code>
         </td>
       </tr>
     );
@@ -18,19 +21,24 @@ class Shortcuts extends PureComponent {
       <div>
         <table className="table--fancy">
           <tbody>
-          {this.renderHotkey('Switch Requests', 'P')}
-          {this.renderHotkey('Send Request', 'Enter')}
-          {this.renderHotkey('New Request', 'N')}
-          {this.renderHotkey('Duplicate Request', 'D')}
-          {this.renderHotkey('Show Cookie Manager', 'K')}
-          {this.renderHotkey('Show Environment Editor', 'E')}
-          {this.renderHotkey('Focus URL Bar', 'L')}
-          {this.renderHotkey('Toggle Sidebar', '\\')}
-          {this.renderHotkey('Show Autocomplete Dropdown', 'Space', false, false, true)}
-          {this.renderHotkey('Show App Preferences', ',')}
-          {this.renderHotkey('Show Workspace Settings', ',', true)}
-          {this.renderHotkey('Show Request Settings', ',', true, true)}
-          {this.renderHotkey('Show Keyboard Shortcuts', '?')}
+          {this.renderHotkey(hotkeys.SHOW_QUICK_SWITCHER)}
+          {this.renderHotkey(hotkeys.SEND_REQUEST)}
+          {this.renderHotkey(hotkeys.SHOW_SEND_OPTIONS)}
+          {this.renderHotkey(hotkeys.CREATE_REQUEST)}
+          {this.renderHotkey(hotkeys.CREATE_FOLDER)}
+          {this.renderHotkey(hotkeys.DUPLICATE_REQUEST)}
+          {this.renderHotkey(hotkeys.SHOW_COOKIES)}
+          {this.renderHotkey(hotkeys.SHOW_ENVIRONMENTS)}
+          {this.renderHotkey(hotkeys.TOGGLE_ENVIRONMENTS_MENU)}
+          {this.renderHotkey(hotkeys.FOCUS_URL)}
+          {this.renderHotkey(hotkeys.TOGGLE_METHOD_DROPDOWN)}
+          {this.renderHotkey(hotkeys.TOGGLE_SIDEBAR)}
+          {this.renderHotkey(hotkeys.TOGGLE_HISTORY_DROPDOWN)}
+          {this.renderHotkey(hotkeys.SHOW_AUTOCOMPLETE)}
+          {this.renderHotkey(hotkeys.SHOW_SETTINGS)}
+          {this.renderHotkey(hotkeys.SHOW_WORKSPACE_SETTINGS)}
+          {this.renderHotkey(hotkeys.SHOW_REQUEST_SETTINGS)}
+          {this.renderHotkey(hotkeys.TOGGLE_MAIN_MENU)}
           </tbody>
         </table>
       </div>

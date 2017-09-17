@@ -24,6 +24,7 @@ import {showModal} from './modals/index';
 import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 import type {Settings} from '../../models/settings';
+import * as hotkeys from '../../common/hotkeys';
 
 @autobind
 class RequestPane extends React.PureComponent {
@@ -199,19 +200,19 @@ class RequestPane extends React.PureComponent {
                 <tr>
                   <td>New Request</td>
                   <td className="text-right">
-                    <code><Hotkey char="N"/></code>
+                    <code><Hotkey hotkey={hotkeys.CREATE_REQUEST}/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Switch Requests</td>
                   <td className="text-right">
-                    <code><Hotkey char="P"/></code>
+                    <code><Hotkey hotkey={hotkeys.SHOW_QUICK_SWITCHER}/></code>
                   </td>
                 </tr>
                 <tr>
                   <td>Edit Environments</td>
                   <td className="text-right">
-                    <code><Hotkey char="E"/></code>
+                    <code><Hotkey hotkey={hotkeys.SHOW_ENVIRONMENTS}/></code>
                   </td>
                 </tr>
                 </tbody>
