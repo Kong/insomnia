@@ -219,6 +219,10 @@ export function createWindow () {
           window.webContents.send('toggle-sidebar');
           trackEvent('App Menu', 'Toggle Sidebar');
         }
+      },
+      {
+        label: 'Toggle DevTools',
+        click: () => mainWindow.toggleDevTools()
       }
     ]
   };
