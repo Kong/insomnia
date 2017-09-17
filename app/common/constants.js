@@ -60,10 +60,10 @@ export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 export const PLUGIN_PATH = path.join((electron.remote || electron).app.getPath('userData'), 'plugins');
 
 // Hotkeys
-export const MOD_SYM = isMac() ? '⌘' : 'ctrl';
-export const ALT_SYM = isMac() ? '⌃' : 'alt';
-export const SHIFT_SYM = isMac() ? '⇧' : 'shift';
-export const CTRL_SYM = isMac() ? '⌃' : 'ctrl';
+export const MOD_SYM = isMac() ? '⌘' : 'Ctrl';
+export const ALT_SYM = isMac() ? '⌃' : 'Alt';
+export const SHIFT_SYM = isMac() ? '⇧' : 'Shift';
+export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
 export function joinHotKeys (keys) {
   return keys.join(isMac() ? '' : '+');
 }
