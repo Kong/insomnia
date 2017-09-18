@@ -40,7 +40,7 @@ class RenderedQueryString extends PureComponent {
       const {url, parameters} = result;
       const qs = querystring.buildFromParams(parameters);
       const fullUrl = querystring.joinUrl(url, qs);
-      this.setState({string: misc.prepareUrlForSending(fullUrl)});
+      this.setState({string: misc.prepareUrlForSending(fullUrl, request.settingEncodeUrl)});
     }
   }
 

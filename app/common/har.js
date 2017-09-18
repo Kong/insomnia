@@ -8,7 +8,7 @@ import {getAuthHeader} from '../network/authentication';
 
 export async function exportHarWithRequest (renderedRequest, addContentLength = false) {
   let postData = '';
-  const url = misc.prepareUrlForSending(renderedRequest.url);
+  const url = misc.prepareUrlForSending(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (renderedRequest.body.fileName) {
     try {

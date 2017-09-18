@@ -28,7 +28,7 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import {debounce} from '../../common/misc';
+import {debounce, getContentDispositionHeader} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -354,10 +354,14 @@ class App extends PureComponent {
 
     try {
       const {response: responsePatch, bodyBuffer} = await network.send(requestId, environmentId);
+      const headers = responsePatch.headers || [];
+      const header = getContentDispositionHeader(headers);
+      const nameFromHeader = header ? header.value : null;
+
       if (responsePatch.statusCode >= 200 && responsePatch.statusCode < 300) {
         const extension = mime.extension(responsePatch.contentType) || '';
-        const name = request.name.replace(/\s/g, '-').toLowerCase();
-        const filename = path.join(dir, `${name}.${extension}`);
+        const name = nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+        const filename = path.join(dir, name);
         const partialResponse = Object.assign({}, responsePatch);
         await models.response.create(partialResponse, `Saved to ${filename}`);
         fs.writeFile(filename, bodyBuffer, err => {
