@@ -1,11 +1,40 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import React from 'react';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
+import type {RequestGroup} from '../../../models/request-group';
+import type {Workspace} from '../../../models/workspace';
+import type {Request} from '../../../models/request';
 
-class SidebarChildren extends PureComponent {
-  _renderChildren (children) {
+type Child = {
+  doc: Request | RequestGroup,
+  children: Array<Child>,
+  collapsed: boolean
+};
+
+type Props = {
+  // Required
+  handleActivateRequest: Function,
+  handleCreateRequest: Function,
+  handleCreateRequestGroup: Function,
+  handleSetRequestGroupCollapsed: Function,
+  handleDuplicateRequest: Function,
+  handleDuplicateRequestGroup: Function,
+  handleGenerateCode: Function,
+  handleCopyAsCurl: Function,
+  moveDoc: Function,
+  childObjects: Array<Child>,
+  workspace: Workspace,
+
+  // Optional
+  activeRequest?: Request
+};
+
+class SidebarChildren extends React.PureComponent {
+  props: Props;
+
+  _renderChildren (children: Array<Child>) {
     const {
       handleCreateRequest,
       handleCreateRequestGroup,
@@ -94,23 +123,5 @@ class SidebarChildren extends PureComponent {
     );
   }
 }
-
-SidebarChildren.propTypes = {
-  // Required
-  handleActivateRequest: PropTypes.func.isRequired,
-  handleCreateRequest: PropTypes.func.isRequired,
-  handleCreateRequestGroup: PropTypes.func.isRequired,
-  handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
-  handleDuplicateRequest: PropTypes.func.isRequired,
-  handleDuplicateRequestGroup: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  handleCopyAsCurl: PropTypes.func.isRequired,
-  moveDoc: PropTypes.func.isRequired,
-  childObjects: PropTypes.arrayOf(PropTypes.object).isRequired,
-  workspace: PropTypes.object.isRequired,
-
-  // Optional
-  activeRequest: PropTypes.object
-};
 
 export default SidebarChildren;
