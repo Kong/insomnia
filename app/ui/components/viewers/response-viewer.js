@@ -59,15 +59,43 @@ class ResponseViewer extends PureComponent {
 
   shouldComponentUpdate (nextProps, nextState) {
     for (let k of Object.keys(nextProps)) {
-      const value = nextProps[k];
-      if (typeof value !== 'function' && this.props[k] !== value) {
+      const next = nextProps[k];
+      const current = this.props[k];
+
+      if (typeof next === 'function') {
+        continue;
+      }
+
+      if (current instanceof Buffer) {
+        if (current.equals(next)) {
+          continue;
+        } else {
+          return true;
+        }
+      }
+
+      if (next !== current) {
         return true;
       }
     }
 
     for (let k of Object.keys(nextState)) {
-      const value = nextState[k];
-      if (typeof value !== 'function' && this.state[k] !== value) {
+      const next = nextState[k];
+      const current = this.state[k];
+
+      if (typeof next === 'function') {
+        continue;
+      }
+
+      if (current instanceof Buffer) {
+        if (current.equals(next)) {
+          continue;
+        } else {
+          return true;
+        }
+      }
+
+      if (next !== current) {
         return true;
       }
     }
