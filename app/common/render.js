@@ -48,9 +48,13 @@ export async function buildRenderContext (
     // Sort the keys that may have Nunjucks last, so that other keys get
     // defined first. Very important if env variables defined in same obj
     // (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
-    const keys = Object.keys(environment).sort((k1, k2) =>
-      environment[k1].match && environment[k1].match(/({{)/) ? 1 : -1
-    );
+    const keys = Object.keys(environment).sort((k1, k2) => {
+      if (typeof environment[k1] === 'string') {
+        return environment[k1].match(/({{)/) ? 1 : -1;
+      } else {
+        return 0;
+      }
+    });
 
     for (const key of keys) {
       /*
