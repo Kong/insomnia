@@ -1,0 +1,81 @@
+@import '../constants/dimensions';
+@import '../constants/colors';
+
+.json-viewer {
+  .json-viewer__inner {
+    white-space: nowrap;
+    display: flex;
+    flex-direction: row;
+  }
+
+  .json-viewer__label::before,
+  .json-viewer__label::after {
+    user-select: none;
+    vertical-align: top;
+  }
+
+  .json-viewer__label::before {
+    content: attr(data-before);
+  }
+
+  .json-viewer__label::after {
+    content: attr(data-after);
+    opacity: 0.5;
+  }
+
+  .json-viewer__value {
+    display: inline-block;
+    user-select: text;
+    cursor: text;
+    white-space: normal;
+    flex: 1;
+    margin-left: 0.3em;
+
+    &.json-viewer__value--number {
+      color: var(--color-surprise);
+    }
+
+    &.json-viewer__value--string {
+      color: var(--color-notice);
+    }
+
+    &.json-viewer__value--null {
+      color: var(--color-surprise);
+    }
+
+    &.json-viewer__value--boolean {
+      color: var(--color-success);
+    }
+  }
+
+  .json-viewer__row--expandable {
+    & > .json-viewer__inner:hover {
+      background-color: var(--hl-xs);
+    }
+
+    &.json-viewer__row--expanded > .json-viewer__inner::before {
+      content: '▾';
+      opacity: 1;
+    }
+
+    &.json-viewer__row--collapsed > .json-viewer__inner::before {
+      content: '▸';
+      opacity: 1;
+    }
+  }
+
+  .json-viewer__row > .json-viewer__inner {
+    position: relative;
+    &::before {
+      display: inline-block;
+      text-align: center;
+      width: 1em;
+      content: '|';
+      opacity: 0.3;
+    }
+  }
+
+  .json-viewer__children {
+    padding-left: 1em;
+  }
+}

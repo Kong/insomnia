@@ -9,6 +9,7 @@ import ResponseWebView from './response-webview';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
 import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
+import JSONViewer from '../json-viewer';
 
 let alwaysShowLargeResponses = false;
 
@@ -201,6 +202,13 @@ class ResponseViewer extends PureComponent {
                  style={{maxWidth: '100%', maxHeight: '100%', margin: 'auto'}}/>
           </div>
         </div>
+      );
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('json')) {
+      return (
+        <JSONViewer
+          className="pad-sm pad-top-xs no-pad-bottom tall scrollable"
+          body={bodyBuffer}
+        />
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
       const justContentType = contentType.split(';')[0];
