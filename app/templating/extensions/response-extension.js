@@ -1,6 +1,7 @@
+// @flow
 import jq from 'jsonpath';
-import {DOMParser} from 'xmldom';
-import xpath from 'xpath';
+import * as xpath from '../../common/xpath';
+import type {ResponseHeader} from '../../models/response';
 
 export default {
   name: 'response',
@@ -23,8 +24,8 @@ export default {
     },
     {
       type: 'string',
-      hide: args => args[0].value === 'raw',
-      displayName: args => {
+      hide: (args: Array<Object>): boolean => args[0].value === 'raw',
+      displayName: (args: Array<Object>): string => {
         switch (args[0].value) {
           case 'body':
             return 'Filter (JSONPath or XPath)';
@@ -37,7 +38,7 @@ export default {
     }
   ],
 
-  async run (context, field, id, filter) {
+  async run (context: Object, field: string, id: string, filter: string) {
     if (!['body', 'header', 'raw'].includes(field)) {
       throw new Error(`Invalid response field ${field}`);
     }
@@ -83,7 +84,7 @@ export default {
   }
 };
 
-function matchJSONPath (bodyStr, query) {
+function matchJSONPath (bodyStr: string, query: string): string {
   let body;
   let results;
 
@@ -108,17 +109,8 @@ function matchJSONPath (bodyStr, query) {
   return results[0];
 }
 
-function matchXPath (bodyStr, query) {
-  let results;
-
-  // This will never throw
-  const dom = new DOMParser().parseFromString(bodyStr);
-
-  try {
-    results = xpath.select(query, dom);
-  } catch (err) {
-    throw new Error(`Invalid XPath query: ${query}`);
-  }
+function matchXPath (bodyStr: string, query: string): string {
+  const results = xpath.query(bodyStr, query);
 
   if (results.length === 0) {
     throw new Error(`Returned no results: ${query}`);
@@ -126,10 +118,10 @@ function matchXPath (bodyStr, query) {
     throw new Error(`Returned more than one result: ${query}`);
   }
 
-  return results[0].childNodes.toString();
+  return results[0].inner;
 }
 
-function matchHeader (headers, name) {
+function matchHeader (headers: Array<ResponseHeader>, name: string): string {
   const header = headers.find(
     h => h.name.toLowerCase() === name.toLowerCase()
   );
