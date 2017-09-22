@@ -2,6 +2,7 @@
 @import '../constants/colors';
 
 .json-viewer {
+  padding-bottom: @padding-lg;
   .json-viewer__inner {
     white-space: nowrap;
     display: flex;
@@ -37,6 +38,10 @@
 
     &.json-viewer__value--string {
       color: var(--color-notice);
+      &::before,
+      &::after {
+        content: '"';
+      }
     }
 
     &.json-viewer__value--null {
@@ -70,12 +75,29 @@
       display: inline-block;
       text-align: center;
       width: 1em;
-      content: '|';
-      opacity: 0.3;
+      content: '-';
+      color: var(--hl-lg);
     }
   }
 
   .json-viewer__children {
     padding-left: 1em;
+  }
+
+  .json-viewer__highlight {
+    color: var(--hl-xl);
+
+    &::before {
+      display: inline-block;
+      text-align: center;
+      width: 1em;
+      content: '+';
+      color: var(--hl-lg);
+    }
+
+    &:hover {
+      background-color: var(--hl-xs);
+      color: var(--color-font);
+    }
   }
 }

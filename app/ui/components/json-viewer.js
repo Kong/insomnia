@@ -3,23 +3,34 @@ import React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 
+const PAGE_SIZE = 100;
+
+type State = {
+  expanded: boolean,
+  hasBeenExpanded: boolean,
+  page: number
+};
+
+type Props = {
+  value: any,
+  expanded?: boolean,
+  label?: string
+};
+
 @autobind
 class JSONNode extends React.PureComponent {
-  state: {
-    expanded: boolean,
-    hasBeenExpanded: boolean
-  };
+  props: Props;
+  state: State;
 
-  props: {
-    value: any,
-    label?: string
-  };
-
-  constructor (props: any) {
+  constructor (props: Props) {
     super(props);
+
+    const expanded = props.expanded !== undefined ? props.expanded : false;
+
     this.state = {
-      expanded: false,
-      hasBeenExpanded: false
+      expanded,
+      hasBeenExpanded: false,
+      page: 1
     };
   }
 
@@ -30,6 +41,14 @@ class JSONNode extends React.PureComponent {
       expanded,
       hasBeenExpanded: this.state.hasBeenExpanded || expanded
     });
+  }
+
+  clickNextPage (e) {
+    this.setState({page: this.state.page + 1});
+  }
+
+  clickShowAll (e) {
+    this.setState({page: -1});
   }
 
   getType (value: any) {
@@ -54,49 +73,81 @@ class JSONNode extends React.PureComponent {
 
   render () {
     const {value, label} = this.props;
-    const {expanded, hasBeenExpanded} = this.state;
+    const {expanded, hasBeenExpanded, page} = this.state;
     const type = this.getType(value);
     let isScalar = true;
 
     let children = null;
     if (Array.isArray(value)) {
       isScalar = false;
-      children = value.map((v, i) => (
-        <JSONNode key={i} value={v} label={i.toString()}/>
-      ));
+      children = value.map((v, i) => ({
+        value: v,
+        label: i.toString()
+      }));
     } else if (value !== null && typeof value === 'object') {
       isScalar = false;
-      children = Object.keys(value).sort((a, b) => {
-        const typeA = this.getType(value[a]);
-        const typeB = this.getType(value[b]);
-
-        // Same type? Sort by key
-        if (typeA === typeB) {
-          return a > b ? 1 : -1;
-        }
-
-        const aIsHeavy = typeA === 'object' || typeA === 'array';
-        const bIsHeavy = typeB === 'object' || typeB === 'array';
-
-        if (aIsHeavy && !bIsHeavy) {
-          return 1;
-        }
-
-        if (!aIsHeavy && bIsHeavy) {
-          return -1;
-        }
-
-        return 0;
-      }).map(key => (
-        <JSONNode key={key} value={value[key]} label={key}/>
-      ));
+      children = Object.keys(value).map(key => ({
+        value: value[key],
+        label: key
+      }));
     }
 
+    // Grab some metadata on children counts
     let describer = '';
     if (children) {
       const word = type === 'array' ? 'item' : 'key';
       const plural = children.length === 1 ? '' : 's';
       describer = ` ${children.length} ${word}${plural}`;
+    }
+
+    // Sort is too slow for large responses. Do something else here (like caching?)
+    // children = children.sort((a, b) => {
+    //   const typeA = this.getType(a.value);
+    //   const typeB = this.getType(b.value);
+    //
+    //   const aIsHeavy = typeA === 'object' || typeA === 'array';
+    //   const bIsHeavy = typeB === 'object' || typeB === 'array';
+    //
+    //   if (aIsHeavy && !bIsHeavy) {
+    //     return 1;
+    //   }
+    //
+    //   if (!aIsHeavy && bIsHeavy) {
+    //     return -1;
+    //   }
+    //
+    //   // Same type? Sort by key
+    //   return a.value > b.value ? 1 : -1;
+    // });
+
+    // Render show-more section
+    const extraChildren = [];
+    const childNodes = [];
+    if (children) {
+      const limit = page * PAGE_SIZE;
+      const next = limit + PAGE_SIZE;
+      const nextLimit = next > children.length ? children.length : next;
+
+      for (let i = 0; i < limit && i < children.length; i++) {
+        const {label, value} = children[i];
+        childNodes.push(
+          <JSONNode key={label} value={value} label={label}/>
+        );
+      }
+
+      if (limit < children.length) {
+        extraChildren.push(
+          <div key="show-next" onClick={this.clickNextPage} className="json-viewer__highlight">
+            Show More ({limit}-{nextLimit})
+          </div>
+        );
+
+        extraChildren.push(
+          <div key="show-all" onClick={this.clickShowAll} className="json-viewer__highlight">
+            Show All ({children.length})
+          </div>
+        );
+      }
     }
 
     let suffix = '';
@@ -133,7 +184,8 @@ class JSONNode extends React.PureComponent {
             'json-viewer__children': true,
             'hide': !expanded && hasBeenExpanded
           })}>
-            {children}
+            {childNodes}
+            {extraChildren}
           </div>
         )}
       </div>
