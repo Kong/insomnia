@@ -115,7 +115,7 @@ describe('ResponseExtension JSONPath', async () => {
 
 describe('ResponseExtension XPath', async () => {
   beforeEach(globalBeforeEach);
-  it('renders basic response "body", query', async () => {
+  it('renders basic response "body" query', async () => {
     const request = await models.request.create({parentId: 'foo'});
     await models.response.create({
       parentId: request._id,
@@ -125,6 +125,18 @@ describe('ResponseExtension XPath', async () => {
     const result = await templating.render(`{% response "body", "${request._id}", "/foo/bar" %}`);
 
     expect(result).toBe('Hello World!');
+  });
+
+  it('renders basic response "body" attribute query', async () => {
+    const request = await models.request.create({parentId: 'foo'});
+    await models.response.create({
+      parentId: request._id,
+      statusCode: 200
+    }, '<foo><bar hello="World!">Hello World!</bar></foo>');
+
+    const result = await templating.render(`{% response "body", "${request._id}", "/foo/bar/@hello" %}`);
+
+    expect(result).toBe('World!');
   });
 
   it('no results on invalid XML', async () => {
