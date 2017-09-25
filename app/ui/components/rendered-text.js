@@ -1,18 +1,18 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 
-class RenderedText extends React.PureComponent {
-  props: {
-    component: string,
-    children: string,
-    render: Function,
-    props?: Object
-  };
+type Props = {
+  component: string,
+  children: string,
+  render: Function,
+  props?: Object
+};
 
-  state: {
-    renderedText: string
-  };
+type State = {
+  renderedText: string
+};
 
+class RenderedText extends React.PureComponent<Props, State> {
   constructor (props: any) {
     super(props);
     this.state = {

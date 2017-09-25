@@ -14,7 +14,8 @@
     "__DEV__": true,
     "fail": true,
     "HTMLDivElement": true,
-    "HTMLElement": true
+    "HTMLElement": true,
+    "HTMLInputElement": true
   },
   "env": {
     "jest/globals": true
@@ -23,7 +24,6 @@
     "no-duplicate-imports": "off",
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",
-    "react/prop-types": "error",
     "filenames/match-exported": ["error", "kebab"]
   },
   "settings": {

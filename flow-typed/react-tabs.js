@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 declare module 'react-tabs' {
   declare module.exports: {
     Tab: React.Element<*>,

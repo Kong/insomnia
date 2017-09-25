@@ -1,30 +1,30 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import ReactDOM from 'react-dom';
 
+type Props = {
+  children: React.Node,
+  message: React.Node,
+  position: 'bottom' | 'top' | 'right' | 'left',
+
+  // Optional
+  className?: string,
+  delay?: number
+};
+
+type State = {
+  visible: boolean
+};
+
 @autobind
-class Tooltip extends React.PureComponent {
-  props: {
-    children: React.Children,
-    message: React.Children | string,
-    position: 'bottom' | 'top' | 'right' | 'left',
-
-    // Optional
-    className?: string,
-    delay?: number
-  };
-
-  state: {
-    visible: boolean
-  };
-
+class Tooltip extends React.PureComponent<Props, State> {
   _showTimeout: number;
 
   // TODO: Figure out what type these should be
-  _tooltip: any;
-  _bubble: any;
+  _tooltip: ?HTMLDivElement;
+  _bubble: ?HTMLDivElement;
 
   constructor (props: any) {
     super(props);
@@ -40,11 +40,11 @@ class Tooltip extends React.PureComponent {
     };
   }
 
-  _setTooltipRef (n: React.Element<*>): void {
+  _setTooltipRef (n: ?HTMLDivElement) {
     this._tooltip = n;
   }
 
-  _setBubbleRef (n: React.Element<*>): void {
+  _setBubbleRef (n: ?HTMLDivElement) {
     this._bubble = n;
   }
 
@@ -54,14 +54,14 @@ class Tooltip extends React.PureComponent {
 
   _handleMouseEnter (e: MouseEvent): void {
     this._showTimeout = setTimeout((): void => {
-      const tooltip = ReactDOM.findDOMNode(this._tooltip);
-      const bubble = ReactDOM.findDOMNode(this._bubble);
+      const tooltip = this._tooltip;
+      const bubble = this._bubble;
 
-      if (!tooltip || !(tooltip instanceof HTMLDivElement)) {
+      if (!tooltip) {
         return;
       }
 
-      if (!bubble || !(bubble instanceof HTMLDivElement)) {
+      if (!bubble) {
         return;
       }
 
@@ -95,8 +95,8 @@ class Tooltip extends React.PureComponent {
     clearTimeout(this._showTimeout);
     this.setState({visible: false});
 
-    const bubble = ReactDOM.findDOMNode(this._bubble);
-    if (!bubble || !(bubble instanceof HTMLDivElement)) {
+    const bubble = this._bubble;
+    if (!bubble) {
       return;
     }
 

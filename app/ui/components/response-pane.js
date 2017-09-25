@@ -2,7 +2,7 @@
 import type {Request} from '../../models/request';
 import type {Response} from '../../models/response';
 
-import React, {PureComponent} from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
@@ -27,34 +27,34 @@ import {trackEvent} from '../../analytics';
 import Hotkey from './hotkey';
 import * as hotkeys from '../../common/hotkeys';
 
+type Props = {
+  // Functions
+  handleSetFilter: Function,
+  showCookiesModal: Function,
+  handleSetPreviewMode: Function,
+  handleSetActiveResponse: Function,
+  handleDeleteResponses: Function,
+  handleDeleteResponse: Function,
+  handleShowRequestSettings: Function,
+
+  // Required
+  previewMode: string,
+  filter: string,
+  filterHistory: Array<string>,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  loadStartTime: number,
+  responses: Array<Object>,
+
+  // Other
+  request: ?Request,
+  response: ?Response
+};
+
 @autobind
-class ResponsePane extends PureComponent {
-  props: {
-    // Functions
-    handleSetFilter: Function,
-    showCookiesModal: Function,
-    handleSetPreviewMode: Function,
-    handleSetActiveResponse: Function,
-    handleDeleteResponses: Function,
-    handleDeleteResponse: Function,
-    handleShowRequestSettings: Function,
-
-    // Required
-    previewMode: string,
-    filter: string,
-    filterHistory: Array<string>,
-    editorFontSize: number,
-    editorIndentSize: number,
-    editorKeyMap: string,
-    editorLineWrapping: boolean,
-    loadStartTime: number,
-    responses: Array<Object>,
-
-    // Other
-    request: ?Request,
-    response: ?Response
-  };
-
+class ResponsePane extends React.PureComponent<Props> {
   _handleGetResponseBody (): Buffer | null {
     if (!this.props.response) {
       return null;

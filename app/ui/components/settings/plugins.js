@@ -1,7 +1,7 @@
 // @flow
 import type {Plugin} from '../../../plugins/index';
 import {getPlugins} from '../../../plugins/index';
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import * as electron from 'electron';
 import Button from '../base/button';
@@ -14,16 +14,16 @@ import Link from '../base/link';
 import {delay} from '../../../common/misc';
 import {PLUGIN_PATH} from '../../../common/constants';
 
-@autobind
-class Plugins extends React.PureComponent {
-  state: {
-    plugins: Array<Plugin>,
-    npmPluginValue: string,
-    error: string,
-    isInstallingFromNpm: boolean,
-    isRefreshingPlugins: boolean
-  };
+type State = {
+  plugins: Array<Plugin>,
+  npmPluginValue: string,
+  error: string,
+  isInstallingFromNpm: boolean,
+  isRefreshingPlugins: boolean
+};
 
+@autobind
+class Plugins extends React.PureComponent<void, State> {
   _isMounted: boolean;
 
   constructor (props: any) {
@@ -41,8 +41,10 @@ class Plugins extends React.PureComponent {
     this.setState({error: ''});
   }
 
-  _handleAddNpmPluginChange (e: Event & {target: HTMLButtonElement}) {
-    this.setState({npmPluginValue: e.target.value});
+  _handleAddNpmPluginChange (e: Event) {
+    if (e.target instanceof HTMLInputElement) {
+      this.setState({npmPluginValue: e.target.value});
+    }
   }
 
   async _handleAddFromNpm (e: Event): Promise<void> {
