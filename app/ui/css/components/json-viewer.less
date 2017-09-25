@@ -51,6 +51,13 @@
     &.json-viewer__value--boolean {
       color: var(--color-success);
     }
+
+    .json-viewer__value__inner--truncated {
+      user-select: none;
+      &::after {
+        content: '...';
+      }
+    }
   }
 
   .json-viewer__row--expandable {

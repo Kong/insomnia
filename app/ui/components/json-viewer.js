@@ -2,18 +2,22 @@
 import React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
+import {describeByteSize} from '../../common/misc';
 
 const PAGE_SIZE = 100;
+const MAX_VALUE_LENGTH = 100;
 
 type State = {
-  expanded: boolean,
-  hasBeenExpanded: boolean,
+  expandedChildren: boolean,
+  expandedValue: boolean,
+  haveChildrenBeenExpanded: boolean,
   page: number
 };
 
 type Props = {
   value: any,
   expanded?: boolean,
+  expandedValue?: boolean,
   label?: string
 };
 
@@ -28,19 +32,30 @@ class JSONNode extends React.PureComponent {
     const expanded = props.expanded !== undefined ? props.expanded : false;
 
     this.state = {
-      expanded,
-      hasBeenExpanded: false,
+      expandedChildren: expanded,
+      expandedValue: expanded,
+      haveChildrenBeenExpanded: expanded,
       page: 1
     };
   }
 
-  clickExpand (e) {
+  clickExpandChildren (e) {
     e.preventDefault();
-    const expanded = !this.state.expanded;
+    const expandedChildren = !this.state.expandedChildren;
     this.setState({
-      expanded,
-      hasBeenExpanded: this.state.hasBeenExpanded || expanded
+      expandedChildren,
+      hasBeenExpanded: this.state.haveChildrenBeenExpanded || expandedChildren
     });
+  }
+
+  clickExpandValue (e) {
+    e.preventDefault();
+
+    if (this.state.expandedValue) {
+      return;
+    }
+
+    this.setState({expandedValue: true});
   }
 
   clickNextPage (e) {
@@ -73,7 +88,13 @@ class JSONNode extends React.PureComponent {
 
   render () {
     const {value, label} = this.props;
-    const {expanded, hasBeenExpanded, page} = this.state;
+    const {
+      expandedChildren,
+      haveChildrenBeenExpanded,
+      expandedValue,
+      page
+    } = this.state;
+
     const type = this.getType(value);
     let isScalar = true;
 
@@ -150,6 +171,13 @@ class JSONNode extends React.PureComponent {
       }
     }
 
+    let valueToShow = value;
+    let isValueTruncated = false;
+    if (value && value.length && value.length > MAX_VALUE_LENGTH && !expandedValue) {
+      valueToShow = value.slice(0, MAX_VALUE_LENGTH);
+      isValueTruncated = true;
+    }
+
     let suffix = '';
     if (type === 'array') {
       suffix = ' [ ] ';
@@ -161,10 +189,10 @@ class JSONNode extends React.PureComponent {
       <div key={label || 'n/a'} className={classnames({
         'json-viewer__row': true,
         'json-viewer__row--expandable': children,
-        'json-viewer__row--collapsed': children && children.length && !expanded,
-        'json-viewer__row--expanded': children && children.length && expanded
+        'json-viewer__row--collapsed': children && children.length && !expandedChildren,
+        'json-viewer__row--expanded': children && children.length && expandedChildren
       })}>
-        <div onClick={this.clickExpand} className="json-viewer__inner">
+        <div onClick={this.clickExpandChildren} className="json-viewer__inner">
           {typeof label === 'string' && (
             <span className="json-viewer__label"
                   data-before={`${label}:`}
@@ -173,16 +201,21 @@ class JSONNode extends React.PureComponent {
           )}
 
           {isScalar && (
-            <div className={`json-viewer__value json-viewer__value--${type}`}>
-              {value + ''}
+            <div className={classnames('json-viewer__value', `json-viewer__value--${type}`, {
+              'json-viewer__value--truncated': isValueTruncated
+            })} onClick={this.clickExpandValue}>
+              {isValueTruncated
+                ? `${describeByteSize(Buffer.from(value).length)} hidden`
+                : (valueToShow || '')
+              }
             </div>
           )}
         </div>
 
-        {children && (expanded || hasBeenExpanded) && (
+        {children && (expandedChildren || haveChildrenBeenExpanded) && (
           <div className={classnames({
             'json-viewer__children': true,
-            'hide': !expanded && hasBeenExpanded
+            'hide': !expandedChildren && haveChildrenBeenExpanded
           })}>
             {childNodes}
             {extraChildren}
