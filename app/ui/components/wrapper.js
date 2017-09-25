@@ -6,7 +6,7 @@ import type {Workspace} from '../../models/workspace';
 import type {Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../../models/request';
 import {updateMimeType} from '../../models/request';
 
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {registerModal, showModal} from './modals/index';
@@ -40,6 +40,77 @@ import * as models from '../../models/index';
 import {trackEvent} from '../../analytics/index';
 import * as importers from 'insomnia-importers';
 import type {CookieJar} from '../../models/cookie-jar';
+import type {Environment} from '../../models/environment';
+
+type Props = {
+  // Helper Functions
+  handleActivateRequest: Function,
+  handleSetSidebarFilter: Function,
+  handleToggleMenuBar: Function,
+  handleImportFileToWorkspace: Function,
+  handleImportUriToWorkspace: Function,
+  handleExportFile: Function,
+  handleSetActiveWorkspace: Function,
+  handleSetActiveEnvironment: Function,
+  handleMoveDoc: Function,
+  handleCreateRequest: Function,
+  handleDuplicateRequest: Function,
+  handleDuplicateRequestGroup: Function,
+  handleDuplicateWorkspace: Function,
+  handleCreateRequestGroup: Function,
+  handleGenerateCodeForActiveRequest: Function,
+  handleGenerateCode: Function,
+  handleCopyAsCurl: Function,
+  handleCreateRequestForWorkspace: Function,
+  handleSetRequestPaneRef: Function,
+  handleSetResponsePaneRef: Function,
+  handleSetResponsePreviewMode: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  handleSetResponseFilter: Function,
+  handleSetActiveResponse: Function,
+  handleSetSidebarRef: Function,
+  handleStartDragSidebar: Function,
+  handleResetDragSidebar: Function,
+  handleStartDragPaneHorizontal: Function,
+  handleStartDragPaneVertical: Function,
+  handleResetDragPaneHorizontal: Function,
+  handleResetDragPaneVertical: Function,
+  handleSetRequestGroupCollapsed: Function,
+  handleSendRequestWithEnvironment: Function,
+  handleSendAndDownloadRequestWithEnvironment: Function,
+
+  // Properties
+  loadStartTime: number,
+  isLoading: boolean,
+  paneWidth: number,
+  paneHeight: number,
+  responsePreviewMode: string,
+  responseFilter: string,
+  responseFilterHistory: Array<string>,
+  sidebarWidth: number,
+  sidebarHidden: boolean,
+  sidebarFilter: string,
+  sidebarChildren: Array<Object>,
+  settings: Settings,
+  workspaces: Array<Workspace>,
+  unseenWorkspaces: Array<Workspace>,
+  workspaceChildren: Array<Object>,
+  environments: Array<Object>,
+  activeRequestResponses: Array<Response>,
+  activeWorkspace: Workspace,
+  activeCookieJar: CookieJar,
+  activeEnvironment: Environment | null,
+
+  // Optional
+  oAuth2Token: ?OAuth2Token,
+  activeRequest: ?Request,
+  activeResponse: ?Response,
+};
+
+type State = {
+  forceRefreshKey: number
+};
 
 const rUpdate = (request, ...args) => {
   if (!request) {
@@ -52,77 +123,7 @@ const rUpdate = (request, ...args) => {
 const sUpdate = models.settings.update;
 
 @autobind
-class Wrapper extends React.PureComponent {
-  props: {
-    // Helper Functions
-    handleActivateRequest: Function,
-    handleSetSidebarFilter: Function,
-    handleToggleMenuBar: Function,
-    handleImportFileToWorkspace: Function,
-    handleImportUriToWorkspace: Function,
-    handleExportFile: Function,
-    handleSetActiveWorkspace: Function,
-    handleSetActiveEnvironment: Function,
-    handleMoveDoc: Function,
-    handleCreateRequest: Function,
-    handleDuplicateRequest: Function,
-    handleDuplicateRequestGroup: Function,
-    handleDuplicateWorkspace: Function,
-    handleCreateRequestGroup: Function,
-    handleGenerateCodeForActiveRequest: Function,
-    handleGenerateCode: Function,
-    handleCopyAsCurl: Function,
-    handleCreateRequestForWorkspace: Function,
-    handleSetRequestPaneRef: Function,
-    handleSetResponsePaneRef: Function,
-    handleSetResponsePreviewMode: Function,
-    handleRender: Function,
-    handleGetRenderContext: Function,
-    handleSetResponseFilter: Function,
-    handleSetActiveResponse: Function,
-    handleSetSidebarRef: Function,
-    handleStartDragSidebar: Function,
-    handleResetDragSidebar: Function,
-    handleStartDragPaneHorizontal: Function,
-    handleStartDragPaneVertical: Function,
-    handleResetDragPaneHorizontal: Function,
-    handleResetDragPaneVertical: Function,
-    handleSetRequestGroupCollapsed: Function,
-    handleSendRequestWithEnvironment: Function,
-    handleSendAndDownloadRequestWithEnvironment: Function,
-
-    // Properties
-    loadStartTime: number,
-    isLoading: boolean,
-    paneWidth: number,
-    paneHeight: number,
-    responsePreviewMode: string,
-    responseFilter: string,
-    responseFilterHistory: Array<string>,
-    sidebarWidth: number,
-    sidebarHidden: boolean,
-    sidebarFilter: string,
-    sidebarChildren: Array<Object>,
-    settings: Settings,
-    workspaces: Array<Workspace>,
-    unseenWorkspaces: Array<Workspace>,
-    workspaceChildren: Array<Object>,
-    environments: Array<Object>,
-    activeRequestResponses: Array<Response>,
-    activeWorkspace: Workspace,
-    activeCookieJar: CookieJar,
-
-    // Optional
-    oAuth2Token: ?OAuth2Token,
-    activeRequest: ?Request,
-    activeResponse: ?Response,
-    activeEnvironment: ?Object
-  };
-
-  state: {
-    forceRefreshKey: number
-  };
-
+class Wrapper extends React.PureComponent<Props, State> {
   constructor (props: any) {
     super(props);
     this.state = {
@@ -616,6 +617,7 @@ class Wrapper extends React.PureComponent {
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
+            activeEnvironment={activeEnvironment}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
           />

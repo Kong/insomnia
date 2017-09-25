@@ -1,5 +1,5 @@
 import electron from 'electron';
-import React from 'react';
+import * as React from 'react';
 import {combineReducers} from 'redux';
 import fs from 'fs';
 import path from 'path';

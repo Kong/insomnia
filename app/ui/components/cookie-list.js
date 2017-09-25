@@ -1,5 +1,5 @@
 // @flow
-import React, {PureComponent} from 'react';
+import React from 'react';
 import uuid from 'uuid';
 import * as toughCookie from 'tough-cookie';
 import autobind from 'autobind-decorator';
@@ -8,17 +8,17 @@ import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
 import type {Cookie} from '../../models/cookie-jar';
 
-@autobind
-class CookieList extends PureComponent {
-  props: {
-    onCookieAdd: Function,
-    onCookieDelete: Function,
-    cookies: Array<Cookie>,
-    newCookieDomainName: string,
-    handleShowModifyCookieModal: Function,
-    handleRender: Function
-  };
+type Props = {
+  onCookieAdd: Function,
+  onCookieDelete: Function,
+  cookies: Array<Cookie>,
+  newCookieDomainName: string,
+  handleShowModifyCookieModal: Function,
+  handleRender: Function
+};
 
+@autobind
+class CookieList extends React.PureComponent<Props> {
   _handleCookieAdd () {
     const newCookie: Cookie = {
       id: uuid.v4(),

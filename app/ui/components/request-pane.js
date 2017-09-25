@@ -3,7 +3,7 @@ import type {Request} from '../../models/request';
 import type {Workspace} from '../../models/workspace';
 import type {OAuth2Token} from '../../models/o-auth-2-token';
 
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import ContentTypeDropdown from './dropdowns/content-type-dropdown';
@@ -26,46 +26,46 @@ import MarkdownPreview from './markdown-preview';
 import type {Settings} from '../../models/settings';
 import * as hotkeys from '../../common/hotkeys';
 
+type Props = {
+  // Functions
+  forceUpdateRequest: Function,
+  handleSend: Function,
+  handleSendAndDownload: Function,
+  handleCreateRequest: Function,
+  handleGenerateCode: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  updateRequestUrl: Function,
+  updateRequestMethod: Function,
+  updateRequestBody: Function,
+  updateRequestParameters: Function,
+  updateRequestAuthentication: Function,
+  updateRequestHeaders: Function,
+  updateRequestMimeType: Function,
+  updateSettingsShowPasswords: Function,
+  updateSettingsUseBulkHeaderEditor: Function,
+  handleImport: Function,
+  handleImportFile: Function,
+
+  // Other
+  useBulkHeaderEditor: boolean,
+  showPasswords: boolean,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  workspace: Workspace,
+  settings: Settings,
+  environmentId: string,
+  forceRefreshCounter: number,
+
+  // Optional
+  request: ?Request,
+  oAuth2Token: ?OAuth2Token
+};
+
 @autobind
-class RequestPane extends React.PureComponent {
-  props: {
-    // Functions
-    forceUpdateRequest: Function,
-    handleSend: Function,
-    handleSendAndDownload: Function,
-    handleCreateRequest: Function,
-    handleGenerateCode: Function,
-    handleRender: Function,
-    handleGetRenderContext: Function,
-    updateRequestUrl: Function,
-    updateRequestMethod: Function,
-    updateRequestBody: Function,
-    updateRequestParameters: Function,
-    updateRequestAuthentication: Function,
-    updateRequestHeaders: Function,
-    updateRequestMimeType: Function,
-    updateSettingsShowPasswords: Function,
-    updateSettingsUseBulkHeaderEditor: Function,
-    handleImport: Function,
-    handleImportFile: Function,
-
-    // Other
-    useBulkHeaderEditor: boolean,
-    showPasswords: boolean,
-    editorFontSize: number,
-    editorIndentSize: number,
-    editorKeyMap: string,
-    editorLineWrapping: boolean,
-    workspace: Workspace,
-    settings: Settings,
-    environmentId: string,
-    forceRefreshCounter: number,
-
-    // Optional
-    request: ?Request,
-    oAuth2Token: ?OAuth2Token
-  };
-
+class RequestPane extends React.PureComponent<Props> {
   _handleUpdateRequestUrlTimeout: number;
 
   _handleEditDescriptionAdd () {
@@ -267,7 +267,7 @@ class RequestPane extends React.PureComponent {
           <TabList>
             <Tab>
               <ContentTypeDropdown onChange={updateRequestMimeType}
-                                   contentType={request.body.mimeType}
+                                   contentType={request.body.mimeType || ''}
                                    request={request}
                                    className="tall">
                 {typeof request.body.mimeType === 'string'

@@ -1,22 +1,22 @@
 // @flow
 import type {Request} from '../../../../models/request';
 
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
 import {HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256} from '../../../../common/constants';
 import HelpTooltip from '../../help-tooltip';
 
-@autobind
-class HawkAuth extends React.PureComponent {
-  props: {
-    request: Request,
-    handleRender: Function,
-    handleGetRenderContext: Function,
-    onChange: Function
-  };
+type Props = {
+  request: Request,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  onChange: Function
+};
 
+@autobind
+class HawkAuth extends React.PureComponent<Props> {
   _handleChangeProperty: Function;
 
   constructor (props: any) {
@@ -43,7 +43,7 @@ class HawkAuth extends React.PureComponent {
     this._handleChangeProperty('algorithm', value);
   }
 
-  renderHawkAuthenticationFields (): Array<React.Element<*>> {
+  renderHawkAuthenticationFields (): React.Node {
     const hawkAuthId = this.renderInputRow(
       'Auth ID',
       'id',

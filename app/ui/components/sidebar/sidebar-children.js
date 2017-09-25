@@ -1,5 +1,5 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
@@ -31,9 +31,7 @@ type Props = {
   activeRequest?: Request
 };
 
-class SidebarChildren extends React.PureComponent {
-  props: Props;
-
+class SidebarChildren extends React.PureComponent<Props> {
   _renderChildren (children: Array<Child>) {
     const {
       handleCreateRequest,

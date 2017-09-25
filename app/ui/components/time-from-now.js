@@ -1,18 +1,18 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import moment from 'moment';
 
+type Props = {
+  timestamp: number
+};
+
+type State = {
+  text: string
+};
+
 @autobind
-class TimeFromNow extends React.PureComponent {
-  props: {
-    timestamp: number
-  };
-
-  state: {
-    text: string
-  };
-
+class TimeFromNow extends React.PureComponent<Props, State> {
   _interval: any;
 
   constructor (props: any) {

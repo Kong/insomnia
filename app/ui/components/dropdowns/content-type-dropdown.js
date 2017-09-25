@@ -1,5 +1,5 @@
 // @flow
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {trackEvent} from '../../../analytics/index';
@@ -8,20 +8,20 @@ import {showModal} from '../modals/index';
 import AlertModal from '../modals/alert-modal';
 import type {Request, RequestBody} from '../../../models/request';
 
+type Props = {
+  onChange: Function,
+  contentType: string | null,
+  children: ?React.Node,
+
+  // Optional
+  className?: string,
+  request?: Request
+};
+
 const EMPTY_MIME_TYPE = null;
 
 @autobind
-class ContentTypeDropdown extends React.PureComponent {
-  props: {
-    onChange: Function,
-    contentType: string | null,
-    children: React.Children,
-
-    // Optional
-    className?: string,
-    request?: Request
-  };
-
+class ContentTypeDropdown extends React.PureComponent<Props> {
   async _checkMimeTypeChange (body: RequestBody, mimeType: string | null) {
     // Nothing to do
     if (body.mimeType === mimeType) {

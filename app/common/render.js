@@ -8,6 +8,7 @@ import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 import type {CookieJar} from '../models/cookie-jar';
+import type {Environment} from '../models/environment';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -19,23 +20,23 @@ export type RenderedRequest = Request & {
 
 export async function buildRenderContext (
   ancestors: Array<BaseModel> | null,
-  rootEnvironment: {data: Object},
-  subEnvironment: {data: Object},
+  rootEnvironment: Environment | null,
+  subEnvironment: Environment | null,
   baseContext: Object = {}
 ): Object {
-  const environments = [];
+  const envObjects = [];
 
   if (rootEnvironment) {
-    environments.push(rootEnvironment.data);
+    envObjects.push(rootEnvironment.data);
   }
 
   if (subEnvironment) {
-    environments.push(subEnvironment.data);
+    envObjects.push(subEnvironment.data);
   }
 
   for (const doc of (ancestors || []).reverse()) {
     if (typeof doc.environment === 'object' && doc.environment !== null) {
-      environments.push(doc.environment);
+      envObjects.push(doc.environment);
     }
   }
 
@@ -44,13 +45,13 @@ export async function buildRenderContext (
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
   const renderContext = baseContext;
-  for (const environment: Object of environments) {
+  for (const envObject: Object of envObjects) {
     // Sort the keys that may have Nunjucks last, so that other keys get
     // defined first. Very important if env variables defined in same obj
     // (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
-    const keys = Object.keys(environment).sort((k1, k2) => {
-      if (typeof environment[k1] === 'string') {
-        return environment[k1].match(/({{)/) ? 1 : -1;
+    const keys = Object.keys(envObject).sort((k1, k2) => {
+      if (typeof envObject[k1] === 'string') {
+        return envObject[k1].match(/({{)/) ? 1 : -1;
       } else {
         return 0;
       }
@@ -70,14 +71,14 @@ export async function buildRenderContext (
        */
       if (typeof renderContext[key] === 'string') {
         renderContext[key] = await render(
-          environment[key],
+          envObject[key],
           renderContext,
           null,
           KEEP_ON_ERROR,
           'Environment'
         );
       } else {
-        renderContext[key] = environment[key];
+        renderContext[key] = envObject[key];
       }
     }
   }
@@ -192,7 +193,7 @@ export async function getRenderContext (
   }
 
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
-  const rootEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+  const rootEnvironment = await models.environment.getOrCreateForWorkspaceId(workspace ? workspace._id : 'n/a');
   const subEnvironment = await models.environment.getById(environmentId);
 
   // Add meta data helper function

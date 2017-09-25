@@ -2,7 +2,7 @@
 import type {Request} from '../../../../models/request';
 import type {OAuth2Token} from '../../../../models/o-auth-2-token';
 
-import React from 'react';
+import * as React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
@@ -18,31 +18,31 @@ import HelpTooltip from '../../help-tooltip';
 import PromptButton from '../../base/prompt-button';
 import TimeFromNow from '../../time-from-now';
 
+type Props = {
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  handleUpdateSettingsShowPasswords: Function,
+  onChange: Function,
+  request: Request,
+  showPasswords: boolean,
+
+  // Optional
+  oAuth2Token: OAuth2Token | null
+};
+
+type State = {
+  error: string,
+  loading: boolean,
+  showAdvanced: boolean
+};
+
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
 
 let showAdvanced = false;
 
 @autobind
-class OAuth2Auth extends React.PureComponent {
-  props: {
-    handleRender: Function,
-    handleGetRenderContext: Function,
-    handleUpdateSettingsShowPasswords: Function,
-    onChange: Function,
-    request: Request,
-    showPasswords: boolean,
-
-    // Optional
-    oAuth2Token: OAuth2Token | null
-  };
-
-  state: {
-    error: string,
-    loading: boolean,
-    showAdvanced: boolean
-  };
-
+class OAuth2Auth extends React.PureComponent<Props, State> {
   _handleChangeProperty: Function;
 
   constructor (props: any) {
@@ -63,9 +63,9 @@ class OAuth2Auth extends React.PureComponent {
     this.setState({showAdvanced});
   }
 
-  async _handleUpdateAccessToken (e: Event & {target: HTMLButtonElement}): Promise<void> {
+  async _handleUpdateAccessToken (e: SyntheticEvent<HTMLInputElement>): Promise<void> {
     const {oAuth2Token} = this.props;
-    const accessToken = e.target.value;
+    const accessToken = e.currentTarget.value;
 
     if (oAuth2Token) {
       await models.oAuth2Token.update(oAuth2Token, {accessToken});
@@ -74,9 +74,9 @@ class OAuth2Auth extends React.PureComponent {
     }
   }
 
-  async _handleUpdateRefreshToken (e: Event & {target: HTMLButtonElement}): Promise<void> {
+  async _handleUpdateRefreshToken (e: SyntheticEvent<HTMLInputElement>): Promise<void> {
     const {oAuth2Token} = this.props;
-    const refreshToken = e.target.value;
+    const refreshToken = e.currentTarget.value;
 
     if (oAuth2Token) {
       await models.oAuth2Token.update(oAuth2Token, {refreshToken});
@@ -118,8 +118,8 @@ class OAuth2Auth extends React.PureComponent {
     this._handleChangeProperty('clientId', value);
   }
 
-  _handleChangeCredentialsInBody (e: Event & {target: HTMLButtonElement}): void {
-    this._handleChangeProperty('credentialsInBody', e.target.value === 'true');
+  _handleChangeCredentialsInBody (e: SyntheticEvent<HTMLInputElement>): void {
+    this._handleChangeProperty('credentialsInBody', e.currentTarget.value === 'true');
   }
 
   _handleChangeClientSecret (value: string): void {
@@ -158,9 +158,9 @@ class OAuth2Auth extends React.PureComponent {
     this._handleChangeProperty('tokenPrefix', value);
   }
 
-  _handleChangeGrantType (e: Event & {target: HTMLButtonElement}): void {
-    trackEvent('OAuth 2', 'Change Grant Type', e.target.value);
-    this._handleChangeProperty('grantType', e.target.value);
+  _handleChangeGrantType (e: SyntheticEvent<HTMLInputElement>): void {
+    trackEvent('OAuth 2', 'Change Grant Type', e.currentTarget.value);
+    this._handleChangeProperty('grantType', e.currentTarget.value);
   }
 
   renderInputRow (
@@ -430,7 +430,7 @@ class OAuth2Auth extends React.PureComponent {
           )}
 
           {/* Handle minor errors */}
-          {(tok && tok.error) && (
+          {tok && tok.error ? (
             <div className="notice error margin-bottom">
               <h2 className="no-margin-top txt-lg force-wrap">
                 {tok.error}
@@ -446,7 +446,7 @@ class OAuth2Auth extends React.PureComponent {
                 )}
               </p>
             </div>
-          )}
+          ) : null}
           <div className="form-control form-control--outlined">
             <label>
               <small>
@@ -468,11 +468,11 @@ class OAuth2Auth extends React.PureComponent {
             </label>
           </div>
           <div className="pad-top text-right">
-            {tok && (
+            {tok ? (
               <PromptButton className="btn btn--clicky" onClick={this._handleClearTokens}>
                 Clear
               </PromptButton>
-            )}
+            ) : null}
             &nbsp;&nbsp;
             <button className="btn btn--clicky"
                     onClick={this._handleRefreshToken}

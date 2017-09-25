@@ -1,18 +1,18 @@
 // @flow
-import React, {PureComponent} from 'react';
+import * as React from 'react';
 import classnames from 'classnames';
 import {RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS} from '../../../common/constants';
 import Tooltip from '../tooltip';
 
-class StatusTag extends PureComponent {
-  props: {
-    statusCode: number,
+type Props = {
+  statusCode: number,
 
-    // Optional
-    small?: boolean,
-    statusMessage?: string
-  };
+  // Optional
+  small?: boolean,
+  statusMessage?: string
+};
 
+class StatusTag extends React.PureComponent<Props> {
   render () {
     const {statusMessage, statusCode, small} = this.props;
 

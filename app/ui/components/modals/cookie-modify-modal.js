@@ -1,5 +1,5 @@
 // @flow
-import React, {PureComponent} from 'react';
+import * as React from 'react';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import autobind from 'autobind-decorator';
 import deepEqual from 'deep-equal';
@@ -17,20 +17,20 @@ import {cookieToString} from '../../../common/cookies';
 import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
 
+type Props = {
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  workspace: Workspace,
+  cookieJar: CookieJar
+};
+
+type State = {
+  cookie: Cookie | null,
+  rawValue: string
+};
+
 @autobind
-class CookieModifyModal extends PureComponent {
-  props: {
-    handleRender: Function,
-    handleGetRenderContext: Function,
-    workspace: Workspace,
-    cookieJar: CookieJar
-  };
-
-  state: {
-    cookie: Cookie | null,
-    rawValue: string
-  };
-
+class CookieModifyModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
   _rawTimeout: number | null;
   _cookieUpdateTimeout: number | null;
@@ -78,7 +78,11 @@ class CookieModifyModal extends PureComponent {
     await models.cookieJar.update(cookieJar);
   }
 
-  _handleChangeRawValue (e: Event & {target: HTMLInputElement}) {
+  _handleChangeRawValue (e: Event) {
+    if (!(e.target instanceof HTMLInputElement)) {
+      return;
+    }
+
     const value = e.target.value;
 
     clearTimeout(this._rawTimeout);
@@ -124,19 +128,21 @@ class CookieModifyModal extends PureComponent {
     return cookie;
   }
 
-  _handleChange (field: string, eventOrValue: string | Event & {target: HTMLInputElement}) {
+  _handleChange (field: string, eventOrValue: string | Event) {
     const {cookie} = this.state;
 
     let value;
 
     if (typeof eventOrValue === 'string') {
       value = eventOrValue.trim();
-    } else {
+    } else if (eventOrValue.target instanceof HTMLInputElement) {
       if (eventOrValue.target.type === 'checkbox') {
         value = eventOrValue.target.checked;
       } else {
         value = eventOrValue.target.value.trim();
       }
+    } else {
+      // Should never happen
     }
 
     const newCookie = Object.assign({}, cookie, {[field]: value});

@@ -13,20 +13,20 @@ import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
 import {fuzzyMatch} from '../../../common/misc';
 
+type Props = {
+  handleShowModifyCookieModal: Function,
+  handleRender: Function,
+  cookieJar: CookieJar,
+  workspace: Workspace
+};
+
+type State = {
+  filter: string,
+  visibleCookieIndexes: Array<number> | null
+};
+
 @autobind
-class CookiesModal extends PureComponent {
-  props: {
-    handleShowModifyCookieModal: Function,
-    handleRender: Function,
-    cookieJar: CookieJar,
-    workspace: Workspace
-  };
-
-  state: {
-    filter: string,
-    visibleCookieIndexes: Array<number> | null
-  };
-
+class CookiesModal extends PureComponent<Props, State> {
   modal: Modal | null;
   filterInput: HTMLInputElement | null;
 
@@ -39,7 +39,7 @@ class CookiesModal extends PureComponent {
     };
   }
 
-  _setModalRef (n: React.Element<*> | null) {
+  _setModalRef (n: React.Component<*> | null) {
     this.modal = n;
   }
 
@@ -72,7 +72,11 @@ class CookiesModal extends PureComponent {
     trackEvent('Cookie', 'Delete');
   }
 
-  async _handleFilterChange (e: Event & {target: HTMLInputElement}) {
+  async _handleFilterChange (e: Event) {
+    if (!(e.target instanceof HTMLInputElement)) {
+      return;
+    }
+
     const filter = e.target.value;
     this._applyFilter(filter, this.props.cookieJar.cookies);
   }
