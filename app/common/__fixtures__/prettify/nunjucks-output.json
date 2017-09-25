@@ -1,0 +1,7 @@
+{
+  "quoted": "{{ bar }}",
+  "variable": {{ hello }},
+  {# This is a comment #}
+  "tag": {% foo 'bar', "baz" %}
+}
+
