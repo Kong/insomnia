@@ -18,7 +18,7 @@ install:
   - node --version
   - npm --version
   - npm config set msvs_version 2013
-  - npm install zip-bin-win
+  - npm install 7zip-bin-win > NUL
   - npm install > NUL
   - npm test
 
