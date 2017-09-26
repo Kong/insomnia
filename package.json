@@ -85,7 +85,10 @@
     },
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
-      "target": "squirrel",
+      "target": [
+        "squirrel",
+        "zip"
+      ],
       "msi": false
     },
     "linux": {
