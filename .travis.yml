@@ -32,7 +32,7 @@ cache:
     - $HOME/.cache
 
 install:
-- npm install -g npm@5 > Nul
+- npm install 7zip-bin-mac 7zip-bin-linux > /dev/null
 - npm install > /dev/null
 - node --version
 - npm --version
