@@ -87,7 +87,6 @@
       "category": "public.app-category.developer-tools"
     },
     "win": {
-      "icon": "icon.ico",
       "target": [
         "squirrel",
         "zip"
