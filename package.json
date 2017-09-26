@@ -29,9 +29,9 @@
     "build:install": "cd build && npm install",
     "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
     "rebuild": "electron-rebuild -f -w node-libcurl",
-    "package:mac": "rm -rf dist/mac && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --mac",
-    "package:win": "rm -rf dist/win* && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --win",
-    "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --linux",
+    "package:mac": "rm -rf dist/mac && electron-builder --publish=never --x64 --mac",
+    "package:win": "rm -rf dist/win* && electron-builder --publish=never --x64 --win",
+    "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && electron-builder --publish=never --x64 --linux",
     "package": "npm test && rm -rf dist/* && npm run package:mac && npm run package:win && npm run package:linux",
     "build-n-package": "npm run build && npm run package",
     "build-n-package:win": "npm run build && npm run package:win",
@@ -68,7 +68,7 @@
   },
   "build": {
     "appId": "com.insomnia.app",
-    "category": "public.app-category.developer-tools",
+    "publish": false,
     "protocols": [
       {
         "name": "Insomnia",
@@ -83,13 +83,15 @@
       "app": "build",
       "output": "dist"
     },
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
     "win": {
-      "iconUrl": "https://insomnia.rest/images/icon.png",
+      "icon": "icon.ico",
       "target": [
         "squirrel",
         "zip"
-      ],
-      "msi": false
+      ]
     },
     "linux": {
       "executableName": "insomnia",
@@ -143,7 +145,7 @@
     "node-forge": "^0.7.0",
     "nunjucks": "^3.0.0",
     "prop-types": "^15.5.10",
-    "react": "^15.6.1",
+    "react": "^15.6.2",
     "react-dnd": "^2.4.0",
     "react-dnd-html5-backend": "^2.4.1",
     "react-dom": "^15.6.1",
@@ -170,18 +172,14 @@
     "babel-loader": "^6.3.2",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-plugin-transform-regenerator": "^6.22.0",
-    "babel-plugin-transform-runtime": "^6.15.0",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
     "babel-preset-flow": "^6.23.0",
     "babel-preset-react": "^6.23.0",
-    "babel-preset-react-hmre": "^1.1.1",
-    "concurrently": "^2.0.0",
+    "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
     "css-loader": "^0.26.2",
-    "electron": "^1.7.5",
-    "electron-builder": "^10.17.3",
+    "electron": "^1.7.8",
+    "electron-builder": "^19.30.2",
     "electron-rebuild": "^1.6.0",
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",
@@ -204,9 +202,7 @@
     "style-loader": "^0.13.2",
     "url-loader": "^0.5.8",
     "webpack": "^3.5.5",
-    "webpack-dev-middleware": "^1.10.1",
     "webpack-dev-server": "^2.4.1",
-    "webpack-hot-middleware": "^2.17.1",
     "webpack-target-electron-renderer": "^0.4.0"
   }
 }
