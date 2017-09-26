@@ -8,7 +8,7 @@ build: off
 shallow_clone: true
 platform: x64
 environment:
-  NODEJS_VERSION: "7"
+  NODEJS_VERSION: "8"
   CSC_LINK: '%WINDOWS_CSC_LINK%'
   CSC_KEY_PASSWORD: '%WINDOWS_CSC_KEY_PASSWORD%'
 
@@ -18,7 +18,7 @@ install:
   - node --version
   - npm --version
   - npm config set msvs_version 2013
-  - npm install 7zip-bin-win
+  - npm install zip-bin-win
   - npm install > NUL
   - npm test
 

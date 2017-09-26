@@ -180,6 +180,7 @@
     "css-loader": "^0.26.2",
     "electron": "^1.7.8",
     "electron-builder": "^19.30.2",
+    "electron-builder-squirrel-windows": "^19.30.3",
     "electron-rebuild": "^1.6.0",
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",
