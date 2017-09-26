@@ -6,9 +6,13 @@ matrix:
       dist: trusty
       env: CC=clang CXX=clang++ npm_config_clang=1
       compiler: clang
+      install:
+        - npm install 7zip-bin-linux > /dev/null
       env:
         - PLATFORM=linux
     - os: osx
+      install:
+        - npm install 7zip-bin-mac > /dev/null
       env:
         - PLATFORM=mac
         - CSC_LINK=$MAC_CSC_LINK
@@ -32,7 +36,6 @@ cache:
     - $HOME/.cache
 
 install:
-- npm install 7zip-bin-mac 7zip-bin-linux > /dev/null
 - npm install > /dev/null
 - node --version
 - npm --version
