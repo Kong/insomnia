@@ -26,7 +26,6 @@ import {isDevelopment} from '../common/constants';
   const context = DragDropContext(DNDBackend);
   const DndComponent = context(App);
   const render = Component => {
-    console.time('Render');
     ReactDOM.render(
       <AppContainer>
         <Provider store={store}>
@@ -35,7 +34,6 @@ import {isDevelopment} from '../common/constants';
       </AppContainer>,
       document.getElementById('root')
     );
-    console.timeEnd('Render');
   };
 
   render(DndComponent);
