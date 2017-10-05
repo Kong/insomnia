@@ -336,12 +336,12 @@ export function _actuallySend (
 
         if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
           const ensureFile = blobOrFilename => {
-            if (blobOrFilename.indexOf('/') === 0) {
-              return blobOrFilename;
-            } else {
-              // Legacy support. Certs used to be stored in blobs, so lets write it to
+            try {
+              fs.statSync(blobOrFilename);
+            } catch (err) {
+              // Certificate file now found!
+              // LEGACY: Certs used to be stored in blobs (not as paths), so lets write it to
               // the temp directory first.
-              // TODO: Delete this fallback eventually
               const fullBase = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
               mkdirp.sync(fullBase);
 
@@ -349,8 +349,11 @@ export function _actuallySend (
               const fullPath = pathJoin(fullBase, name);
               fs.writeFileSync(fullPath, new Buffer(blobOrFilename, 'base64'));
 
-              return fullPath;
+              // Set filename to the one we just saved
+              blobOrFilename = fullPath;
             }
+
+            return blobOrFilename;
           };
 
           const {passphrase, cert, key, pfx} = certificate;
