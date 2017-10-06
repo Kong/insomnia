@@ -2,7 +2,7 @@
 import type {Request} from '../../../../models/request';
 import classnames from 'classnames';
 import {newBodyRaw} from '../../../../models/request';
-import React from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {parse, print} from 'graphql';
 import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
@@ -44,19 +44,19 @@ type Props = {
   className?: string
 };
 
+type State = {
+  body: GraphQLBody,
+  schema: Object | null,
+  schemaFetchError: string,
+  schemaLastFetchTime: number,
+  schemaIsFetching: boolean,
+  hideSchemaFetchErrors: boolean,
+  variablesSyntaxError: string,
+  forceRefreshKey: number
+}
+
 @autobind
-class GraphQLEditor extends React.PureComponent {
-  props: Props;
-  state: {
-    body: GraphQLBody,
-    schema: Object | null,
-    schemaFetchError: string,
-    schemaLastFetchTime: number,
-    schemaIsFetching: boolean,
-    hideSchemaFetchErrors: boolean,
-    variablesSyntaxError: string,
-    forceRefreshKey: number
-  };
+class GraphQLEditor extends React.PureComponent<Props, State> {
   _isMounted: boolean;
 
   constructor (props: Props) {
@@ -297,7 +297,8 @@ class GraphQLEditor extends React.PureComponent {
         </div>
         <div className="graphql-editor__schema-notice">
           {this.renderSchemaFetchMessage()}
-          <button className={classnames('icon space-left', {'fa-spin': schemaIsFetching})} onClick={this._handleRefreshSchema}>
+          <button className={classnames('icon space-left', {'fa-spin': schemaIsFetching})}
+                  onClick={this._handleRefreshSchema}>
             <i className="fa fa-refresh"/>
           </button>
         </div>

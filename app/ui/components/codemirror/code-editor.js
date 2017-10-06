@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import CodeMirror from 'codemirror';
@@ -57,7 +57,7 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 @autobind
-class CodeEditor extends PureComponent {
+class CodeEditor extends React.Component {
   constructor (props) {
     super(props);
 

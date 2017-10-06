@@ -131,19 +131,6 @@ class WorkspaceSettingsModal extends PureComponent {
     trackEvent('Certificates', 'Toggle');
   }
 
-  toggle (workspace) {
-    this.modal.toggle();
-    this.setState({
-      workspace,
-      showAddCertificateForm: false,
-      crtPath: '',
-      keyPath: '',
-      pfxPath: '',
-      host: '',
-      passphrase: ''
-    });
-  }
-
   show () {
     const hasDescription = !!this.props.workspace.description;
     this.setState({

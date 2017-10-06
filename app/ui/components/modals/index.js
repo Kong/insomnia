@@ -28,14 +28,6 @@ export function showModal (modalCls, ...args) {
   return _getModal(modalCls).show(...args);
 }
 
-export function toggleModal (modalCls, ...args) {
-  return _getModal(modalCls).toggle(...args);
-}
-
-export function hideModal (modalCls) {
-  return _getModal(modalCls).hide();
-}
-
 export function hideAllModals () {
   for (const key of Object.keys(modals)) {
     const modal = modals[key];

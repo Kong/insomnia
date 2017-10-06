@@ -29,10 +29,6 @@ class ChangelogModal extends PureComponent {
     this.modal.hide();
   }
 
-  toggle () {
-    this.modal.toggle();
-  }
-
   async componentDidMount () {
     let changelog;
     try {

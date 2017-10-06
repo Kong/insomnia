@@ -1,7 +1,7 @@
 // @flow
-import React, {PureComponent} from 'react';
+import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {Dropdown, DropdownDivider, DropdownItem, DropdownButton} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {showModal} from '../modals';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
@@ -18,18 +18,17 @@ type Props = {
   className?: string
 };
 
-@autobind
-class SyncDropdown extends PureComponent {
-  props: Props;
-  state: {
-    loggedIn: boolean | null,
-    loading: boolean,
-    resourceGroupId: string | null,
-    syncMode: string | null,
-    syncPercent: number,
-    workspaceName: string
-  };
+type State = {
+  loggedIn: boolean | null,
+  loading: boolean,
+  resourceGroupId: string | null,
+  syncMode: string | null,
+  syncPercent: number,
+  workspaceName: string
+};
 
+@autobind
+class SyncDropdown extends React.PureComponent<Props, State> {
   _hasPrompted: boolean;
   _isMounted: boolean;
 

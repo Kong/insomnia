@@ -20,7 +20,7 @@ type BaseWorkspace = {
   }>
 };
 
-export type Workspace = BaseWorkspace & BaseModel;
+export type Workspace = BaseModel & BaseWorkspace;
 
 export function init () {
   return {
@@ -32,7 +32,7 @@ export function init () {
   };
 }
 
-export async function migrate (doc: Object) {
+export async function migrate (doc: Workspace): Promise<Workspace> {
   // There was a bug on import that would set this to the current workspace ID.
   // Let's remove it here so that nothing bad happens.
   if (doc.parentId !== null) {

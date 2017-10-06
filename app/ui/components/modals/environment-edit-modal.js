@@ -55,11 +55,6 @@ class EnvironmentEditModal extends PureComponent {
     this.modal.hide();
   }
 
-  toggle (requestGroup) {
-    this.modal.toggle();
-    this.setState({requestGroup});
-  }
-
   render () {
     const {
       editorKeyMap,

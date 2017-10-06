@@ -1,8 +1,20 @@
-const NUNJUCKS_REGEXES = [
-  /{{[^}]*}}/, // variables
-  /{%[^%]*%}/, // tags
-  /{#[^#]*#}/ // comments
-];
+const STATE_IN_NUN_VAR = 'nunvar';
+const STATE_IN_NUN_TAG = 'nuntag';
+const STATE_IN_NUN_COM = 'nuncom';
+const STATE_IN_STRING = 'string';
+const STATE_NONE = 'none';
+
+const NUNJUCKS_OPEN_STATES = {
+  '{{': STATE_IN_NUN_VAR,
+  '{%': STATE_IN_NUN_TAG,
+  '{#': STATE_IN_NUN_COM
+};
+
+const NUNJUCKS_CLOSE_STATES = {
+  '}}': STATE_IN_NUN_VAR,
+  '%}': STATE_IN_NUN_TAG,
+  '#}': STATE_IN_NUN_COM
+};
 
 /**
  * Format a JSON string without parsing it as JavaScript.
@@ -11,10 +23,9 @@ const NUNJUCKS_REGEXES = [
  *
  * @param json
  * @param indentChars
- * @param ignoreRegexes
  * @returns {string}
  */
-export function prettifyJson (json, indentChars = '\t', ignoreRegexes = NUNJUCKS_REGEXES) {
+export function prettifyJson (json, indentChars = '\t') {
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
   try {
@@ -24,114 +35,115 @@ export function prettifyJson (json, indentChars = '\t', ignoreRegexes = NUNJUCKS
     console.warn('Prettify failed to handle unicode', err);
   }
 
-  // Replace ignored strings with placeholders, so we can put them back at the end
-  const ignoredSubstrings = {};
-  for (let x = 0; x < ignoreRegexes.length; x++) {
-    let m;
-    for (let y = 0; (m = ignoreRegexes[x].exec(json)); y++) {
-      const v = `__IGNORED_${x}_${y}_IGNORED__`;
-      ignoredSubstrings[v] = m[0];
-      json = `${json.slice(0, m.index)}${v}${json.slice(m.index + m[0].length)}`;
-    }
-  }
-
   let i = 0;
   let il = json.length;
   let tab = indentChars;
   let newJson = '';
   let indentLevel = 0;
-  let inString = false;
-  let isEscaped = false;
   let currentChar = null;
-  let previousChar = null;
   let nextChar = null;
+  let nextTwo = null;
+  let state = STATE_NONE;
 
   for (; i < il; i += 1) {
     currentChar = json.charAt(i);
-    previousChar = json.charAt(i - 1);
-    nextChar = json.charAt(i + 1);
+    nextChar = json.charAt(i + 1) || '';
+    nextTwo = currentChar + nextChar;
 
-    // Handle the escaped case
-    if (isEscaped) {
-      isEscaped = false;
-      newJson += currentChar;
+    if (state === STATE_IN_STRING) {
+      if (currentChar === '"') {
+        state = STATE_NONE;
+        newJson += currentChar;
+        continue;
+      } else if (currentChar === '\\') {
+        newJson += currentChar + nextChar;
+        i++;
+        continue;
+      } else {
+        newJson += currentChar;
+        continue;
+      }
+    }
+
+    // Close Nunjucks states
+    if (Object.values(NUNJUCKS_CLOSE_STATES).includes(state)) {
+      const closeState = NUNJUCKS_CLOSE_STATES[nextTwo];
+      if (closeState) {
+        state = STATE_NONE;
+        if (closeState === STATE_IN_NUN_COM) {
+          // Put comments on their own lines
+          newJson += nextTwo + '\n' + _repeatString(tab, indentLevel);
+        } else {
+          newJson += nextTwo;
+        }
+        i++;
+        continue;
+      } else {
+        newJson += currentChar;
+        continue;
+      }
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~ //
+    // Handle "nothing" State //
+    // ~~~~~~~~~~~~~~~~~~~~~~ //
+
+    // Open Nunjucks states
+    const nextState = NUNJUCKS_OPEN_STATES[nextTwo];
+    if (nextState) {
+      state = nextState;
+      newJson += nextTwo;
+      i++;
       continue;
     }
 
     switch (currentChar) {
-      case '\\':
-        isEscaped = !isEscaped;
-        newJson += currentChar;
-        break;
-      case '{':
-        if (!inString && nextChar !== '}') {
-          newJson += currentChar + '\n' + _repeatString(tab, indentLevel + 1);
-          indentLevel += 1;
-        } else {
-          newJson += currentChar;
-        }
-        break;
-      case '[':
-        if (!inString && nextChar !== ']') {
-          newJson += currentChar + '\n' + _repeatString(tab, indentLevel + 1);
-          indentLevel += 1;
-        } else {
-          newJson += currentChar;
-        }
-        break;
-      case '}':
-        if (!inString && previousChar !== '{') {
-          indentLevel -= 1;
-          newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
-        } else {
-          newJson += currentChar;
-        }
-        break;
-      case ']':
-        if (!inString && previousChar !== '[') {
-          indentLevel -= 1;
-          newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
-        } else {
-          newJson += currentChar;
-        }
-        break;
       case ',':
-        if (!inString) {
-          newJson += ',\n' + _repeatString(tab, indentLevel);
+        newJson += currentChar + '\n' + _repeatString(tab, indentLevel);
+        continue;
+      case '{':
+        if (nextChar === '}') {
+          newJson += currentChar + nextChar;
+          i++;
         } else {
-          newJson += currentChar;
+          indentLevel++;
+          newJson += currentChar + '\n' + _repeatString(tab, indentLevel);
         }
-        break;
+        continue;
+      case '[':
+        if (nextChar === ']') {
+          newJson += currentChar + nextChar;
+          i++;
+        } else {
+          indentLevel++;
+          newJson += currentChar + '\n' + _repeatString(tab, indentLevel);
+        }
+        continue;
+      case '}':
+        indentLevel--;
+        newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
+        continue;
+      case ']':
+        indentLevel--;
+        newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
+        continue;
       case ':':
-        if (!inString) {
-          newJson += ': ';
-        } else {
-          newJson += currentChar;
-        }
-        break;
+        newJson += ': ';
+        continue;
+      case '"':
+        state = STATE_IN_STRING;
+        newJson += currentChar;
+        continue;
       case ' ':
       case '\n':
       case '\t':
-        if (inString) {
-          newJson += currentChar;
-        }
-        break;
-      case '"':
-        inString = !inString;
-        newJson += currentChar;
-        break;
       case '\r':
-        // Skip windows return characters
-        break;
+        // Don't add whitespace
+        continue;
       default:
         newJson += currentChar;
-        break;
+        continue;
     }
-  }
-
-  // Put the ignored strings back where they were
-  for (const v of Object.keys(ignoredSubstrings)) {
-    newJson = newJson.replace(v, ignoredSubstrings[v]);
   }
 
   // Remove lines that only contain whitespace

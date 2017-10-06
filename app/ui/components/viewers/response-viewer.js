@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
@@ -14,7 +14,7 @@ import JSONViewer from '../json-viewer';
 let alwaysShowLargeResponses = false;
 
 @autobind
-class ResponseViewer extends PureComponent {
+class ResponseViewer extends React.Component {
   constructor (props) {
     super(props);
     this.state = {

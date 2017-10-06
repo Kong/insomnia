@@ -83,11 +83,6 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  toggle (currentTabIndex = 0) {
-    this.setState({currentTabIndex});
-    this.modal.toggle();
-  }
-
   render () {
     const {settings} = this.props;
     const {currentTabIndex} = this.state;
