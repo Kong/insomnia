@@ -2,68 +2,29 @@
 import React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
-import {describeByteSize} from '../../common/misc';
 
-const PAGE_SIZE = 100;
-const MAX_VALUE_LENGTH = 100;
-
-type State = {
-  expandedChildren: boolean,
-  expandedValue: boolean,
-  haveChildrenBeenExpanded: boolean,
-  page: number
-};
+// const PAGE_SIZE = 10;
+const MAX_VALUE_LENGTH = 50;
 
 type Props = {
-  value: any,
-  expanded?: boolean,
-  expandedValue?: boolean,
-  label?: string
+  body: Buffer,
+  fontSize: number,
+
+  // Optional
+  className?: string,
+};
+
+type State = {
+  expandedPaths: {[string]: boolean};
 };
 
 @autobind
-class JSONNode extends React.PureComponent {
-  props: Props;
-  state: State;
-
+class JSONViewer extends React.PureComponent<Props, State> {
   constructor (props: Props) {
     super(props);
-
-    const expanded = props.expanded !== undefined ? props.expanded : false;
-
     this.state = {
-      expandedChildren: expanded,
-      expandedValue: expanded,
-      haveChildrenBeenExpanded: expanded,
-      page: 1
+      expandedPaths: {'.root': true}
     };
-  }
-
-  clickExpandChildren (e) {
-    e.preventDefault();
-    const expandedChildren = !this.state.expandedChildren;
-    this.setState({
-      expandedChildren,
-      hasBeenExpanded: this.state.haveChildrenBeenExpanded || expandedChildren
-    });
-  }
-
-  clickExpandValue (e) {
-    e.preventDefault();
-
-    if (this.state.expandedValue) {
-      return;
-    }
-
-    this.setState({expandedValue: true});
-  }
-
-  clickNextPage (e) {
-    this.setState({page: this.state.page + 1});
-  }
-
-  clickShowAll (e) {
-    this.setState({page: -1});
   }
 
   getType (value: any) {
@@ -86,163 +47,207 @@ class JSONNode extends React.PureComponent {
     }
   }
 
-  render () {
-    const {value, label} = this.props;
-    const {
-      expandedChildren,
-      haveChildrenBeenExpanded,
-      expandedValue,
-      page
-    } = this.state;
+  isCollapsable (obj: any): boolean {
+    switch (this.getType(obj)) {
+      case 'string':
+        return obj.length > MAX_VALUE_LENGTH;
+      case 'array':
+        return obj.length > 0;
+      case 'object':
+        return Object.keys(obj).length > 0;
+      default:
+        return false;
+    }
+  }
 
-    const type = this.getType(value);
-    let isScalar = true;
+  getValue (obj: any, collapsed: boolean) {
+    let n;
+    let comment;
+    let abbr;
+    let hasChildren = false;
 
-    let children = null;
-    if (Array.isArray(value)) {
-      isScalar = false;
-      children = value.map((v, i) => ({
-        value: v,
-        label: i.toString()
-      }));
-    } else if (value !== null && typeof value === 'object') {
-      isScalar = false;
-      children = Object.keys(value).map(key => ({
-        value: value[key],
-        label: key
-      }));
+    if (Array.isArray(obj)) {
+      hasChildren = true;
+      n = obj.length;
+      comment = n > 0 ? `// ${n} item${n === 1 ? '' : 's'}` : '';
+      abbr = collapsed && n > 0 ? `[…]` : '[]';
+    } else if (obj && typeof obj === 'object') {
+      hasChildren = true;
+      n = Object.keys(obj).length;
+      comment = n > 0 ? `// ${n} key${n === 1 ? '' : 's'}` : '';
+      abbr = collapsed && n > 0 ? `{…}` : '{}';
     }
 
-    // Grab some metadata on children counts
-    let describer = '';
-    if (children) {
-      const word = type === 'array' ? 'item' : 'key';
-      const plural = children.length === 1 ? '' : 's';
-      describer = ` ${children.length} ${word}${plural}`;
-    }
-
-    // Sort is too slow for large responses. Do something else here (like caching?)
-    // children = children.sort((a, b) => {
-    //   const typeA = this.getType(a.value);
-    //   const typeB = this.getType(b.value);
-    //
-    //   const aIsHeavy = typeA === 'object' || typeA === 'array';
-    //   const bIsHeavy = typeB === 'object' || typeB === 'array';
-    //
-    //   if (aIsHeavy && !bIsHeavy) {
-    //     return 1;
-    //   }
-    //
-    //   if (!aIsHeavy && bIsHeavy) {
-    //     return -1;
-    //   }
-    //
-    //   // Same type? Sort by key
-    //   return a.value > b.value ? 1 : -1;
-    // });
-
-    // Render show-more section
-    const extraChildren = [];
-    const childNodes = [];
-    if (children) {
-      const limit = page * PAGE_SIZE;
-      const next = limit + PAGE_SIZE;
-      const nextLimit = next > children.length ? children.length : next;
-
-      for (let i = 0; i < limit && i < children.length; i++) {
-        const {label, value} = children[i];
-        childNodes.push(
-          <JSONNode key={label} value={value} label={label}/>
-        );
+    if (hasChildren) {
+      if (n === 0) {
+        return abbr;
       }
 
-      if (limit < children.length) {
-        extraChildren.push(
-          <div key="show-next" onClick={this.clickNextPage} className="json-viewer__highlight">
-            Show More ({limit}-{nextLimit})
-          </div>
-        );
-
-        extraChildren.push(
-          <div key="show-all" onClick={this.clickShowAll} className="json-viewer__highlight">
-            Show All ({children.length})
-          </div>
-        );
-      }
+      return collapsed
+        ? <span>{abbr} <span className="json-viewer__type-comment">{comment}</span></span>
+        : null;
     }
 
-    let valueToShow = value;
-    let isValueTruncated = false;
-    if (value && value.length && value.length > MAX_VALUE_LENGTH && !expandedValue) {
-      valueToShow = value.slice(0, MAX_VALUE_LENGTH);
-      isValueTruncated = true;
-    }
+    const strObj: string = `${obj}`;
+    let displayValue = strObj;
 
-    let suffix = '';
-    if (type === 'array') {
-      suffix = ' [ ] ';
-    } else if (type === 'object') {
-      suffix = ' { } ';
+    let collapsable = strObj.length > MAX_VALUE_LENGTH;
+    if (collapsable && collapsed) {
+      const halfOfMax = Math.floor(MAX_VALUE_LENGTH / 2) - 5;
+      const start = strObj.slice(0, halfOfMax);
+      const end = strObj.slice(strObj.length - halfOfMax);
+      displayValue = `${start}…${end}`;
     }
 
     return (
-      <div key={label || 'n/a'} className={classnames({
-        'json-viewer__row': true,
-        'json-viewer__row--expandable': children,
-        'json-viewer__row--collapsed': children && children.length && !expandedChildren,
-        'json-viewer__row--expanded': children && children.length && expandedChildren
-      })}>
-        <div onClick={this.clickExpandChildren} className="json-viewer__inner">
-          {typeof label === 'string' && (
-            <span className="json-viewer__label"
-                  data-before={`${label}:`}
-                  data-after={`${suffix}${describer}`}
-            />
-          )}
-
-          {isScalar && (
-            <div className={classnames('json-viewer__value', `json-viewer__value--${type}`, {
-              'json-viewer__value--truncated': isValueTruncated
-            })} onClick={this.clickExpandValue}>
-              {isValueTruncated
-                ? `${describeByteSize(Buffer.from(value).length)} hidden`
-                : (valueToShow || '')
-              }
-            </div>
-          )}
-        </div>
-
-        {children && (expandedChildren || haveChildrenBeenExpanded) && (
-          <div className={classnames({
-            'json-viewer__children': true,
-            'hide': !expandedChildren && haveChildrenBeenExpanded
-          })}>
-            {childNodes}
-            {extraChildren}
-          </div>
-        )}
-      </div>
+      <span className={`json-viewer__value json-viewer__type-${this.getType(obj)}`}>
+        {displayValue}
+      </span>
     );
   }
-}
 
-class JSONViewer extends React.PureComponent {
-  props: {
-    body: Buffer,
+  handleClickKey (e: MouseEvent) {
+    if (e.currentTarget instanceof HTMLElement) {
+      const path: string = e.currentTarget.getAttribute('data-path') || '';
+      this.setState(state => ({
+        expandedPaths: Object.assign({}, state.expandedPaths, {
+          [path]: !this.isExpanded(path)
+        })
+      }));
+    }
+  }
 
-    // Optional
-    className?: string
-  };
+  isCollapsed (path: string): boolean {
+    if (!this.state.expandedPaths.hasOwnProperty(path)) {
+      return false;
+    }
+
+    return !this.state.expandedPaths[path];
+  }
+
+  isExpanded (path: string): boolean {
+    return !this.isCollapsed(path);
+  }
+
+  renderRows (obj: any, paths: Array<string> = []) {
+    if (paths.length > 0 && this.isCollapsed(paths.join(''))) {
+      return [];
+    }
+
+    const rows = [];
+    const indentStyles = {paddingLeft: `${paths.length * 1.3}em`};
+
+    if (Array.isArray(obj)) {
+      for (let key = 0; key < obj.length; key++) {
+        const newPaths = [...paths, `[${key}]`];
+        const collapsed = this.isCollapsed(newPaths.join(''));
+        const collapsable = this.isCollapsable(obj[key]);
+        const rowClasses = classnames({
+          'json-viewer__row': true,
+          'json-viewer__row--collapsable': collapsable,
+          'json-viewer__row--collapsed': collapsed
+        });
+        rows.push((
+          <tr key={newPaths.join('')} className={rowClasses}>
+            <td style={indentStyles}
+                className="json-viewer__key-container"
+                data-path={newPaths.join('')}
+                onClick={collapsable ? this.handleClickKey : null}>
+              <span className="json-viewer__icon"></span>
+              <span className="json-viewer__key json-viewer__key--array">
+                {key}
+              </span>
+            </td>
+            <td>
+              {this.getValue(obj[key], collapsed)}
+            </td>
+          </tr>
+        ));
+
+        if (!this.isCollapsed(paths.join(''))) {
+          for (const row of this.renderRows(obj[key], newPaths)) {
+            rows.push(row);
+          }
+        }
+      }
+    } else if (obj && typeof obj === 'object') {
+      for (let key of Object.keys(obj)) {
+        const newPaths = [...paths, `.${key}`];
+        const collapsed = this.isCollapsed(newPaths.join(''));
+        const collapsable = this.isCollapsable(obj[key]);
+        const rowClasses = classnames({
+          'json-viewer__row': true,
+          'json-viewer__row--collapsable': collapsable,
+          'json-viewer__row--collapsed': collapsed
+        });
+        rows.push((
+          <tr key={newPaths.join('')} className={rowClasses}>
+            <td style={indentStyles}
+                className="json-viewer__key-container"
+                data-path={newPaths.join('')}
+                onClick={collapsable ? this.handleClickKey : null}>
+              <span className="json-viewer__icon"></span>
+              <span className="json-viewer__key json-viewer__key--object">
+                {key}
+              </span>
+            </td>
+            <td>
+              {this.getValue(obj[key], collapsed)}
+            </td>
+          </tr>
+        ));
+
+        if (!this.isCollapsed(paths.join(''))) {
+          for (const row of this.renderRows(obj[key], newPaths)) {
+            rows.push(row);
+          }
+        }
+      }
+    } else if (paths.length === 0) {
+      const collapsed = this.isCollapsed(paths.join(''));
+      const collapsable = this.isCollapsable(obj);
+      const rowClasses = classnames({
+        'json-viewer__row': true,
+        'json-viewer__row--collapsable': collapsable,
+        'json-viewer__row--collapsed': collapsed
+      });
+      rows.push((
+        <tr key={paths.join('')} className={rowClasses}>
+          <td style={indentStyles}
+              className="json-viewer__key-container"
+              data-path={paths.join('')}
+              onClick={collapsable ? this.handleClickKey : null}>
+            <span className="json-viewer__icon"></span>
+          </td>
+          <td>
+            {this.getValue(obj, collapsed)}
+          </td>
+        </tr>
+      ));
+    }
+
+    return rows;
+  }
 
   render () {
     const {
       body,
+      fontSize,
       className
     } = this.props;
 
+    let rows;
+    try {
+      rows = this.renderRows(JSON.parse(body.toString()));
+    } catch (err) {
+      rows = <tr><td>Uh Oh!</td></tr>;
+    }
+
     return (
-      <div className={classnames(className, 'json-viewer')}>
-        <JSONNode label="root" value={JSON.parse(body.toString())} expanded/>
+      <div className={classnames(className, 'json-viewer')} style={{fontSize}}>
+        <table>
+          <tbody>{rows}</tbody>
+        </table>
       </div>
     );
   }

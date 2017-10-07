@@ -206,6 +206,7 @@ class ResponseViewer extends React.Component {
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('json')) {
       return (
         <JSONViewer
+          fontSize={editorFontSize}
           className="pad-sm pad-top-xs no-pad-bottom tall scrollable"
           body={bodyBuffer}
         />
