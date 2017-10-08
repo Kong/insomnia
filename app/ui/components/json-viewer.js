@@ -16,6 +16,31 @@ type Props = {
 
 @autobind
 class JSONViewer extends React.PureComponent<Props> {
+  viewer: ?HTMLDivElement;
+  largestWidth: ?number;
+
+  setRef (n: HTMLDivElement | null) {
+    this.viewer = n;
+  }
+
+  setMinWidth () {
+    if (!this.viewer) {
+      return;
+    }
+
+    const td = this.viewer.querySelector('td');
+    if (!td) {
+      return;
+    }
+
+    const width = td.getBoundingClientRect().width;
+    if (!this.largestWidth || width > this.largestWidth) {
+      this.largestWidth = width;
+      td.style.minWidth = `${this.largestWidth}px`;
+      td.style.boxSizing = 'border-box';
+    }
+  }
+
   render () {
     const {
       body,
@@ -27,6 +52,7 @@ class JSONViewer extends React.PureComponent<Props> {
     try {
       rows = (
         <JSONViewerObj
+          onExpand={this.setMinWidth}
           value={JSON.parse(body.toString())}
           paths={[]}
         />
@@ -38,7 +64,7 @@ class JSONViewer extends React.PureComponent<Props> {
     }
 
     return (
-      <div className={classnames(className, 'json-viewer')} style={{fontSize}}>
+      <div ref={this.setRef} className={classnames(className, 'json-viewer')} style={{fontSize}}>
         <table>
           <tbody>{rows}</tbody>
         </table>
@@ -50,6 +76,7 @@ class JSONViewer extends React.PureComponent<Props> {
 type Props2 = {
   paths: Array<string>,
   value: any,
+  onExpand: Function,
   label?: string | number,
   hide?: boolean
 };
@@ -143,10 +170,14 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     }
 
     return (
-      <span className={`json-viewer__value json-viewer__type-${this.getType(obj)}`}>
+      <pre className={`json-viewer__value json-viewer__type-${this.getType(obj)}`}>
         {displayValue}
-      </span>
+      </pre>
     );
+  }
+
+  componentDidUpdate () {
+    this.props.onExpand();
   }
 
   handleClickKey () {
@@ -157,7 +188,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
   }
 
   render () {
-    const {label, value, paths, hide} = this.props;
+    const {label, value, paths, hide, onExpand} = this.props;
     const {expanded, hasBeenExpanded} = this.state;
 
     const collapsable = this.isCollapsable(value);
@@ -199,6 +230,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
               hide={hide || collapsed}
               key={key}
               label={key}
+              onExpand={onExpand}
               value={value[key]}
               paths={newPaths}
             />
@@ -232,6 +264,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
               hide={hide || collapsed}
               key={key}
               label={key}
+              onExpand={onExpand}
               value={value[key]}
               paths={newPaths}
             />
