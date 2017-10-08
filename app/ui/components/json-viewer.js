@@ -14,16 +14,59 @@ type Props = {
   className?: string,
 };
 
-type State = {
-  expandedPaths: {[string]: boolean};
+@autobind
+class JSONViewer extends React.PureComponent<Props> {
+  render () {
+    const {
+      body,
+      fontSize,
+      className
+    } = this.props;
+
+    let rows;
+    try {
+      rows = (
+        <JSONViewerObj
+          value={JSON.parse(body.toString())}
+          paths={[]}
+        />
+      );
+    } catch (err) {
+      rows = <tr>
+        <td>Uh Oh!</td>
+      </tr>;
+    }
+
+    return (
+      <div className={classnames(className, 'json-viewer')} style={{fontSize}}>
+        <table>
+          <tbody>{rows}</tbody>
+        </table>
+      </div>
+    );
+  }
+}
+
+type Props2 = {
+  paths: Array<string>,
+  value: any,
+  label?: string | number,
+  hide?: boolean
+};
+
+type State2 = {
+  expanded: boolean,
+  hasBeenExpanded: boolean
 };
 
 @autobind
-class JSONViewer extends React.PureComponent<Props, State> {
-  constructor (props: Props) {
+class JSONViewerObj extends React.PureComponent<Props2, State2> {
+  constructor (props: Props2) {
     super(props);
+    const {paths} = props;
     this.state = {
-      expandedPaths: {'.root': true}
+      expanded: paths.length === 0,
+      hasBeenExpanded: false
     };
   }
 
@@ -106,150 +149,116 @@ class JSONViewer extends React.PureComponent<Props, State> {
     );
   }
 
-  handleClickKey (e: MouseEvent) {
-    if (e.currentTarget instanceof HTMLElement) {
-      const path: string = e.currentTarget.getAttribute('data-path') || '';
-      this.setState(state => ({
-        expandedPaths: Object.assign({}, state.expandedPaths, {
-          [path]: !this.isExpanded(path)
-        })
-      }));
-    }
+  handleClickKey () {
+    this.setState(state => ({
+      expanded: !state.expanded,
+      hasBeenExpanded: true
+    }));
   }
 
-  isCollapsed (path: string): boolean {
-    if (!this.state.expandedPaths.hasOwnProperty(path)) {
-      return false;
-    }
+  render () {
+    const {label, value, paths, hide} = this.props;
+    const {expanded, hasBeenExpanded} = this.state;
 
-    return !this.state.expandedPaths[path];
-  }
+    const collapsable = this.isCollapsable(value);
+    const collapsed = !expanded;
+    const indentStyles = {paddingLeft: `${(paths.length - 1) * 1.3}em`};
 
-  isExpanded (path: string): boolean {
-    return !this.isCollapsed(path);
-  }
-
-  renderRows (obj: any, paths: Array<string> = []) {
-    if (paths.length > 0 && this.isCollapsed(paths.join(''))) {
-      return [];
-    }
+    const rowClasses = classnames({
+      'hide': hide,
+      'json-viewer__row': true,
+      'json-viewer__row--collapsable': collapsable,
+      'json-viewer__row--collapsed': collapsed
+    });
 
     const rows = [];
-    const indentStyles = {paddingLeft: `${paths.length * 1.3}em`};
-
-    if (Array.isArray(obj)) {
-      for (let key = 0; key < obj.length; key++) {
-        const newPaths = [...paths, `[${key}]`];
-        const collapsed = this.isCollapsed(newPaths.join(''));
-        const collapsable = this.isCollapsable(obj[key]);
-        const rowClasses = classnames({
-          'json-viewer__row': true,
-          'json-viewer__row--collapsable': collapsable,
-          'json-viewer__row--collapsed': collapsed
-        });
+    if (Array.isArray(value)) {
+      if (label !== undefined) {
         rows.push((
-          <tr key={newPaths.join('')} className={rowClasses}>
+          <tr key={paths.join('')} className={rowClasses}>
             <td style={indentStyles}
                 className="json-viewer__key-container"
-                data-path={newPaths.join('')}
                 onClick={collapsable ? this.handleClickKey : null}>
               <span className="json-viewer__icon"></span>
               <span className="json-viewer__key json-viewer__key--array">
-                {key}
-              </span>
+            {label}
+          </span>
             </td>
             <td>
-              {this.getValue(obj[key], collapsed)}
+              {this.getValue(value, collapsed)}
             </td>
           </tr>
         ));
+      }
 
-        if (!this.isCollapsed(paths.join(''))) {
-          for (const row of this.renderRows(obj[key], newPaths)) {
-            rows.push(row);
-          }
+      if (!collapsed || hasBeenExpanded) {
+        for (let key = 0; key < value.length; key++) {
+          const newPaths = [...paths, `[${key}]`];
+          rows.push((
+            <JSONViewerObj
+              hide={hide || collapsed}
+              key={key}
+              label={key}
+              value={value[key]}
+              paths={newPaths}
+            />
+          ));
         }
       }
-    } else if (obj && typeof obj === 'object') {
-      for (let key of Object.keys(obj)) {
-        const newPaths = [...paths, `.${key}`];
-        const collapsed = this.isCollapsed(newPaths.join(''));
-        const collapsable = this.isCollapsable(obj[key]);
-        const rowClasses = classnames({
-          'json-viewer__row': true,
-          'json-viewer__row--collapsable': collapsable,
-          'json-viewer__row--collapsed': collapsed
-        });
+    } else if (value && typeof value === 'object') {
+      if (label !== undefined) {
         rows.push((
-          <tr key={newPaths.join('')} className={rowClasses}>
+          <tr key={paths.join('')} className={rowClasses}>
             <td style={indentStyles}
                 className="json-viewer__key-container"
-                data-path={newPaths.join('')}
                 onClick={collapsable ? this.handleClickKey : null}>
               <span className="json-viewer__icon"></span>
-              <span className="json-viewer__key json-viewer__key--object">
-                {key}
-              </span>
+              <span className="json-viewer__key json-viewer__key--array">
+              {label}
+            </span>
             </td>
             <td>
-              {this.getValue(obj[key], collapsed)}
+              {this.getValue(value, collapsed)}
             </td>
           </tr>
         ));
+      }
 
-        if (!this.isCollapsed(paths.join(''))) {
-          for (const row of this.renderRows(obj[key], newPaths)) {
-            rows.push(row);
-          }
+      if (!collapsed || hasBeenExpanded) {
+        for (let key of Object.keys(value)) {
+          const newPaths = [...paths, `.${key}`];
+          rows.push((
+            <JSONViewerObj
+              hide={hide || collapsed}
+              key={key}
+              label={key}
+              value={value[key]}
+              paths={newPaths}
+            />
+          ));
         }
       }
-    } else if (paths.length === 0) {
-      const collapsed = this.isCollapsed(paths.join(''));
-      const collapsable = this.isCollapsable(obj);
-      const rowClasses = classnames({
-        'json-viewer__row': true,
-        'json-viewer__row--collapsable': collapsable,
-        'json-viewer__row--collapsed': collapsed
-      });
+    } else {
       rows.push((
         <tr key={paths.join('')} className={rowClasses}>
           <td style={indentStyles}
               className="json-viewer__key-container"
-              data-path={paths.join('')}
               onClick={collapsable ? this.handleClickKey : null}>
             <span className="json-viewer__icon"></span>
+            {paths.length > 0 ? (
+              <span className="json-viewer__key json-viewer__key--array">
+                {label}
+              </span>
+            ) : null}
           </td>
           <td>
-            {this.getValue(obj, collapsed)}
+            {this.getValue(value, collapsed)}
           </td>
         </tr>
       ));
     }
 
     return rows;
-  }
-
-  render () {
-    const {
-      body,
-      fontSize,
-      className
-    } = this.props;
-
-    let rows;
-    try {
-      rows = this.renderRows(JSON.parse(body.toString()));
-    } catch (err) {
-      rows = <tr><td>Uh Oh!</td></tr>;
-    }
-
-    return (
-      <div className={classnames(className, 'json-viewer')} style={{fontSize}}>
-        <table>
-          <tbody>{rows}</tbody>
-        </table>
-      </div>
-    );
   }
 }
 
