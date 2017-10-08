@@ -34,7 +34,7 @@ import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
 import {showAlert, showPrompt} from '../components/modals/index';
-import {exportHar} from '../../common/har';
+import {exportHarRequest} from '../../common/har';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from '../components/keydown-binder';
 import {executeHotKey} from '../../common/hotkeys';
@@ -232,7 +232,7 @@ class App extends PureComponent {
   async _handleCopyAsCurl (request) {
     const {activeEnvironment} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    const har = await exportHar(request._id, environmentId);
+    const har = await exportHarRequest(request._id, environmentId);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert('shell', 'curl');
     clipboard.writeText(cmd);

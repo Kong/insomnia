@@ -21,7 +21,7 @@ describe('export()', () => {
     expect(data.__export_source).toBe(`insomnia.desktop.app:v${getAppVersion()}`);
     expect(data.resources[0]._id).toBe(w._id);
     expect(data.resources[1]._id).toBe(eBase._id);
-    expect(data.resources[2]._id).toBe('jar_dd2ccc1a2745477a881a9e8ef9d42403');
+    expect(data.resources[2]._id).toBe('jar_e3e96e5fdd6842298b66dee1f0940f3d');
     expect(data.resources[3]._id).toBe(r1._id);
     expect(data.resources[4]._id).toBe(ePub._id);
     expect(data.resources.length).toBe(5);

@@ -1,5 +1,6 @@
 import {convert} from 'insomnia-importers';
 import * as db from './database';
+import * as har from './har';
 import * as models from '../models';
 import {getAppVersion} from './constants';
 import * as misc from './misc';
@@ -155,6 +156,46 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   };
 }
 
+export async function exportHAR (parentDoc = null, includePrivateDocs = false) {
+  let workspaces;
+  if (parentDoc) {
+    workspaces = [parentDoc];
+  } else {
+    workspaces = await models.workspace.all();
+  }
+
+  const workspaceEnvironmentLookup = {};
+  for (let workspace of workspaces) {
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+    let environmentId = workspaceMeta && workspaceMeta.activeEnvironmentId;
+    const environment = await models.environment.getById(environmentId);
+    if (!environment || (environment.isPrivate && !includePrivateDocs)) {
+      environmentId = 'n/a';
+    }
+    workspaceEnvironmentLookup[workspace._id] = environmentId;
+  }
+
+  const requests = [];
+  for (let workspace of workspaces) {
+    const workspaceDocs = await getDocWithDescendants(workspace, includePrivateDocs);
+    const workspaceRequests = workspaceDocs
+      .filter(d => (d.type === models.request.type))
+      .sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1)
+      .map(request => {
+        return {
+          requestId: request._id,
+          environmentId: workspaceEnvironmentLookup[workspace._id]
+        };
+      });
+
+    requests.push(...workspaceRequests);
+  }
+
+  const data = await har.exportHar(requests);
+
+  return JSON.stringify(data, null, '\t');
+}
+
 export async function exportJSON (parentDoc = null, includePrivateDocs = false) {
   const data = {
     _type: 'export',
@@ -164,13 +205,9 @@ export async function exportJSON (parentDoc = null, includePrivateDocs = false) 
     resources: {}
   };
 
-  const docs = await db.withDescendants(parentDoc);
+  const docs = await getDocWithDescendants(parentDoc, includePrivateDocs);
 
   data.resources = docs
-    .filter(d => (
-      // Don't include if private, except if we want to
-      !d.isPrivate || includePrivateDocs
-    ))
     .filter(d => (
       // Only export these model types
       d.type === models.request.type ||
@@ -198,4 +235,12 @@ export async function exportJSON (parentDoc = null, includePrivateDocs = false) 
     });
 
   return JSON.stringify(data, null, '\t');
+}
+
+async function getDocWithDescendants (parentDoc = null, includePrivateDocs = false) {
+  const docs = await db.withDescendants(parentDoc);
+  return docs.filter(d => (
+        // Don't include if private, except if we want to
+        !d.isPrivate || includePrivateDocs
+      ));
 }

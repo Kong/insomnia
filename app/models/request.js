@@ -130,7 +130,7 @@ export function newBodyNone (): RequestBody {
   return {};
 }
 
-export function newBodyRaw (rawBody: string, contentType: string): RequestBody {
+export function newBodyRaw (rawBody: string, contentType?: string): RequestBody {
   if (typeof contentType !== 'string') {
     return {text: rawBody};
   }

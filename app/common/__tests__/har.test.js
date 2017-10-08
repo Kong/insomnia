@@ -49,16 +49,11 @@ describe('exportHarWithRequest()', () => {
     expect(har).toEqual({
       bodySize: -1,
       cookies: [{
-        creation: '2016-10-05T04:40:49.505Z',
         domain: 'google.com',
         expires: '2096-10-12T04:40:49.000Z',
-        hostOnly: true,
-        key: 'foo',
         name: 'foo',
         path: '/',
-        value: 'barrrrr',
-        // lastAccessed is updated, so lets hack the assertion
-        lastAccessed: har.cookies[0].lastAccessed
+        value: 'barrrrr'
       }],
       headers: [
         {name: 'Content-Type', value: 'application/json'},
@@ -68,6 +63,8 @@ describe('exportHarWithRequest()', () => {
       httpVersion: 'HTTP/1.1',
       method: 'POST',
       postData: {
+        mimeType: '',
+        params: [],
         text: 'foo bar'
       },
       queryString: [{name: 'foo bar', value: 'hello&world'}],
