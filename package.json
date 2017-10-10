@@ -195,7 +195,7 @@
     "eslint-plugin-react": "^7.4.0",
     "eslint-plugin-standard": "^2.1.1",
     "file-loader": "^0.10.1",
-    "flow-bin": "^0.55.0",
+    "flow-bin": "^0.56.0",
     "jest": "^19.0.2",
     "less": "^2.7.2",
     "less-loader": "^2.2.3",

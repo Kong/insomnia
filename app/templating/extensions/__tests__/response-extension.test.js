@@ -240,7 +240,7 @@ describe('ResponseExtension Header', async () => {
       await templating.render(`{% response "header", "${request._id}", "dne" %}`);
       fail('should have failed');
     } catch (err) {
-      expect(err.message).toContain('No match for header: dne');
+      expect(err.message).toBe('No header with name "dne".\nChoices are [\n\t"Content-Type",\n\t"Content-Length"\n]');
     }
   });
 });

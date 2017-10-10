@@ -1,19 +1,43 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
 import * as templating from '../../../templating';
+import type {NunjucksParsedTag, NunjucksParsedTagArg} from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import {delay, fnOrString} from '../../../common/misc';
 import {trackEvent} from '../../../analytics/index';
+import type {BaseModel} from '../../../models/index';
+import type {Workspace} from '../../../models/workspace';
+import type {PluginArgumentEnumOption} from '../../../templating/extensions/index';
+
+type Props = {
+  handleRender: Function,
+  defaultValue: string,
+  onChange: Function,
+  workspace: Workspace
+};
+
+type State = {
+  activeTagData: NunjucksParsedTag | null,
+  activeTagDefinition: NunjucksParsedTag | null,
+  tagDefinitions: Array<Object>,
+  loadingDocs: boolean,
+  allDocs: {[string]: Array<BaseModel>},
+  rendering: boolean,
+  preview: string,
+  error: string
+};
 
 @autobind
-class TagEditor extends PureComponent {
-  constructor (props) {
+class TagEditor extends React.PureComponent<Props, State> {
+  _select: ?HTMLSelectElement;
+
+  constructor (props: Props) {
     super(props);
 
     this.state = {
@@ -28,11 +52,12 @@ class TagEditor extends PureComponent {
     };
   }
 
-  async componentDidMount () {
+  async load () {
     const activeTagData = templateUtils.tokenizeTag(this.props.defaultValue);
 
     const tagDefinitions = await templating.getTagDefinitions();
-    const activeTagDefinition = tagDefinitions.find(d => d.name === activeTagData.name);
+    const activeTagDefinition: NunjucksParsedTag | null = tagDefinitions.find(
+      d => d.name === activeTagData.name) || null;
 
     // Edit tags raw that we don't know about
     if (!activeTagDefinition) {
@@ -43,7 +68,11 @@ class TagEditor extends PureComponent {
     await this._update(tagDefinitions, activeTagDefinition, activeTagData, true);
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentDidMount () {
+    this.load();
+  }
+
+  componentWillReceiveProps (nextProps: Props) {
     const {workspace} = nextProps;
 
     if (this.props.workspace._id !== workspace._id) {
@@ -51,16 +80,18 @@ class TagEditor extends PureComponent {
     }
   }
 
-  _handleRefresh () {
-    this._update(
-      this.state.tagDefinitions,
-      this.state.activeTagDefinition,
-      this.state.activeTagData,
-      true
-    );
+  async _handleRefresh () {
+    if (this.state.tagDefinitions) {
+      await this._update(
+        this.state.tagDefinitions,
+        this.state.activeTagDefinition,
+        this.state.activeTagData,
+        true
+      );
+    }
   }
 
-  async _refreshModels (workspace) {
+  async _refreshModels (workspace: Workspace) {
     const allDocs = {};
     for (const type of models.types()) {
       allDocs[type] = [];
@@ -73,53 +104,88 @@ class TagEditor extends PureComponent {
     this.setState({allDocs, loadingDocs: false});
   }
 
-  _updateArg (argValue, argIndex) {
+  _updateArg (argValue: string | number, argIndex: number) {
     const {tagDefinitions, activeTagData, activeTagDefinition} = this.state;
 
+    if (!activeTagData) {
+      console.warn('No active tag data to update', {state: this.state});
+      return;
+    }
+
+    // Ensure all arguments exist
+    const defaultArgs = activeTagDefinition
+      ? this._getDefaultTagData(activeTagDefinition).args
+      : [];
+    for (let i = 0; i < defaultArgs.length; i++) {
+      if (activeTagData.args[i]) {
+        continue;
+      }
+      activeTagData.args[i] = defaultArgs[i];
+    }
+
     const tagData = clone(activeTagData);
-    tagData.args[argIndex].value = argValue;
+    const argData: NunjucksParsedTagArg = tagData.args[argIndex];
+
+    if (!argData) {
+      // Should never happen
+      console.warn('Could not find arg data to update', {tagData, argIndex});
+      return;
+    }
+
+    // Update it
+    argData.value = argValue;
 
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
-  _handleChange (e) {
-    const parent = e.target.parentNode;
-    const argIndex = parent.getAttribute('data-arg-index');
+  _handleChange (e: SyntheticEvent<HTMLInputElement>) {
+    const parent = e.currentTarget.parentNode;
+    let argIndex = -1;
+    if (parent instanceof HTMLElement) {
+      const index = parent && parent.getAttribute('data-arg-index');
+      argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
+    }
 
-    if (e.target.type === 'number') {
-      return this._updateArg(parseFloat(e.target.value), argIndex);
+    if (e.currentTarget.type === 'number') {
+      return this._updateArg(parseFloat(e.currentTarget.value), argIndex);
     } else {
-      return this._updateArg(e.target.value, argIndex);
+      return this._updateArg(e.currentTarget.value, argIndex);
     }
   }
 
-  _handleChangeCustomArg (e) {
+  _handleChangeCustomArg (e: SyntheticEvent<HTMLInputElement>) {
     const {tagDefinitions, activeTagData, activeTagDefinition} = this.state;
 
-    const tagData = clone(activeTagData);
-    tagData.rawValue = e.target.value;
+    const tagData: NunjucksParsedTag | null = clone(activeTagData);
+
+    if (tagData) {
+      tagData.rawValue = e.currentTarget.value;
+    }
 
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
-  async _handleChangeTag (e) {
-    const name = e.target.value;
-    const tagDefinition = (await templating.getTagDefinitions()).find(d => d.name === name);
-    this._update(this.state.tagDefinitions, tagDefinition, false);
+  async _handleChangeTag (e: SyntheticEvent<HTMLInputElement>) {
+    const name = e.currentTarget.value;
+    const tagDefinitions = await templating.getTagDefinitions();
+    const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
+    this._update(this.state.tagDefinitions, tagDefinition, null, false);
     trackEvent('Tag Editor', 'Change Tag', name);
   }
 
-  _setSelectRef (n) {
+  _setSelectRef (n: ?HTMLSelectElement) {
     this._select = n;
 
     // Let it render, then focus the input
     setTimeout(() => {
-      this._select && this._select.focus();
+      if (this._select instanceof HTMLSelectElement) {
+        this._select.focus();
+      }
     }, 100);
   }
 
-  _getDefaultTagData (tagDefinition) {
-    const defaultFill = templateUtils.getDefaultFill(
+  _getDefaultTagData (tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
+    const defaultFill: string = templateUtils.getDefaultFill(
       tagDefinition.name,
       tagDefinition.args
     );
@@ -127,7 +193,12 @@ class TagEditor extends PureComponent {
     return templateUtils.tokenizeTag(defaultFill);
   }
 
-  async _update (tagDefinitions, tagDefinition, tagData, noCallback = false) {
+  async _update (
+    tagDefinitions: Array<NunjucksParsedTag>,
+    tagDefinition: NunjucksParsedTag | null,
+    tagData: NunjucksParsedTag | null,
+    noCallback: boolean = false
+  ) {
     const {handleRender} = this.props;
     this.setState({rendering: true});
 
@@ -138,24 +209,27 @@ class TagEditor extends PureComponent {
     let preview = '';
     let error = '';
 
-    let activeTagData = tagData;
+    let activeTagData: NunjucksParsedTag | null = tagData;
     if (!activeTagData && tagDefinition) {
       activeTagData = this._getDefaultTagData(tagDefinition);
-    } else if (!activeTagData && !tagDefinition) {
+    } else if (!activeTagData && !tagDefinition && this.state.activeTagData) {
       activeTagData = {
         name: 'custom',
+        args: [],
         rawValue: templateUtils.unTokenizeTag(this.state.activeTagData)
       };
     }
 
     let template;
-    try {
-      template = typeof activeTagData.rawValue === 'string'
-        ? activeTagData.rawValue
-        : templateUtils.unTokenizeTag(activeTagData);
-      preview = await handleRender(template);
-    } catch (err) {
-      error = err.message;
+    if (activeTagData) {
+      try {
+        template = typeof activeTagData.rawValue === 'string'
+          ? activeTagData.rawValue
+          : templateUtils.unTokenizeTag(activeTagData);
+        preview = await handleRender(template);
+      } catch (err) {
+        error = err.message;
+      }
     }
 
     // Make rendering take at least this long so we can see a spinner
@@ -176,7 +250,7 @@ class TagEditor extends PureComponent {
     }
   }
 
-  renderArgString (value, placeholder) {
+  renderArgString (value: string, placeholder: string) {
     return (
       <input
         type="text"
@@ -187,30 +261,31 @@ class TagEditor extends PureComponent {
     );
   }
 
-  renderArgNumber (value, placeholder) {
+  renderArgNumber (value: string, placeholder: string) {
     return (
       <input
         type="number"
-        defaultValue={value || 0}
+        defaultValue={value || '0'}
         placeholder={placeholder}
         onChange={this._handleChange}
       />
     );
   }
 
-  renderArgEnum (value, options) {
+  renderArgEnum (value: string, options: Array<PluginArgumentEnumOption>) {
+    const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
     return (
       <select value={value} onChange={this._handleChange}>
         {options.map(option => {
-          let label;
+          let label: string;
           if (option.description) {
-            label = `${option.displayName} – ${option.description}`;
+            label = `${fnOrString(option.displayName, argDatas)} – ${option.description}`;
           } else {
-            label = option.displayName;
+            label = fnOrString(option.displayName, argDatas);
           }
 
           return (
-            <option key={option.value} value={option.value}>
+            <option key={option.value.toString()} value={option.value}>
               {label}
             </option>
           );
@@ -219,7 +294,7 @@ class TagEditor extends PureComponent {
     );
   }
 
-  renderArgModel (value, modelType) {
+  renderArgModel (value: string, modelType: string) {
     const {allDocs, loadingDocs} = this.state;
     const docs = allDocs[modelType] || [];
     const id = value || 'n/a';
@@ -234,61 +309,87 @@ class TagEditor extends PureComponent {
           if (doc.type === models.request.type) {
             const requests = allDocs[models.request.type] || [];
             const request = requests.find(r => r._id === doc._id);
+            const method = request && typeof request.method === 'string' ? request.method : 'GET';
             const parentId = request ? request.parentId : 'n/a';
             const requestGroups = allDocs[models.requestGroup.type] || [];
             const requestGroup = requestGroups.find(rg => rg._id === parentId);
-            const requestGroupStr = requestGroup ? `[${requestGroup.name}] ` : '';
-            namePrefix = `${requestGroupStr + request.method} `;
+            const requestGroupName = requestGroup && typeof requestGroup.name === 'string'
+              ? requestGroup.name
+              : '';
+            const requestGroupStr = requestGroupName ? `[${requestGroupName}] ` : '';
+            namePrefix = `${requestGroupStr + method} `;
           }
 
+          const docName = typeof doc.name === 'string' ? doc.name : 'Unknown Request';
           return (
-            <option key={doc._id} value={doc._id}>{namePrefix}{doc.name}</option>
+            <option key={doc._id} value={doc._id}>{namePrefix}{docName}</option>
           );
         })}
       </select>
     );
   }
 
-  renderArg (argDefinition, args, argIndex) {
+  renderArg (
+    argDefinition: NunjucksParsedTagArg,
+    argDatas: Array<NunjucksParsedTagArg>,
+    argIndex: number
+  ) {
     // Decide whether or not to show it
-    if (argDefinition.hide && argDefinition.hide(args)) {
+    if (typeof argDefinition.hide === 'function' && argDefinition.hide(argDatas)) {
       return null;
     }
 
-    let argData;
-    if (argIndex < args.length) {
-      argData = args[argIndex];
-    } else {
+    let argData: NunjucksParsedTagArg;
+    if (argIndex < argDatas.length) {
+      argData = argDatas[argIndex];
+    } else if (this.state.activeTagDefinition) {
       const defaultTagData = this._getDefaultTagData(this.state.activeTagDefinition);
       argData = defaultTagData.args[argIndex];
+    } else {
+      return null;
     }
 
-    const value = argData.value;
+    if (!argData) {
+      console.error('Failed to find argument to set default', {argDefinition, argDatas, argIndex});
+      return null;
+    }
+
+    const value = argData.value.toString();
 
     let argInput;
     if (argDefinition.type === 'string') {
-      const {placeholder} = argDefinition;
+      const placeholder = typeof argDefinition.placeholder === 'string'
+        ? argDefinition.placeholder
+        : '';
       argInput = this.renderArgString(value, placeholder);
     } else if (argDefinition.type === 'enum') {
       const {options} = argDefinition;
       argInput = this.renderArgEnum(value, options);
     } else if (argDefinition.type === 'model') {
-      const {model} = argDefinition;
-      argInput = this.renderArgModel(value, model);
+      const model = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
+      const modelId = typeof value === 'string' ? value : 'unknown';
+      argInput = this.renderArgModel(modelId, model);
     } else if (argDefinition.type === 'number') {
-      const {placeholder} = argDefinition;
-      argInput = this.renderArgNumber(value, placeholder);
+      const placeholder = typeof argDefinition.placeholder === 'string'
+        ? argDefinition.placeholder
+        : '';
+      argInput = this.renderArgNumber(value, placeholder || '');
     } else {
       return null;
     }
 
-    const {displayName} = argDefinition;
+    const help = typeof argDefinition.help === 'string' ? argDefinition.help : '';
+    const displayName = (
+      typeof argDefinition.displayName === 'string' ||
+      typeof argDefinition.displayName === 'function'
+    ) ? fnOrString(argDefinition.displayName, argDatas) : '';
+
     return (
       <div key={argIndex} className="form-control form-control--outlined">
         <label>
-          {fnOrString(displayName, args)}
-          {argDefinition.help && (
-            <HelpTooltip className="space-left">{argDefinition.help}</HelpTooltip>
+          {fnOrString(displayName, argDatas)}
+          {help && (
+            <HelpTooltip className="space-left">{help}</HelpTooltip>
           )}
           <div data-arg-index={argIndex}>
             {argInput}
@@ -308,15 +409,21 @@ class TagEditor extends PureComponent {
     let previewElement;
     if (error) {
       previewElement = (
-        <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
+        <pre>
+          <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
+        </pre>
       );
     } else if (rendering) {
       previewElement = (
-        <code className="block"><span className="faint italic">rendering...</span></code>
+        <pre>
+          <code className="block"><span className="faint italic">rendering...</span></code>
+        </pre>
       );
     } else {
       previewElement = (
-        <code className="block selectable">{preview || <span>&nbsp;</span>}</code>
+        <pre>
+          <code className="block selectable scrollable force-wrap">{preview || <span>&nbsp;</span>}</code>
+        </pre>
       );
     }
 
@@ -336,7 +443,10 @@ class TagEditor extends PureComponent {
             </select>
           </label>
         </div>
-        {activeTagDefinition && activeTagDefinition.args.map((argDefinition, index) => (
+        {activeTagDefinition && activeTagDefinition.args.map((
+          argDefinition: NunjucksParsedTagArg,
+          index
+        ) => (
           this.renderArg(argDefinition, activeTagData.args, index)
         ))}
         {!activeTagDefinition && (
@@ -364,12 +474,5 @@ class TagEditor extends PureComponent {
     );
   }
 }
-
-TagEditor.propTypes = {
-  handleRender: PropTypes.func.isRequired,
-  defaultValue: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-  workspace: PropTypes.object.isRequired
-};
 
 export default TagEditor;

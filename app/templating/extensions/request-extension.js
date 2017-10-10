@@ -54,18 +54,36 @@ export default {
       case 'url':
         return getRequestUrl(context, request);
       case 'cookie':
+
+        if (!name) {
+          throw new Error('No cookie specified');
+        }
+
         const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
         const url = await getRequestUrl(context, request);
         const value = await getCookieValue(cookieJar, url, name);
         return value;
       case 'header':
+        if (!name) {
+          throw new Error('No header specified');
+        }
+
+        const names = [];
+
+        if (request.headers.length === 0) {
+          throw new Error(`No headers available`);
+        }
+
         for (const header of request.headers) {
-          const currentName = await context.util.render(name);
-          if (currentName.toLowerCase() === name.toLowerCase()) {
+          const headerName = await context.util.render(header.name);
+          names.push(headerName);
+          if (headerName.toLowerCase() === name.toLowerCase()) {
             return context.util.render(header.value);
           }
         }
-        throw new Error(`No header for name "${name}"`);
+
+        const namesStr = names.map(n => `"${n}"`).join(',\n\t');
+        throw new Error(`No header with name "${name}".\nChoices are [\n\t${namesStr}\n]`);
     }
 
     return null;
@@ -97,10 +115,14 @@ function getCookieValue (cookieJar, url, name) {
         console.warn(`Failed to find cookie for ${url}`, err);
       }
 
+      if (!cookies || cookies.length === 0) {
+        reject(new Error(`No cookies in stored for url "${url}"`));
+      }
+
       const cookie = cookies.find(cookie => cookie.key === name);
       if (!cookie) {
-        const names = cookies.map(c => `"${c.key}"`).join(', ');
-        reject(new Error(`No cookie with name "${name}". Choices are ${names} for url "${url}"`));
+        const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
+        throw new Error(`No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`);
       } else {
         resolve(cookie ? cookie.value : null);
       }
