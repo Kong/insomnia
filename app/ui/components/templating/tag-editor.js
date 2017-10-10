@@ -477,11 +477,11 @@ class TagEditor extends React.PureComponent<Props, State> {
               <DropdownDivider>Input Type</DropdownDivider>
               <DropdownItem value={{variable: false, argIndex}}
                             onClick={this._handleChangeArgVariable}>
-                <i className={'fa ' + (isVariable ? '' : 'fa-check')}/> Text
+                <i className={'fa ' + (isVariable ? '' : 'fa-check')}/> Static Value
               </DropdownItem>
               <DropdownItem value={{variable: true, argIndex}}
                             onClick={this._handleChangeArgVariable}>
-                <i className={'fa ' + (isVariable ? 'fa-check' : '')}/> Variable
+                <i className={'fa ' + (isVariable ? 'fa-check' : '')}/> Environment Variable
               </DropdownItem>
             </Dropdown>
           </div>
