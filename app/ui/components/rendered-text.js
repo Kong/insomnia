@@ -2,10 +2,8 @@
 import * as React from 'react';
 
 type Props = {
-  component: string,
   children: string,
-  render: Function,
-  props?: Object
+  render: Function
 };
 
 type State = {
@@ -35,8 +33,7 @@ class RenderedText extends React.PureComponent<Props, State> {
   }
 
   render () {
-    const {component, props} = this.props;
-    return React.createElement(component, props || {}, this.state.renderedText);
+    return this.state.renderedText;
   }
 }
 

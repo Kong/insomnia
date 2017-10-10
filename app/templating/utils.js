@@ -3,6 +3,7 @@
 export type NunjucksParsedTagArg = {
   type: 'string' | 'number' | 'boolean' | 'number' | 'variable' | 'expression',
   value: string | number | boolean,
+  forceVariable?: boolean,
   quotedBy?: '"' | "'"
 };
 

@@ -79,6 +79,7 @@ class NunjucksModal extends PureComponent {
           onChange={this._handleTemplateChange}
           defaultValue={defaultTemplate}
           handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
           workspace={workspace}
         />
       );
