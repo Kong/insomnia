@@ -1,9 +1,10 @@
 // @flow
 import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
-import type {RequestHeader} from '../models/request';
+import type {RequestBodyParameter, RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
 import type {RenderedRequest} from '../common/render';
+import {getRenderContext, getRenderedRequest} from '../common/render';
 
 import electron from 'electron';
 import mkdirp from 'mkdirp';
@@ -11,13 +12,13 @@ import mimes from 'mime-types';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'insomnia-node-libcurl';
-import {join as pathJoin} from 'path';
+import {join as pathJoin, basename} from 'path';
+import FormData from 'form-data/lib/form_data';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
-import {getRenderedRequest, getRenderContext} from '../common/render';
+import {describeByteSize, getContentTypeHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -388,16 +389,69 @@ export function _actuallySend (
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
+        const form = [];
         const params = renderedRequest.body.params || [];
-        const data = params.map(param => {
-          if (param.type === 'file' && param.fileName) {
-            const type = mimes.lookup(param.fileName) || 'application/octet-stream';
-            return {name: param.name, file: param.fileName, type};
+        const boundary = '------------------------X-INSOMNIA-BOUNDARY';
+
+        const contentTypeHeader = getContentTypeHeader(headers);
+        if (contentTypeHeader) {
+          contentTypeHeader.value = `multipart/form-data; boundary=${boundary}`;
+        } else {
+          headers.push({
+            name: 'Content-Type',
+            value: `multipart/form-data; charset=utf-8; boundary=${boundary}`
+          });
+        }
+
+        for (const param: RequestBodyParameter of params) {
+          const fileName = param.fileName;
+          if (param.type === 'file' && fileName) {
+            const contentType = mimes.lookup(fileName) || 'application/octet-stream';
+            const baseName = basename(fileName);
+            form.push(boundary);
+            form.push(`Content-Disposition: form-data; name="${param.name}" filename="${baseName}"`);
+            form.push(`Content-Type: ${contentType}`);
+            form.push('');
+            const f = fs.readFileSync(fileName).toString('utf8');
+            form.push(f);
           } else {
-            return {name: param.name, contents: param.value};
+            form.push(boundary);
+            form.push(`Content-Disposition: form-data; name="${param.name}"`);
+            form.push('');
+            form.push(param.value);
           }
-        });
-        setOpt(Curl.option.HTTPPOST, data);
+        }
+        form.push(`${boundary}--`);
+        requestBody = form.join('\n');
+        console.log('Body', requestBody);
+        // const form = new FormData();
+        // for (const param: RequestBodyParameter of params) {
+        //   const fileName = param.fileName;
+        //   if (param.type === 'file' && fileName) {
+        //     const contentType = mimes.lookup(fileName) || 'application/octet-stream';
+        //     const {size} = fs.statSync(fileName);
+        //     form.append(param.name, fs.createReadStream(fileName, 'utf8'), {
+        //       contentType,
+        //       knownLength: size
+        //     });
+        //   } else {
+        //     form.append(param.name, param.value);
+        //   }
+        // }
+        // form.pipe(fs.createWriteStream('/Users/gschier/Desktop/foo.txt'));
+        // const {size} = fs.statSync('/Users/gschier/Desktop/foo.txt');
+        // const fd = fs.openSync('/Users/gschier/Desktop/foo.txt', 'r+');
+        //
+        // setOpt(Curl.option.INFILESIZE_LARGE, size);
+        // setOpt(Curl.option.UPLOAD, 1);
+        // setOpt(Curl.option.READDATA, form);
+        //
+        // // We need this, otherwise curl will send it as a POST
+        // setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+        //
+        // const fn = () => fs.closeSync(fd);
+        // curl.on('end', fn);
+        // curl.on('error', fn);
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
