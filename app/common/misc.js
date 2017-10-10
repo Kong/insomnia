@@ -5,7 +5,6 @@ import {join as pathJoin} from 'path';
 import {format as urlFormat, parse as urlParse} from 'url';
 import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
 import * as querystring from './querystring';
-import stream from 'stream';
 import {shell} from 'electron';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';

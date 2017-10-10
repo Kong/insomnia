@@ -12,8 +12,7 @@ import mimes from 'mime-types';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'insomnia-node-libcurl';
-import {join as pathJoin, basename} from 'path';
-import FormData from 'form-data/lib/form_data';
+import {basename, join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
@@ -389,7 +388,7 @@ export function _actuallySend (
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
         requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
-        const form = [];
+        const form: Array<Buffer> = [];
         const params = renderedRequest.body.params || [];
         const boundary = '------------------------X-INSOMNIA-BOUNDARY';
 
@@ -399,7 +398,7 @@ export function _actuallySend (
         } else {
           headers.push({
             name: 'Content-Type',
-            value: `multipart/form-data; charset=utf-8; boundary=${boundary}`
+            value: `multipart/form-data; boundary=${boundary}`
           });
         }
 
@@ -408,50 +407,46 @@ export function _actuallySend (
           if (param.type === 'file' && fileName) {
             const contentType = mimes.lookup(fileName) || 'application/octet-stream';
             const baseName = basename(fileName);
-            form.push(boundary);
-            form.push(`Content-Disposition: form-data; name="${param.name}" filename="${baseName}"`);
-            form.push(`Content-Type: ${contentType}`);
-            form.push('');
-            const f = fs.readFileSync(fileName).toString('utf8');
-            form.push(f);
+            form.push(new Buffer(boundary));
+            form.push(new Buffer('\n'));
+            form.push(new Buffer([
+              'Content-Disposition: form-data',
+              `name="${param.name.replace(/"/g, '\\"')}"`,
+              `filename="${baseName.replace(/"/g, '\\"')}"`
+            ].join('; ')));
+            form.push(new Buffer('\n'));
+            form.push(new Buffer(`Content-Type: ${contentType}`));
+            form.push(new Buffer('\n'));
+            form.push(new Buffer('\n'));
+            form.push(fs.readFileSync(fileName));
+            form.push(new Buffer('\n'));
           } else {
-            form.push(boundary);
-            form.push(`Content-Disposition: form-data; name="${param.name}"`);
-            form.push('');
-            form.push(param.value);
+            form.push(new Buffer(boundary));
+            form.push(new Buffer('\n'));
+            form.push(new Buffer(`Content-Disposition: form-data; name="${param.name}"`));
+            form.push(new Buffer('\n'));
+            form.push(new Buffer('\n'));
+            form.push(new Buffer(param.value));
+            form.push(new Buffer('\n'));
           }
         }
-        form.push(`${boundary}--`);
-        requestBody = form.join('\n');
-        console.log('Body', requestBody);
-        // const form = new FormData();
-        // for (const param: RequestBodyParameter of params) {
-        //   const fileName = param.fileName;
-        //   if (param.type === 'file' && fileName) {
-        //     const contentType = mimes.lookup(fileName) || 'application/octet-stream';
-        //     const {size} = fs.statSync(fileName);
-        //     form.append(param.name, fs.createReadStream(fileName, 'utf8'), {
-        //       contentType,
-        //       knownLength: size
-        //     });
-        //   } else {
-        //     form.append(param.name, param.value);
-        //   }
-        // }
-        // form.pipe(fs.createWriteStream('/Users/gschier/Desktop/foo.txt'));
-        // const {size} = fs.statSync('/Users/gschier/Desktop/foo.txt');
-        // const fd = fs.openSync('/Users/gschier/Desktop/foo.txt', 'r+');
-        //
-        // setOpt(Curl.option.INFILESIZE_LARGE, size);
-        // setOpt(Curl.option.UPLOAD, 1);
-        // setOpt(Curl.option.READDATA, form);
-        //
-        // // We need this, otherwise curl will send it as a POST
-        // setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
-        //
-        // const fn = () => fs.closeSync(fd);
-        // curl.on('end', fn);
-        // curl.on('error', fn);
+        form.push(new Buffer(`${boundary}--`));
+        let bytesRead = 0;
+        const formBuffer = Buffer.concat(form);
+
+        setOpt(Curl.option.UPLOAD, 1);
+        setOpt(Curl.option.INFILESIZE_LARGE, formBuffer.length);
+        // We need this, otherwise curl will send it as a POST
+
+        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+        curl.setOpt(Curl.option.READFUNCTION, function (buffer, size, nmemb) {
+          if (bytesRead >= formBuffer.length || size === 0 || nmemb === 0) {
+            return 0;
+          }
+          const wrote = formBuffer.copy(buffer, 0, bytesRead);
+          bytesRead += wrote;
+          return wrote;
+        });
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
