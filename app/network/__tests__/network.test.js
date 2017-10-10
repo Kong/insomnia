@@ -482,6 +482,7 @@ describe('_getAwsAuthHeaders', () => {
       },
       headers: [{name: 'content-type', value: 'application/json'}],
       body: {text: '{}'},
+      method: 'POST',
       url: 'https://example.com/path?query=q1'
     };
     const headers = networkUtils._getAwsAuthHeaders(
@@ -489,7 +490,8 @@ describe('_getAwsAuthHeaders', () => {
       req.authentication.secretAccessKey,
       req.headers,
       req.body.text,
-      req.url
+      req.url,
+      req.method
     );
     expect(filterHeaders(headers, 'x-amz-date')[0].value)
       .toMatch(/^\d{8}T\d{6}Z$/);
@@ -508,7 +510,8 @@ describe('_getAwsAuthHeaders', () => {
         secretAccessKey: 'SAK9999999999999'
       },
       headers: [],
-      url: 'https://example.com'
+      url: 'https://example.com',
+      method: 'GET'
     };
 
     const headers = networkUtils._getAwsAuthHeaders(
@@ -516,7 +519,8 @@ describe('_getAwsAuthHeaders', () => {
       req.authentication.secretAccessKey,
       req.headers,
       null,
-      req.url
+      req.url,
+      req.method
     );
 
     expect(filterHeaders(headers, 'x-amz-date')[0].value)

@@ -466,7 +466,8 @@ export function _actuallySend (
             renderedRequest.authentication.secretAccessKey || '',
             headers,
             requestBody || '',
-            finalUrl
+            finalUrl,
+            renderedRequest.method
           );
           for (const header of extraHeaders) {
             headers.push(header);
@@ -667,7 +668,10 @@ export async function send (requestId: string, environmentId: string) {
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
-async function _applyRequestPluginHooks (renderedRequest: RenderedRequest, renderedContext: Object): Promise<RenderedRequest> {
+async function _applyRequestPluginHooks (
+  renderedRequest: RenderedRequest,
+  renderedContext: Object
+): Promise<RenderedRequest> {
   let newRenderedRequest = renderedRequest;
   for (const {plugin, hook} of await plugins.getRequestHooks()) {
     newRenderedRequest = clone(newRenderedRequest);
@@ -729,7 +733,8 @@ export function _getAwsAuthHeaders (
   secretAccessKey: string,
   headers: Array<RequestHeader>,
   body: string,
-  url: string
+  url: string,
+  method: string
 ) {
   const credentials = {accessKeyId, secretAccessKey};
 
@@ -738,6 +743,7 @@ export function _getAwsAuthHeaders (
 
   const awsSignOptions = {
     body,
+    method,
     path: parsedUrl.path,
     host: parsedUrl.hostname, // Purposefully not ".host" because we don't want the port
     headers: {
