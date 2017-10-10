@@ -15,7 +15,8 @@
     "fail": true,
     "HTMLDivElement": true,
     "HTMLElement": true,
-    "HTMLInputElement": true
+    "HTMLInputElement": true,
+    "HTMLSelectElement": true
   },
   "env": {
     "jest/globals": true
