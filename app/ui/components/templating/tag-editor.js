@@ -14,9 +14,11 @@ import {trackEvent} from '../../../analytics/index';
 import type {BaseModel} from '../../../models/index';
 import type {Workspace} from '../../../models/workspace';
 import type {PluginArgumentEnumOption} from '../../../templating/extensions/index';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown/index';
 
 type Props = {
   handleRender: Function,
+  handleGetRenderContext: Function,
   defaultValue: string,
   onChange: Function,
   workspace: Workspace
@@ -30,7 +32,8 @@ type State = {
   allDocs: {[string]: Array<BaseModel>},
   rendering: boolean,
   preview: string,
-  error: string
+  error: string,
+  variables: Array<{name: string, value: string}>
 };
 
 @autobind
@@ -48,7 +51,8 @@ class TagEditor extends React.PureComponent<Props, State> {
       allDocs: {},
       rendering: true,
       preview: '',
-      error: ''
+      error: '',
+      variables: []
     };
   }
 
@@ -68,8 +72,15 @@ class TagEditor extends React.PureComponent<Props, State> {
     await this._update(tagDefinitions, activeTagDefinition, activeTagData, true);
   }
 
+  async loadVariables () {
+    const context = await this.props.handleGetRenderContext();
+    const variables = context.keys;
+    this.setState({variables});
+  }
+
   componentDidMount () {
     this.load();
+    this.loadVariables();
   }
 
   componentWillReceiveProps (nextProps: Props) {
@@ -104,7 +115,11 @@ class TagEditor extends React.PureComponent<Props, State> {
     this.setState({allDocs, loadingDocs: false});
   }
 
-  _updateArg (argValue: string | number, argIndex: number) {
+  _updateArg (
+    argValue: string | number | boolean,
+    argIndex: number,
+    forceNewType: string | null = null
+  ) {
     const {tagDefinitions, activeTagData, activeTagDefinition} = this.state;
 
     if (!activeTagData) {
@@ -112,10 +127,13 @@ class TagEditor extends React.PureComponent<Props, State> {
       return;
     }
 
+    if (!activeTagDefinition) {
+      console.warn('No active tag definition to update', {state: this.state});
+      return;
+    }
+
     // Ensure all arguments exist
-    const defaultArgs = activeTagDefinition
-      ? this._getDefaultTagData(activeTagDefinition).args
-      : [];
+    const defaultArgs = this._getDefaultTagData(activeTagDefinition).args;
     for (let i = 0; i < defaultArgs.length; i++) {
       if (activeTagData.args[i]) {
         continue;
@@ -135,10 +153,42 @@ class TagEditor extends React.PureComponent<Props, State> {
     // Update it
     argData.value = argValue;
 
+    // Update type if we need to
+    if (forceNewType) {
+      // Ugh, what a hack (because it's enum)
+      (argData: any).type = forceNewType;
+    }
+
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
-  _handleChange (e: SyntheticEvent<HTMLInputElement>) {
+  async _handleChangeArgVariable (options: {argIndex: number, variable: boolean}) {
+    const {variable, argIndex} = options;
+    const {activeTagData, activeTagDefinition, variables} = this.state;
+
+    if (!activeTagData || !activeTagDefinition) {
+      console.warn('Failed to change arg variable', {state: this.state});
+      return;
+    }
+
+    const argData = activeTagData.args[argIndex];
+    const argDef = activeTagDefinition.args[argIndex];
+    const existingValue = argData ? argData.value : '';
+
+    if (variable) {
+      const variable = variables.find(v => v.value === existingValue);
+      const firstVariable = variables.length ? variables[0].name : '';
+      const value = variable ? variable.name : firstVariable;
+      return this._updateArg(value || 'my_variable', argIndex, 'variable');
+    } else {
+      const initialType = argDef ? argDef.type : 'string';
+      const variable = variables.find(v => v.name === existingValue);
+      const value = variable ? variable.value : '';
+      return this._updateArg(value, argIndex, initialType);
+    }
+  }
+
+  _handleChange (e: SyntheticEvent<HTMLInputElement>, forceVariable: boolean = false) {
     const parent = e.currentTarget.parentNode;
     let argIndex = -1;
     if (parent instanceof HTMLElement) {
@@ -250,6 +300,19 @@ class TagEditor extends React.PureComponent<Props, State> {
     }
   }
 
+  renderArgVariable (path: string) {
+    const {variables} = this.state;
+    return (
+      <select type="text" defaultValue={path || ''} onChange={this._handleChange}>
+        {variables.map((v, i) => (
+          <option key={`${i}::${v.name}`} value={v.name}>
+            {v.name}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
   renderArgString (value: string, placeholder: string) {
     return (
       <input
@@ -355,9 +418,13 @@ class TagEditor extends React.PureComponent<Props, State> {
     }
 
     const value = argData.value.toString();
+    const isVariable = argData.type === 'variable';
+    const argInputVariable = isVariable ? this.renderArgVariable(value) : null;
 
     let argInput;
+    let isVariableAllowed = false;
     if (argDefinition.type === 'string') {
+      isVariableAllowed = true;
       const placeholder = typeof argDefinition.placeholder === 'string'
         ? argDefinition.placeholder
         : '';
@@ -370,6 +437,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       const modelId = typeof value === 'string' ? value : 'unknown';
       argInput = this.renderArgModel(modelId, model);
     } else if (argDefinition.type === 'number') {
+      isVariableAllowed = true;
       const placeholder = typeof argDefinition.placeholder === 'string'
         ? argDefinition.placeholder
         : '';
@@ -385,16 +453,39 @@ class TagEditor extends React.PureComponent<Props, State> {
     ) ? fnOrString(argDefinition.displayName, argDatas) : '';
 
     return (
-      <div key={argIndex} className="form-control form-control--outlined">
-        <label>
-          {fnOrString(displayName, argDatas)}
-          {help && (
-            <HelpTooltip className="space-left">{help}</HelpTooltip>
-          )}
-          <div data-arg-index={argIndex}>
-            {argInput}
+      <div key={argIndex} className="form-row">
+        <div className="form-control form-control--outlined">
+          <label>
+            {fnOrString(displayName, argDatas)}
+            {argData.type === 'variable' ? (
+              <span className="faded space-left">(Variable)</span>
+            ) : null}
+            {help && (
+              <HelpTooltip className="space-left">{help}</HelpTooltip>
+            )}
+            <div data-arg-index={argIndex}>
+              {argInputVariable || argInput}
+            </div>
+          </label>
+        </div>
+        {isVariableAllowed ? (
+          <div className="form-control form-control--outlined form-control--no-label width-auto">
+            <Dropdown right>
+              <DropdownButton className="btn btn--clicky">
+                <i className="fa fa-gear"/>
+              </DropdownButton>
+              <DropdownDivider>Input Type</DropdownDivider>
+              <DropdownItem value={{variable: false, argIndex}}
+                            onClick={this._handleChangeArgVariable}>
+                <i className={'fa ' + (isVariable ? '' : 'fa-check')}/> Static Value
+              </DropdownItem>
+              <DropdownItem value={{variable: true, argIndex}}
+                            onClick={this._handleChangeArgVariable}>
+                <i className={'fa ' + (isVariable ? 'fa-check' : '')}/> Environment Variable
+              </DropdownItem>
+            </Dropdown>
           </div>
-        </label>
+        ) : null}
       </div>
     );
   }
@@ -422,7 +513,8 @@ class TagEditor extends React.PureComponent<Props, State> {
     } else {
       previewElement = (
         <pre>
-          <code className="block selectable scrollable force-wrap">{preview || <span>&nbsp;</span>}</code>
+          <code className="block selectable scrollable force-wrap">{preview ||
+          <span>&nbsp;</span>}</code>
         </pre>
       );
     }

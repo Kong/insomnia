@@ -27,10 +27,11 @@ describe('ResponseExtension General', async () => {
   });
 
   it('fails on empty filter', async () => {
-    await models.response.create({parentId: 'req_test'}, '{"foo": "bar"}');
+    const request = await models.request.create({parentId: 'foo'});
+    await models.response.create({parentId: request._id, statusCode: 200}, '{"foo": "bar"}');
 
     try {
-      await templating.render(`{% response "body", "req_test", "" %}`);
+      await templating.render(`{% response "body", "${request._id}", "" %}`);
       fail('Should have failed');
     } catch (err) {
       expect(err.message).toContain('No body filter specified');

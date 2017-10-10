@@ -49,10 +49,6 @@ export default ({
       throw new Error('No request specified');
     }
 
-    if (field !== 'raw' && !filter) {
-      throw new Error(`No ${field} filter specified`);
-    }
-
     const request = await context.util.models.request.getById(id);
     if (!request) {
       throw new Error(`Could not find request ${id}`);
@@ -65,7 +61,11 @@ export default ({
     }
 
     if (!response.statusCode) {
-      throw new Error('No responses for request');
+      throw new Error('No successful responses for request');
+    }
+
+    if (field !== 'raw' && !filter) {
+      throw new Error(`No ${field} filter specified`);
     }
 
     const sanitizedFilter = filter.trim();
