@@ -4,6 +4,7 @@ class Curl extends EventEmitter {
   constructor () {
     super();
     this._options = {};
+    this._meta = {};
   }
   setOpt (name, value) {
     if (!name) {
@@ -13,6 +14,12 @@ class Curl extends EventEmitter {
     if (name === Curl.option.CAINFO) {
       // Just ignore this because it's platform-specific
       return;
+    }
+
+    if (name === Curl.option.READFUNCTION) {
+      const buffer = new Buffer(10000);
+      const bytes = value(buffer);
+      this._meta[`${name}_VALUE`] = buffer.slice(0, bytes).toString('utf8');
     }
 
     if (name === Curl.option.COOKIELIST) {
@@ -42,7 +49,8 @@ class Curl extends EventEmitter {
   perform () {
     process.nextTick(() => {
       const data = Buffer.from(JSON.stringify({
-        options: this._options
+        options: this._options,
+        meta: this._meta
       }));
 
       this.emit('data', data);
@@ -110,6 +118,7 @@ Curl.option = {
   PROXY: 'PROXY',
   PROXYAUTH: 'PROXYAUTH',
   READDATA: 'READDATA',
+  READFUNCTION: 'READFUNCTION',
   SSLCERT: 'SSLCERT',
   SSLCERTTYPE: 'SSLCERTTYPE',
   SSLKEY: 'SSLKEY',

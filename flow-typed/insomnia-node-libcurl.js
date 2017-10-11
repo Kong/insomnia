@@ -25,6 +25,7 @@ declare class Curl {
     PROXY: number,
     PROXYAUTH: number,
     READDATA: number,
+    READFUNCTION: number,
     SSLCERT: number,
     SSLCERTTYPE: number,
     SSLKEY: number,

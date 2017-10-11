@@ -1,4 +1,5 @@
 import * as networkUtils from '../network';
+import fs from 'fs';
 import {join as pathJoin, resolve as pathResolve} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
@@ -64,6 +65,7 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
       options: {
         COOKIELIST: [
           'notlocalhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
@@ -72,7 +74,7 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
@@ -120,12 +122,13 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
       options: {
         POST: 1,
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
           'Expect: ',
@@ -199,11 +202,12 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
@@ -253,20 +257,21 @@ describe('actuallySend()', () => {
     delete body.options.READDATA;
 
     expect(body).toEqual({
+      meta: {},
       options: {
         POST: 1,
         ACCEPT_ENCODING: '',
         CUSTOMREQUEST: 'POST',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
           'Expect: ',
           'Transfer-Encoding: '
         ],
         NOPROGRESS: false,
-        INFILESIZE_LARGE: 13,
+        INFILESIZE_LARGE: 26,
         PROXY: '',
         TIMEOUT_MS: 0,
         UPLOAD: 1,
@@ -309,29 +314,39 @@ describe('actuallySend()', () => {
       settings
     );
     const body = JSON.parse(bodyBuffer);
-    expect(body).toEqual({
-      options: {
-        POST: 1,
-        ACCEPT_ENCODING: '',
-        COOKIEFILE: '',
-        FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
-        HTTPHEADER: [
-          'Content-Type: multipart/form-data',
-          'Expect: ',
-          'Transfer-Encoding: '
-        ],
-        HTTPPOST: [
-          {file: fileName, name: 'foo', type: 'text/plain'},
-          {contents: 'AA', name: 'a'}
-        ],
-        NOPROGRESS: false,
-        PROXY: '',
-        TIMEOUT_MS: 0,
-        URL: 'http://localhost/',
-        USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+    expect(body.meta.READFUNCTION_VALUE).toBe([
+      '------------------------X-INSOMNIA-BOUNDARY',
+      'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
+      'Content-Type: text/plain',
+      '',
+      fs.readFileSync(fileName),
+      '------------------------X-INSOMNIA-BOUNDARY',
+      'Content-Disposition: form-data; name="a"',
+      '',
+      'AA',
+      '------------------------X-INSOMNIA-BOUNDARY--'
+    ].join('\n'));
+
+    expect(body.options).toEqual({
+      POST: 1,
+      ACCEPT_ENCODING: '',
+      COOKIEFILE: '',
+      FOLLOWLOCATION: true,
+      MAXREDIRS: -1,
+      CUSTOMREQUEST: 'POST',
+      HTTPHEADER: [
+        'Content-Type: multipart/form-data; boundary=------------------------X-INSOMNIA-BOUNDARY',
+        'Expect: ',
+        'Transfer-Encoding: '
+      ],
+      INFILESIZE_LARGE: 299,
+      NOPROGRESS: false,
+      PROXY: '',
+      TIMEOUT_MS: 0,
+      URL: 'http://localhost/',
+      UPLOAD: 1,
+      USERAGENT: `insomnia/${getAppVersion()}`,
+      VERBOSE: true
     });
   });
 
@@ -351,12 +366,13 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -385,12 +401,13 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
       options: {
         NOBODY: 1,
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -418,12 +435,13 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -452,12 +470,13 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
+        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',

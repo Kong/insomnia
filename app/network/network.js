@@ -4,10 +4,10 @@ import type {RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
 import type {RenderedRequest} from '../common/render';
+import {getRenderContext, getRenderedRequest} from '../common/render';
 
 import electron from 'electron';
 import mkdirp from 'mkdirp';
-import mimes from 'mime-types';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'insomnia-node-libcurl';
@@ -16,8 +16,7 @@ import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {describeByteSize, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
-import {getRenderedRequest, getRenderContext} from '../common/render';
+import {describeByteSize, getContentTypeHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -27,6 +26,7 @@ import {getAuthHeader} from './authentication';
 import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import {urlMatchesCertHost} from './url-matches-cert-host';
 import aws4 from 'aws4';
+import {buildMultipart} from './multipart';
 
 export type ResponsePatch = {
   statusMessage?: string,
@@ -132,7 +132,7 @@ export function _actuallySend (
 
       // Set all the basic options
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      // setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+      setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
@@ -389,15 +389,34 @@ export function _actuallySend (
         requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const params = renderedRequest.body.params || [];
-        const data = params.map(param => {
-          if (param.type === 'file' && param.fileName) {
-            const type = mimes.lookup(param.fileName) || 'application/octet-stream';
-            return {name: param.name, file: param.fileName, type};
-          } else {
-            return {name: param.name, contents: param.value};
+        const {body: multipartBody, boundary} = buildMultipart(params);
+
+        // Extend the Content-Type header
+        const contentTypeHeader = getContentTypeHeader(headers);
+        if (contentTypeHeader) {
+          contentTypeHeader.value = `multipart/form-data; boundary=${boundary}`;
+        } else {
+          headers.push({
+            name: 'Content-Type',
+            value: `multipart/form-data; boundary=${boundary}`
+          });
+        }
+
+        setOpt(Curl.option.UPLOAD, 1);
+        setOpt(Curl.option.INFILESIZE_LARGE, multipartBody.length);
+
+        // We need this, otherwise curl will send it as a PUT
+        setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
+
+        let bytesUploaded = 0;
+        curl.setOpt(Curl.option.READFUNCTION, function (buffer, size, nmemb) {
+          if (bytesUploaded >= multipartBody.length || size === 0 || nmemb === 0) {
+            return 0;
           }
+          const wrote = multipartBody.copy(buffer, 0, bytesUploaded);
+          bytesUploaded += wrote;
+          return wrote;
         });
-        setOpt(Curl.option.HTTPPOST, data);
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
