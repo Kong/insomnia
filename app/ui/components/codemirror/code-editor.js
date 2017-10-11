@@ -439,7 +439,8 @@ class CodeEditor extends React.Component {
         getTags = async () => {
           const expandedTags = [];
           for (const tagDef of await getTagDefinitions()) {
-            if (tagDef.args[0].type !== 'enum') {
+            const firstArg = tagDef.args[0];
+            if (!firstArg || firstArg.type !== 'enum') {
               expandedTags.push(tagDef);
               continue;
             }
