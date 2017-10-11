@@ -264,14 +264,13 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'POST',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
           'Expect: ',
           'Transfer-Encoding: '
         ],
         NOPROGRESS: false,
-        INFILESIZE_LARGE: 13,
+        INFILESIZE_LARGE: 26,
         PROXY: '',
         TIMEOUT_MS: 0,
         UPLOAD: 1,
