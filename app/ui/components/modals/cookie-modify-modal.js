@@ -20,6 +20,7 @@ import type {Workspace} from '../../../models/workspace';
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
   workspace: Workspace,
   cookieJar: CookieJar
 };
@@ -175,7 +176,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
 
   _renderInputField (field: string, error: string | null = null) {
     const {cookie} = this.state;
-    const {handleRender, handleGetRenderContext} = this.props;
+    const {handleRender, handleGetRenderContext, nunjucksPowerUserMode} = this.props;
 
     if (!cookie) {
       return null;
@@ -190,6 +191,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
           <OneLineEditor
             render={handleRender}
             getRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}/>
         </label>

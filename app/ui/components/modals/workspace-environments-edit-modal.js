@@ -25,7 +25,8 @@ type Props = {
   editorKeyMap: string,
   lineWrapping: boolean,
   render: Function,
-  getRenderContext: Function
+  getRenderContext: Function,
+  nunjucksPowerUserMode: boolean
 };
 
 type State = {
@@ -257,7 +258,8 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       editorKeyMap,
       lineWrapping,
       render,
-      getRenderContext
+      getRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     const {
@@ -384,6 +386,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 didChange={this._didChange}
                 render={render}
                 getRenderContext={getRenderContext}
+                nunjucksPowerUserMode={nunjucksPowerUserMode}
               />
             </div>
           </div>

@@ -249,7 +249,7 @@ class CodeEditor extends React.Component {
       this._codemirrorSetValue(defaultValue || '');
 
       // Setup nunjucks listeners
-      if (this.props.render) {
+      if (this.props.render && !this.props.nunjucksPowerUserMode) {
         this.codeMirror.enableNunjucksTags(this.props.render);
       }
 
@@ -760,6 +760,7 @@ CodeEditor.propTypes = {
   onClick: PropTypes.func,
   onPaste: PropTypes.func,
   render: PropTypes.func,
+  nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,
   keyMap: PropTypes.string,

@@ -52,6 +52,7 @@ type Props = {
   showPasswords: boolean,
   editorFontSize: number,
   editorIndentSize: number,
+  nunjucksPowerUserMode: boolean,
   editorKeyMap: string,
   editorLineWrapping: boolean,
   workspace: Workspace,
@@ -171,6 +172,7 @@ class RequestPane extends React.PureComponent<Props> {
       handleGetRenderContext,
       handleImport,
       handleRender,
+      nunjucksPowerUserMode,
       handleSend,
       handleSendAndDownload,
       oAuth2Token,
@@ -258,6 +260,7 @@ class RequestPane extends React.PureComponent<Props> {
             handleSend={handleSend}
             handleSendAndDownload={handleSendAndDownload}
             handleRender={handleRender}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             handleGetRenderContext={handleGetRenderContext}
             url={request.url}
             requestId={request._id}
@@ -313,6 +316,7 @@ class RequestPane extends React.PureComponent<Props> {
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
               key={uniqueKey}
               request={request}
               workspace={workspace}
@@ -335,6 +339,7 @@ class RequestPane extends React.PureComponent<Props> {
                 handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
+                nunjucksPowerUserMode={nunjucksPowerUserMode}
                 onChange={updateRequestAuthentication}
               />
             </div>
@@ -363,6 +368,7 @@ class RequestPane extends React.PureComponent<Props> {
                   pairs={request.parameters}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   onChange={updateRequestParameters}
                 />
               </div>
@@ -381,6 +387,7 @@ class RequestPane extends React.PureComponent<Props> {
               headers={request.headers}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}
               editorLineWrapping={editorLineWrapping}

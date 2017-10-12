@@ -36,7 +36,8 @@ class BasicAuth extends PureComponent {
       authentication,
       showPasswords,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     const pairs = [{
@@ -52,6 +53,7 @@ class BasicAuth extends PureComponent {
         disableDelete
         handleRender={handleRender}
         handleGetRenderContext={handleGetRenderContext}
+        nunjucksPowerUserMode={nunjucksPowerUserMode}
         namePlaceholder="Username"
         valuePlaceholder="•••••••••••"
         valueInputType={showPasswords ? 'text' : 'password'}
@@ -68,6 +70,7 @@ BasicAuth.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   authentication: PropTypes.object.isRequired,
   showPasswords: PropTypes.bool.isRequired

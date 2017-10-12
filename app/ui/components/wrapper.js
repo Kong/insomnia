@@ -450,6 +450,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           handleImport={this._handleImport}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           updateRequestBody={this._handleUpdateRequestBody}
           updateRequestUrl={this._handleUpdateRequestUrl}
           updateRequestMethod={this._handleUpdateRequestMethod}
@@ -516,6 +517,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             ref={registerModal}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
@@ -530,11 +532,13 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorLineWrapping={settings.editorLineWrapping}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           />
 
           <CookiesModal
             handleShowModifyCookieModal={this._handleShowModifyCookieModal}
             handleRender={handleRender}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             ref={registerModal}
             workspace={activeWorkspace}
             cookieJar={activeCookieJar}
@@ -543,6 +547,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <CookieModifyModal
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             ref={registerModal}
             cookieJar={activeCookieJar}
             workspace={activeWorkspace}
@@ -555,6 +560,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleGetRenderContext={handleGetRenderContext}
             workspace={activeWorkspace}
           />
+
           <WorkspaceSettingsModal
             ref={registerModal}
             workspace={activeWorkspace}
@@ -564,6 +570,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorLineWrapping={settings.editorLineWrapping}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
             handleDuplicateWorkspace={handleDuplicateWorkspace}
           />
@@ -605,6 +612,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             onChange={models.requestGroup.update}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           />
           <SetupSyncModal
             ref={registerModal}
@@ -620,6 +628,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             activeEnvironment={activeEnvironment}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           />
         </div>
       </div>

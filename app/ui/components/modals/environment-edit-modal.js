@@ -63,6 +63,7 @@ class EnvironmentEditModal extends PureComponent {
       lineWrapping,
       render,
       getRenderContext,
+      nunjucksPowerUserMode,
       ...extraProps
     } = this.props;
 
@@ -86,6 +87,7 @@ class EnvironmentEditModal extends PureComponent {
             didChange={this._didChange}
             render={render}
             getRenderContext={getRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
           />
         </ModalBody>
         <ModalFooter>
@@ -108,6 +110,7 @@ EnvironmentEditModal.propTypes = {
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
   getRenderContext: PropTypes.func.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   lineWrapping: PropTypes.bool.isRequired
 };
 

@@ -102,6 +102,20 @@ class General extends PureComponent {
           </label>
         </div>
 
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Nunjucks Power User Mode
+            {' '}
+            <HelpTooltip>
+              Disable tag editing interface in favor of raw Nunjucks syntax (requires restart)
+            </HelpTooltip>
+            <input type="checkbox"
+                   name="nunjucksPowerUserMode"
+                   checked={settings.nunjucksPowerUserMode}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
         <div className="form-row">
           <div className="form-control form-control--outlined pad-top-sm">
             <label>Text Editor Font Size (px)
