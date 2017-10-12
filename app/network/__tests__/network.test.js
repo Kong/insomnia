@@ -1,8 +1,9 @@
 import * as networkUtils from '../network';
+import fs from 'fs';
 import {join as pathJoin, resolve as pathResolve} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
-import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
 
@@ -281,74 +282,74 @@ describe('actuallySend()', () => {
     });
   });
 
-  // it('sends multipart form data', async () => {
-  //   const workspace = await models.workspace.create();
-  //   const settings = await models.settings.create();
-  //   await models.cookieJar.create({parentId: workspace._id});
-  //   const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
-  //
-  //   const request = Object.assign(models.request.init(), {
-  //     _id: 'req_123',
-  //     parentId: workspace._id,
-  //     headers: [{name: 'Content-Type', value: 'multipart/form-data'}],
-  //     url: 'http://localhost',
-  //     method: 'POST',
-  //     body: {
-  //       mimeType: CONTENT_TYPE_FORM_DATA,
-  //       params: [
-  //         // Should ignore value and send the file since type is set to file
-  //         {name: 'foo', fileName: fileName, value: 'bar', type: 'file'},
-  //
-  //         // Some extra params
-  //         {name: 'a', value: 'AA'},
-  //         {name: 'baz', value: 'qux', disabled: true}
-  //       ]
-  //     }
-  //   });
-  //
-  //   const renderedRequest = await getRenderedRequest(request);
-  //   const {bodyBuffer} = await networkUtils._actuallySend(
-  //     renderedRequest,
-  //     workspace,
-  //     settings
-  //   );
-  //   const body = JSON.parse(bodyBuffer);
-  //   expect(body.meta.READFUNCTION_VALUE).toBe([
-  //     '------------------------X-INSOMNIA-BOUNDARY',
-  //     'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
-  //     'Content-Type: text/plain',
-  //     '',
-  //     fs.readFileSync(fileName),
-  //     '------------------------X-INSOMNIA-BOUNDARY',
-  //     'Content-Disposition: form-data; name="a"',
-  //     '',
-  //     'AA',
-  //     '------------------------X-INSOMNIA-BOUNDARY--',
-  //     ''
-  //   ].join('\r\n'));
-  //
-  //   expect(body.options).toEqual({
-  //     POST: 1,
-  //     ACCEPT_ENCODING: '',
-  //     COOKIEFILE: '',
-  //     FOLLOWLOCATION: true,
-  //     MAXREDIRS: -1,
-  //     CUSTOMREQUEST: 'POST',
-  //     HTTPHEADER: [
-  //       'Content-Type: multipart/form-data; boundary=------------------------X-INSOMNIA-BOUNDARY',
-  //       'Expect: ',
-  //       'Transfer-Encoding: '
-  //     ],
-  //     INFILESIZE_LARGE: 310,
-  //     NOPROGRESS: false,
-  //     PROXY: '',
-  //     TIMEOUT_MS: 0,
-  //     URL: 'http://localhost/',
-  //     UPLOAD: 1,
-  //     USERAGENT: `insomnia/${getAppVersion()}`,
-  //     VERBOSE: true
-  //   });
-  // });
+  it('sends multipart form data', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+    await models.cookieJar.create({parentId: workspace._id});
+    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      headers: [{name: 'Content-Type', value: 'multipart/form-data'}],
+      url: 'http://localhost',
+      method: 'POST',
+      body: {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: [
+          // Should ignore value and send the file since type is set to file
+          {name: 'foo', fileName: fileName, value: 'bar', type: 'file'},
+
+          // Some extra params
+          {name: 'a', value: 'AA'},
+          {name: 'baz', value: 'qux', disabled: true}
+        ]
+      }
+    });
+
+    const renderedRequest = await getRenderedRequest(request);
+    const {bodyBuffer} = await networkUtils._actuallySend(
+      renderedRequest,
+      workspace,
+      settings
+    );
+    const body = JSON.parse(bodyBuffer);
+    expect(body.meta.READFUNCTION_VALUE).toBe([
+      '--------------------------X-INSOMNIA-BOUNDARY',
+      'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
+      'Content-Type: text/plain',
+      '',
+      fs.readFileSync(fileName),
+      '--------------------------X-INSOMNIA-BOUNDARY',
+      'Content-Disposition: form-data; name="a"',
+      '',
+      'AA',
+      '--------------------------X-INSOMNIA-BOUNDARY--',
+      ''
+    ].join('\r\n'));
+
+    expect(body.options).toEqual({
+      POST: 1,
+      ACCEPT_ENCODING: '',
+      COOKIEFILE: '',
+      FOLLOWLOCATION: true,
+      MAXREDIRS: -1,
+      CUSTOMREQUEST: 'POST',
+      HTTPHEADER: [
+        'Content-Type: multipart/form-data; boundary=------------------------X-INSOMNIA-BOUNDARY',
+        'Expect: ',
+        'Transfer-Encoding: '
+      ],
+      INFILESIZE_LARGE: 316,
+      NOPROGRESS: false,
+      PROXY: '',
+      TIMEOUT_MS: 0,
+      URL: 'http://localhost/',
+      UPLOAD: 1,
+      USERAGENT: `insomnia/${getAppVersion()}`,
+      VERBOSE: true
+    });
+  });
 
   it('uses unix socket', async () => {
     const workspace = await models.workspace.create();

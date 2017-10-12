@@ -11,7 +11,7 @@ export function buildMultipart (params: Array<RequestBodyParameter>): {boundary:
 
   const add = (v: Buffer | string) => {
     if (typeof v === 'string') {
-      buffers.push(Buffer.from(v, 'utf8'));
+      buffers.push(Buffer.from(v));
     } else {
       buffers.push(v);
     }
@@ -25,7 +25,7 @@ export function buildMultipart (params: Array<RequestBodyParameter>): {boundary:
       continue;
     }
 
-    add(`${boundary}`);
+    add(`--${boundary}`);
     add(lineBreak);
 
     if (param.type === 'file' && param.fileName) {
@@ -54,7 +54,7 @@ export function buildMultipart (params: Array<RequestBodyParameter>): {boundary:
     add(lineBreak);
   }
 
-  add(`${boundary}--`);
+  add(`--${boundary}--`);
   add(lineBreak);
 
   const body = Buffer.concat(buffers);

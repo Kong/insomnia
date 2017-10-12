@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
-import {SimplePDF} from 'simple-react-pdf';
+import PDFViewer from '../pdf-viewer';
 import CodeEditor from '../codemirror/code-editor';
 import ResponseWebView from './response-webview';
 import ResponseRaw from './response-raw';
@@ -113,6 +113,7 @@ class ResponseViewer extends React.Component {
       editorIndentSize,
       editorKeyMap,
       updateFilter,
+      responseId,
       url,
       error
     } = this.props;
@@ -214,11 +215,9 @@ class ResponseViewer extends React.Component {
         />
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
-      const justContentType = contentType.split(';')[0];
-      const base64Body = bodyBuffer.toString('base64');
       return (
         <div className="tall wide scrollable">
-          <SimplePDF file={`data:${justContentType};base64,${base64Body}`}/>
+          <PDFViewer body={bodyBuffer} uniqueKey={responseId}/>
         </div>
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
@@ -277,6 +276,7 @@ class ResponseViewer extends React.Component {
 
 ResponseViewer.propTypes = {
   getBody: PropTypes.func.isRequired,
+  responseId: PropTypes.string.isRequired,
   previewMode: PropTypes.string.isRequired,
   filter: PropTypes.string.isRequired,
   filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,

@@ -43,7 +43,8 @@
       "./__jest__/setup.js"
     ],
     "moduleNameMapper": {
-      "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js"
+      "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
+      "^worker-loader!": "<rootDir>/__mocks__/dummy.js"
     },
     "testMatch": [
       "**/__tests__/**/*.test.js?(x)"
@@ -142,6 +143,7 @@
     "nedb": "^1.8.0",
     "node-forge": "^0.7.0",
     "nunjucks": "^3.0.0",
+    "pdfjs-dist": "^1.9.640",
     "prop-types": "^15.5.10",
     "react": "^16.0.0",
     "react-dnd": "^2.4.0",
@@ -152,7 +154,6 @@
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
     "reselect": "^3.0.1",
-    "simple-react-pdf": "^1.0.8",
     "srp-js": "^0.2.0",
     "tar": "^3.1.7",
     "tough-cookie": "^2.3.1",

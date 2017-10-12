@@ -13,15 +13,15 @@ describe('buildMultipart()', () => {
 
     expect(boundary).toBe('------------------------X-INSOMNIA-BOUNDARY');
     expect(body.toString()).toBe([
-      `${boundary}`,
+      `--${boundary}`,
       'Content-Disposition: form-data; name="foo"',
       '',
       'bar',
-      `${boundary}`,
+      `--${boundary}`,
       'Content-Disposition: form-data; name="multi-line"',
       '',
       'Hello\nWorld!',
-      `${boundary}--`,
+      `--${boundary}--`,
       ''
     ].join('\r\n'));
   });
@@ -36,20 +36,20 @@ describe('buildMultipart()', () => {
 
     expect(boundary).toBe('------------------------X-INSOMNIA-BOUNDARY');
     expect(body.toString()).toBe([
-      `${boundary}`,
+      `--${boundary}`,
       'Content-Disposition: form-data; name="foo"',
       '',
       'bar',
-      `${boundary}`,
+      `--${boundary}`,
       'Content-Disposition: form-data; name="file"; filename="testfile.txt"',
       'Content-Type: text/plain',
       '',
       'Hello World!\n\nHow are you?',
-      `${boundary}`,
+      `--${boundary}`,
       'Content-Disposition: form-data; name="baz"',
       '',
       'qux',
-      `${boundary}--`,
+      `--${boundary}--`,
       ''
     ].join('\r\n'));
   });
@@ -64,15 +64,15 @@ describe('buildMultipart()', () => {
 
     expect(boundary).toBe('------------------------X-INSOMNIA-BOUNDARY');
     expect(body.toString()).toBe([
-      `${boundary}`,
+      `--${boundary}`,
       'Content-Disposition: form-data; name=""',
       '',
       'bar',
-      `${boundary}`,
+      `--${boundary}`,
       'Content-Disposition: form-data; name="foo"',
       '',
       '',
-      `${boundary}--`,
+      `--${boundary}--`,
       ''
     ].join('\r\n'));
   });
