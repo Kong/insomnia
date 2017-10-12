@@ -95,7 +95,15 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 
   async _applyFilter (filter: string, cookies: Array<Cookie>) {
-    const renderedCookies = await this.props.handleRender(cookies);
+    const renderedCookies = [];
+
+    for (const cookie of cookies) {
+      try {
+        renderedCookies.push(await this.props.handleRender(cookie));
+      } catch (err) {
+        return;
+      }
+    }
 
     let visibleCookieIndexes;
 
