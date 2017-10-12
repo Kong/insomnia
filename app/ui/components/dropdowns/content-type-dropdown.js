@@ -10,7 +10,7 @@ import type {Request, RequestBody} from '../../../models/request';
 
 type Props = {
   onChange: Function,
-  contentType: string | null,
+  contentType: ?string,
   children: ?React.Node,
 
   // Optional
@@ -68,8 +68,9 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
   }
 
   _renderDropdownItem (mimeType: string | null, forcedName: string = '') {
-    const contentType = typeof this.props.contentType !== 'string'
-      ? EMPTY_MIME_TYPE : this.props.contentType;
+    const contentType = typeof this.props.contentType === 'string'
+      ? this.props.contentType
+      : EMPTY_MIME_TYPE;
 
     const iconClass = mimeType === contentType ? 'fa-check' : 'fa-empty';
 

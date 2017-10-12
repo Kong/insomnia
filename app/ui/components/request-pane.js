@@ -267,7 +267,7 @@ class RequestPane extends React.PureComponent<Props> {
           <TabList>
             <Tab>
               <ContentTypeDropdown onChange={updateRequestMimeType}
-                                   contentType={request.body.mimeType || ''}
+                                   contentType={request.body.mimeType}
                                    request={request}
                                    className="tall">
                 {typeof request.body.mimeType === 'string'
