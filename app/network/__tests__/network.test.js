@@ -324,8 +324,9 @@ describe('actuallySend()', () => {
       'Content-Disposition: form-data; name="a"',
       '',
       'AA',
-      '------------------------X-INSOMNIA-BOUNDARY--'
-    ].join('\n'));
+      '------------------------X-INSOMNIA-BOUNDARY--',
+      ''
+    ].join('\r\n'));
 
     expect(body.options).toEqual({
       POST: 1,
@@ -339,7 +340,7 @@ describe('actuallySend()', () => {
         'Expect: ',
         'Transfer-Encoding: '
       ],
-      INFILESIZE_LARGE: 299,
+      INFILESIZE_LARGE: 310,
       NOPROGRESS: false,
       PROXY: '',
       TIMEOUT_MS: 0,

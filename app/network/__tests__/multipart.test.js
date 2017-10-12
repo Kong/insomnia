@@ -20,10 +20,10 @@ describe('buildMultipart()', () => {
       `${boundary}`,
       'Content-Disposition: form-data; name="multi-line"',
       '',
-      'Hello',
-      'World!',
-      `${boundary}--`
-    ].join('\n'));
+      'Hello\nWorld!',
+      `${boundary}--`,
+      ''
+    ].join('\r\n'));
   });
 
   it('builds with file', async () => {
@@ -44,15 +44,14 @@ describe('buildMultipart()', () => {
       'Content-Disposition: form-data; name="file"; filename="testfile.txt"',
       'Content-Type: text/plain',
       '',
-      'Hello World!',
-      '',
-      'How are you?',
+      'Hello World!\n\nHow are you?',
       `${boundary}`,
       'Content-Disposition: form-data; name="baz"',
       '',
       'qux',
-      `${boundary}--`
-    ].join('\n'));
+      `${boundary}--`,
+      ''
+    ].join('\r\n'));
   });
 
   it('skips entries with no name or value', async () => {
@@ -73,7 +72,8 @@ describe('buildMultipart()', () => {
       'Content-Disposition: form-data; name="foo"',
       '',
       '',
-      `${boundary}--`
-    ].join('\n'));
+      `${boundary}--`,
+      ''
+    ].join('\r\n'));
   });
 });

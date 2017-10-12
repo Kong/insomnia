@@ -7,6 +7,7 @@ import type {RequestBodyParameter} from '../models/request';
 export function buildMultipart (params: Array<RequestBodyParameter>): {boundary: string, body: Buffer} {
   const buffers = [];
   const boundary = '------------------------X-INSOMNIA-BOUNDARY';
+  const lineBreak = '\r\n';
 
   const add = (v: Buffer | string) => {
     if (typeof v === 'string') {
@@ -24,7 +25,8 @@ export function buildMultipart (params: Array<RequestBodyParameter>): {boundary:
       continue;
     }
 
-    add(`${boundary}\n`);
+    add(`${boundary}`);
+    add(lineBreak);
 
     if (param.type === 'file' && param.fileName) {
       const name = param.name || '';
@@ -33,21 +35,27 @@ export function buildMultipart (params: Array<RequestBodyParameter>): {boundary:
       add(
         'Content-Disposition: form-data; ' +
         `name="${name.replace(/"/g, '\\"')}"; ` +
-        `filename="${path.basename(fileName).replace(/"/g, '\\"')}"\n`
+        `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`
       );
-      add(`Content-Type: ${contentType}\n\n`);
+      add(lineBreak);
+      add(`Content-Type: ${contentType}`);
+      add(lineBreak);
+      add(lineBreak);
       add(fs.readFileSync(fileName));
     } else {
       const name = param.name || '';
       const value = param.value || '';
-      add(`Content-Disposition: form-data; name="${name}"\n\n`);
+      add(`Content-Disposition: form-data; name="${name}"`);
+      add(lineBreak);
+      add(lineBreak);
       add(value);
     }
 
-    add('\n');
+    add(lineBreak);
   }
 
   add(`${boundary}--`);
+  add(lineBreak);
 
   const body = Buffer.concat(buffers);
   return {boundary: boundary, body};
