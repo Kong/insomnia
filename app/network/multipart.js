@@ -6,7 +6,7 @@ import type {RequestBodyParameter} from '../models/request';
 
 export function buildMultipart (params: Array<RequestBodyParameter>): {boundary: string, body: Buffer} {
   const buffers = [];
-  const boundary = '--------------------------f454e8380a65f4a3';
+  const boundary = '------------------------X-INSOMNIA-BOUNDARY';
   const lineBreak = '\r\n';
 
   const add = (v: Buffer | string) => {
