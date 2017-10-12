@@ -1,7 +1,7 @@
 import * as google from './google';
 import * as models from '../models';
 import {ipcRenderer} from 'electron';
-import {getAppVersion, getAppPlatform} from '../common/constants';
+import {getAppVersion, getAppPlatform, isDevelopment} from '../common/constants';
 
 let initialized = false;
 export async function init (accountId) {
@@ -24,7 +24,7 @@ export async function init (accountId) {
     trackEvent(...args);
   });
 
-  if (window) {
+  if (window && !isDevelopment()) {
     window.addEventListener('error', e => {
       trackEvent('Error', 'Uncaught Error');
       console.error('Uncaught Error', e);

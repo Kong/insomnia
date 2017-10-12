@@ -315,17 +315,18 @@ describe('actuallySend()', () => {
     );
     const body = JSON.parse(bodyBuffer);
     expect(body.meta.READFUNCTION_VALUE).toBe([
-      '------------------------X-INSOMNIA-BOUNDARY',
+      '--------------------------X-INSOMNIA-BOUNDARY',
       'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
       'Content-Type: text/plain',
       '',
       fs.readFileSync(fileName),
-      '------------------------X-INSOMNIA-BOUNDARY',
+      '--------------------------X-INSOMNIA-BOUNDARY',
       'Content-Disposition: form-data; name="a"',
       '',
       'AA',
-      '------------------------X-INSOMNIA-BOUNDARY--'
-    ].join('\n'));
+      '--------------------------X-INSOMNIA-BOUNDARY--',
+      ''
+    ].join('\r\n'));
 
     expect(body.options).toEqual({
       POST: 1,
@@ -339,7 +340,7 @@ describe('actuallySend()', () => {
         'Expect: ',
         'Transfer-Encoding: '
       ],
-      INFILESIZE_LARGE: 299,
+      INFILESIZE_LARGE: 316,
       NOPROGRESS: false,
       PROXY: '',
       TIMEOUT_MS: 0,
