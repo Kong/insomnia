@@ -3,6 +3,7 @@
 export type NunjucksParsedTagArg = {
   type: 'string' | 'number' | 'boolean' | 'number' | 'variable' | 'expression',
   value: string | number | boolean,
+  defaultValue?: string | number | boolean,
   forceVariable?: boolean,
   quotedBy?: '"' | "'"
 };
@@ -121,7 +122,7 @@ export function tokenizeTag (tagStr: string): NunjucksParsedTag {
       if (quotedBy) {
         arg = {type: 'string', value: currentArg, quotedBy};
       } else if (['true', 'false'].includes(currentArg)) {
-        arg = {type: 'boolean', value: currentArg};
+        arg = {type: 'boolean', value: currentArg.toLowerCase() === 'true'};
       } else if (currentArg.match(/^\d*\.?\d*$/)) {
         arg = {type: 'number', value: currentArg};
       } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
@@ -149,6 +150,8 @@ export function unTokenizeTag (tagData: NunjucksParsedTag): string {
       const re = new RegExp(`([^\\\\])${q}`, 'g');
       const str = arg.value.toString().replace(re, `$1\\${q}`);
       args.push(`${q}${str}${q}`);
+    } else if (arg.type === 'boolean') {
+      args.push(arg.value ? 'true' : 'false');
     } else {
       args.push(arg.value);
     }
@@ -160,23 +163,21 @@ export function unTokenizeTag (tagData: NunjucksParsedTag): string {
 
 /** Get the default Nunjucks string for an extension */
 export function getDefaultFill (name: string, args: Array<NunjucksParsedTagArg>): string {
-  const stringArgs = (args || []).map(argDefinition => {
-    if (argDefinition.type === 'enum') {
-      const {defaultValue, options} = argDefinition;
-      const value = defaultValue !== undefined ? defaultValue : options[0].value;
-      return `'${value}'`;
-    } else if (argDefinition.type === 'number') {
-      return argDefinition.defaultValue !== undefined ? argDefinition.defaultValue : 0;
-    } else if (argDefinition.defaultValue !== undefined) {
-      switch (typeof argDefinition.defaultValue) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-          return `'${argDefinition.defaultValue.toString()}'`;
-      }
+  const stringArgs: Array<string> = (args || []).map(argDefinition => {
+    switch (argDefinition.type) {
+      case 'enum':
+        const {defaultValue, options} = argDefinition;
+        const value = defaultValue !== undefined ? defaultValue : options[0].value;
+        return `'${value}'`;
+      case 'number':
+        return `${parseFloat(argDefinition.defaultValue) || 0}`;
+      case 'boolean':
+        return argDefinition.defaultValue ? 'true' : 'false';
+      case 'string':
+        return `'${(argDefinition.defaultValue: any) || ''}'`;
+      default:
+        return "''";
     }
-
-    return "''";
   });
 
   return `${name} ${stringArgs.join(', ')}`;
