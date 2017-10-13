@@ -161,7 +161,8 @@ class SettingsModal extends PureComponent {
                 activeTheme={settings.theme}
               />
             </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable"><SettingsShortcuts/></TabPanel>
+            <TabPanel
+              className="react-tabs__tab-panel pad scrollable"><SettingsShortcuts/></TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable"><Account/></TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable"><Plugins/></TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable"><About/></TabPanel>
