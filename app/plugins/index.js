@@ -6,6 +6,7 @@ import path from 'path';
 import {PLUGIN_PATH} from '../common/constants';
 import {resolveHomePath} from '../common/misc';
 import {showError} from '../ui/components/modals/index';
+import type {PluginTemplateTag} from '../templating/extensions/index';
 
 export type Plugin = {
   name: string,
@@ -17,7 +18,7 @@ export type Plugin = {
 
 export type TemplateTag = {
   plugin: string,
-  templateTag: Function
+  templateTag: PluginTemplateTag
 }
 
 export type RequestHook = {

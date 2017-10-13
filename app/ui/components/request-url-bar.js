@@ -301,6 +301,7 @@ class RequestUrlBar extends PureComponent {
       url,
       method,
       handleRender,
+      nunjucksPowerUserMode,
       handleGetRenderContext,
       handleAutocompleteUrls,
       uniquenessKey
@@ -322,6 +323,7 @@ class RequestUrlBar extends PureComponent {
               forceEditor
               type="text"
               render={handleRender}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocompleteUrls}
               getRenderContext={handleGetRenderContext}
               placeholder="https://api.myproduct.com/v1/users"
@@ -346,6 +348,7 @@ RequestUrlBar.propTypes = {
   onMethodChange: PropTypes.func.isRequired,
   handleGenerateCode: PropTypes.func.isRequired,
   url: PropTypes.string.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   method: PropTypes.string.isRequired,
   requestId: PropTypes.string.isRequired,
   uniquenessKey: PropTypes.string.isRequired

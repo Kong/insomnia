@@ -2,28 +2,32 @@
 import * as React from 'react';
 
 type Props = {
-  component: string,
   children: string,
-  render: Function,
-  props?: Object
+  render: Function
 };
 
 type State = {
-  renderedText: string
+  renderedText: string,
+  error: string
 };
 
 class RenderedText extends React.PureComponent<Props, State> {
   constructor (props: any) {
     super(props);
     this.state = {
-      renderedText: ''
+      renderedText: '',
+      error: ''
     };
   }
 
   async _render () {
     const {render, children} = this.props;
-    const renderedText = await render(children);
-    this.setState({renderedText});
+    try {
+      const renderedText = await render(children);
+      this.setState({renderedText, error: ''});
+    } catch (err) {
+      this.setState({error: err.message});
+    }
   }
 
   componentDidMount () {
@@ -35,8 +39,15 @@ class RenderedText extends React.PureComponent<Props, State> {
   }
 
   render () {
-    const {component, props} = this.props;
-    return React.createElement(component, props || {}, this.state.renderedText);
+    if (this.state.error) {
+      return (
+        <span className="font-error" style={{fontSize: '0.9em', fontStyle: 'italic'}}>
+          {this.state.error}
+        </span>
+      );
+    } else {
+      return this.state.renderedText;
+    }
   }
 }
 

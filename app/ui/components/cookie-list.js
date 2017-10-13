@@ -67,13 +67,16 @@ class CookieList extends React.PureComponent<Props> {
 
             return (
               <tr className="selectable" key={i}>
-                <RenderedText render={handleRender} component="td">
-                  {cookie.domain}
-                </RenderedText>
-                <RenderedText render={handleRender} component="td"
-                              props={{className: 'force-wrap wide'}}>
-                  {cookieString}
-                </RenderedText>
+                <td>
+                  <RenderedText render={handleRender}>
+                    {cookie.domain}
+                  </RenderedText>
+                </td>
+                <td className="force-wrap wide">
+                  <RenderedText render={handleRender}>
+                    {cookieString}
+                  </RenderedText>
+                </td>
                 <td onClick={null} className="text-right no-wrap">
                   <button className="btn btn--super-compact btn--outlined"
                           onClick={e => handleShowModifyCookieModal(cookie)}

@@ -171,7 +171,8 @@ class WorkspaceSettingsModal extends PureComponent {
       editorIndentSize,
       editorKeyMap,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     const {
@@ -218,6 +219,7 @@ class WorkspaceSettingsModal extends PureComponent {
                   lineWrapping={editorLineWrapping}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   defaultValue={workspace.description}
                   onChange={this._handleDescriptionChange}
                 />
@@ -422,6 +424,7 @@ WorkspaceSettingsModal.propTypes = {
   editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   handleRemoveWorkspace: PropTypes.func.isRequired,

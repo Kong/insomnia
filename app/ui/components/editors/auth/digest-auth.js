@@ -36,6 +36,7 @@ class DigestAuth extends PureComponent {
       authentication,
       showPasswords,
       handleRender,
+      nunjucksPowerUserMode,
       handleGetRenderContext
     } = this.props;
 
@@ -52,6 +53,7 @@ class DigestAuth extends PureComponent {
         disableDelete
         handleRender={handleRender}
         handleGetRenderContext={handleGetRenderContext}
+        nunjucksPowerUserMode={nunjucksPowerUserMode}
         namePlaceholder="Username"
         valuePlaceholder="•••••••••••"
         valueInputType={showPasswords ? 'text' : 'password'}
@@ -68,6 +70,7 @@ DigestAuth.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   authentication: PropTypes.object.isRequired,
   showPasswords: PropTypes.bool.isRequired

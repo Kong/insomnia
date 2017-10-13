@@ -292,6 +292,7 @@ class OneLineEditor extends PureComponent {
       render,
       onPaste,
       getRenderContext,
+      nunjucksPowerUserMode,
       getAutocompleteConstants,
       mode: syntaxMode,
       type: originalType
@@ -326,6 +327,7 @@ class OneLineEditor extends PureComponent {
           onChange={onChange}
           render={render}
           getRenderContext={getRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           getAutocompleteConstants={getAutocompleteConstants}
           className={classnames('editor--single-line', className)}
           defaultValue={defaultValue}
@@ -372,6 +374,7 @@ OneLineEditor.propTypes = {
   onPaste: PropTypes.func,
   render: PropTypes.func,
   getRenderContext: PropTypes.func,
+  nunjucksPowerUserMode: PropTypes.bool,
   getAutocompleteConstants: PropTypes.func,
   placeholder: PropTypes.string,
   className: PropTypes.string,

@@ -259,6 +259,14 @@ export function createWindow () {
         }
       },
       {
+        label: 'Show App Data Folder',
+        click: (menuItem, window, e) => {
+          const directory = app.getPath('userData');
+          shell.showItemInFolder(directory);
+          trackEvent('App Menu', 'Open App Data');
+        }
+      },
+      {
         label: 'Insomnia Help',
         accelerator: 'CmdOrCtrl+/',
         click: () => {

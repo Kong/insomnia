@@ -249,7 +249,7 @@ class CodeEditor extends React.Component {
       this._codemirrorSetValue(defaultValue || '');
 
       // Setup nunjucks listeners
-      if (this.props.render) {
+      if (this.props.render && !this.props.nunjucksPowerUserMode) {
         this.codeMirror.enableNunjucksTags(this.props.render);
       }
 
@@ -439,7 +439,8 @@ class CodeEditor extends React.Component {
         getTags = async () => {
           const expandedTags = [];
           for (const tagDef of await getTagDefinitions()) {
-            if (tagDef.args[0].type !== 'enum') {
+            const firstArg = tagDef.args[0];
+            if (!firstArg || firstArg.type !== 'enum') {
               expandedTags.push(tagDef);
               continue;
             }
@@ -759,6 +760,7 @@ CodeEditor.propTypes = {
   onClick: PropTypes.func,
   onPaste: PropTypes.func,
   render: PropTypes.func,
+  nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,
   keyMap: PropTypes.string,

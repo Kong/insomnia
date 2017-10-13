@@ -11,8 +11,4 @@ describe('package.json', () => {
       expect(`${name}::${actual}`).toBe(`${name}::${expected}`);
     }
   });
-
-  it('pdfjs should not be in deps', () => {
-    expect(appPackage.dependencies['simple-react-pdf']).toBeUndefined();
-  });
 });
