@@ -2,7 +2,6 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
-import {DEBOUNCE_MILLIS} from '../../../common/constants';
 
 @autobind
 class EnvironmentEditor extends PureComponent {
