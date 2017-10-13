@@ -35,6 +35,7 @@ type Props = {
   lineWrapping: boolean,
   render: Function,
   getRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
   request: Request,
   workspace: Workspace,
   settings: Settings,
@@ -243,6 +244,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       keyMap,
       render,
       getRenderContext,
+      nunjucksPowerUserMode,
       lineWrapping,
       className
     } = this.props;
@@ -323,6 +325,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             className={className}
             render={render}
             getRenderContext={getRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             onChange={this._handleVariablesChange}
             mode="application/json"
             lineWrapping={lineWrapping}

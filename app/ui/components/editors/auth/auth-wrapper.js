@@ -20,6 +20,7 @@ class AuthWrapper extends PureComponent {
       request,
       handleRender,
       handleGetRenderContext,
+      nunjucksPowerUserMode,
       handleUpdateSettingsShowPasswords,
       onChange,
       showPasswords
@@ -34,6 +35,7 @@ class AuthWrapper extends PureComponent {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
         />
@@ -45,6 +47,7 @@ class AuthWrapper extends PureComponent {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -56,6 +59,7 @@ class AuthWrapper extends PureComponent {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
         />
       );
@@ -80,6 +84,7 @@ class AuthWrapper extends PureComponent {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
         />
@@ -90,6 +95,7 @@ class AuthWrapper extends PureComponent {
           authentication={authentication}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
           onChange={onChange}
           showPasswords={showPasswords}
@@ -102,6 +108,7 @@ class AuthWrapper extends PureComponent {
           request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
         />
       );
@@ -112,6 +119,7 @@ class AuthWrapper extends PureComponent {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           handleUpdateSettingsShowPasswords={handleUpdateSettingsShowPasswords}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
           showPasswords={showPasswords}
         />
@@ -144,6 +152,7 @@ AuthWrapper.propTypes = {
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   request: PropTypes.object.isRequired,
   showPasswords: PropTypes.bool.isRequired,

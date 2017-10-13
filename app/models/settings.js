@@ -21,7 +21,8 @@ type BaseSettings = {
   theme: string,
   maxRedirects: number,
   disableAnalyticsTracking: boolean,
-  pluginPath: string
+  pluginPath: string,
+  nunjucksPowerUserMode: boolean
 };
 
 export type Settings = BaseModel & Settings;
@@ -51,7 +52,8 @@ export function init (): BaseSettings {
     autoHideMenuBar: false,
     theme: 'default',
     disableAnalyticsTracking: false,
-    pluginPath: ''
+    pluginPath: '',
+    nunjucksPowerUserMode: false
   };
 }
 

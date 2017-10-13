@@ -56,7 +56,8 @@ class MarkdownEditor extends PureComponent {
       className,
       tall,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     const {markdown} = this.state;
@@ -102,6 +103,7 @@ class MarkdownEditor extends PureComponent {
               defaultValue={markdown}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
               onChange={this._handleChange}
             />
           </div>
@@ -130,6 +132,7 @@ MarkdownEditor.propTypes = {
   lineWrapping: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
 
   // Optional
   placeholder: PropTypes.string,

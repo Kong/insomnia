@@ -14,6 +14,7 @@ class RawEditor extends PureComponent {
       keyMap,
       render,
       getRenderContext,
+      nunjucksPowerUserMode,
       lineWrapping,
       onChange,
       className
@@ -29,6 +30,7 @@ class RawEditor extends PureComponent {
         className={className}
         render={render}
         getRenderContext={getRenderContext}
+        nunjucksPowerUserMode={nunjucksPowerUserMode}
         onChange={onChange}
         mode={contentType}
         lineWrapping={lineWrapping}
@@ -47,6 +49,7 @@ RawEditor.propTypes = {
   indentSize: PropTypes.number.isRequired,
   keyMap: PropTypes.string.isRequired,
   lineWrapping: PropTypes.bool.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
 
   // Optional
   className: PropTypes.string,

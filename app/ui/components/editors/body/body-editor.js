@@ -55,7 +55,8 @@ class BodyEditor extends PureComponent {
       settings,
       environmentId,
       handleRender: render,
-      handleGetRenderContext: getRenderContext
+      handleGetRenderContext: getRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     const noRender = request.settingDisableRenderRequestBody;
@@ -75,6 +76,7 @@ class BodyEditor extends PureComponent {
           onChange={this._handleFormUrlEncodedChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           parameters={request.body.params || []}
         />
       );
@@ -85,6 +87,7 @@ class BodyEditor extends PureComponent {
           onChange={this._handleFormChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           parameters={request.body.params || []}
         />
       );
@@ -111,6 +114,7 @@ class BodyEditor extends PureComponent {
           settings={settings}
           environmentId={environmentId}
           getRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={this._handleGraphQLChange}
         />
       );
@@ -127,6 +131,7 @@ class BodyEditor extends PureComponent {
           content={request.body.text || ''}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={this._handleRawChange}
         />
       );
@@ -154,6 +159,7 @@ BodyEditor.propTypes = {
   workspace: PropTypes.object.isRequired,
   settings: PropTypes.object.isRequired,
   environmentId: PropTypes.string.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
 
   // Optional
   fontSize: PropTypes.number,

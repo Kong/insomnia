@@ -63,6 +63,7 @@ class EnvironmentEditor extends PureComponent {
       editorKeyMap,
       render,
       getRenderContext,
+      nunjucksPowerUserMode,
       lineWrapping,
       ...props
     } = this.props;
@@ -81,6 +82,7 @@ class EnvironmentEditor extends PureComponent {
           onChange={this._handleChange}
           debounceMillis={DEBOUNCE_MILLIS * 6}
           defaultValue={JSON.stringify(environment)}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           render={render}
           getRenderContext={getRenderContext}
           mode="application/json"
@@ -101,6 +103,7 @@ EnvironmentEditor.propTypes = {
   editorKeyMap: PropTypes.string.isRequired,
   render: PropTypes.func.isRequired,
   getRenderContext: PropTypes.func.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   lineWrapping: PropTypes.bool.isRequired
 };
 
