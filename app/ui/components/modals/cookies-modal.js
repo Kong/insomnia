@@ -101,7 +101,8 @@ class CookiesModal extends PureComponent<Props, State> {
       try {
         renderedCookies.push(await this.props.handleRender(cookie));
       } catch (err) {
-        return;
+        // It's okay. Filter the raw version instead
+        renderedCookies.push(cookie);
       }
     }
 
