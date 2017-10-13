@@ -3,8 +3,8 @@ import React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 
-// const PAGE_SIZE = 10;
-const MAX_VALUE_LENGTH = 50;
+const PAGE_SIZE = 25;
+const MAX_VALUE_LENGTH = 100;
 
 type Props = {
   body: Buffer,
@@ -83,7 +83,8 @@ type Props2 = {
 
 type State2 = {
   expanded: boolean,
-  hasBeenExpanded: boolean
+  hasBeenExpanded: boolean,
+  page: number
 };
 
 @autobind
@@ -93,7 +94,8 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     const {paths} = props;
     this.state = {
       expanded: paths.length === 0,
-      hasBeenExpanded: false
+      hasBeenExpanded: false,
+      page: 0
     };
   }
 
@@ -150,12 +152,20 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
 
     if (hasChildren) {
       if (n === 0) {
-        return abbr;
+        return (
+          <td>
+            {abbr}
+          </td>
+        );
+      } else if (collapsed) {
+        return (
+          <td>
+            {abbr} <span className="json-viewer__type-comment">{comment}</span>
+          </td>
+        );
+      } else {
+        return null;
       }
-
-      return collapsed
-        ? <span>{abbr} <span className="json-viewer__type-comment">{comment}</span></span>
-        : null;
     }
 
     const strObj: string = `${obj}`;
@@ -170,9 +180,9 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     }
 
     return (
-      <pre className={`json-viewer__value json-viewer__type-${this.getType(obj)}`}>
+      <td className={`json-viewer__value json-viewer__type-${this.getType(obj)}`}>
         {displayValue}
-      </pre>
+      </td>
     );
   }
 
@@ -187,13 +197,18 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     }));
   }
 
+  handleNextPage () {
+    this.setState(({page}) => ({page: page + 1}));
+  }
+
   render () {
     const {label, value, paths, hide, onExpand} = this.props;
-    const {expanded, hasBeenExpanded} = this.state;
+    const {expanded, hasBeenExpanded, page} = this.state;
 
     const collapsable = this.isCollapsable(value);
     const collapsed = !expanded;
     const indentStyles = {paddingLeft: `${(paths.length - 1) * 1.3}em`};
+    const nextIndentStyles = {paddingLeft: `${(paths.length) * 1.3}em`};
 
     const rowClasses = classnames({
       'hide': hide,
@@ -211,19 +226,16 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
                 className="json-viewer__key-container"
                 onClick={collapsable ? this.handleClickKey : null}>
               <span className="json-viewer__icon"></span>
-              <span className="json-viewer__key json-viewer__key--array">
-            {label}
-          </span>
+              <span className="json-viewer__key json-viewer__key--array">{label}</span>
             </td>
-            <td>
-              {this.getValue(value, collapsed)}
-            </td>
+            {this.getValue(value, collapsed)}
           </tr>
         ));
       }
 
       if (!collapsed || hasBeenExpanded) {
-        for (let key = 0; key < value.length; key++) {
+        const maxItem = page >= 0 ? PAGE_SIZE * (page + 1) : Infinity;
+        for (let key = 0; key < value.length && key < maxItem; key++) {
           const newPaths = [...paths, `[${key}]`];
           rows.push((
             <JSONViewerObj
@@ -235,6 +247,25 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
               paths={newPaths}
             />
           ));
+        }
+
+        if (value.length > maxItem) {
+          const nextBatch = Math.min(value.length - maxItem, PAGE_SIZE);
+          rows.push(
+            <tr key="next">
+              <td style={nextIndentStyles} className="json-viewer__key-container">
+                <span className="json-viewer__icon"></span>
+                <span className="json-viewer__key json-viewer__key--array">
+                  {maxItem}…{value.length - 1}
+                </span>
+              </td>
+              <td className="json-viewer__value json-viewer__value--next-page">
+                <button onClick={this.handleNextPage}>
+                  Show {nextBatch === PAGE_SIZE ? `${nextBatch} More` : 'Remaining'}
+                </button>
+              </td>
+            </tr>
+          );
         }
       }
     } else if (value && typeof value === 'object') {
@@ -249,9 +280,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
               {label}
             </span>
             </td>
-            <td>
-              {this.getValue(value, collapsed)}
-            </td>
+            {this.getValue(value, collapsed)}
           </tr>
         ));
       }
@@ -284,9 +313,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
               </span>
             ) : null}
           </td>
-          <td>
-            {this.getValue(value, collapsed)}
-          </td>
+          {this.getValue(value, collapsed)}
         </tr>
       ));
     }
