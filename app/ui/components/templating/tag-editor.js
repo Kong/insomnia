@@ -92,14 +92,12 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   async _handleRefresh () {
-    if (this.state.tagDefinitions) {
-      await this._update(
-        this.state.tagDefinitions,
-        this.state.activeTagDefinition,
-        this.state.activeTagData,
-        true
-      );
-    }
+    await this._update(
+      this.state.tagDefinitions,
+      this.state.activeTagDefinition,
+      this.state.activeTagData,
+      true
+    );
   }
 
   async _refreshModels (workspace: Workspace) {
@@ -198,6 +196,8 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     if (e.currentTarget.type === 'number') {
       return this._updateArg(parseFloat(e.currentTarget.value), argIndex);
+    } else if (e.currentTarget.type === 'checkbox') {
+      return this._updateArg(e.currentTarget.checked, argIndex);
     } else {
       return this._updateArg(e.currentTarget.value, argIndex);
     }
@@ -282,15 +282,10 @@ class TagEditor extends React.PureComponent<Props, State> {
       }
     }
 
-    // Make rendering take at least this long so we can see a spinner
-    await delay(300 - (Date.now() - start));
-
     this.setState({
       tagDefinitions,
       activeTagData,
-      preview,
       error,
-      rendering: false,
       activeTagDefinition: tagDefinition
     });
 
@@ -298,6 +293,13 @@ class TagEditor extends React.PureComponent<Props, State> {
     if (!noCallback) {
       this.props.onChange(template);
     }
+
+    // Make rendering take at least this long so we can see a spinner
+    await delay(300 - (Date.now() - start));
+    this.setState({
+      rendering: false,
+      preview
+    });
   }
 
   renderArgVariable (path: string) {
@@ -332,6 +334,12 @@ class TagEditor extends React.PureComponent<Props, State> {
         placeholder={placeholder}
         onChange={this._handleChange}
       />
+    );
+  }
+
+  renderArgBoolean (checked: boolean) {
+    return (
+      <input type="checkbox" checked={checked} onChange={this._handleChange}/>
     );
   }
 
@@ -417,9 +425,9 @@ class TagEditor extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const value = argData.value.toString();
+    const strValue = argData.value.toString();
     const isVariable = argData.type === 'variable';
-    const argInputVariable = isVariable ? this.renderArgVariable(value) : null;
+    const argInputVariable = isVariable ? this.renderArgVariable(strValue) : null;
 
     let argInput;
     let isVariableAllowed = false;
@@ -428,20 +436,20 @@ class TagEditor extends React.PureComponent<Props, State> {
       const placeholder = typeof argDefinition.placeholder === 'string'
         ? argDefinition.placeholder
         : '';
-      argInput = this.renderArgString(value, placeholder);
+      argInput = this.renderArgString(strValue, placeholder);
     } else if (argDefinition.type === 'enum') {
       const {options} = argDefinition;
-      argInput = this.renderArgEnum(value, options);
+      argInput = this.renderArgEnum(strValue, options);
     } else if (argDefinition.type === 'model') {
       const model = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
-      const modelId = typeof value === 'string' ? value : 'unknown';
+      const modelId = typeof strValue === 'string' ? strValue : 'unknown';
       argInput = this.renderArgModel(modelId, model);
+    } else if (argDefinition.type === 'boolean') {
+      argInput = this.renderArgBoolean(strValue.toLowerCase() === 'true');
     } else if (argDefinition.type === 'number') {
       isVariableAllowed = true;
-      const placeholder = typeof argDefinition.placeholder === 'string'
-        ? argDefinition.placeholder
-        : '';
-      argInput = this.renderArgNumber(value, placeholder || '');
+      const placeholder = typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
+      argInput = this.renderArgNumber(strValue, placeholder || '');
     } else {
       return null;
     }
@@ -452,20 +460,20 @@ class TagEditor extends React.PureComponent<Props, State> {
       typeof argDefinition.displayName === 'function'
     ) ? fnOrString(argDefinition.displayName, argDatas) : '';
 
+    const formControlClasses = classnames({
+      'form-control': true,
+      'form-control--thin': argDefinition.type === 'boolean',
+      'form-control--outlined': argDefinition.type !== 'boolean'
+    });
+
     return (
       <div key={argIndex} className="form-row">
-        <div className="form-control form-control--outlined">
-          <label>
+        <div className={formControlClasses}>
+          <label data-arg-index={argIndex}>
             {fnOrString(displayName, argDatas)}
-            {argData.type === 'variable' ? (
-              <span className="faded space-left">(Variable)</span>
-            ) : null}
-            {help && (
-              <HelpTooltip className="space-left">{help}</HelpTooltip>
-            )}
-            <div data-arg-index={argIndex}>
-              {argInputVariable || argInput}
-            </div>
+            {isVariable && <span className="faded space-left">(Variable)</span>}
+            {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+            {argInputVariable || argInput}
           </label>
         </div>
         {isVariableAllowed ? (
@@ -550,9 +558,11 @@ class TagEditor extends React.PureComponent<Props, State> {
             </label>
           </div>
         )}
+        <hr className="hr"/>
         <div className="form-row">
           <div className="form-control form-control--outlined">
             <button type="button"
+                    style={{zIndex: 10, position: 'relative'}}
                     className="txt-sm pull-right icon inline-block"
                     onClick={this._handleRefresh}>
               refresh <i className={classnames('fa fa-refresh', {'fa-spin': rendering})}/>

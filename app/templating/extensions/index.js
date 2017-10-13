@@ -46,6 +46,11 @@ export type PluginArgumentString = PluginArgumentBase & {
   defaultValue?: string
 };
 
+export type PluginArgumentBoolean = PluginArgumentBase & {
+  type: 'boolean';
+  defaultValue?: boolean
+};
+
 export type PluginArgumentNumber = PluginArgumentBase & {
   type: 'number';
   placeholder?: string,
@@ -56,6 +61,7 @@ export type PluginArgument =
   PluginArgumentEnum
   | PluginArgumentModel
   | PluginArgumentString
+  | PluginArgumentBoolean
   | PluginArgumentNumber;
 
 export type PluginTemplateTagContext = {

@@ -116,8 +116,8 @@ describe('tokenizeTag()', () => {
     const expected = {
       name: 'name',
       args: [
-        {type: 'boolean', value: 'true'},
-        {type: 'boolean', value: 'false'}
+        {type: 'boolean', value: true},
+        {type: 'boolean', value: false}
       ]
     };
 
