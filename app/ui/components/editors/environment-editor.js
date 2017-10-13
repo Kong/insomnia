@@ -36,11 +36,12 @@ class EnvironmentEditor extends PureComponent {
       }
     }
 
+    this.props.didChange();
+
+    // Call this last in case component unmounted
     if (this.state.error !== error || this.state.warning !== warning) {
       this.setState({error, warning});
     }
-
-    this.props.didChange();
   }
 
   _setEditorRef (n) {
@@ -80,7 +81,6 @@ class EnvironmentEditor extends PureComponent {
           lineWrapping={lineWrapping}
           keyMap={editorKeyMap}
           onChange={this._handleChange}
-          debounceMillis={DEBOUNCE_MILLIS * 6}
           defaultValue={JSON.stringify(environment)}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           render={render}
