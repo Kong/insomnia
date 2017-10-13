@@ -89,7 +89,6 @@ class ErrorBoundary extends React.PureComponent<Props> {
         {child}
       </SingleErrorBoundary>
     ));
-
   }
 }
 

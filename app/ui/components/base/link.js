@@ -6,6 +6,7 @@ import * as misc from '../../../common/misc';
 
 type Props = {|
   href: string,
+  title?: string,
   button?: boolean,
   onClick?: Function,
   children?: React.Node
