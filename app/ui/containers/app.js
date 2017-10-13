@@ -38,6 +38,7 @@ import {exportHar} from '../../common/har';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from '../components/keydown-binder';
 import {executeHotKey} from '../../common/hotkeys';
+import ErrorBoundary from '../components/error-boundary';
 
 @autobind
 class App extends PureComponent {
@@ -720,45 +721,50 @@ class App extends PureComponent {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="app">
-          <Wrapper
-            {...this.props}
-            ref={this._setWrapperRef}
-            paneWidth={this.state.paneWidth}
-            paneHeight={this.state.paneHeight}
-            sidebarWidth={this.state.sidebarWidth}
-            handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-            handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-            handleActivateRequest={this._handleSetActiveRequest}
-            handleSetRequestPaneRef={this._setRequestPaneRef}
-            handleSetResponsePaneRef={this._setResponsePaneRef}
-            handleSetSidebarRef={this._setSidebarRef}
-            handleStartDragSidebar={this._startDragSidebar}
-            handleResetDragSidebar={this._resetDragSidebar}
-            handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-            handleStartDragPaneVertical={this._startDragPaneVertical}
-            handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-            handleResetDragPaneVertical={this._resetDragPaneVertical}
-            handleCreateRequest={this._requestCreate}
-            handleRender={this._handleRenderText}
-            handleGetRenderContext={this._handleGetRenderContext}
-            handleDuplicateRequest={this._requestDuplicate}
-            handleDuplicateRequestGroup={this._requestGroupDuplicate}
-            handleDuplicateWorkspace={this._workspaceDuplicate}
-            handleCreateRequestGroup={this._requestGroupCreate}
-            handleGenerateCode={this._handleGenerateCode}
-            handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-            handleCopyAsCurl={this._handleCopyAsCurl}
-            handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-            handleSetResponseFilter={this._handleSetResponseFilter}
-            handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-            handleSendAndDownloadRequestWithEnvironment={this._handleSendAndDownloadRequestWithEnvironment}
-            handleSetActiveResponse={this._handleSetActiveResponse}
-            handleSetActiveRequest={this._handleSetActiveRequest}
-            handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-            handleSetSidebarFilter={this._handleSetSidebarFilter}
-            handleToggleMenuBar={this._handleToggleMenuBar}
-          />
-          <Toast/>
+          <ErrorBoundary showAlert>
+            <Wrapper
+              {...this.props}
+              ref={this._setWrapperRef}
+              paneWidth={this.state.paneWidth}
+              paneHeight={this.state.paneHeight}
+              sidebarWidth={this.state.sidebarWidth}
+              handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+              handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+              handleActivateRequest={this._handleSetActiveRequest}
+              handleSetRequestPaneRef={this._setRequestPaneRef}
+              handleSetResponsePaneRef={this._setResponsePaneRef}
+              handleSetSidebarRef={this._setSidebarRef}
+              handleStartDragSidebar={this._startDragSidebar}
+              handleResetDragSidebar={this._resetDragSidebar}
+              handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+              handleStartDragPaneVertical={this._startDragPaneVertical}
+              handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+              handleResetDragPaneVertical={this._resetDragPaneVertical}
+              handleCreateRequest={this._requestCreate}
+              handleRender={this._handleRenderText}
+              handleGetRenderContext={this._handleGetRenderContext}
+              handleDuplicateRequest={this._requestDuplicate}
+              handleDuplicateRequestGroup={this._requestGroupDuplicate}
+              handleDuplicateWorkspace={this._workspaceDuplicate}
+              handleCreateRequestGroup={this._requestGroupCreate}
+              handleGenerateCode={this._handleGenerateCode}
+              handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+              handleCopyAsCurl={this._handleCopyAsCurl}
+              handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+              handleSetResponseFilter={this._handleSetResponseFilter}
+              handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+              handleSendAndDownloadRequestWithEnvironment={this._handleSendAndDownloadRequestWithEnvironment}
+              handleSetActiveResponse={this._handleSetActiveResponse}
+              handleSetActiveRequest={this._handleSetActiveRequest}
+              handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+              handleSetSidebarFilter={this._handleSetSidebarFilter}
+              handleToggleMenuBar={this._handleToggleMenuBar}
+            />
+          </ErrorBoundary>
+
+          <ErrorBoundary showAlert>
+            <Toast/>
+          </ErrorBoundary>
 
           {/* Block all mouse activity by showing an overlay while dragging */}
           {this.state.showDragOverlay ? <div className="blocker-overlay"></div> : null}

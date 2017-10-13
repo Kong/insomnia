@@ -529,76 +529,80 @@ class Wrapper extends React.PureComponent<Props, State> {
            className={classnames('wrapper', {'wrapper--vertical': settings.forceVerticalLayout})}
            style={{gridTemplateColumns: columns, gridTemplateRows: rows}}>
 
-        <Sidebar
-          ref={handleSetSidebarRef}
-          showEnvironmentsModal={this._handleShowEnvironmentsModal}
-          showCookiesModal={this._handleShowCookiesModal}
-          handleActivateRequest={handleActivateRequest}
-          handleChangeFilter={handleSetSidebarFilter}
-          handleImportFile={this._handleImportFile}
-          handleExportFile={handleExportFile}
-          handleSetActiveWorkspace={handleSetActiveWorkspace}
-          handleDuplicateRequest={handleDuplicateRequest}
-          handleGenerateCode={handleGenerateCode}
-          handleCopyAsCurl={handleCopyAsCurl}
-          handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleSetActiveEnvironment={handleSetActiveEnvironment}
-          moveDoc={handleMoveDoc}
-          handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-          activeRequest={activeRequest}
-          activeEnvironment={activeEnvironment}
-          handleCreateRequest={handleCreateRequest}
-          handleCreateRequestGroup={handleCreateRequestGroup}
-          filter={sidebarFilter || ''}
-          hidden={sidebarHidden || false}
-          workspace={activeWorkspace}
-          unseenWorkspaces={unseenWorkspaces}
-          childObjects={sidebarChildren}
-          width={sidebarWidth}
-          isLoading={isLoading}
-          workspaces={workspaces}
-          environments={environments}
-        />
+        <ErrorBoundary showAlert>
+          <Sidebar
+            ref={handleSetSidebarRef}
+            showEnvironmentsModal={this._handleShowEnvironmentsModal}
+            showCookiesModal={this._handleShowCookiesModal}
+            handleActivateRequest={handleActivateRequest}
+            handleChangeFilter={handleSetSidebarFilter}
+            handleImportFile={this._handleImportFile}
+            handleExportFile={handleExportFile}
+            handleSetActiveWorkspace={handleSetActiveWorkspace}
+            handleDuplicateRequest={handleDuplicateRequest}
+            handleGenerateCode={handleGenerateCode}
+            handleCopyAsCurl={handleCopyAsCurl}
+            handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+            handleSetActiveEnvironment={handleSetActiveEnvironment}
+            moveDoc={handleMoveDoc}
+            handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+            activeRequest={activeRequest}
+            activeEnvironment={activeEnvironment}
+            handleCreateRequest={handleCreateRequest}
+            handleCreateRequestGroup={handleCreateRequestGroup}
+            filter={sidebarFilter || ''}
+            hidden={sidebarHidden || false}
+            workspace={activeWorkspace}
+            unseenWorkspaces={unseenWorkspaces}
+            childObjects={sidebarChildren}
+            width={sidebarWidth}
+            isLoading={isLoading}
+            workspaces={workspaces}
+            environments={environments}
+          />
+        </ErrorBoundary>
 
         <div className="drag drag--sidebar">
           <div onDoubleClick={handleResetDragSidebar} onMouseDown={this._handleStartDragSidebar}>
           </div>
         </div>
 
-        <RequestPane
-          ref={handleSetRequestPaneRef}
-          handleImportFile={this._handleImportFile}
-          request={activeRequest}
-          showPasswords={settings.showPasswords}
-          useBulkHeaderEditor={settings.useBulkHeaderEditor}
-          editorFontSize={settings.editorFontSize}
-          editorIndentSize={settings.editorIndentSize}
-          editorKeyMap={settings.editorKeyMap}
-          editorLineWrapping={settings.editorLineWrapping}
-          workspace={activeWorkspace}
-          settings={settings}
-          environmentId={activeEnvironment ? activeEnvironment._id : ''}
-          oAuth2Token={oAuth2Token}
-          forceUpdateRequest={this._handleForceUpdateRequest}
-          handleCreateRequest={handleCreateRequestForWorkspace}
-          handleGenerateCode={handleGenerateCodeForActiveRequest}
-          handleImport={this._handleImport}
-          handleRender={handleRender}
-          handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          updateRequestBody={this._handleUpdateRequestBody}
-          updateRequestUrl={this._handleUpdateRequestUrl}
-          updateRequestMethod={this._handleUpdateRequestMethod}
-          updateRequestParameters={this._handleUpdateRequestParameters}
-          updateRequestAuthentication={this._handleUpdateRequestAuthentication}
-          updateRequestHeaders={this._handleUpdateRequestHeaders}
-          updateRequestMimeType={this._handleUpdateRequestMimeType}
-          updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
-          updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
-          forceRefreshCounter={this.state.forceRefreshKey}
-          handleSend={this._handleSendRequestWithActiveEnvironment}
-          handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
-        />
+        <ErrorBoundary showAlert>
+          <RequestPane
+            ref={handleSetRequestPaneRef}
+            handleImportFile={this._handleImportFile}
+            request={activeRequest}
+            showPasswords={settings.showPasswords}
+            useBulkHeaderEditor={settings.useBulkHeaderEditor}
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            editorLineWrapping={settings.editorLineWrapping}
+            workspace={activeWorkspace}
+            settings={settings}
+            environmentId={activeEnvironment ? activeEnvironment._id : ''}
+            oAuth2Token={oAuth2Token}
+            forceUpdateRequest={this._handleForceUpdateRequest}
+            handleCreateRequest={handleCreateRequestForWorkspace}
+            handleGenerateCode={handleGenerateCodeForActiveRequest}
+            handleImport={this._handleImport}
+            handleRender={handleRender}
+            handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            updateRequestBody={this._handleUpdateRequestBody}
+            updateRequestUrl={this._handleUpdateRequestUrl}
+            updateRequestMethod={this._handleUpdateRequestMethod}
+            updateRequestParameters={this._handleUpdateRequestParameters}
+            updateRequestAuthentication={this._handleUpdateRequestAuthentication}
+            updateRequestHeaders={this._handleUpdateRequestHeaders}
+            updateRequestMimeType={this._handleUpdateRequestMimeType}
+            updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
+            updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
+            forceRefreshCounter={this.state.forceRefreshKey}
+            handleSend={this._handleSendRequestWithActiveEnvironment}
+            handleSendAndDownload={this._handleSendAndDownloadRequestWithActiveEnvironment}
+          />
+        </ErrorBoundary>
 
         <div className="drag drag--pane-horizontal">
           <div
@@ -614,27 +618,29 @@ class Wrapper extends React.PureComponent<Props, State> {
           </div>
         </div>
 
-        <ResponsePane
-          ref={handleSetResponsePaneRef}
-          request={activeRequest}
-          responses={activeRequestResponses}
-          response={activeResponse}
-          editorFontSize={settings.editorFontSize}
-          editorIndentSize={settings.editorIndentSize}
-          editorKeyMap={settings.editorKeyMap}
-          editorLineWrapping={settings.editorLineWrapping}
-          previewMode={responsePreviewMode}
-          filter={responseFilter}
-          filterHistory={responseFilterHistory}
-          loadStartTime={loadStartTime}
-          showCookiesModal={this._handleShowCookiesModal}
-          handleShowRequestSettings={this._handleShowRequestSettingsModal}
-          handleSetActiveResponse={this._handleSetActiveResponse}
-          handleSetPreviewMode={this._handleSetPreviewMode}
-          handleDeleteResponses={this._handleDeleteResponses}
-          handleDeleteResponse={this._handleDeleteResponse}
-          handleSetFilter={this._handleSetResponseFilter}
-        />
+        <ErrorBoundary showAlert>
+          <ResponsePane
+            ref={handleSetResponsePaneRef}
+            request={activeRequest}
+            responses={activeRequestResponses}
+            response={activeResponse}
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorKeyMap={settings.editorKeyMap}
+            editorLineWrapping={settings.editorLineWrapping}
+            previewMode={responsePreviewMode}
+            filter={responseFilter}
+            filterHistory={responseFilterHistory}
+            loadStartTime={loadStartTime}
+            showCookiesModal={this._handleShowCookiesModal}
+            handleShowRequestSettings={this._handleShowRequestSettingsModal}
+            handleSetActiveResponse={this._handleSetActiveResponse}
+            handleSetPreviewMode={this._handleSetPreviewMode}
+            handleDeleteResponses={this._handleDeleteResponses}
+            handleDeleteResponse={this._handleDeleteResponse}
+            handleSetFilter={this._handleSetResponseFilter}
+          />
+        </ErrorBoundary>
       </div>
     ];
   }

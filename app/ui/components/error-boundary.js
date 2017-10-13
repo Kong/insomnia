@@ -6,7 +6,8 @@ import Mailto from './base/mailto';
 type Props = {
   children: React.Node,
   errorClassName?: string,
-  showAlert?: boolean
+  showAlert?: boolean,
+  replaceWith?: React.Node
 };
 
 type State = {
@@ -40,7 +41,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
       try {
         showError({
           error,
-          title: 'Error',
+          title: 'Application Error',
           message: (
             <p>
               Failed to render {componentName}.
@@ -53,8 +54,6 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
       } catch (err) {
         // UI is so broken that we can't even show an alert
       }
-    } else {
-      console.error(`Failed to render ${componentName}`, error);
     }
   }
 
@@ -65,7 +64,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
     if (error && info) {
       return (
         <div className={errorClassName || null}>
-          {error.message}
+          Render Failure: {error.message}
         </div>
       );
     }

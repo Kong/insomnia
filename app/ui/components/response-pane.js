@@ -279,7 +279,7 @@ class ResponsePane extends React.PureComponent<Props> {
             </Tab>
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
-            <ErrorBoundary showAlert>
+            <ErrorBoundary errorClassName="font-error pad text-center">
               <ResponseViewer
                 key={response._id}
                 // Send larger one because legacy responses have bytesContent === -1
@@ -303,38 +303,46 @@ class ResponsePane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ResponseHeadersViewer
-                key={response._id}
-                headers={response.headers}
-              />
+              <ErrorBoundary errorClassName="font-error pad text-center">
+                <ResponseHeadersViewer
+                  key={response._id}
+                  headers={response.headers}
+                />
+              </ErrorBoundary>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ResponseCookiesViewer
-                handleShowRequestSettings={handleShowRequestSettings}
-                cookiesSent={response.settingSendCookies}
-                cookiesStored={response.settingStoreCookies}
-                showCookiesModal={showCookiesModal}
-                key={response._id}
-                headers={cookieHeaders}
-              />
+              <ErrorBoundary errorClassName="font-error pad text-center">
+                <ResponseCookiesViewer
+                  handleShowRequestSettings={handleShowRequestSettings}
+                  cookiesSent={response.settingSendCookies}
+                  cookiesStored={response.settingStoreCookies}
+                  showCookiesModal={showCookiesModal}
+                  key={response._id}
+                  headers={cookieHeaders}
+                />
+              </ErrorBoundary>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel">
-            <ResponseTimelineViewer
-              key={response._id}
-              timeline={response.timeline || []}
-              editorLineWrapping={editorLineWrapping}
-              editorFontSize={editorFontSize}
-              editorIndentSize={editorIndentSize}
-            />
+            <ErrorBoundary errorClassName="font-error pad text-center">
+              <ResponseTimelineViewer
+                key={response._id}
+                timeline={response.timeline || []}
+                editorLineWrapping={editorLineWrapping}
+                editorFontSize={editorFontSize}
+                editorIndentSize={editorIndentSize}
+              />
+            </ErrorBoundary>
           </TabPanel>
         </Tabs>
-        <ResponseTimer
-          handleCancel={cancelCurrentRequest}
-          loadStartTime={loadStartTime}
-        />
+        <ErrorBoundary errorClassName="font-error pad text-center">
+          <ResponseTimer
+            handleCancel={cancelCurrentRequest}
+            loadStartTime={loadStartTime}
+          />
+        </ErrorBoundary>
       </section>
     );
   }
