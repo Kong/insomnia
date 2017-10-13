@@ -84,6 +84,7 @@ class SettingsModal extends PureComponent {
   }
 
   render () {
+    foo.bar = 'nstr';
     const {settings} = this.props;
     const {currentTabIndex} = this.state;
     const email = session.isLoggedIn() ? session.getEmail() : null;
@@ -161,7 +162,8 @@ class SettingsModal extends PureComponent {
                 activeTheme={settings.theme}
               />
             </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable"><SettingsShortcuts/></TabPanel>
+            <TabPanel
+              className="react-tabs__tab-panel pad scrollable"><SettingsShortcuts/></TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable"><Account/></TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable"><Plugins/></TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable"><About/></TabPanel>

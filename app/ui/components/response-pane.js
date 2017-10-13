@@ -26,6 +26,7 @@ import {cancelCurrentRequest} from '../../network/network';
 import {trackEvent} from '../../analytics';
 import Hotkey from './hotkey';
 import * as hotkeys from '../../common/hotkeys';
+import ErrorBoundary from './error-boundary';
 
 type Props = {
   // Functions
@@ -278,25 +279,27 @@ class ResponsePane extends React.PureComponent<Props> {
             </Tab>
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
-            <ResponseViewer
-              key={response._id}
-              // Send larger one because legacy responses have bytesContent === -1
-              responseId={response._id}
-              bytes={Math.max(response.bytesContent, response.bytesRead)}
-              contentType={response.contentType || ''}
-              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-              filter={filter}
-              filterHistory={filterHistory}
-              updateFilter={response.error ? null : handleSetFilter}
-              bodyPath={response.bodyPath}
-              getBody={this._handleGetResponseBody}
-              error={response.error}
-              editorLineWrapping={editorLineWrapping}
-              editorFontSize={editorFontSize}
-              editorIndentSize={editorIndentSize}
-              editorKeyMap={editorKeyMap}
-              url={response.url}
-            />
+            <ErrorBoundary showAlert>
+              <ResponseViewer
+                key={response._id}
+                // Send larger one because legacy responses have bytesContent === -1
+                responseId={response._id}
+                bytes={Math.max(response.bytesContent, response.bytesRead)}
+                contentType={response.contentType || ''}
+                previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+                filter={filter}
+                filterHistory={filterHistory}
+                updateFilter={response.error ? null : handleSetFilter}
+                bodyPath={response.bodyPath}
+                getBody={this._handleGetResponseBody}
+                error={response.error}
+                editorLineWrapping={editorLineWrapping}
+                editorFontSize={editorFontSize}
+                editorIndentSize={editorIndentSize}
+                editorKeyMap={editorKeyMap}
+                url={response.url}
+              />
+            </ErrorBoundary>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
