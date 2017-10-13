@@ -10,32 +10,30 @@ class ResponseHeadersViewer extends PureComponent {
       h => `${h.name}: ${h.value}`
     ).join('\n');
 
-    return (
-      <div>
-        <table className="table--fancy table--striped">
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Value</th>
+    return [
+      <table key='table' className="table--fancy table--striped">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {headers.map((h, i) => (
+          <tr className="selectable" key={i}>
+            <td style={{width: '50%'}} className="force-wrap">{h.name}</td>
+            <td style={{width: '50%'}} className="force-wrap">{h.value}</td>
           </tr>
-          </thead>
-          <tbody>
-          {headers.map((h, i) => (
-            <tr className="selectable" key={i}>
-              <td style={{width: '50%'}} className="force-wrap">{h.name}</td>
-              <td style={{width: '50%'}} className="force-wrap">{h.value}</td>
-            </tr>
-          ))}
-          </tbody>
-        </table>
-        <p className="pad-top">
-          <CopyButton
-            className="pull-right btn btn--clicky"
-            content={headersString}
-          />
-        </p>
-      </div>
-    );
+        ))}
+        </tbody>
+      </table>,
+      <p key='copy' className="pad-top">
+        <CopyButton
+          className="pull-right btn btn--clicky"
+          content={headersString}
+        />
+      </p>
+    ];
   }
 }
 

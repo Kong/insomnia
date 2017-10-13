@@ -25,6 +25,7 @@ import RequestSettingsModal from './modals/request-settings-modal';
 import MarkdownPreview from './markdown-preview';
 import type {Settings} from '../../models/settings';
 import * as hotkeys from '../../common/hotkeys';
+import ErrorBoundary from './error-boundary';
 
 type Props = {
   // Functions
@@ -249,22 +250,24 @@ class RequestPane extends React.PureComponent<Props> {
     return (
       <section className="pane request-pane">
         <header className="pane__header">
-          <RequestUrlBar
-            uniquenessKey={uniqueKey}
-            method={request.method}
-            onMethodChange={updateRequestMethod}
-            onUrlChange={this._handleUpdateRequestUrl}
-            handleAutocompleteUrls={this._autocompleteUrls}
-            handleImport={handleImport}
-            handleGenerateCode={handleGenerateCode}
-            handleSend={handleSend}
-            handleSendAndDownload={handleSendAndDownload}
-            handleRender={handleRender}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            handleGetRenderContext={handleGetRenderContext}
-            url={request.url}
-            requestId={request._id}
-          />
+          <ErrorBoundary errorClassName="font-error pad text-center">
+            <RequestUrlBar
+              uniquenessKey={uniqueKey}
+              method={request.method}
+              onMethodChange={updateRequestMethod}
+              onUrlChange={this._handleUpdateRequestUrl}
+              handleAutocompleteUrls={this._autocompleteUrls}
+              handleImport={handleImport}
+              handleGenerateCode={handleGenerateCode}
+              handleSend={handleSend}
+              handleSendAndDownload={handleSendAndDownload}
+              handleRender={handleRender}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              handleGetRenderContext={handleGetRenderContext}
+              url={request.url}
+              requestId={request._id}
+            />
+          </ErrorBoundary>
         </header>
         <Tabs className="react-tabs pane__body" forceRenderTabPanel>
           <TabList>
@@ -331,46 +334,54 @@ class RequestPane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
-              <AuthWrapper
-                key={uniqueKey}
-                oAuth2Token={oAuth2Token}
-                showPasswords={showPasswords}
-                request={request}
-                handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
-                onChange={updateRequestAuthentication}
-              />
+              <ErrorBoundary errorClassName="font-error pad text-center">
+                <AuthWrapper
+                  key={uniqueKey}
+                  oAuth2Token={oAuth2Token}
+                  showPasswords={showPasswords}
+                  request={request}
+                  handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  onChange={updateRequestAuthentication}
+                />
+              </ErrorBoundary>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel query-editor">
             <div className="pad pad-bottom-sm query-editor__preview">
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
-                <RenderedQueryString
-                  key={uniqueKey}
-                  handleRender={handleRender}
-                  request={request}
-                />
+                <ErrorBoundary
+                  errorClassName="tall wide vertically-align font-error pad text-center">
+                  <RenderedQueryString
+                    key={uniqueKey}
+                    handleRender={handleRender}
+                    request={request}
+                  />
+                </ErrorBoundary>
               </code>
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <KeyValueEditor
-                  sortable
-                  key={uniqueKey}
-                  namePlaceholder="name"
-                  valuePlaceholder="value"
-                  onToggleDisable={this._trackQueryToggle}
-                  onCreate={this._trackQueryCreate}
-                  onDelete={this._trackQueryDelete}
-                  pairs={request.parameters}
-                  handleRender={handleRender}
-                  handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  onChange={updateRequestParameters}
-                />
+                <ErrorBoundary
+                  errorClassName="tall wide vertically-align font-error pad text-center">
+                  <KeyValueEditor
+                    sortable
+                    key={uniqueKey}
+                    namePlaceholder="name"
+                    valuePlaceholder="value"
+                    onToggleDisable={this._trackQueryToggle}
+                    onCreate={this._trackQueryCreate}
+                    onDelete={this._trackQueryDelete}
+                    pairs={request.parameters}
+                    handleRender={handleRender}
+                    handleGetRenderContext={handleGetRenderContext}
+                    nunjucksPowerUserMode={nunjucksPowerUserMode}
+                    onChange={updateRequestParameters}
+                  />
+                </ErrorBoundary>
               </div>
             </div>
             <div className="pad-right text-right">
@@ -382,18 +393,20 @@ class RequestPane extends React.PureComponent<Props> {
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel header-editor">
-            <RequestHeadersEditor
-              key={uniqueKey}
-              headers={request.headers}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              editorFontSize={editorFontSize}
-              editorIndentSize={editorIndentSize}
-              editorLineWrapping={editorLineWrapping}
-              onChange={updateRequestHeaders}
-              bulk={useBulkHeaderEditor}
-            />
+            <ErrorBoundary errorClassName="font-error pad text-center">
+              <RequestHeadersEditor
+                key={uniqueKey}
+                headers={request.headers}
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
+                nunjucksPowerUserMode={nunjucksPowerUserMode}
+                editorFontSize={editorFontSize}
+                editorIndentSize={editorIndentSize}
+                editorLineWrapping={editorLineWrapping}
+                onChange={updateRequestHeaders}
+                bulk={useBulkHeaderEditor}
+              />
+            </ErrorBoundary>
 
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
@@ -411,12 +424,14 @@ class RequestPane extends React.PureComponent<Props> {
                   </button>
                 </div>
                 <div className="pad">
-                  <MarkdownPreview
-                    heading={request.name}
-                    debounceMillis={1000}
-                    markdown={request.description}
-                    handleRender={handleRender}
-                  />
+                  <ErrorBoundary errorClassName="font-error pad text-center">
+                    <MarkdownPreview
+                      heading={request.name}
+                      debounceMillis={1000}
+                      markdown={request.description}
+                      handleRender={handleRender}
+                    />
+                  </ErrorBoundary>
                 </div>
               </div>
             ) : (
