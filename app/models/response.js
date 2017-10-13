@@ -94,7 +94,7 @@ export async function findRecentForRequest (requestId: string, limit: number): P
   return responses;
 }
 
-export async function getLatestForRequest (requestId: string): Response | null {
+export async function getLatestForRequest (requestId: string): Promise<Response | null> {
   const responses = await findRecentForRequest(requestId, 1);
   const response = (responses[0]: ?Response);
   return response || null;

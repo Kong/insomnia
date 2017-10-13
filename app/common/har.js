@@ -223,7 +223,7 @@ export async function exportHar (exportRequests: Array<ExportRequest>): Promise<
   };
 }
 
-async function exportHarResponse (response: ResponseModel | null): Promise<HarResponse> {
+export async function exportHarResponse (response: ResponseModel | null): Promise<HarResponse> {
   if (!response) {
     return {
       status: 0,
