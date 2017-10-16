@@ -64,17 +64,16 @@ class CookieList extends React.PureComponent<Props> {
           <tbody key={cookies.length}>
           {cookies.map((cookie, i) => {
             const cookieString = cookieToString(toughCookie.Cookie.fromJSON(cookie));
-
             return (
               <tr className="selectable" key={i}>
                 <td>
                   <RenderedText render={handleRender}>
-                    {cookie.domain}
+                    {cookie.domain || ''}
                   </RenderedText>
                 </td>
                 <td className="force-wrap wide">
                   <RenderedText render={handleRender}>
-                    {cookieString}
+                    {cookieString || ''}
                   </RenderedText>
                 </td>
                 <td onClick={null} className="text-right no-wrap">

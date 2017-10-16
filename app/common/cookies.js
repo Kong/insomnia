@@ -12,7 +12,7 @@ export function cookiesFromJar (jar) {
         console.warn('Failed to get cookies form jar', err);
         resolve([]);
       } else {
-        resolve(cookies);
+        resolve(cookies.map(c => c.toJSON()));
       }
     });
   });
