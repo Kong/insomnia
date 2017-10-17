@@ -2,6 +2,7 @@
 import React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
+import Button from './base/button';
 
 const PAGE_SIZE = 25;
 const MAX_VALUE_LENGTH = 100;
@@ -84,7 +85,7 @@ type Props2 = {
 type State2 = {
   expanded: boolean,
   hasBeenExpanded: boolean,
-  page: number
+  pages: {[number]: boolean}
 };
 
 @autobind
@@ -95,7 +96,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     this.state = {
       expanded: paths.length === 0,
       hasBeenExpanded: false,
-      page: 0
+      pages: {}
     };
   }
 
@@ -197,13 +198,17 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     }));
   }
 
-  handleNextPage () {
-    this.setState(({page}) => ({page: page + 1}));
+  handleTogglePage (page: number) {
+    this.setState(state => {
+      const visible = !state.pages[page];
+      const pages = Object.assign({}, state.pages, {[page]: visible});
+      return {pages};
+    });
   }
 
   render () {
     const {label, value, paths, hide, onExpand} = this.props;
-    const {expanded, hasBeenExpanded, page} = this.state;
+    const {expanded, hasBeenExpanded, pages} = this.state;
 
     const collapsable = this.isCollapsable(value);
     const collapsed = !expanded;
@@ -234,38 +239,44 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
       }
 
       if (!collapsed || hasBeenExpanded) {
-        const maxItem = page >= 0 ? PAGE_SIZE * (page + 1) : Infinity;
-        for (let key = 0; key < value.length && key < maxItem; key++) {
-          const newPaths = [...paths, `[${key}]`];
-          rows.push((
-            <JSONViewerObj
-              hide={hide || collapsed}
-              key={key}
-              label={key}
-              onExpand={onExpand}
-              value={value[key]}
-              paths={newPaths}
-            />
-          ));
-        }
+        for (let key = 0; key < value.length; key++) {
+          const inPage = Math.floor(key / PAGE_SIZE);
+          const visible = pages[inPage];
 
-        if (value.length > maxItem) {
-          const nextBatch = Math.min(value.length - maxItem, PAGE_SIZE);
-          rows.push(
-            <tr key="next">
-              <td style={nextIndentStyles} className="json-viewer__key-container">
-                <span className="json-viewer__icon"></span>
-                <span className="json-viewer__key json-viewer__key--array">
-                  {maxItem}…{value.length - 1}
+          // Add "Show" button if we're at the start of a page
+          if (key % PAGE_SIZE === 0) {
+            const start = inPage * PAGE_SIZE;
+            const end = Math.min(value.length, start + PAGE_SIZE);
+            rows.push(
+              <tr key={`page__${inPage}`}>
+                <td style={nextIndentStyles} className="json-viewer__key-container">
+                  <span className="json-viewer__icon"></span>
+                  <span className="json-viewer__key json-viewer__key--array">
+                  {start}…{end}
                 </span>
-              </td>
-              <td className="json-viewer__value json-viewer__value--next-page">
-                <button onClick={this.handleNextPage}>
-                  Show {nextBatch === PAGE_SIZE ? `${nextBatch} More` : 'Remaining'}
-                </button>
-              </td>
-            </tr>
-          );
+                </td>
+                <td className="json-viewer__value json-viewer__value--next-page">
+                  <Button value={inPage} onClick={this.handleTogglePage}>
+                    {visible ? 'Hide' : 'Show'}
+                  </Button>
+                </td>
+              </tr>
+            );
+          }
+
+          if (visible) {
+            const newPaths = [...paths, `[${key}]`];
+            rows.push((
+              <JSONViewerObj
+                hide={hide || collapsed}
+                key={key}
+                label={key}
+                onExpand={onExpand}
+                value={value[key]}
+                paths={newPaths}
+              />
+            ));
+          }
         }
       }
     } else if (value && typeof value === 'object') {
