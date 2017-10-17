@@ -87,6 +87,7 @@
     "win": {
       "iconUrl": "https://insomnia.rest/images/icon.png",
       "target": [
+        "portable",
         "squirrel",
         "zip"
       ],
