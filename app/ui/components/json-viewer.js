@@ -4,9 +4,9 @@ import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import {isDevelopment} from '../../common/constants';
 
-const PAGE_SIZE = isDevelopment() ? 10 : 500;
+const PAGE_SIZE = isDevelopment() ? 50 : 500;
 const MAX_PAGES = isDevelopment() ? 100 : 10000;
-const MAX_VALUE_LENGTH = isDevelopment() ? 50 : 100;
+const MAX_VALUE_LENGTH = 75;
 
 type Props = {
   body: Buffer,
