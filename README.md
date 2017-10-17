@@ -11,6 +11,11 @@ Insomnia is a cross-platform _REST client_, built on top of [Electron](http://el
 
 ![Insomnia REST Client Screenshot](https://insomnia.rest/images/docs/promo.png)
 
+## Install Prebuilt Binaries
+
+Insomnia is available for Mac, Windows, and Linux and can be downloaded 
+from http://insomnia.rest/download/
+
 ## Bugs and Feature Requests
 
 Have a bug or a feature request? First, read the 
