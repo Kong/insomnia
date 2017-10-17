@@ -22,6 +22,11 @@ class RenderedText extends React.PureComponent<Props, State> {
 
   async _render () {
     const {render, children} = this.props;
+
+    if (!children) {
+      return;
+    }
+
     try {
       const renderedText = await render(children);
       this.setState({renderedText, error: ''});
