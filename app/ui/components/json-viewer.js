@@ -2,10 +2,11 @@
 import React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
-import Button from './base/button';
+import {isDevelopment} from '../../common/constants';
 
-const PAGE_SIZE = 25;
-const MAX_VALUE_LENGTH = 100;
+const PAGE_SIZE = isDevelopment() ? 10 : 500;
+const MAX_PAGES = isDevelopment() ? 100 : 10000;
+const MAX_VALUE_LENGTH = isDevelopment() ? 50 : 100;
 
 type Props = {
   body: Buffer,
@@ -53,8 +54,10 @@ class JSONViewer extends React.PureComponent<Props> {
     try {
       rows = (
         <JSONViewerObj
+          expandChildren
           onExpand={this.setMinWidth}
-          value={JSON.parse(body.toString())}
+          value={{root: JSON.parse(body.toString())}}
+          indent={0}
           paths={[]}
         />
       );
@@ -74,27 +77,30 @@ class JSONViewer extends React.PureComponent<Props> {
   }
 }
 
-type Props2 = {
+type Props2 = {|
   paths: Array<string>,
   value: any,
   onExpand: Function,
+  indent: number,
+  expandChildren?: boolean,
+  expanded?: boolean,
   label?: string | number,
   hide?: boolean
-};
+|};
 
-type State2 = {
+type State2 = {|
   expanded: boolean,
   hasBeenExpanded: boolean,
-  pages: {[number]: boolean}
-};
+  pages: {[string]: boolean}
+|};
 
 @autobind
 class JSONViewerObj extends React.PureComponent<Props2, State2> {
   constructor (props: Props2) {
     super(props);
-    const {paths} = props;
+    const {paths, expanded} = props;
     this.state = {
-      expanded: paths.length === 0,
+      expanded: expanded || paths.length === 0,
       hasBeenExpanded: false,
       pages: {}
     };
@@ -142,12 +148,12 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     if (Array.isArray(obj)) {
       hasChildren = true;
       n = obj.length;
-      comment = n > 0 ? `// ${n} item${n === 1 ? '' : 's'}` : '';
+      comment = n > 0 ? `${n} item${n === 1 ? '' : 's'}` : '';
       abbr = collapsed && n > 0 ? `[…]` : '[]';
     } else if (obj && typeof obj === 'object') {
       hasChildren = true;
       n = Object.keys(obj).length;
-      comment = n > 0 ? `// ${n} key${n === 1 ? '' : 's'}` : '';
+      comment = n > 0 ? `${n} key${n === 1 ? '' : 's'}` : '';
       abbr = collapsed && n > 0 ? `{…}` : '{}';
     }
 
@@ -200,20 +206,21 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
 
   handleTogglePage (page: number) {
     this.setState(state => {
-      const visible = !state.pages[page];
+      const visible = !state.pages[page.toString()];
       const pages = Object.assign({}, state.pages, {[page]: visible});
       return {pages};
     });
   }
 
   render () {
-    const {label, value, paths, hide, onExpand} = this.props;
+    const {label, value, paths, hide, onExpand, indent, expandChildren} = this.props;
     const {expanded, hasBeenExpanded, pages} = this.state;
 
     const collapsable = this.isCollapsable(value);
     const collapsed = !expanded;
-    const indentStyles = {paddingLeft: `${(paths.length - 1) * 1.3}em`};
-    const nextIndentStyles = {paddingLeft: `${(paths.length) * 1.3}em`};
+
+    // NOTE: Subtract 1 from indent because indent is applied on the child, which gets indent + 1
+    const getIndentStyles = indent => ({paddingLeft: `${indent - 1}em`});
 
     const rowClasses = classnames({
       'hide': hide,
@@ -227,7 +234,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
       if (label !== undefined) {
         rows.push((
           <tr key={paths.join('')} className={rowClasses}>
-            <td style={indentStyles}
+            <td style={getIndentStyles(indent)}
                 className="json-viewer__key-container"
                 onClick={collapsable ? this.handleClickKey : null}>
               <span className="json-viewer__icon"></span>
@@ -239,43 +246,78 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
       }
 
       if (!collapsed || hasBeenExpanded) {
-        for (let key = 0; key < value.length; key++) {
-          const inPage = Math.floor(key / PAGE_SIZE);
-          const visible = pages[inPage];
+        const hasMultiplePages = Array.isArray(value) && value.length > PAGE_SIZE;
+        const maxItemsToShow = MAX_PAGES * PAGE_SIZE;
+        const totalPages = Math.ceil(value.length / PAGE_SIZE);
+        for (let page = 0; page < totalPages; page++) {
+          const pageStart = page * PAGE_SIZE;
+          const pageEnd = Math.min(value.length, pageStart + PAGE_SIZE);
 
-          // Add "Show" button if we're at the start of a page
-          if (key % PAGE_SIZE === 0) {
-            const start = inPage * PAGE_SIZE;
-            const end = Math.min(value.length, start + PAGE_SIZE);
+          if (!collapsed && pageStart > maxItemsToShow) {
             rows.push(
-              <tr key={`page__${inPage}`}>
-                <td style={nextIndentStyles} className="json-viewer__key-container">
+              <tr key={`page__${page}`}>
+                <td style={getIndentStyles(indent + 1)}
+                    onClick={e => this.handleTogglePage(page)}
+                    className="json-viewer__key-container">
                   <span className="json-viewer__icon"></span>
-                  <span className="json-viewer__key json-viewer__key--array">
-                  {start}…{end}
-                </span>
+                  <span
+                    className="json-viewer__key json-viewer__key--page">{pageStart}…{value.length}</span>
                 </td>
-                <td className="json-viewer__value json-viewer__value--next-page">
-                  <Button value={inPage} onClick={this.handleTogglePage}>
-                    {visible ? 'Hide' : 'Show'}
-                  </Button>
+                <td className="json-viewer__value json-viewer__type-comment">
+                  Too many remaining to show
                 </td>
               </tr>
             );
           }
 
-          if (visible) {
-            const newPaths = [...paths, `[${key}]`];
-            rows.push((
-              <JSONViewerObj
-                hide={hide || collapsed}
-                key={key}
-                label={key}
-                onExpand={onExpand}
-                value={value[key]}
-                paths={newPaths}
-              />
-            ));
+          // Don't render any more!
+          if (pageStart > maxItemsToShow) {
+            break;
+          }
+
+          for (let key = pageStart; key < pageEnd; key++) {
+            const isFirstInPage = key % PAGE_SIZE === 0;
+            const visible = !hasMultiplePages || !!pages[page.toString()];
+            const hasBeenVisible = !hasMultiplePages || pages[page.toString()] !== undefined;
+
+            // Add "Show" button if we're at the start of a page
+            if (hasMultiplePages && isFirstInPage) {
+              const start = page * PAGE_SIZE;
+              const end = Math.min(value.length, start + PAGE_SIZE);
+              const className = classnames({
+                'hide': collapsed,
+                'json-viewer__row': true,
+                'json-viewer__row--collapsable': collapsable,
+                'json-viewer__row--collapsed': !visible
+              });
+              rows.push(
+                <tr key={`page__${page}`} className={className}>
+                  <td style={getIndentStyles(indent + 1)}
+                      onClick={e => this.handleTogglePage(page)}
+                      className="json-viewer__key-container">
+                    <span className="json-viewer__icon"></span>
+                    <span className="json-viewer__key json-viewer__key--page">{start}…{end}</span>
+                  </td>
+                </tr>
+              );
+            }
+
+            if (visible || hasBeenVisible) {
+              // Push all the children
+              const newPaths = [...paths, `[${key}]`];
+              rows.push((
+                <JSONViewerObj
+                  expanded={expandChildren}
+                  indent={indent + (hasMultiplePages ? 2 : 1)}
+                  hide={hide || collapsed || !visible}
+                  key={key}
+                  label={key}
+                  onExpand={onExpand}
+                  value={value[key]}
+                  paths={newPaths}
+                />
+              ));
+            }
           }
         }
       }
@@ -283,7 +325,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
       if (label !== undefined) {
         rows.push((
           <tr key={paths.join('')} className={rowClasses}>
-            <td style={indentStyles}
+            <td style={getIndentStyles(indent)}
                 className="json-viewer__key-container"
                 onClick={collapsable ? this.handleClickKey : null}>
               <span className="json-viewer__icon"></span>
@@ -301,7 +343,9 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
           const newPaths = [...paths, `.${key}`];
           rows.push((
             <JSONViewerObj
+              indent={indent + 1}
               hide={hide || collapsed}
+              expanded={expandChildren}
               key={key}
               label={key}
               onExpand={onExpand}
@@ -314,7 +358,7 @@ class JSONViewerObj extends React.PureComponent<Props2, State2> {
     } else {
       rows.push((
         <tr key={paths.join('')} className={rowClasses}>
-          <td style={indentStyles}
+          <td style={getIndentStyles(indent)}
               className="json-viewer__key-container"
               onClick={collapsable ? this.handleClickKey : null}>
             <span className="json-viewer__icon"></span>

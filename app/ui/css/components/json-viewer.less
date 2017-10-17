@@ -27,6 +27,16 @@
     }
   }
 
+  .json-viewer__key--page {
+    &::before {
+      content: '[';
+    }
+
+    &::after {
+      content: ']';
+    }
+  }
+
   .json-viewer__value--next-page {
     button {
       padding: @padding-xxs @padding-xs;
@@ -42,11 +52,9 @@
     }
   }
 
+  .json-viewer__key--page,
+  .json-viewer__key--array,
   .json-viewer__key--object {
-    color: var(--color-success);
-  }
-
-  .json-viewer__key--array {
     color: var(--color-success);
   }
 
@@ -57,6 +65,13 @@
     text-align: center;
     color: var(--hl);
     font-family: @font-default;
+
+    // Don't make icon bump up the row height
+    line-height: 1em;
+  }
+
+  .json-viewer__row {
+    line-height: 1.4em;
   }
 
   .json-viewer__row--collapsable {
@@ -89,6 +104,13 @@
     color: var(--color-notice);
     &::before, &::after {
       content: '"';
+    }
+  }
+
+  .json-viewer__type-comment {
+    color: var(--hl);
+    &::before {
+      content: '// ';
     }
   }
 
