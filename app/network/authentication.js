@@ -1,7 +1,8 @@
-import {AUTH_BASIC, AUTH_BEARER, AUTH_OAUTH_2, AUTH_HAWK} from '../common/constants';
+import {AUTH_BASIC, AUTH_BEARER, AUTH_OAUTH_2, AUTH_HAWK, AUTH_ASAP} from '../common/constants';
 import {getBasicAuthHeader, getBearerAuthHeader} from '../common/misc';
 import getOAuth2Token from './o-auth-2/get-token';
 import * as Hawk from 'hawk';
+import jwtAuthentication from 'jwt-authentication';
 
 export async function getAuthHeader (requestId, url, method, authentication) {
   if (authentication.disabled) {
@@ -41,6 +42,33 @@ export async function getAuthHeader (requestId, url, method, authentication) {
       name: 'Authorization',
       value: header.field
     };
+  }
+
+  if (authentication.type === AUTH_ASAP) {
+    const {issuer, subject, audience, keyId, privateKey} = authentication;
+    const generator = jwtAuthentication.client.create();
+    const claims = {
+      iss: issuer,
+      sub: subject,
+      aud: audience
+    };
+    const options = {
+      privateKey,
+      kid: keyId
+    };
+
+    return new Promise((resolve, reject) => {
+      generator.generateAuthorizationHeader(claims, options, (error, headerValue) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve({
+            name: 'Authorization',
+            value: headerValue
+          });
+        }
+      });
+    });
   }
 
   return null;
