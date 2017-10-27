@@ -47,11 +47,11 @@ class RenderedText extends React.PureComponent<Props, State> {
     if (this.state.error) {
       return (
         <span className="font-error" style={{fontSize: '0.9em', fontStyle: 'italic'}}>
-          {this.state.error}
+          {this.state.error || 'Unknown Error'}
         </span>
       );
     } else {
-      return this.state.renderedText;
+      return this.state.renderedText || '';
     }
   }
 }
