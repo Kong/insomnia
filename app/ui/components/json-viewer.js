@@ -50,13 +50,18 @@ class JSONViewer extends React.PureComponent<Props> {
       className
     } = this.props;
 
+    let value = JSON.parse(body.toString());
+    if (Array.isArray(value) || (value && typeof value === 'object')) {
+      value = {root: value};
+    }
+
     let rows;
     try {
       rows = (
         <JSONViewerObj
           expandChildren
           onExpand={this.setMinWidth}
-          value={{root: JSON.parse(body.toString())}}
+          value={value}
           indent={0}
           paths={[]}
         />
