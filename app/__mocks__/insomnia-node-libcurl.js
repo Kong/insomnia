@@ -17,9 +17,18 @@ class Curl extends EventEmitter {
     }
 
     if (name === Curl.option.READFUNCTION) {
-      const buffer = new Buffer(10000);
-      const bytes = value(buffer);
-      this._meta[`${name}_VALUE`] = buffer.slice(0, bytes).toString('utf8');
+      let body = '';
+      // Only limiting this to prevent infinite loops
+      for (let i = 0; i < 1000; i++) {
+        const buffer = new Buffer(23);
+        const bytes = value(buffer);
+        if (bytes === 0) {
+          break;
+        }
+        body += buffer.slice(0, bytes);
+      }
+
+      this._meta[`${name}_VALUE`] = body;
     }
 
     if (name === Curl.option.COOKIELIST) {

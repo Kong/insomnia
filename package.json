@@ -140,6 +140,7 @@
     "mime-types": "^2.1.14",
     "mkdirp": "^0.5.1",
     "moment": "^2.18.1",
+    "multistream": "^2.1.0",
     "nedb": "^1.8.0",
     "node-forge": "^0.7.0",
     "nunjucks": "^3.0.0",

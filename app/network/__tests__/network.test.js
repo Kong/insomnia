@@ -6,6 +6,7 @@ import * as models from '../../models';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
+import {DEFAULT_BOUNDARY} from '../multipart';
 
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);
@@ -315,16 +316,16 @@ describe('actuallySend()', () => {
     );
     const body = JSON.parse(bodyBuffer);
     expect(body.meta.READFUNCTION_VALUE).toBe([
-      '--------------------------X-INSOMNIA-BOUNDARY',
+      `--${DEFAULT_BOUNDARY}`,
       'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
       'Content-Type: text/plain',
       '',
       fs.readFileSync(fileName),
-      '--------------------------X-INSOMNIA-BOUNDARY',
+      `--${DEFAULT_BOUNDARY}`,
       'Content-Disposition: form-data; name="a"',
       '',
       'AA',
-      '--------------------------X-INSOMNIA-BOUNDARY--',
+      `--${DEFAULT_BOUNDARY}--`,
       ''
     ].join('\r\n'));
 
