@@ -1,7 +1,6 @@
 // @flow
+import * as electron from 'electron';
 import mimes from 'mime-types';
-import {PassThrough} from 'stream';
-import MultiStream from 'multistream';
 import fs from 'fs';
 import path from 'path';
 import type {RequestBodyParameter} from '../models/request';
@@ -9,29 +8,27 @@ import type {RequestBodyParameter} from '../models/request';
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 
 export async function buildMultipart (params: Array<RequestBodyParameter>) {
-  return new Promise(async resolve => {
-    const streams = [];
+  return new Promise(async (resolve: Function, reject: Function) => {
+    const filePath = path.join(electron.remote.app.getPath('temp'), Math.random() + '.body');
+    const writeStream = fs.createWriteStream(filePath);
     const lineBreak = '\r\n';
     let totalSize = 0;
 
-    const addFile = async (path: string) => {
+    async function addFile (path: string) {
       return new Promise(resolve => {
         const {size} = fs.statSync(path);
         const stream = fs.createReadStream(path);
-        // NOTE: Not sure why Multistream doesn't handle this. Seems like it should.
-        stream.on('readable', () => {
-          streams.push(stream);
-          totalSize += size;
+        stream.once('end', () => {
           resolve();
         });
+        stream.pipe(writeStream, {end: false});
+        totalSize += size;
       });
-    };
+    }
 
     const addString = (v: string) => {
       const buffer = Buffer.from(v);
-      const stream = new PassThrough();
-      stream.end(buffer);
-      streams.push(stream);
+      writeStream.write(buffer);
       totalSize += buffer.length;
     };
 
@@ -75,10 +72,15 @@ export async function buildMultipart (params: Array<RequestBodyParameter>) {
     addString(`--${DEFAULT_BOUNDARY}--`);
     addString(lineBreak);
 
-    const body = MultiStream(streams);
-    window.body = body;
-    body.on('readable', () => {
-      resolve({boundary: DEFAULT_BOUNDARY, body, contentLength: totalSize});
+    writeStream.on('error', err => {
+      reject(err);
     });
+
+    writeStream.on('close', () => {
+      resolve({boundary: DEFAULT_BOUNDARY, filePath, contentLength: totalSize});
+    });
+
+    // We're done here. End the stream and tell FS to save/close the file.
+    writeStream.end();
   });
 }

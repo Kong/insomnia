@@ -389,7 +389,7 @@ export function _actuallySend (
         requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const params = renderedRequest.body.params || [];
-        const {body: multipartBody, boundary, contentLength} = await buildMultipart(params);
+        const {filePath: multipartBodyPath, boundary, contentLength} = await buildMultipart(params);
 
         // Extend the Content-Type header
         const contentTypeHeader = getContentTypeHeader(headers);
@@ -402,27 +402,22 @@ export function _actuallySend (
           });
         }
 
-        setOpt(Curl.option.UPLOAD, 1);
+        const fd = fs.openSync(multipartBodyPath, 'r+');
+
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
+        setOpt(Curl.option.UPLOAD, 1);
+        setOpt(Curl.option.READDATA, fd);
 
         // We need this, otherwise curl will send it as a PUT
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
 
-        // let dataLen = 0;
-        curl.setOpt(Curl.option.READFUNCTION, (buffer: Buffer, size: number, nmemb: number) => {
-          if (size === 0 || nmemb === 0) {
-            // Nothing to do
-            return 0;
-          }
+        const fn = () => {
+          fs.closeSync(fd);
+          fs.unlink(multipartBodyPath, () => {});
+        };
 
-          const data = multipartBody.read(buffer.length);
-          if (!data) {
-            // Out of data
-            return 0;
-          }
-
-          return data.copy(buffer);
-        });
+        curl.on('end', fn);
+        curl.on('error', fn);
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';

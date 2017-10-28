@@ -1,4 +1,5 @@
 import {EventEmitter} from 'events';
+import fs from 'fs';
 
 class Curl extends EventEmitter {
   constructor () {
@@ -6,6 +7,7 @@ class Curl extends EventEmitter {
     this._options = {};
     this._meta = {};
   }
+
   setOpt (name, value) {
     if (!name) {
       throw new Error(`Invalid option ${name} ${value}`);
@@ -35,6 +37,11 @@ class Curl extends EventEmitter {
       // This can be set multiple times
       this._options[name] = this._options[name] || [];
       this._options[name].push(value);
+    } else if (name === Curl.option.READDATA) {
+      const {size} = fs.fstatSync(value);
+      const buffer = new Buffer(size);
+      fs.readSync(value, buffer, 0, size, 0);
+      this._options[name] = buffer.toString();
     } else {
       this._options[name] = value;
     }
