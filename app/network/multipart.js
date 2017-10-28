@@ -1,62 +1,86 @@
 // @flow
+import * as electron from 'electron';
 import mimes from 'mime-types';
 import fs from 'fs';
 import path from 'path';
 import type {RequestBodyParameter} from '../models/request';
 
-export function buildMultipart (params: Array<RequestBodyParameter>): {boundary: string, body: Buffer} {
-  const buffers = [];
-  const boundary = '------------------------X-INSOMNIA-BOUNDARY';
-  const lineBreak = '\r\n';
+export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 
-  const add = (v: Buffer | string) => {
-    if (typeof v === 'string') {
-      buffers.push(Buffer.from(v));
-    } else {
-      buffers.push(v);
-    }
-  };
+export async function buildMultipart (params: Array<RequestBodyParameter>) {
+  return new Promise(async (resolve: Function, reject: Function) => {
+    const filePath = path.join(electron.remote.app.getPath('temp'), Math.random() + '.body');
+    const writeStream = fs.createWriteStream(filePath);
+    const lineBreak = '\r\n';
+    let totalSize = 0;
 
-  for (const param of params) {
-    const noName = !param.name;
-    const noValue = !(param.value || param.fileName);
-
-    if (noName && noValue) {
-      continue;
-    }
-
-    add(`--${boundary}`);
-    add(lineBreak);
-
-    if (param.type === 'file' && param.fileName) {
-      const name = param.name || '';
-      const fileName = param.fileName;
-      const contentType = mimes.lookup(fileName) || 'application/octet-stream';
-      add(
-        'Content-Disposition: form-data; ' +
-        `name="${name.replace(/"/g, '\\"')}"; ` +
-        `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`
-      );
-      add(lineBreak);
-      add(`Content-Type: ${contentType}`);
-      add(lineBreak);
-      add(lineBreak);
-      add(fs.readFileSync(fileName));
-    } else {
-      const name = param.name || '';
-      const value = param.value || '';
-      add(`Content-Disposition: form-data; name="${name}"`);
-      add(lineBreak);
-      add(lineBreak);
-      add(value);
+    async function addFile (path: string) {
+      return new Promise(resolve => {
+        const {size} = fs.statSync(path);
+        const stream = fs.createReadStream(path);
+        stream.once('end', () => {
+          resolve();
+        });
+        stream.pipe(writeStream, {end: false});
+        totalSize += size;
+      });
     }
 
-    add(lineBreak);
-  }
+    const addString = (v: string) => {
+      const buffer = Buffer.from(v);
+      writeStream.write(buffer);
+      totalSize += buffer.length;
+    };
 
-  add(`--${boundary}--`);
-  add(lineBreak);
+    for (const param of params) {
+      const noName = !param.name;
+      const noValue = !(param.value || param.fileName);
 
-  const body = Buffer.concat(buffers);
-  return {boundary: boundary, body};
+      if (noName && noValue) {
+        continue;
+      }
+
+      addString(`--${DEFAULT_BOUNDARY}`);
+      addString(lineBreak);
+
+      if (param.type === 'file' && param.fileName) {
+        const name = param.name || '';
+        const fileName = param.fileName;
+        const contentType = mimes.lookup(fileName) || 'application/octet-stream';
+        addString(
+          'Content-Disposition: form-data; ' +
+          `name="${name.replace(/"/g, '\\"')}"; ` +
+          `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`
+        );
+        addString(lineBreak);
+        addString(`Content-Type: ${contentType}`);
+        addString(lineBreak);
+        addString(lineBreak);
+        await addFile(fileName);
+      } else {
+        const name = param.name || '';
+        const value = param.value || '';
+        addString(`Content-Disposition: form-data; name="${name}"`);
+        addString(lineBreak);
+        addString(lineBreak);
+        addString(value);
+      }
+
+      addString(lineBreak);
+    }
+
+    addString(`--${DEFAULT_BOUNDARY}--`);
+    addString(lineBreak);
+
+    writeStream.on('error', err => {
+      reject(err);
+    });
+
+    writeStream.on('close', () => {
+      resolve({boundary: DEFAULT_BOUNDARY, filePath, contentLength: totalSize});
+    });
+
+    // We're done here. End the stream and tell FS to save/close the file.
+    writeStream.end();
+  });
 }
