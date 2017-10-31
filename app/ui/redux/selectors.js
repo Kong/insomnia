@@ -28,6 +28,14 @@ export const selectActiveWorkspace = createSelector(
   }
 );
 
+export const selectActiveWorkspaceClientCertificates = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    return entities.clientCertificates.filter(c => c.parentId === activeWorkspace._id);
+  }
+);
+
 export const selectActiveWorkspaceMeta = createSelector(
   selectActiveWorkspace,
   selectEntitiesLists,

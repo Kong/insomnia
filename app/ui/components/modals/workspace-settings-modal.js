@@ -1,5 +1,5 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
 import DebouncedInput from '../base/debounced-input';
@@ -12,25 +12,56 @@ import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
 import {trackEvent} from '../../../analytics/index';
 import MarkdownEditor from '../markdown-editor';
+import type {Workspace} from '../../../models/workspace';
+import type {ClientCertificate} from '../../../models/client-certificate';
+
+type Props = {
+  clientCertificates: Array<ClientCertificate>,
+  workspace: Workspace,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  nunjucksPowerUserMode: boolean,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  handleRemoveWorkspace: Function,
+  handleDuplicateWorkspace: Function
+};
+
+type State = {
+  showAddCertificateForm: boolean,
+  host: string,
+  crtPath: string,
+  keyPath: string,
+  pfxPath: string,
+  isPrivate: boolean,
+  passphrase: string,
+  showDescription: boolean,
+  defaultPreviewMode: boolean
+};
 
 @autobind
-class WorkspaceSettingsModal extends PureComponent {
-  constructor (props) {
+class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
+  modal: Modal | null;
+
+  constructor (props: Props) {
     super(props);
 
     this.state = {
       showAddCertificateForm: false,
+      host: '',
       crtPath: '',
       keyPath: '',
       pfxPath: '',
-      host: '',
       passphrase: '',
+      isPrivate: false,
       showDescription: false,
       defaultPreviewMode: false
     };
   }
 
-  _workspaceUpdate (patch) {
+  _workspaceUpdate (patch: Object) {
     models.workspace.update(this.props.workspace, patch);
   }
 
@@ -39,7 +70,7 @@ class WorkspaceSettingsModal extends PureComponent {
     trackEvent('Workspace', 'Add Description');
   }
 
-  _handleSetModalRef (n) {
+  _handleSetModalRef (n: ?Modal) {
     this.modal = n;
   }
 
@@ -55,14 +86,22 @@ class WorkspaceSettingsModal extends PureComponent {
   }
 
   _handleToggleCertificateForm () {
-    this.setState({showAddCertificateForm: !this.state.showAddCertificateForm});
+    this.setState(state => ({
+      showAddCertificateForm: !state.showAddCertificateForm,
+      crtPath: '',
+      keyPath: '',
+      pfxPath: '',
+      host: '',
+      passphrase: '',
+      isPrivate: false
+    }));
   }
 
-  _handleRename (name) {
+  _handleRename (name: string) {
     this._workspaceUpdate({name});
   }
 
-  _handleDescriptionChange (description) {
+  _handleDescriptionChange (description: string) {
     this._workspaceUpdate({description});
 
     if (this.state.defaultPreviewMode !== false) {
@@ -70,84 +109,75 @@ class WorkspaceSettingsModal extends PureComponent {
     }
   }
 
-  _handleCreateHostChange (e) {
-    this.setState({host: e.target.value});
+  _handleCreateHostChange (e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({host: e.currentTarget.value});
   }
 
-  _handleCreatePfxChange (pfxPath) {
+  _handleCreatePfxChange (pfxPath: string) {
     this.setState({pfxPath});
   }
 
-  _handleCreateCrtChange (crtPath) {
+  _handleCreateCrtChange (crtPath: string) {
     this.setState({crtPath});
   }
 
-  _handleCreateKeyChange (keyPath) {
+  _handleCreateKeyChange (keyPath: string) {
     this.setState({keyPath});
   }
 
-  _handleCreatePassphraseChange (e) {
-    this.setState({passphrase: e.target.value});
+  _handleCreatePassphraseChange (e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({passphrase: e.currentTarget.value});
   }
 
-  async _handleSubmitCertificate (e) {
+  _handleCreateIsPrivateChange (e: SyntheticEvent<HTMLInputElement>) {
+    this.setState({isPrivate: e.currentTarget.checked});
+  }
+
+  async _handleCreateCertificate (e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
 
     const {workspace} = this.props;
-    const {pfxPath, crtPath, keyPath, host, passphrase} = this.state;
+    const {pfxPath, crtPath, keyPath, host, passphrase, isPrivate} = this.state;
 
     const certificate = {
       host,
-      passphrase,
-      cert: crtPath,
-      key: keyPath,
-      pfx: pfxPath,
-      disabled: false
+      isPrivate,
+      parentId: workspace._id,
+      passphrase: passphrase || null,
+      disabled: false,
+      cert: crtPath || null,
+      key: keyPath || null,
+      pfx: pfxPath || null
     };
 
-    const certificates = [
-      ...workspace.certificates.filter(c => c.host !== certificate.host),
-      certificate
-    ];
-
-    await models.workspace.update(workspace, {certificates});
+    await models.clientCertificate.create(certificate);
     this._handleToggleCertificateForm();
     trackEvent('Certificates', 'Create');
   }
 
-  _handleDeleteCertificate (certificate) {
-    const {workspace} = this.props;
-    const certificates = workspace.certificates.filter(c => c.host !== certificate.host);
-    models.workspace.update(workspace, {certificates});
+  async _handleDeleteCertificate (certificate: ClientCertificate) {
+    await models.clientCertificate.remove(certificate);
     trackEvent('Certificates', 'Delete');
   }
 
-  _handleToggleCertificate (certificate) {
-    const {workspace} = this.props;
-    const certificates = workspace.certificates.map(
-      c => c === certificate ? Object.assign({}, c, {disabled: !c.disabled}) : c
-    );
-    models.workspace.update(workspace, {certificates});
+  async _handleToggleCertificate (certificate: ClientCertificate) {
+    await models.clientCertificate.update(certificate, {disabled: !certificate.disabled});
     trackEvent('Certificates', 'Toggle');
   }
 
   show () {
     const hasDescription = !!this.props.workspace.description;
     this.setState({
-      showAddCertificateForm: false,
-      crtPath: '',
-      keyPath: '',
-      pfxPath: '',
-      host: '',
-      passphrase: '',
       showDescription: hasDescription,
-      defaultPreviewMode: hasDescription
+      defaultPreviewMode: hasDescription,
+      showAddCertificateForm: false
     });
-    this.modal.show();
+
+    this.modal && this.modal.show();
   }
 
   hide () {
-    this.modal.hide();
+    this.modal && this.modal.hide();
   }
 
   renderModalHeader () {
@@ -163,8 +193,73 @@ class WorkspaceSettingsModal extends PureComponent {
     );
   }
 
+  renderCertificate (certificate: ClientCertificate) {
+    return (
+      <div key={certificate._id}>
+        <div className="row-spaced">
+          <div>
+            <span className="pad-right no-wrap">
+                          <strong>PFX:</strong>
+              {' '}
+              {certificate.pfx
+                ? <i className="fa fa-check"/>
+                : <i className="fa fa-remove"/>
+              }
+                        </span>
+            <span className="pad-right no-wrap">
+                          <strong>CRT:</strong>
+              {' '}
+              {certificate.cert
+                ? <i className="fa fa-check"/>
+                : <i className="fa fa-remove"/>
+              }
+                        </span>
+            <span className="pad-right no-wrap">
+                          <strong>Key:</strong>
+              {' '}
+              {certificate.key
+                ? <i className="fa fa-check"/>
+                : <i className="fa fa-remove"/>
+              }
+                        </span>
+            <span className="pad-right no-wrap" title={certificate.passphrase || null}>
+                          <strong>Passphrase:</strong>
+              {' '}
+              {certificate.passphrase
+                ? <i className="fa fa-check"/>
+                : <i className="fa fa-remove"/>
+              }
+                        </span>
+            <span className="pad-right">
+                          <strong>Host:</strong>
+              {' '}
+              <span className="monospace selectable">{certificate.host}</span>
+                      </span>
+          </div>
+          <div className="no-wrap">
+            <button className="btn btn--super-compact width-auto"
+                    title="Enable or disable certificate"
+                    onClick={() => this._handleToggleCertificate(certificate)}>
+              {certificate.disabled
+                ? <i className="fa fa-square-o"/>
+                : <i className="fa fa-check-square-o"/>
+              }
+            </button>
+            <PromptButton className="btn btn--super-compact width-auto"
+                          confirmMessage=" "
+                          addIcon
+                          onClick={() => this._handleDeleteCertificate(certificate)}>
+              <i className="fa fa-trash-o"/>
+            </PromptButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   renderModalBody () {
     const {
+      clientCertificates,
       workspace,
       editorLineWrapping,
       editorFontSize,
@@ -175,10 +270,14 @@ class WorkspaceSettingsModal extends PureComponent {
       nunjucksPowerUserMode
     } = this.props;
 
+    const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
+    const privateCertificates = clientCertificates.filter(c => c.isPrivate);
+
     const {
       pfxPath,
       crtPath,
       keyPath,
+      isPrivate,
       showAddCertificateForm,
       showDescription,
       defaultPreviewMode
@@ -246,84 +345,38 @@ class WorkspaceSettingsModal extends PureComponent {
           <TabPanel className="react-tabs__tab-panel pad scrollable">
             {!showAddCertificateForm ? (
               <div>
-                {workspace.certificates.length === 0 ? (
-                  <p className="notice info margin-top-sm">
+                {clientCertificates.length === 0 ? (
+                  <p className="notice surprise margin-top-sm">
                     You have not yet added any certificates
                   </p>
-                ) : workspace.certificates.map(certificate => (
-                  <div key={certificate.host}>
-                    <p className="notice info no-margin-top">
-                      Client certificates are an experimental feature
-                    </p>
-                    <div className="row-spaced">
-                      <div>
-                      <span className="pad-right no-wrap">
-                        <strong>PFX:</strong>
-                        {' '}
-                        {certificate.pfx
-                          ? <i className="fa fa-check"/>
-                          : <i className="fa fa-remove"/>
-                        }
-                      </span>
-                        <span className="pad-right no-wrap">
-                        <strong>CRT:</strong>
-                          {' '}
-                          {certificate.cert
-                            ? <i className="fa fa-check"/>
-                            : <i className="fa fa-remove"/>
-                          }
-                      </span>
-                        <span className="pad-right no-wrap">
-                        <strong>Key:</strong>
-                          {' '}
-                          {certificate.key
-                            ? <i className="fa fa-check"/>
-                            : <i className="fa fa-remove"/>
-                          }
-                      </span>
-                        <span className="pad-right no-wrap" title={certificate.passphrase || null}>
-                        <strong>Passphrase:</strong>
-                          {' '}
-                          {certificate.passphrase
-                            ? <i className="fa fa-check"/>
-                            : <i className="fa fa-remove"/>
-                          }
-                      </span>
-                        <span className="pad-right">
-                        <strong>Host:</strong>
-                          {' '}
-                          <span className="monospace selectable">{certificate.host}</span>
-                      </span>
-                      </div>
-                      <div className="no-wrap">
-                        <button className="btn btn--super-compact width-auto"
-                                title="Enable or disable certificate"
-                                onClick={() => this._handleToggleCertificate(certificate)}>
-                          {certificate.disabled
-                            ? <i className="fa fa-square-o"/>
-                            : <i className="fa fa-check-square-o"/>
-                          }
-                        </button>
-                        <PromptButton className="btn btn--super-compact width-auto"
-                                      confirmMessage=" "
-                                      addIcon
-                                      onClick={() => this._handleDeleteCertificate(certificate)}>
-                          <i className="fa fa-trash-o"/>
-                        </PromptButton>
-                      </div>
-                    </div>
+                ) : null}
+
+                {publicCertificates.length > 0
+                  ? publicCertificates.map(this.renderCertificate)
+                  : null
+                }
+
+                {privateCertificates.length > 0 ? (
+                  <div>
+                    <h2>
+                      Private Certificates
+                      <HelpTooltip position="right" className="space-left">
+                        Private certificates will not by synced.
+                      </HelpTooltip>
+                    </h2>
+                    {privateCertificates.map(this.renderCertificate)}
                   </div>
-                ))}
+                ) : null}
                 <hr className="hr--spaced"/>
                 <div className="text-center">
                   <button className="btn btn--clicky auto"
                           onClick={this._handleToggleCertificateForm}>
-                    Add Certificate
+                    Create Certificate
                   </button>
                 </div>
               </div>
             ) : (
-              <form onSubmit={this._handleSubmitCertificate}>
+              <form onSubmit={this._handleCreateCertificate}>
                 <div className="form-control form-control--outlined no-pad-top">
                   <label>Host
                     <HelpTooltip position="right" className="space-left">
@@ -387,16 +440,27 @@ class WorkspaceSettingsModal extends PureComponent {
                     />
                   </label>
                 </div>
+                <div className="form-control form-control--slim">
+                  <label>Private
+                    <HelpTooltip className="space-left">
+                      Private certificates will not be synced
+                    </HelpTooltip>
+                    <input
+                      type="checkbox"
+                      value={isPrivate}
+                      onChange={this._handleCreateIsPrivateChange}
+                    />
+                  </label>
+                </div>
                 <br/>
                 <div className="pad-top text-right">
                   <button type="button"
-                          className="btn btn--super-compact"
+                          className="btn btn--super-compact space-right"
                           onClick={this._handleToggleCertificateForm}>
                     Cancel
                   </button>
-                  {' '}
-                  <button className="btn btn--clicky" type="submit">
-                    Add Certificate
+                  <button className="btn btn--clicky space-right" type="submit">
+                    Create Certificate
                   </button>
                 </div>
               </form>
@@ -417,18 +481,5 @@ class WorkspaceSettingsModal extends PureComponent {
     );
   }
 }
-
-WorkspaceSettingsModal.propTypes = {
-  workspace: PropTypes.object.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  handleRemoveWorkspace: PropTypes.func.isRequired,
-  handleDuplicateWorkspace: PropTypes.func.isRequired
-};
 
 export default WorkspaceSettingsModal;

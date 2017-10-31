@@ -49,7 +49,8 @@ async function getAllDocs () {
     ...await models.request.all(),
     ...await models.requestMeta.all(),
     ...await models.response.all(),
-    ...await models.oAuth2Token.all()
+    ...await models.oAuth2Token.all(),
+    ...await models.clientCertificate.all()
   ];
 
   return allDocs;

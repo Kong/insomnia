@@ -12,6 +12,8 @@ type BaseEnvironment = {
   name: string,
   data: Object,
   color: string | null,
+
+  // For sync control
   isPrivate: boolean
 };
 

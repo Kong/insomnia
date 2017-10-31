@@ -5,6 +5,7 @@ import {Provider} from 'react-redux';
 import {DragDropContext} from 'react-dnd';
 import App from './containers/app';
 import * as models from '../models';
+import * as db from '../common/database';
 import {types as modelTypes} from '../models';
 import {init as initStore} from './redux/modules';
 import {init as initDB} from '../common/database';
@@ -53,4 +54,5 @@ import {isDevelopment} from '../common/constants';
 // Export some useful things for dev
 if (isDevelopment()) {
   window.models = models;
+  window.db = db;
 }
