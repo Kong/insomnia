@@ -61,15 +61,21 @@ class CookiesModal extends PureComponent<Props, State> {
     trackEvent('Cookie', 'Create');
   }
 
+  async _handleDeleteAllCookies () {
+    const {cookieJar} = this.props;
+    cookieJar.cookies = [];
+    await this._saveChanges();
+    trackEvent('Cookie', 'Delete All');
+  }
+
   async _handleCookieDelete (cookie: Cookie) {
     const {cookieJar} = this.props;
     const {cookies} = cookieJar;
 
     // NOTE: This is sketchy because it relies on the same reference
-    cookieJar.cookies = cookies.filter(c => c !== cookie);
+    cookieJar.cookies = cookies.filter(c => c.id !== cookie.id);
 
     await this._saveChanges();
-    trackEvent('Cookie', 'Delete');
   }
 
   async _handleFilterChange (e: Event) {
@@ -162,6 +168,8 @@ class CookiesModal extends PureComponent<Props, State> {
       filter
     } = this.state;
 
+    const cookies = this._getVisibleCookies();
+
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
@@ -181,11 +189,12 @@ class CookiesModal extends PureComponent<Props, State> {
               </div>
               <div className="cookie-list__list border-tops pad">
                 <CookieList
+                  cookies={cookies}
                   handleShowModifyCookieModal={handleShowModifyCookieModal}
                   handleRender={handleRender}
-                  cookies={this._getVisibleCookies()}
-                  onCookieAdd={this._handleCookieAdd}
-                  onCookieDelete={this._handleCookieDelete}
+                  handleDeleteAll={this._handleDeleteAllCookies}
+                  handleCookieAdd={this._handleCookieAdd}
+                  handleCookieDelete={this._handleCookieDelete}
                   // Set the domain to the filter so that it shows up if we're filtering
                   newCookieDomainName={filter || 'domain.com'}
                 />
