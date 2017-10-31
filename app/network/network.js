@@ -138,6 +138,7 @@ export function _actuallySend (
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Set maximum amount of redirects allowed
+      // NOTE: Setting this to -1 breaks some versions of libcurl
       if (settings.maxRedirects > 0) {
         setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
       }
