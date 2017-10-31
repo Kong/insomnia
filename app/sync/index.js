@@ -17,7 +17,8 @@ const WHITE_LIST = {
   [models.request.type]: true,
   [models.requestGroup.type]: true,
   [models.environment.type]: true,
-  [models.cookieJar.type]: true
+  [models.cookieJar.type]: true,
+  [models.clientCertificate.type]: true
 };
 
 export const logger = new Logger();

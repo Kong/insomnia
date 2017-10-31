@@ -132,11 +132,16 @@ export function _actuallySend (
 
       // Set all the basic options
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
+
+      // Set maximum amount of redirects allowed
+      // NOTE: Setting this to -1 breaks some versions of libcurl
+      if (settings.maxRedirects > 0) {
+        setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+      }
 
       // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
       // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
@@ -327,7 +332,8 @@ export function _actuallySend (
       }
 
       // Set client certs if needed
-      for (const certificate of workspace.certificates) {
+      const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
+      for (const certificate of clientCertificates) {
         if (certificate.disabled) {
           continue;
         }

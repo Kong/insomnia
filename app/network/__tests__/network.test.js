@@ -75,7 +75,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
@@ -129,7 +128,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
           'Expect: ',
@@ -208,7 +206,6 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
@@ -259,7 +256,6 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'POST',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
           'Expect: ',
@@ -316,7 +312,6 @@ describe('actuallySend()', () => {
       ACCEPT_ENCODING: '',
       COOKIEFILE: '',
       FOLLOWLOCATION: true,
-      MAXREDIRS: -1,
       CUSTOMREQUEST: 'POST',
       HTTPHEADER: [
         'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
@@ -369,7 +364,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -404,7 +398,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -438,7 +431,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -473,7 +465,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',

@@ -42,6 +42,7 @@ import * as importers from 'insomnia-importers';
 import type {CookieJar} from '../../models/cookie-jar';
 import type {Environment} from '../../models/environment';
 import ErrorBoundary from './error-boundary';
+import type {ClientCertificate} from '../../models/client-certificate';
 
 type Props = {
   // Helper Functions
@@ -102,6 +103,7 @@ type Props = {
   activeWorkspace: Workspace,
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
+  activeWorkspaceClientCertificates: Array<ClientCertificate>,
 
   // Optional
   oAuth2Token: ?OAuth2Token,
@@ -339,6 +341,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       activeCookieJar,
       activeRequestResponses,
       activeResponse,
+      activeWorkspaceClientCertificates,
       environments,
       handleActivateRequest,
       handleCreateRequest,
@@ -455,6 +458,7 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <WorkspaceSettingsModal
             ref={registerModal}
+            clientCertificates={activeWorkspaceClientCertificates}
             workspace={activeWorkspace}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
