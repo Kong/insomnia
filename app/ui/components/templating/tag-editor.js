@@ -117,7 +117,8 @@ class TagEditor extends React.PureComponent<Props, State> {
   _updateArg (
     argValue: string | number | boolean,
     argIndex: number,
-    forceNewType: string | null = null
+    forceNewType: string | null = null,
+    patch: Object = {}
   ) {
     const {tagDefinitions, activeTagData, activeTagDefinition} = this.state;
 
@@ -129,6 +130,11 @@ class TagEditor extends React.PureComponent<Props, State> {
     if (!activeTagDefinition) {
       console.warn('No active tag definition to update', {state: this.state});
       return;
+    }
+
+    // Fix strings
+    if (typeof argValue === 'string') {
+      argValue = argValue.replace(/\\/g, '\\\\');
     }
 
     // Ensure all arguments exist
@@ -155,7 +161,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     // Update type if we need to
     if (forceNewType) {
       // Ugh, what a hack (because it's enum)
-      (argData: any).type = forceNewType;
+      Object.assign((argData: any), {type: forceNewType}, patch);
     }
 
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
@@ -183,7 +189,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       const initialType = argDef ? argDef.type : 'string';
       const variable = variables.find(v => v.name === existingValue);
       const value = variable ? variable.value : '';
-      return this._updateArg(value, argIndex, initialType);
+      return this._updateArg(value, argIndex, initialType, {quotedBy: "'"});
     }
   }
 
