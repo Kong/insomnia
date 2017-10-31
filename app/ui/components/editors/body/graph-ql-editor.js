@@ -175,7 +175,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   _handleBodyChange (query: string, variables?: Object): void {
     const operationNames = this._getOperationNames();
-    const firstName = operationNames.length ? operationNames[0] : null;
 
     const body: GraphQLBody = {query};
 
@@ -183,8 +182,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       body.variables = variables;
     }
 
-    if (firstName) {
-      body.operationName = firstName;
+    if (operationNames.length) {
+      body.operationName = operationNames[0];
     }
 
     this.setState({variablesSyntaxError: '', body});
