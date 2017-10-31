@@ -155,7 +155,7 @@ const authTypesMap = {
   [AUTH_OAUTH_2]: ['OAuth 2', 'OAuth 2.0'],
   [AUTH_HAWK]: ['Hawk', 'Hawk'],
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
-  [AUTH_NETRC]: ['Netrc', 'Netrc']
+  [AUTH_NETRC]: ['Netrc', 'Netrc File']
 };
 
 export function getPreviewModeName (previewMode, useLong = false) {

@@ -12,6 +12,7 @@ import * as _requestVersion from './request-version';
 import * as _requestMeta from './request-meta';
 import * as _response from './response';
 import * as _oAuth2Token from './o-auth-2-token';
+import * as _clientCertificate from './client-certificate';
 import {generateId} from '../common/misc';
 
 export type BaseModel = {
@@ -36,6 +37,7 @@ export const requestVersion = _requestVersion;
 export const requestMeta = _requestMeta;
 export const response = _response;
 export const oAuth2Token = _oAuth2Token;
+export const clientCertificate = _clientCertificate;
 
 export function all () {
   return [
@@ -51,7 +53,8 @@ export function all () {
     requestVersion,
     requestMeta,
     response,
-    oAuth2Token
+    oAuth2Token,
+    clientCertificate
   ];
 }
 

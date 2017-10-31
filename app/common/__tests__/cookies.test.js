@@ -46,11 +46,11 @@ describe('cookiesFromJar()', () => {
 
     const cookies = await cookieUtils.cookiesFromJar(jar);
 
-    expect(cookies[0].domain).toEqual('insomnia.rest');
-    expect(cookies[0].key).toEqual('bar');
-    expect(cookies[0].value).toEqual('baz');
-    expect(cookies[0].creation instanceof Date).toEqual(true);
-    expect(cookies[0].expires).toEqual(d);
+    expect(cookies[0].domain).toBe('insomnia.rest');
+    expect(cookies[0].key).toBe('bar');
+    expect(cookies[0].value).toBe('baz');
+    expect(cookies[0].creation).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/);
+    expect(cookies[0].expires).toEqual(d.toISOString());
   });
 
   it('handles bad jar', async () => {
@@ -102,7 +102,7 @@ describe('cookieHeaderValueForUri()', () => {
 
   describe('cookieToString()', () => {
     beforeEach(globalBeforeEach);
-    it('does it\'s thing', async () => {
+    it('does its thing', async () => {
       const jar = cookieUtils.jarFromCookies([{
         key: 'foo',
         value: 'bar',

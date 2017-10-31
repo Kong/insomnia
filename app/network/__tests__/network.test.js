@@ -6,6 +6,7 @@ import * as models from '../../models';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
+import {DEFAULT_BOUNDARY} from '../multipart';
 
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);
@@ -74,7 +75,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
@@ -128,7 +128,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
           'Expect: ',
@@ -207,7 +206,6 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
@@ -230,6 +228,7 @@ describe('actuallySend()', () => {
     const workspace = await models.workspace.create();
     const settings = await models.settings.create();
     await models.cookieJar.create({parentId: workspace._id});
+    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
 
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
@@ -237,10 +236,7 @@ describe('actuallySend()', () => {
       headers: [{name: 'Content-Type', value: 'application/octet-stream'}],
       url: 'http://localhost',
       method: 'POST',
-      body: {
-        mimeType: CONTENT_TYPE_FILE,
-        fileName: pathResolve(pathJoin(__dirname, './testfile.txt')) // Let's send ourselves
-      }
+      body: {mimeType: CONTENT_TYPE_FILE, fileName}
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -252,10 +248,6 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
 
-    // READDATA is an fd (random int), so fuzzy assert this one
-    expect(typeof body.options.READDATA).toBe('number');
-    delete body.options.READDATA;
-
     expect(body).toEqual({
       meta: {},
       options: {
@@ -264,7 +256,6 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'POST',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
           'Expect: ',
@@ -273,6 +264,7 @@ describe('actuallySend()', () => {
         NOPROGRESS: false,
         INFILESIZE_LARGE: 26,
         PROXY: '',
+        READDATA: fs.readFileSync(fileName, 'utf8'),
         TIMEOUT_MS: 0,
         UPLOAD: 1,
         URL: 'http://localhost/',
@@ -314,34 +306,33 @@ describe('actuallySend()', () => {
       settings
     );
     const body = JSON.parse(bodyBuffer);
-    expect(body.meta.READFUNCTION_VALUE).toBe([
-      '--------------------------X-INSOMNIA-BOUNDARY',
-      'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
-      'Content-Type: text/plain',
-      '',
-      fs.readFileSync(fileName),
-      '--------------------------X-INSOMNIA-BOUNDARY',
-      'Content-Disposition: form-data; name="a"',
-      '',
-      'AA',
-      '--------------------------X-INSOMNIA-BOUNDARY--',
-      ''
-    ].join('\r\n'));
 
     expect(body.options).toEqual({
       POST: 1,
       ACCEPT_ENCODING: '',
       COOKIEFILE: '',
       FOLLOWLOCATION: true,
-      MAXREDIRS: -1,
       CUSTOMREQUEST: 'POST',
       HTTPHEADER: [
-        'Content-Type: multipart/form-data; boundary=------------------------X-INSOMNIA-BOUNDARY',
+        'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
         'Expect: ',
         'Transfer-Encoding: '
       ],
-      INFILESIZE_LARGE: 316,
+      INFILESIZE_LARGE: 244,
       NOPROGRESS: false,
+      READDATA: [
+        `--${DEFAULT_BOUNDARY}`,
+        'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
+        'Content-Type: text/plain',
+        '',
+        fs.readFileSync(fileName),
+        `--${DEFAULT_BOUNDARY}`,
+        'Content-Disposition: form-data; name="a"',
+        '',
+        'AA',
+        `--${DEFAULT_BOUNDARY}--`,
+        ''
+      ].join('\r\n'),
       PROXY: '',
       TIMEOUT_MS: 0,
       URL: 'http://localhost/',
@@ -373,7 +364,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -408,7 +398,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -442,7 +431,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',
@@ -477,7 +465,6 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        MAXREDIRS: -1,
         HTTPHEADER: ['content-type: '],
         NOPROGRESS: false,
         PROXY: '',

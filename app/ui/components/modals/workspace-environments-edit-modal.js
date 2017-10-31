@@ -41,6 +41,7 @@ type State = {
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   environmentEditorRef: EnvironmentEditor | null;
   colorChangeTimeout: any;
+  saveTimeout: any;
   modal: Modal;
 
   constructor (props: Props) {
@@ -189,13 +190,13 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   }
 
   _didChange () {
-    const isValid = this.environmentEditorRef ? this.environmentEditorRef.isValid() : false;
+    this._saveChanges();
 
+    // Call this last in case component unmounted
+    const isValid = this.environmentEditorRef ? this.environmentEditorRef.isValid() : false;
     if (this.state.isValid !== isValid) {
       this.setState({isValid});
     }
-
-    this._saveChanges();
   }
 
   _getActiveEnvironment (): Environment | null {
@@ -247,7 +248,10 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const activeEnvironment = this._getActiveEnvironment();
 
     if (activeEnvironment) {
-      models.environment.update(activeEnvironment, {data});
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = setTimeout(() => {
+        models.environment.update(activeEnvironment, {data});
+      }, DEBOUNCE_MILLIS * 4);
     }
   }
 

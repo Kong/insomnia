@@ -304,8 +304,17 @@ class TagEditor extends React.PureComponent<Props, State> {
 
   renderArgVariable (path: string) {
     const {variables} = this.state;
+
+    if (variables.length === 0) {
+      return (
+        <select disabled>
+          <option>-- No Environment Variables Found --</option>
+        </select>
+      );
+    }
+
     return (
-      <select type="text" defaultValue={path || ''} onChange={this._handleChange}>
+      <select value={path || ''} onChange={this._handleChange}>
         {variables.map((v, i) => (
           <option key={`${i}::${v.name}`} value={v.name}>
             {v.name}

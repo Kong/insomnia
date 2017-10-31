@@ -2,7 +2,6 @@
 import * as React from 'react';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import autobind from 'autobind-decorator';
-import deepEqual from 'deep-equal';
 import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
@@ -57,7 +56,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     cookie = cookie[0] || cookie;
 
     const {cookieJar} = this.props;
-    const oldCookie = cookieJar.cookies.find(c => deepEqual(c, cookie));
+    const oldCookie = cookieJar.cookies.find(c => c.id === cookie.id);
 
     if (!oldCookie) {
       // Cookie not found in jar

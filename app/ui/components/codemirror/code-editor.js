@@ -581,6 +581,11 @@ class CodeEditor extends React.Component {
    * @param forcePrettify
    */
   _codemirrorSetValue (code, forcePrettify = false) {
+    if (typeof code !== 'string') {
+      console.warn('Code editor was passed non-string value', code);
+      return;
+    }
+
     this._originalCode = code;
 
     // Don't ignore changes from prettify
