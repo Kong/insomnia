@@ -48,6 +48,9 @@ const BASE_CODEMIRROR_OPTIONS = {
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     },
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
+      // HACK: So nothing conflicts withe the "Send Request" shortcut
+    },
     'Ctrl-Space': 'autocomplete',
 
     // Change default find command from "find" to "findPersistent" so the
