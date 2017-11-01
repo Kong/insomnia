@@ -384,8 +384,9 @@ class TagEditor extends React.PureComponent<Props, State> {
       <select value={value} onChange={this._handleChange}>
         {options.map(option => {
           let label: string;
-          if (option.description) {
-            label = `${fnOrString(option.displayName, argDatas)} – ${option.description}`;
+          const {description} = option;
+          if (description) {
+            label = `${fnOrString(option.displayName, argDatas)} – ${description}`;
           } else {
             label = fnOrString(option.displayName, argDatas);
           }
