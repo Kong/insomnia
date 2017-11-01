@@ -13,6 +13,8 @@ import {showModal} from '../../components/modals';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
+import SelectModal from '../../components/modals/select-modal';
+import {showError} from '../../components/modals/index';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 
@@ -180,79 +182,108 @@ export function importUri (workspaceId, uri) {
 }
 
 export function exportFile (workspaceId = null) {
-  return async dispatch => {
+  return dispatch => {
     dispatch(loadStart());
 
-    const workspace = await models.workspace.getById(workspaceId);
+    const VALUE_JSON = 'json';
+    const VALUE_HAR = 'har';
 
-    // Check if we want to export private environments
-    let environments;
-    if (workspace) {
-      const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
-      environments = [
-        parentEnv,
-        ...await models.environment.findByParentId(parentEnv._id)
-      ];
-    } else {
-      environments = await models.environment.all();
-    }
-
-    let exportPrivateEnvironments = false;
-    const privateEnvironments = environments.filter(e => e.isPrivate);
-    if (privateEnvironments.length) {
-      const names = privateEnvironments.map(e => e.name).join(', ');
-      exportPrivateEnvironments = await showModal(AskModal, {
-        title: 'Export Private Environments?',
-        message: `Do you want to include private environments (${names}) in your export?`
-      });
-    }
-
-    const date = moment().format('YYYY-MM-DD');
-    const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
-    const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-    const dir = lastDir || electron.remote.app.getPath('desktop');
-
-    const options = {
-      title: 'Export Insomnia Data',
-      buttonLabel: 'Export',
-      defaultPath: path.join(dir, `${name}_${date}`),
-      filters: [{
-        name: 'Insomnia Export', extensions: ['json']
-      }, {
-        name: 'HTTP Archive 1.2', extensions: ['har']
-      }]
-    };
-
-    electron.remote.dialog.showSaveDialog(options, async filename => {
-      if (!filename) {
-        trackEvent('Export', 'Cancel');
-        // It was cancelled, so let's bail out
+    showModal(SelectModal, {
+      title: 'Select Export Type',
+      options: [
+        {name: 'Insomnia – Sharable with other Insomnia users', value: VALUE_JSON},
+        {name: 'HAR – HTTP Archive Format', value: VALUE_HAR}
+      ],
+      message: 'Which format would you like to export as?',
+      onCancel: () => {
         dispatch(loadStop());
-        return;
-      }
+      },
+      onDone: async selectedFormat => {
+        const workspace = await
+          models.workspace.getById(workspaceId);
 
-      let json;
-      if (path.extname(filename) === '.har') {
-        json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
-      } else {
-        json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
-      }
-
-      // Remember last exported path
-      window.localStorage.setItem(
-        'insomnia.lastExportPath',
-        path.dirname(filename)
-      );
-
-      fs.writeFile(filename, json, {}, err => {
-        if (err) {
-          console.warn('Export failed', err);
-          trackEvent('Export', 'Failure');
-          return;
+        // Check if we want to export private environments
+        let environments;
+        if (workspace) {
+          const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
+          environments = [
+            parentEnv,
+            ...await models.environment.findByParentId(parentEnv._id)
+          ];
+        } else {
+          environments = await models.environment.all();
         }
-        trackEvent('Export', 'Success');
-        dispatch(loadStop());
-      });
+
+        let exportPrivateEnvironments = false;
+        const privateEnvironments = environments.filter(e => e.isPrivate);
+        if (privateEnvironments.length) {
+          const names = privateEnvironments.map(e => e.name).join(', ');
+          exportPrivateEnvironments = await showModal(AskModal, {
+            title: 'Export Private Environments?',
+            message: `Do you want to include private environments (${names}) in your export?`
+          });
+        }
+
+        const date = moment().format('YYYY-MM-DD');
+        const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
+        const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
+        const dir = lastDir || electron.remote.app.getPath('desktop');
+
+        const options = {
+          title: 'Export Insomnia Data',
+          buttonLabel: 'Export',
+          defaultPath: path.join(dir, `${name}_${date}`),
+          filters: []
+        };
+
+        if (selectedFormat === VALUE_HAR) {
+          options.filters = [{name: 'HTTP Archive 1.2', extensions: ['har', 'har.json', 'json']}];
+        } else {
+          options.filters = [{name: 'Insomnia Export', extensions: ['json']}];
+        }
+
+        electron.remote.dialog.showSaveDialog(options, async filename => {
+          if (!filename) {
+            trackEvent('Export', 'Cancel');
+            // It was cancelled, so let's bail out
+            dispatch(loadStop());
+            return;
+          }
+
+          let json;
+          try {
+            if (selectedFormat === VALUE_HAR) {
+              json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
+            } else {
+              json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
+            }
+          } catch (err) {
+            showError({
+              title: 'Export Failed',
+              error: err,
+              message: 'Export failed due to an unexpected error'
+            });
+            dispatch(loadStop());
+            return;
+          }
+
+          // Remember last exported path
+          window.localStorage.setItem(
+            'insomnia.lastExportPath',
+            path.dirname(filename)
+          );
+
+          fs.writeFile(filename, json, {}, err => {
+            if (err) {
+              console.warn('Export failed', err);
+              trackEvent('Export', 'Failure');
+              return;
+            }
+            trackEvent('Export', 'Success');
+            dispatch(loadStop());
+          });
+        });
+      }
     });
   };
 }

@@ -46,7 +46,7 @@ class ErrorModal extends PureComponent {
     const {error, message, title, addCancel} = this.state;
 
     return (
-      <Modal ref={this._setModalRef} closeOnKeyCodes={[13]}>
+      <Modal ref={this._setModalRef}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
           {message ? (

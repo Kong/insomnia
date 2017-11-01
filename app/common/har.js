@@ -13,6 +13,7 @@ import type {Response as ResponseModel} from '../models/response';
 import {getAuthHeader} from '../network/authentication';
 import {getAppVersion} from './constants';
 import {getSetCookieHeaders} from './misc';
+import {RenderError} from '../templating/index';
 
 export type HarCookie = {
   name: string,
@@ -264,8 +265,16 @@ export async function exportHarRequest (requestId: string, environmentId: string
 }
 
 export async function exportHarWithRequest (request: Request, environmentId: string, addContentLength: boolean = false): Promise<HarRequest | null> {
-  const renderedRequest = await getRenderedRequest(request, environmentId);
-  return await exportHarWithRenderedRequest(renderedRequest, addContentLength);
+  try {
+    const renderedRequest = await getRenderedRequest(request, environmentId);
+    return exportHarWithRenderedRequest(renderedRequest, addContentLength);
+  } catch (err) {
+    if (err instanceof RenderError) {
+      throw new Error(`Failed to render "${request.name}:${err.path}"\n ${err.message}`);
+    } else {
+      throw new Error(`Failed to export request "${request.name}"\n ${err.message}`);
+    }
+  }
 }
 
 export async function exportHarWithRenderedRequest (renderedRequest: RenderedRequest, addContentLength: boolean = false): Promise<HarRequest> {
@@ -328,8 +337,7 @@ function getReponseCookies (response: ResponseModel): Array<HarCookie> {
     }
 
     return mapCookie(cookie);
-  })
-  .filter(Boolean);
+  }).filter(Boolean);
 }
 
 function mapCookie (cookie: Cookie): HarCookie {
