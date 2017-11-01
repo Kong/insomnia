@@ -153,12 +153,26 @@ describe('tokenizeTag()', () => {
 
 describe('unTokenizeTag()', () => {
   beforeEach(globalBeforeEach);
-  it('untokenizes a tag', () => {
+  it('handles the default case', () => {
     const tagStr = `{% name bar, "baz \\"qux\\""   , 1 + 5, 'hi' %}`;
 
     const tagData = utils.tokenizeTag(tagStr);
     const result = utils.unTokenizeTag(tagData);
 
     expect(result).toEqual(`{% name bar, "baz \\"qux\\"", 1 + 5, 'hi' %}`);
+  });
+
+  it('fixes missing quotedBy attribute', () => {
+    const tagData = {
+      name: 'name',
+      args: [
+        {type: 'file', value: 'foo/bar/baz'},
+        {type: 'model', value: 'foo'}
+      ]
+    };
+
+    const result = utils.unTokenizeTag(tagData);
+
+    expect(result).toEqual(`{% name 'foo/bar/baz', 'foo' %}`);
   });
 });
