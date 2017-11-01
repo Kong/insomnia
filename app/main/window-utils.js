@@ -282,7 +282,7 @@ export function createWindow () {
     position: 'before=help',
     submenu: [{
       label: 'Reload',
-      accelerator: 'CmdOrCtrl+Shift+R',
+      accelerator: 'Shift+F5',
       click: () => mainWindow.reload()
     }, {
       label: 'Toggle DevTools',
@@ -308,12 +308,29 @@ export function createWindow () {
     }]
   };
 
+  const toolsMenu = {
+    label: 'Tools',
+    submenu: [{
+      label: 'Reload Plugins',
+      accelerator: 'CmdOrCtrl+Shift+R',
+      click: () => {
+        const window = BrowserWindow.getFocusedWindow();
+        if (!window || !window.webContents) {
+          return;
+        }
+
+        window.webContents.send('reload-plugins');
+      }
+    }]
+  };
+
   let template = [];
 
   template.push(applicationMenu);
   template.push(editMenu);
   template.push(viewMenu);
   template.push(windowMenu);
+  template.push(toolsMenu);
   template.push(helpMenu);
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {

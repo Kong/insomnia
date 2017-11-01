@@ -371,7 +371,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                 <div className="text-center">
                   <button className="btn btn--clicky auto"
                           onClick={this._handleToggleCertificateForm}>
-                    Create Certificate
+                    New Certificate
                   </button>
                 </div>
               </div>

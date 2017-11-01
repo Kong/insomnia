@@ -27,20 +27,24 @@ describe('init()', () => {
   it('initializes correctly', async () => {
     const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
     expect(Object.keys(result)).toEqual(['request']);
-    expect(Object.keys(result.request)).toEqual([
-      'getId',
-      'getName',
-      'getUrl',
-      'getMethod',
+    expect(Object.keys(result.request).sort()).toEqual([
+      'addHeader',
+      'getEnvironment',
+      'getEnvironmentVariable',
       'getHeader',
       'getHeaders',
+      'getId',
+      'getMethod',
+      'getName',
+      'getUrl',
       'hasHeader',
       'removeHeader',
-      'setHeader',
-      'addHeader',
       'setCookie',
-      'getEnvironmentVariable',
-      'getEnvironment'
+      'setHeader',
+      'settingDisableRenderRequestBody',
+      'settingEncodeUrl',
+      'settingSendCookies',
+      'settingStoreCookies'
     ]);
   });
 
