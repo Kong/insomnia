@@ -9,7 +9,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import {exportHar} from '../../../common/har';
+import {exportHarRequest} from '../../../common/har';
 import {trackEvent} from '../../../analytics/index';
 import Link from '../base/link';
 
@@ -89,7 +89,7 @@ class GenerateCodeModal extends PureComponent {
     const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
 
     const {environmentId} = this.props;
-    const har = await exportHar(request._id, environmentId, addContentLength);
+    const har = await exportHarRequest(request._id, environmentId, addContentLength);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert(target.key, client.key);
 

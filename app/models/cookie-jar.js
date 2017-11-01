@@ -8,13 +8,20 @@ export const canDuplicate = true;
 
 export type Cookie = {
   id: string,
-  domain: string,
-  path: string,
   key: string,
   value: string,
-  expires: number | null,
+  expires: Date | string | number | null,
+  domain: string,
+  path: string,
+  secure: boolean,
   httpOnly: boolean,
-  secure: boolean
+
+  extensions?: Array<any>,
+  creation?: Date,
+  creationIndex?: number,
+  hostOnly?: boolean,
+  pathIsDefault?: boolean,
+  lastAccessed?: Date
 }
 
 type BaseCookieJar = {

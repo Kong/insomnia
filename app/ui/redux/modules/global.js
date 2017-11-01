@@ -207,8 +207,6 @@ export function exportFile (workspaceId = null) {
       });
     }
 
-    const json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
-
     const date = moment().format('YYYY-MM-DD');
     const name = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
     const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
@@ -220,15 +218,24 @@ export function exportFile (workspaceId = null) {
       defaultPath: path.join(dir, `${name}_${date}`),
       filters: [{
         name: 'Insomnia Export', extensions: ['json']
+      }, {
+        name: 'HTTP Archive 1.2', extensions: ['har']
       }]
     };
 
-    electron.remote.dialog.showSaveDialog(options, filename => {
+    electron.remote.dialog.showSaveDialog(options, async filename => {
       if (!filename) {
         trackEvent('Export', 'Cancel');
         // It was cancelled, so let's bail out
         dispatch(loadStop());
         return;
+      }
+
+      let json;
+      if (path.extname(filename) === '.har') {
+        json = await importUtils.exportHAR(workspace, exportPrivateEnvironments);
+      } else {
+        json = await importUtils.exportJSON(workspace, exportPrivateEnvironments);
       }
 
       // Remember last exported path

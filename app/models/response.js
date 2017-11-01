@@ -89,13 +89,15 @@ export function remove (response: Response) {
   return db.remove(response);
 }
 
-export function findRecentForRequest (requestId: string, limit: number) {
-  return db.findMostRecentlyModified(type, {parentId: requestId}, limit);
+export async function findRecentForRequest (requestId: string, limit: number): Promise<Array<Response>> {
+  const responses = await db.findMostRecentlyModified(type, {parentId: requestId}, limit);
+  return responses;
 }
 
-export async function getLatestForRequest (requestId: string) {
+export async function getLatestForRequest (requestId: string): Promise<Response | null> {
   const responses = await findRecentForRequest(requestId, 1);
-  return responses[0] || null;
+  const response = (responses[0]: ?Response);
+  return response || null;
 }
 
 export async function create (patch: Object = {}, bodyBuffer: Buffer | null = null) {
