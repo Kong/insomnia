@@ -39,6 +39,8 @@ import * as hotkeys from '../../common/hotkeys';
 import {executeHotKey} from '../../common/hotkeys';
 import KeydownBinder from '../components/keydown-binder';
 import ErrorBoundary from '../components/error-boundary';
+import * as plugins from '../../plugins';
+import * as templating from '../../templating/index';
 
 @autobind
 class App extends PureComponent {
@@ -683,6 +685,12 @@ class App extends PureComponent {
 
     ipcRenderer.on('toggle-preferences', () => {
       showModal(SettingsModal);
+    });
+
+    ipcRenderer.on('reload-plugins', async () => {
+      await plugins.getPlugins(true);
+      templating.reload();
+      console.log('[plugins] reloaded');
     });
 
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
