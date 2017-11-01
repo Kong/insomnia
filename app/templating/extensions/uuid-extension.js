@@ -1,6 +1,8 @@
+// @flow
 import uuid from 'uuid';
+import type {PluginTemplateTag} from './index';
 
-export default {
+export default ({
   displayName: 'UUID',
   name: 'uuid',
   description: 'generate v1 or v4 UUIDs',
@@ -30,4 +32,4 @@ export default {
         throw new Error(`Invalid UUID type "${uuidType}"`);
     }
   }
-};
+}: PluginTemplateTag);

@@ -7,6 +7,7 @@ import nowExtension from './now-extension';
 import fileExtension from './file-extension';
 import responseExtension from './response-extension';
 import base64Extension from './base-64-extension';
+import hashExtension from './hash-extension';
 import requestExtension from './request-extension';
 import type {NunjucksParsedTagArg} from '../utils';
 import type {Request} from '../../models/request';
@@ -24,8 +25,8 @@ type PluginArgumentBase = {
 
 export type PluginArgumentEnumOption = {
   displayName: DisplayName,
-  description: string,
   value: PluginArgumentValue,
+  description?: string,
   placeholder?: string
 }
 
@@ -96,10 +97,11 @@ export type PluginTemplateTag = {
 
 const DEFAULT_EXTENSIONS: Array<PluginTemplateTag> = [
   timestampExtension,
+  fileExtension,
   nowExtension,
   uuidExtension,
   base64Extension,
-  fileExtension,
+  hashExtension,
   requestExtension,
   responseExtension
 ];
