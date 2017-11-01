@@ -183,7 +183,8 @@ class CodeEditor extends React.Component {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         {line: -1, ch: -1},
-        {line: -1, ch: -1}
+        {line: -1, ch: -1},
+        {scroll: false}
       );
     }
   }
