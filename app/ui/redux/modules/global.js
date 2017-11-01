@@ -76,22 +76,24 @@ export const reducer = combineReducers({
 
 export function newCommand (command, args) {
   return async dispatch => {
-    // TODO: Make this use reducer when Modals ported to Redux
-    if (command === COMMAND_ALERT) {
-      const {message, title} = args;
-      showModal(AlertModal, {title, message});
-    } else if (command === COMMAND_LOGIN) {
-      const {title, message} = args;
-      showModal(LoginModal, {title, message});
-    } else if (command === COMMAND_TRIAL_END) {
-      showModal(PaymentNotificationModal);
-    } else if (command === COMMAND_IMPORT_URI) {
-      await showModal(AlertModal, {
-        title: 'Confirm Data Import',
-        message: <span>Do you really want to import <code>{args.uri}</code>?</span>,
-        addCancel: true
-      });
-      dispatch(importUri(args.workspaceId, args.uri));
+    switch (command) {
+      case COMMAND_ALERT:
+        showModal(AlertModal, {title: args.title, message: args.message});
+        break;
+      case COMMAND_LOGIN:
+        showModal(LoginModal, {title: args.title, message: args.message});
+        break;
+      case COMMAND_TRIAL_END:
+        showModal(PaymentNotificationModal);
+        break;
+      case COMMAND_IMPORT_URI:
+        await showModal(AlertModal, {
+          title: 'Confirm Data Import',
+          message: <span>Do you really want to import <code>{args.uri}</code>?</span>,
+          addCancel: true
+        });
+        dispatch(importUri(args.workspaceId, args.uri));
+        break;
     }
   };
 }
