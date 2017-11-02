@@ -237,6 +237,7 @@ export function _actuallySend (
         setOpt(Curl.option.URL, finalUrl);
       }
       timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
+      timeline.push({name: 'TEXT', value: `Using ${Curl.getVersion()}`});
 
       // log some things
       if (renderedRequest.settingEncodeUrl) {
