@@ -1,5 +1,5 @@
 declare class Curl {
-  getVersion: () => string,
+  static getVersion: () => string,
   static option: {
     ACCEPT_ENCODING: number,
     CAINFO: number,
