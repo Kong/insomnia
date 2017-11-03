@@ -44,7 +44,7 @@ Development on Insomnia can be done on Mac, Windows, or Linux as long as you hav
 <summary>Initial Dev Setup</summary>
 
 ```bash
-# Install dependencies and build addons for Electron
+# Install dependencies and build add-ons for Electron
 npm install
 npm run rebuild
 
@@ -68,6 +68,10 @@ the following tools:
 - [Flow](https://flow.org/) – For type annotations
 
 </details>
+
+## Community Projects
+
+[Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
 ## License
 
