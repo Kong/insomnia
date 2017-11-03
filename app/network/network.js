@@ -135,7 +135,6 @@ export function _actuallySend (
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
-      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -457,6 +456,14 @@ export function _actuallySend (
       if (requestBody !== null) {
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
+
+      // Don't use keep-alive because it makes for an inconsistent debugging experience
+      headers.push({name: 'Connection', value: 'close'});
+
+      // Setup encoding settings
+      headers.push({name: 'Accept', value: ''}); // Don't auto-send this header
+      headers.push({name: 'Accept-Encoding', value: ''}); // Don't auto-send this header
+      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Build the body
       const dataBuffers = [];
