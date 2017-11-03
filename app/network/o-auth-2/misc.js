@@ -53,8 +53,11 @@ export function authorizeUserInWindow (url, urlRegex = /.*/) {
     child.webContents.on('did-navigate', () => {
       const url = child.webContents.getURL();
       if (url.match(urlRegex)) {
+        console.log(`[oauth2] Matched redirect to "${url}" with ${urlRegex.toString()}`);
         finalUrl = url;
         child.close();
+      } else {
+        console.log(`[oauth2] Ignoring redirect to "${url}" with match ${urlRegex.toString()}`);
       }
     });
 
