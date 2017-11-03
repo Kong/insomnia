@@ -71,7 +71,7 @@ the following tools:
 
 ## Community Projects
 
-[Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation with Insomnia exports.
+[Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
 ## License
 
