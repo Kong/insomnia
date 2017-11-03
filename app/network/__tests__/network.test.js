@@ -79,7 +79,6 @@ describe('actuallySend()', () => {
           'Content-Type: application/json',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: '
         ],
@@ -135,7 +134,6 @@ describe('actuallySend()', () => {
           'Content-Type: application/x-www-form-urlencoded',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: '
         ],
@@ -216,7 +214,6 @@ describe('actuallySend()', () => {
           'Content-Type: application/json',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: '
         ],
@@ -269,7 +266,6 @@ describe('actuallySend()', () => {
           'Content-Type: application/octet-stream',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: '
         ],
@@ -329,7 +325,6 @@ describe('actuallySend()', () => {
         'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
         'Expect: ',
         'Transfer-Encoding: ',
-        'Connection: close',
         'Accept: ',
         'Accept-Encoding: '
       ],
@@ -380,7 +375,6 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: ',
           'content-type: '
@@ -419,7 +413,6 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: ',
           'content-type: '
@@ -457,7 +450,6 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: ',
           'content-type: '
@@ -496,7 +488,6 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Connection: close',
           'Accept: ',
           'Accept-Encoding: ',
           'content-type: '
@@ -552,7 +543,6 @@ describe('_getAwsAuthHeaders', () => {
         secretAccessKey: 'SAK9999999999999'
       },
       headers: [
-        'Connection: close',
         'Accept: ',
         'Accept-Encoding: '
       ],

@@ -457,9 +457,6 @@ export function _actuallySend (
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
-      // Don't use keep-alive because it makes for an inconsistent debugging experience
-      headers.push({name: 'Connection', value: 'close'});
-
       // Setup encoding settings
       headers.push({name: 'Accept', value: ''}); // Don't auto-send this header
       headers.push({name: 'Accept-Encoding', value: ''}); // Don't auto-send this header
