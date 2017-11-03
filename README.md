@@ -69,6 +69,10 @@ the following tools:
 
 </details>
 
+## Community Projects
+
+[Swaggymnia](https://github.com/mlabouardy/swaggymnia) by [@mlabouardy](https://github.com/mlabouardy)
+
 ## License
 
 [GNU AGPLv3](LICENSE) &copy; [Insomnia](https://insomnia.rest)
