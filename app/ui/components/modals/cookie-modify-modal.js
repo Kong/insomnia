@@ -78,25 +78,39 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     await models.cookieJar.update(cookieJar);
   }
 
-  _handleChangeRawValue (e: Event) {
-    if (!(e.target instanceof HTMLInputElement)) {
-      return;
-    }
-
-    const value = e.target.value;
+  _handleChangeRawValue (e: SyntheticEvent<HTMLInputElement>) {
+    const value = e.currentTarget.value;
 
     clearTimeout(this._rawTimeout);
     this._rawTimeout = setTimeout(async () => {
-      const cookie = toughCookie.Cookie.parse(value);
-      if (!this.state.cookie) {
+      const oldCookie = this.state.cookie;
+      let cookie;
+      try {
+        // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+        cookie = toughCookie.Cookie.parse(value).toJSON();
+      } catch (err) {
+        console.warn(`Failed to parse cookie string "${value}"`, err);
         return;
       }
+
+      if (!this.state.cookie || !oldCookie) {
+        return;
+      }
+
+      // Make sure cookie has an id
+      cookie.id = oldCookie.id;
 
       await this._handleCookieUpdate(cookie);
     }, DEBOUNCE_MILLIS * 2);
   }
 
   async _handleCookieUpdate (newCookie: Cookie) {
+    const oldCookie = this.state.cookie;
+    if (!oldCookie) {
+      // We don't have a cookie to edit
+      return;
+    }
+
     const cookie = clone(newCookie);
 
     // Sanitize expires field
@@ -111,8 +125,12 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     const cookieJar = clone(this.props.cookieJar);
 
     const {cookies} = cookieJar;
-
     const index = cookies.findIndex(c => c.id === cookie.id);
+
+    if (index < 0) {
+      console.warn(`Could not find cookie with id=${cookie.id} to edit`);
+      return;
+    }
 
     cookieJar.cookies = [
       ...cookies.slice(0, index),
