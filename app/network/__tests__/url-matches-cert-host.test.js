@@ -115,6 +115,18 @@ describe('urlMatchesCertHost', () => {
       const certificateHost = '*.example.org';
       expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
     });
+
+    it('should return true if certificate host has wildcard port', () => {
+      const requestUrl = 'http://localhost:3000/some/resources?query=1';
+      const certificateHost = 'localhost:*';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
+
+    it('should return true if certificate host has wildcard in middle of port', () => {
+      const requestUrl = 'http://localhost:3000/some/resources?query=1';
+      const certificateHost = 'localhost:3*';
+      expect(urlMatchesCertHost(certificateHost, requestUrl)).toBe(true);
+    });
   });
 
   describe('when an invalid certificate host is supplied', () => {
