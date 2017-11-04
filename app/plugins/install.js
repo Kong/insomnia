@@ -7,6 +7,8 @@ import path from 'path';
 import * as tar from 'tar';
 import * as crypto from 'crypto';
 
+const YARN_PATH = path.resolve(__dirname, '../bin/yarn-standalone.js');
+
 export default async function (moduleName: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     let info: Object = {};
@@ -27,7 +29,9 @@ export default async function (moduleName: string): Promise<void> {
     request.on('response', response => {
       const bodyBuffers = [];
 
+      console.log(`[plugins] Downloading plugin tarball from ${info.dist.tarball}`);
       response.on('end', () => {
+        console.log(`[plugins] Extracting plugin to ${pluginDir}`);
         const w = tar.extract({
           cwd: pluginDir, // Extract to plugin's directory
           strict: true, // Fail on anything
@@ -38,14 +42,28 @@ export default async function (moduleName: string): Promise<void> {
           reject(new Error(`Failed to extract ${info.dist.tarball}: ${err.message}`));
         });
 
+        console.log(`[plugins] Running Yarn install in "${pluginDir}"`);
         w.on('end', () => {
-          childProcess.exec('npm install', {cwd: pluginDir}, (err, stdout, stderr) => {
-            if (err) {
-              reject(new Error(stderr));
-            } else {
-              resolve();
+          childProcess.execFile(
+            process.execPath,
+            [YARN_PATH, 'install'],
+            {
+              timeout: 5 * 60 * 1000,
+              maxBuffer: 1024 * 1024,
+              cwd: pluginDir,
+              env: {
+                'NODE_ENV': 'production',
+                'ELECTRON_RUN_AS_NODE': 'true'
+              }
+            },
+            (err, stdout, stderr) => {
+              if (err) {
+                reject(new Error(stderr));
+              } else {
+                resolve();
+              }
             }
-          });
+          );
         });
 
         const body = Buffer.concat(bodyBuffers);
@@ -70,27 +88,51 @@ export default async function (moduleName: string): Promise<void> {
 
 async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
   return new Promise((resolve, reject) => {
-    childProcess.exec(
-      `npm show ${moduleName} --json`, (err, stdout, stderr) => {
-        if (err && stderr.includes('E404')) {
-          reject(new Error(`${moduleName} not found on npm`));
+    console.log(`[plugins] Fetching module info from npm`);
+    childProcess.execFile(
+      process.execPath,
+      [YARN_PATH, 'info', moduleName, '--json'],
+      {
+        timeout: 5 * 60 * 1000,
+        maxBuffer: 1024 * 1024,
+        env: {
+          'NODE_ENV': 'production',
+          'ELECTRON_RUN_AS_NODE': 'true'
+        }
+      }, (err, stdout, stderr) => {
+        if (err) {
+          reject(new Error(`${moduleName} install error: ${err.message}`));
           return;
         }
 
-        const info = JSON.parse(stdout);
+        if (stderr) {
+          reject(new Error(`Yarn error ${stderr.toString('utf8')}`));
+          return;
+        }
 
-        if (!info.hasOwnProperty('insomnia')) {
+        let yarnOutput;
+        try {
+          yarnOutput = JSON.parse(stdout.toString('utf8'));
+        } catch (err) {
+          reject(new Error(`Yarn response not JSON: ${err.message}`));
+          return;
+        }
+
+        const data = yarnOutput.data;
+        if (!data.hasOwnProperty('insomnia')) {
           reject(new Error(`"${moduleName}" not a plugin! Package missing "insomnia" attribute`));
           return;
         }
 
+        console.log(`[plugins] Detected Insomnia plugin ${data.name}`);
+
         resolve({
-          insomnia: info.insomnia,
-          name: info.name,
-          version: info.version,
+          insomnia: data.insomnia,
+          name: data.name,
+          version: data.version,
           dist: {
-            shasum: info.dist.shasum,
-            tarball: info.dist.tarball
+            shasum: data.dist.shasum,
+            tarball: data.dist.tarball
           }
         });
       }
