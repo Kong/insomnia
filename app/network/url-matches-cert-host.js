@@ -13,10 +13,24 @@ export function urlMatchesCertHost (certificateHost, requestUrl) {
   const assumedCPort = parseInt(cPort) || DEFAULT_PORT;
 
   const cHostnameRegex = escapeRegex(cHostname || '').replace(/\\\*/g, '.*');
+  const cPortRegex = escapeRegex(cPort || '').replace(/\\\*/g, '.*');
 
-  if (assumedCPort !== assumedPort) {
+  // Check ports
+  if ((cPort + '').includes('*')) {
+    if (!(port || '').match(`^${cPortRegex}$`)) {
+      return false;
+    }
+  } else {
+    if (assumedCPort !== assumedPort) {
+      return false;
+    }
+  }
+
+  // Check hostnames
+  if (!(hostname || '').match(`^${cHostnameRegex}$`)) {
     return false;
   }
 
-  return !!(hostname || '').match(`^${cHostnameRegex}$`);
+  // Everything matches
+  return true;
 }
