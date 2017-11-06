@@ -6,11 +6,11 @@ import DigestAuth from './digest-auth';
 import BearerAuth from './bearer-auth';
 import NTLMAuth from './ntlm-auth';
 import OAuth2Auth from './o-auth-2-auth';
+import OAuth1Auth from './o-auth-1-auth';
 import HawkAuth from './hawk-auth';
 import AWSAuth from './aws-auth';
 import NetrcAuth from './netrc-auth';
 import autobind from 'autobind-decorator';
-import Link from '../../base/link';
 
 @autobind
 class AuthWrapper extends PureComponent {
@@ -65,17 +65,13 @@ class AuthWrapper extends PureComponent {
       );
     } else if (authentication.type === AUTH_OAUTH_1) {
       return (
-        <div className="vertically-center text-center">
-          <div className="pad text-sm text-center">
-            <i className="fa fa-commenting super-faint" style={{fontSize: '8rem', opacity: 0.3}}/>
-            <p className="faint pad-top">
-              Want OAuth 1.0? Please upvote
-              the <Link href="https://github.com/getinsomnia/insomnia/issues/197">
-              Issue on GitHub
-            </Link>
-            </p>
-          </div>
-        </div>
+        <OAuth1Auth
+          request={request}
+          handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          onChange={onChange}
+        />
       );
     } else if (authentication.type === AUTH_DIGEST) {
       return (

@@ -1,10 +1,11 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
 import {GRANT_TYPE_AUTHORIZATION_CODE} from '../network/o-auth-2/constants';
+import {SIGNATURE_METHOD_HMAC_SHA1} from '../network/o-auth-1/constants';
 
 export const name = 'Request';
 export const type = 'Request';
@@ -97,6 +98,14 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         disabled: oldAuth.disabled || false,
         username: oldAuth.username || '',
         password: oldAuth.password || ''
+      };
+
+    case AUTH_OAUTH_1:
+      return {
+        type,
+        disabled: false,
+        signatureMethod: SIGNATURE_METHOD_HMAC_SHA1,
+        version: '1.0'
       };
 
     // OAuth 2.0
