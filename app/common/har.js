@@ -255,7 +255,11 @@ export async function exportHarResponse (response: ResponseModel | null): Promis
   };
 }
 
-export async function exportHarRequest (requestId: string, environmentId: string, addContentLength: boolean = false): Promise<HarRequest | null> {
+export async function exportHarRequest (
+  requestId: string,
+  environmentId: string,
+  addContentLength: boolean = false
+): Promise<HarRequest | null> {
   const request = await models.request.getById(requestId);
   if (!request) {
     return null;
@@ -264,7 +268,11 @@ export async function exportHarRequest (requestId: string, environmentId: string
   return await exportHarWithRequest(request, environmentId, addContentLength);
 }
 
-export async function exportHarWithRequest (request: Request, environmentId: string, addContentLength: boolean = false): Promise<HarRequest | null> {
+export async function exportHarWithRequest (
+  request: Request,
+  environmentId: string,
+  addContentLength: boolean = false
+): Promise<HarRequest | null> {
   try {
     const renderedRequest = await getRenderedRequest(request, environmentId);
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
@@ -277,14 +285,17 @@ export async function exportHarWithRequest (request: Request, environmentId: str
   }
 }
 
-export async function exportHarWithRenderedRequest (renderedRequest: RenderedRequest, addContentLength: boolean = false): Promise<HarRequest> {
+export async function exportHarWithRenderedRequest (
+  renderedRequest: RenderedRequest,
+  addContentLength: boolean = false
+): Promise<HarRequest> {
   const url = misc.prepareUrlForSending(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (addContentLength) {
     const hasContentLengthHeader = misc.filterHeaders(
-        renderedRequest.headers,
-        'Content-Length'
-      ).length > 0;
+      renderedRequest.headers,
+      'Content-Length'
+    ).length > 0;
 
     if (!hasContentLengthHeader) {
       const name = 'Content-Length';
@@ -302,7 +313,10 @@ export async function exportHarWithRenderedRequest (renderedRequest: RenderedReq
       renderedRequest.authentication
     );
     if (header) {
-      renderedRequest.headers.push(header);
+      renderedRequest.headers.push({
+        name: header.name,
+        value: header.value
+      });
     }
   }
 

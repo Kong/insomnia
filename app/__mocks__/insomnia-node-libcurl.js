@@ -8,6 +8,10 @@ class Curl extends EventEmitter {
     this._meta = {};
   }
 
+  static getVersion () {
+    return 'libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0';
+  }
+
   setOpt (name, value) {
     if (!name) {
       throw new Error(`Invalid option ${name} ${value}`);

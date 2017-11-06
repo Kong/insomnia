@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia",
-  "version": "5.9.6",
+  "version": "5.10.1",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "Debug APIs like a human, not a robot",
@@ -29,6 +29,7 @@
     "moment": "^2.18.1",
     "nedb": "^1.8.0",
     "node-forge": "^0.7.0",
+    "oauth-1.0a": "^2.2.2",
     "srp-js": "^0.2.0",
     "tar": "^3.1.7",
     "tough-cookie": "^2.3.1",

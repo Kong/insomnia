@@ -5,8 +5,6 @@ import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
 import type {RenderedRequest} from '../common/render';
 import {getRenderContext, getRenderedRequest} from '../common/render';
-
-import electron from 'electron';
 import mkdirp from 'mkdirp';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
@@ -15,7 +13,7 @@ import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
-import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
 import {describeByteSize, getContentTypeHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -135,7 +133,6 @@ export function _actuallySend (
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
-      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -237,6 +234,7 @@ export function _actuallySend (
         setOpt(Curl.option.URL, finalUrl);
       }
       timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
+      timeline.push({name: 'TEXT', value: `Using ${Curl.getVersion()}`});
 
       // log some things
       if (renderedRequest.settingEncodeUrl) {
@@ -257,7 +255,7 @@ export function _actuallySend (
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
       if (process.platform !== 'darwin') {
-        const basCAPath = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
+        const basCAPath = getTempDir();
         const fullCAPath = pathJoin(basCAPath, CACerts.filename);
 
         try {
@@ -348,7 +346,7 @@ export function _actuallySend (
               // Certificate file now found!
               // LEGACY: Certs used to be stored in blobs (not as paths), so lets write it to
               // the temp directory first.
-              const fullBase = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
+              const fullBase = getTempDir();
               mkdirp.sync(fullBase);
 
               const name = `${renderedRequest._id}_${renderedRequest.modified}`;
@@ -457,6 +455,11 @@ export function _actuallySend (
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
+      // Setup encoding settings
+      headers.push({name: 'Accept', value: ''}); // Don't auto-send this header
+      headers.push({name: 'Accept-Encoding', value: ''}); // Don't auto-send this header
+      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
+
       // Build the body
       const dataBuffers = [];
       let dataBuffersLength = 0;
@@ -509,7 +512,10 @@ export function _actuallySend (
           );
 
           if (authHeader) {
-            headers.push(authHeader);
+            headers.push({
+              name: authHeader.name,
+              value: authHeader.value
+            });
           }
         }
       }

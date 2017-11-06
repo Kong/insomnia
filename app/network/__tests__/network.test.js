@@ -78,7 +78,9 @@ describe('actuallySend()', () => {
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: ',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -131,7 +133,9 @@ describe('actuallySend()', () => {
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: ',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
         POSTFIELDS: 'foo=bar&bar=&=value',
@@ -209,7 +213,9 @@ describe('actuallySend()', () => {
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: ',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -259,7 +265,9 @@ describe('actuallySend()', () => {
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: ',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
         INFILESIZE_LARGE: 26,
@@ -316,7 +324,9 @@ describe('actuallySend()', () => {
       HTTPHEADER: [
         'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
         'Expect: ',
-        'Transfer-Encoding: '
+        'Transfer-Encoding: ',
+        'Accept: ',
+        'Accept-Encoding: '
       ],
       INFILESIZE_LARGE: 244,
       NOPROGRESS: false,
@@ -364,7 +374,11 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: ',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -398,7 +412,11 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: ',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -431,7 +449,11 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: ',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -465,7 +487,11 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: ',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -516,7 +542,10 @@ describe('_getAwsAuthHeaders', () => {
         accessKeyId: 'AKIA99999999',
         secretAccessKey: 'SAK9999999999999'
       },
-      headers: [],
+      headers: [
+        'Accept: ',
+        'Accept-Encoding: '
+      ],
       url: 'https://example.com',
       method: 'GET'
     };

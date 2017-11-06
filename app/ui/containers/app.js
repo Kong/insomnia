@@ -36,9 +36,11 @@ import {getKeys} from '../../templating/utils';
 import {showAlert, showPrompt} from '../components/modals/index';
 import {exportHarRequest} from '../../common/har';
 import * as hotkeys from '../../common/hotkeys';
-import KeydownBinder from '../components/keydown-binder';
 import {executeHotKey} from '../../common/hotkeys';
+import KeydownBinder from '../components/keydown-binder';
 import ErrorBoundary from '../components/error-boundary';
+import * as plugins from '../../plugins';
+import * as templating from '../../templating/index';
 
 @autobind
 class App extends PureComponent {
@@ -685,6 +687,12 @@ class App extends PureComponent {
       showModal(SettingsModal);
     });
 
+    ipcRenderer.on('reload-plugins', async () => {
+      await plugins.getPlugins(true);
+      templating.reload();
+      console.log('[plugins] reloaded');
+    });
+
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
     });
@@ -698,6 +706,36 @@ class App extends PureComponent {
 
       this.props.handleCommand(command, args);
     });
+
+    // NOTE: This is required for "drop" event to trigger.
+    document.addEventListener('dragover', e => {
+      e.preventDefault();
+    }, false);
+
+    document.addEventListener('drop', async e => {
+      e.preventDefault();
+      const {activeWorkspace, handleImportUriToWorkspace} = this.props;
+      if (!activeWorkspace) {
+        return;
+      }
+
+      if (e.dataTransfer.files.length === 0) {
+        console.log('Ignored drop event because no files present');
+        return;
+      }
+
+      const file = e.dataTransfer.files[0];
+      const {path} = file;
+      const uri = `file://${path}`;
+
+      await showAlert({
+        title: 'Confirm Data Import',
+        message: <span>Import <code>{path}</code>?</span>,
+        addCancel: true
+      });
+
+      handleImportUriToWorkspace(activeWorkspace._id, uri);
+    }, false);
 
     ipcRenderer.on('toggle-changelog', () => {
       showModal(ChangelogModal);

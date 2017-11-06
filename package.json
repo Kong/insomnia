@@ -25,7 +25,7 @@
     "build:clean": "rm -rf ./build/* && rm -rf ./dist/* && mkdirp ./build",
     "build:renderer": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.production.babel.js",
     "build:main": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.electron.babel.js",
-    "build:copy": "cp -r ./app/package.json ./app/static ./app/icons/* ./build/",
+    "build:copy": "cp -r ./app/package.json ./bin ./app/static ./app/icons/* ./build/",
     "build:install": "cd build && npm install",
     "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
     "rebuild": "electron-rebuild -f -w node-libcurl",
@@ -69,6 +69,13 @@
   },
   "build": {
     "appId": "com.insomnia.app",
+    "extraResources": [
+      {
+        "from": "./bin",
+        "to": "./bin",
+        "filter": "yarn-standalone.js"
+      }
+    ],
     "category": "public.app-category.developer-tools",
     "protocols": [
       {
@@ -144,6 +151,7 @@
     "nedb": "^1.8.0",
     "node-forge": "^0.7.0",
     "nunjucks": "^3.0.0",
+    "oauth-1.0a": "^2.2.2",
     "pdfjs-dist": "^1.9.640",
     "prop-types": "^15.5.10",
     "react": "^16.0.0",
@@ -197,7 +205,7 @@
     "eslint-plugin-react": "^7.4.0",
     "eslint-plugin-standard": "^2.1.1",
     "file-loader": "^0.10.1",
-    "flow-bin": "^0.56.0",
+    "flow-bin": "^0.58.0",
     "jest": "^19.0.2",
     "less": "^2.7.2",
     "less-loader": "^2.2.3",

@@ -1,10 +1,23 @@
-import {AUTH_BASIC, AUTH_BEARER, AUTH_OAUTH_2, AUTH_HAWK, AUTH_ASAP} from '../common/constants';
+// @flow
+import {AUTH_ASAP, AUTH_BASIC, AUTH_BEARER, AUTH_HAWK, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../common/constants';
 import {getBasicAuthHeader, getBearerAuthHeader} from '../common/misc';
 import getOAuth2Token from './o-auth-2/get-token';
+import getOAuth1Token from './o-auth-1/get-token';
 import * as Hawk from 'hawk';
 import jwtAuthentication from 'jwt-authentication';
+import type {RequestAuthentication} from '../models/request';
 
-export async function getAuthHeader (requestId, url, method, authentication) {
+type Header = {
+  name: string,
+  value: string
+};
+
+export async function getAuthHeader (
+  requestId: string,
+  url: string,
+  method: string,
+  authentication: RequestAuthentication
+): Promise<Header | null> {
   if (authentication.disabled) {
     return null;
   }
@@ -24,6 +37,18 @@ export async function getAuthHeader (requestId, url, method, authentication) {
     if (oAuth2Token) {
       const token = oAuth2Token.accessToken;
       return _buildBearerHeader(token, authentication.tokenPrefix);
+    } else {
+      return null;
+    }
+  }
+
+  if (authentication.type === AUTH_OAUTH_1) {
+    const oAuth1Token = await getOAuth1Token(url, method, authentication);
+    if (oAuth1Token) {
+      return {
+        name: 'Authorization',
+        value: oAuth1Token.Authorization
+      };
     } else {
       return null;
     }

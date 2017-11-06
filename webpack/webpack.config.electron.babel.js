@@ -32,8 +32,7 @@ module.exports = {
   ],
   output: output,
   node: {
-    __dirname: false,
-    __filename: false
+    __dirname: false // Use node.js __dirname
   },
   target: 'electron-main',
   plugins: plugins

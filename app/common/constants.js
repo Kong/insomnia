@@ -24,6 +24,11 @@ export function getAppEnvironment () {
   return process.env.INSOMNIA_ENV || 'production';
 }
 
+export function getTempDir () {
+  // NOTE: Using a fairly unique name here because "insomnia" is a common word
+  return path.join(electron.remote.app.getPath('temp'), `insomnia_${getAppVersion()}`);
+}
+
 export function isMac () {
   return getAppPlatform() === 'darwin';
 }

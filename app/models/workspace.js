@@ -74,13 +74,14 @@ async function _ensureDependencies (workspace: Workspace) {
   await models.environment.getOrCreateForWorkspaceId(workspace._id);
 }
 
-async function _migrateExtractClientCertificates (workspace: Workspace) {
-  if (!Array.isArray(workspace.certificates)) {
+async function _migrateExtractClientCertificates (workspace: Workspace): Promise<Workspace> {
+  const certificates = (workspace: Object).certificates || null;
+  if (!Array.isArray(certificates)) {
     // Already migrated
     return workspace;
   }
 
-  for (const cert of workspace.certificates) {
+  for (const cert of certificates) {
     await models.clientCertificate.create({
       parentId: workspace._id,
       host: cert.host,
@@ -92,7 +93,7 @@ async function _migrateExtractClientCertificates (workspace: Workspace) {
     });
   }
 
-  delete workspace.certificates;
+  delete (workspace: Object).certificates;
 
   // This will remove the now-missing `certificates` property
   await update(workspace, {});

@@ -1,11 +1,4 @@
-declare class Nunjucks<T> {
-  extensions: {[string]: T},
-  addExtension: (name: string, ext: T) => void,
-  addFilter: (name: string, ext: Function) => void,
-  renderString: (text: string, context: Object, callback: Function) => void
-}
-
-declare type Config = {
+type NunjucksConfig = {
   autoescape: boolean,
   throwOnUndefined: boolean,
   tags: {
@@ -18,8 +11,15 @@ declare type Config = {
   }
 };
 
+declare class Nunjucks<T> {
+  extensions: {[string]: T},
+  addExtension: (name: string, ext: T) => void,
+  addFilter: (name: string, ext: Function) => void,
+  renderString: (text: string, context: Object, callback: Function) => void
+}
+
 declare module 'nunjucks' {
   declare module.exports: {
-    configure: <T>(config: Config) => Nunjucks<T>
+    configure: <T>(config: NunjucksConfig) => Nunjucks<T>
   }
 }
