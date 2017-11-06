@@ -106,7 +106,14 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         type,
         disabled: false,
         signatureMethod: SIGNATURE_METHOD_HMAC_SHA1,
-        version: '1.0'
+        consumerKey: '',
+        consumerSecret: '',
+        tokenKey: '',
+        tokenSecret: '',
+        version: '1.0',
+        nonce: '',
+        timestamp: '',
+        callback: ''
       };
 
     // OAuth 2.0

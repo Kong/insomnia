@@ -6,7 +6,7 @@ import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
-import { SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_PLAINTEXT } from '../../../../network/o-auth-1/constants';
+import {SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_PLAINTEXT} from '../../../../network/o-auth-1/constants';
 
 type Props = {
   handleRender: Function,
@@ -46,6 +46,22 @@ class OAuth1Auth extends React.PureComponent<Props> {
 
   _handleChangeTokenSecret (value: string): void {
     this._handleChangeProperty('tokenSecret', value);
+  }
+
+  _handleChangeRealm (value: string): void {
+    this._handleChangeProperty('realm', value);
+  }
+
+  _handleChangeCallback (value: string): void {
+    this._handleChangeProperty('callback', value);
+  }
+
+  _handleChangeNonce (value: string): void {
+    this._handleChangeProperty('nonce', value);
+  }
+
+  _handleChangeTimestamp (value: string): void {
+    this._handleChangeProperty('timestamp', value);
   }
 
   _handleChangeSignatureMethod (e: SyntheticEvent<HTMLInputElement>): void {
@@ -151,6 +167,33 @@ class OAuth1Auth extends React.PureComponent<Props> {
       this._handleChangeTokenSecret
     );
 
+    const callback = this.renderInputRow(
+      'Callback URL',
+      'callback',
+      this._handleChangeCallback
+    );
+
+    const realm = this.renderInputRow(
+      'Realm',
+      'realm',
+      this._handleChangeRealm,
+      'Leave blank for default'
+    );
+
+    const nonce = this.renderInputRow(
+      'Nonce',
+      'nonce',
+      this._handleChangeNonce,
+      'Leave blank for default'
+    );
+
+    const timestamp = this.renderInputRow(
+      'Timestamp',
+      'timestamp',
+      this._handleChangeTimestamp,
+      'Leave blank for default'
+    );
+
     const signatureMethod = this.renderSelectRow(
       'Signature Method',
       'signatureMethod',
@@ -173,7 +216,11 @@ class OAuth1Auth extends React.PureComponent<Props> {
       tokenKey,
       tokenSecret,
       signatureMethod,
-      version
+      callback,
+      version,
+      timestamp,
+      realm,
+      nonce
     ];
   }
 

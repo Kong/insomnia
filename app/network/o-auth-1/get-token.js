@@ -30,7 +30,6 @@ export default async function (
   method: string,
   authentication: RequestAuthentication
 ): {[string]: string} {
-  console.log('OAUTHING', url, method, authentication);
   const oauth = new OAuth1({
     consumer: {
       key: authentication.consumerKey,
@@ -38,13 +37,29 @@ export default async function (
     },
     signature_method: authentication.signatureMethod,
     version: authentication.version,
-    hash_function: hashFunction(authentication.signatureMethod)
+    hash_function: hashFunction(authentication.signatureMethod),
+    realm: authentication.realm || null
   });
 
   const requestData = {
     url: url,
-    method: method
+    method: method,
+    data: {
+      // These are conditionally filled in below
+    }
   };
+
+  if (authentication.callback) {
+    requestData.data.oauth_callback = authentication.callback;
+  }
+
+  if (authentication.nonce) {
+    requestData.data.oauth_nonce = authentication.nonce;
+  }
+
+  if (authentication.timestamp) {
+    requestData.data.oauth_timestamp = authentication.timestamp;
+  }
 
   let token = null;
   if (authentication.tokenKey && authentication.tokenSecret) {
