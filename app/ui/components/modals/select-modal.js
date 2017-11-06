@@ -18,7 +18,7 @@ type State = {
 @autobind
 class SelectModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
-  doneButton: ?HTMLSelectElement;
+  doneButton: ?HTMLButtonElement;
   _doneCallback: ?Function;
 
   constructor (props: Props) {
@@ -36,7 +36,7 @@ class SelectModal extends React.PureComponent<Props, State> {
     this.modal = m;
   }
 
-  _setDoneButtonRef (n: ?HTMLSelectElement) {
+  _setDoneButtonRef (n: ?HTMLButtonElement) {
     this.doneButton = n;
   }
 

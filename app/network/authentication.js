@@ -1,10 +1,22 @@
-import {AUTH_BASIC, AUTH_BEARER, AUTH_OAUTH_2, AUTH_OAUTH_1, AUTH_HAWK} from '../common/constants';
+// @flow
+import {AUTH_BASIC, AUTH_BEARER, AUTH_HAWK, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../common/constants';
 import {getBasicAuthHeader, getBearerAuthHeader} from '../common/misc';
 import getOAuth2Token from './o-auth-2/get-token';
 import getOAuth1Token from './o-auth-1/get-token';
 import * as Hawk from 'hawk';
+import type {RequestAuthentication} from '../models/request';
 
-export async function getAuthHeader (requestId, url, method, authentication) {
+type Header = {
+  name: string,
+  value: string
+};
+
+export async function getAuthHeader (
+  requestId: string,
+  url: string,
+  method: string,
+  authentication: RequestAuthentication
+): Promise<Header | null> {
   if (authentication.disabled) {
     return null;
   }

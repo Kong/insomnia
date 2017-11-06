@@ -13,6 +13,7 @@ export const prefix = 'req';
 export const canDuplicate = true;
 
 export type RequestAuthentication = Object;
+
 export type RequestHeader = {
   name: string,
   value: string,

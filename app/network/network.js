@@ -512,7 +512,10 @@ export function _actuallySend (
           );
 
           if (authHeader) {
-            headers.push(authHeader);
+            headers.push({
+              name: authHeader.name,
+              value: authHeader.value
+            });
           }
         }
       }

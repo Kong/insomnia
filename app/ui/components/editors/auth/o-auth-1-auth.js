@@ -40,6 +40,14 @@ class OAuth1Auth extends React.PureComponent<Props> {
     this._handleChangeProperty('consumerSecret', value);
   }
 
+  _handleChangeTokenKey (value: string): void {
+    this._handleChangeProperty('tokenKey', value);
+  }
+
+  _handleChangeTokenSecret (value: string): void {
+    this._handleChangeProperty('tokenSecret', value);
+  }
+
   _handleChangeSignatureMethod (e: SyntheticEvent<HTMLInputElement>): void {
     this._handleChangeProperty('signatureMethod', e.currentTarget.value);
   }
@@ -131,6 +139,18 @@ class OAuth1Auth extends React.PureComponent<Props> {
       this._handleChangeConsumerSecret
     );
 
+    const tokenKey = this.renderInputRow(
+      'Token',
+      'tokenKey',
+      this._handleChangeTokenKey
+    );
+
+    const tokenSecret = this.renderInputRow(
+      'Token Secret',
+      'tokenSecret',
+      this._handleChangeTokenSecret
+    );
+
     const signatureMethod = this.renderSelectRow(
       'Signature Method',
       'signatureMethod',
@@ -150,6 +170,8 @@ class OAuth1Auth extends React.PureComponent<Props> {
     return [
       consumerKey,
       consumerSecret,
+      tokenKey,
+      tokenSecret,
       signatureMethod,
       version
     ];
