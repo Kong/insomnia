@@ -69,8 +69,10 @@ class TagEditor extends React.PureComponent<Props, State> {
       activeTagData.rawValue = this.props.defaultValue;
     }
 
-    await this._refreshModels(this.props.workspace);
-    await this._update(tagDefinitions, activeTagDefinition, activeTagData, true);
+    await Promise.all([
+      this._refreshModels(this.props.workspace),
+      this._update(tagDefinitions, activeTagDefinition, activeTagData, true)
+    ]);
   }
 
   async loadVariables () {
@@ -102,12 +104,14 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   async _refreshModels (workspace: Workspace) {
+    this.setState({loadingDocs: true});
+
     const allDocs = {};
     for (const type of models.types()) {
       allDocs[type] = [];
     }
 
-    for (const doc of await db.withDescendants(workspace)) {
+    for (const doc of await db.withDescendants(workspace, models.request.type)) {
       allDocs[doc.type].push(doc);
     }
 
@@ -406,8 +410,16 @@ class TagEditor extends React.PureComponent<Props, State> {
     const docs = allDocs[modelType] || [];
     const id = value || 'n/a';
 
+    if (loadingDocs) {
+      return (
+        <select disabled={loadingDocs}>
+          <option>Loading...</option>
+        </select>
+      );
+    }
+
     return (
-      <select value={id} disabled={loadingDocs} onChange={this._handleChange}>
+      <select value={id} onChange={this._handleChange}>
         <option value="n/a">-- Select Item --</option>
         {docs.map(doc => {
           let namePrefix = null;
