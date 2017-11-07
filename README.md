@@ -72,8 +72,8 @@ the following tools:
 ## Community Projects
 
 - [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
-- [JWT Decode Plugin](https://www.npmjs.com/package/insomnia-plugin-jwtdecode)
-- [XDebug Plugin](https://www.npmjs.com/package/insomna-plugin-xdebug)
+- [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Plugin to decode header or payload of JWT tokens
+- [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Plugin to enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request.
 
 ## License
 
