@@ -69,11 +69,20 @@ the following tools:
 
 </details>
 
+## Plugins
+
+Here is a list of plugins available for installation via NPM.
+
+- [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Decode header or payload of JWT tokens
+- [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request.
+- [Default Headers](https://www.npmjs.com/package/insomna-plugin-default-headers) – Set default headers on requests
+- [Random Number](https://www.npmjs.com/package/insomnia-plugin-randomnumber) – Generate a random integer between a minumum and maximum
+- [Random Credit Card](https://www.npmjs.com/package/insomnia-plugin-randomcreditcard) – Generate random credit card numbers
+
 ## Community Projects
 
-- [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
-- [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Plugin to decode header or payload of JWT tokens
-- [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Plugin to enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request.
+[Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
+
 
 ## License
 
