@@ -279,7 +279,13 @@ class OneLineEditor extends PureComponent {
   }
 
   _mayContainNunjucks (text) {
-    return !!(text && text.match(NUNJUCKS_REGEX));
+    // Not sure, but sometimes this isn't a string
+    if (typeof text !== 'string') {
+      return false;
+    }
+
+    // Does the string contain Nunjucks tags?
+    return !!text.match(NUNJUCKS_REGEX);
   }
 
   render () {
