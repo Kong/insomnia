@@ -1,6 +1,6 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_HAWK, AUTH_NETRC} from '../../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_HAWK, AUTH_NETRC, AUTH_ASAP} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
 import BearerAuth from './bearer-auth';
@@ -10,6 +10,7 @@ import OAuth1Auth from './o-auth-1-auth';
 import HawkAuth from './hawk-auth';
 import AWSAuth from './aws-auth';
 import NetrcAuth from './netrc-auth';
+import AsapAuth from './asap-auth';
 import autobind from 'autobind-decorator';
 
 @autobind
@@ -123,6 +124,16 @@ class AuthWrapper extends PureComponent {
     } else if (authentication.type === AUTH_NETRC) {
       return (
         <NetrcAuth />
+      );
+    } else if (authentication.type === AUTH_ASAP) {
+      return (
+        <AsapAuth
+          request={request}
+          handleRender={handleRender}
+          handleGetRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          onChange={onChange}
+        />
       );
     } else {
       return (

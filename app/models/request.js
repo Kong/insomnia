@@ -1,6 +1,6 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, AUTH_ASAP, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -136,6 +136,10 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
     // hawk
     case AUTH_HAWK:
       return {type, algorithm: HAWK_ALGORITHM_SHA256};
+
+    // Atlassian ASAP
+    case AUTH_ASAP:
+      return {type, issuer: '', subject: '', audience: '', keyId: '', privateKey: ''};
 
     // Types needing no defaults
     default:

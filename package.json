@@ -143,6 +143,7 @@
     "insomnia-node-libcurl": "^1.2.3",
     "jsonlint": "^1.6.2",
     "jsonpath": "^0.2.12",
+    "jwt-authentication": "^0.3.3",
     "marked": "^0.3.6",
     "mime-types": "^2.1.14",
     "mkdirp": "^0.5.1",
