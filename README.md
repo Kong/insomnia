@@ -71,7 +71,9 @@ the following tools:
 
 ## Community Projects
 
-[Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
+- [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
+- [JWT Decode Plugin](https://www.npmjs.com/package/insomnia-plugin-jwtdecode)
+- [XDebug Plugin](https://www.npmjs.com/package/insomna-plugin-xdebug)
 
 ## License
 
