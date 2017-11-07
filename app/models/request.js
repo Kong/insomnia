@@ -118,7 +118,10 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
 
     // OAuth 2.0
     case AUTH_OAUTH_2:
-      return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
+      return {
+        type,
+        grantType: GRANT_TYPE_AUTHORIZATION_CODE
+      };
 
     // Aws IAM
     case AUTH_AWS_IAM:
@@ -129,19 +132,26 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         secretAccessKey: oldAuth.secretAccessKey || ''
       };
 
-    // netrc
-    case AUTH_NETRC:
-      return {type};
-
-    // hawk
+    // Hawk
     case AUTH_HAWK:
-      return {type, algorithm: HAWK_ALGORITHM_SHA256};
+      return {
+        type,
+        algorithm: HAWK_ALGORITHM_SHA256
+      };
 
     // Atlassian ASAP
     case AUTH_ASAP:
-      return {type, issuer: '', subject: '', audience: '', keyId: '', privateKey: ''};
+      return {
+        type,
+        issuer: '',
+        subject: '',
+        audience: '',
+        keyId: '',
+        privateKey: ''
+      };
 
     // Types needing no defaults
+    case AUTH_NETRC:
     default:
       return {type};
   }

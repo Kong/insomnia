@@ -63,15 +63,15 @@ class AuthDropdown extends PureComponent {
           {children}
         </DropdownButton>
         {this.renderAuthType(AUTH_BASIC)}
+        {this.renderAuthType(AUTH_DIGEST)}
         {this.renderAuthType(AUTH_OAUTH_1)}
         {this.renderAuthType(AUTH_OAUTH_2)}
-        {this.renderAuthType(AUTH_DIGEST)}
-        {this.renderAuthType(AUTH_BEARER)}
         {this.renderAuthType(AUTH_NTLM)}
         {this.renderAuthType(AUTH_AWS_IAM)}
-        {this.renderAuthType(AUTH_NETRC)}
+        {this.renderAuthType(AUTH_BEARER)}
         {this.renderAuthType(AUTH_HAWK)}
         {this.renderAuthType(AUTH_ASAP)}
+        {this.renderAuthType(AUTH_NETRC)}
         <DropdownDivider>Other</DropdownDivider>
         {this.renderAuthType(AUTH_NONE, 'No Authentication')}
       </Dropdown>

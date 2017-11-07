@@ -71,12 +71,15 @@ export async function getAuthHeader (
 
   if (authentication.type === AUTH_ASAP) {
     const {issuer, subject, audience, keyId, privateKey} = authentication;
+
     const generator = jwtAuthentication.client.create();
+
     const claims = {
       iss: issuer,
       sub: subject,
       aud: audience
     };
+
     const options = {
       privateKey,
       kid: keyId
