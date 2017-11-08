@@ -112,7 +112,7 @@ class Plugins extends React.PureComponent<void, State> {
         <p className="notice info no-margin-top">
           Plugins is still an experimental feature. See
           {' '}
-          <Link href="https://insomnia.rest/documentation/plugins/">
+          <Link href="https://support.insomnia.rest/article/26-plugins">
             Documentation
           </Link> for more info.
         </p>

@@ -398,7 +398,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         <ModalFooter>
           <div className="margin-left italic txt-sm tall">
             * Environment data can be used for&nbsp;
-            <Link href="https://insomnia.rest/documentation/templating/">
+            <Link href="https://support.insomnia.rest/article/40-template-tags">
               Nunjucks Templating
             </Link> in your requests
           </div>
