@@ -937,9 +937,18 @@ function mapDispatchToProps (dispatch) {
 }
 
 async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
+  // Nothing to do. We are in the same spot as we started
   if (docToMove._id === targetId) {
-    // Nothing to do. We are in the same spot as we started
     return;
+  }
+
+  // Don't allow dragging things into itself or children. This will disconnect
+  // the node from the tree and cause the item to no longer show in the UI.
+  const descendents = await db.withDescendants(docToMove);
+  for (const doc of descendents) {
+    if (doc._id === parentId) {
+      return;
+    }
   }
 
   function __updateDoc (doc, patch) {
