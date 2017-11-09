@@ -99,7 +99,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     if (request) {
       try {
-        // TODO: Use Insomnia's network stack to handle things like authentication
         const bodyJson = JSON.stringify({query: introspectionQuery});
         const introspectionRequest = Object.assign({}, request, {
           body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
