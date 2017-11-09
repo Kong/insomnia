@@ -79,7 +79,7 @@ describe('actuallySend()', () => {
           'Content-Type: application/json',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: '
         ],
         NOPROGRESS: false,
@@ -134,7 +134,7 @@ describe('actuallySend()', () => {
           'Content-Type: application/x-www-form-urlencoded',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: '
         ],
         NOPROGRESS: false,
@@ -214,7 +214,7 @@ describe('actuallySend()', () => {
           'Content-Type: application/json',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: '
         ],
         NOPROGRESS: false,
@@ -266,7 +266,7 @@ describe('actuallySend()', () => {
           'Content-Type: application/octet-stream',
           'Expect: ',
           'Transfer-Encoding: ',
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: '
         ],
         NOPROGRESS: false,
@@ -325,7 +325,7 @@ describe('actuallySend()', () => {
         'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
         'Expect: ',
         'Transfer-Encoding: ',
-        'Accept: ',
+        'Accept: */*',
         'Accept-Encoding: '
       ],
       INFILESIZE_LARGE: 244,
@@ -375,7 +375,7 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: ',
           'content-type: '
         ],
@@ -413,7 +413,7 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: ',
           'content-type: '
         ],
@@ -450,7 +450,7 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: ',
           'content-type: '
         ],
@@ -488,7 +488,7 @@ describe('actuallySend()', () => {
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
         HTTPHEADER: [
-          'Accept: ',
+          'Accept: */*',
           'Accept-Encoding: ',
           'content-type: '
         ],
@@ -543,7 +543,7 @@ describe('_getAwsAuthHeaders', () => {
         secretAccessKey: 'SAK9999999999999'
       },
       headers: [
-        'Accept: ',
+        'Accept: */*',
         'Accept-Encoding: '
       ],
       url: 'https://example.com',

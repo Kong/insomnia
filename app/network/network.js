@@ -456,7 +456,7 @@ export function _actuallySend (
       }
 
       // Setup encoding settings
-      headers.push({name: 'Accept', value: ''}); // Don't auto-send this header
+      headers.push({name: 'Accept', value: '*/*'}); // Default to anything
       headers.push({name: 'Accept-Encoding', value: ''}); // Don't auto-send this header
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
