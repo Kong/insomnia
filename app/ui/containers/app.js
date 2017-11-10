@@ -41,6 +41,7 @@ import KeydownBinder from '../components/keydown-binder';
 import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
+import AskModal from '../components/modals/ask-modal';
 
 @autobind
 class App extends PureComponent {
@@ -95,6 +96,19 @@ class App extends PureComponent {
         const {activeRequest, activeWorkspace} = this.props;
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
         this._requestCreate(parentId);
+      }],
+      [hotkeys.DELETE_REQUEST, () => {
+        const {activeRequest} = this.props;
+        showModal(AskModal, {
+          title: 'Delete Request?',
+          message: `Really delete ${activeRequest.name}?`,
+          onDone: confirmed => {
+            if (!confirmed) {
+              return;
+            }
+            models.request.remove(activeRequest);
+          }
+        });
       }],
       [hotkeys.CREATE_FOLDER, () => {
         const {activeRequest, activeWorkspace} = this.props;

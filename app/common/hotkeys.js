@@ -59,6 +59,14 @@ export const SHOW_QUICK_SWITCHER: Hotkey = {
   keycode: keycodes.p
 };
 
+export const RELOAD_PLUGINS: Hotkey = {
+  description: 'Reload Plugins',
+  meta: true,
+  alt: false,
+  shift: true,
+  keycode: keycodes.r
+};
+
 export const SHOW_AUTOCOMPLETE: Hotkey = {
   description: 'Show Autocomplete',
   meta: true,
@@ -163,6 +171,14 @@ export const CREATE_REQUEST: Hotkey = {
   keycode: keycodes.n
 };
 
+export const DELETE_REQUEST: Hotkey = {
+  description: 'Delete Request',
+  meta: true,
+  alt: false,
+  shift: true,
+  keycode: keycodes.delete
+};
+
 export const CREATE_FOLDER: Hotkey = {
   description: 'Create Folder',
   meta: true,
@@ -248,6 +264,8 @@ export function getChar (hotkey: Hotkey) {
       console.error('Invalid hotkey', hotkey);
     } else if (v.toUpperCase() === 'ENTER') {
       chars.push('Enter');
+    } else if (v.toUpperCase() === 'DELETE') {
+      chars.push('Delete');
     } else if (v.toUpperCase() === 'COMMA') {
       chars.push(',');
     } else if (v.toUpperCase() === 'BACKSLASH') {
