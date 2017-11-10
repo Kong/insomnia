@@ -39,7 +39,7 @@ type State = {
 
 @autobind
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
-  environmentEditorRef: EnvironmentEditor | null;
+  environmentEditorRef: ?EnvironmentEditor;
   colorChangeTimeout: any;
   saveTimeout: any;
   modal: Modal;
@@ -61,7 +61,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  _setEditorRef (n: EnvironmentEditor) {
+  _setEditorRef (n: ?EnvironmentEditor) {
     this.environmentEditorRef = n;
   }
 

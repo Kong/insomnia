@@ -2,10 +2,9 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
-import type {Environment} from '../../../models/environment';
 
 type Props = {
-  environment: Environment,
+  environment: Object,
   didChange: Function,
   editorFontSize: number,
   editorIndentSize: number,
