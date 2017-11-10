@@ -22,7 +22,6 @@ describe('client_credentials', () => {
       }
     }));
 
-    // console.log('GET TOKEN', getToken);
     const result = await getToken(
       'req_1',
       ACCESS_TOKEN_URL,

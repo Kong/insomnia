@@ -14,9 +14,14 @@ export async function buildMultipart (params: Array<RequestBodyParameter>) {
     const lineBreak = '\r\n';
     let totalSize = 0;
 
-    async function addFile (path: string) {
-      return new Promise(resolve => {
-        const {size} = fs.statSync(path);
+    function addFile (path: string): Promise<void> {
+      return new Promise((resolve, reject) => {
+        let size;
+        try {
+          size = fs.statSync(path).size;
+        } catch (err) {
+          reject(err);
+        }
         const stream = fs.createReadStream(path);
         stream.once('end', () => {
           resolve();
@@ -56,7 +61,11 @@ export async function buildMultipart (params: Array<RequestBodyParameter>) {
         addString(`Content-Type: ${contentType}`);
         addString(lineBreak);
         addString(lineBreak);
-        await addFile(fileName);
+        try {
+          await addFile(fileName);
+        } catch (err) {
+          return reject(err);
+        }
       } else {
         const name = param.name || '';
         const value = param.value || '';
