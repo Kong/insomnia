@@ -30,6 +30,7 @@ import ErrorBoundary from './error-boundary';
 type Props = {
   // Functions
   forceUpdateRequest: Function,
+  forceUpdateRequestHeaders: Function,
   handleSend: Function,
   handleSendAndDownload: Function,
   handleCreateRequest: Function,
@@ -169,6 +170,7 @@ class RequestPane extends React.PureComponent<Props> {
       editorKeyMap,
       editorLineWrapping,
       forceRefreshCounter,
+      forceUpdateRequestHeaders,
       handleGenerateCode,
       handleGetRenderContext,
       handleImport,
@@ -326,6 +328,7 @@ class RequestPane extends React.PureComponent<Props> {
               environmentId={environmentId}
               settings={settings}
               onChange={updateRequestBody}
+              onChangeHeaders={forceUpdateRequestHeaders}
               fontSize={editorFontSize}
               indentSize={editorIndentSize}
               keyMap={editorKeyMap}

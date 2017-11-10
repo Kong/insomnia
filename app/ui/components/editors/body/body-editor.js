@@ -1,17 +1,43 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
+import * as mimes from 'mime-types';
+import clone from 'clone';
 import autobind from 'autobind-decorator';
 import RawEditor from './raw-editor';
 import UrlEncodedEditor from './url-encoded-editor';
 import FormEditor from './form-editor';
 import FileEditor from './file-editor';
-import {getContentTypeFromHeaders, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FILE, CONTENT_TYPE_GRAPHQL} from '../../../../common/constants';
-import {newBodyRaw, newBodyFormUrlEncoded, newBodyForm, newBodyFile} from '../../../../models/request';
+import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders} from '../../../../common/constants';
+import type {Request, RequestBodyParameter} from '../../../../models/request';
+import {newBodyFile, newBodyForm, newBodyFormUrlEncoded, newBodyRaw} from '../../../../models/request';
 import GraphQLEditor from './graph-ql-editor';
+import {getContentTypeHeader} from '../../../../common/misc';
+import type {Settings} from '../../../../models/settings';
+import type {Workspace} from '../../../../models/workspace';
+import {showModal} from '../../modals/index';
+import AskModal from '../../modals/ask-modal';
+
+type Props = {
+  // Required
+  onChange: Function,
+  onChangeHeaders: Function,
+  handleUpdateRequestMimeType: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  request: Request,
+  workspace: Workspace,
+  settings: Settings,
+  environmentId: string,
+  nunjucksPowerUserMode: boolean,
+  fontSize: number,
+  indentSize: number,
+  keyMap: string,
+  lineWrapping: boolean
+};
 
 @autobind
-class BodyEditor extends PureComponent {
-  _handleRawChange (rawValue) {
+class BodyEditor extends React.PureComponent<Props> {
+  _handleRawChange (rawValue: string) {
     const {onChange, request} = this.props;
 
     const contentType = getContentTypeFromHeaders(request.headers);
@@ -20,27 +46,58 @@ class BodyEditor extends PureComponent {
     onChange(newBody);
   }
 
-  _handleGraphQLChange (content) {
+  _handleGraphQLChange (content: string) {
     const {onChange} = this.props;
     const newBody = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
     onChange(newBody);
   }
 
-  _handleFormUrlEncodedChange (parameters) {
+  _handleFormUrlEncodedChange (parameters: Array<RequestBodyParameter>) {
     const {onChange} = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(newBody);
   }
 
-  _handleFormChange (parameters) {
+  _handleFormChange (parameters: Array<RequestBodyParameter>) {
     const {onChange} = this.props;
     const newBody = newBodyForm(parameters);
     onChange(newBody);
   }
 
-  _handleFileChange (path) {
-    const {onChange} = this.props;
+  async _handleFileChange (path: string) {
+    const {onChange, onChangeHeaders, request} = this.props;
+    const headers = clone(request.headers);
+
+    let contentTypeHeader = getContentTypeHeader(headers);
+
+    if (!contentTypeHeader) {
+      contentTypeHeader = {name: 'Content-Type', value: CONTENT_TYPE_FILE};
+      headers.push(contentTypeHeader);
+    }
+
+    // Update Content-Type header if the user wants
+    const contentType = contentTypeHeader.value;
+    const newContentType = mimes.lookup(path) || CONTENT_TYPE_FILE;
+    if (contentType !== newContentType) {
+      contentTypeHeader.value = newContentType;
+      showModal(AskModal, {
+        title: 'Change Content-Type',
+        message: (
+          <p>
+            Do you want set the <span className="monospace">Content-Type</span> header
+            to <span className="monospace">{newContentType}</span>?
+          </p>
+        ),
+        onDone: saidYes => {
+          if (saidYes) {
+            onChangeHeaders(headers);
+          }
+        }
+      });
+    }
+
     const newBody = newBodyFile(path);
+
     onChange(newBody);
   }
 
@@ -63,7 +120,7 @@ class BodyEditor extends PureComponent {
     const handleRender = noRender ? null : render;
     const handleGetRenderContext = noRender ? null : getRenderContext;
 
-    const uniqueKey = `${request._id}::${noRender}`;
+    const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
 
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
@@ -148,24 +205,5 @@ class BodyEditor extends PureComponent {
     }
   }
 }
-
-BodyEditor.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  handleUpdateRequestMimeType: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  request: PropTypes.object.isRequired,
-  workspace: PropTypes.object.isRequired,
-  settings: PropTypes.object.isRequired,
-  environmentId: PropTypes.string.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-
-  // Optional
-  fontSize: PropTypes.number,
-  indentSize: PropTypes.number,
-  keyMap: PropTypes.string,
-  lineWrapping: PropTypes.bool
-};
 
 export default BodyEditor;

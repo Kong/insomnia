@@ -166,6 +166,10 @@ class Wrapper extends React.PureComponent<Props, State> {
     return rUpdate(this.props.activeRequest, {headers});
   }
 
+  _handleForceUpdateRequestHeaders (headers: Array<RequestHeader>): Promise<Request> {
+    return this._handleForceUpdateRequest({headers});
+  }
+
   _handleUpdateRequestUrl (url: string): Promise<Request> {
     return rUpdate(this.props.activeRequest, {url});
   }
@@ -596,6 +600,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             updateRequestBody={this._handleUpdateRequestBody}
+            forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
             updateRequestUrl={this._handleUpdateRequestUrl}
             updateRequestMethod={this._handleUpdateRequestMethod}
             updateRequestParameters={this._handleUpdateRequestParameters}
