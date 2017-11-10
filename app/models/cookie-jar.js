@@ -1,6 +1,7 @@
 // @flow
 import * as db from '../common/database';
 import type {BaseModel} from './index';
+
 export const name = 'Cookie Jar';
 export const type = 'CookieJar';
 export const prefix = 'jar';
@@ -44,6 +45,10 @@ export function migrate (doc: CookieJar): CookieJar {
 }
 
 export function create (patch: Object = {}) {
+  if (!patch.parentId) {
+    throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
+  }
+
   return db.docCreate(type, patch);
 }
 
