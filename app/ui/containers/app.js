@@ -99,6 +99,11 @@ class App extends PureComponent {
       }],
       [hotkeys.DELETE_REQUEST, () => {
         const {activeRequest} = this.props;
+
+        if (!activeRequest) {
+          return;
+        }
+
         showModal(AskModal, {
           title: 'Delete Request?',
           message: `Really delete ${activeRequest.name}?`,
