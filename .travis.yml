@@ -32,7 +32,6 @@ cache:
     - $HOME/.cache
 
 install:
-- npm install -g npm@5 > Nul
 - npm install > /dev/null
 - node --version
 - npm --version
