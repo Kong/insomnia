@@ -17,6 +17,7 @@ import {trackEvent} from '../../../analytics/index';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import type {Workspace} from '../../../models/workspace';
 import type {Environment} from '../../../models/environment';
+import * as db from '../../../common/database';
 
 type Props = {
   activeEnvironment: Environment | null,
@@ -43,6 +44,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   colorChangeTimeout: any;
   saveTimeout: any;
   modal: Modal;
+  editorKey: number;
 
   constructor (props: Props) {
     super(props);
@@ -55,6 +57,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     };
 
     this.colorChangeTimeout = null;
+    this.editorKey = 0;
   }
 
   hide () {
@@ -212,6 +215,26 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     this._handleChangeEnvironmentColor(environment, null);
   }
 
+  componentDidMount () {
+    db.onChange(async changes => {
+      const {selectedEnvironmentId} = this.state;
+
+      for (const change of changes) {
+        const [
+          _, // eslint-disable-line no-unused-vars
+          doc,
+          fromSync
+        ] = change;
+
+        // Force an editor refresh if any changes from sync come in
+        if (doc._id === selectedEnvironmentId && fromSync) {
+          this.editorKey = doc.modified;
+          await this._load(this.state.workspace);
+        }
+      }
+    });
+  }
+
   async _handleClickColorChange (environment: Environment) {
     let el = document.querySelector('#env-color-picker');
 
@@ -244,7 +267,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const data = this.environmentEditorRef.getValue();
+    let data;
+    try {
+      data = this.environmentEditorRef.getValue();
+    } catch (err) {
+      // Invalid JSON probably
+      return;
+    }
+
     const activeEnvironment = this._getActiveEnvironment();
 
     if (activeEnvironment) {
@@ -385,7 +415,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 editorKeyMap={editorKeyMap}
                 lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
-                key={activeEnvironment ? activeEnvironment._id : 'n/a'}
+                key={`${this.editorKey}::${activeEnvironment ? activeEnvironment._id : 'n/a'}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange}
                 render={render}

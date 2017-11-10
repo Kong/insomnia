@@ -40,7 +40,11 @@ function getDBFilePath (modelType) {
  * @param forceReset
  * @returns {null}
  */
-export async function init (types: Array<string>, config: Object = {}, forceReset: boolean = false) {
+export async function init (
+  types: Array<string>,
+  config: Object = {},
+  forceReset: boolean = false
+) {
   if (forceReset) {
     changeListeners = [];
     db = {};
@@ -240,8 +244,10 @@ export function insert<T: BaseModel> (doc: T, fromSync: boolean = false): Promis
         return reject(err);
       }
 
-      notifyOfChange(CHANGE_INSERT, newDoc, fromSync);
       resolve(newDoc);
+
+      // NOTE: This needs to be after we resolve
+      notifyOfChange(CHANGE_INSERT, newDoc, fromSync);
     });
   });
 }
@@ -254,9 +260,10 @@ export function update<T: BaseModel> (doc: T, fromSync: boolean = false): Promis
         return reject(err);
       }
 
-      notifyOfChange(CHANGE_UPDATE, docWithDefaults, fromSync);
-
       resolve(docWithDefaults);
+
+      // NOTE: This needs to be after we resolve
+      notifyOfChange(CHANGE_UPDATE, docWithDefaults, fromSync);
     });
   });
 }
@@ -311,7 +318,10 @@ export async function docUpdate<T: BaseModel> (originalDoc: T, patch: Object = {
   return update(doc);
 }
 
-export async function docCreate<T: BaseModel> (type: string, ...patches: Array<Object>): Promise<T> {
+export async function docCreate<T: BaseModel> (
+  type: string,
+  ...patches: Array<Object>
+): Promise<T> {
   const doc = await initModel(
     type,
     ...patches,
