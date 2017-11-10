@@ -1,6 +1,6 @@
 // @flow
 import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
-import type {RequestHeader} from '../models/request';
+import type {Request, RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
 import type {RenderedRequest} from '../common/render';
@@ -417,7 +417,8 @@ export function _actuallySend (
 
         const fn = () => {
           fs.closeSync(fd);
-          fs.unlink(multipartBodyPath, () => {});
+          fs.unlink(multipartBodyPath, () => {
+          });
         };
 
         curl.on('end', fn);
@@ -642,6 +643,46 @@ export function _actuallySend (
       handleError(err);
     }
   });
+}
+
+export async function sendWithSettings (
+  requestId: string,
+  requestPatch: Object
+) {
+  const request = await models.request.getById(requestId);
+  if (!request) {
+    throw new Error(`Failed to find request: ${requestId}`);
+  }
+
+  const settings = await models.settings.getOrCreate();
+  const ancestors = await db.withAncestors(request, [
+    models.requestGroup.type,
+    models.workspace.type
+  ]);
+
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  const workspace = await models.workspace.getById(workspaceId);
+  if (!workspace) {
+    throw new Error(`Failed to find workspace for: ${requestId}`);
+  }
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
+
+  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
+    _id: request._id + '.other',
+    parentId: request._id
+  });
+
+  let renderedRequest: RenderedRequest;
+  try {
+    renderedRequest = await getRenderedRequest(newRequest, environmentId);
+  } catch (err) {
+    throw new Error(`Failed to render request: ${requestId}`);
+  }
+
+  return await _actuallySend(renderedRequest, workspace, settings);
 }
 
 export async function send (requestId: string, environmentId: string) {
