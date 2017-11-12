@@ -63,6 +63,10 @@ export function hasUserAgentHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'user-agent').length > 0;
 }
 
+export function hasAcceptEncodingHeader<T: Header> (headers: Array<T>): boolean {
+  return filterHeaders(headers, 'accept-encoding').length > 0;
+}
+
 export function getSetCookieHeaders<T: Header> (headers: Array<T>): Array<T> {
   return filterHeaders(headers, 'set-cookie');
 }

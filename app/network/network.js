@@ -14,7 +14,7 @@ import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {describeByteSize, getContentTypeHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, getContentTypeHeader, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -133,6 +133,7 @@ export function _actuallySend (
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
+      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -456,11 +457,6 @@ export function _actuallySend (
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
-      // Setup encoding settings
-      headers.push({name: 'Accept', value: '*/*'}); // Default to anything
-      headers.push({name: 'Accept-Encoding', value: ''}); // Don't auto-send this header
-      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
-
       // Build the body
       const dataBuffers = [];
       let dataBuffersLength = 0;
@@ -519,6 +515,16 @@ export function _actuallySend (
             });
           }
         }
+      }
+
+      // Send a default Accept headers of anything
+      if (!hasAcceptHeader(headers)) {
+        headers.push({name: 'Accept', value: '*/*'}); // Default to anything
+      }
+
+      // Don't auto-send Accept-Encoding header
+      if (!hasAcceptEncodingHeader(headers)) {
+        headers.push({name: 'Accept-Encoding', value: ''});
       }
 
       // Set User-Agent if it't not already in headers
