@@ -1,5 +1,5 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown';
@@ -9,10 +9,25 @@ import Tooltip from '../tooltip';
 import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
+import type {Workspace} from '../../../models/workspace';
+import type {Environment} from '../../../models/environment';
+
+type Props = {
+  workspace: Workspace,
+  handleChangeEnvironment: Function,
+  workspace: Workspace,
+  environments: Array<Environment>,
+
+  // Optional
+  className?: string,
+  activeEnvironment: Environment | null
+};
 
 @autobind
-class EnvironmentsDropdown extends PureComponent {
-  _handleActivateEnvironment (environmentId) {
+class EnvironmentsDropdown extends React.PureComponent<Props> {
+  _dropdown: ?Dropdown;
+
+  _handleActivateEnvironment (environmentId: string) {
     this.props.handleChangeEnvironment(environmentId);
     trackEvent('Environment', environmentId ? 'Activate' : 'Deactivate');
   }
@@ -21,11 +36,11 @@ class EnvironmentsDropdown extends PureComponent {
     showModal(EnvironmentsModal, this.props.workspace);
   }
 
-  _setDropdownRef (n) {
+  _setDropdownRef (n: ?Dropdown) {
     this._dropdown = n;
   }
 
-  renderEnvironmentItem (environment) {
+  renderEnvironmentItem (environment: Environment) {
     return (
       <DropdownItem key={environment._id}
                     value={environment._id}
@@ -36,7 +51,7 @@ class EnvironmentsDropdown extends PureComponent {
     );
   }
 
-  _handleKeydown (e) {
+  _handleKeydown (e: KeyboardEvent) {
     executeHotKey(e, hotkeys.TOGGLE_ENVIRONMENTS_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
@@ -77,9 +92,9 @@ class EnvironmentsDropdown extends PureComponent {
                 </Tooltip>
               )}
               <div className="sidebar__menu__thing__text">
-                {activeEnvironment && activeEnvironment.color && (
+                {(activeEnvironment && activeEnvironment.color) ? (
                   <i className="fa fa-circle space-right" style={{color: activeEnvironment.color}}/>
-                )}
+                ) : null}
                 {description}
               </div>
               <i className="space-left fa fa-caret-down"/>
@@ -104,18 +119,5 @@ class EnvironmentsDropdown extends PureComponent {
     );
   }
 }
-
-EnvironmentsDropdown.propTypes = {
-  // Functions
-  handleChangeEnvironment: PropTypes.func.isRequired,
-
-  // Other
-  workspace: PropTypes.object.isRequired,
-  environments: PropTypes.arrayOf(PropTypes.object).isRequired,
-
-  // Optional
-  activeEnvironment: PropTypes.object,
-  className: PropTypes.string
-};
 
 export default EnvironmentsDropdown;

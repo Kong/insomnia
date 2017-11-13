@@ -318,6 +318,22 @@ export async function docUpdate<T: BaseModel> (originalDoc: T, patch: Object = {
   return update(doc);
 }
 
+export async function docCreateNoMigrate<T: BaseModel> (
+  type: string,
+  ...patches: Array<Object>
+): Promise<T> {
+  const doc = await initModel(
+    type,
+    ...patches,
+
+    // Fields that the user can't touch
+    {type: type},
+    {__NO_MIGRATE: true}
+  );
+
+  return insert(doc);
+}
+
 export async function docCreate<T: BaseModel> (
   type: string,
   ...patches: Array<Object>
@@ -415,7 +431,7 @@ export async function duplicate<T: BaseModel> (originalDoc: T, patch: Object = {
     delete newDoc.created;
     delete newDoc.modified;
 
-    const createdDoc = await docCreate(newDoc.type, newDoc);
+    const createdDoc = await docCreateNoMigrate(newDoc.type, newDoc);
 
     // 2. Get all the children
     for (const type of allTypes()) {
