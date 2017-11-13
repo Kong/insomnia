@@ -193,13 +193,13 @@ export function getAuthTypeName (authType, useLong = false) {
   }
 }
 
-export function getContentTypeFromHeaders (headers) {
+export function getContentTypeFromHeaders (headers, defaultValue = null) {
   if (!Array.isArray(headers)) {
     return null;
   }
 
   const header = headers.find(({name}) => name.toLowerCase() === 'content-type');
-  return header ? header.value : null;
+  return header ? header.value : defaultValue;
 }
 
 export const RESPONSE_CODE_REASONS = {

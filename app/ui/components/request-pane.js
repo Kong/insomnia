@@ -316,13 +316,12 @@ class RequestPane extends React.PureComponent<Props> {
               </button>
             </Tab>
           </TabList>
-          <TabPanel className="react-tabs__tab-panel editor-wrapper">
+          <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
-              key={uniqueKey}
               request={request}
               workspace={workspace}
               environmentId={environmentId}
@@ -337,9 +336,8 @@ class RequestPane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
-              <ErrorBoundary errorClassName="font-error pad text-center">
+              <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <AuthWrapper
-                  key={uniqueKey}
                   oAuth2Token={oAuth2Token}
                   showPasswords={showPasswords}
                   request={request}
@@ -356,10 +354,9 @@ class RequestPane extends React.PureComponent<Props> {
             <div className="pad pad-bottom-sm query-editor__preview">
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
-                <ErrorBoundary
+                <ErrorBoundary key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center">
                   <RenderedQueryString
-                    key={uniqueKey}
                     handleRender={handleRender}
                     request={request}
                   />
@@ -368,11 +365,10 @@ class RequestPane extends React.PureComponent<Props> {
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <ErrorBoundary
+                <ErrorBoundary key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center">
                   <KeyValueEditor
                     sortable
-                    key={uniqueKey}
                     namePlaceholder="name"
                     valuePlaceholder="value"
                     onToggleDisable={this._trackQueryToggle}
@@ -396,9 +392,8 @@ class RequestPane extends React.PureComponent<Props> {
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel header-editor">
-            <ErrorBoundary errorClassName="font-error pad text-center">
+            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
-                key={uniqueKey}
                 headers={request.headers}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}

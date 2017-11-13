@@ -6,6 +6,7 @@ import {shell} from 'electron';
 import PDFViewer from '../pdf-viewer';
 import CodeEditor from '../codemirror/code-editor';
 import ResponseWebView from './response-webview';
+import MultipartViewer from './response-multipart';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
 import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
@@ -27,8 +28,8 @@ type Props = {
   contentType: string,
 
   // Optional
-  updateFilter?: Function,
-  error?: string
+  updateFilter: Function | null,
+  error: string | null
 };
 
 type State = {
@@ -243,6 +244,21 @@ class ResponseViewer extends React.Component<Props, State> {
         <div className="tall wide scrollable">
           <PDFViewer body={bodyBuffer} uniqueKey={responseId}/>
         </div>
+      );
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
+      return (
+        <MultipartViewer
+          responseId={responseId}
+          bodyBuffer={bodyBuffer}
+          contentType={contentType}
+          filter={filter}
+          filterHistory={filterHistory}
+          editorFontSize={editorFontSize}
+          editorIndentSize={editorIndentSize}
+          editorKeyMap={editorKeyMap}
+          editorLineWrapping={editorLineWrapping}
+          url={url}
+        />
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];

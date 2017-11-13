@@ -1,14 +1,17 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import CopyButton from '../base/copy-button';
+import type {ResponseHeader} from '../../../models/response';
 
-class ResponseHeadersViewer extends PureComponent {
+type Props = {
+  headers: Array<ResponseHeader>
+};
+
+class ResponseHeadersViewer extends React.PureComponent<Props> {
   render () {
     const {headers} = this.props;
 
-    const headersString = headers.map(
-      h => `${h.name}: ${h.value}`
-    ).join('\n');
+    const headersString = headers.map(h => `${h.name}: ${h.value}`).join('\n');
 
     return [
       <table key='table' className="table--fancy table--striped">
@@ -36,9 +39,5 @@ class ResponseHeadersViewer extends PureComponent {
     ];
   }
 }
-
-ResponseHeadersViewer.propTypes = {
-  headers: PropTypes.array.isRequired
-};
 
 export default ResponseHeadersViewer;
