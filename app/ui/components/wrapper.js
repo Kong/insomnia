@@ -11,6 +11,7 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {registerModal, showModal} from './modals/index';
 import AlertModal from './modals/alert-modal';
+import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
 import ChangelogModal from './modals/changelog-modal';
 import CookiesModal from './modals/cookies-modal';
@@ -405,6 +406,7 @@ class Wrapper extends React.PureComponent<Props, State> {
           <ErrorModal ref={registerModal}/>
           <PromptModal ref={registerModal}/>
 
+          <WrapperModal ref={registerModal}/>
           <ChangelogModal ref={registerModal}/>
           <LoginModal ref={registerModal}/>
           <AskModal ref={registerModal}/>
