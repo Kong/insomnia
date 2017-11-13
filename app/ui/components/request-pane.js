@@ -316,8 +316,9 @@ class RequestPane extends React.PureComponent<Props> {
               </button>
             </Tab>
           </TabList>
-          <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
+          <TabPanel className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
+              key={uniqueKey}
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
@@ -413,7 +414,7 @@ class RequestPane extends React.PureComponent<Props> {
               </button>
             </div>
           </TabPanel>
-          <TabPanel key={uniqueKey} className="react-tabs__tab-panel tall scrollable">
+          <TabPanel key={`docs::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">
