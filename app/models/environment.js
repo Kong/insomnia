@@ -51,8 +51,6 @@ export function findByParentId (parentId: string): Promise<Array<Environment>> {
 export async function getOrCreateForWorkspaceId (workspaceId: string): Promise<Environment> {
   const environments = await db.find(type, {parentId: workspaceId});
 
-  console.log('ALL', await db.find(type, {parentId: workspaceId}));
-
   if (!environments.length) {
     return await create({
       parentId: workspaceId,

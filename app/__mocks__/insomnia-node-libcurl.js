@@ -6,10 +6,15 @@ class Curl extends EventEmitter {
     super();
     this._options = {};
     this._meta = {};
+    this._features = {};
   }
 
   static getVersion () {
     return 'libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0';
+  }
+
+  enable (name) {
+    this._features[name] = true;
   }
 
   setOpt (name, value) {
@@ -70,17 +75,19 @@ class Curl extends EventEmitter {
     process.nextTick(() => {
       const data = Buffer.from(JSON.stringify({
         options: this._options,
-        meta: this._meta
+        meta: this._meta,
+        features: this._features
       }));
 
       this.emit('data', data);
 
       process.nextTick(() => {
-        this.emit('end', 'NOT_USED', 'NOT_USED', [{
-          'Content-Length': `${data.length}`,
-          'Content-Type': 'application/json',
-          result: {code: 200, reason: 'OK'}
-        }]);
+        this.emit('end', 'NOT_USED', 'NOT_USED', [
+          'HTTP/1.1 200 OK',
+          `Content-Length: ${data.length}`,
+          'Content-Type: application/json',
+          ''
+        ].join('\n'));
       });
     });
   }
@@ -111,6 +118,10 @@ Curl.netrc = {
   IGNORED: 0,
   OPTIONAL: 1,
   REQUIRED: 2
+};
+
+Curl.feature = {
+  NO_HEADER_PARSING: 'NO_HEADER_PARSING'
 };
 
 Curl.option = {
