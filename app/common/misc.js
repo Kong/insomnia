@@ -71,6 +71,11 @@ export function getSetCookieHeaders<T: Header> (headers: Array<T>): Array<T> {
   return filterHeaders(headers, 'set-cookie');
 }
 
+export function getLocationHeader<T: Header> (headers: Array<T>): T | null {
+  const matches = filterHeaders(headers, 'location');
+  return matches.length ? matches[0] : null;
+}
+
 export function getContentTypeHeader<T: Header> (headers: Array<T>): T | null {
   const matches = filterHeaders(headers, 'content-type');
   return matches.length ? matches[0] : null;
