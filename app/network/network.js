@@ -14,7 +14,7 @@ import * as models from '../models';
 import * as querystring from '../common/querystring';
 import * as util from '../common/misc.js';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {describeByteSize, getContentTypeHeader, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -31,6 +31,7 @@ export type ResponsePatch = {
   error?: string,
   url?: string,
   statusCode?: number,
+  httpVersion?: string,
   headers?: Array<ResponseHeader>,
   elapsedTime?: number,
   contentType?: string,
@@ -113,6 +114,10 @@ export function _actuallySend (
       }
     }
 
+    function enable (feature: number) {
+      curl.enable(feature);
+    }
+
     try {
       // Setup the cancellation logic
       cancelRequestFunction = () => {
@@ -134,6 +139,7 @@ export function _actuallySend (
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
+      enable(Curl.feature.NO_HEADER_PARSING);
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -544,26 +550,18 @@ export function _actuallySend (
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Handle the response ending
-      curl.on('end', async function (_1, _2, allCurlHeadersObjects) {
+      curl.on('end', async (_1, _2, rawHeaders) => {
+        const allCurlHeadersObjects = _parseHeaders(rawHeaders);
         // Headers are an array (one for each redirect)
         const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 
         // Collect various things
-        const result = lastCurlHeadersObject && lastCurlHeadersObject.result;
-        const statusCode = result ? result.code : -1;
-        const statusMessage = result ? result.reason : 'Unknown';
+        const httpVersion = lastCurlHeadersObject.version || 'Unknown';
+        const statusCode = lastCurlHeadersObject.code || -1;
+        const statusMessage = lastCurlHeadersObject.reason || 'Unknown';
 
         // Collect the headers
-        const headers = [];
-        for (const name of lastCurlHeadersObject ? Object.keys(lastCurlHeadersObject) : []) {
-          if (typeof lastCurlHeadersObject[name] === 'string') {
-            headers.push({name, value: lastCurlHeadersObject[name]});
-          } else if (Array.isArray(lastCurlHeadersObject[name])) {
-            for (const value of lastCurlHeadersObject[name]) {
-              headers.push({name, value});
-            }
-          }
-        }
+        const headers = lastCurlHeadersObject.headers;
 
         // Calculate the content type
         const contentTypeHeader = util.getContentTypeHeader(headers);
@@ -571,18 +569,18 @@ export function _actuallySend (
 
         // Update Cookie Jar
         let currentUrl = finalUrl;
-        let setCookieStrings = [];
+        let setCookieStrings: Array<string> = [];
         const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
-        for (const curlHeaderObject of allCurlHeadersObjects) {
+        for (const {headers} of allCurlHeadersObjects) {
           // Collect Set-Cookie headers
-          const setCookieHeaders = _getCurlHeader(curlHeaderObject, 'set-cookie', []);
-          setCookieStrings = [...setCookieStrings, ...setCookieHeaders];
+          const setCookieHeaders = getSetCookieHeaders(headers);
+          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
 
           // Pull out new URL if there is a redirect
-          const newLocation = _getCurlHeader(curlHeaderObject, 'location', null);
+          const newLocation = getLocationHeader(headers);
           if (newLocation !== null) {
-            currentUrl = urlResolve(currentUrl, newLocation);
+            currentUrl = urlResolve(currentUrl, newLocation.value);
           }
         }
 
@@ -619,6 +617,7 @@ export function _actuallySend (
           headers,
           contentType,
           statusCode,
+          httpVersion,
           statusMessage,
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
@@ -627,7 +626,7 @@ export function _actuallySend (
         };
 
         // Close the request
-        this.close();
+        curl.close();
 
         respond(responsePatch, bodyBuffer);
       });
@@ -731,7 +730,7 @@ export async function send (requestId: string, environmentId: string) {
         parentId: renderedRequestBeforePlugins._id,
         error: err.message,
         statusCode: STATUS_CODE_PLUGIN_ERROR,
-        statusMessage: err.plugin ? `Plugin ${err.plugin}` : 'Plugin',
+        statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
         settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
         settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
       }
@@ -790,20 +789,40 @@ async function _applyResponsePluginHooks (
   }
 }
 
-function _getCurlHeader (
-  curlHeadersObj: {[string]: string},
-  name: string,
-  fallback: any
-): string {
-  const headerName = Object.keys(curlHeadersObj).find(
-    n => n.toLowerCase() === name.toLowerCase()
-  );
+export function _parseHeaders (
+  buffer: Buffer
+): Array<{headers: Array<ResponseHeader>, version: string, code: number, reason: string}> {
+  const results = [];
 
-  if (headerName) {
-    return curlHeadersObj[headerName];
-  } else {
-    return fallback;
+  const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
+
+  for (let i = 0, currentResult = null; i < lines.length; i++) {
+    const line = lines[i];
+    const isEmptyLine = line.trim() === '';
+
+    // If we hit an empty line, start parsing the next response
+    if (isEmptyLine && currentResult) {
+      results.push(currentResult);
+      currentResult = null;
+      continue;
+    }
+
+    if (!currentResult) {
+      const [version, code, ...other] = line.split(/ +/g);
+      currentResult = {
+        version,
+        code: parseInt(code, 10),
+        reason: other.join(' '),
+        headers: []
+      };
+    } else {
+      const [name, value] = line.split(/:\s(.+)/);
+      const header: ResponseHeader = {name, value: value || ''};
+      currentResult.headers.push(header);
+    }
   }
+
+  return results;
 }
 
 // exported for unit tests only

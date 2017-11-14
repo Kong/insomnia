@@ -173,7 +173,7 @@ class General extends PureComponent {
             </HelpTooltip>
             <input type="number"
                    name="timeout"
-                   min={0}
+                   min={-1}
                    defaultValue={settings.timeout}
                    onChange={this._handleUpdateSetting}/>
           </label>
