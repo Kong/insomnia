@@ -131,6 +131,11 @@ class OneLineEditor extends PureComponent {
   }
 
   _handleEditorFocus (e) {
+    if (this.props.disabled) {
+      e.preventDefault();
+      return;
+    }
+
     const focusedFromTabEvent = !!e.sourceCapabilities;
 
     if (focusedFromTabEvent) {
@@ -318,8 +323,7 @@ class OneLineEditor extends PureComponent {
     if (showEditor) {
       const codeEditorClasses = classnames(
         'editor--single-line',
-        className,
-        {'input--disabled': disabled}
+        className
       );
       return (
         <CodeEditor
@@ -331,6 +335,7 @@ class OneLineEditor extends PureComponent {
           noStyleActiveLine
           noLint
           singleLine
+          disabled={disabled}
           tabIndex={0}
           id={id}
           type={type}

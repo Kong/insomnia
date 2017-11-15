@@ -5,13 +5,13 @@ import {showModal} from '../../modals/index';
 import {tokenizeTag} from '../../../../templating/utils';
 import {getTagDefinitions} from '../../../../templating/index';
 
-CodeMirror.defineExtension('enableNunjucksTags', function (handleRender, readOnly) {
+CodeMirror.defineExtension('enableNunjucksTags', function (handleRender, disabled) {
   if (!handleRender) {
     console.warn('enableNunjucksTags wasn\'t passed a render function');
     return;
   }
 
-  const refreshFn = _highlightNunjucksTags.bind(this, handleRender, readOnly);
+  const refreshFn = _highlightNunjucksTags.bind(this, handleRender, disabled);
   const debouncedRefreshFn = misc.debounce(refreshFn);
 
   this.on('change', (cm, change) => {
@@ -32,7 +32,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function (handleRender, readOnl
   refreshFn();
 });
 
-async function _highlightNunjucksTags (render, readOnly) {
+async function _highlightNunjucksTags (render, disabled) {
   const renderCacheKey = Math.random() + '';
   const renderString = text => render(text, renderCacheKey);
 
@@ -99,7 +99,7 @@ async function _highlightNunjucksTags (render, readOnly) {
       }
 
       const el = document.createElement('span');
-      el.className = `nunjucks-tag ${readOnly ? 'nunjucks-tag--disabled' : ''} ${tok.type}`;
+      el.className = `nunjucks-tag ${disabled ? 'nunjucks-tag--disabled' : ''} ${tok.type}`;
       el.setAttribute('draggable', 'true');
       el.setAttribute('data-error', 'off');
       el.setAttribute('data-template', tok.string);
@@ -118,7 +118,7 @@ async function _highlightNunjucksTags (render, readOnly) {
       activeMarks.push(mark);
 
       el.addEventListener('click', async () => {
-        if (readOnly) {
+        if (disabled) {
           return;
         }
 
