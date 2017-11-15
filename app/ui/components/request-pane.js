@@ -245,7 +245,10 @@ class RequestPane extends React.PureComponent<Props> {
 
     let numBodyParams = 0;
     if (request.body && request.body.params) {
-      numBodyParams = request.body.params.filter(p => !p.disabled).length;
+      const diffParams = (requestDiff && requestDiff.body && requestDiff.body.params) || [];
+      const bodyParams = (request.body && request.body.params) || [];
+      const allParams = [...diffParams, ...bodyParams];
+      numBodyParams = allParams.filter(p => !p.disabled).length;
     }
 
     const diffParameters = (requestDiff && requestDiff.parameters) || [];
@@ -265,9 +268,9 @@ class RequestPane extends React.PureComponent<Props> {
     return (
       <section className="pane request-pane">
         <header className="pane__header">
-          <ErrorBoundary errorClassName="font-error pad text-center">
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <RequestUrlBar
-              uniquenessKey={uniqueKey}
+              placeholder={(requestDiff && requestDiff.url) || ''}
               method={request.method}
               onMethodChange={updateRequestMethod}
               onUrlChange={this._handleUpdateRequestUrl}
@@ -303,6 +306,9 @@ class RequestPane extends React.PureComponent<Props> {
                             authentication={request.authentication}
                             className="tall">
                 {getAuthTypeName(request.authentication.type) || 'Auth'}
+                {requestDiff && requestDiff.authentication && !request.authentication.disableInheritance ? (
+                  ` (${getAuthTypeName(requestDiff.authentication.type)})`
+                ) : null}
                 <i className="fa fa-caret-down space-left"/>
               </AuthDropdown>
             </Tab>
