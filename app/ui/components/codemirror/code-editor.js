@@ -254,7 +254,7 @@ class CodeEditor extends React.Component {
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        this.codeMirror.enableNunjucksTags(this.props.render);
+        this.codeMirror.enableNunjucksTags(this.props.render, this.props.readOnly);
       }
 
       // Make URLs clickable
@@ -740,7 +740,7 @@ class CodeEditor extends React.Component {
 
     return (
       <div className={classes} style={style} data-editor-type={type}>
-        <div className={classnames('editor__container', 'input', className)}
+        <div className={classnames('editor__container', 'input')}
              style={styles}
              onClick={onClick}
              onMouseLeave={onMouseLeave}>

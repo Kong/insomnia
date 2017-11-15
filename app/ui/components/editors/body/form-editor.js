@@ -1,12 +1,36 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
 import {trackEvent} from '../../../../analytics/index';
+import type {RequestBodyParameter} from '../../../../models/request';
+
+type Props = {
+  onChange: Function,
+  parameters: Array<RequestBodyParameter>,
+  inheritedParameters: Array<RequestBodyParameter>,
+  nunjucksPowerUserMode: boolean,
+  handleRender: Function | null,
+  handleGetRenderContext: Function | null
+};
 
 @autobind
-class FormEditor extends PureComponent {
-  _handleTrackToggle (pair) {
+class FormEditor extends React.PureComponent<Props> {
+  _generateParametersKey (parameters: Array<RequestBodyParameter>) {
+    const keyParts = [];
+    for (const parameter of parameters) {
+      const segments = [
+        parameter.name,
+        parameter.value || '',
+        parameter.disabled ? 'disabled' : 'enabled'
+      ];
+      keyParts.push(segments.join(':::'));
+    }
+
+    return keyParts.join('_++_');
+  }
+
+  _handleTrackToggle (pair: RequestBodyParameter) {
     trackEvent(
       'Form Editor',
       `Toggle ${pair.type || 'text'}`,
@@ -14,7 +38,7 @@ class FormEditor extends PureComponent {
     );
   }
 
-  _handleTrackChangeType (type) {
+  _handleTrackChangeType (type: string) {
     trackEvent('Form Editor', 'Change Type', type);
   }
 
@@ -33,6 +57,7 @@ class FormEditor extends PureComponent {
   render () {
     const {
       parameters,
+      inheritedParameters,
       onChange,
       handleRender,
       handleGetRenderContext,
@@ -42,39 +67,54 @@ class FormEditor extends PureComponent {
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
-          <KeyValueEditor
-            sortable
-            allowFile
-            allowMultiline
-            className="pad-bottom pad-top"
-            namePlaceholder="name"
-            valuePlaceholder="value"
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            onToggleDisable={this._handleTrackToggle}
-            onChangeType={this._handleTrackChangeType}
-            onChooseFile={this._handleTrackChooseFile}
-            onCreate={this._handleTrackCreate}
-            onDelete={this._handleTrackDelete}
-            onChange={onChange}
-            pairs={parameters}
-          />
+          <div className="pad-top">
+            {inheritedParameters && inheritedParameters.length ? [
+              <label key="label" className="label--small pad-left">
+                Parent Parts
+              </label>,
+              <KeyValueEditor
+                key={this._generateParametersKey(inheritedParameters)}
+                sortable
+                readOnly
+                disabled
+                allowFile
+                allowMultiline
+                namePlaceholder="name"
+                valuePlaceholder="value"
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
+                nunjucksPowerUserMode={nunjucksPowerUserMode}
+                pairs={inheritedParameters}
+              />
+            ] : null}
+            {inheritedParameters && inheritedParameters.length ? (
+              <label className="label--small pad-left pad-top">
+                Parts
+              </label>
+            ) : null}
+            <KeyValueEditor
+              sortable
+              allowFile
+              allowMultiline
+              className="pad-bottom"
+              namePlaceholder="name"
+              valuePlaceholder="value"
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              onToggleDisable={this._handleTrackToggle}
+              onChangeType={this._handleTrackChangeType}
+              onChooseFile={this._handleTrackChooseFile}
+              onCreate={this._handleTrackCreate}
+              onDelete={this._handleTrackDelete}
+              onChange={onChange}
+              pairs={parameters}
+            />
+          </div>
         </div>
       </div>
     );
   }
 }
-
-FormEditor.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-
-  // Optional
-  handleRender: PropTypes.func,
-  handleGetRenderContext: PropTypes.func
-};
 
 export default FormEditor;

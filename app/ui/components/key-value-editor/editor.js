@@ -141,7 +141,9 @@ class Editor extends PureComponent {
 
   _onChange (pairs) {
     clearTimeout(this._triggerTimeout);
-    this._triggerTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
+    this._triggerTimeout = setTimeout(() => {
+      this.props.onChange && this.props.onChange(pairs);
+    }, DEBOUNCE_MILLIS);
     this.setState({pairs});
   }
 
@@ -371,7 +373,7 @@ class Editor extends PureComponent {
             />
           ))}
 
-          {!maxPairs || pairs.length < maxPairs
+          {!disabled && (!maxPairs || pairs.length < maxPairs)
             ? <KeyValueEditorRow
               key="empty-row"
               hideButtons
@@ -399,10 +401,10 @@ class Editor extends PureComponent {
 }
 
 Editor.propTypes = {
-  onChange: PropTypes.func.isRequired,
   pairs: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
+  onChange: PropTypes.func,
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,

@@ -53,8 +53,8 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     } = this.props;
 
     return (
-      <div className="pad-top">
-        {inheritedParameters ? [
+      <div className="pad-top-sm">
+        {inheritedParameters && inheritedParameters.length ? [
           <label key="label" className="label--small pad-left">
             Parent Params
           </label>,
@@ -62,22 +62,17 @@ class RequestParametersEditor extends React.PureComponent<Props> {
             key={this._generateParametersKey(inheritedParameters)}
             sortable
             disabled
+            readOnly
             namePlaceholder="name"
             valuePlaceholder="value"
-            className="no-pad-top no-pad-bottom"
             pairs={inheritedParameters}
-            maxPairs={inheritedParameters.length}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            onToggleDisable={this._handleTrackToggle}
-            onCreate={this._handleTrackCreate}
-            onDelete={this._handleTrackDelete}
-            onChange={onChange}
           />
         ] : null}
 
-        {inheritedParameters ? (
+        {inheritedParameters && inheritedParameters.length ? (
           <label className="label--small pad-left pad-top">
             Params
           </label>

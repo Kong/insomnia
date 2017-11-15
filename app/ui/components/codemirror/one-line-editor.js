@@ -316,6 +316,11 @@ class OneLineEditor extends PureComponent {
     const showEditor = mode === MODE_EDITOR;
 
     if (showEditor) {
+      const codeEditorClasses = classnames(
+        'editor--single-line',
+        className,
+        {'input--disabled': disabled}
+      );
       return (
         <CodeEditor
           ref={this._setEditorRef}
@@ -342,7 +347,7 @@ class OneLineEditor extends PureComponent {
           getRenderContext={getRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           getAutocompleteConstants={getAutocompleteConstants}
-          className={classnames('editor--single-line', className)}
+          className={codeEditorClasses}
           defaultValue={defaultValue}
         />
       );

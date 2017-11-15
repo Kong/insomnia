@@ -179,7 +179,7 @@ class KeyValueEditorRow extends PureComponent {
       return (
         <FileInputButton
           ref={this._setValueInputRef}
-          disabled={disabled || readOnly}
+          disabled={disabled}
           showFileName
           showFileIcon
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
@@ -191,7 +191,7 @@ class KeyValueEditorRow extends PureComponent {
       const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
         <button className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-                disabled={disabled || readOnly}
+                disabled={disabled}
                 onClick={this._handleEditMultiline}>
           <i className="fa fa-pencil-square-o space-right"/>
           {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
@@ -223,6 +223,7 @@ class KeyValueEditorRow extends PureComponent {
 
   renderPairSelector () {
     const {
+      disabled,
       hideButtons,
       allowMultiline,
       allowFile
@@ -245,8 +246,8 @@ class KeyValueEditorRow extends PureComponent {
 
     if (showDropdown) {
       return (
-        <Dropdown right>
-          <DropdownButton className="tall">
+        <Dropdown right disabled={disabled}>
+          <DropdownButton className="tall" disabled={disabled}>
             <i className="fa fa-caret-down"/>
           </DropdownButton>
           <DropdownItem onClick={this._handleTypeChange} value={{type: 'text', multiline: false}}>

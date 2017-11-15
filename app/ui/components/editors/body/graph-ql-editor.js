@@ -1,7 +1,6 @@
 // @flow
-import type {Request} from '../../../../models/request';
-import classnames from 'classnames';
 import {newBodyRaw} from '../../../../models/request';
+import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {parse, print} from 'graphql';
@@ -18,6 +17,7 @@ import type {Settings} from '../../../../models/settings';
 import type {RenderedRequest} from '../../../../common/render';
 import {getRenderedRequest} from '../../../../common/render';
 import TimeFromNow from '../../time-from-now';
+import * as models from '../../../../models/index';
 
 type GraphQLBody = {
   query: string,
@@ -35,7 +35,7 @@ type Props = {
   render: Function | null,
   getRenderContext: Function | null,
   nunjucksPowerUserMode: boolean,
-  request: Request,
+  requestId: string,
   workspace: Workspace,
   settings: Settings,
   environmentId: string,
@@ -58,6 +58,7 @@ type State = {
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _isMounted: boolean;
+  _interval: any;
 
   constructor (props: Props) {
     super(props);
@@ -78,10 +79,10 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     this.setState({hideSchemaFetchErrors: true});
   }
 
-  async _fetchAndSetSchema (rawRequest: Request) {
+  async _fetchAndSetSchema () {
     this.setState({schemaIsFetching: true});
 
-    const {workspace, settings, environmentId} = this.props;
+    const {workspace, settings, environmentId, requestId} = this.props;
 
     const newState = {
       schema: this.state.schema,
@@ -89,6 +90,13 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaLastFetchTime: this.state.schemaLastFetchTime,
       schemaIsFetching: false
     };
+
+    const rawRequest = await models.request.getById(requestId);
+
+    if (!rawRequest) {
+      console.error(`Failed to find request id=${requestId}`);
+      return;
+    }
 
     let request: RenderedRequest | null = null;
     try {
@@ -139,10 +147,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     if (this._isMounted) {
       this.setState(newState);
     }
-  }
-
-  _handleRefreshSchema (): void {
-    this._fetchAndSetSchema(this.props.request);
   }
 
   _handlePrettify () {
@@ -228,18 +232,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     return JSON.stringify(body);
   }
 
-  componentWillReceiveProps (nextProps: Props) {
-    if (nextProps.request.url !== this.props.request.url) {
-      (async () => await this._fetchAndSetSchema(nextProps.request))();
-    }
-  }
-
   componentDidMount () {
-    this._fetchAndSetSchema(this.props.request);
+    this._interval = setInterval(this._fetchAndSetSchema, 10000);
+    this._fetchAndSetSchema();
     this._isMounted = true;
   }
 
   componentWillUnmount () {
+    clearInterval(this._interval);
     this._isMounted = false;
   }
 
@@ -325,7 +325,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         <div className="graphql-editor__schema-notice">
           {this.renderSchemaFetchMessage()}
           <button className={classnames('icon space-left', {'fa-spin': schemaIsFetching})}
-                  onClick={this._handleRefreshSchema}>
+                  onClick={this._fetchAndSetSchema}>
             <i className="fa fa-refresh"/>
           </button>
         </div>

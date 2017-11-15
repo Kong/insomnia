@@ -8,7 +8,7 @@ import UrlEncodedEditor from './url-encoded-editor';
 import FormEditor from './form-editor';
 import FileEditor from './file-editor';
 import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders} from '../../../../common/constants';
-import type {Request, RequestBodyParameter} from '../../../../models/request';
+import type {RequestBody, RequestBodyParameter, RequestHeader} from '../../../../models/request';
 import {newBodyFile, newBodyForm, newBodyFormUrlEncoded, newBodyRaw} from '../../../../models/request';
 import GraphQLEditor from './graph-ql-editor';
 import {getContentTypeHeader} from '../../../../common/misc';
@@ -17,14 +17,18 @@ import type {Workspace} from '../../../../models/workspace';
 import {showModal} from '../../modals/index';
 import AskModal from '../../modals/ask-modal';
 
-type Props = {
+type Props = {|
   // Required
   onChange: Function,
   onChangeHeaders: Function,
   handleUpdateRequestMimeType: Function,
   handleRender: Function,
   handleGetRenderContext: Function,
-  request: Request,
+  disableRender: boolean,
+  body: RequestBody,
+  requestId: string,
+  headers: Array<RequestHeader>,
+  inheritedBody: RequestBody | null,
   workspace: Workspace,
   settings: Settings,
   environmentId: string,
@@ -33,14 +37,14 @@ type Props = {
   indentSize: number,
   keyMap: string,
   lineWrapping: boolean
-};
+|};
 
 @autobind
 class BodyEditor extends React.PureComponent<Props> {
   _handleRawChange (rawValue: string) {
-    const {onChange, request} = this.props;
+    const {onChange, headers} = this.props;
 
-    const contentType = getContentTypeFromHeaders(request.headers);
+    const contentType = getContentTypeFromHeaders(headers);
     const newBody = newBodyRaw(rawValue, contentType || '');
 
     onChange(newBody);
@@ -65,8 +69,8 @@ class BodyEditor extends React.PureComponent<Props> {
   }
 
   async _handleFileChange (path: string) {
-    const {onChange, onChangeHeaders, request} = this.props;
-    const headers = clone(request.headers);
+    const {onChange, onChangeHeaders, headers: originalHeaders} = this.props;
+    const headers = clone(originalHeaders);
 
     let contentTypeHeader = getContentTypeHeader(headers);
 
@@ -107,24 +111,27 @@ class BodyEditor extends React.PureComponent<Props> {
       fontSize,
       indentSize,
       lineWrapping,
-      request,
+      requestId,
+      headers,
+      body,
+      inheritedBody,
       workspace,
       settings,
       environmentId,
+      disableRender,
       handleRender: render,
       handleGetRenderContext: getRenderContext,
       nunjucksPowerUserMode
     } = this.props;
 
-    const noRender = request.settingDisableRenderRequestBody;
-    const handleRender = noRender ? null : render;
-    const handleGetRenderContext = noRender ? null : getRenderContext;
+    const handleRender = disableRender ? null : render;
+    const handleGetRenderContext = disableRender ? null : getRenderContext;
 
-    const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
+    const uniqueKey = `${requestId}::${disableRender ? 'no-render' : 'render'}`;
 
-    const fileName = request.body.fileName;
-    const mimeType = request.body.mimeType;
-    const isBodyEmpty = typeof mimeType !== 'string' && !request.body.text;
+    const fileName = body.fileName;
+    const mimeType = body.mimeType;
+    const isBodyEmpty = typeof mimeType !== 'string' && !body.text;
 
     if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
       return (
@@ -134,7 +141,8 @@ class BodyEditor extends React.PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
-          parameters={request.body.params || []}
+          parameters={body.params || []}
+          inheritedParameters={(inheritedBody && inheritedBody.params) || []}
         />
       );
     } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
@@ -145,7 +153,8 @@ class BodyEditor extends React.PureComponent<Props> {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
-          parameters={request.body.params || []}
+          parameters={body.params || []}
+          inheritedParameters={(inheritedBody && inheritedBody.params) || []}
         />
       );
     } else if (mimeType === CONTENT_TYPE_FILE) {
@@ -160,10 +169,10 @@ class BodyEditor extends React.PureComponent<Props> {
       return (
         <GraphQLEditor
           key={uniqueKey}
-          request={request}
+          requestId={requestId}
           fontSize={fontSize}
           indentSize={indentSize}
-          content={request.body.text || ''}
+          content={body.text || ''}
           keyMap={keyMap}
           lineWrapping={lineWrapping}
           render={handleRender}
@@ -176,7 +185,7 @@ class BodyEditor extends React.PureComponent<Props> {
         />
       );
     } else if (!isBodyEmpty) {
-      const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
+      const contentType = getContentTypeFromHeaders(headers) || mimeType;
       return (
         <RawEditor
           key={uniqueKey}
@@ -185,7 +194,7 @@ class BodyEditor extends React.PureComponent<Props> {
           keyMap={keyMap}
           lineWrapping={lineWrapping}
           contentType={contentType || 'text/plain'}
-          content={request.body.text || ''}
+          content={body.text || ''}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}

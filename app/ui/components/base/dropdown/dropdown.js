@@ -184,6 +184,10 @@ class Dropdown extends PureComponent {
   }
 
   _handleClick () {
+    if (this.props.disabled) {
+      return;
+    }
+
     this.toggle();
   }
 
@@ -429,7 +433,8 @@ Dropdown.propTypes = {
   onHide: PropTypes.func,
   className: PropTypes.string,
   style: PropTypes.string,
-  beside: PropTypes.bool
+  beside: PropTypes.bool,
+  disabled: PropTypes.bool
 };
 
 export default Dropdown;

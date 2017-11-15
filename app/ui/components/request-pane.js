@@ -330,11 +330,15 @@ class RequestPane extends React.PureComponent<Props> {
           <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
               key={uniqueKey}
+              inheritedBody={requestDiff ? requestDiff.body : null}
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
-              request={request}
+              requestId={request._id}
+              body={request.body}
+              headers={request.headers}
+              disableRender={request.settingDisableRenderRequestBody}
               workspace={workspace}
               environmentId={environmentId}
               settings={settings}

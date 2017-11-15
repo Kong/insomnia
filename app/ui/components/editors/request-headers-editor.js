@@ -154,20 +154,13 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
                 key={this._generateHeadersKey(inheritedHeaders)}
                 sortable
                 disabled
+                readOnly
                 namePlaceholder="My-Header"
                 valuePlaceholder="Value"
-                className="no-pad-top no-pad-bottom"
                 pairs={inheritedHeaders}
-                maxPairs={inheritedHeaders.length}
                 nunjucksPowerUserMode={nunjucksPowerUserMode}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
-                handleGetAutocompleteNameConstants={this._getCommonHeaderNames}
-                handleGetAutocompleteValueConstants={this._getCommonHeaderValues}
-                onToggleDisable={this._handleTrackToggle}
-                onCreate={this._handleTrackCreate}
-                onDelete={this._handleTrackDelete}
-                onChange={onChange}
               />
             ] : null}
 
