@@ -45,6 +45,7 @@ import type {CookieJar} from '../../models/cookie-jar';
 import type {Environment} from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type {ClientCertificate} from '../../models/client-certificate';
+import type {RequestDiff} from '../../network/parent-requests';
 
 type Props = {
   // Helper Functions
@@ -110,7 +111,7 @@ type Props = {
   // Optional
   oAuth2Token: ?OAuth2Token,
   activeRequest: ?Request,
-  activeRequestDiff: ?Request,
+  activeRequestDiff: ?RequestDiff,
   activeResponse: ?Response,
 };
 

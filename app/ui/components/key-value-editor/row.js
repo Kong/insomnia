@@ -179,7 +179,7 @@ class KeyValueEditorRow extends PureComponent {
       return (
         <FileInputButton
           ref={this._setValueInputRef}
-          disabled={disabled || readOnly || false}
+          disabled={disabled || readOnly}
           showFileName
           showFileIcon
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
@@ -191,7 +191,7 @@ class KeyValueEditorRow extends PureComponent {
       const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
         <button className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-                disabled={disabled || readOnly || false}
+                disabled={disabled || readOnly}
                 onClick={this._handleEditMultiline}>
           <i className="fa fa-pencil-square-o space-right"/>
           {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
@@ -304,7 +304,7 @@ class KeyValueEditorRow extends PureComponent {
     let handle = null;
     if (sortable) {
       const btn = (
-        <button disabled={readOnly} className="key-value-editor__drag">
+        <button disabled={readOnly || disabled} className="key-value-editor__drag">
           <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
         </button>
       );
@@ -342,7 +342,7 @@ class KeyValueEditorRow extends PureComponent {
           {!hideButtons ? (
             <Button onClick={this._handleDisableChange}
                     value={!pair.disabled}
-                    disabled={readOnly}
+                    disabled={readOnly || disabled}
                     title={pair.disabled ? 'Enable item' : 'Disable item'}>
               {pair.disabled
                 ? <i className="fa fa-square-o"/>
@@ -356,7 +356,7 @@ class KeyValueEditorRow extends PureComponent {
           {!noDelete && (
             !hideButtons ? (
               <PromptButton key={Math.random()}
-                            disabled={readOnly}
+                            disabled={readOnly || disabled}
                             tabIndex={-1}
                             confirmMessage=" "
                             addIcon
@@ -365,7 +365,7 @@ class KeyValueEditorRow extends PureComponent {
                 <i className="fa fa-trash-o"/>
               </PromptButton>
             ) : (
-              <button disabled={readOnly}>
+              <button disabled={readOnly || disabled}>
                 <i className="fa fa-empty"/>
               </button>
             )

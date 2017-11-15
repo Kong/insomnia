@@ -11,9 +11,11 @@ describe('extendRequest()', () => {
     expect(() => extendRequest({}, null)).toThrowError('Cannot extend empty child request');
   });
 
-  it('Fails to extend null parent', () => {
-    expect(() => extendRequest(null, null)).toThrowError('Cannot extend with empty parent request');
-  });
+  testInheritance('null parent returns child',
+    null,
+    {url: 'https://child.insomnia.rest'},
+    {url: 'https://child.insomnia.rest'}
+  );
 
   testInheritance('child keeps it\'s URL',
     {url: 'https://insomnia.rest'},

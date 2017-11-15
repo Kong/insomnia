@@ -1,13 +1,27 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import * as querystring from '../../common/querystring';
 import * as misc from '../../common/misc';
 import CopyButton from './base/copy-button';
+import {patchRequest} from '../../network/parent-requests';
+import type {RequestDiff} from '../../network/parent-requests';
+import type {Request} from '../../models/request';
+
+type Props = {
+  request: Request,
+  handleRender: Function,
+  requestDiff: ?RequestDiff
+};
+
+type State = {
+  string: string
+};
 
 @autobind
-class RenderedQueryString extends PureComponent {
-  constructor (props) {
+class RenderedQueryString extends React.PureComponent<Props, State> {
+  _interval: any;
+  constructor (props: Props) {
     super(props);
     this._interval = null;
     this.state = {
@@ -15,21 +29,22 @@ class RenderedQueryString extends PureComponent {
     };
   }
 
-  async _debouncedUpdate (props) {
+  async _debouncedUpdate (props: Props) {
     clearTimeout(this._interval);
     this._interval = setTimeout(() => {
       this._update(props);
     }, 300);
   }
 
-  async _update (props) {
-    const {request} = props;
-    const enabledParameters = request.parameters.filter(p => !p.disabled);
+  async _update (props: Props) {
+    const {request, requestDiff} = props;
+    const extendedRequest = patchRequest(request, requestDiff);
+    const enabledParameters = extendedRequest.parameters.filter(p => !p.disabled);
 
     let result;
     try {
       result = await props.handleRender({
-        url: request.url,
+        url: extendedRequest.url,
         parameters: enabledParameters
       });
     } catch (err) {
@@ -40,7 +55,7 @@ class RenderedQueryString extends PureComponent {
       const {url, parameters} = result;
       const qs = querystring.buildFromParams(parameters);
       const fullUrl = querystring.joinUrl(url, qs);
-      this.setState({string: misc.prepareUrlForSending(fullUrl, request.settingEncodeUrl)});
+      this.setState({string: misc.prepareUrlForSending(fullUrl, extendedRequest.settingEncodeUrl)});
     }
   }
 
@@ -52,7 +67,7 @@ class RenderedQueryString extends PureComponent {
     clearTimeout(this._interval);
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps (nextProps: Props) {
     if (nextProps.request._id !== this.props.request._id) {
       this._update(nextProps);
     } else {
@@ -81,10 +96,5 @@ class RenderedQueryString extends PureComponent {
     );
   }
 }
-
-RenderedQueryString.propTypes = {
-  request: PropTypes.object.isRequired,
-  handleRender: PropTypes.func.isRequired
-};
 
 export default RenderedQueryString;

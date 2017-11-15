@@ -8,8 +8,8 @@ import autobind from 'autobind-decorator';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import ContentTypeDropdown from './dropdowns/content-type-dropdown';
 import AuthDropdown from './dropdowns/auth-dropdown';
-import KeyValueEditor from './key-value-editor/editor';
 import RequestHeadersEditor from './editors/request-headers-editor';
+import RequestParametersEditor from './editors/request-parameters-editor';
 import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
@@ -26,6 +26,7 @@ import MarkdownPreview from './markdown-preview';
 import type {Settings} from '../../models/settings';
 import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
+import type {RequestDiff} from '../../network/parent-requests';
 
 type Props = {
   // Functions
@@ -64,7 +65,7 @@ type Props = {
 
   // Optional
   request: ?Request,
-  requestDiff: ?Request,
+  requestDiff: ?RequestDiff,
   oAuth2Token: ?OAuth2Token
 };
 
@@ -245,11 +246,19 @@ class RequestPane extends React.PureComponent<Props> {
       numBodyParams = request.body.params.filter(p => !p.disabled).length;
     }
 
-    const numParameters = request.parameters.filter(p => !p.disabled).length;
-    const numHeaders = request.headers.filter(h => !h.disabled).length;
-    const urlHasQueryParameters = request.url.indexOf('?') >= 0;
+    const diffParameters = (requestDiff && requestDiff.parameters) || [];
+    const diffHeaders = (requestDiff && requestDiff.headers) || [];
+    const allParameters = [...diffParameters, ...request.parameters];
+    const allHeaders = [...diffHeaders, ...request.headers];
+    const numParameters = allParameters.filter(p => !p.disabled).length;
+    const numHeaders = allHeaders.filter(h => !h.disabled).length;
 
-    const uniqueKey = `${forceRefreshCounter}::${request._id}`;
+    const urlHasQueryParameters = request.url.indexOf('?') >= 0;
+    const uniqueKey = [
+      forceRefreshCounter,
+      request._id,
+      requestDiff ? 'yes' : 'no'
+    ].join('::');
 
     return (
       <section className="pane request-pane">
@@ -357,28 +366,21 @@ class RequestPane extends React.PureComponent<Props> {
             <div className="pad pad-bottom-sm query-editor__preview">
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
-                <ErrorBoundary key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
+                <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                   <RenderedQueryString
                     handleRender={handleRender}
                     request={request}
+                    requestDiff={requestDiff}
                   />
                 </ErrorBoundary>
               </code>
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <ErrorBoundary key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
-                  <KeyValueEditor
-                    sortable
-                    namePlaceholder="name"
-                    valuePlaceholder="value"
-                    className="pad-bottom pad-top"
-                    onToggleDisable={this._trackQueryToggle}
-                    onCreate={this._trackQueryCreate}
-                    onDelete={this._trackQueryDelete}
-                    pairs={request.parameters}
+                <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+                  <RequestParametersEditor
+                    parameters={request.parameters}
+                    inheritedParameters={requestDiff ? requestDiff.parameters : null}
                     handleRender={handleRender}
                     handleGetRenderContext={handleGetRenderContext}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}

@@ -17,33 +17,43 @@ export type RequestDiff = {
   authentication: RequestAuthentication | null
 };
 
-export function extendRequest (parent: Request, child: Request): Request {
+export function extendRequest (parent: ?Request, child: Request): Request {
   const extendedRequest = diffRequest(parent, child);
   return patchRequest(child, extendedRequest);
 }
 
-export function diffRequest (parent: Request, child: Request): RequestDiff {
+export function diffRequest (parent: ?Request, child: Request): RequestDiff {
+  const extendedRequest = {
+    url: null,
+    headers: null,
+    parameters: null,
+    body: null,
+    authentication: null
+  };
+
   if (!parent) {
-    throw new Error('Cannot extend with empty parent request');
+    return extendedRequest;
   }
 
   if (!child) {
     throw new Error('Cannot extend empty child request');
   }
 
-  const extendedRequest = {
-    url: _diffUrl(parent.url, child.url),
-    headers: _diffHeaders(parent.headers, child.headers),
-    parameters: _diffParameters(parent.parameters, child.parameters),
-    body: _diffBody(parent.body, child.body),
-    authentication: _diffAuthentication(parent.authentication, child.authentication)
-  };
+  extendedRequest.url = _diffUrl(parent.url, child.url);
+  extendedRequest.headers = _diffNameValuePairs(parent.headers, child.headers);
+  extendedRequest.parameters = _diffNameValuePairs(parent.parameters, child.parameters);
+  extendedRequest.body = _diffBody(parent.body, child.body);
+  extendedRequest.authentication = _diffAuthentication(parent.authentication, child.authentication);
 
   return extendedRequest;
 }
 
-export function patchRequest (child: Request, diff: RequestDiff): Request {
+export function patchRequest (child: Request, diff: ?RequestDiff): Request {
   const newRequest = clone(child);
+
+  if (!diff) {
+    return child;
+  }
 
   if (diff.url) {
     newRequest.url = diff.url || newRequest.url;
@@ -87,14 +97,6 @@ function _diffBody (parentBody: RequestBody, childBody: RequestBody): RequestBod
   const childHasBodyMimeType = typeof childBody.mimeType === 'string';
   const childHasBody = childHasBodyText || childHasBodyFile || childHasBodyMimeType;
   return childHasBody ? null : parentBody;
-}
-
-function _diffParameters (parentParameters, childParameters): Array<RequestParameter> | null {
-  return _diffNameValuePairs(parentParameters, childParameters);
-}
-
-function _diffHeaders (parentHeaders, childHeaders): Array<RequestHeader> | null {
-  return _diffNameValuePairs(parentHeaders, childHeaders);
 }
 
 function _diffAuthentication (

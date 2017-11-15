@@ -29,6 +29,20 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
     this.props.onChange(this._getHeadersFromString(headersString));
   }
 
+  _generateHeadersKey (parameters: Array<RequestHeader>) {
+    const keyParts = [];
+    for (const parameter of parameters) {
+      const segments = [
+        parameter.name,
+        parameter.value || '',
+        parameter.disabled ? 'disabled' : 'enabled'
+      ];
+      keyParts.push(segments.join(':::'));
+    }
+
+    return keyParts.join('_++_');
+  }
+
   _handleTrackToggle (pair: RequestHeader) {
     trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
   }
@@ -137,7 +151,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
                 Parent Headers
               </label>,
               <KeyValueEditor
-                key="editor"
+                key={this._generateHeadersKey(inheritedHeaders)}
                 sortable
                 disabled
                 namePlaceholder="My-Header"
