@@ -8,14 +8,12 @@ describe('extendRequest()', () => {
   beforeEach(globalBeforeEach);
 
   it('Fails to extend null child', () => {
-    expect(() => extendRequest(null, null)).toThrowError('Cannot extend null child request');
+    expect(() => extendRequest({}, null)).toThrowError('Cannot extend empty child request');
   });
 
-  testInheritance('does not extend null parent',
-    null,
-    {url: 'https://child.insomnia.rest'},
-    {url: 'https://child.insomnia.rest'}
-  );
+  it('Fails to extend null parent', () => {
+    expect(() => extendRequest(null, null)).toThrowError('Cannot extend with empty parent request');
+  });
 
   testInheritance('child keeps it\'s URL',
     {url: 'https://insomnia.rest'},
@@ -108,8 +106,8 @@ describe('extendRequest()', () => {
     body: {
       mimeType: CONTENT_TYPE_FORM_DATA,
       params: [
-
         {name: 'foo', value: 'parent'},
+        {name: '', value: ''},
         {name: 'disabled_child', value: 'parent'},
         {name: 'disabled_both', value: 'parent', disabled: true},
         {name: 'disabled_only_parent', value: 'child', disabled: true}
@@ -139,6 +137,7 @@ describe('extendRequest()', () => {
   testInheritance('child overwrites headers', {
     headers: [
       {name: 'foo', value: 'parent'},
+      {name: '', value: ''},
       {name: 'disabled_child', value: 'parent'},
       {name: 'disabled_both', value: 'parent', disabled: true},
       {name: 'disabled_only_parent', value: 'child', disabled: true}
@@ -161,6 +160,7 @@ describe('extendRequest()', () => {
   testInheritance('child overwrites parameters', {
     parameters: [
       {name: 'foo', value: 'parent'},
+      {name: '', value: ''},
       {name: 'disabled_child', value: 'parent'},
       {name: 'disabled_both', value: 'parent', disabled: true},
       {name: 'disabled_only_parent', value: 'child', disabled: true}

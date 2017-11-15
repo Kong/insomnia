@@ -64,6 +64,7 @@ type Props = {
 
   // Optional
   request: ?Request,
+  requestDiff: ?Request,
   oAuth2Token: ?OAuth2Token
 };
 
@@ -180,6 +181,7 @@ class RequestPane extends React.PureComponent<Props> {
       handleSendAndDownload,
       oAuth2Token,
       request,
+      requestDiff,
       workspace,
       environmentId,
       settings,
@@ -372,6 +374,7 @@ class RequestPane extends React.PureComponent<Props> {
                     sortable
                     namePlaceholder="name"
                     valuePlaceholder="value"
+                    className="pad-bottom pad-top"
                     onToggleDisable={this._trackQueryToggle}
                     onCreate={this._trackQueryCreate}
                     onDelete={this._trackQueryDelete}
@@ -395,6 +398,7 @@ class RequestPane extends React.PureComponent<Props> {
           <TabPanel className="react-tabs__tab-panel header-editor">
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
+                inheritedHeaders={requestDiff ? requestDiff.headers : null}
                 headers={request.headers}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}

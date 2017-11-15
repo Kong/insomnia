@@ -108,6 +108,7 @@ class DebouncedInput extends PureComponent {
       onBlur, // eslint-disable-line no-unused-vars
       delay, // eslint-disable-line no-unused-vars
       textarea,
+      disabled,
       ...props
     } = this.props;
     if (textarea) {
@@ -115,6 +116,7 @@ class DebouncedInput extends PureComponent {
         <textarea
           ref={this._setRef}
           {...props}
+          disabled={disabled}
           onChange={this._handleChange}
           onFocus={this._handleFocus}
           onBlur={this._handleBlur}
@@ -125,6 +127,7 @@ class DebouncedInput extends PureComponent {
         <input
           ref={this._setRef}
           {...props}
+          disabled={disabled}
           onChange={this._handleChange}
           onFocus={this._handleFocus}
           onBlur={this._handleBlur}
@@ -139,6 +142,7 @@ DebouncedInput.propTypes = {
   onChange: PropTypes.func.isRequired,
 
   // Optional
+  disabled: PropTypes.bool,
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   textarea: PropTypes.bool,

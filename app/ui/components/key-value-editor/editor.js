@@ -317,6 +317,8 @@ class Editor extends PureComponent {
   render () {
     const {
       maxPairs,
+      readOnly,
+      disabled,
       className,
       valueInputType,
       valuePlaceholder,
@@ -343,6 +345,8 @@ class Editor extends PureComponent {
               noDelete={disableDelete}
               key={pair.id || 'no-id'}
               index={i} // For dragging
+              readOnly={readOnly}
+              disabled={disabled}
               ref={this._setRowRef}
               sortable={sortable}
               namePlaceholder={namePlaceholder}
@@ -417,6 +421,8 @@ Editor.propTypes = {
   onChooseFile: PropTypes.func,
   onDelete: PropTypes.func,
   onCreate: PropTypes.func,
+  readOnly: PropTypes.bool,
+  disabled: PropTypes.bool,
   className: PropTypes.string
 };
 

@@ -110,6 +110,7 @@ type Props = {
   // Optional
   oAuth2Token: ?OAuth2Token,
   activeRequest: ?Request,
+  activeRequestDiff: ?Request,
   activeResponse: ?Response,
 };
 
@@ -343,6 +344,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     const {
       activeEnvironment,
       activeRequest,
+      activeRequestDiff,
       activeWorkspace,
       activeCookieJar,
       activeRequestResponses,
@@ -584,6 +586,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             ref={handleSetRequestPaneRef}
             handleImportFile={this._handleImportFile}
             request={activeRequest}
+            requestDiff={activeRequestDiff}
             showPasswords={settings.showPasswords}
             useBulkHeaderEditor={settings.useBulkHeaderEditor}
             editorFontSize={settings.editorFontSize}

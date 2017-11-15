@@ -1,96 +1,157 @@
 // @flow
 import type {Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../models/request';
+import clone from 'clone';
 import {AUTH_NONE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED} from '../common/constants';
 
-type Pair = {name: string, value: string, disabled?: boolean};
+type Pair = {
+  name: string,
+  value: string,
+  disabled?: boolean
+};
 
-export function extendRequest (parent: Request | null, child: Request): Request {
-  if (!child) {
-    throw new Error('Cannot extend null child request');
-  }
+export type RequestDiff = {
+  url: string | null,
+  headers: Array<RequestHeader> | null,
+  parameters: Array<RequestParameter> | null,
+  body: RequestBody | null,
+  authentication: RequestAuthentication | null
+};
 
+export function extendRequest (parent: Request, child: Request): Request {
+  const extendedRequest = diffRequest(parent, child);
+  return patchRequest(child, extendedRequest);
+}
+
+export function diffRequest (parent: Request, child: Request): RequestDiff {
   if (!parent) {
-    return child;
+    throw new Error('Cannot extend with empty parent request');
   }
 
-  const newRequest: Request = {
-    // Trivial properties
-    _id: child._id,
-    type: child.type,
-    parentId: child.parentId,
-    modified: child.modified,
-    created: child.created,
-    settingStoreCookies: child.settingSendCookies,
-    settingSendCookies: child.settingSendCookies,
-    settingDisableRenderRequestBody: child.settingDisableRenderRequestBody,
-    settingEncodeUrl: child.settingEncodeUrl,
-    name: child.name,
-    description: child.description,
-    method: child.method,
-    metaSortKey: child.metaSortKey,
+  if (!child) {
+    throw new Error('Cannot extend empty child request');
+  }
 
-    // Complex properties
-    url: _extendUrl(parent.url, child.url),
-    body: _extendBody(parent.body, child.body),
-    parameters: _extendParameters(parent.parameters, child.parameters),
-    headers: _extendHeaders(parent.headers, child.headers),
-    authentication: _extendAuthentication(parent.authentication, child.authentication)
+  const extendedRequest = {
+    url: _diffUrl(parent.url, child.url),
+    headers: _diffHeaders(parent.headers, child.headers),
+    parameters: _diffParameters(parent.parameters, child.parameters),
+    body: _diffBody(parent.body, child.body),
+    authentication: _diffAuthentication(parent.authentication, child.authentication)
   };
+
+  return extendedRequest;
+}
+
+export function patchRequest (child: Request, diff: RequestDiff): Request {
+  const newRequest = clone(child);
+
+  if (diff.url) {
+    newRequest.url = diff.url || newRequest.url;
+  }
+
+  if (diff.body && diff.body.params) {
+    newRequest.body.params = _mergeNameValuePairs(diff.body.params, newRequest.body.params || []);
+  } else if (diff.body) {
+    newRequest.body = diff.body;
+  }
+
+  if (diff.parameters) {
+    newRequest.parameters = _mergeNameValuePairs(diff.parameters, newRequest.parameters);
+  }
+
+  if (diff.headers) {
+    newRequest.headers = _mergeNameValuePairs(diff.headers, newRequest.headers);
+  }
 
   return newRequest;
 }
 
-function _extendUrl (parentUrl: string, childUrl: string): string {
-  return childUrl || parentUrl;
+function _diffUrl (parentUrl: string, childUrl: string): string | null {
+  return childUrl ? null : parentUrl;
 }
 
-function _extendBody (parentBody: RequestBody, childBody: RequestBody): RequestBody {
-  // Merge together if they are both form data or urlencoded
+function _diffBody (parentBody: RequestBody, childBody: RequestBody): RequestBody | null {
   const bothUrlEncoded = parentBody.mimeType === CONTENT_TYPE_FORM_URLENCODED &&
     childBody.mimeType === CONTENT_TYPE_FORM_URLENCODED;
   const bothFormData = parentBody.mimeType === CONTENT_TYPE_FORM_DATA &&
     childBody.mimeType === CONTENT_TYPE_FORM_DATA;
-  if (bothUrlEncoded || bothFormData) {
-    const params = _mergeNameValuePairs(parentBody.params || [], childBody.params || []);
-    return Object.assign(childBody, {params});
-  }
 
-  console.log('BODY', parentBody, childBody);
+  // Merge together if they are both form data or urlencoded
+  if (bothUrlEncoded || bothFormData) {
+    const params = _diffNameValuePairs(parentBody.params || [], childBody.params || []);
+    return params ? Object.assign(clone(childBody), {params}) : null;
+  }
 
   const childHasBodyText = !!childBody.text;
   const childHasBodyFile = !!childBody.fileName;
   const childHasBodyMimeType = typeof childBody.mimeType === 'string';
   const childHasBody = childHasBodyText || childHasBodyFile || childHasBodyMimeType;
-  return childHasBody ? childBody : parentBody;
+  return childHasBody ? null : parentBody;
 }
 
-function _extendParameters (parentParameters, childParameters): Array<RequestParameter> {
-  return _mergeNameValuePairs(parentParameters, childParameters);
+function _diffParameters (parentParameters, childParameters): Array<RequestParameter> | null {
+  return _diffNameValuePairs(parentParameters, childParameters);
 }
 
-function _extendHeaders (parentHeaders, childHeaders): Array<RequestHeader> {
-  return _mergeNameValuePairs(parentHeaders, childHeaders);
+function _diffHeaders (parentHeaders, childHeaders): Array<RequestHeader> | null {
+  return _diffNameValuePairs(parentHeaders, childHeaders);
 }
 
-function _extendAuthentication (parentAuthentication, childAuthentication): RequestAuthentication {
+function _diffAuthentication (
+  parentAuthentication,
+  childAuthentication
+): RequestAuthentication | null {
   const childHasAuth = childAuthentication.type && childAuthentication.type !== AUTH_NONE;
   return childHasAuth ? childAuthentication : parentAuthentication;
 }
 
-function _mergeNameValuePairs<T: Pair> (parent: Array<T>, child: Array<T>): Array<T> {
-  const newPairs = [];
-  for (const parentPair of parent) {
-    if (parentPair.disabled) {
+function _diffNameValuePairs<T: Pair> (
+  parentPairs: Array<T>,
+  childPairs: Array<T>
+): Array<T> | null {
+  const diffPairs = [];
+
+  for (const parentPair of parentPairs) {
+    // Ignore empty pairs
+    if (!parentPair.name && !parentPair.value) {
       continue;
     }
 
-    const childPair = child.find(p => p.name === parentPair.name);
+    // Can we ignore the child?
+    const childPair = childPairs.find(p => p.name === parentPair.name);
     if (childPair && !childPair.disabled) {
       continue;
     }
 
-    newPairs.push(parentPair);
+    diffPairs.push(clone(parentPair));
   }
 
-  return [...newPairs, ...child];
+  if (diffPairs.length === 0) {
+    return null;
+  }
+
+  return diffPairs;
+}
+
+function _mergeNameValuePairs<T: Pair> (
+  parentPairs: Array<T>,
+  childPairs: Array<T>
+): Array<T> {
+  const validParents = [];
+  for (const parentPair of parentPairs) {
+    // Parent pair is disabled so act like it doesn't exist
+    if (parentPair.disabled) {
+      continue;
+    }
+
+    // Child overwrites parent?
+    const childPair = childPairs.find(p => p.name === parentPair.name);
+    if (childPair && !childPair.disabled) {
+      continue;
+    }
+
+    validParents.push(parentPair);
+  }
+
+  return [...validParents, ...childPairs];
 }

@@ -46,6 +46,7 @@ class FormEditor extends PureComponent {
             sortable
             allowFile
             allowMultiline
+            className="pad-bottom pad-top"
             namePlaceholder="name"
             valuePlaceholder="value"
             handleRender={handleRender}

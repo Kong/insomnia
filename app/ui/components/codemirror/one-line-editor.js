@@ -111,6 +111,10 @@ class OneLineEditor extends PureComponent {
 
   _handleInputMouseEnter () {
     // Convert to editor when user hovers mouse over input
+    if (this.props.disabled) {
+      return;
+    }
+
     /*
      * NOTE: we're doing it in a timeout because we don't want to convert if the
      * mouse goes in an out right away.
@@ -297,6 +301,8 @@ class OneLineEditor extends PureComponent {
       placeholder,
       render,
       onPaste,
+      readOnly,
+      disabled,
       getRenderContext,
       nunjucksPowerUserMode,
       getAutocompleteConstants,
@@ -323,6 +329,7 @@ class OneLineEditor extends PureComponent {
           tabIndex={0}
           id={id}
           type={type}
+          readOnly={readOnly}
           mode={syntaxMode}
           placeholder={placeholder}
           onPaste={onPaste}
@@ -350,6 +357,7 @@ class OneLineEditor extends PureComponent {
             // background: 'rgba(255, 0, 0, 0.05)', // For debugging
             width: '100%'
           }}
+          disabled={disabled}
           placeholder={placeholder}
           defaultValue={defaultValue}
           onBlur={this._handleInputBlur}
@@ -379,6 +387,8 @@ OneLineEditor.propTypes = {
   onChange: PropTypes.func,
   onPaste: PropTypes.func,
   render: PropTypes.func,
+  readOnly: PropTypes.bool,
+  disabled: PropTypes.bool,
   getRenderContext: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
   getAutocompleteConstants: PropTypes.func,

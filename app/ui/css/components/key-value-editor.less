@@ -2,8 +2,6 @@
 @import '../constants/colors';
 
 .key-value-editor {
-  padding: @padding-md 0;
-
   // This is the actual row
   .key-value-editor__row-wrapper {
     position: relative;
@@ -58,14 +56,13 @@
   }
 
   .key-value-editor__drag {
-    width: @line-height-sm;
-    min-width: @line-height-sm;
+    padding-left: @padding-md;
+    padding-right: @padding-sm;
     text-align: center;
     box-sizing: border-box;
     overflow: hidden;
 
-    // Remove hover effect
-    &, &:hover {
+    & {
       color: var(--hl);
     }
   }
@@ -76,7 +73,7 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    padding: 0 @padding-sm 0 0;
+    padding: 0;
     box-sizing: border-box;
 
     // Pad the first form if there's no drag handle before it
@@ -98,6 +95,9 @@
 
     & > * {
       padding: 0 @padding-xs;
+      &:last-child {
+        padding-right: @padding-md;
+      }
     }
 
     & > button,
@@ -105,14 +105,16 @@
       color: @hl;
       margin: 0;
 
-      &:hover,
-      &:focus {
-        background: transparent;
-      }
+      &:not(:disabled) {
+        &:hover,
+        &:focus {
+          background: transparent;
+        }
 
-      &:hover,
-      &:focus {
-        color: inherit;
+        &:hover,
+        &:focus {
+          color: inherit;
+        }
       }
     }
   }
