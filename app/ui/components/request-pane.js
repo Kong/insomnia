@@ -47,6 +47,7 @@ type Props = {
   updateRequestMimeType: Function,
   updateSettingsShowPasswords: Function,
   updateSettingsUseBulkHeaderEditor: Function,
+  updateAuthenticationDisableInheritance: Function,
   handleImport: Function,
   handleImportFile: Function,
 
@@ -64,9 +65,9 @@ type Props = {
   forceRefreshCounter: number,
 
   // Optional
-  request: ?Request,
-  requestDiff: ?RequestDiff,
-  oAuth2Token: ?OAuth2Token
+  request: Request | null,
+  requestDiff: RequestDiff | null,
+  oAuth2Token: OAuth2Token | null
 };
 
 @autobind
@@ -194,6 +195,7 @@ class RequestPane extends React.PureComponent<Props> {
       updateRequestMimeType,
       updateRequestParameters,
       updateSettingsShowPasswords,
+      updateAuthenticationDisableInheritance,
       useBulkHeaderEditor
     } = this.props;
 
@@ -355,9 +357,11 @@ class RequestPane extends React.PureComponent<Props> {
               <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <AuthWrapper
                   oAuth2Token={oAuth2Token}
+                  inheritedAuthentication={requestDiff ? requestDiff.authentication : null}
                   showPasswords={showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
+                  handleUpdateAuthenticationDisableInheritance={updateAuthenticationDisableInheritance}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}

@@ -146,28 +146,31 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
       <div className="pad-bottom scrollable-container">
         <div className="scrollable">
           <div className="pad-top">
-            {inheritedHeaders ? [
-              <label key="label" className="label--small pad-left">
-                Parent Headers
-              </label>,
-              <KeyValueEditor
-                key={this._generateHeadersKey(inheritedHeaders)}
-                sortable
-                disabled
-                readOnly
-                namePlaceholder="My-Header"
-                valuePlaceholder="Value"
-                pairs={inheritedHeaders}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
-                handleRender={handleRender}
-                handleGetRenderContext={handleGetRenderContext}
-              />
-            ] : null}
+            {inheritedHeaders ? (
+              <div>
+                <div className="label--small pad-left">
+                  Parent Headers
+                </div>
+
+                <KeyValueEditor
+                  key={this._generateHeadersKey(inheritedHeaders)}
+                  sortable
+                  disabled
+                  readOnly
+                  namePlaceholder="My-Header"
+                  valuePlaceholder="Value"
+                  pairs={inheritedHeaders}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                />
+              </div>
+            ) : null}
 
             {inheritedHeaders ? (
-              <label className="label--small pad-left pad-top">
+              <div className="label--small pad-left pad-top">
                 Headers
-              </label>
+              </div>
             ) : null}
 
             <KeyValueEditor

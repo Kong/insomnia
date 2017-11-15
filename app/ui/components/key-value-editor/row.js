@@ -305,9 +305,9 @@ class KeyValueEditorRow extends PureComponent {
     let handle = null;
     if (sortable) {
       const btn = (
-        <button disabled={readOnly || disabled} className="key-value-editor__drag">
+        <div className={'key-value-editor__drag ' + (disabled ? 'btn--disabled' : '')}>
           <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
-        </button>
+        </div>
       );
       handle = (readOnly || disabled) ? btn : connectDragSource(btn);
     }

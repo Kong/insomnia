@@ -23,16 +23,31 @@ class BearerAuth extends PureComponent {
     const {token} = request.authentication;
 
     return (
-      <div className="form-control form-control--underlined pad no-margin">
-        <OneLineEditor
-          className="no-margin"
-          onChange={this._handleChange}
-          defaultValue={token || ''}
-          render={handleRender}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
-          placeholder="token"
-          getRenderContext={handleGetRenderContext}
-        />
+      <div className="pad">
+        <table>
+          <tbody>
+          <tr>
+            <td className="pad-right no-wrap valign-middle">
+              <label htmlFor="bearer-token" className="label--small no-pad">
+                Bearer Token
+              </label>
+            </td>
+            <td className="wide">
+              <div className="form-control form-control--underlined no-margin">
+                <OneLineEditor
+                  id="bearer-token"
+                  onChange={this._handleChange}
+                  defaultValue={token || ''}
+                  render={handleRender}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  placeholder="token"
+                  getRenderContext={handleGetRenderContext}
+                />
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
       </div>
     );
   }

@@ -73,6 +73,10 @@ export function patchRequest (child: Request, diff: ?RequestDiff): Request {
     newRequest.headers = _mergeNameValuePairs(diff.headers, newRequest.headers);
   }
 
+  if (diff.authentication && !child.authentication.disableInheritance) {
+    newRequest.authentication = diff.authentication || newRequest.authentication;
+  }
+
   return newRequest;
 }
 
@@ -103,8 +107,17 @@ function _diffAuthentication (
   parentAuthentication,
   childAuthentication
 ): RequestAuthentication | null {
-  const childHasAuth = childAuthentication.type && childAuthentication.type !== AUTH_NONE;
-  return childHasAuth ? childAuthentication : parentAuthentication;
+  // Nothing to do if parent has no auth
+  if (!parentAuthentication.type || parentAuthentication.type === AUTH_NONE) {
+    return null;
+  }
+
+  // Nothing to do if child has auth already
+  if (childAuthentication.type && childAuthentication.type !== AUTH_NONE) {
+    return null;
+  }
+
+  return parentAuthentication;
 }
 
 function _diffNameValuePairs<T: Pair> (

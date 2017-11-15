@@ -2,7 +2,7 @@ import {globalBeforeEach} from '../../__jest__/before-each';
 import * as models from '../../models/index';
 import {initModel} from '../../models/index';
 import {extendRequest} from '../parent-requests';
-import {CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED} from '../../common/constants';
+import {AUTH_BASIC, AUTH_NONE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED} from '../../common/constants';
 
 describe('extendRequest()', () => {
   beforeEach(globalBeforeEach);
@@ -181,6 +181,36 @@ describe('extendRequest()', () => {
       {name: 'disabled_both', value: 'child', disabled: true}
     ]
   });
+
+  testInheritance('parent overrides unset auth',
+    {authentication: {type: AUTH_BASIC, username: 'user', password: 'pass'}},
+    {authentication: {}},
+    {authentication: {type: AUTH_BASIC, username: 'user', password: 'pass'}}
+  );
+
+  testInheritance('parent overrides NONE auth',
+    {authentication: {type: AUTH_BASIC, username: 'user', password: 'pass'}},
+    {authentication: {type: AUTH_NONE, foo: 'bar'}},
+    {authentication: {type: AUTH_BASIC, username: 'user', password: 'pass'}}
+  );
+
+  testInheritance('parent skips auth',
+    {authentication: {type: AUTH_BASIC, username: 'user', password: 'pass'}},
+    {authentication: {type: AUTH_BASIC, username: 'child', password: 'child'}},
+    {authentication: {type: AUTH_BASIC, username: 'child', password: 'child'}}
+  );
+
+  testInheritance('parent skips disabled inheritance setting',
+    {authentication: {type: AUTH_BASIC, username: 'user', password: 'pass'}},
+    {authentication: {disableInheritance: true}},
+    {authentication: {disableInheritance: true}}
+  );
+
+  testInheritance('child does not inherit NONE auth',
+    {authentication: {type: AUTH_NONE}},
+    {authentication: {}},
+    {authentication: {}}
+  );
 });
 
 function testInheritance (name, parentSub, childSub, attrs) {

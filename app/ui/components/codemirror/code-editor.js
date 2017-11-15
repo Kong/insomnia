@@ -741,7 +741,10 @@ class CodeEditor extends React.Component {
     }
 
     return (
-      <div className={classes} style={style} data-editor-type={type}>
+      <div tabIndex={disabled ? -1 : null}
+           className={classes}
+           style={style}
+           data-editor-type={type}>
         <div className={classnames('editor__container', 'input', {'input--disabled': disabled})}
              style={styles}
              onClick={onClick}

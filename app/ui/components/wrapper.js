@@ -46,6 +46,7 @@ import type {Environment} from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type {ClientCertificate} from '../../models/client-certificate';
 import type {RequestDiff} from '../../network/parent-requests';
+import {AUTH_NONE} from '../../common/constants';
 
 type Props = {
   // Helper Functions
@@ -109,10 +110,10 @@ type Props = {
   activeWorkspaceClientCertificates: Array<ClientCertificate>,
 
   // Optional
-  oAuth2Token: ?OAuth2Token,
-  activeRequest: ?Request,
-  activeRequestDiff: ?RequestDiff,
-  activeResponse: ?Response,
+  oAuth2Token: OAuth2Token | null,
+  activeRequest: Request | null,
+  activeRequestDiff: RequestDiff | null,
+  activeResponse: Response | null
 };
 
 type State = {
@@ -171,6 +172,23 @@ class Wrapper extends React.PureComponent<Props, State> {
 
   _handleForceUpdateRequestHeaders (headers: Array<RequestHeader>): Promise<Request> {
     return this._handleForceUpdateRequest({headers});
+  }
+
+  _handleUpdateAuthenticationDisableInheritance (value: boolean): Promise<Request> | null {
+    const request = this.props.activeRequest;
+    if (!request) {
+      return null;
+    }
+
+    const hasNoAuth = !request.authentication.type || request.authentication.type === AUTH_NONE;
+    if (!hasNoAuth) {
+      return null;
+    }
+
+    const {authentication} = request;
+    authentication.disableInheritance = value;
+
+    return this._handleForceUpdateRequest({authentication});
   }
 
   _handleUpdateRequestUrl (url: string): Promise<Request> {
@@ -607,6 +625,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             updateRequestBody={this._handleUpdateRequestBody}
             forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
+            updateAuthenticationDisableInheritance={this._handleUpdateAuthenticationDisableInheritance}
             updateRequestUrl={this._handleUpdateRequestUrl}
             updateRequestMethod={this._handleUpdateRequestMethod}
             updateRequestParameters={this._handleUpdateRequestParameters}
