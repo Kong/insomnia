@@ -2,7 +2,7 @@ import {globalBeforeEach} from '../../__jest__/before-each';
 import * as models from '../../models/index';
 import {initModel} from '../../models/index';
 import {extendRequest} from '../parent-requests';
-import {AUTH_BASIC, AUTH_NONE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED} from '../../common/constants';
+import {AUTH_BASIC, AUTH_NONE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_JSON} from '../../common/constants';
 
 describe('extendRequest()', () => {
   beforeEach(globalBeforeEach);
@@ -135,6 +135,18 @@ describe('extendRequest()', () => {
       ]
     }
   });
+
+  testInheritance('child inherits parent body when empty',
+    {body: {mimeType: CONTENT_TYPE_JSON, text: '{"foo": "bar"}'}},
+    {body: {}},
+    {body: {mimeType: CONTENT_TYPE_JSON, text: '{"foo": "bar"}'}}
+  );
+
+  testInheritance('child inherits parent body when empty and form',
+    {body: {mimeType: CONTENT_TYPE_FORM_DATA, params: [{name: 'foo', value: 'bar'}]}},
+    {body: {}},
+    {body: {mimeType: CONTENT_TYPE_FORM_DATA, params: [{name: 'foo', value: 'bar'}]}},
+  );
 
   testInheritance('child overwrites headers', {
     headers: [

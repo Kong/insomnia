@@ -14,7 +14,7 @@ import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
+import {AUTH_NONE, DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
 import {trackEvent} from '../../analytics/index';
 import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
@@ -243,14 +243,6 @@ class RequestPane extends React.PureComponent<Props> {
       );
     }
 
-    let numBodyParams = 0;
-    if (request.body && request.body.params) {
-      const diffParams = (requestDiff && requestDiff.body && requestDiff.body.params) || [];
-      const bodyParams = (request.body && request.body.params) || [];
-      const allParams = [...diffParams, ...bodyParams];
-      numBodyParams = allParams.filter(p => !p.disabled).length;
-    }
-
     const diffParameters = (requestDiff && requestDiff.parameters) || [];
     const diffHeaders = (requestDiff && requestDiff.headers) || [];
     const allParameters = [...diffParameters, ...request.parameters];
@@ -264,6 +256,32 @@ class RequestPane extends React.PureComponent<Props> {
       request._id,
       requestDiff ? 'yes' : 'no'
     ].join('::');
+
+    // Build body name
+    const body = request.body;
+    const diffBody = requestDiff ? requestDiff.body : null;
+    const hasBody = typeof body.mimeType === 'string';
+    const bodyToUse = !hasBody && diffBody && !body.disableInheritance ? diffBody : body;
+    const bodyName = typeof bodyToUse.mimeType === 'string'
+      ? getContentTypeName(bodyToUse.mimeType)
+      : 'Body';
+
+    let numBodyParams = 0;
+    if (bodyToUse && bodyToUse.params) {
+      const diffParams = (requestDiff && requestDiff.body && requestDiff.body.params) || [];
+      const bodyParams = (request.body && request.body.params) || [];
+      const allParams = [...diffParams, ...bodyParams];
+      numBodyParams = allParams.filter(p => !p.disabled).length;
+    }
+    const bodyParamCounter = numBodyParams
+      ? <span className="bubble space-left">{numBodyParams}</span>
+      : null;
+
+    const auth = request.authentication;
+    const diffAuth = requestDiff ? requestDiff.authentication : null;
+    const hasAuth = auth.type && auth.type !== AUTH_NONE;
+    const authToUse = !hasAuth && diffAuth && !auth.disableInheritance ? diffAuth : auth;
+    const authName = getAuthTypeName(authToUse.type) || 'Auth';
 
     return (
       <section className="pane request-pane">
@@ -294,10 +312,8 @@ class RequestPane extends React.PureComponent<Props> {
                                    contentType={request.body.mimeType}
                                    request={request}
                                    className="tall">
-                {typeof request.body.mimeType === 'string'
-                  ? getContentTypeName(request.body.mimeType)
-                  : 'Body'}
-                {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
+                {bodyName}
+                {bodyParamCounter}
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
             </Tab>
@@ -305,10 +321,7 @@ class RequestPane extends React.PureComponent<Props> {
               <AuthDropdown onChange={updateRequestAuthentication}
                             authentication={request.authentication}
                             className="tall">
-                {getAuthTypeName(request.authentication.type) || 'Auth'}
-                {requestDiff && requestDiff.authentication && !request.authentication.disableInheritance ? (
-                  ` (${getAuthTypeName(requestDiff.authentication.type)})`
-                ) : null}
+                {authName}
                 <i className="fa fa-caret-down space-left"/>
               </AuthDropdown>
             </Tab>

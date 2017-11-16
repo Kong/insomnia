@@ -168,7 +168,8 @@ class AuthWrapper extends React.PureComponent<Props> {
                   checked={!request.authentication.disableInheritance}
                   onChange={this._handleUpdateAuthenticationDisableInheritance}
                 />
-                Inherit {getAuthTypeName(inheritedAuthentication.type, true) || 'Auth'} from parent
+                Inherit {getAuthTypeName(inheritedAuthentication.type, true) || 'authentication'}
+                from parent
               </label>
             </div>
           </div>

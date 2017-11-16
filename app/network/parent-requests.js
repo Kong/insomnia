@@ -59,8 +59,11 @@ export function patchRequest (child: Request, diff: ?RequestDiff): Request {
     newRequest.url = diff.url || newRequest.url;
   }
 
-  if (diff.body && diff.body.params) {
-    newRequest.body.params = _mergeNameValuePairs(diff.body.params, newRequest.body.params || []);
+  if (diff.body && diff.body.params && newRequest.body.params) {
+    newRequest.body.params = _mergeNameValuePairs(
+      diff.body.params,
+      newRequest.body.params
+    );
   } else if (diff.body) {
     newRequest.body = diff.body;
   }

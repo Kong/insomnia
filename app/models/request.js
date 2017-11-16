@@ -41,7 +41,8 @@ export type RequestBody = {
   mimeType?: string | null,
   text?: string,
   fileName?: string,
-  params?: Array<RequestBodyParameter>
+  params?: Array<RequestBodyParameter>,
+  disableInheritance?: boolean
 };
 
 type BaseRequest = {

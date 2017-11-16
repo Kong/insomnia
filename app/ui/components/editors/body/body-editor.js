@@ -7,7 +7,7 @@ import RawEditor from './raw-editor';
 import UrlEncodedEditor from './url-encoded-editor';
 import FormEditor from './form-editor';
 import FileEditor from './file-editor';
-import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders} from '../../../../common/constants';
+import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders, getContentTypeName} from '../../../../common/constants';
 import type {RequestBody, RequestBodyParameter, RequestHeader} from '../../../../models/request';
 import {newBodyFile, newBodyForm, newBodyFormUrlEncoded, newBodyRaw} from '../../../../models/request';
 import GraphQLEditor from './graph-ql-editor';
@@ -41,6 +41,13 @@ type Props = {|
 
 @autobind
 class BodyEditor extends React.PureComponent<Props> {
+  _handleUpdateDisableInheritance (e: SyntheticEvent<HTMLInputElement>) {
+    const {onChange, body} = this.props;
+    const newBody = clone(body);
+    newBody.disableInheritance = !e.currentTarget.checked;
+    onChange(newBody);
+  }
+
   _handleRawChange (rawValue: string) {
     const {onChange, headers} = this.props;
 
@@ -200,6 +207,25 @@ class BodyEditor extends React.PureComponent<Props> {
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={this._handleRawChange}
         />
+      );
+    } else if (inheritedBody) {
+      return (
+        <div className="overflow-hidden editor vertically-center text-center">
+          <div className="pad super-faint text-sm text-center">
+            <i className="fa fa-hand-peace-o" style={{fontSize: '8rem', opacity: 0.3}}/>
+            <br/><br/>
+            <div className="form-control">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={!body.disableInheritance}
+                  onChange={this._handleUpdateDisableInheritance}
+                />
+                Inherit {getContentTypeName(inheritedBody.mimeType) || 'body'} from parent
+              </label>
+            </div>
+          </div>
+        </div>
       );
     } else {
       return (
