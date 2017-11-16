@@ -9,6 +9,7 @@ import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
 import type {RequestHeader} from '../../../models/request';
+import Wrap from '../wrap';
 
 type Props = {
   onChange: Function,
@@ -27,20 +28,6 @@ type Props = {
 class RequestHeadersEditor extends React.PureComponent<Props> {
   _handleBulkUpdate (headersString: string) {
     this.props.onChange(this._getHeadersFromString(headersString));
-  }
-
-  _generateHeadersKey (parameters: Array<RequestHeader>) {
-    const keyParts = [];
-    for (const parameter of parameters) {
-      const segments = [
-        parameter.name,
-        parameter.value || '',
-        parameter.disabled ? 'disabled' : 'enabled'
-      ];
-      keyParts.push(segments.join(':::'));
-    }
-
-    return keyParts.join('_++_');
   }
 
   _handleTrackToggle (pair: RequestHeader) {
@@ -147,7 +134,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
         <div className="scrollable">
           <div className="pad-top">
             {inheritedHeaders ? (
-              <div>
+              <Wrap>
                 <div className="label--small pad-left">
                   Inherited Headers
                   <div className="bubble space-left">
@@ -156,7 +143,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
                 </div>
 
                 <KeyValueEditor
-                  key={this._generateHeadersKey(inheritedHeaders)}
+                  useKey
                   sortable
                   disabled
                   readOnly
@@ -167,7 +154,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                 />
-              </div>
+              </Wrap>
             ) : null}
 
             {inheritedHeaders ? (

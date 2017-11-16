@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import {trackEvent} from '../../../analytics/index';
 import type {RequestParameter} from '../../../models/request';
+import Wrap from '../wrap';
 
 type Props = {
   onChange: Function,
@@ -28,20 +29,6 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     trackEvent('Parameters Editor', 'Delete');
   }
 
-  _generateParametersKey (parameters: Array<RequestParameter>) {
-    const keyParts = [];
-    for (const parameter of parameters) {
-      const segments = [
-        parameter.name,
-        parameter.value || '',
-        parameter.disabled ? 'disabled' : 'enabled'
-      ];
-      keyParts.push(segments.join(':::'));
-    }
-
-    return keyParts.join('_++_');
-  }
-
   render () {
     const {
       parameters,
@@ -54,26 +41,28 @@ class RequestParametersEditor extends React.PureComponent<Props> {
 
     return (
       <div className="pad-top-sm">
-        {inheritedParameters && inheritedParameters.length ? [
-          <label key="label" className="label--small pad-left">
-            Inherited Parameters
-            <div className="bubble space-left">
-              {inheritedParameters.filter(p => !p.disabled).length}
-            </div>
-          </label>,
-          <KeyValueEditor
-            key={this._generateParametersKey(inheritedParameters)}
-            sortable
-            disabled
-            readOnly
-            namePlaceholder="name"
-            valuePlaceholder="value"
-            pairs={inheritedParameters}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-          />
-        ] : null}
+        {inheritedParameters && inheritedParameters.length ? (
+          <Wrap>
+            <label key="label" className="label--small pad-left">
+              Inherited Parameters
+              <div className="bubble space-left">
+                {inheritedParameters.filter(p => !p.disabled).length}
+              </div>
+            </label>
+            <KeyValueEditor
+              useKey
+              sortable
+              disabled
+              readOnly
+              namePlaceholder="name"
+              valuePlaceholder="value"
+              pairs={inheritedParameters}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+            />
+          </Wrap>
+        ) : null}
 
         {inheritedParameters && inheritedParameters.length ? (
           <label className="label--small pad-left pad-top">
