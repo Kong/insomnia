@@ -128,7 +128,6 @@ describe('extendRequest()', () => {
     body: {
       mimeType: CONTENT_TYPE_FORM_DATA,
       params: [
-        {name: 'disabled_child', value: 'parent'},
         {name: 'foo', value: 'child'},
         {name: 'disabled_child', value: 'child', disabled: true},
         {name: 'disabled_both', value: 'child', disabled: true}
@@ -164,7 +163,6 @@ describe('extendRequest()', () => {
     ]
   }, {
     headers: [
-      {name: 'disabled_child', value: 'parent'},
       {name: 'foo', value: 'child'},
       {name: 'disabled_child', value: 'child', disabled: true},
       {name: 'disabled_both', value: 'child', disabled: true}
@@ -187,7 +185,6 @@ describe('extendRequest()', () => {
     ]
   }, {
     parameters: [
-      {name: 'disabled_child', value: 'parent'},
       {name: 'foo', value: 'child'},
       {name: 'disabled_child', value: 'child', disabled: true},
       {name: 'disabled_both', value: 'child', disabled: true}

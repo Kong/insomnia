@@ -136,8 +136,9 @@ function _diffNameValuePairs<T: Pair> (
     }
 
     // Can we ignore the child?
+    // NOTE: Even disabled child pairs will overwrite (we wan't this)
     const childPair = childPairs.find(p => p.name === parentPair.name);
-    if (childPair && !childPair.disabled) {
+    if (childPair) {
       continue;
     }
 
