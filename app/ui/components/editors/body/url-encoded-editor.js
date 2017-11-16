@@ -65,6 +65,9 @@ class UrlEncodedEditor extends React.PureComponent<Props> {
             {inheritedParameters && inheritedParameters.length ? [
               <label key="label" className="label--small pad-left">
                 Inherited Items
+                <div className="bubble space-left">
+                  {inheritedParameters.filter(p => !p.disabled).length}
+                </div>
               </label>,
               <KeyValueEditor
                 key={this._generateParametersKey(inheritedParameters)}
@@ -83,6 +86,9 @@ class UrlEncodedEditor extends React.PureComponent<Props> {
             {inheritedParameters && inheritedParameters.length ? (
               <label className="label--small pad-left pad-top">
                 Items
+                <div className="bubble space-left">
+                  {parameters.filter(p => !p.disabled).length}
+                </div>
               </label>
             ) : null}
             <KeyValueEditor

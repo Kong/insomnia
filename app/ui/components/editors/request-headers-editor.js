@@ -150,6 +150,9 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
               <div>
                 <div className="label--small pad-left">
                   Inherited Headers
+                  <div className="bubble space-left">
+                    {inheritedHeaders.filter(p => !p.disabled).length}
+                  </div>
                 </div>
 
                 <KeyValueEditor
@@ -170,6 +173,9 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
             {inheritedHeaders ? (
               <div className="label--small pad-left pad-top">
                 Headers
+                <div className="bubble space-left">
+                  {headers.filter(p => !p.disabled).length}
+                </div>
               </div>
             ) : null}
 

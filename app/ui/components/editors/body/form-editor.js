@@ -71,6 +71,9 @@ class FormEditor extends React.PureComponent<Props> {
             {inheritedParameters && inheritedParameters.length ? [
               <label key="label" className="label--small pad-left">
                 Inherited Parts
+                <div className="bubble space-left">
+                  {inheritedParameters.filter(p => !p.disabled).length}
+                </div>
               </label>,
               <KeyValueEditor
                 key={this._generateParametersKey(inheritedParameters)}
@@ -90,6 +93,9 @@ class FormEditor extends React.PureComponent<Props> {
             {inheritedParameters && inheritedParameters.length ? (
               <label className="label--small pad-left pad-top">
                 Parts
+                <div className="bubble space-left">
+                  {parameters.filter(p => !p.disabled).length}
+                </div>
               </label>
             ) : null}
             <KeyValueEditor
