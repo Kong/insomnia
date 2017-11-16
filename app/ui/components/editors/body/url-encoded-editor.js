@@ -64,7 +64,7 @@ class UrlEncodedEditor extends React.PureComponent<Props> {
           <div className="pad-top">
             {inheritedParameters && inheritedParameters.length ? [
               <label key="label" className="label--small pad-left">
-                Parent Items
+                Inherited Items
               </label>,
               <KeyValueEditor
                 key={this._generateParametersKey(inheritedParameters)}

@@ -149,7 +149,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
             {inheritedHeaders ? (
               <div>
                 <div className="label--small pad-left">
-                  Parent Headers
+                  Inherited Headers
                 </div>
 
                 <KeyValueEditor

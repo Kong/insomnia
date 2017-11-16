@@ -56,7 +56,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
       <div className="pad-top-sm">
         {inheritedParameters && inheritedParameters.length ? [
           <label key="label" className="label--small pad-left">
-            Parent Params
+            Inherited Parameters
           </label>,
           <KeyValueEditor
             key={this._generateParametersKey(inheritedParameters)}
@@ -74,7 +74,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
 
         {inheritedParameters && inheritedParameters.length ? (
           <label className="label--small pad-left pad-top">
-            Params
+            Parameters
           </label>
         ) : null}
 
