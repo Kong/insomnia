@@ -5,6 +5,8 @@ import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import installExtension, {REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS} from 'electron-devtools-installer';
+import * as models from './models/index';
+import * as database from './common/database';
 
 // Handle potential auto-update
 if (needsRestart) {
@@ -15,6 +17,7 @@ if (needsRestart) {
 errorHandling.init();
 updates.init();
 windowUtils.init();
+database.init(models.types());
 
 function addUrlToOpen (e, url) {
   e.preventDefault();
