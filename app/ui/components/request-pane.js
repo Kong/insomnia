@@ -90,11 +90,11 @@ class RequestPane extends React.PureComponent<Props> {
 
     const requestId = this.props.request ? this.props.request._id : 'n/a';
 
-    const urls = docs.filter(d => (
+    const urls = docs.filter((d: any) => (
       d.type === models.request.type && // Only requests
       d._id !== requestId && // Not current request
       (d.url || '') // Only ones with non-empty URLs
-    )).map(r => r.url || '');
+    )).map((r: any) => (r.url || '').trim());
 
     return Array.from(new Set(urls));
   }
