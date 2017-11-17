@@ -1,21 +1,20 @@
 // @flow
 import type {BaseModel} from '../models/index';
+import * as models from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
-import fs from 'fs';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
 import {initModel} from '../models';
-import * as models from '../models/index';
-import AlertModal from '../ui/components/modals/alert-modal';
-import {showModal} from '../ui/components/modals/index';
-import {trackEvent} from '../analytics/index';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
 export const CHANGE_REMOVE = 'remove';
 
-let db = {};
+const database = {};
+const db = {
+  _empty: true
+};
 
 // ~~~~~~~ //
 // HELPERS //
@@ -27,73 +26,62 @@ function allTypes () {
 
 function getDBFilePath (modelType) {
   // NOTE: Do not EVER change this. EVER!
-  const basePath = electron.remote.app.getPath('userData');
+  const basePath = electron.app.getPath('userData');
   return fsPath.join(basePath, `insomnia.${modelType}.db`);
 }
 
-/**
- * Initialize the database. Note that this isn't actually async, but might be
- * in the future!
- *
- * @param types
- * @param config
- * @param forceReset
- * @returns {null}
- */
 export async function init (
   types: Array<string>,
   config: Object = {},
   forceReset: boolean = false
 ) {
-  if (forceReset) {
-    changeListeners = [];
-    db = {};
-  }
-
-  // Fill in the defaults
-  for (const modelType of types) {
-    if (db[modelType]) {
-      console.warn(`[db] Already initialized DB.${modelType}`);
-      continue;
-    }
-
-    const filePath = getDBFilePath(modelType);
-
-    // Check to make sure the responses DB file isn't too big to parse. If it is, we
-    // should delete it
-    try {
-      const MBs = fs.statSync(filePath).size / 1024 / 1024;
-      if (modelType === models.response.type && MBs > 256) {
-        // NOTE: Node.js can't have a string longer than 256MB. Since the response DB can reach
-        // sizes that big, let's not even load it if it's bigger than that. Just start over.
-        console.warn(`[db] Response DB too big (${MBs}). Deleting...`);
-        fs.unlinkSync(filePath);
-
-        // Can't show alert until the app renders, so delay for a bit first
-        setTimeout(() => {
-          showModal(AlertModal, {
-            title: 'Response DB Too Large',
-            message: 'Your combined responses have exceeded 256MB and have been flushed. ' +
-            'NOTE: A better solution to this will be implemented in a future release.'
-          });
-          trackEvent('Alert', 'DB Too Large');
-        }, 1000);
+  const initializeAsClient = electron.remote && !config.inMemoryOnly;
+  if (initializeAsClient) {
+    electron.ipcRenderer.on('db.changes', async (e, changes) => {
+      for (const fn of changeListeners) {
+        await fn(changes);
       }
-    } catch (err) {
-      // File probably did not exist probably, so no big deal
+    });
+    console.log('[db] Initialized DB client');
+  } else {
+    if (forceReset) {
+      changeListeners = [];
+      for (const attr of Object.keys(db)) {
+        if (attr === '_empty') {
+          continue;
+        }
+
+        delete db[attr];
+      }
     }
 
-    const collection = new NeDB(Object.assign({
-      autoload: true,
-      filename: filePath
-    }, config));
+    // Fill in the defaults
+    for (const modelType of types) {
+      if (db[modelType]) {
+        console.warn(`[db] Already initialized DB.${modelType}`);
+        continue;
+      }
 
-    collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+      const filePath = getDBFilePath(modelType);
+      const collection = new NeDB(Object.assign({
+        autoload: true,
+        filename: filePath
+      }, config));
 
-    db[modelType] = collection;
+      collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
+
+      db[modelType] = collection;
+    }
+
+    delete db._empty;
+
+    electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
+      const result = await database[fnName](...args);
+      e.sender.send(replyChannel, result);
+    });
+
+    console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
   }
-
-  console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -112,12 +100,19 @@ export function offChange (callback: Function): void {
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
-export function bufferChanges (millis: number = 1000): void {
-  bufferingChanges = true;
-  setTimeout(flushChanges, millis);
-}
+export const bufferChanges = database.bufferChanges = function (millis: number = 1000): void {
+  if (db._empty) {
+    _send('bufferChanges', ...arguments);
+    return;
+  }
 
-export async function flushChanges (): Promise<void> {
+  bufferingChanges = true;
+  setTimeout(database.flushChanges, millis);
+};
+
+export const flushChanges = database.flushChanges = async function (): Promise<void> {
+  if (db._empty) return _send('flushChanges', ...arguments);
+
   bufferingChanges = false;
   const changes = [...changeBuffer];
   changeBuffer = [];
@@ -127,17 +122,24 @@ export async function flushChanges (): Promise<void> {
     return;
   }
 
+  // Notify local listeners too
   for (const fn of changeListeners) {
     await fn(changes);
   }
-}
+
+  // Notify remote listeners
+  const windows = electron.BrowserWindow.getAllWindows();
+  for (const window of windows) {
+    window.webContents.send('db.changes', changes);
+  }
+};
 
 async function notifyOfChange (event: string, doc: BaseModel, fromSync: boolean): Promise<void> {
   changeBuffer.push([event, doc, fromSync]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
-    await flushChanges();
+    await database.flushChanges();
   }
 }
 
@@ -145,19 +147,23 @@ async function notifyOfChange (event: string, doc: BaseModel, fromSync: boolean)
 // Helpers //
 // ~~~~~~~ //
 
-export async function getMostRecentlyModified (
+export const getMostRecentlyModified = database.getMostRecentlyModified = async function (
   type: string,
   query: Object = {}
 ): Promise<BaseModel | null> {
-  const docs = await findMostRecentlyModified(type, query, 1);
-  return docs.length ? docs[0] : null;
-}
+  if (db._empty) return _send('getMostRecentlyModified', ...arguments);
 
-export function findMostRecentlyModified (
+  const docs = await database.findMostRecentlyModified(type, query, 1);
+  return docs.length ? docs[0] : null;
+};
+
+export const findMostRecentlyModified = database.findMostRecentlyModified = async function (
   type: string,
   query: Object = {},
   limit: number | null = null
 ): Promise<Array<BaseModel>> {
+  if (db._empty) return _send('findMostRecentlyModified', ...arguments);
+
   return new Promise(resolve => {
     db[type].find(query).sort({modified: -1}).limit(limit).exec(async (err, rawDocs) => {
       if (err) {
@@ -174,13 +180,15 @@ export function findMostRecentlyModified (
       resolve(docs);
     });
   });
-}
+};
 
-export function find<T: BaseModel> (
+export const find = database.find = async function <T: BaseModel> (
   type: string,
   query: Object = {},
   sort: Object = {created: 1}
 ): Promise<Array<T>> {
+  if (db._empty) return _send('find', ...arguments);
+
   return new Promise((resolve, reject) => {
     db[type].find(query).sort(sort).exec(async (err, rawDocs) => {
       if (err) {
@@ -195,27 +203,44 @@ export function find<T: BaseModel> (
       resolve(docs);
     });
   });
-}
+};
 
-export function all<T: BaseModel> (type: string): Promise<Array<T>> {
-  return find(type);
-}
+export const all = database.all = async function <T: BaseModel> (type: string): Promise<Array<T>> {
+  if (db._empty) return _send('all', ...arguments);
 
-export async function getWhere<T: BaseModel> (type: string, query: Object): Promise<T | null> {
-  const docs = await find(type, query);
+  return database.find(type);
+};
+
+export const getWhere = database.getWhere = async function <T: BaseModel> (
+  type: string,
+  query: Object
+): Promise<T | null> {
+  if (db._empty) return _send('getWhere', ...arguments);
+
+  const docs = await database.find(type, query);
   return docs.length ? docs[0] : null;
-}
+};
 
-export async function get<T: BaseModel> (type: string, id: string): Promise<T | null> {
+export const get = database.get = async function <T: BaseModel> (
+  type: string,
+  id: string
+): Promise<T | null> {
+  if (db._empty) return _send('get', ...arguments);
+
   // Short circuit IDs used to represent nothing
   if (!id || id === 'n/a') {
     return null;
   } else {
-    return getWhere(type, {_id: id});
+    return database.getWhere(type, {_id: id});
   }
-}
+};
 
-export function count (type: string, query: Object = {}): Promise<number> {
+export const count = database.count = async function (
+  type: string,
+  query: Object = {}
+): Promise<number> {
+  if (db._empty) return _send('count', ...arguments);
+
   return new Promise((resolve, reject) => {
     db[type].count(query, (err, count) => {
       if (err) {
@@ -225,18 +250,28 @@ export function count (type: string, query: Object = {}): Promise<number> {
       resolve(count);
     });
   });
-}
+};
 
-export async function upsert (doc: BaseModel, fromSync: boolean = false): Promise<BaseModel> {
-  const existingDoc = await get(doc.type, doc._id);
+export const upsert = database.upsert = async function (
+  doc: BaseModel,
+  fromSync: boolean = false
+): Promise<BaseModel> {
+  if (db._empty) return _send('upsert', ...arguments);
+
+  const existingDoc = await database.get(doc.type, doc._id);
   if (existingDoc) {
-    return update(doc, fromSync);
+    return database.update(doc, fromSync);
   } else {
-    return insert(doc, fromSync);
+    return database.insert(doc, fromSync);
   }
-}
+};
 
-export function insert<T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
+export const insert = database.insert = async function <T: BaseModel> (
+  doc: T,
+  fromSync: boolean = false
+): Promise<T> {
+  if (db._empty) return _send('insert', ...arguments);
+
   return new Promise(async (resolve, reject) => {
     const docWithDefaults = await initModel(doc.type, doc);
     db[doc.type].insert(docWithDefaults, (err, newDoc) => {
@@ -250,9 +285,14 @@ export function insert<T: BaseModel> (doc: T, fromSync: boolean = false): Promis
       notifyOfChange(CHANGE_INSERT, newDoc, fromSync);
     });
   });
-}
+};
 
-export function update<T: BaseModel> (doc: T, fromSync: boolean = false): Promise<T> {
+export const update = database.update = async function <T: BaseModel> (
+  doc: T,
+  fromSync: boolean = false
+): Promise<T> {
+  if (db._empty) return _send('update', ...arguments);
+
   return new Promise(async (resolve, reject) => {
     const docWithDefaults = await initModel(doc.type, doc);
     db[doc.type].update({_id: docWithDefaults._id}, docWithDefaults, err => {
@@ -266,12 +306,17 @@ export function update<T: BaseModel> (doc: T, fromSync: boolean = false): Promis
       notifyOfChange(CHANGE_UPDATE, docWithDefaults, fromSync);
     });
   });
-}
+};
 
-export async function remove<T: BaseModel> (doc: T, fromSync: boolean = false): Promise<void> {
-  bufferChanges();
+export const remove = database.remove = async function <T: BaseModel> (
+  doc: T,
+  fromSync: boolean = false
+): Promise<void> {
+  if (db._empty) return _send('remove', ...arguments);
 
-  const docs = await withDescendants(doc);
+  database.bufferChanges();
+
+  const docs = await database.withDescendants(doc);
   const docIds = docs.map(d => d._id);
   const types = [...new Set(docs.map(d => d.type))];
 
@@ -280,14 +325,19 @@ export async function remove<T: BaseModel> (doc: T, fromSync: boolean = false): 
 
   docs.map(d => notifyOfChange(CHANGE_REMOVE, d, fromSync));
 
-  flushChanges();
-}
+  database.flushChanges();
+};
 
-export async function removeWhere (type: string, query: Object): Promise<void> {
-  bufferChanges();
+export const removeWhere = database.removeWhere = async function (
+  type: string,
+  query: Object
+): Promise<void> {
+  if (db._empty) return _send('removeWhere', ...arguments);
 
-  for (const doc of await find(type, query)) {
-    const docs = await withDescendants(doc);
+  database.bufferChanges();
+
+  for (const doc of await database.find(type, query)) {
+    const docs = await database.withDescendants(doc);
     const docIds = docs.map(d => d._id);
     const types = [...new Set(docs.map(d => d.type))];
 
@@ -297,8 +347,8 @@ export async function removeWhere (type: string, query: Object): Promise<void> {
     docs.map(d => notifyOfChange(CHANGE_REMOVE, d, false));
   }
 
-  flushChanges();
-}
+  database.flushChanges();
+};
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
@@ -315,7 +365,7 @@ export async function docUpdate<T: BaseModel> (originalDoc: T, patch: Object = {
     patch,
   );
 
-  return update(doc);
+  return database.update(doc);
 }
 
 export async function docCreateNoMigrate<T: BaseModel> (
@@ -331,7 +381,7 @@ export async function docCreateNoMigrate<T: BaseModel> (
     {__NO_MIGRATE: true}
   );
 
-  return insert(doc);
+  return database.insert(doc);
 }
 
 export async function docCreate<T: BaseModel> (
@@ -346,17 +396,19 @@ export async function docCreate<T: BaseModel> (
     {type: type}
   );
 
-  return insert(doc);
+  return database.insert(doc);
 }
 
 // ~~~~~~~ //
 // GENERAL //
 // ~~~~~~~ //
 
-export async function withDescendants (
-  doc: BaseModel,
+export const withDescendants = database.withDescendants = async function <T: BaseModel> (
+  doc: T,
   stopType: string | null = null
-): Promise<Array<BaseModel>> {
+): Promise<Array<T>> {
+  if (db._empty) return _send('withDescendants', ...arguments);
+
   let docsToReturn = doc ? [doc] : [];
 
   async function next (docs: Array<BaseModel>): Promise<Array<BaseModel>> {
@@ -370,7 +422,7 @@ export async function withDescendants (
       for (const type of allTypes()) {
         // If the doc is null, we want to search for parentId === null
         const parentId = d ? d._id : null;
-        const more = await find(type, {parentId});
+        const more = await database.find(type, {parentId});
         foundDocs = [...foundDocs, ...more];
       }
     }
@@ -386,12 +438,14 @@ export async function withDescendants (
   }
 
   return await next([doc]);
-}
+};
 
-export async function withAncestors (
+export const withAncestors = database.withAncestors = async function (
   doc: BaseModel | null,
   types: Array<string> = allTypes()
 ): Promise<Array<BaseModel>> {
+  if (db._empty) return _send('withAncestors', ...arguments);
+
   if (!doc) {
     return [];
   }
@@ -403,7 +457,7 @@ export async function withAncestors (
     for (const d: BaseModel of docs) {
       for (const type of types) {
         // If the doc is null, we want to search for parentId === null
-        const another = await get(type, d.parentId);
+        const another = await database.get(type, d.parentId);
         another && foundDocs.push(another);
       }
     }
@@ -419,10 +473,15 @@ export async function withAncestors (
   }
 
   return await next([doc]);
-}
+};
 
-export async function duplicate<T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
-  bufferChanges();
+export const duplicate = database.duplicate = async function <T: BaseModel> (
+  originalDoc: T,
+  patch: Object = {}
+): Promise<T> {
+  if (db._empty) return _send('duplicate', ...arguments);
+
+  database.bufferChanges();
 
   async function next<T: BaseModel> (docToCopy: T, patch: Object): Promise<T> {
     // 1. Copy the doc
@@ -441,7 +500,7 @@ export async function duplicate<T: BaseModel> (originalDoc: T, patch: Object = {
       }
 
       const parentId = docToCopy._id;
-      const children = await find(type, {parentId});
+      const children = await database.find(type, {parentId});
       for (const doc of children) {
         await next(doc, {parentId: createdDoc._id});
       }
@@ -452,7 +511,21 @@ export async function duplicate<T: BaseModel> (originalDoc: T, patch: Object = {
 
   const createdDoc = await next(originalDoc, patch);
 
-  flushChanges();
+  database.flushChanges();
 
   return createdDoc;
+};
+
+// ~~~~~~~ //
+// Helpers //
+// ~~~~~~~ //
+
+async function _send<T> (fnName: string, ...args: Array<any>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const replyChannel = `db.fn.reply:${Math.random().toString().replace('0.', '')}`;
+    electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
+    electron.ipcRenderer.once(replyChannel, (e, result) => {
+      resolve(result);
+    });
+  });
 }
