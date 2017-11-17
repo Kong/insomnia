@@ -18,6 +18,7 @@ const remote = {
 
 module.exports = {
   ...remote,
+  remote: remote,
   ipcMain: {
     on () {
 

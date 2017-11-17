@@ -143,6 +143,7 @@ export function getBodyBuffer (response: Response, readFailureValue: any = null)
 }
 
 export function storeBodyBuffer (bodyBuffer: Buffer | null) {
+  console.log('ELECTRON', electron);
   const root = electron.remote.app.getPath('userData');
   const dir = path.join(root, 'responses');
 

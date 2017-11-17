@@ -35,7 +35,8 @@ export async function init (
   config: Object = {},
   forceReset: boolean = false
 ) {
-  if (electron.remote) {
+  const initializeAsClient = electron.remote && !config.inMemoryOnly;
+  if (initializeAsClient) {
     electron.ipcRenderer.on('db.changes', async (e, changes) => {
       for (const fn of changeListeners) {
         await fn(changes);
