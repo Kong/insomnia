@@ -1,5 +1,6 @@
 // @flow
 import type {BaseModel} from './index';
+import uuid from 'uuid';
 import * as db from '../common/database';
 
 type BaseSettings = {
@@ -22,10 +23,11 @@ type BaseSettings = {
   maxRedirects: number,
   disableAnalyticsTracking: boolean,
   pluginPath: string,
-  nunjucksPowerUserMode: boolean
+  nunjucksPowerUserMode: boolean,
+  deviceId: string | null
 };
 
-export type Settings = BaseModel & Settings;
+export type Settings = BaseModel & BaseSettings;
 
 export const name = 'Settings';
 export const type = 'Settings';
@@ -53,11 +55,13 @@ export function init (): BaseSettings {
     theme: 'default',
     disableAnalyticsTracking: false,
     pluginPath: '',
-    nunjucksPowerUserMode: false
+    nunjucksPowerUserMode: false,
+    deviceId: null
   };
 }
 
-export function migrate <T> (doc: T): T {
+export function migrate (doc: Settings): Settings {
+  doc = _migrateDeviceId(doc);
   return doc;
 }
 
@@ -85,4 +89,25 @@ export async function getOrCreate (patch: Object = {}): Promise<Settings> {
   } else {
     return results[0];
   }
+}
+
+function _migrateDeviceId (settings: Settings): Settings {
+  console.log('MIGRATE SETTINGS', settings);
+  // Cannot possible pull legacy Id out so let's bail until next time
+  if (!window || !window.localStorage) {
+    return settings;
+  }
+
+  // We already have one so we're done
+  if (settings.deviceId) {
+    return settings;
+  }
+
+  // Pull out legacy GA clientID and assign it to device ID.
+  const oldId = window.localStorage['gaClientId'] || null;
+  const deviceId = oldId || uuid.v4();
+  settings.deviceId = deviceId;
+
+  console.log('SETTINGS MIGRATED', settings);
+  return settings;
 }

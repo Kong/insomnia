@@ -1,10 +1,16 @@
+// @flow
 import * as google from './google';
 import * as models from '../models';
 import {ipcRenderer} from 'electron';
-import {getAppVersion, getAppPlatform, isDevelopment} from '../common/constants';
+import {getAppVersion, getAppPlatform, isDevelopment, GA_ID, GA_HOST} from '../common/constants';
+import {GoogleAnalytics} from './google';
 
-let initialized = false;
-export async function init (accountId) {
+let analytics = null;
+
+const DIMENSION_PLATFORM = 1;
+const DIMENSION_VERSION = 2;
+
+export async function init (accountId: ?string) {
   const settings = await models.settings.getOrCreate();
 
   if (settings.disableAnalyticsTracking) {
@@ -12,16 +18,18 @@ export async function init (accountId) {
     return;
   }
 
-  if (initialized) {
-    return;
+  if (analytics) {
+    analytics = new GoogleAnalytics(
+      GA_ID,
+      settings.deviceId || settings._id,
+      `https://${GA_HOST}/`
+    );
+    analytics.setCustomDimension(DIMENSION_PLATFORM, getAppPlatform());
+    analytics.setCustomDimension(DIMENSION_VERSION, getAppVersion());
   }
 
-  await google.init(accountId, getAppPlatform(), getAppVersion());
-
-  initialized = true;
-
   ipcRenderer.on('analytics-track-event', (_, args) => {
-    trackEvent(...args);
+    analytics.trackEvent(...args);
   });
 
   if (window && !isDevelopment()) {

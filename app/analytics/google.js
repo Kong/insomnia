@@ -1,95 +1,101 @@
-import * as constants from '../common/constants';
+// @flow
+import {getAppVersion, isDevelopment} from '../common/constants';
+import * as electron from 'electron';
+import * as querystring from '../common/querystring';
+import type {RequestParameter} from '../models/request';
 
-let _sessionId = null;
+const KEY_TRACKING_ID = 'cid';
+const KEY_VERSION = 'v';
+const KEY_CLIENT_ID = 'cid';
+const KEY_USER_ID = 'uid';
+const KEY_HIT_TYPE = 't';
+const KEY_LOCATION = 'dl';
+const KEY_TITLE = 'dt';
+// const KEY_VIEWPORT_SIZE = 'vp';
+// const KEY_SCREEN_RESOLUTION = 'sr';
+// const KEY_USER_LANGUAGE = 'ul';
+// const KEY_DOCUMENT_ENCODING = 'de';
+const KEY_EVENT_CATEGORY = 'ec';
+const KEY_EVENT_ACTION = 'ea';
+const KEY_EVENT_LABEL = 'el';
+const KEY_EVENT_VALUE = 'ev';
 
-const DIMENSION_PLATFORM = 'dimension1';
-const DIMENSION_VERSION = 'dimension2';
+const KEY_CUSTOM_DIMENSION_PREFIX = 'cd';
 
-export function init (userId, platform, version) {
-  if (constants.isDevelopment()) {
-    console.log(`[ga] Not initializing for dev`);
-    return;
+const BASE_URL = isDevelopment()
+  ? 'https://www.google-analytics.com/debug/collect'
+  : 'https://www.google-analytics.com/collect';
+
+export class GoogleAnalytics {
+  _trackingId: string;
+  _clientId: string;
+  _userId: string | null;
+  _customDimensions: {[string]: string};
+  _location: string;
+
+  constructor (trackingId: string, clientId: string, location: string) {
+    this._trackingId = trackingId;
+    this._clientId = clientId;
+    this._location = location;
+    this._userId = null;
+    this._customDimensions = {};
   }
 
-  if (!_sessionId) {
-    _injectGoogleAnalyticsScript();
+  sendEvent (category: string, action: string, label: ?string, value: ?string) {
+    const params = [
+      {name: KEY_HIT_TYPE, value: 'event'},
+      {name: KEY_EVENT_CATEGORY, value: category},
+      {name: KEY_EVENT_ACTION, value: action}
+    ];
+
+    label && params.push({name: KEY_EVENT_LABEL, value: label});
+    value && params.push({name: KEY_EVENT_VALUE, value: value});
+
+    this._request(params);
   }
 
-  if (!window.localStorage['gaClientId']) {
-    window.localStorage['gaClientId'] = require('uuid').v4();
+  sendPageView () {
+    const params = [{name: KEY_HIT_TYPE, value: 'pageview'}];
+    this._request(params);
   }
 
-  _sessionId = window.localStorage['gaClientId'];
-
-  window.ga('create', constants.GA_ID, {
-    'storage': 'none',
-    'clientId': _sessionId
-  });
-
-  // Disable URL protocol check
-  window.ga('set', 'checkProtocolTask', () => null);
-
-  // Set a fake location
-  window.ga('set', 'location', `https://${constants.GA_HOST}/`);
-
-  setUserId(userId);
-  setPlatform(platform);
-  setVersion(version);
-
-  // Track the initial page view
-  window.ga('send', 'pageview');
-
-  console.log(`[ga] Initialized for ${_sessionId}`);
-}
-
-export function setPlatform (platform) {
-  if (!window.ga || !platform) {
-    return;
+  setCustomDimension (index: number, value: string) {
+    this._customDimensions[index.toString()] = value;
   }
 
-  window.ga('set', DIMENSION_PLATFORM, platform);
-  console.log(`[ga] Set platform ${platform}`);
-}
+  _getDefaultParams () {
+    const params = [
+      {name: KEY_VERSION, value: '1'},
+      {name: KEY_TRACKING_ID, value: this._trackingId},
+      {name: KEY_CLIENT_ID, value: this._clientId},
+      {name: KEY_LOCATION, value: this._location},
+      {name: KEY_TITLE, value: `Insomnia ${getAppVersion()}`}
+    ];
 
-export function setVersion (version) {
-  if (!window.ga || !version) {
-    return;
+    this._userId && params.push({name: KEY_USER_ID, value: this._userId});
+
+    for (const id of Object.keys(this._customDimensions)) {
+      const name = KEY_CUSTOM_DIMENSION_PREFIX + id;
+      const value = this._customDimensions[id];
+      params.push({name, value});
+    }
+
+    return params;
   }
 
-  window.ga('set', DIMENSION_VERSION, version);
-  console.log(`[ga] Set version ${version}`);
-}
+  _request (params: Array<RequestParameter>) {
+    const allParams = [...this._getDefaultParams(), ...params];
+    console.log('SENDING', allParams);
 
-export function setUserId (userId) {
-  if (!window.ga || !userId) {
-    return;
-  }
+    const qs = querystring.buildFromParams(allParams);
+    const url = querystring.joinUrl(BASE_URL, qs);
+    const net = (electron.remote || electron).net;
+    const request = net.request(url);
 
-  window.ga('set', 'userId', userId);
-  console.log(`[ga] Set userId ${userId}`);
-}
-
-export function sendEvent (...googleAnalyticsArgs) {
-  window.ga && window.ga('send', 'event', ...googleAnalyticsArgs);
-  console.log(`[ga] Send event [${googleAnalyticsArgs.join(', ')}]`);
-}
-
-function _injectGoogleAnalyticsScript () {
-  try {
-    /* eslint-disable */
-    (function (i, s, o, g, r, a, m) {
-      i['GoogleAnalyticsObject'] = r;
-      i[r] = i[r] || function () {
-          (i[r].q = i[r].q || []).push(arguments)
-        }, i[r].l = 1 * new Date();
-      a = s.createElement(o);
-      m = s.getElementsByTagName(o)[0];
-      a.async = 1;
-      a.src = g;
-      m.parentNode.insertBefore(a, m)
-    })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
-    /* eslint-enable */
-  } catch (e) {
-    console.warn('[ga] Failed to inject Google Analytics');
+    request.on('response', response => {
+      if (response.status) {
+        console.log('RESPONSE', response);
+      }
+    });
   }
 }
