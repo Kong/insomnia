@@ -54,14 +54,14 @@ export function authorizeUserInWindow (url, urlRegex = /.*/) {
       // Be sure to resolve URL so that we can handle redirects with no host like /foo/bar
       const currentUrl = child.webContents.getURL();
       if (currentUrl.match(urlRegex)) {
-        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlRegex.toString()}`);
+        console.debug(`[oauth2] Matched redirect to "${currentUrl}" with ${urlRegex.toString()}`);
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl === url) {
         // It's the first one, so it's not a redirect
-        console.log(`[oauth2] Loaded "${currentUrl}"`);
+        console.debug(`[oauth2] Loaded "${currentUrl}"`);
       } else {
-        console.log(`[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlRegex.toString()}`);
+        console.debug(`[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlRegex.toString()}`);
       }
     });
 

@@ -1,6 +1,5 @@
 // @flow
 import type {BaseModel} from './index';
-import uuid from 'uuid';
 import * as db from '../common/database';
 
 type BaseSettings = {
@@ -61,11 +60,10 @@ export function init (): BaseSettings {
 }
 
 export function migrate (doc: Settings): Settings {
-  doc = _migrateDeviceId(doc);
   return doc;
 }
 
-export async function all (): Promise<Array<Settings>> {
+export async function all (patch: Object = {}): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -89,25 +87,4 @@ export async function getOrCreate (patch: Object = {}): Promise<Settings> {
   } else {
     return results[0];
   }
-}
-
-function _migrateDeviceId (settings: Settings): Settings {
-  console.log('MIGRATE SETTINGS', settings);
-  // Cannot possible pull legacy Id out so let's bail until next time
-  if (!window || !window.localStorage) {
-    return settings;
-  }
-
-  // We already have one so we're done
-  if (settings.deviceId) {
-    return settings;
-  }
-
-  // Pull out legacy GA clientID and assign it to device ID.
-  const oldId = window.localStorage['gaClientId'] || null;
-  const deviceId = oldId || uuid.v4();
-  settings.deviceId = deviceId;
-
-  console.log('SETTINGS MIGRATED', settings);
-  return settings;
 }

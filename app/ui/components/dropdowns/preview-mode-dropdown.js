@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {getPreviewModeName, PREVIEW_MODES} from '../../../common/constants';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics/index';
 
 @autobind
 class PreviewModeDropdown extends PureComponent {

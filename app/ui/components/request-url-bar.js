@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from './base/dropdown';
-import {trackEvent} from '../../analytics';
+import {trackEvent} from '../../common/analytics';
 import {showPrompt} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';

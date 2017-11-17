@@ -1,7 +1,7 @@
 import srp from 'srp-js';
 import * as crypt from './crypt';
 import * as util from '../common/fetch';
-import {trackEvent, setAccountId} from '../analytics';
+import {trackEvent, setAccountId} from '../common/analytics';
 
 /** Create a new session for the user */
 export async function login (rawEmail, rawPassphrase) {
