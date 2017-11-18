@@ -2,9 +2,9 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
-import {trackEvent} from '../../../analytics/index';
 import type {RequestParameter} from '../../../models/request';
 import Wrap from '../wrap';
+import {trackEvent} from '../../../common/analytics';
 
 type Props = {
   onChange: Function,
