@@ -23,7 +23,7 @@ import * as models from '../../models';
 import {PREVIEW_MODE_SOURCE} from '../../common/constants';
 import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../network/network';
-import {trackEvent} from '../../analytics';
+import {trackEvent} from '../../common/analytics';
 import Hotkey from './hotkey';
 import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';

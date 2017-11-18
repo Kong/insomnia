@@ -6,7 +6,7 @@ import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
 import SidebarRequestRow from './sidebar-request-row';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import * as misc from '../../../common/misc';
 
 @autobind

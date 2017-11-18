@@ -10,7 +10,7 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import {delay, fnOrString} from '../../../common/misc';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import type {BaseModel} from '../../../models/index';
 import type {Workspace} from '../../../models/workspace';
 import type {PluginArgumentEnumOption} from '../../../templating/extensions/index';

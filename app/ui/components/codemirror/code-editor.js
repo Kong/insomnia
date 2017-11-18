@@ -9,7 +9,7 @@ import vkBeautify from 'vkbeautify';
 import {showModal} from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS, isMac} from '../../../common/constants';
 import './base-imports';

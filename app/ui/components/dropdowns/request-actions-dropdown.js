@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
 import {Dropdown, DropdownButton, DropdownHint, DropdownItem} from '../base/dropdown';
 import * as models from '../../../models';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {DropdownDivider} from '../base/dropdown/index';
 import * as hotkeys from '../../../common/hotkeys';
 

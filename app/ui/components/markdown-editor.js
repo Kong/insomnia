@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
-import {trackEvent} from '../../analytics';
+import {trackEvent} from '../../common/analytics';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';

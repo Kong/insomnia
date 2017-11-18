@@ -48,7 +48,7 @@ export function jarFromCookies (cookies) {
     const copy = JSON.stringify({cookies});
     jar = CookieJar.fromJSON(copy);
   } catch (e) {
-    console.log('Failed to initialize cookie jar', e);
+    console.log('[cookies] Failed to initialize cookie jar', e);
     jar = new CookieJar();
   }
 

@@ -6,7 +6,7 @@ import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} f
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
 import {showModal} from '../modals';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {showPrompt} from '../modals/index';
 import * as hotkeys from '../../../common/hotkeys';
 

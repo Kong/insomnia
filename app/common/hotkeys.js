@@ -1,7 +1,7 @@
 // @flow
 import keycodes from './keycodes';
 import {isMac} from './constants';
-import {trackEvent} from '../analytics/index';
+import {trackEvent} from './analytics';
 
 export type Hotkey = {
   description: string,

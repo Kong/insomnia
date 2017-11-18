@@ -100,7 +100,7 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
           };
 
           plugins.push(plugin);
-          // console.log(`[plugin] Loaded ${modulePath}`);
+          console.debug(`[plugin] Loaded ${modulePath}`);
         } catch (err) {
           showError({
             title: 'Plugin Error',

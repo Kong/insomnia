@@ -8,7 +8,7 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import CookieList from '../cookie-list';
 import * as models from '../../../models';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
 import {fuzzyMatch} from '../../../common/misc';

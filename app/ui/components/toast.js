@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import GravatarImg from './gravatar-img';
 import Link from './base/link';
 import * as fetch from '../../common/fetch';
-import {trackEvent} from '../../analytics/index';
+import {trackEvent} from '../../common/analytics';
 import * as models from '../../models/index';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';

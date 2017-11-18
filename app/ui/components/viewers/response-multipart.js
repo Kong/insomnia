@@ -12,7 +12,7 @@ import ResponseViewer from './response-viewer';
 import {getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY} from '../../../common/constants';
 import type {ResponseHeader} from '../../../models/response';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown/index';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import WrapperModal from '../modals/wrapper-modal';
 import {showModal} from '../modals/index';
 import ResponseHeadersViewer from './response-headers-viewer';

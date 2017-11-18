@@ -29,9 +29,9 @@ export default async function (moduleName: string): Promise<void> {
     request.on('response', response => {
       const bodyBuffers = [];
 
-      console.log(`[plugins] Downloading plugin tarball from ${info.dist.tarball}`);
+      console.debug(`[plugins] Downloading plugin tarball from ${info.dist.tarball}`);
       response.on('end', () => {
-        console.log(`[plugins] Extracting plugin to ${pluginDir}`);
+        console.debug(`[plugins] Extracting plugin to ${pluginDir}`);
         const w = tar.extract({
           cwd: pluginDir, // Extract to plugin's directory
           strict: true, // Fail on anything
@@ -42,7 +42,7 @@ export default async function (moduleName: string): Promise<void> {
           reject(new Error(`Failed to extract ${info.dist.tarball}: ${err.message}`));
         });
 
-        console.log(`[plugins] Running Yarn install in "${pluginDir}"`);
+        console.debug(`[plugins] Running Yarn install in "${pluginDir}"`);
         w.on('end', () => {
           childProcess.execFile(
             process.execPath,
@@ -88,7 +88,7 @@ export default async function (moduleName: string): Promise<void> {
 
 async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
   return new Promise((resolve, reject) => {
-    console.log(`[plugins] Fetching module info from npm`);
+    console.debug(`[plugins] Fetching module info from npm`);
     childProcess.execFile(
       process.execPath,
       [YARN_PATH, 'info', moduleName, '--json'],
@@ -124,7 +124,7 @@ async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
           return;
         }
 
-        console.log(`[plugins] Detected Insomnia plugin ${data.name}`);
+        console.debug(`[plugins] Detected Insomnia plugin ${data.name}`);
 
         resolve({
           insomnia: data.insomnia,

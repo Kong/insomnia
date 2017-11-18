@@ -1,5 +1,5 @@
 import * as models from '../../models';
-import * as importUtil from '../import';
+import * as importUtil from '../../ui/import';
 import {getAppVersion} from '../constants';
 import {globalBeforeEach} from '../../__jest__/before-each';
 

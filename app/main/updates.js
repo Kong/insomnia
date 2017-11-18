@@ -23,19 +23,19 @@ export function init () {
   setInterval(_checkForUpdates, CHECK_FOR_UPDATES_INTERVAL);
 
   autoUpdater.on('error', e => {
-    console.log(`[updater] Error: ${e.message}`);
+    console.warn(`[updater] Error: ${e.message}`);
   });
 
   autoUpdater.on('update-not-available', () => {
-    console.log('[updater] Not Available --');
+    console.debug('[updater] Not Available --');
   });
 
   autoUpdater.on('update-available', () => {
-    console.log('[updater] Update Available --');
+    console.debug('[updater] Update Available --');
   });
 
   autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
-    console.log(`[updater] Downloaded ${releaseName} --`);
+    console.debug(`[updater] Downloaded ${releaseName} --`);
     _showUpdateNotification();
   });
 }

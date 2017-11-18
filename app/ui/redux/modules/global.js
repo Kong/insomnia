@@ -6,8 +6,8 @@ import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
-import * as importUtils from '../../../common/import';
-import {trackEvent} from '../../../analytics';
+import * as importUtils from '../../import';
+import {trackEvent} from '../../../common/analytics';
 import AlertModal from '../../components/modals/alert-modal';
 import {showModal} from '../../components/modals';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';

@@ -6,7 +6,7 @@ import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';

@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
-import {trackEvent} from '../../../../analytics/index';
+import {trackEvent} from '../../../../common/analytics';
 import type {RequestBodyParameter} from '../../../../models/request';
 import Wrap from '../../wrap';
 

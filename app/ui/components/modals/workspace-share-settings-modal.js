@@ -11,7 +11,7 @@ import * as session from '../../../sync/session';
 import * as sync from '../../../sync/index';
 import {showPrompt} from './index';
 import PromptButton from '../base/prompt-button';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 
 @autobind
 class WorkspaceShareSettingsModal extends PureComponent {
