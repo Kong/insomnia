@@ -1,5 +1,9 @@
 export function init () {
-  process.on('uncaughtException', e => {
-    console.error('[catcher] Uncaught exception:', e);
+  process.on('uncaughtException', err => {
+    console.error('[catcher] Uncaught exception:', err.stack);
+  });
+
+  process.on('unhandledRejection', err => {
+    console.error('[catcher] Unhandled rejection:', err.stack);
   });
 }

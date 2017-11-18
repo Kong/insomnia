@@ -13,7 +13,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import type {Workspace} from '../../../models/workspace';
 import type {Environment} from '../../../models/environment';

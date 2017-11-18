@@ -5,7 +5,7 @@ import * as session from './session';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
-import {trackEvent} from '../analytics/index';
+import {trackEvent} from '../common/analytics';
 import * as zlib from 'zlib';
 
 export const START_DELAY = 1E3;

@@ -22,10 +22,11 @@ type BaseSettings = {
   maxRedirects: number,
   disableAnalyticsTracking: boolean,
   pluginPath: string,
-  nunjucksPowerUserMode: boolean
+  nunjucksPowerUserMode: boolean,
+  deviceId: string | null
 };
 
-export type Settings = BaseModel & Settings;
+export type Settings = BaseModel & BaseSettings;
 
 export const name = 'Settings';
 export const type = 'Settings';
@@ -53,15 +54,16 @@ export function init (): BaseSettings {
     theme: 'default',
     disableAnalyticsTracking: false,
     pluginPath: '',
-    nunjucksPowerUserMode: false
+    nunjucksPowerUserMode: false,
+    deviceId: null
   };
 }
 
-export function migrate <T> (doc: T): T {
+export function migrate (doc: Settings): Settings {
   return doc;
 }
 
-export async function all (): Promise<Array<Settings>> {
+export async function all (patch: Object = {}): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];

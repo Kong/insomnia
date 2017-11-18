@@ -10,7 +10,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import {exportHarRequest} from '../../../common/har';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import Link from '../base/link';
 
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');

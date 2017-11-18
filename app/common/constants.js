@@ -26,7 +26,8 @@ export function getAppEnvironment () {
 
 export function getTempDir () {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
-  return path.join(electron.remote.app.getPath('temp'), `insomnia_${getAppVersion()}`);
+  const {app} = electron.remote || electron;
+  return path.join(app.getPath('temp'), `insomnia_${getAppVersion()}`);
 }
 
 export function isMac () {
@@ -55,7 +56,7 @@ export const DEBOUNCE_MILLIS = 100;
 export const MAX_RESPONSES = 20;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
-export const GA_HOST = 'desktop.insomnia.rest';
+export const GA_LOCATION = 'https://desktop.insomnia.rest/';
 export const CHANGELOG_URL = 'https://changelog.insomnia.rest/changelog.json';
 export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
 export const STATUS_CODE_PLUGIN_ERROR = -222;

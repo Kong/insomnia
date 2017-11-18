@@ -217,7 +217,6 @@ export function _actuallySend (
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
-          // console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
           lastPercent = percent;
         }
 
@@ -271,7 +270,7 @@ export function _actuallySend (
           // Doesn't exist yet, so write it
           mkdirp.sync(basCAPath);
           fs.writeFileSync(fullCAPath, CACerts.blob);
-          console.log('[net] Set CA to', fullCAPath);
+          console.debug('[net] Set CA to', fullCAPath);
         }
 
         setOpt(Curl.option.CAINFO, fullCAPath);

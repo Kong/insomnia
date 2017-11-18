@@ -26,8 +26,18 @@ function allTypes () {
 
 function getDBFilePath (modelType) {
   // NOTE: Do not EVER change this. EVER!
-  const basePath = electron.app.getPath('userData');
+  const {app} = electron.remote || electron;
+  const basePath = app.getPath('userData');
   return fsPath.join(basePath, `insomnia.${modelType}.db`);
+}
+
+export async function initClient () {
+  electron.ipcRenderer.on('db.changes', async (e, changes) => {
+    for (const fn of changeListeners) {
+      await fn(changes);
+    }
+  });
+  console.debug('[db] Initialized DB client');
 }
 
 export async function init (
@@ -35,53 +45,43 @@ export async function init (
   config: Object = {},
   forceReset: boolean = false
 ) {
-  const initializeAsClient = electron.remote && !config.inMemoryOnly;
-  if (initializeAsClient) {
-    electron.ipcRenderer.on('db.changes', async (e, changes) => {
-      for (const fn of changeListeners) {
-        await fn(changes);
-      }
-    });
-    console.log('[db] Initialized DB client');
-  } else {
-    if (forceReset) {
-      changeListeners = [];
-      for (const attr of Object.keys(db)) {
-        if (attr === '_empty') {
-          continue;
-        }
-
-        delete db[attr];
-      }
-    }
-
-    // Fill in the defaults
-    for (const modelType of types) {
-      if (db[modelType]) {
-        console.warn(`[db] Already initialized DB.${modelType}`);
+  if (forceReset) {
+    changeListeners = [];
+    for (const attr of Object.keys(db)) {
+      if (attr === '_empty') {
         continue;
       }
 
-      const filePath = getDBFilePath(modelType);
-      const collection = new NeDB(Object.assign({
-        autoload: true,
-        filename: filePath
-      }, config));
+      delete db[attr];
+    }
+  }
 
-      collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
-
-      db[modelType] = collection;
+  // Fill in the defaults
+  for (const modelType of types) {
+    if (db[modelType]) {
+      console.warn(`[db] Already initialized DB.${modelType}`);
+      continue;
     }
 
-    delete db._empty;
+    const filePath = getDBFilePath(modelType);
+    const collection = new NeDB(Object.assign({
+      autoload: true,
+      filename: filePath
+    }, config));
 
-    electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
-      const result = await database[fnName](...args);
-      e.sender.send(replyChannel, result);
-    });
+    collection.persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);
 
-    console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+    db[modelType] = collection;
   }
+
+  delete db._empty;
+
+  electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
+    const result = await database[fnName](...args);
+    e.sender.send(replyChannel, result);
+  });
+
+  console.debug(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
 }
 
 // ~~~~~~~~~~~~~~~~ //

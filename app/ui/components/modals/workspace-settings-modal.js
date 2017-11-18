@@ -10,7 +10,7 @@ import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import MarkdownEditor from '../markdown-editor';
 import type {Workspace} from '../../../models/workspace';
 import type {ClientCertificate} from '../../../models/client-certificate';

@@ -20,7 +20,7 @@ import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent} from '../../analytics';
+import {trackEvent} from '../../common/analytics';
 import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
@@ -42,6 +42,7 @@ import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
+import {trackNonInteractiveEvent} from '../../common/analytics';
 
 @autobind
 class App extends PureComponent {
@@ -658,12 +659,12 @@ class App extends PureComponent {
     const firstLaunch = !lastVersion;
     if (firstLaunch) {
       // TODO: Show a welcome message
-      trackEvent('General', 'First Launch', getAppVersion(), {nonInteraction: true});
+      trackNonInteractiveEvent('General', 'First Launch', getAppVersion());
     } else if (lastVersion !== getAppVersion()) {
-      trackEvent('General', 'Updated', getAppVersion(), {nonInteraction: true});
+      trackNonInteractiveEvent('General', 'Updated', getAppVersion());
       showModal(ChangelogModal);
     } else {
-      trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
+      trackNonInteractiveEvent('General', 'Launched', getAppVersion());
     }
 
     db.onChange(async changes => {
@@ -739,7 +740,7 @@ class App extends PureComponent {
       }
 
       if (e.dataTransfer.files.length === 0) {
-        console.log('Ignored drop event because no files present');
+        console.debug('[drag] Ignored drop event because no files present');
         return;
       }
 
@@ -1009,7 +1010,7 @@ async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
         // If sort keys get too close together, we need to redistribute the list. This is
         // not performant at all (need to update all siblings in DB), but it is extremely rare
         // anyway
-        console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
+        console.debug(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
 
         db.bufferChanges(300);
         docs.map((r, i) => __updateDoc(r, {metaSortKey: i * 100, parentId}));

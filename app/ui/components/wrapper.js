@@ -39,7 +39,7 @@ import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as models from '../../models/index';
-import {trackEvent} from '../../analytics/index';
+import {trackEvent} from '../../common/analytics';
 import * as importers from 'insomnia-importers';
 import type {CookieJar} from '../../models/cookie-jar';
 import type {Environment} from '../../models/environment';
@@ -225,11 +225,11 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords (showPasswords: boolean): Promise<Request> {
+  _handleUpdateSettingsShowPasswords (showPasswords: boolean): Promise<Settings> {
     return sUpdate(this.props.settings, {showPasswords});
   }
 
-  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor: boolean): Promise<Request> {
+  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor: boolean): Promise<Settings> {
     return sUpdate(this.props.settings, {useBulkHeaderEditor});
   }
 

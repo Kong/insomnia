@@ -2,7 +2,7 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
-import {trackEvent} from '../../../analytics';
+import {trackEvent} from '../../../common/analytics';
 import {showModal} from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';

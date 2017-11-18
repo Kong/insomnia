@@ -1,14 +1,14 @@
 import {convert} from 'insomnia-importers';
-import * as db from './database';
-import * as har from './har';
-import * as models from '../models';
-import {getAppVersion} from './constants';
-import * as misc from './misc';
-import {showModal} from '../ui/components/modals/index';
-import AlertModal from '../ui/components/modals/alert-modal';
-import * as fetch from './fetch';
+import * as db from '../common/database';
+import * as har from '../common/har';
+import * as models from '../models/index';
+import {getAppVersion} from '../common/constants';
+import * as misc from '../common/misc';
+import {showModal} from './components/modals/index';
+import AlertModal from './components/modals/alert-modal';
+import * as fetch from '../common/fetch';
 import fs from 'fs';
-import {trackEvent} from '../analytics/index';
+import {trackEvent} from '../common/analytics';
 
 const EXPORT_FORMAT = 3;
 

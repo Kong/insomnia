@@ -68,7 +68,7 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
 
   const redirectedTo = await authorizeUserInWindow(finalUrl, regex);
 
-  console.log('[oauth2] Detected redirect ' + redirectedTo);
+  console.debug('[oauth2] Detected redirect ' + redirectedTo);
 
   const {query} = urlParse(redirectedTo);
   return responseToObject(query, [

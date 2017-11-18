@@ -2,7 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_XML, getContentTypeName} from '../../../common/constants';
 import {showModal} from '../modals/index';
 import AlertModal from '../modals/alert-modal';
@@ -64,7 +64,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
     }
 
     this.props.onChange(mimeType);
-    trackEvent('Request', 'Content-Type Change', mimeType);
+    trackEvent('Request', 'Content-Type Change', mimeType ? 'mimeType' : 'unset');
   }
 
   _renderDropdownItem (mimeType: string | null, forcedName: string = '') {

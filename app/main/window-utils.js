@@ -1,8 +1,9 @@
 import electron from 'electron';
 import path from 'path';
 import fs from 'fs';
-import LocalStorage from '../common/local-storage';
+import LocalStorage from './local-storage';
 import {getAppName, isDevelopment, isMac} from '../common/constants';
+import {trackEvent} from '../common/analytics';
 
 const {app, Menu, BrowserWindow, shell, dialog} = electron;
 
@@ -356,15 +357,6 @@ function showUnresponsiveModal () {
       createWindow();
     }
   });
-}
-
-function trackEvent (...args) {
-  const windows = BrowserWindow.getAllWindows();
-  if (!windows.length || !windows[0].webContents) {
-    return;
-  }
-
-  windows[0].webContents.send('analytics-track-event', args);
 }
 
 function saveBounds () {

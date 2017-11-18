@@ -4,7 +4,7 @@ import autobind from 'autobind-decorator';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown';
 import {showModal} from '../modals/index';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import Tooltip from '../tooltip';
 import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';

@@ -15,7 +15,7 @@ import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
 import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
-import {trackEvent} from '../../analytics/index';
+import {trackEvent} from '../../common/analytics';
 import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
 import * as models from '../../models';
