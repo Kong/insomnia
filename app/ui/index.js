@@ -9,16 +9,14 @@ import * as db from '../common/database';
 import {initClient as initDB} from '../common/database';
 import {init as initStore} from './redux/modules';
 import {init as initSync} from '../sync';
-import {init as initAnalytics} from '../common/analytics';
 import {init as initPlugins} from '../plugins';
-import {getAccountId} from '../sync/session';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
 import {isDevelopment} from '../common/constants';
+import {trackEvent, trackPageView} from '../common/analytics';
 
 (async function () {
   await initDB();
-  await initAnalytics(getAccountId());
 
   // Create Redux store
   const store = await initStore();
@@ -55,3 +53,19 @@ if (isDevelopment()) {
   window.models = models;
   window.db = db;
 }
+
+// Catch uncaught errors and report them
+if (window && !isDevelopment()) {
+  window.addEventListener('error', e => {
+    trackEvent('Error', 'Uncaught Error');
+    console.error('Uncaught Error', e);
+  });
+
+  window.addEventListener('unhandledRejection', e => {
+    trackEvent('Error', 'Uncaught Promise');
+    console.error('Unhandled Promise', e);
+  });
+}
+
+// Track the page view
+trackPageView();

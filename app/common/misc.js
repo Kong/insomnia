@@ -1,4 +1,5 @@
 // @flow
+import * as electron from 'electron';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
@@ -345,4 +346,29 @@ export function fuzzyMatch (searchString: string, text: string): boolean {
   }
 
   return toMatch.test(text.toLowerCase());
+}
+
+export function getViewportSize (): string | null {
+  const {BrowserWindow} = electron.remote || electron;
+  const w = BrowserWindow.getFocusedWindow() ||
+    BrowserWindow.getAllWindows()[0];
+
+  if (w) {
+    const {width, height} = w.getContentBounds();
+    return `${width}x${height}`;
+  } else {
+    // No windows open
+    return null;
+  }
+}
+
+export function getScreenResolution (): string {
+  const {screen} = electron.remote || electron;
+  const {width, height} = screen.getPrimaryDisplay().workAreaSize;
+  return `${width}x${height}`;
+}
+
+export function getUserLanguage (): string {
+  const {app} = electron.remote || electron;
+  return app.getLocale();
 }

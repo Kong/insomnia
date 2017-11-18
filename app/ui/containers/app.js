@@ -42,7 +42,7 @@ import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
-import {trackNonInteractiveEvent} from '../../common/analytics/index';
+import {trackNonInteractiveEvent} from '../../common/analytics';
 
 @autobind
 class App extends PureComponent {

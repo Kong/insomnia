@@ -8,7 +8,7 @@ import {showModal} from './components/modals/index';
 import AlertModal from './components/modals/alert-modal';
 import * as fetch from '../common/fetch';
 import fs from 'fs';
-import {trackEvent} from '../common/analytics/index';
+import {trackEvent} from '../common/analytics';
 
 const EXPORT_FORMAT = 3;
 

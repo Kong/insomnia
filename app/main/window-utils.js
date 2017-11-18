@@ -2,9 +2,8 @@ import electron from 'electron';
 import path from 'path';
 import fs from 'fs';
 import LocalStorage from './local-storage';
-import {GA_ID, GA_LOCATION, getAppName, isDevelopment, isMac} from '../common/constants';
-import {GoogleAnalytics} from '../common/analytics/google';
-import * as models from '../models/index';
+import {getAppName, isDevelopment, isMac} from '../common/constants';
+import {trackEvent} from '../common/analytics';
 
 const {app, Menu, BrowserWindow, shell, dialog} = electron;
 
@@ -357,26 +356,6 @@ function showUnresponsiveModal () {
       mainWindow.destroy();
       createWindow();
     }
-  });
-}
-
-let analytics = null;
-
-function trackEvent (...args) {
-  const windows = BrowserWindow.getAllWindows();
-  if (!windows.length || !windows[0].webContents) {
-    return;
-  }
-
-  process.nextTick(async () => {
-    if (!analytics) {
-      const settings = await models.settings.getOrCreate();
-      const {deviceId, _id, disableAnalyticsTracking} = settings;
-      const clientId = deviceId || _id;
-      analytics = new GoogleAnalytics(GA_ID, clientId, GA_LOCATION, disableAnalyticsTracking);
-    }
-
-    analytics.trackEvent(true, ...args);
   });
 }
 
