@@ -3,6 +3,7 @@ import {EventEmitter} from 'events';
 import {globalBeforeEach} from '../../__jest__/before-each';
 import * as models from '../../models/index';
 import {_trackEvent} from '../analytics';
+import {getAppPlatform, getAppVersion} from '../constants';
 
 describe('init()', () => {
   beforeEach(async () => {
@@ -48,9 +49,9 @@ describe('init()', () => {
         'dl=https%3A%2F%2Fdesktop.insomnia.rest%2F&' +
         'sr=1920x1080&' +
         'ul=en-US&' +
-        'dt=Insomnia%205.11.7&' +
-        'cd1=darwin&' +
-        'cd2=5.11.7&' +
+        `dt=Insomnia%20${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
         'vp=1900x1060&' +
         'de=UTF-8&' +
         't=event&' +
@@ -74,9 +75,9 @@ describe('init()', () => {
         'dl=https%3A%2F%2Fdesktop.insomnia.rest%2F&' +
         'sr=1920x1080&' +
         'ul=en-US&' +
-        'dt=Insomnia%205.11.7&' +
-        'cd1=darwin&' +
-        'cd2=5.11.7&' +
+        `dt=Insomnia%20${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
         'vp=1900x1060&' +
         'de=UTF-8&' +
         't=event&' +
@@ -101,9 +102,9 @@ describe('init()', () => {
         'dl=https%3A%2F%2Fdesktop.insomnia.rest%2F&' +
         'sr=1920x1080&' +
         'ul=en-US&' +
-        'dt=Insomnia%205.11.7&' +
-        'cd1=darwin&' +
-        'cd2=5.11.7&' +
+        `dt=Insomnia%20${getAppVersion()}&` +
+        `cd1=${getAppPlatform()}&` +
+        `cd2=${getAppVersion()}&` +
         'vp=1900x1060&' +
         'de=UTF-8&' +
         't=event&' +
