@@ -26,8 +26,7 @@ async function build (relConfigPath) {
     const targetPlatform = PLATFORM_MAP[process.platform];
     const packager = new electronBuilder.Packager({
       config,
-      // [targetPlatform]: config[targetPlatform].target,
-      linux: config.linux.target
+      [targetPlatform]: config[targetPlatform].target
     });
     return packager.build();
   } catch
