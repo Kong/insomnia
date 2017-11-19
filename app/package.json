@@ -2,7 +2,6 @@
   "private": true,
   "name": "insomnia",
   "version": "5.11.7",
-  "channel": "stable",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",
   "description": "Debug APIs like a human, not a robot",

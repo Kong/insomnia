@@ -2,8 +2,6 @@ import * as packageJSON from '../package.json';
 import * as electron from 'electron';
 import path from 'path';
 
-console.log('PACKAGE.JSON', packageJSON);
-
 // App Stuff
 
 export function getAppVersion () {

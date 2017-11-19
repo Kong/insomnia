@@ -137,7 +137,7 @@ async function _sendToGoogle (params: Array<RequestParameter>) {
   const allParams = [...baseParams, ...params];
   const qs = querystring.buildFromParams(allParams);
   const baseUrl = isDevelopment()
-    ? 'https://www.google-analytics.com/collect'
+    ? 'https://www.google-analytics.com/debug/collect'
     : 'https://www.google-analytics.com/collect';
   const url = querystring.joinUrl(baseUrl, qs);
 
