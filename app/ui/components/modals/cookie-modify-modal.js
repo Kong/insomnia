@@ -2,12 +2,11 @@
 import * as React from 'react';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import autobind from 'autobind-decorator';
-import deepEqual from 'deep-equal';
 import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -20,6 +19,7 @@ import type {Workspace} from '../../../models/workspace';
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
   workspace: Workspace,
   cookieJar: CookieJar
 };
@@ -56,7 +56,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     cookie = cookie[0] || cookie;
 
     const {cookieJar} = this.props;
-    const oldCookie = cookieJar.cookies.find(c => deepEqual(c, cookie));
+    const oldCookie = cookieJar.cookies.find(c => c.id === cookie.id);
 
     if (!oldCookie) {
       // Cookie not found in jar
@@ -78,25 +78,39 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     await models.cookieJar.update(cookieJar);
   }
 
-  _handleChangeRawValue (e: Event) {
-    if (!(e.target instanceof HTMLInputElement)) {
-      return;
-    }
-
-    const value = e.target.value;
+  _handleChangeRawValue (e: SyntheticEvent<HTMLInputElement>) {
+    const value = e.currentTarget.value;
 
     clearTimeout(this._rawTimeout);
     this._rawTimeout = setTimeout(async () => {
-      const cookie = toughCookie.Cookie.parse(value);
-      if (!this.state.cookie) {
+      const oldCookie = this.state.cookie;
+      let cookie;
+      try {
+        // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+        cookie = toughCookie.Cookie.parse(value).toJSON();
+      } catch (err) {
+        console.warn(`Failed to parse cookie string "${value}"`, err);
         return;
       }
+
+      if (!this.state.cookie || !oldCookie) {
+        return;
+      }
+
+      // Make sure cookie has an id
+      cookie.id = oldCookie.id;
 
       await this._handleCookieUpdate(cookie);
     }, DEBOUNCE_MILLIS * 2);
   }
 
   async _handleCookieUpdate (newCookie: Cookie) {
+    const oldCookie = this.state.cookie;
+    if (!oldCookie) {
+      // We don't have a cookie to edit
+      return;
+    }
+
     const cookie = clone(newCookie);
 
     // Sanitize expires field
@@ -111,8 +125,12 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     const cookieJar = clone(this.props.cookieJar);
 
     const {cookies} = cookieJar;
-
     const index = cookies.findIndex(c => c.id === cookie.id);
+
+    if (index < 0) {
+      console.warn(`Could not find cookie with id=${cookie.id} to edit`);
+      return;
+    }
 
     cookieJar.cookies = [
       ...cookies.slice(0, index),
@@ -175,7 +193,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
 
   _renderInputField (field: string, error: string | null = null) {
     const {cookie} = this.state;
-    const {handleRender, handleGetRenderContext} = this.props;
+    const {handleRender, handleGetRenderContext, nunjucksPowerUserMode} = this.props;
 
     if (!cookie) {
       return null;
@@ -190,6 +208,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
           <OneLineEditor
             render={handleRender}
             getRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             defaultValue={val || ''}
             onChange={value => this._handleChange(field, value)}/>
         </label>

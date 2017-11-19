@@ -84,6 +84,7 @@ class CodePromptModal extends PureComponent {
   render () {
     const {
       handleGetRenderContext,
+      nunjucksPowerUserMode,
       handleRender,
       editorKeyMap,
       editorIndentSize,
@@ -130,6 +131,7 @@ class CodePromptModal extends PureComponent {
                   defaultValue={defaultValue}
                   placeholder={placeholder}
                   onChange={this._handleChange}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
                   getRenderContext={enableRender ? handleGetRenderContext : null}
                   render={enableRender ? handleRender : null}
                   mode={mode}
@@ -172,6 +174,7 @@ CodePromptModal.propTypes = {
   editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
 
   // Optional
   handleGetRenderContext: PropTypes.func,

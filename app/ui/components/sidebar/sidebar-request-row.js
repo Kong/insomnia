@@ -8,7 +8,7 @@ import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
 import Editable from '../base/editable';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {showModal} from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 

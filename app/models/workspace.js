@@ -10,14 +10,7 @@ export const canDuplicate = true;
 
 type BaseWorkspace = {
   name: string,
-  description: string,
-  certificates: Array<{
-    host: string,
-    passphrase: string,
-    cert: string,
-    key: string,
-    pfx: string
-  }>
+  description: string
 };
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -25,10 +18,7 @@ export type Workspace = BaseModel & BaseWorkspace;
 export function init () {
   return {
     name: 'New Workspace',
-    description: '',
-    certificates: [
-      // {host, port, cert, key, pfx, passphrase}
-    ]
+    description: ''
   };
 }
 
@@ -41,6 +31,7 @@ export async function migrate (doc: Workspace): Promise<Workspace> {
   }
 
   await _ensureDependencies(doc);
+  doc = await _migrateExtractClientCertificates(doc);
 
   return doc;
 }
@@ -81,4 +72,31 @@ export function remove (workspace: Workspace): Promise<void> {
 async function _ensureDependencies (workspace: Workspace) {
   await models.cookieJar.getOrCreateForParentId(workspace._id);
   await models.environment.getOrCreateForWorkspaceId(workspace._id);
+}
+
+async function _migrateExtractClientCertificates (workspace: Workspace): Promise<Workspace> {
+  const certificates = (workspace: Object).certificates || null;
+  if (!Array.isArray(certificates)) {
+    // Already migrated
+    return workspace;
+  }
+
+  for (const cert of certificates) {
+    await models.clientCertificate.create({
+      parentId: workspace._id,
+      host: cert.host,
+      passphrase: cert.passphrase || null,
+      cert: cert.cert || null,
+      key: cert.key || null,
+      pfx: cert.pfx || null,
+      isPrivate: false
+    });
+  }
+
+  delete (workspace: Object).certificates;
+
+  // This will remove the now-missing `certificates` property
+  await update(workspace, {});
+
+  return workspace;
 }

@@ -20,6 +20,10 @@ class AskModal extends PureComponent {
     this.modal = m;
   }
 
+  _setYesButtonRef (n) {
+    this.yesButton = n;
+  }
+
   _handleYes () {
     this.hide();
     this._doneCallback && this._doneCallback(true);
@@ -49,6 +53,10 @@ class AskModal extends PureComponent {
 
     this.modal.show();
 
+    setTimeout(() => {
+      this.yesButton && this.yesButton.focus();
+    }, 100);
+
     return new Promise(resolve => {
       this._promiseCallback = resolve;
     });
@@ -68,7 +76,7 @@ class AskModal extends PureComponent {
             <button className="btn" onClick={this._handleNo}>
               No
             </button>
-            <button className="btn" onClick={this._handleYes}>
+            <button ref={this._setYesButtonRef} className="btn" onClick={this._handleYes}>
               Yes
             </button>
           </div>

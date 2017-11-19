@@ -2,7 +2,7 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
-import {trackEvent} from '../../../../analytics/index';
+import {trackEvent} from '../../../../common/analytics';
 
 @autobind
 class UrlEncodedEditor extends PureComponent {
@@ -27,7 +27,8 @@ class UrlEncodedEditor extends PureComponent {
       parameters,
       onChange,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     return (
@@ -41,6 +42,7 @@ class UrlEncodedEditor extends PureComponent {
             onChange={onChange}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             onToggleDisable={this._handleTrackToggle}
             onCreate={this._handleTrackCreate}
             onDelete={this._handleTrackDelete}
@@ -56,6 +58,7 @@ UrlEncodedEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
 
   // Optional
   handleRender: PropTypes.func,

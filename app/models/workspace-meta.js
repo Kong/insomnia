@@ -51,8 +51,12 @@ export function update (workspaceMeta: WorkspaceMeta, patch: Object = {}): Promi
   return db.docUpdate(workspaceMeta, patch);
 }
 
+export async function getByParentId (parentId: string): Promise<WorkspaceMeta | null> {
+  return await db.getWhere(type, {parentId});
+}
+
 export async function getOrCreateByParentId (parentId: string): Promise<WorkspaceMeta> {
-  const doc = await db.getWhere(type, {parentId});
+  const doc = await getByParentId(parentId);
   return doc || this.create({parentId});
 }
 

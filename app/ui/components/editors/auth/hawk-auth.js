@@ -12,6 +12,7 @@ type Props = {
   request: Request,
   handleRender: Function,
   handleGetRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
   onChange: Function
 };
 
@@ -108,7 +109,7 @@ class HawkAuth extends React.PureComponent<Props> {
     property: string,
     onChange: Function
   ): React.Element<*> {
-    const {handleRender, handleGetRenderContext, request} = this.props;
+    const {handleRender, handleGetRenderContext, request, nunjucksPowerUserMode} = this.props;
     const id = label.replace(/ /g, '-');
     return (
       <tr key={id}>
@@ -124,6 +125,7 @@ class HawkAuth extends React.PureComponent<Props> {
               type="text"
               onChange={onChange}
               defaultValue={request.authentication[property] || ''}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
             />

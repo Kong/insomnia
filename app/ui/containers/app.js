@@ -20,8 +20,8 @@ import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent} from '../../analytics';
-import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {trackEvent} from '../../common/analytics';
+import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -34,10 +34,15 @@ import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
 import {showAlert, showPrompt} from '../components/modals/index';
-import {exportHar} from '../../common/har';
+import {exportHarRequest} from '../../common/har';
 import * as hotkeys from '../../common/hotkeys';
-import KeydownBinder from '../components/keydown-binder';
 import {executeHotKey} from '../../common/hotkeys';
+import KeydownBinder from '../components/keydown-binder';
+import ErrorBoundary from '../components/error-boundary';
+import * as plugins from '../../plugins';
+import * as templating from '../../templating/index';
+import AskModal from '../components/modals/ask-modal';
+import {trackNonInteractiveEvent} from '../../common/analytics';
 
 @autobind
 class App extends PureComponent {
@@ -92,6 +97,24 @@ class App extends PureComponent {
         const {activeRequest, activeWorkspace} = this.props;
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
         this._requestCreate(parentId);
+      }],
+      [hotkeys.DELETE_REQUEST, () => {
+        const {activeRequest} = this.props;
+
+        if (!activeRequest) {
+          return;
+        }
+
+        showModal(AskModal, {
+          title: 'Delete Request?',
+          message: `Really delete ${activeRequest.name}?`,
+          onDone: confirmed => {
+            if (!confirmed) {
+              return;
+            }
+            models.request.remove(activeRequest);
+          }
+        });
       }],
       [hotkeys.CREATE_FOLDER, () => {
         const {activeRequest, activeWorkspace} = this.props;
@@ -231,7 +254,7 @@ class App extends PureComponent {
   async _handleCopyAsCurl (request) {
     const {activeEnvironment} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    const har = await exportHar(request._id, environmentId);
+    const har = await exportHarRequest(request._id, environmentId);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert('shell', 'curl');
     clipboard.writeText(cmd);
@@ -636,12 +659,12 @@ class App extends PureComponent {
     const firstLaunch = !lastVersion;
     if (firstLaunch) {
       // TODO: Show a welcome message
-      trackEvent('General', 'First Launch', getAppVersion(), {nonInteraction: true});
+      trackNonInteractiveEvent('General', 'First Launch', getAppVersion());
     } else if (lastVersion !== getAppVersion()) {
-      trackEvent('General', 'Updated', getAppVersion(), {nonInteraction: true});
+      trackNonInteractiveEvent('General', 'Updated', getAppVersion());
       showModal(ChangelogModal);
     } else {
-      trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
+      trackNonInteractiveEvent('General', 'Launched', getAppVersion());
     }
 
     db.onChange(async changes => {
@@ -684,6 +707,12 @@ class App extends PureComponent {
       showModal(SettingsModal);
     });
 
+    ipcRenderer.on('reload-plugins', async () => {
+      await plugins.getPlugins(true);
+      templating.reload();
+      console.log('[plugins] reloaded');
+    });
+
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       showModal(SettingsModal, TAB_INDEX_SHORTCUTS);
     });
@@ -697,6 +726,36 @@ class App extends PureComponent {
 
       this.props.handleCommand(command, args);
     });
+
+    // NOTE: This is required for "drop" event to trigger.
+    document.addEventListener('dragover', e => {
+      e.preventDefault();
+    }, false);
+
+    document.addEventListener('drop', async e => {
+      e.preventDefault();
+      const {activeWorkspace, handleImportUriToWorkspace} = this.props;
+      if (!activeWorkspace) {
+        return;
+      }
+
+      if (e.dataTransfer.files.length === 0) {
+        console.debug('[drag] Ignored drop event because no files present');
+        return;
+      }
+
+      const file = e.dataTransfer.files[0];
+      const {path} = file;
+      const uri = `file://${path}`;
+
+      await showAlert({
+        title: 'Confirm Data Import',
+        message: <span>Import <code>{path}</code>?</span>,
+        addCancel: true
+      });
+
+      handleImportUriToWorkspace(activeWorkspace._id, uri);
+    }, false);
 
     ipcRenderer.on('toggle-changelog', () => {
       showModal(ChangelogModal);
@@ -720,45 +779,50 @@ class App extends PureComponent {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="app">
-          <Wrapper
-            {...this.props}
-            ref={this._setWrapperRef}
-            paneWidth={this.state.paneWidth}
-            paneHeight={this.state.paneHeight}
-            sidebarWidth={this.state.sidebarWidth}
-            handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-            handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-            handleActivateRequest={this._handleSetActiveRequest}
-            handleSetRequestPaneRef={this._setRequestPaneRef}
-            handleSetResponsePaneRef={this._setResponsePaneRef}
-            handleSetSidebarRef={this._setSidebarRef}
-            handleStartDragSidebar={this._startDragSidebar}
-            handleResetDragSidebar={this._resetDragSidebar}
-            handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-            handleStartDragPaneVertical={this._startDragPaneVertical}
-            handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-            handleResetDragPaneVertical={this._resetDragPaneVertical}
-            handleCreateRequest={this._requestCreate}
-            handleRender={this._handleRenderText}
-            handleGetRenderContext={this._handleGetRenderContext}
-            handleDuplicateRequest={this._requestDuplicate}
-            handleDuplicateRequestGroup={this._requestGroupDuplicate}
-            handleDuplicateWorkspace={this._workspaceDuplicate}
-            handleCreateRequestGroup={this._requestGroupCreate}
-            handleGenerateCode={this._handleGenerateCode}
-            handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-            handleCopyAsCurl={this._handleCopyAsCurl}
-            handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-            handleSetResponseFilter={this._handleSetResponseFilter}
-            handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-            handleSendAndDownloadRequestWithEnvironment={this._handleSendAndDownloadRequestWithEnvironment}
-            handleSetActiveResponse={this._handleSetActiveResponse}
-            handleSetActiveRequest={this._handleSetActiveRequest}
-            handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-            handleSetSidebarFilter={this._handleSetSidebarFilter}
-            handleToggleMenuBar={this._handleToggleMenuBar}
-          />
-          <Toast/>
+          <ErrorBoundary showAlert>
+            <Wrapper
+              {...this.props}
+              ref={this._setWrapperRef}
+              paneWidth={this.state.paneWidth}
+              paneHeight={this.state.paneHeight}
+              sidebarWidth={this.state.sidebarWidth}
+              handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+              handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+              handleActivateRequest={this._handleSetActiveRequest}
+              handleSetRequestPaneRef={this._setRequestPaneRef}
+              handleSetResponsePaneRef={this._setResponsePaneRef}
+              handleSetSidebarRef={this._setSidebarRef}
+              handleStartDragSidebar={this._startDragSidebar}
+              handleResetDragSidebar={this._resetDragSidebar}
+              handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+              handleStartDragPaneVertical={this._startDragPaneVertical}
+              handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+              handleResetDragPaneVertical={this._resetDragPaneVertical}
+              handleCreateRequest={this._requestCreate}
+              handleRender={this._handleRenderText}
+              handleGetRenderContext={this._handleGetRenderContext}
+              handleDuplicateRequest={this._requestDuplicate}
+              handleDuplicateRequestGroup={this._requestGroupDuplicate}
+              handleDuplicateWorkspace={this._workspaceDuplicate}
+              handleCreateRequestGroup={this._requestGroupCreate}
+              handleGenerateCode={this._handleGenerateCode}
+              handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+              handleCopyAsCurl={this._handleCopyAsCurl}
+              handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+              handleSetResponseFilter={this._handleSetResponseFilter}
+              handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+              handleSendAndDownloadRequestWithEnvironment={this._handleSendAndDownloadRequestWithEnvironment}
+              handleSetActiveResponse={this._handleSetActiveResponse}
+              handleSetActiveRequest={this._handleSetActiveRequest}
+              handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+              handleSetSidebarFilter={this._handleSetSidebarFilter}
+              handleToggleMenuBar={this._handleToggleMenuBar}
+            />
+          </ErrorBoundary>
+
+          <ErrorBoundary showAlert>
+            <Toast/>
+          </ErrorBoundary>
 
           {/* Block all mouse activity by showing an overlay while dragging */}
           {this.state.showDragOverlay ? <div className="blocker-overlay"></div> : null}
@@ -812,6 +876,7 @@ function mapStateToProps (state, props) {
   // Workspace stuff
   const workspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
   const activeWorkspace = selectActiveWorkspace(state, props);
+  const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
   const sidebarHidden = workspaceMeta.sidebarHidden || false;
   const sidebarFilter = workspaceMeta.sidebarFilter || '';
   const sidebarWidth = workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
@@ -855,6 +920,7 @@ function mapStateToProps (state, props) {
     isLoading,
     loadStartTime,
     activeWorkspace,
+    activeWorkspaceClientCertificates,
     activeRequest,
     activeRequestResponses,
     activeResponse,
@@ -891,9 +957,18 @@ function mapDispatchToProps (dispatch) {
 }
 
 async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
+  // Nothing to do. We are in the same spot as we started
   if (docToMove._id === targetId) {
-    // Nothing to do. We are in the same spot as we started
     return;
+  }
+
+  // Don't allow dragging things into itself or children. This will disconnect
+  // the node from the tree and cause the item to no longer show in the UI.
+  const descendents = await db.withDescendants(docToMove);
+  for (const doc of descendents) {
+    if (doc._id === parentId) {
+      return;
+    }
   }
 
   function __updateDoc (doc, patch) {
@@ -935,7 +1010,7 @@ async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
         // If sort keys get too close together, we need to redistribute the list. This is
         // not performant at all (need to update all siblings in DB), but it is extremely rare
         // anyway
-        console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
+        console.debug(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
 
         db.bufferChanges(300);
         docs.map((r, i) => __updateDoc(r, {metaSortKey: i * 100, parentId}));

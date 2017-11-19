@@ -2,7 +2,7 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
-import {trackEvent} from '../../../../analytics/index';
+import {trackEvent} from '../../../../common/analytics';
 
 @autobind
 class FormEditor extends PureComponent {
@@ -35,7 +35,8 @@ class FormEditor extends PureComponent {
       parameters,
       onChange,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     return (
@@ -49,6 +50,7 @@ class FormEditor extends PureComponent {
             valuePlaceholder="value"
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             onToggleDisable={this._handleTrackToggle}
             onChangeType={this._handleTrackChangeType}
             onChooseFile={this._handleTrackChooseFile}
@@ -67,6 +69,7 @@ FormEditor.propTypes = {
   // Required
   onChange: PropTypes.func.isRequired,
   parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
 
   // Optional
   handleRender: PropTypes.func,

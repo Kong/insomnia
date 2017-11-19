@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
-import {trackEvent} from '../../analytics';
+import {trackEvent} from '../../common/analytics';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';
@@ -56,7 +56,8 @@ class MarkdownEditor extends PureComponent {
       className,
       tall,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     const {markdown} = this.state;
@@ -102,6 +103,7 @@ class MarkdownEditor extends PureComponent {
               defaultValue={markdown}
               render={handleRender}
               getRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
               onChange={this._handleChange}
             />
           </div>
@@ -130,6 +132,7 @@ MarkdownEditor.propTypes = {
   lineWrapping: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
 
   // Optional
   placeholder: PropTypes.string,

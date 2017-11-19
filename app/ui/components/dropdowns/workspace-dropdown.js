@@ -11,7 +11,7 @@ import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/settings-modal';
 import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
 import {showModal, showPrompt} from '../modals/index';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';

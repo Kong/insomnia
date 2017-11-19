@@ -1,10 +1,11 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, AUTH_ASAP, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
 import {GRANT_TYPE_AUTHORIZATION_CODE} from '../network/o-auth-2/constants';
+import {SIGNATURE_METHOD_HMAC_SHA1} from '../network/o-auth-1/constants';
 
 export const name = 'Request';
 export const type = 'Request';
@@ -12,6 +13,7 @@ export const prefix = 'req';
 export const canDuplicate = true;
 
 export type RequestAuthentication = Object;
+
 export type RequestHeader = {
   name: string,
   value: string,
@@ -99,9 +101,27 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         password: oldAuth.password || ''
       };
 
+    case AUTH_OAUTH_1:
+      return {
+        type,
+        disabled: false,
+        signatureMethod: SIGNATURE_METHOD_HMAC_SHA1,
+        consumerKey: '',
+        consumerSecret: '',
+        tokenKey: '',
+        tokenSecret: '',
+        version: '1.0',
+        nonce: '',
+        timestamp: '',
+        callback: ''
+      };
+
     // OAuth 2.0
     case AUTH_OAUTH_2:
-      return {type, grantType: GRANT_TYPE_AUTHORIZATION_CODE};
+      return {
+        type,
+        grantType: GRANT_TYPE_AUTHORIZATION_CODE
+      };
 
     // Aws IAM
     case AUTH_AWS_IAM:
@@ -112,15 +132,26 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         secretAccessKey: oldAuth.secretAccessKey || ''
       };
 
-    // netrc
-    case AUTH_NETRC:
-      return {type};
-
-    // hawk
+    // Hawk
     case AUTH_HAWK:
-      return {type, algorithm: HAWK_ALGORITHM_SHA256};
+      return {
+        type,
+        algorithm: HAWK_ALGORITHM_SHA256
+      };
+
+    // Atlassian ASAP
+    case AUTH_ASAP:
+      return {
+        type,
+        issuer: '',
+        subject: '',
+        audience: '',
+        keyId: '',
+        privateKey: ''
+      };
 
     // Types needing no defaults
+    case AUTH_NETRC:
     default:
       return {type};
   }
@@ -130,7 +161,7 @@ export function newBodyNone (): RequestBody {
   return {};
 }
 
-export function newBodyRaw (rawBody: string, contentType: string): RequestBody {
+export function newBodyRaw (rawBody: string, contentType?: string): RequestBody {
   if (typeof contentType !== 'string') {
     return {text: rawBody};
   }

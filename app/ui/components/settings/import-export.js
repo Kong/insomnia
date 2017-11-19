@@ -35,7 +35,9 @@ class ImportExport extends PureComponent {
         <p>
           Don't see your format here?
           {' '}
-          <Link href="https://insomnia.rest/documentation/import-export">Add Your Own</Link>.
+          <Link href="https://support.insomnia.rest/article/52-importing-and-exporting-data">
+            Add Your Own
+          </Link>.
         </p>
         <div className="pad-top">
           <Dropdown outline>

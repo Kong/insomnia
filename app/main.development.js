@@ -4,17 +4,22 @@ import {isDevelopment, isMac} from './common/constants';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import installExtension, {REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS} from 'electron-devtools-installer';
+import * as models from './models/index';
+import * as database from './common/database';
 
 // Handle potential auto-update
 if (needsRestart) {
   process.exit(0);
 }
 
+// Fall back so client-side code works
+console.debug = console.debug || console.log;
+
 // Initialize some things
 errorHandling.init();
 updates.init();
 windowUtils.init();
+database.init(models.types());
 
 function addUrlToOpen (e, url) {
   e.preventDefault();
@@ -49,22 +54,23 @@ app.on('activate', (e, hasVisibleWindows) => {
     } catch (e) {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
-      console.log('-- App not ready to "activate" yet --');
+      console.log('[main] App not ready to "activate" yet');
     }
   }
 });
 
 // When the app is first launched
 app.on('ready', async () => {
+  // TODO: Fix these. They stopped working
   // Install developer extensions if we're in dev mode
-  if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
-    try {
-      console.log('Installed Extension: ' + await installExtension(REACT_DEVELOPER_TOOLS));
-      console.log('Installed Extension: ' + await installExtension(REDUX_DEVTOOLS));
-    } catch (err) {
-      console.warn('Failed to install devtools extension', err);
-    }
-  }
+  // if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
+  //   try {
+  //     console.debug('[main] Installed Extension: ' + await installExtension(REACT_DEVELOPER_TOOLS));
+  //     console.debug('[main] Installed Extension: ' + await installExtension(REDUX_DEVTOOLS));
+  //   } catch (err) {
+  //     console.warn('Failed to install devtools extension', err);
+  //   }
+  // }
 
   app.removeListener('open-url', addUrlToOpen);
   const window = windowUtils.createWindow();

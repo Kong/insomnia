@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import allHeaderNames from '../../../datasets/header-names';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
@@ -96,7 +96,8 @@ class RequestHeadersEditor extends PureComponent {
       editorLineWrapping,
       onChange,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     return bulk ? (
@@ -104,6 +105,7 @@ class RequestHeadersEditor extends PureComponent {
           <CodeEditor
             getRenderContext={handleGetRenderContext}
             render={handleRender}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             fontSize={editorFontSize}
             indentSize={editorIndentSize}
             lineWrapping={editorLineWrapping}
@@ -119,6 +121,7 @@ class RequestHeadersEditor extends PureComponent {
               namePlaceholder="My-Header"
               valuePlaceholder="Value"
               pairs={headers}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               handleGetAutocompleteNameConstants={this._getCommonHeaderNames}
@@ -140,6 +143,7 @@ RequestHeadersEditor.propTypes = {
   editorFontSize: PropTypes.number.isRequired,
   editorIndentSize: PropTypes.number.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired,
   headers: PropTypes.arrayOf(PropTypes.shape({

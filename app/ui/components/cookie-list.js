@@ -7,10 +7,12 @@ import {cookieToString} from '../../common/cookies';
 import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
 import type {Cookie} from '../../models/cookie-jar';
+import {Dropdown, DropdownButton, DropdownItem} from './base/dropdown/index';
 
 type Props = {
-  onCookieAdd: Function,
-  onCookieDelete: Function,
+  handleCookieAdd: Function,
+  handleCookieDelete: Function,
+  handleDeleteAll: Function,
   cookies: Array<Cookie>,
   newCookieDomainName: string,
   handleShowModifyCookieModal: Function,
@@ -31,16 +33,17 @@ class CookieList extends React.PureComponent<Props> {
       httpOnly: false
     };
 
-    this.props.onCookieAdd(newCookie);
+    this.props.handleCookieAdd(newCookie);
   }
 
   _handleDeleteCookie (cookie: Cookie) {
-    this.props.onCookieDelete(cookie);
+    this.props.handleCookieDelete(cookie);
   }
 
   render () {
     const {
       cookies,
+      handleDeleteAll,
       handleShowModifyCookieModal,
       handleRender
     } = this.props;
@@ -53,27 +56,36 @@ class CookieList extends React.PureComponent<Props> {
             <th style={{minWidth: '10rem'}}>Domain</th>
             <th style={{width: '90%'}}>Cookie</th>
             <th style={{width: '2rem'}} className="text-right">
-              <button className="btn btn--super-duper-compact btn--outlined txt-md"
-                      onClick={this._handleCookieAdd}
-                      title="Add cookie">
-                Add Cookie
-              </button>
+              <Dropdown right>
+                <DropdownButton title="Add cookie"
+                                className="btn btn--super-duper-compact btn--outlined txt-md">
+                  Actions <i className="fa fa-caret-down"/>
+                </DropdownButton>
+                <DropdownItem onClick={this._handleCookieAdd}>
+                  <i className="fa fa-plus-circle"/> Add Cookie
+                </DropdownItem>
+                <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
+                  <i className="fa fa-trash-o"/> Delete All
+                </DropdownItem>
+              </Dropdown>
             </th>
           </tr>
           </thead>
           <tbody key={cookies.length}>
           {cookies.map((cookie, i) => {
             const cookieString = cookieToString(toughCookie.Cookie.fromJSON(cookie));
-
             return (
               <tr className="selectable" key={i}>
-                <RenderedText render={handleRender} component="td">
-                  {cookie.domain}
-                </RenderedText>
-                <RenderedText render={handleRender} component="td"
-                              props={{className: 'force-wrap wide'}}>
-                  {cookieString}
-                </RenderedText>
+                <td>
+                  <RenderedText render={handleRender}>
+                    {cookie.domain || ''}
+                  </RenderedText>
+                </td>
+                <td className="force-wrap wide">
+                  <RenderedText render={handleRender}>
+                    {cookieString || ''}
+                  </RenderedText>
+                </td>
                 <td onClick={null} className="text-right no-wrap">
                   <button className="btn btn--super-compact btn--outlined"
                           onClick={e => handleShowModifyCookieModal(cookie)}

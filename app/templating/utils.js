@@ -1,10 +1,26 @@
+// @flow
+
+export type NunjucksParsedTagArg = {
+  type: 'string' | 'number' | 'boolean' | 'number' | 'variable' | 'expression',
+  value: string | number | boolean,
+  defaultValue?: string | number | boolean,
+  forceVariable?: boolean,
+  quotedBy?: '"' | "'"
+};
+
+export type NunjucksParsedTag = {
+  name: string,
+  args: Array<NunjucksParsedTagArg>,
+  rawValue?: string
+};
+
 /**
  * Get list of paths to all primitive types in nested object
  * @param {object} obj - object to analyse
  * @param {String} [prefix] - base path to prefix to all paths
  * @returns {Array} - list of paths
  */
-export function getKeys (obj, prefix = '') {
+export function getKeys (obj: any, prefix: string = ''): Array<{name: string, value: any}> {
   let allKeys = [];
 
   const typeOfObj = Object.prototype.toString.call(obj);
@@ -33,7 +49,7 @@ export function getKeys (obj, prefix = '') {
  * @param {string} tagStr - the template string for the tag
  * @return {object} parsed tag data
  */
-export function tokenizeTag (tagStr) {
+export function tokenizeTag (tagStr: string): NunjucksParsedTag {
   // ~~~~~~~~ //
   // Sanitize //
   // ~~~~~~~~ //
@@ -106,7 +122,7 @@ export function tokenizeTag (tagStr) {
       if (quotedBy) {
         arg = {type: 'string', value: currentArg, quotedBy};
       } else if (['true', 'false'].includes(currentArg)) {
-        arg = {type: 'boolean', value: currentArg};
+        arg = {type: 'boolean', value: currentArg.toLowerCase() === 'true'};
       } else if (currentArg.match(/^\d*\.?\d*$/)) {
         arg = {type: 'number', value: currentArg};
       } else if (currentArg.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
@@ -125,19 +141,17 @@ export function tokenizeTag (tagStr) {
   return {name, args};
 }
 
-/**
- * Convert a tokenized tag back into a Nunjucks string
- * @param {object} tagData - tag data to serialize
- * @return {string} tag as a Nunjucks string
- */
-export function unTokenizeTag (tagData) {
+/** Convert a tokenized tag back into a Nunjucks string */
+export function unTokenizeTag (tagData: NunjucksParsedTag): string {
   const args = [];
   for (const arg of tagData.args) {
-    if (arg.type === 'string') {
+    if (['string', 'model', 'file'].includes(arg.type)) {
       const q = arg.quotedBy || "'";
       const re = new RegExp(`([^\\\\])${q}`, 'g');
-      const str = arg.value.replace(re, `$1\\${q}`);
+      const str = arg.value.toString().replace(re, `$1\\${q}`);
       args.push(`${q}${str}${q}`);
+    } else if (arg.type === 'boolean') {
+      args.push(arg.value ? 'true' : 'false');
     } else {
       args.push(arg.value);
     }
@@ -147,24 +161,24 @@ export function unTokenizeTag (tagData) {
   return `{% ${tagData.name} ${argsStr} %}`;
 }
 
-/**
- * Get the default Nunjucks string for an extension
- * @param {string} name
- * @param {object[]} args
- * @returns {string}
- */
-export function getDefaultFill (name, args) {
-  const stringArgs = (args || []).map(argDefinition => {
-    if (argDefinition.type === 'enum') {
-      const {defaultValue, options} = argDefinition;
-      const value = defaultValue !== undefined ? defaultValue : options[0].value;
-      return `'${value}'`;
-    } else if (argDefinition.type === 'number') {
-      const {defaultValue} = argDefinition;
-      return defaultValue !== undefined ? defaultValue : 0;
-    } else {
-      const {defaultValue} = argDefinition;
-      return defaultValue !== undefined ? `'${defaultValue}'` : "''";
+/** Get the default Nunjucks string for an extension */
+export function getDefaultFill (name: string, args: Array<NunjucksParsedTagArg>): string {
+  const stringArgs: Array<string> = (args || []).map(argDefinition => {
+    switch (argDefinition.type) {
+      case 'enum':
+        const {defaultValue, options} = argDefinition;
+        const value = defaultValue !== undefined ? defaultValue : options[0].value;
+        return `'${value}'`;
+      case 'number':
+        return `${parseFloat(argDefinition.defaultValue) || 0}`;
+      case 'boolean':
+        return argDefinition.defaultValue ? 'true' : 'false';
+      case 'string':
+      case 'file':
+      case 'model':
+        return `'${(argDefinition.defaultValue: any) || ''}'`;
+      default:
+        return "''";
     }
   });
 

@@ -111,4 +111,16 @@ describe('certificateUrlParse', () => {
     expected.host = `${host}:${port}`;
     expect(certificateUrlParse(url)).toEqual(expected);
   });
+
+  it('should return the correct port if wildcard in port', () => {
+    const protocol = 'https';
+    const host = 'localhost';
+    const port = '*';
+    const path = '/some/resources';
+    const query = 'query=1&other=2';
+    const fragment = 'myfragment';
+
+    const url = `${protocol}://${host}:${port}${path}?${query}#${fragment}`;
+    expect(certificateUrlParse(url).port).toEqual(port);
+  });
 });

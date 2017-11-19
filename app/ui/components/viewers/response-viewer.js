@@ -1,20 +1,45 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
-import {SimplePDF} from 'simple-react-pdf';
+import PDFViewer from '../pdf-viewer';
 import CodeEditor from '../codemirror/code-editor';
 import ResponseWebView from './response-webview';
+import MultipartViewer from './response-multipart';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
 import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
 
 let alwaysShowLargeResponses = false;
 
+type Props = {
+  getBody: Function,
+  responseId: string,
+  previewMode: string,
+  filter: string,
+  filterHistory: Array<string>,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  url: string,
+  bytes: number,
+  contentType: string,
+
+  // Optional
+  updateFilter: Function | null,
+  error: string | null
+};
+
+type State = {
+  blockingBecauseTooLarge: boolean,
+  bodyBuffer: Buffer | null
+};
+
 @autobind
-class ResponseViewer extends PureComponent {
-  constructor (props) {
+class ResponseViewer extends React.Component<Props, State> {
+  constructor (props: Props) {
     super(props);
     this.state = {
       blockingBecauseTooLarge: false,
@@ -22,7 +47,7 @@ class ResponseViewer extends PureComponent {
     };
   }
 
-  _handleOpenLink (link) {
+  _handleOpenLink (link: string) {
     shell.openExternal(link);
   }
 
@@ -36,7 +61,7 @@ class ResponseViewer extends PureComponent {
     this._handleDismissBlocker();
   }
 
-  _maybeLoadResponseBody (props, forceShow = false) {
+  _maybeLoadResponseBody (props: Props, forceShow?: boolean) {
     // Block the response if it's too large
     const responseIsTooLarge = props.bytes > LARGE_RESPONSE_MB * 1024 * 1024;
     if (!forceShow && !alwaysShowLargeResponses && responseIsTooLarge) {
@@ -53,11 +78,11 @@ class ResponseViewer extends PureComponent {
     this._maybeLoadResponseBody(this.props);
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps (nextProps: Props) {
     this._maybeLoadResponseBody(nextProps);
   }
 
-  shouldComponentUpdate (nextProps, nextState) {
+  shouldComponentUpdate (nextProps: Props, nextState: State) {
     for (let k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
@@ -66,7 +91,7 @@ class ResponseViewer extends PureComponent {
         continue;
       }
 
-      if (current instanceof Buffer) {
+      if (current instanceof Buffer && next instanceof Buffer) {
         if (current.equals(next)) {
           continue;
         } else {
@@ -87,7 +112,7 @@ class ResponseViewer extends PureComponent {
         continue;
       }
 
-      if (current instanceof Buffer) {
+      if (current instanceof Buffer && next instanceof Buffer) {
         if (current.equals(next)) {
           continue;
         } else {
@@ -113,6 +138,7 @@ class ResponseViewer extends PureComponent {
       editorIndentSize,
       editorKeyMap,
       updateFilter,
+      responseId,
       url,
       error
     } = this.props;
@@ -172,7 +198,7 @@ class ResponseViewer extends PureComponent {
     // Try to detect JSON in all cases (even if header is set). Apparently users
     // often send JSON with weird content-types like text/plain
     try {
-      JSON.parse(bodyBuffer);
+      JSON.parse(bodyBuffer.toString('utf8'));
       contentType = 'application/json';
     } catch (e) {
       // Nothing
@@ -214,12 +240,25 @@ class ResponseViewer extends PureComponent {
         />
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
-      const justContentType = contentType.split(';')[0];
-      const base64Body = bodyBuffer.toString('base64');
       return (
         <div className="tall wide scrollable">
-          <SimplePDF file={`data:${justContentType};base64,${base64Body}`}/>
+          <PDFViewer body={bodyBuffer} uniqueKey={responseId}/>
         </div>
+      );
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
+      return (
+        <MultipartViewer
+          responseId={responseId}
+          bodyBuffer={bodyBuffer}
+          contentType={contentType}
+          filter={filter}
+          filterHistory={filterHistory}
+          editorFontSize={editorFontSize}
+          editorIndentSize={editorIndentSize}
+          editorKeyMap={editorKeyMap}
+          editorLineWrapping={editorLineWrapping}
+          url={url}
+        />
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];
@@ -274,23 +313,5 @@ class ResponseViewer extends PureComponent {
     }
   }
 }
-
-ResponseViewer.propTypes = {
-  getBody: PropTypes.func.isRequired,
-  previewMode: PropTypes.string.isRequired,
-  filter: PropTypes.string.isRequired,
-  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  url: PropTypes.string.isRequired,
-  bytes: PropTypes.number.isRequired,
-  contentType: PropTypes.string.isRequired,
-
-  // Optional
-  updateFilter: PropTypes.func,
-  error: PropTypes.string
-};
 
 export default ResponseViewer;

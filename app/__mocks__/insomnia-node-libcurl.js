@@ -1,10 +1,22 @@
 import {EventEmitter} from 'events';
+import fs from 'fs';
 
 class Curl extends EventEmitter {
   constructor () {
     super();
     this._options = {};
+    this._meta = {};
+    this._features = {};
   }
+
+  static getVersion () {
+    return 'libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0';
+  }
+
+  enable (name) {
+    this._features[name] = true;
+  }
+
   setOpt (name, value) {
     if (!name) {
       throw new Error(`Invalid option ${name} ${value}`);
@@ -15,10 +27,30 @@ class Curl extends EventEmitter {
       return;
     }
 
+    if (name === Curl.option.READFUNCTION) {
+      let body = '';
+      // Only limiting this to prevent infinite loops
+      for (let i = 0; i < 1000; i++) {
+        const buffer = new Buffer(23);
+        const bytes = value(buffer);
+        if (bytes === 0) {
+          break;
+        }
+        body += buffer.slice(0, bytes);
+      }
+
+      this._meta[`${name}_VALUE`] = body;
+    }
+
     if (name === Curl.option.COOKIELIST) {
       // This can be set multiple times
       this._options[name] = this._options[name] || [];
       this._options[name].push(value);
+    } else if (name === Curl.option.READDATA) {
+      const {size} = fs.fstatSync(value);
+      const buffer = new Buffer(size);
+      fs.readSync(value, buffer, 0, size, 0);
+      this._options[name] = buffer.toString();
     } else {
       this._options[name] = value;
     }
@@ -42,17 +74,20 @@ class Curl extends EventEmitter {
   perform () {
     process.nextTick(() => {
       const data = Buffer.from(JSON.stringify({
-        options: this._options
+        options: this._options,
+        meta: this._meta,
+        features: this._features
       }));
 
       this.emit('data', data);
 
       process.nextTick(() => {
-        this.emit('end', 'NOT_USED', 'NOT_USED', [{
-          'Content-Length': `${data.length}`,
-          'Content-Type': 'application/json',
-          result: {code: 200, reason: 'OK'}
-        }]);
+        this.emit('end', 'NOT_USED', 'NOT_USED', [
+          'HTTP/1.1 200 OK',
+          `Content-Length: ${data.length}`,
+          'Content-Type: application/json',
+          ''
+        ].join('\n'));
       });
     });
   }
@@ -85,6 +120,10 @@ Curl.netrc = {
   REQUIRED: 2
 };
 
+Curl.feature = {
+  NO_HEADER_PARSING: 'NO_HEADER_PARSING'
+};
+
 Curl.option = {
   ACCEPT_ENCODING: 'ACCEPT_ENCODING',
   CAINFO: 'CAINFO',
@@ -110,6 +149,7 @@ Curl.option = {
   PROXY: 'PROXY',
   PROXYAUTH: 'PROXYAUTH',
   READDATA: 'READDATA',
+  READFUNCTION: 'READFUNCTION',
   SSLCERT: 'SSLCERT',
   SSLCERTTYPE: 'SSLCERTTYPE',
   SSLKEY: 'SSLKEY',

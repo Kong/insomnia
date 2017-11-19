@@ -11,7 +11,7 @@ class LocalStorage {
     this._buffer = {};
 
     mkdirp.sync(basePath);
-    console.log(`[localstorage] Initialized at ${basePath}`);
+    console.debug(`[localstorage] Initialized at ${basePath}`);
   }
 
   setItem (key, obj) {

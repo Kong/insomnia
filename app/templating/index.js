@@ -2,6 +2,8 @@
 import nunjucks from 'nunjucks';
 import * as extensions from './extensions';
 import BaseExtension from './base-extension';
+import type {NunjucksParsedTag} from './utils';
+import type {PluginTemplateTag} from './extensions/index';
 
 export class RenderError extends Error {
   message: string;
@@ -10,13 +12,6 @@ export class RenderError extends Error {
   type: string;
   reason: string;
 }
-
-export type NunjucksTag = {
-  name: string,
-  displayName: string,
-  description: string,
-  args: Array<Object>
-};
 
 // Some constants
 export const RENDER_ALL = 'all';
@@ -85,7 +80,7 @@ export function reload (): void {
 /**
  * Get definitions of template tags
  */
-export async function getTagDefinitions (): Promise<Array<NunjucksTag>> {
+export async function getTagDefinitions (): Promise<Array<NunjucksParsedTag>> {
   const env = await getNunjucks(RENDER_ALL);
 
   return Object.keys(env.extensions)
@@ -148,7 +143,7 @@ async function getNunjucks (renderMode: string) {
 
   const nj = nunjucks.configure(config);
 
-  const allExtensions = await extensions.all();
+  const allExtensions: Array<PluginTemplateTag> = await extensions.all();
   for (let i = 0; i < allExtensions.length; i++) {
     const ext = allExtensions[i];
     ext.priority = ext.priority || i * 100;

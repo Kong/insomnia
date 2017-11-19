@@ -6,7 +6,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
 
@@ -89,7 +89,8 @@ class RequestSettingsModal extends PureComponent {
       editorIndentSize,
       editorKeyMap,
       handleRender,
-      handleGetRenderContext
+      handleGetRenderContext,
+      nunjucksPowerUserMode
     } = this.props;
 
     const {showDescription, defaultPreviewMode} = this.state;
@@ -123,6 +124,7 @@ class RequestSettingsModal extends PureComponent {
             lineWrapping={editorLineWrapping}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             defaultValue={request.description}
             onChange={this._handleDescriptionChange}
           />
@@ -187,6 +189,7 @@ RequestSettingsModal.propTypes = {
   editorIndentSize: PropTypes.number.isRequired,
   editorKeyMap: PropTypes.string.isRequired,
   editorLineWrapping: PropTypes.bool.isRequired,
+  nunjucksPowerUserMode: PropTypes.bool.isRequired,
   handleRender: PropTypes.func.isRequired,
   handleGetRenderContext: PropTypes.func.isRequired
 };

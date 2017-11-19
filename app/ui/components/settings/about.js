@@ -13,7 +13,7 @@ class About extends PureComponent {
         <p>
           If you have any question or concerns, don't hesitate to
           {' '}
-          <Link href="https://insomnia.rest/documentation/support-and-feedback/">reach out</Link>.
+          <Link href="https://insomnia.rest/support/">reach out</Link>.
           {' '}
           And, if you want access to
           cloud sync or just feel like being awesome, you can sign up for

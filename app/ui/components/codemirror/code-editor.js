@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import CodeMirror from 'codemirror';
@@ -9,7 +9,7 @@ import vkBeautify from 'vkbeautify';
 import {showModal} from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS, isMac} from '../../../common/constants';
 import './base-imports';
@@ -48,6 +48,9 @@ const BASE_CODEMIRROR_OPTIONS = {
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     },
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
+      // HACK: So nothing conflicts withe the "Send Request" shortcut
+    },
     'Ctrl-Space': 'autocomplete',
 
     // Change default find command from "find" to "findPersistent" so the
@@ -57,7 +60,7 @@ const BASE_CODEMIRROR_OPTIONS = {
 };
 
 @autobind
-class CodeEditor extends PureComponent {
+class CodeEditor extends React.Component {
   constructor (props) {
     super(props);
 
@@ -183,7 +186,8 @@ class CodeEditor extends PureComponent {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         {line: -1, ch: -1},
-        {line: -1, ch: -1}
+        {line: -1, ch: -1},
+        {scroll: false}
       );
     }
   }
@@ -249,7 +253,7 @@ class CodeEditor extends PureComponent {
       this._codemirrorSetValue(defaultValue || '');
 
       // Setup nunjucks listeners
-      if (this.props.render) {
+      if (this.props.render && !this.props.nunjucksPowerUserMode) {
         this.codeMirror.enableNunjucksTags(this.props.render);
       }
 
@@ -439,7 +443,8 @@ class CodeEditor extends PureComponent {
         getTags = async () => {
           const expandedTags = [];
           for (const tagDef of await getTagDefinitions()) {
-            if (tagDef.args[0].type !== 'enum') {
+            const firstArg = tagDef.args[0];
+            if (!firstArg || firstArg.type !== 'enum') {
               expandedTags.push(tagDef);
               continue;
             }
@@ -580,6 +585,11 @@ class CodeEditor extends PureComponent {
    * @param forcePrettify
    */
   _codemirrorSetValue (code, forcePrettify = false) {
+    if (typeof code !== 'string') {
+      console.warn('Code editor was passed non-string value', code);
+      return;
+    }
+
     this._originalCode = code;
 
     // Don't ignore changes from prettify
@@ -759,6 +769,7 @@ CodeEditor.propTypes = {
   onClick: PropTypes.func,
   onPaste: PropTypes.func,
   render: PropTypes.func,
+  nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,
   keyMap: PropTypes.string,

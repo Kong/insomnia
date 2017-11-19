@@ -6,7 +6,7 @@ import SizeTag from '../tags/size-tag';
 import StatusTag from '../tags/status-tag';
 import TimeTag from '../tags/time-tag';
 import PromptButton from '../base/prompt-button';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
 import {executeHotKey} from '../../../common/hotkeys';

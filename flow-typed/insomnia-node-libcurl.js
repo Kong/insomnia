@@ -1,4 +1,8 @@
 declare class Curl {
+  static getVersion: () => string;
+  static feature: {
+    NO_HEADER_PARSING: number
+  };
   static option: {
     ACCEPT_ENCODING: number,
     CAINFO: number,
@@ -25,6 +29,7 @@ declare class Curl {
     PROXY: number,
     PROXYAUTH: number,
     READDATA: number,
+    READFUNCTION: number,
     SSLCERT: number,
     SSLCERTTYPE: number,
     SSLKEY: number,
@@ -68,6 +73,7 @@ declare class Curl {
   };
 
   setOpt: (option: number, ...args: Array<any>) => void;
+  enable: (option: number, ...args: Array<any>) => void;
   getInfo: (option: string, ...args: Array<any>) => any;
   perform: () => void;
   close: () => void;

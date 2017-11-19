@@ -7,7 +7,6 @@ import autobind from 'autobind-decorator';
 import {parse, print} from 'graphql';
 import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
-import clone from 'clone';
 import CodeEditor from '../../codemirror/code-editor';
 import {jsonParseOr} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
@@ -22,7 +21,7 @@ import TimeFromNow from '../../time-from-now';
 
 type GraphQLBody = {
   query: string,
-  variables: Object,
+  variables?: Object,
   operationName?: string
 }
 
@@ -33,8 +32,9 @@ type Props = {
   indentSize: number,
   keyMap: string,
   lineWrapping: boolean,
-  render: Function,
-  getRenderContext: Function,
+  render: Function | null,
+  getRenderContext: Function | null,
+  nunjucksPowerUserMode: boolean,
   request: Request,
   workspace: Workspace,
   settings: Settings,
@@ -99,7 +99,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     if (request) {
       try {
-        // TODO: Use Insomnia's network stack to handle things like authentication
         const bodyJson = JSON.stringify({query: introspectionQuery});
         const introspectionRequest = Object.assign({}, request, {
           body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
@@ -157,13 +156,36 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }, 200);
   }
 
-  _handleBodyChange (query: string, variables: Object): void {
-    const body = clone(this.state.body);
-    const newState = {variablesSyntaxError: '', body};
+  _getOperationNames (): Array<string> {
+    const {body} = this.state;
 
-    newState.body.query = query;
-    newState.body.variables = variables;
-    this.setState(newState);
+    let documentAST;
+    try {
+      documentAST = parse(body.query);
+    } catch (e) {
+      return [];
+    }
+
+    return documentAST.definitions
+      .filter(def => def.kind === 'OperationDefinition')
+      .map(def => def.name ? def.name.value : null)
+      .filter(Boolean);
+  }
+
+  _handleBodyChange (query: string, variables?: Object): void {
+    const operationNames = this._getOperationNames();
+
+    const body: GraphQLBody = {query};
+
+    if (variables) {
+      body.variables = variables;
+    }
+
+    if (operationNames.length) {
+      body.operationName = operationNames[0];
+    }
+
+    this.setState({variablesSyntaxError: '', body});
     this.props.onChange(this._graphQLToString(body));
   }
 
@@ -173,7 +195,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   _handleVariablesChange (variables: string): void {
     try {
-      const variablesObj = JSON.parse(variables || '{}');
+      const variablesObj = JSON.parse(variables || 'null');
       this._handleBodyChange(this.state.body.query, variablesObj);
     } catch (err) {
       this.setState({variablesSyntaxError: err.message});
@@ -181,21 +203,25 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _stringToGraphQL (text: string): GraphQLBody {
-    let obj;
+    let obj: GraphQLBody;
     try {
       obj = JSON.parse(text);
     } catch (err) {
-      obj = {query: '', variables: {}};
+      obj = {query: ''};
     }
 
     if (typeof obj.variables === 'string') {
-      obj.variables = jsonParseOr(obj.variables, {});
+      obj.variables = jsonParseOr(obj.variables, '');
     }
 
-    return {
-      query: obj.query || '',
-      variables: obj.variables || {}
-    };
+    const query = obj.query || '';
+    const variables = obj.variables || null;
+
+    if (variables) {
+      return {query, variables};
+    } else {
+      return {query};
+    }
   }
 
   _graphQLToString (body: GraphQLBody): string {
@@ -243,6 +269,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       keyMap,
       render,
       getRenderContext,
+      nunjucksPowerUserMode,
       lineWrapping,
       className
     } = this.props;
@@ -323,6 +350,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             className={className}
             render={render}
             getRenderContext={getRenderContext}
+            nunjucksPowerUserMode={nunjucksPowerUserMode}
             onChange={this._handleVariablesChange}
             mode="application/json"
             lineWrapping={lineWrapping}

@@ -26,6 +26,10 @@ const NUNJUCKS_CLOSE_STATES = {
  * @returns {string}
  */
 export function prettifyJson (json, indentChars = '\t') {
+  if (!json) {
+    return '';
+  }
+
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
   try {

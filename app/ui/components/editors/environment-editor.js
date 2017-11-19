@@ -1,12 +1,30 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
-import {DEBOUNCE_MILLIS} from '../../../common/constants';
+
+type Props = {
+  environment: Object,
+  didChange: Function,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  render: Function,
+  getRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
+  lineWrapping: boolean
+};
+
+type State = {
+  error: string | null,
+  warning: string | null
+};
 
 @autobind
-class EnvironmentEditor extends PureComponent {
-  constructor (props) {
+class EnvironmentEditor extends React.PureComponent<Props, State> {
+  _editor: CodeEditor | null;
+
+  constructor (props: Props) {
     super(props);
     this.state = {
       error: null,
@@ -36,19 +54,24 @@ class EnvironmentEditor extends PureComponent {
       }
     }
 
+    this.props.didChange();
+
+    // Call this last in case component unmounted
     if (this.state.error !== error || this.state.warning !== warning) {
       this.setState({error, warning});
     }
-
-    this.props.didChange();
   }
 
-  _setEditorRef (n) {
+  _setEditorRef (n: ?CodeEditor) {
     this._editor = n;
   }
 
   getValue () {
-    return JSON.parse(this._editor.getValue());
+    if (this._editor) {
+      return JSON.parse(this._editor.getValue());
+    } else {
+      return '';
+    }
   }
 
   isValid () {
@@ -63,6 +86,7 @@ class EnvironmentEditor extends PureComponent {
       editorKeyMap,
       render,
       getRenderContext,
+      nunjucksPowerUserMode,
       lineWrapping,
       ...props
     } = this.props;
@@ -79,8 +103,8 @@ class EnvironmentEditor extends PureComponent {
           lineWrapping={lineWrapping}
           keyMap={editorKeyMap}
           onChange={this._handleChange}
-          debounceMillis={DEBOUNCE_MILLIS * 6}
           defaultValue={JSON.stringify(environment)}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
           render={render}
           getRenderContext={getRenderContext}
           mode="application/json"
@@ -92,16 +116,5 @@ class EnvironmentEditor extends PureComponent {
     );
   }
 }
-
-EnvironmentEditor.propTypes = {
-  environment: PropTypes.object.isRequired,
-  didChange: PropTypes.func.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  render: PropTypes.func.isRequired,
-  getRenderContext: PropTypes.func.isRequired,
-  lineWrapping: PropTypes.bool.isRequired
-};
 
 export default EnvironmentEditor;

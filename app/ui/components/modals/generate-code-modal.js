@@ -9,8 +9,8 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import {exportHar} from '../../../common/har';
-import {trackEvent} from '../../../analytics/index';
+import {exportHarRequest} from '../../../common/har';
+import {trackEvent} from '../../../common/analytics';
 import Link from '../base/link';
 
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
@@ -89,7 +89,7 @@ class GenerateCodeModal extends PureComponent {
     const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
 
     const {environmentId} = this.props;
-    const har = await exportHar(request._id, environmentId, addContentLength);
+    const har = await exportHarRequest(request._id, environmentId, addContentLength);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert(target.key, client.key);
 

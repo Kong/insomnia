@@ -1,10 +1,13 @@
 import * as networkUtils from '../network';
+import fs from 'fs';
 import {join as pathJoin, resolve as pathResolve} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
+import {DEFAULT_BOUNDARY} from '../multipart';
+import {_parseHeaders} from '../network';
 
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);
@@ -64,6 +67,10 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         COOKIELIST: [
           'notlocalhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
@@ -72,11 +79,12 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: */*',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -120,16 +128,21 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         POST: 1,
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: */*',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
         POSTFIELDS: 'foo=bar&bar=&=value',
@@ -199,15 +212,20 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: */*',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -226,6 +244,7 @@ describe('actuallySend()', () => {
     const workspace = await models.workspace.create();
     const settings = await models.settings.create();
     await models.cookieJar.create({parentId: workspace._id});
+    const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
 
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
@@ -233,10 +252,7 @@ describe('actuallySend()', () => {
       headers: [{name: 'Content-Type', value: 'application/octet-stream'}],
       url: 'http://localhost',
       method: 'POST',
-      body: {
-        mimeType: CONTENT_TYPE_FILE,
-        fileName: pathResolve(pathJoin(__dirname, './testfile.txt')) // Let's send ourselves
-      }
+      body: {mimeType: CONTENT_TYPE_FILE, fileName}
     });
 
     const renderedRequest = await getRenderedRequest(request);
@@ -248,26 +264,28 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
 
-    // READDATA is an fd (random int), so fuzzy assert this one
-    expect(typeof body.options.READDATA).toBe('number');
-    delete body.options.READDATA;
-
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         POST: 1,
         ACCEPT_ENCODING: '',
         CUSTOMREQUEST: 'POST',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
           'Expect: ',
-          'Transfer-Encoding: '
+          'Transfer-Encoding: ',
+          'Accept: */*',
+          'Accept-Encoding: '
         ],
         NOPROGRESS: false,
-        INFILESIZE_LARGE: 13,
+        INFILESIZE_LARGE: 26,
         PROXY: '',
+        READDATA: fs.readFileSync(fileName, 'utf8'),
         TIMEOUT_MS: 0,
         UPLOAD: 1,
         URL: 'http://localhost/',
@@ -309,29 +327,41 @@ describe('actuallySend()', () => {
       settings
     );
     const body = JSON.parse(bodyBuffer);
-    expect(body).toEqual({
-      options: {
-        POST: 1,
-        ACCEPT_ENCODING: '',
-        COOKIEFILE: '',
-        FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
-        HTTPHEADER: [
-          'Content-Type: multipart/form-data',
-          'Expect: ',
-          'Transfer-Encoding: '
-        ],
-        HTTPPOST: [
-          {file: fileName, name: 'foo', type: 'text/plain'},
-          {contents: 'AA', name: 'a'}
-        ],
-        NOPROGRESS: false,
-        PROXY: '',
-        TIMEOUT_MS: 0,
-        URL: 'http://localhost/',
-        USERAGENT: `insomnia/${getAppVersion()}`,
-        VERBOSE: true
-      }
+
+    expect(body.options).toEqual({
+      POST: 1,
+      ACCEPT_ENCODING: '',
+      COOKIEFILE: '',
+      FOLLOWLOCATION: true,
+      CUSTOMREQUEST: 'POST',
+      HTTPHEADER: [
+        'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
+        'Expect: ',
+        'Transfer-Encoding: ',
+        'Accept: */*',
+        'Accept-Encoding: '
+      ],
+      INFILESIZE_LARGE: 244,
+      NOPROGRESS: false,
+      READDATA: [
+        `--${DEFAULT_BOUNDARY}`,
+        'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
+        'Content-Type: text/plain',
+        '',
+        fs.readFileSync(fileName),
+        `--${DEFAULT_BOUNDARY}`,
+        'Content-Disposition: form-data; name="a"',
+        '',
+        'AA',
+        `--${DEFAULT_BOUNDARY}--`,
+        ''
+      ].join('\r\n'),
+      PROXY: '',
+      TIMEOUT_MS: 0,
+      URL: 'http://localhost/',
+      UPLOAD: 1,
+      USERAGENT: `insomnia/${getAppVersion()}`,
+      VERBOSE: true
     });
   });
 
@@ -351,13 +381,20 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: */*',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -385,13 +422,20 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         NOBODY: 1,
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: */*',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -418,13 +462,20 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: */*',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -452,13 +503,20 @@ describe('actuallySend()', () => {
 
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true
+      },
       options: {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        // MAXREDIRS: -1,
-        HTTPHEADER: ['content-type: '],
+        HTTPHEADER: [
+          'Accept: */*',
+          'Accept-Encoding: ',
+          'content-type: '
+        ],
         NOPROGRESS: false,
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -482,6 +540,7 @@ describe('_getAwsAuthHeaders', () => {
       },
       headers: [{name: 'content-type', value: 'application/json'}],
       body: {text: '{}'},
+      method: 'POST',
       url: 'https://example.com/path?query=q1'
     };
     const headers = networkUtils._getAwsAuthHeaders(
@@ -489,7 +548,8 @@ describe('_getAwsAuthHeaders', () => {
       req.authentication.secretAccessKey,
       req.headers,
       req.body.text,
-      req.url
+      req.url,
+      req.method
     );
     expect(filterHeaders(headers, 'x-amz-date')[0].value)
       .toMatch(/^\d{8}T\d{6}Z$/);
@@ -507,8 +567,12 @@ describe('_getAwsAuthHeaders', () => {
         accessKeyId: 'AKIA99999999',
         secretAccessKey: 'SAK9999999999999'
       },
-      headers: [],
-      url: 'https://example.com'
+      headers: [
+        'Accept: */*',
+        'Accept-Encoding: '
+      ],
+      url: 'https://example.com',
+      method: 'GET'
     };
 
     const headers = networkUtils._getAwsAuthHeaders(
@@ -516,7 +580,8 @@ describe('_getAwsAuthHeaders', () => {
       req.authentication.secretAccessKey,
       req.headers,
       null,
-      req.url
+      req.url,
+      req.method
     );
 
     expect(filterHeaders(headers, 'x-amz-date')[0].value)
@@ -526,5 +591,96 @@ describe('_getAwsAuthHeaders', () => {
       .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999/);
     expect(filterHeaders(headers, 'content-type'))
       .toHaveLength(0);
+  });
+});
+
+describe('_parseHeaders', () => {
+  const basicHeaders = [
+    'HTTP/1.1 301 Moved Permanently',
+    'X-Powered-By: Express',
+    'location: http://localhost:3000/',
+    'Content-Type: text/plain; charset=utf-8',
+    'Content-Length: 17',
+    'ETag: W/"11-WKzg6oYof0o8Mliwrz5pkw"',
+    'Duplicate: foo',
+    'Duplicate: bar',
+    'Date: Mon, 13 Nov 2017 22:06:28 GMT',
+    'Foo', // Invalid header
+    ''
+  ];
+
+  const minimalHeaders = [
+    'HTTP/1.1 301',
+    ''
+  ];
+
+  it('Parses single response headers', () => {
+    expect(_parseHeaders(new Buffer(basicHeaders.join('\n')))).toEqual([
+      {
+        code: 301,
+        version: 'HTTP/1.1',
+        reason: 'Moved Permanently',
+        headers: [
+          {name: 'X-Powered-By', value: 'Express'},
+          {name: 'location', value: 'http://localhost:3000/'},
+          {name: 'Content-Type', value: 'text/plain; charset=utf-8'},
+          {name: 'Content-Length', value: '17'},
+          {name: 'ETag', value: 'W/"11-WKzg6oYof0o8Mliwrz5pkw"'},
+          {name: 'Duplicate', value: 'foo'},
+          {name: 'Duplicate', value: 'bar'},
+          {name: 'Date', value: 'Mon, 13 Nov 2017 22:06:28 GMT'},
+          {name: 'Foo', value: ''}
+        ]
+      }
+    ]);
+  });
+
+  it('Parses Windows newlines', () => {
+    expect(_parseHeaders(new Buffer(basicHeaders.join('\r\n')))).toEqual([
+      {
+        code: 301,
+        version: 'HTTP/1.1',
+        reason: 'Moved Permanently',
+        headers: [
+          {name: 'X-Powered-By', value: 'Express'},
+          {name: 'location', value: 'http://localhost:3000/'},
+          {name: 'Content-Type', value: 'text/plain; charset=utf-8'},
+          {name: 'Content-Length', value: '17'},
+          {name: 'ETag', value: 'W/"11-WKzg6oYof0o8Mliwrz5pkw"'},
+          {name: 'Duplicate', value: 'foo'},
+          {name: 'Duplicate', value: 'bar'},
+          {name: 'Date', value: 'Mon, 13 Nov 2017 22:06:28 GMT'},
+          {name: 'Foo', value: ''}
+        ]
+      }
+    ]);
+  });
+
+  it('Parses multiple responses', () => {
+    const blobs = basicHeaders.join('\r\n') + '\n' + minimalHeaders.join('\n');
+    expect(_parseHeaders(new Buffer(blobs))).toEqual([
+      {
+        code: 301,
+        version: 'HTTP/1.1',
+        reason: 'Moved Permanently',
+        headers: [
+          {name: 'X-Powered-By', value: 'Express'},
+          {name: 'location', value: 'http://localhost:3000/'},
+          {name: 'Content-Type', value: 'text/plain; charset=utf-8'},
+          {name: 'Content-Length', value: '17'},
+          {name: 'ETag', value: 'W/"11-WKzg6oYof0o8Mliwrz5pkw"'},
+          {name: 'Duplicate', value: 'foo'},
+          {name: 'Duplicate', value: 'bar'},
+          {name: 'Date', value: 'Mon, 13 Nov 2017 22:06:28 GMT'},
+          {name: 'Foo', value: ''}
+        ]
+      },
+      {
+        code: 301,
+        headers: [],
+        reason: '',
+        version: 'HTTP/1.1'
+      }
+    ]);
   });
 });

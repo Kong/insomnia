@@ -1,4 +1,4 @@
-import {CookieJar} from 'tough-cookie';
+import {CookieJar, Cookie} from 'tough-cookie';
 
 /**
  * Get a list of cookie objects from a request.jar()
@@ -12,7 +12,8 @@ export function cookiesFromJar (jar) {
         console.warn('Failed to get cookies form jar', err);
         resolve([]);
       } else {
-        resolve(cookies);
+        // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+        resolve(cookies.map(c => c.toJSON()));
       }
     });
   });
@@ -47,7 +48,7 @@ export function jarFromCookies (cookies) {
     const copy = JSON.stringify({cookies});
     jar = CookieJar.fromJSON(copy);
   } catch (e) {
-    console.log('Failed to initialize cookie jar', e);
+    console.log('[cookies] Failed to initialize cookie jar', e);
     jar = new CookieJar();
   }
 
@@ -58,6 +59,11 @@ export function jarFromCookies (cookies) {
 }
 
 export function cookieToString (cookie) {
+  // Cookie can either be a plain JS object or Cookie instance
+  if (!(cookie instanceof Cookie)) {
+    cookie = Cookie.fromJSON(cookie);
+  }
+
   let str = cookie.toString();
 
   // tough-cookie toString() doesn't put domain on all the time.

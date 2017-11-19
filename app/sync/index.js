@@ -5,7 +5,7 @@ import * as session from './session';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
-import {trackEvent} from '../analytics/index';
+import {trackEvent} from '../common/analytics';
 import * as zlib from 'zlib';
 
 export const START_DELAY = 1E3;
@@ -17,7 +17,8 @@ const WHITE_LIST = {
   [models.request.type]: true,
   [models.requestGroup.type]: true,
   [models.environment.type]: true,
-  [models.cookieJar.type]: true
+  [models.cookieJar.type]: true,
+  [models.clientCertificate.type]: true
 };
 
 export const logger = new Logger();
@@ -92,8 +93,11 @@ export async function init () {
       extraDelay += PULL_PERIOD;
     }
 
-    // Add sync duration to give the server some room if it's being slow
-    extraDelay += (Date.now() - syncStartTime) * 2;
+    const totalSyncTime = Date.now() - syncStartTime;
+
+    // Add sync duration to give the server some room if it's being slow.
+    // Also, multiply it by a random value so everyone doesn't sync up
+    extraDelay += totalSyncTime * (Math.random() * 2);
 
     nextSyncTime = Date.now() + PULL_PERIOD + extraDelay;
     isSyncing = false;

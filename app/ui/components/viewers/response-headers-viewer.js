@@ -1,46 +1,43 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import CopyButton from '../base/copy-button';
+import type {ResponseHeader} from '../../../models/response';
 
-class ResponseHeadersViewer extends PureComponent {
+type Props = {
+  headers: Array<ResponseHeader>
+};
+
+class ResponseHeadersViewer extends React.PureComponent<Props> {
   render () {
     const {headers} = this.props;
 
-    const headersString = headers.map(
-      h => `${h.name}: ${h.value}`
-    ).join('\n');
+    const headersString = headers.map(h => `${h.name}: ${h.value}`).join('\n');
 
-    return (
-      <div>
-        <table className="table--fancy table--striped">
-          <thead>
-          <tr>
-            <th>Name</th>
-            <th>Value</th>
+    return [
+      <table key='table' className="table--fancy table--striped">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+        </thead>
+        <tbody>
+        {headers.map((h, i) => (
+          <tr className="selectable" key={i}>
+            <td style={{width: '50%'}} className="force-wrap">{h.name}</td>
+            <td style={{width: '50%'}} className="force-wrap">{h.value}</td>
           </tr>
-          </thead>
-          <tbody>
-          {headers.map((h, i) => (
-            <tr className="selectable" key={i}>
-              <td style={{width: '50%'}} className="force-wrap">{h.name}</td>
-              <td style={{width: '50%'}} className="force-wrap">{h.value}</td>
-            </tr>
-          ))}
-          </tbody>
-        </table>
-        <p className="pad-top">
-          <CopyButton
-            className="pull-right btn btn--clicky"
-            content={headersString}
-          />
-        </p>
-      </div>
-    );
+        ))}
+        </tbody>
+      </table>,
+      <p key='copy' className="pad-top">
+        <CopyButton
+          className="pull-right btn btn--clicky"
+          content={headersString}
+        />
+      </p>
+    ];
   }
 }
-
-ResponseHeadersViewer.propTypes = {
-  headers: PropTypes.array.isRequired
-};
 
 export default ResponseHeadersViewer;

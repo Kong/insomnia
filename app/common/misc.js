@@ -1,4 +1,5 @@
 // @flow
+import * as electron from 'electron';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
@@ -63,8 +64,17 @@ export function hasUserAgentHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'user-agent').length > 0;
 }
 
+export function hasAcceptEncodingHeader<T: Header> (headers: Array<T>): boolean {
+  return filterHeaders(headers, 'accept-encoding').length > 0;
+}
+
 export function getSetCookieHeaders<T: Header> (headers: Array<T>): Array<T> {
   return filterHeaders(headers, 'set-cookie');
+}
+
+export function getLocationHeader<T: Header> (headers: Array<T>): T | null {
+  const matches = filterHeaders(headers, 'location');
+  return matches.length ? matches[0] : null;
 }
 
 export function getContentTypeHeader<T: Header> (headers: Array<T>): T | null {
@@ -321,7 +331,44 @@ export function escapeRegex (str: string): string {
 }
 
 export function fuzzyMatch (searchString: string, text: string): boolean {
-  const regexSearchString = escapeRegex(searchString.toLowerCase()).split('').join('.*');
-  const toMatch = new RegExp(regexSearchString);
+  const lowercase = searchString.toLowerCase();
+
+  // Split into individual chars, then escape the ones that need it.
+  const regexSearchString = lowercase.split('').map(v => escapeRegex(v)).join('.*');
+
+  let toMatch;
+  try {
+    toMatch = new RegExp(regexSearchString);
+  } catch (err) {
+    console.warn('Invalid regex', searchString, regexSearchString);
+    // Invalid regex somehow
+    return false;
+  }
+
   return toMatch.test(text.toLowerCase());
+}
+
+export function getViewportSize (): string | null {
+  const {BrowserWindow} = electron.remote || electron;
+  const w = BrowserWindow.getFocusedWindow() ||
+    BrowserWindow.getAllWindows()[0];
+
+  if (w) {
+    const {width, height} = w.getContentBounds();
+    return `${width}x${height}`;
+  } else {
+    // No windows open
+    return null;
+  }
+}
+
+export function getScreenResolution (): string {
+  const {screen} = electron.remote || electron;
+  const {width, height} = screen.getPrimaryDisplay().workAreaSize;
+  return `${width}x${height}`;
+}
+
+export function getUserLanguage (): string {
+  const {app} = electron.remote || electron;
+  return app.getLocale();
 }

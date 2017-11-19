@@ -12,6 +12,7 @@ export default function certificateUrlParse (url) {
     parsed.hostname = _reinstateWildcards(parsed.hostname);
     parsed.host = _reinstateWildcards(parsed.host);
     parsed.href = _reinstateWildcards(parsed.href);
+    parsed.port = _reinstateWildcards(parsed.port);
 
     return parsed;
   }

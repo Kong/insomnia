@@ -12,6 +12,7 @@ import * as _requestVersion from './request-version';
 import * as _requestMeta from './request-meta';
 import * as _response from './response';
 import * as _oAuth2Token from './o-auth-2-token';
+import * as _clientCertificate from './client-certificate';
 import {generateId} from '../common/misc';
 
 export type BaseModel = {
@@ -36,6 +37,7 @@ export const requestVersion = _requestVersion;
 export const requestMeta = _requestMeta;
 export const response = _response;
 export const oAuth2Token = _oAuth2Token;
+export const clientCertificate = _clientCertificate;
 
 export function all () {
   return [
@@ -51,7 +53,8 @@ export function all () {
     requestVersion,
     requestMeta,
     response,
-    oAuth2Token
+    oAuth2Token,
+    clientCertificate
   ];
 }
 
@@ -82,7 +85,10 @@ export function getModelName (type: string, count: number = 1) {
   }
 }
 
-export async function initModel <T: BaseModel> (type: string, ...sources: Array<Object>): Promise<T> {
+export async function initModel<T: BaseModel> (
+  type: string,
+  ...sources: Array<Object>
+): Promise<T> {
   const model = getModel(type);
 
   if (!model) {
@@ -108,7 +114,10 @@ export async function initModel <T: BaseModel> (type: string, ...sources: Array<
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  const migratedDoc = await model.migrate(fullObject);
+  const noMigrate = fullObject.__NO_MIGRATE;
+  const migratedDoc = noMigrate
+    ? fullObject
+    : await model.migrate(fullObject);
 
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {
