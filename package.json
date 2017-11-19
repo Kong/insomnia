@@ -69,7 +69,6 @@
   },
   "build": {
     "appId": "com.insomnia.app",
-    "publish": false,
     "extraResources": [
       {
         "from": "./bin",
@@ -77,7 +76,6 @@
         "filter": "yarn-standalone.js"
       }
     ],
-    "category": "public.app-category.developer-tools",
     "protocols": [
       {
         "name": "Insomnia",
@@ -189,8 +187,8 @@
     "cross-env": "^2.0.0",
     "css-loader": "^0.26.2",
     "electron": "^1.7.9",
-    "electron-builder": "^19.30.2",
-    "electron-builder-squirrel-windows": "^19.30.3",
+    "electron-builder": "^19.45.5",
+    "electron-builder-squirrel-windows": "^19.46.0",
     "electron-rebuild": "^1.6.0",
     "eslint": "^3.16.1",
     "eslint-config-semistandard": "^7.0.0",

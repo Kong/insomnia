@@ -157,8 +157,14 @@ async function _sendToGoogle (params: Array<RequestParameter>) {
     const chunks = [];
 
     response.on('end', () => {
+      const jsonStr = Buffer.concat(chunks).toString('utf8');
+
+      // GA only returns data if it's the debug server
+      if (!jsonStr) {
+        return;
+      }
+
       try {
-        const jsonStr = Buffer.concat(chunks).toString('utf8');
         const data = JSON.parse(jsonStr);
         const {hitParsingResult} = data;
         if (hitParsingResult.valid) {
