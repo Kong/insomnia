@@ -137,7 +137,7 @@ async function _sendToGoogle (params: Array<RequestParameter>) {
   const allParams = [...baseParams, ...params];
   const qs = querystring.buildFromParams(allParams);
   const baseUrl = isDevelopment()
-    ? 'https://www.google-analytics.com/debug/collect'
+    ? 'https://www.google-analytics.com/collect'
     : 'https://www.google-analytics.com/collect';
   const url = querystring.joinUrl(baseUrl, qs);
 
@@ -155,15 +155,15 @@ async function _sendToGoogle (params: Array<RequestParameter>) {
     }
 
     const chunks = [];
+    const [contentType] = response.headers['content-type'] || [];
+
+    if (contentType !== 'application/json') {
+      // Production GA API returns a Gif to use for tracking
+      return;
+    }
 
     response.on('end', () => {
       const jsonStr = Buffer.concat(chunks).toString('utf8');
-
-      // GA only returns data if it's the debug server
-      if (!jsonStr) {
-        return;
-      }
-
       try {
         const data = JSON.parse(jsonStr);
         const {hitParsingResult} = data;
