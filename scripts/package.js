@@ -1,5 +1,5 @@
 const electronBuilder = require('electron-builder');
-const config = require('../electron-builder.json');
+const config = require('../.electronbuilder');
 const path = require('path');
 const rimraf = require('rimraf');
 
