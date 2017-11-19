@@ -51,6 +51,9 @@ module.exports = {
   ipcRenderer: {
     on () {
 
+    },
+    send () {
+
     }
   }
 };
