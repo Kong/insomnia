@@ -1,7 +1,7 @@
 const electronBuilder = require('electron-builder');
-const config = require('../.electronbuilder');
 const path = require('path');
 const rimraf = require('rimraf');
+const fs = require('fs');
 
 const PLATFORM_MAP = {
   darwin: 'mac',
@@ -14,13 +14,15 @@ async function run () {
   await removeDir('../dist');
 
   console.log('[package] Packaging app');
-  await build(config);
+  await build('../.electronbuilder');
 
   console.log('[package] Complete!');
 }
 
-async function build (config) {
+async function build (relConfigPath) {
   try {
+    const configPath = path.resolve(__dirname, relConfigPath);
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     const targetPlatform = PLATFORM_MAP[process.platform];
     const packager = new electronBuilder.Packager({
       config,
