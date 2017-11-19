@@ -46,10 +46,16 @@ module.exports = {
   ipcMain: {
     on () {
 
+    },
+    once () {
+
     }
   },
   ipcRenderer: {
     on () {
+
+    },
+    once () {
 
     },
     send () {
