@@ -9,12 +9,10 @@ matrix:
       install:
         - npm install 7zip-bin-linux
       env:
-        - PLATFORM=linux
     - os: osx
       install:
         - npm install 7zip-bin-mac
       env:
-        - PLATFORM=mac
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
 
@@ -44,7 +42,7 @@ script:
 - npm test
 
 before_deploy:
-- npm run build-n-package:$PLATFORM
+- npm run build-n-package
 
 deploy:
   provider: releases
