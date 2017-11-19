@@ -26,6 +26,8 @@ async function build (relConfigPath) {
     const targetPlatform = PLATFORM_MAP[process.platform];
     const packager = new electronBuilder.Packager({
       config,
+      cscLink: process.env.CSC_LINK,
+      cscKeyPassword: process.env.CSC_KEY_PASSWORD,
       [targetPlatform]: config[targetPlatform].target
     });
     return packager.build();
