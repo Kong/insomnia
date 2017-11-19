@@ -29,7 +29,7 @@ export async function update (patch) {
 export async function get () {
   const results = await db.all(type);
   if (results.length === 0) {
-    return await create();
+    return create();
   } else {
     return results[0];
   }

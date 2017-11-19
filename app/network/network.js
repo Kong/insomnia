@@ -12,9 +12,8 @@ import {Curl} from 'insomnia-node-libcurl';
 import {join as pathJoin} from 'path';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
-import * as util from '../common/misc.js';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, prepareUrlForSending, setDefaultProtocol} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -42,6 +41,11 @@ export type ResponsePatch = {
   timeline?: Array<ResponseTimelineEntry>
 };
 
+export type SendResult = {
+  bodyBuffer: ?Buffer,
+  response: ResponsePatch
+};
+
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
@@ -54,11 +58,11 @@ export function cancelCurrentRequest () {
   }
 }
 
-export function _actuallySend (
+export async function _actuallySend (
   renderedRequest: RenderedRequest,
   workspace: Workspace,
   settings: Settings
-): Promise<{bodyBuffer: ?Buffer, response: ResponsePatch}> {
+): Promise<SendResult> {
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
 
@@ -227,7 +231,7 @@ export function _actuallySend (
       const qs = querystring.buildFromParams(renderedRequest.parameters);
       const url = querystring.joinUrl(renderedRequest.url, qs);
       const isUnixSocket = url.match(/https?:\/\/unix:\//);
-      const finalUrl = util.prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
+      const finalUrl = prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
       if (isUnixSocket) {
         // URL prep will convert "unix:/path" hostname to "unix/path"
         const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
@@ -357,7 +361,7 @@ export function _actuallySend (
 
               const name = `${renderedRequest._id}_${renderedRequest.modified}`;
               const fullPath = pathJoin(fullBase, name);
-              fs.writeFileSync(fullPath, new Buffer(blobOrFilename, 'base64'));
+              fs.writeFileSync(fullPath, Buffer.from(blobOrFilename, 'base64'));
 
               // Set filename to the one we just saved
               blobOrFilename = fullPath;
@@ -563,7 +567,7 @@ export function _actuallySend (
         const headers = lastCurlHeadersObject.headers;
 
         // Calculate the content type
-        const contentTypeHeader = util.getContentTypeHeader(headers);
+        const contentTypeHeader = getContentTypeHeader(headers);
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
@@ -652,7 +656,7 @@ export function _actuallySend (
 export async function sendWithSettings (
   requestId: string,
   requestPatch: Object
-) {
+): Promise<SendResult> {
   const request = await models.request.getById(requestId);
   if (!request) {
     throw new Error(`Failed to find request: ${requestId}`);
@@ -686,10 +690,13 @@ export async function sendWithSettings (
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return await _actuallySend(renderedRequest, workspace, settings);
+  return _actuallySend(renderedRequest, workspace, settings);
 }
 
-export async function send (requestId: string, environmentId: string) {
+export async function send (
+  requestId: string,
+  environmentId: string
+): Promise<SendResult> | SendResult {
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way
@@ -701,7 +708,7 @@ export async function send (requestId: string, environmentId: string) {
   const timeSinceLastInteraction = Date.now() - lastUserInteraction;
   const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
   if (delayMillis > 0) {
-    await util.delay(delayMillis);
+    await delay(delayMillis);
   }
 
   // Fetch some things
@@ -732,7 +739,8 @@ export async function send (requestId: string, environmentId: string) {
         statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
         settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
         settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
-      }
+      },
+      bodyBuffer: null
     };
   }
 
@@ -836,7 +844,7 @@ export function _getAwsAuthHeaders (
   const credentials = {accessKeyId, secretAccessKey};
 
   const parsedUrl = urlParse(url);
-  const contentTypeHeader = util.getContentTypeHeader(headers);
+  const contentTypeHeader = getContentTypeHeader(headers);
 
   const awsSignOptions = {
     body,

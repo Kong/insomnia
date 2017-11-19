@@ -8,7 +8,6 @@ import HTTPSnippet from 'insomnia-httpsnippet';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {showModal} from '../components/modals';
 import Wrapper from '../components/wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
 import Toast from '../components/toast';
@@ -19,7 +18,7 @@ import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent} from '../../common/analytics';
+import {trackEvent, trackNonInteractiveEvent} from '../../common/analytics';
 import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
@@ -32,16 +31,14 @@ import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
-import {showAlert, showPrompt} from '../components/modals/index';
+import {showAlert, showModal, showPrompt} from '../components/modals/index';
 import {exportHarRequest} from '../../common/har';
 import * as hotkeys from '../../common/hotkeys';
-import {executeHotKey} from '../../common/hotkeys';
 import KeydownBinder from '../components/keydown-binder';
 import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
-import {trackNonInteractiveEvent} from '../../common/analytics';
 
 @autobind
 class App extends PureComponent {
@@ -133,7 +130,7 @@ class App extends PureComponent {
     const {activeRequest, activeEnvironment} = this.props;
     await this._handleSendRequestWithEnvironment(
       activeRequest ? activeRequest._id : 'n/a',
-      activeEnvironment ? activeEnvironment._id : 'n/a',
+      activeEnvironment ? activeEnvironment._id : 'n/a'
     );
   }
 
@@ -593,7 +590,7 @@ class App extends PureComponent {
 
   _handleKeyDown (e) {
     for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(e, definition, callback);
+      hotkeys.executeHotKey(e, definition, callback);
     }
   }
 

@@ -230,7 +230,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   componentWillReceiveProps (nextProps: Props) {
     if (nextProps.request.url !== this.props.request.url) {
-      (async () => await this._fetchAndSetSchema(nextProps.request))();
+      (async () => {
+        await this._fetchAndSetSchema(nextProps.request);
+      })();
     }
   }
 

@@ -33,7 +33,7 @@ export async function login (rawEmail, rawPassphrase) {
   // Compute and Submit M1 //
   // ~~~~~~~~~~~~~~~~~~~~~ //
 
-  c.setB(new Buffer(srpB, 'hex'));
+  c.setB(Buffer.from(srpB, 'hex'));
   const srpM1 = c.computeM1().toString('hex');
   const {srpM2} = await util.post('/auth/login-m1', {srpM1, sessionStarterId});
 
@@ -41,7 +41,7 @@ export async function login (rawEmail, rawPassphrase) {
   // Verify Server Identity M2 //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  c.checkM2(new Buffer(srpM2, 'hex'));
+  c.checkM2(Buffer.from(srpM2, 'hex'));
 
   // ~~~~~~~~~~~~~~~~~~~~~~ //
   // Initialize the Session //
@@ -73,7 +73,7 @@ export async function login (rawEmail, rawPassphrase) {
     email,
     JSON.parse(symmetricKeyStr),
     JSON.parse(publicKey),
-    JSON.parse(encPrivateKey),
+    JSON.parse(encPrivateKey)
   );
 
   // Set the ID for Google Analytics
@@ -135,7 +135,7 @@ export async function shareWithTeam (resourceGroupId, teamId, rawPassphrase) {
     const accountPublicKeyJWK = JSON.parse(instructions.keys[accountId]);
     newKeys[accountId] = crypt.encryptRSAWithJWK(
       accountPublicKeyJWK,
-      resourceGroupSymmetricKey,
+      resourceGroupSymmetricKey
     );
   }
 

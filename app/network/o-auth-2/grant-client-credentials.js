@@ -2,7 +2,7 @@
 import {getBasicAuthHeader, setDefaultProtocol} from '../../common/misc';
 import * as c from './constants';
 import {responseToObject} from './misc';
-import * as network from '../network';
+import {sendWithSettings} from '../network';
 import * as models from '../../models/index';
 
 export default async function (
@@ -34,15 +34,20 @@ export default async function (
 
   const url = setDefaultProtocol(accessTokenUrl);
 
-  const {response, bodyBuffer} = await network.sendWithSettings(requestId, {
+  const {response, bodyBuffer} = await sendWithSettings(requestId, {
     headers,
     url,
     method: 'POST',
     body: models.request.newBodyFormUrlEncoded(params)
   });
 
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw new Error(`[oauth2] Failed to fetch token url=${url} status=${response.statusCode}`);
+  if (!bodyBuffer) {
+    throw new Error(`[oauth2] No body returned from ${url}`);
+  }
+
+  const statusCode = response.statusCode || 0;
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new Error(`[oauth2] Failed to fetch token url=${url} status=${statusCode}`);
   }
 
   const results = responseToObject(bodyBuffer.toString('utf8'), [

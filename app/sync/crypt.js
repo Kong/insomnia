@@ -320,13 +320,13 @@ async function _pbkdf2Passphrase (passphrase, salt) {
 
     const algo = {
       name: 'PBKDF2',
-      salt: new Buffer(salt, 'hex'),
+      salt: Buffer.from(salt, 'hex'),
       iterations: DEFAULT_PBKDF2_ITERATIONS,
       hash: 'SHA-256'
     };
 
     const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
-    return new Buffer(derivedKeyRaw).toString('hex');
+    return Buffer.from(derivedKeyRaw).toString('hex');
   } else {
     console.debug('[crypt] Using Forge PBKDF2');
     const derivedKeyRaw = forge.pkcs5.pbkdf2(

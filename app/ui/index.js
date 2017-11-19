@@ -6,7 +6,6 @@ import {DragDropContext} from 'react-dnd';
 import App from './containers/app';
 import * as models from '../models';
 import * as db from '../common/database';
-import {initClient as initDB} from '../common/database';
 import {init as initStore} from './redux/modules';
 import {init as initSync} from '../sync';
 import {init as initPlugins} from '../plugins';
@@ -16,7 +15,7 @@ import {isDevelopment} from '../common/constants';
 import {trackEvent, trackPageView} from '../common/analytics';
 
 (async function () {
-  await initDB();
+  await db.initClient();
 
   // Create Redux store
   const store = await initStore();

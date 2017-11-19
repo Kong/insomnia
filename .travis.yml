@@ -20,6 +20,7 @@ addons:
   apt:
     packages:
     - libcurl4-openssl-dev
+    - snapcraft
     - git-all
     - build-essential
     - icnsutils

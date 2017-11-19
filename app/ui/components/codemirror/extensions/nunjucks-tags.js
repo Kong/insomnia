@@ -188,7 +188,7 @@ async function _highlightNunjucksTags (render) {
   // For example, adding a {% raw %} tag would need to clear everything it wrapped
   const marksInViewport = doc.findMarks(
     {ch: 0, line: vp.from},
-    {ch: 0, line: vp.to},
+    {ch: 0, line: vp.to}
   );
 
   for (const mark of marksInViewport) {
