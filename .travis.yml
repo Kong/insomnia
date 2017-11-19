@@ -56,5 +56,6 @@ deploy:
     - dist/**/*.dmg
     - dist/**/*.deb
     - dist/**/*.AppImage
+    - dist/**/*.tar.gz
   on:
     tags: true

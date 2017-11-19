@@ -32,7 +32,6 @@
   "win": {
     "target": [
       "squirrel",
-      "portable",
       "zip"
     ]
   },
