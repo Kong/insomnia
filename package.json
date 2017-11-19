@@ -69,6 +69,7 @@
   },
   "build": {
     "appId": "com.insomnia.app",
+    "publish": false,
     "extraResources": [
       {
         "from": "./bin",
@@ -96,6 +97,7 @@
     "win": {
       "target": [
         "squirrel",
+        "portable",
         "zip"
       ]
     },
