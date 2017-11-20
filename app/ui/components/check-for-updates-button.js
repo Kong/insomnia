@@ -44,9 +44,7 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     const {children, className} = this.props;
     const {status, checking} = this.state;
     return (
-      <button disabled={status}
-              className={className}
-              onClick={this._handleCheckForUpdates}>
+      <button disabled={status} className={className} onClick={this._handleCheckForUpdates}>
         {(checking && status) ? status : children}
       </button>
     );

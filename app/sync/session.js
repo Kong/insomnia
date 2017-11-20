@@ -184,7 +184,7 @@ export function getFullName () {
  */
 export function getSessionData () {
   const sessionId = getCurrentSessionId();
-  if (!sessionId) {
+  if (!sessionId || !window) {
     return {};
   }
 

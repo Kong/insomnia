@@ -97,7 +97,7 @@ async function _getDefaultParams (): Promise<Array<RequestParameter>> {
   // Migrate old GA ID into settings model
   let {deviceId} = settings;
   if (!deviceId) {
-    const oldId = window.localStorage['gaClientId'] || null;
+    const oldId = (window && window.localStorage['gaClientId']) || null;
     deviceId = oldId || uuid.v4();
     await models.settings.update(settings, {deviceId});
   }

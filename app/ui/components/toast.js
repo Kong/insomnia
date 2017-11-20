@@ -57,7 +57,8 @@ class Toast extends PureComponent {
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
         workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: isLinux() || !settings.updateAutomatically
+        updatesNotSupported: isLinux(),
+        autoUpdatesDisabled: !settings.updateAutomatically
       };
 
       notification = await fetch.post(`/notification`, data);

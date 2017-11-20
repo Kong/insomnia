@@ -27,7 +27,7 @@ async function getUpdateUrl (): Promise<string | null> {
 
   const qs = querystring.buildFromParams(params);
   const fullUrl = querystring.joinUrl(updateUrl, qs);
-  console.log(`[updater] Using url ${updateUrl}`);
+  console.log(`[updater] Using url ${fullUrl}`);
 
   if (isDevelopment()) {
     return null;
