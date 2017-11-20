@@ -8,6 +8,7 @@ coverage
 
 # Generated
 app/main.min.js
+app/node_modules
 
 # Logs
 logs
