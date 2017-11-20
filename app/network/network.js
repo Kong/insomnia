@@ -144,6 +144,7 @@ export async function _actuallySend (
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
       enable(Curl.feature.NO_HEADER_PARSING);
+      enable(Curl.feature.NO_DATA_PARSING);
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -221,6 +222,7 @@ export async function _actuallySend (
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
+          console.debug(`[debug] Request downloaded ${percent}%`);
           lastPercent = percent;
         }
 
