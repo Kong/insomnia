@@ -1,5 +1,6 @@
 image: Visual Studio 2015
 build: off
+test: off
 
 #---------------------------------#
 #    environment configuration    #
