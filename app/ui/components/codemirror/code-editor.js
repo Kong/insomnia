@@ -254,7 +254,7 @@ class CodeEditor extends React.Component {
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        this.codeMirror.enableNunjucksTags(this.props.render);
+        this.codeMirror.enableNunjucksTags(this.props.render, this.props.disabled);
       }
 
       // Make URLs clickable
@@ -657,6 +657,7 @@ class CodeEditor extends React.Component {
       id,
       readOnly,
       fontSize,
+      disabled,
       mode,
       filter,
       filterHistory,
@@ -671,7 +672,8 @@ class CodeEditor extends React.Component {
     const classes = classnames(className, {
       'editor': true,
       'editor--dynamic-height': dynamicHeight,
-      'editor--readonly': readOnly
+      'editor--readonly': readOnly,
+      'editor--disabled': disabled
     });
 
     const toolbarChildren = [];
@@ -739,8 +741,11 @@ class CodeEditor extends React.Component {
     }
 
     return (
-      <div className={classes} style={style} data-editor-type={type}>
-        <div className={classnames('editor__container', 'input', className)}
+      <div tabIndex={disabled ? -1 : null}
+           className={classes}
+           style={style}
+           data-editor-type={type}>
+        <div className={classnames('editor__container', 'input', {'input--disabled': disabled})}
              style={styles}
              onClick={onClick}
              onMouseLeave={onMouseLeave}>
@@ -795,6 +800,7 @@ CodeEditor.propTypes = {
   updateFilter: PropTypes.func,
   defaultTabBehavior: PropTypes.bool,
   readOnly: PropTypes.bool,
+  disabled: PropTypes.bool,
   type: PropTypes.string,
   filter: PropTypes.string,
   filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired),

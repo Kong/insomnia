@@ -25,6 +25,7 @@ import {cookiesFromJar, jarFromCookies} from '../common/cookies';
 import {urlMatchesCertHost} from './url-matches-cert-host';
 import aws4 from 'aws4';
 import {buildMultipart} from './multipart';
+import {extendRequest} from './parent-requests';
 
 export type ResponsePatch = {
   statusMessage?: string,
@@ -679,9 +680,12 @@ export async function sendWithSettings (
     parentId: request._id
   });
 
+  const parentRequest = await db.getWhere(models.request.type, {name: '__PARENT__'});
+  const extendedRequest = extendRequest(parentRequest, newRequest);
+
   let renderedRequest: RenderedRequest;
   try {
-    renderedRequest = await getRenderedRequest(newRequest, environmentId);
+    renderedRequest = await getRenderedRequest(extendedRequest, environmentId);
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
@@ -716,8 +720,11 @@ export async function send (requestId: string, environmentId: string) {
     throw new Error(`Failed to find request to send for ${requestId}`);
   }
 
-  const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
-  const renderedContextBeforePlugins = await getRenderContext(request, environmentId, ancestors);
+  const parentRequest = await db.getWhere(models.request.type, {name: '__PARENT__'});
+  const extendedRequest = extendRequest(parentRequest, request);
+
+  const renderedRequestBeforePlugins = await getRenderedRequest(extendedRequest, environmentId);
+  const renderedContextBeforePlugins = await getRenderContext(extendedRequest, environmentId, ancestors);
 
   let renderedRequest: RenderedRequest;
   try {

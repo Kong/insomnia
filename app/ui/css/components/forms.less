@@ -210,7 +210,7 @@
   }
 }
 
-*:disabled {
+*:disabled, .input--disabled, .btn--disabled {
   opacity: 0.5;
 }
 
@@ -218,6 +218,11 @@
 .btn.focus:not(:disabled),
 .btn:hover:not(:disabled) {
   background-color: @hl-xs;
+}
+
+.input--disabled,
+input:disabled {
+  cursor: text;
 }
 
 .btn:active:not(:disabled) {

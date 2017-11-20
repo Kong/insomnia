@@ -41,7 +41,7 @@ export function trackEvent (
   });
 }
 
-export async function trackNonInteractiveEvent (
+export function trackNonInteractiveEvent (
   category: string,
   action: string,
   label: ?string,

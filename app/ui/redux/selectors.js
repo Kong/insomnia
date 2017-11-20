@@ -171,6 +171,13 @@ export const selectActiveRequest = createSelector(
   }
 );
 
+export const selectActiveParentRequest = createSelector(
+  selectEntitiesLists,
+  entities => {
+    return entities.requests.find(r => r.name === '__PARENT__');
+  }
+);
+
 export const selectActiveCookieJar = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,

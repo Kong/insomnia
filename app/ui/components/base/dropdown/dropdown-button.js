@@ -1,19 +1,20 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 
-class DropdownButton extends PureComponent {
+type Props = {
+  children: React.Node,
+  disabled: ?boolean
+};
+
+class DropdownButton extends React.PureComponent<Props> {
   render () {
-    const {children, ...props} = this.props;
+    const {children, disabled, ...props} = this.props;
     return (
-      <button type="button" {...props}>
+      <button type="button" disabled={disabled} {...props}>
         {children}
       </button>
     );
   }
 }
-
-DropdownButton.propTypes = {
-  children: PropTypes.node
-};
 
 export default DropdownButton;

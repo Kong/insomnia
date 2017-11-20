@@ -51,6 +51,7 @@ class BasicAuth extends PureComponent {
         pairs={pairs}
         maxPairs={1}
         disableDelete
+        className="pad-bottom pad-top"
         handleRender={handleRender}
         handleGetRenderContext={handleGetRenderContext}
         nunjucksPowerUserMode={nunjucksPowerUserMode}

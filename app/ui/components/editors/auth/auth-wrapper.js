@@ -1,6 +1,6 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_AWS_IAM, AUTH_HAWK, AUTH_NETRC, AUTH_ASAP} from '../../../../common/constants';
+// @flow
+import * as React from 'react';
+import {AUTH_ASAP, AUTH_AWS_IAM, AUTH_BASIC, AUTH_BEARER, AUTH_DIGEST, AUTH_HAWK, AUTH_NETRC, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, getAuthTypeName} from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
 import BearerAuth from './bearer-auth';
@@ -12,13 +12,33 @@ import AWSAuth from './aws-auth';
 import NetrcAuth from './netrc-auth';
 import AsapAuth from './asap-auth';
 import autobind from 'autobind-decorator';
+import type {Request, RequestAuthentication} from '../../../../models/request';
+import type {OAuth2Token} from '../../../../models/o-auth-2-token';
+
+type Props = {
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  handleUpdateSettingsShowPasswords: Function,
+  handleUpdateAuthenticationDisableInheritance: Function,
+  nunjucksPowerUserMode: boolean,
+  onChange: Function,
+  request: Request,
+  showPasswords: boolean,
+  inheritedAuthentication: RequestAuthentication | null,
+  oAuth2Token: OAuth2Token | null
+};
 
 @autobind
-class AuthWrapper extends PureComponent {
+class AuthWrapper extends React.PureComponent<Props> {
+  _handleUpdateAuthenticationDisableInheritance (e: SyntheticEvent<HTMLInputElement>) {
+    this.props.handleUpdateAuthenticationDisableInheritance(!e.currentTarget.checked);
+  }
+
   renderEditor () {
     const {
       oAuth2Token,
       request,
+      inheritedAuthentication,
       handleRender,
       handleGetRenderContext,
       nunjucksPowerUserMode,
@@ -123,7 +143,7 @@ class AuthWrapper extends PureComponent {
       );
     } else if (authentication.type === AUTH_NETRC) {
       return (
-        <NetrcAuth />
+        <NetrcAuth/>
       );
     } else if (authentication.type === AUTH_ASAP) {
       return (
@@ -134,6 +154,26 @@ class AuthWrapper extends PureComponent {
           nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={onChange}
         />
+      );
+    } else if (inheritedAuthentication) {
+      return (
+        <div className="vertically-center text-center">
+          <div className="pad super-faint text-sm text-center">
+            <i className="fa fa-unlock-alt" style={{fontSize: '8rem', opacity: 0.3}}/>
+            <br/><br/>
+            <div className="form-control">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={!request.authentication.disableInheritance}
+                  onChange={this._handleUpdateAuthenticationDisableInheritance}
+                />
+                Inherit {getAuthTypeName(inheritedAuthentication.type, true) || 'authentication'}
+                from parent
+              </label>
+            </div>
+          </div>
+        </div>
       );
     } else {
       return (
@@ -154,18 +194,5 @@ class AuthWrapper extends PureComponent {
     );
   }
 }
-
-AuthWrapper.propTypes = {
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  handleUpdateSettingsShowPasswords: PropTypes.func.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  request: PropTypes.object.isRequired,
-  showPasswords: PropTypes.bool.isRequired,
-
-  // Optional
-  oAuth2Token: PropTypes.object
-};
 
 export default AuthWrapper;

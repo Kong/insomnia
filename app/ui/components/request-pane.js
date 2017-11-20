@@ -8,13 +8,13 @@ import autobind from 'autobind-decorator';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
 import ContentTypeDropdown from './dropdowns/content-type-dropdown';
 import AuthDropdown from './dropdowns/auth-dropdown';
-import KeyValueEditor from './key-value-editor/editor';
 import RequestHeadersEditor from './editors/request-headers-editor';
+import RequestParametersEditor from './editors/request-parameters-editor';
 import RenderedQueryString from './rendered-query-string';
 import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
-import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
+import {AUTH_NONE, DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
 import {trackEvent} from '../../common/analytics';
 import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
@@ -26,6 +26,7 @@ import MarkdownPreview from './markdown-preview';
 import type {Settings} from '../../models/settings';
 import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
+import type {RequestDiff} from '../../network/parent-requests';
 
 type Props = {
   // Functions
@@ -46,6 +47,7 @@ type Props = {
   updateRequestMimeType: Function,
   updateSettingsShowPasswords: Function,
   updateSettingsUseBulkHeaderEditor: Function,
+  updateAuthenticationDisableInheritance: Function,
   handleImport: Function,
   handleImportFile: Function,
 
@@ -63,8 +65,9 @@ type Props = {
   forceRefreshCounter: number,
 
   // Optional
-  request: ?Request,
-  oAuth2Token: ?OAuth2Token
+  request: Request | null,
+  requestDiff: RequestDiff | null,
+  oAuth2Token: OAuth2Token | null
 };
 
 @autobind
@@ -180,6 +183,7 @@ class RequestPane extends React.PureComponent<Props> {
       handleSendAndDownload,
       oAuth2Token,
       request,
+      requestDiff,
       workspace,
       environmentId,
       settings,
@@ -191,6 +195,7 @@ class RequestPane extends React.PureComponent<Props> {
       updateRequestMimeType,
       updateRequestParameters,
       updateSettingsShowPasswords,
+      updateAuthenticationDisableInheritance,
       useBulkHeaderEditor
     } = this.props;
 
@@ -238,23 +243,52 @@ class RequestPane extends React.PureComponent<Props> {
       );
     }
 
-    let numBodyParams = 0;
-    if (request.body && request.body.params) {
-      numBodyParams = request.body.params.filter(p => !p.disabled).length;
-    }
+    const diffParameters = (requestDiff && requestDiff.parameters) || [];
+    const diffHeaders = (requestDiff && requestDiff.headers) || [];
+    const allParameters = [...diffParameters, ...request.parameters];
+    const allHeaders = [...diffHeaders, ...request.headers];
+    const numParameters = allParameters.filter(p => !p.disabled).length;
+    const numHeaders = allHeaders.filter(h => !h.disabled).length;
 
-    const numParameters = request.parameters.filter(p => !p.disabled).length;
-    const numHeaders = request.headers.filter(h => !h.disabled).length;
     const urlHasQueryParameters = request.url.indexOf('?') >= 0;
+    const uniqueKey = [
+      forceRefreshCounter,
+      request._id,
+      requestDiff ? 'yes' : 'no'
+    ].join('::');
 
-    const uniqueKey = `${forceRefreshCounter}::${request._id}`;
+    // Build body name
+    const body = request.body;
+    const diffBody = requestDiff ? requestDiff.body : null;
+    const hasBody = typeof body.mimeType === 'string';
+    const bodyToUse = !hasBody && diffBody && !body.disableInheritance ? diffBody : body;
+    const bodyName = typeof bodyToUse.mimeType === 'string'
+      ? getContentTypeName(bodyToUse.mimeType)
+      : 'Body';
+
+    let numBodyParams = 0;
+    if (bodyToUse && bodyToUse.params) {
+      const diffParams = (requestDiff && requestDiff.body && requestDiff.body.params) || [];
+      const bodyParams = (request.body && request.body.params) || [];
+      const allParams = [...diffParams, ...bodyParams];
+      numBodyParams = allParams.filter(p => !p.disabled).length;
+    }
+    const bodyParamCounter = numBodyParams
+      ? <span className="bubble space-left">{numBodyParams}</span>
+      : null;
+
+    const auth = request.authentication;
+    const diffAuth = requestDiff ? requestDiff.authentication : null;
+    const hasAuth = auth.type && auth.type !== AUTH_NONE;
+    const authToUse = !hasAuth && diffAuth && !auth.disableInheritance ? diffAuth : auth;
+    const authName = getAuthTypeName(authToUse.type) || 'Auth';
 
     return (
       <section className="pane request-pane">
         <header className="pane__header">
-          <ErrorBoundary errorClassName="font-error pad text-center">
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <RequestUrlBar
-              uniquenessKey={uniqueKey}
+              placeholder={(requestDiff && requestDiff.url) || ''}
               method={request.method}
               onMethodChange={updateRequestMethod}
               onUrlChange={this._handleUpdateRequestUrl}
@@ -278,10 +312,8 @@ class RequestPane extends React.PureComponent<Props> {
                                    contentType={request.body.mimeType}
                                    request={request}
                                    className="tall">
-                {typeof request.body.mimeType === 'string'
-                  ? getContentTypeName(request.body.mimeType)
-                  : 'Body'}
-                {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
+                {bodyName}
+                {bodyParamCounter}
                 <i className="fa fa-caret-down space-left"/>
               </ContentTypeDropdown>
             </Tab>
@@ -289,7 +321,7 @@ class RequestPane extends React.PureComponent<Props> {
               <AuthDropdown onChange={updateRequestAuthentication}
                             authentication={request.authentication}
                             className="tall">
-                {getAuthTypeName(request.authentication.type) || 'Auth'}
+                {authName}
                 <i className="fa fa-caret-down space-left"/>
               </AuthDropdown>
             </Tab>
@@ -319,11 +351,15 @@ class RequestPane extends React.PureComponent<Props> {
           <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
               key={uniqueKey}
+              inheritedBody={requestDiff ? requestDiff.body : null}
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
-              request={request}
+              requestId={request._id}
+              body={request.body}
+              headers={request.headers}
+              disableRender={request.settingDisableRenderRequestBody}
               workspace={workspace}
               environmentId={environmentId}
               settings={settings}
@@ -340,9 +376,11 @@ class RequestPane extends React.PureComponent<Props> {
               <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <AuthWrapper
                   oAuth2Token={oAuth2Token}
+                  inheritedAuthentication={requestDiff ? requestDiff.authentication : null}
                   showPasswords={showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
+                  handleUpdateAuthenticationDisableInheritance={updateAuthenticationDisableInheritance}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
@@ -355,27 +393,21 @@ class RequestPane extends React.PureComponent<Props> {
             <div className="pad pad-bottom-sm query-editor__preview">
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
-                <ErrorBoundary key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
+                <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                   <RenderedQueryString
                     handleRender={handleRender}
                     request={request}
+                    requestDiff={requestDiff}
                   />
                 </ErrorBoundary>
               </code>
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <ErrorBoundary key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
-                  <KeyValueEditor
-                    sortable
-                    namePlaceholder="name"
-                    valuePlaceholder="value"
-                    onToggleDisable={this._trackQueryToggle}
-                    onCreate={this._trackQueryCreate}
-                    onDelete={this._trackQueryDelete}
-                    pairs={request.parameters}
+                <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+                  <RequestParametersEditor
+                    parameters={request.parameters}
+                    inheritedParameters={requestDiff ? requestDiff.parameters : null}
                     handleRender={handleRender}
                     handleGetRenderContext={handleGetRenderContext}
                     nunjucksPowerUserMode={nunjucksPowerUserMode}
@@ -395,6 +427,7 @@ class RequestPane extends React.PureComponent<Props> {
           <TabPanel className="react-tabs__tab-panel header-editor">
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
+                inheritedHeaders={requestDiff ? requestDiff.headers : null}
                 headers={request.headers}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}

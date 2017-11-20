@@ -12,6 +12,8 @@ type Props = {
   // Optional
   showFileName?: boolean,
   showFileIcon?: boolean,
+  disabled?: boolean,
+  className?: string,
   name?: string
 };
 
@@ -49,14 +51,15 @@ class FileInputButton extends React.PureComponent<Props> {
   }
 
   render () {
-    const {showFileName, showFileIcon, path, name, ...extraProps} = this.props;
+    const {showFileName, showFileIcon, path, name, disabled, className} = this.props;
     const fileName = pathBasename(path);
     return (
       <button type="button"
+              className={className}
+              disabled={disabled}
               ref={this._setRef}
               onClick={this._handleChooseFile}
-              title={path}
-              {...extraProps}>
+              title={path}>
         {showFileIcon && <i className="fa fa-file-o space-right"/>}
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>

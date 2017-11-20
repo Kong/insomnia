@@ -20,8 +20,8 @@ import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent} from '../../common/analytics';
-import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveParentRequest, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {trackEvent, trackNonInteractiveEvent} from '../../common/analytics';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
@@ -42,7 +42,7 @@ import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
-import {trackNonInteractiveEvent} from '../../common/analytics';
+import {diffRequest} from '../../network/parent-requests';
 
 @autobind
 class App extends PureComponent {
@@ -890,6 +890,12 @@ function mapStateToProps (state, props) {
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
 
+  // Parent Request Stuff
+  const activeParentRequest = selectActiveParentRequest(state, props);
+  const activeRequestDiff = activeRequest && activeParentRequest
+    ? diffRequest(activeParentRequest, activeRequest)
+    : null;
+
   // Cookie Jar
   const activeCookieJar = selectActiveCookieJar(state, props);
 
@@ -922,6 +928,7 @@ function mapStateToProps (state, props) {
     activeWorkspace,
     activeWorkspaceClientCertificates,
     activeRequest,
+    activeRequestDiff,
     activeRequestResponses,
     activeResponse,
     activeCookieJar,

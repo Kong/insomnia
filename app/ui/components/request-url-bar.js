@@ -300,11 +300,11 @@ class RequestUrlBar extends PureComponent {
     const {
       url,
       method,
+      placeholder,
       handleRender,
       nunjucksPowerUserMode,
       handleGetRenderContext,
-      handleAutocompleteUrls,
-      uniquenessKey
+      handleAutocompleteUrls
     } = this.props;
 
     return (
@@ -317,7 +317,6 @@ class RequestUrlBar extends PureComponent {
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>
             <OneLineEditor
-              key={uniquenessKey}
               ref={this._setInputRef}
               onPaste={this._handleUrlPaste}
               forceEditor
@@ -326,7 +325,7 @@ class RequestUrlBar extends PureComponent {
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               getAutocompleteConstants={handleAutocompleteUrls}
               getRenderContext={handleGetRenderContext}
-              placeholder="https://api.myproduct.com/v1/users"
+              placeholder={placeholder || 'https://api.myproduct.com/v1/users'}
               defaultValue={url}
               onChange={this._handleUrlChange}/>
             {this.renderSendButton()}
@@ -351,7 +350,7 @@ RequestUrlBar.propTypes = {
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
   method: PropTypes.string.isRequired,
   requestId: PropTypes.string.isRequired,
-  uniquenessKey: PropTypes.string.isRequired
+  placeholder: PropTypes.string.isRequired
 };
 
 export default RequestUrlBar;

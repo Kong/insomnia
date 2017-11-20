@@ -1,4 +1,5 @@
 import React, {PureComponent} from 'react';
+import crypto from 'crypto';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
@@ -24,7 +25,12 @@ class Editor extends PureComponent {
     this._focusedPairId = null;
     this._focusedField = NAME;
     this._rows = [];
+    this.state = {
+      pairs: []
+    };
+  }
 
+  _initPairs (props) {
     // Migrate and add IDs to all pairs (pairs didn't used to have IDs)
     const pairs = [...props.pairs];
     for (const pair of pairs) {
@@ -33,9 +39,9 @@ class Editor extends PureComponent {
       }
     }
 
-    this.state = {
+    this.setState({
       pairs: pairs
-    };
+    });
   }
 
   _setRowRef (n) {
@@ -141,7 +147,9 @@ class Editor extends PureComponent {
 
   _onChange (pairs) {
     clearTimeout(this._triggerTimeout);
-    this._triggerTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
+    this._triggerTimeout = setTimeout(() => {
+      this.props.onChange && this.props.onChange(pairs);
+    }, DEBOUNCE_MILLIS);
     this.setState({pairs});
   }
 
@@ -310,13 +318,40 @@ class Editor extends PureComponent {
     }
   }
 
+  _generateKey () {
+    const {pairs} = this.props;
+    const hash = crypto.createHash('sha1');
+    for (const pair of pairs) {
+      const segments = [
+        pair.name,
+        pair.value || '',
+        pair.disabled ? 'disabled' : '',
+        pair.type || '',
+        pair.multiline ? 'multiline' : ''
+      ];
+      hash.update(`${segments.join(':::')}_++_`, 'utf8');
+    }
+
+    return hash.digest('base64');
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this._initPairs(nextProps);
+  }
+
   componentDidUpdate () {
     this._updateFocus();
+  }
+
+  componentWillMount () {
+    this._initPairs(this.props);
   }
 
   render () {
     const {
       maxPairs,
+      readOnly,
+      disabled,
       className,
       valueInputType,
       valuePlaceholder,
@@ -329,20 +364,25 @@ class Editor extends PureComponent {
       allowFile,
       allowMultiline,
       sortable,
+      useKey,
       disableDelete
     } = this.props;
 
     const {pairs} = this.state;
 
     const classes = classnames('key-value-editor', 'wide', className);
+
+    const key = useKey ? this._generateKey() : null;
     return (
       <Lazy delay={pairs.length > 20 ? 50 : -1}>
-        <ul className={classes}>
+        <ul key={key} className={classes}>
           {pairs.map((pair, i) => (
             <KeyValueEditorRow
               noDelete={disableDelete}
               key={pair.id || 'no-id'}
               index={i} // For dragging
+              readOnly={readOnly}
+              disabled={disabled}
               ref={this._setRowRef}
               sortable={sortable}
               namePlaceholder={namePlaceholder}
@@ -367,7 +407,7 @@ class Editor extends PureComponent {
             />
           ))}
 
-          {!maxPairs || pairs.length < maxPairs
+          {!disabled && (!maxPairs || pairs.length < maxPairs)
             ? <KeyValueEditorRow
               key="empty-row"
               hideButtons
@@ -395,10 +435,10 @@ class Editor extends PureComponent {
 }
 
 Editor.propTypes = {
-  onChange: PropTypes.func.isRequired,
   pairs: PropTypes.arrayOf(PropTypes.object).isRequired,
 
   // Optional
+  onChange: PropTypes.func,
   handleRender: PropTypes.func,
   handleGetRenderContext: PropTypes.func,
   nunjucksPowerUserMode: PropTypes.bool,
@@ -417,7 +457,10 @@ Editor.propTypes = {
   onChooseFile: PropTypes.func,
   onDelete: PropTypes.func,
   onCreate: PropTypes.func,
-  className: PropTypes.string
+  readOnly: PropTypes.bool,
+  disabled: PropTypes.bool,
+  className: PropTypes.string,
+  useKey: PropTypes.bool
 };
 
 export default Editor;

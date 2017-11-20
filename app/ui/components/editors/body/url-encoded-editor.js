@@ -1,12 +1,25 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
+import type {RequestBodyParameter} from '../../../../models/request';
+import Wrap from '../../wrap';
 import {trackEvent} from '../../../../common/analytics';
 
+type Props = {
+  onChange: Function,
+  parameters: Array<RequestBodyParameter>,
+  inheritedParameters: Array<RequestBodyParameter> | null,
+  nunjucksPowerUserMode: boolean,
+
+  // Optional
+  handleRender: ?Function,
+  handleGetRenderContext: ?Function
+}
+
 @autobind
-class UrlEncodedEditor extends PureComponent {
-  _handleTrackToggle (pair) {
+class UrlEncodedEditor extends React.PureComponent<Props> {
+  _handleTrackToggle (pair: RequestBodyParameter) {
     trackEvent(
       'Url Encoded Editor',
       'Toggle',
@@ -25,6 +38,7 @@ class UrlEncodedEditor extends PureComponent {
   render () {
     const {
       parameters,
+      inheritedParameters,
       onChange,
       handleRender,
       handleGetRenderContext,
@@ -34,35 +48,58 @@ class UrlEncodedEditor extends PureComponent {
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
-          <KeyValueEditor
-            sortable
-            allowMultiline
-            namePlaceholder="name"
-            valuePlaceholder="value"
-            onChange={onChange}
-            handleRender={handleRender}
-            handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            onToggleDisable={this._handleTrackToggle}
-            onCreate={this._handleTrackCreate}
-            onDelete={this._handleTrackDelete}
-            pairs={parameters}
-          />
+          <div className="pad-top">
+            {inheritedParameters && inheritedParameters.length ? (
+              <Wrap>
+                <label key="label" className="label--small pad-left">
+                  Inherited Items
+                  <div className="bubble space-left">
+                    {inheritedParameters.filter(p => !p.disabled).length}
+                  </div>
+                </label>
+                <KeyValueEditor
+                  useKey
+                  disabled
+                  readOnly
+                  sortable
+                  allowMultiline
+                  namePlaceholder="name"
+                  valuePlaceholder="value"
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  pairs={inheritedParameters}
+                />
+              </Wrap>
+            ) : null}
+            {inheritedParameters && inheritedParameters.length ? (
+              <label className="label--small pad-left pad-top">
+                Items
+                <div className="bubble space-left">
+                  {parameters.filter(p => !p.disabled).length}
+                </div>
+              </label>
+            ) : null}
+            <KeyValueEditor
+              sortable
+              allowMultiline
+              namePlaceholder="name"
+              valuePlaceholder="value"
+              className="pad-bottom"
+              onChange={onChange}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              onToggleDisable={this._handleTrackToggle}
+              onCreate={this._handleTrackCreate}
+              onDelete={this._handleTrackDelete}
+              pairs={parameters}
+            />
+          </div>
         </div>
       </div>
     );
   }
 }
-
-UrlEncodedEditor.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-
-  // Optional
-  handleRender: PropTypes.func,
-  handleGetRenderContext: PropTypes.func
-};
 
 export default UrlEncodedEditor;

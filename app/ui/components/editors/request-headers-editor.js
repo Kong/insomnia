@@ -1,5 +1,5 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
@@ -8,14 +8,29 @@ import allHeaderNames from '../../../datasets/header-names';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
+import type {RequestHeader} from '../../../models/request';
+import Wrap from '../wrap';
+
+type Props = {
+  onChange: Function,
+  bulk: boolean,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorLineWrapping: boolean,
+  nunjucksPowerUserMode: boolean,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  headers: Array<RequestHeader>,
+  inheritedHeaders: Array<RequestHeader> | null
+};
 
 @autobind
-class RequestHeadersEditor extends PureComponent {
-  _handleBulkUpdate (headersString) {
+class RequestHeadersEditor extends React.PureComponent<Props> {
+  _handleBulkUpdate (headersString: string) {
     this.props.onChange(this._getHeadersFromString(headersString));
   }
 
-  _handleTrackToggle (pair) {
+  _handleTrackToggle (pair: RequestHeader) {
     trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
   }
 
@@ -27,7 +42,7 @@ class RequestHeadersEditor extends PureComponent {
     trackEvent('Headers Editor', 'Delete');
   }
 
-  _getHeadersFromString (headersString) {
+  _getHeadersFromString (headersString: string): Array<RequestHeader> {
     const headers = [];
     const rows = headersString.split(/\n+/);
 
@@ -69,7 +84,7 @@ class RequestHeadersEditor extends PureComponent {
     return headersString;
   }
 
-  _getCommonHeaderValues (pair) {
+  _getCommonHeaderValues (pair: RequestHeader) {
     switch (pair.name.toLowerCase()) {
       case 'content-type':
       case 'accept':
@@ -83,7 +98,7 @@ class RequestHeadersEditor extends PureComponent {
     }
   }
 
-  _getCommonHeaderNames (pair) {
+  _getCommonHeaderNames (pair: RequestHeader) {
     return allHeaderNames;
   }
 
@@ -91,6 +106,7 @@ class RequestHeadersEditor extends PureComponent {
     const {
       bulk,
       headers,
+      inheritedHeaders,
       editorFontSize,
       editorIndentSize,
       editorLineWrapping,
@@ -101,25 +117,60 @@ class RequestHeadersEditor extends PureComponent {
     } = this.props;
 
     return bulk ? (
-        <div className="tall">
-          <CodeEditor
-            getRenderContext={handleGetRenderContext}
-            render={handleRender}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            fontSize={editorFontSize}
-            indentSize={editorIndentSize}
-            lineWrapping={editorLineWrapping}
-            onChange={this._handleBulkUpdate}
-            defaultValue={this._getHeadersString()}
-          />
-        </div>
-      ) : (
-        <div className="pad-bottom scrollable-container">
-          <div className="scrollable">
+      <div className="tall">
+        <CodeEditor
+          getRenderContext={handleGetRenderContext}
+          render={handleRender}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          fontSize={editorFontSize}
+          indentSize={editorIndentSize}
+          lineWrapping={editorLineWrapping}
+          onChange={this._handleBulkUpdate}
+          defaultValue={this._getHeadersString()}
+        />
+      </div>
+    ) : (
+      <div className="pad-bottom scrollable-container">
+        <div className="scrollable">
+          <div className="pad-top">
+            {inheritedHeaders ? (
+              <Wrap>
+                <div className="label--small pad-left">
+                  Inherited Headers
+                  <div className="bubble space-left">
+                    {inheritedHeaders.filter(p => !p.disabled).length}
+                  </div>
+                </div>
+
+                <KeyValueEditor
+                  useKey
+                  sortable
+                  disabled
+                  readOnly
+                  namePlaceholder="My-Header"
+                  valuePlaceholder="Value"
+                  pairs={inheritedHeaders}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                />
+              </Wrap>
+            ) : null}
+
+            {inheritedHeaders ? (
+              <div className="label--small pad-left pad-top">
+                Headers
+                <div className="bubble space-left">
+                  {headers.filter(p => !p.disabled).length}
+                </div>
+              </div>
+            ) : null}
+
             <KeyValueEditor
               sortable
               namePlaceholder="My-Header"
               valuePlaceholder="Value"
+              className="no-pad"
               pairs={headers}
               nunjucksPowerUserMode={nunjucksPowerUserMode}
               handleRender={handleRender}
@@ -133,23 +184,9 @@ class RequestHeadersEditor extends PureComponent {
             />
           </div>
         </div>
-      );
+      </div>
+    );
   }
 }
-
-RequestHeadersEditor.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  bulk: PropTypes.bool.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  headers: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    value: PropTypes.string.isRequired
-  })).isRequired
-};
 
 export default RequestHeadersEditor;

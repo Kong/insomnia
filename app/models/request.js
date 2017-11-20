@@ -1,6 +1,6 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, AUTH_ASAP, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, AUTH_ASAP, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256, AUTH_BEARER} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildFromParams, deconstructToParams} from '../common/querystring';
@@ -41,7 +41,8 @@ export type RequestBody = {
   mimeType?: string | null,
   text?: string,
   fileName?: string,
-  params?: Array<RequestBodyParameter>
+  params?: Array<RequestBodyParameter>,
+  disableInheritance?: boolean
 };
 
 type BaseRequest = {
@@ -86,11 +87,7 @@ export function init (): BaseRequest {
 
 export function newAuth (type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
   switch (type) {
-    // No Auth
-    case AUTH_NONE:
-      return {};
-
-    // HTTP Basic Authentication
+    // These all have the same attributes
     case AUTH_BASIC:
     case AUTH_DIGEST:
     case AUTH_NTLM:
@@ -116,14 +113,12 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         callback: ''
       };
 
-    // OAuth 2.0
     case AUTH_OAUTH_2:
       return {
         type,
         grantType: GRANT_TYPE_AUTHORIZATION_CODE
       };
 
-    // Aws IAM
     case AUTH_AWS_IAM:
       return {
         type,
@@ -132,14 +127,12 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         secretAccessKey: oldAuth.secretAccessKey || ''
       };
 
-    // Hawk
     case AUTH_HAWK:
       return {
         type,
         algorithm: HAWK_ALGORITHM_SHA256
       };
 
-    // Atlassian ASAP
     case AUTH_ASAP:
       return {
         type,
@@ -150,10 +143,22 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         privateKey: ''
       };
 
-    // Types needing no defaults
+    case AUTH_BEARER:
+      return {
+        type,
+        token: ''
+      };
+
     case AUTH_NETRC:
-    default:
       return {type};
+
+    // Types needing no defaults
+    case AUTH_NONE:
+    default:
+      return {
+        type,
+        disableInheritance: false
+      };
   }
 }
 

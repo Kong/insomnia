@@ -166,6 +166,7 @@ class KeyValueEditorRow extends PureComponent {
     const {
       pair,
       readOnly,
+      disabled,
       forceInput,
       valueInputType,
       valuePlaceholder,
@@ -178,6 +179,7 @@ class KeyValueEditorRow extends PureComponent {
       return (
         <FileInputButton
           ref={this._setValueInputRef}
+          disabled={disabled}
           showFileName
           showFileIcon
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
@@ -189,6 +191,7 @@ class KeyValueEditorRow extends PureComponent {
       const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
         <button className="btn btn--outlined btn--super-duper-compact wide ellipsis"
+                disabled={disabled}
                 onClick={this._handleEditMultiline}>
           <i className="fa fa-pencil-square-o space-right"/>
           {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
@@ -199,6 +202,7 @@ class KeyValueEditorRow extends PureComponent {
         <OneLineEditor
           ref={this._setValueInputRef}
           readOnly={readOnly}
+          disabled={disabled}
           forceInput={forceInput}
           type={valueInputType || 'text'}
           placeholder={valuePlaceholder || 'Value'}
@@ -219,6 +223,7 @@ class KeyValueEditorRow extends PureComponent {
 
   renderPairSelector () {
     const {
+      disabled,
       hideButtons,
       allowMultiline,
       allowFile
@@ -241,8 +246,8 @@ class KeyValueEditorRow extends PureComponent {
 
     if (showDropdown) {
       return (
-        <Dropdown right>
-          <DropdownButton className="tall">
+        <Dropdown right disabled={disabled}>
+          <DropdownButton className="tall" disabled={disabled}>
             <i className="fa fa-caret-down"/>
           </DropdownButton>
           <DropdownItem onClick={this._handleTypeChange} value={{type: 'text', multiline: false}}>
@@ -277,6 +282,7 @@ class KeyValueEditorRow extends PureComponent {
       hideButtons,
       forceInput,
       readOnly,
+      disabled,
       className,
       isDragging,
       isDraggingOver,
@@ -298,11 +304,12 @@ class KeyValueEditorRow extends PureComponent {
 
     let handle = null;
     if (sortable) {
-      handle = connectDragSource(
-        <div className="key-value-editor__drag">
+      const btn = (
+        <div className={'key-value-editor__drag ' + (disabled ? 'btn--disabled' : '')}>
           <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
         </div>
       );
+      handle = (readOnly || disabled) ? btn : connectDragSource(btn);
     }
 
     const row = (
@@ -320,6 +327,7 @@ class KeyValueEditorRow extends PureComponent {
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
               readOnly={readOnly}
+              disabled={disabled}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
               onFocus={this._handleFocusName}
@@ -335,6 +343,7 @@ class KeyValueEditorRow extends PureComponent {
           {!hideButtons ? (
             <Button onClick={this._handleDisableChange}
                     value={!pair.disabled}
+                    disabled={readOnly || disabled}
                     title={pair.disabled ? 'Enable item' : 'Disable item'}>
               {pair.disabled
                 ? <i className="fa fa-square-o"/>
@@ -348,6 +357,7 @@ class KeyValueEditorRow extends PureComponent {
           {!noDelete && (
             !hideButtons ? (
               <PromptButton key={Math.random()}
+                            disabled={readOnly || disabled}
                             tabIndex={-1}
                             confirmMessage=" "
                             addIcon
@@ -356,7 +366,7 @@ class KeyValueEditorRow extends PureComponent {
                 <i className="fa fa-trash-o"/>
               </PromptButton>
             ) : (
-              <button>
+              <button disabled={readOnly || disabled}>
                 <i className="fa fa-empty"/>
               </button>
             )
@@ -390,6 +400,7 @@ KeyValueEditorRow.propTypes = {
 
   // Optional
   readOnly: PropTypes.bool,
+  disabled: PropTypes.bool,
   onMove: PropTypes.func,
   onKeyDown: PropTypes.func,
   onBlurName: PropTypes.func,

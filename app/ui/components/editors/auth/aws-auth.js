@@ -54,6 +54,7 @@ class AWSAuth extends PureComponent {
         handleRender={handleRender}
         handleGetRenderContext={handleGetRenderContext}
         nunjucksPowerUserMode={nunjucksPowerUserMode}
+        className="pad-top"
         namePlaceholder="AWS_ACCESS_KEY_ID"
         valuePlaceholder="AWS_SECRET_ACCESS_KEY"
         valueInputType={showPasswords ? 'text' : 'password'}
