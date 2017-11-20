@@ -40,8 +40,8 @@ class HawkAuth extends React.PureComponent<Props> {
     this._handleChangeProperty('key', value);
   }
 
-  _handleChangeAlgorithm (value: string): void {
-    this._handleChangeProperty('algorithm', value);
+  _handleChangeAlgorithm (e: SyntheticEvent<HTMLSelectElement>): void {
+    this._handleChangeProperty('algorithm', e.currentTarget.value);
   }
 
   renderHawkAuthenticationFields (): React.Node {
