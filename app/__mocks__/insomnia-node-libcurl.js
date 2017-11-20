@@ -31,7 +31,7 @@ class Curl extends EventEmitter {
       let body = '';
       // Only limiting this to prevent infinite loops
       for (let i = 0; i < 1000; i++) {
-        const buffer = new Buffer(23);
+        const buffer = Buffer.alloc(23);
         const bytes = value(buffer);
         if (bytes === 0) {
           break;
@@ -48,7 +48,7 @@ class Curl extends EventEmitter {
       this._options[name].push(value);
     } else if (name === Curl.option.READDATA) {
       const {size} = fs.fstatSync(value);
-      const buffer = new Buffer(size);
+      const buffer = Buffer.alloc(size);
       fs.readSync(value, buffer, 0, size, 0);
       this._options[name] = buffer.toString();
     } else {

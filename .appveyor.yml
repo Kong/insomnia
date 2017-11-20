@@ -1,5 +1,6 @@
 image: Visual Studio 2015
 build: off
+test: off
 
 #---------------------------------#
 #    environment configuration    #
@@ -8,7 +9,7 @@ build: off
 shallow_clone: true
 platform: x64
 environment:
-  NODEJS_VERSION: "7"
+  NODEJS_VERSION: "8"
   CSC_LINK: '%WINDOWS_CSC_LINK%'
   CSC_KEY_PASSWORD: '%WINDOWS_CSC_KEY_PASSWORD%'
 
@@ -18,6 +19,7 @@ install:
   - node --version
   - npm --version
   - npm config set msvs_version 2013
+  - npm install 7zip-bin-win > NUL
   - npm install > NUL
   - npm test
 
@@ -30,14 +32,14 @@ cache:
 #---------------------------------#
 
 build_script:
-  - if %APPVEYOR_REPO_TAG%==true npm run build-n-package:win
+  - if %APPVEYOR_REPO_TAG%==true npm run build-n-package
 
 #---------------------------------#
 #      artifacts configuration    #
 #---------------------------------#
 
 artifacts:
-  - path: dist\win\*
+  - path: dist\squirrel-windows\*
     name: dist
 
 #---------------------------------#
@@ -50,5 +52,6 @@ deploy:
   auth_token:
     secure: Ffmgxn+wt5WSf/jgJ/L+/3mkUs4fn9Z5j4Dz73VATsgL14Rf/xUp2nOyE0ecow+1
   artifact: dist
+  prerelease: true
   on:
     appveyor_repo_tag: true

@@ -328,7 +328,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     const originalResource = await syncStorage.getResourceByDocId('req_t');
     const updatedResource = await syncStorage.updateResource(
       originalResource,
-      {removed: true},
+      {removed: true}
     );
 
     // Update it and push it again
@@ -427,7 +427,7 @@ async function _setSessionData () {
   const {privateKey} = await crypt.generateKeyPairJWK();
   const encPrivateKey = {
     ad: '',
-    d: (new Buffer(JSON.stringify(privateKey))).toString('hex'),
+    d: Buffer.from(JSON.stringify(privateKey)).toString('hex'),
     iv: '968f1d810efdaec58f9e313e',
     t: '0e87a2e57a198ca79cb99585fe9c244a'
   };
@@ -441,7 +441,7 @@ async function _setSessionData () {
     'gschier1990@gmail.com',
     symmetricKey,
     publicKey,
-    encPrivateKey,
+    encPrivateKey
   );
 }
 

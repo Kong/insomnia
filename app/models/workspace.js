@@ -51,7 +51,7 @@ export async function all (): Promise<Array<Workspace>> {
 
   if (workspaces.length === 0) {
     await create({name: 'Insomnia'});
-    return await all();
+    return all();
   } else {
     return workspaces;
   }

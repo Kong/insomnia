@@ -9,12 +9,11 @@ import * as moment from 'moment';
 import * as importUtils from '../../import';
 import {trackEvent} from '../../../common/analytics';
 import AlertModal from '../../components/modals/alert-modal';
-import {showModal} from '../../components/modals';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
 import SelectModal from '../../components/modals/select-modal';
-import {showError} from '../../components/modals/index';
+import {showError, showModal} from '../../components/modals/index';
 
 const LOCALSTORAGE_PREFIX = `insomnia::meta`;
 

@@ -6,7 +6,6 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
 import uuid from 'uuid';
-import {initModel} from '../models';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -175,7 +174,7 @@ export const findMostRecentlyModified = database.findMostRecentlyModified = asyn
 
       const docs = [];
       for (const rawDoc of rawDocs) {
-        docs.push(await initModel(type, rawDoc));
+        docs.push(await models.initModel(type, rawDoc));
       }
 
       resolve(docs);
@@ -198,7 +197,7 @@ export const find = database.find = async function <T: BaseModel> (
 
       const docs = [];
       for (const rawDoc of rawDocs) {
-        docs.push(await initModel(type, rawDoc));
+        docs.push(await models.initModel(type, rawDoc));
       }
 
       resolve(docs);
@@ -274,7 +273,7 @@ export const insert = database.insert = async function <T: BaseModel> (
   if (db._empty) return _send('insert', ...arguments);
 
   return new Promise(async (resolve, reject) => {
-    const docWithDefaults = await initModel(doc.type, doc);
+    const docWithDefaults = await models.initModel(doc.type, doc);
     db[doc.type].insert(docWithDefaults, (err, newDoc) => {
       if (err) {
         return reject(err);
@@ -295,7 +294,7 @@ export const update = database.update = async function <T: BaseModel> (
   if (db._empty) return _send('update', ...arguments);
 
   return new Promise(async (resolve, reject) => {
-    const docWithDefaults = await initModel(doc.type, doc);
+    const docWithDefaults = await models.initModel(doc.type, doc);
     db[doc.type].update({_id: docWithDefaults._id}, docWithDefaults, err => {
       if (err) {
         return reject(err);
@@ -356,14 +355,14 @@ export const removeWhere = database.removeWhere = async function (
 // ~~~~~~~~~~~~~~~~~~~ //
 
 export async function docUpdate<T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
-  const doc = await initModel(
+  const doc = await models.initModel(
     originalDoc.type,
     originalDoc,
 
     // NOTE: This is before `patch` because we want `patch.modified` to win if it has it
     {modified: Date.now()},
 
-    patch,
+    patch
   );
 
   return database.update(doc);
@@ -373,7 +372,7 @@ export async function docCreateNoMigrate<T: BaseModel> (
   type: string,
   ...patches: Array<Object>
 ): Promise<T> {
-  const doc = await initModel(
+  const doc = await models.initModel(
     type,
     ...patches,
 
@@ -389,7 +388,7 @@ export async function docCreate<T: BaseModel> (
   type: string,
   ...patches: Array<Object>
 ): Promise<T> {
-  const doc = await initModel(
+  const doc = await models.initModel(
     type,
     ...patches,
 
@@ -412,7 +411,7 @@ export const withDescendants = database.withDescendants = async function <T: Bas
 
   let docsToReturn = doc ? [doc] : [];
 
-  async function next (docs: Array<BaseModel>): Promise<Array<BaseModel>> {
+  async function next (docs: Array<BaseModel>) {
     let foundDocs = [];
 
     for (const d of docs) {
@@ -435,10 +434,10 @@ export const withDescendants = database.withDescendants = async function <T: Bas
 
     // Continue searching for children
     docsToReturn = [...docsToReturn, ...foundDocs];
-    return await next(foundDocs);
+    return next(foundDocs);
   }
 
-  return await next([doc]);
+  return next([doc]);
 };
 
 export const withAncestors = database.withAncestors = async function (
@@ -470,10 +469,10 @@ export const withAncestors = database.withAncestors = async function (
 
     // Continue searching for children
     docsToReturn = [...docsToReturn, ...foundDocs];
-    return await next(foundDocs);
+    return next(foundDocs);
   }
 
-  return await next([doc]);
+  return next([doc]);
 };
 
 export const duplicate = database.duplicate = async function <T: BaseModel> (

@@ -15,7 +15,13 @@
     },
     "test": {
       "presets": [
-        "es2015",
+        [
+          "env", {
+          "targets": {
+            "node": "8.4"
+          }
+        }
+        ],
         "flow" // We need to add this again because it has to run before es2015
       ]
     }

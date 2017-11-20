@@ -46,7 +46,7 @@ class RequestCreateModal extends PureComponent {
     const finalRequest = await models.request.updateMimeType(
       request,
       this._shouldNotHaveBody() ? null : selectedContentType,
-      true,
+      true
     );
 
     this._onComplete(finalRequest);

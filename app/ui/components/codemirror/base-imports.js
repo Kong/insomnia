@@ -48,10 +48,10 @@ import './extensions/autocomplete';
 import './extensions/clickable';
 import './extensions/nunjucks-tags';
 
-// Make jsonlint available to the jsonlint plugin
-import {parser as jsonlint} from 'jsonlint';
-global.jsonlint = jsonlint;
-
 // CSS
 import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
+
+// Make jsonlint available to the jsonlint plugin
+import {parser as jsonlint} from 'jsonlint';
+global.jsonlint = jsonlint;

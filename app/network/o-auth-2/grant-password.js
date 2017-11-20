@@ -45,8 +45,13 @@ export default async function (
     body: models.request.newBodyFormUrlEncoded(params)
   });
 
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw new Error(`[oauth2] Failed to fetch access token url=${url} status=${response.statusCode}`);
+  if (!bodyBuffer) {
+    throw new Error(`[oauth2] No body returned from ${url}`);
+  }
+
+  const statusCode = response.statusCode || 0;
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new Error(`[oauth2] Failed to fetch access token url=${url} status=${statusCode}`);
   }
 
   const results = responseToObject(bodyBuffer.toString(), [

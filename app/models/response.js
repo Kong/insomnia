@@ -131,7 +131,7 @@ export function getLatestByParentId (parentId: string) {
 export function getBodyBuffer (response: Response, readFailureValue: any = null) {
   // No body, so return empty Buffer
   if (!response.bodyPath) {
-    return new Buffer([]);
+    return Buffer.alloc(0);
   }
 
   try {

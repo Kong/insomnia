@@ -86,7 +86,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     const part = parts[activePart];
 
     if (!part) {
-      return new Buffer('');
+      return Buffer.from('');
     }
 
     return part.value;

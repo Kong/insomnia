@@ -314,7 +314,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         {name: 'In Request Body', value: 'true'}
       ],
       this._handleChangeCredentialsInBody,
-      'Whether or not to send credentials as Basic Auth, or as plain text in the request body',
+      'Whether or not to send credentials as Basic Auth, or as plain text in the request body'
     );
 
     if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {

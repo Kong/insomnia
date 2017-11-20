@@ -6,7 +6,6 @@ import {join as pathJoin} from 'path';
 import {format as urlFormat, parse as urlParse} from 'url';
 import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
 import * as querystring from './querystring';
-import {shell} from 'electron';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
@@ -272,10 +271,10 @@ export function clickLink (href: string): void {
     const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
     const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
     const attributedHref = querystring.joinUrl(href, qs);
-    shell.openExternal(attributedHref);
+    electron.shell.openExternal(attributedHref);
   } else {
     // Don't modify non-http urls
-    shell.openExternal(href);
+    electron.shell.openExternal(href);
   }
 }
 

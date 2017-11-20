@@ -55,7 +55,7 @@ export function create (patch: Object = {}) {
 export async function getOrCreateForParentId (parentId: string) {
   const cookieJars = await db.find(type, {parentId});
   if (cookieJars.length === 0) {
-    return await create({parentId});
+    return create({parentId});
   } else {
     return cookieJars[0];
   }

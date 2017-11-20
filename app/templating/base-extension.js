@@ -1,6 +1,7 @@
-const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 import * as models from '../models/index';
 import * as templating from './index';
+
+const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
 export default class BaseExtension {
   constructor (ext) {
@@ -73,9 +74,11 @@ export default class BaseExtension {
         models: {
           request: {getById: models.request.getById},
           workspace: {getById: models.workspace.getById},
-          cookieJar: {getOrCreateForWorkspace: workspace => {
-            return models.cookieJar.getOrCreateForParentId(workspace._id);
-          }},
+          cookieJar: {
+            getOrCreateForWorkspace: workspace => {
+              return models.cookieJar.getOrCreateForParentId(workspace._id);
+            }
+          },
           response: {
             getLatestForRequestId: models.response.getLatestForRequest,
             getBodyBuffer: models.response.getBodyBuffer

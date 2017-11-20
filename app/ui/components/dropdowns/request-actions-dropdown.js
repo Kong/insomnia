@@ -2,10 +2,9 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
-import {Dropdown, DropdownButton, DropdownHint, DropdownItem} from '../base/dropdown';
+import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown/index';
 import * as models from '../../../models';
 import {trackEvent} from '../../../common/analytics';
-import {DropdownDivider} from '../base/dropdown/index';
 import * as hotkeys from '../../../common/hotkeys';
 
 @autobind

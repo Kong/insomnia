@@ -12,7 +12,6 @@ import type {Request} from '../models/request';
 import type {Response as ResponseModel} from '../models/response';
 import {getAuthHeader} from '../network/authentication';
 import {getAppVersion} from './constants';
-import {getSetCookieHeaders} from './misc';
 import {RenderError} from '../templating/index';
 
 export type HarCookie = {
@@ -265,7 +264,7 @@ export async function exportHarRequest (
     return null;
   }
 
-  return await exportHarWithRequest(request, environmentId, addContentLength);
+  return exportHarWithRequest(request, environmentId, addContentLength);
 }
 
 export async function exportHarWithRequest (
@@ -340,7 +339,7 @@ function getRequestCookies (renderedRequest: RenderedRequest): Array<HarCookie> 
 }
 
 function getReponseCookies (response: ResponseModel): Array<HarCookie> {
-  return getSetCookieHeaders(response.headers).map(h => {
+  return misc.getSetCookieHeaders(response.headers).map(h => {
     let cookie;
     try {
       cookie = toughCookie.parse(h.value || '');
@@ -396,7 +395,7 @@ function mapCookie (cookie: Cookie): HarCookie {
 }
 
 function getResponseContent (response: ResponseModel): HarContent {
-  const body: Buffer = models.response.getBodyBuffer(response, new Buffer([]));
+  const body: Buffer = models.response.getBodyBuffer(response, Buffer.alloc(0));
   return {
     size: body.byteLength,
     mimeType: response.contentType,
