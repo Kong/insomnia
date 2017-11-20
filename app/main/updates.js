@@ -48,13 +48,10 @@ function _sendUpdateStatus (status) {
 }
 
 function _sendUpdateComplete (success: boolean, msg: string) {
-  _sendUpdateStatus(msg);
-  setTimeout(() => {
-    const windows = BrowserWindow.getAllWindows();
-    for (const w of windows) {
-      w.send('updater.check.complete', success);
-    }
-  }, 1500);
+  const windows = BrowserWindow.getAllWindows();
+  for (const w of windows) {
+    w.send('updater.check.complete', success, msg);
+  }
 }
 
 let hasPromptedForUpdates = false;
@@ -71,16 +68,13 @@ export async function init () {
 
   autoUpdater.on('update-available', () => {
     console.debug('[updater] Update Available');
-    _sendUpdateStatus('Downloading');
+    _sendUpdateStatus('Downloading...');
   });
 
   autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
     console.debug(`[updater] Downloaded ${releaseName}`);
-    _sendUpdateStatus('Installing');
-    setTimeout(() => {
-      _showUpdateNotification();
-      _sendUpdateComplete(true, 'Restart Required');
-    }, 1000);
+    _sendUpdateComplete(true, 'Updated (Restart Required)');
+    _showUpdateNotification();
   });
 
   ipcMain.on('updater.check', async e => {

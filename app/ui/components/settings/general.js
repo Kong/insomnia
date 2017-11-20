@@ -267,9 +267,8 @@ class General extends React.PureComponent<Props> {
             </div>
             <div className="form-control form-control--outlined pad-top-sm">
               <label>Update Channel
-                <select value={settings.updateAutomatically ? settings.updateChannel : false}
+                <select value={settings.updateChannel}
                         name="updateChannel"
-                        disabled={!settings.updateAutomatically}
                         onChange={this._handleUpdateSetting}>
                   <option value={UPDATE_CHANNEL_STABLE}>Stable (Recommended)</option>
                   <option value={UPDATE_CHANNEL_BETA}>Stable and Beta</option>

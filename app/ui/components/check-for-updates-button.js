@@ -10,7 +10,8 @@ type Props = {
 
 type State = {
   status: string,
-  checking: boolean
+  checking: boolean,
+  updateAvailable: boolean
 };
 
 @autobind
@@ -19,7 +20,8 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       status: '',
-      checking: false
+      checking: false,
+      updateAvailable: false
     };
   }
 
@@ -30,8 +32,8 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
       }
     });
 
-    electron.ipcRenderer.on('updater.check.complete', () => {
-      this.setState({checking: false, status: ''});
+    electron.ipcRenderer.on('updater.check.complete', (e, updateAvailable, status) => {
+      this.setState({checking: false, status, updateAvailable});
     });
   }
 
@@ -42,10 +44,23 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
 
   render () {
     const {children, className} = this.props;
-    const {status, checking} = this.state;
+    const {status, checking, updateAvailable} = this.state;
+
+    let toShow = children;
+
+    if (checking) {
+      toShow = status || children;
+    }
+
+    if (updateAvailable) {
+      toShow = status;
+    }
+
     return (
-      <button disabled={status} className={className} onClick={this._handleCheckForUpdates}>
-        {(checking && status) ? status : children}
+      <button className={className}
+              disabled={status || updateAvailable}
+              onClick={this._handleCheckForUpdates}>
+        {toShow}
       </button>
     );
   }
