@@ -9,7 +9,6 @@ import DropdownDivider from './dropdown-divider';
 import {fuzzyMatch} from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
 import * as hotkeys from '../../../../common/hotkeys';
-import {executeHotKey} from '../../../../common/hotkeys';
 
 @autobind
 class Dropdown extends PureComponent {
@@ -116,7 +115,7 @@ class Dropdown extends PureComponent {
 
     this._handleDropdownNavigation(e);
 
-    executeHotKey(e, hotkeys.CLOSE_DROPDOWN, () => {
+    hotkeys.executeHotKey(e, hotkeys.CLOSE_DROPDOWN, () => {
       this.hide();
     });
   }

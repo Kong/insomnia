@@ -1,9 +1,9 @@
 {
-  "name": "insomnia",
+  "name": "insomnia-dev",
   "private": true,
   "version": "1.0.0",
   "description": "Insomnia App",
-  "cache": 1,
+  "cache": 3,
   "main": "main.js",
   "licence": "GNU AGPLv3",
   "homepage": "https://insomnia.rest",
@@ -22,21 +22,10 @@
     "build-main": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js",
     "hot-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
-    "build:clean": "rm -rf ./build/* && rm -rf ./dist/* && mkdirp ./build",
-    "build:renderer": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.production.babel.js",
-    "build:main": "cross-env NODE_ENV=production webpack --config ./webpack/webpack.config.electron.babel.js",
-    "build:copy": "cp -r ./app/package.json ./bin ./app/static ./app/icons/* ./build/",
-    "build:install": "cd build && npm install",
-    "build": "npm run build:clean && npm run build:renderer && npm run build:main && npm run build:copy && npm run build:install",
     "rebuild": "electron-rebuild -f -w node-libcurl",
-    "package:mac": "rm -rf dist/mac && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --mac",
-    "package:win": "rm -rf dist/win* && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --win",
-    "package:linux": "rm -rf dist/linux && rm -f dist/*.AppImage && rm -f dist/*.deb && node node_modules/electron-builder/out/cli/build-cli.js --publish=never --x64 --linux",
-    "package": "npm test && rm -rf dist/* && npm run package:mac && npm run package:win && npm run package:linux",
-    "build-n-package": "npm run build && npm run package",
-    "build-n-package:win": "npm run build && npm run package:win",
-    "build-n-package:mac": "npm run build && npm run package:mac",
-    "build-n-package:linux": "npm run build && npm run package:linux"
+    "package": "node ./scripts/package.js",
+    "build": "node ./scripts/build.js",
+    "build-n-package": "npm run build && npm run package"
   },
   "jest": {
     "setupFiles": [
@@ -66,60 +55,6 @@
       "!**/__mocks__/**",
       "!**/node_modules/**"
     ]
-  },
-  "build": {
-    "appId": "com.insomnia.app",
-    "extraResources": [
-      {
-        "from": "./bin",
-        "to": "./bin",
-        "filter": "yarn-standalone.js"
-      }
-    ],
-    "category": "public.app-category.developer-tools",
-    "protocols": [
-      {
-        "name": "Insomnia",
-        "role": "Viewer",
-        "schemes": [
-          "insomnia"
-        ]
-      }
-    ],
-    "fileAssociations": [],
-    "directories": {
-      "app": "build",
-      "output": "dist"
-    },
-    "win": {
-      "iconUrl": "https://insomnia.rest/images/icon.png",
-      "target": [
-        "squirrel",
-        "zip"
-      ],
-      "msi": false
-    },
-    "linux": {
-      "executableName": "insomnia",
-      "synopsis": "A simple, beautiful, and free REST API client",
-      "category": "Development",
-      "target": [
-        "AppImage",
-        "deb",
-        "tar.gz"
-      ]
-    },
-    "deb": {
-      "depends": [
-        "gconf2",
-        "gconf-service",
-        "libnotify4",
-        "libappindicator1",
-        "libxtst6",
-        "libnss3",
-        "libcurl3"
-      ]
-    }
   },
   "dependencies": {
     "autobind-decorator": "^1.3.4",
@@ -159,7 +94,7 @@
     "react-dnd-html5-backend": "^2.4.1",
     "react-dom": "^16.0.0",
     "react-redux": "^5.0.6",
-    "react-tabs": "^1.1.0",
+    "react-tabs": "^2.1.1",
     "redux": "^3.7.2",
     "redux-thunk": "^2.2.0",
     "reselect": "^3.0.1",
@@ -177,46 +112,47 @@
     "babel-core": "^6.23.1",
     "babel-eslint": "^7.1.1",
     "babel-jest": "^19.0.0",
-    "babel-loader": "^6.3.2",
+    "babel-loader": "^7.1.2",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-plugin-transform-regenerator": "^6.22.0",
-    "babel-plugin-transform-runtime": "^6.15.0",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
     "babel-preset-flow": "^6.23.0",
     "babel-preset-react": "^6.23.0",
-    "babel-preset-react-hmre": "^1.1.1",
-    "concurrently": "^2.0.0",
+    "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
-    "css-loader": "^0.26.2",
+    "css-loader": "^0.28.7",
     "electron": "^1.7.9",
-    "electron-builder": "^10.17.3",
+    "electron-builder": "^19.45.5",
+    "electron-builder-lib": "^19.46.3",
+    "electron-builder-squirrel-windows": "^19.46.0",
     "electron-rebuild": "^1.6.0",
     "eslint": "^3.16.1",
-    "eslint-config-semistandard": "^7.0.0",
-    "eslint-config-standard": "^7.0.0",
+    "eslint-config-semistandard": "^11.0.0",
+    "eslint-config-standard": "^10.2.1",
     "eslint-plugin-filenames": "^1.1.0",
     "eslint-plugin-flowtype": "^2.36.0",
     "eslint-plugin-html": "^2.0.1",
+    "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jest": "^19.0.1",
     "eslint-plugin-json": "^1.2.0",
+    "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-react": "^7.4.0",
-    "eslint-plugin-standard": "^2.1.1",
-    "file-loader": "^0.10.1",
+    "eslint-plugin-standard": "^3.0.1",
+    "file-loader": "^1.1.5",
     "flow-bin": "^0.58.0",
     "jest": "^19.0.2",
     "less": "^2.7.2",
-    "less-loader": "^2.2.3",
+    "less-loader": "^4.0.5",
+    "ncp": "^2.0.0",
+    "npm": "^5.5.1",
     "react-hot-loader": "^3.0.0-beta.6",
     "redux-mock-store": "^1.0.2",
-    "style-loader": "^0.13.2",
-    "url-loader": "^0.5.8",
+    "rimraf": "^2.6.2",
+    "style-loader": "^0.19.0",
+    "url-loader": "^0.6.2",
     "webpack": "^3.5.5",
-    "webpack-dev-middleware": "^1.10.1",
     "webpack-dev-server": "^2.4.1",
-    "webpack-hot-middleware": "^2.17.1",
     "webpack-target-electron-renderer": "^0.4.0"
   }
 }

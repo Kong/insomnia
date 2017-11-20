@@ -5,9 +5,8 @@ import PromptButton from '../base/prompt-button';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
-import {showModal} from '../modals';
 import {trackEvent} from '../../../common/analytics';
-import {showPrompt} from '../modals/index';
+import {showPrompt, showModal} from '../modals/index';
 import * as hotkeys from '../../../common/hotkeys';
 
 @autobind

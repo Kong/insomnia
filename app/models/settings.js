@@ -83,7 +83,7 @@ export async function update (settings: Settings, patch: Object): Promise<Settin
 export async function getOrCreate (patch: Object = {}): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
-    return await create(patch);
+    return create(patch);
   } else {
     return results[0];
   }

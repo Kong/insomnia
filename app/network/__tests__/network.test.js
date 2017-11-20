@@ -7,7 +7,6 @@ import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FO
 import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
 import {DEFAULT_BOUNDARY} from '../multipart';
-import {_parseHeaders} from '../network';
 
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);
@@ -615,7 +614,7 @@ describe('_parseHeaders', () => {
   ];
 
   it('Parses single response headers', () => {
-    expect(_parseHeaders(new Buffer(basicHeaders.join('\n')))).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -636,7 +635,7 @@ describe('_parseHeaders', () => {
   });
 
   it('Parses Windows newlines', () => {
-    expect(_parseHeaders(new Buffer(basicHeaders.join('\r\n')))).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(basicHeaders.join('\r\n')))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',
@@ -658,7 +657,7 @@ describe('_parseHeaders', () => {
 
   it('Parses multiple responses', () => {
     const blobs = basicHeaders.join('\r\n') + '\n' + minimalHeaders.join('\n');
-    expect(_parseHeaders(new Buffer(blobs))).toEqual([
+    expect(networkUtils._parseHeaders(Buffer.from(blobs))).toEqual([
       {
         code: 301,
         version: 'HTTP/1.1',

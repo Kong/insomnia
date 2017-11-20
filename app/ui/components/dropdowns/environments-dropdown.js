@@ -6,7 +6,6 @@ import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} f
 import {showModal} from '../modals/index';
 import {trackEvent} from '../../../common/analytics';
 import Tooltip from '../tooltip';
-import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
 import type {Workspace} from '../../../models/workspace';
@@ -52,7 +51,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
   }
 
   _handleKeydown (e: KeyboardEvent) {
-    executeHotKey(e, hotkeys.TOGGLE_ENVIRONMENTS_MENU, () => {
+    hotkeys.executeHotKey(e, hotkeys.TOGGLE_ENVIRONMENTS_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }

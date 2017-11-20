@@ -467,7 +467,7 @@ export async function getOrCreateConfig (resourceGroupId) {
   const config = await store.getConfig(resourceGroupId);
 
   if (!config) {
-    return await store.insertConfig({resourceGroupId});
+    return store.insertConfig({resourceGroupId});
   } else {
     return config;
   }
@@ -485,9 +485,9 @@ export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   const patch = {resourceGroupId, syncMode};
 
   if (config) {
-    return await store.updateConfig(config, patch);
+    return store.updateConfig(config, patch);
   } else {
-    return await store.insertConfig(patch);
+    return store.insertConfig(patch);
   }
 }
 
@@ -708,7 +708,7 @@ export async function createResourceGroup (parentId, name) {
 }
 
 export async function createResource (doc, resourceGroupId) {
-  return await store.insertResource({
+  return store.insertResource({
     id: doc._id,
     name: doc.name || 'n/a', // Set name to the doc name if it has one
     resourceGroupId: resourceGroupId,
@@ -744,7 +744,7 @@ export async function createResourceForDoc (doc) {
     // If the current doc IS a Workspace, just return it
     return workspaceResource;
   } else {
-    return await createResource(doc, workspaceResource.resourceGroupId);
+    return createResource(doc, workspaceResource.resourceGroupId);
   }
 }
 
@@ -760,7 +760,7 @@ export async function getOrCreateResourceForDoc (doc) {
   if (resource) {
     return resource;
   } else {
-    return await createResourceForDoc(doc);
+    return createResourceForDoc(doc);
   }
 }
 

@@ -155,10 +155,16 @@ async function _sendToGoogle (params: Array<RequestParameter>) {
     }
 
     const chunks = [];
+    const [contentType] = response.headers['content-type'] || [];
+
+    if (contentType !== 'application/json') {
+      // Production GA API returns a Gif to use for tracking
+      return;
+    }
 
     response.on('end', () => {
+      const jsonStr = Buffer.concat(chunks).toString('utf8');
       try {
-        const jsonStr = Buffer.concat(chunks).toString('utf8');
         const data = JSON.parse(jsonStr);
         const {hitParsingResult} = data;
         if (hitParsingResult.valid) {

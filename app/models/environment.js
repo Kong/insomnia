@@ -52,7 +52,7 @@ export async function getOrCreateForWorkspaceId (workspaceId: string): Promise<E
   const environments = await db.find(type, {parentId: workspaceId});
 
   if (!environments.length) {
-    return await create({
+    return create({
       parentId: workspaceId,
       name: 'Base Environment'
     });

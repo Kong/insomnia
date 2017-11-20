@@ -4,7 +4,6 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
-import {pressedHotKey} from '../../../common/hotkeys';
 
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
@@ -33,7 +32,7 @@ class Modal extends PureComponent {
     }
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
-    const pressedEscape = pressedHotKey(e, hotkeys.CLOSE_MODAL);
+    const pressedEscape = hotkeys.pressedHotKey(e, hotkeys.CLOSE_MODAL);
     const pressedElse = closeOnKeyCodes.find(c => c === e.keyCode);
 
     if (pressedEscape || pressedElse) {
@@ -120,7 +119,7 @@ class Modal extends PureComponent {
       className,
       {'modal--fixed-height': tall},
       {'modal--noescape': noEscape},
-      {'modal--wide': wide},
+      {'modal--wide': wide}
     );
 
     const styles = {};

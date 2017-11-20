@@ -13,7 +13,6 @@ import {registerModal, showModal} from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
-import ChangelogModal from './modals/changelog-modal';
 import CookiesModal from './modals/cookies-modal';
 import CookieModifyModal from '../components/modals/cookie-modify-modal';
 import EnvironmentEditModal from './modals/environment-edit-modal';
@@ -407,7 +406,6 @@ class Wrapper extends React.PureComponent<Props, State> {
           <PromptModal ref={registerModal}/>
 
           <WrapperModal ref={registerModal}/>
-          <ChangelogModal ref={registerModal}/>
           <LoginModal ref={registerModal}/>
           <AskModal ref={registerModal}/>
           <SelectModal ref={registerModal}/>

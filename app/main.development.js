@@ -96,8 +96,8 @@ app.on('ready', async () => {
   });
 
   // Don't send origin header from Insomnia app because we're not technically using CORS
-  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
     delete details.requestHeaders['Origin'];
-    callback({ cancel: false, requestHeaders: details.requestHeaders });
+    fn({ cancel: false, requestHeaders: details.requestHeaders });
   });
 });

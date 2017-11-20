@@ -18,7 +18,6 @@ import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-moda
 import * as session from '../../../sync/session';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
-import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
 
@@ -98,7 +97,7 @@ class WorkspaceDropdown extends PureComponent {
   }
 
   _handleKeydown (e) {
-    executeHotKey(e, hotkeys.TOGGLE_MAIN_MENU, () => {
+    hotkeys.executeHotKey(e, hotkeys.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }

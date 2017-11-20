@@ -18,6 +18,7 @@ describe('client_credentials', () => {
         scope: SCOPE
       })),
       response: {
+        statusCode: 200,
         headers: [{name: 'Content-Type', value: 'application/json'}]
       }
     }));
@@ -69,6 +70,7 @@ describe('client_credentials', () => {
         scope: SCOPE
       })),
       response: {
+        statusCode: 200,
         headers: [{name: 'Content-Type', value: 'application/x-www-form-urlencoded'}]
       }
     }));

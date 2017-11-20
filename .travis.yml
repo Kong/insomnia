@@ -3,14 +3,17 @@ language: node_js
 matrix:
   include:
     - os: linux
+      sudo: required
       dist: trusty
       env: CC=clang CXX=clang++ npm_config_clang=1
       compiler: clang
+      install:
+        - npm install 7zip-bin-linux > /dev/null
       env:
-        - PLATFORM=linux
     - os: osx
+      install:
+        - npm install 7zip-bin-mac > /dev/null
       env:
-        - PLATFORM=mac
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
 
@@ -18,6 +21,7 @@ addons:
   apt:
     packages:
     - libcurl4-openssl-dev
+    - snapd
     - git-all
     - build-essential
     - icnsutils
@@ -40,17 +44,19 @@ script:
 - npm test
 
 before_deploy:
-- npm run build-n-package:$PLATFORM
+- npm run build-n-package
 
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
   skip_cleanup: true
   file_glob: true
+  prerelease: true
   file:
     - dist/**/*.zip
     - dist/**/*.dmg
     - dist/**/*.deb
     - dist/**/*.AppImage
+    - dist/**/*.tar.gz
   on:
     tags: true

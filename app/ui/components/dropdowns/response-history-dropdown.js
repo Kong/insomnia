@@ -9,7 +9,6 @@ import PromptButton from '../base/prompt-button';
 import {trackEvent} from '../../../common/analytics';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
-import {executeHotKey} from '../../../common/hotkeys';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
@@ -33,7 +32,7 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   _handleKeydown (e) {
-    executeHotKey(e, hotkeys.TOGGLE_HISTORY_DROPDOWN, () => {
+    hotkeys.executeHotKey(e, hotkeys.TOGGLE_HISTORY_DROPDOWN, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }
