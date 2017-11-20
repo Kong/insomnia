@@ -272,7 +272,7 @@ class General extends React.PureComponent<Props> {
                         disabled={!settings.updateAutomatically}
                         onChange={this._handleUpdateSetting}>
                   <option value={UPDATE_CHANNEL_STABLE}>Stable (Recommended)</option>
-                  <option value={UPDATE_CHANNEL_BETA}>Stable and Beta (Use at Own Risk)</option>
+                  <option value={UPDATE_CHANNEL_BETA}>Stable and Beta</option>
                 </select>
               </label>
             </div>

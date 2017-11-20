@@ -7,7 +7,7 @@ import {delay} from '../common/misc';
 
 const {autoUpdater, BrowserWindow, ipcMain} = electron;
 
-async function getUpdateUrl (): Promise<string | null> {
+async function getUpdateUrl (force: boolean): Promise<string | null> {
   const platform = process.platform;
   const settings = await models.settings.getOrCreate();
   let updateUrl = null;
@@ -33,7 +33,7 @@ async function getUpdateUrl (): Promise<string | null> {
     return null;
   }
 
-  if (!settings.updateAutomatically) {
+  if (!force && !settings.updateAutomatically) {
     return null;
   }
 
@@ -122,7 +122,7 @@ async function _checkForUpdates (force: boolean) {
     return;
   }
 
-  const updateUrl = await getUpdateUrl();
+  const updateUrl = await getUpdateUrl(force);
 
   if (updateUrl === null) {
     console.debug(`[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`);
