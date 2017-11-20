@@ -51,6 +51,7 @@ deploy:
   api_key: $GITHUB_TOKEN
   skip_cleanup: true
   file_glob: true
+  prerelease: true
   file:
     - dist/**/*.zip
     - dist/**/*.dmg
