@@ -3,13 +3,14 @@ const webpack = require('webpack');
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
 const path = require('path');
+const mkdirp = require('mkdirp');
 const configRenderer = require('../webpack/webpack.config.production.babel');
 const configMain = require('../webpack/webpack.config.electron.babel');
 
 async function run () {
   // Remove folders first
   console.log('[build] Removing existing directories');
-  await removeDir('../build');
+  await emptyDir('../build');
 
   // Build the things
   console.log('[build] Building Webpack');
@@ -19,6 +20,7 @@ async function run () {
   // Copy necessary files
   console.log('[build] Copying files');
   await copyFiles('../app/package.json', '../build/package.json');
+  await copyFiles('../app/package-lock.json', '../build/package-lock.json');
   await copyFiles('../bin', '../build/');
   await copyFiles('../app/static', '../build/static');
   await copyFiles('../app/icons/', '../build/');
@@ -42,13 +44,14 @@ async function buildWebpack (config) {
   });
 }
 
-async function removeDir (relPath) {
+async function emptyDir (relPath) {
   return new Promise((resolve, reject) => {
     const dir = path.resolve(__dirname, relPath);
     rimraf(dir, err => {
       if (err) {
         reject(err);
       } else {
+        mkdirp.sync(dir);
         resolve();
       }
     });

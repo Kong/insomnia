@@ -2,6 +2,7 @@ const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
 const fs = require('fs');
+const mkdirp = require('mkdirp');
 
 const PLATFORM_MAP = {
   darwin: 'mac',
@@ -11,7 +12,7 @@ const PLATFORM_MAP = {
 
 async function run () {
   console.log('[package] Removing existing directories');
-  await removeDir('../dist');
+  await emptyDir('../dist');
 
   console.log('[package] Packaging app');
   await build('../.electronbuilder');
@@ -38,13 +39,14 @@ async function build (relConfigPath) {
   }
 }
 
-async function removeDir (relPath) {
+async function emptyDir (relPath) {
   return new Promise((resolve, reject) => {
     const dir = path.resolve(__dirname, relPath);
     rimraf(dir, err => {
       if (err) {
         reject(err);
       } else {
+        mkdirp.sync(dir);
         resolve();
       }
     });
