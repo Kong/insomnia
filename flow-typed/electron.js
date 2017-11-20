@@ -17,6 +17,7 @@ declare module 'electron' {
     net: Object,
     dialog: Object,
     clipboard: Object,
-    screen: Object
+    screen: Object,
+    autoUpdater: Object
   }
 }

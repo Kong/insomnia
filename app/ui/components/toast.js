@@ -8,6 +8,7 @@ import {trackEvent} from '../../common/analytics';
 import * as models from '../../models/index';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';
+import {isLinux} from '../../common/constants';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -40,6 +41,7 @@ class Toast extends PureComponent {
     }
 
     const stats = await models.stats.get();
+    const settings = await models.settings.getOrCreate();
 
     let notification;
 
@@ -54,7 +56,8 @@ class Toast extends PureComponent {
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type)
+        workspaces: await db.count(models.workspace.type),
+        updatesNotSupported: isLinux() || !settings.updateAutomatically
       };
 
       notification = await fetch.post(`/notification`, data);
