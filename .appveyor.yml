@@ -39,7 +39,7 @@ build_script:
 #---------------------------------#
 
 artifacts:
-  - path: dist\win\*
+  - path: dist\squirrel-windows\*
     name: dist
 
 #---------------------------------#
