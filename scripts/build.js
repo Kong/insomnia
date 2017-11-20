@@ -77,7 +77,7 @@ async function install (relDir) {
         return reject(err);
       }
 
-      npm.commands.install(prefix, err => {
+      npm.commands.install([prefix], err => {
         if (err) {
           reject(err);
         } else {
