@@ -270,14 +270,14 @@ export async function _actuallySend (
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
       if (process.platform !== 'darwin') {
-        const basCAPath = getTempDir();
-        const fullCAPath = pathJoin(basCAPath, CACerts.filename);
+        const baseCAPath = getTempDir();
+        const fullCAPath = pathJoin(baseCAPath, CACerts.filename);
 
         try {
           fs.statSync(fullCAPath);
         } catch (err) {
           // Doesn't exist yet, so write it
-          mkdirp.sync(basCAPath);
+          mkdirp.sync(baseCAPath);
           fs.writeFileSync(fullCAPath, CACerts.blob);
           console.debug('[net] Set CA to', fullCAPath);
         }
@@ -358,12 +358,10 @@ export async function _actuallySend (
             try {
               fs.statSync(blobOrFilename);
             } catch (err) {
-              // Certificate file now found!
-              // LEGACY: Certs used to be stored in blobs (not as paths), so lets write it to
+              // Certificate file not found!
+              // LEGACY: Certs used to be stored in blobs (not as paths), so let's write it to
               // the temp directory first.
               const fullBase = getTempDir();
-              mkdirp.sync(fullBase);
-
               const name = `${renderedRequest._id}_${renderedRequest.modified}`;
               const fullPath = pathJoin(fullBase, name);
               fs.writeFileSync(fullPath, Buffer.from(blobOrFilename, 'base64'));
