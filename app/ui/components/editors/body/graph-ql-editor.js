@@ -1,7 +1,7 @@
 // @flow
 import type {Request} from '../../../../models/request';
-import classnames from 'classnames';
 import {newBodyRaw} from '../../../../models/request';
+import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {parse, print} from 'graphql';
@@ -18,6 +18,7 @@ import type {Settings} from '../../../../models/settings';
 import type {RenderedRequest} from '../../../../common/render';
 import {getRenderedRequest} from '../../../../common/render';
 import TimeFromNow from '../../time-from-now';
+import {getBodyBufferFromPath} from '../../../../models/response';
 
 type GraphQLBody = {
   query: string,
@@ -109,11 +110,13 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           parentId: request._id
         });
 
-        const {bodyBuffer, response} = await network._actuallySend(
+        const response = await network._actuallySend(
           introspectionRequest,
           workspace,
           settings
         );
+
+        const bodyBuffer = getBodyBufferFromPath(response.bodyPath || '');
 
         const status = response.statusCode || 0;
 

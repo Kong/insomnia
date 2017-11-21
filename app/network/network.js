@@ -10,10 +10,13 @@ import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'insomnia-node-libcurl';
 import {join as pathJoin} from 'path';
+import zlib from 'zlib';
+import uuid from 'uuid';
+import * as electron from 'electron';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, prepareUrlForSending, setDefaultProtocol} from '../common/misc';
+import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, prepareUrlForSending, setDefaultProtocol, waitForStreamToFinish} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -25,11 +28,15 @@ import {urlMatchesCertHost} from './url-matches-cert-host';
 import aws4 from 'aws4';
 import {buildMultipart} from './multipart';
 
+const {app} = electron.remote || electron;
+
 export type ResponsePatch = {
   statusMessage?: string,
   error?: string,
   url?: string,
   statusCode?: number,
+  bytesContent?: number,
+  bodyPath?: string,
   httpVersion?: string,
   headers?: Array<ResponseHeader>,
   elapsedTime?: number,
@@ -39,11 +46,6 @@ export type ResponsePatch = {
   settingStoreCookies?: boolean,
   settingSendCookies?: boolean,
   timeline?: Array<ResponseTimelineEntry>
-};
-
-export type SendResult = {
-  bodyBuffer: ?Buffer,
-  response: ResponsePatch
 };
 
 // Time since user's last keypress to wait before making the request
@@ -62,7 +64,7 @@ export async function _actuallySend (
   renderedRequest: RenderedRequest,
   workspace: Workspace,
   settings: Settings
-): Promise<SendResult> {
+): Promise<ResponsePatch> {
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
 
@@ -70,20 +72,21 @@ export async function _actuallySend (
     const curl = new Curl();
 
     /** Helper function to respond with a success */
-    function respond (patch: ResponsePatch, bodyBuffer: ?Buffer = null): void {
+    function respond (patch: ResponsePatch, bodyPath: ?string): void {
       const response = Object.assign(({
         parentId: renderedRequest._id,
         timeline: timeline,
+        bodyPath: bodyPath || '',
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies
       }: ResponsePatch), patch);
 
-      resolve({bodyBuffer, response});
+      resolve(response);
 
       // Apply plugin hooks and don't wait for them and don't throw from them
       process.nextTick(async () => {
         try {
-          await _applyResponsePluginHooks(response, bodyBuffer);
+          await _applyResponsePluginHooks(response);
         } catch (err) {
           // TODO: Better error handling here
           console.warn('Response plugin failed', err);
@@ -144,6 +147,7 @@ export async function _actuallySend (
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
       enable(Curl.feature.NO_HEADER_PARSING);
+      enable(Curl.feature.NO_DATA_PARSING);
 
       // Set maximum amount of redirects allowed
       // NOTE: Setting this to -1 breaks some versions of libcurl
@@ -221,6 +225,7 @@ export async function _actuallySend (
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
+          console.debug(`[debug] Request downloaded ${percent}%`);
           lastPercent = percent;
         }
 
@@ -466,12 +471,19 @@ export async function _actuallySend (
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
-      // Build the body
-      const dataBuffers = [];
-      let dataBuffersLength = 0;
-      curl.on('data', chunk => {
-        dataBuffers.push(chunk);
-        dataBuffersLength += chunk.length;
+      let responseBodyBytes = 0;
+      const responsesDir = pathJoin(app.getPath('userData'), 'responses');
+      mkdirp.sync(responsesDir);
+      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.zip');
+      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
+      const gzip = zlib.createGzip();
+      gzip.pipe(responseBodyWriteStream);
+      curl.on('end', () => gzip.end());
+      curl.on('error', () => gzip.end());
+      setOpt(Curl.option.WRITEFUNCTION, (buff: Buffer) => {
+        responseBodyBytes += buff.length;
+        gzip.write(buff);
+        return buff.length;
       });
 
       // Handle Authorization header
@@ -612,9 +624,6 @@ export async function _actuallySend (
           }
         }
 
-        // Handle the body
-        const bodyBuffer = Buffer.concat(dataBuffers, dataBuffersLength);
-
         // Return the response data
         const responsePatch = {
           headers,
@@ -624,14 +633,17 @@ export async function _actuallySend (
           statusMessage,
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          bytesContent: bodyBuffer.length,
+          bytesContent: responseBodyBytes,
           url: curl.getInfo(Curl.info.EFFECTIVE_URL)
         };
 
         // Close the request
         curl.close();
 
-        respond(responsePatch, bodyBuffer);
+        // Make sure the response body has been fully written first
+        await waitForStreamToFinish(responseBodyWriteStream);
+
+        respond(responsePatch, responseBodyPath);
       });
 
       curl.on('error', function (err, code) {
@@ -656,7 +668,7 @@ export async function _actuallySend (
 export async function sendWithSettings (
   requestId: string,
   requestPatch: Object
-): Promise<SendResult> {
+): Promise<ResponsePatch> {
   const request = await models.request.getById(requestId);
   if (!request) {
     throw new Error(`Failed to find request: ${requestId}`);
@@ -696,7 +708,7 @@ export async function sendWithSettings (
 export async function send (
   requestId: string,
   environmentId: string
-): Promise<SendResult> | SendResult {
+): Promise<ResponsePatch> {
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way
@@ -778,13 +790,12 @@ async function _applyRequestPluginHooks (
 }
 
 async function _applyResponsePluginHooks (
-  response: ResponsePatch,
-  bodyBuffer: ?Buffer = null
+  response: ResponsePatch
 ): Promise<void> {
   for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
       ...pluginContexts.app.init(plugin),
-      ...pluginContexts.response.init(plugin, response, bodyBuffer)
+      ...pluginContexts.response.init(plugin, response)
     };
 
     try {

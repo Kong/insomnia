@@ -26,7 +26,8 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import {debounce, getContentDispositionHeader} from '../../common/misc';
+import {compress, debounce, getContentDispositionHeader} from '../../common/misc';
+import zlib from 'zlib';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -372,24 +373,36 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const {response: responsePatch, bodyBuffer} = await network.send(requestId, environmentId);
+      const {response: responsePatch} = await network.send(requestId, environmentId);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? header.value : null;
 
+      if (!responsePatch.bodyPath) {
+        return;
+      }
+
       if (responsePatch.statusCode >= 200 && responsePatch.statusCode < 300) {
-        const extension = mime.extension(responsePatch.contentType) || '';
+        const extension = mime.extension(responsePatch.contentType) || 'unknown';
         const name = nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+
         const filename = path.join(dir, name);
-        const partialResponse = Object.assign({}, responsePatch);
-        await models.response.create(partialResponse, `Saved to ${filename}`);
-        fs.writeFile(filename, bodyBuffer, err => {
-          if (err) {
-            console.warn('Failed to download request after sending', err);
-          }
+        const from = fs.createReadStream(responsePatch.bodyPath);
+        const to = fs.createWriteStream(filename);
+        const gunzip = zlib.createGunzip();
+        from.pipe(gunzip).pipe(to);
+
+        gunzip.on('end', async () => {
+          trackEvent('Response', 'Download After Save Success');
+          fs.writeFileSync(responsePatch.bodyPath, compress(`Saved to ${filename}`));
+          await models.response.create(responsePatch);
         });
-      } else {
-        await models.response.create(responsePatch, bodyBuffer);
+
+        gunzip.on('error', async err => {
+          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+          trackEvent('Response', 'Download After Save Failed');
+          await models.response.create(responsePatch);
+        });
       }
     } catch (err) {
       showAlert({
@@ -429,8 +442,8 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const {response: responsePatch, bodyBuffer} = await network.send(requestId, environmentId);
-      await models.response.create(responsePatch, bodyBuffer);
+      const responsePatch = await network.send(requestId, environmentId);
+      await models.response.create(responsePatch);
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {request, error: err});

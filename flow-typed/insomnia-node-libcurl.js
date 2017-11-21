@@ -1,7 +1,8 @@
 declare class Curl {
   static getVersion: () => string;
   static feature: {
-    NO_HEADER_PARSING: number
+    NO_HEADER_PARSING: number,
+    NO_DATA_PARSING: number
   };
   static option: {
     ACCEPT_ENCODING: number,
@@ -42,6 +43,7 @@ declare class Curl {
     USERAGENT: number,
     USERNAME: number,
     VERBOSE: number,
+    WRITEFUNCTION: number,
     XFERINFOFUNCTION: number,
   };
 

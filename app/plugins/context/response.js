@@ -1,12 +1,15 @@
 // @flow
 import type {Plugin} from '../';
 import type {ResponseHeader} from '../../models/response';
+import * as models from '../../models/index';
 
 type MaybeResponse = {
   parentId?: string,
   statusCode?: number,
   statusMessage?: string,
   bytesRead?: number,
+  bytesContent?: number,
+  bodyPath?: string,
   elapsedTime?: number,
   headers?: Array<ResponseHeader>
 }
@@ -43,7 +46,7 @@ export function init (
         return response.elapsedTime || 0;
       },
       getBody (): Buffer | null {
-        return bodyBuffer;
+        return models.response.getBodyBufferFromPath(response.bodyPath || '');
       },
       getHeader (name: string): string | Array<string> | null {
         const headers = response.headers || [];

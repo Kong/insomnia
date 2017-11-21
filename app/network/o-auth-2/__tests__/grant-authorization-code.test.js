@@ -2,6 +2,10 @@ import getToken from '../grant-authorization-code';
 import {createBWRedirectMock} from './helpers';
 import {globalBeforeEach} from '../../../__jest__/before-each';
 import * as network from '../../network';
+import fs from 'fs';
+import path from 'path';
+import {getTempDir} from '../../../common/constants';
+import {compress} from '../../../common/misc';
 
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
@@ -16,16 +20,18 @@ describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
   it('gets token with JSON and basic auth', async () => {
     createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    const bodyPath = path.join(getTempDir(), 'response.zip');
+
+    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+      access_token: 'token_123',
+      token_type: 'token_type',
+      scope: SCOPE
+    }))));
+
     network.sendWithSettings = jest.fn(() => ({
-      bodyBuffer: Buffer.from(JSON.stringify({
-        access_token: 'token_123',
-        token_type: 'token_type',
-        scope: SCOPE
-      })),
-      response: {
-        statusCode: 200,
-        headers: [{name: 'Content-Type', value: 'application/json'}]
-      }
+      bodyPath,
+      statusCode: 200,
+      headers: [{name: 'Content-Type', value: 'application/json'}]
     }));
 
     const result = await getToken(
@@ -75,16 +81,18 @@ describe('authorization_code', () => {
 
   it('gets token with urlencoded and body auth', async () => {
     createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    const bodyPath = path.join(getTempDir(), 'response.zip');
+
+    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+      access_token: 'token_123',
+      token_type: 'token_type',
+      scope: SCOPE
+    }))));
+
     network.sendWithSettings = jest.fn(() => ({
-      bodyBuffer: Buffer.from(JSON.stringify({
-        access_token: 'token_123',
-        token_type: 'token_type',
-        scope: SCOPE
-      })),
-      response: {
-        statusCode: 200,
-        headers: [{name: 'Content-Type', value: 'application/x-www-form-urlencoded'}]
-      }
+      bodyPath,
+      statusCode: 200,
+      headers: [{name: 'Content-Type', value: 'application/x-www-form-urlencoded'}]
     }));
 
     const result = await getToken(

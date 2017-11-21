@@ -58,17 +58,19 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(
+    const {bodyPath} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         COOKIELIST: [
@@ -119,17 +121,19 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(
+    const {bodyPath} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         POST: 1,
@@ -203,17 +207,19 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(
+    const {bodyPath} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -255,18 +261,20 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(
+    const {bodyPath} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
 
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         POST: 1,
@@ -320,47 +328,54 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(
+    const {bodyPath} = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
-
-    expect(body.options).toEqual({
-      POST: 1,
-      ACCEPT_ENCODING: '',
-      COOKIEFILE: '',
-      FOLLOWLOCATION: true,
-      CUSTOMREQUEST: 'POST',
-      HTTPHEADER: [
-        'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
-        'Expect: ',
-        'Transfer-Encoding: ',
-        'Accept: */*',
-        'Accept-Encoding: '
-      ],
-      INFILESIZE_LARGE: 244,
-      NOPROGRESS: false,
-      READDATA: [
-        `--${DEFAULT_BOUNDARY}`,
-        'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
-        'Content-Type: text/plain',
-        '',
-        fs.readFileSync(fileName),
-        `--${DEFAULT_BOUNDARY}`,
-        'Content-Disposition: form-data; name="a"',
-        '',
-        'AA',
-        `--${DEFAULT_BOUNDARY}--`,
-        ''
-      ].join('\r\n'),
-      PROXY: '',
-      TIMEOUT_MS: 0,
-      URL: 'http://localhost/',
-      UPLOAD: 1,
-      USERAGENT: `insomnia/${getAppVersion()}`,
-      VERBOSE: true
+    expect(body).toEqual({
+      meta: {},
+      features: {
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
+      },
+      options: {
+        POST: 1,
+        ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
+        FOLLOWLOCATION: true,
+        CUSTOMREQUEST: 'POST',
+        HTTPHEADER: [
+          'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
+          'Expect: ',
+          'Transfer-Encoding: ',
+          'Accept: */*',
+          'Accept-Encoding: '
+        ],
+        INFILESIZE_LARGE: 244,
+        NOPROGRESS: false,
+        READDATA: [
+          `--${DEFAULT_BOUNDARY}`,
+          'Content-Disposition: form-data; name="foo"; filename="testfile.txt"',
+          'Content-Type: text/plain',
+          '',
+          fs.readFileSync(fileName),
+          `--${DEFAULT_BOUNDARY}`,
+          'Content-Disposition: form-data; name="a"',
+          '',
+          'AA',
+          `--${DEFAULT_BOUNDARY}--`,
+          ''
+        ].join('\r\n'),
+        PROXY: '',
+        TIMEOUT_MS: 0,
+        URL: 'http://localhost/',
+        UPLOAD: 1,
+        USERAGENT: `insomnia/${getAppVersion()}`,
+        VERBOSE: true
+      }
     });
   });
 
@@ -376,13 +391,15 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -417,13 +434,15 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         NOBODY: 1,
@@ -457,13 +476,15 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         CUSTOMREQUEST: 'GET',
@@ -498,13 +519,15 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyBuffer} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
+    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
       features: {
-        NO_HEADER_PARSING: true
+        NO_HEADER_PARSING: true,
+        NO_DATA_PARSING: true
       },
       options: {
         CUSTOMREQUEST: 'GET',

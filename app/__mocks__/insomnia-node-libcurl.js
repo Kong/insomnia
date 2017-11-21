@@ -80,6 +80,7 @@ class Curl extends EventEmitter {
       }));
 
       this.emit('data', data);
+      this._options.WRITEFUNCTION(data);
 
       process.nextTick(() => {
         this.emit('end', 'NOT_USED', 'NOT_USED', [
@@ -121,7 +122,8 @@ Curl.netrc = {
 };
 
 Curl.feature = {
-  NO_HEADER_PARSING: 'NO_HEADER_PARSING'
+  NO_HEADER_PARSING: 'NO_HEADER_PARSING',
+  NO_DATA_PARSING: 'NO_DATA_PARSING'
 };
 
 Curl.option = {
@@ -162,6 +164,7 @@ Curl.option = {
   USERAGENT: 'USERAGENT',
   USERNAME: 'USERNAME',
   VERBOSE: 'VERBOSE',
+  WRITEFUNCTION: 'WRITEFUNCTION',
   XFERINFOFUNCTION: 'XFERINFOFUNCTION'
 };
 

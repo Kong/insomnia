@@ -111,13 +111,14 @@ async function _getToken (
     headers.push(getBasicAuthHeader(clientId, clientSecret));
   }
 
-  const {response, bodyBuffer} = await sendWithSettings(requestId, {
+  const response = await sendWithSettings(requestId, {
     headers,
     url,
     method: 'POST',
     body: models.request.newBodyFormUrlEncoded(params)
   });
 
+  const bodyBuffer = models.response.getBodyBufferFromPath(response.bodyPath || '');
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }
