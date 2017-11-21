@@ -23,7 +23,7 @@ export default class Logger {
   _log (type, message, ...args) {
     let fn;
     if (type === 'debug') {
-      fn = 'debug';
+      fn = 'log';
     } else if (type === 'warn') {
       fn = 'warn';
     } else {

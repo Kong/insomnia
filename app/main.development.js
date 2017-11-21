@@ -12,9 +12,6 @@ if (needsRestart) {
   process.exit(0);
 }
 
-// Fall back so client-side code works
-console.debug = console.debug || console.log;
-
 // Initialize some things
 database.init(models.types());
 errorHandling.init();
@@ -65,8 +62,8 @@ app.on('ready', async () => {
   // Install developer extensions if we're in dev mode
   // if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
   //   try {
-  //     console.debug('[main] Installed Extension: ' + await installExtension(REACT_DEVELOPER_TOOLS));
-  //     console.debug('[main] Installed Extension: ' + await installExtension(REDUX_DEVTOOLS));
+  //     console.log('[main] Installed Extension: ' + await installExtension(REACT_DEVELOPER_TOOLS));
+  //     console.log('[main] Installed Extension: ' + await installExtension(REDUX_DEVTOOLS));
   //   } catch (err) {
   //     console.warn('Failed to install devtools extension', err);
   //   }

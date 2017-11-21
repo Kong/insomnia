@@ -62,17 +62,17 @@ export async function init () {
   });
 
   autoUpdater.on('update-not-available', () => {
-    console.debug('[updater] Not Available');
+    console.log('[updater] Not Available');
     _sendUpdateComplete(false, 'Up to Date');
   });
 
   autoUpdater.on('update-available', () => {
-    console.debug('[updater] Update Available');
+    console.log('[updater] Update Available');
     _sendUpdateStatus('Downloading...');
   });
 
   autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
-    console.debug(`[updater] Downloaded ${releaseName}`);
+    console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateComplete(true, 'Updated (Restart Required)');
     _showUpdateNotification();
   });
@@ -119,13 +119,13 @@ async function _checkForUpdates (force: boolean) {
   const updateUrl = await getUpdateUrl(force);
 
   if (updateUrl === null) {
-    console.debug(`[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`);
+    console.log(`[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`);
     _sendUpdateComplete(false, 'Updates Not Supported');
     return;
   }
 
   try {
-    console.debug(`[updater] Checking for updates url=${updateUrl}`);
+    console.log(`[updater] Checking for updates url=${updateUrl}`);
     autoUpdater.setFeedURL(updateUrl);
     autoUpdater.checkForUpdates();
   } catch (err) {

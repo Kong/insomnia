@@ -225,7 +225,7 @@ export async function _actuallySend (
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
-          console.debug(`[debug] Request downloaded ${percent}%`);
+          console.log(`[debug] Request downloaded ${percent}%`);
           lastPercent = percent;
         }
 
@@ -279,7 +279,7 @@ export async function _actuallySend (
           // Doesn't exist yet, so write it
           mkdirp.sync(baseCAPath);
           fs.writeFileSync(fullCAPath, CACerts.blob);
-          console.debug('[net] Set CA to', fullCAPath);
+          console.log('[net] Set CA to', fullCAPath);
         }
 
         setOpt(Curl.option.CAINFO, fullCAPath);

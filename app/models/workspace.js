@@ -30,7 +30,6 @@ export async function migrate (doc: Workspace): Promise<Workspace> {
     process.nextTick(() => update(doc, {parentId: null}));
   }
 
-  await _ensureDependencies(doc);
   doc = await _migrateExtractClientCertificates(doc);
 
   return doc;
@@ -41,9 +40,7 @@ export function getById (id: string): Promise<Workspace | null> {
 }
 
 export async function create (patch: Object = {}): Promise<Workspace> {
-  const doc = await db.docCreate(type, patch);
-  await _ensureDependencies(doc);
-  return doc;
+  return db.docCreate(type, patch);
 }
 
 export async function all (): Promise<Array<Workspace>> {
@@ -67,11 +64,6 @@ export function update (workspace: Workspace, patch: Object): Promise<Workspace>
 
 export function remove (workspace: Workspace): Promise<void> {
   return db.remove(workspace);
-}
-
-async function _ensureDependencies (workspace: Workspace) {
-  await models.cookieJar.getOrCreateForParentId(workspace._id);
-  await models.environment.getOrCreateForWorkspaceId(workspace._id);
 }
 
 async function _migrateExtractClientCertificates (workspace: Workspace): Promise<Workspace> {
