@@ -80,6 +80,7 @@ class Curl extends EventEmitter {
       }));
 
       this.emit('data', data);
+      this._options.WRITEFUNCTION(data);
 
       process.nextTick(() => {
         this.emit('end', 'NOT_USED', 'NOT_USED', [

@@ -36,7 +36,7 @@ export default async function (
 
   const url = setDefaultProtocol(accessTokenUrl);
 
-  const {response, bodyBuffer} = await sendWithSettings(requestId, {
+  const response = await sendWithSettings(requestId, {
     headers,
     url,
     method: 'POST',
@@ -48,6 +48,7 @@ export default async function (
     throw new Error(`[oauth2] Failed to refresh token url=${url} status=${statusCode}`);
   }
 
+  const bodyBuffer = models.response.getBodyBufferFromPath(response.bodyPath || '');
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }

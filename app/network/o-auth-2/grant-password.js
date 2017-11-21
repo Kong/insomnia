@@ -38,13 +38,14 @@ export default async function (
 
   const url = setDefaultProtocol(accessTokenUrl);
 
-  const {response, bodyBuffer} = await network.sendWithSettings(requestId, {
+  const response = await network.sendWithSettings(requestId, {
     url,
     headers,
     method: 'POST',
     body: models.request.newBodyFormUrlEncoded(params)
   });
 
+  const bodyBuffer = models.response.getBodyBufferFromPath(response.bodyPath || '');
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }

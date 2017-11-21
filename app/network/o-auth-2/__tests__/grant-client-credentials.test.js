@@ -1,6 +1,10 @@
 import getToken from '../grant-client-credentials';
 import {globalBeforeEach} from '../../../__jest__/before-each';
+import path from 'path';
+import fs from 'fs';
 import * as network from '../../network';
+import {getTempDir} from '../../../common/constants';
+import {compress} from '../../../common/misc';
 
 // Mock some test things
 const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
@@ -11,16 +15,18 @@ const SCOPE = 'scope_123';
 describe('client_credentials', () => {
   beforeEach(globalBeforeEach);
   it('gets token with JSON and basic auth', async () => {
+    const bodyPath = path.join(getTempDir(), 'response.zip');
+
+    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+      access_token: 'token_123',
+      token_type: 'token_type',
+      scope: SCOPE
+    }))));
+
     network.sendWithSettings = jest.fn(() => ({
-      bodyBuffer: Buffer.from(JSON.stringify({
-        access_token: 'token_123',
-        token_type: 'token_type',
-        scope: SCOPE
-      })),
-      response: {
-        statusCode: 200,
-        headers: [{name: 'Content-Type', value: 'application/json'}]
-      }
+      bodyPath,
+      statusCode: 200,
+      headers: [{name: 'Content-Type', value: 'application/json'}]
     }));
 
     const result = await getToken(
@@ -63,16 +69,18 @@ describe('client_credentials', () => {
   });
 
   it('gets token with urlencoded and body auth', async () => {
+    const bodyPath = path.join(getTempDir(), 'response.zip');
+
+    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+      access_token: 'token_123',
+      token_type: 'token_type',
+      scope: SCOPE
+    }))));
+
     network.sendWithSettings = jest.fn(() => ({
-      bodyBuffer: Buffer.from(JSON.stringify({
-        access_token: 'token_123',
-        token_type: 'token_type',
-        scope: SCOPE
-      })),
-      response: {
-        statusCode: 200,
-        headers: [{name: 'Content-Type', value: 'application/x-www-form-urlencoded'}]
-      }
+      bodyPath,
+      statusCode: 200,
+      headers: [{name: 'Content-Type', value: 'application/x-www-form-urlencoded'}]
     }));
 
     const result = await getToken(

@@ -1,6 +1,7 @@
 import * as packageJSON from '../package.json';
 import * as electron from 'electron';
 import path from 'path';
+import mkdirp from 'mkdirp';
 
 // App Stuff
 
@@ -27,7 +28,9 @@ export function getAppEnvironment () {
 export function getTempDir () {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
   const {app} = electron.remote || electron;
-  return path.join(app.getPath('temp'), `insomnia_${getAppVersion()}`);
+  const dir = path.join(app.getPath('temp'), `insomnia_${getAppVersion()}`);
+  mkdirp.sync(dir);
+  return dir;
 }
 
 export function isMac () {

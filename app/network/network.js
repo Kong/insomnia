@@ -48,11 +48,6 @@ export type ResponsePatch = {
   timeline?: Array<ResponseTimelineEntry>
 };
 
-export type SendResult = {
-  bodyBuffer: ?Buffer,
-  response: ResponsePatch
-};
-
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
@@ -69,7 +64,7 @@ export async function _actuallySend (
   renderedRequest: RenderedRequest,
   workspace: Workspace,
   settings: Settings
-): Promise<SendResult> {
+): Promise<ResponsePatch> {
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
 
@@ -86,9 +81,7 @@ export async function _actuallySend (
         settingStoreCookies: renderedRequest.settingStoreCookies
       }: ResponsePatch), patch);
 
-      // TODO: Remove the need for bodyBuffer
-      const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath || '');
-      resolve({bodyBuffer, response});
+      resolve(response);
 
       // Apply plugin hooks and don't wait for them and don't throw from them
       process.nextTick(async () => {
@@ -675,7 +668,7 @@ export async function _actuallySend (
 export async function sendWithSettings (
   requestId: string,
   requestPatch: Object
-): Promise<SendResult> {
+): Promise<ResponsePatch> {
   const request = await models.request.getById(requestId);
   if (!request) {
     throw new Error(`Failed to find request: ${requestId}`);
@@ -715,7 +708,7 @@ export async function sendWithSettings (
 export async function send (
   requestId: string,
   environmentId: string
-): Promise<SendResult> | SendResult {
+): Promise<ResponsePatch> {
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way

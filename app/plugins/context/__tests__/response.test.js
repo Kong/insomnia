@@ -1,5 +1,9 @@
 import * as plugin from '../response';
 import {globalBeforeEach} from '../../../__jest__/before-each';
+import {getTempDir} from '../../../common/constants';
+import {compress} from '../../../common/misc';
+import fs from 'fs';
+import path from 'path';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -34,7 +38,10 @@ describe('init()', () => {
 describe('response.*', () => {
   beforeEach(globalBeforeEach);
   it('works for basic and full response', async () => {
+    const bodyPath = path.join(getTempDir(), 'response.zip');
+    fs.writeFileSync(bodyPath, compress(Buffer.from('Hello World!')));
     const response = {
+      bodyPath,
       parentId: 'req_1',
       url: 'https://insomnia.rest',
       statusCode: 200,
@@ -42,7 +49,7 @@ describe('response.*', () => {
       bytesRead: 123,
       elapsedTime: 321
     };
-    const result = plugin.init(PLUGIN, response, Buffer.from('Hello World!'));
+    const result = plugin.init(PLUGIN, response);
     expect(result.response.getRequestId()).toBe('req_1');
     expect(result.response.getStatusCode()).toBe(200);
     expect(result.response.getBytesRead()).toBe(123);
@@ -56,7 +63,7 @@ describe('response.*', () => {
     expect(result.response.getStatusCode()).toBe(0);
     expect(result.response.getBytesRead()).toBe(0);
     expect(result.response.getTime()).toBe(0);
-    expect(result.response.getBody()).toBeNull();
+    expect(result.response.getBody().length).toBe(0);
   });
 
   it('works for getting headers', () => {

@@ -442,7 +442,7 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const {response: responsePatch} = await network.send(requestId, environmentId);
+      const responsePatch = await network.send(requestId, environmentId);
       await models.response.create(responsePatch);
     } catch (err) {
       if (err.type === 'render') {
