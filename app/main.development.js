@@ -16,10 +16,10 @@ if (needsRestart) {
 console.debug = console.debug || console.log;
 
 // Initialize some things
+database.init(models.types());
 errorHandling.init();
 updates.init();
 windowUtils.init();
-database.init(models.types());
 
 function addUrlToOpen (e, url) {
   e.preventDefault();

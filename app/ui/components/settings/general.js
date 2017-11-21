@@ -1,24 +1,36 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
-import {isMac} from '../../../common/constants';
+import {isMac, isWindows, UPDATE_CHANNEL_BETA, UPDATE_CHANNEL_STABLE} from '../../../common/constants';
+import type {Settings} from '../../../models/settings';
+import Wrap from '../wrap';
+import CheckForUpdatesButton from '../check-for-updates-button';
+
+type Props = {
+  settings: Settings,
+  updateSetting: Function,
+  handleToggleMenuBar: Function
+};
 
 @autobind
-class General extends PureComponent {
-  _handleUpdateSetting (e) {
-    let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+class General extends React.PureComponent<Props> {
+  _handleUpdateSetting (e: SyntheticEvent<HTMLInputElement>) {
+    const el = e.currentTarget;
+    let value = el.type === 'checkbox' ? el.checked : el.value;
 
     if (e.target.type === 'number') {
       value = parseInt(value, 10);
     }
 
-    this.props.updateSetting(e.target.name, value);
+    this.props.updateSetting(el.name, value);
+
+    return value;
   }
 
-  _handleToggleMenuBar (e) {
-    this._handleUpdateSetting(e);
-    this.props.handleToggleMenuBar(e.target.checked);
+  _handleToggleMenuBar (e: SyntheticEvent<HTMLInputElement>) {
+    const value = this._handleUpdateSetting(e);
+    this.props.handleToggleMenuBar(value);
   }
 
   render () {
@@ -231,8 +243,42 @@ class General extends PureComponent {
           </div>
         </div>
 
-        <hr className="pad-top"/>
+        {isWindows() || isMac() ? (
+          <Wrap>
+            <hr className="pad-top"/>
+            <div>
+              <div className="pull-right">
+                <CheckForUpdatesButton className="btn btn--outlined btn--super-duper-compact">
+                  Check Now
+                </CheckForUpdatesButton>
+              </div>
+              <h2>Software Updates</h2>
+            </div>
+            <div className="form-control form-control--thin">
+              <label className="inline-block">Automatically download and install updates
+                <HelpTooltip className="space-left">
+                  If disabled, you will receive a notification when a new update is available
+                </HelpTooltip>
+                <input type="checkbox"
+                       name="updateAutomatically"
+                       checked={settings.updateAutomatically}
+                       onChange={this._handleUpdateSetting}/>
+              </label>
+            </div>
+            <div className="form-control form-control--outlined pad-top-sm">
+              <label>Update Channel
+                <select value={settings.updateChannel}
+                        name="updateChannel"
+                        onChange={this._handleUpdateSetting}>
+                  <option value={UPDATE_CHANNEL_STABLE}>Stable (Recommended)</option>
+                  <option value={UPDATE_CHANNEL_BETA}>Stable and Beta</option>
+                </select>
+              </label>
+            </div>
+          </Wrap>
+        ) : null}
 
+        <hr className="pad-top"/>
         <h2>Plugins</h2>
 
         <div className="form-control form-control--outlined">
@@ -252,11 +298,5 @@ class General extends PureComponent {
     );
   }
 }
-
-General.propTypes = {
-  settings: PropTypes.object.isRequired,
-  updateSetting: PropTypes.func.isRequired,
-  handleToggleMenuBar: PropTypes.func.isRequired
-};
 
 export default General;

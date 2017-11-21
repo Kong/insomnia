@@ -5,6 +5,7 @@ import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import {DB_PERSIST_INTERVAL} from './constants';
+import uuid from 'uuid';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
@@ -521,7 +522,7 @@ export const duplicate = database.duplicate = async function <T: BaseModel> (
 
 async function _send<T> (fnName: string, ...args: Array<any>): Promise<T> {
   return new Promise((resolve, reject) => {
-    const replyChannel = `db.fn.reply:${Math.random().toString().replace('0.', '')}`;
+    const replyChannel = `db.fn.reply:${uuid.v4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
     electron.ipcRenderer.once(replyChannel, (e, result) => {
       resolve(result);

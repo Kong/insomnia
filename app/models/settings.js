@@ -1,6 +1,7 @@
 // @flow
 import type {BaseModel} from './index';
 import * as db from '../common/database';
+import {UPDATE_CHANNEL_STABLE} from '../common/constants';
 
 type BaseSettings = {
   showPasswords: boolean,
@@ -23,7 +24,9 @@ type BaseSettings = {
   disableAnalyticsTracking: boolean,
   pluginPath: string,
   nunjucksPowerUserMode: boolean,
-  deviceId: string | null
+  deviceId: string | null,
+  updateChannel: string,
+  updateAutomatically: boolean
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -55,7 +58,9 @@ export function init (): BaseSettings {
     disableAnalyticsTracking: false,
     pluginPath: '',
     nunjucksPowerUserMode: false,
-    deviceId: null
+    deviceId: null,
+    updateChannel: UPDATE_CHANNEL_STABLE,
+    updateAutomatically: true
   };
 }
 

@@ -24,8 +24,8 @@ install:
   - npm test
 
 cache:
-  - '%APPDATA%\npm-cache -> package.json'
-  - '%USERPROFILE%\.electron -> package.json'
+  - '%APPDATA%\npm-cache -> package-lock.json'
+  - '%USERPROFILE%\.electron -> package-lock.json'
 
 #---------------------------------#
 #       tests configuration       #

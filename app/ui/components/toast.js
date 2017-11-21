@@ -40,6 +40,7 @@ class Toast extends PureComponent {
     }
 
     const stats = await models.stats.get();
+    const settings = await models.settings.getOrCreate();
 
     let notification;
 
@@ -54,7 +55,10 @@ class Toast extends PureComponent {
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type)
+        workspaces: await db.count(models.workspace.type),
+        updatesNotSupported: constants.isLinux(),
+        autoUpdatesDisabled: !settings.updateAutomatically,
+        updateChannel: !settings.updateChannel
       };
 
       notification = await fetch.post(`/notification`, data);

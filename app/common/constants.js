@@ -77,6 +77,12 @@ export function joinHotKeys (keys) {
   return keys.join(isMac() ? '' : '+');
 }
 
+// Updates
+export const UPDATE_CHANNEL_STABLE = 'stable';
+export const UPDATE_CHANNEL_BETA = 'beta';
+export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
+export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
+
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;

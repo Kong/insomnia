@@ -154,7 +154,11 @@ export function getPrivateKey () {
 }
 
 export function getCurrentSessionId () {
-  return window.localStorage.getItem('currentSessionId');
+  if (window) {
+    return window.localStorage.getItem('currentSessionId');
+  } else {
+    return false;
+  }
 }
 
 export function getAccountId () {
@@ -180,7 +184,7 @@ export function getFullName () {
  */
 export function getSessionData () {
   const sessionId = getCurrentSessionId();
-  if (!sessionId) {
+  if (!sessionId || !window) {
     return {};
   }
 
