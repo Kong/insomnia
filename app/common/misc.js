@@ -1,5 +1,6 @@
 // @flow
 import * as electron from 'electron';
+import {Readable, Writable} from 'stream';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
@@ -370,4 +371,24 @@ export function getScreenResolution (): string {
 export function getUserLanguage (): string {
   const {app} = electron.remote || electron;
   return app.getLocale();
+}
+
+export async function waitForStreamToFinish (s: Readable | Writable): Promise<void> {
+  return new Promise(resolve => {
+    if (s.hasOwnProperty('readable') && !s.readable) {
+      return resolve();
+    }
+
+    if (s.hasOwnProperty('writable') && !s.writable) {
+      return resolve();
+    }
+
+    s.on('finish', () => {
+      resolve();
+    });
+
+    s.on('error', () => {
+      resolve();
+    });
+  });
 }

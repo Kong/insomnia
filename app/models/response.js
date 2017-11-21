@@ -91,7 +91,10 @@ export function remove (response: Response) {
   return db.remove(response);
 }
 
-export async function findRecentForRequest (requestId: string, limit: number): Promise<Array<Response>> {
+export async function findRecentForRequest (
+  requestId: string,
+  limit: number
+): Promise<Array<Response>> {
   const responses = await db.findMostRecentlyModified(type, {parentId: requestId}, limit);
   return responses;
 }
@@ -102,7 +105,7 @@ export async function getLatestForRequest (requestId: string): Promise<Response 
   return response || null;
 }
 
-export async function create (patch: Object = {}, bodyBuffer: Buffer | null = null) {
+export async function create (patch: Object = {}) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
@@ -120,8 +123,7 @@ export async function create (patch: Object = {}, bodyBuffer: Buffer | null = nu
   await db.removeWhere(type, {parentId, _id: {$nin: recentIds}});
 
   // Actually create the new response
-  const bodyPath = bodyBuffer ? storeBodyBuffer(bodyBuffer) : '';
-  return db.docCreate(type, {bodyPath}, patch);
+  return db.docCreate(type, patch);
 }
 
 export function getLatestByParentId (parentId: string) {
@@ -129,13 +131,17 @@ export function getLatestByParentId (parentId: string) {
 }
 
 export function getBodyBuffer (response: Response, readFailureValue: any = null) {
+  return getBodyBufferFromPath(response.bodyPath, readFailureValue);
+}
+
+export function getBodyBufferFromPath (path: string, readFailureValue: any = null) {
   // No body, so return empty Buffer
-  if (!response.bodyPath) {
+  if (!path) {
     return Buffer.alloc(0);
   }
 
   try {
-    return decompress(fs.readFileSync(response.bodyPath));
+    return decompress(fs.readFileSync(path));
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return readFailureValue;

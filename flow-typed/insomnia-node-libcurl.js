@@ -43,6 +43,7 @@ declare class Curl {
     USERAGENT: number,
     USERNAME: number,
     VERBOSE: number,
+    WRITEFUNCTION: number,
     XFERINFOFUNCTION: number,
   };
 
