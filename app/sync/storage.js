@@ -210,7 +210,7 @@ export function initDB (config, forceReset) {
     }
 
     // Done
-    console.debug(`[sync] Initialize Sync DB at ${basePath}`);
+    console.log(`[sync] Initialize Sync DB at ${basePath}`);
   }
 }
 

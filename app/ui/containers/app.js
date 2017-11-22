@@ -747,7 +747,7 @@ class App extends PureComponent {
       }
 
       if (e.dataTransfer.files.length === 0) {
-        console.debug('[drag] Ignored drop event because no files present');
+        console.log('[drag] Ignored drop event because no files present');
         return;
       }
 
@@ -1013,7 +1013,7 @@ async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
         // If sort keys get too close together, we need to redistribute the list. This is
         // not performant at all (need to update all siblings in DB), but it is extremely rare
         // anyway
-        console.debug(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
+        console.log(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
 
         db.bufferChanges(300);
         docs.map((r, i) => __updateDoc(r, {metaSortKey: i * 100, parentId}));

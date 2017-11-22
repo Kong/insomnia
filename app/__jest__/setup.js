@@ -16,7 +16,6 @@ const localStorageMock = (function () {
   };
 })();
 
-global.console.debug = global.console.log;
 global.localStorage = localStorageMock;
 global.requestAnimationFrame = cb => process.nextTick(cb);
 global.require = require;

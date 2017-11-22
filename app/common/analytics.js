@@ -69,7 +69,7 @@ export async function _trackEvent (
   value: ?string
 ) {
   const prefix = interactive ? '[ga] Event' : '[ga] Non-interactive';
-  console.debug(prefix, [category, action, label, value].filter(Boolean).join(', '));
+  console.log(prefix, [category, action, label, value].filter(Boolean).join(', '));
 
   const params = [
     {name: KEY_HIT_TYPE, value: 'event'},
@@ -86,7 +86,7 @@ export async function _trackEvent (
 
 async function _trackPageView () {
   const params = [{name: KEY_HIT_TYPE, value: 'pageview'}];
-  console.debug('[ga] Page', GA_LOCATION);
+  console.log('[ga] Page', GA_LOCATION);
   await _sendToGoogle(params);
 }
 
@@ -129,7 +129,7 @@ async function _getDefaultParams (): Promise<Array<RequestParameter>> {
 async function _sendToGoogle (params: Array<RequestParameter>) {
   let settings = await models.settings.getOrCreate();
   if (settings.disableAnalyticsTracking) {
-    console.debug('[ga] Google analytics tracking disabled. Not sending');
+    console.log('[ga] Google analytics tracking disabled. Not sending');
     return;
   }
 

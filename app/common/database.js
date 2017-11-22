@@ -37,7 +37,7 @@ export async function initClient () {
       await fn(changes);
     }
   });
-  console.debug('[db] Initialized DB client');
+  console.log('[db] Initialized DB client');
 }
 
 export async function init (
@@ -81,7 +81,7 @@ export async function init (
     e.sender.send(replyChannel, result);
   });
 
-  console.debug(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+  console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
 }
 
 // ~~~~~~~~~~~~~~~~ //
