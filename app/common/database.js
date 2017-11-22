@@ -81,7 +81,12 @@ export async function init (
     e.sender.send(replyChannel, result);
   });
 
-  await _repairDatabase();
+  // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to
+  // hang indefinitely for some reason.
+  // TODO: Figure out why this makes tests hang
+  if (!config.inMemoryOnly) {
+    await _repairDatabase();
+  }
 
   if (!config.inMemoryOnly) {
     console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
