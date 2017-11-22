@@ -113,7 +113,7 @@ export const bufferChanges = database.bufferChanges = async function (millis: nu
 
 export const flushChangesAsync = database.flushChangesAsync = async function (): Promise<void> {
   process.nextTick(async () => {
-    await this.flushChanges();
+    await flushChanges();
   });
 };
 

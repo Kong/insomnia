@@ -366,7 +366,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(resource.removed).toBe(false);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(9);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(5);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });
@@ -389,7 +389,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(updatedResource.removed).toBe(true);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(9);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(5);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });

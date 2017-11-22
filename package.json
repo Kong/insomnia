@@ -141,7 +141,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "file-loader": "^1.1.5",
     "flow-bin": "^0.58.0",
-    "jest": "^19.0.2",
+    "jest": "^21.2.1",
     "less": "^2.7.2",
     "less-loader": "^4.0.5",
     "ncp": "^2.0.0",
