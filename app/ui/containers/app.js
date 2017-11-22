@@ -14,11 +14,11 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, {TAB_INDEX_SHORTCUTS} from '../components/modals/settings-modal';
-import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
+import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent, trackNonInteractiveEvent} from '../../common/analytics';
+import {trackEvent} from '../../common/analytics';
 import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
@@ -665,17 +665,6 @@ class App extends PureComponent {
     // Update title
     this._updateDocumentTitle();
 
-    // Update Stats Object
-    const {lastVersion, launches} = await models.stats.get();
-    const firstLaunch = !lastVersion;
-    if (firstLaunch) {
-      trackNonInteractiveEvent('General', 'First Launch', getAppVersion());
-    } else if (lastVersion !== getAppVersion()) {
-      trackNonInteractiveEvent('General', 'Updated', getAppVersion());
-    } else {
-      trackNonInteractiveEvent('General', 'Launched', getAppVersion());
-    }
-
     db.onChange(async changes => {
       for (const change of changes) {
         const [
@@ -704,12 +693,6 @@ class App extends PureComponent {
           console.log('[App] Forcing update from request change', change);
         }
       }
-    });
-
-    models.stats.update({
-      launches: launches + 1,
-      lastLaunch: Date.now(),
-      lastVersion: getAppVersion()
     });
 
     ipcRenderer.on('toggle-preferences', () => {
@@ -768,10 +751,11 @@ class App extends PureComponent {
 
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
 
-    process.nextTick(() => ipcRenderer.send('app-ready'));
-
     // handle this
     this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
+
+    // Give it a bit before letting the backend know it's ready
+    setTimeout(() => ipcRenderer.send('window-ready'), 500);
   }
 
   componentWillUnmount () {

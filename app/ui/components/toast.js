@@ -1,39 +1,71 @@
-import React, {PureComponent} from 'react';
+// @flow
+import * as React from 'react';
+import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import GravatarImg from './gravatar-img';
 import Link from './base/link';
 import * as fetch from '../../common/fetch';
-import {trackEvent} from '../../common/analytics';
+import {trackEvent, trackNonInteractiveEvent} from '../../common/analytics';
 import * as models from '../../models/index';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
+export type ToastNotification = {
+  key: string,
+  url: string,
+  cta: string,
+  message: string,
+  email: string
+};
+
+type Props = {};
+
+type State = {
+  notification: ToastNotification | null,
+  visible: boolean
+};
+
 @autobind
-class Toast extends PureComponent {
-  constructor (props) {
+class Toast extends React.PureComponent<Props, State> {
+  _interval: any;
+
+  constructor (props: Props) {
     super(props);
-    this.state = {notification: null, visible: false};
+    this.state = {
+      notification: null,
+      visible: false
+    };
   }
 
   _handlePostCTACleanup () {
-    trackEvent('Notification', 'Click', this.state.notification.key);
+    const {notification} = this.state;
+    if (!notification) {
+      return;
+    }
+
+    trackEvent('Notification', 'Click', notification.key);
     this._dismissNotification();
   }
 
   _handleCancelClick () {
-    trackEvent('Notification', 'Dismiss', this.state.notification.key);
+    const {notification} = this.state;
+    if (!notification) {
+      return;
+    }
+
+    trackEvent('Notification', 'Dismiss', notification.key);
     this._dismissNotification();
   }
 
-  _hasSeenNotification (notification) {
+  _hasSeenNotification (notification: ToastNotification) {
     const seenNotifications = this._loadSeen();
     return seenNotifications[notification.key];
   }
 
-  async _handleCheckNotifications () {
+  async _checkForNotifications () {
     // If there is a notification open, skip check
     if (this.state.notification) {
       return;
@@ -42,12 +74,11 @@ class Toast extends PureComponent {
     const stats = await models.stats.get();
     const settings = await models.settings.getOrCreate();
 
-    let notification;
+    let notification: ToastNotification;
 
     // Try fetching user notification
     try {
       const data = {
-        lastLaunch: stats.lastLaunch,
         firstLaunch: stats.created,
         launches: stats.launches,
         platform: constants.getAppPlatform(),
@@ -66,6 +97,10 @@ class Toast extends PureComponent {
       console.warn('[toast] Failed to fetch user notifications', err);
     }
 
+    this._handleNotification(notification);
+  }
+
+  _handleNotification (notification: ?ToastNotification) {
     // No new notifications
     if (!notification || this._hasSeenNotification(notification)) {
       return;
@@ -82,6 +117,9 @@ class Toast extends PureComponent {
 
     // Fade the notification in
     setTimeout(() => this.setState({visible: true}), 1000);
+
+    // Track it
+    trackNonInteractiveEvent('Notification', 'Shown', notification.key);
   }
 
   _loadSeen () {
@@ -103,17 +141,26 @@ class Toast extends PureComponent {
 
     // Give time for toast to fade out, then remove it
     setTimeout(() => {
-      this.setState({notification: null});
+      this.setState({notification: null}, async () => {
+        await this._checkForNotifications();
+      });
     }, 1000);
   }
 
+  _listenerShowNotification (e: any, notification: ToastNotification) {
+    console.log('[toast] Received notification ' + notification.key);
+    this._handleNotification(notification);
+  }
+
   componentDidMount () {
-    setTimeout(this._handleCheckNotifications, 1000 * 10);
-    this._interval = setInterval(this._handleCheckNotifications, 1000 * 60 * 30);
+    setTimeout(this._checkForNotifications, 1000 * 10);
+    this._interval = setInterval(this._checkForNotifications, 1000 * 60 * 30);
+    electron.ipcRenderer.on('show-notification', this._listenerShowNotification);
   }
 
   componentWillUnmount () {
     clearInterval(this._interval);
+    electron.ipcRenderer.removeListener('show-notification', this._listenerShowNotification);
   }
 
   render () {
