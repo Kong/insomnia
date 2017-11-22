@@ -147,17 +147,20 @@ class Toast extends React.PureComponent<Props, State> {
     }, 1000);
   }
 
+  _listenerShowNotification (e: any, notification: ToastNotification) {
+    console.log('[toast] Received notification ' + notification.key);
+    this._handleNotification(notification);
+  }
+
   componentDidMount () {
     setTimeout(this._checkForNotifications, 1000 * 10);
     this._interval = setInterval(this._checkForNotifications, 1000 * 60 * 30);
-    electron.ipcRenderer.on('show-notification', (e: any, notification: ToastNotification) => {
-      console.log('[toast] Received notification ' + notification.key);
-      this._handleNotification(notification);
-    });
+    electron.ipcRenderer.on('show-notification', this._listenerShowNotification);
   }
 
   componentWillUnmount () {
     clearInterval(this._interval);
+    electron.ipcRenderer.removeListener('show-notification', this._listenerShowNotification);
   }
 
   render () {
