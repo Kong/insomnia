@@ -25,21 +25,29 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount () {
-    electron.ipcRenderer.on('updater.check.status', (e, status) => {
-      if (this.state.checking) {
-        this.setState({status});
-      }
-    });
+  _listenerCheckComplete (e: any, updateAvailable: true, status: string) {
+    this.setState({status, updateAvailable});
+  }
 
-    electron.ipcRenderer.on('updater.check.complete', (e, updateAvailable, status) => {
-      this.setState({checking: false, status, updateAvailable});
-    });
+  _listenerCheckStatus (e: any, status: string) {
+    if (this.state.checking) {
+      this.setState({status});
+    }
   }
 
   _handleCheckForUpdates () {
     electron.ipcRenderer.send('updater.check');
     this.setState({checking: true});
+  }
+
+  componentDidMount () {
+    electron.ipcRenderer.on('updater.check.status', this._listenerCheckStatus);
+    electron.ipcRenderer.on('updater.check.complete', this._listenerCheckComplete);
+  }
+
+  componentWillUnmount () {
+    electron.ipcRenderer.removeListener('updater.check.complete', this._listenerCheckComplete);
+    electron.ipcRenderer.removeListener('updater.check.status', this._listenerCheckStatus);
   }
 
   render () {

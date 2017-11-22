@@ -1,36 +1,51 @@
+// @flow
 import needsRestart from 'electron-squirrel-startup';
-import electron from 'electron';
-import {isDevelopment, isMac} from './common/constants';
+import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
+import {getAppVersion, isDevelopment, isMac} from './common/constants';
+import {trackNonInteractiveEvent} from './common/analytics';
+import type {ToastNotification} from './ui/components/toast';
+import type {Stats} from './models/stats';
 
 // Handle potential auto-update
 if (needsRestart) {
   process.exit(0);
 }
 
-// Initialize some things
-database.init(models.types());
-errorHandling.init();
-updates.init();
-windowUtils.init();
-
-function addUrlToOpen (e, url) {
-  e.preventDefault();
-  args.push(url);
-}
-
 const {app, ipcMain, session} = electron;
+const commandLineArgs = process.argv.slice(1);
 
-const args = process.argv.slice(1);
+// So if (window) checks don't throw
+global.window = global.window || undefined;
+
+// When the app is first launched
+app.on('ready', async () => {
+  // Init some important things first
+  await database.init(models.types());
+  await errorHandling.init();
+  await windowUtils.init();
+
+  // Init the app
+  await _trackStats();
+  await _launchApp();
+
+  // Init the rest
+  await updates.init();
+});
 
 // Set as default protocol
 app.setAsDefaultProtocolClient(`insomnia${isDevelopment() ? 'dev' : ''}`);
 
-app.on('open-url', addUrlToOpen);
+function _addUrlToOpen (e, url) {
+  e.preventDefault();
+  commandLineArgs.push(url);
+}
+
+app.on('open-url', _addUrlToOpen);
 
 // Enable this for CSS grid layout :)
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
@@ -56,25 +71,13 @@ app.on('activate', (e, hasVisibleWindows) => {
   }
 });
 
-// When the app is first launched
-app.on('ready', async () => {
-  // TODO: Fix these. They stopped working
-  // Install developer extensions if we're in dev mode
-  // if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
-  //   try {
-  //     console.log('[main] Installed Extension: ' + await installExtension(REACT_DEVELOPER_TOOLS));
-  //     console.log('[main] Installed Extension: ' + await installExtension(REDUX_DEVTOOLS));
-  //   } catch (err) {
-  //     console.warn('Failed to install devtools extension', err);
-  //   }
-  // }
-
-  app.removeListener('open-url', addUrlToOpen);
+function _launchApp () {
+  app.removeListener('open-url', _addUrlToOpen);
   const window = windowUtils.createWindow();
 
   // Handle URLs sent via command line args
-  ipcMain.once('app-ready', () => {
-    args.length && window.send('run-command', args[0]);
+  ipcMain.once('window-ready', () => {
+    commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
   });
 
   // Called when second instance launched with args (Windows)
@@ -95,6 +98,53 @@ app.on('ready', async () => {
   // Don't send origin header from Insomnia app because we're not technically using CORS
   session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
     delete details.requestHeaders['Origin'];
-    fn({ cancel: false, requestHeaders: details.requestHeaders });
+    fn({cancel: false, requestHeaders: details.requestHeaders});
   });
-});
+}
+
+async function _trackStats () {
+  // Handle the stats
+  const oldStats = await models.stats.get();
+  const stats: Stats = await models.stats.update({
+    currentLaunch: Date.now(),
+    lastLaunch: oldStats.currentLaunch,
+    currentVersion: getAppVersion(),
+    lastVersion: oldStats.currentVersion,
+    launches: oldStats.launches + 1
+  });
+
+  // Update Stats Object
+  const firstLaunch = stats.launches === 1;
+  const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
+
+  if (firstLaunch) {
+    trackNonInteractiveEvent('General', 'First Launch', stats.currentVersion);
+  } else if (justUpdated) {
+    trackNonInteractiveEvent('General', 'Updated', stats.currentVersion);
+  } else {
+    trackNonInteractiveEvent('General', 'Launched', stats.currentVersion);
+  }
+
+  ipcMain.once('window-ready', () => {
+    const {currentVersion} = stats;
+    if (!justUpdated || !currentVersion) {
+      return;
+    }
+
+    const {BrowserWindow} = electron;
+    const notification: ToastNotification = {
+      key: `updated-${currentVersion}`,
+      url: `https://insomnia.rest/changelog/${currentVersion}/`,
+      cta: 'See What\'s New',
+      message: `Updated to ${currentVersion}`,
+      email: 'support@insomnia.rest'
+    };
+
+    // Wait a bit before showing the user because the app just launched.
+    setTimeout(() => {
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.send('show-notification', notification);
+      }
+    }, 5000);
+  });
+}

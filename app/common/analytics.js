@@ -41,7 +41,7 @@ export function trackEvent (
   });
 }
 
-export async function trackNonInteractiveEvent (
+export function trackNonInteractiveEvent (
   category: string,
   action: string,
   label: ?string,
@@ -52,8 +52,10 @@ export async function trackNonInteractiveEvent (
   });
 }
 
-export async function trackPageView () {
-  await _trackPageView();
+export function trackPageView () {
+  process.nextTick(async () => {
+    await _trackPageView();
+  });
 }
 
 // ~~~~~~~~~~~~~~~~~ //
