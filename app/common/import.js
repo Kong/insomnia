@@ -1,14 +1,14 @@
 import {convert} from 'insomnia-importers';
-import * as db from '../common/database';
-import * as har from '../common/har';
+import * as db from './database';
+import * as har from './har';
 import * as models from '../models/index';
-import {getAppVersion} from '../common/constants';
-import * as misc from '../common/misc';
-import {showModal} from './components/modals/index';
-import AlertModal from './components/modals/alert-modal';
-import * as fetch from '../common/fetch';
+import {getAppVersion} from './constants';
+import * as misc from './misc';
+import {showModal} from '../ui/components/modals/index';
+import AlertModal from '../ui/components/modals/alert-modal';
+import * as fetch from './fetch';
 import fs from 'fs';
-import {trackEvent} from '../common/analytics';
+import {trackEvent} from './analytics';
 
 const EXPORT_FORMAT = 3;
 
@@ -107,7 +107,7 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   for (const resource of data.resources) {
     // Buffer DB changes
     // NOTE: Doing it inside here so it's more "scalable"
-    db.bufferChanges(100);
+    await db.bufferChanges(100);
 
     // Replace null parentIds with current workspace
     if (!resource.parentId) {
@@ -147,7 +147,7 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
     importedDocs[newDoc.type].push(newDoc);
   }
 
-  db.flushChanges();
+  await db.flushChanges();
 
   return {
     source: results.type.id,

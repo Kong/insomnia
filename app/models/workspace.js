@@ -30,10 +30,7 @@ export async function migrate (doc: Workspace): Promise<Workspace> {
     process.nextTick(() => update(doc, {parentId: null}));
   }
 
-  await _ensureDependencies(doc);
-  doc = await _migrateExtractClientCertificates(doc);
-
-  return doc;
+  return _migrateExtractClientCertificates(doc);
 }
 
 export function getById (id: string): Promise<Workspace | null> {
@@ -41,9 +38,7 @@ export function getById (id: string): Promise<Workspace | null> {
 }
 
 export async function create (patch: Object = {}): Promise<Workspace> {
-  const doc = await db.docCreate(type, patch);
-  await _ensureDependencies(doc);
-  return doc;
+  return db.docCreate(type, patch);
 }
 
 export async function all (): Promise<Array<Workspace>> {
@@ -69,11 +64,6 @@ export function remove (workspace: Workspace): Promise<void> {
   return db.remove(workspace);
 }
 
-async function _ensureDependencies (workspace: Workspace) {
-  await models.cookieJar.getOrCreateForParentId(workspace._id);
-  await models.environment.getOrCreateForWorkspaceId(workspace._id);
-}
-
 async function _migrateExtractClientCertificates (workspace: Workspace): Promise<Workspace> {
   const certificates = (workspace: Object).certificates || null;
   if (!Array.isArray(certificates)) {
@@ -84,7 +74,7 @@ async function _migrateExtractClientCertificates (workspace: Workspace): Promise
   for (const cert of certificates) {
     await models.clientCertificate.create({
       parentId: workspace._id,
-      host: cert.host,
+      host: cert.host || '',
       passphrase: cert.passphrase || null,
       cert: cert.cert || null,
       key: cert.key || null,

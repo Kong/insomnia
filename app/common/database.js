@@ -59,7 +59,7 @@ export async function init (
   // Fill in the defaults
   for (const modelType of types) {
     if (db[modelType]) {
-      console.warn(`[db] Already initialized DB.${modelType}`);
+      console.log(`[db] Already initialized DB.${modelType}`);
       continue;
     }
 
@@ -81,7 +81,16 @@ export async function init (
     e.sender.send(replyChannel, result);
   });
 
-  console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+  // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to
+  // hang indefinitely for some reason.
+  // TODO: Figure out why this makes tests hang
+  if (!config.inMemoryOnly) {
+    await _repairDatabase();
+  }
+
+  if (!config.inMemoryOnly) {
+    console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+  }
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -100,14 +109,17 @@ export function offChange (callback: Function): void {
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
-export const bufferChanges = database.bufferChanges = function (millis: number = 1000): void {
-  if (db._empty) {
-    _send('bufferChanges', ...arguments);
-    return;
-  }
+export const bufferChanges = database.bufferChanges = async function (millis: number = 1000): Promise<void> {
+  if (db._empty) return _send('bufferChanges', ...arguments);
 
   bufferingChanges = true;
   setTimeout(database.flushChanges, millis);
+};
+
+export const flushChangesAsync = database.flushChangesAsync = async function (): Promise<void> {
+  process.nextTick(async () => {
+    await flushChanges();
+  });
 };
 
 export const flushChanges = database.flushChanges = async function (): Promise<void> {
@@ -314,7 +326,7 @@ export const remove = database.remove = async function <T: BaseModel> (
 ): Promise<void> {
   if (db._empty) return _send('remove', ...arguments);
 
-  database.bufferChanges();
+  await database.bufferChanges();
 
   const docs = await database.withDescendants(doc);
   const docIds = docs.map(d => d._id);
@@ -325,7 +337,7 @@ export const remove = database.remove = async function <T: BaseModel> (
 
   docs.map(d => notifyOfChange(CHANGE_REMOVE, d, fromSync));
 
-  database.flushChanges();
+  await database.flushChanges();
 };
 
 export const removeWhere = database.removeWhere = async function (
@@ -334,7 +346,7 @@ export const removeWhere = database.removeWhere = async function (
 ): Promise<void> {
   if (db._empty) return _send('removeWhere', ...arguments);
 
-  database.bufferChanges();
+  await database.bufferChanges();
 
   for (const doc of await database.find(type, query)) {
     const docs = await database.withDescendants(doc);
@@ -347,7 +359,7 @@ export const removeWhere = database.removeWhere = async function (
     docs.map(d => notifyOfChange(CHANGE_REMOVE, d, false));
   }
 
-  database.flushChanges();
+  await database.flushChanges();
 };
 
 // ~~~~~~~~~~~~~~~~~~~ //
@@ -481,7 +493,7 @@ export const duplicate = database.duplicate = async function <T: BaseModel> (
 ): Promise<T> {
   if (db._empty) return _send('duplicate', ...arguments);
 
-  database.bufferChanges();
+  await database.bufferChanges();
 
   async function next<T: BaseModel> (docToCopy: T, patch: Object): Promise<T> {
     // 1. Copy the doc
@@ -511,7 +523,7 @@ export const duplicate = database.duplicate = async function <T: BaseModel> (
 
   const createdDoc = await next(originalDoc, patch);
 
-  database.flushChanges();
+  await database.flushChanges();
 
   return createdDoc;
 };
@@ -528,4 +540,88 @@ async function _send<T> (fnName: string, ...args: Array<any>): Promise<T> {
       resolve(result);
     });
   });
+}
+
+/**
+ * Run various database repair scripts
+ */
+export async function _repairDatabase () {
+  console.log(`[fix] Running database repairs`);
+  for (const workspace of await find(models.workspace.type)) {
+    await _repairBaseEnvironments(workspace);
+    await _fixMultipleCookieJars(workspace);
+  }
+}
+
+/**
+ * This function repairs workspaces that have multiple base environments. Since a workspace
+ * can only have one, this function walks over all base environments, merges the data, and
+ * moves all children as well.
+ */
+async function _repairBaseEnvironments (workspace) {
+  const baseEnvironments = await find(models.environment.type, {parentId: workspace._id});
+
+  // Nothing to do here
+  if (baseEnvironments.length <= 1) {
+    return;
+  }
+
+  const chosenBase = baseEnvironments[0];
+  for (const baseEnvironment of baseEnvironments) {
+    if (baseEnvironment._id === chosenBase._id) {
+      continue;
+    }
+
+    chosenBase.data = Object.assign(baseEnvironment.data, chosenBase.data);
+    const subEnvironments = await find(models.environment.type, {parentId: baseEnvironment._id});
+
+    for (const subEnvironment of subEnvironments) {
+      await docUpdate(subEnvironment, {parentId: chosenBase._id});
+    }
+
+    // Remove unnecessary base env
+    await remove(baseEnvironment);
+  }
+
+  // Update remaining base env
+  await update(chosenBase);
+
+  console.log(`[fix] Merged ${baseEnvironments.length} base environments under ${workspace.name}`);
+}
+
+/**
+ * This function repairs workspaces that have multiple cookie jars. Since a workspace
+ * can only have one, this function walks over all jars and merges them and their cookies
+ * together.
+ */
+async function _fixMultipleCookieJars (workspace) {
+  const cookieJars = await find(models.cookieJar.type, {parentId: workspace._id});
+
+  // Nothing to do here
+  if (cookieJars.length <= 1) {
+    return;
+  }
+
+  const chosenJar = cookieJars[0];
+  for (const cookieJar of cookieJars) {
+    if (cookieJar._id === chosenJar._id) {
+      continue;
+    }
+
+    for (const cookie of cookieJar.cookies) {
+      if (chosenJar.cookies.find(c => c.id === cookie.id)) {
+        continue;
+      }
+
+      chosenJar.cookies.push(cookie);
+    }
+
+    // Remove unnecessary jar
+    await remove(cookieJar);
+  }
+
+  // Update remaining jar
+  await update(chosenJar);
+
+  console.log(`[fix] Merged ${cookieJars.length} cookie jars under ${workspace.name}`);
 }

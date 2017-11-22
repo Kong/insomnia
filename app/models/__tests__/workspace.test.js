@@ -25,23 +25,25 @@ describe('migrate()', () => {
 
     expect(certs.length).toBe(2);
     expect(certs.sort((c1, c2) => c1._id > c2._id ? -1 : 1)).toEqual([{
-      _id: 'crt_a262d22b5fa8491c9bd958fba03e301e',
-      cert: null,
-      disabled: false,
-      isPrivate: false,
-      key: 'key',
-      parentId: 'wrk_cc1dd2ca4275747aa88199e8efd42403',
-      passphrase: 'mypass',
-      pfx: null,
-      type: 'ClientCertificate'
-    }, {
-      _id: 'crt_2e7c268809ee44b8900d5cbbaa7d3a19',
+      _id: 'crt_e3e96e5fdd6842298b66dee1f0940f3d',
       cert: 'cert',
       disabled: false,
       isPrivate: false,
+      host: '',
       key: null,
       parentId: 'wrk_cc1dd2ca4275747aa88199e8efd42403',
       passphrase: null,
+      pfx: null,
+      type: 'ClientCertificate'
+    }, {
+      _id: 'crt_dd2ccc1a2745477a881a9e8ef9d42403',
+      cert: null,
+      disabled: false,
+      isPrivate: false,
+      host: '',
+      key: 'key',
+      parentId: 'wrk_cc1dd2ca4275747aa88199e8efd42403',
+      passphrase: 'mypass',
       pfx: null,
       type: 'ClientCertificate'
     }]);

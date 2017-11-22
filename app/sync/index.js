@@ -248,7 +248,7 @@ export async function push (resourceGroupId = null) {
   }
 
   // Resolve conflicts
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const serverResource of conflicts) {
     const localResource = await store.getResourceByDocId(
       serverResource.id,
@@ -283,7 +283,7 @@ export async function push (resourceGroupId = null) {
     }
   }
 
-  db.flushChanges();
+  db.flushChangesAsync();
 }
 
 export async function pull (resourceGroupId = null, createMissingResources = true) {
@@ -347,7 +347,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   // Insert all the created docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const serverResource of createdResources) {
     let doc;
 
@@ -390,13 +390,13 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     logger.debug(`Pull created ${createdResources.length} resources`);
   }
 
-  db.flushChanges();
+  db.flushChangesAsync();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Save all the updated docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const serverResource of updatedResources) {
     try {
       const {resourceGroupId, encContent} = serverResource;
@@ -416,7 +416,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
       logger.warn('Failed to decode updated resource', e, serverResource);
     }
   }
-  db.flushChanges();
+  db.flushChangesAsync();
 
   if (updatedResources.length) {
     logger.debug(`Pull updated ${updatedResources.length} resources`);
@@ -426,7 +426,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   // Remove all the docs that need removing //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const id of idsToRemove) {
     const resource = await store.getResourceByDocId(id);
     if (!resource) {
@@ -444,7 +444,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // Remove from DB
     await db.remove(doc, true);
   }
-  db.flushChanges();
+  db.flushChangesAsync();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Push all the docs that need pushing //

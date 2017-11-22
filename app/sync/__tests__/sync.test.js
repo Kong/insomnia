@@ -257,8 +257,8 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Assert that all our new models were created
     expect((await models.workspace.all()).length).toBe(2);
     expect((await models.request.all()).length).toBe(3);
-    expect((await models.environment.all()).length).toBe(3);
-    expect((await models.cookieJar.all()).length).toBe(2);
+    expect((await models.environment.all()).length).toBe(1);
+    expect((await models.cookieJar.all()).length).toBe(0);
 
     // Assert that initializing sync will create the initial resources
     expect((await syncStorage.allConfigs()).length).toBe(0);
@@ -267,7 +267,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     jest.runOnlyPendingTimers();
     await promise;
     expect((await syncStorage.allConfigs()).length).toBe(2);
-    expect((await syncStorage.allResources()).length).toBe(9);
+    expect((await syncStorage.allResources()).length).toBe(5);
 
     // Mark all configs as auto sync
     const configs = await syncStorage.allConfigs();
@@ -286,7 +286,7 @@ describe('Integration tests for creating Resources and pushing', () => {
 
   it('Resources created on DB change', async () => {
     // Fetch the workspace and create a new request
-    db.bufferChanges();
+    await db.bufferChanges();
     await models.request.create({
       _id: 'req_t',
       url: 'https://google.com',
@@ -302,19 +302,19 @@ describe('Integration tests for creating Resources and pushing', () => {
 
     // Assert
     expect((await syncStorage.allConfigs()).length).toBe(2);
-    expect((await syncStorage.allResources()).length).toBe(10);
+    expect((await syncStorage.allResources()).length).toBe(6);
     expect(_decryptResource(resource).url).toBe('https://google.com');
     expect(resource.removed).toBe(false);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(10);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(6);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });
 
   it('Resources revived on DB change', async () => {
     // Fetch the workspace and create a new request
-    db.bufferChanges();
+    await db.bufferChanges();
     const request = await models.request.create({
       _id: 'req_t',
       name: 'Original Request',
@@ -332,7 +332,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     );
 
     // Update it and push it again
-    db.bufferChanges();
+    await db.bufferChanges();
     await models.request.update(request, {name: 'New Name'});
     await db.flushChanges();
     await sync.writePendingChanges();
@@ -349,7 +349,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Create, update a request, and fetch it's resource
     const request = await models.request.getById('req_1');
     const resource = await syncStorage.getResourceByDocId(request._id);
-    db.bufferChanges();
+    await db.bufferChanges();
     const updatedRequest = await models.request.update(request, {name: 'New Name'});
 
     // Drain and fetch new resource
@@ -366,7 +366,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(resource.removed).toBe(false);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(9);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(5);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });
@@ -375,7 +375,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     // Create, update a request, and fetch it's resource
     const request = await models.request.getById('req_1');
     const resource = await syncStorage.getResourceByDocId(request._id);
-    db.bufferChanges();
+    await db.bufferChanges();
     await models.request.remove(request);
 
     // Drain and fetch new resource
@@ -389,7 +389,7 @@ describe('Integration tests for creating Resources and pushing', () => {
     expect(updatedResource.removed).toBe(true);
 
     expect(session.syncPush.mock.calls.length).toBe(1);
-    expect(session.syncPush.mock.calls[0][0].length).toBe(9);
+    expect(session.syncPush.mock.calls[0][0].length).toBe(5);
 
     expect(session.syncPull.mock.calls).toEqual([]);
   });

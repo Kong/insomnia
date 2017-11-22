@@ -56,6 +56,8 @@ class App extends PureComponent {
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT
     };
 
+    this._isMigratingChildren = false;
+
     this._getRenderContextPromiseCache = {};
 
     this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({paneWidth}));
@@ -778,7 +780,54 @@ class App extends PureComponent {
     document.removeEventListener('mousemove', this._handleMouseMove);
   }
 
+  async _ensureWorkspaceChildren (props) {
+    const {activeWorkspace, activeCookieJar, environments} = props;
+    const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
+
+    // Nothing to do
+    if (baseEnvironments.length && activeCookieJar) {
+      return;
+    }
+
+    // We already started migrating. Let it finish.
+    if (this._isMigratingChildren) {
+      return;
+    }
+
+    // Prevent rendering of everything
+    this._isMigratingChildren = true;
+
+    await db.bufferChanges();
+    if (baseEnvironments.length === 0) {
+      await models.environment.create({parentId: activeWorkspace._id});
+      console.log(`[app] Created missing base environment for ${activeWorkspace.name}`);
+    }
+
+    if (!activeCookieJar) {
+      await models.cookieJar.create({parentId: this.props.activeWorkspace._id});
+      console.log(`[app] Created missing cookie jar for ${activeWorkspace.name}`);
+    }
+
+    await db.flushChanges();
+
+    // Flush "transaction"
+    this._isMigratingChildren = false;
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this._ensureWorkspaceChildren(nextProps);
+  }
+
+  componentWillMount () {
+    this._ensureWorkspaceChildren(this.props);
+  }
+
   render () {
+    if (this._isMigratingChildren) {
+      console.log('[app] Waiting for migration to complete');
+      return null;
+    }
+
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="app">
@@ -1015,7 +1064,7 @@ async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
         // anyway
         console.log(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
 
-        db.bufferChanges(300);
+        await db.bufferChanges(300);
         docs.map((r, i) => __updateDoc(r, {metaSortKey: i * 100, parentId}));
       } else {
         const metaSortKey = afterKey - ((afterKey - beforeKey) / 2);

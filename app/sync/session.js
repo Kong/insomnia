@@ -154,7 +154,7 @@ export function getPrivateKey () {
 }
 
 export function getCurrentSessionId () {
-  if (window) {
+  if (global.window) { // NOTE: Must check for window on global
     return window.localStorage.getItem('currentSessionId');
   } else {
     return false;
