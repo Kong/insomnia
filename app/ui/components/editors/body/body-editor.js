@@ -27,12 +27,7 @@ type Props = {
   request: Request,
   workspace: Workspace,
   settings: Settings,
-  environmentId: string,
-  nunjucksPowerUserMode: boolean,
-  fontSize: number,
-  indentSize: number,
-  keyMap: string,
-  lineWrapping: boolean
+  environmentId: string
 };
 
 @autobind
@@ -103,17 +98,12 @@ class BodyEditor extends React.PureComponent<Props> {
 
   render () {
     const {
-      keyMap,
-      fontSize,
-      indentSize,
-      lineWrapping,
       request,
       workspace,
       settings,
       environmentId,
       handleRender: render,
-      handleGetRenderContext: getRenderContext,
-      nunjucksPowerUserMode
+      handleGetRenderContext: getRenderContext
     } = this.props;
 
     const noRender = request.settingDisableRenderRequestBody;
@@ -133,7 +123,7 @@ class BodyEditor extends React.PureComponent<Props> {
           onChange={this._handleFormUrlEncodedChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           parameters={request.body.params || []}
         />
       );
@@ -144,7 +134,7 @@ class BodyEditor extends React.PureComponent<Props> {
           onChange={this._handleFormChange}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           parameters={request.body.params || []}
         />
       );
@@ -161,17 +151,12 @@ class BodyEditor extends React.PureComponent<Props> {
         <GraphQLEditor
           key={uniqueKey}
           request={request}
-          fontSize={fontSize}
-          indentSize={indentSize}
           content={request.body.text || ''}
-          keyMap={keyMap}
-          lineWrapping={lineWrapping}
           render={handleRender}
           workspace={workspace}
           settings={settings}
           environmentId={environmentId}
           getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
           onChange={this._handleGraphQLChange}
         />
       );
@@ -180,15 +165,15 @@ class BodyEditor extends React.PureComponent<Props> {
       return (
         <RawEditor
           key={uniqueKey}
-          fontSize={fontSize}
-          indentSize={indentSize}
-          keyMap={keyMap}
-          lineWrapping={lineWrapping}
+          fontSize={settings.editorFontSize}
+          indentSize={settings.editorIndentSize}
+          keyMap={settings.editorKeyMap}
+          lineWrapping={settings.editorLineWrapping}
           contentType={contentType || 'text/plain'}
           content={request.body.text || ''}
           render={handleRender}
           getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           onChange={this._handleRawChange}
         />
       );

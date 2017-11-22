@@ -582,12 +582,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             ref={handleSetRequestPaneRef}
             handleImportFile={this._handleImportFile}
             request={activeRequest}
-            showPasswords={settings.showPasswords}
-            useBulkHeaderEditor={settings.useBulkHeaderEditor}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
             workspace={activeWorkspace}
             settings={settings}
             environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -598,7 +592,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleImport={this._handleImport}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             updateRequestBody={this._handleUpdateRequestBody}
             forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
             updateRequestUrl={this._handleUpdateRequestUrl}

@@ -29,13 +29,8 @@ type GraphQLBody = {
 type Props = {
   onChange: Function,
   content: string,
-  fontSize: number,
-  indentSize: number,
-  keyMap: string,
-  lineWrapping: boolean,
   render: Function | null,
   getRenderContext: Function | null,
-  nunjucksPowerUserMode: boolean,
   request: Request,
   workspace: Workspace,
   settings: Settings,
@@ -269,13 +264,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   render () {
     const {
       content,
-      fontSize,
-      indentSize,
-      keyMap,
       render,
       getRenderContext,
-      nunjucksPowerUserMode,
-      lineWrapping,
+      settings,
       className
     } = this.props;
 
@@ -306,14 +297,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
               completeSingle: false
             }}
             lintOptions={schema ? {schema} : null}
-            fontSize={fontSize}
-            indentSize={indentSize}
-            keyMap={keyMap}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            keyMap={settings.editorKeyMap}
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
             mode="graphql"
-            lineWrapping={lineWrapping}
+            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>
@@ -348,17 +339,17 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             dynamicHeight
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
-            fontSize={fontSize}
-            indentSize={indentSize}
-            keyMap={keyMap}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            keyMap={settings.editorKeyMap}
             defaultValue={variables}
             className={className}
             render={render}
             getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             onChange={this._handleVariablesChange}
             mode="application/json"
-            lineWrapping={lineWrapping}
+            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>

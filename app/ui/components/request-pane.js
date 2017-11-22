@@ -50,13 +50,6 @@ type Props = {
   handleImportFile: Function,
 
   // Other
-  useBulkHeaderEditor: boolean,
-  showPasswords: boolean,
-  editorFontSize: number,
-  editorIndentSize: number,
-  nunjucksPowerUserMode: boolean,
-  editorKeyMap: string,
-  editorLineWrapping: boolean,
   workspace: Workspace,
   settings: Settings,
   environmentId: string,
@@ -100,9 +93,9 @@ class RequestPane extends React.PureComponent<Props> {
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor () {
-    const {useBulkHeaderEditor, updateSettingsUseBulkHeaderEditor} = this.props;
-    updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor);
-    trackEvent('Headers', 'Toggle Bulk', !useBulkHeaderEditor ? 'On' : 'Off');
+    const {settings, updateSettingsUseBulkHeaderEditor} = this.props;
+    updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
+    trackEvent('Headers', 'Toggle Bulk', !settings.useBulkHeaderEditor ? 'On' : 'Off');
   }
 
   _handleImportFile () {
@@ -165,17 +158,12 @@ class RequestPane extends React.PureComponent<Props> {
 
   render () {
     const {
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       forceRefreshCounter,
       forceUpdateRequestHeaders,
       handleGenerateCode,
       handleGetRenderContext,
       handleImport,
       handleRender,
-      nunjucksPowerUserMode,
       handleSend,
       handleSendAndDownload,
       oAuth2Token,
@@ -183,15 +171,13 @@ class RequestPane extends React.PureComponent<Props> {
       workspace,
       environmentId,
       settings,
-      showPasswords,
       updateRequestAuthentication,
       updateRequestBody,
       updateRequestHeaders,
       updateRequestMethod,
       updateRequestMimeType,
       updateRequestParameters,
-      updateSettingsShowPasswords,
-      useBulkHeaderEditor
+      updateSettingsShowPasswords
     } = this.props;
 
     if (!request) {
@@ -264,7 +250,7 @@ class RequestPane extends React.PureComponent<Props> {
               handleSend={handleSend}
               handleSendAndDownload={handleSendAndDownload}
               handleRender={handleRender}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               handleGetRenderContext={handleGetRenderContext}
               url={request.url}
               requestId={request._id}
@@ -322,17 +308,12 @@ class RequestPane extends React.PureComponent<Props> {
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
               request={request}
               workspace={workspace}
               environmentId={environmentId}
               settings={settings}
               onChange={updateRequestBody}
               onChangeHeaders={forceUpdateRequestHeaders}
-              fontSize={editorFontSize}
-              indentSize={editorIndentSize}
-              keyMap={editorKeyMap}
-              lineWrapping={editorLineWrapping}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
@@ -340,12 +321,12 @@ class RequestPane extends React.PureComponent<Props> {
               <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <AuthWrapper
                   oAuth2Token={oAuth2Token}
-                  showPasswords={showPasswords}
+                  showPasswords={settings.showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   onChange={updateRequestAuthentication}
                 />
               </ErrorBoundary>
@@ -378,7 +359,7 @@ class RequestPane extends React.PureComponent<Props> {
                     pairs={request.parameters}
                     handleRender={handleRender}
                     handleGetRenderContext={handleGetRenderContext}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
+                    nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                     onChange={updateRequestParameters}
                   />
                 </ErrorBoundary>
@@ -398,19 +379,19 @@ class RequestPane extends React.PureComponent<Props> {
                 headers={request.headers}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
-                editorLineWrapping={editorLineWrapping}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                editorFontSize={settings.editorFontSize}
+                editorIndentSize={settings.editorIndentSize}
+                editorLineWrapping={settings.editorLineWrapping}
                 onChange={updateRequestHeaders}
-                bulk={useBulkHeaderEditor}
+                bulk={settings.useBulkHeaderEditor}
               />
             </ErrorBoundary>
 
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
                       onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
-                {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+                {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
           </TabPanel>
