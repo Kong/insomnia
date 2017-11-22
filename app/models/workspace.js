@@ -30,9 +30,7 @@ export async function migrate (doc: Workspace): Promise<Workspace> {
     process.nextTick(() => update(doc, {parentId: null}));
   }
 
-  doc = await _migrateExtractClientCertificates(doc);
-
-  return doc;
+  return _migrateExtractClientCertificates(doc);
 }
 
 export function getById (id: string): Promise<Workspace | null> {
@@ -76,7 +74,7 @@ async function _migrateExtractClientCertificates (workspace: Workspace): Promise
   for (const cert of certificates) {
     await models.clientCertificate.create({
       parentId: workspace._id,
-      host: cert.host,
+      host: cert.host || '',
       passphrase: cert.passphrase || null,
       cert: cert.cert || null,
       key: cert.key || null,

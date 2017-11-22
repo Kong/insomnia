@@ -59,7 +59,7 @@ export async function init (
   // Fill in the defaults
   for (const modelType of types) {
     if (db[modelType]) {
-      console.warn(`[db] Already initialized DB.${modelType}`);
+      console.log(`[db] Already initialized DB.${modelType}`);
       continue;
     }
 
@@ -83,7 +83,9 @@ export async function init (
 
   await _repairDatabase();
 
-  console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+  if (!config.inMemoryOnly) {
+    console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+  }
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -107,6 +109,12 @@ export const bufferChanges = database.bufferChanges = async function (millis: nu
 
   bufferingChanges = true;
   setTimeout(database.flushChanges, millis);
+};
+
+export const flushChangesAsync = database.flushChangesAsync = async function (): Promise<void> {
+  process.nextTick(async () => {
+    await this.flushChanges();
+  });
 };
 
 export const flushChanges = database.flushChanges = async function (): Promise<void> {

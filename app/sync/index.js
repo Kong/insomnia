@@ -283,7 +283,7 @@ export async function push (resourceGroupId = null) {
     }
   }
 
-  await db.flushChanges();
+  db.flushChangesAsync();
 }
 
 export async function pull (resourceGroupId = null, createMissingResources = true) {
@@ -390,7 +390,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     logger.debug(`Pull created ${createdResources.length} resources`);
   }
 
-  await db.flushChanges();
+  db.flushChangesAsync();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Save all the updated docs to the DB //
@@ -416,7 +416,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
       logger.warn('Failed to decode updated resource', e, serverResource);
     }
   }
-  await db.flushChanges();
+  db.flushChangesAsync();
 
   if (updatedResources.length) {
     logger.debug(`Pull updated ${updatedResources.length} resources`);
@@ -444,7 +444,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // Remove from DB
     await db.remove(doc, true);
   }
-  await db.flushChanges();
+  db.flushChangesAsync();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Push all the docs that need pushing //
