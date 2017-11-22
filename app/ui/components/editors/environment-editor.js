@@ -54,11 +54,13 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
       }
     }
 
-    this.props.didChange();
-
     // Call this last in case component unmounted
     if (this.state.error !== error || this.state.warning !== warning) {
-      this.setState({error, warning});
+      this.setState({error, warning}, () => {
+        this.props.didChange();
+      });
+    } else {
+      this.props.didChange();
     }
   }
 
