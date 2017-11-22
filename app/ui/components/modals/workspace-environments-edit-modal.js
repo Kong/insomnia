@@ -20,7 +20,7 @@ import type {Environment} from '../../../models/environment';
 import * as db from '../../../common/database';
 
 type Props = {
-  activeEnvironment: Environment | null,
+  activeEnvironmentId: string | null,
   editorFontSize: number,
   editorIndentSize: number,
   editorKeyMap: string,
@@ -73,11 +73,11 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   }
 
   async show (workspace: Workspace) {
-    const {activeEnvironment} = this.props;
+    const {activeEnvironmentId} = this.props;
 
     // Default to showing the currently active environment
-    if (activeEnvironment) {
-      this.setState({selectedEnvironmentId: activeEnvironment._id});
+    if (activeEnvironmentId) {
+      this.setState({selectedEnvironmentId: activeEnvironmentId});
     }
 
     await this._load(workspace);
@@ -86,7 +86,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     trackEvent('Environment Editor', 'Show');
   }
 
-  async _load (workspace: Workspace | null, environmentToActivate: Environment | null = null) {
+  async _load (workspace: Workspace | null, environmentToSelect: Environment | null = null) {
     if (!workspace) {
       console.warn('Failed to reload environment editor without Workspace');
       return;
@@ -97,8 +97,8 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
     let selectedEnvironmentId;
 
-    if (environmentToActivate) {
-      selectedEnvironmentId = environmentToActivate._id;
+    if (environmentToSelect) {
+      selectedEnvironmentId = environmentToSelect._id;
     } else if (this.state.workspace && workspace._id !== this.state.workspace._id) {
       // We've changed workspaces, so load the root one
       selectedEnvironmentId = rootEnvironment._id;

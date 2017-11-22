@@ -527,7 +527,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
-            activeEnvironment={activeEnvironment}
+            activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
