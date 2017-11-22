@@ -5,6 +5,7 @@ declare module 'electron' {
       app: Object,
       BrowserWindow: Object,
       ipcMain: Object,
+      session: Object,
       net: Object,
       dialog: Object,
       screen: Object
@@ -14,6 +15,7 @@ declare module 'electron' {
     BrowserWindow: Object,
     ipcRenderer: Object,
     ipcMain: Object,
+    session: Object,
     net: Object,
     dialog: Object,
     clipboard: Object,
