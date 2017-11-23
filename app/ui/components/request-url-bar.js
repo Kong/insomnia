@@ -4,12 +4,11 @@ import autobind from 'autobind-decorator';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from './base/dropdown';
-import {trackEvent} from '../../analytics';
+import {trackEvent} from '../../common/analytics';
 import {showPrompt} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
-import {executeHotKey} from '../../common/hotkeys';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from './keydown-binder';
 
@@ -116,7 +115,7 @@ class RequestUrlBar extends PureComponent {
       return;
     }
 
-    executeHotKey(e, hotkeys.FOCUS_URL, () => {
+    hotkeys.executeHotKey(e, hotkeys.FOCUS_URL, () => {
       if (!this._input) {
         return;
       }
@@ -125,14 +124,14 @@ class RequestUrlBar extends PureComponent {
       this._input.selectAll();
     });
 
-    executeHotKey(e, hotkeys.TOGGLE_METHOD_DROPDOWN, () => {
+    hotkeys.executeHotKey(e, hotkeys.TOGGLE_METHOD_DROPDOWN, () => {
       if (!this._methodDropdown) {
         return;
       }
       this._methodDropdown.toggle();
     });
 
-    executeHotKey(e, hotkeys.SHOW_SEND_OPTIONS, () => {
+    hotkeys.executeHotKey(e, hotkeys.SHOW_SEND_OPTIONS, () => {
       this._dropdown.toggle(true);
     });
   }

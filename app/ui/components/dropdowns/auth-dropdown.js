@@ -2,11 +2,11 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
-import {trackEvent} from '../../../analytics';
+import {trackEvent} from '../../../common/analytics';
 import {showModal} from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, getAuthTypeName} from '../../../common/constants';
+import {AUTH_BASIC, AUTH_DIGEST, AUTH_BEARER, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, AUTH_ASAP, getAuthTypeName} from '../../../common/constants';
 
 @autobind
 class AuthDropdown extends PureComponent {
@@ -63,14 +63,15 @@ class AuthDropdown extends PureComponent {
           {children}
         </DropdownButton>
         {this.renderAuthType(AUTH_BASIC)}
+        {this.renderAuthType(AUTH_DIGEST)}
         {this.renderAuthType(AUTH_OAUTH_1)}
         {this.renderAuthType(AUTH_OAUTH_2)}
-        {this.renderAuthType(AUTH_DIGEST)}
-        {this.renderAuthType(AUTH_BEARER)}
         {this.renderAuthType(AUTH_NTLM)}
         {this.renderAuthType(AUTH_AWS_IAM)}
-        {this.renderAuthType(AUTH_NETRC)}
+        {this.renderAuthType(AUTH_BEARER)}
         {this.renderAuthType(AUTH_HAWK)}
+        {this.renderAuthType(AUTH_ASAP)}
+        {this.renderAuthType(AUTH_NETRC)}
         <DropdownDivider>Other</DropdownDivider>
         {this.renderAuthType(AUTH_NONE, 'No Authentication')}
       </Dropdown>

@@ -1,13 +1,12 @@
 // @flow
 import type {Request} from '../../../../models/request';
-import classnames from 'classnames';
 import {newBodyRaw} from '../../../../models/request';
+import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {parse, print} from 'graphql';
 import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
-import clone from 'clone';
 import CodeEditor from '../../codemirror/code-editor';
 import {jsonParseOr} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
@@ -19,23 +18,19 @@ import type {Settings} from '../../../../models/settings';
 import type {RenderedRequest} from '../../../../common/render';
 import {getRenderedRequest} from '../../../../common/render';
 import TimeFromNow from '../../time-from-now';
+import {getBodyBufferFromPath} from '../../../../models/response';
 
 type GraphQLBody = {
   query: string,
-  variables: Object,
+  variables?: Object,
   operationName?: string
 }
 
 type Props = {
   onChange: Function,
   content: string,
-  fontSize: number,
-  indentSize: number,
-  keyMap: string,
-  lineWrapping: boolean,
-  render: Function,
-  getRenderContext: Function,
-  nunjucksPowerUserMode: boolean,
+  render: Function | null,
+  getRenderContext: Function | null,
   request: Request,
   workspace: Workspace,
   settings: Settings,
@@ -100,7 +95,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     if (request) {
       try {
-        // TODO: Use Insomnia's network stack to handle things like authentication
         const bodyJson = JSON.stringify({query: introspectionQuery});
         const introspectionRequest = Object.assign({}, request, {
           body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
@@ -111,11 +105,13 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           parentId: request._id
         });
 
-        const {bodyBuffer, response} = await network._actuallySend(
+        const response = await network._actuallySend(
           introspectionRequest,
           workspace,
           settings
         );
+
+        const bodyBuffer = getBodyBufferFromPath(response.bodyPath || '');
 
         const status = response.statusCode || 0;
 
@@ -158,13 +154,36 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }, 200);
   }
 
-  _handleBodyChange (query: string, variables: Object): void {
-    const body = clone(this.state.body);
-    const newState = {variablesSyntaxError: '', body};
+  _getOperationNames (): Array<string> {
+    const {body} = this.state;
 
-    newState.body.query = query;
-    newState.body.variables = variables;
-    this.setState(newState);
+    let documentAST;
+    try {
+      documentAST = parse(body.query);
+    } catch (e) {
+      return [];
+    }
+
+    return documentAST.definitions
+      .filter(def => def.kind === 'OperationDefinition')
+      .map(def => def.name ? def.name.value : null)
+      .filter(Boolean);
+  }
+
+  _handleBodyChange (query: string, variables?: Object): void {
+    const operationNames = this._getOperationNames();
+
+    const body: GraphQLBody = {query};
+
+    if (variables) {
+      body.variables = variables;
+    }
+
+    if (operationNames.length) {
+      body.operationName = operationNames[0];
+    }
+
+    this.setState({variablesSyntaxError: '', body});
     this.props.onChange(this._graphQLToString(body));
   }
 
@@ -174,7 +193,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   _handleVariablesChange (variables: string): void {
     try {
-      const variablesObj = JSON.parse(variables || '{}');
+      const variablesObj = JSON.parse(variables || 'null');
       this._handleBodyChange(this.state.body.query, variablesObj);
     } catch (err) {
       this.setState({variablesSyntaxError: err.message});
@@ -182,21 +201,25 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _stringToGraphQL (text: string): GraphQLBody {
-    let obj;
+    let obj: GraphQLBody;
     try {
       obj = JSON.parse(text);
     } catch (err) {
-      obj = {query: '', variables: {}};
+      obj = {query: ''};
     }
 
     if (typeof obj.variables === 'string') {
-      obj.variables = jsonParseOr(obj.variables, {});
+      obj.variables = jsonParseOr(obj.variables, '');
     }
 
-    return {
-      query: obj.query || '',
-      variables: obj.variables || {}
-    };
+    const query = obj.query || '';
+    const variables = obj.variables || null;
+
+    if (variables) {
+      return {query, variables};
+    } else {
+      return {query};
+    }
   }
 
   _graphQLToString (body: GraphQLBody): string {
@@ -205,7 +228,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   componentWillReceiveProps (nextProps: Props) {
     if (nextProps.request.url !== this.props.request.url) {
-      (async () => await this._fetchAndSetSchema(nextProps.request))();
+      (async () => {
+        await this._fetchAndSetSchema(nextProps.request);
+      })();
     }
   }
 
@@ -239,13 +264,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   render () {
     const {
       content,
-      fontSize,
-      indentSize,
-      keyMap,
       render,
       getRenderContext,
-      nunjucksPowerUserMode,
-      lineWrapping,
+      settings,
       className
     } = this.props;
 
@@ -276,14 +297,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
               completeSingle: false
             }}
             lintOptions={schema ? {schema} : null}
-            fontSize={fontSize}
-            indentSize={indentSize}
-            keyMap={keyMap}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            keyMap={settings.editorKeyMap}
             defaultValue={query}
             className={className}
             onChange={this._handleQueryChange}
             mode="graphql"
-            lineWrapping={lineWrapping}
+            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>
@@ -318,17 +339,17 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             dynamicHeight
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
-            fontSize={fontSize}
-            indentSize={indentSize}
-            keyMap={keyMap}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            keyMap={settings.editorKeyMap}
             defaultValue={variables}
             className={className}
             render={render}
             getRenderContext={getRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
+            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             onChange={this._handleVariablesChange}
             mode="application/json"
-            lineWrapping={lineWrapping}
+            lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />
         </div>

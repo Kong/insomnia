@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import allHeaderNames from '../../../datasets/header-names';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';

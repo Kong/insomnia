@@ -1,20 +1,32 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import {basename as pathBasename} from 'path';
 import {remote} from 'electron';
 
+type Props = {
+  // Required
+  onChange: Function,
+  path: string,
+
+  // Optional
+  showFileName?: boolean,
+  showFileIcon?: boolean,
+  name?: string
+};
+
 @autobind
-class FileInputButton extends PureComponent {
+class FileInputButton extends React.PureComponent<Props> {
+  _button: ?HTMLButtonElement;
   focus () {
-    this._button.focus();
+    this._button && this._button.focus();
   }
 
   focusEnd () {
-    this._button.focus();
+    this._button && this._button.focus();
   }
 
-  _setRef (n) {
+  _setRef (n: ?HTMLButtonElement) {
     this._button = n;
   }
 
@@ -51,16 +63,5 @@ class FileInputButton extends PureComponent {
     );
   }
 }
-
-FileInputButton.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  path: PropTypes.string.isRequired,
-
-  // Optional
-  showFileName: PropTypes.bool,
-  showFileIcon: PropTypes.bool,
-  name: PropTypes.string
-};
 
 export default FileInputButton;

@@ -1,4 +1,9 @@
 declare class Curl {
+  static getVersion: () => string;
+  static feature: {
+    NO_HEADER_PARSING: number,
+    NO_DATA_PARSING: number
+  };
   static option: {
     ACCEPT_ENCODING: number,
     CAINFO: number,
@@ -38,6 +43,7 @@ declare class Curl {
     USERAGENT: number,
     USERNAME: number,
     VERBOSE: number,
+    WRITEFUNCTION: number,
     XFERINFOFUNCTION: number,
   };
 
@@ -69,6 +75,7 @@ declare class Curl {
   };
 
   setOpt: (option: number, ...args: Array<any>) => void;
+  enable: (option: number, ...args: Array<any>) => void;
   getInfo: (option: string, ...args: Array<any>) => any;
   perform: () => void;
   close: () => void;

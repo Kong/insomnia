@@ -1,6 +1,11 @@
 import getToken from '../grant-authorization-code';
 import {createBWRedirectMock} from './helpers';
 import {globalBeforeEach} from '../../../__jest__/before-each';
+import * as network from '../../network';
+import fs from 'fs';
+import path from 'path';
+import {getTempDir} from '../../../common/constants';
+import {compress} from '../../../common/misc';
 
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
@@ -15,12 +20,22 @@ describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
   it('gets token with JSON and basic auth', async () => {
     createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
-    window.fetch = jest.fn(() => new window.Response(
-      JSON.stringify({access_token: 'token_123', token_type: 'token_type', scope: SCOPE}),
-      {headers: {'Content-Type': 'application/json'}}
-    ));
+    const bodyPath = path.join(getTempDir(), 'response.zip');
+
+    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+      access_token: 'token_123',
+      token_type: 'token_type',
+      scope: SCOPE
+    }))));
+
+    network.sendWithSettings = jest.fn(() => ({
+      bodyPath,
+      statusCode: 200,
+      headers: [{name: 'Content-Type', value: 'application/json'}]
+    }));
 
     const result = await getToken(
+      'req_1',
       AUTHORIZE_URL,
       ACCESS_TOKEN_URL,
       false,
@@ -32,19 +47,23 @@ describe('authorization_code', () => {
     );
 
     // Check the request to fetch the token
-    expect(window.fetch.mock.calls).toEqual([[ACCESS_TOKEN_URL, {
-      body: [
-        'grant_type=authorization_code',
-        'code=code_123',
-        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}`,
-        `state=${STATE}`
-      ].join('&'),
+    expect(network.sendWithSettings.mock.calls).toEqual([['req_1', {
+      url: ACCESS_TOKEN_URL,
       method: 'POST',
-      headers: {
-        'Accept': 'application/x-www-form-urlencoded, application/json',
-        'Authorization': 'Basic Y2xpZW50XzEyMzpzZWNyZXRfMTIzNDU0NTY2Nzc3NTYzNDM=',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
+      body: {
+        mimeType: 'application/x-www-form-urlencoded',
+        params: [
+          {name: 'grant_type', value: 'authorization_code', disabled: false},
+          {name: 'code', value: 'code_123', disabled: false},
+          {name: 'redirect_uri', value: REDIRECT_URI, disabled: false},
+          {name: 'state', value: STATE, disabled: false}
+        ]
+      },
+      headers: [
+        {name: 'Content-Type', value: 'application/x-www-form-urlencoded'},
+        {name: 'Accept', value: 'application/x-www-form-urlencoded, application/json'},
+        {name: 'Authorization', value: 'Basic Y2xpZW50XzEyMzpzZWNyZXRfMTIzNDU0NTY2Nzc3NTYzNDM='}
+      ]
     }]]);
 
     // Check the expected value
@@ -62,12 +81,22 @@ describe('authorization_code', () => {
 
   it('gets token with urlencoded and body auth', async () => {
     createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
-    window.fetch = jest.fn(() => new window.Response(
-      `access_token=token_123&token_type=token_type&scope=${SCOPE}`,
-      {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
-    ));
+    const bodyPath = path.join(getTempDir(), 'response.zip');
+
+    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+      access_token: 'token_123',
+      token_type: 'token_type',
+      scope: SCOPE
+    }))));
+
+    network.sendWithSettings = jest.fn(() => ({
+      bodyPath,
+      statusCode: 200,
+      headers: [{name: 'Content-Type', value: 'application/x-www-form-urlencoded'}]
+    }));
 
     const result = await getToken(
+      'req_1',
       AUTHORIZE_URL,
       ACCESS_TOKEN_URL,
       true,
@@ -79,20 +108,24 @@ describe('authorization_code', () => {
     );
 
     // Check the request to fetch the token
-    expect(window.fetch.mock.calls).toEqual([[ACCESS_TOKEN_URL, {
-      body: [
-        'grant_type=authorization_code',
-        'code=code_123',
-        `redirect_uri=${encodeURIComponent(REDIRECT_URI)}`,
-        `state=${STATE}`,
-        `client_id=${CLIENT_ID}`,
-        `client_secret=${CLIENT_SECRET}`
-      ].join('&'),
+    expect(network.sendWithSettings.mock.calls).toEqual([['req_1', {
+      url: ACCESS_TOKEN_URL,
       method: 'POST',
-      headers: {
-        'Accept': 'application/x-www-form-urlencoded, application/json',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
+      body: {
+        mimeType: 'application/x-www-form-urlencoded',
+        params: [
+          {name: 'grant_type', value: 'authorization_code', disabled: false},
+          {name: 'code', value: 'code_123', disabled: false},
+          {name: 'redirect_uri', value: REDIRECT_URI, disabled: false},
+          {name: 'state', value: STATE, disabled: false},
+          {name: 'client_id', value: CLIENT_ID, disabled: false},
+          {name: 'client_secret', value: CLIENT_SECRET, disabled: false}
+        ]
+      },
+      headers: [
+        {name: 'Content-Type', value: 'application/x-www-form-urlencoded'},
+        {name: 'Accept', value: 'application/x-www-form-urlencoded, application/json'}
+      ]
     }]]);
 
     // Check the expected value

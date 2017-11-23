@@ -1,6 +1,7 @@
 // @flow
 import type {BaseModel} from './index';
 import * as db from '../common/database';
+import {UPDATE_CHANNEL_STABLE} from '../common/constants';
 
 type BaseSettings = {
   showPasswords: boolean,
@@ -22,10 +23,13 @@ type BaseSettings = {
   maxRedirects: number,
   disableAnalyticsTracking: boolean,
   pluginPath: string,
-  nunjucksPowerUserMode: boolean
+  nunjucksPowerUserMode: boolean,
+  deviceId: string | null,
+  updateChannel: string,
+  updateAutomatically: boolean
 };
 
-export type Settings = BaseModel & Settings;
+export type Settings = BaseModel & BaseSettings;
 
 export const name = 'Settings';
 export const type = 'Settings';
@@ -53,15 +57,18 @@ export function init (): BaseSettings {
     theme: 'default',
     disableAnalyticsTracking: false,
     pluginPath: '',
-    nunjucksPowerUserMode: false
+    nunjucksPowerUserMode: false,
+    deviceId: null,
+    updateChannel: UPDATE_CHANNEL_STABLE,
+    updateAutomatically: true
   };
 }
 
-export function migrate <T> (doc: T): T {
+export function migrate (doc: Settings): Settings {
   return doc;
 }
 
-export async function all (): Promise<Array<Settings>> {
+export async function all (patch: Object = {}): Promise<Array<Settings>> {
   const settings = await db.all(type);
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -81,7 +88,7 @@ export async function update (settings: Settings, patch: Object): Promise<Settin
 export async function getOrCreate (patch: Object = {}): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
-    return await create(patch);
+    return create(patch);
   } else {
     return results[0];
   }

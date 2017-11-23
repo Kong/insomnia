@@ -5,7 +5,7 @@ import * as session from './session';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
-import {trackEvent} from '../analytics/index';
+import {trackEvent} from '../common/analytics';
 import * as zlib from 'zlib';
 
 export const START_DELAY = 1E3;
@@ -17,7 +17,8 @@ const WHITE_LIST = {
   [models.request.type]: true,
   [models.requestGroup.type]: true,
   [models.environment.type]: true,
-  [models.cookieJar.type]: true
+  [models.cookieJar.type]: true,
+  [models.clientCertificate.type]: true
 };
 
 export const logger = new Logger();
@@ -247,7 +248,7 @@ export async function push (resourceGroupId = null) {
   }
 
   // Resolve conflicts
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const serverResource of conflicts) {
     const localResource = await store.getResourceByDocId(
       serverResource.id,
@@ -282,7 +283,7 @@ export async function push (resourceGroupId = null) {
     }
   }
 
-  db.flushChanges();
+  db.flushChangesAsync();
 }
 
 export async function pull (resourceGroupId = null, createMissingResources = true) {
@@ -346,7 +347,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   // Insert all the created docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const serverResource of createdResources) {
     let doc;
 
@@ -389,13 +390,13 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     logger.debug(`Pull created ${createdResources.length} resources`);
   }
 
-  db.flushChanges();
+  db.flushChangesAsync();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Save all the updated docs to the DB //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const serverResource of updatedResources) {
     try {
       const {resourceGroupId, encContent} = serverResource;
@@ -415,7 +416,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
       logger.warn('Failed to decode updated resource', e, serverResource);
     }
   }
-  db.flushChanges();
+  db.flushChangesAsync();
 
   if (updatedResources.length) {
     logger.debug(`Pull updated ${updatedResources.length} resources`);
@@ -425,7 +426,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
   // Remove all the docs that need removing //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  db.bufferChanges();
+  await db.bufferChanges();
   for (const id of idsToRemove) {
     const resource = await store.getResourceByDocId(id);
     if (!resource) {
@@ -443,7 +444,7 @@ export async function pull (resourceGroupId = null, createMissingResources = tru
     // Remove from DB
     await db.remove(doc, true);
   }
-  db.flushChanges();
+  db.flushChangesAsync();
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Push all the docs that need pushing //
@@ -466,7 +467,7 @@ export async function getOrCreateConfig (resourceGroupId) {
   const config = await store.getConfig(resourceGroupId);
 
   if (!config) {
-    return await store.insertConfig({resourceGroupId});
+    return store.insertConfig({resourceGroupId});
   } else {
     return config;
   }
@@ -484,9 +485,9 @@ export async function createOrUpdateConfig (resourceGroupId, syncMode) {
   const patch = {resourceGroupId, syncMode};
 
   if (config) {
-    return await store.updateConfig(config, patch);
+    return store.updateConfig(config, patch);
   } else {
-    return await store.insertConfig(patch);
+    return store.insertConfig(patch);
   }
 }
 
@@ -707,7 +708,7 @@ export async function createResourceGroup (parentId, name) {
 }
 
 export async function createResource (doc, resourceGroupId) {
-  return await store.insertResource({
+  return store.insertResource({
     id: doc._id,
     name: doc.name || 'n/a', // Set name to the doc name if it has one
     resourceGroupId: resourceGroupId,
@@ -743,7 +744,7 @@ export async function createResourceForDoc (doc) {
     // If the current doc IS a Workspace, just return it
     return workspaceResource;
   } else {
-    return await createResource(doc, workspaceResource.resourceGroupId);
+    return createResource(doc, workspaceResource.resourceGroupId);
   }
 }
 
@@ -759,7 +760,7 @@ export async function getOrCreateResourceForDoc (doc) {
   if (resource) {
     return resource;
   } else {
-    return await createResourceForDoc(doc);
+    return createResourceForDoc(doc);
   }
 }
 

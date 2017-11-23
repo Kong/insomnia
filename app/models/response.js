@@ -29,6 +29,7 @@ export type ResponseTimelineEntry = {
 type BaseResponse = {
   statusCode: number,
   statusMessage: string,
+  httpVersion: string,
   contentType: string,
   url: string,
   bytesRead: number,
@@ -51,6 +52,7 @@ export function init (): BaseResponse {
   return {
     statusCode: 0,
     statusMessage: '',
+    httpVersion: '',
     contentType: '',
     url: '',
     bytesRead: 0,
@@ -89,16 +91,21 @@ export function remove (response: Response) {
   return db.remove(response);
 }
 
-export function findRecentForRequest (requestId: string, limit: number) {
-  return db.findMostRecentlyModified(type, {parentId: requestId}, limit);
+export async function findRecentForRequest (
+  requestId: string,
+  limit: number
+): Promise<Array<Response>> {
+  const responses = await db.findMostRecentlyModified(type, {parentId: requestId}, limit);
+  return responses;
 }
 
-export async function getLatestForRequest (requestId: string) {
+export async function getLatestForRequest (requestId: string): Promise<Response | null> {
   const responses = await findRecentForRequest(requestId, 1);
-  return responses[0] || null;
+  const response = (responses[0]: ?Response);
+  return response || null;
 }
 
-export async function create (patch: Object = {}, bodyBuffer: Buffer | null = null) {
+export async function create (patch: Object = {}) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
@@ -116,8 +123,7 @@ export async function create (patch: Object = {}, bodyBuffer: Buffer | null = nu
   await db.removeWhere(type, {parentId, _id: {$nin: recentIds}});
 
   // Actually create the new response
-  const bodyPath = bodyBuffer ? storeBodyBuffer(bodyBuffer) : '';
-  return db.docCreate(type, {bodyPath}, patch);
+  return db.docCreate(type, patch);
 }
 
 export function getLatestByParentId (parentId: string) {
@@ -125,13 +131,17 @@ export function getLatestByParentId (parentId: string) {
 }
 
 export function getBodyBuffer (response: Response, readFailureValue: any = null) {
+  return getBodyBufferFromPath(response.bodyPath, readFailureValue);
+}
+
+export function getBodyBufferFromPath (path: string, readFailureValue: any = null) {
   // No body, so return empty Buffer
-  if (!response.bodyPath) {
-    return new Buffer([]);
+  if (!path) {
+    return Buffer.alloc(0);
   }
 
   try {
-    return decompress(fs.readFileSync(response.bodyPath));
+    return decompress(fs.readFileSync(path));
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return readFailureValue;

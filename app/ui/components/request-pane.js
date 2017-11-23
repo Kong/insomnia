@@ -15,7 +15,7 @@ import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
 import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
-import {trackEvent} from '../../analytics/index';
+import {trackEvent} from '../../common/analytics';
 import * as querystring from '../../common/querystring';
 import * as db from '../../common/database';
 import * as models from '../../models';
@@ -30,6 +30,7 @@ import ErrorBoundary from './error-boundary';
 type Props = {
   // Functions
   forceUpdateRequest: Function,
+  forceUpdateRequestHeaders: Function,
   handleSend: Function,
   handleSendAndDownload: Function,
   handleCreateRequest: Function,
@@ -49,13 +50,6 @@ type Props = {
   handleImportFile: Function,
 
   // Other
-  useBulkHeaderEditor: boolean,
-  showPasswords: boolean,
-  editorFontSize: number,
-  editorIndentSize: number,
-  nunjucksPowerUserMode: boolean,
-  editorKeyMap: string,
-  editorLineWrapping: boolean,
   workspace: Workspace,
   settings: Settings,
   environmentId: string,
@@ -89,19 +83,19 @@ class RequestPane extends React.PureComponent<Props> {
 
     const requestId = this.props.request ? this.props.request._id : 'n/a';
 
-    const urls = docs.filter(d => (
+    const urls = docs.filter((d: any) => (
       d.type === models.request.type && // Only requests
       d._id !== requestId && // Not current request
       (d.url || '') // Only ones with non-empty URLs
-    )).map(r => r.url || '');
+    )).map((r: any) => (r.url || '').trim());
 
     return Array.from(new Set(urls));
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor () {
-    const {useBulkHeaderEditor, updateSettingsUseBulkHeaderEditor} = this.props;
-    updateSettingsUseBulkHeaderEditor(!useBulkHeaderEditor);
-    trackEvent('Headers', 'Toggle Bulk', !useBulkHeaderEditor ? 'On' : 'Off');
+    const {settings, updateSettingsUseBulkHeaderEditor} = this.props;
+    updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
+    trackEvent('Headers', 'Toggle Bulk', !settings.useBulkHeaderEditor ? 'On' : 'Off');
   }
 
   _handleImportFile () {
@@ -164,16 +158,12 @@ class RequestPane extends React.PureComponent<Props> {
 
   render () {
     const {
-      editorFontSize,
-      editorIndentSize,
-      editorKeyMap,
-      editorLineWrapping,
       forceRefreshCounter,
+      forceUpdateRequestHeaders,
       handleGenerateCode,
       handleGetRenderContext,
       handleImport,
       handleRender,
-      nunjucksPowerUserMode,
       handleSend,
       handleSendAndDownload,
       oAuth2Token,
@@ -181,15 +171,13 @@ class RequestPane extends React.PureComponent<Props> {
       workspace,
       environmentId,
       settings,
-      showPasswords,
       updateRequestAuthentication,
       updateRequestBody,
       updateRequestHeaders,
       updateRequestMethod,
       updateRequestMimeType,
       updateRequestParameters,
-      updateSettingsShowPasswords,
-      useBulkHeaderEditor
+      updateSettingsShowPasswords
     } = this.props;
 
     if (!request) {
@@ -262,7 +250,7 @@ class RequestPane extends React.PureComponent<Props> {
               handleSend={handleSend}
               handleSendAndDownload={handleSendAndDownload}
               handleRender={handleRender}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               handleGetRenderContext={handleGetRenderContext}
               url={request.url}
               requestId={request._id}
@@ -314,36 +302,31 @@ class RequestPane extends React.PureComponent<Props> {
               </button>
             </Tab>
           </TabList>
-          <TabPanel className="react-tabs__tab-panel editor-wrapper">
+          <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
             <BodyEditor
+              key={uniqueKey}
               handleUpdateRequestMimeType={updateRequestMimeType}
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              key={uniqueKey}
               request={request}
               workspace={workspace}
               environmentId={environmentId}
               settings={settings}
               onChange={updateRequestBody}
-              fontSize={editorFontSize}
-              indentSize={editorIndentSize}
-              keyMap={editorKeyMap}
-              lineWrapping={editorLineWrapping}
+              onChangeHeaders={forceUpdateRequestHeaders}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable">
-              <ErrorBoundary errorClassName="font-error pad text-center">
+              <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
                 <AuthWrapper
-                  key={uniqueKey}
                   oAuth2Token={oAuth2Token}
-                  showPasswords={showPasswords}
+                  showPasswords={settings.showPasswords}
                   request={request}
                   handleUpdateSettingsShowPasswords={updateSettingsShowPasswords}
                   handleRender={handleRender}
                   handleGetRenderContext={handleGetRenderContext}
-                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   onChange={updateRequestAuthentication}
                 />
               </ErrorBoundary>
@@ -353,10 +336,9 @@ class RequestPane extends React.PureComponent<Props> {
             <div className="pad pad-bottom-sm query-editor__preview">
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
-                <ErrorBoundary
+                <ErrorBoundary key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center">
                   <RenderedQueryString
-                    key={uniqueKey}
                     handleRender={handleRender}
                     request={request}
                   />
@@ -365,11 +347,10 @@ class RequestPane extends React.PureComponent<Props> {
             </div>
             <div className="scrollable-container">
               <div className="scrollable">
-                <ErrorBoundary
+                <ErrorBoundary key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center">
                   <KeyValueEditor
                     sortable
-                    key={uniqueKey}
                     namePlaceholder="name"
                     valuePlaceholder="value"
                     onToggleDisable={this._trackQueryToggle}
@@ -378,7 +359,7 @@ class RequestPane extends React.PureComponent<Props> {
                     pairs={request.parameters}
                     handleRender={handleRender}
                     handleGetRenderContext={handleGetRenderContext}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
+                    nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                     onChange={updateRequestParameters}
                   />
                 </ErrorBoundary>
@@ -393,29 +374,28 @@ class RequestPane extends React.PureComponent<Props> {
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel header-editor">
-            <ErrorBoundary errorClassName="font-error pad text-center">
+            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <RequestHeadersEditor
-                key={uniqueKey}
                 headers={request.headers}
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
-                nunjucksPowerUserMode={nunjucksPowerUserMode}
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
-                editorLineWrapping={editorLineWrapping}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                editorFontSize={settings.editorFontSize}
+                editorIndentSize={settings.editorIndentSize}
+                editorLineWrapping={settings.editorLineWrapping}
                 onChange={updateRequestHeaders}
-                bulk={useBulkHeaderEditor}
+                bulk={settings.useBulkHeaderEditor}
               />
             </ErrorBoundary>
 
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"
                       onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
-                {useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+                {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
           </TabPanel>
-          <TabPanel key={uniqueKey} className="react-tabs__tab-panel tall scrollable">
+          <TabPanel key={`docs::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">

@@ -11,8 +11,8 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {registerModal, showModal} from './modals/index';
 import AlertModal from './modals/alert-modal';
+import WrapperModal from './modals/wrapper-modal';
 import ErrorModal from './modals/error-modal';
-import ChangelogModal from './modals/changelog-modal';
 import CookiesModal from './modals/cookies-modal';
 import CookieModifyModal from '../components/modals/cookie-modify-modal';
 import EnvironmentEditModal from './modals/environment-edit-modal';
@@ -22,6 +22,7 @@ import PaymentNotificationModal from './modals/payment-notification-modal';
 import NunjucksModal from './modals/nunjucks-modal';
 import PromptModal from './modals/prompt-modal';
 import AskModal from './modals/ask-modal';
+import SelectModal from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
 import RequestPane from './request-pane';
 import RequestSwitcherModal from './modals/request-switcher-modal';
@@ -37,11 +38,12 @@ import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as models from '../../models/index';
-import {trackEvent} from '../../analytics/index';
+import {trackEvent} from '../../common/analytics';
 import * as importers from 'insomnia-importers';
 import type {CookieJar} from '../../models/cookie-jar';
 import type {Environment} from '../../models/environment';
 import ErrorBoundary from './error-boundary';
+import type {ClientCertificate} from '../../models/client-certificate';
 
 type Props = {
   // Helper Functions
@@ -102,6 +104,7 @@ type Props = {
   activeWorkspace: Workspace,
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
+  activeWorkspaceClientCertificates: Array<ClientCertificate>,
 
   // Optional
   oAuth2Token: ?OAuth2Token,
@@ -163,6 +166,10 @@ class Wrapper extends React.PureComponent<Props, State> {
     return rUpdate(this.props.activeRequest, {headers});
   }
 
+  _handleForceUpdateRequestHeaders (headers: Array<RequestHeader>): Promise<Request> {
+    return this._handleForceUpdateRequest({headers});
+  }
+
   _handleUpdateRequestUrl (url: string): Promise<Request> {
     return rUpdate(this.props.activeRequest, {url});
   }
@@ -217,11 +224,11 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords (showPasswords: boolean): Promise<Request> {
+  _handleUpdateSettingsShowPasswords (showPasswords: boolean): Promise<Settings> {
     return sUpdate(this.props.settings, {showPasswords});
   }
 
-  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor: boolean): Promise<Request> {
+  _handleUpdateSettingsUseBulkHeaderEditor (useBulkHeaderEditor: boolean): Promise<Settings> {
     return sUpdate(this.props.settings, {useBulkHeaderEditor});
   }
 
@@ -339,6 +346,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       activeCookieJar,
       activeRequestResponses,
       activeResponse,
+      activeWorkspaceClientCertificates,
       environments,
       handleActivateRequest,
       handleCreateRequest,
@@ -397,9 +405,10 @@ class Wrapper extends React.PureComponent<Props, State> {
           <ErrorModal ref={registerModal}/>
           <PromptModal ref={registerModal}/>
 
-          <ChangelogModal ref={registerModal}/>
+          <WrapperModal ref={registerModal}/>
           <LoginModal ref={registerModal}/>
           <AskModal ref={registerModal}/>
+          <SelectModal ref={registerModal}/>
           <RequestCreateModal ref={registerModal}/>
           <PaymentNotificationModal ref={registerModal}/>
           <FilterHelpModal ref={registerModal}/>
@@ -455,6 +464,7 @@ class Wrapper extends React.PureComponent<Props, State> {
 
           <WorkspaceSettingsModal
             ref={registerModal}
+            clientCertificates={activeWorkspaceClientCertificates}
             workspace={activeWorkspace}
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
@@ -517,7 +527,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorFontSize={settings.editorFontSize}
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
-            activeEnvironment={activeEnvironment}
+            activeEnvironmentId={activeEnvironment ? activeEnvironment._id : null}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
@@ -572,12 +582,6 @@ class Wrapper extends React.PureComponent<Props, State> {
             ref={handleSetRequestPaneRef}
             handleImportFile={this._handleImportFile}
             request={activeRequest}
-            showPasswords={settings.showPasswords}
-            useBulkHeaderEditor={settings.useBulkHeaderEditor}
-            editorFontSize={settings.editorFontSize}
-            editorIndentSize={settings.editorIndentSize}
-            editorKeyMap={settings.editorKeyMap}
-            editorLineWrapping={settings.editorLineWrapping}
             workspace={activeWorkspace}
             settings={settings}
             environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -588,8 +592,8 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleImport={this._handleImport}
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             updateRequestBody={this._handleUpdateRequestBody}
+            forceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
             updateRequestUrl={this._handleUpdateRequestUrl}
             updateRequestMethod={this._handleUpdateRequestMethod}
             updateRequestParameters={this._handleUpdateRequestParameters}

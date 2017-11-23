@@ -12,6 +12,8 @@ type BaseEnvironment = {
   name: string,
   data: Object,
   color: string | null,
+
+  // For sync control
   isPrivate: boolean
 };
 
@@ -47,18 +49,16 @@ export function findByParentId (parentId: string): Promise<Array<Environment>> {
 }
 
 export async function getOrCreateForWorkspaceId (workspaceId: string): Promise<Environment> {
-  let environment = await db.getWhere(type, {
-    parentId: workspaceId
-  });
+  const environments = await db.find(type, {parentId: workspaceId});
 
-  if (!environment) {
-    environment = await create({
+  if (!environments.length) {
+    return create({
       parentId: workspaceId,
       name: 'Base Environment'
     });
   }
 
-  return environment;
+  return environments[environments.length - 1];
 }
 
 export async function getOrCreateForWorkspace (workspace: Workspace): Promise<Environment> {

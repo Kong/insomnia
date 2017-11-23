@@ -145,7 +145,7 @@ export function tokenizeTag (tagStr: string): NunjucksParsedTag {
 export function unTokenizeTag (tagData: NunjucksParsedTag): string {
   const args = [];
   for (const arg of tagData.args) {
-    if (arg.type === 'string') {
+    if (['string', 'model', 'file'].includes(arg.type)) {
       const q = arg.quotedBy || "'";
       const re = new RegExp(`([^\\\\])${q}`, 'g');
       const str = arg.value.toString().replace(re, `$1\\${q}`);
@@ -174,6 +174,8 @@ export function getDefaultFill (name: string, args: Array<NunjucksParsedTagArg>)
       case 'boolean':
         return argDefinition.defaultValue ? 'true' : 'false';
       case 'string':
+      case 'file':
+      case 'model':
         return `'${(argDefinition.defaultValue: any) || ''}'`;
       default:
         return "''";

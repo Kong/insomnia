@@ -8,37 +8,38 @@ import HTTPSnippet from 'insomnia-httpsnippet';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {showModal} from '../components/modals';
 import Wrapper from '../components/wrapper';
 import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
 import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
-import ChangelogModal from '../components/modals/changelog-modal';
 import SettingsModal, {TAB_INDEX_SHORTCUTS} from '../components/modals/settings-modal';
-import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, getAppVersion, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
+import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS, PREVIEW_MODE_SOURCE} from '../../common/constants';
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent} from '../../analytics';
-import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
+import {trackEvent} from '../../common/analytics';
+import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import {debounce, getContentDispositionHeader} from '../../common/misc';
+import {compress, debounce, getContentDispositionHeader} from '../../common/misc';
+import zlib from 'zlib';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
 import {getKeys} from '../../templating/utils';
-import {showAlert, showPrompt} from '../components/modals/index';
-import {exportHar} from '../../common/har';
+import {showAlert, showModal, showPrompt} from '../components/modals/index';
+import {exportHarRequest} from '../../common/har';
 import * as hotkeys from '../../common/hotkeys';
 import KeydownBinder from '../components/keydown-binder';
-import {executeHotKey} from '../../common/hotkeys';
 import ErrorBoundary from '../components/error-boundary';
+import * as plugins from '../../plugins';
+import * as templating from '../../templating/index';
+import AskModal from '../components/modals/ask-modal';
 
 @autobind
 class App extends PureComponent {
@@ -54,6 +55,8 @@ class App extends PureComponent {
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT
     };
+
+    this._isMigratingChildren = false;
 
     this._getRenderContextPromiseCache = {};
 
@@ -94,6 +97,24 @@ class App extends PureComponent {
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
         this._requestCreate(parentId);
       }],
+      [hotkeys.DELETE_REQUEST, () => {
+        const {activeRequest} = this.props;
+
+        if (!activeRequest) {
+          return;
+        }
+
+        showModal(AskModal, {
+          title: 'Delete Request?',
+          message: `Really delete ${activeRequest.name}?`,
+          onDone: confirmed => {
+            if (!confirmed) {
+              return;
+            }
+            models.request.remove(activeRequest);
+          }
+        });
+      }],
       [hotkeys.CREATE_FOLDER, () => {
         const {activeRequest, activeWorkspace} = this.props;
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
@@ -112,7 +133,7 @@ class App extends PureComponent {
     const {activeRequest, activeEnvironment} = this.props;
     await this._handleSendRequestWithEnvironment(
       activeRequest ? activeRequest._id : 'n/a',
-      activeEnvironment ? activeEnvironment._id : 'n/a',
+      activeEnvironment ? activeEnvironment._id : 'n/a'
     );
   }
 
@@ -232,7 +253,7 @@ class App extends PureComponent {
   async _handleCopyAsCurl (request) {
     const {activeEnvironment} = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-    const har = await exportHar(request._id, environmentId);
+    const har = await exportHarRequest(request._id, environmentId);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert('shell', 'curl');
     clipboard.writeText(cmd);
@@ -354,24 +375,36 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const {response: responsePatch, bodyBuffer} = await network.send(requestId, environmentId);
+      const {response: responsePatch} = await network.send(requestId, environmentId);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? header.value : null;
 
+      if (!responsePatch.bodyPath) {
+        return;
+      }
+
       if (responsePatch.statusCode >= 200 && responsePatch.statusCode < 300) {
-        const extension = mime.extension(responsePatch.contentType) || '';
+        const extension = mime.extension(responsePatch.contentType) || 'unknown';
         const name = nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+
         const filename = path.join(dir, name);
-        const partialResponse = Object.assign({}, responsePatch);
-        await models.response.create(partialResponse, `Saved to ${filename}`);
-        fs.writeFile(filename, bodyBuffer, err => {
-          if (err) {
-            console.warn('Failed to download request after sending', err);
-          }
+        const from = fs.createReadStream(responsePatch.bodyPath);
+        const to = fs.createWriteStream(filename);
+        const gunzip = zlib.createGunzip();
+        from.pipe(gunzip).pipe(to);
+
+        gunzip.on('end', async () => {
+          trackEvent('Response', 'Download After Save Success');
+          fs.writeFileSync(responsePatch.bodyPath, compress(`Saved to ${filename}`));
+          await models.response.create(responsePatch);
         });
-      } else {
-        await models.response.create(responsePatch, bodyBuffer);
+
+        gunzip.on('error', async err => {
+          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+          trackEvent('Response', 'Download After Save Failed');
+          await models.response.create(responsePatch);
+        });
       }
     } catch (err) {
       showAlert({
@@ -411,8 +444,8 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const {response: responsePatch, bodyBuffer} = await network.send(requestId, environmentId);
-      await models.response.create(responsePatch, bodyBuffer);
+      const responsePatch = await network.send(requestId, environmentId);
+      await models.response.create(responsePatch);
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {request, error: err});
@@ -572,7 +605,7 @@ class App extends PureComponent {
 
   _handleKeyDown (e) {
     for (const [definition, callback] of this._globalKeyMap) {
-      executeHotKey(e, definition, callback);
+      hotkeys.executeHotKey(e, definition, callback);
     }
   }
 
@@ -632,19 +665,6 @@ class App extends PureComponent {
     // Update title
     this._updateDocumentTitle();
 
-    // Update Stats Object
-    const {lastVersion, launches} = await models.stats.get();
-    const firstLaunch = !lastVersion;
-    if (firstLaunch) {
-      // TODO: Show a welcome message
-      trackEvent('General', 'First Launch', getAppVersion(), {nonInteraction: true});
-    } else if (lastVersion !== getAppVersion()) {
-      trackEvent('General', 'Updated', getAppVersion(), {nonInteraction: true});
-      showModal(ChangelogModal);
-    } else {
-      trackEvent('General', 'Launched', getAppVersion(), {nonInteraction: true});
-    }
-
     db.onChange(async changes => {
       for (const change of changes) {
         const [
@@ -675,14 +695,14 @@ class App extends PureComponent {
       }
     });
 
-    models.stats.update({
-      launches: launches + 1,
-      lastLaunch: Date.now(),
-      lastVersion: getAppVersion()
-    });
-
     ipcRenderer.on('toggle-preferences', () => {
       showModal(SettingsModal);
+    });
+
+    ipcRenderer.on('reload-plugins', async () => {
+      await plugins.getPlugins(true);
+      templating.reload();
+      console.log('[plugins] reloaded');
     });
 
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
@@ -699,16 +719,43 @@ class App extends PureComponent {
       this.props.handleCommand(command, args);
     });
 
-    ipcRenderer.on('toggle-changelog', () => {
-      showModal(ChangelogModal);
-    });
+    // NOTE: This is required for "drop" event to trigger.
+    document.addEventListener('dragover', e => {
+      e.preventDefault();
+    }, false);
+
+    document.addEventListener('drop', async e => {
+      e.preventDefault();
+      const {activeWorkspace, handleImportUriToWorkspace} = this.props;
+      if (!activeWorkspace) {
+        return;
+      }
+
+      if (e.dataTransfer.files.length === 0) {
+        console.log('[drag] Ignored drop event because no files present');
+        return;
+      }
+
+      const file = e.dataTransfer.files[0];
+      const {path} = file;
+      const uri = `file://${path}`;
+
+      await showAlert({
+        title: 'Confirm Data Import',
+        message: <span>Import <code>{path}</code>?</span>,
+        addCancel: true
+      });
+
+      handleImportUriToWorkspace(activeWorkspace._id, uri);
+    }, false);
 
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
 
-    process.nextTick(() => ipcRenderer.send('app-ready'));
-
     // handle this
     this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
+
+    // Give it a bit before letting the backend know it's ready
+    setTimeout(() => ipcRenderer.send('window-ready'), 500);
   }
 
   componentWillUnmount () {
@@ -717,7 +764,54 @@ class App extends PureComponent {
     document.removeEventListener('mousemove', this._handleMouseMove);
   }
 
+  async _ensureWorkspaceChildren (props) {
+    const {activeWorkspace, activeCookieJar, environments} = props;
+    const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
+
+    // Nothing to do
+    if (baseEnvironments.length && activeCookieJar) {
+      return;
+    }
+
+    // We already started migrating. Let it finish.
+    if (this._isMigratingChildren) {
+      return;
+    }
+
+    // Prevent rendering of everything
+    this._isMigratingChildren = true;
+
+    await db.bufferChanges();
+    if (baseEnvironments.length === 0) {
+      await models.environment.create({parentId: activeWorkspace._id});
+      console.log(`[app] Created missing base environment for ${activeWorkspace.name}`);
+    }
+
+    if (!activeCookieJar) {
+      await models.cookieJar.create({parentId: this.props.activeWorkspace._id});
+      console.log(`[app] Created missing cookie jar for ${activeWorkspace.name}`);
+    }
+
+    await db.flushChanges();
+
+    // Flush "transaction"
+    this._isMigratingChildren = false;
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this._ensureWorkspaceChildren(nextProps);
+  }
+
+  componentWillMount () {
+    this._ensureWorkspaceChildren(this.props);
+  }
+
   render () {
+    if (this._isMigratingChildren) {
+      console.log('[app] Waiting for migration to complete');
+      return null;
+    }
+
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <div className="app">
@@ -818,6 +912,7 @@ function mapStateToProps (state, props) {
   // Workspace stuff
   const workspaceMeta = selectActiveWorkspaceMeta(state, props) || {};
   const activeWorkspace = selectActiveWorkspace(state, props);
+  const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
   const sidebarHidden = workspaceMeta.sidebarHidden || false;
   const sidebarFilter = workspaceMeta.sidebarFilter || '';
   const sidebarWidth = workspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
@@ -861,6 +956,7 @@ function mapStateToProps (state, props) {
     isLoading,
     loadStartTime,
     activeWorkspace,
+    activeWorkspaceClientCertificates,
     activeRequest,
     activeRequestResponses,
     activeResponse,
@@ -897,9 +993,18 @@ function mapDispatchToProps (dispatch) {
 }
 
 async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
+  // Nothing to do. We are in the same spot as we started
   if (docToMove._id === targetId) {
-    // Nothing to do. We are in the same spot as we started
     return;
+  }
+
+  // Don't allow dragging things into itself or children. This will disconnect
+  // the node from the tree and cause the item to no longer show in the UI.
+  const descendents = await db.withDescendants(docToMove);
+  for (const doc of descendents) {
+    if (doc._id === parentId) {
+      return;
+    }
   }
 
   function __updateDoc (doc, patch) {
@@ -941,9 +1046,9 @@ async function _moveDoc (docToMove, parentId, targetId, targetOffset) {
         // If sort keys get too close together, we need to redistribute the list. This is
         // not performant at all (need to update all siblings in DB), but it is extremely rare
         // anyway
-        console.log(`-- Recreating Sort Keys ${beforeKey} ${afterKey} --`);
+        console.log(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
 
-        db.bufferChanges(300);
+        await db.bufferChanges(300);
         docs.map((r, i) => __updateDoc(r, {metaSortKey: i * 100, parentId}));
       } else {
         const metaSortKey = afterKey - ((afterKey - beforeKey) / 2);

@@ -3,9 +3,11 @@ import * as plugins from '../../plugins/index';
 
 import timestampExtension from './timestamp-extension';
 import uuidExtension from './uuid-extension';
-import NowExtension from './now-extension';
+import nowExtension from './now-extension';
+import fileExtension from './file-extension';
 import responseExtension from './response-extension';
 import base64Extension from './base-64-extension';
+import hashExtension from './hash-extension';
 import requestExtension from './request-extension';
 import type {NunjucksParsedTagArg} from '../utils';
 import type {Request} from '../../models/request';
@@ -23,32 +25,36 @@ type PluginArgumentBase = {
 
 export type PluginArgumentEnumOption = {
   displayName: DisplayName,
-  description: string,
   value: PluginArgumentValue,
+  description?: string,
   placeholder?: string
 }
 
 export type PluginArgumentEnum = PluginArgumentBase & {
-  type: 'enum';
+  type: 'enum',
   options: Array<PluginArgumentEnumOption>,
   defaultValue?: PluginArgumentValue
 };
 
 export type PluginArgumentModel = PluginArgumentBase & {
-  type: 'model';
+  type: 'model',
   model: string,
   defaultValue?: string
 };
 
 export type PluginArgumentString = PluginArgumentBase & {
-  type: 'string';
+  type: 'string',
   placeholder?: string,
   defaultValue?: string
 };
 
 export type PluginArgumentBoolean = PluginArgumentBase & {
-  type: 'boolean';
+  type: 'boolean',
   defaultValue?: boolean
+};
+
+export type PluginArgumentFile = PluginArgumentBase & {
+  type: 'file'
 };
 
 export type PluginArgumentNumber = PluginArgumentBase & {
@@ -62,6 +68,7 @@ export type PluginArgument =
   | PluginArgumentModel
   | PluginArgumentString
   | PluginArgumentBoolean
+  | PluginArgumentFile
   | PluginArgumentNumber;
 
 export type PluginTemplateTagContext = {
@@ -90,9 +97,11 @@ export type PluginTemplateTag = {
 
 const DEFAULT_EXTENSIONS: Array<PluginTemplateTag> = [
   timestampExtension,
-  NowExtension,
+  fileExtension,
+  nowExtension,
   uuidExtension,
   base64Extension,
+  hashExtension,
   requestExtension,
   responseExtension
 ];

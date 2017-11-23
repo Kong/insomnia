@@ -5,20 +5,17 @@ import {Provider} from 'react-redux';
 import {DragDropContext} from 'react-dnd';
 import App from './containers/app';
 import * as models from '../models';
-import {types as modelTypes} from '../models';
+import * as db from '../common/database';
 import {init as initStore} from './redux/modules';
-import {init as initDB} from '../common/database';
 import {init as initSync} from '../sync';
-import {init as initAnalytics} from '../analytics';
 import {init as initPlugins} from '../plugins';
-import {getAccountId} from '../sync/session';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
 import {isDevelopment} from '../common/constants';
+import {trackEvent, trackPageView} from '../common/analytics';
 
 (async function () {
-  await initDB(modelTypes());
-  await initAnalytics(getAccountId());
+  await db.initClient();
 
   // Create Redux store
   const store = await initStore();
@@ -53,4 +50,21 @@ import {isDevelopment} from '../common/constants';
 // Export some useful things for dev
 if (isDevelopment()) {
   window.models = models;
+  window.db = db;
 }
+
+// Catch uncaught errors and report them
+if (window && !isDevelopment()) {
+  window.addEventListener('error', e => {
+    trackEvent('Error', 'Uncaught Error');
+    console.error('Uncaught Error', e);
+  });
+
+  window.addEventListener('unhandledRejection', e => {
+    trackEvent('Error', 'Uncaught Promise');
+    console.error('Unhandled Promise', e);
+  });
+}
+
+// Track the page view
+trackPageView();

@@ -179,12 +179,7 @@ describe('keyedDebounce()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     jest.useFakeTimers();
-
-    // There has to be a better way to reset this...
-    setTimeout.mock.calls = [];
   });
-
-  afterEach(() => jest.clearAllTimers());
 
   it('debounces correctly', () => {
     const resultsList = [];
@@ -215,12 +210,7 @@ describe('debounce()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     jest.useFakeTimers();
-
-    // There has to be a better way to reset this...
-    setTimeout.mock.calls = [];
   });
-
-  afterEach(() => jest.clearAllTimers());
 
   it('debounces correctly', () => {
     const resultList = [];

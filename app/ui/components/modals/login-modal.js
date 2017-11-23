@@ -115,7 +115,7 @@ class LoginModal extends PureComponent {
           <p>
             If you have any questions or concerns, send you email to
             {' '}
-            <Link href="https://insomnia.rest/documentation/support-and-feedback/">
+            <Link href="https://insomnia.rest/support/">
               support@insomnia.rest
             </Link>
           </p>

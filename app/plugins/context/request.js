@@ -76,6 +76,18 @@ export function init (
       },
       getEnvironment (): Object {
         return renderedContext;
+      },
+      settingSendCookies (enabled: boolean) {
+        renderedRequest.settingSendCookies = enabled;
+      },
+      settingStoreCookies (enabled: boolean) {
+        renderedRequest.settingStoreCookies = enabled;
+      },
+      settingEncodeUrl (enabled: boolean) {
+        renderedRequest.settingEncodeUrl = enabled;
+      },
+      settingDisableRenderRequestBody (enabled: boolean) {
+        renderedRequest.settingDisableRenderRequestBody = enabled;
       }
 
       // NOTE: For these to make sense, we'd need to account for cookies in the jar as well

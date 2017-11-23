@@ -3,6 +3,7 @@ import type {Request} from '../../models/request';
 import type {Response} from '../../models/response';
 
 import * as React from 'react';
+import zlib from 'zlib';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
@@ -23,7 +24,7 @@ import * as models from '../../models';
 import {PREVIEW_MODE_SOURCE} from '../../common/constants';
 import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../network/network';
-import {trackEvent} from '../../analytics';
+import {trackEvent} from '../../common/analytics';
 import Hotkey from './hotkey';
 import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
@@ -47,7 +48,7 @@ type Props = {
   editorKeyMap: string,
   editorLineWrapping: boolean,
   loadStartTime: number,
-  responses: Array<Object>,
+  responses: Array<Response>,
 
   // Other
   request: ?Request,
@@ -65,22 +66,20 @@ class ResponsePane extends React.PureComponent<Props> {
   }
 
   async _handleDownloadResponseBody () {
-    if (!this.props.response) {
+    const {response, request} = this.props;
+    if (!response || !request) {
       // Should never happen
       console.warn('No response to download');
       return;
     }
 
-    const {response} = this.props;
     const {contentType} = response;
-    const extension = mime.extension(contentType) || '';
+    const extension = mime.extension(contentType) || 'unknown';
 
     const options = {
       title: 'Save Response Body',
       buttonLabel: 'Save',
-      filters: [{
-        name: 'Download', extensions: [extension]
-      }]
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`
     };
 
     remote.dialog.showSaveDialog(options, outputPath => {
@@ -89,25 +88,26 @@ class ResponsePane extends React.PureComponent<Props> {
         return;
       }
 
-      const bodyBuffer = models.response.getBodyBuffer(response);
-
-      if (bodyBuffer) {
-        fs.writeFile(outputPath, bodyBuffer, err => {
-          if (err) {
-            console.warn('Failed to save response body', err);
-            trackEvent('Response', 'Save Failure');
-          } else {
-            trackEvent('Response', 'Save Success');
-          }
+      if (response.bodyPath) {
+        const from = fs.createReadStream(response.bodyPath);
+        const to = fs.createWriteStream(outputPath);
+        const gunzip = zlib.createGunzip();
+        from.pipe(gunzip).pipe(to);
+        gunzip.on('end', () => {
+          trackEvent('Response', 'Save Success');
+        });
+        gunzip.on('error', err => {
+          console.warn('Failed to save response body', err);
+          trackEvent('Response', 'Save Failure');
         });
       }
     });
   }
 
   _handleDownloadFullResponseBody () {
-    const {response} = this.props;
+    const {response, request} = this.props;
 
-    if (!response) {
+    if (!response || !request) {
       // Should never happen
       console.warn('No response to download');
       return;
@@ -118,15 +118,10 @@ class ResponsePane extends React.PureComponent<Props> {
       .map(v => v.value)
       .join('');
 
-    const bodyBuffer = models.response.getBodyBuffer(response) || Buffer.from('');
-    const fullResponse = `${headers}${bodyBuffer.toString()}`;
-
     const options = {
       title: 'Save Full Response',
       buttonLabel: 'Save',
-      filters: [{
-        name: 'Download'
-      }]
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`
     };
 
     remote.dialog.showSaveDialog(options, filename => {
@@ -135,14 +130,20 @@ class ResponsePane extends React.PureComponent<Props> {
         return;
       }
 
-      fs.writeFile(filename, fullResponse, {}, err => {
-        if (err) {
+      if (response.bodyPath) {
+        const from = fs.createReadStream(response.bodyPath);
+        const to = fs.createWriteStream(filename);
+        to.write(headers);
+        const gunzip = zlib.createGunzip();
+        from.pipe(gunzip).pipe(to);
+        gunzip.on('end', () => {
+          trackEvent('Response', 'Save Full Success');
+        });
+        gunzip.on('error', err => {
           console.warn('Failed to save full response', err);
           trackEvent('Response', 'Save Full Failure');
-        } else {
-          trackEvent('Response', 'Save Full Success');
-        }
-      });
+        });
+      }
     });
   }
 
@@ -279,9 +280,8 @@ class ResponsePane extends React.PureComponent<Props> {
             </Tab>
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
-            <ErrorBoundary errorClassName="font-error pad text-center">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseViewer
-                key={response._id}
                 // Send larger one because legacy responses have bytesContent === -1
                 responseId={response._id}
                 bytes={Math.max(response.bytesContent, response.bytesRead)}
@@ -303,32 +303,27 @@ class ResponsePane extends React.PureComponent<Props> {
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ErrorBoundary errorClassName="font-error pad text-center">
-                <ResponseHeadersViewer
-                  key={response._id}
-                  headers={response.headers}
-                />
+              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+                <ResponseHeadersViewer headers={response.headers} />
               </ErrorBoundary>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
-              <ErrorBoundary errorClassName="font-error pad text-center">
+              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
                 <ResponseCookiesViewer
                   handleShowRequestSettings={handleShowRequestSettings}
                   cookiesSent={response.settingSendCookies}
                   cookiesStored={response.settingStoreCookies}
                   showCookiesModal={showCookiesModal}
-                  key={response._id}
                   headers={cookieHeaders}
                 />
               </ErrorBoundary>
             </div>
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel">
-            <ErrorBoundary errorClassName="font-error pad text-center">
+            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseTimelineViewer
-                key={response._id}
                 timeline={response.timeline || []}
                 editorLineWrapping={editorLineWrapping}
                 editorFontSize={editorFontSize}

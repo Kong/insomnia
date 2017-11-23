@@ -13,13 +13,14 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import type {Workspace} from '../../../models/workspace';
 import type {Environment} from '../../../models/environment';
+import * as db from '../../../common/database';
 
 type Props = {
-  activeEnvironment: Environment | null,
+  activeEnvironmentId: string | null,
   editorFontSize: number,
   editorIndentSize: number,
   editorKeyMap: string,
@@ -39,10 +40,11 @@ type State = {
 
 @autobind
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
-  environmentEditorRef: EnvironmentEditor | null;
+  environmentEditorRef: ?EnvironmentEditor;
   colorChangeTimeout: any;
   saveTimeout: any;
   modal: Modal;
+  editorKey: number;
 
   constructor (props: Props) {
     super(props);
@@ -55,13 +57,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     };
 
     this.colorChangeTimeout = null;
+    this.editorKey = 0;
   }
 
   hide () {
     this.modal && this.modal.hide();
   }
 
-  _setEditorRef (n: EnvironmentEditor) {
+  _setEditorRef (n: ?EnvironmentEditor) {
     this.environmentEditorRef = n;
   }
 
@@ -70,11 +73,11 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   }
 
   async show (workspace: Workspace) {
-    const {activeEnvironment} = this.props;
+    const {activeEnvironmentId} = this.props;
 
     // Default to showing the currently active environment
-    if (activeEnvironment) {
-      this.setState({selectedEnvironmentId: activeEnvironment._id});
+    if (activeEnvironmentId) {
+      this.setState({selectedEnvironmentId: activeEnvironmentId});
     }
 
     await this._load(workspace);
@@ -83,7 +86,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     trackEvent('Environment Editor', 'Show');
   }
 
-  async _load (workspace: Workspace | null, environmentToActivate: Environment | null = null) {
+  async _load (workspace: Workspace | null, environmentToSelect: Environment | null = null) {
     if (!workspace) {
       console.warn('Failed to reload environment editor without Workspace');
       return;
@@ -94,8 +97,8 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
     let selectedEnvironmentId;
 
-    if (environmentToActivate) {
-      selectedEnvironmentId = environmentToActivate._id;
+    if (environmentToSelect) {
+      selectedEnvironmentId = environmentToSelect._id;
     } else if (this.state.workspace && workspace._id !== this.state.workspace._id) {
       // We've changed workspaces, so load the root one
       selectedEnvironmentId = rootEnvironment._id;
@@ -212,6 +215,26 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     this._handleChangeEnvironmentColor(environment, null);
   }
 
+  componentDidMount () {
+    db.onChange(async changes => {
+      const {selectedEnvironmentId} = this.state;
+
+      for (const change of changes) {
+        const [
+          _, // eslint-disable-line no-unused-vars
+          doc,
+          fromSync
+        ] = change;
+
+        // Force an editor refresh if any changes from sync come in
+        if (doc._id === selectedEnvironmentId && fromSync) {
+          this.editorKey = doc.modified;
+          await this._load(this.state.workspace);
+        }
+      }
+    });
+  }
+
   async _handleClickColorChange (environment: Environment) {
     let el = document.querySelector('#env-color-picker');
 
@@ -244,7 +267,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const data = this.environmentEditorRef.getValue();
+    let data;
+    try {
+      data = this.environmentEditorRef.getValue();
+    } catch (err) {
+      // Invalid JSON probably
+      return;
+    }
+
     const activeEnvironment = this._getActiveEnvironment();
 
     if (activeEnvironment) {
@@ -385,7 +415,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                 editorKeyMap={editorKeyMap}
                 lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
-                key={activeEnvironment ? activeEnvironment._id : 'n/a'}
+                key={`${this.editorKey}::${activeEnvironment ? activeEnvironment._id : 'n/a'}`}
                 environment={activeEnvironment ? activeEnvironment.data : {}}
                 didChange={this._didChange}
                 render={render}
@@ -398,7 +428,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         <ModalFooter>
           <div className="margin-left italic txt-sm tall">
             * Environment data can be used for&nbsp;
-            <Link href="https://insomnia.rest/documentation/templating/">
+            <Link href="https://support.insomnia.rest/article/40-template-tags">
               Nunjucks Templating
             </Link> in your requests
           </div>

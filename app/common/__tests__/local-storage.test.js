@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import LocalStorage from '../local-storage';
+import LocalStorage from '../../main/local-storage';
 import {globalBeforeEach} from '../../__jest__/before-each';
 
 describe('LocalStorage()', () => {

@@ -6,7 +6,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
 

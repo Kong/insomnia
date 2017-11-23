@@ -10,11 +10,12 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import {delay, fnOrString} from '../../../common/misc';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import type {BaseModel} from '../../../models/index';
 import type {Workspace} from '../../../models/workspace';
 import type {PluginArgumentEnumOption} from '../../../templating/extensions/index';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown/index';
+import FileInputButton from '../base/file-input-button';
 
 type Props = {
   handleRender: Function,
@@ -68,8 +69,10 @@ class TagEditor extends React.PureComponent<Props, State> {
       activeTagData.rawValue = this.props.defaultValue;
     }
 
-    await this._refreshModels(this.props.workspace);
-    await this._update(tagDefinitions, activeTagDefinition, activeTagData, true);
+    await Promise.all([
+      this._refreshModels(this.props.workspace),
+      this._update(tagDefinitions, activeTagDefinition, activeTagData, true)
+    ]);
   }
 
   async loadVariables () {
@@ -101,12 +104,14 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   async _refreshModels (workspace: Workspace) {
+    this.setState({loadingDocs: true});
+
     const allDocs = {};
     for (const type of models.types()) {
       allDocs[type] = [];
     }
 
-    for (const doc of await db.withDescendants(workspace)) {
+    for (const doc of await db.withDescendants(workspace, models.request.type)) {
       allDocs[doc.type].push(doc);
     }
 
@@ -116,7 +121,8 @@ class TagEditor extends React.PureComponent<Props, State> {
   _updateArg (
     argValue: string | number | boolean,
     argIndex: number,
-    forceNewType: string | null = null
+    forceNewType: string | null = null,
+    patch: Object = {}
   ) {
     const {tagDefinitions, activeTagData, activeTagDefinition} = this.state;
 
@@ -128,6 +134,11 @@ class TagEditor extends React.PureComponent<Props, State> {
     if (!activeTagDefinition) {
       console.warn('No active tag definition to update', {state: this.state});
       return;
+    }
+
+    // Fix strings
+    if (typeof argValue === 'string') {
+      argValue = argValue.replace(/\\/g, '\\\\');
     }
 
     // Ensure all arguments exist
@@ -154,7 +165,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     // Update type if we need to
     if (forceNewType) {
       // Ugh, what a hack (because it's enum)
-      (argData: any).type = forceNewType;
+      Object.assign((argData: any), {type: forceNewType}, patch);
     }
 
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
@@ -182,8 +193,12 @@ class TagEditor extends React.PureComponent<Props, State> {
       const initialType = argDef ? argDef.type : 'string';
       const variable = variables.find(v => v.name === existingValue);
       const value = variable ? variable.value : '';
-      return this._updateArg(value, argIndex, initialType);
+      return this._updateArg(value, argIndex, initialType, {quotedBy: "'"});
     }
+  }
+
+  _handleChangeFile (path: string, argIndex: number) {
+    return this._updateArg(path, argIndex);
   }
 
   _handleChange (e: SyntheticEvent<HTMLInputElement>, forceVariable: boolean = false) {
@@ -315,6 +330,9 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     return (
       <select value={path || ''} onChange={this._handleChange}>
+        <option key="n/a" value="NO_VARIABLE">
+          -- Select Variable --
+        </option>
         {variables.map((v, i) => (
           <option key={`${i}::${v.name}`} value={v.name}>
             {v.name}
@@ -352,14 +370,27 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
+  renderArgFile (value: string, argIndex: number) {
+    return (
+      <FileInputButton
+        showFileIcon
+        showFileName
+        className="btn btn--clicky btn--super-compact"
+        onChange={path => this._handleChangeFile(path, argIndex)}
+        path={value}
+      />
+    );
+  }
+
   renderArgEnum (value: string, options: Array<PluginArgumentEnumOption>) {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
     return (
       <select value={value} onChange={this._handleChange}>
         {options.map(option => {
           let label: string;
-          if (option.description) {
-            label = `${fnOrString(option.displayName, argDatas)} – ${option.description}`;
+          const {description} = option;
+          if (description) {
+            label = `${fnOrString(option.displayName, argDatas)} – ${description}`;
           } else {
             label = fnOrString(option.displayName, argDatas);
           }
@@ -379,8 +410,16 @@ class TagEditor extends React.PureComponent<Props, State> {
     const docs = allDocs[modelType] || [];
     const id = value || 'n/a';
 
+    if (loadingDocs) {
+      return (
+        <select disabled={loadingDocs}>
+          <option>Loading...</option>
+        </select>
+      );
+    }
+
     return (
-      <select value={id} disabled={loadingDocs} onChange={this._handleChange}>
+      <select value={id} onChange={this._handleChange}>
         <option value="n/a">-- Select Item --</option>
         {docs.map(doc => {
           let namePrefix = null;
@@ -439,9 +478,8 @@ class TagEditor extends React.PureComponent<Props, State> {
     const argInputVariable = isVariable ? this.renderArgVariable(strValue) : null;
 
     let argInput;
-    let isVariableAllowed = false;
+    let isVariableAllowed = true;
     if (argDefinition.type === 'string') {
-      isVariableAllowed = true;
       const placeholder = typeof argDefinition.placeholder === 'string'
         ? argDefinition.placeholder
         : '';
@@ -449,14 +487,16 @@ class TagEditor extends React.PureComponent<Props, State> {
     } else if (argDefinition.type === 'enum') {
       const {options} = argDefinition;
       argInput = this.renderArgEnum(strValue, options);
+    } else if (argDefinition.type === 'file') {
+      argInput = this.renderArgFile(strValue, argIndex);
     } else if (argDefinition.type === 'model') {
+      isVariableAllowed = false;
       const model = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
       const modelId = typeof strValue === 'string' ? strValue : 'unknown';
       argInput = this.renderArgModel(modelId, model);
     } else if (argDefinition.type === 'boolean') {
       argInput = this.renderArgBoolean(strValue.toLowerCase() === 'true');
     } else if (argDefinition.type === 'number') {
-      isVariableAllowed = true;
       const placeholder = typeof argDefinition.placeholder === 'string' ? argDefinition.placeholder : '';
       argInput = this.renderArgNumber(strValue, placeholder || '');
     } else {

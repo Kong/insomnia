@@ -11,14 +11,13 @@ import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/settings-modal';
 import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
 import {showModal, showPrompt} from '../modals/index';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import * as session from '../../../sync/session';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
-import {executeHotKey} from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
 
@@ -98,7 +97,7 @@ class WorkspaceDropdown extends PureComponent {
   }
 
   _handleKeydown (e) {
-    executeHotKey(e, hotkeys.TOGGLE_MAIN_MENU, () => {
+    hotkeys.executeHotKey(e, hotkeys.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
     });
   }

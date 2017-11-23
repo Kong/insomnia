@@ -1,14 +1,19 @@
-import * as querystring from '../../common/querystring';
+// @flow
 import * as c from './constants';
 import {responseToObject} from './misc';
 import {getBasicAuthHeader, setDefaultProtocol} from '../../common/misc';
+import * as models from '../../models/index';
+import {sendWithSettings} from '../network';
 
-export default async function (accessTokenUrl,
-                               credentialsInBody,
-                               clientId,
-                               clientSecret,
-                               refreshToken,
-                               scope = '') {
+export default async function (
+  requestId: string,
+  accessTokenUrl: string,
+  credentialsInBody: boolean,
+  clientId: string,
+  clientSecret: string,
+  refreshToken: string,
+  scope: string
+): Promise<Object> {
   const params = [
     {name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_REFRESH},
     {name: c.P_REFRESH_TOKEN, value: refreshToken}
@@ -17,30 +22,38 @@ export default async function (accessTokenUrl,
   // Add optional params
   scope && params.push({name: c.P_SCOPE, value: scope});
 
-  const headers = new window.Headers({
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Accept': 'application/x-www-form-urlencoded, application/json'
-  });
+  const headers = [
+    {name: 'Content-Type', value: 'application/x-www-form-urlencoded'},
+    {name: 'Accept', value: 'application/x-www-form-urlencoded, application/json'}
+  ];
 
   if (credentialsInBody) {
     params.push({name: c.P_CLIENT_ID, value: clientId});
     params.push({name: c.P_CLIENT_SECRET, value: clientSecret});
   } else {
-    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
-    headers.set(name, value);
+    headers.push(getBasicAuthHeader(clientId, clientSecret));
   }
-
-  const config = {
-    method: 'POST',
-    body: querystring.buildFromParams(params),
-    headers: headers
-  };
 
   const url = setDefaultProtocol(accessTokenUrl);
 
-  const response = await window.fetch(url, config);
-  const body = await response.text();
-  const results = responseToObject(body, [
+  const response = await sendWithSettings(requestId, {
+    headers,
+    url,
+    method: 'POST',
+    body: models.request.newBodyFormUrlEncoded(params)
+  });
+
+  const statusCode = response.statusCode || 0;
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new Error(`[oauth2] Failed to refresh token url=${url} status=${statusCode}`);
+  }
+
+  const bodyBuffer = models.response.getBodyBufferFromPath(response.bodyPath || '');
+  if (!bodyBuffer) {
+    throw new Error(`[oauth2] No body returned from ${url}`);
+  }
+
+  const results = responseToObject(bodyBuffer.toString(), [
     c.P_ACCESS_TOKEN,
     c.P_REFRESH_TOKEN,
     c.P_EXPIRES_IN,

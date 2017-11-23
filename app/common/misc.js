@@ -1,11 +1,12 @@
 // @flow
+import * as electron from 'electron';
+import {Readable, Writable} from 'stream';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
 import {format as urlFormat, parse as urlParse} from 'url';
 import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
 import * as querystring from './querystring';
-import {shell} from 'electron';
 
 const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
@@ -63,8 +64,17 @@ export function hasUserAgentHeader<T: Header> (headers: Array<T>): boolean {
   return filterHeaders(headers, 'user-agent').length > 0;
 }
 
+export function hasAcceptEncodingHeader<T: Header> (headers: Array<T>): boolean {
+  return filterHeaders(headers, 'accept-encoding').length > 0;
+}
+
 export function getSetCookieHeaders<T: Header> (headers: Array<T>): Array<T> {
   return filterHeaders(headers, 'set-cookie');
+}
+
+export function getLocationHeader<T: Header> (headers: Array<T>): T | null {
+  const matches = filterHeaders(headers, 'location');
+  return matches.length ? matches[0] : null;
 }
 
 export function getContentTypeHeader<T: Header> (headers: Array<T>): T | null {
@@ -257,16 +267,20 @@ export function preventDefault (e: Event): void {
   e.preventDefault();
 }
 
-export function clickLink (href: string): void {
+export function attributeHref (href: string): string {
   if (href.match(/^http/i)) {
     const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
     const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
-    const attributedHref = querystring.joinUrl(href, qs);
-    shell.openExternal(attributedHref);
+    return querystring.joinUrl(href, qs);
   } else {
     // Don't modify non-http urls
-    shell.openExternal(href);
+    return href;
   }
+}
+
+export function clickLink (href: string): void {
+  const attributedHref = attributeHref(href);
+  electron.shell.openExternal(attributedHref);
 }
 
 export function fnOrString (v: string | Function, ...args: Array<any>) {
@@ -336,4 +350,49 @@ export function fuzzyMatch (searchString: string, text: string): boolean {
   }
 
   return toMatch.test(text.toLowerCase());
+}
+
+export function getViewportSize (): string | null {
+  const {BrowserWindow} = electron.remote || electron;
+  const w = BrowserWindow.getFocusedWindow() ||
+    BrowserWindow.getAllWindows()[0];
+
+  if (w) {
+    const {width, height} = w.getContentBounds();
+    return `${width}x${height}`;
+  } else {
+    // No windows open
+    return null;
+  }
+}
+
+export function getScreenResolution (): string {
+  const {screen} = electron.remote || electron;
+  const {width, height} = screen.getPrimaryDisplay().workAreaSize;
+  return `${width}x${height}`;
+}
+
+export function getUserLanguage (): string {
+  const {app} = electron.remote || electron;
+  return app.getLocale();
+}
+
+export async function waitForStreamToFinish (s: Readable | Writable): Promise<void> {
+  return new Promise(resolve => {
+    if (s.hasOwnProperty('readable') && !s.readable) {
+      return resolve();
+    }
+
+    if (s.hasOwnProperty('writable') && !s.writable) {
+      return resolve();
+    }
+
+    s.on('finish', () => {
+      resolve();
+    });
+
+    s.on('error', () => {
+      resolve();
+    });
+  });
 }

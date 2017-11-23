@@ -1,22 +1,22 @@
 // @flow
 import type {ResponseHeader, ResponseTimelineEntry} from '../models/response';
-import type {RequestHeader} from '../models/request';
+import type {Request, RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
 import type {RenderedRequest} from '../common/render';
 import {getRenderContext, getRenderedRequest} from '../common/render';
-
-import electron from 'electron';
 import mkdirp from 'mkdirp';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'insomnia-node-libcurl';
 import {join as pathJoin} from 'path';
+import zlib from 'zlib';
+import uuid from 'uuid';
+import * as electron from 'electron';
 import * as models from '../models';
 import * as querystring from '../common/querystring';
-import * as util from '../common/misc.js';
-import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {describeByteSize, getContentTypeHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, setDefaultProtocol} from '../common/misc';
+import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
+import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, prepareUrlForSending, setDefaultProtocol, waitForStreamToFinish} from '../common/misc';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -28,11 +28,16 @@ import {urlMatchesCertHost} from './url-matches-cert-host';
 import aws4 from 'aws4';
 import {buildMultipart} from './multipart';
 
+const {app} = electron.remote || electron;
+
 export type ResponsePatch = {
   statusMessage?: string,
   error?: string,
   url?: string,
   statusCode?: number,
+  bytesContent?: number,
+  bodyPath?: string,
+  httpVersion?: string,
   headers?: Array<ResponseHeader>,
   elapsedTime?: number,
   contentType?: string,
@@ -55,11 +60,11 @@ export function cancelCurrentRequest () {
   }
 }
 
-export function _actuallySend (
+export async function _actuallySend (
   renderedRequest: RenderedRequest,
   workspace: Workspace,
   settings: Settings
-): Promise<{bodyBuffer: ?Buffer, response: ResponsePatch}> {
+): Promise<ResponsePatch> {
   return new Promise(async resolve => {
     let timeline: Array<ResponseTimelineEntry> = [];
 
@@ -67,20 +72,21 @@ export function _actuallySend (
     const curl = new Curl();
 
     /** Helper function to respond with a success */
-    function respond (patch: ResponsePatch, bodyBuffer: ?Buffer = null): void {
+    function respond (patch: ResponsePatch, bodyPath: ?string): void {
       const response = Object.assign(({
         parentId: renderedRequest._id,
         timeline: timeline,
+        bodyPath: bodyPath || '',
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies
       }: ResponsePatch), patch);
 
-      resolve({bodyBuffer, response});
+      resolve(response);
 
       // Apply plugin hooks and don't wait for them and don't throw from them
       process.nextTick(async () => {
         try {
-          await _applyResponsePluginHooks(response, bodyBuffer);
+          await _applyResponsePluginHooks(response);
         } catch (err) {
           // TODO: Better error handling here
           console.warn('Response plugin failed', err);
@@ -115,6 +121,10 @@ export function _actuallySend (
       }
     }
 
+    function enable (feature: number) {
+      curl.enable(feature);
+    }
+
     try {
       // Setup the cancellation logic
       cancelRequestFunction = () => {
@@ -132,11 +142,18 @@ export function _actuallySend (
 
       // Set all the basic options
       setOpt(Curl.option.FOLLOWLOCATION, settings.followRedirects);
-      setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
       setOpt(Curl.option.TIMEOUT_MS, settings.timeout); // 0 for no timeout
       setOpt(Curl.option.VERBOSE, true); // True so debug function works
       setOpt(Curl.option.NOPROGRESS, false); // False so progress function works
       setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
+      enable(Curl.feature.NO_HEADER_PARSING);
+      enable(Curl.feature.NO_DATA_PARSING);
+
+      // Set maximum amount of redirects allowed
+      // NOTE: Setting this to -1 breaks some versions of libcurl
+      if (settings.maxRedirects > 0) {
+        setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+      }
 
       // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
       // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
@@ -208,7 +225,7 @@ export function _actuallySend (
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
-          // console.log('PROGRESS 2', `${percent}%`, ultotal, ulnow);
+          console.log(`[debug] Request downloaded ${percent}%`);
           lastPercent = percent;
         }
 
@@ -219,7 +236,7 @@ export function _actuallySend (
       const qs = querystring.buildFromParams(renderedRequest.parameters);
       const url = querystring.joinUrl(renderedRequest.url, qs);
       const isUnixSocket = url.match(/https?:\/\/unix:\//);
-      const finalUrl = util.prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
+      const finalUrl = prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
       if (isUnixSocket) {
         // URL prep will convert "unix:/path" hostname to "unix/path"
         const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
@@ -232,6 +249,7 @@ export function _actuallySend (
         setOpt(Curl.option.URL, finalUrl);
       }
       timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
+      timeline.push({name: 'TEXT', value: `Using ${Curl.getVersion()}`});
 
       // log some things
       if (renderedRequest.settingEncodeUrl) {
@@ -252,14 +270,14 @@ export function _actuallySend (
       // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
       // certificates form the OS.
       if (process.platform !== 'darwin') {
-        const basCAPath = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
-        const fullCAPath = pathJoin(basCAPath, CACerts.filename);
+        const baseCAPath = getTempDir();
+        const fullCAPath = pathJoin(baseCAPath, CACerts.filename);
 
         try {
           fs.statSync(fullCAPath);
         } catch (err) {
           // Doesn't exist yet, so write it
-          mkdirp.sync(basCAPath);
+          mkdirp.sync(baseCAPath);
           fs.writeFileSync(fullCAPath, CACerts.blob);
           console.log('[net] Set CA to', fullCAPath);
         }
@@ -327,7 +345,8 @@ export function _actuallySend (
       }
 
       // Set client certs if needed
-      for (const certificate of workspace.certificates) {
+      const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
+      for (const certificate of clientCertificates) {
         if (certificate.disabled) {
           continue;
         }
@@ -339,15 +358,13 @@ export function _actuallySend (
             try {
               fs.statSync(blobOrFilename);
             } catch (err) {
-              // Certificate file now found!
-              // LEGACY: Certs used to be stored in blobs (not as paths), so lets write it to
+              // Certificate file not found!
+              // LEGACY: Certs used to be stored in blobs (not as paths), so let's write it to
               // the temp directory first.
-              const fullBase = pathJoin(electron.remote.app.getPath('temp'), 'insomnia');
-              mkdirp.sync(fullBase);
-
+              const fullBase = getTempDir();
               const name = `${renderedRequest._id}_${renderedRequest.modified}`;
               const fullPath = pathJoin(fullBase, name);
-              fs.writeFileSync(fullPath, new Buffer(blobOrFilename, 'base64'));
+              fs.writeFileSync(fullPath, Buffer.from(blobOrFilename, 'base64'));
 
               // Set filename to the one we just saved
               blobOrFilename = fullPath;
@@ -389,7 +406,7 @@ export function _actuallySend (
         requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const params = renderedRequest.body.params || [];
-        const {body: multipartBody, boundary} = buildMultipart(params);
+        const {filePath: multipartBodyPath, boundary, contentLength} = await buildMultipart(params);
 
         // Extend the Content-Type header
         const contentTypeHeader = getContentTypeHeader(headers);
@@ -402,21 +419,23 @@ export function _actuallySend (
           });
         }
 
+        const fd = fs.openSync(multipartBodyPath, 'r+');
+
+        setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         setOpt(Curl.option.UPLOAD, 1);
-        setOpt(Curl.option.INFILESIZE_LARGE, multipartBody.length);
+        setOpt(Curl.option.READDATA, fd);
 
         // We need this, otherwise curl will send it as a PUT
         setOpt(Curl.option.CUSTOMREQUEST, renderedRequest.method);
 
-        let bytesUploaded = 0;
-        curl.setOpt(Curl.option.READFUNCTION, function (buffer, size, nmemb) {
-          if (bytesUploaded >= multipartBody.length || size === 0 || nmemb === 0) {
-            return 0;
-          }
-          const wrote = multipartBody.copy(buffer, 0, bytesUploaded);
-          bytesUploaded += wrote;
-          return wrote;
-        });
+        const fn = () => {
+          fs.closeSync(fd);
+          fs.unlink(multipartBodyPath, () => {
+          });
+        };
+
+        curl.on('end', fn);
+        curl.on('error', fn);
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
@@ -450,12 +469,19 @@ export function _actuallySend (
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
-      // Build the body
-      const dataBuffers = [];
-      let dataBuffersLength = 0;
-      curl.on('data', chunk => {
-        dataBuffers.push(chunk);
-        dataBuffersLength += chunk.length;
+      let responseBodyBytes = 0;
+      const responsesDir = pathJoin(app.getPath('userData'), 'responses');
+      mkdirp.sync(responsesDir);
+      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.zip');
+      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
+      const gzip = zlib.createGzip();
+      gzip.pipe(responseBodyWriteStream);
+      curl.on('end', () => gzip.end());
+      curl.on('error', () => gzip.end());
+      setOpt(Curl.option.WRITEFUNCTION, (buff: Buffer) => {
+        responseBodyBytes += buff.length;
+        gzip.write(buff);
+        return buff.length;
       });
 
       // Handle Authorization header
@@ -502,9 +528,22 @@ export function _actuallySend (
           );
 
           if (authHeader) {
-            headers.push(authHeader);
+            headers.push({
+              name: authHeader.name,
+              value: authHeader.value
+            });
           }
         }
+      }
+
+      // Send a default Accept headers of anything
+      if (!hasAcceptHeader(headers)) {
+        headers.push({name: 'Accept', value: '*/*'}); // Default to anything
+      }
+
+      // Don't auto-send Accept-Encoding header
+      if (!hasAcceptEncodingHeader(headers)) {
+        headers.push({name: 'Accept-Encoding', value: ''});
       }
 
       // Set User-Agent if it't not already in headers
@@ -524,45 +563,37 @@ export function _actuallySend (
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       // Handle the response ending
-      curl.on('end', async function (_1, _2, allCurlHeadersObjects) {
+      curl.on('end', async (_1, _2, rawHeaders) => {
+        const allCurlHeadersObjects = _parseHeaders(rawHeaders);
         // Headers are an array (one for each redirect)
         const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 
         // Collect various things
-        const result = lastCurlHeadersObject && lastCurlHeadersObject.result;
-        const statusCode = result ? result.code : -1;
-        const statusMessage = result ? result.reason : 'Unknown';
+        const httpVersion = lastCurlHeadersObject.version || 'Unknown';
+        const statusCode = lastCurlHeadersObject.code || -1;
+        const statusMessage = lastCurlHeadersObject.reason || 'Unknown';
 
         // Collect the headers
-        const headers = [];
-        for (const name of lastCurlHeadersObject ? Object.keys(lastCurlHeadersObject) : []) {
-          if (typeof lastCurlHeadersObject[name] === 'string') {
-            headers.push({name, value: lastCurlHeadersObject[name]});
-          } else if (Array.isArray(lastCurlHeadersObject[name])) {
-            for (const value of lastCurlHeadersObject[name]) {
-              headers.push({name, value});
-            }
-          }
-        }
+        const headers = lastCurlHeadersObject.headers;
 
         // Calculate the content type
-        const contentTypeHeader = util.getContentTypeHeader(headers);
+        const contentTypeHeader = getContentTypeHeader(headers);
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
 
         // Update Cookie Jar
         let currentUrl = finalUrl;
-        let setCookieStrings = [];
+        let setCookieStrings: Array<string> = [];
         const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
-        for (const curlHeaderObject of allCurlHeadersObjects) {
+        for (const {headers} of allCurlHeadersObjects) {
           // Collect Set-Cookie headers
-          const setCookieHeaders = _getCurlHeader(curlHeaderObject, 'set-cookie', []);
-          setCookieStrings = [...setCookieStrings, ...setCookieHeaders];
+          const setCookieHeaders = getSetCookieHeaders(headers);
+          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
 
           // Pull out new URL if there is a redirect
-          const newLocation = _getCurlHeader(curlHeaderObject, 'location', null);
+          const newLocation = getLocationHeader(headers);
           if (newLocation !== null) {
-            currentUrl = urlResolve(currentUrl, newLocation);
+            currentUrl = urlResolve(currentUrl, newLocation.value);
           }
         }
 
@@ -591,25 +622,26 @@ export function _actuallySend (
           }
         }
 
-        // Handle the body
-        const bodyBuffer = Buffer.concat(dataBuffers, dataBuffersLength);
-
         // Return the response data
         const responsePatch = {
           headers,
           contentType,
           statusCode,
+          httpVersion,
           statusMessage,
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          bytesContent: bodyBuffer.length,
+          bytesContent: responseBodyBytes,
           url: curl.getInfo(Curl.info.EFFECTIVE_URL)
         };
 
         // Close the request
-        this.close();
+        curl.close();
 
-        respond(responsePatch, bodyBuffer);
+        // Make sure the response body has been fully written first
+        await waitForStreamToFinish(responseBodyWriteStream);
+
+        respond(responsePatch, responseBodyPath);
       });
 
       curl.on('error', function (err, code) {
@@ -631,7 +663,50 @@ export function _actuallySend (
   });
 }
 
-export async function send (requestId: string, environmentId: string) {
+export async function sendWithSettings (
+  requestId: string,
+  requestPatch: Object
+): Promise<ResponsePatch> {
+  const request = await models.request.getById(requestId);
+  if (!request) {
+    throw new Error(`Failed to find request: ${requestId}`);
+  }
+
+  const settings = await models.settings.getOrCreate();
+  const ancestors = await db.withAncestors(request, [
+    models.requestGroup.type,
+    models.workspace.type
+  ]);
+
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  const workspace = await models.workspace.getById(workspaceId);
+  if (!workspace) {
+    throw new Error(`Failed to find workspace for: ${requestId}`);
+  }
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
+
+  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
+    _id: request._id + '.other',
+    parentId: request._id
+  });
+
+  let renderedRequest: RenderedRequest;
+  try {
+    renderedRequest = await getRenderedRequest(newRequest, environmentId);
+  } catch (err) {
+    throw new Error(`Failed to render request: ${requestId}`);
+  }
+
+  return _actuallySend(renderedRequest, workspace, settings);
+}
+
+export async function send (
+  requestId: string,
+  environmentId: string
+): Promise<ResponsePatch> {
   // HACK: wait for all debounces to finish
   /*
    * TODO: Do this in a more robust way
@@ -643,7 +718,7 @@ export async function send (requestId: string, environmentId: string) {
   const timeSinceLastInteraction = Date.now() - lastUserInteraction;
   const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
   if (delayMillis > 0) {
-    await util.delay(delayMillis);
+    await delay(delayMillis);
   }
 
   // Fetch some things
@@ -671,10 +746,11 @@ export async function send (requestId: string, environmentId: string) {
         parentId: renderedRequestBeforePlugins._id,
         error: err.message,
         statusCode: STATUS_CODE_PLUGIN_ERROR,
-        statusMessage: err.plugin ? `Plugin ${err.plugin}` : 'Plugin',
+        statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
         settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
         settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
-      }
+      },
+      bodyBuffer: null
     };
   }
 
@@ -712,13 +788,12 @@ async function _applyRequestPluginHooks (
 }
 
 async function _applyResponsePluginHooks (
-  response: ResponsePatch,
-  bodyBuffer: ?Buffer = null
+  response: ResponsePatch
 ): Promise<void> {
   for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
       ...pluginContexts.app.init(plugin),
-      ...pluginContexts.response.init(plugin, response, bodyBuffer)
+      ...pluginContexts.response.init(plugin, response)
     };
 
     try {
@@ -730,20 +805,40 @@ async function _applyResponsePluginHooks (
   }
 }
 
-function _getCurlHeader (
-  curlHeadersObj: {[string]: string},
-  name: string,
-  fallback: any
-): string {
-  const headerName = Object.keys(curlHeadersObj).find(
-    n => n.toLowerCase() === name.toLowerCase()
-  );
+export function _parseHeaders (
+  buffer: Buffer
+): Array<{headers: Array<ResponseHeader>, version: string, code: number, reason: string}> {
+  const results = [];
 
-  if (headerName) {
-    return curlHeadersObj[headerName];
-  } else {
-    return fallback;
+  const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
+
+  for (let i = 0, currentResult = null; i < lines.length; i++) {
+    const line = lines[i];
+    const isEmptyLine = line.trim() === '';
+
+    // If we hit an empty line, start parsing the next response
+    if (isEmptyLine && currentResult) {
+      results.push(currentResult);
+      currentResult = null;
+      continue;
+    }
+
+    if (!currentResult) {
+      const [version, code, ...other] = line.split(/ +/g);
+      currentResult = {
+        version,
+        code: parseInt(code, 10),
+        reason: other.join(' '),
+        headers: []
+      };
+    } else {
+      const [name, value] = line.split(/:\s(.+)/);
+      const header: ResponseHeader = {name, value: value || ''};
+      currentResult.headers.push(header);
+    }
   }
+
+  return results;
 }
 
 // exported for unit tests only
@@ -758,7 +853,7 @@ export function _getAwsAuthHeaders (
   const credentials = {accessKeyId, secretAccessKey};
 
   const parsedUrl = urlParse(url);
-  const contentTypeHeader = util.getContentTypeHeader(headers);
+  const contentTypeHeader = getContentTypeHeader(headers);
 
   const awsSignOptions = {
     body,

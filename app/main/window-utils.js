@@ -1,8 +1,10 @@
 import electron from 'electron';
 import path from 'path';
 import fs from 'fs';
-import LocalStorage from '../common/local-storage';
-import {getAppName, isDevelopment, isMac} from '../common/constants';
+import LocalStorage from './local-storage';
+import {getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
+import {trackEvent} from '../common/analytics';
+import * as misc from '../common/misc';
 
 const {app, Menu, BrowserWindow, shell, dialog} = electron;
 
@@ -130,7 +132,7 @@ export function createWindow () {
           if (!window || !window.webContents) {
             return;
           }
-          window.webContents.send('toggle-changelog');
+          misc.clickLink(`https://insomnia.rest/changelog/${getAppVersion()}/`);
           trackEvent('App Menu', 'Changelog');
         }
       },
@@ -245,7 +247,7 @@ export function createWindow () {
         label: 'Contact Support',
         click: () => {
           trackEvent('App Menu', 'Contact');
-          shell.openExternal('https://insomnia.rest/documentation/support-and-feedback/');
+          shell.openExternal('https://insomnia.rest/support/');
         }
       },
       {
@@ -271,7 +273,7 @@ export function createWindow () {
         accelerator: 'CmdOrCtrl+/',
         click: () => {
           trackEvent('App Menu', 'Help');
-          shell.openExternal('https://insomnia.rest/documentation/');
+          shell.openExternal('https://support.insomnia.rest');
         }
       }
     ]
@@ -282,7 +284,7 @@ export function createWindow () {
     position: 'before=help',
     submenu: [{
       label: 'Reload',
-      accelerator: 'CmdOrCtrl+Shift+R',
+      accelerator: 'Shift+F5',
       click: () => mainWindow.reload()
     }, {
       label: 'Toggle DevTools',
@@ -308,12 +310,29 @@ export function createWindow () {
     }]
   };
 
+  const toolsMenu = {
+    label: 'Tools',
+    submenu: [{
+      label: 'Reload Plugins',
+      accelerator: 'CmdOrCtrl+Shift+R',
+      click: () => {
+        const window = BrowserWindow.getFocusedWindow();
+        if (!window || !window.webContents) {
+          return;
+        }
+
+        window.webContents.send('reload-plugins');
+      }
+    }]
+  };
+
   let template = [];
 
   template.push(applicationMenu);
   template.push(editMenu);
   template.push(viewMenu);
   template.push(windowMenu);
+  template.push(toolsMenu);
   template.push(helpMenu);
 
   if (isDevelopment() || process.env.INSOMNIA_FORCE_DEBUG) {
@@ -339,15 +358,6 @@ function showUnresponsiveModal () {
       createWindow();
     }
   });
-}
-
-function trackEvent (...args) {
-  const windows = BrowserWindow.getAllWindows();
-  if (!windows.length || !windows[0].webContents) {
-    return;
-  }
-
-  windows[0].webContents.send('analytics-track-event', args);
 }
 
 function saveBounds () {

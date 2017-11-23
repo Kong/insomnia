@@ -1,17 +1,23 @@
+// @flow
 import {parse as urlParse} from 'url';
 import * as querystring from '../../common/querystring';
 import * as c from './constants';
-import {responseToObject, authorizeUserInWindow} from './misc';
+import {authorizeUserInWindow, responseToObject} from './misc';
 import {escapeRegex, getBasicAuthHeader} from '../../common/misc';
+import * as models from '../../models/index';
+import {sendWithSettings} from '../network';
 
-export default async function (authorizeUrl,
-                               accessTokenUrl,
-                               credentialsInBody,
-                               clientId,
-                               clientSecret,
-                               redirectUri = '',
-                               scope = '',
-                               state = '') {
+export default async function (
+  requestId: string,
+  authorizeUrl: string,
+  accessTokenUrl: string,
+  credentialsInBody: boolean,
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string = '',
+  scope: string = '',
+  state: string = ''
+): Promise<Object> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
   }
@@ -31,6 +37,7 @@ export default async function (authorizeUrl,
   // TODO: Handle error
 
   const tokenResults = await _getToken(
+    requestId,
     accessTokenUrl,
     credentialsInBody,
     clientId,
@@ -57,9 +64,11 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   // Add query params to URL
   const qs = querystring.buildFromParams(params);
   const finalUrl = querystring.joinUrl(url, qs);
-  const regex = new RegExp(`${escapeRegex(redirectUri)}.*(code=|error=)`);
+  const regex = new RegExp(`${escapeRegex(redirectUri)}.*(code=|error=)`, 'i');
 
   const redirectedTo = await authorizeUserInWindow(finalUrl, regex);
+
+  console.log('[oauth2] Detected redirect ' + redirectedTo);
 
   const {query} = urlParse(redirectedTo);
   return responseToObject(query, [
@@ -71,7 +80,16 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   ]);
 }
 
-async function _getToken (url, credentialsInBody, clientId, clientSecret, code, redirectUri = '', state = '') {
+async function _getToken (
+  requestId: string,
+  url: string,
+  credentialsInBody: boolean,
+  clientId: string,
+  clientSecret: string,
+  code: string,
+  redirectUri: string = '',
+  state: string = ''
+): Promise<Object> {
   const params = [
     {name: c.P_GRANT_TYPE, value: c.GRANT_TYPE_AUTHORIZATION_CODE},
     {name: c.P_CODE, value: code}
@@ -81,28 +99,36 @@ async function _getToken (url, credentialsInBody, clientId, clientSecret, code, 
   redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
   state && params.push({name: c.P_STATE, value: state});
 
-  const headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Accept': 'application/x-www-form-urlencoded, application/json'
-  };
+  const headers = [
+    {name: 'Content-Type', value: 'application/x-www-form-urlencoded'},
+    {name: 'Accept', value: 'application/x-www-form-urlencoded, application/json'}
+  ];
 
   if (credentialsInBody) {
     params.push({name: c.P_CLIENT_ID, value: clientId});
     params.push({name: c.P_CLIENT_SECRET, value: clientSecret});
   } else {
-    const {name, value} = getBasicAuthHeader(clientId, clientSecret);
-    headers[name] = value;
+    headers.push(getBasicAuthHeader(clientId, clientSecret));
   }
 
-  const config = {
+  const response = await sendWithSettings(requestId, {
+    headers,
+    url,
     method: 'POST',
-    body: querystring.buildFromParams(params),
-    headers: headers
-  };
+    body: models.request.newBodyFormUrlEncoded(params)
+  });
 
-  const response = await window.fetch(url, config);
-  const body = await response.text();
-  const results = responseToObject(body, [
+  const bodyBuffer = models.response.getBodyBufferFromPath(response.bodyPath || '');
+  if (!bodyBuffer) {
+    throw new Error(`[oauth2] No body returned from ${url}`);
+  }
+
+  const statusCode = response.statusCode || 0;
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new Error(`[oauth2] Failed to fetch token url=${url} status=${statusCode}`);
+  }
+
+  const results = responseToObject(bodyBuffer.toString('utf8'), [
     c.P_ACCESS_TOKEN,
     c.P_REFRESH_TOKEN,
     c.P_EXPIRES_IN,

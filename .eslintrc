@@ -22,6 +22,7 @@
     "jest/globals": true
   },
   "rules": {
+    "no-var": "error",
     "no-duplicate-imports": "off",
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",

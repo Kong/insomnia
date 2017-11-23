@@ -9,7 +9,7 @@ import vkBeautify from 'vkbeautify';
 import {showModal} from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import {prettifyJson} from '../../../common/prettify';
 import {DEBOUNCE_MILLIS, isMac} from '../../../common/constants';
 import './base-imports';
@@ -47,6 +47,9 @@ const BASE_CODEMIRROR_OPTIONS = {
   extraKeys: {
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
+    },
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
+      // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     'Ctrl-Space': 'autocomplete',
 
@@ -183,7 +186,8 @@ class CodeEditor extends React.Component {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         {line: -1, ch: -1},
-        {line: -1, ch: -1}
+        {line: -1, ch: -1},
+        {scroll: false}
       );
     }
   }
@@ -581,6 +585,11 @@ class CodeEditor extends React.Component {
    * @param forcePrettify
    */
   _codemirrorSetValue (code, forcePrettify = false) {
+    if (typeof code !== 'string') {
+      console.warn('Code editor was passed non-string value', code);
+      return;
+    }
+
     this._originalCode = code;
 
     // Don't ignore changes from prettify

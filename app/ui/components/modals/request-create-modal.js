@@ -8,7 +8,7 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import {getContentTypeName, METHOD_GET, METHOD_HEAD, METHOD_OPTIONS, METHOD_DELETE} from '../../../common/constants';
 import * as models from '../../../models/index';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 
 @autobind
 class RequestCreateModal extends PureComponent {
@@ -46,7 +46,7 @@ class RequestCreateModal extends PureComponent {
     const finalRequest = await models.request.updateMimeType(
       request,
       this._shouldNotHaveBody() ? null : selectedContentType,
-      true,
+      true
     );
 
     this._onComplete(finalRequest);

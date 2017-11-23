@@ -13,15 +13,15 @@ export function registerModal (instance) {
 }
 
 export function showPrompt (config) {
-  showModal(PromptModal, config);
+  return showModal(PromptModal, config);
 }
 
 export function showAlert (config) {
-  showModal(AlertModal, config);
+  return showModal(AlertModal, config);
 }
 
 export function showError (config) {
-  showModal(ErrorModal, config);
+  return showModal(ErrorModal, config);
 }
 
 export function showModal (modalCls, ...args) {

@@ -58,7 +58,7 @@ class RequestRenderErrorModal extends PureComponent {
               </button>
             )}
             <Link button
-                  href="https://insomnia.rest/documentation/templating/"
+                  href="https://support.insomnia.rest/article/40-template-tags"
                   className="btn btn--clicky">
               Templating Documentation <i className="fa fa-external-link"/>
             </Link>

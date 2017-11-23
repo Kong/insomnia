@@ -12,6 +12,7 @@ export function cookiesFromJar (jar) {
         console.warn('Failed to get cookies form jar', err);
         resolve([]);
       } else {
+        // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
         resolve(cookies.map(c => c.toJSON()));
       }
     });
@@ -47,7 +48,7 @@ export function jarFromCookies (cookies) {
     const copy = JSON.stringify({cookies});
     jar = CookieJar.fromJSON(copy);
   } catch (e) {
-    console.log('Failed to initialize cookie jar', e);
+    console.log('[cookies] Failed to initialize cookie jar', e);
     jar = new CookieJar();
   }
 

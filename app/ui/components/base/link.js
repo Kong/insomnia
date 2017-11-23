@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {trackEvent} from '../../../analytics/index';
+import {trackEvent} from '../../../common/analytics';
 import * as misc from '../../../common/misc';
 
 type Props = {|
@@ -9,6 +9,7 @@ type Props = {|
   title?: string,
   button?: boolean,
   onClick?: Function,
+  className?: string,
   children?: React.Node
 |};
 
@@ -31,11 +32,18 @@ class Link extends React.PureComponent<Props> {
       button,
       href,
       children,
+      className,
       ...other
     } = this.props;
-    return button
-      ? <button onClick={this._handleClick} {...other}>{children}</button>
-      : <a href={href} onClick={this._handleClick} {...other}>{children}</a>;
+    return button ? (
+      <button onClick={this._handleClick} className={className} {...other}>
+        {children}
+      </button>
+    ) : (
+      <a href={href} onClick={this._handleClick} className={className} {...other}>
+        {children}
+      </a>
+    );
   }
 }
 
