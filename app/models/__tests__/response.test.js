@@ -83,4 +83,24 @@ describe('migrate()', () => {
     // Should have set bodyPath and stored the body
     expect(newModel.bodyPath).toBe('/foo/bar');
   });
+
+  it('migrates leaves bodyCompression for null', async () => {
+    expect((await models.initModel(models.response.type, {
+      bodyPath: '/foo/bar',
+      bodyCompression: null
+    })).bodyCompression).toBe(null);
+  });
+
+  it('migrates sets bodyCompression to null if does not have one yet', async () => {
+    expect((await models.initModel(models.response.type, {
+      bodyPath: '/foo/bar'
+    })).bodyCompression).toBe(null);
+  });
+
+  it('migrates leaves bodyCompression if string', async () => {
+    expect((await models.initModel(models.response.type, {
+      bodyPath: '/foo/bar',
+      bodyCompression: 'zip'
+    })).bodyCompression).toBe('zip');
+  });
 });

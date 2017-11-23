@@ -63,7 +63,7 @@ export function init (): BaseResponse {
     headers: [],
     timeline: [],
     bodyPath: '', // Actual bodies are stored on the filesystem
-    bodyCompression: 'zip', // For legacy bodies
+    bodyCompression: null, // For legacy bodies
     error: '',
     requestVersionId: null,
 
@@ -74,7 +74,8 @@ export function init (): BaseResponse {
 }
 
 export function migrate (doc: Object) {
-  doc = migrateBody(doc);
+  doc = migrateBodyToFileSystem(doc);
+  doc = migrateBodyCompression(doc);
   return doc;
 }
 
@@ -192,34 +193,39 @@ function getBodyBufferFromPath<T> (
   }
 }
 
-function storeBodyBuffer (bodyBuffer: Buffer | null) {
-  const root = electron.remote.app.getPath('userData');
-  const dir = path.join(root, 'responses');
-
-  mkdirp.sync(dir);
-
-  const hash = crypto.createHash('md5').update(bodyBuffer || '').digest('hex');
-  const fullPath = path.join(dir, `${hash}.zip`);
-
-  try {
-    const buff = bodyBuffer || Buffer.from('');
-    const compressed = zlib.gzipSync(buff);
-    fs.writeFileSync(fullPath, compressed);
-  } catch (err) {
-    console.warn('Failed to write response body to file', err.message);
-  }
-
-  return fullPath;
-}
-
-function migrateBody (doc: Object) {
+async function migrateBodyToFileSystem (doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
-    const bodyPath = storeBodyBuffer(bodyBuffer);
-    const newDoc = Object.assign(doc, {bodyPath});
-    db.docUpdate(newDoc);
+    const root = electron.remote.app.getPath('userData');
+    const dir = path.join(root, 'responses');
+
+    mkdirp.sync(dir);
+
+    const hash = crypto.createHash('md5').update(bodyBuffer || '').digest('hex');
+    const bodyPath = path.join(dir, `${hash}.zip`);
+
+    try {
+      const buff = bodyBuffer || Buffer.from('');
+      fs.writeFileSync(bodyPath, buff);
+    } catch (err) {
+      console.warn('Failed to write response body to file', err.message);
+    }
+
+    const newDoc = await db.docUpdate(doc, {bodyPath});
     return newDoc;
   } else {
     return doc;
   }
+}
+
+function migrateBodyCompression (doc: Object) {
+  if (doc.hasOwnProperty('bodyCompression')) {
+    return doc;
+  }
+
+  // Set old legacy request body compression to zip because that's what they used to
+  // be stored as by default
+  doc.bodyCompression = 'zip';
+
+  return doc;
 }
