@@ -41,7 +41,7 @@ export default async function (
     body: models.request.newBodyFormUrlEncoded(params)
   });
 
-  const bodyBuffer = models.response.getBodyBufferFromPath(response.bodyPath || '');
+  const bodyBuffer = models.response.getBodyBuffer(response);
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }

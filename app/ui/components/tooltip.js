@@ -48,7 +48,7 @@ class Tooltip extends React.PureComponent<Props, State> {
     this._bubble = n;
   }
 
-  _handleClick (e: MouseEvent): void {
+  _handleStopClick (e: MouseEvent): void {
     e.stopPropagation();
   }
 
@@ -147,10 +147,11 @@ class Tooltip extends React.PureComponent<Props, State> {
     return (
       <div className={tooltipClasses}
            ref={this._setTooltipRef}
-           onClick={this._handleClick}
            onMouseEnter={this._handleMouseEnter}
            onMouseLeave={this._handleMouseLeave}>
-        <div className={bubbleClasses} ref={this._setBubbleRef}>
+        <div className={bubbleClasses}
+             onClick={this._handleStopClick}
+             ref={this._setBubbleRef}>
           {message}
         </div>
         {children}

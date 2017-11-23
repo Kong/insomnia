@@ -1,10 +1,12 @@
 // @flow
 import type {BaseModel} from './index';
 import * as models from './index';
+import {Readable} from 'stream';
 
 import fs from 'fs';
 import crypto from 'crypto';
 import path from 'path';
+import zlib from 'zlib';
 import mkdirp from 'mkdirp';
 import * as electron from 'electron';
 import {MAX_RESPONSES} from '../common/constants';
@@ -38,6 +40,8 @@ type BaseResponse = {
   headers: Array<ResponseHeader>,
   timeline: Array<ResponseTimelineEntry>,
   bodyPath: string, // Actual bodies are stored on the filesystem
+  bodyCompression: 'zip' | null,
+  message: string,
   error: string,
   requestVersionId: string | null,
 
@@ -61,6 +65,8 @@ export function init (): BaseResponse {
     headers: [],
     timeline: [],
     bodyPath: '', // Actual bodies are stored on the filesystem
+    bodyCompression: 'zip', // For legacy bodies
+    message: '',
     error: '',
     requestVersionId: null,
 
@@ -130,25 +136,66 @@ export function getLatestByParentId (parentId: string) {
   return db.getMostRecentlyModified(type, {parentId});
 }
 
-export function getBodyBuffer (response: Response, readFailureValue: any = null) {
-  return getBodyBufferFromPath(response.bodyPath, readFailureValue);
+export function getBodyStream<T> (
+  response: Object,
+  readFailureValue: ?T
+): Readable | null | T {
+  return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
-export function getBodyBufferFromPath (path: string, readFailureValue: any = null) {
+export function getBodyBuffer<T> (response: Object, readFailureValue: ?T): Buffer | T | null {
+  return getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
+}
+
+function getBodyStreamFromPath<T> (
+  bodyPath: string,
+  compression: string | null,
+  readFailureValue: ?T
+): Readable | null | T {
   // No body, so return empty Buffer
-  if (!path) {
+  if (!bodyPath) {
+    return null;
+  }
+
+  try {
+    fs.statSync(bodyPath);
+  } catch (err) {
+    console.warn('Failed to read response body', err.message);
+    return readFailureValue === undefined ? null : readFailureValue;
+  }
+
+  const readStream = fs.createReadStream(bodyPath);
+  if (compression === 'zip') {
+    return readStream.pipe(zlib.createGunzip());
+  } else {
+    return readStream;
+  }
+}
+
+function getBodyBufferFromPath<T> (
+  bodyPath: string,
+  compression: string | null,
+  readFailureValue: ?T
+): Buffer | T | null {
+  // No body, so return empty Buffer
+  if (!bodyPath) {
     return Buffer.alloc(0);
   }
 
   try {
-    return decompress(fs.readFileSync(path));
+    const rawBuffer = fs.readFileSync(bodyPath);
+    if (compression === 'zip') {
+      return decompress(rawBuffer);
+    } else {
+      return rawBuffer;
+    }
   } catch (err) {
     console.warn('Failed to read response body', err.message);
-    return readFailureValue;
+    return readFailureValue === undefined ? null : readFailureValue;
   }
 }
 
-export function storeBodyBuffer (bodyBuffer: Buffer | null) {
+function storeBodyBuffer (bodyBuffer: Buffer | null) {
   const root = electron.remote.app.getPath('userData');
   const dir = path.join(root, 'responses');
 

@@ -2,6 +2,7 @@
 import type {Plugin} from '../';
 import type {ResponseHeader} from '../../models/response';
 import * as models from '../../models/index';
+import {Readable} from 'stream';
 
 type MaybeResponse = {
   parentId?: string,
@@ -46,7 +47,10 @@ export function init (
         return response.elapsedTime || 0;
       },
       getBody (): Buffer | null {
-        return models.response.getBodyBufferFromPath(response.bodyPath || '');
+        return models.response.getBodyBuffer(response);
+      },
+      getBodyStream (): Readable | null {
+        return models.response.getBodyStream(response);
       },
       getHeader (name: string): string | Array<string> | null {
         const headers = response.headers || [];

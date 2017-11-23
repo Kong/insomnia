@@ -2,7 +2,6 @@ import getToken from '../grant-password';
 import {globalBeforeEach} from '../../../__jest__/before-each';
 import * as network from '../../network';
 import {getTempDir} from '../../../common/constants';
-import {compress} from '../../../common/misc';
 import path from 'path';
 import fs from 'fs';
 
@@ -17,13 +16,13 @@ const SCOPE = 'scope_123';
 describe('password', () => {
   beforeEach(globalBeforeEach);
   it('gets token with JSON and basic auth', async () => {
-    const bodyPath = path.join(getTempDir(), 'response.zip');
+    const bodyPath = path.join(getTempDir(), 'foo.response');
 
-    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+    fs.writeFileSync(bodyPath, JSON.stringify({
       access_token: 'token_123',
       token_type: 'token_type',
       scope: SCOPE
-    }))));
+    }));
 
     network.sendWithSettings = jest.fn(() => ({
       bodyPath,
@@ -76,13 +75,13 @@ describe('password', () => {
   });
 
   it('gets token with urlencoded and body auth', async () => {
-    const bodyPath = path.join(getTempDir(), 'response.zip');
+    const bodyPath = path.join(getTempDir(), 'foo.response');
 
-    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+    fs.writeFileSync(bodyPath, JSON.stringify({
       access_token: 'token_123',
       token_type: 'token_type',
       scope: SCOPE
-    }))));
+    }));
 
     network.sendWithSettings = jest.fn(() => ({
       bodyPath,
