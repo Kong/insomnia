@@ -1,7 +1,7 @@
 // @flow
 import type {BaseModel} from './index';
 import * as db from '../common/database';
-import {getAppVersion, UPDATE_CHANNEL_BETA, UPDATE_CHANNEL_STABLE} from '../common/constants';
+import {UPDATE_CHANNEL_STABLE} from '../common/constants';
 
 type BaseSettings = {
   showPasswords: boolean,
@@ -65,7 +65,6 @@ export function init (): BaseSettings {
 }
 
 export function migrate (doc: Settings): Settings {
-  doc = migrateUpdateChannel(doc);
   return doc;
 }
 
@@ -93,15 +92,4 @@ export async function getOrCreate (patch: Object = {}): Promise<Settings> {
   } else {
     return results[0];
   }
-}
-
-function migrateUpdateChannel (doc: Settings): Settings {
-  const onBetaVersion = getAppVersion().includes('-beta');
-
-  // If we're on a stable channel but we launch a beta version, switch the channel to beta
-  if (doc.updateChannel === UPDATE_CHANNEL_STABLE && onBetaVersion) {
-    doc.updateChannel = UPDATE_CHANNEL_BETA;
-  }
-
-  return doc;
 }
