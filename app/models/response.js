@@ -11,7 +11,6 @@ import mkdirp from 'mkdirp';
 import * as electron from 'electron';
 import {MAX_RESPONSES} from '../common/constants';
 import * as db from '../common/database';
-import {compress, decompress} from '../common/misc';
 
 export const name = 'Response';
 export const type = 'Response';
@@ -183,7 +182,7 @@ function getBodyBufferFromPath<T> (
   try {
     const rawBuffer = fs.readFileSync(bodyPath);
     if (compression === 'zip') {
-      return decompress(rawBuffer);
+      return zlib.gunzipSync(rawBuffer);
     } else {
       return rawBuffer;
     }
@@ -203,7 +202,9 @@ function storeBodyBuffer (bodyBuffer: Buffer | null) {
   const fullPath = path.join(dir, `${hash}.zip`);
 
   try {
-    fs.writeFileSync(fullPath, compress(bodyBuffer || Buffer.from('')));
+    const buff = bodyBuffer || Buffer.from('');
+    const compressed = zlib.gzipSync(buff);
+    fs.writeFileSync(fullPath, compressed);
   } catch (err) {
     console.warn('Failed to write response body to file', err.message);
   }

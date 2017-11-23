@@ -292,21 +292,13 @@ export function fnOrString (v: string | Function, ...args: Array<any>) {
 }
 
 export function compressObject (obj: any): string {
-  const compressed = compress(JSON.stringify(obj));
+  const compressed = zlib.gzipSync(JSON.stringify(obj));
   return compressed.toString('base64');
 }
 
 export function decompressObject (input: string): any {
-  const jsonBuffer = decompress(Buffer.from(input, 'base64'));
+  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
   return JSON.parse(jsonBuffer.toString('utf8'));
-}
-
-export function compress (inputBuffer: Buffer | string): Buffer {
-  return zlib.gzipSync(inputBuffer);
-}
-
-export function decompress (inputBuffer: Buffer | string): Buffer {
-  return zlib.gunzipSync(inputBuffer);
 }
 
 export function resolveHomePath (p: string): string {
