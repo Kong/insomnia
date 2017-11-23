@@ -41,7 +41,6 @@ type BaseResponse = {
   timeline: Array<ResponseTimelineEntry>,
   bodyPath: string, // Actual bodies are stored on the filesystem
   bodyCompression: 'zip' | null,
-  message: string,
   error: string,
   requestVersionId: string | null,
 
@@ -66,7 +65,6 @@ export function init (): BaseResponse {
     timeline: [],
     bodyPath: '', // Actual bodies are stored on the filesystem
     bodyCompression: 'zip', // For legacy bodies
-    message: '',
     error: '',
     requestVersionId: null,
 

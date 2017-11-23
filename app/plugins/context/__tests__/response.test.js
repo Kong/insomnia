@@ -4,6 +4,7 @@ import {getTempDir} from '../../../common/constants';
 import {compress} from '../../../common/misc';
 import fs from 'fs';
 import path from 'path';
+import * as models from '../../../models/index';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -24,6 +25,7 @@ describe('init()', () => {
       'getBytesRead',
       'getTime',
       'getBody',
+      'getBodyStream',
       'getHeader',
       'hasHeader'
     ]);
@@ -40,7 +42,7 @@ describe('response.*', () => {
   it('works for basic and full response', async () => {
     const bodyPath = path.join(getTempDir(), 'response.zip');
     fs.writeFileSync(bodyPath, compress(Buffer.from('Hello World!')));
-    const response = {
+    const response = await models.initModel(models.response.type, {
       bodyPath,
       parentId: 'req_1',
       url: 'https://insomnia.rest',
@@ -48,7 +50,7 @@ describe('response.*', () => {
       statusMessage: 'OK',
       bytesRead: 123,
       elapsedTime: 321
-    };
+    });
     const result = plugin.init(PLUGIN, response);
     expect(result.response.getRequestId()).toBe('req_1');
     expect(result.response.getStatusCode()).toBe(200);

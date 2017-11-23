@@ -395,7 +395,12 @@ function mapCookie (cookie: Cookie): HarCookie {
 }
 
 function getResponseContent (response: ResponseModel): HarContent {
-  const body: Buffer = models.response.getBodyBuffer(response, Buffer.alloc(0));
+  let body: Buffer | null = models.response.getBodyBuffer(response);
+
+  if (body === null) {
+    body = Buffer.alloc(0);
+  }
+
   return {
     size: body.byteLength,
     mimeType: response.contentType,

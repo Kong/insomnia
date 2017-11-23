@@ -26,7 +26,7 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import {compress, debounce, getContentDispositionHeader} from '../../common/misc';
+import {debounce, getContentDispositionHeader} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -389,7 +389,7 @@ class App extends PureComponent {
 
         const filename = path.join(dir, name);
         const to = fs.createWriteStream(filename);
-        const readStream = models.response.getBodyStreamFromPath(responsePatch.bodyPath || '');
+        const readStream = models.response.getBodyStream(responsePatch);
 
         if (!readStream) {
           return;
@@ -399,7 +399,7 @@ class App extends PureComponent {
 
         readStream.on('end', async () => {
           trackEvent('Response', 'Download After Save Success');
-          responsePatch.message = `Saved to ${filename}`;
+          responsePatch.error = `Saved to ${filename}`;
           await models.response.create(responsePatch);
         });
 

@@ -379,15 +379,15 @@ export function getUserLanguage (): string {
 
 export async function waitForStreamToFinish (s: Readable | Writable): Promise<void> {
   return new Promise(resolve => {
-    if (s.hasOwnProperty('readable') && !s.readable) {
+    if (s._readableState && s._readableState.finished) {
       return resolve();
     }
 
-    if (s.hasOwnProperty('writable') && !s.writable) {
+    if (s._writableState && s._writableState.finished) {
       return resolve();
     }
 
-    s.on('finish', () => {
+    s.on('close', () => {
       resolve();
     });
 
