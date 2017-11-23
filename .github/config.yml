@@ -1,7 +1,8 @@
 # Comment to be posted to on first time issues
 newIssueWelcomeComment: |
   👋 Thanks for opening your first issue! If you're reporting a 🐞 bug, please make sure
-  you include steps to reproduce it.
+  you include steps to reproduce it. If you're requesting a feature 🎁, please provide real
+  use cases that would benefit. 👪
 
   To help make this a smooth process, please be sure you have first read the
   [contributing guidelines](https://github.com/getinsomnia/insomnia/blob/master/CONTRIBUTING.md).
@@ -15,5 +16,5 @@ newPRWelcomeComment: |
 
 # Comment to be posted to on pull requests merged by a first time user
 firstPRMergeComment: >
-  Congrats on merging your first pull request! You're helping make Insomnia awesome! 🎉🎉🎉
+  Congrats on merging your first pull request! 🎉🎉🎉 You're helping make Insomnia awesome! 🙌
 
