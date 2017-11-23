@@ -2,7 +2,7 @@ import electron from 'electron';
 import path from 'path';
 import fs from 'fs';
 import LocalStorage from './local-storage';
-import {getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
+import {CHANGELOG_BASE_URL, getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
 import {trackEvent} from '../common/analytics';
 import * as misc from '../common/misc';
 
@@ -132,7 +132,7 @@ export function createWindow () {
           if (!window || !window.webContents) {
             return;
           }
-          misc.clickLink(`https://insomnia.rest/changelog/${getAppVersion()}/`);
+          misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
           trackEvent('App Menu', 'Changelog');
         }
       },

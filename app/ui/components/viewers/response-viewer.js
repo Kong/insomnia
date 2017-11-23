@@ -9,12 +9,14 @@ import ResponseWebView from './response-webview';
 import MultipartViewer from './response-multipart';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
-import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
+import {HUGE_RESPONSE_MB, LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
+import Wrap from '../wrap';
 
 let alwaysShowLargeResponses = false;
 
 type Props = {
   getBody: Function,
+  download: Function,
   responseId: string,
   previewMode: string,
   filter: string,
@@ -130,17 +132,19 @@ class ResponseViewer extends React.Component<Props, State> {
 
   render () {
     const {
-      previewMode,
-      filter,
-      filterHistory,
-      editorLineWrapping,
+      bytes,
+      download,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      updateFilter,
+      editorLineWrapping,
+      error,
+      filter,
+      filterHistory,
+      previewMode,
       responseId,
-      url,
-      error
+      updateFilter,
+      url
     } = this.props;
 
     let contentType = this.props.contentType;
@@ -157,24 +161,41 @@ class ResponseViewer extends React.Component<Props, State> {
       );
     }
 
+    const wayTooLarge = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
     const {blockingBecauseTooLarge} = this.state;
     if (blockingBecauseTooLarge) {
       return (
         <div className="response-pane__notify">
-          <p className="pad faint">
-            Response body over {LARGE_RESPONSE_MB}MB hidden to prevent unresponsiveness
-          </p>
-          <p>
-            <button onClick={this._handleDismissBlocker}
-                    className="inline-block btn btn--clicky">
-              Show Response
-            </button>
-            {' '}
-            <button className="faint inline-block btn btn--super-compact"
-                    onClick={this._handleDisableBlocker}>
-              Always Show
-            </button>
-          </p>
+          {wayTooLarge ? (
+            <Wrap>
+              <p className="pad faint">
+                Responses over {HUGE_RESPONSE_MB}MB cannot be shown
+              </p>
+              <p>
+                <button onClick={download} className="inline-block btn btn--clicky">
+                  Save Response To File
+                </button>
+              </p>
+            </Wrap>
+          ) : (
+            <Wrap>
+              <p className="pad faint">
+                Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
+              </p>
+              <p>
+                <button onClick={this._handleDismissBlocker}
+                        disabled={wayTooLarge}
+                        className="inline-block btn btn--clicky">
+                  Show Response
+                </button>
+                {' '}
+                <button className="faint inline-block btn btn--super-compact"
+                        onClick={this._handleDisableBlocker}>
+                  Always Show
+                </button>
+              </p>
+            </Wrap>
+          )}
         </div>
       );
     }

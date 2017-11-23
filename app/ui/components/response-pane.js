@@ -287,6 +287,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 filter={filter}
                 filterHistory={filterHistory}
                 updateFilter={response.error ? null : handleSetFilter}
+                download={this._handleDownloadResponseBody}
                 getBody={this._handleGetResponseBody}
                 error={response.error}
                 editorLineWrapping={editorLineWrapping}
