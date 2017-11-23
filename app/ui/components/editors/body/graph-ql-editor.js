@@ -18,7 +18,7 @@ import type {Settings} from '../../../../models/settings';
 import type {RenderedRequest} from '../../../../common/render';
 import {getRenderedRequest} from '../../../../common/render';
 import TimeFromNow from '../../time-from-now';
-import {getBodyBufferFromPath} from '../../../../models/response';
+import * as models from '../../../../models/index';
 
 type GraphQLBody = {
   query: string,
@@ -111,7 +111,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           settings
         );
 
-        const bodyBuffer = getBodyBufferFromPath(response.bodyPath || '');
+        const bodyBuffer = models.response.getBodyBuffer(response);
 
         const status = response.statusCode || 0;
 

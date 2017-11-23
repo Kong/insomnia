@@ -33,7 +33,7 @@ class ResponseError extends PureComponent {
 
     return (
       <div>
-        <pre className="selectable pad force-word-wrap" style={{fontSize: `${fontSize}px`}}>
+        <pre className="selectable pad force-pre-wrap" style={{fontSize: `${fontSize}px`}}>
           {error}
         </pre>
         <hr/>

@@ -26,6 +26,7 @@ type Part = {
 };
 
 type Props = {
+  download: Function,
   responseId: string,
   bodyBuffer: Buffer | null,
   contentType: string,
@@ -205,14 +206,15 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
 
   render () {
     const {
-      responseId,
-      filter,
-      filterHistory,
-      url,
+      download,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      editorLineWrapping
+      editorLineWrapping,
+      filter,
+      filterHistory,
+      responseId,
+      url
     } = this.props;
 
     const {
@@ -268,20 +270,21 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
           <div className="tall wide">
             <ResponseViewer
               key={`${responseId}::${activePart}`}
-              getBody={this._getBody}
-              responseId={`${responseId}[${activePart}]`}
-              previewMode={PREVIEW_MODE_FRIENDLY}
-              filter={filter}
-              filterHistory={filterHistory}
+              bytes={selectedPart.bytes || 0}
+              contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
+              download={download}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
               editorLineWrapping={editorLineWrapping}
-              url={url}
-              bytes={selectedPart.bytes || 0}
-              contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
-              updateFilter={null}
               error={null}
+              filter={filter}
+              filterHistory={filterHistory}
+              getBody={this._getBody}
+              previewMode={PREVIEW_MODE_FRIENDLY}
+              responseId={`${responseId}[${activePart}]`}
+              updateFilter={null}
+              url={url}
             />
           </div>
         ) : null}

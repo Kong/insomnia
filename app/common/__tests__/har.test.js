@@ -36,7 +36,7 @@ describe('exportHar()', () => {
         { name: 'Content-Type', value: 'application/json' }
       ],
       contentType: 'application/json',
-      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json.gz')
+      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json')
     });
 
     const exportRequests = [ { requestId: req1._id, environmentId: 'n/a' } ];
@@ -260,7 +260,7 @@ describe('exportHarResponse()', () => {
         { name: 'Set-Cookie', value: 'sessionid=12345; HttpOnly; Path=/' }
       ],
       contentType: 'application/json',
-      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json.gz')
+      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json')
     });
 
     const harResponse = await harUtils.exportHarResponse(response);

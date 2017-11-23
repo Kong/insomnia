@@ -48,7 +48,7 @@ export default async function (
     throw new Error(`[oauth2] Failed to refresh token url=${url} status=${statusCode}`);
   }
 
-  const bodyBuffer = models.response.getBodyBufferFromPath(response.bodyPath || '');
+  const bodyBuffer = models.response.getBodyBuffer(response);
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }

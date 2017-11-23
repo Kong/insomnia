@@ -18,7 +18,7 @@ describe('migrate()', () => {
       electron.remote.app.getPath('userData'),
       `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
     );
-    const storedBody = models.response.getBodyBuffer({bodyPath: expectedBodyPath});
+    const storedBody = models.response.getBodyBuffer(newModel);
 
     // Should have set bodyPath and stored the body
     expect(newModel.bodyPath).toBe(expectedBodyPath);
@@ -38,7 +38,7 @@ describe('migrate()', () => {
       electron.remote.app.getPath('userData'),
       `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`
     );
-    const storedBody = models.response.getBodyBuffer({bodyPath: expectedBodyPath});
+    const storedBody = models.response.getBodyBuffer(newModel);
 
     // Should have stripped these
     expect(newModel.body).toBeUndefined();
@@ -60,7 +60,7 @@ describe('migrate()', () => {
       electron.remote.app.getPath('userData'),
       'responses/d41d8cd98f00b204e9800998ecf8427e.zip'
     );
-    const storedBody = models.response.getBodyBuffer({bodyPath: expectedBodyPath});
+    const storedBody = models.response.getBodyBuffer(newModel);
 
     // Should have stripped these
     expect(newModel.body).toBeUndefined();
@@ -82,5 +82,25 @@ describe('migrate()', () => {
 
     // Should have set bodyPath and stored the body
     expect(newModel.bodyPath).toBe('/foo/bar');
+  });
+
+  it('migrates leaves bodyCompression for null', async () => {
+    expect((await models.initModel(models.response.type, {
+      bodyPath: '/foo/bar',
+      bodyCompression: null
+    })).bodyCompression).toBe(null);
+  });
+
+  it('migrates sets bodyCompression to null if does not have one yet', async () => {
+    expect((await models.initModel(models.response.type, {
+      bodyPath: '/foo/bar'
+    })).bodyCompression).toBe(null);
+  });
+
+  it('migrates leaves bodyCompression if string', async () => {
+    expect((await models.initModel(models.response.type, {
+      bodyPath: '/foo/bar',
+      bodyCompression: 'zip'
+    })).bodyCompression).toBe('zip');
   });
 });

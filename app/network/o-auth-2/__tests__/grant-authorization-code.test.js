@@ -5,7 +5,6 @@ import * as network from '../../network';
 import fs from 'fs';
 import path from 'path';
 import {getTempDir} from '../../../common/constants';
-import {compress} from '../../../common/misc';
 
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
@@ -20,13 +19,13 @@ describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
   it('gets token with JSON and basic auth', async () => {
     createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
-    const bodyPath = path.join(getTempDir(), 'response.zip');
+    const bodyPath = path.join(getTempDir(), 'foo.response');
 
-    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+    fs.writeFileSync(bodyPath, JSON.stringify({
       access_token: 'token_123',
       token_type: 'token_type',
       scope: SCOPE
-    }))));
+    }));
 
     network.sendWithSettings = jest.fn(() => ({
       bodyPath,
@@ -81,13 +80,13 @@ describe('authorization_code', () => {
 
   it('gets token with urlencoded and body auth', async () => {
     createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
-    const bodyPath = path.join(getTempDir(), 'response.zip');
+    const bodyPath = path.join(getTempDir(), 'foo.response');
 
-    fs.writeFileSync(bodyPath, compress(Buffer.from(JSON.stringify({
+    fs.writeFileSync(bodyPath, JSON.stringify({
       access_token: 'token_123',
       token_type: 'token_type',
       scope: SCOPE
-    }))));
+    }));
 
     network.sendWithSettings = jest.fn(() => ({
       bodyPath,

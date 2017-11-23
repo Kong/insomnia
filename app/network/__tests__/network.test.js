@@ -58,13 +58,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(
+    const response = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
@@ -121,13 +121,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(
+    const response = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
@@ -207,13 +207,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(
+    const response = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
@@ -261,13 +261,13 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(
+    const response = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
 
     expect(body).toEqual({
@@ -328,12 +328,12 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(
+    const response = await networkUtils._actuallySend(
       renderedRequest,
       workspace,
       settings
     );
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
@@ -391,9 +391,9 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
@@ -434,9 +434,9 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
@@ -476,9 +476,9 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},
@@ -519,9 +519,9 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const {bodyPath} = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
 
-    const bodyBuffer = models.response.getBodyBufferFromPath(bodyPath);
+    const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
     expect(body).toEqual({
       meta: {},

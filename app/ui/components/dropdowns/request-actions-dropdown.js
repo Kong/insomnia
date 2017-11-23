@@ -59,10 +59,7 @@ class RequestActionsDropdown extends PureComponent {
           <i className="fa fa-code"/> Generate Code
           <DropdownHint hotkey={hotkeys.GENERATE_CODE}/>
         </DropdownItem>
-        <DropdownItem onClick={this._handleCopyAsCurl}
-                      buttonClass={PromptButton}
-                      addIcon
-                      confirmMessage="Click Again to Copy">
+        <DropdownItem onClick={this._handleCopyAsCurl}>
           <i className="fa fa-copy"/> Copy as Curl
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} onClick={this._handleRemove} addIcon>

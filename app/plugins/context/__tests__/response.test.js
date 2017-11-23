@@ -1,9 +1,9 @@
 import * as plugin from '../response';
 import {globalBeforeEach} from '../../../__jest__/before-each';
 import {getTempDir} from '../../../common/constants';
-import {compress} from '../../../common/misc';
 import fs from 'fs';
 import path from 'path';
+import * as models from '../../../models/index';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -24,6 +24,7 @@ describe('init()', () => {
       'getBytesRead',
       'getTime',
       'getBody',
+      'getBodyStream',
       'getHeader',
       'hasHeader'
     ]);
@@ -39,16 +40,17 @@ describe('response.*', () => {
   beforeEach(globalBeforeEach);
   it('works for basic and full response', async () => {
     const bodyPath = path.join(getTempDir(), 'response.zip');
-    fs.writeFileSync(bodyPath, compress(Buffer.from('Hello World!')));
-    const response = {
+    fs.writeFileSync(bodyPath, Buffer.from('Hello World!'));
+    const response = await models.initModel(models.response.type, {
       bodyPath,
+      bodyCompression: null,
       parentId: 'req_1',
       url: 'https://insomnia.rest',
       statusCode: 200,
       statusMessage: 'OK',
       bytesRead: 123,
       elapsedTime: 321
-    };
+    });
     const result = plugin.init(PLUGIN, response);
     expect(result.response.getRequestId()).toBe('req_1');
     expect(result.response.getStatusCode()).toBe(200);

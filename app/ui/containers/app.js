@@ -26,8 +26,7 @@ import WorkspaceSettingsModal from '../components/modals/workspace-settings-moda
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import {compress, debounce, getContentDispositionHeader} from '../../common/misc';
-import zlib from 'zlib';
+import {debounce, getContentDispositionHeader} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -375,7 +374,7 @@ class App extends PureComponent {
     this.props.handleStartLoading(requestId);
 
     try {
-      const {response: responsePatch} = await network.send(requestId, environmentId);
+      const responsePatch = await network.send(requestId, environmentId);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? header.value : null;
@@ -389,18 +388,22 @@ class App extends PureComponent {
         const name = nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
 
         const filename = path.join(dir, name);
-        const from = fs.createReadStream(responsePatch.bodyPath);
         const to = fs.createWriteStream(filename);
-        const gunzip = zlib.createGunzip();
-        from.pipe(gunzip).pipe(to);
+        const readStream = models.response.getBodyStream(responsePatch);
 
-        gunzip.on('end', async () => {
+        if (!readStream) {
+          return;
+        }
+
+        readStream.pipe(to);
+
+        readStream.on('end', async () => {
           trackEvent('Response', 'Download After Save Success');
-          fs.writeFileSync(responsePatch.bodyPath, compress(`Saved to ${filename}`));
+          responsePatch.error = `Saved to ${filename}`;
           await models.response.create(responsePatch);
         });
 
-        gunzip.on('error', async err => {
+        readStream.on('error', async err => {
           console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
           trackEvent('Response', 'Download After Save Failed');
           await models.response.create(responsePatch);
