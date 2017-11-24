@@ -88,7 +88,7 @@ export async function _actuallySend (
       // Apply plugin hooks and don't wait for them and don't throw from them
       process.nextTick(async () => {
         try {
-          await _applyResponsePluginHooks(response);
+          await _applyResponsePluginHooks(workspace, response);
         } catch (err) {
           // TODO: Better error handling here
           console.warn('Response plugin failed', err);
@@ -736,9 +736,19 @@ export async function send (
   const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
   const renderedContextBeforePlugins = await getRenderContext(request, environmentId, ancestors);
 
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
+  if (!workspace) {
+    throw new Error(`Failed to find workspace for request: ${requestId}`);
+  }
+
   let renderedRequest: RenderedRequest;
   try {
-    renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins, renderedContextBeforePlugins);
+    renderedRequest = await _applyRequestPluginHooks(
+      workspace,
+      renderedRequestBeforePlugins,
+      renderedContextBeforePlugins
+    );
   } catch (err) {
     return {
       response: {
@@ -754,16 +764,11 @@ export async function send (
     };
   }
 
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
-  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
-  if (!workspace) {
-    throw new Error(`Failed to find workspace for request: ${requestId}`);
-  }
-
   return _actuallySend(renderedRequest, workspace, settings);
 }
 
 async function _applyRequestPluginHooks (
+  workspace: Workspace,
   renderedRequest: RenderedRequest,
   renderedContext: Object
 ): Promise<RenderedRequest> {
@@ -772,7 +777,7 @@ async function _applyRequestPluginHooks (
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
-      ...pluginContexts.app.init(plugin),
+      ...pluginContexts.app.init(plugin, workspace),
       ...pluginContexts.request.init(plugin, newRenderedRequest, renderedContext)
     };
 
@@ -788,11 +793,12 @@ async function _applyRequestPluginHooks (
 }
 
 async function _applyResponsePluginHooks (
+  workspace: Workspace,
   response: ResponsePatch
 ): Promise<void> {
   for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
-      ...pluginContexts.app.init(plugin),
+      ...pluginContexts.app.init(plugin, workspace),
       ...pluginContexts.response.init(plugin, response)
     };
 
