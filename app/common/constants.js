@@ -60,10 +60,10 @@ export const MAX_RESPONSES = 20;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
 export const GA_ID = 'UA-86416787-1';
 export const GA_LOCATION = 'https://desktop.insomnia.rest/';
-export const CHANGELOG_URL = 'https://changelog.insomnia.rest/changelog.json';
-export const CHANGELOG_PAGE = 'https://insomnia.rest/changelog/';
+export const CHANGELOG_BASE_URL = 'https://insomnia.rest/changelog';
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
+export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 export const PLUGIN_PATH = path.join((electron.remote || electron).app.getPath('userData'), 'plugins');

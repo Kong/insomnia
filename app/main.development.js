@@ -6,7 +6,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import {getAppVersion, isDevelopment, isMac} from './common/constants';
+import {CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac} from './common/constants';
 import {trackNonInteractiveEvent} from './common/analytics';
 import type {ToastNotification} from './ui/components/toast';
 import type {Stats} from './models/stats';
@@ -134,7 +134,7 @@ async function _trackStats () {
     const {BrowserWindow} = electron;
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: `https://insomnia.rest/changelog/${currentVersion}/`,
+      url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
       cta: 'See What\'s New',
       message: `Updated to ${currentVersion}`,
       email: 'support@insomnia.rest'

@@ -38,7 +38,9 @@ class DropdownItem extends PureComponent {
 
     const inner = (
       <div className={classnames('dropdown__inner', className)}>
-        <div className="dropdown__text" style={styles}>{children}</div>
+        <div className="dropdown__text" style={styles}>
+          {children}
+        </div>
       </div>
     );
 

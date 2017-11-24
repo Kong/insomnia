@@ -3,7 +3,6 @@ import type {Request} from '../../models/request';
 import type {Response} from '../../models/response';
 
 import * as React from 'react';
-import zlib from 'zlib';
 import autobind from 'autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
@@ -88,15 +87,14 @@ class ResponsePane extends React.PureComponent<Props> {
         return;
       }
 
-      if (response.bodyPath) {
-        const from = fs.createReadStream(response.bodyPath);
+      const readStream = models.response.getBodyStream(response);
+      if (readStream) {
         const to = fs.createWriteStream(outputPath);
-        const gunzip = zlib.createGunzip();
-        from.pipe(gunzip).pipe(to);
-        gunzip.on('end', () => {
+        readStream.pipe(to);
+        to.on('end', () => {
           trackEvent('Response', 'Save Success');
         });
-        gunzip.on('error', err => {
+        to.on('error', err => {
           console.warn('Failed to save response body', err);
           trackEvent('Response', 'Save Failure');
         });
@@ -130,16 +128,15 @@ class ResponsePane extends React.PureComponent<Props> {
         return;
       }
 
-      if (response.bodyPath) {
-        const from = fs.createReadStream(response.bodyPath);
+      const readStream = models.response.getBodyStream(response);
+      if (readStream) {
         const to = fs.createWriteStream(filename);
         to.write(headers);
-        const gunzip = zlib.createGunzip();
-        from.pipe(gunzip).pipe(to);
-        gunzip.on('end', () => {
+        readStream.pipe(to);
+        to.on('end', () => {
           trackEvent('Response', 'Save Full Success');
         });
-        gunzip.on('error', err => {
+        to.on('error', err => {
           console.warn('Failed to save full response', err);
           trackEvent('Response', 'Save Full Failure');
         });
@@ -290,7 +287,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 filter={filter}
                 filterHistory={filterHistory}
                 updateFilter={response.error ? null : handleSetFilter}
-                bodyPath={response.bodyPath}
+                download={this._handleDownloadResponseBody}
                 getBody={this._handleGetResponseBody}
                 error={response.error}
                 editorLineWrapping={editorLineWrapping}

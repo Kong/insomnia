@@ -2,7 +2,7 @@ import electron from 'electron';
 import path from 'path';
 import fs from 'fs';
 import LocalStorage from './local-storage';
-import {getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
+import {CHANGELOG_BASE_URL, getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
 import {trackEvent} from '../common/analytics';
 import * as misc from '../common/misc';
 
@@ -95,9 +95,10 @@ export function createWindow () {
     trackEvent('Window', 'Unresponsive');
   });
 
-  // and load the app.html of the app.
-  // TODO: Use path.join for this
-  mainWindow.loadURL(`file://${__dirname}/renderer.html`);
+  // Load the html of the app.
+  const appUrl = process.env.APP_RENDER_URL || `file://${__dirname}/renderer.html`;
+  console.log(`[main] Loading ${process.env.APP_RENDER_URL}`);
+  mainWindow.loadURL(appUrl);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
@@ -132,7 +133,7 @@ export function createWindow () {
           if (!window || !window.webContents) {
             return;
           }
-          misc.clickLink(`https://insomnia.rest/changelog/${getAppVersion()}/`);
+          misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
           trackEvent('App Menu', 'Changelog');
         }
       },

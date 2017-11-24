@@ -1,24 +1,27 @@
 const webpack = require('webpack');
 const baseConfig = require('./webpack.config.base.babel');
+const pkg = require('../package.json');
 
-const PORT = 3333;
+const port = pkg.dev['webpack-dev-server-port'];
 
 module.exports = {
   ...baseConfig,
   devtool: 'eval-source-map',
   entry: [
     'react-hot-loader/patch',
+    `webpack-dev-server/client?http://localhost:${port}`,
+    'webpack/hot/only-dev-server',
     ...baseConfig.entry
   ],
   output: {
     ...baseConfig.output,
-    publicPath: `http://localhost:${PORT}/`
+    publicPath: '/'
   },
   devServer: {
-    hot: true,
-    hotOnly: true,
-    port: PORT,
-    publicPath: `http://localhost:${PORT}/`
+    host: 'localhost',
+    port: port,
+    publicPath: '/',
+    hot: true
   },
   plugins: [
     ...baseConfig.plugins,

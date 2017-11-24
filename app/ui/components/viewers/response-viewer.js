@@ -9,13 +9,15 @@ import ResponseWebView from './response-webview';
 import MultipartViewer from './response-multipart';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
-import {LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
 import JSONViewer from '../json-viewer';
+import {HUGE_RESPONSE_MB, LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
+import Wrap from '../wrap';
 
 let alwaysShowLargeResponses = false;
 
 type Props = {
   getBody: Function,
+  download: Function,
   responseId: string,
   previewMode: string,
   filter: string,
@@ -35,7 +37,8 @@ type Props = {
 
 type State = {
   blockingBecauseTooLarge: boolean,
-  bodyBuffer: Buffer | null
+  bodyBuffer: Buffer | null,
+  error: string
 };
 
 @autobind
@@ -44,7 +47,8 @@ class ResponseViewer extends React.Component<Props, State> {
     super(props);
     this.state = {
       blockingBecauseTooLarge: false,
-      bodyBuffer: null
+      bodyBuffer: null,
+      error: ''
     };
   }
 
@@ -68,10 +72,15 @@ class ResponseViewer extends React.Component<Props, State> {
     if (!forceShow && !alwaysShowLargeResponses && responseIsTooLarge) {
       this.setState({blockingBecauseTooLarge: true});
     } else {
-      this.setState({
-        blockingBecauseTooLarge: false,
-        bodyBuffer: props.getBody()
-      });
+      try {
+        const bodyBuffer = props.getBody();
+        this.setState({
+          bodyBuffer,
+          blockingBecauseTooLarge: false
+        });
+      } catch (err) {
+        this.setState({error: `Failed reading response from filesystem: ${err.stack}`});
+      }
     }
   }
 
@@ -131,51 +140,76 @@ class ResponseViewer extends React.Component<Props, State> {
 
   render () {
     const {
-      previewMode,
-      filter,
-      filterHistory,
-      editorLineWrapping,
+      bytes,
+      download,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      updateFilter,
+      editorLineWrapping,
+      error: responseError,
+      filter,
+      filterHistory,
+      previewMode,
       responseId,
-      url,
-      error
+      updateFilter,
+      url
     } = this.props;
 
     let contentType = this.props.contentType;
 
-    const {bodyBuffer} = this.state;
+    const {bodyBuffer, error: parseError} = this.state;
+
+    const error = responseError || parseError;
 
     if (error) {
       return (
-        <ResponseError
-          url={url}
-          error={error}
-          fontSize={editorFontSize}
-        />
+        <div className="scrollable tall">
+          <ResponseError
+            url={url}
+            error={error}
+            fontSize={editorFontSize}
+          />
+        </div>
       );
     }
 
+    const wayTooLarge = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
     const {blockingBecauseTooLarge} = this.state;
     if (blockingBecauseTooLarge) {
       return (
         <div className="response-pane__notify">
-          <p className="pad faint">
-            Response body over {LARGE_RESPONSE_MB}MB hidden to prevent unresponsiveness
-          </p>
-          <p>
-            <button onClick={this._handleDismissBlocker}
-                    className="inline-block btn btn--clicky">
-              Show Response
-            </button>
-            {' '}
-            <button className="faint inline-block btn btn--super-compact"
-                    onClick={this._handleDisableBlocker}>
-              Always Show
-            </button>
-          </p>
+          {wayTooLarge ? (
+            <Wrap>
+              <p className="pad faint">
+                Responses over {HUGE_RESPONSE_MB}MB cannot be shown
+              </p>
+              <button onClick={download} className="inline-block btn btn--clicky">
+                Save Response To File
+              </button>
+            </Wrap>
+          ) : (
+            <Wrap>
+              <p className="pad faint">
+                Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
+              </p>
+              <div>
+                <button onClick={download} className="inline-block btn btn--clicky margin-xs">
+                  Save To File
+                </button>
+                <button onClick={this._handleDismissBlocker}
+                        disabled={wayTooLarge}
+                        className=" inline-block btn btn--clicky margin-xs">
+                  Show Anyway
+                </button>
+              </div>
+              <div className="pad-top-sm">
+                <button className="faint inline-block btn btn--super-compact"
+                        onClick={this._handleDisableBlocker}>
+                  Always Show
+                </button>
+              </div>
+            </Wrap>
+          )}
         </div>
       );
     }
@@ -257,15 +291,16 @@ class ResponseViewer extends React.Component<Props, State> {
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
       return (
         <MultipartViewer
-          responseId={responseId}
           bodyBuffer={bodyBuffer}
           contentType={contentType}
-          filter={filter}
-          filterHistory={filterHistory}
+          download={download}
           editorFontSize={editorFontSize}
           editorIndentSize={editorIndentSize}
           editorKeyMap={editorKeyMap}
           editorLineWrapping={editorLineWrapping}
+          filter={filter}
+          filterHistory={filterHistory}
+          responseId={responseId}
           url={url}
         />
       );
@@ -291,7 +326,15 @@ class ResponseViewer extends React.Component<Props, State> {
     } else { // Show everything else as "source"
       const match = contentType.match(/charset=([\w-]+)/);
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
-      const body = iconv.decode(bodyBuffer, charset);
+
+      // Sometimes iconv conversion fails so fallback to regular buffer
+      let body;
+      try {
+        body = iconv.decode(bodyBuffer, charset);
+      } catch (err) {
+        body = bodyBuffer.toString();
+        console.warn('[response] Failed to decode body', err);
+      }
 
       // Try to detect content-types if there isn't one
       let mode;

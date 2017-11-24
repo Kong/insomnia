@@ -269,8 +269,8 @@ class General extends React.PureComponent<Props> {
                 <select value={settings.updateChannel}
                         name="updateChannel"
                         onChange={this._handleUpdateSetting}>
-                  <option value={UPDATE_CHANNEL_STABLE}>Stable (Recommended)</option>
-                  <option value={UPDATE_CHANNEL_BETA}>Stable and Beta</option>
+                  <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
+                  <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
                 </select>
               </label>
             </div>

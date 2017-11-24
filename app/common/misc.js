@@ -292,21 +292,13 @@ export function fnOrString (v: string | Function, ...args: Array<any>) {
 }
 
 export function compressObject (obj: any): string {
-  const compressed = compress(JSON.stringify(obj));
+  const compressed = zlib.gzipSync(JSON.stringify(obj));
   return compressed.toString('base64');
 }
 
 export function decompressObject (input: string): any {
-  const jsonBuffer = decompress(Buffer.from(input, 'base64'));
+  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
   return JSON.parse(jsonBuffer.toString('utf8'));
-}
-
-export function compress (inputBuffer: Buffer | string): Buffer {
-  return zlib.gzipSync(inputBuffer);
-}
-
-export function decompress (inputBuffer: Buffer | string): Buffer {
-  return zlib.gunzipSync(inputBuffer);
 }
 
 export function resolveHomePath (p: string): string {
@@ -379,15 +371,15 @@ export function getUserLanguage (): string {
 
 export async function waitForStreamToFinish (s: Readable | Writable): Promise<void> {
   return new Promise(resolve => {
-    if (s.hasOwnProperty('readable') && !s.readable) {
+    if (s._readableState && s._readableState.finished) {
       return resolve();
     }
 
-    if (s.hasOwnProperty('writable') && !s.writable) {
+    if (s._writableState && s._writableState.finished) {
       return resolve();
     }
 
-    s.on('finish', () => {
+    s.on('close', () => {
       resolve();
     });
 

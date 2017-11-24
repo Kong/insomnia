@@ -10,7 +10,6 @@ import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
 import {Curl} from 'insomnia-node-libcurl';
 import {join as pathJoin} from 'path';
-import zlib from 'zlib';
 import uuid from 'uuid';
 import * as electron from 'electron';
 import * as models from '../models';
@@ -37,6 +36,8 @@ export type ResponsePatch = {
   statusCode?: number,
   bytesContent?: number,
   bodyPath?: string,
+  bodyCompression?: 'zip' | null,
+  message?: string,
   httpVersion?: string,
   headers?: Array<ResponseHeader>,
   elapsedTime?: number,
@@ -75,6 +76,7 @@ export async function _actuallySend (
     function respond (patch: ResponsePatch, bodyPath: ?string): void {
       const response = Object.assign(({
         parentId: renderedRequest._id,
+        bodyCompression: null, // Will default to .zip otherwise
         timeline: timeline,
         bodyPath: bodyPath || '',
         settingSendCookies: renderedRequest.settingSendCookies,
@@ -225,7 +227,7 @@ export async function _actuallySend (
 
         const percent = Math.round(dlnow / dltotal * 100);
         if (percent !== lastPercent) {
-          console.log(`[debug] Request downloaded ${percent}%`);
+          // console.log(`[network] Request downloaded ${percent}%`);
           lastPercent = percent;
         }
 
@@ -472,15 +474,13 @@ export async function _actuallySend (
       let responseBodyBytes = 0;
       const responsesDir = pathJoin(app.getPath('userData'), 'responses');
       mkdirp.sync(responsesDir);
-      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.zip');
+      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
       const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
-      const gzip = zlib.createGzip();
-      gzip.pipe(responseBodyWriteStream);
-      curl.on('end', () => gzip.end());
-      curl.on('error', () => gzip.end());
+      curl.on('end', () => responseBodyWriteStream.end());
+      curl.on('error', () => responseBodyWriteStream.end());
       setOpt(Curl.option.WRITEFUNCTION, (buff: Buffer) => {
         responseBodyBytes += buff.length;
-        gzip.write(buff);
+        responseBodyWriteStream.write(buff);
         return buff.length;
       });
 

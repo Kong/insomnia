@@ -21,6 +21,7 @@ import * as xpath2 from '../../../common/xpath';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
+const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
@@ -576,6 +577,14 @@ class CodeEditor extends React.Component {
     }
 
     const value = this.codeMirror.getDoc().getValue();
+
+    const lint = value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
+    const existingLint = this.codeMirror.options.lint || false;
+    console.log('LINT?', lint, value.length, MAX_SIZE_FOR_LINTING - value.length);
+    if (lint !== existingLint) {
+      this.codeMirror.setOption('lint', lint);
+    }
+
     this.props.onChange(value);
   }
 
