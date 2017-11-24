@@ -95,9 +95,10 @@ export function createWindow () {
     trackEvent('Window', 'Unresponsive');
   });
 
-  // and load the app.html of the app.
-  // TODO: Use path.join for this
-  mainWindow.loadURL(`file://${__dirname}/renderer.html`);
+  // Load the html of the app.
+  const appUrl = process.env.APP_RENDER_URL || `file://${__dirname}/renderer.html`;
+  console.log(`[main] Loading ${process.env.APP_RENDER_URL}`);
+  mainWindow.loadURL(appUrl);
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {

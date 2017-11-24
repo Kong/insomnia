@@ -14,6 +14,9 @@ import './css/index.less';
 import {isDevelopment} from '../common/constants';
 import {trackEvent, trackPageView} from '../common/analytics';
 
+// Handy little helper
+document.body.setAttribute('data-platform', process.platform);
+
 (async function () {
   await db.initClient();
 
@@ -34,6 +37,9 @@ import {trackEvent, trackPageView} from '../common/analytics';
   };
 
   render(DndComponent);
+
+  // Track the page view
+  trackPageView();
 
   // Hot Module Replacement API
   if (module.hot) {
@@ -66,5 +72,20 @@ if (window && !isDevelopment()) {
   });
 }
 
-// Track the page view
-trackPageView();
+function showUpdateNotification () {
+  console.log('[app] Update Available');
+
+  // eslint-disable-next-line no-new
+  new window.Notification('Insomnia Update Ready', {
+    body: 'Relaunch the app for it to take effect',
+    silent: true,
+    sticky: true
+  });
+}
+
+const {ipcRenderer} = require('electron');
+ipcRenderer.on('update-available', () => {
+  // Give it a few seconds before showing this. Sometimes, when
+  // you relaunch too soon it doesn't work the first time.
+  setTimeout(showUpdateNotification, 1000 * 10);
+});

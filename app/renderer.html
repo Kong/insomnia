@@ -3,65 +3,11 @@
 <head>
   <meta charset="utf-8">
   <title>Insomnia</title>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;">
 </head>
 <body>
 <div id="root"></div>
-<div id="dropdowns-container"></div>
-<div id="tooltips-container"></div>
-<script>
-  // HOT RELOADING IN DEV
-  (function () {
-    const script = document.createElement('script');
-    script.async = true; // Make Chrome not warn about cross-origin script blocking
-    script.src = process.env.HOT
-      ? 'http://localhost:3333/bundle.js'
-      : 'bundle.js';
-
-    document.write(script.outerHTML);
-
-    if (process.env.HOT) {
-      const msg = 'Waiting for build server. The initial build can ' +
-        'take over a minute on slower hardware.';
-      document.querySelector('#root').innerHTML = `<p>${msg}</p>`;
-    }
-  }());
-</script>
-<script>
-  // UPDATE HANDLERS
-  (function () {
-    function showUpdateNotification () {
-      console.log('[app] Update Available');
-
-      // eslint-disable-next-line no-new
-      new window.Notification('Insomnia Update Ready', {
-        body: 'Relaunch the app for it to take effect',
-        silent: true,
-        sticky: true
-      });
-    }
-
-    const {ipcRenderer} = require('electron');
-    ipcRenderer.on('update-available', () => {
-      // Give it a few seconds before showing this. Sometimes, when
-      // you relaunch too soon it doesn't work the first time.
-      setTimeout(showUpdateNotification, 1000 * 10);
-    });
-  })();
-</script>
-<script>
-  (function () {
-    const {productName, version} = require('./package.json');
-    if (process.env.INSOMNIA_ENV === 'development') {
-      document.title = `${productName}`;
-    } else {
-      document.title = `${productName} v${version}`;
-    }
-  })();
-</script>
-
-<script>
-  // SOME HELPERS
-  document.body.setAttribute('data-platform', process.platform);
-</script>
+<script src="bundle.js" type="application/javascript"></script>
 </body>
 </html>
