@@ -2,14 +2,8 @@
 import type {Plugin} from '../';
 import * as electron from 'electron';
 import {showAlert} from '../../ui/components/modals/index';
-import {importRaw, importUri} from '../../common/import';
-import type {Workspace} from '../../models/workspace';
 
-export function init (plugin: Plugin, activeWorkspace: Workspace): {app: Object} {
-  if (!activeWorkspace) {
-    throw new Error('contexts.app initialized without workspace');
-  }
-
+export function init (plugin: Plugin): {app: Object} {
   return {
     app: {
       alert (message: string): Promise<void> {
@@ -35,20 +29,6 @@ export function init (plugin: Plugin, activeWorkspace: Workspace): {app: Object}
             resolve(filename || null);
           });
         });
-      },
-      async importUri (uri: string, workspaceId: ?string): Promise<void> {
-        if (!workspaceId) {
-          await importUri(activeWorkspace._id, uri);
-        } else {
-          await importUri(workspaceId, uri);
-        }
-      },
-      async importRaw (text: string, workspaceId: ?string): Promise<void> {
-        if (!workspaceId) {
-          await importRaw(activeWorkspace._id, text);
-        } else {
-          await importRaw(workspaceId, text);
-        }
       }
     }
   };

@@ -29,7 +29,6 @@ describe('init()', () => {
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'addHeader',
-      'addParameter',
       'getEnvironment',
       'getEnvironmentVariable',
       'getHeader',
@@ -37,16 +36,11 @@ describe('init()', () => {
       'getId',
       'getMethod',
       'getName',
-      'getParameter',
-      'getParameters',
       'getUrl',
       'hasHeader',
-      'hasParameter',
       'removeHeader',
-      'removeParameter',
       'setCookie',
       'setHeader',
-      'setParameter',
       'settingDisableRenderRequestBody',
       'settingEncodeUrl',
       'settingSendCookies',
@@ -68,10 +62,6 @@ describe('request.*', () => {
       _id: 'req_1',
       parentId: 'wrk_1',
       name: 'My Request',
-      parameters: [
-        {name: 'limit', value: '10'},
-        {name: 'offset', value: '100'}
-      ],
       headers: [
         {name: 'hello', value: 'world'},
         {name: 'Content-Type', value: 'application/json'}
@@ -85,39 +75,6 @@ describe('request.*', () => {
     expect(result.request.getName()).toBe('My Request');
     expect(result.request.getUrl()).toBe('');
     expect(result.request.getMethod()).toBe('GET');
-  });
-
-  it('works for query parameters', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
-
-    // getParameters()
-    expect(result.request.getParameters()).toEqual([
-      {name: 'limit', value: '10'},
-      {name: 'offset', value: '100'}
-    ]);
-
-    // getParameter()
-    expect(result.request.getParameter('limit')).toBe('10');
-    expect(result.request.getParameter('LIMIT')).toBe(null);
-    expect(result.request.getParameter('does-not-exist')).toBe(null);
-    expect(result.request.hasParameter('limit')).toBe(true);
-
-    // setParameter()
-    result.request.setParameter('limit', '20');
-    result.request.setParameter('new', 'hi');
-    expect(result.request.getParameter('limit')).toBe('20');
-    expect(result.request.getParameter('new')).toBe('hi');
-
-    // addParameter()
-    result.request.addParameter('limit', '99');
-    result.request.addParameter('something-else', 'foo');
-    expect(result.request.getParameter('limit')).toBe('20');
-    expect(result.request.getParameter('something-else')).toBe('foo');
-
-    // removeParameter()
-    result.request.removeParameter('limit');
-    expect(result.request.getParameter('limit')).toBe(null);
-    expect(result.request.hasParameter('limit')).toBe(false);
   });
 
   it('works for headers', async () => {

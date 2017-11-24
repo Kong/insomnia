@@ -88,7 +88,7 @@ export async function _actuallySend (
       // Apply plugin hooks and don't wait for them and don't throw from them
       process.nextTick(async () => {
         try {
-          await _applyResponsePluginHooks(workspace, response);
+          await _applyResponsePluginHooks(response);
         } catch (err) {
           // TODO: Better error handling here
           console.warn('Response plugin failed', err);
@@ -745,7 +745,6 @@ export async function send (
   let renderedRequest: RenderedRequest;
   try {
     renderedRequest = await _applyRequestPluginHooks(
-      workspace,
       renderedRequestBeforePlugins,
       renderedContextBeforePlugins
     );
@@ -768,7 +767,6 @@ export async function send (
 }
 
 async function _applyRequestPluginHooks (
-  workspace: Workspace,
   renderedRequest: RenderedRequest,
   renderedContext: Object
 ): Promise<RenderedRequest> {
@@ -777,7 +775,7 @@ async function _applyRequestPluginHooks (
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
-      ...pluginContexts.app.init(plugin, workspace),
+      ...pluginContexts.app.init(plugin),
       ...pluginContexts.request.init(plugin, newRenderedRequest, renderedContext)
     };
 
@@ -793,12 +791,11 @@ async function _applyRequestPluginHooks (
 }
 
 async function _applyResponsePluginHooks (
-  workspace: Workspace,
   response: ResponsePatch
 ): Promise<void> {
   for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
-      ...pluginContexts.app.init(plugin, workspace),
+      ...pluginContexts.app.init(plugin),
       ...pluginContexts.response.init(plugin, response)
     };
 

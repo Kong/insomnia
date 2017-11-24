@@ -5,12 +5,14 @@ import * as har from './har';
 import type {BaseModel} from '../models/index';
 import * as models from '../models/index';
 import {getAppVersion} from './constants';
-import * as misc from './misc';
 import {showModal} from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import * as fetch from './fetch';
 import fs from 'fs';
 import {trackEvent} from './analytics';
+import type {Workspace} from '../models/workspace';
+import type {Environment} from '../models/environment';
+import {fnOrString, generateId} from './misc';
 
 const EXPORT_FORMAT = 3;
 
@@ -31,7 +33,7 @@ const MODELS = {
   [EXPORT_TYPE_ENVIRONMENT]: models.environment
 };
 
-export async function importUri (workspaceId: string, uri: string): Promise<void> {
+export async function importUri (workspaceId: string | null, uri: string): Promise<void> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
     const response = await fetch.rawFetch(uri);
@@ -43,13 +45,7 @@ export async function importUri (workspaceId: string, uri: string): Promise<void
     throw new Error(`Invalid import URI ${uri}`);
   }
 
-  const workspace = await models.workspace.getById(workspaceId);
-
-  if (!workspace) {
-    throw new Error(`Must provide a valid workspace Id to import to id=${workspaceId}`);
-  }
-
-  const result = await importRaw(workspace._id, rawText);
+  const result = await importRaw(workspaceId, rawText);
   const {summary, source, error} = result;
 
   if (error) {
@@ -74,7 +70,7 @@ export async function importUri (workspaceId: string, uri: string): Promise<void
 }
 
 export async function importRaw (
-  workspaceId: string,
+  workspaceId: string | null,
   rawContent: string,
   generateNewIds: boolean = false
 ): Promise<{source: string, error: string | null, summary: {[string]: Array<BaseModel>}}> {
@@ -92,25 +88,39 @@ export async function importRaw (
 
   const {data} = results;
 
-  const workspace = await models.workspace.getById(workspaceId);
-  if (!workspace) {
-    throw new Error(`Workspace not found to import to id=${workspaceId}`);
-  }
+  let workspace: Workspace | null = await models.workspace.getById(workspaceId || 'n/a');
 
   // Fetch the base environment in case we need it
-  const baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+  let baseEnvironment: Environment | null = await models.environment.getOrCreateForWorkspaceId(
+    workspaceId || 'n/a'
+  );
 
   // Generate all the ids we may need
-  const generatedIds = {};
+  const generatedIds: {[string]: string | Function} = {};
   for (const r of data.resources) {
     if (generateNewIds || r._id.match(REPLACE_ID_REGEX)) {
-      generatedIds[r._id] = misc.generateId(MODELS[r._type].prefix);
+      generatedIds[r._id] = generateId(MODELS[r._type].prefix);
     }
   }
 
   // Always replace these "constants"
-  generatedIds['__WORKSPACE_ID__'] = workspace._id;
-  generatedIds['__BASE_ENVIRONMENT_ID__'] = baseEnvironment._id;
+  generatedIds['__WORKSPACE_ID__'] = async () => {
+    if (!workspace) {
+      workspace = await models.workspace.create({name: 'Imported Workspace'});
+    }
+
+    return workspace._id;
+  };
+
+  generatedIds['__BASE_ENVIRONMENT_ID__'] = async () => {
+    if (!baseEnvironment) {
+      if (!workspace) {
+        workspace = await models.workspace.create({name: 'Imported Workspace'});
+      }
+      baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+    }
+    return baseEnvironment._id;
+  };
 
   // Import everything backwards so they get inserted in the correct order
   data.resources.reverse();
@@ -132,12 +142,12 @@ export async function importRaw (
 
     // Replace _id if we need to
     if (generatedIds[resource._id]) {
-      resource._id = generatedIds[resource._id];
+      resource._id = await fnOrString(generatedIds[resource._id]);
     }
 
     // Replace newly generated IDs if they exist
     if (generatedIds[resource.parentId]) {
-      resource.parentId = generatedIds[resource.parentId];
+      resource.parentId = await fnOrString(generatedIds[resource.parentId]);
     }
 
     const model: Object = MODELS[resource._type];
