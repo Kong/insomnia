@@ -1,0 +1,23 @@
+{{ partial "head" . }}
+<body>
+
+{{ partial "navbar" . }}
+
+<main role="main" class="container">
+    <div class="row">
+        <div class="col-12 center">
+            <h1 class="post-title">
+                {{ .Site.Params.pageNotFoundTitle }}
+            </h1>
+            <p>
+                <a href="/" class="button">Take me Home</a>
+            </p>
+        </div>
+    </div>
+</main>
+
+{{ partial "footer" . }}
+{{ partial "js" . }}
+
+</body>
+</html>

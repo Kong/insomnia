@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="{{ with .Site.LanguageCode }}{{ . }}{{ else }}en-US{{ end }}">
+<head>
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>
+    {{ if .IsHome }}{{ .Title }}{{ else }}{{ .Title }} |
+    {{ .Site.Title }}{{ end }}
+  </title>
+  <meta name="author" content="{{ with .Site.Params.name }}{{ . }}{{ end }}">
+  <meta name="description"
+        content="{{ with .Site.Params.description }}{{ . }}{{ end }}">
+  {{ .Hugo.Generator }}
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+  <!-- Google Stuff -->
+  <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "WebSite",
+        "name": "{{ .Site.Title }}",
+        "url": "{{ .Site.BaseURL }}"
+    }
+
+
+
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "Organization",
+      "url": "{{ .Site.BaseURL }}",
+      "logo": "{{ .Site.BaseURL }}images/icon.png",
+      "name": "{{ .Site.Title }}",
+      "sameAs": [
+        "https://twitter.com/{{ .Site.Params.twitter }}",
+        "https://plus.google.com/+{{ .Site.Params.googlePlus }}"
+      ]
+    }
+
+
+
+  </script>
+
+  {{ if eq .Section "changelog" }}
+  <!-- Twitter Summary Card (Changelog) -->
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:site" content="@{{ .Site.Params.twitter }}"/>
+  <meta name="twitter:title" content="{{ .Title }}"/>
+  <meta name="twitter:description"
+        content="{{ if .Summary }}{{ .Summary }}{{ else }}Release notes for version {{ .Slug }}{{ end }}"/>
+  <meta name="twitter:image"
+        content="{{ .Site.BaseURL }}images/twitter-card-icon.png"/>
+  <!-- Facebook Metadata (Changelog) -->
+  <meta property="og:url" content="{{ .Permalink }}"/>
+  <meta property="og:type" content="article"/>
+  <meta property="og:title" content="{{ .Title }}"/>
+  <meta property="og:description"
+        content="{{ if .Summary }}{{ .Summary }}{{ else }}Release notes for version {{ .Slug }}{{ end }}"/>
+  <meta property="og:image"
+        content="{{ .Site.BaseURL }}images/twitter-card-icon.png"/>
+  {{ else if .IsPage }}
+  <!-- Twitter Summary Card (Content) -->
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:site" content="@{{ .Site.Params.twitter }}"/>
+  <meta name="twitter:title" content="{{ .Title }}"/>
+  <meta name="twitter:description"
+        content="{{ if .IsPage }}{{ .Summary }}{{ else }}{{ .Site.Params.description }}{{ end }}"/>
+  <meta name="twitter:image"
+        content="{{ .Site.BaseURL }}images/twitter-card-icon.png"/>
+  <!-- Facebook Metadata (Content) -->
+  <meta property="og:url" content="{{ .Permalink }}"/>
+  <meta property="og:type" content="article"/>
+  <meta property="og:title" content="{{ .Title }}"/>
+  <meta property="og:description"
+        content="{{ if .IsPage }}{{ .Summary }}{{ else }}{{ .Site.Params.description }}{{ end }}"/>
+  <meta property="og:image" content="{{ .Site.BaseURL }}images/twitter-card-icon.png"/>
+  {{ else if .IsHome }}
+  <!-- Full Twitter Card (Home Page) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="{{ .Site.Params.twitter }}">
+  <meta name="twitter:creator" content="{{ .Site.Params.twitter }}">
+  <meta name="twitter:title" content="{{ .Site.Title }}">
+  <meta name="twitter:description" content="{{ .Site.Params.description }}">
+  <meta name="twitter:image" content="{{ .Site.BaseURL }}images/twitter-promo-3.png">
+  <!-- Facebook Metadata (Home Page) -->
+  <meta property="og:url" content="{{ .Permalink }}"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="{{ .Site.Title }}"/>
+  <meta property="og:description" content="{{ .Site.Params.description }}"/>
+  <meta property="og:image" content="{{ .Site.BaseURL }}images/twitter-promo-3.png"/>
+  {{ else if .IsNode }}
+  <!-- Twitter Summary Card (List Page) -->
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:site" content="@{{ .Site.Params.twitter }}"/>
+  <meta name="twitter:title" content="{{ .Title }} for {{ .Site.Params.shortName }}"/>
+  <meta name="twitter:description"
+        content="{{ if .IsPage }}{{ .Summary }}{{ else }}{{ .Site.Params.description }}{{ end }}"/>
+  <meta name="twitter:image" content="{{ .Site.BaseURL }}images/twitter-card-icon.png"/>
+  <!-- Facebook Metadata (Content) -->
+  <meta property="og:url" content="{{ .Permalink }}"/>
+  <meta property="og:type" content="article"/>
+  <meta property="og:title" content="{{ .Title }} for {{ .Site.Params.shortName }}"/>
+  <meta property="og:description"
+        content="{{ if .IsPage }}{{ .Summary }}{{ else }}{{ .Site.Params.description }}{{ end }}"/>
+  <meta property="og:image" content="{{ .Site.BaseURL }}images/twitter-card-icon.png"/>
+  {{ end }}
+  <!-- /Twitter Card -->
+
+  {{ partial "extra-head" . }}
+
+  <!-- RSS -->
+  {{ if .RSSLink }}
+  <link href="{{ .RSSLink }}" rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}"/>
+  <link href="{{ .RSSLink }}" rel="feed" type="application/rss+xml" title="{{ .Site.Title }}"/>
+  {{ end }}
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ .Site.BaseURL }}images/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ .Site.BaseURL }}images/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ .Site.BaseURL }}images/favicon/favicon-16x16.png">
+  <link rel="manifest" href="{{ .Site.BaseURL }}images/favicon/manifest.json">
+  <link rel="mask-icon" href="{{ .Site.BaseURL }}images/favicon/safari-pinned-tab.svg" color="#584dbc">
+  <link rel="shortcut icon" href="{{ .Site.BaseURL }}images/favicon/favicon.ico">
+  <meta name="msapplication-config" content="{{ .Site.BaseURL }}images/favicon/browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="{{ .Site.BaseURL }}css/simple-grid.min.css">
+  <link rel="stylesheet" href="{{ .Site.BaseURL }}css/base.css">
+  {{ range .Site.Params.stylesheets }}
+  <link rel="stylesheet" href="{{ $.Site.BaseURL }}css/{{ . }}">
+  {{ end }}
+</head>

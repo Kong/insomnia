@@ -1,0 +1,18 @@
+{
+  "lerna": "2.5.1",
+  "version": "independent",
+  "packages": [
+    "plugins/*",
+    "packages/*",
+    "website"
+  ],
+  "commands": {
+    "publish": {
+      "allowBranch": "master",
+      "ignore": [
+        "insomnia-app",
+        "insomnia-website"
+      ]
+    }
+  }
+}

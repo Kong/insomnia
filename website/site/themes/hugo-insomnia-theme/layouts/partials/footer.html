@@ -1,0 +1,47 @@
+<footer class="footer">
+  <section>
+    <p class="footer__menu">
+      {{ if .Site.Params.twitter }}
+      <a href="https://twitter.com/{{ .Site.Params.twitter }}" target="_blank"
+         title="Twitter">
+        Twitter
+      </a>
+      {{ end }}
+
+      {{ if .Site.Params.github }}
+      <a href="https://github.com/{{ .Site.Params.github }}" target="_blank"
+         title="GitHub">
+        GitHub
+      </a>
+      {{ end }}
+
+      {{ if .Site.Params.googlePlus }}
+      <a href="https://plus.google.com/+{{ .Site.Params.googlePlus }}" target="_blank"
+         title="Google+">
+        Google+
+      </a>
+      {{ end }}
+
+      {{ if not .IsHome }}
+      {{ if .RSSLink }}
+      <a href="{{ .RSSLink }}" type="application/rss+xml" target="_blank"
+         title="RSS">
+        RSS
+      </a>
+      {{ end }}
+      {{ end }}
+      {{ if .Site.Menus.footer }}
+      {{ range .Site.Menus.footer }}
+      <a href="{{ .URL }}">{{ .Name }}</a>
+      {{ end }}
+      {{ end }}
+    </p>
+
+    <p class="text-sm">
+      &copy; {{ now.Format "2006"}}
+      <a href="{{ .Site.Params.copyrightURL }}" target="_blank">
+        {{ .Site.Copyright }}
+      </a>
+    </p>
+  </section>
+</footer>

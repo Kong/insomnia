@@ -1,0 +1,36 @@
+{{ partial "head" . }}
+<body class="home-template">
+
+{{ partial "navbar" . }}
+
+<main class="content" role="main">
+    <article class="container">
+        <header>
+            <h1>Blog Series</h1>
+        </header>
+        <section>
+            <p>
+                {{ $data := .Data }}
+                {{ range $count, $term := .Data.Terms.ByCount }}
+                <a class="button tags__tag" href="/{{ $data.Plural }}/{{ $term.Name | urlize }}">
+                    {{ $term.Name }} ({{ $term.Count }})
+                </a>
+                {{ end }}
+            </p>
+        </section>
+        <footer>
+            <p>
+                <a href="/">
+                    &laquo; All Blog Posts
+                </a>
+            </p>
+        </footer>
+    </article>
+</main>
+
+{{ partial "footer" . }}
+{{ partial "js" . }}
+
+</body>
+</html>
+

@@ -1,0 +1,48 @@
+{{ if .Content }}
+{{ .Content }}
+{{ else }}
+<p>
+  Version {{ .Slug }} is here!
+</p>
+{{ end }}
+<p class="center">
+  {{ if or (not (isset .Params "channel")) (eq .Params.channel "stable") }}
+  {{ partial "download-button" }}
+  &nbsp;
+  <a href="https://github.com/getinsomnia/insomnia/releases/v{{ .Slug }}"
+     class="button button--no-outline"
+     target="_blank">
+    View on GitHub
+  </a>
+  {{ else }}
+  {{ partial "beta-download-button" . }}
+  {{ end }}
+</p>
+
+
+{{ if isset .Params "major" }}
+<p><strong>Major Changes</strong></p>
+<ul class="ul--decorated ul--major">
+  {{ range .Params.major }}
+  <li class="changelog__list-item">{{ . }}</li>
+  {{ end }}
+</ul>
+{{ end }}
+
+{{ if isset .Params "fixes" }}
+<p><strong>Bug Fixes</strong></p>
+<ul class="ul--decorated ul--fix">
+  {{ range .Params.fixes }}
+  <li class="changelog__list-item">{{ . }}</li>
+  {{ end }}
+</ul>
+{{ end }}
+
+{{ if isset .Params "minor" }}
+<p><strong>Minor Changes</strong></p>
+<ul class="ul--decorated ul--minor">
+  {{ range .Params.minor }}
+  <li class="changelog__list-item">{{ . }}</li>
+  {{ end }}
+</ul>
+{{ end }}

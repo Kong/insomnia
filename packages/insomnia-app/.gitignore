@@ -1,0 +1,7 @@
+dist
+build
+
+# Generated
+app/main.min.js
+app/node_modules
+

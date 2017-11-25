@@ -3,7 +3,7 @@
 [![Insomnia](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
 [![Travis](https://api.travis-ci.org/getinsomnia/insomnia.svg)](https://travis-ci.org/getinsomnia/insomnia)
 [![AppVeyor](https://img.shields.io/appveyor/ci/gschier/insomnia.svg)](https://ci.appveyor.com/project/gschier/insomnia)
-[![license](https://img.shields.io/github/license/getinsomnia/insomnia.svg)](LICENSE)
+[![license](https://img.shields.io/github/license/getinsomnia/insomnia.svg)](packages/insomnia-app/LICENSE)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/getinsomnia.svg?style=social&label=%40GetInsomnia%20on%20Twitter&style=plastic)](https://twitter.com/getinsomnia)
 
@@ -32,7 +32,7 @@ For more generic product questions and feedback, join the [Slack Team](https://c
 Please read through our [contributing guidelines](CONTRIBUTING.md). Included are directions 
 for opening issues, coding standards, and notes on development.
 
-Editor preferences are available in the [editor config](.editorconfig) for easy use in 
+Editor preferences are available in the [editor config](packages/insomnia-app/.editorconfig) for easy use in 
 common text editors. Read more and download plugins at [editorconfig.org](http://editorconfig.org).
 
 ## Developing
@@ -86,4 +86,4 @@ Here is a list of plugins available for installation via NPM.
 
 ## License
 
-[GNU AGPLv3](LICENSE) &copy; [Insomnia](https://insomnia.rest)
+[GNU AGPLv3](packages/insomnia-app/LICENSE) &copy; [Insomnia](https://insomnia.rest)

@@ -1,0 +1,126 @@
+---
+baseurl: "https://insomnia.rest/"
+languageCode: "en-us"
+copyright: "Floating Keyboard Software, Victoria BC, Canada"
+title: "Insomnia REST Client"
+theme: "hugo-insomnia-theme"
+publishdir: "_hugo"
+disqusShortname: "insomnia-rest"
+googleAnalytics: "UA-9837747-12"
+permalinks:
+  blog: /blog/:slug
+menu:
+  main:
+    - Name: "Pricing"
+      Identifier: "pricing"
+      URL: "/pricing/"
+      Weight: 2
+    - Name: "Docs"
+      Identifier: "docs"
+      URL: "https://support.insomnia.rest"
+      Weight: 1
+    - Name: "Blog"
+      Identifier: "blog"
+      URL: "/blog/"
+      Weight: 2
+    - Name: "Download"
+      Identifier: "download"
+      URL: "/download/"
+      Weight: 3
+    - Name: "Account"
+      Identifier: "account"
+      Pre: "button"
+      URL: "/app/account/"
+      Weight: 10
+    - Name: "Sign Up"
+      Identifier: "signup"
+      Pre: "button"
+      URL: "/app/signup/"
+      Weight: 10
+    - Name: "Download"
+      Identifier: "download"
+      URL: "/download/"
+      Weight: 100
+  footer:
+    - Name: Contact
+      Identifier: support
+      URL: /support/
+      weight: 1
+    - Name: Open Source
+      Identifier: opensource
+      URL: https://github.com/getinsomnia
+      weight: 4
+    - Name: Blog
+      Identifier: blog
+      URL: /blog/
+      weight: 5
+    - Name: Transparency
+      Identifier: transparency
+      URL: /transparency/
+      weight: 6
+    - Name: Changelog
+      Identifier: changelog
+      URL: /changelog/
+      weight: 7
+    - Name: Teams
+      Identifier: teams
+      URL: /teams/
+      weight: 8
+    - Name: Plus
+      Identifier: plus
+      URL: /plus/
+      weight: 9
+    - Name: Terms
+      Identifier: terms
+      URL: /terms/
+      weight: 100
+    - Name: Code of Conduct
+      Identifier: coc
+      URL: /code-of-conduct/
+      weight: 101
+  docs:
+      - Name: ""
+        Identifier: "welcome"
+        Weight: 0
+      - Name: "Getting Started"
+        Identifier: "starting"
+        Weight: 1
+      - Name: "Help Topics"
+        Identifier: "topics"
+        Weight: 2
+      - Name: "Other"
+        Identifier: "other"
+        Weight: 3
+author:
+  name: "Gregory Schier"
+  image: "me.jpg"
+taxonomies:
+  tag: "tags"
+  category: "categories"
+  series: "series"
+params:
+  copyrightURL: "https://floatingkeyboard.com"
+  repo: "https://github.com/getinsomnia/website"
+  docsCategories:
+    - "welcome"
+    - "starting"
+    - "topics"
+  stylesheets:
+    - "main.css"
+  scripts:
+    - "build/main.min.js"
+  email: "support@insomnia.rest"
+  pageNotFoundTitle: "Sorry, that page doesn't exist"
+  shortName: "Insomnia"
+  bio: "Independent software developer"
+  location: "Victoria BC, Canada"
+  description: "A powerful REST API Client with cookie management, environment variables, code generation, and authentication for Mac, Window, and Linux"
+  twitter: "GetInsomnia"
+  googlePlus: "InsomniaRest"
+  keepReadingStr: "Read More"
+pygmentsCodeFences: true
+pygmentsStyle: "monokai"
+pygmentsUseClasses: true
+metaDataFormat: "yaml"
+blackfriday:
+  fractions: false

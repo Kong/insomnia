@@ -1,0 +1,97 @@
+{{ partial "head" . }}
+<body class="template-changelog">
+
+<!-- Fonts -->
+{{ partial "fontawesome" }}
+
+{{ partial "navbar" . }}
+
+<main role="main">
+  <article>
+    <header>
+      <div class="container">
+        <div class="row">
+          <div class="col-12">
+            <h1>Insomnia <code>{{ .Slug }}</code> Release</h1>
+            <div class="meta">
+              <time datetime='{{ .Date.Format "02 January 2006" }}'>
+                {{ .Date.Format "02 January, 2006" }}
+              </time>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {{ partial "post-tags" . }}
+
+    <section class="content container">
+      <div class="row">
+        <div class="col-12">
+          {{ partial "changelog-details" . }}
+        </div>
+      </div>
+    </section>
+
+    {{ partial "post-tags" . }}
+
+    {{ if .Site.Params.enableAuthor }}
+    <footer class="container">
+      <div class="row">
+        <div class="col-12">
+          {{ partial "author" . }}
+        </div>
+      </div>
+    </footer>
+    {{ end }}
+  </article>
+
+  {{ if not .Params.disableSharing }}
+  <section class="section--bordered share">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          {{ partial "share-links" . }}
+        </div>
+      </div>
+    </div>
+  </section>
+  {{ end }}
+
+  {{ if not .Params.disablecomments }}
+  <section class="comments">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          {{ if .Site.BuildDrafts }}
+          Hiding comments in dev mode
+          {{ else }}
+          {{ template "_internal/disqus.html" . }}
+          {{ end }}
+        </div>
+      </div>
+    </div>
+  </section>
+  {{ end }}
+
+  <section class="dark no-margin padding-bottom padding-top">
+    <div class="container">
+      <div class="row center">
+        <div class="col-8">
+          <p class="no-margin" style="margin: 0.6rem;">
+            Ready to speed up your API testing workflow?
+          </p>
+        </div>
+        <div class="col-4">
+          {{ partial "download-button" }}
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+{{ partial "footer" . }}
+{{ partial "js" . }}
+
+</body>
+</html>
