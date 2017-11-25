@@ -9,7 +9,7 @@
     "url": "https://github.com/getinsomnia/insomnia"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
+    "bootstrap": "lerna bootstrap && lerna run rebuild --scope=insomnia-app",
     "start": "cd packages/insomnia-app && npm run dev",
     "clean": "lerna run clean",
     "test": "lerna run test --stream",

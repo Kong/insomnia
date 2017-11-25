@@ -96,7 +96,7 @@ export function createWindow () {
   });
 
   // Load the html of the app.
-  const appUrl = process.env.APP_RENDER_URL || `file://${__dirname}/renderer.html`;
+  const appUrl = process.env.APP_RENDER_URL || `file://${app.getAppPath()}/renderer.html`;
   console.log(`[main] Loading ${process.env.APP_RENDER_URL}`);
   mainWindow.loadURL(appUrl);
 

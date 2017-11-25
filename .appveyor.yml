@@ -39,7 +39,7 @@ build_script:
 #---------------------------------#
 
 artifacts:
-  - path: dist\squirrel-windows\*
+  - path: packages\insomnia-app\dist\squirrel-windows\*
     name: dist
 
 #---------------------------------#

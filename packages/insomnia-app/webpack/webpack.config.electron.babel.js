@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'development') {
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development')
     })
-  ]
+  ];
 } else {
   output.path = path.join(__dirname, '../build');
   devtool = productionConfig.devtool;

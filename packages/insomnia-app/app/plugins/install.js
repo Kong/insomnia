@@ -7,8 +7,6 @@ import path from 'path';
 import * as tar from 'tar';
 import * as crypto from 'crypto';
 
-const YARN_PATH = path.resolve(__dirname, '../bin/yarn-standalone.js');
-
 export default async function (moduleName: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     let info: Object = {};
@@ -46,7 +44,7 @@ export default async function (moduleName: string): Promise<void> {
         w.on('end', () => {
           childProcess.execFile(
             process.execPath,
-            [YARN_PATH, 'install'],
+            [_getYarnPath(), 'install'],
             {
               timeout: 5 * 60 * 1000,
               maxBuffer: 1024 * 1024,
@@ -91,7 +89,7 @@ async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
     console.log(`[plugins] Fetching module info from npm`);
     childProcess.execFile(
       process.execPath,
-      [YARN_PATH, 'info', moduleName, '--json'],
+      [_getYarnPath(), 'info', moduleName, '--json'],
       {
         timeout: 5 * 60 * 1000,
         maxBuffer: 1024 * 1024,
@@ -138,4 +136,9 @@ async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
       }
     );
   });
+}
+
+function _getYarnPath () {
+  const {app} = electron.remote || electron;
+  return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
 }

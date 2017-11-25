@@ -67,20 +67,10 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
 
     plugins = [];
 
-    const initPlugin = (meta: Object, module: any, path: ?string): Plugin => {
-      return {
-        name: meta.name || meta.name,
-        description: meta.description || '',
-        version: meta.version || '0.0.0',
-        directory: path || '',
-        module: module
-      };
-    };
-
     for (const p of CORE_PLUGINS) {
       const pluginJson = global.require(`${p}/package.json`);
       const pluginModule = global.require(p);
-      plugins.push(initPlugin(pluginJson.insomnia, pluginModule));
+      plugins.push(_initPlugin(pluginJson, pluginModule));
     }
 
     for (const p of allPaths) {
@@ -116,7 +106,7 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
           delete global.require.cache[global.require.resolve(modulePath)];
           const module = global.require(modulePath);
 
-          plugins.push(initPlugin(pluginJson.insomnia || {}, module, modulePath));
+          plugins.push(_initPlugin(pluginJson || {}, module, modulePath));
           console.log(`[plugin] Loaded ${modulePath}`);
         } catch (err) {
           showError({
@@ -169,4 +159,15 @@ export async function getResponseHooks (): Promise<Array<ResponseHook>> {
   }
 
   return functions;
+}
+
+function _initPlugin (packageJSON: Object, module: any, path: ?string): Plugin {
+  const meta = packageJSON.insomnia || {};
+  return {
+    name: packageJSON.name || meta.name,
+    description: packageJSON.description || meta.description || '',
+    version: packageJSON.version || 'unknown',
+    directory: path || '',
+    module: module
+  };
 }

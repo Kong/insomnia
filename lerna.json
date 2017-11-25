@@ -8,7 +8,6 @@
   ],
   "commands": {
     "publish": {
-      "allowBranch": "master",
       "ignore": [
         "insomnia-app",
         "insomnia-website"
