@@ -35,12 +35,10 @@ cache:
     - $HOME/.electron
     - $HOME/.cache
 
-install:
-- npm run bootstrap > /dev/null
+script:
 - node --version
 - npm --version
-
-script:
+- npm run bootstrap
 - npm test
 
 before_deploy:

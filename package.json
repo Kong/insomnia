@@ -5,6 +5,9 @@
   "license": "MIT",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "repository": "https://github.com/getinsomnia/insomnia",
+  "bugs": {
+    "url": "https://github.com/getinsomnia/insomnia"
+  },
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "start": "cd packages/insomnia-app && npm run dev",
@@ -13,17 +16,9 @@
     "build": "lerna run build --stream",
     "package": "lerna run build-n-package --stream"
   },
-  "bugs": {
-    "url": "https://github.com/getinsomnia/insomnia"
-  },
-  "workspaces": [
-    "packages/*",
-    "website"
-  ],
   "devDependencies": {
     "flow-bin": "^0.59.0",
     "jest": "^21.2.1",
     "lerna": "^2.5.1"
-  },
-  "dependencies": {}
+  }
 }
