@@ -10,7 +10,12 @@ const PLATFORM_MAP = {
   win32: 'win'
 };
 
-async function run () {
+// Start the madness!
+process.nextTick(async () => {
+  await packageApp();
+});
+
+async function packageApp () {
   console.log('[package] Removing existing directories');
   await emptyDir('../dist');
 
@@ -53,4 +58,3 @@ async function emptyDir (relPath) {
   });
 }
 
-run();

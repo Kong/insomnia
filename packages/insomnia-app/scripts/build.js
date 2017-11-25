@@ -4,10 +4,20 @@ const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
 const path = require('path');
 const mkdirp = require('mkdirp');
+const fs = require('fs');
 const configRenderer = require('../webpack/webpack.config.production.babel');
 const configMain = require('../webpack/webpack.config.electron.babel');
 
-async function run () {
+// Start the madness!
+process.nextTick(async () => {
+  try {
+    await build();
+  } catch (err) {
+    console.error('[build] Failed to build', err);
+  }
+});
+
+async function build () {
   // Remove folders first
   console.log('[build] Removing existing directories');
   await emptyDir('../build');
@@ -19,11 +29,12 @@ async function run () {
 
   // Copy necessary files
   console.log('[build] Copying files');
-  await copyFiles('../app/package.json', '../build/package.json');
-  await copyFiles('../app/package-lock.json', '../build/package-lock.json');
   await copyFiles('../bin', '../build/');
   await copyFiles('../app/static', '../build/static');
   await copyFiles('../app/icons/', '../build/');
+
+  // Generate package.json
+  await generatePackageJson('../package.json', '../app/package.json', '../build/package.json');
 
   // Install Node modules
   console.log('[build] Installing dependencies');
@@ -91,4 +102,33 @@ async function install (relDir) {
   });
 }
 
-run();
+function generatePackageJson (relBasePkg, relAppPkg, relOutPkg) {
+  // Read package.json's
+  const basePath = path.resolve(__dirname, relBasePkg);
+  const appPath = path.resolve(__dirname, relAppPkg);
+  const outPath = path.resolve(__dirname, relOutPkg);
+
+  const basePkg = JSON.parse(fs.readFileSync(basePath));
+  const appPkg = JSON.parse(fs.readFileSync(appPath));
+
+  appPkg.dependencies = {};
+
+  // Figure out which dependencies to pack
+  const allDependencies = Object.keys(basePkg.dependencies);
+  const packedDependencies = basePkg.packedDependencies;
+  const unpackedDependencies = allDependencies.filter(
+    name => !packedDependencies.includes(name)
+  );
+
+  // Add dependencies
+  for (const name of unpackedDependencies) {
+    const version = basePkg.dependencies[name];
+    if (!version) {
+      throw new Error(`Failed to find packed dep "${name}" in dependencies`);
+    }
+    appPkg.dependencies[name] = version;
+    console.log(`[build] Setting packed dep ${name}`);
+  }
+
+  fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));
+}
