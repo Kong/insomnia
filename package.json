@@ -6,6 +6,7 @@
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "repository": "https://github.com/getinsomnia/insomnia",
   "scripts": {
+    "bootstrap": "lerna bootstrap",
     "start": "cd packages/insomnia-app && npm run dev",
     "clean": "lerna run clean",
     "test": "lerna run test --stream",
