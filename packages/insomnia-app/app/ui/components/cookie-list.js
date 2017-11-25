@@ -3,7 +3,7 @@ import React from 'react';
 import uuid from 'uuid';
 import * as toughCookie from 'tough-cookie';
 import autobind from 'autobind-decorator';
-import {cookieToString} from '../../common/cookies';
+import {cookieToString} from 'insomnia-cookies';
 import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
 import type {Cookie} from '../../models/cookie-jar';

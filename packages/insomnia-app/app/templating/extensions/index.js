@@ -1,14 +1,4 @@
 // @flow
-import * as plugins from '../../plugins/index';
-
-import timestampExtension from './timestamp-extension';
-import uuidExtension from './uuid-extension';
-import nowExtension from './now-extension';
-import fileExtension from './file-extension';
-import responseExtension from './response-extension';
-import base64Extension from './base-64-extension';
-import hashExtension from './hash-extension';
-import requestExtension from './request-extension';
 import type {NunjucksParsedTagArg} from '../utils';
 import type {Request} from '../../models/request';
 import type {Response} from '../../models/response';
@@ -94,22 +84,3 @@ export type PluginTemplateTag = {
   deprecated?: boolean,
   priority?: number
 };
-
-const DEFAULT_EXTENSIONS: Array<PluginTemplateTag> = [
-  timestampExtension,
-  fileExtension,
-  nowExtension,
-  uuidExtension,
-  base64Extension,
-  hashExtension,
-  requestExtension,
-  responseExtension
-];
-
-export async function all (): Promise<Array<PluginTemplateTag>> {
-  const templateTags = await plugins.getTemplateTags();
-  return [
-    ...DEFAULT_EXTENSIONS,
-    ...templateTags.map(p => p.templateTag)
-  ];
-}

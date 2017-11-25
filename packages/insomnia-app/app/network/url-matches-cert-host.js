@@ -1,6 +1,7 @@
 import {parse as urlParse} from 'url';
 import certificateUrlParse from './certificate-url-parse';
-import {escapeRegex, setDefaultProtocol} from '../common/misc';
+import {escapeRegex} from '../common/misc';
+import {setDefaultProtocol} from 'insomnia-url';
 
 const DEFAULT_PORT = 443;
 

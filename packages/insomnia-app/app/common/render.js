@@ -2,9 +2,9 @@
 import type {Request} from '../models/request';
 import type {BaseModel} from '../models/index';
 
+import {setDefaultProtocol} from 'insomnia-url';
 import clone from 'clone';
 import * as models from '../models';
-import {setDefaultProtocol} from './misc';
 import * as db from './database';
 import * as templating from '../templating';
 import type {CookieJar} from '../models/cookie-jar';

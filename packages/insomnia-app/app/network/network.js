@@ -13,16 +13,16 @@ import {join as pathJoin} from 'path';
 import uuid from 'uuid';
 import * as electron from 'electron';
 import * as models from '../models';
-import * as querystring from '../common/querystring';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, prepareUrlForSending, setDefaultProtocol, waitForStreamToFinish} from '../common/misc';
+import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, waitForStreamToFinish} from '../common/misc';
+import {setDefaultProtocol, smartEncodeUrl, buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
 import {getAuthHeader} from './authentication';
-import {cookiesFromJar, jarFromCookies} from '../common/cookies';
+import {cookiesFromJar, jarFromCookies} from 'insomnia-cookies';
 import {urlMatchesCertHost} from './url-matches-cert-host';
 import aws4 from 'aws4';
 import {buildMultipart} from './multipart';
@@ -235,10 +235,10 @@ export async function _actuallySend (
       }, true);
 
       // Set the URL, including the query parameters
-      const qs = querystring.buildFromParams(renderedRequest.parameters);
-      const url = querystring.joinUrl(renderedRequest.url, qs);
+      const qs = buildQueryStringFromParams(renderedRequest.parameters);
+      const url = joinUrlAndQueryString(renderedRequest.url, qs);
       const isUnixSocket = url.match(/https?:\/\/unix:\//);
-      const finalUrl = prepareUrlForSending(url, renderedRequest.settingEncodeUrl);
+      const finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
       if (isUnixSocket) {
         // URL prep will convert "unix:/path" hostname to "unix/path"
         const match = finalUrl.match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
@@ -405,7 +405,7 @@ export async function _actuallySend (
       let requestBody = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-        requestBody = querystring.buildFromParams(renderedRequest.body.params || [], false);
+        requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const params = renderedRequest.body.params || [];
         const {filePath: multipartBodyPath, boundary, contentLength} = await buildMultipart(params);

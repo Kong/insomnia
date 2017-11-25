@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "insomnia",
+  "name": "insomnia-app",
   "version": "5.12.0-beta.3",
   "productName": "Insomnia",
   "longName": "Insomnia REST Client",

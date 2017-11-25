@@ -16,7 +16,7 @@ import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
 import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
 import {trackEvent} from '../../common/analytics';
-import * as querystring from '../../common/querystring';
+import {deconstructQueryStringToParams, extractQueryStringFromUrl} from 'insomnia-url';
 import * as db from '../../common/database';
 import * as models from '../../models';
 import Hotkey from './hotkey';
@@ -125,7 +125,7 @@ class RequestPane extends React.PureComponent<Props> {
 
     let query;
     try {
-      query = querystring.extractFromUrl(request.url);
+      query = extractQueryStringFromUrl(request.url);
     } catch (e) {
       console.warn('Failed to parse url to import querystring');
       return;
@@ -135,7 +135,7 @@ class RequestPane extends React.PureComponent<Props> {
     const url = request.url.replace(query, '');
     const parameters = [
       ...request.parameters,
-      ...querystring.deconstructToParams(query)
+      ...deconstructQueryStringToParams(query)
     ];
 
     // Only update if url changed

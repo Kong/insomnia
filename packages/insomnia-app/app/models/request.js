@@ -3,7 +3,7 @@ import type {BaseModel} from './index';
 import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, AUTH_ASAP, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
-import {buildFromParams, deconstructToParams} from '../common/querystring';
+import {buildQueryStringFromParams, deconstructQueryStringToParams} from 'insomnia-url';
 import {GRANT_TYPE_AUTHORIZATION_CODE} from '../network/o-auth-2/constants';
 import {SIGNATURE_METHOD_HMAC_SHA1} from '../network/o-auth-1/constants';
 
@@ -290,12 +290,12 @@ export function updateMimeType (
     // Urlencoded
     body = request.body.params
       ? newBodyFormUrlEncoded(request.body.params)
-      : newBodyFormUrlEncoded(deconstructToParams(request.body.text));
+      : newBodyFormUrlEncoded(deconstructQueryStringToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
     // Form Data
     body = request.body.params
       ? newBodyForm(request.body.params)
-      : newBodyForm(deconstructToParams(request.body.text));
+      : newBodyForm(deconstructQueryStringToParams(request.body.text));
   } else if (mimeType === CONTENT_TYPE_FILE) {
     // File
     body = newBodyFile('');
@@ -310,7 +310,7 @@ export function updateMimeType (
   } else {
     // Raw Content-Type (ex: application/json)
     body = request.body.params
-      ? newBodyRaw(buildFromParams(request.body.params, false), mimeType)
+      ? newBodyRaw(buildQueryStringFromParams(request.body.params, false), mimeType)
       : newBodyRaw(request.body.text || '', mimeType);
   }
 
@@ -370,7 +370,7 @@ function migrateBody (request: Request): Request {
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
     const body = typeof request.body === 'string' ? request.body : '';
-    request.body = newBodyFormUrlEncoded(deconstructToParams(body, false));
+    request.body = newBodyFormUrlEncoded(deconstructQueryStringToParams(body, false));
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {

@@ -12,7 +12,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import OneLineEditor from '../codemirror/one-line-editor';
-import {cookieToString} from '../../../common/cookies';
+import {cookieToString} from 'insomnia-cookies';
 import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
 

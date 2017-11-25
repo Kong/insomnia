@@ -128,7 +128,7 @@ class Plugins extends React.PureComponent<void, State> {
             </tr>
             </thead>
             <tbody>
-            {plugins.map(plugin => (
+            {plugins.map(plugin => !plugin.directory ? null : (
               <tr key={plugin.name}>
                 <td>
                   {plugin.name}

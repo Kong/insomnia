@@ -1,9 +1,8 @@
 // @flow
 import nunjucks from 'nunjucks';
-import * as extensions from './extensions';
 import BaseExtension from './base-extension';
 import type {NunjucksParsedTag} from './utils';
-import type {PluginTemplateTag} from './extensions/index';
+import * as plugins from '../plugins/index';
 
 export class RenderError extends Error {
   message: string;
@@ -143,7 +142,8 @@ async function getNunjucks (renderMode: string) {
 
   const nj = nunjucks.configure(config);
 
-  const allExtensions: Array<PluginTemplateTag> = await extensions.all();
+  const allTemplateTagPlugins = await plugins.getTemplateTags();
+  const allExtensions = allTemplateTagPlugins.map(p => p.templateTag);
   for (let i = 0; i < allExtensions.length; i++) {
     const ext = allExtensions[i];
     ext.priority = ext.priority || i * 100;

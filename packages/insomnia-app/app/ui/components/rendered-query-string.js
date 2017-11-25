@@ -1,8 +1,7 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import * as querystring from '../../common/querystring';
-import * as misc from '../../common/misc';
+import {buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl} from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
 @autobind
@@ -38,9 +37,9 @@ class RenderedQueryString extends PureComponent {
 
     if (result) {
       const {url, parameters} = result;
-      const qs = querystring.buildFromParams(parameters);
-      const fullUrl = querystring.joinUrl(url, qs);
-      this.setState({string: misc.prepareUrlForSending(fullUrl, request.settingEncodeUrl)});
+      const qs = buildQueryStringFromParams(parameters);
+      const fullUrl = joinUrlAndQueryString(url, qs);
+      this.setState({string: smartEncodeUrl(fullUrl, request.settingEncodeUrl)});
     }
   }
 

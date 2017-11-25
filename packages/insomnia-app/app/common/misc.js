@@ -1,14 +1,12 @@
 // @flow
 import * as electron from 'electron';
 import {Readable, Writable} from 'stream';
+import {joinUrlAndQueryString} from 'insomnia-url';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
-import {format as urlFormat, parse as urlParse} from 'url';
 import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
-import * as querystring from './querystring';
 
-const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
 type Header = {
@@ -92,20 +90,6 @@ export function getContentLengthHeader<T: Header> (headers: Array<T>): T | null 
   return matches.length ? matches[0] : null;
 }
 
-export function setDefaultProtocol (url: string, defaultProto: string = 'http:'): string {
-  // If no url, don't bother returning anything
-  if (!url) {
-    return '';
-  }
-
-  // Default the proto if it doesn't exist
-  if (url.indexOf('://') === -1) {
-    url = `${defaultProto}//${url}`;
-  }
-
-  return url;
-}
-
 /**
  * Generate an ID of the format "<MODEL_NAME>_<TIMESTAMP><RANDOM>"
  * @param prefix
@@ -118,84 +102,6 @@ export function generateId (prefix: string): string {
     return `${prefix}_${id}`;
   } else {
     return id;
-  }
-}
-
-export function flexibleEncodeComponent (str: string, ignore: string = ''): string {
-  // Sometimes spaces screw things up because of url.parse
-  str = str.replace(/%20/g, ' ');
-
-  // Handle all already-encoded characters so we don't touch them
-  str = str.replace(/%([0-9a-fA-F]{2})/g, '__ENC__$1');
-
-  // Do a special encode of ignored chars, so they aren't touched.
-  // This first pass, surrounds them with a special tag (anything unique
-  // will work), so it can change them back later
-  // Example: will replace %40 with __LEAVE_40_LEAVE__, and we'll change
-  // it back to %40 at the end.
-  for (const c of ignore) {
-    const code = encodeURIComponent(c).replace('%', '');
-    const re2 = new RegExp(escapeRegex(c), 'g');
-    str = str.replace(re2, `__RAW__${code}`);
-  }
-
-  // Encode it
-  str = encodeURIComponent(str);
-
-  // Put back the raw version of the ignored chars
-  for (const match of str.match(/__RAW__([0-9a-fA-F]{2})/g) || []) {
-    const code = match.replace('__RAW__', '');
-    str = str.replace(match, decodeURIComponent(`%${code}`));
-  }
-
-  // Put back the encoded version of the ignored chars
-  for (const match of str.match(/__ENC__([0-9a-fA-F]{2})/g) || []) {
-    const code = match.replace('__ENC__', '');
-    str = str.replace(match, `%${code}`);
-  }
-
-  return str;
-}
-
-export function prepareUrlForSending (url: string, autoEncode: boolean = true): string {
-  const urlWithProto = setDefaultProtocol(url);
-
-  if (!autoEncode) {
-    return urlWithProto;
-  } else {
-    // Parse the URL into components
-    const parsedUrl = urlParse(urlWithProto);
-
-    // ~~~~~~~~~~~ //
-    // 1. Pathname //
-    // ~~~~~~~~~~~ //
-
-    if (parsedUrl.pathname) {
-      const segments = parsedUrl.pathname.split('/');
-      parsedUrl.pathname = segments.map(
-        s => flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST)
-      ).join('/');
-    }
-
-    // ~~~~~~~~~~~~~~ //
-    // 2. Querystring //
-    // ~~~~~~~~~~~~~~ //
-
-    if (parsedUrl.query) {
-      const qsParams = querystring.deconstructToParams(parsedUrl.query);
-      const encodedQsParams = [];
-      for (const {name, value} of qsParams) {
-        encodedQsParams.push({
-          name: flexibleEncodeComponent(name),
-          value: flexibleEncodeComponent(value)
-        });
-      }
-
-      parsedUrl.query = querystring.buildFromParams(encodedQsParams);
-      parsedUrl.search = `?${parsedUrl.query}`;
-    }
-
-    return urlFormat(parsedUrl);
   }
 }
 
@@ -271,7 +177,7 @@ export function attributeHref (href: string): string {
   if (href.match(/^http/i)) {
     const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
     const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
-    return querystring.joinUrl(href, qs);
+    return joinUrlAndQueryString(href, qs);
   } else {
     // Don't modify non-http urls
     return href;

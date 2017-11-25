@@ -4,7 +4,7 @@ import {Cookie as toughCookie} from 'tough-cookie';
 import * as models from '../models';
 import {getRenderedRequest} from './render';
 import type {RenderedRequest} from './render';
-import {jarFromCookies} from './cookies';
+import {jarFromCookies} from 'insomnia-cookies';
 import * as misc from './misc';
 import type {Cookie} from '../models/cookie-jar';
 import {newBodyRaw} from '../models/request';
@@ -13,6 +13,7 @@ import type {Response as ResponseModel} from '../models/response';
 import {getAuthHeader} from '../network/authentication';
 import {getAppVersion} from './constants';
 import {RenderError} from '../templating/index';
+import {smartEncodeUrl} from 'insomnia-url';
 
 export type HarCookie = {
   name: string,
@@ -288,7 +289,7 @@ export async function exportHarWithRenderedRequest (
   renderedRequest: RenderedRequest,
   addContentLength: boolean = false
 ): Promise<HarRequest> {
-  const url = misc.prepareUrlForSending(renderedRequest.url, renderedRequest.settingEncodeUrl);
+  const url = smartEncodeUrl(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (addContentLength) {
     const hasContentLengthHeader = misc.filterHeaders(

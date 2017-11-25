@@ -1,11 +1,11 @@
 // @flow
 import * as models from '../models/index';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import * as electron from 'electron';
 import uuid from 'uuid';
 import {GA_ID, GA_LOCATION, getAppPlatform, getAppVersion, isDevelopment} from './constants';
 import {getAccountId} from '../sync/session';
 import type {RequestParameter} from '../models/request';
-import * as querystring from './querystring';
 import {getScreenResolution, getUserLanguage, getViewportSize} from './misc';
 
 const DIMENSION_PLATFORM = 1;
@@ -137,11 +137,11 @@ async function _sendToGoogle (params: Array<RequestParameter>) {
 
   const baseParams = await _getDefaultParams();
   const allParams = [...baseParams, ...params];
-  const qs = querystring.buildFromParams(allParams);
+  const qs = buildQueryStringFromParams(allParams);
   const baseUrl = isDevelopment()
     ? 'https://www.google-analytics.com/debug/collect'
     : 'https://www.google-analytics.com/collect';
-  const url = querystring.joinUrl(baseUrl, qs);
+  const url = joinUrlAndQueryString(baseUrl, qs);
 
   const net = (electron.remote || electron).net;
   const request = net.request(url);

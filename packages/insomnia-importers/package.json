@@ -13,8 +13,7 @@
     "insomnia-import": "./bin/cli"
   },
   "scripts": {
-    "test": "jest --silent",
-    "test:watch": "npm test -- --watch"
+    "test": "jest --silent"
   },
   "dependencies": {
     "commander": "^2.9.0",

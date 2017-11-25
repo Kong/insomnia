@@ -1,5 +1,6 @@
 // @flow
-import {getBasicAuthHeader, setDefaultProtocol} from '../../common/misc';
+import {getBasicAuthHeader} from '../../common/misc';
+import {setDefaultProtocol} from 'insomnia-url';
 import * as c from './constants';
 import {responseToObject} from './misc';
 import {sendWithSettings} from '../network';

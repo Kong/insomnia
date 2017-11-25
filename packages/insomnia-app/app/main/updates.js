@@ -2,7 +2,7 @@
 import electron from 'electron';
 import {CHECK_FOR_UPDATES_INTERVAL, getAppVersion, isDevelopment, UPDATE_URL_MAC, UPDATE_URL_WINDOWS} from '../common/constants';
 import * as models from '../models/index';
-import * as querystring from '../common/querystring';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import {delay} from '../common/misc';
 
 const {autoUpdater, BrowserWindow, ipcMain} = electron;
@@ -25,8 +25,8 @@ async function getUpdateUrl (force: boolean): Promise<string | null> {
     {name: 'channel', value: settings.updateChannel}
   ];
 
-  const qs = querystring.buildFromParams(params);
-  const fullUrl = querystring.joinUrl(updateUrl, qs);
+  const qs = buildQueryStringFromParams(params);
+  const fullUrl = joinUrlAndQueryString(updateUrl, qs);
   console.log(`[updater] Using url ${fullUrl}`);
 
   if (isDevelopment()) {

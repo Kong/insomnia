@@ -17,7 +17,7 @@ import {getTagDefinitions} from '../../../templating/index';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
-import * as xpath2 from '../../../common/xpath';
+import {query as queryXPath} from 'insomnia-xpath';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -326,7 +326,7 @@ class CodeEditor extends React.Component {
   _prettifyXML (code) {
     if (this.props.updateFilter && this.state.filter) {
       try {
-        const results = xpath2.query(code, this.state.filter);
+        const results = queryXPath(code, this.state.filter);
         code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
       } catch (err) {
         // Failed to parse filter (that's ok)

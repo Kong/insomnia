@@ -31,6 +31,16 @@ export type ResponseHook = {
   hook: Function
 }
 
+const CORE_PLUGINS = [
+  'insomnia-plugin-base64',
+  'insomnia-plugin-hash',
+  'insomnia-plugin-file',
+  'insomnia-plugin-now',
+  'insomnia-plugin-uuid',
+  'insomnia-plugin-request',
+  'insomnia-plugin-response'
+];
+
 let plugins: ?Array<Plugin> = null;
 
 export async function init (): Promise<void> {
@@ -56,6 +66,23 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
     const allPaths = [...basePaths, ...extendedPaths];
 
     plugins = [];
+
+    const initPlugin = (meta: Object, module: any, path: ?string): Plugin => {
+      return {
+        name: meta.name || meta.name,
+        description: meta.description || '',
+        version: meta.version || '0.0.0',
+        directory: path || '',
+        module: module
+      };
+    };
+
+    for (const p of CORE_PLUGINS) {
+      const pluginJson = global.require(`${p}/package.json`);
+      const pluginModule = global.require(p);
+      plugins.push(initPlugin(pluginJson.insomnia, pluginModule));
+    }
+
     for (const p of allPaths) {
       if (!fs.existsSync(p)) {
         continue;
@@ -89,17 +116,7 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
           delete global.require.cache[global.require.resolve(modulePath)];
           const module = global.require(modulePath);
 
-          const pluginMeta = pluginJson.insomnia || {};
-
-          const plugin: Plugin = {
-            name: pluginMeta.name || pluginJson.name,
-            description: pluginMeta.description || '',
-            version: pluginJson.version || '0.0.0',
-            directory: modulePath,
-            module
-          };
-
-          plugins.push(plugin);
+          plugins.push(initPlugin(pluginJson.insomnia || {}, module, modulePath));
           console.log(`[plugin] Loaded ${modulePath}`);
         } catch (err) {
           showError({

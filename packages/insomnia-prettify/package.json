@@ -6,7 +6,6 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "jest --silent",
-    "test:watch": "npm test -- --watch"
+    "test": "jest --silent"
   }
 }

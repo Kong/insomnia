@@ -1,6 +1,6 @@
 // @flow
-import * as querystring from '../../common/querystring';
 import * as c from './constants';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import {responseToObject, authorizeUserInWindow} from './misc';
 
 export default async function (
@@ -22,8 +22,8 @@ export default async function (
   state && params.push({name: c.P_STATE, value: state});
 
   // Add query params to URL
-  const qs = querystring.buildFromParams(params);
-  const finalUrl = querystring.joinUrl(authorizationUrl, qs);
+  const qs = buildQueryStringFromParams(params);
+  const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
 
   const redirectedTo = await authorizeUserInWindow(finalUrl, /(access_token=|error=)/);
   const fragment = redirectedTo.split('#')[1];

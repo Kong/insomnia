@@ -1,7 +1,7 @@
 // @flow
 import {parse as urlParse} from 'url';
-import * as querystring from '../../common/querystring';
 import * as c from './constants';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import {authorizeUserInWindow, responseToObject} from './misc';
 import {escapeRegex, getBasicAuthHeader} from '../../common/misc';
 import * as models from '../../models/index';
@@ -62,8 +62,8 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   state && params.push({name: c.P_STATE, value: state});
 
   // Add query params to URL
-  const qs = querystring.buildFromParams(params);
-  const finalUrl = querystring.joinUrl(url, qs);
+  const qs = buildQueryStringFromParams(params);
+  const finalUrl = joinUrlAndQueryString(url, qs);
   const regex = new RegExp(`${escapeRegex(redirectUri)}.*(code=|error=)`, 'i');
 
   const redirectedTo = await authorizeUserInWindow(finalUrl, regex);
