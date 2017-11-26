@@ -4,10 +4,10 @@
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
-    "main": "main.min.js",
     "productName": "Insomnia",
-    "version": "5.12.0-beta.3",
-    "longName": "Insomnia REST Client"
+    "longName": "Insomnia REST Client",
+    "version": "5.12.0-beta.4",
+    "main": "main.min.js"
   },
   "licence": "MIT",
   "homepage": "https://insomnia.rest/",
