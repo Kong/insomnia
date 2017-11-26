@@ -1,14 +1,18 @@
+// @flow
 import {convert} from 'insomnia-importers';
 import * as db from './database';
 import * as har from './har';
+import type {BaseModel} from '../models/index';
 import * as models from '../models/index';
 import {getAppVersion} from './constants';
-import * as misc from './misc';
 import {showModal} from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import * as fetch from './fetch';
 import fs from 'fs';
 import {trackEvent} from './analytics';
+import type {Workspace} from '../models/workspace';
+import type {Environment} from '../models/environment';
+import {fnOrString, generateId} from './misc';
 
 const EXPORT_FORMAT = 3;
 
@@ -29,7 +33,7 @@ const MODELS = {
   [EXPORT_TYPE_ENVIRONMENT]: models.environment
 };
 
-export async function importUri (workspaceId, uri) {
+export async function importUri (workspaceId: string | null, uri: string): Promise<void> {
   let rawText;
   if (uri.match(/^(http|https):\/\//)) {
     const response = await fetch.rawFetch(uri);
@@ -41,8 +45,7 @@ export async function importUri (workspaceId, uri) {
     throw new Error(`Invalid import URI ${uri}`);
   }
 
-  const workspace = await models.workspace.getById(workspaceId);
-  const result = await importRaw(workspace, rawText);
+  const result = await importRaw(workspaceId, rawText);
   const {summary, source, error} = result;
 
   if (error) {
@@ -66,7 +69,11 @@ export async function importUri (workspaceId, uri) {
   trackEvent('Import', 'Success', source);
 }
 
-export async function importRaw (workspace, rawContent, generateNewIds = false) {
+export async function importRaw (
+  workspaceId: string | null,
+  rawContent: string,
+  generateNewIds: boolean = false
+): Promise<{source: string, error: string | null, summary: {[string]: Array<BaseModel>}}> {
   let results;
   try {
     results = convert(rawContent);
@@ -81,20 +88,39 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
 
   const {data} = results;
 
+  let workspace: Workspace | null = await models.workspace.getById(workspaceId || 'n/a');
+
   // Fetch the base environment in case we need it
-  const baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+  let baseEnvironment: Environment | null = await models.environment.getOrCreateForWorkspaceId(
+    workspaceId || 'n/a'
+  );
 
   // Generate all the ids we may need
-  const generatedIds = {};
+  const generatedIds: {[string]: string | Function} = {};
   for (const r of data.resources) {
     if (generateNewIds || r._id.match(REPLACE_ID_REGEX)) {
-      generatedIds[r._id] = misc.generateId(MODELS[r._type].prefix);
+      generatedIds[r._id] = generateId(MODELS[r._type].prefix);
     }
   }
 
   // Always replace these "constants"
-  generatedIds['__WORKSPACE_ID__'] = workspace._id;
-  generatedIds['__BASE_ENVIRONMENT_ID__'] = baseEnvironment._id;
+  generatedIds['__WORKSPACE_ID__'] = async () => {
+    if (!workspace) {
+      workspace = await models.workspace.create({name: 'Imported Workspace'});
+    }
+
+    return workspace._id;
+  };
+
+  generatedIds['__BASE_ENVIRONMENT_ID__'] = async () => {
+    if (!baseEnvironment) {
+      if (!workspace) {
+        workspace = await models.workspace.create({name: 'Imported Workspace'});
+      }
+      baseEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+    }
+    return baseEnvironment._id;
+  };
 
   // Import everything backwards so they get inserted in the correct order
   data.resources.reverse();
@@ -110,32 +136,32 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
     await db.bufferChanges(100);
 
     // Replace null parentIds with current workspace
-    if (!resource.parentId) {
+    if (!resource.parentId && resource._type !== EXPORT_TYPE_WORKSPACE) {
       resource.parentId = '__WORKSPACE_ID__';
     }
 
     // Replace _id if we need to
     if (generatedIds[resource._id]) {
-      resource._id = generatedIds[resource._id];
+      resource._id = await fnOrString(generatedIds[resource._id]);
     }
 
     // Replace newly generated IDs if they exist
     if (generatedIds[resource.parentId]) {
-      resource.parentId = generatedIds[resource.parentId];
+      resource.parentId = await fnOrString(generatedIds[resource.parentId]);
     }
 
-    const model = MODELS[resource._type];
+    const model: Object = MODELS[resource._type];
     if (!model) {
       console.warn('Unknown doc type for import', resource._type);
       continue;
     }
 
     const existingDoc = await model.getById(resource._id);
-    let newDoc;
+    let newDoc: BaseModel;
     if (existingDoc) {
-      newDoc = await model.update(existingDoc, resource);
+      newDoc = await db.docUpdate(existingDoc, resource);
     } else {
-      newDoc = await model.create(resource);
+      newDoc = await db.docCreate(model.type, resource);
 
       // Mark as not seen if we created a new workspace from sync
       if (newDoc.type === models.workspace.type) {
@@ -150,13 +176,18 @@ export async function importRaw (workspace, rawContent, generateNewIds = false) 
   await db.flushChanges();
 
   return {
-    source: results.type.id,
+    source: (results.type && typeof results.type.id === 'string')
+      ? results.type.id
+      : 'unknown',
     summary: importedDocs,
     error: null
   };
 }
 
-export async function exportHAR (parentDoc = null, includePrivateDocs = false) {
+export async function exportHAR (
+  parentDoc: BaseModel | null = null,
+  includePrivateDocs: boolean = false
+): Promise<string> {
   let workspaces;
   if (parentDoc) {
     workspaces = [parentDoc];
@@ -167,8 +198,8 @@ export async function exportHAR (parentDoc = null, includePrivateDocs = false) {
   const workspaceEnvironmentLookup = {};
   for (let workspace of workspaces) {
     const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
-    let environmentId = workspaceMeta && workspaceMeta.activeEnvironmentId;
-    const environment = await models.environment.getById(environmentId);
+    let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
+    const environment = await models.environment.getById(environmentId || 'n/a');
     if (!environment || (environment.isPrivate && !includePrivateDocs)) {
       environmentId = 'n/a';
     }
@@ -177,11 +208,11 @@ export async function exportHAR (parentDoc = null, includePrivateDocs = false) {
 
   const requests = [];
   for (let workspace of workspaces) {
-    const workspaceDocs = await getDocWithDescendants(workspace, includePrivateDocs);
-    const workspaceRequests = workspaceDocs
+    const docs: Array<BaseModel> = await getDocWithDescendants(workspace, includePrivateDocs);
+    const workspaceRequests = docs
       .filter(d => (d.type === models.request.type))
-      .sort((a, b) => a.metaSortKey < b.metaSortKey ? -1 : 1)
-      .map(request => {
+      .sort((a: Object, b: Object) => a.metaSortKey < b.metaSortKey ? -1 : 1)
+      .map((request: BaseModel) => {
         return {
           requestId: request._id,
           environmentId: workspaceEnvironmentLookup[workspace._id]
@@ -196,16 +227,19 @@ export async function exportHAR (parentDoc = null, includePrivateDocs = false) {
   return JSON.stringify(data, null, '\t');
 }
 
-export async function exportJSON (parentDoc = null, includePrivateDocs = false) {
+export async function exportJSON (
+  parentDoc: BaseModel | null = null,
+  includePrivateDocs: boolean = false
+): Promise<string> {
   const data = {
     _type: 'export',
     __export_format: EXPORT_FORMAT,
     __export_date: new Date(),
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
-    resources: {}
+    resources: []
   };
 
-  const docs = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
 
   data.resources = docs
     .filter(d => (
@@ -216,7 +250,7 @@ export async function exportJSON (parentDoc = null, includePrivateDocs = false) 
       d.type === models.cookieJar.type ||
       d.type === models.environment.type
     ))
-    .map(d => {
+    .map((d: Object) => {
       if (d.type === models.workspace.type) {
         d._type = EXPORT_TYPE_WORKSPACE;
       } else if (d.type === models.cookieJar.type) {
@@ -237,10 +271,13 @@ export async function exportJSON (parentDoc = null, includePrivateDocs = false) 
   return JSON.stringify(data, null, '\t');
 }
 
-async function getDocWithDescendants (parentDoc = null, includePrivateDocs = false) {
+async function getDocWithDescendants (
+  parentDoc: BaseModel | null = null,
+  includePrivateDocs: boolean = false
+): Promise<Array<BaseModel>> {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(d => (
-        // Don't include if private, except if we want to
-        !d.isPrivate || includePrivateDocs
-      ));
+    // Don't include if private, except if we want to
+    !d.isPrivate || includePrivateDocs
+  ));
 }

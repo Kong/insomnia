@@ -23,13 +23,6 @@ export function init () {
 }
 
 export async function migrate (doc: Workspace): Promise<Workspace> {
-  // There was a bug on import that would set this to the current workspace ID.
-  // Let's remove it here so that nothing bad happens.
-  if (doc.parentId !== null) {
-    // Save it to the DB for this one
-    process.nextTick(() => update(doc, {parentId: null}));
-  }
-
   return _migrateExtractClientCertificates(doc);
 }
 
@@ -86,7 +79,8 @@ async function _migrateExtractClientCertificates (workspace: Workspace): Promise
   delete (workspace: Object).certificates;
 
   // This will remove the now-missing `certificates` property
-  await update(workspace, {});
+  // NOTE: Using db.update so we don't change things like modified time
+  await db.update(workspace);
 
   return workspace;
 }

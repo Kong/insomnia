@@ -114,10 +114,7 @@ export async function initModel<T: BaseModel> (
 
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
-  const noMigrate = fullObject.__NO_MIGRATE;
-  const migratedDoc = noMigrate
-    ? fullObject
-    : await model.migrate(fullObject);
+  const migratedDoc = await model.migrate(fullObject);
 
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {

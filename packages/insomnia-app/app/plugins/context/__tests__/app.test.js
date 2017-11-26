@@ -11,10 +11,14 @@ const PLUGIN = {
 
 describe('init()', () => {
   beforeEach(globalBeforeEach);
-  it('initializes correctly', () => {
+  it('initializes correctly', async () => {
     const result = plugin.init({name: PLUGIN});
     expect(Object.keys(result)).toEqual(['app']);
-    expect(Object.keys(result.app)).toEqual(['alert', 'getPath', 'showSaveDialog']);
+    expect(Object.keys(result.app).sort()).toEqual([
+      'alert',
+      'getPath',
+      'showSaveDialog'
+    ]);
   });
 });
 
