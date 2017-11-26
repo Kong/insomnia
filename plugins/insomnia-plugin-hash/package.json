@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-hash",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia hash template tag",
   "license": "MIT",
@@ -15,6 +15,5 @@
   },
   "scripts": {
     "test": "jest --silent"
-  },
-  "devDependencies": {}
+  }
 }

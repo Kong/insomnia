@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-uuid",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia uuid template tag",
   "license": "MIT",
@@ -17,6 +17,5 @@
   },
   "dependencies": {
     "uuid": "^3.1.0"
-  },
-  "devDependencies": {}
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-default-headers",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
@@ -12,6 +12,5 @@
   "insomnia": {
     "name": "default-headers",
     "description": "Add default headers to requests"
-  },
-  "devDependencies": {}
+  }
 }
