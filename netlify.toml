@@ -2,12 +2,5 @@
   base = "website"
   publish = "_speedpack"
   command = "npm run build"
-
-[context.production.environment]
-    HUGO_VERSION = "0.30"
-
-[context.deploy-preview.environment]
-    HUGO_VERSION = "0.30"
-
-[context.branch-deploy.environment]
-    HUGO_VERSION = "0.30"
+  HUGO_VERSION = "0.30"
+  NODE_VERSION = "9"
