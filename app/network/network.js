@@ -736,9 +736,18 @@ export async function send (
   const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
   const renderedContextBeforePlugins = await getRenderContext(request, environmentId, ancestors);
 
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
+  if (!workspace) {
+    throw new Error(`Failed to find workspace for request: ${requestId}`);
+  }
+
   let renderedRequest: RenderedRequest;
   try {
-    renderedRequest = await _applyRequestPluginHooks(renderedRequestBeforePlugins, renderedContextBeforePlugins);
+    renderedRequest = await _applyRequestPluginHooks(
+      renderedRequestBeforePlugins,
+      renderedContextBeforePlugins
+    );
   } catch (err) {
     return {
       response: {
@@ -752,12 +761,6 @@ export async function send (
       },
       bodyBuffer: null
     };
-  }
-
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
-  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
-  if (!workspace) {
-    throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
 
   return _actuallySend(renderedRequest, workspace, settings);

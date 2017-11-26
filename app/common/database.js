@@ -366,7 +366,7 @@ export const removeWhere = database.removeWhere = async function (
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
 
-export async function docUpdate<T: BaseModel> (originalDoc: T, patch: Object = {}): Promise<T> {
+export async function docUpdate<T: BaseModel> (originalDoc: T, ...patches: Array<Object>): Promise<T> {
   const doc = await models.initModel(
     originalDoc.type,
     originalDoc,
@@ -374,26 +374,10 @@ export async function docUpdate<T: BaseModel> (originalDoc: T, patch: Object = {
     // NOTE: This is before `patch` because we want `patch.modified` to win if it has it
     {modified: Date.now()},
 
-    patch
+    ...patches
   );
 
   return database.update(doc);
-}
-
-export async function docCreateNoMigrate<T: BaseModel> (
-  type: string,
-  ...patches: Array<Object>
-): Promise<T> {
-  const doc = await models.initModel(
-    type,
-    ...patches,
-
-    // Fields that the user can't touch
-    {type: type},
-    {__NO_MIGRATE: true}
-  );
-
-  return database.insert(doc);
 }
 
 export async function docCreate<T: BaseModel> (
@@ -415,19 +399,19 @@ export async function docCreate<T: BaseModel> (
 // GENERAL //
 // ~~~~~~~ //
 
-export const withDescendants = database.withDescendants = async function <T: BaseModel> (
-  doc: T,
+export const withDescendants = database.withDescendants = async function (
+  doc: BaseModel | null,
   stopType: string | null = null
-): Promise<Array<T>> {
+): Promise<Array<BaseModel>> {
   if (db._empty) return _send('withDescendants', ...arguments);
 
   let docsToReturn = doc ? [doc] : [];
 
-  async function next (docs: Array<BaseModel>) {
+  async function next (docs: Array<BaseModel | null>): Promise<Array<BaseModel>> {
     let foundDocs = [];
 
     for (const d of docs) {
-      if (stopType && d.type === stopType) {
+      if (stopType && d && d.type === stopType) {
         continue;
       }
 
@@ -502,7 +486,7 @@ export const duplicate = database.duplicate = async function <T: BaseModel> (
     delete newDoc.created;
     delete newDoc.modified;
 
-    const createdDoc = await docCreateNoMigrate(newDoc.type, newDoc);
+    const createdDoc = await docCreate(newDoc.type, newDoc);
 
     // 2. Get all the children
     for (const type of allTypes()) {
