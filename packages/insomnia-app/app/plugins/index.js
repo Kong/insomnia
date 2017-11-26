@@ -65,12 +65,17 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
     const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
 
-    plugins = [];
+    // Store plugins in a map so that plugins with the same
+    // name only get added once
+    // TODO: Make this more complex and have the latest version always win
+    const pluginMap: {[string]: Plugin} = {
+      // "name": "module"
+    };
 
     for (const p of CORE_PLUGINS) {
       const pluginJson = global.require(`${p}/package.json`);
       const pluginModule = global.require(p);
-      plugins.push(_initPlugin(pluginJson, pluginModule));
+      pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule);
     }
 
     for (const p of allPaths) {
@@ -106,7 +111,7 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
           delete global.require.cache[global.require.resolve(modulePath)];
           const module = global.require(modulePath);
 
-          plugins.push(_initPlugin(pluginJson || {}, module, modulePath));
+          pluginMap[pluginJson.name] = _initPlugin(pluginJson || {}, module, modulePath);
           console.log(`[plugin] Loaded ${modulePath}`);
         } catch (err) {
           showError({
@@ -117,6 +122,8 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
         }
       }
     }
+
+    plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
 
   return plugins;

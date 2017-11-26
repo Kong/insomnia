@@ -161,7 +161,9 @@ class Plugins extends React.PureComponent<void, State> {
             <button className="pull-right icon" onClick={this._handleClearError}>
               <i className="fa fa-times"/>
             </button>
-            {error}
+            <div className="selectable force-pre-wrap">
+              {error}
+            </div>
           </div>
         )}
 
