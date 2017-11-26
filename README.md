@@ -85,3 +85,6 @@ Here is a list of plugins available for installation via NPM.
 
 [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
+## License
+
+[MIT](LICENSE) &copy; [Insomnia](https://insomnia.rest)

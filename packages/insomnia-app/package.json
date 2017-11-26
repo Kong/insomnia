@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "Insomnia App",
-  "licence": "GNU AGPLv3",
+  "licence": "MIT",
   "homepage": "https://insomnia.rest",
   "repository": {
     "type": "git",
