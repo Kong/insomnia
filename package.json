@@ -18,7 +18,6 @@
     "package-app": "lerna run package --stream --scope=insomnia-app"
   },
   "devDependencies": {
-    "flow-bin": "^0.59.0",
     "jest": "^21.2.1",
     "lerna": "^2.5.1"
   }
