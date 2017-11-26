@@ -9,7 +9,7 @@ const configRenderer = require('../webpack/webpack.config.production.babel');
 const configMain = require('../webpack/webpack.config.electron.babel');
 
 // Start build if ran from CLI
-if (require.start === module) {
+if (require.main === module) {
   process.nextTick(async () => {
     await module.exports.start();
   });
@@ -32,7 +32,7 @@ module.exports.start = async function () {
   await copyFiles('../app/icons/', '../build/');
 
   // Generate package.json
-  await generatePackageJson('../package.json', '../app/package.json', '../build/package.json');
+  await generatePackageJson('../package.json', '../build/package.json');
 
   // Install Node modules
   console.log('[build] Installing dependencies');
@@ -100,16 +100,30 @@ async function install (relDir) {
   });
 }
 
-function generatePackageJson (relBasePkg, relAppPkg, relOutPkg) {
+function generatePackageJson (relBasePkg, relOutPkg) {
   // Read package.json's
   const basePath = path.resolve(__dirname, relBasePkg);
-  const appPath = path.resolve(__dirname, relAppPkg);
   const outPath = path.resolve(__dirname, relOutPkg);
 
   const basePkg = JSON.parse(fs.readFileSync(basePath));
-  const appPkg = JSON.parse(fs.readFileSync(appPath));
 
-  appPkg.dependencies = {};
+  const appPkg = {
+    name: 'insomnia',
+    version: basePkg.app.version,
+    productName: basePkg.app.productName,
+    longName: basePkg.app.longName,
+    description: basePkg.description,
+    homepage: basePkg.homepage,
+    author: basePkg.author,
+    main: 'main.min.js',
+    dependencies: {}
+  };
+
+  for (const key of Object.keys(appPkg)) {
+    if (key === undefined) {
+      throw new Error(`[build] missing "app.${key}" from package.json`);
+    }
+  }
 
   // Figure out which dependencies to pack
   const allDependencies = Object.keys(basePkg.dependencies);

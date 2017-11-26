@@ -1,4 +1,4 @@
-import * as packageJSON from '../package.json';
+import * as packageJSON from '../../package.json';
 import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
@@ -6,15 +6,15 @@ import mkdirp from 'mkdirp';
 // App Stuff
 
 export function getAppVersion () {
-  return packageJSON.version;
+  return packageJSON.app.version;
 }
 
 export function getAppLongName () {
-  return packageJSON.longName;
+  return packageJSON.app.longName;
 }
 
 export function getAppName () {
-  return packageJSON.productName;
+  return packageJSON.app.productName;
 }
 
 export function getAppPlatform () {

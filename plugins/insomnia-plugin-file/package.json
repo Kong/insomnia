@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-file",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia file templte tag",
   "license": "MIT",
@@ -14,5 +14,8 @@
   },
   "scripts": {
     "test": "jest --silent"
+  },
+  "devDependencies": {
+    "eslint": "^4.12.0"
   }
 }

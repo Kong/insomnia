@@ -1,10 +1,19 @@
 {
-  "name": "insomnia-app",
   "private": true,
   "version": "1.0.0",
-  "description": "Insomnia App",
+  "name": "insomnia-app",
+  "app": {
+    "name": "insomnia",
+    "main": "main.min.js",
+    "productName": "Insomnia",
+    "version": "5.12.0-beta.3",
+    "longName": "Insomnia REST Client"
+  },
   "licence": "MIT",
-  "homepage": "https://insomnia.rest",
+  "homepage": "https://insomnia.rest/",
+  "description": "Debug APIs like a human, not a robot",
+  "author": "Insomnia <support@insomnia.rest>",
+  "main": "app/main.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/getinsomnia/insomnia"
@@ -14,7 +23,7 @@
     "test": "flow check && npm run lint && cross-env NODE_ENV=test jest --silent",
     "test-appveyor": "npm run test -- --maxWorkers 1",
     "bootstrap": "npm install && electron-rebuild -f -w node-libcurl",
-    "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && INSOMNIA_ENV=development electron app",
+    "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && INSOMNIA_ENV=development electron .",
     "start:dev-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "build": "node ./scripts/build.js",
@@ -152,7 +161,7 @@
     "electron-builder-lib": "^19.46.3",
     "electron-builder-squirrel-windows": "^19.46.0",
     "electron-rebuild": "^1.6.0",
-    "eslint": "^3.16.1",
+    "eslint": "^4.12.0",
     "eslint-config-semistandard": "^11.0.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-filenames": "^1.1.0",
@@ -168,7 +177,6 @@
     "file-loader": "^1.1.5",
     "flow": "^0.2.3",
     "flow-bin": "^0.58.0",
-    "jest": "^21.2.1",
     "less": "^2.7.2",
     "less-loader": "^4.0.5",
     "ncp": "^2.0.0",

@@ -7,7 +7,6 @@ const fs = require('fs');
 const {version} = require('../package.json');
 
 module.exports.go = function () {
-
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Configure the arguments parsing //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //

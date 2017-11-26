@@ -38,6 +38,7 @@
     "babel-preset-es2015": "6.3.13",
     "babel-preset-react": "^6.24.1",
     "concurrently": "^3.1.0",
+    "eslint": "^4.12.0",
     "flow": "^0.2.3",
     "json-loader": "^0.5.7",
     "netlify-cli": "^1.2.2",

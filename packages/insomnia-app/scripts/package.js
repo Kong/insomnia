@@ -12,7 +12,7 @@ const PLATFORM_MAP = {
 };
 
 // Start package if ran from CLI
-if (require.start === module) {
+if (require.main === module) {
   process.nextTick(async () => {
     await buildTask.start();
     await module.exports.start();

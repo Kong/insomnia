@@ -1,6 +1,6 @@
 {
   "name": "insomnia-importers",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
@@ -18,5 +18,8 @@
   "dependencies": {
     "commander": "^2.9.0",
     "shell-quote": "^1.6.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.12.0"
   }
 }
