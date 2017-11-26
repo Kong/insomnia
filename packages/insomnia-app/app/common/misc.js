@@ -14,20 +14,6 @@ type Header = {
   value: string
 };
 
-export function getBasicAuthHeader (username: ?string, password: ?string): Header {
-  const name = 'Authorization';
-  const header = `${username || ''}:${password || ''}`;
-  const authString = Buffer.from(header, 'utf8').toString('base64');
-  const value = `Basic ${authString}`;
-  return {name, value};
-}
-
-export function getBearerAuthHeader (token: string): Header {
-  const name = 'Authorization';
-  const value = `Bearer ${token}`;
-  return {name, value};
-}
-
 export function filterHeaders<T: Header> (headers: Array<T>, name: string): Array<T> {
   if (!Array.isArray(headers) || !name) {
     return [];

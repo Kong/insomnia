@@ -25,7 +25,7 @@ const NUNJUCKS_CLOSE_STATES = {
  * @param indentChars
  * @returns {string}
  */
-export function prettifyJson (json, indentChars = '\t') {
+module.exports.prettify = function (json, indentChars = '\t') {
   if (!json) {
     return '';
   }
@@ -152,7 +152,7 @@ export function prettifyJson (json, indentChars = '\t') {
 
   // Remove lines that only contain whitespace
   return newJson.replace(/^\s*\n/gm, '');
-}
+};
 
 function _repeatString (s, count) {
   return new Array(count + 1).join(s);

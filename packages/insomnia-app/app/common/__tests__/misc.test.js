@@ -1,41 +1,6 @@
 import * as misc from '../misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
 
-describe('getBasicAuthHeader()', () => {
-  beforeEach(globalBeforeEach);
-  it('succeed with username and password', () => {
-    const header = misc.getBasicAuthHeader('user', 'password');
-    expect(header).toEqual({
-      name: 'Authorization',
-      value: 'Basic dXNlcjpwYXNzd29yZA=='
-    });
-  });
-
-  it('succeed with no username', () => {
-    const header = misc.getBasicAuthHeader(null, 'password');
-    expect(header).toEqual({
-      name: 'Authorization',
-      value: 'Basic OnBhc3N3b3Jk'
-    });
-  });
-
-  it('succeed with username and empty password', () => {
-    const header = misc.getBasicAuthHeader('user', '');
-    expect(header).toEqual({
-      name: 'Authorization',
-      value: 'Basic dXNlcjo='
-    });
-  });
-
-  it('succeed with username and null password', () => {
-    const header = misc.getBasicAuthHeader('user', null);
-    expect(header).toEqual({
-      name: 'Authorization',
-      value: 'Basic dXNlcjo='
-    });
-  });
-});
-
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
   it('finds valid header', () => {

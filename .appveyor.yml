@@ -32,7 +32,7 @@ cache:
 #---------------------------------#
 
 build_script:
-  - if %APPVEYOR_REPO_TAG%==true npm run package
+  - if %APPVEYOR_REPO_TAG%==true npm run package-app
 
 #---------------------------------#
 #      artifacts configuration    #

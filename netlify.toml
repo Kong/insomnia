@@ -1,6 +1,6 @@
 [build]
-  publish = "_speedpack"
-  command = "npm run build"
+  publish = "website/_speedpack"
+  command = "npm run build-website"
 
 [context.production.environment]
     HUGO_VERSION = "0.30"

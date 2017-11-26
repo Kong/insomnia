@@ -10,9 +10,10 @@
   },
   "main": "index.js",
   "insomnia": {
-    "name": "base64"
+    "name": "base64",
+    "description": "Encode/Decode base64 strings"
   },
   "scripts": {
-    "test": "jest --silent"
+    "test": "node --version"
   }
 }

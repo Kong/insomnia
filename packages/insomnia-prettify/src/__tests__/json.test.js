@@ -1,11 +1,9 @@
-import {prettifyJson} from '../prettify';
-import fs from 'fs';
-import path from 'path';
-import {globalBeforeEach} from '../../__jest__/before-each';
+const fs = require('fs');
+const path = require('path');
+const {prettify} = require('../json');
 
 describe('prettify()', () => {
-  beforeEach(globalBeforeEach);
-  const basePath = path.join(__dirname, '../__fixtures__/prettify');
+  const basePath = path.join(__dirname, '../__fixtures__');
   const files = fs.readdirSync(basePath);
   for (const file of files) {
     if (!file.match(/-input\.json$/)) {
@@ -18,7 +16,7 @@ describe('prettify()', () => {
     it(`handles ${name}`, () => {
       const input = fs.readFileSync(path.join(basePath, `${slug}-input.json`), 'utf8').trim();
       const output = fs.readFileSync(path.join(basePath, `${slug}-output.json`), 'utf8').trim();
-      const result = prettifyJson(input, '  ');
+      const result = prettify(input, '  ');
       expect(result).toBe(output);
     });
   }

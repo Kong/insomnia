@@ -1,11 +1,12 @@
 // @flow
 import {AUTH_ASAP, AUTH_BASIC, AUTH_BEARER, AUTH_HAWK, AUTH_OAUTH_1, AUTH_OAUTH_2} from '../common/constants';
-import {getBasicAuthHeader, getBearerAuthHeader} from '../common/misc';
 import getOAuth2Token from './o-auth-2/get-token';
 import getOAuth1Token from './o-auth-1/get-token';
 import * as Hawk from 'hawk';
 import jwtAuthentication from 'jwt-authentication';
 import type {RequestAuthentication} from '../models/request';
+import {getBasicAuthHeader} from './basic-auth/get-header';
+import {getBearerAuthHeader} from './bearer-auth/get-header';
 
 type Header = {
   name: string,
@@ -56,13 +57,7 @@ export async function getAuthHeader (
 
   if (authentication.type === AUTH_HAWK) {
     const {id, key, algorithm} = authentication;
-
-    const header = Hawk.client.header(
-      url,
-      method,
-      {credentials: {id, key, algorithm}}
-    );
-
+    const header = Hawk.client.header(url, method, {credentials: {id, key, algorithm}});
     return {
       name: 'Authorization',
       value: header.field
@@ -73,13 +68,7 @@ export async function getAuthHeader (
     const {issuer, subject, audience, keyId, privateKey} = authentication;
 
     const generator = jwtAuthentication.client.create();
-
-    const claims = {
-      iss: issuer,
-      sub: subject,
-      aud: audience
-    };
-
+    const claims = {iss: issuer, sub: subject, aud: audience};
     const options = {
       privateKey,
       kid: keyId

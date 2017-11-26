@@ -1,5 +1,7 @@
 # Insomnia Default Headers
 
+[![Npm Version](https://img.shields.io/npm/v/insomnia-plugin-default-headers.svg)](https://www.npmjs.com/package/insomnia-plugin-default-headers)
+
 This is a plugin for [Insomnia](https://insomnia.rest) that allows users to set default
 headers for requests.
 

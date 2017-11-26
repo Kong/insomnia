@@ -3,9 +3,10 @@ import {parse as urlParse} from 'url';
 import * as c from './constants';
 import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import {authorizeUserInWindow, responseToObject} from './misc';
-import {escapeRegex, getBasicAuthHeader} from '../../common/misc';
+import {escapeRegex} from '../../common/misc';
 import * as models from '../../models/index';
 import {sendWithSettings} from '../network';
+import {getBasicAuthHeader} from '../basic-auth/get-header';
 
 export default async function (
   requestId: string,

@@ -1,3 +1,5 @@
 declare module 'insomnia-prettify' {
-  declare module.exports: *
+  declare module.exports: {
+    json: Function
+  }
 }

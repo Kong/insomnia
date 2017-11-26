@@ -11,7 +11,7 @@ import CodeEditor from '../../codemirror/code-editor';
 import {jsonParseOr} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
 import {CONTENT_TYPE_JSON, DEBOUNCE_MILLIS} from '../../../../common/constants';
-import {prettifyJson} from 'insomnia-prettify';
+import prettify from 'insomnia-prettify';
 import * as network from '../../../../network/network';
 import type {Workspace} from '../../../../models/workspace';
 import type {Settings} from '../../../../models/settings';
@@ -147,7 +147,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const {body, forceRefreshKey} = this.state;
     const {variables, query} = body;
     const prettyQuery = query && print(parse(query));
-    const prettyVariables = variables && JSON.parse(prettifyJson(JSON.stringify(variables)));
+    const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
     this._handleBodyChange(prettyQuery, prettyVariables);
     setTimeout(() => {
       this.setState({forceRefreshKey: forceRefreshKey + 1});
@@ -284,7 +284,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       variables: variablesObject
     } = this._stringToGraphQL(content);
 
-    const variables = prettifyJson(JSON.stringify(variablesObject));
+    const variables = prettify.json(JSON.stringify(variablesObject));
 
     return (
       <div key={forceRefreshKey} className="graphql-editor">

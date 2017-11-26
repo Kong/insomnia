@@ -3,7 +3,6 @@
   "private": true,
   "version": "1.0.0",
   "description": "Insomnia App",
-  "main": "main.js",
   "licence": "GNU AGPLv3",
   "homepage": "https://insomnia.rest",
   "repository": {
@@ -11,22 +10,18 @@
     "url": "https://github.com/getinsomnia/insomnia"
   },
   "scripts": {
-    "test:lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
-    "test:noisy": "cross-env NODE_ENV=test jest",
-    "test:coverage": "cross-env NODE_ENV=test jest --coverage --silent && open ./coverage/lcov-report/index.html",
-    "test:flow": "flow check",
-    "test": "npm run test:flow && npm run test:lint && cross-env NODE_ENV=test jest --silent --maxWorkers 1",
-    "start-hot": "npm run build-main && cross-env HOT=1 INSOMNIA_ENV=development electron app",
-    "build-main": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js",
-    "hot-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
-    "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
-    "rebuild": "electron-rebuild -f -w node-libcurl",
-    "package": "node ./scripts/package.js",
+    "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
+    "test": "flow check && npm run lint && cross-env NODE_ENV=test jest --silent",
+    "test-appveyor": "npm run test -- --maxWorkers 1",
+    "bootstrap": "npm install && electron-rebuild -f -w node-libcurl",
+    "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && INSOMNIA_ENV=development electron app",
+    "start:dev-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
+    "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "build": "node ./scripts/build.js",
-    "build-n-package": "npm run build && npm run package"
+    "package": "node ./scripts/package.js"
   },
   "dev": {
-    "webpack-dev-server-port": 3333
+    "dev-server-port": 3333
   },
   "jest": {
     "setupFiles": [

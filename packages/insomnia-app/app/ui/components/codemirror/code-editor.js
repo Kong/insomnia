@@ -10,7 +10,7 @@ import {showModal} from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import {trackEvent} from '../../../common/analytics';
-import {prettifyJson} from '../../../common/prettify';
+import prettify from 'insomnia-prettify';
 import {DEBOUNCE_MILLIS, isMac} from '../../../common/constants';
 import './base-imports';
 import {getTagDefinitions} from '../../../templating/index';
@@ -316,7 +316,7 @@ class CodeEditor extends React.Component {
         }
       }
 
-      return prettifyJson(jsonString, '\t');
+      return prettify.json(jsonString, '\t');
     } catch (e) {
       // That's Ok, just leave it
       return code;

@@ -1,10 +1,10 @@
 // @flow
-import {getBasicAuthHeader} from '../../common/misc';
 import {setDefaultProtocol} from 'insomnia-url';
 import * as c from './constants';
 import {responseToObject} from './misc';
 import * as network from '../network';
 import * as models from '../../models/index';
+import {getBasicAuthHeader} from '../basic-auth/get-header';
 
 export default async function (
   requestId: string,

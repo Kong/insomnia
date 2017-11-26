@@ -5,24 +5,25 @@
   "description": "Website for https://insomnia.rest",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "licence": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getinsomnia/insomnia.git"
+  },
+  "homepage": "https://github.com/getinsomnia/insomnia/website#readme",
   "scripts": {
-    "task:changelog": "rm -rf ./site/content/changelog-json && cp -r ./site/content/changelog ./site/content/changelog-json",
-    "build:clean": "rm -rf _hugo",
-    "build:generate": "npm run task:changelog && hugo --source site --destination $PWD/_hugo",
+    "bootstrap": "npm install",
+    "clean": "rm -rf _hugo",
+    "build:changelog": "rm -rf ./site/content/changelog-json && cp -r ./site/content/changelog ./site/content/changelog-json",
+    "build:generate": "npm run build:changelog && hugo --source site --destination $PWD/_hugo",
     "build:pack": "speedpack _hugo --output _speedpack",
     "build:app": "NODE_ENV=production webpack --config webpack.config.babel.js",
     "build": "npm run build:clean && npm run build:app && npm run build:generate && npm run build:pack",
     "dev:app": "NODE_ENV=development webpack --config webpack.config.babel.js --watch",
     "dev:hugo": "hugo --source site serve --buildDrafts --buildFuture --bind 0.0.0.0",
-    "dev": "npm run task:changelog && concurrently --kill-others \"npm run dev:hugo\" \"npm run dev:app\"",
-    "start:serve": "hugo --source site serve --bind 0.0.0.0",
-    "start": "npm run task:changelog && npm run start:serve"
+    "dev": "npm run build:changelog && concurrently --kill-others \"npm run dev:hugo\" \"npm run dev:app\"",
+    "start": "npm run build:changelog && hugo --source site serve --bind 0.0.0.0",
+    "test": "node --version"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/getinsomnia/website.git"
-  },
-  "homepage": "https://github.com/getinsomnia/website#readme",
   "devDependencies": {
     "babel": "6.3.13",
     "babel-core": "6.1.18",

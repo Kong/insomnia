@@ -8,16 +8,14 @@ const fs = require('fs');
 const configRenderer = require('../webpack/webpack.config.production.babel');
 const configMain = require('../webpack/webpack.config.electron.babel');
 
-// Start the madness!
-process.nextTick(async () => {
-  try {
-    await build();
-  } catch (err) {
-    console.error('[build] Failed to build', err);
-  }
-});
+// Start build if ran from CLI
+if (require.start === module) {
+  process.nextTick(async () => {
+    await module.exports.start();
+  });
+}
 
-async function build () {
+module.exports.start = async function () {
   // Remove folders first
   console.log('[build] Removing existing directories');
   await emptyDir('../build');
@@ -41,7 +39,7 @@ async function build () {
   await install('../build/');
 
   console.log('[build] Complete!');
-}
+};
 
 async function buildWebpack (config) {
   return new Promise((resolve, reject) => {

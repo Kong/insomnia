@@ -1,10 +1,6 @@
 # Importers
 
-[![Insomnia REST Client](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
 [![Npm Version](https://img.shields.io/npm/v/insomnia-importers.svg)](https://www.npmjs.com/package/insomnia-importers)
-[![license](https://img.shields.io/github/license/getinsomnia/importers.svg)]()
-[![TravisCI](https://api.travis-ci.org/getinsomnia/importers.svg?branch=master)](https://travis-ci.org/getinsomnia/importers)
-[![Coverage Status](https://coveralls.io/repos/github/getinsomnia/importers/badge.svg?branch=master)](https://coveralls.io/github/getinsomnia/importers?branch=master)
 
 This repository contains converters to translate popular HTTP data formats to
 Insomnia v2 format.

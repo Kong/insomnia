@@ -3,6 +3,7 @@ const path = require('path');
 const rimraf = require('rimraf');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
+const buildTask = require('./build');
 
 const PLATFORM_MAP = {
   darwin: 'mac',
@@ -10,22 +11,25 @@ const PLATFORM_MAP = {
   win32: 'win'
 };
 
-// Start the madness!
-process.nextTick(async () => {
-  await packageApp();
-});
+// Start package if ran from CLI
+if (require.start === module) {
+  process.nextTick(async () => {
+    await buildTask.start();
+    await module.exports.start();
+  });
+}
 
-async function packageApp () {
+module.exports.start = async function () {
   console.log('[package] Removing existing directories');
   await emptyDir('../dist');
 
   console.log('[package] Packaging app');
-  await build('../.electronbuilder');
+  await pkg('../.electronbuilder');
 
   console.log('[package] Complete!');
-}
+};
 
-async function build (relConfigPath) {
+async function pkg (relConfigPath) {
   try {
     const configPath = path.resolve(__dirname, relConfigPath);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -36,7 +40,7 @@ async function build (relConfigPath) {
       cscKeyPassword: process.env.CSC_KEY_PASSWORD,
       [targetPlatform]: config[targetPlatform].target
     });
-    return packager.build();
+    return packager.start();
   } catch
     (err) {
     console.log('[package] Failed: ' + err.stack);

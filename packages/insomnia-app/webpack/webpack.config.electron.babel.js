@@ -3,6 +3,8 @@ const path = require('path');
 const productionConfig = require('./webpack.config.production.babel');
 const pkg = require('../package.json');
 
+const PORT = pkg.dev['dev-server-port'];
+
 let devtool;
 let plugins;
 const output = {
@@ -13,10 +15,9 @@ const output = {
 if (process.env.NODE_ENV === 'development') {
   output.path = path.join(__dirname, '../app');
   devtool = 'eval-source-map';
-  const port = pkg.dev['webpack-dev-server-port'];
   plugins = [
     new webpack.DefinePlugin({
-      'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${port}/renderer.html`),
+      'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/renderer.html`),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development')
     })

@@ -42,7 +42,7 @@ script:
 - npm test
 
 before_deploy:
-- npm run package
+- npm run package-app
 
 deploy:
   provider: releases

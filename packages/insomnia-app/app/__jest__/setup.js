@@ -17,6 +17,7 @@ const localStorageMock = (function () {
 })();
 
 // Don't console log during testing. It's annoying
+global.__DEV__ = false;
 global.console.log = () => null;
 global.localStorage = localStorageMock;
 global.requestAnimationFrame = cb => process.nextTick(cb);
