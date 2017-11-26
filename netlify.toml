@@ -1,6 +1,6 @@
 [build]
   base = "website"
-  publish = "_speedpack"
+  publish = "website/_speedpack"
   command = "npm run build"
   HUGO_VERSION = "0.30"
   NODE_VERSION = "9"
