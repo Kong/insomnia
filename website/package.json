@@ -1,7 +1,7 @@
 {
   "name": "insomnia-website",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Website for https://insomnia.rest",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "licence": "MIT",
