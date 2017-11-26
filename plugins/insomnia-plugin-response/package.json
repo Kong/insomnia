@@ -19,7 +19,5 @@
     "insomnia-xpath": "^0.0.4",
     "jsonpath": "^1.0.0"
   },
-  "devDependencies": {
-    "eslint": "^4.12.0"
-  }
+  "devDependencies": {}
 }

@@ -16,7 +16,5 @@
   "scripts": {
     "test": "node --version"
   },
-  "devDependencies": {
-    "eslint": "^4.12.0"
-  }
+  "devDependencies": {}
 }

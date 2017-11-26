@@ -19,7 +19,5 @@
     "commander": "^2.9.0",
     "shell-quote": "^1.6.1"
   },
-  "devDependencies": {
-    "eslint": "^4.12.0"
-  }
+  "devDependencies": {}
 }

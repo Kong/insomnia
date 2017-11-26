@@ -13,7 +13,5 @@
     "name": "default-headers",
     "description": "Add default headers to requests"
   },
-  "devDependencies": {
-    "eslint": "^4.12.0"
-  }
+  "devDependencies": {}
 }
