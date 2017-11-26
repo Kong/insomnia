@@ -11,11 +11,11 @@
     "bootstrap": "lerna bootstrap && lerna run rebuild",
     "clean": "lerna run clean --stream",
     "test": "lerna run test --stream",
-    "start-app": "lerna run start --stream --scope=insomnia-app",
-    "start-website": "lerna run start --stream --scope=insomnia-website",
-    "build-app": "lerna run build --stream --scope=insomnia-app",
-    "build-website": "lerna run build --stream --scope=insomnia-website",
-    "package-app": "lerna run package --stream --scope=insomnia-app"
+    "app-start": "lerna run start --stream --scope=insomnia-app",
+    "app-build": "lerna run build --stream --scope=insomnia-app",
+    "app-package": "lerna run package --stream --scope=insomnia-app",
+    "website-start": "lerna run start --stream --scope=insomnia-website",
+    "website-build": "lerna run build --stream --scope=insomnia-website"
   },
   "devDependencies": {
     "jest": "^21.2.1",

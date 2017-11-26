@@ -70,7 +70,7 @@ menu:
       Identifier: plus
       URL: /plus/
       weight: 9
-    - Name: Terms
+    - Name: Terms of Service
       Identifier: terms
       URL: /terms/
       weight: 100

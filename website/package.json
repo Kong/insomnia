@@ -21,6 +21,7 @@
     "dev:app": "NODE_ENV=development webpack --config webpack.config.babel.js --watch",
     "dev:hugo": "hugo --source site serve --buildDrafts --buildFuture --bind 0.0.0.0",
     "dev": "npm run build:changelog && concurrently --kill-others \"npm run dev:hugo\" \"npm run dev:app\"",
+    "deploy": "npm run build && netlify deploy -s insomnia -e production",
     "start": "npm run build:changelog && hugo --source site serve --bind 0.0.0.0",
     "test": "node --version"
   },
@@ -39,6 +40,7 @@
     "concurrently": "^3.1.0",
     "flow": "^0.2.3",
     "json-loader": "^0.5.7",
+    "netlify-cli": "^1.2.2",
     "speedpack": "^0.2.0",
     "webpack": "^3.5.1"
   },

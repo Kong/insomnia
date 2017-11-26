@@ -54,7 +54,7 @@ npm run bootstrap
 npm test
 
 # Start App with Live Reload
-npm run start-app
+npm run app-start
 ```
 
 </details>
