@@ -40,7 +40,7 @@ async function pkg (relConfigPath) {
       cscKeyPassword: process.env.CSC_KEY_PASSWORD,
       [targetPlatform]: config[targetPlatform].target
     });
-    return packager.start();
+    return packager.build();
   } catch
     (err) {
     console.log('[package] Failed: ' + err.stack);

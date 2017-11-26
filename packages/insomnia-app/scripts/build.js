@@ -113,6 +113,7 @@ function generatePackageJson (relBasePkg, relOutPkg) {
     productName: basePkg.app.productName,
     longName: basePkg.app.longName,
     description: basePkg.description,
+    license: basePkg.license,
     homepage: basePkg.homepage,
     author: basePkg.author,
     main: 'main.min.js',
