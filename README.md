@@ -2,8 +2,6 @@
 
 [![Insomnia](https://img.shields.io/badge/maintainer-Insomnia-purple.svg?colorB=6e60cc)](https://insomnia.rest)
 [![Travis](https://api.travis-ci.org/getinsomnia/insomnia.svg)](https://travis-ci.org/getinsomnia/insomnia)
-[![AppVeyor](https://img.shields.io/appveyor/ci/gschier/insomnia.svg)](https://ci.appveyor.com/project/gschier/insomnia)
-[![license](https://img.shields.io/github/license/getinsomnia/insomnia.svg)](LICENSE)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![Twitter Follow](https://img.shields.io/twitter/follow/getinsomnia.svg?style=social&label=%40GetInsomnia%20on%20Twitter&style=plastic)](https://twitter.com/getinsomnia)
 
@@ -43,16 +41,20 @@ Development on Insomnia can be done on Mac, Windows, or Linux as long as you hav
 <details>
 <summary>Initial Dev Setup</summary>
 
+This repository is structured as a monorepo and contains many Node.JS packages. Each package has
+it's own set of command, but the most common commands are available from the 
+root `[package.json](package.json)` adn can be accessed using the `npm run ...` command. Here
+are the only three commands you should need to start developing on the app.
+
 ```bash
-# Install dependencies and build add-ons for Electron
-npm install
-npm run rebuild
+# Install and Link Dependencies
+npm run bootstrap
 
-# Start app
-npm run dev
-
-# Run tests
+# Run Tests
 npm test
+
+# Start App with Live Reload
+npm run start-app
 ```
 
 </details>
@@ -83,7 +85,3 @@ Here is a list of plugins available for installation via NPM.
 
 [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 
-
-## License
-
-[GNU AGPLv3](LICENSE) &copy; [Insomnia](https://insomnia.rest)

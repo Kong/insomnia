@@ -1,27 +1,22 @@
-node_modules
-.idea
-.vscode
-dist/*
-build/*
-.DS_Store
-coverage
-
-# Generated
-app/main.min.js
-app/node_modules
-
-# Logs
 logs
 *.log
 npm-debug.log*
-
-# Runtime data
+yarn-debug.log*
+yarn-error.log*
 pids
 *.pid
 *.seed
-
-# Optional npm cache directory
+*.pid.lock
+lib-cov
+coverage
+.lock-wscript
+build/Release
+node_modules/
 .npm
-
-# Optional REPL history
+.eslintcache
 .node_repl_history
+*.tgz
+.yarn-integrity
+.env
+.idea
+.DS_Store

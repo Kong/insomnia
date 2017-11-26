@@ -35,16 +35,14 @@ cache:
     - $HOME/.electron
     - $HOME/.cache
 
-install:
-- npm install > /dev/null
+script:
 - node --version
 - npm --version
-
-script:
+- npm run bootstrap
 - npm test
 
 before_deploy:
-- npm run build-n-package
+- npm run package-app
 
 deploy:
   provider: releases
@@ -53,10 +51,10 @@ deploy:
   file_glob: true
   prerelease: true
   file:
-    - dist/**/*.zip
-    - dist/**/*.dmg
-    - dist/**/*.deb
-    - dist/**/*.AppImage
-    - dist/**/*.tar.gz
+    - packages/insomnia-app/dist/**/*.zip
+    - packages/insomnia-app/dist/**/*.dmg
+    - packages/insomnia-app/dist/**/*.deb
+    - packages/insomnia-app/dist/**/*.AppImage
+    - packages/insomnia-app/dist/**/*.tar.gz
   on:
     tags: true

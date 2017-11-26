@@ -1,0 +1,51 @@
+/beta.html                                                       /documentation/3_0-beta/
+/blog/:year/:month/:day/changelog-for-:rest                      /documentation/migrate-from-chrome/
+/blog/google-discontinuing-chrome-apps/.com                      /
+/blog/google-discontinuing-chrome-apps/support@insomnia.rest     /
+/code.html                                                       /documentation/code-snippets/
+/cookies.html                                                    /documentation/cookie-management/
+/documentation/3.0-beta                                          /documentation/3_0-beta/
+/documentation/keyboard-shortcuts.html                           /documentation/keyboard-shortcuts/
+/documentation/order-requests-in-the-sidebar.html                /documentation/
+/documentation/schedule-a-request-on-a-set-interval.html         /documentation/
+/documentation/swig-templating-language.html                     /documentation/environment-variables/
+/documentation/export-spec/                                      /documentation/import-export/
+/environments.html                                               /documentation/environment-variables/
+/feedback.html                                                   /documentation/support-and-feedback/
+/installation.html                                               /documentation/installation/
+/migrate-from-chrome.html                                        /documentation/migrate-from-chrome/
+/shortcuts.html                                                  /documentation/keyboard-shortcuts/
+/tags/announcement/support@insomnia.rest                         /documentation/support-and-feedback/
+/workspaces.html                                                 /documentation/workspaces/
+/index.xml                                                       /blog/index.xml
+/contact/                                                        /support/
+/eula/                                                           https://github.com/getinsomnia/insomnia/blob/master/LICENSE
+
+# Legacy Docs
+/documentation/support-and-feedback/*       /support/
+/documentation/installation/*               https://support.insomnia.rest/article/23-installation
+/documentation/plus/*                       https://support.insomnia.rest/article/47-insomnia-plus
+/documentation/teams/*                      https://support.insomnia.rest/article/20-teams
+/documentation/faq/*                        https://support.insomnia.rest/article/48-frequently-asked-questions
+/documentation/environment-variables/*      https://support.insomnia.rest/article/18-environment-variables
+/documentation/template-tags/*              https://support.insomnia.rest/article/40-template-tags
+/documentation/cookie-management/*          https://support.insomnia.rest/article/49-cookies
+/documentation/workspaces/*                 https://support.insomnia.rest/article/50-workspaces
+/documentation/authentication/*             https://support.insomnia.rest/article/38-authentication
+/documentation/request-chaining/*           https://support.insomnia.rest/article/43-chaining-requests
+/documentation/code-snippets/*              https://support.insomnia.rest/article/37-code-snippet-generation
+/documentation/client-certificates/*        https://support.insomnia.rest/article/51-client-certificates
+/documentation/import-export/*              https://support.insomnia.rest/article/52-importing-and-exporting-data
+/documentation/plugins/*                    https://support.insomnia.rest/article/26-plugins
+/documentation/proxy/*                      https://support.insomnia.rest/article/53-http-s-proxy
+/documentation/ssl-validation/*             https://support.insomnia.rest/article/54-ssl-validation
+/documentation/migrate-from-chrome/*        https://support.insomnia.rest/article/55-migrate-from-2-0
+/documentation/security/*                   https://support.insomnia.rest/article/57-encryption
+/documentation/forgot-password/*            https://support.insomnia.rest/article/56-forgot-password
+/documentation/how-you-can-help/*           https://support.insomnia.rest/article/58-how-you-can-help
+/documentation/keyboard-shortcuts/*         https://support.insomnia.rest/article/59-keyboard-shortcuts
+/documentation/backstory/*                  https://support.insomnia.rest/article/60-backstory
+/documentation/*                            https://support.insomnia.rest
+/docs/*                                     https://support.insomnia.rest
+
+

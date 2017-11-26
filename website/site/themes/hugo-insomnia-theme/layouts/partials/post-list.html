@@ -1,0 +1,45 @@
+{{ range .Pages }}
+<article class="article--preview container">
+  <header class="row">
+    <div class="col-12">
+      <a href="{{ .Permalink }}">
+        <h1>{{ .Title }}</h1>
+      </a>
+      <div class="meta">
+        <time datetime='{{ .Date.Format "02 January 2006" }}'>
+          {{ .Date.Format "02 January, 2006" }}
+        </time>
+        {{ if isset .Params "series" }}
+        {{ with .Params.series }}
+        –
+        <a href="/series/{{ index . 0 | urlize }}"
+           title="This post is part of the {{ index . 0 | title }} blog series">
+          {{ index . 0 }}
+        </a>
+        {{ end }}
+        {{ end }}
+      </div>
+    </div>
+  </header>
+  <section>
+    <div class="row">
+      <div class="col-12 article--preview__content">
+        <p>{{ .Summary }}</p>
+      </div>
+    </div>
+    <div class="row article--preview__footer">
+      <div class="col-8">
+        {{ partial "tags" . }}
+      </div>
+      <div class="col-4 article--preview__read-more">
+        <a href="{{ .Permalink }}">
+          {{ .Site.Params.keepReadingStr }} &raquo;
+        </a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 article--preview__separator"></div>
+    </div>
+  </section>
+</article>
+{{ end }}

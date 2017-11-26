@@ -1,0 +1,29 @@
+<section class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav class="pagination center" role="pagination">
+                {{ if .Paginator.HasPrev }}
+                <a class="pagination__button pagination__button--left"
+                   href="{{ .Paginator.Prev.URL }}">
+                    &laquo; Newer
+                </a>
+                {{ else }}
+                <a class="pagination__button pagination__button--left">&nbsp;</a>
+                {{ end }}
+
+                <div class="pagination__pages">
+                    Page {{ .Paginator.PageNumber }} of {{ .Paginator.TotalPages }}
+                </div>
+
+                {{ if .Paginator.HasNext }}
+                <a class="pagination__button pagination__button--right"
+                   href="{{ .Paginator.Next.URL }}">
+                    Older &raquo;
+                </a>
+                {{ else }}
+                <a class="pagination__button pagination__button--right">&nbsp;</a>
+                {{ end }}
+            </nav>
+        </div>
+    </div>
+</section>

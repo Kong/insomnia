@@ -1,0 +1,15 @@
+{{ if isset .Params "series" }}
+<section class="container">
+  <div class="row">
+    <div class="col-12">
+      <p class="notice">
+        {{ with .Params.series }}
+        This post is part of the
+        <a href="{{ $.Site.BaseURL }}series/{{ index . 0 | urlize }}">
+          {{ index . 0 }}</a> series
+        {{ end }}
+      </p>
+    </div>
+  </div>
+</section>
+{{ end }}

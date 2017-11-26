@@ -1,0 +1,21 @@
+{
+  "name": "insomnia-plugin-now",
+  "version": "1.0.1",
+  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "description": "Insomnia now template tag",
+  "license": "MIT",
+  "repository": "https://github.com/getinsomnia/insomnia/tree/master/plugins/insomnia-plugin-now",
+  "bugs": {
+    "url": "https://github.com/getinsomnia/insomnia"
+  },
+  "main": "index.js",
+  "insomnia": {
+    "name": "now"
+  },
+  "scripts": {
+    "test": "jest --silent"
+  },
+  "dependencies": {
+    "moment": "^2.19.2"
+  }
+}

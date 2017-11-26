@@ -20,7 +20,7 @@ install:
   - npm --version
   - npm config set msvs_version 2013
   - npm install 7zip-bin-win > NUL
-  - npm install > NUL
+  - npm run bootstrap
   - npm test
 
 cache:
@@ -32,14 +32,14 @@ cache:
 #---------------------------------#
 
 build_script:
-  - if %APPVEYOR_REPO_TAG%==true npm run build-n-package
+  - if %APPVEYOR_REPO_TAG%==true npm run package-app
 
 #---------------------------------#
 #      artifacts configuration    #
 #---------------------------------#
 
 artifacts:
-  - path: dist\squirrel-windows\*
+  - path: packages\insomnia-app\dist\squirrel-windows\*
     name: dist
 
 #---------------------------------#

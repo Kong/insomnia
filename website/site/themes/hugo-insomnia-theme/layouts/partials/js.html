@@ -1,0 +1,4 @@
+<!-- Scripts -->
+{{ range .Site.Params.scripts }}
+<script async src="{{ $.Site.BaseURL }}javascript/{{ . }}"></script>
+{{ end }}

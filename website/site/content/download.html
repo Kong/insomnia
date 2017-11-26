@@ -1,0 +1,97 @@
+---
+title: Download Insomnia
+subTitle: So you can finally `GET` some `REST` &#128564;
+---
+
+<div class="row center">
+  <div class="col-4 platform-download">
+    <i class="fa fa-apple platform-download__icon bg-mac"></i>
+    <p>
+      <a href="https://builds.insomnia.rest/downloads/mac/latest"
+         data-ga="Download:Mac"
+         class="button">
+        <i class="fa fa-download"></i>
+        OS X 10.9+
+      </a>
+    </p>
+    <p class="subtle small" style="max-width:12rem;margin:auto;">
+      or <code>brew cask install insomnia</code>
+    </p>
+  </div>
+  <div class="col-4 platform-download">
+    <i class="fa fa-windows platform-download__icon bg-windows"></i>
+    <p>
+      <a href="https://builds.insomnia.rest/downloads/windows/latest"
+         data-ga="Download:Windows"
+         class="button">
+        <i class="fa fa-download"></i>
+        Windows 7+
+      </a>
+    </p>
+    <p class="subtle small" style="max-width:12rem;margin:auto;">
+      (64-bit only)
+    </p>
+  </div>
+  <div class="col-4 platform-download">
+    <i class="fa fa-linux platform-download__icon bg-linux"></i>
+    <p>
+      <a href="https://builds.insomnia.rest/downloads/ubuntu/latest"
+         data-ga="Download:Linux:Ubuntu"
+         class="button">
+        <i class="fa fa-download"></i>
+        Ubuntu 14.04+
+      </a>
+    </p>
+    <p class="subtle small" style="max-width:12rem;margin:auto;">
+      or try the
+      <a href="https://builds.insomnia.rest/downloads/linux/latest"
+         data-ga="Download:Linux:AUR">
+        AppImage Package
+      </a>
+      or
+      <a href="https://aur.archlinux.org/packages/insomnia/"
+         data-ga="Download:Linux:AppImage">
+        AUR Package
+      </a>
+    </p>
+  </div>
+</div>
+<div class="row center">
+  <div class="col-12">
+    <hr>
+  </div>
+</div>
+<div class="row center">
+  <div class="col-3">
+  </div>
+  <div class="col-6">
+    <h2>Thanks for choosing Insomnia</h2>
+    <p>
+      Help out by spreading the word &#128522;
+    </p>
+    <a title="Share on Twitter"
+       href="http://twitter.com/share?url=https://insomnia.rest&text=I+just+downloaded+Insomnia+REST+Client&via=GetInsomnia&"
+       onclick="window.open(this.href, 'twitter-share', 'width=800,height=600');return false;"
+       class="button--share button twitter">
+      <i class="fa fa-twitter"></i>
+    </a>
+    <a title="Share on Facebook"
+       href="http://www.facebook.com/sharer/sharer.php?u=https://insomnia.rest&"
+       onclick="window.open(this.href, 'facebook-share', 'width=800,height=600');return false;"
+       class="button--share button facebook">
+      <i class="fa fa-facebook"></i>
+    </a>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var as = document.querySelectorAll('a[data-ga]');
+    for (var i = 0; i < as.length; i++) {
+      as[i].addEventListener('click', function (e) {
+        var args = this.getAttribute('data-ga').split(':');
+        ga('send', 'event', args[0], args[1], args[2]);
+      });
+    }
+  })();
+</script>

@@ -1,0 +1,66 @@
+{
+  "name": "insomnia-website",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Website for https://insomnia.rest",
+  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "licence": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getinsomnia/insomnia.git"
+  },
+  "homepage": "https://github.com/getinsomnia/insomnia/website#readme",
+  "scripts": {
+    "bootstrap": "npm install",
+    "clean": "rm -rf _hugo",
+    "build:changelog": "rm -rf ./site/content/changelog-json && cp -r ./site/content/changelog ./site/content/changelog-json",
+    "build:generate": "npm run build:changelog && hugo --source site --destination $PWD/_hugo",
+    "build:pack": "speedpack _hugo --output _speedpack",
+    "build:app": "NODE_ENV=production webpack --config webpack.config.babel.js",
+    "build": "npm run build:clean && npm run build:app && npm run build:generate && npm run build:pack",
+    "dev:app": "NODE_ENV=development webpack --config webpack.config.babel.js --watch",
+    "dev:hugo": "hugo --source site serve --buildDrafts --buildFuture --bind 0.0.0.0",
+    "dev": "npm run build:changelog && concurrently --kill-others \"npm run dev:hugo\" \"npm run dev:app\"",
+    "start": "npm run build:changelog && hugo --source site serve --bind 0.0.0.0",
+    "test": "node --version"
+  },
+  "devDependencies": {
+    "babel": "6.3.13",
+    "babel-core": "6.1.18",
+    "babel-eslint": "5.0.0",
+    "babel-loader": "6.1.0",
+    "babel-plugin-add-module-exports": "0.1.2",
+    "babel-plugin-transform-class-properties": "^6.19.0",
+    "babel-plugin-transform-object-rest-spread": "^6.20.2",
+    "babel-plugin-transform-regenerator": "^6.16.1",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-es2015": "6.3.13",
+    "babel-preset-react": "^6.24.1",
+    "concurrently": "^3.1.0",
+    "flow": "^0.2.3",
+    "json-loader": "^0.5.7",
+    "speedpack": "^0.2.0",
+    "webpack": "^3.5.1"
+  },
+  "dependencies": {
+    "hkdf": "0.0.2",
+    "node-forge": "^0.7.1",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "srp-js": "^0.2.0",
+    "whatwg-fetch": "^2.0.1"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "react"
+    ],
+    "plugins": [
+      "transform-object-rest-spread",
+      "transform-class-properties",
+      "add-module-exports",
+      "transform-regenerator",
+      "transform-runtime"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+[
+{{ $total := len .Data.Pages }}
+{{ $pages := .Data.Pages.ByDate.Reverse }}
+{{ range $i, $page := $pages }}
+{
+"version": "{{ .Slug }}",
+{{ if isset .Params "link" }}
+"link": "{{ .Params.link }}",
+{{ end }}
+{{ if isset .Params "channel" }}
+"channel": "{{ .Params.channel }}",
+{{ else }}
+"channel": "stable",
+{{ end }}
+{{ if isset .Params "summary" }}
+"summary": "{{ .Params.summary }}",
+{{ end }}
+"major": [
+{{ if isset .Params "major" }}
+{{ $majorTotal := len .Params.major }}
+{{ range $i, $v := .Params.major }}
+"{{ . }}"{{ if eq $i (add $majorTotal -1) }}{{ else }},{{ end }}
+{{ end }}
+{{ end }}
+],
+"fixes": [
+{{ if isset .Params "fixes" }}
+{{ $fixesTotal := len .Params.fixes }}
+{{ range $i, $v := .Params.fixes }}
+"{{ . }}"{{ if eq $i (add $fixesTotal -1) }}{{ else }},{{ end }}
+{{ end }}
+{{ end }}
+],
+"minor": [
+{{ if isset .Params "minor" }}
+{{ $minorTotal := len .Params.minor }}
+{{ range $i, $v := .Params.minor }}
+"{{ . }}"{{ if eq $i (add $minorTotal -1) }}{{ else }},{{ end }}
+{{ end }}
+{{ end }}
+]
+{{ if eq $i (add $total -1) }}}{{ else }}},
+{{ end }}
+{{ end }}
+]
