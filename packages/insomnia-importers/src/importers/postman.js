@@ -78,7 +78,7 @@ function importRequestItem (item, parentId) {
     _type: 'request',
     name: item.name || '',
     description: request.description || '',
-    url: request.url || '',
+    url: importUrl(request.url),
     method: request.method || 'GET',
     headers: mapImporter(request.header, importHeader),
     body: importBody(request.body),
@@ -90,6 +90,18 @@ function importHeader (header) {
     name: header.key,
     value: header.value,
   })
+}
+
+function importUrl (url) {
+  if (!url) {
+    return '';
+  }
+
+  if (url.raw) {
+    return url.raw;
+  }
+
+  return url;
 }
 
 function importBody (body) {
