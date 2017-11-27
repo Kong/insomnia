@@ -84,7 +84,7 @@ async function copyFiles (relSource, relDest) {
 async function install (relDir) {
   return new Promise((resolve, reject) => {
     const prefix = path.resolve(__dirname, relDir);
-    npm.load({prefix, production: true, optional: false, }, err => {
+    npm.load({prefix, production: true, optional: false, 'package-lock': false}, err => {
       if (err) {
         return reject(err);
       }
