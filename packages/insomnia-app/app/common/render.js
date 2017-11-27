@@ -46,17 +46,7 @@ export async function buildRenderContext (
   // way we can keep same-name variables from the parent context.
   const renderContext = baseContext;
   for (const envObject: Object of envObjects) {
-    // Sort the keys that may have Nunjucks last, so that other keys get
-    // defined first. Very important if env variables defined in same obj
-    // (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
-    const keys = Object.keys(envObject).sort((k1, k2) => {
-      if (typeof envObject[k1] === 'string') {
-        return envObject[k1].match(/({{)/) ? 1 : -1;
-      } else {
-        return 0;
-      }
-    });
-
+    const keys = _getOrderedEnvironmentKeys(envObject);
     for (const key of keys) {
       /*
        * If we're overwriting a string, try to render it first with the base as
@@ -87,14 +77,17 @@ export async function buildRenderContext (
   let finalRenderContext = renderContext;
 
   // Render recursive references.
+  const keys = _getOrderedEnvironmentKeys(finalRenderContext);
   for (let i = 0; i < 3; i++) {
-    finalRenderContext = await render(
-      finalRenderContext,
-      finalRenderContext,
-      null,
-      KEEP_ON_ERROR,
-      'Environment'
-    );
+    for (const key of keys) {
+      finalRenderContext[key] = await render(
+        finalRenderContext[key],
+        finalRenderContext,
+        null,
+        KEEP_ON_ERROR,
+        'Environment'
+      );
+    }
   }
 
   return finalRenderContext;
@@ -293,4 +286,30 @@ export async function getRenderedRequest (
     type: renderedRequest.type,
     url: renderedRequest.url
   };
+}
+
+/**
+ * Sort the keys that may have Nunjucks last, so that other keys get
+ * defined first. Very important if env variables defined in same obj
+ * (eg. {"foo": "{{ bar }}", "bar": "Hello World!"})
+ *
+ * @param v
+ * @returns {number}
+ */
+function _nunjucksSortValue (v) {
+  if (v && v.match && v.match(/({%)/)) {
+    return 3;
+  } else if (v && v.match && v.match(/({{)/)) {
+    return 2;
+  } else {
+    return 1;
+  }
+}
+
+function _getOrderedEnvironmentKeys (finalRenderContext: Object): Array<string> {
+  return Object.keys(finalRenderContext).sort((k1, k2) => {
+    const k1Sort = _nunjucksSortValue(finalRenderContext[k1]);
+    const k2Sort = _nunjucksSortValue(finalRenderContext[k2]);
+    return k1Sort - k2Sort;
+  });
 }

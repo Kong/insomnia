@@ -16,9 +16,15 @@ const localStorageMock = (function () {
   };
 })();
 
-// Don't console log during testing. It's annoying
 global.__DEV__ = false;
-global.console.log = () => null;
 global.localStorage = localStorageMock;
 global.requestAnimationFrame = cb => process.nextTick(cb);
 global.require = require;
+
+// Don't console log real logs that start with a tag (eg. [db] ...). It's annoying
+const log = console.log;
+global.console.log = (...args) => {
+  if (!(typeof args[0] === 'string' && args[0][0] === '[')) {
+    log(...args);
+  }
+};

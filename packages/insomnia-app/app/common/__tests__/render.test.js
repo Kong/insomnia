@@ -188,9 +188,10 @@ describe('buildRenderContext()', () => {
     }];
 
     const context = await renderUtils.buildRenderContext(ancestors);
-    const result = await renderUtils.render('{{ urls.admin }}/foo', context);
-
-    expect(result).toEqual('https://parent.com/admin/foo');
+    expect(await renderUtils.render('{{ urls.admin }}/foo', context))
+      .toBe('https://parent.com/admin/foo');
+    expect(await renderUtils.render('{{ urls.test }}/foo', context))
+      .toBe('https://parent.com/test/foo');
   });
 
   it('renders child environment variables', async () => {
@@ -254,6 +255,31 @@ describe('buildRenderContext()', () => {
       winner: 'folder parent',
       root: true,
       sub: true
+    });
+  });
+
+  it('handles variables being used in tags', async () => {
+    const rootEnvironment = {
+      type: models.environment.type,
+      data: {
+        hash_input: '{{ orderId }}{{ secret }}',
+        hash_input_expected: '123456789012345ThisIsATopSecretValue',
+        orderId: 123456789012345,
+        password: "{% hash 'sha512', 'hex', hash_input %}",
+        password_expected: "{% hash 'sha512', 'hex', hash_input_expected %}",
+        secret: 'ThisIsATopSecretValue'
+      }
+    };
+
+    const context = await renderUtils.buildRenderContext([], rootEnvironment);
+
+    expect(context).toEqual({
+      hash_input: '123456789012345ThisIsATopSecretValue',
+      hash_input_expected: '123456789012345ThisIsATopSecretValue',
+      orderId: 123456789012345,
+      password: 'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
+      password_expected: 'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
+      secret: 'ThisIsATopSecretValue'
     });
   });
 
