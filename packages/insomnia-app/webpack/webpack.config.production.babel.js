@@ -3,7 +3,7 @@ const baseConfig = require('./webpack.config.base.babel');
 
 module.exports = {
   ...baseConfig,
-  devtool: 'source-map',
+  devtool: false,
   plugins: [
     ...baseConfig.plugins,
     new webpack.DefinePlugin({

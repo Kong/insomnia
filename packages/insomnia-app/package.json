@@ -69,6 +69,7 @@
     "insomnia-httpsnippet",
     "jwt-authentication",
     "moment",
+    "node-forge",
     "pdfjs-dist",
     "prop-types",
     "react",
