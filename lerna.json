@@ -4,5 +4,10 @@
   "packages": [
     "plugins/*",
     "packages/*"
-  ]
+  ],
+  "commands": {
+    "publish": {
+      "skipGit": true
+    }
+  }
 }

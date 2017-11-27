@@ -6,7 +6,7 @@
     "name": "insomnia",
     "productName": "Insomnia",
     "longName": "Insomnia REST Client",
-    "version": "5.12.0-beta.5",
+    "version": "5.12.0",
     "main": "main.min.js"
   },
   "licence": "MIT",
