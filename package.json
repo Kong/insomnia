@@ -9,13 +9,12 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap && lerna run rebuild",
+    "publish": "lerna publish --skip-git",
     "clean": "lerna clean",
     "test": "lerna run test --stream",
     "app-start": "lerna run start --stream --scope=insomnia-app",
     "app-build": "lerna run build --stream --scope=insomnia-app",
-    "app-package": "lerna run package --stream --scope=insomnia-app",
-    "website-start": "lerna run start --stream --scope=insomnia-website",
-    "website-build": "lerna run build --stream --scope=insomnia-website"
+    "app-package": "lerna run package --stream --scope=insomnia-app"
   },
   "devDependencies": {
     "jest": "^21.2.1",
