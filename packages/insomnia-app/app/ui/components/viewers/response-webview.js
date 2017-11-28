@@ -22,6 +22,9 @@ class ResponseWebview extends PureComponent {
     const {body, contentType, url} = this.props;
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
     this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
+
+    // This is kind of hacky but electron-context-menu fails to save images if
+    // this isn't here.
     this._webview.webContents = this._webview;
     this._webview.webContents.session = new EventEmitter();
   }
