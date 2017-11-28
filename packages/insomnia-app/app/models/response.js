@@ -39,7 +39,7 @@ type BaseResponse = {
   headers: Array<ResponseHeader>,
   timeline: Array<ResponseTimelineEntry>,
   bodyPath: string, // Actual bodies are stored on the filesystem
-  bodyCompression: 'zip' | null,
+  bodyCompression: 'zip' | null | '__NEEDS_MIGRATION__',
   error: string,
   requestVersionId: string | null,
 
@@ -63,7 +63,7 @@ export function init (): BaseResponse {
     headers: [],
     timeline: [],
     bodyPath: '', // Actual bodies are stored on the filesystem
-    bodyCompression: null, // For legacy bodies
+    bodyCompression: '__NEEDS_MIGRATION__', // For legacy bodies
     error: '',
     requestVersionId: null,
 
@@ -73,9 +73,9 @@ export function init (): BaseResponse {
   };
 }
 
-export function migrate (doc: Object) {
-  doc = migrateBodyToFileSystem(doc);
-  doc = migrateBodyCompression(doc);
+export async function migrate (doc: Object) {
+  doc = await migrateBodyToFileSystem(doc);
+  doc = await migrateBodyCompression(doc);
   return doc;
 }
 
@@ -196,7 +196,8 @@ function getBodyBufferFromPath<T> (
 async function migrateBodyToFileSystem (doc: Object) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
-    const root = electron.remote.app.getPath('userData');
+    const {app} = electron.remote || electron;
+    const root = app.getPath('userData');
     const dir = path.join(root, 'responses');
 
     mkdirp.sync(dir);
@@ -211,21 +212,16 @@ async function migrateBodyToFileSystem (doc: Object) {
       console.warn('Failed to write response body to file', err.message);
     }
 
-    const newDoc = await db.docUpdate(doc, {bodyPath});
-    return newDoc;
+    return db.docUpdate(doc, {bodyPath, bodyCompression: null});
   } else {
     return doc;
   }
 }
 
 function migrateBodyCompression (doc: Object) {
-  if (doc.hasOwnProperty('bodyCompression')) {
-    return doc;
+  if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
+    doc.bodyCompression = 'zip';
   }
-
-  // Set old legacy request body compression to zip because that's what they used to
-  // be stored as by default
-  doc.bodyCompression = 'zip';
 
   return doc;
 }
