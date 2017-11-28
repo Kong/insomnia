@@ -36,7 +36,8 @@ describe('exportHar()', () => {
         { name: 'Content-Type', value: 'application/json' }
       ],
       contentType: 'application/json',
-      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json')
+      bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
+      bodyCompression: null
     });
 
     const exportRequests = [ { requestId: req1._id, environmentId: 'n/a' } ];
