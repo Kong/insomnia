@@ -1,4 +1,4 @@
-[*.{js,json,html}]
+[*.{js,json,html,md}]
 charset = utf-8
 indent_style = space
 indent_size = 2

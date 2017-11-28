@@ -1,0 +1,52 @@
+{
+  "_type": "export",
+  "__export_format": 1,
+  "__export_date": "2016-04-24T01:54:07.153Z",
+  "__export_source": "insomnia.chrome.app:v2.6.10",
+  "items": [
+    {
+      "_type": "request_group",
+      "_id": "c_1415844880580",
+      "name": "Test Folder",
+      "environments": {
+        "base": {
+          "base_url": "https://insomnia.rest/api/v1",
+          "api_key": "live_123"
+        }
+      },
+      "requests": [
+        {
+          "_type": "request",
+          "_id": "sc_1415844884091",
+          "url": "{{ base_url }}/users",
+          "method": "POST",
+          "body": "{\"foo\": \"bar\"}",
+          "headers": [{
+            "name": "Content-TYPE",
+            "value": "application/json; charset=utf-8"
+          }],
+          "params": [
+            {
+              "name": "testing",
+              "value": "hi 123"
+            },
+            {
+              "name": "testing 2",
+              "value": "hi 456"
+            }
+          ],
+          "authentication": {
+            "_type": "basic",
+            "username": "{{ api_key }}",
+            "password": ""
+          },
+          "__insomnia": {
+            "format": "json",
+            "panel_width": 0.5
+          },
+          "name": "Test Request"
+        }
+      ]
+    }
+  ]
+}

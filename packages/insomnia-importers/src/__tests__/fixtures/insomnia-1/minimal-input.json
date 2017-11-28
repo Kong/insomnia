@@ -1,0 +1,18 @@
+{
+  "_type": "export",
+  "__export_format": 1,
+  "__export_date": "2016-04-24T01:54:07.153Z",
+  "__export_source": "insomnia.chrome.app:v2.6.10",
+  "items": [
+    {
+      "_type": "request_group",
+      "_id": "c_1415844880580",
+      "requests": [
+        {
+          "_type": "request",
+          "_id": "sc_1415844884091"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "method": "POST",
+  "url": "https://insomnia.rest/foo/bar",
+  "httpVersion": "HTTP/1.1",
+  "headers": [],
+  "postData": {
+    "params": [
+      {
+        "name": "file",
+        "fileName": "/home/user/test.txt"
+      },
+      {
+        "name": "foo",
+        "value": "bar",
+        "fileName": null,
+        "contentType": null,
+        "comment": "hahah"
+      }
+    ]
+  }
+}

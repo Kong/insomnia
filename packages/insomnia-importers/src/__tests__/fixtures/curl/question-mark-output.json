@@ -1,0 +1,23 @@
+{
+  "_type": "export",
+  "__export_format": 3,
+  "__export_date": "2016-11-18T22:34:51.526Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__REQ_1__",
+      "_type": "request",
+      "parentId": "__WORKSPACE_ID__",
+      "url": "http://192.168.1.1:9200/executions/_search?pretty",
+      "name": "http://192.168.1.1:9200/executions/_search?pretty",
+      "method": "POST",
+      "body": {
+        "mimeType": "",
+        "text": "{\"query\":{\"match_all\":{}}}"
+      },
+      "parameters": [],
+      "headers": [],
+      "authentication": {}
+    }
+  ]
+}
