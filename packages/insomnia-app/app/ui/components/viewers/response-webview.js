@@ -1,4 +1,5 @@
 import React, {PureComponent} from 'react';
+import {EventEmitter} from 'events';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import contextMenu from 'electron-context-menu';
@@ -21,6 +22,8 @@ class ResponseWebview extends PureComponent {
     const {body, contentType, url} = this.props;
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
     this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
+    this._webview.webContents = this._webview;
+    this._webview.webContents.session = new EventEmitter();
   }
 
   componentDidUpdate () {
