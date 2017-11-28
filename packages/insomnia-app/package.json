@@ -6,7 +6,7 @@
     "name": "insomnia",
     "productName": "Insomnia",
     "longName": "Insomnia REST Client",
-    "version": "5.12.0",
+    "version": "5.12.1",
     "main": "main.min.js"
   },
   "licence": "MIT",
@@ -103,7 +103,7 @@
     "insomnia-cookies": "^0.0.4",
     "insomnia-httpsnippet": "^1.16.5",
     "insomnia-importers": "^1.5.6",
-    "insomnia-node-libcurl": "^1.2.9",
+    "insomnia-node-libcurl": "^1.2.10",
     "insomnia-plugin-base64": "^1.0.3",
     "insomnia-plugin-file": "^1.0.3",
     "insomnia-plugin-hash": "^1.0.3",
