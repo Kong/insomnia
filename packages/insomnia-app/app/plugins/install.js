@@ -1,7 +1,7 @@
 // @flow
 import * as electron from 'electron';
 import childProcess from 'child_process';
-import {PLUGIN_PATH} from '../common/constants';
+import {isDevelopment, PLUGIN_PATH} from '../common/constants';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import * as tar from 'tar';
@@ -140,5 +140,11 @@ async function _isInsomniaPlugin (moduleName: string): Promise<Object> {
 
 function _getYarnPath () {
   const {app} = electron.remote || electron;
-  return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
+
+  // TODO: This is brittle. Make finding this more robust.
+  if (isDevelopment()) {
+    return path.resolve(app.getAppPath(), './bin/yarn-standalone.js');
+  } else {
+    return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
+  }
 }
