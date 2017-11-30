@@ -140,7 +140,7 @@ function generatePackageJson (relBasePkg, relOutPkg) {
       throw new Error(`Failed to find packed dep "${name}" in dependencies`);
     }
     appPkg.dependencies[name] = version;
-    console.log(`[build] Setting packed dep ${name}`);
+    console.log(`[build] Adding native Node dep ${name}`);
   }
 
   fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));
