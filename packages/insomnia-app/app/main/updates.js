@@ -29,6 +29,11 @@ async function getUpdateUrl (force: boolean): Promise<string | null> {
   const fullUrl = joinUrlAndQueryString(updateUrl, qs);
   console.log(`[updater] Using url ${fullUrl}`);
 
+  if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
+    console.log(`[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable`);
+    return null;
+  }
+
   if (isDevelopment()) {
     return null;
   }
