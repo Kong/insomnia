@@ -8,7 +8,7 @@ import {getRenderContext, getRenderedRequest} from '../common/render';
 import mkdirp from 'mkdirp';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
-import {Curl} from 'insomnia-node-libcurl';
+import {Curl} from 'insomnia-libcurl';
 import {join as pathJoin} from 'path';
 import uuid from 'uuid';
 import * as electron from 'electron';

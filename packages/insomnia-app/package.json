@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.4",
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
@@ -22,7 +22,7 @@
     "lint": "eslint \"**/*.js\" \"**/*.html\" \"**/*.json\"",
     "test": "flow check && npm run lint && cross-env NODE_ENV=test jest --silent",
     "test-appveyor": "npm run test -- --maxWorkers 1",
-    "bootstrap": "npm install && electron-rebuild -f -w node-libcurl",
+    "bootstrap": "electron-rebuild -f -w ../insomnia-libcurl",
     "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && electron .",
     "start:dev-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
     "start": "concurrently --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
@@ -103,7 +103,7 @@
     "insomnia-cookies": "^0.0.4",
     "insomnia-httpsnippet": "^1.16.5",
     "insomnia-importers": "^1.5.6",
-    "insomnia-node-libcurl": "^1.2.3",
+    "insomnia-libcurl": "^0.0.2",
     "insomnia-plugin-base64": "^1.0.3",
     "insomnia-plugin-file": "^1.0.3",
     "insomnia-plugin-hash": "^1.0.3",

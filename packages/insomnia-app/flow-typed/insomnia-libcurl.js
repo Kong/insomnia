@@ -82,7 +82,7 @@ declare class Curl {
   on: (event: string, callback: Function) => void;
 }
 
-declare module 'insomnia-node-libcurl' {
+declare module 'insomnia-libcurl' {
   declare module.exports: {
     Curl: typeof Curl
   }

@@ -9,6 +9,7 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap && lerna run bootstrap",
+    "publish": "lerna publish",
     "clean": "lerna clean",
     "test": "lerna run test --stream",
     "app-start": "lerna run start --stream --scope=insomnia-app",
