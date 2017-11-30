@@ -471,19 +471,6 @@ export async function _actuallySend (
         setOpt(Curl.option.POSTFIELDS, requestBody);
       }
 
-      let responseBodyBytes = 0;
-      const responsesDir = pathJoin(app.getPath('userData'), 'responses');
-      mkdirp.sync(responsesDir);
-      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
-      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
-      curl.on('end', () => responseBodyWriteStream.end());
-      curl.on('error', () => responseBodyWriteStream.end());
-      setOpt(Curl.option.WRITEFUNCTION, (buff: Buffer) => {
-        responseBodyBytes += buff.length;
-        responseBodyWriteStream.write(buff);
-        return buff.length;
-      });
-
       // Handle Authorization header
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
         if (renderedRequest.authentication.type === AUTH_BASIC) {
@@ -561,6 +548,19 @@ export async function _actuallySend (
         .filter(h => h.name)
         .map(h => `${(h.name || '').trim()}: ${h.value}`);
       setOpt(Curl.option.HTTPHEADER, headerStrings);
+
+      let responseBodyBytes = 0;
+      const responsesDir = pathJoin(app.getPath('userData'), 'responses');
+      mkdirp.sync(responsesDir);
+      const responseBodyPath = pathJoin(responsesDir, uuid.v4() + '.response');
+      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
+      curl.on('end', () => responseBodyWriteStream.end());
+      curl.on('error', () => responseBodyWriteStream.end());
+      setOpt(Curl.option.WRITEFUNCTION, (buff: Buffer) => {
+        responseBodyBytes += buff.length;
+        responseBodyWriteStream.write(buff);
+        return buff.length;
+      });
 
       // Handle the response ending
       curl.on('end', async (_1, _2, rawHeaders) => {
