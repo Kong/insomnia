@@ -21,4 +21,14 @@ describe('package.json', () => {
     expect(globalPackage.dependencies['graphql']).toBe('^0.10.5');
     expect(globalPackage.dependencies['codemirror-graphql']).toBe('^0.6.11');
   });
+
+  it('packages must be included in webpack build or else errors happen', () => {
+    // If this is built by Webpack it fails on multipart/form-data
+    expect(globalPackage.packedDependencies.includes('httpsnippet')).toBe(false);
+  });
+
+  it('packages must NOT be included in webpack build or else errors happen', () => {
+    // PDFJS breaks if not part of Webpack build
+    expect(globalPackage.packedDependencies.includes('pdfjs-dist')).toBe(true);
+  });
 });
