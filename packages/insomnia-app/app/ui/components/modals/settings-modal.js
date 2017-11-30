@@ -14,7 +14,7 @@ import Account from '../settings/account';
 import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
-import {Curl} from 'insomnia-node-libcurl';
+import {Curl} from 'insomnia-libcurl';
 import {getAppName, getAppVersion} from '../../../common/constants';
 import {trackEvent} from '../../../common/analytics';
 import * as session from '../../../sync/session';
