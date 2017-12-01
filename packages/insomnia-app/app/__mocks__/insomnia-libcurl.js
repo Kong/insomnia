@@ -17,6 +17,10 @@ class Curl extends EventEmitter {
     this._features[name] = true;
   }
 
+  setUrl (url) {
+    this.setOpt(Curl.option.URL, url);
+  }
+
   setOpt (name, value) {
     if (!name) {
       throw new Error(`Invalid option ${name} ${value}`);
