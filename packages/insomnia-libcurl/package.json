@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "jest --silent"
+    "test": "node --version"
   },
   "dependencies": {
     "insomnia-node-libcurl": "^1.2.11"
