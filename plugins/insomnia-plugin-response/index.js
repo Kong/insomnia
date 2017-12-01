@@ -1,4 +1,5 @@
 const jq = require('jsonpath');
+const iconv = require('iconv-lite');
 const {query: queryXPath} = require('insomnia-xpath');
 
 module.exports.templateTags = [{
@@ -71,14 +72,35 @@ module.exports.templateTags = [{
     if (field === 'header') {
       return matchHeader(response.headers, sanitizedFilter);
     } else if (field === 'raw') {
-      return context.util.models.response.getBodyBuffer(response, '').toString();
+      const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
+      const match = response.contentType.match(/charset=([\w-]+)/);
+      const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
+
+      // Sometimes iconv conversion fails so fallback to regular buffer
+      try {
+        return iconv.decode(bodyBuffer, charset);
+      } catch (err) {
+        console.warn('[response] Failed to decode body', err);
+        return bodyBuffer.toString();
+      }
     } else if (field === 'body') {
-      const bodyStr = context.util.models.response.getBodyBuffer(response, '').toString();
+      const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
+      const match = response.contentType.match(/charset=([\w-]+)/);
+      const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
+
+      // Sometimes iconv conversion fails so fallback to regular buffer
+      let body;
+      try {
+        body = iconv.decode(bodyBuffer, charset);
+      } catch (err) {
+        body = bodyBuffer.toString();
+        console.warn('[response] Failed to decode body', err);
+      }
 
       if (sanitizedFilter.indexOf('$') === 0) {
-        return matchJSONPath(bodyStr, sanitizedFilter);
+        return matchJSONPath(body, sanitizedFilter);
       } else if (sanitizedFilter.indexOf('/') === 0) {
-        return matchXPath(bodyStr, sanitizedFilter);
+        return matchXPath(body, sanitizedFilter);
       } else {
         throw new Error(`Invalid format for response query: ${sanitizedFilter}`);
       }

@@ -245,10 +245,10 @@ export async function _actuallySend (
         const protocol = (match && match[1]) || '';
         const socketPath = (match && match[2]) || '';
         const socketUrl = (match && match[3]) || '';
-        setOpt(Curl.option.URL, `${protocol}//${socketUrl}`);
+        curl.setUrl(`${protocol}//${socketUrl}`);
         setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
       } else {
-        setOpt(Curl.option.URL, finalUrl);
+        curl.setUrl(finalUrl);
       }
       timeline.push({name: 'TEXT', value: 'Preparing request to ' + finalUrl});
       timeline.push({name: 'TEXT', value: `Using ${Curl.getVersion()}`});

@@ -13,11 +13,30 @@ class Curl {
       throw new Error(`Cannot setOpt for unknown option ${option}`);
     }
 
+    // Throw on deprecated options
+    const disabledOpts = {
+      [nodeLibcurl.Curl.option.URL]: this.setUrl
+    };
+    if (disabledOpts[option]) {
+      const name = Curl.optName(option);
+      const newName = disabledOpts[option].name;
+      throw new Error(`setOpt(${name}) is deprecated. Please use ${newName}() instead`);
+    }
+
     this._handle.setOpt(option, value);
+  }
+
+  setUrl (url) {
+    this._handle.setOpt(Curl.option.URL, url);
   }
 
   static getVersion () {
     return nodeLibcurl.Curl.getVersion();
+  }
+
+  static optName (opt) {
+    const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+    return name || opt;
   }
 
   getInfo (property) {

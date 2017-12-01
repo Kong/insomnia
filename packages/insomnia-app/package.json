@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "name": "insomnia-app",
   "app": {
     "name": "insomnia",
@@ -103,13 +103,13 @@
     "insomnia-cookies": "^0.0.4",
     "insomnia-httpsnippet": "^1.16.5",
     "insomnia-importers": "^1.5.6",
-    "insomnia-libcurl": "^0.0.2",
+    "insomnia-libcurl": "^0.0.3",
     "insomnia-plugin-base64": "^1.0.3",
     "insomnia-plugin-file": "^1.0.3",
     "insomnia-plugin-hash": "^1.0.3",
     "insomnia-plugin-now": "^1.0.3",
     "insomnia-plugin-request": "^1.0.4",
-    "insomnia-plugin-response": "^1.0.4",
+    "insomnia-plugin-response": "^1.0.5",
     "insomnia-plugin-uuid": "^1.0.3",
     "insomnia-prettify": "^0.1.2",
     "insomnia-url": "^0.1.2",

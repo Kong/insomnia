@@ -80,6 +80,12 @@ declare class Curl {
   perform: () => void;
   close: () => void;
   on: (event: string, callback: Function) => void;
+
+  // ~~~~~~~~~~~ //
+  // New Methods //
+  // ~~~~~~~~~~~ //
+
+  setUrl: (url: string) => void;
 }
 
 declare module 'insomnia-libcurl' {

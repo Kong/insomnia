@@ -1,4 +1,5 @@
 const tag = require('..').templateTags[0];
+const iconv = require('iconv-lite');
 
 describe('Response tag', () => {
   describe('General', () => {
@@ -64,6 +65,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/json',
         _body: '{"foo": "bar"}'
       }];
 
@@ -80,6 +82,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/json',
         _body: '{"foo": "'
       }];
 
@@ -100,6 +103,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/json',
         _body: '{"foo": "bar"}'
       }];
 
@@ -120,6 +124,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/json',
         _body: '{"foo": "bar"}'
       }];
 
@@ -140,6 +145,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/json',
         _body: '{"array": ["bar", "baz"]}'
       }];
 
@@ -152,6 +158,22 @@ describe('Response tag', () => {
         expect(err.message).toContain('Returned more than one result: $.array.*');
       }
     });
+
+    it('works with utf-16 encoding', async () => {
+      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+
+      const responses = [{
+        _id: 'res_1',
+        parentId: 'req_1',
+        statusCode: 200,
+        contentType: 'application/json; charset=UTF-16',
+        _body: iconv.encode('{"array": ["bar", "baz"]}', 'UTF-16')
+      }];
+
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'body', 'req_1', '$.array[0]')).toBe('bar');
+    });
   });
 
   describe('XPath', async () => {
@@ -162,6 +184,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/xml',
         _body: '<foo><bar>Hello World!</bar></foo>'
       }];
 
@@ -178,6 +201,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/xml',
         _body: '<foo><bar hello="World">Hello World!</bar></foo>'
       }];
 
@@ -194,6 +218,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/xml',
         _body: '<hi></hi></sstr>'
       }];
 
@@ -214,6 +239,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/xml',
         _body: '<foo></foo>'
       }];
 
@@ -234,6 +260,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/xml',
         _body: '<foo></foo>'
       }];
 
@@ -254,6 +281,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'application/xml',
         _body: '<foo><bar>Hello World!</bar><bar>And again!</bar></foo>'
       }];
 
@@ -276,6 +304,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: '',
         headers: [
           {name: 'Content-Type', value: 'application/json'},
           {name: 'Content-Length', value: '20'}
@@ -323,6 +352,7 @@ describe('Response tag', () => {
         _id: 'res_1',
         parentId: 'req_1',
         statusCode: 200,
+        contentType: 'text/plain',
         _body: 'Hello World!'
       }];
 
@@ -354,8 +384,17 @@ function _genTestContext (requests, responses) {
             return responses.find(r => r.parentId === requestId) || null;
           },
           getBodyBuffer (response) {
-            const str = bodies[response._id];
-            return str ? Buffer.from(str) : null;
+            const strOrBuffer = bodies[response._id];
+
+            if (typeof strOrBuffer === 'string') {
+              return Buffer.from(strOrBuffer);
+            }
+
+            if (!strOrBuffer) {
+              return null;
+            }
+
+            return strOrBuffer;
           }
         }
       }

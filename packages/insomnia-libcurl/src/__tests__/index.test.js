@@ -1,5 +1,8 @@
-describe('query()', () => {
+const {Curl} = require('../curl');
+
+describe('Curl', () => {
   it('hello', () => {
-    expect('foo').toBe('foo');
+    const curl = new Curl();
+    expect(curl).toBeDefined();
   });
 });
