@@ -131,7 +131,6 @@ async function _getDefaultParams (): Promise<Array<RequestParameter>> {
 async function _sendToGoogle (params: Array<RequestParameter>) {
   let settings = await models.settings.getOrCreate();
   if (settings.disableAnalyticsTracking) {
-    console.log('[ga] Google analytics tracking disabled. Not sending');
     return;
   }
 
