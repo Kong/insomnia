@@ -35,8 +35,8 @@ class BodyEditor extends React.PureComponent<Props> {
   _handleRawChange (rawValue: string) {
     const {onChange, request} = this.props;
 
-    const contentType = getContentTypeFromHeaders(request.headers);
-    const newBody = newBodyRaw(rawValue, contentType || '');
+    const oldContentType = request.body.mimeType || '';
+    const newBody = newBodyRaw(rawValue, oldContentType);
 
     onChange(newBody);
   }
