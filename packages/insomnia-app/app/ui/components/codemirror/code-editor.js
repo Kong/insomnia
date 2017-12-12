@@ -18,6 +18,7 @@ import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import {query as queryXPath} from 'insomnia-xpath';
+import deepEqual from 'deep-equal';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -477,7 +478,7 @@ class CodeEditor extends React.Component {
     const cm = this.codeMirror;
     Object.keys(options).map(key => {
       // Don't set the option if it hasn't changed
-      if (options[key] === cm.options[key]) {
+      if (deepEqual(options[key], cm.options[key])) {
         return;
       }
 
@@ -488,7 +489,7 @@ class CodeEditor extends React.Component {
   _normalizeMode (mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
 
-    if (mimeType === 'graphql') {
+    if (mimeType.includes('graphql')) {
       // Because graphQL plugin doesn't recognize application/graphql content-type
       return 'graphql';
     } else if (this._isJSON(mimeType)) {
