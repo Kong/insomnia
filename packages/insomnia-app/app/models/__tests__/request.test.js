@@ -28,7 +28,11 @@ describe('create()', async () => {
   it('creates a valid request', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
 
-    const request = await models.request.create({name: 'Test Request', parentId: 'fld_124', description: 'A test Request'});
+    const request = await models.request.create({
+      name: 'Test Request',
+      parentId: 'fld_124',
+      description: 'A test Request'
+    });
     const expected = {
       _id: 'req_cc1dd2ca4275747aa88199e8efd42403',
       created: 1478795580200,
@@ -104,7 +108,7 @@ describe('updateMimeType()', async () => {
     expect(newRequest.headers).toEqual([{name: 'content-tYPE', value: 'text/html'}]);
   });
 
-  it('removes content-type', async () => {
+  it('keeps content-type', async () => {
     const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
@@ -114,7 +118,7 @@ describe('updateMimeType()', async () => {
 
     const newRequest = await models.request.updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
-    expect(newRequest.headers).toEqual([]);
+    expect(newRequest.headers).toEqual([{name: 'content-tYPE', value: 'application/json'}]);
   });
 });
 
