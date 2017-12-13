@@ -76,9 +76,10 @@ the following tools:
 
 Here is a list of plugins available for installation via NPM.
 
+- [Custom Timestamp](https://www.npmjs.com/package/insomnia-plugin-customtimestamp) – Advanced timestamp creator
+- [Default Headers](https://www.npmjs.com/package/insomnia-plugin-default-headers) – Set default headers on requests
 - [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Decode header or payload of JWT tokens
 - [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request.
-- [Default Headers](https://www.npmjs.com/package/insomnia-plugin-default-headers) – Set default headers on requests
 - [Random Number](https://www.npmjs.com/package/insomnia-plugin-randomnumber) – Generate a random integer between a minimum and maximum
 - [Random Credit Card](https://www.npmjs.com/package/insomnia-plugin-randomcreditcard) – Generate random credit card numbers
 
