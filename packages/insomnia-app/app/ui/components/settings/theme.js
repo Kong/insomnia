@@ -20,12 +20,12 @@ const THEMES = [
   {key: 'default', name: 'Insomnia', img: imgDefault},
   {key: 'light', name: 'Simple Light', img: imgLight},
   {key: 'dark', name: 'Simple Dark', img: imgDark},
-  {key: 'purple', name: 'Purple', img: imgPurple, paid: true},
-  {key: 'material', name: 'Material', img: imgMaterial, paid: true},
-  {key: 'solarized', name: 'Solarized', img: imgSolarized, paid: true},
-  {key: 'solarized-light', name: 'Solarized Light', img: imgSolarizedLight, paid: true},
-  {key: 'solarized-dark', name: 'Solarized Dark', img: imgSolarizedDark, paid: true},
-  {key: 'railscasts', name: 'Railscasts', img: imgRailscasts, paid: true}
+  {key: 'purple', name: 'Purple', img: imgPurple},
+  {key: 'material', name: 'Material', img: imgMaterial},
+  {key: 'solarized', name: 'Solarized', img: imgSolarized},
+  {key: 'solarized-light', name: 'Solarized Light', img: imgSolarizedLight},
+  {key: 'solarized-dark', name: 'Solarized Dark', img: imgSolarizedDark},
+  {key: 'railscasts', name: 'Railscasts', img: imgRailscasts}
 ];
 
 @autobind
@@ -33,25 +33,14 @@ class Theme extends PureComponent {
   constructor (props) {
     super(props);
     this.state = {
-      isPremium: window.localStorage.getItem('settings.theme.isPremium') || false
+      isPremium: true
     };
   }
 
   async componentDidMount () {
-    // NOTE: This is kind of sketchy because we're relying on our parent (tab view)
-    // to remove->add us every time our tab is shown. If it didn't, we would need to
-    // also hook into componentWillUpdate somehow to refresh more often.
+    // What the fuck is this bullshit
 
-    if (!session.isLoggedIn()) {
-      this.setState({isPremium: false});
-      return;
-    }
-
-    const {isPremium} = await session.whoami();
-    if (this.state.isPremium !== isPremium) {
-      this.setState({isPremium});
-      window.localStorage.setItem('settings.theme.isPremium', isPremium);
-    }
+    this.setState({isPremium});
   }
 
   renderTheme (theme) {
