@@ -569,9 +569,9 @@ export async function _actuallySend (
         const lastCurlHeadersObject = allCurlHeadersObjects[allCurlHeadersObjects.length - 1];
 
         // Collect various things
-        const httpVersion = lastCurlHeadersObject.version || 'Unknown';
+        const httpVersion = lastCurlHeadersObject.version || '';
         const statusCode = lastCurlHeadersObject.code || -1;
-        const statusMessage = lastCurlHeadersObject.reason || 'Unknown';
+        const statusMessage = lastCurlHeadersObject.reason || '';
 
         // Collect the headers
         const headers = lastCurlHeadersObject.headers;
