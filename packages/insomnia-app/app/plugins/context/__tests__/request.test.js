@@ -2,13 +2,6 @@ import * as plugin from '../request';
 import * as models from '../../../models';
 import {globalBeforeEach} from '../../../__jest__/before-each';
 
-const PLUGIN = {
-  name: 'my-plugin',
-  version: '1.0.0',
-  directory: '/plugins/my-plugin',
-  module: {}
-};
-
 const CONTEXT = {
   user_key: 'my_user_key',
   hello: 'world',
@@ -25,7 +18,7 @@ describe('init()', () => {
   });
 
   it('initializes correctly', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'addHeader',
@@ -49,7 +42,7 @@ describe('init()', () => {
   });
 
   it('fails to initialize without request', () => {
-    expect(() => plugin.init(PLUGIN))
+    expect(() => plugin.init())
       .toThrowError('contexts.request initialized without request');
   });
 });
@@ -70,7 +63,7 @@ describe('request.*', () => {
   });
 
   it('works for basic getters', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
     expect(result.request.getId()).toBe('req_1');
     expect(result.request.getName()).toBe('My Request');
     expect(result.request.getUrl()).toBe('');
@@ -78,7 +71,7 @@ describe('request.*', () => {
   });
 
   it('works for headers', async () => {
-    const result = plugin.init(PLUGIN, await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
 
     // getHeaders()
     expect(result.request.getHeaders()).toEqual([
@@ -112,7 +105,7 @@ describe('request.*', () => {
     const request = await models.request.getById('req_1');
     request.cookies = []; // Because the plugin technically needs a RenderedRequest
 
-    const result = plugin.init(PLUGIN, request, CONTEXT);
+    const result = plugin.init(request, CONTEXT);
 
     result.request.setCookie('foo', 'bar');
     result.request.setCookie('foo', 'baz');
@@ -123,7 +116,7 @@ describe('request.*', () => {
     const request = await models.request.getById('req_1');
     request.cookies = []; // Because the plugin technically needs a RenderedRequest
 
-    const result = plugin.init(PLUGIN, request, CONTEXT);
+    const result = plugin.init(request, CONTEXT);
 
     // getEnvironment
     expect(result.request.getEnvironment()).toEqual({

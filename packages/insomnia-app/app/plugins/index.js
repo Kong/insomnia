@@ -37,6 +37,7 @@ const CORE_PLUGINS = [
   'insomnia-plugin-file',
   'insomnia-plugin-now',
   'insomnia-plugin-uuid',
+  'insomnia-plugin-prompt',
   'insomnia-plugin-request',
   'insomnia-plugin-response'
 ];

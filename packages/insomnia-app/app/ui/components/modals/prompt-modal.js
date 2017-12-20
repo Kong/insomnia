@@ -20,6 +20,7 @@ class PromptModal extends PureComponent {
       upperCase: false,
       hint: null,
       inputType: 'text',
+      cancelable: true,
       hints: []
     };
   }
@@ -66,6 +67,7 @@ class PromptModal extends PureComponent {
       selectText,
       upperCase,
       hint,
+      cancelable,
       inputType,
       placeholder,
       label,
@@ -82,6 +84,7 @@ class PromptModal extends PureComponent {
       defaultValue,
       submitName,
       selectText,
+      cancelable,
       placeholder,
       upperCase,
       hint,
@@ -107,7 +110,7 @@ class PromptModal extends PureComponent {
     );
 
     return (
-      <div type="button" key={hint} className={classes}>
+      <div key={hint} className={classes}>
         <Button className="tall" onClick={this._handleSelectHint} value={hint}>
           {hint}
         </Button>
@@ -131,7 +134,8 @@ class PromptModal extends PureComponent {
       placeholder,
       label,
       upperCase,
-      hints
+      hints,
+      cancelable
     } = this.state;
 
     const input = (
@@ -152,7 +156,7 @@ class PromptModal extends PureComponent {
     }
 
     return (
-      <Modal ref={this._setModalRef}>
+      <Modal ref={this._setModalRef} noEscape={!cancelable}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">

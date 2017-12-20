@@ -1,10 +1,8 @@
 // @flow
-import type {Plugin} from '../';
 import type {RenderedRequest} from '../../common/render';
 import * as misc from '../../common/misc';
 
 export function init (
-  plugin: Plugin,
   renderedRequest: RenderedRequest,
   renderedContext: Object
 ): {request: Object} {

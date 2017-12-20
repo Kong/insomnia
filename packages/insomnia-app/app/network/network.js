@@ -4,7 +4,7 @@ import type {Request, RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
 import type {RenderedRequest} from '../common/render';
-import {getRenderContext, getRenderedRequest} from '../common/render';
+import {getRenderedRequest, getRenderedRequestAndContext, RENDER_PURPOSE_SEND} from '../common/render';
 import mkdirp from 'mkdirp';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
@@ -15,7 +15,7 @@ import * as electron from 'electron';
 import * as models from '../models';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
 import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, waitForStreamToFinish} from '../common/misc';
-import {setDefaultProtocol, smartEncodeUrl, buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
+import {buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol, smartEncodeUrl} from 'insomnia-url';
 import fs from 'fs';
 import * as db from '../common/database';
 import * as CACerts from './cacert';
@@ -733,8 +733,14 @@ export async function send (
     throw new Error(`Failed to find request to send for ${requestId}`);
   }
 
-  const renderedRequestBeforePlugins = await getRenderedRequest(request, environmentId);
-  const renderedContextBeforePlugins = await getRenderContext(request, environmentId, ancestors);
+  const renderResult = await getRenderedRequestAndContext(
+    request,
+    environmentId,
+    RENDER_PURPOSE_SEND
+  );
+
+  const renderedRequestBeforePlugins = renderResult.request;
+  const renderedContextBeforePlugins = renderResult.context;
 
   const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
   const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
@@ -775,8 +781,8 @@ async function _applyRequestPluginHooks (
     newRenderedRequest = clone(newRenderedRequest);
 
     const context = {
-      ...pluginContexts.app.init(plugin),
-      ...pluginContexts.request.init(plugin, newRenderedRequest, renderedContext)
+      ...pluginContexts.app.init(),
+      ...pluginContexts.request.init(newRenderedRequest, renderedContext)
     };
 
     try {
@@ -795,8 +801,8 @@ async function _applyResponsePluginHooks (
 ): Promise<void> {
   for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
-      ...pluginContexts.app.init(plugin),
-      ...pluginContexts.response.init(plugin, response)
+      ...pluginContexts.app.init(),
+      ...pluginContexts.response.init(response)
     };
 
     try {

@@ -1,13 +1,35 @@
 // @flow
-import type {Plugin} from '../';
 import * as electron from 'electron';
 import {showAlert} from '../../ui/components/modals/index';
+import {showPrompt} from '../../ui/components/modals';
+import {RENDER_PURPOSE_SEND} from '../../common/render';
 
-export function init (plugin: Plugin): {app: Object} {
+export function init (renderPurpose?: string): {app: Object} {
   return {
     app: {
-      alert (message: string): Promise<void> {
-        return showAlert({title: `Plugin ${plugin.name}`, message: message || ''});
+      alert (options: {title: string, message: string}): Promise<void> {
+        if (renderPurpose !== RENDER_PURPOSE_SEND) {
+          return Promise.resolve();
+        }
+
+        return showAlert(options || {});
+      },
+      prompt (options: {title: string, label?: string, defaultValue?: string, submitName?: string}): Promise<string> {
+        options = options || {};
+
+        if (renderPurpose !== RENDER_PURPOSE_SEND) {
+          return Promise.resolve(options.defaultValue || '');
+        }
+
+        return new Promise(resolve => {
+          showPrompt({
+            ...(options || {}),
+            cancelable: false,
+            onComplete (value: string) {
+              resolve(value);
+            }
+          });
+        });
       },
       getPath (name: string): string {
         switch (name.toLowerCase()) {
@@ -18,6 +40,10 @@ export function init (plugin: Plugin): {app: Object} {
         }
       },
       async showSaveDialog (options: {defaultPath?: string} = {}): Promise<string | null> {
+        if (renderPurpose !== RENDER_PURPOSE_SEND) {
+          return Promise.resolve(null);
+        }
+
         return new Promise(resolve => {
           const saveOptions = {
             title: 'Save File',

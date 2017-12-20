@@ -1,5 +1,4 @@
 // @flow
-import type {Plugin} from '../';
 import type {ResponseHeader} from '../../models/response';
 import * as models from '../../models/index';
 import {Readable} from 'stream';
@@ -16,7 +15,6 @@ type MaybeResponse = {
 }
 
 export function init (
-  plugin: Plugin,
   response: MaybeResponse,
   bodyBuffer: Buffer | null = null
 ): {response: Object} {
