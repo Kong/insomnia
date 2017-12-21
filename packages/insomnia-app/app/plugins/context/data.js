@@ -1,8 +1,7 @@
 // @flow
-import type {Plugin} from '../';
 import {exportHAR, exportJSON, importRaw, importUri} from '../../common/import';
 
-export function init (plugin: Plugin): {'import': Object, 'export': Object} {
+export function init (): {'import': Object, 'export': Object} {
   return {
     'import': {
       async uri (uri: string, options: {workspaceId?: string} = {}): Promise<void> {

@@ -12,6 +12,8 @@ import type {Environment} from '../models/environment';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
+export const RENDER_PURPOSE_SEND = 'send';
+export const RENDER_PURPOSE_GENERAL = 'general';
 
 export type RenderedRequest = Request & {
   cookies: Array<{name: string, value: string, disabled?: boolean}>,
@@ -112,7 +114,7 @@ export async function render<T> (
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
-  async function next (x: any, path: string = name): Promise<any> {
+  async function next (x: any, path: string, first: boolean = false): Promise<any> {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
@@ -158,21 +160,26 @@ export async function render<T> (
 
       const keys = Object.keys(x);
       for (const key of keys) {
-        const pathPrefix = path ? path + '.' : '';
-        x[key] = await next(x[key], `${pathPrefix}${key}`);
+        if (first && key.indexOf('_') === 0) {
+          x[key] = await next(x[key], path);
+        } else {
+          const pathPrefix = path ? path + '.' : '';
+          x[key] = await next(x[key], `${pathPrefix}${key}`);
+        }
       }
     }
 
     return x;
   }
 
-  return next(newObj);
+  return next(newObj, name, true);
 }
 
 export async function getRenderContext (
   request: Request,
   environmentId: string,
-  ancestors: Array<BaseModel> | null = null
+  ancestors: Array<BaseModel> | null = null,
+  purpose: string | null = null
 ): Promise<Object> {
   if (!request) {
     return {};
@@ -201,21 +208,22 @@ export async function getRenderContext (
     workspaceId: workspace ? workspace._id : 'n/a'
   });
 
+  baseContext.getPurpose = () => purpose;
+
   // Generate the context we need to render
-  const context = await buildRenderContext(
+  return await buildRenderContext(
     ancestors,
     rootEnvironment,
     subEnvironment,
     baseContext
   );
-
-  return context;
 }
 
-export async function getRenderedRequest (
+export async function getRenderedRequestAndContext (
   request: Request,
-  environmentId: string
-): Promise<RenderedRequest> {
+  environmentId: string,
+  purpose?: string
+): Promise<{request: RenderedRequest, context: Object}> {
   const ancestors = await db.withAncestors(request, [
     models.request.type,
     models.requestGroup.type,
@@ -225,20 +233,17 @@ export async function getRenderedRequest (
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
 
-  const renderContext = await getRenderContext(request, environmentId, ancestors);
+  const renderContext = await getRenderContext(request, environmentId, ancestors, purpose);
 
   // Render all request properties
-  const renderedRequest = await render(
-    request,
+  const renderResult = await render(
+    {_request: request, _cookieJar: cookieJar},
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null
   );
 
-  // Render cookies
-  const renderedCookieJar = await render(
-    cookieJar,
-    renderContext
-  );
+  const renderedRequest = renderResult._request;
+  const renderedCookieJar = renderResult._cookieJar;
 
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
@@ -260,32 +265,44 @@ export async function getRenderedRequest (
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
 
   return {
-    // Add the yummy cookies
-    // TODO: Eventually get rid of RenderedRequest type and put these elsewhere
-    cookieJar: renderedCookieJar,
-    cookies: [],
+    context: renderContext,
+    request: {
+      // Add the yummy cookies
+      // TODO: Eventually get rid of RenderedRequest type and put these elsewhere
+      cookieJar: renderedCookieJar,
+      cookies: [],
 
-    // NOTE: Flow doesn't like Object.assign, so we have to do each property manually
-    // for now to convert Request to RenderedRequest.
-    _id: renderedRequest._id,
-    authentication: renderedRequest.authentication,
-    body: renderedRequest.body,
-    created: renderedRequest.created,
-    modified: renderedRequest.modified,
-    description: renderedRequest.description,
-    headers: renderedRequest.headers,
-    metaSortKey: renderedRequest.metaSortKey,
-    method: renderedRequest.method,
-    name: renderedRequest.name,
-    parameters: renderedRequest.parameters,
-    parentId: renderedRequest.parentId,
-    settingDisableRenderRequestBody: renderedRequest.settingDisableRenderRequestBody,
-    settingEncodeUrl: renderedRequest.settingEncodeUrl,
-    settingSendCookies: renderedRequest.settingSendCookies,
-    settingStoreCookies: renderedRequest.settingStoreCookies,
-    type: renderedRequest.type,
-    url: renderedRequest.url
+      // NOTE: Flow doesn't like Object.assign, so we have to do each property manually
+      // for now to convert Request to RenderedRequest.
+      _id: renderedRequest._id,
+      authentication: renderedRequest.authentication,
+      body: renderedRequest.body,
+      created: renderedRequest.created,
+      modified: renderedRequest.modified,
+      description: renderedRequest.description,
+      headers: renderedRequest.headers,
+      metaSortKey: renderedRequest.metaSortKey,
+      method: renderedRequest.method,
+      name: renderedRequest.name,
+      parameters: renderedRequest.parameters,
+      parentId: renderedRequest.parentId,
+      settingDisableRenderRequestBody: renderedRequest.settingDisableRenderRequestBody,
+      settingEncodeUrl: renderedRequest.settingEncodeUrl,
+      settingSendCookies: renderedRequest.settingSendCookies,
+      settingStoreCookies: renderedRequest.settingStoreCookies,
+      type: renderedRequest.type,
+      url: renderedRequest.url
+    }
   };
+}
+
+export async function getRenderedRequest (
+  request: Request,
+  environmentId: string,
+  purpose?: string
+): Promise<RenderedRequest> {
+  const result = await getRenderedRequestAndContext(request, environmentId, purpose);
+  return result.request;
 }
 
 /**

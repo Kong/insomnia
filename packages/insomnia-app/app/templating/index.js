@@ -54,7 +54,7 @@ export function render (text: string, config: Object = {}): Promise<string> {
           : 'error';
 
         const newError = new RenderError(sanitizedMsg);
-        newError.path = path || null;
+        newError.path = path || '';
         newError.message = sanitizedMsg;
         newError.location = {line, column};
         newError.type = 'render';

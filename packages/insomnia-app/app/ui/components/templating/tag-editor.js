@@ -509,6 +509,12 @@ class TagEditor extends React.PureComponent<Props, State> {
       typeof argDefinition.displayName === 'function'
     ) ? fnOrString(argDefinition.displayName, argDatas) : '';
 
+    let validationError = '';
+    const canValidate = argDefinition.type === 'string' || argDefinition.type === 'number';
+    if (canValidate && typeof argDefinition.validate === 'function') {
+      validationError = argDefinition.validate(strValue) || '';
+    }
+
     const formControlClasses = classnames({
       'form-control': true,
       'form-control--thin': argDefinition.type === 'boolean',
@@ -522,6 +528,7 @@ class TagEditor extends React.PureComponent<Props, State> {
             {fnOrString(displayName, argDatas)}
             {isVariable && <span className="faded space-left">(Variable)</span>}
             {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+            {validationError && <span className="font-error space-left">{validationError}</span>}
             {argInputVariable || argInput}
           </label>
         </div>
