@@ -1,24 +1,11 @@
-# Insomnia Default Headers
+# Insomnia OS Template Tag
 
-[![Npm Version](https://img.shields.io/npm/v/insomnia-plugin-default-headers.svg)](https://www.npmjs.com/package/insomnia-plugin-default-headers)
+[![Npm Version](https://img.shields.io/npm/v/insomnia-plugin-os.svg)](https://www.npmjs.com/package/insomnia-plugin-os)
 
-This is a plugin for [Insomnia](https://insomnia.rest) that allows users to set default
-headers for requests.
+This is a plugin for [Insomnia](https://insomnia.rest) that provides access to some 
+convenient functions from the NodeJS `os` package.
 
 ## Installation
 
-Install the `insomnia-plugin-default-headers` plugin from Preferences > Plugins.
-
-## Usage
-
-Headers can be added by setting a `DEFAULT_HEADERS` environment variable.
-
-```json
-{
-	"DEFAULT_HEADERS": {
-		"Content-Type": "application/json",
-		"Connection": "close"
-	}
-}
-```
+Install the `insomnia-plugin-os` plugin from Preferences > Plugins.
 
