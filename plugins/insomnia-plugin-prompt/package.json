@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-prompt",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia prompt template tag",
   "license": "MIT",
