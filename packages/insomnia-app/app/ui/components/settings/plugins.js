@@ -54,7 +54,7 @@ class Plugins extends React.PureComponent<void, State> {
 
     const newState = {isInstallingFromNpm: false, error: ''};
     try {
-      await installPlugin(this.state.npmPluginValue);
+      await installPlugin(this.state.npmPluginValue.trim());
       await this._handleRefreshPlugins();
     } catch (err) {
       newState.error = err.message;
