@@ -30,7 +30,8 @@ describe('implicit', () => {
       state: STATE,
       error: null,
       error_description: null,
-      error_uri: null
+      error_uri: null,
+      nonce: null
     });
   });
 });

@@ -9,10 +9,10 @@ export default async function (
   clientId: string,
   redirectUri: string = '',
   scope: string = '',
-  state: string = ''
+  state: string = '',
+  responseType: string = ''
 ): Promise<Object> {
   const params = [
-    {name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_TOKEN},
     {name: c.P_CLIENT_ID, value: clientId}
   ];
 
@@ -20,6 +20,8 @@ export default async function (
   redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
   scope && params.push({name: c.P_SCOPE, value: scope});
   state && params.push({name: c.P_STATE, value: state});
+  responseType === c.RESPONSE_TYPE_BOTH && params.push({name: c.P_NONCE, value: 'nonce'});
+  responseType && params.push({name: c.P_RESPONSE_TYPE, value: responseType});
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
@@ -33,6 +35,7 @@ export default async function (
       c.P_ACCESS_TOKEN,
       c.P_TOKEN_TYPE,
       c.P_EXPIRES_IN,
+      c.P_NONCE,
       c.P_SCOPE,
       c.P_STATE,
       c.P_ERROR,
