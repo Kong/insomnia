@@ -159,6 +159,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('tokenPrefix', value);
   }
 
+  _handleChangeAudience (value: string): void {
+    this._handleChangeProperty('audience', value);
+  }
+
   _handleChangeGrantType (e: SyntheticEvent<HTMLInputElement>): void {
     trackEvent('OAuth 2', 'Change Grant Type', e.currentTarget.value);
     this._handleChangeProperty('grantType', e.currentTarget.value);
@@ -306,6 +310,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'Change Authorization header prefix from Bearer to something else'
     );
 
+    const audience = this.renderInputRow(
+      'Audience',
+      'audience',
+      this._handleChangeAudience,
+      'Indicate what resource server to access'
+    );
+
     const credentialsInBody = this.renderSelectRow(
       'Credentials',
       'credentialsInBody',
@@ -342,7 +353,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       advancedFields = [
         scope,
         credentialsInBody,
-        tokenPrefix
+        tokenPrefix,
+        audience
       ];
     } else if (grantType === GRANT_TYPE_PASSWORD) {
       basicFields = [
