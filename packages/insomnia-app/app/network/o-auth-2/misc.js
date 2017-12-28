@@ -54,7 +54,7 @@ export function authorizeUserInWindow (url, urlSuccessRegex = /.*/, urlFailureRe
       }
     });
 
-    function parseUrl (currentUrl) {
+    function _parseUrl (currentUrl) {
       if (currentUrl.match(urlSuccessRegex)) {
         console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`);
         finalUrl = currentUrl;
@@ -75,12 +75,12 @@ export function authorizeUserInWindow (url, urlSuccessRegex = /.*/, urlFailureRe
     child.webContents.on('did-navigate', () => {
       // Be sure to resolve URL so that we can handle redirects with no host like /foo/bar
       const currentUrl = child.webContents.getURL();
-      parseUrl(currentUrl);
+      _parseUrl(currentUrl);
     });
 
     child.webContents.on('did-fail-load', (e, errorCode, errorDescription, url) => {
       // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
-      parseUrl(url);
+      _parseUrl(url);
     });
 
     // Show the window to the user after it loads
