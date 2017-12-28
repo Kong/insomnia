@@ -32,6 +32,23 @@ export function authorizeUserInWindow (url, urlSuccessRegex = /.*/, urlFailureRe
     let finalUrl = null;
     let hasError = false;
 
+    function _parseUrl (currentUrl) {
+      if (currentUrl.match(urlSuccessRegex)) {
+        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`);
+        finalUrl = currentUrl;
+        child.close();
+      } else if (currentUrl.match(urlFailureRegex)) {
+        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
+        hasError = true;
+        child.close();
+      } else if (currentUrl === url) {
+        // It's the first one, so it's not a redirect
+        console.log(`[oauth2] Loaded "${currentUrl}"`);
+      } else {
+        console.log(`[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`);
+      }
+    }
+
     // Create a child window
     const child = new electron.remote.BrowserWindow({
       webPreferences: {
@@ -53,23 +70,6 @@ export function authorizeUserInWindow (url, urlSuccessRegex = /.*/, urlFailureRe
         reject(new Error(errorDescription));
       }
     });
-
-    function _parseUrl (currentUrl) {
-      if (currentUrl.match(urlSuccessRegex)) {
-        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`);
-        finalUrl = currentUrl;
-        child.close();
-      } else if (currentUrl.match(urlFailureRegex)) {
-        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
-        hasError = true;
-        child.close();
-      } else if (currentUrl === url) {
-        // It's the first one, so it's not a redirect
-        console.log(`[oauth2] Loaded "${currentUrl}"`);
-      } else {
-        console.log(`[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`);
-      }
-    }
 
     // Catch the redirect after login
     child.webContents.on('did-navigate', () => {
