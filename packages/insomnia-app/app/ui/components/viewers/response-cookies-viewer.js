@@ -51,7 +51,7 @@ class ResponseCookiesViewer extends PureComponent {
           </div>
         )}
 
-        <table className="table--fancy table--striped">
+        <table className="table--fancy table--striped table--compact">
           <thead>
           <tr>
             <th>Name</th>
