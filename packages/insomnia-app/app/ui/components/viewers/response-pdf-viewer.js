@@ -13,7 +13,7 @@ type State = {
 };
 
 @autobind
-class PDFViewer extends React.PureComponent<Props, State> {
+class ResponsePDFViewer extends React.PureComponent<Props, State> {
   container: ?HTMLDivElement;
   debounceTimeout: any;
 
@@ -109,4 +109,4 @@ class PDFViewer extends React.PureComponent<Props, State> {
   }
 }
 
-export default PDFViewer;
+export default ResponsePDFViewer;

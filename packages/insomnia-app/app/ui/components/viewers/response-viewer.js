@@ -3,7 +3,8 @@ import * as React from 'react';
 import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
 import {shell} from 'electron';
-import PDFViewer from '../pdf-viewer';
+import PDFViewer from './response-pdf-viewer';
+import CSVViewer from './response-csv-viewer';
 import CodeEditor from '../codemirror/code-editor';
 import ResponseWebView from './response-webview';
 import MultipartViewer from './response-multipart';
@@ -277,6 +278,12 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <div className="tall wide scrollable">
           <PDFViewer body={bodyBuffer} uniqueKey={responseId}/>
+        </div>
+      );
+    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
+      return (
+        <div className="tall wide scrollable">
+          <CSVViewer body={bodyBuffer}/>
         </div>
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
