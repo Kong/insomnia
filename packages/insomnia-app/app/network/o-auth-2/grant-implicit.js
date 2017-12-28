@@ -20,14 +20,14 @@ export default async function (
   redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
   scope && params.push({name: c.P_SCOPE, value: scope});
   state && params.push({name: c.P_STATE, value: state});
-  responseType === c.RESPONSE_TYPE_BOTH && params.push({name: c.P_NONCE, value: 'nonce'});
+  responseType === c.RESPONSE_TYPE_BOTH && params.push({name: c.P_NONCE, value: 'nonce' + Math.floor(Math.random() * 999999) + 1 });
   responseType && params.push({name: c.P_RESPONSE_TYPE, value: responseType});
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
 
-  const redirectedTo = await authorizeUserInWindow(finalUrl, /(access_token=|error=)/);
+  const redirectedTo = await authorizeUserInWindow(finalUrl, /(access_token=)/, /(error=)/);
   const fragment = redirectedTo.split('#')[1];
 
   if (fragment) {

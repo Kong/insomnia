@@ -27,9 +27,10 @@ export function responseToObject (body, keys) {
   return results;
 }
 
-export function authorizeUserInWindow (url, urlRegex = /.*/) {
+export function authorizeUserInWindow (url, urlSuccessRegex = /.*/, urlFailureRegex = /.*/) {
   return new Promise((resolve, reject) => {
     let finalUrl = null;
+    let hasError = false;
 
     // Create a child window
     const child = new electron.remote.BrowserWindow({
@@ -45,24 +46,41 @@ export function authorizeUserInWindow (url, urlRegex = /.*/) {
       if (finalUrl) {
         resolve(finalUrl);
       } else {
-        reject(new Error('Authorization window closed'));
+        let errorDescription = 'Authorization window closed';
+        if (hasError) {
+          errorDescription += ' after oauth error';
+        }
+        reject(new Error(errorDescription));
       }
     });
 
-    // Catch the redirect after login
-    child.webContents.on('did-navigate', () => {
-      // Be sure to resolve URL so that we can handle redirects with no host like /foo/bar
-      const currentUrl = child.webContents.getURL();
-      if (currentUrl.match(urlRegex)) {
-        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlRegex.toString()}`);
+    function parseUrl (currentUrl) {
+      if (currentUrl.match(urlSuccessRegex)) {
+        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`);
         finalUrl = currentUrl;
+        child.close();
+      } else if (currentUrl.match(urlFailureRegex)) {
+        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
+        hasError = true;
         child.close();
       } else if (currentUrl === url) {
         // It's the first one, so it's not a redirect
         console.log(`[oauth2] Loaded "${currentUrl}"`);
       } else {
-        console.log(`[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlRegex.toString()}`);
+        console.log(`[oauth2] Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`);
       }
+    }
+
+    // Catch the redirect after login
+    child.webContents.on('did-navigate', () => {
+      // Be sure to resolve URL so that we can handle redirects with no host like /foo/bar
+      const currentUrl = child.webContents.getURL();
+      parseUrl(currentUrl);
+    });
+
+    child.webContents.on('did-fail-load', (e, errorCode, errorDescription, url) => {
+      // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
+      parseUrl(url);
     });
 
     // Show the window to the user after it loads
