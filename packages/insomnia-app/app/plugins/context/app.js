@@ -7,14 +7,21 @@ import {RENDER_PURPOSE_SEND} from '../../common/render';
 export function init (renderPurpose?: string): {app: Object} {
   return {
     app: {
-      alert (options: {title: string, message: string}): Promise<void> {
+      alert (title: string, message?: string): Promise<void> {
         if (renderPurpose !== RENDER_PURPOSE_SEND) {
           return Promise.resolve();
         }
 
-        return showAlert(options || {});
+        return showAlert({title, message});
       },
-      prompt (options: {title: string, label?: string, defaultValue?: string, submitName?: string}): Promise<string> {
+      prompt (
+        title: string,
+        options: {
+          label?: string,
+          defaultValue?: string,
+          submitName?: string
+        }
+      ): Promise<string> {
         options = options || {};
 
         if (renderPurpose !== RENDER_PURPOSE_SEND) {
@@ -23,6 +30,7 @@ export function init (renderPurpose?: string): {app: Object} {
 
         return new Promise(resolve => {
           showPrompt({
+            title,
             ...(options || {}),
             cancelable: false,
             onComplete (value: string) {
