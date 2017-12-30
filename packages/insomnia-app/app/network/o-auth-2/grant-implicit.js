@@ -7,7 +7,7 @@ export default async function (
   requestId: string,
   authorizationUrl: string,
   clientId: string,
-  responseType: string = c.RESPONSE_TYPE_TOKEN,
+  responseType: string = c.RESPONSE_TYPE_ACCESS,
   redirectUri: string = '',
   scope: string = '',
   state: string = ''
