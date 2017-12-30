@@ -34,13 +34,13 @@ describe('app.alert()', () => {
     const result = plugin.init(RENDER_PURPOSE_SEND);
 
     // Make sure it returns result of showAlert()
-    expect(result.app.alert()).toBe('dummy-return-value');
-    expect(result.app.alert({title: 'My message'})).toBe('dummy-return-value');
+    expect(result.app.alert('Title')).toBe('dummy-return-value');
+    expect(result.app.alert('Title', 'Message')).toBe('dummy-return-value');
 
     // Make sure it passes correct arguments
     expect(modals.showAlert.mock.calls).toEqual([
-      [{}],
-      [{title: 'My message'}]
+      [{title: 'Title'}],
+      [{title: 'Title', message: 'Message'}]
     ]);
   });
 });
@@ -62,13 +62,13 @@ describe('app.prompt()', () => {
     const result = plugin.init(RENDER_PURPOSE_SEND);
 
     // Make sure it returns result of showAlert()
-    result.app.prompt();
-    result.app.prompt({title: 'My message'});
+    result.app.prompt('Title');
+    result.app.prompt('Title', {label: 'Label'});
 
     // Make sure it passes correct arguments
     expect(modals.showPrompt.mock.calls).toEqual([
-      [{cancelable: false, onComplete: expect.any(Function)}],
-      [{cancelable: false, onComplete: expect.any(Function), title: 'My message'}]
+      [{title: 'Title', cancelable: false, onComplete: expect.any(Function)}],
+      [{title: 'Title', label: 'Label', cancelable: false, onComplete: expect.any(Function)}]
     ]);
   });
 });
