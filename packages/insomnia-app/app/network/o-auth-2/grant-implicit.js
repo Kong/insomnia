@@ -16,13 +16,15 @@ export default async function (
     {name: c.P_CLIENT_ID, value: responseType},
     {name: c.P_CLIENT_ID, value: clientId}
   ];
-  const RESPONSE_NONCE: string = ((Math.floor(Math.random() * 9999999999999) + 1): any);
 
   // Add optional params
+  if (responseType === c.RESPONSE_TYPE_BOTH) {
+    const responseNonce: string = ((Math.floor(Math.random() * 9999999999999) + 1): any);
+    params.push({name: c.P_NONCE, value: responseNonce});
+  }
   redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
   scope && params.push({name: c.P_SCOPE, value: scope});
   state && params.push({name: c.P_STATE, value: state});
-  responseType === c.RESPONSE_TYPE_BOTH && params.push({name: c.P_NONCE, value: RESPONSE_NONCE});
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
