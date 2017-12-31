@@ -58,8 +58,6 @@ export function authorizeUserInWindow (url, urlSuccessRegex = /.*/, urlFailureRe
       show: false
     });
 
-    child.openDevTools();
-
     // Finish on close
     child.on('close', () => {
       if (finalUrl) {
