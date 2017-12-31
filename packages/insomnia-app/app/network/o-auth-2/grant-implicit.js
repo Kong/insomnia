@@ -13,7 +13,7 @@ export default async function (
   state: string = ''
 ): Promise<Object> {
   const params = [
-    {name: c.P_CLIENT_ID, value: responseType},
+    {name: c.P_RESPONSE_TYPE, value: responseType},
     {name: c.P_CLIENT_ID, value: clientId}
   ];
 

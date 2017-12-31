@@ -94,10 +94,10 @@ async function _getOAuth2ImplicitHeader (
     requestId,
     authentication.authorizationUrl,
     authentication.clientId,
+    authentication.responseType,
     authentication.redirectUrl,
     authentication.scope,
-    authentication.state,
-    authentication.responseType
+    authentication.state
   );
 
   return _updateOAuth2Token(requestId, results);
