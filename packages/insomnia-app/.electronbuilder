@@ -47,16 +47,7 @@
     ]
   },
   "snap": {
-    "plugs": ["default", "desktop"],
-    "stagePackages": ["libasound2",
-                      "libcurl3",
-                      "libgconf-2-4",
-                      "libnotify4",
-                      "libnspr4",
-                      "libnss3",
-                      "libpulse0",
-                      "libxss1",
-                      "libxtst6"]
+    "stagePackages": ["default", "libcurl3"]
   },
   "deb": {
     "depends": [
