@@ -57,6 +57,47 @@ describe('buildMultipart()', () => {
     ].join('\r\n'));
   });
 
+  it('supports unicode names', async () => {
+    const {filePath, boundary, contentLength} = await buildMultipart([
+      {name: 'ü†ƒ-∞', value: 'ü†ƒ-∞'}
+    ]);
+
+    const escName = '%C3%BC%E2%80%A0%C6%92-%E2%88%9E';
+    expect(boundary).toBe(DEFAULT_BOUNDARY);
+    expect(contentLength).toBe(141);
+    expect(fs.readFileSync(filePath, 'utf8')).toBe([
+      `--${boundary}`,
+      `Content-Disposition: form-data; name*=utf-8''${escName}`,
+      '',
+      'ü†ƒ-∞',
+      `--${boundary}--`,
+      ''
+    ].join('\r\n'));
+  });
+
+  it('supports unicode filenames', async () => {
+    const fileName = path.resolve(path.join(__dirname, './üñîçø∂é.txt'));
+    const {filePath, boundary, contentLength} = await buildMultipart([{
+      name: 'file',
+      type: 'file',
+      fileName: fileName,
+      contentType: 'text/plain; charset="UTF-8"'
+    }]);
+    const escFileName = '%C3%BC%C3%B1%C3%AE%C3%A7%C3%B8%E2%88%82%C3%A9.txt';
+
+    expect(boundary).toBe(DEFAULT_BOUNDARY);
+    expect(contentLength).toBe(294);
+    expect(fs.readFileSync(filePath, 'utf8')).toBe([
+      `--${boundary}`,
+      `Content-Disposition: form-data; name="file"; filename*=utf-8''${escFileName}`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      '',
+      'Üñîçø∂é¡\n\nWe’ve come a long way from “Smart Quotes,” haven’t we? :-)\n',
+      `--${boundary}--`,
+      ''
+    ].join('\r\n'));
+  });
+
   it('skips entries with no name or value', async () => {
     const {filePath, boundary, contentLength} = await buildMultipart([
       {value: 'bar'},

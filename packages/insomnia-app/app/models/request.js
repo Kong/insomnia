@@ -34,7 +34,8 @@ export type RequestBodyParameter = {
   disabled?: boolean,
   id?: string,
   fileName?: string,
-  type?: string
+  type?: string,
+  contentType?: string
 };
 
 export type RequestBody = {
