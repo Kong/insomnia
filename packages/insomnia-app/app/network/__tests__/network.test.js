@@ -307,6 +307,7 @@ describe('actuallySend()', () => {
     const settings = await models.settings.create();
     await models.cookieJar.create({parentId: workspace._id});
     const fileName = pathResolve(pathJoin(__dirname, './testfile.txt'));
+    const uniFile = pathResolve(pathJoin(__dirname, './üñîçø∂é.txt'));
 
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
@@ -319,6 +320,7 @@ describe('actuallySend()', () => {
         params: [
           // Should ignore value and send the file since type is set to file
           {name: 'foo', fileName: fileName, value: 'bar', type: 'file'},
+          {name: 'üñî', fileName: uniFile, value: 'ignored', type: 'file'},
 
           // Some extra params
           {name: 'a', value: 'AA'},
@@ -354,7 +356,7 @@ describe('actuallySend()', () => {
           'Accept: */*',
           'Accept-Encoding: '
         ],
-        INFILESIZE_LARGE: 244,
+        INFILESIZE_LARGE: 530,
         NOPROGRESS: false,
         READDATA: [
           `--${DEFAULT_BOUNDARY}`,
@@ -362,6 +364,13 @@ describe('actuallySend()', () => {
           'Content-Type: text/plain',
           '',
           fs.readFileSync(fileName),
+          `--${DEFAULT_BOUNDARY}`,
+          'Content-Disposition: form-data; ' +
+          "name*=utf-8''%C3%BC%C3%B1%C3%AE; " +
+          "filename*=utf-8''%C3%BC%C3%B1%C3%AE%C3%A7%C3%B8%E2%88%82%C3%A9.txt",
+          'Content-Type: text/plain', // TODO: infer charset for text/plain...?
+          '',
+          fs.readFileSync(uniFile),
           `--${DEFAULT_BOUNDARY}`,
           'Content-Disposition: form-data; name="a"',
           '',

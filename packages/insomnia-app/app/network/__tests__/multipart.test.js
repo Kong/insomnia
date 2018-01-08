@@ -57,7 +57,7 @@ describe('buildMultipart()', () => {
     ].join('\r\n'));
   });
 
-  it('supports unicode names', async () => {
+  it('supports unicode field names', async () => {
     const {filePath, boundary, contentLength} = await buildMultipart([
       {name: 'ü†ƒ-∞', value: 'ü†ƒ-∞'}
     ]);
@@ -75,7 +75,7 @@ describe('buildMultipart()', () => {
     ].join('\r\n'));
   });
 
-  it('supports unicode filenames', async () => {
+  it('supports unicode filenames with custom content type', async () => {
     const fileName = path.resolve(path.join(__dirname, './üñîçø∂é.txt'));
     const {filePath, boundary, contentLength} = await buildMultipart([{
       name: 'file',
@@ -86,13 +86,37 @@ describe('buildMultipart()', () => {
     const escFileName = '%C3%BC%C3%B1%C3%AE%C3%A7%C3%B8%E2%88%82%C3%A9.txt';
 
     expect(boundary).toBe(DEFAULT_BOUNDARY);
-    expect(contentLength).toBe(294);
+    expect(contentLength).toBe(308);
     expect(fs.readFileSync(filePath, 'utf8')).toBe([
       `--${boundary}`,
       `Content-Disposition: form-data; name="file"; filename*=utf-8''${escFileName}`,
       'Content-Type: text/plain; charset="UTF-8"',
       '',
-      'Üñîçø∂é¡\n\nWe’ve come a long way from “Smart Quotes,” haven’t we? :-)\n',
+      'ASCII, ISO-8859-1 (LATIN-1), and WINDOWS-1252 are dead.\n\nLong live Üñîçø∂é and ü†ƒ-∞!\n',
+      `--${boundary}--`,
+      ''
+    ].join('\r\n'));
+  });
+
+  it('supports the option to send raw UTF-8 field and filenames', async () => {
+    const fileName = path.resolve(path.join(__dirname, './üñîçø∂é.txt'));
+    const {filePath, boundary, contentLength} = await buildMultipart([{
+      name: 'file',
+      type: 'file',
+      fileName: fileName,
+      contentType: 'text/plain; charset="UTF-8"'
+    }], {
+      useRFC2231ForMultipart: false
+    });
+
+    expect(boundary).toBe(DEFAULT_BOUNDARY);
+    expect(contentLength).toEqual(272);
+    expect(fs.readFileSync(filePath, 'utf8')).toBe([
+      `--${boundary}`,
+      `Content-Disposition: form-data; name="file"; filename="üñîçø∂é.txt"`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      '',
+      'ASCII, ISO-8859-1 (LATIN-1), and WINDOWS-1252 are dead.\n\nLong live Üñîçø∂é and ü†ƒ-∞!\n',
       `--${boundary}--`,
       ''
     ].join('\r\n'));
