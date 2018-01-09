@@ -42,8 +42,12 @@
     "target": [
       "AppImage",
       "deb",
-      "tar.gz"
+      "tar.gz",
+      "snap"
     ]
+  },
+  "snap": {
+    "stagePackages": ["default", "libcurl3"]
   },
   "deb": {
     "depends": [
