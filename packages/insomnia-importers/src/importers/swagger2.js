@@ -23,10 +23,8 @@ module.exports.convert = async function (rawData) {
     _type: 'workspace',
     _id: WORKSPACE_ID,
     parentId: null,
-    created: Date.now(),
-    modified:  Date.now(),
     name: `${document.info.title} ${document.info.version}`,
-    description: document.info.description
+    description: document.info.description || ''
   };
 
   const baseEnv = {
@@ -45,9 +43,9 @@ module.exports.convert = async function (rawData) {
     parentId: baseEnv._id,
     name: 'Swagger env',
     data: {
-      base_path: document.basePath,
-      scheme: document.schemes[0],
-      host: document.host
+      base_path: document.basePath || '',
+      scheme: (document.schemes || ["http"])[0],
+      host: document.host || ''
     }
   }
 
@@ -72,7 +70,7 @@ module.exports.convert = async function (rawData) {
 async function parseDocument(rawData) {
   try {
     const parser = new SwaggerParser();
-    const document = JSON.parse(rawData) || SwaggerParser.YAML.parse(rawData);
+    const document = unthrowableParseJson(rawData) || SwaggerParser.YAML.parse(rawData);
     if(!document) {
       return null;
     }
@@ -81,6 +79,14 @@ async function parseDocument(rawData) {
     return dereferenced;
   } catch (err) {
     return null;
+  }
+
+  function unthrowableParseJson(rawData) {
+    try {
+      return JSON.parse(rawData)
+    } catch(err) {
+      return null;
+    }
   }
 }
 
@@ -148,7 +154,8 @@ function pathWithParamsAsVariables(path) {
  */
 function prepareQueryParams(endpointSchema) {
   const isSendInQuery = p => p.in === 'query';
-  const queryParameters = endpointSchema.parameters.filter(isSendInQuery);
+  const parameters = endpointSchema.parameters || [];
+  const queryParameters = parameters.filter(isSendInQuery);
   return convertParameters(queryParameters);
 }
 
@@ -160,7 +167,8 @@ function prepareQueryParams(endpointSchema) {
  */
 function prepareHeaders(endpointSchema) {
   const isSendInHeader = p => p.in === 'header';
-  const headerParameters = endpointSchema.parameters.filter(isSendInHeader);
+  const parameters = endpointSchema.parameters || [];
+  const headerParameters = parameters.filter(isSendInHeader);
   return convertParameters(headerParameters);
 }
 
@@ -181,12 +189,18 @@ function prepareBody(endpointSchema, globalMimeTypes) {
 
   if(supportedMimeType === MIMETYPE_JSON) {
     const isSendInBody = p => p.in === 'body';
-    const bodyParameter = endpointSchema.parameters.find(isSendInBody);
+    const parameters = endpointSchema.parameters || [];
+    const bodyParameter = parameters.find(isSendInBody);
+    if(!bodyParameter) {
+      return {
+        mimeType: supportedMimeType
+      }
+    }
+
     const example = (bodyParameter) ? generateParameterExample(bodyParameter.schema) : undefined;
     const text = JSON.stringify(example, null, 2);
-
     return {
-      supportedMimeType,
+      mimeType: supportedMimeType,
       text
     }
   }
