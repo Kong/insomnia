@@ -118,7 +118,7 @@
     "jsonlint": "^1.6.2",
     "jsonpath": "^0.2.12",
     "jwt-authentication": "^0.3.3",
-    "marked": "^0.3.6",
+    "marked": "^0.3.9",
     "mime-types": "^2.1.14",
     "mkdirp": "^0.5.1",
     "moment": "^2.18.1",

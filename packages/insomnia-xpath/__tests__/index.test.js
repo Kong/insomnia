@@ -27,6 +27,13 @@ describe('query()', () => {
     ]
   );
 
+  q('handles string query',
+    ['<x><y>foo</y><y>bar</y></x>', 'substring(//y[1], 2)'],
+    [
+      {inner: 'oo', outer: 'oo'}
+    ]
+  );
+
   it('handles invalid query', () => {
     expect(() => query('<hi>there</hi>', '//[]')).toThrowError('Invalid XPath query: //[]');
   });
