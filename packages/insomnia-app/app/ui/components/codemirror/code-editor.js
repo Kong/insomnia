@@ -331,7 +331,7 @@ class CodeEditor extends React.Component {
         code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
       } catch (err) {
         // Failed to parse filter (that's ok)
-        code = `<result></result>`;
+        code = `<error>${err.message}</error>`;
       }
     }
 
