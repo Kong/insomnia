@@ -29,7 +29,11 @@ function getDBFilePath (modelType) {
   // NOTE: Do not EVER change this. EVER!
   const {app} = electron.remote || electron;
   const basePath = app.getPath('userData');
-  return fs.realpathSync(fsPath.join(basePath, `insomnia.${modelType}.db`));
+  const dbPath = fsPath.join(basePath, `insomnia.${modelType}.db`);
+  if (fs.existsSync(dbPath)) {
+    return fs.realpathSync(dbPath);
+  }
+  return dbPath;
 }
 
 export async function initClient () {
