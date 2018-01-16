@@ -10,9 +10,9 @@ const importers = [
   require('./src/importers/curl')
 ];
 
-module.exports.convert = function (contents) {
+module.exports.convert = async function (contents) {
   for (const importer of importers) {
-    const resources = importer.convert(contents);
+    const resources = await importer.convert(contents);
 
     if (resources) {
       return {

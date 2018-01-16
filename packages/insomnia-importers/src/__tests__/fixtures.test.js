@@ -18,7 +18,7 @@ describe('Fixtures', () => {
       const prefix = input.replace(/-input\.[^.]+/, '');
       const output = `${prefix}-output.json`;
 
-      it(`Import ${name} ${input}`, () => {
+      it(`Import ${name} ${input}`, async () => {
 
         expect(typeof input).toBe('string');
         expect(typeof output).toBe('string');
@@ -29,7 +29,7 @@ describe('Fixtures', () => {
         expect(typeof inputContents).toBe('string');
         expect(typeof outputContents).toBe('string');
 
-        const results = importers.convert(inputContents);
+        const results = await importers.convert(inputContents);
         const expected = JSON.parse(outputContents);
 
         expected.__export_date = results.data.__export_date;
