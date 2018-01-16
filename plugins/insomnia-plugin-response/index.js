@@ -99,10 +99,8 @@ module.exports.templateTags = [{
 
       if (sanitizedFilter.indexOf('$') === 0) {
         return matchJSONPath(body, sanitizedFilter);
-      } else if (sanitizedFilter.indexOf('/') === 0) {
-        return matchXPath(body, sanitizedFilter);
       } else {
-        throw new Error(`Invalid format for response query: ${sanitizedFilter}`);
+        return matchXPath(body, sanitizedFilter);
       }
     } else {
       throw new Error(`Unknown field ${field}`);

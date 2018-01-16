@@ -211,6 +211,23 @@ describe('Response tag', () => {
       expect(result).toBe('World');
     });
 
+    it('renders query that does not start with slash', async () => {
+      const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
+
+      const responses = [{
+        _id: 'res_1',
+        parentId: 'req_1',
+        statusCode: 200,
+        contentType: 'application/xml',
+        _body: '<foo><bar hello="World">Hello World!</bar></foo>'
+      }];
+
+      const context = _genTestContext(requests, responses);
+      const result = await tag.run(context, 'body', 'req_1', 'substring(/foo/bar, 7)');
+
+      expect(result).toBe('World!');
+    });
+
     it('no results on invalid XML', async () => {
       const requests = [{_id: 'req_1', parentId: 'wrk_1'}];
 
