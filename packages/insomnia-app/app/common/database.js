@@ -4,6 +4,7 @@ import * as models from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
+import fs from 'fs';
 import {DB_PERSIST_INTERVAL} from './constants';
 import uuid from 'uuid';
 
@@ -28,7 +29,11 @@ function getDBFilePath (modelType) {
   // NOTE: Do not EVER change this. EVER!
   const {app} = electron.remote || electron;
   const basePath = app.getPath('userData');
-  return fsPath.join(basePath, `insomnia.${modelType}.db`);
+  const dbPath = fsPath.join(basePath, `insomnia.${modelType}.db`);
+  if (fs.existsSync(dbPath)) {
+    return fs.realpathSync(dbPath);
+  }
+  return dbPath;
 }
 
 export async function initClient () {
