@@ -82,5 +82,6 @@ export type PluginTemplateTag = {
   description: string,
   run: (context: PluginTemplateTagContext, ...arg: Array<any>) => Promise<any> | any,
   deprecated?: boolean,
+  validate?: (value: any) => ?string,
   priority?: number
 };

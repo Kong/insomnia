@@ -14,7 +14,7 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
     const headersString = headers.map(h => `${h.name}: ${h.value}`).join('\n');
 
     return [
-      <table key='table' className="table--fancy table--striped">
+      <table key='table' className="table--fancy table--striped table--compact">
         <thead>
         <tr>
           <th>Name</th>

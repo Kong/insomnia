@@ -11,6 +11,6 @@
   "dependencies": {
     "insomnia-cookies": "^0.0.4",
     "xmldom": "^0.1.27",
-    "xpath": "^0.0.26"
+    "xpath": "0.0.27"
   }
 }

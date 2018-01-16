@@ -1,5 +1,6 @@
 import * as models from '../models/index';
 import * as templating from './index';
+import * as pluginContexts from '../plugins/context';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 
@@ -60,6 +61,9 @@ export default class BaseExtension {
     // Pull out the meta helper
     const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
 
+    // Pull out the purpose
+    const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
+
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
@@ -67,6 +71,7 @@ export default class BaseExtension {
 
     // Define a helper context with utils
     const helperContext = {
+      ...pluginContexts.app.init(renderPurpose),
       context: renderContext,
       meta: renderMeta,
       util: {

@@ -1,3 +1,3 @@
 module.exports.requestHooks = [
-  require('./src/request-hook')
+  require('./src/default-headers')
 ];

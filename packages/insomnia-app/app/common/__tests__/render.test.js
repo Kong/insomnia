@@ -382,4 +382,30 @@ describe('render()', () => {
       expect(err.message).toBe('unknown block tag: invalid');
     }
   });
+
+  it('outputs correct error path', async () => {
+    const template = {
+      foo: [{bar: '{% foo %}'}]
+    };
+
+    try {
+      await renderUtils.render(template);
+      fail('Should have failed to render');
+    } catch (err) {
+      expect(err.path).toBe('foo[0].bar');
+    }
+  });
+
+  it('outputs correct error path when private first node', async () => {
+    const template = {
+      _foo: {_bar: {baz: '{% foo %}'}}
+    };
+
+    try {
+      await renderUtils.render(template);
+      fail('Should have failed to render');
+    } catch (err) {
+      expect(err.path).toBe('_bar.baz');
+    }
+  });
 });
