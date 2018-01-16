@@ -8,6 +8,7 @@ import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
 import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_IMPLICIT, GRANT_TYPE_PASSWORD} from '../../../../network/o-auth-2/constants';
+import {RESPONSE_TYPE_ID, RESPONSE_TYPE_ACCESS, RESPONSE_TYPE_BOTH} from '../../../../network/o-auth-2/constants';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
@@ -113,6 +114,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     const {request} = this.props;
     const authentication = Object.assign({}, request.authentication, {[property]: value});
     this.props.onChange(authentication);
+  }
+
+  _handlerChangeResponseType (e: SyntheticEvent<HTMLInputElement>): void {
+    this._handleChangeProperty('responseType', e.currentTarget.value);
   }
 
   _handleChangeClientId (value: string): void {
@@ -310,6 +315,18 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'Change Authorization header prefix from Bearer to something else'
     );
 
+    const responseType = this.renderSelectRow(
+      'Response Type',
+      'responseType',
+      [
+        {name: 'Access Token', value: RESPONSE_TYPE_ACCESS},
+        {name: 'ID Token', value: RESPONSE_TYPE_ID},
+        {name: 'ID and Access Token', value: RESPONSE_TYPE_BOTH}
+      ],
+      this._handlerChangeResponseType,
+      'Indicates the type of credentials returned in the response'
+    );
+
     const audience = this.renderInputRow(
       'Audience',
       'audience',
@@ -378,6 +395,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       ];
 
       advancedFields = [
+        responseType,
         scope,
         state,
         tokenPrefix
