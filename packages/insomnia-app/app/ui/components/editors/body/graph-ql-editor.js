@@ -154,12 +154,10 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }, 200);
   }
 
-  _getOperationNames (): Array<string> {
-    const {body} = this.state;
-
+  _getOperationNames (query: string): Array<string> {
     let documentAST;
     try {
-      documentAST = parse(body.query);
+      documentAST = parse(query);
     } catch (e) {
       return [];
     }
@@ -171,7 +169,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleBodyChange (query: string, variables?: Object): void {
-    const operationNames = this._getOperationNames();
+    const operationNames = this._getOperationNames(query);
 
     const body: GraphQLBody = {query};
 
