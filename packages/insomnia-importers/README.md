@@ -3,10 +3,10 @@
 [![Npm Version](https://img.shields.io/npm/v/insomnia-importers.svg)](https://www.npmjs.com/package/insomnia-importers)
 
 This repository contains converters to translate popular HTTP data formats to
-Insomnia v2 format.
+Insomnia v3 format.
 
-- Insomnia v1
-- Postman v2
+- Insomnia v1 and v2
+- Postman v2.0
 - cURL
 - HTTP Archive Format 1.2 (HAR)
 
