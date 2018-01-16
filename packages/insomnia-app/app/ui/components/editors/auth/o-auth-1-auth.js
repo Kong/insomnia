@@ -5,9 +5,10 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
-import CodeEditor from '../../codemirror/code-editor';
 import HelpTooltip from '../../help-tooltip';
-import {SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_RSA_SHA1, SIGNATURE_METHOD_PLAINTEXT} from '../../../../network/o-auth-1/constants';
+import {SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_PLAINTEXT, SIGNATURE_METHOD_RSA_SHA1} from '../../../../network/o-auth-1/constants';
+import CodePromptModal from '../../modals/code-prompt-modal';
+import {showModal} from '../../modals';
 
 type Props = {
   handleRender: Function,
@@ -17,6 +18,19 @@ type Props = {
   request: Request
 };
 
+const PRIVATE_KEY_PLACEHOLDER = `
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEA39k9udklHnmkU0GtTLpnYtKk1l5txYmUD/cGI0bFd3HHOOLG
+mI0av55vMFEhxL7yrFrcL8pRKp0+pnOVStMDmbwsPE/pu9pf3uxD+m9/Flv89bUk
+mml+R3E8PwAYzkX0cr4yQTPN9PSSqy+d2+KrZ9QZmpc3tqltTbMVV93cxKCxfBrf
+jbiMIAVh7silDVY5+V46SJu8zY2kXOBBtlrE7/JoMiTURCkRjNIA8/sgSmRxBTdM
+313lKJM7NgxaGnREbP75U7ErfBvReJsf5p6h5+XXFirG7F2ntcqjUoR3M+opngp0
+CgffdGcsK7MmUUgAG7r05b0mljhI35t/0Y57MwIDAQABAoIBAQCH1rLohudJmROp
+Gl/qAewfQiiZlfATQavCDGuDGL1YAIme8a8GgApNYf2jWnidhiqJgRHBRor+yzFr
+cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
+-----END RSA PRIVATE KEY-----
+`.trim();
+
 @autobind
 class OAuth1Auth extends React.PureComponent<Props> {
   _handleChangeProperty: Function;
@@ -25,6 +39,21 @@ class OAuth1Auth extends React.PureComponent<Props> {
     super(props);
 
     this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
+  }
+
+  _handleEditPrivateKey () {
+    const {handleRender, handleGetRenderContext, request} = this.props;
+    const {privateKey} = request.authentication;
+    showModal(CodePromptModal, {
+      submitName: 'Done',
+      title: `Edit Private Key`,
+      defaultValue: privateKey,
+      onChange: this._handleChangePrivateKey,
+      enableRender: handleRender || handleGetRenderContext,
+      placeholder: PRIVATE_KEY_PLACEHOLDER,
+      mode: 'text/plain',
+      hideMode: true
+    });
   }
 
   _handleChangeProperty (property: string, value: string | boolean): void {
@@ -152,18 +181,8 @@ class OAuth1Auth extends React.PureComponent<Props> {
     property: string,
     onChange: Function
   ): React.Element<*> {
-    const { handleRender, handleGetRenderContext, request, nunjucksPowerUserMode } = this.props;
     const id = label.replace(/ /g, '-');
-    const placeholderPrivateKey = '-----BEGIN RSA PRIVATE KEY-----\n' +
-    'MIIEpQIBAAKCAQEA39k9udklHnmkU0GtTLpnYtKk1l5txYmUD/cGI0bFd3HHOOLG\n' +
-    'mI0av55vMFEhxL7yrFrcL8pRKp0+pnOVStMDmbwsPE/pu9pf3uxD+m9/Flv89bUk\n' +
-    'mml+R3E8PwAYzkX0cr4yQTPN9PSSqy+d2+KrZ9QZmpc3tqltTbMVV93cxKCxfBrf\n' +
-    'jbiMIAVh7silDVY5+V46SJu8zY2kXOBBtlrE7/JoMiTURCkRjNIA8/sgSmRxBTdM\n' +
-    '313lKJM7NgxaGnREbP75U7ErfBvReJsf5p6h5+XXFirG7F2ntcqjUoR3M+opngp0\n' +
-    'CgffdGcsK7MmUUgAG7r05b0mljhI35t/0Y57MwIDAQABAoIBAQCH1rLohudJmROp\n' +
-    'Gl/qAewfQiiZlfATQavCDGuDGL1YAIme8a8GgApNYf2jWnidhiqJgRHBRor+yzFr\n' +
-    'cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=\n' +
-    '-----END RSA PRIVATE KEY-----';
+    const {authentication} = this.props.request;
     return (
       <tr key={id}>
         <td className="pad-right pad-top-sm no-wrap valign-top">
@@ -174,19 +193,10 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </td>
         <td className="wide">
           <div className="form-control form-control--underlined form-control--tall no-margin">
-            <CodeEditor
-              id={id}
-              onChange={onChange}
-              defaultValue={request.authentication[property] || ''}
-              dynamicHeight={true}
-              hideLineNumbers={true}
-              lineWrapping={true}
-              placeholder={placeholderPrivateKey}
-              style={{height: 200}}
-              nunjucksPowerUserMode={nunjucksPowerUserMode}
-              render={handleRender}
-              getRenderContext={handleGetRenderContext}
-            />
+            <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
+              <i className="fa fa-edit space-right"/>
+              {authentication.privateKey ? 'Click to Edit' : 'Click to Add'}
+            </button>
           </div>
         </td>
       </tr>
@@ -268,19 +278,26 @@ class OAuth1Auth extends React.PureComponent<Props> {
       this._handleChangeVersion
     );
 
-    return [
+    const fields = [
       consumerKey,
       consumerSecret,
       tokenKey,
       tokenSecret,
       signatureMethod,
-      privateKey,
       callback,
       version,
       timestamp,
       realm,
       nonce
     ];
+
+    const {authentication} = this.props.request;
+    if (authentication.signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
+      const i = fields.indexOf(signatureMethod);
+      fields.splice(i + 1, 0, privateKey);
+    }
+
+    return fields;
   }
 
   render () {

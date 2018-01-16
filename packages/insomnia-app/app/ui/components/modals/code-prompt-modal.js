@@ -31,6 +31,7 @@ class CodePromptModal extends PureComponent {
       placeholder: '',
       hint: '',
       mode: 'text/plain',
+      hideMode: false,
       enableRender: false
     };
   }
@@ -60,6 +61,7 @@ class CodePromptModal extends PureComponent {
       placeholder,
       hint,
       mode,
+      hideMode,
       enableRender,
       onChange,
       onModeChange
@@ -75,6 +77,7 @@ class CodePromptModal extends PureComponent {
       placeholder,
       hint,
       enableRender,
+      hideMode,
       mode: mode || this.state.mode
     });
 
@@ -99,6 +102,7 @@ class CodePromptModal extends PureComponent {
       defaultValue,
       hint,
       mode,
+      hideMode,
       enableRender
     } = this.state;
 
@@ -120,6 +124,7 @@ class CodePromptModal extends PureComponent {
                 indentSize={editorIndentSize}
                 fontSize={editorFontSize}
                 lineWrapping={editorLineWrapping}
+                nunjucksPowerUserMode={nunjucksPowerUserMode}
               />
             </div>
           ) : (
@@ -145,19 +150,21 @@ class CodePromptModal extends PureComponent {
           )}
         </ModalBody>
         <ModalFooter>
-          <Dropdown>
-            <DropdownButton className="btn btn--clicky margin-left-sm">
-              {MODES[mode]}
-              <i className="fa fa-caret-down space-left"/>
-            </DropdownButton>
-            <DropdownDivider>Editor Syntax</DropdownDivider>
-            {Object.keys(MODES).map(mode => (
-              <DropdownItem key={mode} value={mode} onClick={this._handleChangeMode}>
-                <i className="fa fa-code"/>
+          {!hideMode ? (
+            <Dropdown>
+              <DropdownButton className="btn btn--clicky margin-left-sm">
                 {MODES[mode]}
-              </DropdownItem>
-            ))}
-          </Dropdown>
+                <i className="fa fa-caret-down space-left"/>
+              </DropdownButton>
+              <DropdownDivider>Editor Syntax</DropdownDivider>
+              {Object.keys(MODES).map(mode => (
+                <DropdownItem key={mode} value={mode} onClick={this._handleChangeMode}>
+                  <i className="fa fa-code"/>
+                  {MODES[mode]}
+                </DropdownItem>
+              ))}
+            </Dropdown>
+          ) : null}
           <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this.hide}>
             {submitName || 'Submit'}
