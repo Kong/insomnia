@@ -7,16 +7,21 @@ export default async function (
   requestId: string,
   authorizationUrl: string,
   clientId: string,
+  responseType: string = c.RESPONSE_TYPE_ACCESS,
   redirectUri: string = '',
   scope: string = '',
   state: string = ''
 ): Promise<Object> {
   const params = [
-    {name: c.P_RESPONSE_TYPE, value: c.RESPONSE_TYPE_TOKEN},
+    {name: c.P_RESPONSE_TYPE, value: responseType},
     {name: c.P_CLIENT_ID, value: clientId}
   ];
 
   // Add optional params
+  if (responseType === c.RESPONSE_TYPE_BOTH) {
+    const responseNonce: string = ((Math.floor(Math.random() * 9999999999999) + 1): any);
+    params.push({name: c.P_NONCE, value: responseNonce});
+  }
   redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
   scope && params.push({name: c.P_SCOPE, value: scope});
   state && params.push({name: c.P_STATE, value: state});
@@ -25,7 +30,7 @@ export default async function (
   const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
 
-  const redirectedTo = await authorizeUserInWindow(finalUrl, /(access_token=|error=)/);
+  const redirectedTo = await authorizeUserInWindow(finalUrl, /(access_token=)/, /(error=)/);
   const fragment = redirectedTo.split('#')[1];
 
   if (fragment) {
@@ -33,6 +38,7 @@ export default async function (
       c.P_ACCESS_TOKEN,
       c.P_TOKEN_TYPE,
       c.P_EXPIRES_IN,
+      c.P_NONCE,
       c.P_SCOPE,
       c.P_STATE,
       c.P_ERROR,
