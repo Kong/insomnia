@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "commander": "^2.9.0",
-    "shell-quote": "^1.6.1"
+    "shell-quote": "^1.6.1",
+    "swagger-parser": "^4.0.1"
   }
 }
