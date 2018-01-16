@@ -76,7 +76,7 @@ export async function importRaw (
 ): Promise<{source: string, error: string | null, summary: {[string]: Array<BaseModel>}}> {
   let results;
   try {
-    results = convert(rawContent);
+    results = await convert(rawContent);
   } catch (e) {
     console.warn('Failed to import data', e);
     return {

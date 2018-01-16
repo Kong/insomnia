@@ -199,7 +199,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
-      const {data} = importers.convert(text);
+      const {data} = await importers.convert(text);
       const {resources} = data;
       const r = resources[0];
 
