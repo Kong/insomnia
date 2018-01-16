@@ -110,6 +110,7 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         consumerSecret: '',
         tokenKey: '',
         tokenSecret: '',
+        privateKey: '',
         version: '1.0',
         nonce: '',
         timestamp: '',

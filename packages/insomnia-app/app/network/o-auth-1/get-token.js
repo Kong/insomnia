@@ -5,7 +5,7 @@
  */
 import crypto from 'crypto';
 import OAuth1 from 'oauth-1.0a';
-import {SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_PLAINTEXT} from './constants';
+import {SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_RSA_SHA1, SIGNATURE_METHOD_PLAINTEXT} from './constants';
 import type {OAuth1SignatureMethod} from './constants';
 import type {RequestAuthentication} from '../../models/request';
 
@@ -13,6 +13,12 @@ function hashFunction (signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
     return function (baseString: string, key: string): string {
       return crypto.createHmac('sha1', key).update(baseString).digest('base64');
+    };
+  }
+
+  if (signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
+    return function (baseString: string, privatekey: string): string {
+      return crypto.createSign('RSA-SHA1').update(baseString).sign(privatekey, 'base64');
     };
   }
 
@@ -66,6 +72,14 @@ export default async function (
     token = {key: authentication.tokenKey, secret: authentication.tokenSecret};
   } else if (authentication.tokenKey) {
     token = {key: authentication.tokenKey};
+  }
+
+  if (authentication.signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
+    token = {key: authentication.tokenKey, secret: authentication.privateKey};
+    // We override getSigningKey for RSA-SHA1 because we don't want ddo/oauth-1.0a to percentEncode the token
+    oauth.getSigningKey = function (tokenSecret) {
+      return tokenSecret || '';
+    };
   }
 
   const data = oauth.authorize(requestData, token);
