@@ -12,12 +12,13 @@ module.exports.templateTags = [{
       options: [
         {displayName: 'URL', value: 'url', description: 'fully qualified URL'},
         {displayName: 'Cookie', value: 'cookie', description: 'cookie value by name'},
-        {displayName: 'Header', value: 'header', description: 'header value by name'}
+        {displayName: 'Header', value: 'header', description: 'header value by name'},
+        {displayName: 'OAuth 2.0 Token', value: 'oauth2', description: 'access token'}
       ]
     },
     {
       type: 'string',
-      hide: args => ['url'].includes(args[0].value),
+      hide: args => ['url', 'oauth2'].includes(args[0].value),
       displayName: args => {
         switch (args[0].value) {
           case 'cookie':
@@ -82,6 +83,12 @@ module.exports.templateTags = [{
 
         const namesStr = names.map(n => `"${n}"`).join(',\n\t');
         throw new Error(`No header with name "${name}".\nChoices are [\n\t${namesStr}\n]`);
+      case 'oauth2':
+        const token = await context.util.models.oAuth2Token.getByRequestId(request._id);
+        if (!token) {
+          throw new Error('No OAuth 2.0 tokens found for request');
+        }
+        return token.accessToken;
     }
 
     return null;

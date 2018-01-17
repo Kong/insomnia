@@ -33,7 +33,6 @@ export function authorizeUserInWindow (
 ) {
   return new Promise((resolve, reject) => {
     let finalUrl = null;
-    let hasError = false;
 
     function _parseUrl (currentUrl) {
       if (currentUrl.match(urlSuccessRegex)) {

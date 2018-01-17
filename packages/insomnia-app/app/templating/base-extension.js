@@ -79,6 +79,7 @@ export default class BaseExtension {
         models: {
           request: {getById: models.request.getById},
           workspace: {getById: models.workspace.getById},
+          oAuth2Token: {getByRequestId: models.oAuth2Token.getByParentId},
           cookieJar: {
             getOrCreateForWorkspace: workspace => {
               return models.cookieJar.getOrCreateForParentId(workspace._id);
