@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-request",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "author": "Gregory Schier <gschier1990@gmail.com>",
   "description": "Insomnia request template tag",
   "license": "MIT",
