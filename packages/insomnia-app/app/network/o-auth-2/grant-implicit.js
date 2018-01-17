@@ -7,7 +7,7 @@ export default async function (
   requestId: string,
   authorizationUrl: string,
   clientId: string,
-  responseType: string = c.RESPONSE_TYPE_ACCESS,
+  responseType: string = c.RESPONSE_TYPE_TOKEN,
   redirectUri: string = '',
   scope: string = '',
   state: string = ''
@@ -18,10 +18,11 @@ export default async function (
   ];
 
   // Add optional params
-  if (responseType === c.RESPONSE_TYPE_BOTH) {
-    const responseNonce: string = ((Math.floor(Math.random() * 9999999999999) + 1): any);
-    params.push({name: c.P_NONCE, value: responseNonce});
+  if (responseType === c.RESPONSE_TYPE_ID_TOKEN_TOKEN) {
+    const nonce = Math.floor(Math.random() * 9999999999999) + 1;
+    params.push({name: c.P_NONCE, value: nonce});
   }
+
   redirectUri && params.push({name: c.P_REDIRECT_URI, value: redirectUri});
   scope && params.push({name: c.P_SCOPE, value: scope});
   state && params.push({name: c.P_STATE, value: state});
@@ -38,7 +39,6 @@ export default async function (
       c.P_ACCESS_TOKEN,
       c.P_TOKEN_TYPE,
       c.P_EXPIRES_IN,
-      c.P_NONCE,
       c.P_SCOPE,
       c.P_STATE,
       c.P_ERROR,

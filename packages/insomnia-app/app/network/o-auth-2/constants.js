@@ -5,9 +5,9 @@ export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
 export const GRANT_TYPE_REFRESH = 'refresh_token';
 
 export const RESPONSE_TYPE_CODE = 'code';
-export const RESPONSE_TYPE_ID = 'id_token';
-export const RESPONSE_TYPE_ACCESS = 'token';
-export const RESPONSE_TYPE_BOTH = 'id_token token';
+export const RESPONSE_TYPE_ID_TOKEN = 'id_token';
+export const RESPONSE_TYPE_TOKEN = 'token';
+export const RESPONSE_TYPE_ID_TOKEN_TOKEN = 'id_token token';
 
 export const P_ACCESS_TOKEN = 'access_token';
 export const P_CLIENT_ID = 'client_id';

@@ -8,7 +8,7 @@ import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
 import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_IMPLICIT, GRANT_TYPE_PASSWORD} from '../../../../network/o-auth-2/constants';
-import {RESPONSE_TYPE_ID, RESPONSE_TYPE_ACCESS, RESPONSE_TYPE_BOTH} from '../../../../network/o-auth-2/constants';
+import {RESPONSE_TYPE_ID_TOKEN, RESPONSE_TYPE_TOKEN, RESPONSE_TYPE_ID_TOKEN_TOKEN} from '../../../../network/o-auth-2/constants';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
@@ -319,9 +319,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'Response Type',
       'responseType',
       [
-        {name: 'Access Token', value: RESPONSE_TYPE_ACCESS},
-        {name: 'ID Token', value: RESPONSE_TYPE_ID},
-        {name: 'ID and Access Token', value: RESPONSE_TYPE_BOTH}
+        {name: 'Access Token', value: RESPONSE_TYPE_TOKEN},
+        {name: 'ID Token', value: RESPONSE_TYPE_ID_TOKEN},
+        {name: 'ID and Access Token', value: RESPONSE_TYPE_ID_TOKEN_TOKEN}
       ],
       this._handlerChangeResponseType,
       'Indicates the type of credentials returned in the response'
