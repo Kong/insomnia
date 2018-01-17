@@ -35,9 +35,15 @@ export default async function (
     state
   );
 
-  // TODO: Handle error
+  // Handle the error
+  if (authorizeResults[c.P_ERROR]) {
+    const code = authorizeResults[c.P_ERROR];
+    const msg = authorizeResults[c.P_ERROR_DESCRIPTION];
+    const uri = authorizeResults[c.P_ERROR_URI];
+    throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
+  }
 
-  const tokenResults = await _getToken(
+  return _getToken(
     requestId,
     accessTokenUrl,
     credentialsInBody,
@@ -47,8 +53,6 @@ export default async function (
     redirectUri,
     state
   );
-
-  return tokenResults;
 }
 
 async function _authorize (url, clientId, redirectUri = '', scope = '', state = '') {
@@ -130,7 +134,7 @@ async function _getToken (
     throw new Error(`[oauth2] Failed to fetch token url=${url} status=${statusCode}`);
   }
 
-  const results = responseToObject(bodyBuffer.toString('utf8'), [
+  return responseToObject(bodyBuffer.toString('utf8'), [
     c.P_ACCESS_TOKEN,
     c.P_REFRESH_TOKEN,
     c.P_EXPIRES_IN,
@@ -140,6 +144,4 @@ async function _getToken (
     c.P_ERROR_URI,
     c.P_ERROR_DESCRIPTION
   ]);
-
-  return results;
 }

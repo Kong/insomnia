@@ -42,7 +42,7 @@ export function authorizeUserInWindow (
         child.close();
       } else if (currentUrl.match(urlFailureRegex)) {
         console.log(`[oauth2] Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
-        hasError = true;
+        finalUrl = currentUrl;
         child.close();
       } else if (currentUrl === url) {
         // It's the first one, so it's not a redirect
@@ -67,9 +67,6 @@ export function authorizeUserInWindow (
         resolve(finalUrl);
       } else {
         let errorDescription = 'Authorization window closed';
-        if (hasError) {
-          errorDescription += ' after oauth error';
-        }
         reject(new Error(errorDescription));
       }
     });
