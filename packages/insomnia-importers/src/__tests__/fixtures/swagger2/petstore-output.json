@@ -71,9 +71,7 @@
         {
           "name": "status",
           "disabled": false,
-          "value": [
-            "available"
-          ]
+          "value": "available"
         }
       ],
       "headers": [],
@@ -91,9 +89,7 @@
         {
           "name": "tags",
           "disabled": false,
-          "value": [
-            "string"
-          ]
+          "value": "string"
         }
       ],
       "headers": [],

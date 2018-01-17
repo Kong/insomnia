@@ -43,7 +43,7 @@
         {
           "name": "limit",
           "disabled": true,
-          "value": 0
+          "value": "0"
         }
       ],
       "headers": [],

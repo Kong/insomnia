@@ -197,9 +197,13 @@ function prepareBody (endpointSchema, globalMimeTypes) {
     }
   }
 
-  return {
-    mimeType: mimeTypes[0] || undefined
-  };
+  if (mimeTypes && mimeTypes.length) {
+    return {
+      mimeType: mimeTypes[0] || undefined
+    };
+  } else {
+    return {};
+  }
 }
 
 /**
@@ -214,7 +218,7 @@ function convertParameters (parameters) {
     return {
       name,
       disabled: required !== true,
-      value: generateParameterExample(parameter)
+      value: `${generateParameterExample(parameter)}`
     }
   })
 }
@@ -239,7 +243,7 @@ function generateParameterExample (schema) {
     'number_double': () => 0.0,
     'integer': () => 0,
     'boolean': () => true,
-    'object': (schema) => {
+    'object': schema => {
       const example = {};
       const {properties} = schema;
 
@@ -249,8 +253,13 @@ function generateParameterExample (schema) {
 
       return example;
     },
-    'array': (schema) => {
-      return [generateParameterExample(schema.items)]
+    'array': schema => {
+      const value = generateParameterExample(schema.items);
+      if (schema.collectionFormat === 'csv') {
+        return value;
+      } else {
+        return [value];
+      }
     }
   };
 
