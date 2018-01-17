@@ -18,6 +18,9 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import type {Workspace} from '../../../models/workspace';
 import type {Environment} from '../../../models/environment';
 import * as db from '../../../common/database';
+import HelpTooltip from '../help-tooltip';
+
+const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 type Props = {
   activeEnvironmentId: string | null,
@@ -314,7 +317,11 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
               {'env-modal__sidebar-item--active': activeEnvironment === rootEnvironment}
             )}>
               <Button onClick={this._handleShowEnvironment} value={rootEnvironment}>
-                {rootEnvironment ? rootEnvironment.name : ''}
+                {ROOT_ENVIRONMENT_NAME}
+                <HelpTooltip className="space-left">
+                  The variables in this environment are always available, regardless of which
+                  sub-environment is active. Useful for storing default or fallback values.
+                </HelpTooltip>
               </Button>
             </li>
             <div className="pad env-modal__sidebar-heading">
@@ -368,11 +375,16 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
           <div className="env-modal__main">
             <div className="env-modal__main__header">
               <h1>
-                <Editable singleClick
-                          className="wide"
-                          onSubmit={
-                            name => activeEnvironment && this._handleChangeEnvironmentName(activeEnvironment, name)}
-                          value={activeEnvironment ? activeEnvironment.name : ''}/>
+                {rootEnvironment === activeEnvironment ? (
+                  ROOT_ENVIRONMENT_NAME
+                ) : (
+                  <Editable singleClick
+                            className="wide"
+                            onSubmit={name => (
+                              activeEnvironment &&
+                              this._handleChangeEnvironmentName(activeEnvironment, name))}
+                            value={activeEnvironment ? activeEnvironment.name : ''}/>
+                )}
               </h1>
 
               {activeEnvironment && rootEnvironment !== activeEnvironment ? (
