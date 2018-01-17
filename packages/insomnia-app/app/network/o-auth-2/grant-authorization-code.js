@@ -65,9 +65,10 @@ async function _authorize (url, clientId, redirectUri = '', scope = '', state = 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(url, qs);
-  const regex = new RegExp(`${escapeRegex(redirectUri)}.*(code=|error=)`, 'i');
+  const successRegex = new RegExp(`${escapeRegex(redirectUri)}.*(code=)`, 'i');
+  const failureRegex = new RegExp(`${escapeRegex(redirectUri)}.*(error=)`, 'i');
 
-  const redirectedTo = await authorizeUserInWindow(finalUrl, regex);
+  const redirectedTo = await authorizeUserInWindow(finalUrl, successRegex, failureRegex);
 
   console.log('[oauth2] Detected redirect ' + redirectedTo);
 

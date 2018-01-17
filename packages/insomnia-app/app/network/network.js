@@ -674,6 +674,7 @@ export async function sendWithSettings (
 
   const settings = await models.settings.getOrCreate();
   const ancestors = await db.withAncestors(request, [
+    models.request.type,
     models.requestGroup.type,
     models.workspace.type
   ]);

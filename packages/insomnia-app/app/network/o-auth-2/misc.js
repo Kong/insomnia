@@ -20,25 +20,28 @@ export function responseToObject (body, keys) {
 
   let results = {};
   for (const key of keys) {
-    const value = data[key] !== undefined ? data[key] : null;
-    results[key] = value;
+    results[key] = data[key] !== undefined ? data[key] : null;
   }
 
   return results;
 }
 
-export function authorizeUserInWindow (url, urlSuccessRegex = /.*/, urlFailureRegex = /.*/) {
+export function authorizeUserInWindow (
+  url,
+  urlSuccessRegex = /(code=).*/,
+  urlFailureRegex = /(error=).*/
+) {
   return new Promise((resolve, reject) => {
     let finalUrl = null;
     let hasError = false;
 
     function _parseUrl (currentUrl) {
       if (currentUrl.match(urlSuccessRegex)) {
-        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`);
+        console.log(`[oauth2] Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`);
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl.match(urlFailureRegex)) {
-        console.log(`[oauth2] Matched redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
+        console.log(`[oauth2] Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
         hasError = true;
         child.close();
       } else if (currentUrl === url) {

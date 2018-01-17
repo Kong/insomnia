@@ -19,6 +19,7 @@ import type {RenderedRequest} from '../../../../common/render';
 import {getRenderedRequest} from '../../../../common/render';
 import TimeFromNow from '../../time-from-now';
 import * as models from '../../../../models/index';
+import * as db from '../../../../common/database';
 
 type GraphQLBody = {
   query: string,
@@ -97,13 +98,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       try {
         const bodyJson = JSON.stringify({query: introspectionQuery});
         const introspectionRequest = Object.assign({}, request, {
-          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON),
-
-          // NOTE: We're not actually saving this request or response but let's pretend
-          // like we are by setting these properties to prevent bugs in the future.
           _id: request._id + '.graphql',
-          parentId: request._id
+          parentId: request._id,
+          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
         });
+
+        // We need to save this request because other parts of the
+        // app may look it up
+        await db.upsert(introspectionRequest);
 
         const response = await network._actuallySend(
           introspectionRequest,
@@ -113,17 +115,16 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
         const bodyBuffer = models.response.getBodyBuffer(response);
 
-        const status = response.statusCode || 0;
+        const status = typeof response.statusCode === 'number' ? response.statusCode : 0;
+        const error = typeof response.error === 'string' ? response.error : '';
 
-        if (response.error) {
-          newState.schemaFetchError = response.error;
+        if (error) {
+          newState.schemaFetchError = error;
         } else if (status < 200 || status >= 300) {
-          const msg = `Got status ${status} fetching schema from "${request.url}"`;
-          newState.schemaFetchError = msg;
+          newState.schemaFetchError = `Got status ${status} fetching schema from "${request.url}"`;
         } else if (bodyBuffer) {
           const {data} = JSON.parse(bodyBuffer.toString());
-          const schema = buildClientSchema(data);
-          newState.schema = schema;
+          newState.schema = buildClientSchema(data);
           newState.schemaLastFetchTime = Date.now();
         } else {
           newState.schemaFetchError = 'No response body received when fetching schema';
