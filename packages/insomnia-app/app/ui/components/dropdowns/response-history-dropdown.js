@@ -2,9 +2,8 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
-import SizeTag from '../tags/size-tag';
 import StatusTag from '../tags/status-tag';
-import TimeTag from '../tags/time-tag';
+import URLTag from '../tags/url-tag';
 import PromptButton from '../base/prompt-button';
 import {trackEvent} from '../../../common/analytics';
 import KeydownBinder from '../keydown-binder';
@@ -60,8 +59,7 @@ class ResponseHistoryDropdown extends PureComponent {
           statusCode={response.statusCode}
           statusMessage={response.statusMessage || null}
         />
-        <TimeTag milliseconds={response.elapsedTime} small/>
-        <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small/>
+        <URLTag small url={response.url} />
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message}/>}
       </DropdownItem>
     );
