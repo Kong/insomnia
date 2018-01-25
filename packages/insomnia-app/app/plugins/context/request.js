@@ -15,6 +15,9 @@ export function init (
       getId (): string {
         return renderedRequest._id;
       },
+      getBodyText (): string {
+        return renderedRequest.body.text;
+      },
       getName (): string {
         return renderedRequest.name;
       },
@@ -23,6 +26,9 @@ export function init (
       },
       getMethod (): string {
         return renderedRequest.method;
+      },
+      setBodyText (text: string): void {
+        renderedRequest.body.text = text;
       },
       setCookie (name: string, value: string): void {
         const cookie = renderedRequest.cookies.find(c => c.name === name);
