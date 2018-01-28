@@ -1,9 +1,8 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
-import KeyValueEditor from '../../key-value-editor/editor';
 import {trackEvent} from '../../../../common/analytics';
-import {AUTH_AWS_IAM} from '../../../../common/constants';
+import autobind from 'autobind-decorator';
+import Button from '../../base/button';
+import PropTypes from 'prop-types';
+import React, {PureComponent} from 'react';
 
 @autobind
 class AWSAuth extends PureComponent {
@@ -15,20 +14,18 @@ class AWSAuth extends PureComponent {
     trackEvent('AWS Auth Editor', 'Delete');
   }
 
-  _handleToggleDisable (pair) {
-    const label = pair.disabled ? 'Disable' : 'Enable';
+  _handleToggleDisable (disabled) {
+    const {authentication} = this.props;
+    authentication.disabled = disabled;
+    this.props.onChange(authentication);
+    const label = authentication.disabled ? 'Disable' : 'Enable';
     trackEvent('AWS Auth Editor', 'Toggle', label);
   }
 
-  _handleChange (pairs) {
-    const pair = {
-      type: AUTH_AWS_IAM,
-      accessKeyId: pairs.length ? pairs[0].name : '',
-      secretAccessKey: pairs.length ? pairs[0].value : '',
-      disabled: pairs.length ? pairs[0].disabled : false
-    };
-
-    this.props.onChange(pair);
+  _handleChange (event) {
+    const {authentication} = this.props;
+    authentication[event.target.getAttribute('id')] = event.target.value;
+    this.props.onChange(authentication);
   }
 
   render () {
@@ -40,28 +37,50 @@ class AWSAuth extends PureComponent {
       nunjucksPowerUserMode
     } = this.props;
 
-    const pairs = [{
-      name: authentication.accessKeyId || '',
-      value: authentication.secretAccessKey || '',
-      disabled: authentication.disabled || false
-    }];
-
     return (
-      <KeyValueEditor
-        pairs={pairs}
-        maxPairs={1}
-        disableDelete
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
-        namePlaceholder="AWS_ACCESS_KEY_ID"
-        valuePlaceholder="AWS_SECRET_ACCESS_KEY"
-        valueInputType={showPasswords ? 'text' : 'password'}
-        onToggleDisable={this._handleToggleDisable}
-        onCreate={this._handleOnCreate}
-        onDelete={this._handleOnDelete}
+      <div class="aws-aws-auth__row-wrapper">
+      <br/>
+      <input
+        type='text'
+        id='accessKeyId'
+        placeholder='AWS_ACCESS_KEY_ID'
         onChange={this._handleChange}
+        defaultValue={authentication.accessKeyId || ''}
+        nunjucksPowerUserMode={nunjucksPowerUserMode}
+        render={handleRender}
+        getRenderContext={handleGetRenderContext}
       />
+      <br/>
+      <input
+        type={showPasswords ? 'text' : 'password'}
+        id='secretAccessKey'
+        placeholder='AWS_SECRET_ACCESS_KEY'
+        onChange={this._handleChange}
+        defaultValue={authentication.secretAccessKey || ''}
+        nunjucksPowerUserMode={nunjucksPowerUserMode}
+        render={handleRender}
+        getRenderContext={handleGetRenderContext}
+      />
+      <br/>
+      <input
+        type={showPasswords ? 'text' : 'password'}
+        id='sessionToken'
+        placeholder='AWS_SESSION_TOKEN'
+        onChange={this._handleChange}
+        defaultValue={authentication.sessionToken || ''}
+        nunjucksPowerUserMode={nunjucksPowerUserMode}
+        render={handleRender}
+        getRenderContext={handleGetRenderContext}
+      />
+      <Button onClick={this._handleToggleDisable}
+              value={!authentication.disabled}
+              title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+        {authentication.disabled
+          ? <i className="fa fa-square-o"/>
+          : <i className="fa fa-check-square-o"/>
+        }
+      </Button>
+      </div>
     );
   }
 }
