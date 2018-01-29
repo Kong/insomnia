@@ -16,7 +16,7 @@ export function init (
         return renderedRequest._id;
       },
       getBodyText (): string {
-        return renderedRequest.body.text;
+        return renderedRequest.body.text || '';
       },
       getName (): string {
         return renderedRequest.name;

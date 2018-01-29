@@ -22,6 +22,7 @@ describe('init()', () => {
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'addHeader',
+      'getBodyText',
       'getEnvironment',
       'getEnvironmentVariable',
       'getHeader',
@@ -32,6 +33,7 @@ describe('init()', () => {
       'getUrl',
       'hasHeader',
       'removeHeader',
+      'setBodyText',
       'setCookie',
       'setHeader',
       'settingDisableRenderRequestBody',
@@ -55,6 +57,7 @@ describe('request.*', () => {
       _id: 'req_1',
       parentId: 'wrk_1',
       name: 'My Request',
+      body: {text: 'body'},
       headers: [
         {name: 'hello', value: 'world'},
         {name: 'Content-Type', value: 'application/json'}
@@ -68,6 +71,7 @@ describe('request.*', () => {
     expect(result.request.getName()).toBe('My Request');
     expect(result.request.getUrl()).toBe('');
     expect(result.request.getMethod()).toBe('GET');
+    expect(result.request.getBodyText()).toBe('body');
   });
 
   it('works for headers', async () => {
