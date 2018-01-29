@@ -44,6 +44,26 @@ export function init (
       getEnvironment (): Object {
         return renderedContext;
       },
+      getParameters (): Array<Object> {
+        return renderedRequest.parameters;
+      },
+      getParameter (name: string): Object | null {
+        const parameter = renderedRequest.parameters.find(p => p.name === name);
+        return parameter ? parameter.value : '';
+      },
+      setParameter (name: string, value: string): void {
+        const parameter = renderedRequest.parameters.find(p => p.name === name);
+        if (parameter) {
+          parameter.value = value;
+        } else {
+          renderedRequest.parameters.push({name, value});
+        }
+      },
+      removeParameter (name: string): void {
+        const index = renderedRequest.parameters.findIndex(p => p.name === name);
+        if (index === -1) return;
+        renderedRequest.parameters.splice(index, 1);
+      },
       settingSendCookies (enabled: boolean) {
         renderedRequest.settingSendCookies = enabled;
       },
