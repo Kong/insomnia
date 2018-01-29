@@ -57,7 +57,7 @@ class AuthWrapper extends PureComponent {
     } else if (authentication.type === AUTH_HAWK) {
       return (
         <HawkAuth
-          request={request}
+          authentication={authentication}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
@@ -102,7 +102,6 @@ class AuthWrapper extends PureComponent {
       return (
         <BearerAuth
           authentication={authentication}
-          request={request}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
