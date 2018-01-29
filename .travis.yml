@@ -10,7 +10,6 @@ matrix:
       install:
         - sudo snap install --classic snapcraft
         - npm install 7zip-bin-linux > /dev/null
-      env:
     - os: osx
       install:
         - npm install 7zip-bin-mac > /dev/null
