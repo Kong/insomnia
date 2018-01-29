@@ -8,6 +8,7 @@ matrix:
       env: CC=clang CXX=clang++ npm_config_clang=1
       compiler: clang
       install:
+        - sudo snap install --classic snapcraft
         - npm install 7zip-bin-linux > /dev/null
       env:
     - os: osx
@@ -21,7 +22,7 @@ addons:
   apt:
     packages:
     - libcurl4-openssl-dev
-    - snapcraft
+    - snapd
     - git-all
     - icnsutils
     - graphicsmagick
