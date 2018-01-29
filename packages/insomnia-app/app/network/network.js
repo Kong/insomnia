@@ -493,9 +493,13 @@ export async function _actuallySend (
             return handleError(
               new Error('AWS authentication not supported for provided body type'));
           }
+          const credentials = {
+            accessKeyId: renderedRequest.authentication.accessKeyId || '',
+            secretAccessKey: renderedRequest.authentication.secretAccessKey || '',
+            sessionToken: renderedRequest.authentication.sessionToken || ''
+          };
           const extraHeaders = _getAwsAuthHeaders(
-            renderedRequest.authentication.accessKeyId || '',
-            renderedRequest.authentication.secretAccessKey || '',
+            credentials,
             headers,
             requestBody || '',
             finalUrl,
@@ -853,15 +857,12 @@ export function _parseHeaders (
 
 // exported for unit tests only
 export function _getAwsAuthHeaders (
-  accessKeyId: string,
-  secretAccessKey: string,
+  credentials: Object,
   headers: Array<RequestHeader>,
   body: string,
   url: string,
   method: string
 ) {
-  const credentials = {accessKeyId, secretAccessKey};
-
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
 

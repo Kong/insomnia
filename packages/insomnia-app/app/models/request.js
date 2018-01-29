@@ -130,7 +130,8 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         type,
         disabled: oldAuth.disabled || false,
         accessKeyId: oldAuth.accessKeyId || '',
-        secretAccessKey: oldAuth.secretAccessKey || ''
+        secretAccessKey: oldAuth.secretAccessKey || '',
+        sessionToken: oldAuth.sessionToken || ''
       };
 
     // Hawk

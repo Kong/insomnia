@@ -14,15 +14,6 @@
     padding-bottom: @padding-sm;
     box-sizing: border-box;
 
-    &.key-value-editor__row-wrapper--disabled > * {
-      opacity: @opacity-subtle;
-      color: var(--hl) !important;
-
-      input, .input {
-        border-style: dashed;
-      }
-    }
-
     &.key-value-editor__row-wrapper--dragging {
       // Set opacity on children so we can still see the separator
       & > * {

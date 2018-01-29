@@ -310,7 +310,9 @@ class KeyValueEditorRow extends PureComponent {
       <li className={classes}>
         {handle}
         <div className="key-value-editor__row">
-          <div className="form-control form-control--underlined form-control--wide">
+          <div className={classnames('form-control form-control--underlined form-control--wide', {
+            'form-control--inactive': pair.disabled
+          })}>
             <OneLineEditor
               ref={this._setNameInputRef}
               placeholder={namePlaceholder || 'Name'}
@@ -327,7 +329,10 @@ class KeyValueEditorRow extends PureComponent {
               onKeyDown={this._handleKeyDown}
             />
           </div>
-          <div className="form-control form-control--wide form-control--underlined no-min-width">
+          <div className={
+            classnames('form-control form-control--underlined form-control--wide no-min-width', {
+              'form-control--inactive': pair.disabled
+            })}>
             {this.renderPairValue()}
           </div>
 
