@@ -127,7 +127,7 @@ class AuthWrapper extends PureComponent {
     } else if (authentication.type === AUTH_ASAP) {
       return (
         <AsapAuth
-          request={request}
+          authentication={authentication}
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}

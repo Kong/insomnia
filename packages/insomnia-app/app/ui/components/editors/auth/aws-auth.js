@@ -56,7 +56,6 @@ class AWSAuth extends PureComponent {
                 'form-control--inactive': authentication.disabled
               })}>
                 <OneLineEditor
-                  forceEditor
                   type='text'
                   id='accessKeyId'
                   placeholder='AWS_ACCESS_KEY_ID'
@@ -80,7 +79,6 @@ class AWSAuth extends PureComponent {
                 'form-control--inactive': authentication.disabled
               })}>
                 <OneLineEditor
-                  forceEditor
                   type={showPasswords ? 'text' : 'password'}
                   id='secretAccessKey'
                   placeholder='AWS_SECRET_ACCESS_KEY'
@@ -105,7 +103,6 @@ class AWSAuth extends PureComponent {
                 'form-control--inactive': authentication.disabled
               })}>
                 <OneLineEditor
-                  forceEditor
                   id='sessionToken'
                   placeholder='AWS_SESSION_TOKEN'
                   onChange={this._handleChangeSessionToken}
@@ -126,6 +123,7 @@ class AWSAuth extends PureComponent {
             <td className="wide">
               <div className="form-control form-control--underlined">
                 <Button className="btn btn--super-duper-compact"
+                        id="enabled"
                         onClick={this._handleDisable}
                         value={!authentication.disabled}
                         title={authentication.disabled ? 'Enable item' : 'Disable item'}>

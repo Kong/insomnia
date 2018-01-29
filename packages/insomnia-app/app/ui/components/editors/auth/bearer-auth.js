@@ -20,8 +20,7 @@ class BearerAuth extends PureComponent {
   }
 
   render () {
-    const {request, handleRender, handleGetRenderContext, nunjucksPowerUserMode} = this.props;
-    const {authentication} = request;
+    const {authentication, handleRender, handleGetRenderContext, nunjucksPowerUserMode} = this.props;
 
     return (
       <div className="pad">
@@ -38,7 +37,6 @@ class BearerAuth extends PureComponent {
                 'form-control--inactive': authentication.disabled
               })}>
                 <OneLineEditor
-                  forceEditor
                   type='text'
                   id='token'
                   disabled={authentication.disabled}
@@ -61,6 +59,7 @@ class BearerAuth extends PureComponent {
             <td className="wide">
               <div className="form-control form-control--underlined">
                 <Button className="btn btn--super-duper-compact"
+                        id="enabled"
                         onClick={this._handleDisable}
                         value={!authentication.disabled}
                         title={authentication.disabled ? 'Enable item' : 'Disable item'}>

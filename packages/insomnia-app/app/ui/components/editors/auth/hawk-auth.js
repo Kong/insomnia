@@ -156,6 +156,7 @@ class HawkAuth extends React.PureComponent<Props> {
             <td className="wide">
               <div className="form-control form-control--underlined">
                 <Button className="btn btn--super-duper-compact"
+                        id="enabled"
                         onClick={this._handleDisable}
                         value={!authentication.disabled}
                         title={authentication.disabled ? 'Enable item' : 'Disable item'}>
