@@ -1,34 +1,28 @@
 import React, {PureComponent} from 'react';
+import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import KeyValueEditor from '../../key-value-editor/editor';
-import {trackEvent} from '../../../../common/analytics';
-import {AUTH_DIGEST} from '../../../../common/constants';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import Button from '../../base/button';
 
 @autobind
 class DigestAuth extends PureComponent {
-  _handleOnCreate () {
-    trackEvent('Digest Auth Editor', 'Create');
+  _handleDisable () {
+    const {authentication} = this.props;
+    authentication.disabled = !authentication.disabled;
+    this.props.onChange(authentication);
   }
 
-  _handleOnDelete () {
-    trackEvent('Digest Auth Editor', 'Delete');
+  _handleChangeUsername (value) {
+    const {authentication} = this.props;
+    authentication.username = value;
+    this.props.onChange(authentication);
   }
 
-  _handleToggleDisable (pair) {
-    const label = pair.disabled ? 'Disable' : 'Enable';
-    trackEvent('Digest Auth Editor', 'Toggle', label);
-  }
-
-  _handleChange (pairs) {
-    const pair = {
-      type: AUTH_DIGEST,
-      username: pairs.length ? pairs[0].name : '',
-      password: pairs.length ? pairs[0].value : '',
-      disabled: pairs.length ? pairs[0].disabled : false
-    };
-
-    this.props.onChange(pair);
+  _handleChangePassword (value) {
+    const {authentication} = this.props;
+    authentication.password = value;
+    this.props.onChange(authentication);
   }
 
   render () {
@@ -40,28 +34,81 @@ class DigestAuth extends PureComponent {
       handleGetRenderContext
     } = this.props;
 
-    const pairs = [{
-      name: authentication.username || '',
-      value: authentication.password || '',
-      disabled: authentication.disabled || false
-    }];
-
     return (
-      <KeyValueEditor
-        pairs={pairs}
-        maxPairs={1}
-        disableDelete
-        handleRender={handleRender}
-        handleGetRenderContext={handleGetRenderContext}
-        nunjucksPowerUserMode={nunjucksPowerUserMode}
-        namePlaceholder="Username"
-        valuePlaceholder="•••••••••••"
-        valueInputType={showPasswords ? 'text' : 'password'}
-        onToggleDisable={this._handleToggleDisable}
-        onCreate={this._handleOnCreate}
-        onDelete={this._handleOnDelete}
-        onChange={this._handleChange}
-      />
+      <div className="pad">
+        <table>
+          <tbody>
+          <tr>
+            <td className="pad-right no-wrap valign-middle">
+              <label htmlFor="username" className="label--small no-pad">
+                Username
+              </label>
+            </td>
+            <td className="wide">
+              <div className={classnames('form-control form-control--underlined no-margin', {
+                'form-control--inactive': authentication.disabled
+              })}>
+                <OneLineEditor
+                  type='text'
+                  id='username'
+                  disabled={authentication.disabled}
+                  placeholder='Username'
+                  onChange={this._handleChangeUsername}
+                  defaultValue={authentication.username || ''}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  render={handleRender}
+                  getRenderContext={handleGetRenderContext}
+                />
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td className="pad-right no-wrap valign-middle">
+              <label htmlFor="password" className="label--small no-pad">
+                Password
+              </label>
+            </td>
+            <td className="wide">
+              <div className={classnames('form-control form-control--underlined no-margin', {
+                'form-control--inactive': authentication.disabled
+              })}>
+                <OneLineEditor
+                  type={showPasswords ? 'text' : 'password'}
+                  id='password'
+                  placeholder='•••••••••••'
+                  onChange={this._handleChangePassword}
+                  defaultValue={authentication.password || ''}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  render={handleRender}
+                  getRenderContext={handleGetRenderContext}
+                />
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td className="pad-right no-wrap valign-middle">
+              <label htmlFor="enabled" className="label--small no-pad">
+                Enabled
+              </label>
+            </td>
+            <td className="wide">
+              <div className="form-control form-control--underlined">
+                <Button className="btn btn--super-duper-compact"
+                        id="enabled"
+                        onClick={this._handleDisable}
+                        value={!authentication.disabled}
+                        title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                  {authentication.disabled
+                    ? <i className="fa fa-square-o"/>
+                    : <i className="fa fa-check-square-o"/>
+                  }
+                </Button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
     );
   }
 }

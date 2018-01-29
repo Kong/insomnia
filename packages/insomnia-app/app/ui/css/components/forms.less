@@ -120,6 +120,17 @@
       padding-right: @padding-xxs;
     }
   }
+
+  &.form-control--inactive {
+    textarea,
+    .input,
+    input,
+    .btn,
+    select {
+      border-style: dashed;
+      opacity: @opacity-subtle;
+    }
+  }
 }
 
 .form-control--wide {

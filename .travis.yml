@@ -4,7 +4,7 @@ matrix:
   include:
     - os: linux
       sudo: required
-      dist: trusty
+      dist: xenial
       env: CC=clang CXX=clang++ npm_config_clang=1
       compiler: clang
       install:
