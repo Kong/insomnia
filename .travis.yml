@@ -48,6 +48,11 @@ deploy:
   file_glob: true
   prerelease: true
   file:
-    - packages/insomnia-app/dist/**/*
+    - packages/insomnia-app/dist/**/*.zip
+    - packages/insomnia-app/dist/**/*.dmg
+    - packages/insomnia-app/dist/**/*.deb
+    - packages/insomnia-app/dist/**/*.snap
+    - packages/insomnia-app/dist/**/*.AppImage
+    - packages/insomnia-app/dist/**/*.tar.gz
   on:
     tags: true
