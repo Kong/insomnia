@@ -42,8 +42,7 @@
     "target": [
       "AppImage",
       "deb",
-      "tar.gz",
-      "snap"
+      "tar.gz"
     ]
   },
   "snap": {
