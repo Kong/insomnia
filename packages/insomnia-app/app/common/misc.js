@@ -66,6 +66,11 @@ export function getContentTypeHeader<T: Header> (headers: Array<T>): T | null {
   return matches.length ? matches[0] : null;
 }
 
+export function getHostHeader<T: Header> (headers: Array<T>): T | null {
+  const matches = filterHeaders(headers, 'host');
+  return matches.length ? matches[0] : null;
+}
+
 export function getContentDispositionHeader<T: Header> (headers: Array<T>): T | null {
   const matches = filterHeaders(headers, 'content-disposition');
   return matches.length ? matches[0] : null;

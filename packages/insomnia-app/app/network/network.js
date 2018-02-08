@@ -14,7 +14,7 @@ import uuid from 'uuid';
 import * as electron from 'electron';
 import * as models from '../models';
 import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {delay, describeByteSize, getContentTypeHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, waitForStreamToFinish} from '../common/misc';
+import {delay, describeByteSize, getContentTypeHeader, getHostHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, waitForStreamToFinish} from '../common/misc';
 import {buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol, smartEncodeUrl} from 'insomnia-url';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -866,11 +866,15 @@ export function _getAwsAuthHeaders (
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
 
+  // AWS uses host header for signing so prioritize that if the user set it manually
+  const hostHeader = getHostHeader(headers);
+  const host = hostHeader ? hostHeader.value : parsedUrl.host;
+
   const awsSignOptions = {
     body,
     method,
+    host,
     path: parsedUrl.path,
-    host: parsedUrl.hostname, // Purposefully not ".host" because we don't want the port
     headers: {
       'content-type': contentTypeHeader ? contentTypeHeader.value : ''
     }
