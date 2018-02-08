@@ -277,31 +277,29 @@ class ResponsePane extends React.PureComponent<Props> {
             </Tab>
           </TabList>
           <TabPanel className="react-tabs__tab-panel">
-            <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-              <ResponseViewer
-                // Send larger one because legacy responses have bytesContent === -1
-                responseId={response._id}
-                bytes={Math.max(response.bytesContent, response.bytesRead)}
-                contentType={response.contentType || ''}
-                previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-                filter={filter}
-                filterHistory={filterHistory}
-                updateFilter={response.error ? null : handleSetFilter}
-                download={this._handleDownloadResponseBody}
-                getBody={this._handleGetResponseBody}
-                error={response.error}
-                editorLineWrapping={editorLineWrapping}
-                editorFontSize={editorFontSize}
-                editorIndentSize={editorIndentSize}
-                editorKeyMap={editorKeyMap}
-                url={response.url}
-              />
-            </ErrorBoundary>
+            <ResponseViewer
+              // Send larger one because legacy responses have bytesContent === -1
+              responseId={response._id}
+              bytes={Math.max(response.bytesContent, response.bytesRead)}
+              contentType={response.contentType || ''}
+              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              filter={filter}
+              filterHistory={filterHistory}
+              updateFilter={response.error ? null : handleSetFilter}
+              download={this._handleDownloadResponseBody}
+              getBody={this._handleGetResponseBody}
+              error={response.error}
+              editorLineWrapping={editorLineWrapping}
+              editorFontSize={editorFontSize}
+              editorIndentSize={editorIndentSize}
+              editorKeyMap={editorKeyMap}
+              url={response.url}
+            />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">
             <div className="scrollable pad">
               <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-                <ResponseHeadersViewer headers={response.headers} />
+                <ResponseHeadersViewer headers={response.headers}/>
               </ErrorBoundary>
             </div>
           </TabPanel>

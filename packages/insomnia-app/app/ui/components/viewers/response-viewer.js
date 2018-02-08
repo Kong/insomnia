@@ -317,6 +317,7 @@ class ResponseViewer extends React.Component<Props, State> {
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
       return (
         <ResponseRaw
+          key={responseId}
           value={iconv.decode(bodyBuffer, charset)}
           fontSize={editorFontSize}
         />
@@ -344,6 +345,7 @@ class ResponseViewer extends React.Component<Props, State> {
 
       return (
         <CodeEditor
+          uniquenessKey={responseId}
           onClickLink={this._handleOpenLink}
           defaultValue={body}
           updateFilter={updateFilter}
