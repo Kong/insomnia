@@ -62,6 +62,10 @@ class KeyValueEditorRow extends PureComponent {
   }
 
   _handleValuePaste (e) {
+    if (!this.props.allowMultiline) {
+      return;
+    }
+
     const value = e.clipboardData.getData('text/plain');
     if (value && value.includes('\n')) {
       e.preventDefault();
