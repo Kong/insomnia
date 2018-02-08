@@ -8,7 +8,8 @@ type Props = {
 
   // Optional
   small?: boolean,
-  className?: string
+  className?: string,
+  maxLength?: number
 };
 
 class URLTag extends React.PureComponent<Props> {
@@ -16,13 +17,15 @@ class URLTag extends React.PureComponent<Props> {
     const {
       url,
       small,
-      className
+      className,
+      maxLength
     } = this.props;
 
+    const max = maxLength || 30;
     let shortUrl = url;
 
-    if (url.length > 40) {
-      shortUrl = url.slice(0, 37) + '...';
+    if (url.length > max) {
+      shortUrl = url.slice(0, max - 3) + '…';
     }
 
     return (

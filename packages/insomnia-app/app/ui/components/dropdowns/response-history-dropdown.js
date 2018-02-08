@@ -8,6 +8,8 @@ import PromptButton from '../base/prompt-button';
 import {trackEvent} from '../../../common/analytics';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
+import TimeTag from '../tags/time-tag';
+import SizeTag from '../tags/size-tag';
 
 @autobind
 class ResponseHistoryDropdown extends PureComponent {
@@ -60,6 +62,8 @@ class ResponseHistoryDropdown extends PureComponent {
           statusMessage={response.statusMessage || null}
         />
         <URLTag small url={response.url}/>
+        <TimeTag milliseconds={response.elapsedTime} small/>
+        <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} small/>
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message}/>}
       </DropdownItem>
     );
