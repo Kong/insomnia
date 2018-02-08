@@ -59,7 +59,7 @@ class ResponseHistoryDropdown extends PureComponent {
           statusCode={response.statusCode}
           statusMessage={response.statusMessage || null}
         />
-        <URLTag small url={response.url} />
+        <URLTag small url={response.url}/>
         {!response.requestVersionId && <i className="icon fa fa-info-circle" title={message}/>}
       </DropdownItem>
     );
@@ -81,10 +81,9 @@ class ResponseHistoryDropdown extends PureComponent {
       <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown ref={this._setDropdownRef}
                   key={activeResponse ? activeResponse._id : 'n/a'} {...extraProps}>
-          <DropdownButton className="btn btn--super-compact tall">
-            {isLatestResponseActive
-              ? <i className="fa fa-history"/>
-              : <i className="fa fa-thumb-tack"/>}
+          <DropdownButton className="btn btn--super-compact tall" title="Response history">
+            {!isLatestResponseActive ? <i className="fa fa-thumb-tack"/> : null}
+            <i className="fa fa-caret-down"/>
           </DropdownButton>
           <DropdownDivider>Response History</DropdownDivider>
           <DropdownItem buttonClass={PromptButton}

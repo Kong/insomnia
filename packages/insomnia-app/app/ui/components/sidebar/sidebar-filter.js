@@ -59,7 +59,7 @@ class SidebarFilter extends PureComponent {
           </div>
           <Dropdown right>
             <DropdownButton className="btn btn--compact">
-              <i className="fa fa-plus-circle"/>
+              <i className="fa fa-plus-circle"/><i className="fa fa-caret-down"/>
             </DropdownButton>
             <DropdownItem onClick={this._handleRequestCreate}>
               <i className="fa fa-plus-circle"/> New Request

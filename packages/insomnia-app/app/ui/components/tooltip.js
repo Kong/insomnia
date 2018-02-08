@@ -75,6 +75,11 @@ class Tooltip extends React.PureComponent<Props, State> {
           bubble.style.left = `${tooltipRect.left + tooltipRect.width + margin}px`;
           break;
 
+        case 'left':
+          bubble.style.top = `${tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2)}px`;
+          bubble.style.left = `${tooltipRect.left - bubbleRect.width - margin}px`;
+          break;
+
         case 'bottom':
           bubble.style.top = `${tooltipRect.top + tooltipRect.height + margin}px`;
           bubble.style.left = `${tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2)}px`;
