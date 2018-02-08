@@ -30,11 +30,24 @@ class AlertModal extends PureComponent {
     this.modal.hide();
   }
 
+  setCancelRef (n) {
+    this._cancel = n;
+  }
+
+  setOkRef (n) {
+    this._ok = n;
+  }
+
   show (options = {}) {
     const {title, message, addCancel} = options;
     this.setState({title, message, addCancel});
 
     this.modal.show();
+
+    // Need to do this after render because modal focuses itself too
+    setTimeout(() => {
+      this._cancel && this._cancel.focus();
+    }, 100);
 
     return new Promise(resolve => {
       this._okCallback = resolve;
@@ -52,8 +65,12 @@ class AlertModal extends PureComponent {
         </ModalBody>
         <ModalFooter>
           <div>
-            {addCancel ? <button className="btn" onClick={this.hide}>Cancel</button> : null}
-            <button className="btn" onClick={this._handleOk}>
+            {addCancel ? (
+              <button className="btn" ref={this.setCancelRef} onClick={this.hide}>
+                Cancel
+              </button>
+            ) : null}
+            <button className="btn" ref={this.setOkRef} onClick={this._handleOk}>
               Ok
             </button>
           </div>

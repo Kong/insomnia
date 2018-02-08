@@ -86,7 +86,7 @@ class ResponseHistoryDropdown extends PureComponent {
         <Dropdown ref={this._setDropdownRef}
                   key={activeResponse ? activeResponse._id : 'n/a'} {...extraProps}>
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
-            {!isLatestResponseActive ? <i className="fa fa-thumb-tack"/> : null}
+            {!isLatestResponseActive ? <i className="fa fa-thumb-tack"/> : <i className="fa fa-clock-o"/>}
             <i className="fa fa-caret-down"/>
           </DropdownButton>
           <DropdownDivider>Response History</DropdownDivider>
