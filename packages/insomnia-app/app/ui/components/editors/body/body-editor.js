@@ -150,6 +150,7 @@ class BodyEditor extends React.PureComponent<Props> {
       return (
         <GraphQLEditor
           key={uniqueKey}
+          uniquenessKey={uniqueKey}
           request={request}
           content={request.body.text || ''}
           render={handleRender}
@@ -164,7 +165,7 @@ class BodyEditor extends React.PureComponent<Props> {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return (
         <RawEditor
-          key={uniqueKey}
+          uniquenessKey={uniqueKey}
           fontSize={settings.editorFontSize}
           indentSize={settings.editorIndentSize}
           keyMap={settings.editorKeyMap}

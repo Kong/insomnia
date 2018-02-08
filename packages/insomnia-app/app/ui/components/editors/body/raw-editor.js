@@ -7,22 +7,24 @@ import CodeEditor from '../../codemirror/code-editor';
 class RawEditor extends PureComponent {
   render () {
     const {
-      contentType,
+      className,
       content,
+      contentType,
       fontSize,
+      getRenderContext,
       indentSize,
       keyMap,
-      render,
-      getRenderContext,
-      nunjucksPowerUserMode,
       lineWrapping,
+      nunjucksPowerUserMode,
       onChange,
-      className
+      render,
+      uniquenessKey
     } = this.props;
 
     return (
       <CodeEditor
         manualPrettify
+        uniquenessKey={uniquenessKey}
         fontSize={fontSize}
         indentSize={indentSize}
         keyMap={keyMap}
@@ -50,6 +52,7 @@ RawEditor.propTypes = {
   keyMap: PropTypes.string.isRequired,
   lineWrapping: PropTypes.bool.isRequired,
   nunjucksPowerUserMode: PropTypes.bool.isRequired,
+  uniquenessKey: PropTypes.string.isRequired,
 
   // Optional
   className: PropTypes.string,

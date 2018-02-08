@@ -24,6 +24,9 @@ const TAB_KEY = 9;
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
+// Global object used for storing and persisting editor states
+const editorStates = {};
+
 const BASE_CODEMIRROR_OPTIONS = {
   lineNumbers: true,
   placeholder: 'Start Typing...',
@@ -71,6 +74,7 @@ class CodeEditor extends React.Component {
     };
 
     this._originalCode = '';
+    this._uniquenessKey = props.uniquenessKey;
   }
 
   componentWillUnmount () {
@@ -79,8 +83,18 @@ class CodeEditor extends React.Component {
     }
   }
 
+  componentDidMount () {
+    this._restoreState();
+  }
+
   componentDidUpdate () {
     this._codemirrorSetOptions();
+    const {uniquenessKey, defaultValue} = this.props;
+    if (uniquenessKey && uniquenessKey !== this._uniquenessKey) {
+      this._codemirrorSetValue(defaultValue);
+      this._restoreState();
+    }
+    this._uniquenessKey = uniquenessKey;
   }
 
   shouldComponentUpdate (nextProps) {
@@ -202,6 +216,34 @@ class CodeEditor extends React.Component {
     }
   }
 
+  _persistState () {
+    const {uniquenessKey} = this.props;
+
+    if (!uniquenessKey || !this.codeMirror) {
+      return;
+    }
+
+    editorStates[uniquenessKey] = {
+      scroll: this.codeMirror.getScrollInfo(),
+      selections: this.codeMirror.listSelections(),
+      cursor: this.codeMirror.getCursor()
+    };
+  }
+
+  _restoreState () {
+    const {uniquenessKey} = this.props;
+    if (!editorStates.hasOwnProperty(uniquenessKey)) {
+      return;
+    }
+
+    const {scroll, selections, cursor} = editorStates[uniquenessKey];
+    this.codeMirror.scrollTo(scroll.left, scroll.top);
+
+    // NOTE: These won't be visible unless the editor is focused
+    this.codeMirror.setCursor(cursor.line, cursor.ch, {scroll: false});
+    this.codeMirror.setSelections(selections, null, {scroll: false});
+  }
+
   _setFilterInputRef (n) {
     this._filterInput = n;
   }
@@ -230,6 +272,7 @@ class CodeEditor extends React.Component {
     this.codeMirror.on('focus', this._codemirrorFocus);
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
+    this.codeMirror.on('scroll', this._codemirrorScroll);
 
     // Prevent these things if we're type === "password"
     this.codeMirror.on('copy', this._codemirrorPreventWhenTypePassword);
@@ -539,9 +582,14 @@ class CodeEditor extends React.Component {
   }
 
   _codemirrorBlur (doc, e) {
+    this._persistState();
     if (this.props.onBlur) {
       this.props.onBlur(e);
     }
+  }
+
+  _codemirrorScroll () {
+    this._persistState();
   }
 
   _codemirrorValueBeforeChange (doc, change) {
@@ -812,7 +860,8 @@ CodeEditor.propTypes = {
   dynamicHeight: PropTypes.bool,
   hintOptions: PropTypes.object,
   lintOptions: PropTypes.object,
-  infoOptions: PropTypes.object
+  infoOptions: PropTypes.object,
+  uniquenessKey: PropTypes.any
 };
 
 export default CodeEditor;

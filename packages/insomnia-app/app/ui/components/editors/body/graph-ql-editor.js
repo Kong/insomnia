@@ -38,7 +38,8 @@ type Props = {
   environmentId: string,
 
   // Optional
-  className?: string
+  className?: string,
+  uniquenessKey?: string
 };
 
 type State = {
@@ -266,7 +267,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       render,
       getRenderContext,
       settings,
-      className
+      className,
+      uniquenessKey
     } = this.props;
 
     const {
@@ -291,6 +293,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
           <CodeEditor
             dynamicHeight
             manualPrettify
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
             hintOptions={{
               schema: schema || null,
               completeSingle: false
@@ -336,6 +339,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         <div className="graphql-editor__variables">
           <CodeEditor
             dynamicHeight
+            uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
             debounceMillis={DEBOUNCE_MILLIS * 4}
             manualPrettify={false}
             fontSize={settings.editorFontSize}
