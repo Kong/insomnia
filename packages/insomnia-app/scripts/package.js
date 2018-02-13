@@ -14,8 +14,12 @@ const PLATFORM_MAP = {
 // Start package if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    await buildTask.start();
-    await module.exports.start();
+    try {
+      await buildTask.start();
+      await module.exports.start();
+    } catch (err) {
+      console.warn('ERROR: ', err.stack);
+    }
   });
 }
 
@@ -41,8 +45,7 @@ async function pkg (relConfigPath) {
       [targetPlatform]: config[targetPlatform].target
     });
     return packager.build();
-  } catch
-    (err) {
+  } catch (err) {
     console.log('[package] Failed: ' + err.stack);
     throw err;
   }
