@@ -82,6 +82,7 @@ type Props = {
   handleSetRequestGroupCollapsed: Function,
   handleSendRequestWithEnvironment: Function,
   handleSendAndDownloadRequestWithEnvironment: Function,
+  handleUpdateRequestMimeType: Function,
 
   // Properties
   loadStartTime: number,
@@ -175,21 +176,6 @@ class Wrapper extends React.PureComponent<Props, State> {
   }
 
   // Special request updaters
-  async _handleUpdateRequestMimeType (mimeType: string): Promise<Request | null> {
-    if (!this.props.activeRequest) {
-      console.warn('Tried to update request mime-type when no active request');
-      return null;
-    }
-
-    const newRequest = await updateMimeType(this.props.activeRequest, mimeType);
-
-    // Force it to update, because other editor components (header editor)
-    // needs to change. Need to wait a delay so the next render can finish
-    setTimeout(this._forceRequestPaneRefresh, 300);
-
-    return newRequest;
-  }
-
   _handleStartDragSidebar (e: Event): void {
     e.preventDefault();
     this.props.handleStartDragSidebar();
@@ -375,6 +361,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleGenerateCodeForActiveRequest,
       handleGenerateCode,
       handleCopyAsCurl,
+      handleUpdateRequestMimeType,
       isLoading,
       loadStartTime,
       paneWidth,
@@ -599,7 +586,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             updateRequestParameters={this._handleUpdateRequestParameters}
             updateRequestAuthentication={this._handleUpdateRequestAuthentication}
             updateRequestHeaders={this._handleUpdateRequestHeaders}
-            updateRequestMimeType={this._handleUpdateRequestMimeType}
+            updateRequestMimeType={handleUpdateRequestMimeType}
             updateSettingsShowPasswords={this._handleUpdateSettingsShowPasswords}
             updateSettingsUseBulkHeaderEditor={this._handleUpdateSettingsUseBulkHeaderEditor}
             forceRefreshCounter={this.state.forceRefreshKey}

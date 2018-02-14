@@ -12,7 +12,8 @@ export function init () {
     previewMode: PREVIEW_MODE_FRIENDLY,
     responseFilter: '',
     responseFilterHistory: [],
-    activeResponseId: null
+    activeResponseId: null,
+    savedRequestBody: {}
   };
 }
 
