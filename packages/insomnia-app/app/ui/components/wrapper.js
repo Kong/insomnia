@@ -4,7 +4,6 @@ import type {Response} from '../../models/response';
 import type {OAuth2Token} from '../../models/o-auth-2-token';
 import type {Workspace} from '../../models/workspace';
 import type {Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter} from '../../models/request';
-import {updateMimeType} from '../../models/request';
 
 import * as React from 'react';
 import autobind from 'autobind-decorator';
