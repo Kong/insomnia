@@ -39,6 +39,7 @@ import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
+import {updateMimeType} from '../../models/request';
 
 @autobind
 class App extends PureComponent {
@@ -354,6 +355,30 @@ class App extends PureComponent {
       responseFilterHistory.unshift(responseFilter);
       await this._updateRequestMetaByParentId(requestId, {responseFilterHistory});
     }, 2000);
+  }
+
+  async _handleUpdateRequestMimeType (mimeType) {
+    if (!this.props.activeRequest) {
+      console.warn('Tried to update request mime-type when no active request');
+      return null;
+    }
+
+    const requestMeta = await models.requestMeta.getByParentId(this.props.activeRequest._id);
+    const savedBody = requestMeta.savedRequestBody;
+
+    const saveValue = (typeof mimeType !== 'string') // Switched to No body
+      ? this.props.activeRequest.body
+      : {}; // Clear saved value in requestMeta
+
+    await models.requestMeta.update(requestMeta, {savedRequestBody: saveValue});
+
+    const newRequest = await updateMimeType(this.props.activeRequest, mimeType, false, savedBody);
+
+    // Force it to update, because other editor components (header editor)
+    // needs to change. Need to wait a delay so the next render can finish
+    setTimeout(this._forceRequestPaneRefresh, 300);
+
+    return newRequest;
   }
 
   async _handleSendAndDownloadRequestWithEnvironment (requestId, environmentId, dir) {
@@ -856,6 +881,7 @@ class App extends PureComponent {
               handleSetActiveEnvironment={this._handleSetActiveEnvironment}
               handleSetSidebarFilter={this._handleSetSidebarFilter}
               handleToggleMenuBar={this._handleToggleMenuBar}
+              handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
             />
           </ErrorBoundary>
 

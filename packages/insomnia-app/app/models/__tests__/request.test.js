@@ -120,6 +120,34 @@ describe('updateMimeType()', async () => {
     expect(newRequest.body).toEqual({});
     expect(newRequest.headers).toEqual([{name: 'content-tYPE', value: 'application/json'}]);
   });
+
+  it('uses saved body when provided', async () => {
+    const request = await models.request.create({
+      name: 'My Request',
+      parentId: 'fld_1',
+      body: {
+        text: 'My Data'
+      }
+    });
+    expect(request).not.toBeNull();
+
+    const newRequest = await models.request.updateMimeType(request, 'application/json', false, {text: 'Saved Data'});
+    expect(newRequest.body.text).toEqual('Saved Data');
+  });
+
+  it('uses existing body when saved body not provided', async () => {
+    const request = await models.request.create({
+      name: 'My Request',
+      parentId: 'fld_1',
+      body: {
+        text: 'My Data'
+      }
+    });
+    expect(request).not.toBeNull();
+
+    const newRequest = await models.request.updateMimeType(request, 'application/json', false, {});
+    expect(newRequest.body.text).toEqual('My Data');
+  });
 });
 
 describe('migrate()', () => {
