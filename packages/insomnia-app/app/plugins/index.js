@@ -17,7 +17,7 @@ export type Plugin = {
 };
 
 export type TemplateTag = {
-  plugin: string,
+  plugin: Plugin,
   templateTag: PluginTemplateTag
 }
 
@@ -29,6 +29,14 @@ export type RequestHook = {
 export type ResponseHook = {
   plugin: Plugin,
   hook: Function
+}
+
+export type ResponseViewer = {
+  plugin: Plugin,
+  match: RegExp,
+  key: string,
+  name: string,
+  component: React.Component,
 }
 
 const CORE_PLUGINS = [
@@ -130,13 +138,26 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
   return plugins;
 }
 
+export async function getResponseViewers (): Promise<Array<ResponseViewer>> {
+  let extensions = [];
+  for (const plugin of await getPlugins()) {
+    const responseViewers = plugin.module.responseViewers || [];
+    extensions = [
+      ...extensions,
+      ...responseViewers.map(rv => ({plugin, ...rv}))
+    ];
+  }
+
+  return extensions;
+}
+
 export async function getTemplateTags (): Promise<Array<TemplateTag>> {
   let extensions = [];
   for (const plugin of await getPlugins()) {
     const templateTags = plugin.module.templateTags || [];
     extensions = [
       ...extensions,
-      ...templateTags.map(tt => ({plugin: plugin.name, templateTag: tt}))
+      ...templateTags.map(tt => ({plugin: plugin, templateTag: tt}))
     ];
   }
 

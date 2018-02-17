@@ -12,6 +12,7 @@ import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
 import {HUGE_RESPONSE_MB, LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
 import Wrap from '../wrap';
+import * as plugins from '../../../plugins';
 
 let alwaysShowLargeResponses = false;
 
@@ -43,6 +44,8 @@ type State = {
 
 @autobind
 class ResponseViewer extends React.Component<Props, State> {
+  _responseViewers: Array<plugins.ResponseViewer>;
+
   constructor (props: Props) {
     super(props);
     this.state = {
@@ -50,6 +53,7 @@ class ResponseViewer extends React.Component<Props, State> {
       bodyBuffer: null,
       error: ''
     };
+    this._responseViewers = [];
   }
 
   _handleOpenLink (link: string) {
@@ -84,8 +88,26 @@ class ResponseViewer extends React.Component<Props, State> {
     }
   }
 
+  async _loadResponseViewers () {
+    this._responseViewers = await plugins.getResponseViewers();
+    this.forceUpdate();
+  }
+
+  _renderResponseViewer (): React.Node {
+    for (const rv of this._responseViewers) {
+      if (rv.key === this.props.previewMode && rv.match.test(this.props.contentType)) {
+        return React.createElement(rv.component, {
+          bodyBuffer: this.state.bodyBuffer
+        });
+      }
+    }
+
+    return null;
+  }
+
   componentWillMount () {
     this._maybeLoadResponseBody(this.props);
+    this._loadResponseViewers();
   }
 
   componentWillReceiveProps (nextProps: Props) {
@@ -248,6 +270,11 @@ class ResponseViewer extends React.Component<Props, State> {
       }
     } catch (e) {
       // Nothing
+    }
+
+    const bodyViewer = this._renderResponseViewer();
+    if (bodyViewer) {
+      return bodyViewer;
     }
 
     const ct = contentType.toLowerCase();
