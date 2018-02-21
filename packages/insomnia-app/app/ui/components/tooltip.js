@@ -20,7 +20,7 @@ type State = {
 
 @autobind
 class Tooltip extends React.PureComponent<Props, State> {
-  _showTimeout: number;
+  _showTimeout: TimeoutID;
 
   // TODO: Figure out what type these should be
   _tooltip: ?HTMLDivElement;

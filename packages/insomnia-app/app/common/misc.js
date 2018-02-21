@@ -105,7 +105,7 @@ export function removeVowels (str: string): string {
 }
 
 export function keyedDebounce (callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
-  let timeout = null;
+  let timeout: TimeoutID;
   let results = {};
 
   return function (key, ...args) {

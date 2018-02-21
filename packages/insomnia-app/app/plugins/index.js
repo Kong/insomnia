@@ -1,5 +1,4 @@
 // @flow
-import type {Component} from 'react';
 import mkdirp from 'mkdirp';
 import * as models from '../models';
 import fs from 'fs';
@@ -37,7 +36,7 @@ export type ResponseViewer = {|
   name: string,
   previewMode: string,
   contentType: RegExp | string | Array<RegExp | string>,
-  component: Component<any, any>,
+  component: React$ElementType,
 |}
 
 const CORE_PLUGINS = [

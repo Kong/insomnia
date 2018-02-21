@@ -97,7 +97,7 @@ class ResponseViewer extends React.Component<Props, State> {
   _renderResponseViewer (): React.Node {
     const {contentType} = this.props;
     for (const rv of this._responseViewers) {
-      if (rv.previewMode === this.props.previewMode && matchRegexs(contentType, rv.contentTypes)) {
+      if (rv.previewMode === this.props.previewMode && matchRegexs(contentType, rv.contentType)) {
         return React.createElement(rv.component, {
           bodyBuffer: this.state.bodyBuffer
         });
