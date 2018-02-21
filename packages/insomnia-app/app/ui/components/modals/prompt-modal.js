@@ -97,6 +97,9 @@ class PromptModal extends PureComponent {
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
+      if (!this._input) {
+        return;
+      }
       this._input.value = defaultValue || '';
       this._input.focus();
       selectText && this._input.select();
