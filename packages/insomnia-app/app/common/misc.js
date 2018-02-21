@@ -285,3 +285,21 @@ export async function waitForStreamToFinish (s: Readable | Writable): Promise<vo
     });
   });
 }
+
+export function matchRegexs (str: string, regexs: RegExp | string | Array<RegExp | string>): boolean {
+  if (!Array.isArray(regexs)) {
+    regexs = [regexs];
+  }
+
+  for (const re of regexs) {
+    if (re instanceof RegExp && re.test(str)) {
+      return true;
+    }
+
+    if (typeof re === 'string' && re === str) {
+      return true;
+    }
+  }
+
+  return false;
+}

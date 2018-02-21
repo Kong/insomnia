@@ -10,9 +10,10 @@ import ResponseWebView from './response-webview';
 import MultipartViewer from './response-multipart';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
-import {HUGE_RESPONSE_MB, LARGE_RESPONSE_MB, PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW} from '../../../common/constants';
+import {HUGE_RESPONSE_MB, LARGE_RESPONSE_MB, PREVIEW_MODE_PREVIEW, PREVIEW_MODE_RAW} from '../../../common/constants';
 import Wrap from '../wrap';
 import * as plugins from '../../../plugins';
+import {matchRegexs} from '../../../common/misc';
 
 let alwaysShowLargeResponses = false;
 
@@ -94,8 +95,9 @@ class ResponseViewer extends React.Component<Props, State> {
   }
 
   _renderResponseViewer (): React.Node {
+    const {contentType} = this.props;
     for (const rv of this._responseViewers) {
-      if (rv.key === this.props.previewMode && rv.match.test(this.props.contentType)) {
+      if (rv.previewMode === this.props.previewMode && matchRegexs(contentType, rv.contentTypes)) {
         return React.createElement(rv.component, {
           bodyBuffer: this.state.bodyBuffer
         });
@@ -278,7 +280,7 @@ class ResponseViewer extends React.Component<Props, State> {
     }
 
     const ct = contentType.toLowerCase();
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
+    if (previewMode === PREVIEW_MODE_PREVIEW && ct.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
@@ -290,7 +292,7 @@ class ResponseViewer extends React.Component<Props, State> {
           </div>
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
+    } else if (previewMode === PREVIEW_MODE_PREVIEW && ct.includes('html')) {
       const justContentType = contentType.split(';')[0];
       const match = contentType.match(/charset=([\w-]+)/);
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
@@ -301,19 +303,19 @@ class ResponseViewer extends React.Component<Props, State> {
           url={url}
         />
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
+    } else if (previewMode === PREVIEW_MODE_PREVIEW && ct.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
           <PDFViewer body={bodyBuffer} uniqueKey={responseId}/>
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
+    } else if (previewMode === PREVIEW_MODE_PREVIEW && ct.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
           <CSVViewer body={bodyBuffer}/>
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
+    } else if (previewMode === PREVIEW_MODE_PREVIEW && ct.indexOf('multipart/') === 0) {
       return (
         <MultipartViewer
           bodyBuffer={bodyBuffer}
@@ -329,7 +331,7 @@ class ResponseViewer extends React.Component<Props, State> {
           url={url}
         />
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
+    } else if (previewMode === PREVIEW_MODE_PREVIEW && ct.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (

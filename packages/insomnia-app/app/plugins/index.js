@@ -1,4 +1,5 @@
 // @flow
+import type {Component} from 'react';
 import mkdirp from 'mkdirp';
 import * as models from '../models';
 import fs from 'fs';
@@ -8,36 +9,36 @@ import {resolveHomePath} from '../common/misc';
 import {showError} from '../ui/components/modals/index';
 import type {PluginTemplateTag} from '../templating/extensions/index';
 
-export type Plugin = {
+export type Plugin = {|
   name: string,
   description: string,
   version: string,
   directory: string,
   module: *
-};
+|};
 
-export type TemplateTag = {
+export type TemplateTag = {|
   plugin: Plugin,
   templateTag: PluginTemplateTag
-}
+|}
 
-export type RequestHook = {
+export type RequestHook = {|
   plugin: Plugin,
   hook: Function
-}
+|}
 
-export type ResponseHook = {
+export type ResponseHook = {|
   plugin: Plugin,
   hook: Function
-}
+|}
 
-export type ResponseViewer = {
+export type ResponseViewer = {|
   plugin: Plugin,
-  match: RegExp,
-  key: string,
   name: string,
-  component: React.Component,
-}
+  previewMode: string,
+  contentType: RegExp | string | Array<RegExp | string>,
+  component: Component<any, any>,
+|}
 
 const CORE_PLUGINS = [
   'insomnia-plugin-base64',
@@ -144,7 +145,13 @@ export async function getResponseViewers (): Promise<Array<ResponseViewer>> {
     const responseViewers = plugin.module.responseViewers || [];
     extensions = [
       ...extensions,
-      ...responseViewers.map(rv => ({plugin, ...rv}))
+      ...responseViewers.map(rv => ({
+        plugin,
+        name: rv.name,
+        previewMode: rv.previewMode,
+        contentType: rv.contentType,
+        component: rv.component
+      }))
     ];
   }
 

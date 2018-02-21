@@ -251,6 +251,7 @@ class ResponsePane extends React.PureComponent<Props> {
           <TabList>
             <Tab>
               <PreviewModeDropdown
+                contentType={response.contentType}
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
                 previewMode={previewMode}
