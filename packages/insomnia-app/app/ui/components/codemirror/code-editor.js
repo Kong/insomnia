@@ -74,7 +74,8 @@ class CodeEditor extends React.Component {
     };
 
     this._originalCode = '';
-    this._uniquenessKey = props.uniquenessKey;
+    this._uniquenessKey = this.props.uniquenessKey;
+    this._previousUniquenessKey = 'n/a';
   }
 
   componentWillUnmount () {
@@ -87,14 +88,21 @@ class CodeEditor extends React.Component {
     this._restoreState();
   }
 
+  componentWillReceiveProps (nextProps) {
+    this._uniquenessKey = nextProps.uniquenessKey;
+    this._previousUniquenessKey = this.props.uniquenessKey;
+
+    // Sync the filter too
+    this.setState({filter: nextProps.filter || ''});
+  }
+
   componentDidUpdate () {
     this._codemirrorSetOptions();
-    const {uniquenessKey, defaultValue} = this.props;
-    if (uniquenessKey && uniquenessKey !== this._uniquenessKey) {
+    const {defaultValue} = this.props;
+    if (this._uniquenessKey && this._uniquenessKey !== this._previousUniquenessKey) {
       this._codemirrorSetValue(defaultValue);
       this._restoreState();
     }
-    this._uniquenessKey = uniquenessKey;
   }
 
   shouldComponentUpdate (nextProps) {
@@ -351,6 +359,7 @@ class CodeEditor extends React.Component {
     try {
       let jsonString = code;
 
+      console.log('FILTER', this.state.filter);
       if (this.props.updateFilter && this.state.filter) {
         let obj = JSON.parse(code);
         try {
@@ -787,7 +796,11 @@ class CodeEditor extends React.Component {
 
     let toolbar = null;
     if (toolbarChildren.length) {
-      toolbar = <div className="editor__toolbar">{toolbarChildren}</div>;
+      toolbar = (
+        <div key={this._uniquenessKey} className="editor__toolbar">
+          {toolbarChildren}
+        </div>
+      );
     }
 
     const styles = {};

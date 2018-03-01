@@ -87,6 +87,7 @@ class Sidebar extends PureComponent {
         </div>
 
         <SidebarFilter
+          key={`${workspace._id}::filter`}
           onChange={handleChangeFilter}
           requestCreate={this._handleCreateRequestInWorkspace}
           requestGroupCreate={this._handleCreateRequestGroupInWorkspace}
