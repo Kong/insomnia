@@ -84,7 +84,7 @@ class PromptModal extends PureComponent {
       defaultValue,
       submitName,
       selectText,
-      cancelable,
+      cancelable: cancelable === undefined ? true : cancelable,
       placeholder,
       upperCase,
       hint,
