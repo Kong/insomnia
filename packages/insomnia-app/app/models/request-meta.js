@@ -37,6 +37,16 @@ export function getByParentId (parentId) {
   return db.getWhere(type, {parentId});
 }
 
+export async function getOrCreateByParentId (parentId) {
+  const requestMeta = await getByParentId(parentId);
+
+  if (requestMeta) {
+    return requestMeta;
+  }
+
+  return create({parentId});
+}
+
 export function all () {
   return db.all(type);
 }

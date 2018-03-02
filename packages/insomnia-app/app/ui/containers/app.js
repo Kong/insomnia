@@ -363,7 +363,9 @@ class App extends PureComponent {
       return null;
     }
 
-    const requestMeta = await models.requestMeta.getByParentId(this.props.activeRequest._id);
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(
+      this.props.activeRequest._id
+    );
     const savedBody = requestMeta.savedRequestBody;
 
     const saveValue = (typeof mimeType !== 'string') // Switched to No body
@@ -841,7 +843,8 @@ class App extends PureComponent {
     }
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
+      <KeydownBinder onKeydown={this._handleKeyDown}
+                     key={this.props.activeWorkspace ? this.props.activeWorkspace._id : 'n/a'}>
         <div className="app">
           <ErrorBoundary showAlert>
             <Wrapper
