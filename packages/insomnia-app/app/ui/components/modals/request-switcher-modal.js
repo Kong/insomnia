@@ -122,7 +122,28 @@ class RequestSwitcherModal extends PureComponent {
     this._handleChangeValue(e.target.value);
   }
 
-  isMatch (searchStrings) {
+  /**
+   * Appends path of ancestor groups, delimited by forward slashes
+   * E.g. Folder1/Folder2/Folder3
+   */
+  _groupOf (request) {
+    const {workspaceChildren} = this.props;
+    const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
+    const matchedGroups = requestGroups.filter(g => g._id === request.parentId);
+    const currentGroupName = request.type === models.requestGroup.type && request.name ? `${request.name}` : '';
+
+    if (matchedGroups.length === 0) {
+      return currentGroupName;
+    }
+
+    const parentGroup = this._groupOf(matchedGroups[0]);
+    const parentGroupText = parentGroup ? `${parentGroup}/` : '';
+    const group = `${parentGroupText}${currentGroupName}`;
+
+    return group;
+  }
+
+  _isMatch (searchStrings) {
     return (request) => {
       // Match request attributes
       const matchesAttributes = fuzzyMatchAll(searchStrings,
@@ -130,6 +151,7 @@ class RequestSwitcherModal extends PureComponent {
           request.name,
           request.url,
           request.method,
+          this._groupOf(request),
           ...(request.parameters
             ? request.parameters.map(p => `${p.name}=${p.value}`)
             : [])
@@ -147,9 +169,11 @@ class RequestSwitcherModal extends PureComponent {
     const {workspaceId, activeRequestParentId} = this.props;
 
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
+    let matchedRequests = workspaceChildren
+      .filter(d => d.type === models.request.type);
+
     if (searchString) {
-      matchedRequests = matchedRequests.filter(this.isMatch(searchString));
+      matchedRequests = matchedRequests.filter(this._isMatch(searchString));
     }
 
     matchedRequests = matchedRequests.sort((a, b) => {
