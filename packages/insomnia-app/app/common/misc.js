@@ -241,6 +241,14 @@ export function fuzzyMatch (searchString: string, text: string): boolean {
   return toMatch.test(text.toLowerCase());
 }
 
+export function fuzzyMatchAll (searchString: string, allText: Array<string>): boolean {
+  return searchString
+    .split(' ')
+    .every(searchWord =>
+      allText.some(text =>
+        fuzzyMatch(searchWord, text)));
+}
+
 export function getViewportSize (): string | null {
   const {BrowserWindow} = electron.remote || electron;
   const w = BrowserWindow.getFocusedWindow() ||

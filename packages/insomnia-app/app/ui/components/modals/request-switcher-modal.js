@@ -8,7 +8,7 @@ import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
-import {fuzzyMatch} from '../../../common/misc';
+import {fuzzyMatchAll} from '../../../common/misc';
 
 @autobind
 class RequestSwitcherModal extends PureComponent {
@@ -122,6 +122,17 @@ class RequestSwitcherModal extends PureComponent {
     this._handleChangeValue(e.target.value);
   }
 
+  isMatch (searchStrings) {
+    return (request) => {
+      const matchesAttributes = fuzzyMatchAll(searchStrings, [ request.name, request.url, request.method ])
+
+      // Match exact Id
+      const matchesId = request._id === searchStrings;
+
+      return matchesAttributes || matchesId;
+    }
+  }
+
   async _handleChangeValue (searchString) {
     const {workspaceChildren, workspaces} = this.props;
     const {workspaceId, activeRequestParentId} = this.props;
@@ -129,17 +140,7 @@ class RequestSwitcherModal extends PureComponent {
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
     if (searchString) {
-      matchedRequests = matchedRequests.filter(r => {
-        const name = r.name.toLowerCase();
-
-        // Fuzzy match searchString to name
-        const matchesName = fuzzyMatch(searchString, name);
-
-        // Match exact Id
-        const matchesId = r._id === searchString;
-
-        return matchesName || matchesId;
-      });
+      matchedRequests = matchedRequests.filter(this.isMatch(searchString));
     }
 
     matchedRequests = matchedRequests.sort((a, b) => {
