@@ -124,13 +124,22 @@ class RequestSwitcherModal extends PureComponent {
 
   isMatch (searchStrings) {
     return (request) => {
-      const matchesAttributes = fuzzyMatchAll(searchStrings, [ request.name, request.url, request.method ])
+      // Match request attributes
+      const matchesAttributes = fuzzyMatchAll(searchStrings,
+        [
+          request.name,
+          request.url,
+          request.method,
+          ...(request.parameters
+            ? request.parameters.map(p => `${p.name}=${p.value}`)
+            : [])
+        ]);
 
       // Match exact Id
       const matchesId = request._id === searchStrings;
 
       return matchesAttributes || matchesId;
-    }
+    };
   }
 
   async _handleChangeValue (searchString) {
