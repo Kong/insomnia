@@ -127,9 +127,10 @@ describe('fuzzyMatchAll()', () => {
   it('can get a positive fuzzy match on multiple fields', () => {
     expect(misc.fuzzyMatchAll('', [undefined])).toEqual(true);
     expect(misc.fuzzyMatchAll('', ['testing'])).toEqual(true);
+    expect(misc.fuzzyMatchAll('   ', ['testing'])).toEqual(true);
     expect(misc.fuzzyMatchAll('test', ['testing'])).toEqual(true);
     expect(misc.fuzzyMatchAll('tstg', ['testing'])).toEqual(true);
-    expect(misc.fuzzyMatchAll('tstg this ou', ['testing', 'this', 'out'])).toEqual(true);
+    expect(misc.fuzzyMatchAll('tstg  this ou', ['testing', 'this', 'out'])).toEqual(true);
   });
 
   it('can get a negative fuzzy match on multiple fields', () => {
