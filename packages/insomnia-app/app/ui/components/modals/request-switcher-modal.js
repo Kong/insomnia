@@ -259,7 +259,7 @@ class RequestSwitcherModal extends PureComponent {
             <div className="form-control form-control--outlined no-margin">
               <input
                 type="text"
-                placeholder="Fuzzy search by Request Name, Folder, URL, Method, or Query String"
+                placeholder="Fuzzy filter by request name, folder, url, method, or query parameters"
                 ref={this._setInputRef}
                 value={searchString}
                 onChange={this._handleChange}
