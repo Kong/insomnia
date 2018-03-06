@@ -16,6 +16,6 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "moment": "^2.19.2"
+    "moment": "^2.21.0"
   }
 }
