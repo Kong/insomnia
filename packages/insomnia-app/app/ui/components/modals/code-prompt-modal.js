@@ -70,6 +70,8 @@ class CodePromptModal extends PureComponent {
     this._onChange = onChange;
     this._onModeChange = onModeChange;
 
+    const realMode = typeof mode === 'string' ? mode : 'text/plain';
+
     this.setState({
       title,
       defaultValue,
@@ -78,7 +80,7 @@ class CodePromptModal extends PureComponent {
       hint,
       enableRender,
       hideMode,
-      mode: mode || this.state.mode
+      mode: realMode || this.state.mode || 'text/plain'
     });
 
     this.modal.show();

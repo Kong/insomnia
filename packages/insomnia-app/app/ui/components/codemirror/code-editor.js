@@ -359,7 +359,6 @@ class CodeEditor extends React.Component {
     try {
       let jsonString = code;
 
-      console.log('FILTER', this.state.filter);
       if (this.props.updateFilter && this.state.filter) {
         let obj = JSON.parse(code);
         try {

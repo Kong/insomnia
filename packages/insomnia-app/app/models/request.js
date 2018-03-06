@@ -1,6 +1,6 @@
 // @flow
 import type {BaseModel} from './index';
-import {AUTH_BASIC, AUTH_DIGEST, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, AUTH_HAWK, AUTH_AWS_IAM, AUTH_NETRC, AUTH_ASAP, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_GET, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_POST, HAWK_ALGORITHM_SHA256} from '../common/constants';
+import {AUTH_ASAP, AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_HAWK, AUTH_NETRC, AUTH_NONE, AUTH_NTLM, AUTH_OAUTH_1, AUTH_OAUTH_2, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, HAWK_ALGORITHM_SHA256, METHOD_GET, METHOD_POST} from '../common/constants';
 import * as db from '../common/database';
 import {getContentTypeHeader} from '../common/misc';
 import {buildQueryStringFromParams, deconstructQueryStringToParams} from 'insomnia-url';
@@ -32,6 +32,7 @@ export type RequestBodyParameter = {
   name: string,
   value: string,
   disabled?: boolean,
+  multiline?: string,
   id?: string,
   fileName?: string,
   type?: string
@@ -175,29 +176,9 @@ export function newBodyRaw (rawBody: string, contentType?: string): RequestBody 
 }
 
 export function newBodyFormUrlEncoded (parameters: Array<RequestBodyParameter> | null): RequestBody {
-  // Remove any properties (eg. fileName) that might not fit
-  parameters = (parameters || []).map(parameter => {
-    const newParameter: RequestBodyParameter = {
-      name: parameter.name,
-      value: parameter.value
-    };
-
-    if (parameter.hasOwnProperty('id')) {
-      newParameter.id = parameter.id;
-    }
-
-    if (parameter.hasOwnProperty('disabled')) {
-      newParameter.disabled = parameter.disabled;
-    } else {
-      newParameter.disabled = false;
-    }
-
-    return newParameter;
-  });
-
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
-    params: parameters
+    params: parameters || []
   };
 }
 
