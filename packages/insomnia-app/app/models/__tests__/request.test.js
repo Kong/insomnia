@@ -6,6 +6,7 @@ describe('init()', () => {
   it('contains all required fields', async () => {
     Date.now = jest.fn().mockReturnValue(1478795580200);
     expect(models.request.init()).toEqual({
+      isPrivate: false,
       authentication: {},
       body: {},
       headers: [],
@@ -35,6 +36,7 @@ describe('create()', async () => {
     });
     const expected = {
       _id: 'req_cc1dd2ca4275747aa88199e8efd42403',
+      isPrivate: false,
       created: 1478795580200,
       modified: 1478795580200,
       parentId: 'fld_124',
@@ -296,6 +298,7 @@ describe('migrate()', () => {
 
     const expected = {
       _id: 'req_123',
+      isPrivate: false,
       type: 'Request',
       url: '',
       created: 1478795580200,
