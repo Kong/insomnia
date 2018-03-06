@@ -180,8 +180,8 @@ describe('migrate()', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'foo', value: 'bar', disabled: false},
-          {name: 'baz', value: '{{ hello }}', disabled: false}
+          {name: 'foo', value: 'bar'},
+          {name: 'baz', value: '{{ hello }}'}
         ]
       },
       url: ''
@@ -201,8 +201,8 @@ describe('migrate()', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'foo', value: 'bar', disabled: false},
-          {name: 'baz', value: '{{ hello }}', disabled: false}
+          {name: 'foo', value: 'bar'},
+          {name: 'baz', value: '{{ hello }}'}
         ]
       },
       url: ''
@@ -222,7 +222,7 @@ describe('migrate()', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: '{"foo": "bar"}', value: '', disabled: false}
+          {name: '{"foo": "bar"}', value: ''}
         ]
       },
       url: ''

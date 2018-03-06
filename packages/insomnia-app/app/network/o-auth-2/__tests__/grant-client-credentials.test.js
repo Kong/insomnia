@@ -44,8 +44,8 @@ describe('client_credentials', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'grant_type', value: 'client_credentials', disabled: false},
-          {name: 'scope', value: SCOPE, disabled: false}
+          {name: 'grant_type', value: 'client_credentials'},
+          {name: 'scope', value: SCOPE}
         ]
       },
       headers: [
@@ -98,10 +98,10 @@ describe('client_credentials', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'grant_type', value: 'client_credentials', disabled: false},
-          {name: 'scope', value: SCOPE, disabled: false},
-          {name: 'client_id', value: CLIENT_ID, disabled: false},
-          {name: 'client_secret', value: CLIENT_SECRET, disabled: false}
+          {name: 'grant_type', value: 'client_credentials'},
+          {name: 'scope', value: SCOPE},
+          {name: 'client_id', value: CLIENT_ID},
+          {name: 'client_secret', value: CLIENT_SECRET}
         ]
       },
       headers: [
