@@ -730,6 +730,7 @@ export async function send (
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();
   const ancestors = await db.withAncestors(request, [
+    models.request.type,
     models.requestGroup.type,
     models.workspace.type
   ]);

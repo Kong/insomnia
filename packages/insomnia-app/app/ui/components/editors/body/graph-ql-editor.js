@@ -15,8 +15,6 @@ import prettify from 'insomnia-prettify';
 import * as network from '../../../../network/network';
 import type {Workspace} from '../../../../models/workspace';
 import type {Settings} from '../../../../models/settings';
-import type {RenderedRequest} from '../../../../common/render';
-import {getRenderedRequest} from '../../../../common/render';
 import TimeFromNow from '../../time-from-now';
 import * as models from '../../../../models/index';
 import * as db from '../../../../common/database';
@@ -79,7 +77,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   async _fetchAndSetSchema (rawRequest: Request) {
     this.setState({schemaIsFetching: true});
 
-    const {workspace, settings, environmentId} = this.props;
+    const {environmentId} = this.props;
 
     const newState = {
       schema: this.state.schema,
@@ -88,52 +86,34 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       schemaIsFetching: false
     };
 
-    let request: RenderedRequest | null = null;
     try {
-      request = await getRenderedRequest(rawRequest, environmentId);
-    } catch (err) {
-      newState.schemaFetchError = `Failed to fetch schema: ${err}`;
-    }
+      const bodyJson = JSON.stringify({query: introspectionQuery});
+      const introspectionRequest = await db.upsert(Object.assign({}, rawRequest, {
+        _id: rawRequest._id + '.graphql',
+        parentId: rawRequest._id,
+        body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
+      }));
 
-    if (request) {
-      try {
-        const bodyJson = JSON.stringify({query: introspectionQuery});
-        const introspectionRequest = Object.assign({}, request, {
-          _id: request._id + '.graphql',
-          parentId: request._id,
-          body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
-        });
+      const response = await network.send(introspectionRequest._id, environmentId);
+      const bodyBuffer = models.response.getBodyBuffer(response);
 
-        // We need to save this request because other parts of the
-        // app may look it up
-        await db.upsert(introspectionRequest);
+      const status = typeof response.statusCode === 'number' ? response.statusCode : 0;
+      const error = typeof response.error === 'string' ? response.error : '';
 
-        const response = await network._actuallySend(
-          introspectionRequest,
-          workspace,
-          settings
-        );
-
-        const bodyBuffer = models.response.getBodyBuffer(response);
-
-        const status = typeof response.statusCode === 'number' ? response.statusCode : 0;
-        const error = typeof response.error === 'string' ? response.error : '';
-
-        if (error) {
-          newState.schemaFetchError = error;
-        } else if (status < 200 || status >= 300) {
-          newState.schemaFetchError = `Got status ${status} fetching schema from "${request.url}"`;
-        } else if (bodyBuffer) {
-          const {data} = JSON.parse(bodyBuffer.toString());
-          newState.schema = buildClientSchema(data);
-          newState.schemaLastFetchTime = Date.now();
-        } else {
-          newState.schemaFetchError = 'No response body received when fetching schema';
-        }
-      } catch (err) {
-        console.warn(`Failed to fetch GraphQL schema from ${request.url}`, err);
-        newState.schemaFetchError = `Failed to contact "${request.url}" to fetch schema`;
+      if (error) {
+        newState.schemaFetchError = error;
+      } else if (status < 200 || status >= 300) {
+        newState.schemaFetchError = `Got status ${status} fetching schema from "${rawRequest.url}"`;
+      } else if (bodyBuffer) {
+        const {data} = JSON.parse(bodyBuffer.toString());
+        newState.schema = buildClientSchema(data);
+        newState.schemaLastFetchTime = Date.now();
+      } else {
+        newState.schemaFetchError = 'No response body received when fetching schema';
       }
+    } catch (err) {
+      console.warn(`Failed to fetch GraphQL schema from ${rawRequest.url}`, err);
+      newState.schemaFetchError = `Failed to contact "${rawRequest.url}" to fetch schema ${err.message}`;
     }
 
     if (this._isMounted) {
