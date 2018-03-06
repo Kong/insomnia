@@ -421,7 +421,7 @@ export async function _actuallySend (
           });
         }
 
-        const fd = fs.openSync(multipartBodyPath, 'r+');
+        const fd = fs.openSync(multipartBodyPath, 'r');
 
         setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
         setOpt(Curl.option.UPLOAD, 1);
@@ -441,7 +441,7 @@ export async function _actuallySend (
       } else if (renderedRequest.body.fileName) {
         const {size} = fs.statSync(renderedRequest.body.fileName);
         const fileName = renderedRequest.body.fileName || '';
-        const fd = fs.openSync(fileName, 'r+');
+        const fd = fs.openSync(fileName, 'r');
 
         setOpt(Curl.option.INFILESIZE_LARGE, size);
         setOpt(Curl.option.UPLOAD, 1);
