@@ -107,6 +107,7 @@
     "insomnia-plugin-base64": "^1.0.3",
     "insomnia-plugin-file": "^1.0.3",
     "insomnia-plugin-hash": "^1.0.3",
+    "insomnia-plugin-jsonpath": "^1.0.1",
     "insomnia-plugin-now": "^1.0.4",
     "insomnia-plugin-prompt": "^1.0.9",
     "insomnia-plugin-request": "^1.0.6",
