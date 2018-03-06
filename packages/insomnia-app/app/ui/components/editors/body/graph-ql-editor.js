@@ -91,6 +91,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       const introspectionRequest = await db.upsert(Object.assign({}, rawRequest, {
         _id: rawRequest._id + '.graphql',
         parentId: rawRequest._id,
+        isPrivate: true, // So it doesn't get synced or exported
         body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
       }));
 

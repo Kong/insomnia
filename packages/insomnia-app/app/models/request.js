@@ -54,6 +54,7 @@ type BaseRequest = {
   headers: Array<RequestHeader>,
   authentication: RequestAuthentication,
   metaSortKey: number,
+  isPrivate: boolean,
 
   // Settings
   settingStoreCookies: boolean,
@@ -75,6 +76,7 @@ export function init (): BaseRequest {
     headers: [],
     authentication: {},
     metaSortKey: -1 * Date.now(),
+    isPrivate: false,
 
     // Settings
     settingStoreCookies: true,
