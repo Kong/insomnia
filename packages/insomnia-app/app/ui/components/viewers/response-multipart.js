@@ -9,7 +9,7 @@ import {PassThrough} from 'stream';
 import multiparty from 'multiparty';
 import autobind from 'autobind-decorator';
 import ResponseViewer from './response-viewer';
-import {getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY} from '../../../common/constants';
+import {getContentTypeFromHeaders, PREVIEW_MODE_PREVIEW} from '../../../common/constants';
 import type {ResponseHeader} from '../../../models/response';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown/index';
 import {trackEvent} from '../../../common/analytics';
@@ -281,7 +281,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
               filter={filter}
               filterHistory={filterHistory}
               getBody={this._getBody}
-              previewMode={PREVIEW_MODE_FRIENDLY}
+              previewMode={PREVIEW_MODE_PREVIEW}
               responseId={`${responseId}[${activePart}]`}
               updateFilter={null}
               url={url}

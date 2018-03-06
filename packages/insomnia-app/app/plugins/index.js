@@ -8,28 +8,36 @@ import {resolveHomePath} from '../common/misc';
 import {showError} from '../ui/components/modals/index';
 import type {PluginTemplateTag} from '../templating/extensions/index';
 
-export type Plugin = {
+export type Plugin = {|
   name: string,
   description: string,
   version: string,
   directory: string,
   module: *
-};
+|};
 
-export type TemplateTag = {
-  plugin: string,
+export type TemplateTag = {|
+  plugin: Plugin,
   templateTag: PluginTemplateTag
-}
+|}
 
-export type RequestHook = {
+export type RequestHook = {|
   plugin: Plugin,
   hook: Function
-}
+|}
 
-export type ResponseHook = {
+export type ResponseHook = {|
   plugin: Plugin,
   hook: Function
-}
+|}
+
+export type ResponseViewer = {|
+  plugin: Plugin,
+  name: string,
+  previewMode: string,
+  contentType: RegExp | string | Array<RegExp | string>,
+  component: React$ElementType,
+|}
 
 const CORE_PLUGINS = [
   'insomnia-plugin-base64',
@@ -130,13 +138,32 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
   return plugins;
 }
 
+export async function getResponseViewers (): Promise<Array<ResponseViewer>> {
+  let extensions = [];
+  for (const plugin of await getPlugins()) {
+    const responseViewers = plugin.module.responseViewers || [];
+    extensions = [
+      ...extensions,
+      ...responseViewers.map(rv => ({
+        plugin,
+        name: rv.name,
+        previewMode: rv.previewMode,
+        contentType: rv.contentType,
+        component: rv.component
+      }))
+    ];
+  }
+
+  return extensions;
+}
+
 export async function getTemplateTags (): Promise<Array<TemplateTag>> {
   let extensions = [];
   for (const plugin of await getPlugins()) {
     const templateTags = plugin.module.templateTags || [];
     extensions = [
       ...extensions,
-      ...templateTags.map(tt => ({plugin: plugin.name, templateTag: tt}))
+      ...templateTags.map(tt => ({plugin: plugin, templateTag: tt}))
     ];
   }
 

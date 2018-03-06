@@ -115,12 +115,12 @@ export const HTTP_METHODS = [
 ];
 
 // Preview Modes
-export const PREVIEW_MODE_FRIENDLY = 'friendly';
+export const PREVIEW_MODE_PREVIEW = 'preview';
 export const PREVIEW_MODE_SOURCE = 'source';
 export const PREVIEW_MODE_RAW = 'raw';
 
 const previewModeMap = {
-  [PREVIEW_MODE_FRIENDLY]: ['Preview', 'Visual Preview'],
+  [PREVIEW_MODE_PREVIEW]: ['Preview', 'Visual Preview'],
   [PREVIEW_MODE_SOURCE]: ['Source', 'Source Code'],
   [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data']
 };

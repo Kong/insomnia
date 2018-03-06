@@ -1,9 +1,9 @@
-import React, {PureComponent} from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 
 @autobind
-class ResponseRaw extends PureComponent {
+class ResponseRaw extends Component {
   constructor (props) {
     super(props);
     this._timeout = null;

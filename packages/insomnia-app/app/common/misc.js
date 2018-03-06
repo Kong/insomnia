@@ -105,7 +105,7 @@ export function removeVowels (str: string): string {
 }
 
 export function keyedDebounce (callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
-  let timeout = null;
+  let timeout: TimeoutID;
   let results = {};
 
   return function (key, ...args) {
@@ -284,4 +284,22 @@ export async function waitForStreamToFinish (s: Readable | Writable): Promise<vo
       resolve();
     });
   });
+}
+
+export function matchRegexs (str: string, regexs: RegExp | string | Array<RegExp | string>): boolean {
+  if (!Array.isArray(regexs)) {
+    regexs = [regexs];
+  }
+
+  for (const re of regexs) {
+    if (re instanceof RegExp && re.test(str)) {
+      return true;
+    }
+
+    if (typeof re === 'string' && re === str) {
+      return true;
+    }
+  }
+
+  return false;
 }

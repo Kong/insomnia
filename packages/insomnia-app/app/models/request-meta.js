@@ -1,5 +1,5 @@
 import * as db from '../common/database';
-import {PREVIEW_MODE_FRIENDLY} from '../common/constants';
+import {PREVIEW_MODE_PREVIEW} from '../common/constants';
 
 export const name = 'Request Meta';
 export const type = 'RequestMeta';
@@ -9,7 +9,7 @@ export const canDuplicate = false;
 export function init () {
   return {
     parentId: null,
-    previewMode: PREVIEW_MODE_FRIENDLY,
+    previewMode: PREVIEW_MODE_PREVIEW,
     responseFilter: '',
     responseFilterHistory: [],
     activeResponseId: null,
@@ -18,6 +18,7 @@ export function init () {
 }
 
 export function migrate (doc) {
+  doc = migratePreviewMode(doc);
   return doc;
 }
 
@@ -49,4 +50,17 @@ export async function getOrCreateByParentId (parentId) {
 
 export function all () {
   return db.all(type);
+}
+
+/**
+ * Rename legacy "friendly" key to "preview"
+ * @param requestMeta
+ * @returns RequestMeta
+ */
+function migratePreviewMode (requestMeta) {
+  if (requestMeta.previewMode === 'friendly') {
+    requestMeta.previewMode = 'preview';
+  }
+
+  return requestMeta;
 }
