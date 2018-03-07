@@ -82,6 +82,7 @@ Here is a list of plugins available for installation via NPM.
 - [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Decode header or payload of JWT tokens
 - [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request.
 - [Random Number](https://www.npmjs.com/package/insomnia-plugin-randomnumber) – Generate a random integer between a minimum and maximum
+- [Chance](https://www.npmjs.com/package/insomnia-plugin-chance) – Generates a random value using Chance.JS
 - [Random Credit Card](https://www.npmjs.com/package/insomnia-plugin-randomcreditcard) – Generate random credit card numbers
 - [Random UK Sort Code](https://www.npmjs.com/package/insomnia-plugin-randomuksortcode) – Generate random UK bank sort codes
 
