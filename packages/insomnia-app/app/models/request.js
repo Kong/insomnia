@@ -151,6 +151,7 @@ export function newAuth (type: string, oldAuth: RequestAuthentication = {}): Req
         issuer: '',
         subject: '',
         audience: '',
+        additionalClaims: '',
         keyId: '',
         privateKey: ''
       };

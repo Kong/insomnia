@@ -56,6 +56,7 @@ class AsapAuth extends React.PureComponent<Props> {
       'Issuer (iss)',
       'issuer',
       'client-name',
+      'text/plain',
       (value) => this._handleChangeProperty('issuer', value)
     );
 
@@ -63,6 +64,7 @@ class AsapAuth extends React.PureComponent<Props> {
       'Subject (sub)',
       'subject',
       'some-username',
+      'text/plain',
       (value) => this._handleChangeProperty('subject', value)
     );
 
@@ -70,13 +72,23 @@ class AsapAuth extends React.PureComponent<Props> {
       'Audience (aud)',
       'audience',
       'resource-server-name',
+      'text/plain',
       (value) => this._handleChangeProperty('audience', value)
+    );
+
+    const asapAdditionalClaims = this.renderTextInput(
+      'Additional Claims',
+      'additionalClaims',
+      'additional-claims (JSON Object)',
+      'application/json',
+      (value) => this._handleChangeProperty('additionalClaims', value)
     );
 
     const asapKeyId = this.renderTextInput(
       'Key ID (kid)',
       'keyId',
       'key-identifier',
+      'text/plain',
       (value) => this._handleChangeProperty('keyId', value)
     );
 
@@ -84,13 +96,14 @@ class AsapAuth extends React.PureComponent<Props> {
       'Private Key',
     );
 
-    return [asapIssuer, asapSubject, asapAudience, asapKeyId, asapPrivateKey];
+    return [asapIssuer, asapSubject, asapAudience, asapAdditionalClaims, asapKeyId, asapPrivateKey];
   }
 
   renderTextInput (
     label: string,
     property: string,
     placeholder: string,
+    mode: string,
     onChange: Function
   ): React.Element<*> {
     const {handleRender, handleGetRenderContext, authentication, nunjucksPowerUserMode} = this.props;
@@ -108,6 +121,7 @@ class AsapAuth extends React.PureComponent<Props> {
           })}>
             <OneLineEditor
               id={id}
+              mode={mode}
               placeholder={placeholder}
               onChange={onChange}
               defaultValue={authentication[property] || ''}
