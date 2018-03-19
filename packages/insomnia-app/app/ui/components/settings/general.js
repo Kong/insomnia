@@ -74,6 +74,17 @@ class General extends React.PureComponent<Props> {
         </div>
 
         <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Multipart Form requests use percent-escaped UTF-8 encoding
+            for Content-Disposition header parameter values
+            <input type="checkbox"
+                   name="useRFC2231ForMultipart"
+                   checked={settings.useRFC2231ForMultipart}
+                   onChange={this._handleUpdateSetting}/>
+          </label>
+        </div>
+
+        <div className="form-control form-control--thin">
           <label className="inline-block">Always use vertical layout
             <input type="checkbox"
                    name="forceVerticalLayout"

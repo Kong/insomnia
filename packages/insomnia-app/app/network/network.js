@@ -408,7 +408,7 @@ export async function _actuallySend (
         requestBody = buildQueryStringFromParams(renderedRequest.body.params || [], false);
       } else if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_DATA) {
         const params = renderedRequest.body.params || [];
-        const {filePath: multipartBodyPath, boundary, contentLength} = await buildMultipart(params);
+        const {filePath: multipartBodyPath, boundary, contentLength} = await buildMultipart(params, settings);
 
         // Extend the Content-Type header
         const contentTypeHeader = getContentTypeHeader(headers);

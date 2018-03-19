@@ -1,0 +1,3 @@
+ASCII, ISO-8859-1 (LATIN-1), and WINDOWS-1252 are dead.
+
+Long live Üñîçø∂é and ü†ƒ-∞!
