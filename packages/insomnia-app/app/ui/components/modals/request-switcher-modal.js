@@ -2,6 +2,7 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
@@ -126,11 +127,11 @@ class RequestSwitcherModal extends PureComponent {
    * Appends path of ancestor groups, delimited by forward slashes
    * E.g. Folder1/Folder2/Folder3
    */
-  _groupOf (request) {
+  _groupOf (requestOrRequestGroup) {
     const {workspaceChildren} = this.props;
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
-    const matchedGroups = requestGroups.filter(g => g._id === request.parentId);
-    const currentGroupName = request.type === models.requestGroup.type && request.name ? `${request.name}` : '';
+    const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
+    const currentGroupName = requestOrRequestGroup.type === models.requestGroup.type && requestOrRequestGroup.name ? `${requestOrRequestGroup.name}` : '';
 
     if (matchedGroups.length === 0) {
       return currentGroupName;
@@ -145,16 +146,20 @@ class RequestSwitcherModal extends PureComponent {
 
   _isMatch (searchStrings) {
     return (request) => {
+      let finalUrl = request.url;
+      if (request.parameters) {
+        finalUrl = joinUrlAndQueryString(
+          finalUrl,
+          buildQueryStringFromParams(request.parameters));
+      }
+
       // Match request attributes
       const matchesAttributes = fuzzyMatchAll(searchStrings,
         [
           request.name,
-          request.url,
+          finalUrl,
           request.method,
-          this._groupOf(request),
-          ...(request.parameters
-            ? request.parameters.map(p => `${p.name}=${p.value}`)
-            : [])
+          this._groupOf(request)
         ]);
 
       // Match exact Id
