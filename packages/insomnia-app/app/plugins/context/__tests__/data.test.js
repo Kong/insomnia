@@ -64,6 +64,7 @@ describe('app.import.*', () => {
     ]);
     expect(await db.all(models.request.type)).toEqual([{
       _id: 'req_imported_1',
+      isPrivate: false,
       authentication: {},
       body: {},
       created: 111,
@@ -109,6 +110,7 @@ describe('app.import.*', () => {
     ]);
     expect(await db.all(models.request.type)).toEqual([{
       _id: 'req_imported_1',
+      isPrivate: false,
       authentication: {},
       body: {},
       created: 111,
@@ -178,6 +180,7 @@ describe('app.export.*', () => {
       }, {
         _id: 'req_1',
         _type: 'request',
+        isPrivate: false,
         authentication: {},
         body: {},
         created: 111,

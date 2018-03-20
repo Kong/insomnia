@@ -7,13 +7,14 @@ export const type = 'RequestVersion';
 export const prefix = 'rvr';
 export const canDuplicate = false;
 
-const FIELDS_TO_IGNORE_IN_REQUEST_DIFF = [
+const FIELDS_TO_IGNORE = [
   '_id',
   'type',
   'created',
   'modified',
   'metaSortKey',
   'description',
+  'parentId',
   'name'
 ];
 
@@ -65,8 +66,15 @@ export async function restore (requestVersionId) {
     return null;
   }
 
-  const request = decompressObject(requestVersion.compressedRequest);
-  return models.request.update(request);
+  const requestPatch = decompressObject(requestVersion.compressedRequest);
+  const originalRequest = await models.request.getById(requestPatch._id);
+
+  // Only restore fields that aren't blacklisted
+  for (const field of FIELDS_TO_IGNORE) {
+    delete requestPatch[field];
+  }
+
+  return models.request.update(originalRequest, requestPatch);
 }
 
 function _diffRequests (rOld, rNew) {
@@ -76,7 +84,7 @@ function _diffRequests (rOld, rNew) {
 
   for (const key of Object.keys(rOld)) {
     // Skip fields that aren't useful
-    if (FIELDS_TO_IGNORE_IN_REQUEST_DIFF.includes(key)) {
+    if (FIELDS_TO_IGNORE.includes(key)) {
       continue;
     }
 

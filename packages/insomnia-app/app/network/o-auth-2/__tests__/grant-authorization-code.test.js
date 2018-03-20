@@ -52,10 +52,10 @@ describe('authorization_code', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'grant_type', value: 'authorization_code', disabled: false},
-          {name: 'code', value: 'code_123', disabled: false},
-          {name: 'redirect_uri', value: REDIRECT_URI, disabled: false},
-          {name: 'state', value: STATE, disabled: false}
+          {name: 'grant_type', value: 'authorization_code'},
+          {name: 'code', value: 'code_123'},
+          {name: 'redirect_uri', value: REDIRECT_URI},
+          {name: 'state', value: STATE}
         ]
       },
       headers: [
@@ -113,12 +113,12 @@ describe('authorization_code', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'grant_type', value: 'authorization_code', disabled: false},
-          {name: 'code', value: 'code_123', disabled: false},
-          {name: 'redirect_uri', value: REDIRECT_URI, disabled: false},
-          {name: 'state', value: STATE, disabled: false},
-          {name: 'client_id', value: CLIENT_ID, disabled: false},
-          {name: 'client_secret', value: CLIENT_SECRET, disabled: false}
+          {name: 'grant_type', value: 'authorization_code'},
+          {name: 'code', value: 'code_123'},
+          {name: 'redirect_uri', value: REDIRECT_URI},
+          {name: 'state', value: STATE},
+          {name: 'client_id', value: CLIENT_ID},
+          {name: 'client_secret', value: CLIENT_SECRET}
         ]
       },
       headers: [

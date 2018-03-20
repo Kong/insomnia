@@ -238,7 +238,7 @@ async function _updateElementText (render, mark, text) {
         } else {
           el.innerHTML = `<label></label>${tagDefinition.displayName || tagData.name}`;
         }
-        el.title = await render(str);
+        el.title = await render(text);
       } else {
         el.innerHTML = `<label></label>${cleanedStr}`;
         el.title = 'Unrecognized tag';

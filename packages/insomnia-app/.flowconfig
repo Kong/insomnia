@@ -3,6 +3,8 @@
 .*/__fixtures__/.*
 
 [include]
+../../plugins
+../../packages
 
 [libs]
 flow-typed/

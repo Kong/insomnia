@@ -39,7 +39,8 @@ const CORE_PLUGINS = [
   'insomnia-plugin-uuid',
   'insomnia-plugin-prompt',
   'insomnia-plugin-request',
-  'insomnia-plugin-response'
+  'insomnia-plugin-response',
+  'insomnia-plugin-jsonpath'
 ];
 
 let plugins: ?Array<Plugin> = null;

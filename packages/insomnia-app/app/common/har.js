@@ -1,19 +1,22 @@
 // @flow
 import fs from 'fs';
+import clone from 'clone';
 import {Cookie as toughCookie} from 'tough-cookie';
 import * as models from '../models';
-import {getRenderedRequest} from './render';
 import type {RenderedRequest} from './render';
+import {getRenderedRequestAndContext} from './render';
 import {jarFromCookies} from 'insomnia-cookies';
+import * as pluginContexts from '../plugins/context/index';
 import * as misc from './misc';
 import type {Cookie} from '../models/cookie-jar';
-import {newBodyRaw} from '../models/request';
 import type {Request} from '../models/request';
+import {newBodyRaw} from '../models/request';
 import type {Response as ResponseModel} from '../models/response';
 import {getAuthHeader} from '../network/authentication';
 import {getAppVersion} from './constants';
 import {RenderError} from '../templating/index';
 import {smartEncodeUrl} from 'insomnia-url';
+import * as plugins from '../plugins';
 
 export type HarCookie = {
   name: string,
@@ -274,7 +277,11 @@ export async function exportHarWithRequest (
   addContentLength: boolean = false
 ): Promise<HarRequest | null> {
   try {
-    const renderedRequest = await getRenderedRequest(request, environmentId);
+    const renderResult = await getRenderedRequestAndContext(request, environmentId);
+    const renderedRequest = await _applyRequestPluginHooks(
+      renderResult.request,
+      renderResult.context
+    );
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
     if (err instanceof RenderError) {
@@ -283,6 +290,30 @@ export async function exportHarWithRequest (
       throw new Error(`Failed to export request "${request.name}"\n ${err.message}`);
     }
   }
+}
+
+async function _applyRequestPluginHooks (
+  renderedRequest: RenderedRequest,
+  renderedContext: Object
+): Promise<RenderedRequest> {
+  let newRenderedRequest = renderedRequest;
+  for (const {plugin, hook} of await plugins.getRequestHooks()) {
+    newRenderedRequest = clone(newRenderedRequest);
+
+    const context = {
+      ...pluginContexts.app.init(),
+      ...pluginContexts.request.init(newRenderedRequest, renderedContext)
+    };
+
+    try {
+      await hook(context);
+    } catch (err) {
+      err.plugin = plugin;
+      throw err;
+    }
+  }
+
+  return newRenderedRequest;
 }
 
 export async function exportHarWithRenderedRequest (

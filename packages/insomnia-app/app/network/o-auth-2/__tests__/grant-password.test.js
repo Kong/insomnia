@@ -48,10 +48,10 @@ describe('password', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'grant_type', value: 'password', disabled: false},
-          {name: 'username', value: USERNAME, disabled: false},
-          {name: 'password', value: PASSWORD, disabled: false},
-          {name: 'scope', value: SCOPE, disabled: false}
+          {name: 'grant_type', value: 'password'},
+          {name: 'username', value: USERNAME},
+          {name: 'password', value: PASSWORD},
+          {name: 'scope', value: SCOPE}
         ]
       },
       headers: [
@@ -107,12 +107,12 @@ describe('password', () => {
       body: {
         mimeType: 'application/x-www-form-urlencoded',
         params: [
-          {name: 'grant_type', value: 'password', disabled: false},
-          {name: 'username', value: USERNAME, disabled: false},
-          {name: 'password', value: PASSWORD, disabled: false},
-          {name: 'scope', value: SCOPE, disabled: false},
-          {name: 'client_id', value: CLIENT_ID, disabled: false},
-          {name: 'client_secret', value: CLIENT_SECRET, disabled: false}
+          {name: 'grant_type', value: 'password'},
+          {name: 'username', value: USERNAME},
+          {name: 'password', value: PASSWORD},
+          {name: 'scope', value: SCOPE},
+          {name: 'client_id', value: CLIENT_ID},
+          {name: 'client_secret', value: CLIENT_SECRET}
         ]
       },
       headers: [

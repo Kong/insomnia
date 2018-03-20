@@ -102,7 +102,7 @@ describe('requestCreate()', () => {
     };
 
     const r = await models.request.create(patch);
-    expect(Object.keys(r).length).toBe(18);
+    expect(Object.keys(r).length).toBe(19);
 
     expect(r._id).toMatch(/^req_[a-zA-Z0-9]{32}$/);
     expect(r.created).toBeGreaterThanOrEqual(now);
