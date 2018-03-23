@@ -91,6 +91,9 @@ export function init (
         if (!header) {
           renderedRequest.headers.push({name, value});
         }
+      },
+      getParameters (): Array<Object> {
+        return renderedRequest.parameters;
       }
 
       // NOTE: For these to make sense, we'd need to account for cookies in the jar as well

@@ -30,6 +30,7 @@ describe('init()', () => {
       'getId',
       'getMethod',
       'getName',
+      'getParameters',
       'getUrl',
       'hasHeader',
       'removeHeader',
