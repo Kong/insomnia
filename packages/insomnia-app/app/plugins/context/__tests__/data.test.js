@@ -80,6 +80,7 @@ describe('app.import.*', () => {
       settingEncodeUrl: true,
       settingSendCookies: true,
       settingStoreCookies: true,
+      settingRebuildPath: true,
       type: 'Request',
       url: 'https://insomnia.rest'
     }]);
@@ -126,6 +127,7 @@ describe('app.import.*', () => {
       settingEncodeUrl: true,
       settingSendCookies: true,
       settingStoreCookies: true,
+      settingRebuildPath: true,
       type: 'Request',
       url: 'https://insomnia.rest'
     }]);
@@ -196,6 +198,7 @@ describe('app.export.*', () => {
         settingEncodeUrl: true,
         settingSendCookies: true,
         settingStoreCookies: true,
+        settingRebuildPath: true,
         url: 'https://insomnia.rest'
       }]
     });
