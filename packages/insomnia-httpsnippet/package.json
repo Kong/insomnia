@@ -1,0 +1,89 @@
+{
+  "version": "1.16.5",
+  "name": "insomnia-httpsnippet",
+  "description": "HTTP Request snippet generator for *most* languages",
+  "author": "Gregory Schier <gschier1990@gmail.com>",
+  "homepage": "https://github.com/getinsomnia/httpsnippet",
+  "license": "MIT",
+  "main": "src/index.js",
+  "bin": "bin/httpsnippet",
+  "keywords": [
+    "api",
+    "csharp",
+    "curl",
+    "go",
+    "har",
+    "http",
+    "httpie",
+    "java",
+    "javascript",
+    "jquery",
+    "objc",
+    "objective-c",
+    "ocaml",
+    "php",
+    "python",
+    "request",
+    "requests",
+    "ruby",
+    "shell",
+    "snippet",
+    "swift",
+    "swift",
+    "unirest",
+    "xhr",
+    "xmlhttprequest"
+  ],
+  "engines": {
+    "node": ">=0.10"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "repository": "Mashape/httpsnippet",
+  "bugs": {
+    "url": "https://github.com/Mashape/httpsnippet/issues"
+  },
+  "scripts": {
+    "quick": "mocha --no-timeouts --fgrep 'Request Validation' --invert",
+    "pretest": "standard && echint",
+    "__test": "mocha --no-timeouts",
+    "posttest": "npm run coverage",
+    "coverage": "istanbul cover --dir coverage _mocha -- --fgrep 'Request Validation' --invert -R dot",
+    "codeclimate": "codeclimate < coverage/lcov.info"
+  },
+  "standard": {
+    "ignore": [
+      "**/test/fixtures/**"
+    ]
+  },
+  "echint": {
+    "ignore": [
+      "coverage/**",
+      "CONTRIBUTING.md",
+      "test/fixtures/**"
+    ]
+  },
+  "devDependencies": {
+    "codeclimate-test-reporter": "0.1.1",
+    "echint": "^1.5.0",
+    "glob": "^6.0.1",
+    "istanbul": "^0.4.0",
+    "mocha": "^2.3.4",
+    "require-directory": "^2.1.1",
+    "should": "^7.1.1",
+    "standard": "^5.4.1"
+  },
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "commander": "^2.9.0",
+    "debug": "^2.2.0",
+    "event-stream": "^3.3.2",
+    "form-data": "^1.0.0-rc3",
+    "fs-readfile-promise": "^2.0.1",
+    "fs-writefile-promise": "^1.0.3",
+    "har-validator": "^2.0.2",
+    "pinkie-promise": "^2.0.0"
+  }
+}
