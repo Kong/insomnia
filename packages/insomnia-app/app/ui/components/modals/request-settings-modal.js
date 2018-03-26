@@ -162,6 +162,16 @@ class RequestSettingsModal extends PureComponent {
               </HelpTooltip>
             </label>
           </div>
+          <div className="form-control form-control--thin">
+            <label>Rebuild path dot sequences
+              <HelpTooltip position="top" className="space-left">
+                This instructs libcurl to squash sequences of "/../" or "/./" that may exist in
+                the URL's path part and that is supposed to be removed according to RFC 3986
+                section 5.2.4
+              </HelpTooltip>
+              {this.renderCheckboxInput('settingRebuildPath')}
+            </label>
+          </div>
         </div>
       </div>
     );

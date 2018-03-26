@@ -157,6 +157,11 @@ export async function _actuallySend (
         setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
       }
 
+      // Don't rebuild dot sequences in path
+      if (!renderedRequest.settingRebuildPath) {
+        setOpt(Curl.option.PATH_AS_IS, true);
+      }
+
       // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET. This is because Curl
       // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
       switch (renderedRequest.method.toUpperCase()) {

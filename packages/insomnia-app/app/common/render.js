@@ -291,6 +291,7 @@ export async function getRenderedRequestAndContext (
       settingEncodeUrl: renderedRequest.settingEncodeUrl,
       settingSendCookies: renderedRequest.settingSendCookies,
       settingStoreCookies: renderedRequest.settingStoreCookies,
+      settingRebuildPath: renderedRequest.settingRebuildPath,
       type: renderedRequest.type,
       url: renderedRequest.url
     }
