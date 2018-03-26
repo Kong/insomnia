@@ -67,6 +67,10 @@ export default async function (
     requestData.data.oauth_timestamp = authentication.timestamp;
   }
 
+  if (authentication.verifier) {
+    requestData.data.oauth_verifier = authentication.verifier;
+  }
+
   let token = null;
   if (authentication.tokenKey && authentication.tokenSecret) {
     token = {key: authentication.tokenKey, secret: authentication.tokenSecret};

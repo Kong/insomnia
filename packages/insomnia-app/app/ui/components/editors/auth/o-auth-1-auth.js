@@ -91,6 +91,10 @@ class OAuth1Auth extends React.PureComponent<Props> {
     this._handleChangeProperty('nonce', value);
   }
 
+  _handleChangeVerifier (value: string): void {
+    this._handleChangeProperty('verifier', value);
+  }
+
   _handleChangeTimestamp (value: string): void {
     this._handleChangeProperty('timestamp', value);
   }
@@ -287,6 +291,13 @@ class OAuth1Auth extends React.PureComponent<Props> {
       'Leave blank for default'
     );
 
+    const verifier = this.renderInputRow(
+      'Verifier',
+      'verifier',
+      this._handleChangeVerifier,
+      'Leave blank for default'
+    );
+
     const timestamp = this.renderInputRow(
       'Timestamp',
       'timestamp',
@@ -330,6 +341,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
       timestamp,
       realm,
       nonce,
+      verifier,
       enabled
     ];
 
