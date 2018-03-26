@@ -283,12 +283,13 @@ class ResponseViewer extends React.Component<Props, State> {
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
-          <CSVViewer body={bodyBuffer}/>
+          <CSVViewer body={bodyBuffer} key={responseId} />
         </div>
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
       return (
         <MultipartViewer
+          key={responseId}
           bodyBuffer={bodyBuffer}
           contentType={contentType}
           download={download}
