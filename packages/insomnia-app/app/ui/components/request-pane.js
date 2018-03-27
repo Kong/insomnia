@@ -351,6 +351,7 @@ class RequestPane extends React.PureComponent<Props> {
                   errorClassName="tall wide vertically-align font-error pad text-center">
                   <KeyValueEditor
                     sortable
+                    allowMultiline
                     namePlaceholder="name"
                     valuePlaceholder="value"
                     onToggleDisable={this._trackQueryToggle}

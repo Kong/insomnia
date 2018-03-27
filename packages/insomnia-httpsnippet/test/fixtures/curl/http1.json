@@ -1,0 +1,5 @@
+{
+  "method": "GET",
+  "url": "http://mockbin.com/request",
+  "httpVersion": "HTTP/1.0"
+}

@@ -55,29 +55,25 @@ class AsapAuth extends React.PureComponent<Props> {
     const asapIssuer = this.renderTextInput(
       'Issuer (iss)',
       'issuer',
-      'client-name',
-      (value) => this._handleChangeProperty('issuer', value)
+      value => this._handleChangeProperty('issuer', value)
     );
 
     const asapSubject = this.renderTextInput(
       'Subject (sub)',
       'subject',
-      'some-username',
-      (value) => this._handleChangeProperty('subject', value)
+      value => this._handleChangeProperty('subject', value)
     );
 
     const asapAudience = this.renderTextInput(
       'Audience (aud)',
       'audience',
-      'resource-server-name',
-      (value) => this._handleChangeProperty('audience', value)
+      value => this._handleChangeProperty('audience', value)
     );
 
     const asapKeyId = this.renderTextInput(
       'Key ID (kid)',
       'keyId',
-      'key-identifier',
-      (value) => this._handleChangeProperty('keyId', value)
+      value => this._handleChangeProperty('keyId', value)
     );
 
     const asapPrivateKey = this.renderPrivateKeyInput(
@@ -90,7 +86,6 @@ class AsapAuth extends React.PureComponent<Props> {
   renderTextInput (
     label: string,
     property: string,
-    placeholder: string,
     onChange: Function
   ): React.Element<*> {
     const {handleRender, handleGetRenderContext, authentication, nunjucksPowerUserMode} = this.props;
@@ -108,7 +103,6 @@ class AsapAuth extends React.PureComponent<Props> {
           })}>
             <OneLineEditor
               id={id}
-              placeholder={placeholder}
               onChange={onChange}
               defaultValue={authentication[property] || ''}
               nunjucksPowerUserMode={nunjucksPowerUserMode}

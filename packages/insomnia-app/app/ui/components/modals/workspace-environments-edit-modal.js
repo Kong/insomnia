@@ -241,12 +241,16 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   async _handleClickColorChange (environment: Environment) {
     let el = document.querySelector('#env-color-picker');
 
-    if (!el) {
-      el = document.createElement('input');
-      el.id = 'env-color-picker';
-      el.type = 'color';
-      document.body && document.body.appendChild(el);
+    // Remove existing child so we reset the event handlers. This
+    // was easier than trying to clean them up later.
+    if (el && el.parentNode) {
+      el.parentNode.removeChild(el);
     }
+
+    el = document.createElement('input');
+    el.id = 'env-color-picker';
+    el.type = 'color';
+    document.body && document.body.appendChild(el);
 
     let color = environment.color || '#7d69cb';
 

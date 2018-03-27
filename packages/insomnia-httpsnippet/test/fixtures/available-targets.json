@@ -1,0 +1,238 @@
+[
+  {
+    "key": "shell",
+    "title": "Shell",
+    "extname": ".sh",
+    "default": "curl",
+    "clients": [
+      {
+        "key": "curl",
+        "title": "cURL",
+        "link": "http://curl.haxx.se/",
+        "description": "cURL is a command line tool and library for transferring data with URL syntax"
+      },
+      {
+        "key": "httpie",
+        "title": "HTTPie",
+        "link": "http://httpie.org/",
+        "description": "a CLI, cURL-like tool for humans"
+      },
+      {
+        "key": "wget",
+        "title": "Wget",
+        "link": "https://www.gnu.org/software/wget/",
+        "description": "a free software package for retrieving files using HTTP, HTTPS"
+      }
+    ]
+  },
+  {
+    "key": "node",
+    "title": "Node.js",
+    "extname": ".js",
+    "default": "native",
+    "clients": [
+      {
+        "key": "native",
+        "title": "HTTP",
+        "link": "http://nodejs.org/api/http.html#http_http_request_options_callback",
+        "description": "Node.js native HTTP interface"
+      },
+      {
+        "key": "request",
+        "title": "Request",
+        "link": "https://github.com/request/request",
+        "description": "Simplified HTTP request client"
+      },
+      {
+        "key": "unirest",
+        "title": "Unirest",
+        "link": "http://unirest.io/nodejs.html",
+        "description": "Lightweight HTTP Request Client Library"
+      }
+    ]
+  },
+  {
+    "key": "javascript",
+    "title": "JavaScript",
+    "extname": ".js",
+    "default": "xhr",
+    "clients": [
+      {
+        "key": "jquery",
+        "title": "jQuery",
+        "link": "http://api.jquery.com/jquery.ajax/",
+        "description": "Perform an asynchronous HTTP (Ajax) requests with jQuery"
+      },
+      {
+        "key": "xhr",
+        "title": "XMLHttpRequest",
+        "link": "https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest",
+        "description": "W3C Standard API that provides scripted client functionality"
+      }
+    ]
+  },
+  {
+    "key": "ocaml",
+    "title": "OCaml",
+    "extname": ".ml",
+    "default": "cohttp",
+    "clients": [
+      {
+        "key": "cohttp",
+        "title": "CoHTTP",
+        "link": "https://github.com/mirage/ocaml-cohttp",
+        "description": "Cohttp is a very lightweight HTTP server using Lwt or Async for OCaml"
+      }
+    ]
+  },
+  {
+    "key": "php",
+    "title": "PHP",
+    "extname": ".php",
+    "default": "curl",
+    "clients": [
+      {
+        "key": "curl",
+        "title": "cURL",
+        "link": "http://php.net/manual/en/book.curl.php",
+        "description": "PHP with ext-curl"
+      },
+      {
+        "key": "http1",
+        "title": "HTTP v1",
+        "link": "http://php.net/manual/en/book.http.php",
+        "description": "PHP with pecl/http v1"
+      },
+      {
+        "key": "http2",
+        "title": "HTTP v2",
+        "link": "http://devel-m6w6.rhcloud.com/mdref/http",
+        "description": "PHP with pecl/http v2"
+      }
+    ]
+  },
+  {
+    "key": "python",
+    "title": "Python",
+    "extname": ".py",
+    "default": "python3",
+    "clients": [
+      {
+        "key": "python3",
+        "title": "http.client",
+        "link": "https://docs.python.org/3/library/http.client.html",
+        "description": "Python3 HTTP Client"
+      },
+      {
+        "key": "requests",
+        "title": "Requests",
+        "link": "http://docs.python-requests.org/en/latest/api/#requests.request",
+        "description": "Requests HTTP library"
+      }
+    ]
+  },
+  {
+    "key": "objc",
+    "title": "Objective-C",
+    "extname": ".m",
+    "default": "nsurlsession",
+    "clients": [
+       {
+        "key": "nsurlsession",
+        "title": "NSURLSession",
+        "link": "https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html",
+        "description": "Foundation's NSURLSession request"
+      }
+    ]
+  },
+  {
+    "key": "swift",
+    "title": "Swift",
+    "extname": ".swift",
+    "default": "nsurlsession",
+    "clients": [
+       {
+        "key": "nsurlsession",
+        "title": "NSURLSession",
+        "link": "https://developer.apple.com/library/mac/documentation/Foundation/Reference/NSURLSession_class/index.html",
+        "description": "Foundation's NSURLSession request"
+      }
+    ]
+  },
+  {
+    "key": "go",
+    "title": "Go",
+    "extname": ".go",
+    "default": "native",
+    "clients": [
+       {
+        "key": "native",
+        "title": "NewRequest",
+        "link": "http://golang.org/pkg/net/http/#NewRequest",
+        "description": "Golang HTTP client request"
+      }
+    ]
+  },
+  {
+    "key": "java",
+    "title": "Java",
+    "extname": ".java",
+    "default": "unirest",
+    "clients": [
+      {
+        "key": "okhttp",
+        "title": "OkHttp",
+        "link": "http://square.github.io/okhttp/",
+        "description": "An HTTP Request Client Library"
+      },
+      {
+        "key": "unirest",
+        "title": "Unirest",
+        "link": "http://unirest.io/java.html",
+        "description": "Lightweight HTTP Request Client Library"
+      }
+    ]
+  },
+  {
+    "key": "ruby",
+    "title": "Ruby",
+    "extname": ".rb",
+    "default": "native",
+    "clients": [
+      {
+        "key": "native",
+        "title": "net::http",
+        "link": "http://ruby-doc.org/stdlib-2.2.1/libdoc/net/http/rdoc/Net/HTTP.html",
+        "description": "Ruby HTTP client"
+      }
+    ]
+  },
+  {
+    "key": "csharp",
+    "title": "C#",
+    "extname": ".cs",
+    "default": "restsharp",
+    "clients": [
+      {
+        "key": "restsharp",
+        "title": "RestSharp",
+        "link": "http://restsharp.org/",
+        "description": "Simple REST and HTTP API Client for .NET"
+      }
+    ]
+  },
+  {
+    "key": "c",
+    "title": "C",
+    "extname": ".c",
+    "default": "libcurl",
+    "clients": [
+      {
+        "key": "libcurl",
+        "title": "Libcurl",
+        "link": "http://curl.haxx.se/libcurl/",
+        "description": "Simple REST and HTTP API Client for C"
+      }
+    ]
+  }
+]

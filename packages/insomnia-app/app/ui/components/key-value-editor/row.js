@@ -286,6 +286,7 @@ class KeyValueEditorRow extends PureComponent {
       isDragging,
       isDraggingOver,
       noDelete,
+      renderLeftIcon,
       connectDragSource,
       connectDragPreview,
       connectDropTarget
@@ -303,7 +304,11 @@ class KeyValueEditorRow extends PureComponent {
 
     let handle = null;
     if (sortable) {
-      handle = connectDragSource(
+      handle = renderLeftIcon ? (
+        <div className="key-value-editor__drag">
+          {renderLeftIcon()}
+        </div>
+      ) : connectDragSource(
         <div className="key-value-editor__drag">
           <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')}/>
         </div>
@@ -420,6 +425,7 @@ KeyValueEditorRow.propTypes = {
   noDropZone: PropTypes.bool,
   hideButtons: PropTypes.bool,
   className: PropTypes.string,
+  renderLeftIcon: PropTypes.func,
 
   // For drag-n-drop
   connectDragSource: PropTypes.func,
