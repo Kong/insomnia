@@ -6,6 +6,8 @@ import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import Lazy from '../base/lazy';
 import KeyValueEditorRow from './row';
 import {generateId, nullFn} from '../../../common/misc';
+import {Dropdown, DropdownItem, DropdownButton} from '../base/dropdown';
+import PromptButton from '../base/prompt-button';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -54,6 +56,10 @@ class Editor extends PureComponent {
     ];
 
     this._onChange(pairs);
+  }
+
+  _handleDeleteAll () {
+    this._onChange([]);
   }
 
   _handleMove (pairToMove, pairToTarget, targetOffset) {
@@ -378,6 +384,16 @@ class Editor extends PureComponent {
               index={-1}
               onChange={nullFn}
               onDelete={nullFn}
+              renderLeftIcon={() => (
+                <Dropdown>
+                  <DropdownButton>
+                    <i className="fa fa-cog"/>
+                  </DropdownButton>
+                  <DropdownItem onClick={this._handleDeleteAll} buttonClass={PromptButton}>
+                    Delete All Items
+                  </DropdownItem>
+                </Dropdown>
+              )}
               className="key-value-editor__row-wrapper--clicker"
               namePlaceholder={`New ${namePlaceholder}`}
               valuePlaceholder={`New ${valuePlaceholder}`}
