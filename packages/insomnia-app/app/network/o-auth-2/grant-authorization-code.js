@@ -131,7 +131,10 @@ async function _getToken (
 
   const statusCode = response.statusCode || 0;
   if (statusCode < 200 || statusCode >= 300) {
-    throw new Error(`[oauth2] Failed to fetch token url=${url} status=${statusCode}`);
+    throw new Error(
+      `[oauth2] Failed to fetch token url=${url} status=${statusCode}\n` +
+      bodyBuffer.toString('utf8')
+    );
   }
 
   return responseToObject(bodyBuffer.toString('utf8'), [
