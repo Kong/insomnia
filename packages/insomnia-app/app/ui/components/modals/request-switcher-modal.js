@@ -2,13 +2,14 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
-import {fuzzyMatch} from '../../../common/misc';
+import {fuzzyMatchAll} from '../../../common/misc';
 
 @autobind
 class RequestSwitcherModal extends PureComponent {
@@ -122,24 +123,62 @@ class RequestSwitcherModal extends PureComponent {
     this._handleChangeValue(e.target.value);
   }
 
+  /**
+   * Appends path of ancestor groups, delimited by forward slashes
+   * E.g. Folder1/Folder2/Folder3
+   */
+  _groupOf (requestOrRequestGroup) {
+    const {workspaceChildren} = this.props;
+    const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
+    const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
+    const currentGroupName = requestOrRequestGroup.type === models.requestGroup.type && requestOrRequestGroup.name ? `${requestOrRequestGroup.name}` : '';
+
+    if (matchedGroups.length === 0) {
+      return currentGroupName;
+    }
+
+    const parentGroup = this._groupOf(matchedGroups[0]);
+    const parentGroupText = parentGroup ? `${parentGroup}/` : '';
+    const group = `${parentGroupText}${currentGroupName}`;
+
+    return group;
+  }
+
+  _isMatch (searchStrings) {
+    return (request) => {
+      let finalUrl = request.url;
+      if (request.parameters) {
+        finalUrl = joinUrlAndQueryString(
+          finalUrl,
+          buildQueryStringFromParams(request.parameters));
+      }
+
+      // Match request attributes
+      const matchesAttributes = fuzzyMatchAll(searchStrings,
+        [
+          request.name,
+          finalUrl,
+          request.method,
+          this._groupOf(request)
+        ]);
+
+      // Match exact Id
+      const matchesId = request._id === searchStrings;
+
+      return matchesAttributes || matchesId;
+    };
+  }
+
   async _handleChangeValue (searchString) {
     const {workspaceChildren, workspaces} = this.props;
     const {workspaceId, activeRequestParentId} = this.props;
 
     // OPTIMIZATION: This only filters if we have a filter
-    let matchedRequests = workspaceChildren.filter(d => d.type === models.request.type);
+    let matchedRequests = workspaceChildren
+      .filter(d => d.type === models.request.type);
+
     if (searchString) {
-      matchedRequests = matchedRequests.filter(r => {
-        const name = r.name.toLowerCase();
-
-        // Fuzzy match searchString to name
-        const matchesName = fuzzyMatch(searchString, name);
-
-        // Match exact Id
-        const matchesId = r._id === searchString;
-
-        return matchesName || matchesId;
-      });
+      matchedRequests = matchedRequests.filter(this._isMatch(searchString));
     }
 
     matchedRequests = matchedRequests.sort((a, b) => {
@@ -225,7 +264,7 @@ class RequestSwitcherModal extends PureComponent {
             <div className="form-control form-control--outlined no-margin">
               <input
                 type="text"
-                placeholder="Search"
+                placeholder="Fuzzy filter by request name, folder, url, method, or query parameters"
                 ref={this._setInputRef}
                 value={searchString}
                 onChange={this._handleChange}

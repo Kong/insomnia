@@ -1,5 +1,5 @@
 import {createSelector} from 'reselect';
-import {fuzzyMatch} from '../../common/misc';
+import {fuzzyMatchAll} from '../../common/misc';
 
 // ~~~~~~~~~ //
 // Selectors //
@@ -112,23 +112,19 @@ export const selectSidebarChildren = createSelector(
 
         const hasMatchedChildren = child.children.find(c => c.hidden === false);
 
-        // Build the monster string to match on
-        const method = child.doc.method || '';
-        const name = child.doc.name;
-        const toMatch = `${method}❅${name}❅${parentNames.join('❅')}`;
+        // Try to match request attributes
+        const {name, url, method, parameters} = child.doc;
 
-        // Try to match name
-        let hasMatchedName = true;
-        for (const token of sidebarFilter.trim().split(' ')) {
-          // Filter failed. Don't render children
-          if (!fuzzyMatch(token, toMatch)) {
-            hasMatchedName = false;
-            break;
-          }
-        }
+        const hasMatchedAttributes = fuzzyMatchAll(sidebarFilter, [
+          name,
+          url,
+          method,
+          ...(parameters ? parameters.map(p => `${p.name}=${p.value}`) : []),
+          ...parentNames
+        ]);
 
         // Update hidden state depending on whether it matched
-        const matched = hasMatchedChildren || hasMatchedName;
+        const matched = hasMatchedChildren || hasMatchedAttributes;
         child.hidden = !matched;
       }
 

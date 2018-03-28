@@ -251,7 +251,15 @@ export function fuzzyMatch (searchString: string, text: string): boolean {
     return false;
   }
 
-  return toMatch.test(text.toLowerCase());
+  return toMatch.test((text || '').toLowerCase());
+}
+
+export function fuzzyMatchAll (searchString: string, allText: Array<string>): boolean {
+  return searchString
+    .split(' ')
+    .every(searchWord =>
+      allText.some(text =>
+        fuzzyMatch(searchWord, text)));
 }
 
 export function getViewportSize (): string | null {
