@@ -91,6 +91,42 @@ export function init (
         if (!header) {
           renderedRequest.headers.push({name, value});
         }
+      },
+      getParameter (name: string): string | null {
+        const parameters = misc.filterParameters(renderedRequest.parameters, name);
+        if (parameters.length) {
+          // Use the last parameter if there are multiple of the same
+          const parameter = parameters[parameters.length - 1];
+          return parameter.value || '';
+        } else {
+          return null;
+        }
+      },
+      getParameters (): Array<{name: string, value: string}> {
+        return renderedRequest.parameters.map(p => ({name: p.name, value: p.value}));
+      },
+      hasParameter (name: string): boolean {
+        return this.getParameter(name) !== null;
+      },
+      removeParameter (name: string): void {
+        const parameters = misc.filterParameters(renderedRequest.parameters, name);
+        renderedRequest.parameters = renderedRequest.parameters.filter(
+          p => !parameters.includes(p)
+        );
+      },
+      setParameter (name: string, value: string): void {
+        const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];
+        if (parameter) {
+          parameter.value = value;
+        } else {
+          this.addParameter(name, value);
+        }
+      },
+      addParameter (name: string, value: string): void {
+        const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];
+        if (!parameter) {
+          renderedRequest.parameters.push({name, value});
+        }
       }
 
       // NOTE: For these to make sense, we'd need to account for cookies in the jar as well

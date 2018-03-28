@@ -14,6 +14,19 @@ type Header = {
   value: string
 };
 
+type Parameter = {
+  name: string,
+  value: string
+};
+
+export function filterParameters<T: Parameter> (parameters: Array<T>, name: string): Array<T> {
+  if (!Array.isArray(parameters) || !name) {
+    return [];
+  }
+
+  return parameters.filter(h => !h || !h.name ? false : h.name === name);
+}
+
 export function filterHeaders<T: Header> (headers: Array<T>, name: string): Array<T> {
   if (!Array.isArray(headers) || !name) {
     return [];

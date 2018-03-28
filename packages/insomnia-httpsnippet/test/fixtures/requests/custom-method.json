@@ -1,0 +1,4 @@
+{
+  "method": "PROPFIND",
+  "url": "http://mockbin.com/har"
+}

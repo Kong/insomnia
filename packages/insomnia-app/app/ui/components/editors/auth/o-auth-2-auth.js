@@ -17,6 +17,7 @@ import {trackEvent} from '../../../../common/analytics';
 import HelpTooltip from '../../help-tooltip';
 import PromptButton from '../../base/prompt-button';
 import TimeFromNow from '../../time-from-now';
+import Button from '../../base/button';
 
 type Props = {
   handleRender: Function,
@@ -127,6 +128,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('credentialsInBody', e.currentTarget.value === 'true');
   }
 
+  _handleChangeEnabled (value: boolean): void {
+    this._handleChangeProperty('disabled', value);
+  }
+
   _handleChangeClientSecret (value: string): void {
     this._handleChangeProperty('clientSecret', value);
   }
@@ -172,6 +177,34 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
 
+  renderEnabledRow (onChange: (boolean) => void): React.Element<*> {
+    const {request} = this.props;
+    const {authentication} = request;
+    return (
+      <tr key="enabled">
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor="enabled" className="label--small no-pad">
+            Enabled
+          </label>
+        </td>
+        <td className="wide">
+          <div className="form-control form-control--underlined no-margin">
+            <Button className="btn btn--super-duper-compact"
+                    id="enabled"
+                    onClick={onChange}
+                    value={!authentication.disabled}
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+              {authentication.disabled
+                ? <i className="fa fa-square-o"/>
+                : <i className="fa fa-check-square-o"/>
+              }
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
   renderInputRow (
     label: string,
     property: string,
@@ -180,6 +213,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     handleAutocomplete: Function | null = null
   ): React.Element<*> {
     const {handleRender, handleGetRenderContext, request, nunjucksPowerUserMode} = this.props;
+    const {authentication} = request;
     const id = label.replace(/ /g, '-');
     const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
     return (
@@ -191,7 +225,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--underlined no-margin">
+          <div className={classnames('form-control form-control--underlined no-margin', {
+            'form-control--inactive': authentication.disabled
+          })}>
             <OneLineEditor
               id={id}
               type={type}
@@ -216,6 +252,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     help: string | null = null
   ): React.Element<*> {
     const {request} = this.props;
+    const {authentication} = request;
     const id = label.replace(/ /g, '-');
     const value = request.authentication.hasOwnProperty(property)
       ? request.authentication[property]
@@ -230,7 +267,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--outlined no-margin">
+            <div className={classnames('form-control form-control--outlined no-margin', {
+              'form-control--inactive': authentication.disabled
+            })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({name, value}) => (
                 <option key={value} value={value}>{name}</option>
@@ -344,13 +383,16 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       'Whether or not to send credentials as Basic Auth, or as plain text in the request body'
     );
 
+    const enabled = this.renderEnabledRow(this._handleChangeEnabled);
+
     if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
       basicFields = [
         authorizationUrl,
         accessTokenUrl,
         clientId,
         clientSecret,
-        redirectUri
+        redirectUri,
+        enabled
       ];
 
       advancedFields = [
@@ -363,7 +405,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       basicFields = [
         accessTokenUrl,
         clientId,
-        clientSecret
+        clientSecret,
+        enabled
       ];
 
       advancedFields = [
@@ -378,7 +421,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         password,
         accessTokenUrl,
         clientId,
-        clientSecret
+        clientSecret,
+        enabled
       ];
 
       advancedFields = [
@@ -390,7 +434,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       basicFields = [
         authorizationUrl,
         clientId,
-        redirectUri
+        redirectUri,
+        enabled
       ];
 
       advancedFields = [
@@ -404,7 +449,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     return {basic: basicFields, advanced: advancedFields};
   }
 
-  renderExpireAt (token: OAuth2Token | null): React.Element<*> | string | null {
+  static renderExpireAt (token: OAuth2Token | null): React.Element<*> | string | null {
     if (!token || !token.accessToken) {
       return null;
     }
@@ -422,7 +467,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     const {request, oAuth2Token: tok} = this.props;
     const {loading, error, showAdvanced} = this.state;
 
-    const expireLabel = this.renderExpireAt(tok);
+    const expireLabel = OAuth2Auth.renderExpireAt(tok);
     const fields = this.renderGrantTypeFields(request.authentication.grantType);
 
     return (

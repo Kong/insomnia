@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "url": "http://mockbin.com/har",
+  "headers": [
+    {
+      "name": "content-type",
+      "value": "text/plain"
+    }
+  ],
+  "postData": {
+    "mimeType": "text/plain",
+    "text": "Hello World"
+  }
+}

@@ -8,7 +8,7 @@ const NAME_MATCH = /[\w.\][]+$/;
 const AFTER_VARIABLE_MATCH = /{{\s*[\w.\][]*$/;
 const AFTER_TAG_MATCH = /{%\s*[\w.\][]*$/;
 const COMPLETE_AFTER_WORD = /[\w.\][-]+/;
-const COMPLETE_AFTER_CURLIES = /[^{]*\{[{%]\s*/;
+const COMPLETE_AFTER_CURLIES = /[^{]*{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
 const MAX_HINT_LOOK_BACK = 100;
 const HINT_DELAY_MILLIS = 700;
@@ -227,13 +227,9 @@ function hint (cm, options) {
       .map(m => allLongMatches.push(m));
   }
 
-  /*
-   * If anything matched the longer segment, only return those. Otherwise return only
-   * the short form. For example, if the long form is "application/json" and short is "json",
-   * prioritise matches form "application/json" if there were any.
-   */
-  const matches = allLongMatches.length ? allLongMatches : allShortMatches;
-  const segment = allLongMatches.length ? nameSegmentLong : nameSegment;
+  // NOTE: This puts the longer (more precise) matches in front of the short ones
+  const matches = [...allLongMatches, ...allShortMatches];
+  const segment = [...nameSegmentLong, nameSegment];
 
   return {
     list: matches,

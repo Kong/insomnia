@@ -20,4 +20,4 @@ node_modules/
 .env
 .idea
 .DS_Store
-test-plugins
+*test-plugins

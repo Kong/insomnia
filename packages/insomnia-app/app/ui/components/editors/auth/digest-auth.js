@@ -52,7 +52,6 @@ class DigestAuth extends PureComponent {
                   type='text'
                   id='username'
                   disabled={authentication.disabled}
-                  placeholder='Username'
                   onChange={this._handleChangeUsername}
                   defaultValue={authentication.username || ''}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
@@ -75,7 +74,6 @@ class DigestAuth extends PureComponent {
                 <OneLineEditor
                   type={showPasswords ? 'text' : 'password'}
                   id='password'
-                  placeholder='•••••••••••'
                   onChange={this._handleChangePassword}
                   defaultValue={authentication.password || ''}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}

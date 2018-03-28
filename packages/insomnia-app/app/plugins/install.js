@@ -24,10 +24,18 @@ export default async function (moduleName: string): Promise<void> {
 
     // Download the module
     const request = electron.remote.net.request(info.dist.tarball);
+    request.on('error', err => {
+      reject(new Error(`Failed to make plugin request ${info.dist.tarball}: ${err.message}`));
+    });
+
     request.on('response', response => {
       const bodyBuffers = [];
 
       console.log(`[plugins] Downloading plugin tarball from ${info.dist.tarball}`);
+      response.on('error', err => {
+        reject(new Error(`Failed to download plugin ${info.dist.tarball}: ${err.message}`));
+      });
+
       response.on('end', () => {
         console.log(`[plugins] Extracting plugin to ${pluginDir}`);
         const w = tar.extract({

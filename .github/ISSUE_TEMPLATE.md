@@ -1,5 +1,5 @@
 <!--
-Be help prevent duplicates by searching existing issues first 🙂
+Please help prevent duplicates by searching existing issues first 🙂
 
 Here are a few helpful tips, depending on what type of issue you are creating:
 

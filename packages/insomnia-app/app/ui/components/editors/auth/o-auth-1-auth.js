@@ -1,7 +1,7 @@
 // @flow
 import type {Request} from '../../../../models/request';
-
 import * as React from 'react';
+import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
@@ -9,6 +9,7 @@ import HelpTooltip from '../../help-tooltip';
 import {SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_PLAINTEXT, SIGNATURE_METHOD_RSA_SHA1} from '../../../../network/o-auth-1/constants';
 import CodePromptModal from '../../modals/code-prompt-modal';
 import {showModal} from '../../modals';
+import Button from '../../base/button';
 
 type Props = {
   handleRender: Function,
@@ -90,6 +91,10 @@ class OAuth1Auth extends React.PureComponent<Props> {
     this._handleChangeProperty('nonce', value);
   }
 
+  _handleChangeVerifier (value: string): void {
+    this._handleChangeProperty('verifier', value);
+  }
+
   _handleChangeTimestamp (value: string): void {
     this._handleChangeProperty('timestamp', value);
   }
@@ -106,6 +111,38 @@ class OAuth1Auth extends React.PureComponent<Props> {
     this._handleChangeProperty('version', value);
   }
 
+  _handleChangeEnabled (value: boolean): void {
+    this._handleChangeProperty('disabled', value);
+  }
+
+  renderEnabledRow (onChange: (boolean) => void): React.Element<*> {
+    const {request} = this.props;
+    const {authentication} = request;
+    return (
+      <tr key="enabled">
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor="enabled" className="label--small no-pad">
+            Enabled
+          </label>
+        </td>
+        <td className="wide">
+          <div className="form-control no-margin">
+            <Button className="btn btn--super-duper-compact"
+                    id="enabled"
+                    onClick={onChange}
+                    value={!authentication.disabled}
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+              {authentication.disabled
+                ? <i className="fa fa-square-o"/>
+                : <i className="fa fa-check-square-o"/>
+              }
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
   renderInputRow (
     label: string,
     property: string,
@@ -114,6 +151,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     handleAutocomplete: Function | null = null
   ): React.Element<*> {
     const {handleRender, handleGetRenderContext, request, nunjucksPowerUserMode} = this.props;
+    const {authentication} = request;
     const id = label.replace(/ /g, '-');
     const type = !this.props.showPasswords && property === 'password' ? 'password' : 'text';
     return (
@@ -125,7 +163,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
           </label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--underlined no-margin">
+          <div className={classnames('form-control form-control--underlined no-margin', {
+            'form-control--inactive': authentication.disabled
+          })}>
             <OneLineEditor
               id={id}
               type={type}
@@ -150,6 +190,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     help: string | null = null
   ): React.Element<*> {
     const {request} = this.props;
+    const {authentication} = request;
     const id = label.replace(/ /g, '-');
     const value = request.authentication.hasOwnProperty(property)
       ? request.authentication[property]
@@ -164,7 +205,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
           </label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--outlined no-margin">
+          <div className={classnames('form-control form-control--outlined no-margin', {
+            'form-control--inactive': authentication.disabled
+          })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({name, value}) => (
                 <option key={value} value={value}>{name}</option>
@@ -248,6 +291,13 @@ class OAuth1Auth extends React.PureComponent<Props> {
       'Leave blank for default'
     );
 
+    const verifier = this.renderInputRow(
+      'Verifier',
+      'verifier',
+      this._handleChangeVerifier,
+      'Leave blank for default'
+    );
+
     const timestamp = this.renderInputRow(
       'Timestamp',
       'timestamp',
@@ -278,6 +328,8 @@ class OAuth1Auth extends React.PureComponent<Props> {
       this._handleChangeVersion
     );
 
+    const enabled = this.renderEnabledRow(this._handleChangeEnabled);
+
     const fields = [
       consumerKey,
       consumerSecret,
@@ -288,7 +340,9 @@ class OAuth1Auth extends React.PureComponent<Props> {
       version,
       timestamp,
       realm,
-      nonce
+      nonce,
+      verifier,
+      enabled
     ];
 
     const {authentication} = this.props.request;

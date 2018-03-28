@@ -40,7 +40,6 @@ class BearerAuth extends PureComponent {
                   type='text'
                   id='token'
                   disabled={authentication.disabled}
-                  placeholder='token'
                   onChange={this._handleChange}
                   defaultValue={authentication.token || ''}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}

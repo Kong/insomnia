@@ -22,6 +22,7 @@ describe('init()', () => {
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'addHeader',
+      'addParameter',
       'getBodyText',
       'getEnvironment',
       'getEnvironmentVariable',
@@ -30,12 +31,17 @@ describe('init()', () => {
       'getId',
       'getMethod',
       'getName',
+      'getParameter',
+      'getParameters',
       'getUrl',
       'hasHeader',
+      'hasParameter',
       'removeHeader',
+      'removeParameter',
       'setBodyText',
       'setCookie',
       'setHeader',
+      'setParameter',
       'settingDisableRenderRequestBody',
       'settingEncodeUrl',
       'settingSendCookies',
@@ -61,6 +67,10 @@ describe('request.*', () => {
       headers: [
         {name: 'hello', value: 'world'},
         {name: 'Content-Type', value: 'application/json'}
+      ],
+      parameters: [
+        {name: 'foo', value: 'bar'},
+        {name: 'message', value: 'Hello World!'}
       ]
     });
   });
@@ -72,6 +82,37 @@ describe('request.*', () => {
     expect(result.request.getUrl()).toBe('');
     expect(result.request.getMethod()).toBe('GET');
     expect(result.request.getBodyText()).toBe('body');
+  });
+
+  it('works for parameters', async () => {
+    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+
+    // getParameters()
+    expect(result.request.getParameters()).toEqual([
+      {name: 'foo', value: 'bar'},
+      {name: 'message', value: 'Hello World!'}
+    ]);
+
+    // getParameter()
+    expect(result.request.getParameter('foo')).toBe('bar');
+    expect(result.request.getParameter('FOO')).toBe(null);
+    expect(result.request.getParameter('does-not-exist')).toBe(null);
+    expect(result.request.hasParameter('foo')).toBe(true);
+
+    // setHeader()
+    result.request.setParameter('foo', 'baz');
+    expect(result.request.getParameter('foo')).toBe('baz');
+
+    // addHeader()
+    result.request.addParameter('foo', 'another');
+    result.request.addParameter('something-else', 'yet another');
+    expect(result.request.getParameter('foo')).toBe('baz');
+    expect(result.request.getParameter('something-else')).toBe('yet another');
+
+    // removeHeader()
+    result.request.removeParameter('foo');
+    expect(result.request.getParameter('foo')).toBe(null);
+    expect(result.request.hasParameter('foo')).toBe(false);
   });
 
   it('works for headers', async () => {

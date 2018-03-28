@@ -61,7 +61,8 @@ type BaseRequest = {
   settingStoreCookies: boolean,
   settingSendCookies: boolean,
   settingDisableRenderRequestBody: boolean,
-  settingEncodeUrl: boolean
+  settingEncodeUrl: boolean,
+  settingRebuildPath: boolean
 };
 
 export type Request = BaseModel & BaseRequest;
@@ -83,7 +84,8 @@ export function init (): BaseRequest {
     settingStoreCookies: true,
     settingSendCookies: true,
     settingDisableRenderRequestBody: false,
-    settingEncodeUrl: true
+    settingEncodeUrl: true,
+    settingRebuildPath: true
   };
 }
 

@@ -171,8 +171,8 @@ function _convertUnicode (originalStr) {
   let c;
   let lastI = 0;
 
-  // Matches \u####
-  const unicodeRegex = /\\u([0-9a-fA-F]{4})/g;
+  // Matches \u#### but not \\u####
+  const unicodeRegex = /[^\\]\\u([0-9a-fA-F]{4})/g;
 
   let convertedStr = '';
   while ((m = unicodeRegex.exec(originalStr))) {

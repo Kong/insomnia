@@ -55,15 +55,13 @@ class AsapAuth extends React.PureComponent<Props> {
     const asapIssuer = this.renderTextInput(
       'Issuer (iss)',
       'issuer',
-      'client-name',
       'text/plain',
-      (value) => this._handleChangeProperty('issuer', value)
+      value => this._handleChangeProperty('issuer', value)
     );
 
     const asapSubject = this.renderTextInput(
       'Subject (sub)',
       'subject',
-      'some-username',
       'text/plain',
       (value) => this._handleChangeProperty('subject', value)
     );
@@ -71,15 +69,13 @@ class AsapAuth extends React.PureComponent<Props> {
     const asapAudience = this.renderTextInput(
       'Audience (aud)',
       'audience',
-      'resource-server-name',
       'text/plain',
-      (value) => this._handleChangeProperty('audience', value)
+      value => this._handleChangeProperty('audience', value)
     );
 
     const asapAdditionalClaims = this.renderTextInput(
       'Additional Claims',
       'additionalClaims',
-      'additional-claims (JSON Object)',
       'application/json',
       (value) => this._handleChangeProperty('additionalClaims', value)
     );
@@ -87,9 +83,8 @@ class AsapAuth extends React.PureComponent<Props> {
     const asapKeyId = this.renderTextInput(
       'Key ID (kid)',
       'keyId',
-      'key-identifier',
       'text/plain',
-      (value) => this._handleChangeProperty('keyId', value)
+      value => this._handleChangeProperty('keyId', value)
     );
 
     const asapPrivateKey = this.renderPrivateKeyInput(
@@ -102,7 +97,6 @@ class AsapAuth extends React.PureComponent<Props> {
   renderTextInput (
     label: string,
     property: string,
-    placeholder: string,
     mode: string,
     onChange: Function
   ): React.Element<*> {
@@ -122,7 +116,6 @@ class AsapAuth extends React.PureComponent<Props> {
             <OneLineEditor
               id={id}
               mode={mode}
-              placeholder={placeholder}
               onChange={onChange}
               defaultValue={authentication[property] || ''}
               nunjucksPowerUserMode={nunjucksPowerUserMode}

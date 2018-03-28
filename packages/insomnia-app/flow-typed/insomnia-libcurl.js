@@ -25,6 +25,7 @@ declare class Curl {
     NOPROGRESS: number,
     NOPROXY: number,
     PASSWORD: number,
+    PATH_AS_IS: number,
     POST: number,
     POSTFIELDS: number,
     PROXY: number,
