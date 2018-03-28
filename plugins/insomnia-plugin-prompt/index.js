@@ -16,6 +16,6 @@ module.exports.templateTags = [{
     'prompt from displaying too frequently during general app use.'
   }],
   run (context, title, label, defaultValue) {
-    return context.app.prompt(title, {label, defaultValue});
+    return context.app.prompt(title, {label, defaultValue, cancelable: true});
   }
 }];
