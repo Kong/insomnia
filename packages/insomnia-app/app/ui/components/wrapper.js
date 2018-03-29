@@ -43,6 +43,7 @@ import type {CookieJar} from '../../models/cookie-jar';
 import type {Environment} from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type {ClientCertificate} from '../../models/client-certificate';
+import MoveRequestGroupModal from './modals/move-request-group-modal';
 
 type Props = {
   // Helper Functions
@@ -58,6 +59,7 @@ type Props = {
   handleCreateRequest: Function,
   handleDuplicateRequest: Function,
   handleDuplicateRequestGroup: Function,
+  handleMoveRequestGroup: Function,
   handleDuplicateWorkspace: Function,
   handleCreateRequestGroup: Function,
   handleGenerateCodeForActiveRequest: Function,
@@ -339,6 +341,7 @@ class Wrapper extends React.PureComponent<Props, State> {
       handleCreateRequestGroup,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
+      handleMoveRequestGroup,
       handleExportFile,
       handleMoveDoc,
       handleResetDragPaneHorizontal,
@@ -420,6 +423,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+            workspaces={workspaces}
           />
 
           <CookiesModal
@@ -448,6 +452,11 @@ class Wrapper extends React.PureComponent<Props, State> {
             workspace={activeWorkspace}
           />
 
+          <MoveRequestGroupModal
+            ref={registerModal}
+            workspaces={workspaces}
+          />
+
           <WorkspaceSettingsModal
             ref={registerModal}
             clientCertificates={activeWorkspaceClientCertificates}
@@ -462,10 +471,12 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
             handleDuplicateWorkspace={handleDuplicateWorkspace}
           />
+
           <WorkspaceShareSettingsModal
             ref={registerModal}
             workspace={activeWorkspace}
           />
+
           <GenerateCodeModal
             ref={registerModal}
             environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
@@ -473,6 +484,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             editorIndentSize={settings.editorIndentSize}
             editorKeyMap={settings.editorKeyMap}
           />
+
           <SettingsModal
             ref={registerModal}
             handleExportWorkspaceToFile={this._handleExportWorkspaceToFile}
@@ -482,6 +494,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleToggleMenuBar={handleToggleMenuBar}
             settings={settings}
           />
+
           <RequestSwitcherModal
             ref={registerModal}
             workspaces={workspaces}
@@ -491,6 +504,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             activateRequest={handleActivateRequest}
             handleSetActiveWorkspace={handleSetActiveWorkspace}
           />
+
           <EnvironmentEditModal
             ref={registerModal}
             editorFontSize={settings.editorFontSize}
@@ -502,10 +516,12 @@ class Wrapper extends React.PureComponent<Props, State> {
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           />
+
           <SetupSyncModal
             ref={registerModal}
             workspace={activeWorkspace}
           />
+
           <WorkspaceEnvironmentsEditModal
             ref={registerModal}
             onChange={models.workspace.update}
@@ -539,6 +555,7 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleGenerateCode={handleGenerateCode}
             handleCopyAsCurl={handleCopyAsCurl}
             handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+            handleMoveRequestGroup={handleMoveRequestGroup}
             handleSetActiveEnvironment={handleSetActiveEnvironment}
             moveDoc={handleMoveDoc}
             handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}

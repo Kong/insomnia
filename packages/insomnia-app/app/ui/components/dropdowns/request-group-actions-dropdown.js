@@ -38,6 +38,11 @@ class RequestGroupActionsDropdown extends PureComponent {
     trackEvent('Folder', 'Duplicate', 'Folder Action');
   }
 
+  _handleRequestGroupMove () {
+    this.props.handleMoveRequestGroup(this.props.requestGroup);
+    trackEvent('Folder', 'Move', 'Folder Action');
+  }
+
   async _handleRequestGroupCreate () {
     this.props.handleCreateRequestGroup(this.props.requestGroup._id);
     trackEvent('Folder', 'Create', 'Folder Action');
@@ -85,6 +90,9 @@ class RequestGroupActionsDropdown extends PureComponent {
         <DropdownItem onClick={this._handleEditEnvironment}>
           <i className="fa fa-code"/> Environment
         </DropdownItem>
+        <DropdownItem onClick={this._handleRequestGroupMove}>
+          <i className="fa fa-exchange"/> Move
+        </DropdownItem>
         <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
           <i className="fa fa-trash-o"/> Delete
         </DropdownItem>
@@ -98,6 +106,7 @@ RequestGroupActionsDropdown.propTypes = {
   handleCreateRequest: PropTypes.func.isRequired,
   handleCreateRequestGroup: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
+  handleMoveRequestGroup: PropTypes.func.isRequired,
 
   // Optional
   requestGroup: PropTypes.object
