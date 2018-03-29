@@ -113,13 +113,16 @@ export const selectSidebarChildren = createSelector(
         const hasMatchedChildren = child.children.find(c => c.hidden === false);
 
         // Try to match request attributes
-        const {name, url, method, parameters} = child.doc;
+        const {name, method} = child.doc;
+
+        // Don't use URL/parameters yet until we have UI to show it
+        // const {name, url, method, parameters} = child.doc;
 
         const hasMatchedAttributes = fuzzyMatchAll(sidebarFilter, [
           name,
-          url,
+          // url,
           method,
-          ...(parameters ? parameters.map(p => `${p.name}=${p.value}`) : []),
+          // ...(parameters ? parameters.map(p => `${p.name}=${p.value}`) : []),
           ...parentNames
         ]);
 
@@ -191,11 +194,7 @@ export const selectUnseenWorkspaces = createSelector(
     const {workspaces, workspaceMetas} = entities;
     return workspaces.filter(workspace => {
       const meta = workspaceMetas.find(m => m.parentId === workspace._id);
-      if (meta && !meta.hasSeen) {
-        return true;
-      } else {
-        return false;
-      }
+      return !!(meta && !meta.hasSeen);
     });
   }
 );

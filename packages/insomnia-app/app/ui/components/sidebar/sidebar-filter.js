@@ -52,7 +52,7 @@ class SidebarFilter extends PureComponent {
             <input
               ref={this._setInputRef}
               type="text"
-              placeholder="Filter by name, folder, url"
+              placeholder="Filter"
               defaultValue={this.props.filter}
               onChange={this._handleOnChange}
             />
