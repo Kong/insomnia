@@ -20,6 +20,5 @@
     "electron-rebuild": "^1.6.0",
     "jest": "^22.1.1",
     "lerna": "^2.7.1"
-  },
-  "dependencies": {}
+  }
 }
