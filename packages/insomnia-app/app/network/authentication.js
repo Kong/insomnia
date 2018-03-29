@@ -73,10 +73,27 @@ export async function getAuthHeader (
   }
 
   if (authentication.type === AUTH_ASAP) {
-    const {issuer, subject, audience, keyId, privateKey} = authentication;
+    const {issuer, subject, audience, keyId, additionalClaims, privateKey} = authentication;
 
     const generator = jwtAuthentication.client.create();
-    const claims = {iss: issuer, sub: subject, aud: audience};
+    let claims = {iss: issuer, sub: subject, aud: audience};
+
+    let parsedAdditionalClaims;
+
+    try {
+      parsedAdditionalClaims = JSON.parse(additionalClaims);
+    } catch (err) {
+      throw new Error(`Unable to parse additional-claims: ${err}`);
+    }
+
+    if (parsedAdditionalClaims) {
+      if (typeof parsedAdditionalClaims !== 'object') {
+        throw new Error(`additional-claims must be an object recieved: '${typeof parsedAdditionalClaims}' instead`);
+      }
+
+      claims = Object.assign(parsedAdditionalClaims, claims);
+    }
+
     const options = {
       privateKey,
       kid: keyId
