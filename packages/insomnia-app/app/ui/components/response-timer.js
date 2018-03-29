@@ -25,8 +25,8 @@ class ResponseTimer extends PureComponent {
     this.setState({elapsedTime});
   }
 
-  componentDidUpdate () {
-    const {loadStartTime} = this.props;
+  componentWillReceiveProps (nextProps) {
+    const {loadStartTime} = nextProps;
 
     if (loadStartTime <= 0) {
       clearInterval(this._interval);
