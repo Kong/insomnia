@@ -72,6 +72,9 @@ declare class Curl {
     debug: {
       SSL_DATA_IN: string,
       SSL_DATA_OUT: string,
+      DATA_OUT: string,
+      DATA_IN: string,
+      TEXT: string
     }
   };
 

@@ -5,7 +5,12 @@ export type NunjucksParsedTagArg = {
   value: string | number | boolean,
   defaultValue?: string | number | boolean,
   forceVariable?: boolean,
-  quotedBy?: '"' | "'"
+  placeholder?: string,
+  help?: string,
+  displayName?: string,
+  quotedBy?: '"' | "'",
+  validate?: (value: any) => string,
+  hide?: (Array<NunjucksParsedTagArg>) => boolean
 };
 
 export type NunjucksParsedTag = {

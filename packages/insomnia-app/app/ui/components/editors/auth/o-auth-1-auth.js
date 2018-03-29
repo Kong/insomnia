@@ -15,6 +15,7 @@ type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
+  showPasswords: boolean,
   onChange: Function,
   request: Request
 };

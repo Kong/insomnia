@@ -32,8 +32,8 @@ type State = {
 @autobind
 class CookieModifyModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
-  _rawTimeout: number | null;
-  _cookieUpdateTimeout: number | null;
+  _rawTimeout: TimeoutID;
+  _cookieUpdateTimeout: TimeoutID;
 
   constructor (props: any) {
     super(props);
@@ -42,9 +42,6 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
       cookie: null,
       rawValue: ''
     };
-
-    this._rawTimeout = null;
-    this._cookieUpdateTimeout = null;
   }
 
   _setModalRef (n: Modal | null) {

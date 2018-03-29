@@ -37,8 +37,9 @@ export async function buildRenderContext (
   }
 
   for (const doc of (ancestors || []).reverse()) {
-    if (typeof doc.environment === 'object' && doc.environment !== null) {
-      envObjects.push(doc.environment);
+    const environment = (doc: any).environment;
+    if (typeof environment === 'object' && environment !== null) {
+      envObjects.push(environment);
     }
   }
 

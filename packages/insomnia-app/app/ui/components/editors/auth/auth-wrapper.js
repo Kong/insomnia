@@ -71,6 +71,7 @@ class AuthWrapper extends PureComponent {
           handleRender={handleRender}
           handleGetRenderContext={handleGetRenderContext}
           nunjucksPowerUserMode={nunjucksPowerUserMode}
+          showPasswords={showPasswords}
           onChange={onChange}
         />
       );

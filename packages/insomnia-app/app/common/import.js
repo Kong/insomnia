@@ -278,6 +278,6 @@ async function getDocWithDescendants (
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(d => (
     // Don't include if private, except if we want to
-    !d.isPrivate || includePrivateDocs
+    !(d: any).isPrivate || includePrivateDocs
   ));
 }

@@ -118,7 +118,7 @@ export function removeVowels (str: string): string {
 }
 
 export function keyedDebounce (callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
-  let timeout = null;
+  let timeout;
   let results = {};
 
   return function (key, ...args) {
@@ -289,11 +289,11 @@ export function getUserLanguage (): string {
 
 export async function waitForStreamToFinish (s: Readable | Writable): Promise<void> {
   return new Promise(resolve => {
-    if (s._readableState && s._readableState.finished) {
+    if ((s: any)._readableState && (s: any)._readableState.finished) {
       return resolve();
     }
 
-    if (s._writableState && s._writableState.finished) {
+    if ((s: any)._writableState && (s: any)._writableState.finished) {
       return resolve();
     }
 

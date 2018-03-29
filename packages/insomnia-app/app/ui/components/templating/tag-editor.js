@@ -421,17 +421,17 @@ class TagEditor extends React.PureComponent<Props, State> {
     return (
       <select value={id} onChange={this._handleChange}>
         <option value="n/a">-- Select Item --</option>
-        {docs.map(doc => {
+        {docs.map((doc: any) => {
           let namePrefix = null;
 
           // Show paren't folder with name if it's a request
           if (doc.type === models.request.type) {
             const requests = allDocs[models.request.type] || [];
-            const request = requests.find(r => r._id === doc._id);
+            const request: any = requests.find(r => r._id === doc._id);
             const method = request && typeof request.method === 'string' ? request.method : 'GET';
             const parentId = request ? request.parentId : 'n/a';
             const requestGroups = allDocs[models.requestGroup.type] || [];
-            const requestGroup = requestGroups.find(rg => rg._id === parentId);
+            const requestGroup: any = requestGroups.find(rg => rg._id === parentId);
             const requestGroupName = requestGroup && typeof requestGroup.name === 'string'
               ? requestGroup.name
               : '';

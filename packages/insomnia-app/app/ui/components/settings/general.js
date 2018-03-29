@@ -19,7 +19,7 @@ class General extends React.PureComponent<Props> {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
-    if (e.target.type === 'number') {
+    if (e.currentTarget.type === 'number') {
       value = parseInt(value, 10);
     }
 

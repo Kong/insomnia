@@ -10,7 +10,8 @@ import type {Request} from '../../../models/request';
 type Child = {
   doc: Request | RequestGroup,
   children: Array<Child>,
-  collapsed: boolean
+  collapsed: boolean,
+  hidden: boolean
 };
 
 type Props = {

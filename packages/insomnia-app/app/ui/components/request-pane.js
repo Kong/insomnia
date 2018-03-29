@@ -62,7 +62,7 @@ type Props = {
 
 @autobind
 class RequestPane extends React.PureComponent<Props> {
-  _handleUpdateRequestUrlTimeout: number;
+  _handleUpdateRequestUrlTimeout: TimeoutID;
 
   _handleEditDescriptionAdd () {
     this._handleEditDescription(true);

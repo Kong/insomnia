@@ -7,6 +7,7 @@ import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
+import type {BaseModel} from '../../../models';
 import * as models from '../../../models';
 import {fuzzyMatchAll} from '../../../common/misc';
 import type {RequestGroup} from '../../../models/request-group';
@@ -146,12 +147,12 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   }
 
   /** Return array of path segments for given request or folder */
-  _groupOf (requestOrRequestGroup: Request | RequestGroup): Array<string> {
+  _groupOf (requestOrRequestGroup: BaseModel): Array<string> {
     const {workspaceChildren} = this.props;
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
     const currentGroupName = requestOrRequestGroup.type === models.requestGroup.type
-      ? `${requestOrRequestGroup.name}`
+      ? `${(requestOrRequestGroup: any).name}`
       : '';
 
     // It's the final parent
@@ -235,8 +236,10 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     this.setState({
       activeIndex,
       searchString,
-      matchedRequests,
-      matchedWorkspaces
+      matchedWorkspaces,
+
+      // Ugh. Force cast to make Flow happy
+      matchedRequests: ((matchedRequests: any): Array<Request>)
     });
   }
 
@@ -316,8 +319,8 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
                         <i className="fa fa-folder-o"/>
                       </div>
                     )}
-                    <MethodTag method={r.method}/>
-                    <strong>{r.name}</strong>
+                    <MethodTag method={(r: any).method}/>
+                    <strong>{(r: any).name}</strong>
                   </Button>
                 </li>
               );
@@ -340,7 +343,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
                   <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
                     <i className="fa fa-random"/>
                     &nbsp;&nbsp;&nbsp;
-                    Switch to <strong>{w.name}</strong>
+                    Switch to <strong>{(w: any).name}</strong>
                   </Button>
                 </li>
               );
