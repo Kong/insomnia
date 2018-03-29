@@ -1,5 +1,5 @@
-import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -9,40 +9,83 @@ import * as models from '../../../models';
 import {trackEvent} from '../../../common/analytics';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
+import * as db from '../../../common/database';
+import type {Workspace} from '../../../models/workspace';
+import type {Request} from '../../../models/request';
+
+type Props = {
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorKeyMap: string,
+  editorLineWrapping: boolean,
+  nunjucksPowerUserMode: boolean,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  workspaces: Array<Workspace>
+};
+
+type State = {
+  request: Request | null,
+  showDescription: boolean,
+  defaultPreviewMode: boolean,
+  activeWorkspaceIdToCopyTo: string | null,
+  workspace: Workspace | null,
+  justCopied: boolean,
+  justMoved: boolean
+};
 
 @autobind
-class RequestSettingsModal extends PureComponent {
-  constructor (props) {
+class RequestSettingsModal extends React.PureComponent<Props, State> {
+  modal: ?Modal;
+  _editor: ?MarkdownEditor;
+
+  constructor (props: Props) {
     super(props);
     this.state = {
       request: null,
       showDescription: false,
-      defaultPreviewMode: false
+      defaultPreviewMode: false,
+      activeWorkspaceIdToCopyTo: null,
+      workspace: null,
+      workspaces: [],
+      justCopied: false,
+      justMoved: false
     };
   }
 
-  _setModalRef (n) {
+  _setModalRef (n: ?Modal) {
     this.modal = n;
   }
 
-  _setEditorRef (n) {
+  _setEditorRef (n: ?MarkdownEditor) {
     this._editor = n;
   }
 
-  async _updateRequestSettingBoolean (e) {
-    const value = e.target.checked;
-    const setting = e.target.name;
+  async _updateRequestSettingBoolean (e: SyntheticEvent<HTMLInputElement>) {
+    if (!this.state.request) {
+      // Should never happen
+      return;
+    }
+
+    const value = e.currentTarget.checked;
+    const setting = e.currentTarget.name;
     const request = await models.request.update(this.state.request, {[setting]: value});
     this.setState({request});
     trackEvent('Request Settings', setting, value ? 'Enable' : 'Disable');
   }
 
-  async _handleNameChange (name) {
+  async _handleNameChange (name: string) {
+    if (!this.state.request) {
+      return;
+    }
     const request = await models.request.update(this.state.request, {name});
     this.setState({request});
   }
 
-  async _handleDescriptionChange (description) {
+  async _handleDescriptionChange (description: string) {
+    if (!this.state.request) {
+      return;
+    }
     const request = await models.request.update(this.state.request, {description});
     this.setState({request, defaultPreviewMode: false});
   }
@@ -52,37 +95,108 @@ class RequestSettingsModal extends PureComponent {
     this.setState({showDescription: true});
   }
 
-  show ({request, forceEditMode}) {
-    const hasDescription = !!request.description;
-    this.setState({
-      request,
-      showDescription: forceEditMode || hasDescription,
-      defaultPreviewMode: hasDescription && !forceEditMode
+  _handleUpdateMoveCopyWorkspace (e: SyntheticEvent<HTMLSelectElement>) {
+    const workspaceId = e.currentTarget.value;
+    this.setState({activeWorkspaceIdToCopyTo: workspaceId});
+  }
+
+  async _handleMoveToWorkspace () {
+    const {activeWorkspaceIdToCopyTo, request} = this.state;
+    if (!request) {
+      return;
+    }
+
+    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
+    if (!workspace) {
+      return;
+    }
+
+    await models.request.update(request, {
+      sortKey: -1E9, // Move to top of sort order
+      parentId: activeWorkspaceIdToCopyTo
     });
 
-    this.modal.show();
+    this.setState({justMoved: true});
+    setTimeout(() => {
+      this.setState({justMoved: false});
+    }, 2000);
+    trackEvent('Request Settings', 'Move to Workspace');
+  }
 
-    if (forceEditMode) {
-      setTimeout(() => this._editor.focus(), 400);
+  async _handleCopyToWorkspace () {
+    const {activeWorkspaceIdToCopyTo, request} = this.state;
+    if (!request) {
+      return;
     }
+
+    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
+    if (!workspace) {
+      return;
+    }
+
+    const newRequest = await models.request.duplicate(request);
+    await models.request.update(newRequest, {
+      sortKey: -1E9, // Move to top of sort order
+      name: request.name, // Because duplicate will add (Copy) suffix
+      parentId: activeWorkspaceIdToCopyTo
+    });
+
+    this.setState({justCopied: true});
+    setTimeout(() => {
+      this.setState({justCopied: false});
+    }, 2000);
+    trackEvent('Request Settings', 'Copy to Workspace');
+  }
+
+  async show ({request, forceEditMode}: {request: Request, forceEditMode: boolean}) {
+    const {workspaces} = this.props;
+
+    const hasDescription = !!request.description;
+
+    // Find workspaces for use with moving workspace
+    const ancestors = await db.withAncestors(request);
+    const doc = ancestors.find(doc => doc.type === models.workspace.type);
+    const workspaceId = doc ? doc._id : 'should-never-happen';
+    const workspace = workspaces.find(w => w._id === workspaceId);
+
+    this.setState({
+      request,
+      workspace: workspace,
+      activeWorkspaceIdToCopyTo: workspace ? workspace._id : 'n/a',
+      showDescription: forceEditMode || hasDescription,
+      defaultPreviewMode: hasDescription && !forceEditMode
+    }, () => {
+      this.modal && this.modal.show();
+
+      if (forceEditMode) {
+        setTimeout(() => {
+          this._editor && this._editor.focus();
+        }, 400);
+      }
+    });
   }
 
   hide () {
-    this.modal.hide();
+    this.modal && this.modal.hide();
   }
 
-  renderCheckboxInput (setting) {
+  renderCheckboxInput (setting: string) {
+    const {request} = this.state;
+    if (!request) {
+      return;
+    }
+
     return (
       <input
         type="checkbox"
         name={setting}
-        checked={this.state.request[setting]}
+        checked={request[setting]}
         onChange={this._updateRequestSettingBoolean}
       />
     );
   }
 
-  renderModalBody (request) {
+  renderModalBody (request: Request) {
     const {
       editorLineWrapping,
       editorFontSize,
@@ -90,10 +204,18 @@ class RequestSettingsModal extends PureComponent {
       editorKeyMap,
       handleRender,
       handleGetRenderContext,
-      nunjucksPowerUserMode
+      nunjucksPowerUserMode,
+      workspaces
     } = this.props;
 
-    const {showDescription, defaultPreviewMode} = this.state;
+    const {
+      showDescription,
+      defaultPreviewMode,
+      activeWorkspaceIdToCopyTo,
+      justMoved,
+      justCopied,
+      workspace
+    } = this.state;
 
     return (
       <div>
@@ -172,6 +294,40 @@ class RequestSettingsModal extends PureComponent {
               {this.renderCheckboxInput('settingRebuildPath')}
             </label>
           </div>
+          <hr/>
+          <div className="form-row">
+            <div className="form-control form-control--outlined">
+              <label>Move/Copy to Workspace
+                <HelpTooltip position="top" className="space-left">
+                  Copy or move the current request to a new workspace. It will be placed at the
+                  root of the new workspace's folder structure.
+                </HelpTooltip>
+                <select value={activeWorkspaceIdToCopyTo}
+                        onChange={this._handleUpdateMoveCopyWorkspace}>
+                  <option value="n/a">-- Select Workspace --</option>
+                  {workspaces.map(w => {
+                    if (workspace && workspace._id === w._id) {
+                      return null;
+                    }
+
+                    return (
+                      <option key={w._id} value={w._id}>{w.name}</option>
+                    );
+                  })}
+                </select>
+              </label>
+            </div>
+            <div className="form-control form-control--no-label width-auto">
+              <button disabled={justCopied} className="btn btn--clicky" onClick={this._handleCopyToWorkspace}>
+                {justCopied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <div className="form-control form-control--no-label width-auto">
+              <button disabled={justMoved} className="btn btn--clicky" onClick={this._handleMoveToWorkspace}>
+                {justMoved ? 'Moved!' : 'Move'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -193,15 +349,5 @@ class RequestSettingsModal extends PureComponent {
     );
   }
 }
-
-RequestSettingsModal.propTypes = {
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired
-};
 
 export default RequestSettingsModal;

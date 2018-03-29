@@ -40,6 +40,7 @@ import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
 import {updateMimeType} from '../../models/request';
+import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 
 @autobind
 class App extends PureComponent {
@@ -181,6 +182,10 @@ class App extends PureComponent {
 
   async _requestGroupDuplicate (requestGroup) {
     models.requestGroup.duplicate(requestGroup);
+  }
+
+  async _requestGroupMove (requestGroup) {
+    showModal(MoveRequestGroupModal, {requestGroup});
   }
 
   async _requestDuplicate (request) {
@@ -870,6 +875,7 @@ class App extends PureComponent {
               handleGetRenderContext={this._handleGetRenderContext}
               handleDuplicateRequest={this._requestDuplicate}
               handleDuplicateRequestGroup={this._requestGroupDuplicate}
+              handleMoveRequestGroup={this._requestGroupMove}
               handleDuplicateWorkspace={this._workspaceDuplicate}
               handleCreateRequestGroup={this._requestGroupCreate}
               handleGenerateCode={this._handleGenerateCode}
