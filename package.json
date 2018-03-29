@@ -10,7 +10,7 @@
   "scripts": {
     "bootstrap": "npm install && lerna bootstrap && lerna run bootstrap",
     "publish": "lerna publish",
-    "clean": "lerna clean",
+    "clean": "lerna clean --yes",
     "test": "lerna run test --stream",
     "app-start": "lerna run start --stream --scope=insomnia-app",
     "app-build": "lerna run build --stream --scope=insomnia-app",
