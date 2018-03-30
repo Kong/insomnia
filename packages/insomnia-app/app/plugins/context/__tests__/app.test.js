@@ -67,8 +67,8 @@ describe('app.prompt()', () => {
 
     // Make sure it passes correct arguments
     expect(modals.showPrompt.mock.calls).toEqual([
-      [{title: 'Title', cancelable: false, onComplete: expect.any(Function)}],
-      [{title: 'Title', label: 'Label', cancelable: false, onComplete: expect.any(Function)}]
+      [{title: 'Title', onComplete: expect.any(Function), onCancel: expect.any(Function)}],
+      [{title: 'Title', label: 'Label', onComplete: expect.any(Function), onCancel: expect.any(Function)}]
     ]);
   });
 });

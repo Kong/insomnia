@@ -1,8 +1,9 @@
 import electron from 'electron';
 import path from 'path';
+import {Curl} from 'insomnia-libcurl';
 import fs from 'fs';
 import LocalStorage from './local-storage';
-import {CHANGELOG_BASE_URL, getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
+import {CHANGELOG_BASE_URL, getAppLongName, getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
 import {trackEvent} from '../common/analytics';
 import * as misc from '../common/misc';
 
@@ -96,8 +97,9 @@ export function createWindow () {
   });
 
   // Load the html of the app.
-  const appUrl = process.env.APP_RENDER_URL || `file://${app.getAppPath()}/renderer.html`;
-  console.log(`[main] Loading ${process.env.APP_RENDER_URL}`);
+  const url = process.env.APP_RENDER_URL;
+  const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
+  console.log(`[main] Loading ${appUrl}`);
   mainWindow.loadURL(appUrl);
 
   // Emitted when the window is closed.
@@ -279,6 +281,29 @@ export function createWindow () {
       }
     ]
   };
+
+  if (!isMac()) {
+    helpMenu.submenu.unshift({
+      label: 'About',
+      click: () => {
+        trackEvent('App Menu', 'About');
+        dialog.showMessageBox({
+          type: 'info',
+          title: getAppName(),
+          message: getAppLongName(),
+          detail: [
+            'Version ' + getAppVersion(),
+            'Shell ' + process.versions['atom-shell'],
+            'Node ' + process.versions.node,
+            'V8 ' + process.versions.v8,
+            'Architecture ' + process.arch,
+            '', // Blank line before libcurl
+            Curl.getVersion()
+          ].join('\n')
+        });
+      }
+    });
+  }
 
   const developerMenu = {
     label: 'Developer',
