@@ -24,8 +24,8 @@ install:
   - npm test
 
 cache:
-  - '%APPDATA%\npm-cache -> package-lock.json'
-  - '%USERPROFILE%\.electron -> package-lock.json'
+  - '%APPDATA%\npm-cache -> packages/insomnia/package.json'
+  - '%USERPROFILE%\.electron -> packages/insomnia/package.json'
 
 #---------------------------------#
 #       tests configuration       #
