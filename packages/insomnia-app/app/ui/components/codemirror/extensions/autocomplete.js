@@ -229,10 +229,15 @@ function hint (cm, options) {
 
   // NOTE: This puts the longer (more precise) matches in front of the short ones
   const matches = [...allLongMatches, ...allShortMatches];
-  const segment = [...nameSegmentLong, nameSegment];
+  const segment = allLongMatches.length ? nameSegmentLong : nameSegment;
+
+  const uniqueMatches = matches.reduce(
+    (arr, v) => arr.find(a => a.text === v.text) ? arr : [...arr, v],
+    [] // Default value
+  );
 
   return {
-    list: matches,
+    list: uniqueMatches,
     from: CodeMirror.Pos(cur.line, cur.ch - segment.length),
     to: CodeMirror.Pos(cur.line, cur.ch)
   };

@@ -33,12 +33,13 @@ class Modal extends PureComponent {
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
     const pressedEscape = hotkeys.pressedHotKey(e, hotkeys.CLOSE_MODAL);
-    const pressedElse = closeOnKeyCodes.find(c => c === e.keyCode);
+    const pressedCloseButton = closeOnKeyCodes.find(c => c === e.keyCode);
 
-    if (pressedEscape || pressedElse) {
+    // Pressed escape
+    if (pressedEscape || pressedCloseButton) {
       e.preventDefault();
-      // Pressed escape
       this.hide();
+      this.props.onCancel && this.props.onCancel();
     }
   }
 
@@ -65,6 +66,7 @@ class Modal extends PureComponent {
 
     if (shouldHide) {
       this.hide();
+      this.props.onCancel && this.props.onCancel();
     }
   }
 
@@ -153,6 +155,7 @@ Modal.propTypes = {
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,
   onHide: PropTypes.func,
+  onCancel: PropTypes.func,
   freshState: PropTypes.bool,
   children: PropTypes.node,
   className: PropTypes.string

@@ -16,10 +16,11 @@ export function init (renderPurpose?: string): {app: Object} {
       },
       prompt (
         title: string,
-        options: {
+        options?: {
           label?: string,
           defaultValue?: string,
-          submitName?: string
+          submitName?: string,
+          cancelable?: boolean
         }
       ): Promise<string> {
         options = options || {};
@@ -28,11 +29,13 @@ export function init (renderPurpose?: string): {app: Object} {
           return Promise.resolve(options.defaultValue || '');
         }
 
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
           showPrompt({
             title,
             ...(options || {}),
-            cancelable: false,
+            onCancel () {
+              reject(new Error(`Prompt ${title} cancelled`));
+            },
             onComplete (value: string) {
               resolve(value);
             }

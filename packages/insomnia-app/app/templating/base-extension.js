@@ -97,6 +97,7 @@ export default class BaseExtension {
     try {
       result = this.run(helperContext, ...args);
     } catch (err) {
+      // Catch sync errors
       callback(err);
       return;
     }
@@ -104,8 +105,12 @@ export default class BaseExtension {
     // If the result is a promise, resolve it async
     if (result instanceof Promise) {
       result.then(
-        r => callback(null, r),
-        err => callback(err)
+        r => {
+          callback(null, r);
+        },
+        err => {
+          callback(err);
+        }
       );
       return;
     }
