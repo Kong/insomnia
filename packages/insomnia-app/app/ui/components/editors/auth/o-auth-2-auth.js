@@ -347,7 +347,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
 
     const tokenPrefix = this.renderInputRow(
-      'Token Prefix',
+      'Header Prefix',
       'tokenPrefix',
       this._handleChangeTokenPrefix,
       'Change Authorization header prefix from Bearer to something else'
@@ -500,7 +500,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         <div className="notice subtle margin-top text-left">
           {/* Handle major errors */}
           {error && (
-            <p className="notice warning margin-bottom">
+            <p className="selectable notice warning margin-bottom">
               {error}
             </p>
           )}

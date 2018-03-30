@@ -29,8 +29,8 @@ export async function getAuthHeader (
   }
 
   if (authentication.type === AUTH_BEARER) {
-    const {token} = authentication;
-    return getBearerAuthHeader(token);
+    const {token, prefix} = authentication;
+    return getBearerAuthHeader(token, prefix);
   }
 
   if (authentication.type === AUTH_OAUTH_2) {
