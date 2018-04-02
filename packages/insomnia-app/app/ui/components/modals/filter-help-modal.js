@@ -84,6 +84,4 @@ class FilterHelpModal extends PureComponent {
   }
 }
 
-FilterHelpModal.propTypes = {};
-
 export default FilterHelpModal;

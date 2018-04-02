@@ -147,6 +147,4 @@ class RequestCreateModal extends PureComponent {
   }
 }
 
-RequestCreateModal.propTypes = {};
-
 export default RequestCreateModal;

@@ -94,6 +94,4 @@ class RequestRenderErrorModal extends PureComponent {
   }
 }
 
-RequestRenderErrorModal.propTypes = {};
-
 export default RequestRenderErrorModal;

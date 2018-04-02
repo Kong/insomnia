@@ -80,6 +80,4 @@ class AlertModal extends PureComponent {
   }
 }
 
-AlertModal.propTypes = {};
-
 export default AlertModal;

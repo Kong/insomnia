@@ -198,6 +198,4 @@ class Toast extends React.PureComponent<Props, State> {
   }
 }
 
-Toast.propTypes = {};
-
 export default Toast;

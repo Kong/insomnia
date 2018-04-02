@@ -86,6 +86,4 @@ class AskModal extends PureComponent {
   }
 }
 
-AskModal.propTypes = {};
-
 export default AskModal;

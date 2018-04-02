@@ -48,6 +48,4 @@ class Shortcuts extends PureComponent {
   }
 }
 
-Shortcuts.propTypes = {};
-
 export default Shortcuts;

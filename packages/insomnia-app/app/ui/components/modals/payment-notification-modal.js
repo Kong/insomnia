@@ -67,6 +67,4 @@ class PaymentNotificationModal extends PureComponent {
   }
 }
 
-PaymentNotificationModal.propTypes = {};
-
 export default PaymentNotificationModal;

@@ -33,6 +33,4 @@ class About extends PureComponent {
   }
 }
 
-About.propTypes = {};
-
 export default About;

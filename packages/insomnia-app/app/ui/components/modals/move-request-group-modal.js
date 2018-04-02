@@ -104,6 +104,4 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
   }
 }
 
-MoveRequestGroupModal.propTypes = {};
-
 export default MoveRequestGroupModal;

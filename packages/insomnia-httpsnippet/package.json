@@ -1,5 +1,5 @@
 {
-  "version": "1.16.5",
+  "version": "1.16.7",
   "name": "insomnia-httpsnippet",
   "description": "HTTP Request snippet generator for *most* languages",
   "author": "Gregory Schier <gschier1990@gmail.com>",

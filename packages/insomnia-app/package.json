@@ -102,7 +102,7 @@
     "html-entities": "^1.2.0",
     "iconv-lite": "^0.4.15",
     "insomnia-cookies": "^0.0.4",
-    "insomnia-httpsnippet": "^1.16.5",
+    "insomnia-httpsnippet": "^1.16.7",
     "insomnia-importers": "^2.0.1",
     "insomnia-libcurl": "^0.0.3",
     "insomnia-plugin-base64": "^1.0.3",

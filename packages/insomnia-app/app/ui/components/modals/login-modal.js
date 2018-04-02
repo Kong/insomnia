@@ -138,6 +138,4 @@ class LoginModal extends PureComponent {
   }
 }
 
-LoginModal.propTypes = {};
-
 export default LoginModal;
