@@ -100,8 +100,14 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
             continue;
           }
 
+          // Delete `require` cache if plugin has been required before
+          for (const p of Object.keys(global.require.cache)) {
+            if (p.indexOf(modulePath) === 0) {
+              delete global.require.cache[p];
+            }
+          }
+
           // Use global.require() instead of require() because Webpack wraps require()
-          delete global.require.cache[global.require.resolve(packageJSONPath)];
           const pluginJson = global.require(packageJSONPath);
 
           // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
@@ -110,7 +116,6 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
           }
 
           // Delete require cache entry and re-require
-          delete global.require.cache[global.require.resolve(modulePath)];
           const module = global.require(modulePath);
 
           pluginMap[pluginJson.name] = _initPlugin(pluginJson || {}, module, modulePath);
