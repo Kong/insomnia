@@ -767,16 +767,13 @@ export async function send (
     );
   } catch (err) {
     return {
-      response: {
-        url: renderedRequestBeforePlugins.url,
-        parentId: renderedRequestBeforePlugins._id,
-        error: err.message,
-        statusCode: STATUS_CODE_PLUGIN_ERROR,
-        statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
-        settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
-        settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
-      },
-      bodyBuffer: null
+      url: renderedRequestBeforePlugins.url,
+      parentId: renderedRequestBeforePlugins._id,
+      error: err.message,
+      statusCode: STATUS_CODE_PLUGIN_ERROR,
+      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
+      settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
+      settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies
     };
   }
 

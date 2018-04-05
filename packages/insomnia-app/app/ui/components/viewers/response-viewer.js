@@ -52,6 +52,15 @@ class ResponseViewer extends React.Component<Props, State> {
     };
   }
 
+  _decodeIconv (bodyBuffer: Buffer, charset: string): string {
+    try {
+      return iconv.decode(bodyBuffer, charset);
+    } catch (err) {
+      console.warn('[response] Failed to decode body', err);
+      return bodyBuffer.toString();
+    }
+  }
+
   _handleOpenLink (link: string) {
     shell.openExternal(link);
   }
@@ -269,7 +278,7 @@ class ResponseViewer extends React.Component<Props, State> {
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
       return (
         <ResponseWebView
-          body={iconv.decode(bodyBuffer, charset)}
+          body={this._decodeIconv(bodyBuffer, charset)}
           contentType={`${justContentType}; charset=UTF-8`}
           url={url}
         />
@@ -319,7 +328,7 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <ResponseRaw
           key={responseId}
-          value={iconv.decode(bodyBuffer, charset)}
+          value={this._decodeIconv(bodyBuffer, charset)}
           fontSize={editorFontSize}
         />
       );
@@ -328,13 +337,7 @@ class ResponseViewer extends React.Component<Props, State> {
       const charset = (match && match.length >= 2) ? match[1] : 'utf-8';
 
       // Sometimes iconv conversion fails so fallback to regular buffer
-      let body;
-      try {
-        body = iconv.decode(bodyBuffer, charset);
-      } catch (err) {
-        body = bodyBuffer.toString();
-        console.warn('[response] Failed to decode body', err);
-      }
+      const body = this._decodeIconv(bodyBuffer, charset);
 
       // Try to detect content-types if there isn't one
       let mode;

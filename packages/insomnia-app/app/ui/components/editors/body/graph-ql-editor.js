@@ -95,16 +95,17 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
       }));
 
-      const response = await network.send(introspectionRequest._id, environmentId);
-      const bodyBuffer = models.response.getBodyBuffer(response);
+      const responsePatch = await network.send(introspectionRequest._id, environmentId);
+      const bodyBuffer = models.response.getBodyBuffer(responsePatch);
 
-      const status = typeof response.statusCode === 'number' ? response.statusCode : 0;
-      const error = typeof response.error === 'string' ? response.error : '';
+      const status = typeof responsePatch.statusCode === 'number' ? responsePatch.statusCode : 0;
+      const error = typeof responsePatch.error === 'string' ? responsePatch.error : '';
 
       if (error) {
         newState.schemaFetchError = error;
       } else if (status < 200 || status >= 300) {
-        newState.schemaFetchError = `Got status ${status} fetching schema from "${rawRequest.url}"`;
+        const renderedURL = responsePatch.url || rawRequest.url;
+        newState.schemaFetchError = `Got status ${status} fetching schema from "${renderedURL}"`;
       } else if (bodyBuffer) {
         const {data} = JSON.parse(bodyBuffer.toString());
         newState.schema = buildClientSchema(data);
@@ -113,8 +114,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         newState.schemaFetchError = 'No response body received when fetching schema';
       }
     } catch (err) {
-      console.warn(`Failed to fetch GraphQL schema from ${rawRequest.url}`, err);
-      newState.schemaFetchError = `Failed to contact "${rawRequest.url}" to fetch schema ${err.message}`;
+      console.warn('Failed to fetch GraphQL schema', err);
+      newState.schemaFetchError = `Failed to to fetch schema: ${err.message}`;
     }
 
     if (this._isMounted) {
