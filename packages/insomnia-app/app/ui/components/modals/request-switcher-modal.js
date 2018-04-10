@@ -2,12 +2,14 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
 import type {BaseModel} from '../../../models';
+import URLTag from '../tags/url-tag';
 import * as models from '../../../models';
 import {fuzzyMatchAll} from '../../../common/misc';
 import type {RequestGroup} from '../../../models/request-group';
@@ -171,19 +173,18 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
   _isMatch (searchStrings: string): (Request) => boolean {
     return (request: Request): boolean => {
-      // Disable URL filtering until we have proper UI to show this
-      // let finalUrl = request.url;
-      // if (request.parameters) {
-      //   finalUrl = joinUrlAndQueryString(
-      //     finalUrl,
-      //     buildQueryStringFromParams(request.parameters));
-      // }
+      let finalUrl = request.url;
+      if (request.parameters) {
+        finalUrl = joinUrlAndQueryString(
+          finalUrl,
+          buildQueryStringFromParams(request.parameters));
+      }
 
       // Match request attributes
       const matchesAttributes = fuzzyMatchAll(searchStrings, [
         request.name,
-        // finalUrl,
-        // request.method,
+        finalUrl,
+        request.method,
         this._groupOf(request).join('/')
       ]);
 
@@ -312,15 +313,20 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
               return (
                 <li key={r._id}>
                   <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
-                    {requestGroup && (
-                      <div className="pull-right faint italic">
-                        {this._groupOf(r).join(' / ')}
-                        &nbsp;&nbsp;
-                        <i className="fa fa-folder-o"/>
-                      </div>
-                    )}
-                    <MethodTag method={(r: any).method}/>
-                    <strong>{(r: any).name}</strong>
+                    <div>
+                      {requestGroup && (
+                        <div className="pull-right faint italic">
+                          {this._groupOf(r).join(' / ')}
+                          &nbsp;&nbsp;
+                          <i className="fa fa-folder-o"/>
+                        </div>
+                      )}
+                      <MethodTag method={(r: any).method}/>
+                      <strong>{(r: any).name}</strong>
+                    </div>
+                    <div>
+                      <URLTag small url={(r: any).url}/>
+                    </div>
                   </Button>
                 </li>
               );
