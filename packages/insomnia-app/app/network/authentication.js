@@ -88,7 +88,7 @@ export async function getAuthHeader (
 
     if (parsedAdditionalClaims) {
       if (typeof parsedAdditionalClaims !== 'object') {
-        throw new Error(`additional-claims must be an object recieved: '${typeof parsedAdditionalClaims}' instead`);
+        throw new Error(`additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`);
       }
 
       claims = Object.assign(parsedAdditionalClaims, claims);
