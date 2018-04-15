@@ -19,5 +19,8 @@
   "devDependencies": {
     "jest": "^22.1.1",
     "lerna": "^2.7.1"
+  },
+  "dependencies": {
+    "fuzzysort": "^1.1.1"
   }
 }

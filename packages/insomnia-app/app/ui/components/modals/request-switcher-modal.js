@@ -2,6 +2,7 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import fuzzysort from 'fuzzysort';
 import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import Button from '../base/button';
 import Modal from '../base/modal';
@@ -9,9 +10,7 @@ import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
 import type {BaseModel} from '../../../models';
-import URLTag from '../tags/url-tag';
 import * as models from '../../../models';
-import {fuzzyMatchAll} from '../../../common/misc';
 import type {RequestGroup} from '../../../models/request-group';
 import type {Request} from '../../../models/request';
 import type {Workspace} from '../../../models/workspace';
@@ -33,6 +32,95 @@ type State = {
   matchedRequests: Array<Request>,
   matchedWorkspaces: Array<Workspace>,
   activeIndex: number
+};
+
+const fuzzyAny = (searchPhrase, text) => {
+  const searchTerms = searchPhrase.trim(' ').split(' ');
+  const emptyResults = {
+    searchTermsMatched: 0,
+    searchTermsCount: searchTerms.length,
+    indexes: []
+  };
+
+  if (!searchPhrase || !searchPhrase.trim() || !searchTerms || searchTerms.length === 0) {
+    return emptyResults;
+  }
+
+  const results = searchTerms.reduce((prevResult, nextTerm) => {
+    const nextResult = fuzzysort.single(nextTerm, text);
+
+    if (!nextResult) {
+      return prevResult;
+    }
+
+    if (!prevResult) {
+      return nextResult;
+    }
+
+    const sort = array => array.sort((a, b) => a - b);
+    const uniq = array => Array.from(new Set(array));
+
+    return {
+      ...prevResult,
+      ...nextResult,
+
+      searchTermsMatched: prevResult.searchTermsMatched + 1,
+
+      indexes: sort(uniq([
+        ...prevResult.indexes,
+        ...nextResult.indexes
+      ]))
+    };
+  }, emptyResults);
+
+  if (results.indexes.length === 0) {
+    return emptyResults;
+  }
+
+  return results;
+};
+
+const fuzzyMatchAll = (searchPhrase, textList) => {
+  if (!searchPhrase) {
+    return true;
+  }
+
+  const searchTerms = searchPhrase.trim(' ').split(' ');
+
+  for (let searchTerm of searchTerms) {
+    let hasMatch = false;
+
+    for (let text of textList) {
+      if (!hasMatch) {
+        const results = fuzzyAny(searchTerm, text);
+
+        if (results.searchTermsMatched > 0) {
+          hasMatch = true;
+        }
+      }
+    }
+
+    if (!hasMatch) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const Highlight = (props: { search: string, text: string }) => {
+  const results = fuzzyAny(props.search, props.text);
+
+  if (results.searchTermsMatched === 0) {
+    return <span>{props.text}</span>;
+  }
+
+  return <span
+    className=''
+    dangerouslySetInnerHTML={{ __html: fuzzysort.highlight(results,
+      '<strong style="color: #695eb8; text-decoration: underline;">',
+      '</strong>') }}
+  />;
 };
 
 @autobind
@@ -180,8 +268,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
           buildQueryStringFromParams(request.parameters));
       }
 
-      // Match request attributes
-      const matchesAttributes = fuzzyMatchAll(searchStrings, [
+      let matchesAttributes = fuzzyMatchAll(searchStrings, [
         request.name,
         finalUrl,
         request.method,
@@ -306,26 +393,26 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
             {matchedRequests.map((r, i) => {
               const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
-                'btn btn--super-compact wide text-left',
+                'btn btn--compact wide text-left',
                 {focus: activeIndex === i}
               );
 
               return (
                 <li key={r._id}>
-                  <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
+                  <Button onClick={this._activateRequest} value={r} className={`${buttonClasses} pad-bottom`}>
                     <div>
                       {requestGroup && (
                         <div className="pull-right faint italic">
-                          {this._groupOf(r).join(' / ')}
+                          <Highlight search={searchString} text={this._groupOf(r).join(' / ')} />
                           &nbsp;&nbsp;
                           <i className="fa fa-folder-o"/>
                         </div>
                       )}
                       <MethodTag method={(r: any).method}/>
-                      <strong>{(r: any).name}</strong>
+                      <Highlight search={searchString} text={(r: any).name} />
                     </div>
-                    <div>
-                      <URLTag small url={(r: any).url}/>
+                    <div style={{marginLeft: 45}}>
+                      <Highlight search={searchString} text={(r: any).url} />
                     </div>
                   </Button>
                 </li>
