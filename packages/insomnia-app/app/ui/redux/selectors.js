@@ -115,14 +115,9 @@ export const selectSidebarChildren = createSelector(
         // Try to match request attributes
         const {name, method} = child.doc;
 
-        // Don't use URL/parameters yet until we have UI to show it
-        // const {name, url, method, parameters} = child.doc;
-
         const hasMatchedAttributes = fuzzyMatchAll(sidebarFilter, [
           name,
-          // url,
           method,
-          // ...(parameters ? parameters.map(p => `${p.name}=${p.value}`) : []),
           ...parentNames
         ]);
 

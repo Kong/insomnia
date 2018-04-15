@@ -2,13 +2,14 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import fuzzysort from 'fuzzysort';
 import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import Button from '../base/button';
+import Highlight from '../base/highlight';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
+import {fuzzyMatchAll} from '../../../common/misc';
 import type {BaseModel} from '../../../models';
 import * as models from '../../../models';
 import type {RequestGroup} from '../../../models/request-group';
@@ -32,95 +33,6 @@ type State = {
   matchedRequests: Array<Request>,
   matchedWorkspaces: Array<Workspace>,
   activeIndex: number
-};
-
-const fuzzyAny = (searchPhrase, text) => {
-  const searchTerms = searchPhrase.trim(' ').split(' ');
-  const emptyResults = {
-    searchTermsMatched: 0,
-    searchTermsCount: searchTerms.length,
-    indexes: []
-  };
-
-  if (!searchPhrase || !searchPhrase.trim() || !searchTerms || searchTerms.length === 0) {
-    return emptyResults;
-  }
-
-  const results = searchTerms.reduce((prevResult, nextTerm) => {
-    const nextResult = fuzzysort.single(nextTerm, text);
-
-    if (!nextResult) {
-      return prevResult;
-    }
-
-    if (!prevResult) {
-      return nextResult;
-    }
-
-    const sort = array => array.sort((a, b) => a - b);
-    const uniq = array => Array.from(new Set(array));
-
-    return {
-      ...prevResult,
-      ...nextResult,
-
-      searchTermsMatched: prevResult.searchTermsMatched + 1,
-
-      indexes: sort(uniq([
-        ...prevResult.indexes,
-        ...nextResult.indexes
-      ]))
-    };
-  }, emptyResults);
-
-  if (results.indexes.length === 0) {
-    return emptyResults;
-  }
-
-  return results;
-};
-
-const fuzzyMatchAll = (searchPhrase, textList) => {
-  if (!searchPhrase) {
-    return true;
-  }
-
-  const searchTerms = searchPhrase.trim(' ').split(' ');
-
-  for (let searchTerm of searchTerms) {
-    let hasMatch = false;
-
-    for (let text of textList) {
-      if (!hasMatch) {
-        const results = fuzzyAny(searchTerm, text);
-
-        if (results.searchTermsMatched > 0) {
-          hasMatch = true;
-        }
-      }
-    }
-
-    if (!hasMatch) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-const Highlight = (props: { search: string, text: string }) => {
-  const results = fuzzyAny(props.search, props.text);
-
-  if (results.searchTermsMatched === 0) {
-    return <span>{props.text}</span>;
-  }
-
-  return <span
-    className=''
-    dangerouslySetInnerHTML={{ __html: fuzzysort.highlight(results,
-      '<strong style="color: #695eb8; text-decoration: underline;">',
-      '</strong>') }}
-  />;
 };
 
 @autobind

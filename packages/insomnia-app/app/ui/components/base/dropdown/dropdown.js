@@ -62,7 +62,7 @@ class Dropdown extends PureComponent {
       const listItemTextWithoutSpaces = listItem.textContent.toLowerCase().replace(/[^\w_]*/g, '');
       const filterWithoutSpaces = newFilter.toLowerCase().replace(/[^\w_]*/g, '');
 
-      if (!newFilter || fuzzyMatch(filterWithoutSpaces, listItemTextWithoutSpaces)) {
+      if (!newFilter || fuzzyMatch(filterWithoutSpaces, listItemTextWithoutSpaces).searchTermsMatched) {
         const filterIndex = listItem.getAttribute('data-filter-index');
         filterItems.push(parseInt(filterIndex, 10));
       }
