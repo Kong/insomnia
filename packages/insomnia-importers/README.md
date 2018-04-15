@@ -9,6 +9,7 @@ Insomnia v3 format.
 - Postman v2.0
 - cURL
 - HTTP Archive Format 1.2 (HAR)
+- Swagger 2.0
 
 ## Installation
 
