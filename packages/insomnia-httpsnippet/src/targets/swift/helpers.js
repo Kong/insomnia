@@ -3,7 +3,7 @@
 var util = require('util')
 
 /**
- * Create an string of given length filled with blank spaces
+ * Create a string of given length filled with blank spaces
  *
  * @param {number} length Length of the array to return
  * @return {string}
@@ -55,7 +55,7 @@ module.exports = {
       case '[object Number]':
         return value
       case '[object Array]':
-        // Don't prettify arrays nto not take too much space
+        // Don't prettify arrays to not take too much space
         var pretty = false
         var valuesRepresentation = value.map(function (v) {
           // Switch to prettify if the value is a dictionary with multiple keys

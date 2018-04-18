@@ -135,7 +135,7 @@ function parseEndpoints (document) {
  * @returns {string}
  */
 function pathWithParamsAsVariables (path) {
-  return path.replace(/{(.+)}/, '{{ $1 }}');
+  return path.replace(/{([^}]+)}/g, '{{ $1 }}');
 }
 
 /**

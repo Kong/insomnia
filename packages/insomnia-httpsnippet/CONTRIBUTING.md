@@ -136,4 +136,4 @@ license your work under the same license as that used by the project.
 
 ## Creating New Conversion Targets
 
-For a info on creating new conversion targets, please review this [guideline](https://github.com/Mashape/httpsnippet/wiki/Creating-Targets)
+For info on creating new conversion targets, please review this [guideline](https://github.com/Mashape/httpsnippet/wiki/Creating-Targets)
