@@ -7,6 +7,7 @@ const PORT = pkg.dev['dev-server-port'];
 module.exports = {
   ...baseConfig,
   devtool: 'eval-source-map',
+  mode: 'development',
   entry: [
     'react-hot-loader/patch',
     `webpack-dev-server/client?http://localhost:${PORT}`,

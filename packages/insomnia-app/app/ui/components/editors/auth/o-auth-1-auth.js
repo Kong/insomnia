@@ -6,7 +6,12 @@ import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import * as misc from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
-import {SIGNATURE_METHOD_HMAC_SHA1, SIGNATURE_METHOD_PLAINTEXT, SIGNATURE_METHOD_RSA_SHA1} from '../../../../network/o-auth-1/constants';
+import {
+  SIGNATURE_METHOD_HMAC_SHA1,
+  SIGNATURE_METHOD_HMAC_SHA256,
+  SIGNATURE_METHOD_PLAINTEXT,
+  SIGNATURE_METHOD_RSA_SHA1
+} from '../../../../network/o-auth-1/constants';
 import CodePromptModal from '../../modals/code-prompt-modal';
 import {showModal} from '../../modals';
 import Button from '../../base/button';
@@ -311,6 +316,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
       'signatureMethod',
       [
         {name: 'HMAC-SHA1', value: SIGNATURE_METHOD_HMAC_SHA1},
+        {name: 'HMAC-SHA256', value: SIGNATURE_METHOD_HMAC_SHA256},
         {name: 'RSA-SHA1', value: SIGNATURE_METHOD_RSA_SHA1},
         {name: 'PLAINTEXT', value: SIGNATURE_METHOD_PLAINTEXT}
       ],

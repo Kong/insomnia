@@ -4,6 +4,7 @@ const baseConfig = require('./webpack.config.base.babel');
 module.exports = {
   ...baseConfig,
   devtool: false,
+  mode: 'production',
   plugins: [
     ...baseConfig.plugins,
     new webpack.DefinePlugin({
