@@ -4,7 +4,14 @@
     "semistandard",
     "plugin:flowtype/recommended"
   ],
-  "plugins": ["react", "jest", "html", "json", "filenames", "flowtype"],
+  "plugins": [
+    "react",
+    "jest",
+    "html",
+    "json",
+    "filenames",
+    "flowtype"
+  ],
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -22,11 +29,15 @@
     "jest/globals": true
   },
   "rules": {
+    "indent": "off",
     "no-var": "error",
     "no-duplicate-imports": "off",
     "react/jsx-uses-react": "error",
     "react/jsx-uses-vars": "error",
-    "filenames/match-exported": ["error", "kebab"]
+    "filenames/match-exported": [
+      "error",
+      "kebab"
+    ]
   },
   "settings": {
     "flowtype": {

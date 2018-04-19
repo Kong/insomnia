@@ -15,24 +15,24 @@ import {trackEvent} from '../../../common/analytics';
 
 @autobind
 class WorkspaceShareSettingsModal extends PureComponent {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {};
   }
 
-  _handleSubmit(e) {
+  _handleSubmit (e) {
     e.preventDefault();
   }
 
-  _handleClose() {
+  _handleClose () {
     this.hide();
   }
 
-  _setModalRef(n) {
+  _setModalRef (n) {
     this.modal = n;
   }
 
-  async _handleUnshare() {
+  async _handleUnshare () {
     if (!session.isLoggedIn()) {
       return;
     }
@@ -50,7 +50,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     }
   }
 
-  _handleShareWithTeam(team) {
+  _handleShareWithTeam (team) {
     showPrompt({
       title: 'Share Workspace',
       label: 'Confirm password to share workspace',
@@ -71,7 +71,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     });
   }
 
-  async _load() {
+  async _load () {
     if (!session.isLoggedIn()) {
       this._resetState({});
       return;
@@ -92,7 +92,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     }
   }
 
-  _resetState(patch = {}) {
+  _resetState (patch = {}) {
     this.setState(Object.assign({
       teams: [],
       resourceGroup: null,
@@ -101,7 +101,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
     }, patch));
   }
 
-  async show() {
+  async show () {
     this._resetState();
     this.modal.show();
 
@@ -109,15 +109,15 @@ class WorkspaceShareSettingsModal extends PureComponent {
     await this._load();
   }
 
-  hide() {
+  hide () {
     this.modal.hide();
   }
 
-  componentWillMount() {
+  componentWillMount () {
     this._resetState();
   }
 
-  render() {
+  render () {
     const {teams, resourceGroup, error, loading} = this.state;
     const {workspace} = this.props;
     return (

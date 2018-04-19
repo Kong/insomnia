@@ -88,7 +88,7 @@ class AsapAuth extends React.PureComponent<Props> {
     );
 
     const asapPrivateKey = this.renderPrivateKeyInput(
-      'Private Key',
+      'Private Key'
     );
 
     return [asapIssuer, asapSubject, asapAudience, asapAdditionalClaims, asapKeyId, asapPrivateKey];
@@ -143,7 +143,7 @@ class AsapAuth extends React.PureComponent<Props> {
   }
 
   renderPrivateKeyInput (
-    label: string,
+    label: string
   ): React.Element<*> {
     const id = label.replace(/ /g, '-');
     const {authentication} = this.props;
