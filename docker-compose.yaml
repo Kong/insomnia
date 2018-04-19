@@ -1,0 +1,6 @@
+version: '3'
+services:
+  package:
+    build: .
+    volumes:
+      - ./packages/insomnia-app/dist:/src/insomnia/packages/insomnia-app/dist
