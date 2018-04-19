@@ -75,7 +75,7 @@ class RequestPane extends React.PureComponent<Props> {
     });
   }
 
-  async _autocompleteUrls () {
+  async _autocompleteUrls (): Promise<Array<string>> {
     const docs = await db.withDescendants(
       this.props.workspace,
       models.request.type

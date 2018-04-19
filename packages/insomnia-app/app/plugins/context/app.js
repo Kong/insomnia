@@ -1,7 +1,6 @@
 // @flow
 import * as electron from 'electron';
-import {showAlert} from '../../ui/components/modals/index';
-import {showPrompt} from '../../ui/components/modals';
+import {showAlert, showPrompt} from '../../ui/components/modals/index';
 import {RENDER_PURPOSE_SEND} from '../../common/render';
 
 export function init (renderPurpose?: string): {app: Object} {

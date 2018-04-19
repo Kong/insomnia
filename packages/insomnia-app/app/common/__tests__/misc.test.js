@@ -139,4 +139,3 @@ describe('fuzzyMatchAll()', () => {
     expect(misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(false);
   });
 });
-

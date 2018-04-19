@@ -212,7 +212,7 @@ export async function getRenderContext (
   baseContext.getPurpose = () => purpose;
 
   // Generate the context we need to render
-  return await buildRenderContext(
+  return buildRenderContext(
     ancestors,
     rootEnvironment,
     subEnvironment,
