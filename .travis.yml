@@ -18,30 +18,14 @@ matrix:
         - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
         - docker-compose build package
         - docker-compose run package
-#    - os: linux
-#      sudo: required
-#      dist: trusty
-#      env: CC=clang CXX=clang++ npm_config_clang=1
-#      compiler: clang
-#      install:
-#        - npm install 7zip-bin-linux > /dev/null
-#      addons:
-#        apt:
-#          packages:
-#          - libcurl4-openssl-dev
-#          - snapd
-#          - git-all
-#          - icnsutils
-#          - graphicsmagick
-
-#    - os: osx
-#      install:
-#        - npm install 7zip-bin-mac > /dev/null
-#      env:
-#        - CSC_LINK=$MAC_CSC_LINK
-#        - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
-#      before_deploy:
-#        - npm run app-package
+    - os: osx
+      install:
+        - npm install 7zip-bin-mac > /dev/null
+      env:
+        - CSC_LINK=$MAC_CSC_LINK
+        - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
+      before_deploy:
+        - npm run app-package
 
 cache:
   directories:
