@@ -40,7 +40,7 @@ RUN wget -q https://github.com/curl/curl/releases/download/curl-7_59_0/curl-7.59
 # Install Node
 RUN wget -O- https://deb.nodesource.com/setup_8.x | bash - \
     && apt-get install -y nodejs graphicsmagick icnsutils \
-    && npm install 7zip-bin-linux
+    && npm install --no-save 7zip-bin-linux app-builder-bin-linux
 
 # Setup dirs
 ADD . /src/insomnia
