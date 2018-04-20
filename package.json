@@ -17,7 +17,6 @@
     "app-package": "lerna run package --stream --scope=insomnia-app"
   },
   "devDependencies": {
-    "electron-rebuild": "^1.6.0",
     "jest": "^22.1.1",
     "lerna": "^2.7.1"
   }

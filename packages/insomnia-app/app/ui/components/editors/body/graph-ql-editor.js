@@ -54,12 +54,13 @@ type State = {
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _isMounted: boolean;
+  _schemaFetchTimeout: TimeoutID;
 
   constructor (props: Props) {
     super(props);
     this._isMounted = false;
     this.state = {
-      body: this._stringToGraphQL(props.content),
+      body: GraphQLEditor._stringToGraphQL(props.content),
       schema: null,
       schemaFetchError: '',
       schemaLastFetchTime: 0,
@@ -123,8 +124,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _handleRefreshSchema (): void {
-    this._fetchAndSetSchema(this.props.request);
+  async _handleRefreshSchema (): Promise<void> {
+    await this._fetchAndSetSchema(this.props.request);
   }
 
   _handlePrettify () {
@@ -166,7 +167,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
 
     this.setState({variablesSyntaxError: '', body});
-    this.props.onChange(this._graphQLToString(body));
+    this.props.onChange(GraphQLEditor._graphQLToString(body));
   }
 
   _handleQueryChange (query: string): void {
@@ -182,7 +183,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _stringToGraphQL (text: string): GraphQLBody {
+  static _stringToGraphQL (text: string): GraphQLBody {
     let obj: GraphQLBody;
     try {
       obj = JSON.parse(text);
@@ -204,25 +205,29 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _graphQLToString (body: GraphQLBody): string {
+  static _graphQLToString (body: GraphQLBody): string {
     return JSON.stringify(body);
   }
 
   componentWillReceiveProps (nextProps: Props) {
-    if (nextProps.request.url !== this.props.request.url) {
-      (async () => {
+    if (nextProps.request.modified !== this.props.request.modified) {
+      clearTimeout(this._schemaFetchTimeout);
+      this._schemaFetchTimeout = setTimeout(async () => {
         await this._fetchAndSetSchema(nextProps.request);
-      })();
+      }, 2000);
     }
   }
 
   componentDidMount () {
-    this._fetchAndSetSchema(this.props.request);
     this._isMounted = true;
+    (async () => {
+      await this._fetchAndSetSchema(this.props.request);
+    })();
   }
 
   componentWillUnmount () {
     this._isMounted = false;
+    clearTimeout(this._schemaFetchTimeout);
   }
 
   renderSchemaFetchMessage () {
@@ -265,7 +270,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const {
       query,
       variables: variablesObject
-    } = this._stringToGraphQL(content);
+    } = GraphQLEditor._stringToGraphQL(content);
 
     const variables = prettify.json(JSON.stringify(variablesObject));
 
