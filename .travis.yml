@@ -14,8 +14,8 @@ matrix:
         - chmod +x docker-compose
         - sudo mv docker-compose /usr/local/bin
         # Some hack to get stdout to be blocking
-        - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
       before_deploy:
+        - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
         - docker-compose build package
         - docker-compose run package
 #    - os: linux
