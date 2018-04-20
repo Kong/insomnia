@@ -44,8 +44,5 @@
       "deb",
       "tar.gz"
     ]
-  },
-  "snap": {
-    "stagePackages": ["default"]
   }
 }
