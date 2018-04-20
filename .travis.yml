@@ -5,25 +5,27 @@ matrix:
     - os: linux
       sudo: required
       dist: trusty
-      env: CC=clang CXX=clang++ npm_config_clang=1
-      compiler: clang
-      install:
-        - npm install 7zip-bin-linux > /dev/null
+      env:
+        - DOCKER_COMPOSE_VERSION=1.20.1
+      # Get newer docker-compose
+      before_install:
+        - sudo rm /usr/local/bin/docker-compose
+        - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+        - chmod +x docker-compose
+        - sudo mv docker-compose /usr/local/bin
+        # Some hack to get stdout to be blocking
+      before_deploy:
+        - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+        - docker-compose build package
+        - docker-compose run package
     - os: osx
       install:
         - npm install 7zip-bin-mac > /dev/null
       env:
         - CSC_LINK=$MAC_CSC_LINK
         - CSC_KEY_PASSWORD=$MAC_CSC_KEY_PASSWORD
-
-addons:
-  apt:
-    packages:
-    - libcurl4-openssl-dev
-    - snapd
-    - git-all
-    - icnsutils
-    - graphicsmagick
+      before_deploy:
+        - npm run app-package
 
 cache:
   directories:
@@ -37,9 +39,6 @@ script:
   - npm --version
   - npm run bootstrap
   - npm test
-
-before_deploy:
-- npm run app-package
 
 deploy:
   provider: releases

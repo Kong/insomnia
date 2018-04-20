@@ -2,7 +2,6 @@ const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
 const fs = require('fs');
-const mkdirp = require('mkdirp');
 const buildTask = require('./build');
 
 const PLATFORM_MAP = {
@@ -25,7 +24,7 @@ if (require.main === module) {
 
 module.exports.start = async function () {
   console.log('[package] Removing existing directories');
-  await emptyDir('../dist');
+  await emptyDir('../dist/*');
 
   console.log('[package] Packaging app');
   await pkg('../.electronbuilder');
@@ -58,7 +57,6 @@ async function emptyDir (relPath) {
       if (err) {
         reject(err);
       } else {
-        mkdirp.sync(dir);
         resolve();
       }
     });
