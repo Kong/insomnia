@@ -16,9 +16,8 @@ matrix:
         - chmod +x docker-compose
         - sudo mv docker-compose /usr/local/bin
         - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
-      install:
-        - docker-compose build package
       before_deploy:
+        - docker-compose build package
         - docker-compose run package
 #    - os: linux
 #      sudo: required
