@@ -146,9 +146,12 @@ class Editor extends PureComponent {
   }
 
   _onChange (pairs) {
-    clearTimeout(this._triggerTimeout);
-    this._triggerTimeout = setTimeout(() => this.props.onChange(pairs), DEBOUNCE_MILLIS);
-    this.setState({pairs});
+    this.setState({pairs}, () => {
+      clearTimeout(this._triggerTimeout);
+      this._triggerTimeout = setTimeout(() => {
+        this.props.onChange(pairs);
+      }, DEBOUNCE_MILLIS);
+    });
   }
 
   _addPair (position) {

@@ -788,7 +788,7 @@ export async function getOrCreateAllActiveResources (resourceGroupId = null) {
   for (const type of modelTypes) {
     for (const doc of await db.all(type)) {
       if (doc.isPrivate) {
-        logger.debug(`Skip private doc ${doc._id}`);
+        // logger.debug(`Skip private doc ${doc._id}`);
         continue;
       }
 

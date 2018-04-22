@@ -383,7 +383,7 @@ class App extends PureComponent {
 
     // Force it to update, because other editor components (header editor)
     // needs to change. Need to wait a delay so the next render can finish
-    setTimeout(this._forceRequestPaneRefresh, 300);
+    setTimeout(this._wrapper._forceRequestPaneRefresh, 300);
 
     return newRequest;
   }
