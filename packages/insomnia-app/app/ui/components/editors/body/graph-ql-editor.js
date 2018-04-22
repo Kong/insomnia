@@ -4,7 +4,7 @@ import {newBodyRaw} from '../../../../models/request';
 import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import {parse, print} from 'graphql';
+import {parse, print, typeFromAST} from 'graphql';
 import {introspectionQuery} from 'graphql/utilities/introspectionQuery';
 import {buildClientSchema} from 'graphql/utilities/buildClientSchema';
 import CodeEditor from '../../codemirror/code-editor';
@@ -124,6 +124,40 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
+  _buildVariableTypes (schema: Object | null, query: string): {[string]: Object} {
+    if (!schema) {
+      return {};
+    }
+
+    let documentAST;
+    try {
+      documentAST = parse(query);
+    } catch (e) {
+      documentAST = null;
+    }
+
+    const definitions = documentAST ? documentAST.definitions : [];
+    const variableToType = {};
+    for (const {kind, variableDefinitions} of definitions) {
+      if (kind !== 'OperationDefinition') {
+        continue;
+      }
+
+      if (!variableDefinitions) {
+        continue;
+      }
+
+      for (const {variable, type} of variableDefinitions) {
+        const inputType = typeFromAST(schema, type);
+        if (!inputType) {
+          continue;
+        }
+        variableToType[variable.name.value] = inputType;
+      }
+    }
+    return variableToType;
+  }
+
   async _handleRefreshSchema (): Promise<void> {
     await this._fetchAndSetSchema(this.props.request);
   }
@@ -139,11 +173,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }, 200);
   }
 
-  _getOperationNames (query: string): Array<string> {
-    let documentAST;
-    try {
-      documentAST = parse(query);
-    } catch (e) {
+  _getOperationNames (query: string, documentAST: Object | null): Array<string> {
+    if (!documentAST) {
       return [];
     }
 
@@ -154,7 +185,14 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleBodyChange (query: string, variables?: Object): void {
-    const operationNames = this._getOperationNames(query);
+    let documentAST;
+    try {
+      documentAST = parse(query);
+    } catch (e) {
+      documentAST = null;
+    }
+
+    const operationNames = this._getOperationNames(query, documentAST);
 
     const body: GraphQLBody = {query};
 
@@ -166,7 +204,11 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       body.operationName = operationNames[0];
     }
 
-    this.setState({variablesSyntaxError: '', body});
+    this.setState({
+      variablesSyntaxError: '',
+      body
+    });
+
     this.props.onChange(GraphQLEditor._graphQLToString(body));
   }
 
@@ -274,6 +316,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const variables = prettify.json(JSON.stringify(variablesObject));
 
+    const variableTypes = this._buildVariableTypes(schema, query);
+
     return (
       <div key={forceRefreshKey} className="graphql-editor">
         <div className="graphql-editor__query">
@@ -336,9 +380,13 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
             className={className}
             render={render}
             getRenderContext={getRenderContext}
+            getAutocompleteConstants={() => Object.keys(variableTypes || {})}
+            lintOptions={{
+              variableToType: variableTypes
+            }}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             onChange={this._handleVariablesChange}
-            mode="application/json"
+            mode="graphql-variables"
             lineWrapping={settings.editorLineWrapping}
             placeholder=""
           />

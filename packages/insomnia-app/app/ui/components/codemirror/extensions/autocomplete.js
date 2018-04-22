@@ -154,10 +154,14 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     clearTimeout(keydownDebounce);
   });
 
-  // Add hot key triggers
+  // Remove keymap if we're already added it
+  cm.removeKeyMap('autocomplete-keymap');
+
+  // Add keymap
   cm.addKeyMap({
+    name: 'autocomplete-keymap',
     'Ctrl-Space': completeForce, // Force autocomplete on hotkey
-    "' '": completeIfAfterTagOrVarOpen
+    '\' \'': completeIfAfterTagOrVarOpen
   });
 
   // Close dropdown whenever something is clicked
@@ -199,37 +203,45 @@ function hint (cm, options) {
   const nameSegmentFull = previousText;
 
   // Actually try to match the list of things
-  const allShortMatches = [];
-  const allLongMatches = [];
+  const lowPriorityMatches = [];
+  const highPriorityMatches = [];
 
   // Match variables
   if (allowMatchingVariables) {
     matchSegments(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES)
-      .map(m => allShortMatches.push(m));
+      .map(m => lowPriorityMatches.push(m));
     matchSegments(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES)
-      .map(m => allLongMatches.push(m));
+      .map(m => highPriorityMatches.push(m));
   }
 
-  // Match constants (only use long segment for a more strict match)
-  // TODO: Make this more flexible. This is really only here as a hack to make
-  // constants only match full string prefixes.
+  // Match constants
   if (allowMatchingConstants) {
-    // Only match full segments with constants
-    matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS)
-      .map(m => allLongMatches.push(m));
+    const cur = cm.getCursor();
+    const token = cm.getTokenAt(cur);
+
+    if (token.type === 'variable') {
+      // For GraphQL to autocomplete constants (variables) in JSON keys
+      matchSegments(constantsToMatch, nameSegment, TYPE_CONSTANT, MAX_CONSTANTS)
+        .map(m => highPriorityMatches.push(m));
+    } else {
+      // Otherwise match full segments
+      matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS)
+        .map(m => highPriorityMatches.push(m));
+    }
   }
 
   // Match tags
   if (allowMatchingTags) {
     matchSegments(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS)
-      .map(m => allShortMatches.push(m));
+      .map(m => lowPriorityMatches.push(m));
     matchSegments(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS)
-      .map(m => allLongMatches.push(m));
+      .map(m => highPriorityMatches.push(m));
   }
 
-  // NOTE: This puts the longer (more precise) matches in front of the short ones
-  const matches = [...allLongMatches, ...allShortMatches];
-  const segment = allLongMatches.length ? nameSegmentLong : nameSegment;
+  const matches = [...highPriorityMatches, ...lowPriorityMatches];
+
+  // Autocomplete from longest matched segment
+  const segment = highPriorityMatches.length ? nameSegmentLong : nameSegment;
 
   const uniqueMatches = matches.reduce(
     (arr, v) => arr.find(a => a.text === v.text) ? arr : [...arr, v],
