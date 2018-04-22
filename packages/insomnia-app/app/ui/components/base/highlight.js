@@ -12,14 +12,20 @@ type Props = {|
 @autobind
 class Highlight extends React.PureComponent<Props> {
   render () {
-    const results = fuzzyMatch(this.props.search, this.props.text);
+    const {
+      search,
+      text,
+      ...otherProps
+    } = this.props;
+
+    const results = fuzzyMatch(search, text);
 
     if (results.searchTermsMatched === 0) {
-      return <span>{this.props.text}</span>;
+      return <span>{text}</span>;
     }
 
     return <span
-      className=''
+      {...otherProps}
       dangerouslySetInnerHTML={{ __html: fuzzysort.highlight(results,
         '<strong style="color: #695eb8; text-decoration: underline;">',
         '</strong>') }}

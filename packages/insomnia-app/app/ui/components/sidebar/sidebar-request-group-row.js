@@ -4,6 +4,7 @@ import autobind from 'autobind-decorator';
 import ReactDOM from 'react-dom';
 import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
+import Highlight from '../base/highlight';
 import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
 import SidebarRequestRow from './sidebar-request-row';
 import {trackEvent} from '../../../common/analytics';
@@ -43,6 +44,7 @@ class SidebarRequestGroupRow extends PureComponent {
     const {
       connectDragSource,
       connectDropTarget,
+      filter,
       moveDoc,
       children,
       requestGroup,
@@ -75,7 +77,7 @@ class SidebarRequestGroupRow extends PureComponent {
       <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
         <div className="sidebar__clickable">
           <i className={'sidebar__item__icon fa ' + folderIconClass}/>
-          <span>{requestGroup.name}</span>
+          <Highlight search={filter} text={requestGroup.name}/>
         </div>
       </button>
     ));
@@ -132,6 +134,7 @@ SidebarRequestGroupRow.propTypes = {
   handleCreateRequestGroup: PropTypes.func.isRequired,
 
   // Other
+  filter: PropTypes.string.isRequired,
   isActive: PropTypes.bool.isRequired,
   isCollapsed: PropTypes.bool.isRequired,
   workspace: PropTypes.object.isRequired,

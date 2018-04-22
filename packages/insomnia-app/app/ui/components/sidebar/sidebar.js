@@ -109,6 +109,7 @@ class Sidebar extends PureComponent {
           moveDoc={moveDoc}
           workspace={workspace}
           activeRequest={activeRequest}
+          filter={filter || ''}
         />
 
         <SyncButton
