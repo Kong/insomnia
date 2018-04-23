@@ -14,7 +14,11 @@ let hidePaymentNotificationUntilNextLaunch = false;
 @autobind
 class PaymentNotificationModal extends PureComponent {
   async _handleCancel () {
-    await sync.cancelTrial();
+    try {
+      await sync.cancelTrial();
+    } catch (err) {
+      // That's okay
+    }
     this.hide();
   }
 
