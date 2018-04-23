@@ -316,7 +316,7 @@ class ResponseViewer extends React.Component<Props, State> {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
-        <div className="vertically-center">
+        <div className="vertically-center" key={responseId}>
           <audio controls>
             <source src={`data:${justContentType};base64,${base64Body}`}/>
           </audio>
