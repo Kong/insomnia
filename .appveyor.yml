@@ -18,7 +18,7 @@ install:
   - ps: Install-Product node $env:NODEJS_VERSION $env:Platform
   - node --version
   - npm --version
-  - npm config set msvs_version 2013
+  - npm config set msvs_version 2015
   - npm install 7zip-bin-win > NUL
   - npm run bootstrap
   - npm test
