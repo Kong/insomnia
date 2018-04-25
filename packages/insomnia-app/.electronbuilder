@@ -42,7 +42,8 @@
     "target": [
       "AppImage",
       "deb",
-      "tar.gz"
+      "tar.gz",
+      "snap"
     ]
   }
 }
