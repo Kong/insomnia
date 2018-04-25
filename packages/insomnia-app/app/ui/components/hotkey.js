@@ -15,14 +15,18 @@ type Props = {
 class Hotkey extends React.PureComponent<Props> {
   render () {
     const {hotkey, className} = this.props;
-    const {alt, shift, meta} = hotkey;
-    const chars = [ ];
+    const {alt, shift, meta, metaIsCtrl} = hotkey;
+    const chars = [];
 
     alt && chars.push(ALT_SYM);
     shift && chars.push(SHIFT_SYM);
 
     if (meta) {
-      chars.push(isMac() ? MOD_SYM : CTRL_SYM);
+      if (metaIsCtrl) {
+        chars.push(CTRL_SYM);
+      } else {
+        chars.push(isMac() ? MOD_SYM : CTRL_SYM);
+      }
     }
 
     chars.push(hotkeys.getChar(hotkey));

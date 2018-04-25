@@ -8,7 +8,8 @@ export type Hotkey = {
   meta: boolean,
   alt: boolean,
   shift: boolean,
-  keycode: number | Array<number>
+  keycode: number | Array<number>,
+  metaIsCtrl?: boolean,
 };
 
 export const SHOW_WORKSPACE_SETTINGS: Hotkey = {
@@ -70,6 +71,7 @@ export const RELOAD_PLUGINS: Hotkey = {
 export const SHOW_AUTOCOMPLETE: Hotkey = {
   description: 'Show Autocomplete',
   meta: true,
+  metaIsCtrl: true,
   alt: false,
   shift: false,
   keycode: keycodes.space

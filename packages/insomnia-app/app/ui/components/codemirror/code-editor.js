@@ -49,7 +49,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   showCursorWhenSelecting: false,
   cursorScrollMargin: 12, // NOTE: This is px
   keyMap: 'default',
-  extraKeys: {
+  extraKeys: CodeMirror.normalizeKeyMap({
     'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     },
@@ -61,7 +61,7 @@ const BASE_CODEMIRROR_OPTIONS = {
     // Change default find command from "find" to "findPersistent" so the
     // search box stays open after pressing Enter
     [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent'
-  }
+  })
 };
 
 @autobind
