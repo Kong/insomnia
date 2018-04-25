@@ -540,7 +540,9 @@ class CodeEditor extends React.Component {
   _normalizeMode (mode) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
 
-    if (mimeType.includes('graphql')) {
+    if (mimeType.includes('graphql-variables')) {
+      return 'graphql-variables';
+    } else if (mimeType.includes('graphql')) {
       // Because graphQL plugin doesn't recognize application/graphql content-type
       return 'graphql';
     } else if (this._isJSON(mimeType)) {
