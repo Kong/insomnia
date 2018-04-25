@@ -4,7 +4,7 @@ import type {Request, RequestHeader} from '../models/request';
 import type {Workspace} from '../models/workspace';
 import type {Settings} from '../models/settings';
 import type {RenderedRequest} from '../common/render';
-import {getRenderedRequest, getRenderedRequestAndContext, RENDER_PURPOSE_SEND} from '../common/render';
+import {getRenderedRequestAndContext, RENDER_PURPOSE_SEND} from '../common/render';
 import mkdirp from 'mkdirp';
 import clone from 'clone';
 import {parse as urlParse, resolve as urlResolve} from 'url';
@@ -13,8 +13,32 @@ import {join as pathJoin} from 'path';
 import uuid from 'uuid';
 import * as electron from 'electron';
 import * as models from '../models';
-import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion, getTempDir, STATUS_CODE_PLUGIN_ERROR} from '../common/constants';
-import {delay, describeByteSize, getContentTypeHeader, getHostHeader, getLocationHeader, getSetCookieHeaders, hasAcceptEncodingHeader, hasAcceptHeader, hasAuthHeader, hasContentTypeHeader, hasUserAgentHeader, waitForStreamToFinish} from '../common/misc';
+import {
+  AUTH_AWS_IAM,
+  AUTH_BASIC,
+  AUTH_DIGEST,
+  AUTH_NETRC,
+  AUTH_NTLM,
+  CONTENT_TYPE_FORM_DATA,
+  CONTENT_TYPE_FORM_URLENCODED,
+  getAppVersion,
+  getTempDir,
+  STATUS_CODE_PLUGIN_ERROR
+} from '../common/constants';
+import {
+  delay,
+  describeByteSize,
+  getContentTypeHeader,
+  getHostHeader,
+  getLocationHeader,
+  getSetCookieHeaders,
+  hasAcceptEncodingHeader,
+  hasAcceptHeader,
+  hasAuthHeader,
+  hasContentTypeHeader,
+  hasUserAgentHeader,
+  waitForStreamToFinish
+} from '../common/misc';
 import {buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol, smartEncodeUrl} from 'insomnia-url';
 import fs from 'fs';
 import * as db from '../common/database';
@@ -63,6 +87,7 @@ export function cancelCurrentRequest () {
 
 export async function _actuallySend (
   renderedRequest: RenderedRequest,
+  renderContext: Object,
   workspace: Workspace,
   settings: Settings
 ): Promise<ResponsePatch> {
@@ -88,7 +113,7 @@ export async function _actuallySend (
       // Apply plugin hooks and don't wait for them and don't throw from them
       process.nextTick(async () => {
         try {
-          await _applyResponsePluginHooks(response);
+          await _applyResponsePluginHooks(response, renderedRequest, renderContext);
         } catch (err) {
           // TODO: Better error handling here
           console.warn('Response plugin failed', err);
@@ -703,14 +728,14 @@ export async function sendWithSettings (
     parentId: request._id
   });
 
-  let renderedRequest: RenderedRequest;
+  let renderResult: {request: RenderedRequest, context: Object};
   try {
-    renderedRequest = await getRenderedRequest(newRequest, environmentId);
+    renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  return _actuallySend(renderedRequest, workspace, settings);
+  return _actuallySend(renderResult.request, renderResult.context, workspace, settings);
 }
 
 export async function send (
@@ -777,7 +802,7 @@ export async function send (
     };
   }
 
-  return _actuallySend(renderedRequest, workspace, settings);
+  return _actuallySend(renderedRequest, renderedContextBeforePlugins, workspace, settings);
 }
 
 async function _applyRequestPluginHooks (
@@ -805,12 +830,15 @@ async function _applyRequestPluginHooks (
 }
 
 async function _applyResponsePluginHooks (
-  response: ResponsePatch
+  response: ResponsePatch,
+  request: RenderedRequest,
+  renderContext: Object
 ): Promise<void> {
   for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
       ...pluginContexts.app.init(),
-      ...pluginContexts.response.init(response)
+      ...pluginContexts.response.init(response),
+      ...pluginContexts.request.init(request, renderContext, true)
     };
 
     try {
@@ -824,7 +852,7 @@ async function _applyResponsePluginHooks (
 
 export function _parseHeaders (
   buffer: Buffer
-): Array<{headers: Array<ResponseHeader>, version: string, code: number, reason: string}> {
+): Array<{ headers: Array<ResponseHeader>, version: string, code: number, reason: string }> {
   const results = [];
 
   const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
@@ -865,7 +893,7 @@ export function _getAwsAuthHeaders (
   body: string,
   url: string,
   method: string
-): Array<{name: string, value: string, disabled?: boolean}> {
+): Array<{ name: string, value: string, disabled?: boolean }> {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
 

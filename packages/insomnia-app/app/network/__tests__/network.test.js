@@ -8,6 +8,8 @@ import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
 import {DEFAULT_BOUNDARY} from '../multipart';
 
+const CONTEXT = {};
+
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);
   it('sends a generic request', async () => {
@@ -60,6 +62,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(
       renderedRequest,
+      CONTEXT,
       workspace,
       settings
     );
@@ -123,6 +126,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(
       renderedRequest,
+      CONTEXT,
       workspace,
       settings
     );
@@ -209,6 +213,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(
       renderedRequest,
+      CONTEXT,
       workspace,
       settings
     );
@@ -263,6 +268,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(
       renderedRequest,
+      CONTEXT,
       workspace,
       settings
     );
@@ -330,6 +336,7 @@ describe('actuallySend()', () => {
     const renderedRequest = await getRenderedRequest(request);
     const response = await networkUtils._actuallySend(
       renderedRequest,
+      CONTEXT,
       workspace,
       settings
     );
@@ -391,7 +398,12 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      CONTEXT,
+      workspace,
+      settings
+    );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
@@ -434,7 +446,12 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      CONTEXT,
+      workspace,
+      settings
+    );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
@@ -476,7 +493,12 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      CONTEXT,
+      workspace,
+      settings
+    );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);
@@ -519,7 +541,12 @@ describe('actuallySend()', () => {
     });
 
     const renderedRequest = await getRenderedRequest(request);
-    const response = await networkUtils._actuallySend(renderedRequest, workspace, settings);
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      CONTEXT,
+      workspace,
+      settings
+    );
 
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(bodyBuffer);

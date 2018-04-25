@@ -49,6 +49,26 @@ describe('init()', () => {
     ]);
   });
 
+  it('initializes correctly in read-only mode', async () => {
+    const result = plugin.init(await models.request.getById('req_1'), CONTEXT, true);
+    expect(Object.keys(result)).toEqual(['request']);
+    expect(Object.keys(result.request).sort()).toEqual([
+      'getBodyText',
+      'getEnvironment',
+      'getEnvironmentVariable',
+      'getHeader',
+      'getHeaders',
+      'getId',
+      'getMethod',
+      'getName',
+      'getParameter',
+      'getParameters',
+      'getUrl',
+      'hasHeader',
+      'hasParameter'
+    ]);
+  });
+
   it('fails to initialize without request', () => {
     expect(() => plugin.init())
       .toThrowError('contexts.request initialized without request');
