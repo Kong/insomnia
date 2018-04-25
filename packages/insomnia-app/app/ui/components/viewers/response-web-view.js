@@ -5,8 +5,8 @@ import autobind from 'autobind-decorator';
 import contextMenu from 'electron-context-menu';
 
 @autobind
-class ResponseWebview extends PureComponent {
-  _handleSetWebviewRef (n) {
+class ResponseWebView extends PureComponent {
+  _handleSetWebViewRef (n) {
     this._webview = n;
     if (n) {
       contextMenu({window: this._webview});
@@ -21,6 +21,7 @@ class ResponseWebview extends PureComponent {
   _setBody () {
     const {body, contentType, url} = this.props;
     const newBody = body.replace('<head>', `<head><base href="${url}">`);
+    console.log('HELLO?', contentType);
     this._webview.loadURL(`data:${contentType},${encodeURIComponent(newBody)}`);
 
     // This is kind of hacky but electron-context-menu fails to save images if
@@ -39,15 +40,15 @@ class ResponseWebview extends PureComponent {
 
   render () {
     return (
-      <webview ref={this._handleSetWebviewRef} src="about:blank"></webview>
+      <webview ref={this._handleSetWebViewRef} src="about:blank"></webview>
     );
   }
 }
 
-ResponseWebview.propTypes = {
+ResponseWebView.propTypes = {
   body: PropTypes.string.isRequired,
   contentType: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired
 };
 
-export default ResponseWebview;
+export default ResponseWebView;

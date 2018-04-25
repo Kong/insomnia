@@ -6,7 +6,7 @@ import {shell} from 'electron';
 import PDFViewer from './response-pdf-viewer';
 import CSVViewer from './response-csv-viewer';
 import CodeEditor from '../codemirror/code-editor';
-import ResponseWebView from './response-webview';
+import ResponseWebView from './response-web-view';
 import MultipartViewer from './response-multipart';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
@@ -252,7 +252,8 @@ class ResponseViewer extends React.Component<Props, State> {
     // common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
     try {
-      if (bodyBuffer.slice(0, 100).toString().trim().match(/^<!doctype html.*>/i)) {
+      const isProbablyHTML = bodyBuffer.slice(0, 100).toString().trim().match(/^<!doctype html.*>/i);
+      if (contentType.indexOf('text/html') !== 0 && isProbablyHTML) {
         contentType = 'text/html';
       }
     } catch (e) {
@@ -279,7 +280,7 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <ResponseWebView
           body={this._decodeIconv(bodyBuffer, charset)}
-          contentType={`${justContentType}; charset=UTF-8`}
+          contentType={justContentType}
           url={url}
         />
       );
@@ -292,7 +293,7 @@ class ResponseViewer extends React.Component<Props, State> {
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
-          <CSVViewer body={bodyBuffer} key={responseId} />
+          <CSVViewer body={bodyBuffer} key={responseId}/>
         </div>
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
