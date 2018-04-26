@@ -30,6 +30,7 @@
     ]
   },
   "win": {
+    "icon": "./build/icon.ico",
     "target": [
       "squirrel",
       "zip"
