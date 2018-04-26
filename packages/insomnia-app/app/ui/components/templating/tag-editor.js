@@ -564,22 +564,15 @@ class TagEditor extends React.PureComponent<Props, State> {
     let previewElement;
     if (error) {
       previewElement = (
-        <pre>
-          <code className="block danger selectable">{error || <span>&nbsp;</span>}</code>
-        </pre>
+        <textarea className="danger" value={error || 'Error'} readOnly/>
       );
     } else if (rendering) {
       previewElement = (
-        <pre>
-          <code className="block"><span className="faint italic">rendering...</span></code>
-        </pre>
+        <textarea value="rendering..." readOnly/>
       );
     } else {
       previewElement = (
-        <pre>
-          <code className="block selectable scrollable force-wrap">{preview ||
-          <span>&nbsp;</span>}</code>
-        </pre>
+        <textarea value={preview || 'error'} readOnly rows={5}/>
       );
     }
 
