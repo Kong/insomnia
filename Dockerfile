@@ -4,7 +4,6 @@ FROM ubuntu:14.04
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y \
     build-essential \
-    libssl-dev \
     autoconf \
     libtool \
     wget
@@ -19,13 +18,23 @@ RUN wget -q https://github.com/nghttp2/nghttp2/releases/download/v1.31.1/nghttp2
     && make install \
     && ldconfig
 
+# Build OpenSSL from source (for Curl)
+RUN wget -q https://github.com/openssl/openssl/archive/OpenSSL_1_1_0h.tar.gz -O ./openssl.tar.gz \
+    && mkdir -p /src/openssl /build/openssl \
+    && tar -xvf openssl.tar.gz -C /src/openssl --strip 1 \
+    && cd /src/openssl \
+    && ./config no-shared --prefix=/build/openssl --openssldir=/build/openssl \
+    && make \
+    && make install \
+    && ldconfig
+
 # Build Curl from source
 RUN wget -q https://github.com/curl/curl/releases/download/curl-7_59_0/curl-7.59.0.tar.gz -O ./curl.tar.gz \
     && mkdir -p /src/curl \
     && tar -xvf curl.tar.gz -C /src/curl --strip 1 \
     && cd /src/curl \
     && ./buildconf \
-    && ./configure \
+    && LIBS="-ldl -lpthread" CPPFLAGS="-I/build/openssl/ -I/build/openssl/include" LDFLAGS="-L/build/openssl/lib" ./configure \
         --disable-shared \
         --enable-static \
         --with-ssl \
