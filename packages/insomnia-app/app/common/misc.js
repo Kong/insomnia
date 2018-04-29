@@ -237,7 +237,7 @@ export function escapeRegex (str: string): string {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
 
-export function fuzzyMatch (searchString: string, text: string): boolean {
+export function fuzzyMatch (searchString: string, text: string): fuzzysort.result {
   const searchTerms = searchString.trim(' ').split(' ');
   const emptyResults = {
     searchTermsMatched: 0,
