@@ -305,7 +305,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
             {matchedRequests.map((r, i) => {
               const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
-                'btn btn--compact wide text-left',
+                'btn btn--expandable-small wide text-left',
                 {focus: activeIndex === i}
               );
 
@@ -323,7 +323,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
                       <MethodTag method={(r: any).method}/>
                       <Highlight search={searchString} text={(r: any).name} />
                     </div>
-                    <div style={{marginLeft: 45}}>
+                    <div className='margin-left-xs faint'>
                       <Highlight search={searchString} text={(r: any).url} />
                     </div>
                   </Button>
