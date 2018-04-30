@@ -65,6 +65,7 @@
     "autobind-decorator",
     "codemirror",
     "codemirror-graphql",
+    "fuzzysort",
     "graphql",
     "highlight.js",
     "jwt-authentication",

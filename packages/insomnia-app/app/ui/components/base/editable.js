@@ -1,7 +1,6 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import Highlight from '../base/highlight';
 
 @autobind
 class Editable extends PureComponent {

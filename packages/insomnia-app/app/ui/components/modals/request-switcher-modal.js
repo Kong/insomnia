@@ -305,21 +305,21 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
             {matchedRequests.map((r, i) => {
               const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
-                'btn btn--expandable-small wide text-left',
+                'btn btn--expandable-small wide text-left pad-bottom',
                 {focus: activeIndex === i}
               );
 
               return (
                 <li key={r._id}>
-                  <Button onClick={this._activateRequest} value={r} className={`${buttonClasses} pad-bottom`}>
+                  <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
                     <div>
-                      {requestGroup && (
+                      {requestGroup ? (
                         <div className="pull-right faint italic">
                           <Highlight search={searchString} text={this._groupOf(r).join(' / ')} />
                           &nbsp;&nbsp;
                           <i className="fa fa-folder-o"/>
                         </div>
-                      )}
+                      ) : null}
                       <MethodTag method={(r: any).method}/>
                       <Highlight search={searchString} text={(r: any).name} />
                     </div>

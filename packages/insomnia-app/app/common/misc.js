@@ -237,8 +237,11 @@ export function escapeRegex (str: string): string {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
 
-export function fuzzyMatch (searchString: string, text: string): fuzzysort.result {
-  const searchTerms = searchString.trim(' ').split(' ');
+export function fuzzyMatch (searchString: string, text: string): {
+  searchTermsMatched: number,
+  indexes: number[]
+} {
+  const searchTerms = searchString.trim().split(' ');
   const emptyResults = {
     searchTermsMatched: 0,
     searchTermsCount: searchTerms.length,
@@ -285,7 +288,7 @@ export function fuzzyMatch (searchString: string, text: string): fuzzysort.resul
 
 export function fuzzyMatchAll (searchString: string, allText: Array<string>): boolean {
   return searchString
-    .trim(' ')
+    .trim()
     .split(' ')
     .every(searchTerm =>
       allText.some(text =>
