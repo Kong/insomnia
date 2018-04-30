@@ -288,7 +288,7 @@ export function fuzzyMatch (searchString: string, text: string): {
 
 export function fuzzyMatchAll (searchString: string, allText: Array<string>): boolean {
   if (!searchString || !searchString.trim()) {
-    return true; 
+    return true;
   }
 
   return searchString
