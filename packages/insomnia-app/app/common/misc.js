@@ -287,9 +287,14 @@ export function fuzzyMatch (searchString: string, text: string): {
 }
 
 export function fuzzyMatchAll (searchString: string, allText: Array<string>): boolean {
+  if (!searchString || !searchString.trim()) {
+    return true; 
+  }
+
   return searchString
-    .trim()
     .split(' ')
+    .map(searchTerm => searchTerm.trim())
+    .filter(searchTerm => !!searchTerm)
     .every(searchTerm =>
       allText.some(text =>
         fuzzyMatch(searchTerm, text).searchTermsMatched > 0));
