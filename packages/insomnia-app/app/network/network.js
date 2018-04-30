@@ -523,17 +523,20 @@ export async function _actuallySend (
             return handleError(
               new Error('AWS authentication not supported for provided body type'));
           }
+          const {authentication} = renderedRequest;
           const credentials = {
-            accessKeyId: renderedRequest.authentication.accessKeyId || '',
-            secretAccessKey: renderedRequest.authentication.secretAccessKey || '',
-            sessionToken: renderedRequest.authentication.sessionToken || ''
+            accessKeyId: authentication.accessKeyId || '',
+            secretAccessKey: authentication.secretAccessKey || '',
+            sessionToken: authentication.sessionToken || ''
           };
           const extraHeaders = _getAwsAuthHeaders(
             credentials,
             headers,
             requestBody || '',
             finalUrl,
-            renderedRequest.method
+            renderedRequest.method,
+            authentication.region || '',
+            authentication.service || ''
           );
           for (const header of extraHeaders) {
             headers.push(header);
@@ -728,7 +731,7 @@ export async function sendWithSettings (
     parentId: request._id
   });
 
-  let renderResult: {request: RenderedRequest, context: Object};
+  let renderResult: { request: RenderedRequest, context: Object };
   try {
     renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
   } catch (err) {
@@ -888,11 +891,17 @@ export function _parseHeaders (
 
 // exported for unit tests only
 export function _getAwsAuthHeaders (
-  credentials: Object,
+  credentials: {
+    accessKeyId: string,
+    secretAccessKey: string,
+    sessionToken: string,
+  },
   headers: Array<RequestHeader>,
   body: string,
   url: string,
-  method: string
+  method: string,
+  region?: string,
+  service?: string
 ): Array<{ name: string, value: string, disabled?: boolean }> {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
@@ -902,6 +911,8 @@ export function _getAwsAuthHeaders (
   const host = hostHeader ? hostHeader.value : parsedUrl.host;
 
   const awsSignOptions = {
+    service,
+    region,
     body,
     method,
     host,
