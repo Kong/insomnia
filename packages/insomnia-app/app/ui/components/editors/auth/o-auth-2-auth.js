@@ -55,8 +55,6 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       loading: false,
       showAdvanced: showAdvanced // Remember from last time
     };
-
-    this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
   }
 
   _handleToggleAdvanced (): void {

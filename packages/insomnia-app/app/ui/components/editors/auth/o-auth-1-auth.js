@@ -42,12 +42,6 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 class OAuth1Auth extends React.PureComponent<Props> {
   _handleChangeProperty: Function;
 
-  constructor (props: any) {
-    super(props);
-
-    this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
-  }
-
   _handleEditPrivateKey () {
     const {handleRender, handleGetRenderContext, request} = this.props;
     const {privateKey} = request.authentication;
