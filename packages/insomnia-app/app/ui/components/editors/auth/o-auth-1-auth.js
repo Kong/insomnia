@@ -4,7 +4,6 @@ import * as React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import * as misc from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,

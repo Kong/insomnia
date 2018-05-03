@@ -617,7 +617,7 @@ describe('_getAwsAuthHeaders', () => {
       .toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('ec2.us-west-2.amazonaws.com');
     expect(filterHeaders(headers, 'authorization')[0].value)
-      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999\/20180430\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/);
+      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/);
     expect(filterHeaders(headers, 'content-type'))
       .toHaveLength(0);
   });
@@ -656,7 +656,7 @@ describe('_getAwsAuthHeaders', () => {
       .toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
     expect(filterHeaders(headers, 'authorization')[0].value)
-      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999\/20180430\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/);
+      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/);
     expect(filterHeaders(headers, 'content-type'))
       .toHaveLength(0);
   });

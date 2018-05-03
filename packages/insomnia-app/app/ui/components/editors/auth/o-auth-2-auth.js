@@ -6,8 +6,15 @@ import * as React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import * as misc from '../../../../common/misc';
-import {GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_CLIENT_CREDENTIALS, GRANT_TYPE_IMPLICIT, GRANT_TYPE_PASSWORD, RESPONSE_TYPE_ID_TOKEN, RESPONSE_TYPE_ID_TOKEN_TOKEN, RESPONSE_TYPE_TOKEN} from '../../../../network/o-auth-2/constants';
+import {
+  GRANT_TYPE_AUTHORIZATION_CODE,
+  GRANT_TYPE_CLIENT_CREDENTIALS,
+  GRANT_TYPE_IMPLICIT,
+  GRANT_TYPE_PASSWORD,
+  RESPONSE_TYPE_ID_TOKEN,
+  RESPONSE_TYPE_ID_TOKEN_TOKEN,
+  RESPONSE_TYPE_TOKEN
+} from '../../../../network/o-auth-2/constants';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
