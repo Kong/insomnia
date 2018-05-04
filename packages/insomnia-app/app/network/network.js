@@ -76,6 +76,9 @@ export type ResponsePatch = {
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
+// Special header value that will prevent the header being sent
+const DISABLE_HEADER_VALUE = '__Di$aB13d__';
+
 let cancelRequestFunction = null;
 let lastUserInteraction = Date.now();
 
@@ -492,8 +495,8 @@ export async function _actuallySend (
 
       if (!noBody) {
         // Don't chunk uploads
-        headers.push({name: 'Expect', value: ''});
-        headers.push({name: 'Transfer-Encoding', value: ''});
+        headers.push({name: 'Expect', value: DISABLE_HEADER_VALUE});
+        headers.push({name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE});
       }
 
       // If we calculated the body within Insomnia (ie. not computed by Curl)
@@ -567,7 +570,7 @@ export async function _actuallySend (
 
       // Don't auto-send Accept-Encoding header
       if (!hasAcceptEncodingHeader(headers)) {
-        headers.push({name: 'Accept-Encoding', value: ''});
+        headers.push({name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE});
       }
 
       // Set User-Agent if it't not already in headers
@@ -577,13 +580,25 @@ export async function _actuallySend (
 
       // Prevent curl from adding default content-type header
       if (!hasContentTypeHeader(headers)) {
-        headers.push({name: 'content-type', value: ''});
+        headers.push({name: 'content-type', value: DISABLE_HEADER_VALUE});
       }
 
       // NOTE: This is last because headers might be modified multiple times
       const headerStrings = headers
         .filter(h => h.name)
-        .map(h => `${(h.name || '').trim()}: ${h.value}`);
+        .map(h => {
+          const value = h.value || '';
+          if (value === '') {
+            // Curl needs a semicolon suffix to send empty header values
+            return `${h.name};`;
+          } else if (value === DISABLE_HEADER_VALUE) {
+            // Tell Curl NOT to send the header if value is null
+            return `${h.name}:`;
+          } else {
+            // Send normal header value
+            return `${h.name}: ${value}`;
+          }
+        });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       let responseBodyBytes = 0;
