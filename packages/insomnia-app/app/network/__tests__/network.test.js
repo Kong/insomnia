@@ -52,7 +52,7 @@ describe('actuallySend()', () => {
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
-      headers: [{name: 'Content-Type', value: 'application/json'}],
+      headers: [{name: 'Content-Type', value: 'application/json'}, {name: 'Empty', value: ''}],
       parameters: [{name: 'foo bar', value: 'hello&world'}],
       method: 'POST',
       body: {
@@ -93,10 +93,11 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/json',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Empty;',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -154,10 +155,10 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         POSTFIELDS: 'foo=bar&bar=&=value',
@@ -240,10 +241,10 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/json',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -298,10 +299,10 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         INFILESIZE_LARGE: 26,
@@ -364,10 +365,10 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'POST',
         HTTPHEADER: [
           'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         INFILESIZE_LARGE: 244,
         NOPROGRESS: false,
@@ -428,8 +429,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -476,8 +477,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -523,8 +524,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -571,8 +572,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -632,7 +633,7 @@ describe('_getAwsAuthHeaders', () => {
       },
       headers: [
         'Accept: */*',
-        'Accept-Encoding: '
+        'Accept-Encoding:'
       ],
       url: 'https://example.com',
       method: 'GET'
