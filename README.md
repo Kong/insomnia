@@ -86,7 +86,8 @@ Here is a list of plugins available for installation via NPM.
 - [Random Credit Card](https://www.npmjs.com/package/insomnia-plugin-randomcreditcard) – Generate random credit card numbers
 - [Random Number](https://www.npmjs.com/package/insomnia-plugin-randomnumber) – Generate a random integer between a minimum and maximum
 - [Random UK Sort Code](https://www.npmjs.com/package/insomnia-plugin-randomuksortcode) – Generate random UK bank sort codes
-- [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request.
+- [Swagger Validator](https://www.npmjs.com/package/insomnia-plugin-validator) – Validate an API response to a swagger spec
+- [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request
 
 ## Community Projects
 
