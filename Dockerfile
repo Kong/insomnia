@@ -38,7 +38,7 @@ RUN wget -q https://github.com/nghttp2/nghttp2/releases/download/v1.31.1/nghttp2
     && mkdir -p /src/nghttp2 /build/nghttp2 \
     && tar -xvf nghttp2.tar.gz -C /src/nghttp2 --strip 1 \
     && cd /src/nghttp2 \
-    && ./configure --enable-lib-only --prefix=/build/nghttp2 \
+    && CFLAGS="-fPIC" ./configure --enable-lib-only --disable-shared --prefix=/build/nghttp2 \
     && make \
     && make install \
     && ldconfig
