@@ -76,18 +76,19 @@ the following tools:
 
 Here is a list of plugins available for installation via NPM.
 
+- [Chance](https://www.npmjs.com/package/insomnia-plugin-chance) – Generates a random value using Chance.JS
 - [Custom Timestamp](https://www.npmjs.com/package/insomnia-plugin-customtimestamp) – Advanced timestamp creator
 - [Default Headers](https://www.npmjs.com/package/insomnia-plugin-default-headers) – Set default headers on requests
 - [Faker](https://www.npmjs.com/package/insomnia-plugin-faker) - Generate Faker data right within Insomnia!
-- [OS Util](https://www.npmjs.com/package/insomnia-plugin-os) – Get OS information
 - [Github Apps](https://www.npmjs.com/package/insomnia-plugin-github-apps-helper) – Generates a JWT for auth with the GitHub API as your GitHub App
-- [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Decode header or payload of JWT tokens
-- [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request.
-- [Random Number](https://www.npmjs.com/package/insomnia-plugin-randomnumber) – Generate a random integer between a minimum and maximum
-- [Chance](https://www.npmjs.com/package/insomnia-plugin-chance) – Generates a random value using Chance.JS
-- [Random Credit Card](https://www.npmjs.com/package/insomnia-plugin-randomcreditcard) – Generate random credit card numbers
-- [Random UK Sort Code](https://www.npmjs.com/package/insomnia-plugin-randomuksortcode) – Generate random UK bank sort codes
 - [Javascript Eval](https://www.npmjs.com/package/insomnia-plugin-js-eval) - Evaluate/run Javascript code
+- [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Decode header or payload of JWT tokens
+- [OS Util](https://www.npmjs.com/package/insomnia-plugin-os) – Get OS information
+- [Random Credit Card](https://www.npmjs.com/package/insomnia-plugin-randomcreditcard) – Generate random credit card numbers
+- [Random Number](https://www.npmjs.com/package/insomnia-plugin-randomnumber) – Generate a random integer between a minimum and maximum
+- [Random UK Sort Code](https://www.npmjs.com/package/insomnia-plugin-randomuksortcode) – Generate random UK bank sort codes
+- [Swagger Validator](https://www.npmjs.com/package/insomnia-plugin-validator) – Validate an API response to a swagger spec
+- [XDebug](https://www.npmjs.com/package/insomna-plugin-xdebug) – Enable Xdebug debugging by adding an `XDEBUG_SESSION` cookie to the request
 
 ## Community Projects
 
