@@ -78,6 +78,7 @@ Here is a list of plugins available for installation via NPM.
 
 - [Custom Timestamp](https://www.npmjs.com/package/insomnia-plugin-customtimestamp) – Advanced timestamp creator
 - [Default Headers](https://www.npmjs.com/package/insomnia-plugin-default-headers) – Set default headers on requests
+- [Faker](https://www.npmjs.com/package/insomnia-plugin-faker) - Generate Faker data right within Insomnia!
 - [OS Util](https://www.npmjs.com/package/insomnia-plugin-os) – Get OS information
 - [Github Apps](https://www.npmjs.com/package/insomnia-plugin-github-apps-helper) – Generates a JWT for auth with the GitHub API as your GitHub App
 - [JWT Decode](https://www.npmjs.com/package/insomnia-plugin-jwtdecode) – Decode header or payload of JWT tokens
