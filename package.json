@@ -18,6 +18,12 @@
   },
   "devDependencies": {
     "jest": "^22.1.1",
-    "lerna": "^2.7.1"
+    "lerna": "^2.7.1",
+    "webpack": "^4.8.3"
+  },
+  "dependencies": {
+    "codemirror": "^5.38.0",
+    "codemirror-graphql": "^0.6.12",
+    "graphql": "^0.13.2"
   }
 }
