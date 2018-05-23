@@ -6,7 +6,6 @@ import {showModal} from '../modals';
 import * as syncStorage from '../../../sync/storage';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync';
-import {trackEvent} from '../../../common/analytics';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import SetupSyncModal from '../modals/setup-sync-modal';
 import type {Workspace} from '../../../models/workspace';
@@ -48,10 +47,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     };
   }
 
-  _trackShowMenu () {
-    trackEvent('Sync', 'Show Menu', 'Authenticated');
-  }
-
   _handleShowShareSettings () {
     showModal(WorkspaceShareSettingsModal, {workspace: this.props.workspace});
   }
@@ -70,8 +65,6 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     // Unset loading state
     this.setState({loading: false});
-
-    trackEvent('Sync', 'Manual Sync');
   }
 
   async _reloadData () {
@@ -176,7 +169,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
       return (
         <div className={className}>
           <Dropdown wide className="wide tall">
-            <DropdownButton className="btn btn--compact wide" onClick={this._trackShowMenu}>
+            <DropdownButton className="btn btn--compact wide">
               {this._getSyncDescription(syncMode, syncPercent)}
             </DropdownButton>
             <DropdownDivider>Workspace Synced {syncPercent}%</DropdownDivider>

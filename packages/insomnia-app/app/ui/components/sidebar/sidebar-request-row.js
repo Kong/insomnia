@@ -8,7 +8,6 @@ import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
 import Editable from '../base/editable';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
-import {trackEvent} from '../../../common/analytics';
 import {showModal} from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 
@@ -32,7 +31,6 @@ class SidebarRequestRow extends PureComponent {
   }
 
   _handleEditStart () {
-    trackEvent('Request', 'Rename', 'In Place');
     this.setState({isEditing: true});
   }
 
@@ -44,7 +42,6 @@ class SidebarRequestRow extends PureComponent {
   _handleRequestCreateFromEmpty () {
     const parentId = this.props.requestGroup._id;
     this.props.requestCreate(parentId);
-    trackEvent('Request', 'Create', 'Empty Folder');
   }
 
   _handleRequestActivate () {
@@ -55,7 +52,6 @@ class SidebarRequestRow extends PureComponent {
     }
 
     handleActivateRequest(request._id);
-    trackEvent('Request', 'Activate', 'Sidebar');
   }
 
   _handleShowRequestSettings () {
@@ -171,7 +167,6 @@ SidebarRequestRow.propTypes = {
 
 const dragSource = {
   beginDrag (props) {
-    trackEvent('Request', 'Drag', 'Begin');
     return {request: props.request};
   }
 };

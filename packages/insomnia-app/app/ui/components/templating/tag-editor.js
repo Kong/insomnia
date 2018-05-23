@@ -10,7 +10,6 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import {delay, fnOrString} from '../../../common/misc';
-import {trackEvent} from '../../../common/analytics';
 import type {BaseModel} from '../../../models/index';
 import type {Workspace} from '../../../models/workspace';
 import type {PluginArgumentEnumOption} from '../../../templating/extensions/index';
@@ -235,7 +234,6 @@ class TagEditor extends React.PureComponent<Props, State> {
     const tagDefinitions = await templating.getTagDefinitions();
     const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
     this._update(this.state.tagDefinitions, tagDefinition, null, false);
-    trackEvent('Tag Editor', 'Change Tag', name);
   }
 
   _setSelectRef (n: ?HTMLSelectElement) {

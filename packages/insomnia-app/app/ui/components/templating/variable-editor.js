@@ -1,7 +1,6 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
-import {trackEvent} from '../../../common/analytics';
 
 @autobind
 class VariableEditor extends PureComponent {
@@ -26,7 +25,6 @@ class VariableEditor extends PureComponent {
 
   _handleChange (e) {
     const name = e.target.value;
-    trackEvent('Variable Editor', 'Change Variable', name);
     this._update(name);
   }
 

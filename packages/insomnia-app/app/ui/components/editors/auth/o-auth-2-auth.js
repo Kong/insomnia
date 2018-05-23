@@ -20,7 +20,6 @@ import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import * as models from '../../../../models';
 import Link from '../../base/link';
-import {trackEvent} from '../../../../common/analytics';
 import HelpTooltip from '../../help-tooltip';
 import PromptButton from '../../base/prompt-button';
 import TimeFromNow from '../../time-from-now';
@@ -178,7 +177,6 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
   }
 
   _handleChangeGrantType (e: SyntheticEvent<HTMLInputElement>): void {
-    trackEvent('OAuth 2', 'Change Grant Type', e.currentTarget.value);
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
 

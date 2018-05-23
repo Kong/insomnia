@@ -10,7 +10,6 @@ import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
-import {trackEvent} from '../../../common/analytics';
 import MarkdownEditor from '../markdown-editor';
 import type {Workspace} from '../../../models/workspace';
 import type {ClientCertificate} from '../../../models/client-certificate';
@@ -67,7 +66,6 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
 
   _handleAddDescription () {
     this.setState({showDescription: true});
-    trackEvent('Workspace', 'Add Description');
   }
 
   _handleSetModalRef (n: ?Modal) {
@@ -152,17 +150,14 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
 
     await models.clientCertificate.create(certificate);
     this._handleToggleCertificateForm();
-    trackEvent('Certificates', 'Create');
   }
 
   async _handleDeleteCertificate (certificate: ClientCertificate) {
     await models.clientCertificate.remove(certificate);
-    trackEvent('Certificates', 'Delete');
   }
 
   async _handleToggleCertificate (certificate: ClientCertificate) {
     await models.clientCertificate.update(certificate, {disabled: !certificate.disabled});
-    trackEvent('Certificates', 'Toggle');
   }
 
   show () {

@@ -11,7 +11,6 @@ import * as session from '../../../sync/session';
 import * as sync from '../../../sync/index';
 import {showPrompt} from './index';
 import PromptButton from '../base/prompt-button';
-import {trackEvent} from '../../../common/analytics';
 
 @autobind
 class WorkspaceShareSettingsModal extends PureComponent {
@@ -88,7 +87,6 @@ class WorkspaceShareSettingsModal extends PureComponent {
     } catch (err) {
       console.warn('Failed to fetch ResourceGroup', err);
       this.setState({error: 'No sync info found. Please try again.', loading: false});
-      trackEvent('Sync', 'Error', 'Share Fetch Fail');
     }
   }
 

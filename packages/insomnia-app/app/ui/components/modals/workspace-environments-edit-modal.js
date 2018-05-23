@@ -13,7 +13,6 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
-import {trackEvent} from '../../../common/analytics';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
 import type {Workspace} from '../../../models/workspace';
 import type {Environment} from '../../../models/environment';
@@ -86,7 +85,6 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     await this._load(workspace);
 
     this.modal && this.modal.show();
-    trackEvent('Environment Editor', 'Show');
   }
 
   async _load (workspace: Workspace | null, environmentToSelect: Environment | null = null) {
@@ -130,11 +128,6 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const parentId = rootEnvironment._id;
     const environment = await models.environment.create({parentId, isPrivate});
     await this._load(workspace, environment);
-
-    trackEvent(
-      'Environment',
-      isPrivate ? 'Create' : 'Create Private'
-    );
   }
 
   async _handleShowEnvironment (environment: Environment) {
@@ -150,7 +143,6 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     const {workspace} = this.state;
 
     await this._load(workspace, environment);
-    trackEvent('Environment Editor', 'Show Environment');
   }
 
   async _handleDeleteEnvironment (environment: Environment) {
@@ -164,7 +156,6 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     // Delete the current one, then activate the root environment
     await models.environment.remove(environment);
     await this._load(workspace, rootEnvironment);
-    trackEvent('Environment', 'Delete');
   }
 
   async _handleChangeEnvironmentName (environment: Environment, name: string) {
@@ -180,8 +171,6 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
     await models.environment.update(realEnvironment, {name});
     await this._load(workspace);
-
-    trackEvent('Environment', 'Rename');
   }
 
   _handleChangeEnvironmentColor (environment: Environment, color: string | null) {
@@ -190,8 +179,6 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
       const {workspace} = this.state;
       await models.environment.update(environment, {color});
       await this._load(workspace);
-
-      trackEvent('Environment', color ? 'Change Color' : 'Unset Color');
     }, DEBOUNCE_MILLIS);
   }
 

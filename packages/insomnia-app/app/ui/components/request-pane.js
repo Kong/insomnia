@@ -15,7 +15,6 @@ import BodyEditor from './editors/body/body-editor';
 import AuthWrapper from './editors/auth/auth-wrapper';
 import RequestUrlBar from './request-url-bar.js';
 import {DEBOUNCE_MILLIS, getAuthTypeName, getContentTypeName} from '../../common/constants';
-import {trackEvent} from '../../common/analytics';
 import {deconstructQueryStringToParams, extractQueryStringFromUrl} from 'insomnia-url';
 import * as db from '../../common/database';
 import * as models from '../../models';
@@ -95,17 +94,14 @@ class RequestPane extends React.PureComponent<Props> {
   _handleUpdateSettingsUseBulkHeaderEditor () {
     const {settings, updateSettingsUseBulkHeaderEditor} = this.props;
     updateSettingsUseBulkHeaderEditor(!settings.useBulkHeaderEditor);
-    trackEvent('Headers', 'Toggle Bulk', !settings.useBulkHeaderEditor ? 'On' : 'Off');
   }
 
   _handleImportFile () {
     this.props.handleImportFile();
-    trackEvent('Request Pane', 'CTA', 'Import');
   }
 
   _handleCreateRequest () {
     this.props.handleCreateRequest(this.props.request);
-    trackEvent('Request Pane', 'CTA', 'New Request');
   }
 
   _handleUpdateRequestUrl (url: string) {
@@ -142,18 +138,6 @@ class RequestPane extends React.PureComponent<Props> {
     if (url !== request.url) {
       this.props.forceUpdateRequest({url, parameters});
     }
-  }
-
-  _trackQueryToggle (pair: {disabled: boolean}) {
-    trackEvent('Query', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
-  }
-
-  _trackQueryCreate () {
-    trackEvent('Query', 'Create');
-  }
-
-  _trackQueryDelete () {
-    trackEvent('Query', 'Delete');
   }
 
   render () {
@@ -337,7 +321,7 @@ class RequestPane extends React.PureComponent<Props> {
               <label className="label--small no-pad-top">Url Preview</label>
               <code className="txt-sm block faint">
                 <ErrorBoundary key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
+                               errorClassName="tall wide vertically-align font-error pad text-center">
                   <RenderedQueryString
                     handleRender={handleRender}
                     request={request}
@@ -345,26 +329,20 @@ class RequestPane extends React.PureComponent<Props> {
                 </ErrorBoundary>
               </code>
             </div>
-            <div className="scrollable-container">
-              <div className="scrollable">
-                <ErrorBoundary key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
-                  <KeyValueEditor
-                    sortable
-                    allowMultiline
-                    namePlaceholder="name"
-                    valuePlaceholder="value"
-                    onToggleDisable={this._trackQueryToggle}
-                    onCreate={this._trackQueryCreate}
-                    onDelete={this._trackQueryDelete}
-                    pairs={request.parameters}
-                    handleRender={handleRender}
-                    handleGetRenderContext={handleGetRenderContext}
-                    nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-                    onChange={updateRequestParameters}
-                  />
-                </ErrorBoundary>
-              </div>
+            <div className="query-editor__editor">
+              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
+                <KeyValueEditor
+                  sortable
+                  allowMultiline
+                  namePlaceholder="name"
+                  valuePlaceholder="value"
+                  pairs={request.parameters}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  onChange={updateRequestParameters}
+                />
+              </ErrorBoundary>
             </div>
             <div className="pad-right text-right">
               <button className="margin-top-sm btn btn--clicky"

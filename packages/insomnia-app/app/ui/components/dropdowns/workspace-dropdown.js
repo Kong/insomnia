@@ -11,7 +11,6 @@ import SettingsModal, {TAB_INDEX_EXPORT} from '../modals/settings-modal';
 import * as models from '../../../models';
 import {getAppVersion} from '../../../common/constants';
 import {showModal, showPrompt} from '../modals/index';
-import {trackEvent} from '../../../common/analytics';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
@@ -76,10 +75,9 @@ class WorkspaceDropdown extends PureComponent {
 
   _handleSwitchWorkspace (workspaceId) {
     this.props.handleSetActiveWorkspace(workspaceId);
-    trackEvent('Workspace', 'Switch');
   }
 
-  _handleWorkspaceCreate (noTrack) {
+  _handleWorkspaceCreate () {
     showPrompt({
       title: 'Create New Workspace',
       defaultValue: 'My Workspace',
@@ -88,10 +86,6 @@ class WorkspaceDropdown extends PureComponent {
       onComplete: async name => {
         const workspace = await models.workspace.create({name});
         this.props.handleSetActiveWorkspace(workspace._id);
-
-        if (!noTrack) {
-          trackEvent('Workspace', 'Create');
-        }
       }
     });
   }

@@ -12,7 +12,6 @@ import ResponseViewer from './response-viewer';
 import {getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY} from '../../../common/constants';
 import type {ResponseHeader} from '../../../models/response';
 import {Dropdown, DropdownButton, DropdownItem} from '../base/dropdown/index';
-import {trackEvent} from '../../../common/analytics';
 import WrapperModal from '../modals/wrapper-modal';
 import {showModal} from '../modals/index';
 import ResponseHeadersViewer from './response-headers-viewer';
@@ -134,7 +133,6 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
 
     electron.remote.dialog.showSaveDialog(options, outputPath => {
       if (!outputPath) {
-        trackEvent('Response', 'Multipart Save Cancel');
         return;
       }
 
@@ -145,9 +143,6 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       fs.writeFile(outputPath, part.value, err => {
         if (err) {
           console.warn('Failed to save multipart to file', err);
-          trackEvent('Response', 'Multipart Save Failure');
-        } else {
-          trackEvent('Response', 'Multipart Save Success');
         }
       });
     });

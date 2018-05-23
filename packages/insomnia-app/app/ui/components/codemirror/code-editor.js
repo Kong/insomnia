@@ -9,7 +9,6 @@ import vkBeautify from 'vkbeautify';
 import {showModal} from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
-import {trackEvent} from '../../../common/analytics';
 import prettify from 'insomnia-prettify';
 import {DEBOUNCE_MILLIS, isMac} from '../../../common/constants';
 import './base-imports';
@@ -347,7 +346,6 @@ class CodeEditor extends React.Component {
   }
 
   _handleBeautify () {
-    trackEvent('Request', 'Beautify');
     this._prettify(this.codeMirror.getValue());
   }
 
@@ -695,17 +693,6 @@ class CodeEditor extends React.Component {
         this.props.updateFilter(filter);
       }
     }, 200);
-
-    // So we don't track on every keystroke, give analytics a longer timeout
-    clearTimeout(this._analyticsTimeout);
-    const json = this._isJSON(this.props.mode);
-    this._analyticsTimeout = setTimeout(() => {
-      trackEvent(
-        'Response',
-        `Filter ${json ? 'JSONPath' : 'XPath'}`,
-        `${filter ? 'Change' : 'Clear'}`
-      );
-    }, 2000);
   }
 
   _canPrettify () {
@@ -716,7 +703,6 @@ class CodeEditor extends React.Component {
   _showFilterHelp () {
     const isJson = this._isJSON(this.props.mode);
     showModal(FilterHelpModal, isJson);
-    trackEvent('Response', `Filter ${isJson ? 'JSONPath' : 'XPath'}`, 'Help');
   }
 
   render () {

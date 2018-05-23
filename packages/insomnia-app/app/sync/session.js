@@ -1,7 +1,6 @@
 import srp from 'srp-js';
 import * as crypt from './crypt';
 import * as util from '../common/fetch';
-import {trackEvent} from '../common/analytics';
 
 /** Create a new session for the user */
 export async function login (rawEmail, rawPassphrase) {
@@ -75,9 +74,6 @@ export async function login (rawEmail, rawPassphrase) {
     JSON.parse(publicKey),
     JSON.parse(encPrivateKey)
   );
-
-  // Set the ID for Google Analytics
-  trackEvent('Session', 'Login');
 }
 
 export function syncCreateResourceGroup (parentResourceId, name, encSymmetricKey) {
@@ -241,7 +237,6 @@ export async function logout () {
   }
 
   unsetSessionData();
-  trackEvent('Session', 'Logout');
 }
 
 export async function listTeams () {
@@ -250,7 +245,6 @@ export async function listTeams () {
 
 export async function endTrial () {
   await util.put('/api/billing/end-trial');
-  trackEvent('Session', 'End Trial');
 }
 
 export function whoami (sessionId = null) {

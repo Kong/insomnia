@@ -10,7 +10,6 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import {exportHarRequest} from '../../../common/har';
-import {trackEvent} from '../../../common/analytics';
 import Link from '../base/link';
 
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
@@ -69,7 +68,6 @@ class GenerateCodeModal extends PureComponent {
   _handleClientChange (client) {
     const {target, request} = this.state;
     this._generateCode(request, target, client);
-    trackEvent('Generate Code', 'Client Change', `${target.title}/${client.title}`);
   }
 
   _handleTargetChange (target) {
@@ -81,7 +79,6 @@ class GenerateCodeModal extends PureComponent {
 
     const client = target.clients.find(c => c.key === target.default);
     this._generateCode(this.state.request, target, client);
-    trackEvent('Generate Code', 'Target Change', target.title);
   }
 
   async _generateCode (request, target, client) {

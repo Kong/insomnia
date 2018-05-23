@@ -4,7 +4,6 @@ import autobind from 'autobind-decorator';
 import {remote} from 'electron';
 import {DEBOUNCE_MILLIS, isMac} from '../../common/constants';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from './base/dropdown';
-import {trackEvent} from '../../common/analytics';
 import {showPrompt} from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
@@ -52,7 +51,6 @@ class RequestUrlBar extends PureComponent {
 
   _handleMethodChange (method) {
     this.props.onMethodChange(method);
-    trackEvent('Request', 'Method Change', method);
   }
 
   _handleUrlChange (url) {
@@ -86,7 +84,6 @@ class RequestUrlBar extends PureComponent {
 
   _handleGenerateCode () {
     this.props.handleGenerateCode();
-    trackEvent('Request', 'Generate Code', 'Send Action');
   }
 
   _handleSetDownloadLocation () {
@@ -98,7 +95,6 @@ class RequestUrlBar extends PureComponent {
 
     remote.dialog.showOpenDialog(options, paths => {
       if (!paths || paths.length === 0) {
-        trackEvent('Response', 'Download Select Cancel');
         return;
       }
 
@@ -161,8 +157,6 @@ class RequestUrlBar extends PureComponent {
         this._handleStopTimeout();
         this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
         this.setState({currentTimeout: seconds});
-
-        trackEvent('Request', 'Send on Delay', 'Send Action', seconds);
       }
     });
   }
@@ -178,8 +172,6 @@ class RequestUrlBar extends PureComponent {
         this._handleStopInterval();
         this._sendInterval = setInterval(this._handleSend, seconds * 1000);
         this.setState({currentInterval: seconds});
-
-        trackEvent('Request', 'Send on Interval', 'Send Action', seconds);
       }
     });
   }
@@ -188,7 +180,6 @@ class RequestUrlBar extends PureComponent {
     clearTimeout(this._sendInterval);
     if (this.state.currentInterval) {
       this.setState({currentInterval: null});
-      trackEvent('Request', 'Stop Send Interval');
     }
   }
 
@@ -196,7 +187,6 @@ class RequestUrlBar extends PureComponent {
     clearTimeout(this._sendTimeout);
     if (this.state.currentTimeout) {
       this.setState({currentTimeout: null});
-      trackEvent('Request', 'Stop Send Timeout');
     }
   }
 

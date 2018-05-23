@@ -8,7 +8,6 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import CookieList from '../cookie-list';
 import * as models from '../../../models';
-import {trackEvent} from '../../../common/analytics';
 import type {Cookie, CookieJar} from '../../../models/cookie-jar';
 import type {Workspace} from '../../../models/workspace';
 import {fuzzyMatch} from '../../../common/misc';
@@ -58,14 +57,12 @@ class CookiesModal extends PureComponent<Props, State> {
 
     cookieJar.cookies = [cookie, ...cookies];
     await this._saveChanges();
-    trackEvent('Cookie', 'Create');
   }
 
   async _handleDeleteAllCookies () {
     const {cookieJar} = this.props;
     cookieJar.cookies = [];
     await this._saveChanges();
-    trackEvent('Cookie', 'Delete All');
   }
 
   async _handleCookieDelete (cookie: Cookie) {
@@ -150,7 +147,6 @@ class CookiesModal extends PureComponent<Props, State> {
     await this._applyFilter(this.state.filter, this.props.cookieJar.cookies);
 
     this.modal && this.modal.show();
-    trackEvent('Cookie Manager', 'Show');
   }
 
   hide () {

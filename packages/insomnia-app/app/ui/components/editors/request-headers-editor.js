@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
-import {trackEvent} from '../../../common/analytics';
 import allHeaderNames from '../../../datasets/header-names';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
@@ -13,18 +12,6 @@ import allEncodings from '../../../datasets/encodings';
 class RequestHeadersEditor extends PureComponent {
   _handleBulkUpdate (headersString) {
     this.props.onChange(this._getHeadersFromString(headersString));
-  }
-
-  _handleTrackToggle (pair) {
-    trackEvent('Headers Editor', 'Toggle', pair.disabled ? 'Disable' : 'Enable');
-  }
-
-  _handleTrackCreate () {
-    trackEvent('Headers Editor', 'Create');
-  }
-
-  _handleTrackDelete () {
-    trackEvent('Headers Editor', 'Delete');
   }
 
   _getHeadersFromString (headersString) {
@@ -126,9 +113,6 @@ class RequestHeadersEditor extends PureComponent {
               handleGetRenderContext={handleGetRenderContext}
               handleGetAutocompleteNameConstants={this._getCommonHeaderNames}
               handleGetAutocompleteValueConstants={this._getCommonHeaderValues}
-              onToggleDisable={this._handleTrackToggle}
-              onCreate={this._handleTrackCreate}
-              onDelete={this._handleTrackDelete}
               onChange={onChange}
             />
           </div>

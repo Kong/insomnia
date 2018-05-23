@@ -4,7 +4,6 @@ import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown/index';
 import * as models from '../../../models';
-import {trackEvent} from '../../../common/analytics';
 import * as hotkeys from '../../../common/hotkeys';
 
 @autobind
@@ -16,23 +15,19 @@ class RequestActionsDropdown extends PureComponent {
   _handleDuplicate () {
     const {request, handleDuplicateRequest} = this.props;
     handleDuplicateRequest(request);
-    trackEvent('Request', 'Duplicate', 'Request Action');
   }
 
   _handleGenerateCode () {
     this.props.handleGenerateCode(this.props.request);
-    trackEvent('Request', 'Generate Code', 'Request Action');
   }
 
   _handleCopyAsCurl () {
-    trackEvent('Request', 'Copy As Curl', 'Request Action');
     this.props.handleCopyAsCurl(this.props.request);
   }
 
   _handleRemove () {
     const {request} = this.props;
     models.request.remove(request);
-    trackEvent('Request', 'Delete', 'Action');
   }
 
   show () {

@@ -5,7 +5,6 @@ import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import {trackEvent} from '../../../common/analytics';
 import * as session from '../../../sync/session';
 import * as sync from '../../../sync/index';
 
@@ -37,7 +36,6 @@ class PaymentNotificationModal extends PureComponent {
   }
 
   hide () {
-    trackEvent('Billing', 'Trial Ended', 'Cancel');
     this.modal.hide();
   }
 

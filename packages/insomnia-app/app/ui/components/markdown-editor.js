@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import {Tab, TabList, TabPanel, Tabs} from 'react-tabs';
-import {trackEvent} from '../../common/analytics';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';
@@ -17,19 +16,9 @@ class MarkdownEditor extends PureComponent {
     };
   }
 
-  _trackTab (name) {
-    trackEvent('Request', 'Markdown Editor Tab', name);
-  }
-
   _handleChange (markdown) {
     this.props.onChange(markdown);
     this.setState({markdown});
-
-    // So we don't track on every keystroke, give analytics a longer timeout
-    clearTimeout(this._analyticsTimeout);
-    this._analyticsTimeout = setTimeout(() => {
-      trackEvent('Request', 'Edit Description');
-    }, 2000);
   }
 
   _setEditorRef (n) {
@@ -74,14 +63,10 @@ class MarkdownEditor extends PureComponent {
       <Tabs className={classes} defaultIndex={defaultPreviewMode ? 1 : 0}>
         <TabList>
           <Tab>
-            <Button onClick={this._trackTab} value="Write">
-              Write
-            </Button>
+            <Button value="Write">Write</Button>
           </Tab>
           <Tab>
-            <Button onClick={this._trackTab} value="Preview">
-              Preview
-            </Button>
+            <Button value="Preview">Preview</Button>
           </Tab>
         </TabList>
         <TabPanel className="react-tabs__tab-panel markdown-editor__edit">

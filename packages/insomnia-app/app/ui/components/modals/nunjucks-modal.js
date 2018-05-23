@@ -7,7 +7,6 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import {trackEvent} from '../../../common/analytics';
 
 @autobind
 class NunjucksModal extends PureComponent {
@@ -42,8 +41,6 @@ class NunjucksModal extends PureComponent {
   }
 
   show ({template, onDone}) {
-    trackEvent('Nunjucks', 'Editor', 'Show');
-
     this._onDone = onDone;
     this._currentTemplate = template;
 
@@ -53,7 +50,6 @@ class NunjucksModal extends PureComponent {
 
   hide () {
     this.modal.hide();
-    trackEvent('Nunjucks', 'Editor', 'Hide');
   }
 
   render () {

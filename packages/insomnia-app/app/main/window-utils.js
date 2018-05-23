@@ -4,7 +4,6 @@ import {Curl} from 'insomnia-libcurl';
 import fs from 'fs';
 import LocalStorage from './local-storage';
 import {CHANGELOG_BASE_URL, getAppLongName, getAppName, getAppVersion, isDevelopment, isMac} from '../common/constants';
-import {trackEvent} from '../common/analytics';
 import * as misc from '../common/misc';
 
 const {app, Menu, BrowserWindow, shell, dialog} = electron;
@@ -61,39 +60,16 @@ export function createWindow () {
     mainWindow.maximize();
   }
 
-  let _resizeTimeout = null;
-  mainWindow.on('resize', e => {
-    saveBounds();
+  mainWindow.on('resize', e => saveBounds());
 
-    clearTimeout(_resizeTimeout);
-    _resizeTimeout = setTimeout(() => {
-      trackEvent('Window', 'Resize');
-    }, 1000);
-  });
+  mainWindow.on('maximize', e => saveBounds());
 
-  mainWindow.on('maximize', e => {
-    saveBounds();
-    trackEvent('Window', 'Maximize');
-  });
+  mainWindow.on('unmaximize', e => saveBounds());
 
-  mainWindow.on('unmaximize', e => {
-    saveBounds();
-    trackEvent('Window', 'Unmaximize');
-  });
-
-  let _moveTimeout = null;
-  mainWindow.on('move', e => {
-    saveBounds();
-
-    clearTimeout(_moveTimeout);
-    _moveTimeout = setTimeout(() => {
-      trackEvent('Window', 'Move');
-    }, 1000);
-  });
+  mainWindow.on('move', e => saveBounds());
 
   mainWindow.on('unresponsive', e => {
     showUnresponsiveModal();
-    trackEvent('Window', 'Unresponsive');
   });
 
   // Load the html of the app.
@@ -108,7 +84,6 @@ export function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
-    trackEvent('Window', 'Close');
   });
 
   const applicationMenu = {
@@ -126,7 +101,6 @@ export function createWindow () {
             return;
           }
           window.webContents.send('toggle-preferences');
-          trackEvent('App Menu', 'Preferences');
         }
       },
       {
@@ -136,7 +110,6 @@ export function createWindow () {
             return;
           }
           misc.clickLink(`${CHANGELOG_BASE_URL}/${getAppVersion()}/`);
-          trackEvent('App Menu', 'Changelog');
         }
       },
       ...(isMac() ? [
@@ -178,7 +151,6 @@ export function createWindow () {
           const zoomFactor = 1;
           window.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
-          trackEvent('App Menu', 'Zoom Reset');
         }
       },
       {
@@ -194,7 +166,6 @@ export function createWindow () {
           window.webContents.setZoomFactor(zoomFactor);
 
           saveZoomFactor(zoomFactor);
-          trackEvent('App Menu', 'Zoom In');
         }
       },
       {
@@ -209,7 +180,6 @@ export function createWindow () {
           const zoomFactor = Math.max(0.5, getZoomFactor() - 0.05);
           window.webContents.setZoomFactor(zoomFactor);
           saveZoomFactor(zoomFactor);
-          trackEvent('App Menu', 'Zoom Out');
         }
       },
       {
@@ -222,7 +192,6 @@ export function createWindow () {
           }
 
           window.webContents.send('toggle-sidebar');
-          trackEvent('App Menu', 'Toggle Sidebar');
         }
       },
       {
@@ -249,7 +218,6 @@ export function createWindow () {
       {
         label: 'Contact Support',
         click: () => {
-          trackEvent('App Menu', 'Contact');
           shell.openExternal('https://insomnia.rest/support/');
         }
       },
@@ -260,7 +228,6 @@ export function createWindow () {
             return;
           }
           window.webContents.send('toggle-preferences-shortcuts');
-          trackEvent('App Menu', 'Shortcuts');
         }
       },
       {
@@ -268,14 +235,12 @@ export function createWindow () {
         click: (menuItem, window, e) => {
           const directory = app.getPath('userData');
           shell.showItemInFolder(directory);
-          trackEvent('App Menu', 'Open App Data');
         }
       },
       {
         label: 'Insomnia Help',
         accelerator: 'CmdOrCtrl+/',
         click: () => {
-          trackEvent('App Menu', 'Help');
           shell.openExternal('https://support.insomnia.rest');
         }
       }
@@ -286,7 +251,6 @@ export function createWindow () {
     helpMenu.submenu.unshift({
       label: 'About',
       click: () => {
-        trackEvent('App Menu', 'About');
         dialog.showMessageBox({
           type: 'info',
           title: getAppName(),

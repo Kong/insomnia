@@ -2,34 +2,9 @@ import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
-import {trackEvent} from '../../../../common/analytics';
 
 @autobind
 class FormEditor extends PureComponent {
-  _handleTrackToggle (pair) {
-    trackEvent(
-      'Form Editor',
-      `Toggle ${pair.type || 'text'}`,
-      pair.disabled ? 'Disable' : 'Enable'
-    );
-  }
-
-  _handleTrackChangeType (type) {
-    trackEvent('Form Editor', 'Change Type', type);
-  }
-
-  _handleTrackChooseFile () {
-    trackEvent('Form Editor', 'Choose File');
-  }
-
-  _handleTrackCreate () {
-    trackEvent('Form Editor', 'Create');
-  }
-
-  _handleTrackDelete () {
-    trackEvent('Form Editor', 'Delete');
-  }
-
   render () {
     const {
       parameters,
@@ -51,11 +26,6 @@ class FormEditor extends PureComponent {
             handleRender={handleRender}
             handleGetRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
-            onToggleDisable={this._handleTrackToggle}
-            onChangeType={this._handleTrackChangeType}
-            onChooseFile={this._handleTrackChooseFile}
-            onCreate={this._handleTrackCreate}
-            onDelete={this._handleTrackDelete}
             onChange={onChange}
             pairs={parameters}
           />

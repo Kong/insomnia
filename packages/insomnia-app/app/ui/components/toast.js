@@ -6,7 +6,6 @@ import classnames from 'classnames';
 import GravatarImg from './gravatar-img';
 import Link from './base/link';
 import * as fetch from '../../common/fetch';
-import {trackEvent, trackNonInteractiveEvent} from '../../common/analytics';
 import * as models from '../../models/index';
 import * as constants from '../../common/constants';
 import * as db from '../../common/database';
@@ -46,7 +45,6 @@ class Toast extends React.PureComponent<Props, State> {
       return;
     }
 
-    trackEvent('Notification', 'Click', notification.key);
     this._dismissNotification();
   }
 
@@ -56,7 +54,6 @@ class Toast extends React.PureComponent<Props, State> {
       return;
     }
 
-    trackEvent('Notification', 'Dismiss', notification.key);
     this._dismissNotification();
   }
 
@@ -117,9 +114,6 @@ class Toast extends React.PureComponent<Props, State> {
 
     // Fade the notification in
     setTimeout(() => this.setState({visible: true}), 1000);
-
-    // Track it
-    trackNonInteractiveEvent('Notification', 'Shown', notification.key);
   }
 
   _loadSeen () {

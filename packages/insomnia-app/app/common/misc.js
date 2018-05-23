@@ -1,11 +1,10 @@
 // @flow
 import * as electron from 'electron';
 import {Readable, Writable} from 'stream';
-import {joinUrlAndQueryString} from 'insomnia-url';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
-import {DEBOUNCE_MILLIS, getAppVersion, isDevelopment} from './constants';
+import {DEBOUNCE_MILLIS} from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -177,20 +176,8 @@ export function preventDefault (e: Event): void {
   e.preventDefault();
 }
 
-export function attributeHref (href: string): string {
-  if (href.match(/^http/i)) {
-    const appName = isDevelopment() ? 'Insomnia Dev' : 'Insomnia';
-    const qs = `utm_source=${appName}&utm_medium=app&utm_campaign=v${getAppVersion()}`;
-    return joinUrlAndQueryString(href, qs);
-  } else {
-    // Don't modify non-http urls
-    return href;
-  }
-}
-
 export function clickLink (href: string): void {
-  const attributedHref = attributeHref(href);
-  electron.shell.openExternal(attributedHref);
+  electron.shell.openExternal(href);
 }
 
 export function fnOrString (v: string | Function, ...args: Array<any>) {

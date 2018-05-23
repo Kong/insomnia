@@ -5,7 +5,6 @@ import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/d
 import StatusTag from '../tags/status-tag';
 import URLTag from '../tags/url-tag';
 import PromptButton from '../base/prompt-button';
-import {trackEvent} from '../../../common/analytics';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
 import TimeTag from '../tags/time-tag';
@@ -18,17 +17,14 @@ class ResponseHistoryDropdown extends PureComponent {
   }
 
   _handleDeleteResponses () {
-    trackEvent('History', 'Delete Responses');
     this.props.handleDeleteResponses(this.props.requestId);
   }
 
   _handleDeleteResponse () {
-    trackEvent('History', 'Delete Response');
     this.props.handleDeleteResponse(this.props.activeResponse);
   }
 
   _handleSetActiveResponse (response) {
-    trackEvent('History', 'Activate Response');
     this.props.handleSetActiveResponse(response);
   }
 

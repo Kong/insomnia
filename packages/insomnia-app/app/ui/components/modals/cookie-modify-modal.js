@@ -6,7 +6,6 @@ import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-import {trackEvent} from '../../../common/analytics';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -63,8 +62,6 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     this.setState({cookie});
 
     this.modal && this.modal.show();
-
-    trackEvent('Cookie Modifier', 'Show');
   }
 
   hide () {
@@ -138,7 +135,6 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     this.setState({cookie});
 
     await this._saveChanges(cookieJar);
-    trackEvent('Cookie', 'Update');
 
     return cookie;
   }

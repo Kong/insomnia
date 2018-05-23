@@ -104,17 +104,6 @@ class General extends React.PureComponent<Props> {
 
         <div className="form-control form-control--thin">
           <label className="inline-block">
-            Disable Usage Tracking
-            {' '}
-            <input type="checkbox"
-                   name="disableAnalyticsTracking"
-                   checked={settings.disableAnalyticsTracking}
-                   onChange={this._handleUpdateSetting}/>
-          </label>
-        </div>
-
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
             Nunjucks Power User Mode
             {' '}
             <HelpTooltip>
