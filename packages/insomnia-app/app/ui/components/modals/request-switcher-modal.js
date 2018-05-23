@@ -320,10 +320,10 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
                           <i className="fa fa-folder-o"/>
                         </div>
                       ) : null}
-                      <MethodTag method={(r: any).method}/>
                       <Highlight search={searchString} text={(r: any).name} />
                     </div>
                     <div className='margin-left-xs faint'>
+                      <MethodTag method={(r: any).method}/>
                       <Highlight search={searchString} text={(r: any).url} />
                     </div>
                   </Button>

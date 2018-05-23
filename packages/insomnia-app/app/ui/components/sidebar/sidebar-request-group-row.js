@@ -113,6 +113,7 @@ class SidebarRequestGroupRow extends PureComponent {
               requestGroup={requestGroup}
               workspace={workspace}
               requestCreate={handleCreateRequest}
+              filter={filter}
             />
           )}
         </ul>

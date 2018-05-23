@@ -2,6 +2,10 @@
 @import '../constants/colors';
 
 .request-switcher {
+  .btn {
+    padding: @padding-sm @padding-md;
+  }
+
   .btn:hover {
     background: @hl-sm;
   }
@@ -11,9 +15,9 @@
   }
 
   .tag {
-    width: 4em;
-    padding-left: 0;
-    margin-right: 0;
+    width: auto;
+    padding-left: 0 !important;
+    margin-right: 0 !important;
     text-align: left;
   }
 }
