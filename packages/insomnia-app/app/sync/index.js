@@ -5,7 +5,6 @@ import * as session from './session';
 import * as store from './storage';
 import * as misc from '../common/misc';
 import Logger from './logger';
-import {trackEvent} from '../common/analytics';
 import * as zlib from 'zlib';
 
 export const START_DELAY = 1E3;
@@ -164,7 +163,6 @@ export async function fixDuplicateResourceGroups () {
 
   if (duplicateCount) {
     logger.debug(`Fixed ${duplicateCount}/${workspaces.length} duplicate synced Workspaces`);
-    trackEvent('Sync', 'Fixed Duplicate');
   } else {
     logger.debug('No dupes found to fix');
   }
@@ -798,7 +796,7 @@ export async function getOrCreateAllActiveResources (resourceGroupId = null) {
           activeResourceMap[doc._id] = await createResourceForDoc(doc);
           created++;
         } catch (e) {
-          logger.warn(`Failed to create resource for ${doc._id} ${e}`, {doc});
+          // logger.warn(`Failed to create resource for ${doc._id} ${e}`, {doc});
         }
       }
     }

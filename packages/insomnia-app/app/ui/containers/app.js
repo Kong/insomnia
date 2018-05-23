@@ -18,7 +18,6 @@ import {COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_
 import * as globalActions from '../redux/modules/global';
 import * as db from '../../common/database';
 import * as models from '../../models';
-import {trackEvent} from '../../common/analytics';
 import {selectActiveCookieJar, selectActiveOAuth2Token, selectActiveRequest, selectActiveRequestMeta, selectActiveRequestResponses, selectActiveResponse, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectEntitiesLists, selectSidebarChildren, selectUnseenWorkspaces, selectWorkspaceRequestsAndRequestGroups} from '../redux/selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
@@ -398,7 +397,6 @@ class App extends PureComponent {
     // it so that we only track it if the request has changed since the last one
     const key = request._id;
     if (this._sendRequestTrackingKey !== key) {
-      trackEvent('Request', 'Send and Download');
       this._sendRequestTrackingKey = key;
     }
 
@@ -430,14 +428,12 @@ class App extends PureComponent {
         readStream.pipe(to);
 
         readStream.on('end', async () => {
-          trackEvent('Response', 'Download After Save Success');
           responsePatch.error = `Saved to ${filename}`;
           await models.response.create(responsePatch);
         });
 
         readStream.on('error', async err => {
           console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-          trackEvent('Response', 'Download After Save Failed');
           await models.response.create(responsePatch);
         });
       }
@@ -472,7 +468,6 @@ class App extends PureComponent {
     // it so that we only track it if the request has changed since the last noe
     const key = `${request._id}::${request.modified}`;
     if (this._sendRequestTrackingKey !== key) {
-      trackEvent('Request', 'Send');
       this._sendRequestTrackingKey = key;
     }
 
@@ -534,34 +529,28 @@ class App extends PureComponent {
   }
 
   _startDragSidebar () {
-    trackEvent('Sidebar', 'Drag');
     this.setState({draggingSidebar: true});
   }
 
   _resetDragSidebar () {
-    trackEvent('Sidebar', 'Drag');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetSidebarWidth(DEFAULT_SIDEBAR_WIDTH), 50);
   }
 
   _startDragPaneHorizontal () {
-    trackEvent('App Pane', 'Drag Start');
     this.setState({draggingPaneHorizontal: true});
   }
 
   _startDragPaneVertical () {
-    trackEvent('App Pane', 'Drag Start Vertical');
     this.setState({draggingPaneVertical: true});
   }
 
   _resetDragPaneHorizontal () {
-    trackEvent('App Pane', 'Drag Reset');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetPaneWidth(DEFAULT_PANE_WIDTH), 50);
   }
 
   _resetDragPaneVertical () {
-    trackEvent('App Pane', 'Drag Reset Vertical');
     // TODO: Remove setTimeout need be not triggering drag on double click
     setTimeout(() => this._handleSetPaneHeight(DEFAULT_PANE_HEIGHT), 50);
   }
@@ -656,7 +645,6 @@ class App extends PureComponent {
   async _handleToggleSidebar () {
     const sidebarHidden = !this.props.sidebarHidden;
     await this._handleSetSidebarHidden(sidebarHidden);
-    trackEvent('Sidebar', 'Toggle Visibility', sidebarHidden ? 'Hide' : 'Show');
   }
 
   _setWrapperRef (n) {

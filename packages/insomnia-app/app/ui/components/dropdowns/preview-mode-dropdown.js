@@ -3,13 +3,11 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import {getPreviewModeName, PREVIEW_MODES} from '../../../common/constants';
-import {trackEvent} from '../../../common/analytics';
 
 @autobind
 class PreviewModeDropdown extends PureComponent {
   _handleClick (previewMode) {
     this.props.updatePreviewMode(previewMode);
-    trackEvent('Response', 'Preview Mode Change', previewMode);
   }
 
   renderPreviewMode (mode) {

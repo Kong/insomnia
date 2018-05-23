@@ -1,7 +1,6 @@
 // @flow
 import keycodes from './keycodes';
 import {isMac} from './constants';
-import {trackEvent} from './analytics';
 
 export type Hotkey = {
   description: string,
@@ -251,7 +250,6 @@ export function executeHotKey (
 ): void {
   if (pressedHotKey(e, definition)) {
     callback();
-    trackEvent('Hotkey', definition.description);
   }
 }
 

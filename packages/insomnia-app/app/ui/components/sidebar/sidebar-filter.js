@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import {Dropdown, DropdownHint, DropdownButton, DropdownItem} from '../base/dropdown';
 import {DEBOUNCE_MILLIS} from '../../../common/constants';
-import {trackEvent} from '../../../common/analytics';
 import KeydownBinder from '../keydown-binder';
 import * as hotkeys from '../../../common/hotkeys';
 
@@ -23,19 +22,14 @@ class SidebarFilter extends PureComponent {
 
     // So we don't track on every keystroke, give analytics a longer timeout
     clearTimeout(this._analyticsTimeout);
-    this._analyticsTimeout = setTimeout(() => {
-      trackEvent('Sidebar', 'Filter', value ? 'Change' : 'Clear');
-    }, 2000);
   }
 
   _handleRequestGroupCreate () {
     this.props.requestGroupCreate();
-    trackEvent('Folder', 'Create', 'Sidebar Filter');
   }
 
   _handleRequestCreate () {
     this.props.requestCreate();
-    trackEvent('Request', 'Create', 'Sidebar Filter');
   }
 
   _handleKeydown (e) {

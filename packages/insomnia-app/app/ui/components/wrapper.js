@@ -37,7 +37,6 @@ import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as models from '../../models/index';
-import {trackEvent} from '../../common/analytics';
 import * as importers from 'insomnia-importers';
 import type {CookieJar} from '../../models/cookie-jar';
 import type {Environment} from '../../models/environment';
@@ -191,8 +190,6 @@ class Wrapper extends React.PureComponent<Props, State> {
       const r = resources[0];
 
       if (r && r._type === 'request') {
-        trackEvent('Import', 'Url Bar');
-
         // Only pull fields that we want to update
         return this._handleForceUpdateRequest({
           url: r.url,
@@ -287,9 +284,6 @@ class Wrapper extends React.PureComponent<Props, State> {
       });
 
       models.workspace.create({name: 'Insomnia'});
-      trackEvent('Workspace', 'Delete', 'Last');
-    } else {
-      trackEvent('Workspace', 'Delete');
     }
 
     await models.workspace.remove(activeWorkspace);

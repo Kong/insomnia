@@ -7,7 +7,6 @@ import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
 import * as importUtils from '../../../common/import';
-import {trackEvent} from '../../../common/analytics';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import LoginModal from '../../components/modals/login-modal';
@@ -134,10 +133,9 @@ export function importFile (workspaceId) {
       buttonLabel: 'Import',
       properties: ['openFile'],
       filters: [{
-        // Allow empty extension and JSON
         name: 'Insomnia Import',
         extensions: [
-          '', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell'
+          '', 'sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml'
         ]
       }]
     };
@@ -146,7 +144,6 @@ export function importFile (workspaceId) {
       if (!paths) {
         // It was cancelled, so let's bail out
         dispatch(loadStop());
-        trackEvent('Import File', 'Cancel');
         return;
       }
 
@@ -155,10 +152,8 @@ export function importFile (workspaceId) {
         try {
           const uri = `file://${p}`;
           await importUtils.importUri(workspaceId, uri);
-          trackEvent('Import File', 'Success');
         } catch (err) {
           showModal(AlertModal, {title: 'Import Failed', message: err + ''});
-          trackEvent('Import File', 'Failure');
         } finally {
           dispatch(loadStop());
         }
@@ -172,9 +167,7 @@ export function importUri (workspaceId, uri) {
     dispatch(loadStart());
     try {
       await importUtils.importUri(workspaceId, uri);
-      trackEvent('Import URI', 'Success');
     } catch (err) {
-      trackEvent('Import URI', 'Failure');
       showModal(AlertModal, {title: 'Import Failed', message: err + ''});
     } finally {
       dispatch(loadStop());
@@ -245,7 +238,6 @@ export function exportFile (workspaceId = null) {
 
         electron.remote.dialog.showSaveDialog(options, async filename => {
           if (!filename) {
-            trackEvent('Export', 'Cancel');
             // It was cancelled, so let's bail out
             dispatch(loadStop());
             return;
@@ -277,10 +269,8 @@ export function exportFile (workspaceId = null) {
           fs.writeFile(filename, json, {}, err => {
             if (err) {
               console.warn('Export failed', err);
-              trackEvent('Export', 'Failure');
               return;
             }
-            trackEvent('Export', 'Success');
             dispatch(loadStop());
           });
         });

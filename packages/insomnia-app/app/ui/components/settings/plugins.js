@@ -6,7 +6,6 @@ import autobind from 'autobind-decorator';
 import * as electron from 'electron';
 import Button from '../base/button';
 import CopyButton from '../base/copy-button';
-import {trackEvent} from '../../../common/analytics';
 import {reload} from '../../../templating/index';
 import installPlugin from '../../../plugins/install';
 import HelpTooltip from '../help-tooltip';
@@ -87,12 +86,10 @@ class Plugins extends React.PureComponent<void, State> {
 
   async _handleClickRefreshPlugins () {
     await this._handleRefreshPlugins();
-    trackEvent('Plugins', 'Refresh');
   }
 
   _handleClickShowPluginsFolder () {
     electron.remote.shell.showItemInFolder(PLUGIN_PATH);
-    trackEvent('Plugins', 'Show Folder');
   }
 
   componentDidMount () {

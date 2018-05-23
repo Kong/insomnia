@@ -12,7 +12,6 @@ import {init as initPlugins} from '../plugins';
 import DNDBackend from './dnd-backend';
 import './css/index.less';
 import {isDevelopment} from '../common/constants';
-import {trackEvent, trackPageView} from '../common/analytics';
 
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -38,9 +37,6 @@ document.body.setAttribute('data-platform', process.platform);
 
   render(DndComponent);
 
-  // Track the page view
-  trackPageView();
-
   // Hot Module Replacement API
   if (module.hot) {
     module.hot.accept('./containers/app', () => {
@@ -62,12 +58,10 @@ if (isDevelopment()) {
 // Catch uncaught errors and report them
 if (window && !isDevelopment()) {
   window.addEventListener('error', e => {
-    trackEvent('Error', 'Uncaught Error');
     console.error('Uncaught Error', e);
   });
 
   window.addEventListener('unhandledRejection', e => {
-    trackEvent('Error', 'Uncaught Promise');
     console.error('Unhandled Promise', e);
   });
 }

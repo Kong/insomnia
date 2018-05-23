@@ -76,6 +76,9 @@ export type ResponsePatch = {
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 
+// Special header value that will prevent the header being sent
+const DISABLE_HEADER_VALUE = '__Di$aB13d__';
+
 let cancelRequestFunction = null;
 let lastUserInteraction = Date.now();
 
@@ -492,8 +495,8 @@ export async function _actuallySend (
 
       if (!noBody) {
         // Don't chunk uploads
-        headers.push({name: 'Expect', value: ''});
-        headers.push({name: 'Transfer-Encoding', value: ''});
+        headers.push({name: 'Expect', value: DISABLE_HEADER_VALUE});
+        headers.push({name: 'Transfer-Encoding', value: DISABLE_HEADER_VALUE});
       }
 
       // If we calculated the body within Insomnia (ie. not computed by Curl)
@@ -523,17 +526,20 @@ export async function _actuallySend (
             return handleError(
               new Error('AWS authentication not supported for provided body type'));
           }
+          const {authentication} = renderedRequest;
           const credentials = {
-            accessKeyId: renderedRequest.authentication.accessKeyId || '',
-            secretAccessKey: renderedRequest.authentication.secretAccessKey || '',
-            sessionToken: renderedRequest.authentication.sessionToken || ''
+            accessKeyId: authentication.accessKeyId || '',
+            secretAccessKey: authentication.secretAccessKey || '',
+            sessionToken: authentication.sessionToken || ''
           };
           const extraHeaders = _getAwsAuthHeaders(
             credentials,
             headers,
             requestBody || '',
             finalUrl,
-            renderedRequest.method
+            renderedRequest.method,
+            authentication.region || '',
+            authentication.service || ''
           );
           for (const header of extraHeaders) {
             headers.push(header);
@@ -564,7 +570,7 @@ export async function _actuallySend (
 
       // Don't auto-send Accept-Encoding header
       if (!hasAcceptEncodingHeader(headers)) {
-        headers.push({name: 'Accept-Encoding', value: ''});
+        headers.push({name: 'Accept-Encoding', value: DISABLE_HEADER_VALUE});
       }
 
       // Set User-Agent if it't not already in headers
@@ -574,13 +580,25 @@ export async function _actuallySend (
 
       // Prevent curl from adding default content-type header
       if (!hasContentTypeHeader(headers)) {
-        headers.push({name: 'content-type', value: ''});
+        headers.push({name: 'content-type', value: DISABLE_HEADER_VALUE});
       }
 
       // NOTE: This is last because headers might be modified multiple times
       const headerStrings = headers
         .filter(h => h.name)
-        .map(h => `${(h.name || '').trim()}: ${h.value}`);
+        .map(h => {
+          const value = h.value || '';
+          if (value === '') {
+            // Curl needs a semicolon suffix to send empty header values
+            return `${h.name};`;
+          } else if (value === DISABLE_HEADER_VALUE) {
+            // Tell Curl NOT to send the header if value is null
+            return `${h.name}:`;
+          } else {
+            // Send normal header value
+            return `${h.name}: ${value}`;
+          }
+        });
       setOpt(Curl.option.HTTPHEADER, headerStrings);
 
       let responseBodyBytes = 0;
@@ -728,7 +746,7 @@ export async function sendWithSettings (
     parentId: request._id
   });
 
-  let renderResult: {request: RenderedRequest, context: Object};
+  let renderResult: { request: RenderedRequest, context: Object };
   try {
     renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
   } catch (err) {
@@ -888,11 +906,17 @@ export function _parseHeaders (
 
 // exported for unit tests only
 export function _getAwsAuthHeaders (
-  credentials: Object,
+  credentials: {
+    accessKeyId: string,
+    secretAccessKey: string,
+    sessionToken: string,
+  },
   headers: Array<RequestHeader>,
   body: string,
   url: string,
-  method: string
+  method: string,
+  region?: string,
+  service?: string
 ): Array<{ name: string, value: string, disabled?: boolean }> {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
@@ -902,6 +926,8 @@ export function _getAwsAuthHeaders (
   const host = hostHeader ? hostHeader.value : parsedUrl.host;
 
   const awsSignOptions = {
+    service,
+    region,
     body,
     method,
     host,

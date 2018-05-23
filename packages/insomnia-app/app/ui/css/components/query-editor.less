@@ -4,14 +4,27 @@
 .query-editor {
   display: grid;
   height: 100%;
-  grid-template-rows: auto minmax(0, 1fr) @line-height-md;
+  grid-template-rows: minmax(0, 100px) minmax(100px, 1fr) @line-height-md;
   grid-template-columns: 100%;
 
-  .query-editor__preview code {
-    overflow: auto;
+  .query-editor__preview {
+    max-height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+
+    code {
+      overflow: auto;
+      min-height: 2em;
+    }
   }
 
-  .key-value-editor {
-    padding: 0;
+  .query-editor__editor {
+    min-height: 2rem;
+    max-height: 100%;
+    overflow-y: auto;
+
+    .key-value-editor {
+      padding: 0;
+    }
   }
 }

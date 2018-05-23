@@ -4,7 +4,6 @@ import * as React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import * as misc from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,
@@ -41,12 +40,6 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 @autobind
 class OAuth1Auth extends React.PureComponent<Props> {
   _handleChangeProperty: Function;
-
-  constructor (props: any) {
-    super(props);
-
-    this._handleChangeProperty = misc.debounce(this._handleChangeProperty, 500);
-  }
 
   _handleEditPrivateKey () {
     const {handleRender, handleGetRenderContext, request} = this.props;

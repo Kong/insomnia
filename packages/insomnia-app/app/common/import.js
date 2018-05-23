@@ -9,7 +9,6 @@ import {showModal} from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import * as fetch from './fetch';
 import fs from 'fs';
-import {trackEvent} from './analytics';
 import type {Workspace} from '../models/workspace';
 import type {Environment} from '../models/environment';
 import {fnOrString, generateId} from './misc';
@@ -46,7 +45,7 @@ export async function importUri (workspaceId: string | null, uri: string): Promi
   }
 
   const result = await importRaw(workspaceId, rawText);
-  const {summary, source, error} = result;
+  const {summary, error} = result;
 
   if (error) {
     showModal(AlertModal, {title: 'Import Failed', message: error});
@@ -66,7 +65,6 @@ export async function importUri (workspaceId: string | null, uri: string): Promi
     message = `You imported ${statements.join(', ')}!`;
   }
   showModal(AlertModal, {title: 'Import Succeeded', message});
-  trackEvent('Import', 'Success', source);
 }
 
 export async function importRaw (

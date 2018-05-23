@@ -23,7 +23,6 @@ import * as models from '../../models';
 import {PREVIEW_MODE_SOURCE} from '../../common/constants';
 import {getSetCookieHeaders, nullFn} from '../../common/misc';
 import {cancelCurrentRequest} from '../../network/network';
-import {trackEvent} from '../../common/analytics';
 import Hotkey from './hotkey';
 import * as hotkeys from '../../common/hotkeys';
 import ErrorBoundary from './error-boundary';
@@ -83,7 +82,6 @@ class ResponsePane extends React.PureComponent<Props> {
 
     remote.dialog.showSaveDialog(options, outputPath => {
       if (!outputPath) {
-        trackEvent('Response', 'Save Cancel');
         return;
       }
 
@@ -91,12 +89,8 @@ class ResponsePane extends React.PureComponent<Props> {
       if (readStream) {
         const to = fs.createWriteStream(outputPath);
         readStream.pipe(to);
-        to.on('end', () => {
-          trackEvent('Response', 'Save Success');
-        });
         to.on('error', err => {
           console.warn('Failed to save response body', err);
-          trackEvent('Response', 'Save Failure');
         });
       }
     });
@@ -124,7 +118,6 @@ class ResponsePane extends React.PureComponent<Props> {
 
     remote.dialog.showSaveDialog(options, filename => {
       if (!filename) {
-        trackEvent('Response', 'Save Full Cancel');
         return;
       }
 
@@ -133,12 +126,8 @@ class ResponsePane extends React.PureComponent<Props> {
         const to = fs.createWriteStream(filename);
         to.write(headers);
         readStream.pipe(to);
-        to.on('end', () => {
-          trackEvent('Response', 'Save Full Success');
-        });
         to.on('error', err => {
           console.warn('Failed to save full response', err);
-          trackEvent('Response', 'Save Full Failure');
         });
       }
     });

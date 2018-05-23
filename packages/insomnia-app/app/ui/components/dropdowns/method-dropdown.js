@@ -4,7 +4,6 @@ import autobind from 'autobind-decorator';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownItem} from '../base/dropdown';
 import * as constants from '../../../common/constants';
 import {showPrompt} from '../modals/index';
-import {trackEvent} from '../../../common/analytics';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 
@@ -56,14 +55,12 @@ class MethodDropdown extends PureComponent {
 
         // Invoke callback
         this.props.onChange(method);
-        trackEvent('Request', 'Set Method', 'Custom');
       }
     });
   }
 
   _handleChange (method) {
     this.props.onChange(method);
-    trackEvent('Request', 'Set Method', method);
   }
 
   toggle () {

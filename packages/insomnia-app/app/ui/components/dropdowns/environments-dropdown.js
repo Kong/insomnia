@@ -4,7 +4,6 @@ import autobind from 'autobind-decorator';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown';
 import {showModal} from '../modals/index';
-import {trackEvent} from '../../../common/analytics';
 import Tooltip from '../tooltip';
 import * as hotkeys from '../../../common/hotkeys';
 import KeydownBinder from '../keydown-binder';
@@ -28,7 +27,6 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
 
   _handleActivateEnvironment (environmentId: string) {
     this.props.handleChangeEnvironment(environmentId);
-    trackEvent('Environment', environmentId ? 'Activate' : 'Deactivate');
   }
 
   _handleShowEnvironmentModal () {

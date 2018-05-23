@@ -7,7 +7,6 @@ import classnames from 'classnames';
 import Highlight from '../base/highlight';
 import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
 import SidebarRequestRow from './sidebar-request-row';
-import {trackEvent} from '../../../common/analytics';
 import * as misc from '../../../common/misc';
 
 @autobind
@@ -26,7 +25,6 @@ class SidebarRequestGroupRow extends PureComponent {
   _handleCollapse () {
     const {requestGroup, handleSetRequestGroupCollapsed, isCollapsed} = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
-    trackEvent('Folder', 'Toggle Visible', !isCollapsed ? 'Close' : 'Open');
   }
 
   _handleShowActions (e) {
@@ -155,7 +153,6 @@ SidebarRequestGroupRow.propTypes = {
  */
 const dragSource = {
   beginDrag (props) {
-    trackEvent('Folder', 'Drag', 'Begin');
     return {
       requestGroup: props.requestGroup
     };

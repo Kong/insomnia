@@ -5,7 +5,6 @@ import PromptButton from '../base/prompt-button';
 import {Dropdown, DropdownButton, DropdownDivider, DropdownHint, DropdownItem} from '../base/dropdown';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
-import {trackEvent} from '../../../common/analytics';
 import {showPrompt, showModal} from '../modals/index';
 import * as hotkeys from '../../../common/hotkeys';
 
@@ -23,34 +22,28 @@ class RequestGroupActionsDropdown extends PureComponent {
       defaultValue: requestGroup.name,
       onComplete: name => {
         models.requestGroup.update(requestGroup, {name});
-        trackEvent('Folder', 'Rename', 'Folder Action');
       }
     });
   }
 
   async _handleRequestCreate () {
     this.props.handleCreateRequest(this.props.requestGroup._id);
-    trackEvent('Request', 'Create', 'Folder Action');
   }
 
   _handleRequestGroupDuplicate () {
     this.props.handleDuplicateRequestGroup(this.props.requestGroup);
-    trackEvent('Folder', 'Duplicate', 'Folder Action');
   }
 
   _handleRequestGroupMove () {
     this.props.handleMoveRequestGroup(this.props.requestGroup);
-    trackEvent('Folder', 'Move', 'Folder Action');
   }
 
   async _handleRequestGroupCreate () {
     this.props.handleCreateRequestGroup(this.props.requestGroup._id);
-    trackEvent('Folder', 'Create', 'Folder Action');
   }
 
   _handleDeleteFolder () {
     models.requestGroup.remove(this.props.requestGroup);
-    trackEvent('Folder', 'Delete', 'Folder Action');
   }
 
   _handleEditEnvironment () {

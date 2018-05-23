@@ -16,7 +16,6 @@ import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import {Curl} from 'insomnia-libcurl';
 import {getAppName, getAppVersion} from '../../../common/constants';
-import {trackEvent} from '../../../common/analytics';
 import * as session from '../../../sync/session';
 import Tooltip from '../tooltip';
 
@@ -36,7 +35,6 @@ class SettingsModal extends PureComponent {
 
   _handleUpdateSetting (key, value) {
     models.settings.update(this.props.settings, {[key]: value});
-    trackEvent('Setting', 'Change', key);
   }
 
   _handleExportAllToFile () {
@@ -63,7 +61,6 @@ class SettingsModal extends PureComponent {
     document.body.setAttribute('theme', theme);
 
     if (persist) {
-      trackEvent('Setting', 'Change Theme', theme);
       models.settings.update(this.props.settings, {theme});
     }
   }

@@ -3,7 +3,15 @@ import fs from 'fs';
 import {join as pathJoin, resolve as pathResolve} from 'path';
 import {getRenderedRequest} from '../../common/render';
 import * as models from '../../models';
-import {AUTH_AWS_IAM, AUTH_BASIC, AUTH_NETRC, CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, getAppVersion} from '../../common/constants';
+import {
+  AUTH_AWS_IAM,
+  AUTH_BASIC,
+  AUTH_NETRC,
+  CONTENT_TYPE_FILE,
+  CONTENT_TYPE_FORM_DATA,
+  CONTENT_TYPE_FORM_URLENCODED,
+  getAppVersion
+} from '../../common/constants';
 import {filterHeaders} from '../../common/misc';
 import {globalBeforeEach} from '../../__jest__/before-each';
 import {DEFAULT_BOUNDARY} from '../multipart';
@@ -44,7 +52,7 @@ describe('actuallySend()', () => {
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
-      headers: [{name: 'Content-Type', value: 'application/json'}],
+      headers: [{name: 'Content-Type', value: 'application/json'}, {name: 'Empty', value: ''}],
       parameters: [{name: 'foo bar', value: 'hello&world'}],
       method: 'POST',
       body: {
@@ -85,10 +93,11 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/json',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Empty;',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -146,10 +155,10 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/x-www-form-urlencoded',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         POSTFIELDS: 'foo=bar&bar=&=value',
@@ -232,10 +241,10 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/json',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         USERNAME: 'user',
@@ -290,10 +299,10 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Content-Type: application/octet-stream',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         NOPROGRESS: false,
         INFILESIZE_LARGE: 26,
@@ -356,10 +365,10 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'POST',
         HTTPHEADER: [
           'Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY',
-          'Expect: ',
-          'Transfer-Encoding: ',
+          'Expect:',
+          'Transfer-Encoding:',
           'Accept: */*',
-          'Accept-Encoding: '
+          'Accept-Encoding:'
         ],
         INFILESIZE_LARGE: 244,
         NOPROGRESS: false,
@@ -420,8 +429,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -468,8 +477,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -515,8 +524,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -563,8 +572,8 @@ describe('actuallySend()', () => {
         FOLLOWLOCATION: true,
         HTTPHEADER: [
           'Accept: */*',
-          'Accept-Encoding: ',
-          'content-type: '
+          'Accept-Encoding:',
+          'content-type:'
         ],
         NOPROGRESS: false,
         PROXY: '',
@@ -591,7 +600,7 @@ describe('_getAwsAuthHeaders', () => {
       headers: [{name: 'content-type', value: 'application/json'}],
       body: {text: '{}'},
       method: 'POST',
-      url: 'https://example.com/path?query=q1'
+      url: 'https://ec2.us-west-2.amazonaws.com/path?query=q1'
     };
     const credentials = {
       accessKeyId: req.authentication.accessKeyId || '',
@@ -607,9 +616,9 @@ describe('_getAwsAuthHeaders', () => {
     );
     expect(filterHeaders(headers, 'x-amz-date')[0].value)
       .toMatch(/^\d{8}T\d{6}Z$/);
-    expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
+    expect(filterHeaders(headers, 'host')[0].value).toEqual('ec2.us-west-2.amazonaws.com');
     expect(filterHeaders(headers, 'authorization')[0].value)
-      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999/);
+      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/);
     expect(filterHeaders(headers, 'content-type'))
       .toHaveLength(0);
   });
@@ -624,7 +633,7 @@ describe('_getAwsAuthHeaders', () => {
       },
       headers: [
         'Accept: */*',
-        'Accept-Encoding: '
+        'Accept-Encoding:'
       ],
       url: 'https://example.com',
       method: 'GET'
@@ -639,14 +648,16 @@ describe('_getAwsAuthHeaders', () => {
       req.headers,
       null,
       req.url,
-      req.method
+      req.method,
+      'us-west-2',
+      'ec2'
     );
 
     expect(filterHeaders(headers, 'x-amz-date')[0].value)
       .toMatch(/^\d{8}T\d{6}Z$/);
     expect(filterHeaders(headers, 'host')[0].value).toEqual('example.com');
     expect(filterHeaders(headers, 'authorization')[0].value)
-      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999/);
+      .toMatch(/^AWS4-HMAC-SHA256 Credential=AKIA99999999\/\d{8}\/us-west-2\/ec2\/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-security-token, Signature=[a-z0-9]*$/);
     expect(filterHeaders(headers, 'content-type'))
       .toHaveLength(0);
   });

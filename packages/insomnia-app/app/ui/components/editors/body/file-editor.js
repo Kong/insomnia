@@ -6,18 +6,15 @@ import electron from 'electron';
 import FileInputButton from '../../base/file-input-button';
 import PromptButton from '../../base/prompt-button';
 import * as misc from '../../../../common/misc';
-import {trackEvent} from '../../../../common/analytics';
 
 @autobind
 class FileEditor extends PureComponent {
   _handleResetFile () {
     this.props.onChange('');
-    trackEvent('File Editor', 'Reset');
   }
 
   _handleChooseFile (path) {
     this.props.onChange(path);
-    trackEvent('File Editor', 'Choose');
   }
 
   render () {

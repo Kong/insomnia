@@ -6,7 +6,6 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
-import {trackEvent} from '../../../common/analytics';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
 import * as db from '../../../common/database';
@@ -71,7 +70,6 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     const setting = e.currentTarget.name;
     const request = await models.request.update(this.state.request, {[setting]: value});
     this.setState({request});
-    trackEvent('Request Settings', setting, value ? 'Enable' : 'Disable');
   }
 
   async _handleNameChange (name: string) {
@@ -91,7 +89,6 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
   }
 
   _handleAddDescription () {
-    trackEvent('Request', 'Add Description');
     this.setState({showDescription: true});
   }
 
@@ -120,7 +117,6 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.setState({justMoved: false});
     }, 2000);
-    trackEvent('Request Settings', 'Move to Workspace');
   }
 
   async _handleCopyToWorkspace () {
@@ -145,7 +141,6 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     setTimeout(() => {
       this.setState({justCopied: false});
     }, 2000);
-    trackEvent('Request Settings', 'Copy to Workspace');
   }
 
   async show ({request, forceEditMode}: {request: Request, forceEditMode: boolean}) {
