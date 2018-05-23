@@ -1,6 +1,7 @@
 // @flow
 import * as electron from 'electron';
 import {Readable, Writable} from 'stream';
+import fuzzysort from 'fuzzysort';
 import uuid from 'uuid';
 import zlib from 'zlib';
 import {join as pathJoin} from 'path';
@@ -223,30 +224,67 @@ export function escapeRegex (str: string): string {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
 
-export function fuzzyMatch (searchString: string, text: string): boolean {
-  const lowercase = searchString.toLowerCase();
+export function fuzzyMatch (searchString: string, text: string): {
+  searchTermsMatched: number,
+  indexes: number[]
+} {
+  const searchTerms = searchString.trim().split(' ');
+  const emptyResults = {
+    searchTermsMatched: 0,
+    searchTermsCount: searchTerms.length,
+    indexes: []
+  };
 
-  // Split into individual chars, then escape the ones that need it.
-  const regexSearchString = lowercase.split('').map(v => escapeRegex(v)).join('.*');
-
-  let toMatch;
-  try {
-    toMatch = new RegExp(regexSearchString);
-  } catch (err) {
-    console.warn('Invalid regex', searchString, regexSearchString);
-    // Invalid regex somehow
-    return false;
+  if (!searchString || !searchString.trim() || !searchTerms || searchTerms.length === 0) {
+    return emptyResults;
   }
 
-  return toMatch.test((text || '').toLowerCase());
+  const results = searchTerms.reduce((prevResult, nextTerm) => {
+    const nextResult = fuzzysort.single(nextTerm, text);
+
+    if (!nextResult) {
+      return prevResult;
+    }
+
+    if (!prevResult) {
+      return nextResult;
+    }
+
+    const sort = array => array.sort((a, b) => a - b);
+    const uniq = array => Array.from(new Set(array));
+
+    return {
+      ...prevResult,
+      ...nextResult,
+
+      searchTermsMatched: prevResult.searchTermsMatched + 1,
+
+      indexes: sort(uniq([
+        ...prevResult.indexes,
+        ...nextResult.indexes
+      ]))
+    };
+  }, emptyResults);
+
+  if (results.indexes.length === 0) {
+    return emptyResults;
+  }
+
+  return results;
 }
 
 export function fuzzyMatchAll (searchString: string, allText: Array<string>): boolean {
+  if (!searchString || !searchString.trim()) {
+    return true;
+  }
+
   return searchString
     .split(' ')
-    .every(searchWord =>
+    .map(searchTerm => searchTerm.trim())
+    .filter(searchTerm => !!searchTerm)
+    .every(searchTerm =>
       allText.some(text =>
-        fuzzyMatch(searchWord, text)));
+        fuzzyMatch(searchTerm, text).searchTermsMatched > 0));
 }
 
 export function getViewportSize (): string | null {

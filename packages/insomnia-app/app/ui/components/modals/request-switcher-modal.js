@@ -2,14 +2,16 @@
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import {buildQueryStringFromParams, joinUrlAndQueryString} from 'insomnia-url';
 import Button from '../base/button';
+import Highlight from '../base/highlight';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import MethodTag from '../tags/method-tag';
+import {fuzzyMatchAll} from '../../../common/misc';
 import type {BaseModel} from '../../../models';
 import * as models from '../../../models';
-import {fuzzyMatchAll} from '../../../common/misc';
 import type {RequestGroup} from '../../../models/request-group';
 import type {Request} from '../../../models/request';
 import type {Workspace} from '../../../models/workspace';
@@ -171,19 +173,17 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
   _isMatch (searchStrings: string): (Request) => boolean {
     return (request: Request): boolean => {
-      // Disable URL filtering until we have proper UI to show this
-      // let finalUrl = request.url;
-      // if (request.parameters) {
-      //   finalUrl = joinUrlAndQueryString(
-      //     finalUrl,
-      //     buildQueryStringFromParams(request.parameters));
-      // }
+      let finalUrl = request.url;
+      if (request.parameters) {
+        finalUrl = joinUrlAndQueryString(
+          finalUrl,
+          buildQueryStringFromParams(request.parameters));
+      }
 
-      // Match request attributes
-      const matchesAttributes = fuzzyMatchAll(searchStrings, [
+      let matchesAttributes = fuzzyMatchAll(searchStrings, [
         request.name,
-        // finalUrl,
-        // request.method,
+        finalUrl,
+        request.method,
         this._groupOf(request).join('/')
       ]);
 
@@ -305,22 +305,27 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
             {matchedRequests.map((r, i) => {
               const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
               const buttonClasses = classnames(
-                'btn btn--super-compact wide text-left',
+                'btn btn--expandable-small wide text-left pad-bottom',
                 {focus: activeIndex === i}
               );
 
               return (
                 <li key={r._id}>
                   <Button onClick={this._activateRequest} value={r} className={buttonClasses}>
-                    {requestGroup && (
-                      <div className="pull-right faint italic">
-                        {this._groupOf(r).join(' / ')}
-                        &nbsp;&nbsp;
-                        <i className="fa fa-folder-o"/>
-                      </div>
-                    )}
-                    <MethodTag method={(r: any).method}/>
-                    <strong>{(r: any).name}</strong>
+                    <div>
+                      {requestGroup ? (
+                        <div className="pull-right faint italic">
+                          <Highlight search={searchString} text={this._groupOf(r).join(' / ')} />
+                          &nbsp;&nbsp;
+                          <i className="fa fa-folder-o"/>
+                        </div>
+                      ) : null}
+                      <MethodTag method={(r: any).method}/>
+                      <Highlight search={searchString} text={(r: any).name} />
+                    </div>
+                    <div className='margin-left-xs faint'>
+                      <Highlight search={searchString} text={(r: any).url} />
+                    </div>
                   </Button>
                 </li>
               );

@@ -6,6 +6,7 @@ import {DragSource, DropTarget} from 'react-dnd';
 import classnames from 'classnames';
 import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
 import Editable from '../base/editable';
+import Highlight from '../base/highlight';
 import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import {showModal} from '../modals/index';
@@ -66,6 +67,7 @@ class SidebarRequestRow extends PureComponent {
 
   render () {
     const {
+      filter,
       handleDuplicateRequest,
       handleGenerateCode,
       handleCopyAsCurl,
@@ -113,7 +115,10 @@ class SidebarRequestRow extends PureComponent {
                   <Editable value={request.name}
                             className="inline-block"
                             onEditStart={this._handleEditStart}
-                            onSubmit={this._handleRequestUpdateName}/>
+                            onSubmit={this._handleRequestUpdateName}
+                            renderReadView={() => (
+                              <Highlight search={filter} text={request.name} />
+                            )}/>
                 </div>
               </div>
             </button>
@@ -152,6 +157,7 @@ SidebarRequestRow.propTypes = {
   moveDoc: PropTypes.func.isRequired,
 
   // Other
+  filter: PropTypes.string.isRequired,
   isActive: PropTypes.bool.isRequired,
 
   // React DnD

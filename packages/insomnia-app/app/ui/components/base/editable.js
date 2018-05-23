@@ -67,6 +67,7 @@ class Editable extends PureComponent {
       singleClick,
       onEditStart, // eslint-disable-line no-unused-vars
       className,
+      renderReadView,
       ...extra
     } = this.props;
     const {editing} = this.state;
@@ -83,12 +84,20 @@ class Editable extends PureComponent {
         />
       );
     } else {
+      const readViewProps = {
+        className: `editable ${className}`,
+        title: singleClick ? 'Click to edit' : 'Double click to edit',
+        onClick: this._handleSingleClickEditStart,
+        onDoubleClick: this._handleEditStart,
+        ...extra
+      };
+
+      if (renderReadView) {
+        return renderReadView(value, readViewProps);
+      }
+
       return (
-        <div {...extra}
-             className={`editable ${className}`}
-             title={singleClick ? 'Click to edit' : 'Double click to edit'}
-             onClick={this._handleSingleClickEditStart}
-             onDoubleClick={this._handleEditStart}>
+        <div {...readViewProps}>
           {value}
         </div>
       );

@@ -28,6 +28,7 @@ type Props = {
   moveDoc: Function,
   childObjects: Array<Child>,
   workspace: Workspace,
+  filter: string,
 
   // Optional
   activeRequest?: Request
@@ -36,6 +37,7 @@ type Props = {
 class SidebarChildren extends React.PureComponent<Props> {
   _renderChildren (children: Array<Child>) {
     const {
+      filter,
       handleCreateRequest,
       handleCreateRequestGroup,
       handleSetRequestGroupCollapsed,
@@ -61,6 +63,7 @@ class SidebarChildren extends React.PureComponent<Props> {
         return (
           <SidebarRequestRow
             key={child.doc._id}
+            filter={filter || ''}
             moveDoc={moveDoc}
             handleActivateRequest={handleActivateRequest}
             handleDuplicateRequest={handleDuplicateRequest}
@@ -97,6 +100,7 @@ class SidebarChildren extends React.PureComponent<Props> {
       return (
         <SidebarRequestGroupRow
           key={requestGroup._id}
+          filter={filter || ''}
           isActive={isActive}
           moveDoc={moveDoc}
           handleActivateRequest={handleActivateRequest}

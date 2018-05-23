@@ -115,8 +115,8 @@ class CookiesModal extends PureComponent<Props, State> {
       visibleCookieIndexes = [];
       for (let i = 0; i < renderedCookies.length; i++) {
         const toSearch = JSON.stringify(renderedCookies[i]);
-        const matched = fuzzyMatch(filter, toSearch);
-        if (matched) {
+        const results = fuzzyMatch(filter, toSearch);
+        if (results.searchTermsMatched > 0) {
           visibleCookieIndexes.push(i);
         }
       }
