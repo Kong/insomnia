@@ -111,15 +111,13 @@ class SidebarRequestRow extends PureComponent {
                     onContextMenu={this._handleShowRequestActions}>
               <div className="sidebar__clickable">
                 <MethodTag method={request.method}/>
-                <div>
-                  <Editable value={request.name}
-                            className="inline-block"
-                            onEditStart={this._handleEditStart}
-                            onSubmit={this._handleRequestUpdateName}
-                            renderReadView={() => (
-                              <Highlight search={filter} text={request.name} />
-                            )}/>
-                </div>
+                <Editable
+                  value={request.name}
+                  className="inline-block"
+                  onEditStart={this._handleEditStart}
+                  onSubmit={this._handleRequestUpdateName}
+                  renderReadView={(value, props) => <Highlight search={filter} text={value} {...props}/>}
+                />
               </div>
             </button>
             <div className="sidebar__actions">

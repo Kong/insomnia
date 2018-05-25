@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import fuzzysort from 'fuzzysort';
+import fuzzySort from 'fuzzysort';
 import {fuzzyMatch} from '../../../common/misc';
 
 type Props = {|
@@ -21,15 +21,23 @@ class Highlight extends React.PureComponent<Props> {
     const results = fuzzyMatch(search, text);
 
     if (results.searchTermsMatched === 0) {
-      return <span>{text}</span>;
+      return (
+        <span {...otherProps}>{text}</span>
+      );
     }
 
-    return <span
-      {...otherProps}
-      dangerouslySetInnerHTML={{ __html: fuzzysort.highlight(results,
-        '<strong style="color: #695eb8; text-decoration: underline;">',
-        '</strong>') }}
-    />;
+    return (
+      <span
+        {...otherProps}
+        dangerouslySetInnerHTML={{
+          __html: fuzzySort.highlight(
+            results,
+            '<strong style="font-style: italic; text-decoration: underline;">',
+            '</strong>'
+          )
+        }}
+      />
+    );
   }
 }
 
