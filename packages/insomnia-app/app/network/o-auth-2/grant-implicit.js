@@ -18,7 +18,7 @@ export default async function (
   ];
 
   // Add optional params
-  if (responseType === c.RESPONSE_TYPE_ID_TOKEN_TOKEN) {
+  if (responseType === c.RESPONSE_TYPE_ID_TOKEN_TOKEN || responseType === c.RESPONSE_TYPE_ID_TOKEN) {
     const nonce = Math.floor(Math.random() * 9999999999999) + 1;
     params.push({name: c.P_NONCE, value: nonce});
   }
