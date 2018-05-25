@@ -234,7 +234,7 @@ class CodeEditor extends React.Component {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
       cursor: this.codeMirror.getCursor(),
-      history: this.codeMirror.getHistory(),
+      history: this.codeMirror.getHistory()
     };
   }
 
