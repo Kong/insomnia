@@ -92,7 +92,11 @@ class Editable extends PureComponent {
         ...extra
       };
 
-      return renderReadView(value, readViewProps);
+      if (renderReadView) {
+        return renderReadView(value, readViewProps);
+      } else {
+        return <span {...readViewProps}>{value}</span>;
+      }
     }
   }
 }
@@ -100,9 +104,9 @@ class Editable extends PureComponent {
 Editable.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   value: PropTypes.string.isRequired,
-  renderReadView: PropTypes.func.isRequired,
 
   // Optional
+  renderReadView: PropTypes.func,
   singleClick: PropTypes.bool,
   onEditStart: PropTypes.func,
   className: PropTypes.string
