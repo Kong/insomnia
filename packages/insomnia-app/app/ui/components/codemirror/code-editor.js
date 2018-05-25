@@ -233,7 +233,8 @@ class CodeEditor extends React.Component {
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
-      cursor: this.codeMirror.getCursor()
+      cursor: this.codeMirror.getCursor(),
+      history: this.codeMirror.getHistory(),
     };
   }
 
@@ -243,8 +244,9 @@ class CodeEditor extends React.Component {
       return;
     }
 
-    const {scroll, selections, cursor} = editorStates[uniquenessKey];
+    const {scroll, selections, cursor, history} = editorStates[uniquenessKey];
     this.codeMirror.scrollTo(scroll.left, scroll.top);
+    this.codeMirror.setHistory(history);
 
     // NOTE: These won't be visible unless the editor is focused
     this.codeMirror.setCursor(cursor.line, cursor.ch, {scroll: false});
@@ -303,6 +305,9 @@ class CodeEditor extends React.Component {
     const setup = () => {
       // Actually set the value
       this._codemirrorSetValue(defaultValue || '');
+
+      // Clear history so we can't undo the initial set
+      this.codeMirror.clearHistory();
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
