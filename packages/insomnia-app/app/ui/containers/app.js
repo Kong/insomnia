@@ -149,14 +149,6 @@ class App extends PureComponent {
     this._sidebar = n;
   }
 
-  _isDragging () {
-    return (
-      this.state.draggingPaneHorizontal ||
-      this.state.draggingPaneVertical ||
-      this.state.draggingSidebar
-    );
-  }
-
   _requestGroupCreate (parentId) {
     showPrompt({
       title: 'New Folder',
@@ -164,8 +156,9 @@ class App extends PureComponent {
       submitName: 'Create',
       label: 'Name',
       selectText: true,
-      onComplete: name => {
-        models.requestGroup.create({parentId, name});
+      onComplete: async name => {
+        const requestGroup = await models.requestGroup.create({parentId, name});
+        await models.requestGroupMeta.create({parentId: requestGroup._id, collapsed: false});
       }
     });
   }
