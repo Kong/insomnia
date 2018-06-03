@@ -108,6 +108,9 @@ type Props = {
   handleSetRequestGroupCollapsed: Function,
   handleSetRequestPinned: Function,
   handleSendRequestWithEnvironment: Function,
+  handleSendFollowUpRequestWithEnvironment: Function,
+  handleBack: Function,
+  handleForward: Function,
   handleSendAndDownloadRequestWithEnvironment: Function,
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
@@ -337,6 +340,17 @@ class Wrapper extends React.PureComponent<Props, State> {
     await models.workspace.remove(activeWorkspace);
   }
 
+  _handleSendFollowUpRequestWithActiveEnvironment(followUpRequest: Request): void {
+    const {
+      activeRequest,
+      activeEnvironment,
+      handleSendFollowUpRequestWithEnvironment,
+    } = this.props;
+    const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+    const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+    handleSendFollowUpRequestWithEnvironment(activeRequestId, activeEnvironmentId, followUpRequest);
+  }
+
   async _handleActiveWorkspaceClearAllResponses(): Promise<void> {
     const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
     const requests = docs.filter(doc => doc.type === models.request.type);
@@ -349,6 +363,7 @@ class Wrapper extends React.PureComponent<Props, State> {
     const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
+
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
@@ -858,6 +873,9 @@ class Wrapper extends React.PureComponent<Props, State> {
             handleDeleteResponses={this._handleDeleteResponses}
             handleDeleteResponse={this._handleDeleteResponse}
             handleSetFilter={this._handleSetResponseFilter}
+            handleSend={this._handleSendFollowUpRequestWithActiveEnvironment}
+            handleBack={this.props.handleBack}
+            handleForward={this.props.handleForward}
           />
         </ErrorBoundary>
       </div>,

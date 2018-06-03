@@ -65,6 +65,11 @@ describe('app.import.*', () => {
         created: 111,
         description: '',
         headers: [],
+        history: {
+          current: -1,
+          requested: [],
+          responses: [],
+        },
         metaSortKey: 0,
         method: 'GET',
         modified: 222,
@@ -115,6 +120,11 @@ describe('app.import.*', () => {
         created: 111,
         description: '',
         headers: [],
+        history: {
+          current: -1,
+          requested: [],
+          responses: [],
+        },
         metaSortKey: 0,
         method: 'GET',
         modified: 222,
@@ -190,6 +200,11 @@ describe('app.export.*', () => {
           created: 111,
           description: '',
           headers: [],
+          history: {
+            current: -1,
+            requested: [],
+            responses: [],
+          },
           metaSortKey: 0,
           method: 'GET',
           modified: 222,
@@ -228,6 +243,7 @@ describe('app.export.*', () => {
             request: {
               bodySize: -1,
               cookies: [],
+
               headers: [],
               headersSize: -1,
               httpVersion: 'HTTP/1.1',

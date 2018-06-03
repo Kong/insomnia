@@ -21,7 +21,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): { a
 
         return showAlert({ title, message });
       },
-      showGenericModalDialog(title: string, options?: { html: string } = {}): Promise<void> {
+      showGenericModalDialog(title: string, options: { html: string } = {}): Promise<void> {
         if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
           return Promise.resolve();
         }

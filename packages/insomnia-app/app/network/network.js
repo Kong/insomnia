@@ -803,6 +803,7 @@ export async function sendWithSettings(
 export async function send(
   requestId: string,
   environmentId: string | null,
+  followUpRequest: ?Request,
   extraInfo?: ExtraRenderInfo,
 ): Promise<ResponsePatch> {
   console.log(`[network] Sending req=${requestId}`);
@@ -866,6 +867,13 @@ export async function send(
       settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
       settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
     };
+  }
+
+  if (followUpRequest) {
+    renderedRequest.url = followUpRequest.url;
+    renderedRequest.method = followUpRequest.method;
+    renderedRequest.body = followUpRequest.body;
+    renderedRequest.parameters = followUpRequest.parameters;
   }
 
   const response = await _actuallySend(

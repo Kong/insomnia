@@ -11,6 +11,8 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import SizeTag from './tags/size-tag';
 import StatusTag from './tags/status-tag';
 import TimeTag from './tags/time-tag';
+import BackTag from './tags/back-tag';
+import ForwardTag from './tags/forward-tag';
 import Button from './base/button';
 import PreviewModeDropdown from './dropdowns/preview-mode-dropdown';
 import ResponseViewer from './viewers/response-viewer';
@@ -38,6 +40,9 @@ type Props = {
   handleDeleteResponses: Function,
   handleDeleteResponse: Function,
   handleShowRequestSettings: Function,
+  handleSend: Function,
+  handleBack: Function,
+  handleForward: Function,
 
   // Required
   previewMode: string,
@@ -155,6 +160,10 @@ class ResponsePane extends React.PureComponent<Props> {
     }
   }
 
+  _handleSend(followUpRequest: Request): void {
+    this.props.handleSend(followUpRequest);
+  }
+
   render() {
     const {
       request,
@@ -259,24 +268,42 @@ class ResponsePane extends React.PureComponent<Props> {
     return (
       <section className={paneClasses}>
         {!response ? null : (
-          <header className={paneHeaderClasses + ' row-spaced'}>
-            <div className="no-wrap scrollable scrollable--no-bars pad-left">
-              <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
-              <TimeTag milliseconds={response.elapsedTime} />
-              <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} />
+          <div>
+            <header className={paneHeaderClasses + ' row-spaced'}>
+              <div className="no-wrap scrollable scrollable--no-bars pad-left">
+                <StatusTag
+                  statusCode={response.statusCode}
+                  statusMessage={response.statusMessage}
+                  small
+                />
+                <TimeTag milliseconds={response.elapsedTime} small />
+                <SizeTag
+                  bytesRead={response.bytesRead}
+                  bytesContent={response.bytesContent}
+                  small
+                />
+              </div>
+              <ResponseHistoryDropdown
+                activeResponse={response}
+                responses={responses}
+                requestVersions={requestVersions}
+                requestId={request._id}
+                handleSetActiveResponse={handleSetActiveResponse}
+                handleDeleteResponses={handleDeleteResponses}
+                handleDeleteResponse={handleDeleteResponse}
+                className="tall pane__header__right"
+                right
+              />
+            </header>
+            <div className="pane__header__sub">
+              <BackTag handleBack={this.props.handleBack} requestHistory={request.history} />
+              <ForwardTag
+                handleForward={this.props.handleForward}
+                requestHistory={request.history}
+              />
+              {response.url}
             </div>
-            <ResponseHistoryDropdown
-              activeResponse={response}
-              responses={responses}
-              requestVersions={requestVersions}
-              requestId={request._id}
-              handleSetActiveResponse={handleSetActiveResponse}
-              handleDeleteResponses={handleDeleteResponses}
-              handleDeleteResponse={handleDeleteResponse}
-              className="tall pane__header__right"
-              right
-            />
-          </header>
+          </div>
         )}
         <Tabs
           className={paneBodyClasses + ' react-tabs'}
@@ -330,6 +357,7 @@ class ResponsePane extends React.PureComponent<Props> {
               editorIndentSize={editorIndentSize}
               editorKeyMap={editorKeyMap}
               url={response.url}
+              handleSend={this._handleSend}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">

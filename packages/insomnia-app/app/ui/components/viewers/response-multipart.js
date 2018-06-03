@@ -36,6 +36,7 @@ type Props = {
   editorKeyMap: string,
   editorLineWrapping: boolean,
   url: string,
+  handleSend: Function,
 };
 
 type State = {
@@ -223,6 +224,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       filterHistory,
       responseId,
       url,
+      handleSend,
     } = this.props;
 
     const { activePart, parts, error } = this.state;
@@ -294,6 +296,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
               responseId={`${responseId}[${activePart}]`}
               updateFilter={null}
               url={url}
+              handleSend={handleSend}
             />
           </div>
         ) : null}

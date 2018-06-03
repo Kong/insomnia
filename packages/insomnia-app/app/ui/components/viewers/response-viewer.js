@@ -2,7 +2,6 @@
 import * as React from 'react';
 import iconv from 'iconv-lite';
 import autobind from 'autobind-decorator';
-import { shell } from 'electron';
 import PDFViewer from './response-pdf-viewer';
 import CSVViewer from './response-csv-viewer';
 import CodeEditor from '../codemirror/code-editor';
@@ -19,12 +18,14 @@ import {
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
+import { newRequest, newBodyNone } from '../../../models/request';
 
 let alwaysShowLargeResponses = false;
 
 type Props = {
   getBody: Function,
   download: Function,
+  handleSend: Function,
   responseId: string,
   previewMode: string,
   filter: string,
@@ -77,7 +78,7 @@ class ResponseViewer extends React.Component<Props, State> {
   }
 
   _handleOpenLink(link: string) {
-    shell.openExternal(link);
+    this.props.handleSend(newRequest(link, 'GET', newBodyNone()));
   }
 
   _handleDismissBlocker() {
@@ -206,6 +207,7 @@ class ResponseViewer extends React.Component<Props, State> {
       responseId,
       updateFilter,
       url,
+      handleSend,
     } = this.props;
 
     let contentType = this.props.contentType;
@@ -348,6 +350,7 @@ class ResponseViewer extends React.Component<Props, State> {
           filterHistory={filterHistory}
           responseId={responseId}
           url={url}
+          handleSend={handleSend}
         />
       );
     } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
