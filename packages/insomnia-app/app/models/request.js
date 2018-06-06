@@ -62,7 +62,8 @@ type BaseRequest = {
   settingSendCookies: boolean,
   settingDisableRenderRequestBody: boolean,
   settingEncodeUrl: boolean,
-  settingRebuildPath: boolean
+  settingRebuildPath: boolean,
+  settingMaxTimelineDataSize: number
 };
 
 export type Request = BaseModel & BaseRequest;
@@ -85,7 +86,8 @@ export function init (): BaseRequest {
     settingSendCookies: true,
     settingDisableRenderRequestBody: false,
     settingEncodeUrl: true,
-    settingRebuildPath: true
+    settingRebuildPath: true,
+    settingMaxTimelineDataSize: 1000
   };
 }
 

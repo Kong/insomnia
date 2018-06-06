@@ -367,6 +367,7 @@ class CodeEditor extends React.Component {
         try {
           jsonString = JSON.stringify(jq.query(obj, this.state.filter));
         } catch (err) {
+          console.log('[jsonpath] Error: ', err);
           jsonString = '[]';
         }
       }
