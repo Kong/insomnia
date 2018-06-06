@@ -113,75 +113,75 @@ export async function getPlugins (force: boolean = false): Promise<Array<Plugin>
   }
 
   if (!plugins) {
-  const settings = await models.settings.getOrCreate();
-  const extraPaths = settings.pluginPath.split(':').filter(p => p).map(resolveHomePath);
+    const settings = await models.settings.getOrCreate();
+    const extraPaths = settings.pluginPath.split(':').filter(p => p).map(resolveHomePath);
 
-  // Make sure the default directories exist
-  mkdirp.sync(PLUGIN_PATH);
+    // Make sure the default directories exist
+    mkdirp.sync(PLUGIN_PATH);
 
-  // Also look in node_modules folder in each directory
-  const basePaths = [PLUGIN_PATH, ...extraPaths];
-  const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
-  const allPaths = [...basePaths, ...extendedPaths];
+    // Also look in node_modules folder in each directory
+    const basePaths = [PLUGIN_PATH, ...extraPaths];
+    const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
+    const allPaths = [...basePaths, ...extendedPaths];
 
-  // Store plugins in a map so that plugins with the same
-  // name only get added once
-  // TODO: Make this more complex and have the latest version always win
-  const pluginMap: {[string]: Plugin} = {
-    // "name": "module"
-  };
+    // Store plugins in a map so that plugins with the same
+    // name only get added once
+    // TODO: Make this more complex and have the latest version always win
+    const pluginMap: { [string]: Plugin } = {
+      // "name": "module"
+    };
 
-  for (const p of CORE_PLUGINS) {
-    const pluginJson = global.require(`${p}/package.json`);
-    const pluginModule = global.require(p);
-    pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule);
+    for (const p of CORE_PLUGINS) {
+      const pluginJson = global.require(`${p}/package.json`);
+      const pluginModule = global.require(p);
+      pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule);
+    }
+
+    await _traversePluginPath(pluginMap, allPaths);
+
+    plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
 
-  await _traversePluginPath(pluginMap, allPaths);
-
-  plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
-}
-
-return plugins;
+  return plugins;
 }
 
 export async function getTemplateTags (): Promise<Array<TemplateTag>> {
   let extensions = [];
-for (const plugin of await getPlugins()) {
-  const templateTags = plugin.module.templateTags || [];
-  extensions = [
-    ...extensions,
-...templateTags.map(tt => ({plugin: plugin.name, templateTag: tt}))
-];
-}
+  for (const plugin of await getPlugins()) {
+    const templateTags = plugin.module.templateTags || [];
+    extensions = [
+      ...extensions,
+      ...templateTags.map(tt => ({plugin: plugin.name, templateTag: tt}))
+    ];
+  }
 
-return extensions;
+  return extensions;
 }
 
 export async function getRequestHooks (): Promise<Array<RequestHook>> {
   let functions = [];
-for (const plugin of await getPlugins()) {
-  const moreFunctions = plugin.module.requestHooks || [];
-  functions = [
-    ...functions,
-...moreFunctions.map(hook => ({plugin, hook}))
-];
-}
+  for (const plugin of await getPlugins()) {
+    const moreFunctions = plugin.module.requestHooks || [];
+    functions = [
+      ...functions,
+      ...moreFunctions.map(hook => ({plugin, hook}))
+    ];
+  }
 
-return functions;
+  return functions;
 }
 
 export async function getResponseHooks (): Promise<Array<ResponseHook>> {
   let functions = [];
-for (const plugin of await getPlugins()) {
-  const moreFunctions = plugin.module.responseHooks || [];
-  functions = [
-    ...functions,
-...moreFunctions.map(hook => ({plugin, hook}))
-];
-}
+  for (const plugin of await getPlugins()) {
+    const moreFunctions = plugin.module.responseHooks || [];
+    functions = [
+      ...functions,
+      ...moreFunctions.map(hook => ({plugin, hook}))
+    ];
+  }
 
-return functions;
+  return functions;
 }
 
 function _initPlugin (packageJSON: Object, module: any, path: ?string): Plugin {
