@@ -88,7 +88,11 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     };
 
     try {
-      const bodyJson = JSON.stringify({query: introspectionQuery});
+      const bodyJson = JSON.stringify({
+        query: introspectionQuery,
+        operationName: 'IntrospectionQuery'
+      });
+
       const introspectionRequest = await db.upsert(Object.assign({}, rawRequest, {
         _id: rawRequest._id + '.graphql',
         parentId: rawRequest._id,
@@ -124,7 +128,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _buildVariableTypes (schema: Object | null, query: string): {[string]: Object} {
+  _buildVariableTypes (schema: Object | null, query: string): { [string]: Object } {
     if (!schema) {
       return {};
     }
