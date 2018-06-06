@@ -22,7 +22,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
     this.state = {
       title: '',
       body: null,
-      tall: false,
+      tall: false
     };
   }
 

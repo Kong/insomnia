@@ -81,6 +81,7 @@ describe('app.import.*', () => {
       settingSendCookies: true,
       settingStoreCookies: true,
       settingRebuildPath: true,
+      settingMaxTimelineDataSize: 1000,
       type: 'Request',
       url: 'https://insomnia.rest'
     }]);
@@ -128,6 +129,7 @@ describe('app.import.*', () => {
       settingSendCookies: true,
       settingStoreCookies: true,
       settingRebuildPath: true,
+      settingMaxTimelineDataSize: 1000,
       type: 'Request',
       url: 'https://insomnia.rest'
     }]);
@@ -199,6 +201,7 @@ describe('app.export.*', () => {
         settingSendCookies: true,
         settingStoreCookies: true,
         settingRebuildPath: true,
+        settingMaxTimelineDataSize: 1000,
         url: 'https://insomnia.rest'
       }]
     });
