@@ -12,12 +12,17 @@ import {jsonParseOr} from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
 import {CONTENT_TYPE_JSON, DEBOUNCE_MILLIS} from '../../../../common/constants';
 import prettify from 'insomnia-prettify';
+import type {ResponsePatch} from '../../../../network/network';
 import * as network from '../../../../network/network';
 import type {Workspace} from '../../../../models/workspace';
 import type {Settings} from '../../../../models/settings';
 import TimeFromNow from '../../time-from-now';
 import * as models from '../../../../models/index';
 import * as db from '../../../../common/database';
+import {showModal} from '../../modals';
+import WrapperModal from '../../modals/wrapper-modal';
+import ResponseTimelineViewer from '../../viewers/response-timeline-viewer';
+import Tooltip from '../../tooltip';
 
 type GraphQLBody = {
   query: string,
@@ -43,7 +48,10 @@ type Props = {
 type State = {
   body: GraphQLBody,
   schema: Object | null,
-  schemaFetchError: string,
+  schemaFetchError: {
+    message: string,
+    response: ResponsePatch | null
+  } | null,
   schemaLastFetchTime: number,
   schemaIsFetching: boolean,
   hideSchemaFetchErrors: boolean,
@@ -62,13 +70,38 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     this.state = {
       body: GraphQLEditor._stringToGraphQL(props.content),
       schema: null,
-      schemaFetchError: '',
+      schemaFetchError: null,
       schemaLastFetchTime: 0,
       schemaIsFetching: false,
       hideSchemaFetchErrors: false,
       variablesSyntaxError: '',
       forceRefreshKey: 0
     };
+  }
+
+  _handleViewResponse () {
+    const {settings} = this.props;
+    const {schemaFetchError} = this.state;
+    if (!schemaFetchError || !schemaFetchError.response) {
+      return;
+    }
+
+    const {response} = schemaFetchError;
+
+    showModal(WrapperModal, {
+      title: 'Introspection Request',
+      tall: true,
+      body: (
+        <div style={{display: 'grid'}} className="tall pad-top">
+          <ResponseTimelineViewer
+            editorFontSize={settings.editorFontSize}
+            editorIndentSize={settings.editorIndentSize}
+            editorLineWrapping={settings.editorLineWrapping}
+            timeline={response.timeline}
+          />
+        </div>
+      )
+    });
   }
 
   _hideSchemaFetchError () {
@@ -82,11 +115,12 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
     const newState = {
       schema: this.state.schema,
-      schemaFetchError: '',
+      schemaFetchError: (null: any),
       schemaLastFetchTime: this.state.schemaLastFetchTime,
       schemaIsFetching: false
     };
 
+    let responsePatch: ResponsePatch | null = null;
     try {
       const bodyJson = JSON.stringify({
         query: introspectionQuery,
@@ -95,32 +129,45 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
       const introspectionRequest = await db.upsert(Object.assign({}, rawRequest, {
         _id: rawRequest._id + '.graphql',
+        settingMaxTimelineDataSize: 5000,
         parentId: rawRequest._id,
         isPrivate: true, // So it doesn't get synced or exported
         body: newBodyRaw(bodyJson, CONTENT_TYPE_JSON)
       }));
 
-      const responsePatch = await network.send(introspectionRequest._id, environmentId);
+      responsePatch = await network.send(introspectionRequest._id, environmentId);
       const bodyBuffer = models.response.getBodyBuffer(responsePatch);
 
       const status = typeof responsePatch.statusCode === 'number' ? responsePatch.statusCode : 0;
       const error = typeof responsePatch.error === 'string' ? responsePatch.error : '';
 
       if (error) {
-        newState.schemaFetchError = error;
+        newState.schemaFetchError = {
+          message: error,
+          response: responsePatch
+        };
       } else if (status < 200 || status >= 300) {
         const renderedURL = responsePatch.url || rawRequest.url;
-        newState.schemaFetchError = `Got status ${status} fetching schema from "${renderedURL}"`;
+        newState.schemaFetchError = {
+          message: `Got status ${status} fetching schema from "${renderedURL}"`,
+          response: responsePatch
+        };
       } else if (bodyBuffer) {
         const {data} = JSON.parse(bodyBuffer.toString());
         newState.schema = buildClientSchema(data);
         newState.schemaLastFetchTime = Date.now();
       } else {
-        newState.schemaFetchError = 'No response body received when fetching schema';
+        newState.schemaFetchError = {
+          message: 'No response body received when fetching schema',
+          response: responsePatch
+        };
       }
     } catch (err) {
       console.warn('Failed to fetch GraphQL schema', err);
-      newState.schemaFetchError = `Failed to to fetch schema: ${err.message}`;
+      newState.schemaFetchError = {
+        message: `Failed to to fetch schema: ${err.message}`,
+        response: responsePatch
+      };
     }
 
     if (this._isMounted) {
@@ -348,10 +395,19 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         <div className="graphql-editor__schema-error">
           {!hideSchemaFetchErrors && schemaFetchError && (
             <div className="notice error margin no-margin-top margin-bottom-sm">
-              <button className="pull-right icon" onClick={this._hideSchemaFetchError}>
-                <i className="fa fa-times"/>
-              </button>
-              {schemaFetchError}
+              <div className="pull-right">
+                <Tooltip position="top" message="View introspection request/response timeline">
+                  <button className="icon icon--success" onClick={this._handleViewResponse}>
+                    <i className="fa fa-bug"/>
+                  </button>
+                </Tooltip>
+                {' '}
+                <button className="icon" onClick={this._hideSchemaFetchError}>
+                  <i className="fa fa-times"/>
+                </button>
+              </div>
+              {schemaFetchError.message}
+              <br/>
             </div>
           )}
         </div>

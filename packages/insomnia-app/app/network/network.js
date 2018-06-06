@@ -101,8 +101,8 @@ export async function _actuallySend (
     const curl = new Curl();
 
     /** Helper function to respond with a success */
-    function respond (patch: ResponsePatch, bodyPath: ?string): void {
-      const response = Object.assign(({
+    async function respond (patch: ResponsePatch, bodyPath: string | null, noPlugins: boolean = false): Promise<void> {
+      const responsePatchBeforeHooks = Object.assign(({
         parentId: renderedRequest._id,
         bodyCompression: null, // Will default to .zip otherwise
         timeline: timeline,
@@ -111,17 +111,20 @@ export async function _actuallySend (
         settingStoreCookies: renderedRequest.settingStoreCookies
       }: ResponsePatch), patch);
 
-      resolve(response);
+      if (noPlugins) {
+        resolve(responsePatchBeforeHooks);
+        return;
+      }
 
-      // Apply plugin hooks and don't wait for them and don't throw from them
-      process.nextTick(async () => {
-        try {
-          await _applyResponsePluginHooks(response, renderedRequest, renderContext);
-        } catch (err) {
-          // TODO: Better error handling here
-          console.warn('Response plugin failed', err);
-        }
-      });
+      let responsePatch: ?ResponsePatch;
+      try {
+        responsePatch = await _applyResponsePluginHooks(responsePatchBeforeHooks, renderedRequest, renderContext);
+      } catch (err) {
+        handleError(new Error(`[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`));
+        return;
+      }
+
+      resolve(responsePatch);
     }
 
     /** Helper function to respond with an error */
@@ -134,7 +137,7 @@ export async function _actuallySend (
         statusMessage: 'Error',
         settingSendCookies: renderedRequest.settingSendCookies,
         settingStoreCookies: renderedRequest.settingStoreCookies
-      });
+      }, null, true);
     }
 
     /** Helper function to set Curl options */
@@ -164,7 +167,7 @@ export async function _actuallySend (
           url: curl.getInfo(Curl.info.EFFECTIVE_URL),
           statusMessage: 'Cancelled',
           error: 'Request was cancelled'
-        });
+        }, null, true);
 
         // Kill it!
         curl.close();
@@ -222,7 +225,7 @@ export async function _actuallySend (
         if (infoType === Curl.info.debug.DATA_OUT) {
           if (content.length === 0) {
             // Sometimes this happens, but I'm not sure why. Just ignore it.
-          } else if (content.length < 1000) {
+          } else if (content.length < renderedRequest.settingMaxTimelineDataSize) {
             timeline.push({name, value: content});
           } else {
             timeline.push({name, value: `(${describeByteSize(content.length)} hidden)`});
@@ -705,7 +708,7 @@ export async function _actuallySend (
           statusMessage = 'Abort';
         }
 
-        respond({statusMessage, error});
+        respond({statusMessage, error}, null, true);
       });
 
       curl.perform();
@@ -827,10 +830,8 @@ async function _applyRequestPluginHooks (
   renderedRequest: RenderedRequest,
   renderedContext: Object
 ): Promise<RenderedRequest> {
-  let newRenderedRequest = renderedRequest;
+  const newRenderedRequest = clone(renderedRequest);
   for (const {plugin, hook} of await plugins.getRequestHooks()) {
-    newRenderedRequest = clone(newRenderedRequest);
-
     const context = {
       ...pluginContexts.app.init(),
       ...pluginContexts.request.init(newRenderedRequest, renderedContext)
@@ -851,12 +852,15 @@ async function _applyResponsePluginHooks (
   response: ResponsePatch,
   request: RenderedRequest,
   renderContext: Object
-): Promise<void> {
+): Promise<ResponsePatch> {
+  const newResponse = clone(response);
+  const newRequest = clone(request);
+
   for (const {plugin, hook} of await plugins.getResponseHooks()) {
     const context = {
       ...pluginContexts.app.init(),
-      ...pluginContexts.response.init(response),
-      ...pluginContexts.request.init(request, renderContext, true)
+      ...pluginContexts.response.init(newResponse),
+      ...pluginContexts.request.init(newRequest, renderContext, true)
     };
 
     try {
@@ -866,6 +870,8 @@ async function _applyResponsePluginHooks (
       throw err;
     }
   }
+
+  return newResponse;
 }
 
 export function _parseHeaders (
