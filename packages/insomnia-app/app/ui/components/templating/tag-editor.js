@@ -192,7 +192,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       const initialType = argDef ? argDef.type : 'string';
       const variable = variables.find(v => v.name === existingValue);
       const value = variable ? variable.value : '';
-      return this._updateArg(value, argIndex, initialType, {quotedBy: "'"});
+      return this._updateArg(value, argIndex, initialType, {quotedBy: '\''});
     }
   }
 
@@ -200,7 +200,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     return this._updateArg(path, argIndex);
   }
 
-  _handleChange (e: SyntheticEvent<HTMLInputElement>, forceVariable: boolean = false) {
+  _handleChange (e: SyntheticEvent<HTMLInputElement>) {
     const parent = e.currentTarget.parentNode;
     let argIndex = -1;
     if (parent instanceof HTMLElement) {

@@ -78,6 +78,7 @@ export default class BaseExtension {
         render: str => templating.render(str, {context: renderContext}),
         models: {
           request: {getById: models.request.getById},
+          requestGroup: {getById: models.requestGroup.getById},
           workspace: {getById: models.workspace.getById},
           oAuth2Token: {getByRequestId: models.oAuth2Token.getByParentId},
           cookieJar: {
