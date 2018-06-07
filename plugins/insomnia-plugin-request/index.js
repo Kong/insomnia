@@ -10,6 +10,8 @@ module.exports.templateTags = [{
       displayName: 'Attribute',
       type: 'enum',
       options: [
+        {displayName: 'Name', value: 'name', description: 'name of request'},
+        {displayName: 'Folder', value: 'folder', description: 'name of immediate parent folder (or workspace)'},
         {displayName: 'URL', value: 'url', description: 'fully qualified URL'},
         {displayName: 'Cookie', value: 'cookie', description: 'cookie value by name'},
         {displayName: 'Header', value: 'header', description: 'header value by name'},
@@ -18,7 +20,7 @@ module.exports.templateTags = [{
     },
     {
       type: 'string',
-      hide: args => ['url', 'oauth2'].includes(args[0].value),
+      hide: args => ['url', 'oauth2', 'name', 'folder'].includes(args[0].value),
       displayName: args => {
         switch (args[0].value) {
           case 'cookie':
@@ -54,7 +56,6 @@ module.exports.templateTags = [{
       case 'url':
         return getRequestUrl(context, request);
       case 'cookie':
-
         if (!name) {
           throw new Error('No cookie specified');
         }
@@ -89,6 +90,11 @@ module.exports.templateTags = [{
           throw new Error('No OAuth 2.0 tokens found for request');
         }
         return token.accessToken;
+      case 'name':
+        return request.name;
+      case 'folder':
+        const requestGroup = await context.util.models.requestGroup.getById(request.parentId);
+        return requestGroup ? requestGroup.name : workspace.name;
     }
 
     return null;
