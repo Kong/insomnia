@@ -69,28 +69,33 @@ class Tooltip extends React.PureComponent<Props, State> {
       const bubbleRect = bubble.getBoundingClientRect();
       const margin = 3;
 
+      let left = 0;
+      let top = 0;
       switch (this.props.position) {
         case 'right':
-          bubble.style.top = `${tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2)}px`;
-          bubble.style.left = `${tooltipRect.left + tooltipRect.width + margin}px`;
+          top = tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2);
+          left = tooltipRect.left + tooltipRect.width + margin;
           break;
 
         case 'left':
-          bubble.style.top = `${tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2)}px`;
-          bubble.style.left = `${tooltipRect.left - bubbleRect.width - margin}px`;
+          top = tooltipRect.top - (bubbleRect.height / 2) + (tooltipRect.height / 2);
+          left = tooltipRect.left - bubbleRect.width - margin;
           break;
 
         case 'bottom':
-          bubble.style.top = `${tooltipRect.top + tooltipRect.height + margin}px`;
-          bubble.style.left = `${tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2)}px`;
+          top = tooltipRect.top + tooltipRect.height + margin;
+          left = tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2);
           break;
 
         case 'top':
         default:
-          bubble.style.top = `${tooltipRect.top - bubbleRect.height - margin}px`;
-          bubble.style.left = `${tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2)}px`;
+          top = tooltipRect.top - bubbleRect.height - margin;
+          left = tooltipRect.left - (bubbleRect.width / 2) + (tooltipRect.width / 2);
           break;
       }
+
+      bubble.style.left = `${Math.max(0, left)}px`;
+      bubble.style.top = `${Math.max(0, top)}px`;
 
       this.setState({visible: true});
     }, this.props.delay || 100);

@@ -18,6 +18,7 @@ import type {Workspace} from '../../../models/workspace';
 import type {Environment} from '../../../models/environment';
 import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
+import Tooltip from '../tooltip';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
@@ -279,6 +280,38 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     }
   }
 
+  renderSidebarRow (environment: Environment) {
+    const activeEnvironment = this._getActiveEnvironment();
+
+    const classes = classnames({
+      'env-modal__sidebar-item': true,
+      'env-modal__sidebar-item--active': activeEnvironment === environment
+    });
+
+    return (
+      <li key={environment._id} className={classes}>
+        <Button onClick={this._handleShowEnvironment} value={environment}>
+          {environment.color
+            ? <i className="space-right fa fa-circle" style={{color: environment.color}}/>
+            : <i className="space-right fa fa-empty"/>
+          }
+
+          {environment.isPrivate && (
+            <Tooltip position="top" message="Environment will not be exported or synced">
+              <i className="fa fa-eye-slash faint space-right"/>
+            </Tooltip>
+          )}
+
+          <Editable
+            className="inline-block"
+            onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
+            value={environment.name}
+          />
+        </Button>
+      </li>
+    );
+  }
+
   render () {
     const {
       editorFontSize,
@@ -320,6 +353,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
               <Dropdown right>
                 <DropdownButton>
                   <i className="fa fa-plus-circle"/>
+                  <i className="fa fa-caret-down"/>
                 </DropdownButton>
                 <DropdownItem onClick={this._handleAddEnvironment} value={false}>
                   <i className="fa fa-eye"/> Environment
@@ -331,36 +365,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
               </Dropdown>
             </div>
             <ul>
-              {subEnvironments.map(environment => {
-                const classes = classnames(
-                  'env-modal__sidebar-item',
-                  {'env-modal__sidebar-item--active': activeEnvironment === environment}
-                );
-
-                return (
-                  <li key={environment._id} className={classes}>
-                    <Button onClick={this._handleShowEnvironment} value={environment}>
-                      {environment.color
-                        ? <i className="space-right fa fa-circle"
-                             style={{color: environment.color}}/>
-                        : <i className="space-right fa fa-empty"/>
-                      }
-
-                      {environment.isPrivate
-                        ? <i className="fa fa-eye-slash faint space-right"
-                             title="Environment will not be exported or synced"/>
-                        : null
-                      }
-
-                      <Editable
-                        className="inline-block"
-                        onSubmit={name => this._handleChangeEnvironmentName(environment, name)}
-                        value={environment.name}
-                      />
-                    </Button>
-                  </li>
-                );
-              })}
+              {subEnvironments.sort((e1, e2) => e1.metaSortKey - e2.metaSortKey).map(this.renderSidebarRow)}
             </ul>
           </div>
           <div className="env-modal__main">

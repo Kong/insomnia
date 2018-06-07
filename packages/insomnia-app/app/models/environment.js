@@ -12,6 +12,7 @@ type BaseEnvironment = {
   name: string,
   data: Object,
   color: string | null,
+  metaSortKey: number,
 
   // For sync control
   isPrivate: boolean
@@ -24,7 +25,8 @@ export function init () {
     name: 'New Environment',
     data: {},
     color: null,
-    isPrivate: false
+    isPrivate: false,
+    metaSortKey: Date.now()
   };
 }
 
